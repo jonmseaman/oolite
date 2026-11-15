@@ -66,7 +66,8 @@ JSValue JSSpecialFunctionsObjectWrapper(JSContext* context) {
   return special;
 }
 
-static JSValue SpecialJSWarning(OOJS_NATIVE_ARGS) {
+static JSValue SpecialJSWarning(JSContext* context, JSValueConst /*oojsThis*/,
+                                int argc, JSValueConst* oojsArgv) {
   OOJS_PROFILE_SCOPE();  // These functions are exception-safe
 
   if (argc < 1) [[unlikely]] {
@@ -82,11 +83,13 @@ static JSValue SpecialJSWarning(OOJS_NATIVE_ARGS) {
   OOJSSetWarningOrErrorStackSkip(0);
 
   OOJS_RETURN_VOID;
-
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-static JSValue SpecialMarkConsoleEntryPoint(OOJS_NATIVE_ARGS) {
+static JSValue SpecialMarkConsoleEntryPoint(JSContext* /*context*/,
+                                            JSValueConst /*oojsThis*/,
+                                            int /*argc*/,
+                                            JSValueConst* /*oojsArgv*/) {
   /*	The SpiderMonkey version recorded the calling stack frame (in eval() in
           console.script.evaluate()) with OOJSMarkConsoleEvalLocation(), so that
           OOJSDescribeLocation() could describe locations in console-evaluated

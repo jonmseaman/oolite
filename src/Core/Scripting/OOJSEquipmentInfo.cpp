@@ -602,7 +602,9 @@ static JSValue EquipmentInfoSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue EquipmentInfoGetAllEqipment(OOJS_GETTER_ARGS) {
+static JSValue EquipmentInfoGetAllEqipment(JSContext* context,
+                                           JSValueConst /*thisObj*/,
+                                           int /*magic*/) {
   OOJS_NATIVE_ENTER(context)
 
   return OOJSValueFromPList(context, OOEquipmentTypeObjectNodes(
@@ -661,7 +663,9 @@ std::optional<std::string> OOJSEquipmentInfoJSClassName() {
 // *** Static methods ***
 
 // infoForKey(key : String): EquipmentInfo
-static JSValue EquipmentInfoStaticInfoForKey(OOJS_NATIVE_ARGS) {
+static JSValue EquipmentInfoStaticInfoForKey(JSContext* context,
+                                             JSValueConst /*oojsThis*/,
+                                             int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
@@ -681,7 +685,8 @@ static JSValue EquipmentInfoStaticInfoForKey(OOJS_NATIVE_ARGS) {
 }
 
 // toString(): the C++ type's jsDescription().
-static JSValue EquipmentInfoToString(OOJS_NATIVE_ARGS) {
+static JSValue EquipmentInfoToString(JSContext* context, JSValueConst oojsThis,
+                                     int /*argc*/, JSValueConst* /*oojsArgv*/) {
   return OOJSCxxObjectWrapperToString(context, OOJS_THIS,
                                       sEquipmentInfoClassID);
 }

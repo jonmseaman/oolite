@@ -233,7 +233,9 @@ void OOJSFrameCallbacksRemoveAll() {
 // MARK: Methods
 
 // addFrameCallback(callback : Function) : Number
-static JSValue GlobalAddFrameCallback(OOJS_NATIVE_ARGS) {
+static JSValue GlobalAddFrameCallback(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int argc,
+                                      JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   // Get callback argument and verify that it's a function.
@@ -274,7 +276,9 @@ static JSValue GlobalAddFrameCallback(OOJS_NATIVE_ARGS) {
 }
 
 // removeFrameCallback(trackingID : Number)
-static JSValue GlobalRemoveFrameCallback(OOJS_NATIVE_ARGS) {
+static JSValue GlobalRemoveFrameCallback(JSContext* context,
+                                         JSValueConst /*oojsThis*/, int argc,
+                                         JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   // Get tracking ID argument.
@@ -308,7 +312,9 @@ static JSValue GlobalRemoveFrameCallback(OOJS_NATIVE_ARGS) {
 }
 
 // isValidFrameCallback(trackingID : Number)
-static JSValue GlobalIsValidFrameCallback(OOJS_NATIVE_ARGS) {
+static JSValue GlobalIsValidFrameCallback(JSContext* context,
+                                          JSValueConst /*oojsThis*/, int argc,
+                                          JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (argc < 1) [[unlikely]] {

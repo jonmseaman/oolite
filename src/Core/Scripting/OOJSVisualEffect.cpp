@@ -582,7 +582,8 @@ oo::PList MeshShaders(OOVisualEffectEntity* effect) {
     if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID;                           \
   } while (0)
 
-static JSValue VisualEffectRemove(OOJS_NATIVE_ARGS) {
+static JSValue VisualEffectRemove(JSContext* context, JSValueConst oojsThis,
+                                  int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOVisualEffectEntity* thisEnt = nullptr;
@@ -601,7 +602,9 @@ static JSValue VisualEffectRemove(OOJS_NATIVE_ARGS) {
 }
 
 // getMaterials()
-static JSValue VisualEffectGetMaterials(OOJS_NATIVE_ARGS) {
+static JSValue VisualEffectGetMaterials(JSContext* context,
+                                        JSValueConst oojsThis, int /*argc*/,
+                                        JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   oo::PList result;
@@ -613,11 +616,12 @@ static JSValue VisualEffectGetMaterials(OOJS_NATIVE_ARGS) {
   if (result.isNull())
     result = oo::PList(oo::PList::Dict{});  // an empty dictionary
   OOJS_RETURN_PLIST(result);
-
 }
 
 // getShaders()
-static JSValue VisualEffectGetShaders(OOJS_NATIVE_ARGS) {
+static JSValue VisualEffectGetShaders(JSContext* context, JSValueConst oojsThis,
+                                      int /*argc*/,
+                                      JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   oo::PList result;
@@ -629,7 +633,6 @@ static JSValue VisualEffectGetShaders(OOJS_NATIVE_ARGS) {
   if (result.isNull())
     result = oo::PList(oo::PList::Dict{});  // an empty dictionary
   OOJS_RETURN_PLIST(result);
-
 }
 
 // setMaterials(params: dict, [shaders: dict])  // sets materials dictionary.
@@ -805,7 +808,10 @@ static JSValue VisualEffectScale(OOJS_NATIVE_ARGS) {
 }
 
 // restoreSubEntities(): boolean
-static JSValue VisualEffectRestoreSubEntities(OOJS_NATIVE_ARGS) {
+static JSValue VisualEffectRestoreSubEntities(JSContext* context,
+                                              JSValueConst oojsThis,
+                                              int /*argc*/,
+                                              JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOVisualEffectEntity* thisEnt = nullptr;

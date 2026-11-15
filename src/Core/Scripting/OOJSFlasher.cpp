@@ -279,7 +279,8 @@ static JSValue FlasherSetProperty(OOJS_SETTER_ARGS) {
     if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID; /* the C++ flasher's */ \
   } while (0)
 
-static JSValue FlasherRemove(OOJS_NATIVE_ARGS) {
+static JSValue FlasherRemove(JSContext* context, JSValueConst oojsThis,
+                             int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOFlasherEntity* thisEnt = nullptr;

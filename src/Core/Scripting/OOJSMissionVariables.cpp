@@ -159,7 +159,8 @@ static JSValue ValueForMissionVariable(JSContext* context,
 
 static int MissionVariablesGetOwnProperty(JSContext* context,
                                           JSPropertyDescriptor* desc,
-                                          JSValueConst object, JSAtom propID) {
+                                          JSValueConst /*object*/,
+                                          JSAtom propID) {
   try {
     std::optional<std::string> key =
         KeyForPropertyName(NameForPropertyID(context, propID));
@@ -186,7 +187,7 @@ static int MissionVariablesGetOwnProperty(JSContext* context,
 static int MissionVariablesGetOwnPropertyNames(JSContext* context,
                                                JSPropertyEnum** outTable,
                                                uint32_t* outCount,
-                                               JSValueConst object) {
+                                               JSValueConst /*object*/) {
   try {
     // A copy of the keys, which is good since the enumerating code might
     // mutate. In key order
@@ -234,7 +235,8 @@ static int MissionVariablesGetOwnPropertyNames(JSContext* context,
 }
 
 static int MissionVariablesDeleteProperty(JSContext* context,
-                                          JSValueConst object, JSAtom propID) {
+                                          JSValueConst /*object*/,
+                                          JSAtom propID) {
   try {
     PlayerEntity* player = OOPlayerForScripting();
 
@@ -254,7 +256,7 @@ static int MissionVariablesDeleteProperty(JSContext* context,
 
 static JSValue MissionVariablesGetProperty(JSContext* context,
                                            JSValueConst object, JSAtom propID,
-                                           JSValueConst receiver) {
+                                           JSValueConst /*receiver*/) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key =
@@ -314,9 +316,11 @@ static bool SetMissionVariable(JSContext* context, JSAtom propID,
   return true;
 }
 
-static int MissionVariablesSetProperty(JSContext* context, JSValueConst object,
-                                       JSAtom propID, JSValueConst value,
-                                       JSValueConst receiver, int flags) {
+static int MissionVariablesSetProperty(JSContext* context,
+                                       JSValueConst /*object*/, JSAtom propID,
+                                       JSValueConst value,
+                                       JSValueConst /*receiver*/,
+                                       int /*flags*/) {
   try {
     return SetMissionVariable(context, propID, value) ? true : -1;
   } catch (...) {
@@ -326,10 +330,11 @@ static int MissionVariablesSetProperty(JSContext* context, JSValueConst object,
 }
 
 static int MissionVariablesDefineOwnProperty(JSContext* context,
-                                             JSValueConst object, JSAtom propID,
-                                             JSValueConst value,
-                                             JSValueConst getter,
-                                             JSValueConst setter, int flags) {
+                                             JSValueConst /*object*/,
+                                             JSAtom propID, JSValueConst value,
+                                             JSValueConst /*getter*/,
+                                             JSValueConst /*setter*/,
+                                             int flags) {
   /*	Object.defineProperty() and friends. Mission variables can't be
           accessors; a defined value is stored like an assignment.
   */

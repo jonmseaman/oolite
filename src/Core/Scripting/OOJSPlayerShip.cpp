@@ -1359,7 +1359,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 // *** Methods ***
 
 // launch()
-static JSValue PlayerShipLaunch(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipLaunch(JSContext* context, JSValueConst /*oojsThis*/,
+                                int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOIsPlayerStale()) [[unlikely]]
@@ -1373,7 +1374,9 @@ static JSValue PlayerShipLaunch(OOJS_NATIVE_ARGS) {
 }
 
 // removeAllCargo()
-static JSValue PlayerShipRemoveAllCargo(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipRemoveAllCargo(JSContext* context,
+                                        JSValueConst /*oojsThis*/, int /*argc*/,
+                                        JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOIsPlayerStale()) [[unlikely]]
@@ -1394,7 +1397,9 @@ static JSValue PlayerShipRemoveAllCargo(OOJS_NATIVE_ARGS) {
 }
 
 // useSpecialCargo(name : String)
-static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipUseSpecialCargo(JSContext* context,
+                                         JSValueConst /*oojsThis*/, int argc,
+                                         JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOIsPlayerStale()) [[unlikely]]
@@ -1420,7 +1425,10 @@ static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS) {
 }
 
 // engageAutopilotToStation(stationForDocking : Station) : Boolean
-static JSValue PlayerShipEngageAutopilotToStation(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipEngageAutopilotToStation(JSContext* context,
+                                                  JSValueConst /*oojsThis*/,
+                                                  int argc,
+                                                  JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOIsPlayerStale()) [[unlikely]]
@@ -1447,7 +1455,10 @@ static JSValue PlayerShipEngageAutopilotToStation(OOJS_NATIVE_ARGS) {
 }
 
 // disengageAutopilot()
-static JSValue PlayerShipDisengageAutopilot(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipDisengageAutopilot(JSContext* context,
+                                            JSValueConst /*oojsThis*/,
+                                            int /*argc*/,
+                                            JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOIsPlayerStale()) [[unlikely]]
@@ -1460,7 +1471,10 @@ static JSValue PlayerShipDisengageAutopilot(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue PlayerShipRequestDockingClearance(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipRequestDockingClearance(JSContext* context,
+                                                 JSValueConst /*oojsThis*/,
+                                                 int argc,
+                                                 JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOIsPlayerStale()) [[unlikely]]
@@ -1485,7 +1499,10 @@ static JSValue PlayerShipRequestDockingClearance(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue PlayerShipCancelDockingRequest(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipCancelDockingRequest(JSContext* context,
+                                              JSValueConst /*oojsThis*/,
+                                              int argc,
+                                              JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOIsPlayerStale()) [[unlikely]]
@@ -1511,7 +1528,10 @@ static JSValue PlayerShipCancelDockingRequest(OOJS_NATIVE_ARGS) {
 }
 
 // awardEquipmentToCurrentPylon(externalTank: equipmentInfoExpression) : Boolean
-static JSValue PlayerShipAwardEquipmentToCurrentPylon(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipAwardEquipmentToCurrentPylon(JSContext* context,
+                                                      JSValueConst /*oojsThis*/,
+                                                      int argc,
+                                                      JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOIsPlayerStale()) [[unlikely]]
@@ -1542,7 +1562,9 @@ static JSValue PlayerShipAwardEquipmentToCurrentPylon(OOJS_NATIVE_ARGS) {
 
 // addPassenger(name: string, start: int, destination: int, ETA: double, fee:
 // double) : Boolean
-static JSValue PlayerShipAddPassenger(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipAddPassenger(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int argc,
+                                      JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1585,7 +1607,9 @@ static JSValue PlayerShipAddPassenger(OOJS_NATIVE_ARGS) {
 }
 
 // removePassenger(name :string)
-static JSValue PlayerShipRemovePassenger(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipRemovePassenger(JSContext* context,
+                                         JSValueConst /*oojsThis*/, int argc,
+                                         JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1612,7 +1636,9 @@ static JSValue PlayerShipRemovePassenger(OOJS_NATIVE_ARGS) {
 
 // addParcel(description: string, start: int, destination: int, ETA: double,
 // fee: double) : Boolean
-static JSValue PlayerShipAddParcel(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipAddParcel(JSContext* context,
+                                   JSValueConst /*oojsThis*/, int argc,
+                                   JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1651,7 +1677,9 @@ static JSValue PlayerShipAddParcel(OOJS_NATIVE_ARGS) {
 }
 
 // removeParcel(description :string)
-static JSValue PlayerShipRemoveParcel(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipRemoveParcel(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int argc,
+                                      JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1677,7 +1705,9 @@ static JSValue PlayerShipRemoveParcel(OOJS_NATIVE_ARGS) {
 
 // awardContract(quantity: int, commodity: string, start: int, destination: int,
 // eta: double, fee: double) : Boolean
-static JSValue PlayerShipAwardContract(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipAwardContract(JSContext* context,
+                                       JSValueConst /*oojsThis*/, int argc,
+                                       JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1723,7 +1753,9 @@ static JSValue PlayerShipAwardContract(OOJS_NATIVE_ARGS) {
 }
 
 // removeContract(commodity: string, destination: int)
-static JSValue PlayerShipRemoveContract(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipRemoveContract(JSContext* context,
+                                        JSValueConst /*oojsThis*/, int argc,
+                                        JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1762,7 +1794,9 @@ static JSValue PlayerShipRemoveContract(OOJS_NATIVE_ARGS) {
 }
 
 // setCustomView(position:vector, orientation:quaternion [, weapon:string])
-static JSValue PlayerShipSetCustomView(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipSetCustomView(JSContext* context,
+                                       JSValueConst /*oojsThis*/, int argc,
+                                       JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1833,7 +1867,10 @@ static JSValue PlayerShipSetCustomView(OOJS_NATIVE_ARGS) {
 }
 
 // resetCustomView()
-static JSValue PlayerShipResetCustomView(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipResetCustomView(JSContext* context,
+                                         JSValueConst /*oojsThis*/,
+                                         int /*argc*/,
+                                         JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1856,7 +1893,10 @@ static JSValue PlayerShipResetCustomView(OOJS_NATIVE_ARGS) {
 }
 
 // resetScannerZoom()
-static JSValue PlayerShipResetScannerZoom(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipResetScannerZoom(JSContext* context,
+                                          JSValueConst /*oojsThis*/,
+                                          int /*argc*/,
+                                          JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1868,7 +1908,10 @@ static JSValue PlayerShipResetScannerZoom(OOJS_NATIVE_ARGS) {
 }
 
 // takeInternalDamage()
-static JSValue PlayerShipTakeInternalDamage(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipTakeInternalDamage(JSContext* context,
+                                            JSValueConst /*oojsThis*/,
+                                            int /*argc*/,
+                                            JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1880,7 +1923,10 @@ static JSValue PlayerShipTakeInternalDamage(OOJS_NATIVE_ARGS) {
 }
 
 // beginHyperspaceCountdown([int: spin_time])
-static JSValue PlayerShipBeginHyperspaceCountdown(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipBeginHyperspaceCountdown(JSContext* context,
+                                                  JSValueConst /*oojsThis*/,
+                                                  int argc,
+                                                  JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1920,7 +1966,10 @@ static JSValue PlayerShipBeginHyperspaceCountdown(OOJS_NATIVE_ARGS) {
 }
 
 // cancelHyperspaceCountdown()
-static JSValue PlayerShipCancelHyperspaceCountdown(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipCancelHyperspaceCountdown(JSContext* context,
+                                                   JSValueConst /*oojsThis*/,
+                                                   int /*argc*/,
+                                                   JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1938,7 +1987,9 @@ static JSValue PlayerShipCancelHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue PlayerShipBeginGalacticHyperspaceCountdown(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipBeginGalacticHyperspaceCountdown(
+    JSContext* context, JSValueConst /*oojsThis*/, int argc,
+    JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1982,7 +2033,10 @@ static JSValue PlayerShipBeginGalacticHyperspaceCountdown(OOJS_NATIVE_ARGS) {
 }
 
 // setMultiFunctionDisplay(index,key)
-static JSValue PlayerShipSetMultiFunctionDisplay(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipSetMultiFunctionDisplay(JSContext* context,
+                                                 JSValueConst /*oojsThis*/,
+                                                 int argc,
+                                                 JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
@@ -2012,7 +2066,10 @@ static JSValue PlayerShipSetMultiFunctionDisplay(OOJS_NATIVE_ARGS) {
 }
 
 // setMultiFunctionText(key,value)
-static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipSetMultiFunctionText(JSContext* context,
+                                              JSValueConst /*oojsThis*/,
+                                              int argc,
+                                              JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
@@ -2052,7 +2109,9 @@ static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS) {
 }
 
 // setPrimedEquipment(key, [noMessage])
-static JSValue PlayerShipSetPrimedEquipment(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipSetPrimedEquipment(JSContext* context,
+                                            JSValueConst /*oojsThis*/, int argc,
+                                            JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
@@ -2085,7 +2144,9 @@ static JSValue PlayerShipSetPrimedEquipment(OOJS_NATIVE_ARGS) {
 }
 
 // setCustomHUDDial(key,value)
-static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipSetCustomHUDDial(JSContext* context,
+                                          JSValueConst /*oojsThis*/, int argc,
+                                          JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
@@ -2114,7 +2175,9 @@ static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue PlayerShipHideHUDSelector(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipHideHUDSelector(JSContext* context,
+                                         JSValueConst /*oojsThis*/, int argc,
+                                         JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
@@ -2137,7 +2200,9 @@ static JSValue PlayerShipHideHUDSelector(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue PlayerShipShowHUDSelector(OOJS_NATIVE_ARGS) {
+static JSValue PlayerShipShowHUDSelector(JSContext* context,
+                                         JSValueConst /*oojsThis*/, int argc,
+                                         JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;

@@ -331,7 +331,8 @@ static int ManifestDeleteProperty(JSContext* context, JSValueConst object,
   }
 }
 
-static JSValue ManifestComment(OOJS_NATIVE_ARGS) {
+static JSValue ManifestComment(JSContext* context, JSValueConst /*oojsThis*/,
+                               int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> good;
@@ -358,7 +359,8 @@ static JSValue ManifestComment(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue ManifestSetComment(OOJS_NATIVE_ARGS) {
+static JSValue ManifestSetComment(JSContext* context, JSValueConst /*oojsThis*/,
+                                  int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   bool OK;
@@ -387,7 +389,9 @@ static JSValue ManifestSetComment(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue ManifestShortComment(OOJS_NATIVE_ARGS) {
+static JSValue ManifestShortComment(JSContext* context,
+                                    JSValueConst /*oojsThis*/, int argc,
+                                    JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> good;
@@ -414,7 +418,9 @@ static JSValue ManifestShortComment(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue ManifestSetShortComment(OOJS_NATIVE_ARGS) {
+static JSValue ManifestSetShortComment(JSContext* context,
+                                       JSValueConst /*oojsThis*/, int argc,
+                                       JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   bool OK;

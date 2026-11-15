@@ -1136,7 +1136,10 @@ static JSValue SystemInfoSetPropertyMethod(OOJS_NATIVE_ARGS) {
 }
 
 // filteredSystems(this : Object, predicate : Function) : Array
-static JSValue SystemInfoStaticFilteredSystems(OOJS_NATIVE_ARGS) {
+static JSValue SystemInfoStaticFilteredSystems(JSContext* context,
+                                               JSValueConst /*oojsThis*/,
+                                               int argc,
+                                               JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   /*	SpiderMonkey version converted the this argument with
@@ -1217,7 +1220,9 @@ static JSValue SystemInfoStaticFilteredSystems(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue SystemInfoStaticSetInterstellarProperty(OOJS_NATIVE_ARGS) {
+static JSValue SystemInfoStaticSetInterstellarProperty(
+    JSContext* context, JSValueConst /*oojsThis*/, int argc,
+    JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> property;

@@ -221,7 +221,8 @@ static JSValue GlobalSetProperty(OOJS_SETTER_ARGS) {
 // *** Methods ***
 
 // log([messageClass : String,] message : string, ...)
-static JSValue GlobalLog(OOJS_NATIVE_ARGS) {
+static JSValue GlobalLog(JSContext* context, JSValueConst /*oojsThis*/,
+                         int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> message;
@@ -268,7 +269,9 @@ static JSValue GlobalLog(OOJS_NATIVE_ARGS) {
 
 // expandDescription(description : String [, overrides : object (dictionary)]) :
 // String
-static JSValue GlobalExpandDescription(OOJS_NATIVE_ARGS) {
+static JSValue GlobalExpandDescription(JSContext* context,
+                                       JSValueConst /*oojsThis*/, int argc,
+                                       JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> string;
@@ -296,7 +299,9 @@ static JSValue GlobalExpandDescription(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue GlobalKeyBindingDescription(OOJS_NATIVE_ARGS) {
+static JSValue GlobalKeyBindingDescription(JSContext* context,
+                                           JSValueConst /*oojsThis*/, int argc,
+                                           JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> string;
@@ -322,7 +327,9 @@ static JSValue GlobalKeyBindingDescription(OOJS_NATIVE_ARGS) {
 
 // expandMissionText(textKey : String [, overrides : object (dictionary)]) :
 // String
-static JSValue GlobalExpandMissionText(OOJS_NATIVE_ARGS) {
+static JSValue GlobalExpandMissionText(JSContext* context,
+                                       JSValueConst /*oojsThis*/, int argc,
+                                       JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> string;
@@ -354,7 +361,9 @@ static JSValue GlobalExpandMissionText(OOJS_NATIVE_ARGS) {
 }
 
 // displayNameForCommodity(commodityName : String) : String
-static JSValue GlobalDisplayNameForCommodity(OOJS_NATIVE_ARGS) {
+static JSValue GlobalDisplayNameForCommodity(JSContext* context,
+                                             JSValueConst /*oojsThis*/,
+                                             int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> string;
@@ -372,7 +381,8 @@ static JSValue GlobalDisplayNameForCommodity(OOJS_NATIVE_ARGS) {
 }
 
 // randomName() : String
-static JSValue GlobalRandomName(OOJS_NATIVE_ARGS) {
+static JSValue GlobalRandomName(JSContext* context, JSValueConst /*oojsThis*/,
+                                int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   /*	Temporarily set the system generation seed to a "really random" seed,
@@ -394,7 +404,10 @@ static JSValue GlobalRandomName(OOJS_NATIVE_ARGS) {
 }
 
 // randomInhabitantsDescription() : String
-static JSValue GlobalRandomInhabitantsDescription(OOJS_NATIVE_ARGS) {
+static JSValue GlobalRandomInhabitantsDescription(JSContext* context,
+                                                  JSValueConst /*oojsThis*/,
+                                                  int argc,
+                                                  JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> string;
@@ -419,7 +432,9 @@ static JSValue GlobalRandomInhabitantsDescription(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue GlobalClearExtraGuiScreenKeys(OOJS_NATIVE_ARGS) {
+static JSValue GlobalClearExtraGuiScreenKeys(JSContext* context,
+                                             JSValueConst /*oojsThis*/,
+                                             int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   bool result = false;
@@ -469,7 +484,9 @@ static JSValue GetParam(JSContext* context, JSValueConst object,
   return value;
 }
 
-static JSValue GlobalSetExtraGuiScreenKeys(OOJS_NATIVE_ARGS) {
+static JSValue GlobalSetExtraGuiScreenKeys(JSContext* context,
+                                           JSValueConst /*oojsThis*/, int argc,
+                                           JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   bool result = false;
@@ -616,7 +633,9 @@ static JSValue GlobalSetExtraGuiScreenKeys(OOJS_NATIVE_ARGS) {
 }
 
 // setScreenBackground(descriptor : guiTextureDescriptor) : Boolean
-static JSValue GlobalSetScreenBackground(OOJS_NATIVE_ARGS) {
+static JSValue GlobalSetScreenBackground(JSContext* context,
+                                         JSValueConst /*oojsThis*/, int argc,
+                                         JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   bool result = false;
@@ -655,7 +674,10 @@ static JSValue GlobalSetScreenBackground(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue GlobalGetScreenBackgroundForKey(OOJS_NATIVE_ARGS) {
+static JSValue GlobalGetScreenBackgroundForKey(JSContext* context,
+                                               JSValueConst /*oojsThis*/,
+                                               int argc,
+                                               JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (argc == 0) [[unlikely]] {
@@ -678,7 +700,10 @@ static JSValue GlobalGetScreenBackgroundForKey(OOJS_NATIVE_ARGS) {
 
 // setScreenBackgroundDefault (key : String, descriptor : guiTextureDescriptor)
 // : boolean
-static JSValue GlobalSetScreenBackgroundForKey(OOJS_NATIVE_ARGS) {
+static JSValue GlobalSetScreenBackgroundForKey(JSContext* context,
+                                               JSValueConst /*oojsThis*/,
+                                               int argc,
+                                               JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   bool result = false;
@@ -713,7 +738,9 @@ static JSValue GlobalSetScreenBackgroundForKey(OOJS_NATIVE_ARGS) {
 }
 
 // setScreenOverlay(descriptor : guiTextureDescriptor) : Boolean
-static JSValue GlobalSetScreenOverlay(OOJS_NATIVE_ARGS) {
+static JSValue GlobalSetScreenOverlay(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int argc,
+                                      JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   bool result = false;
@@ -745,7 +772,10 @@ static JSValue GlobalSetScreenOverlay(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue GlobalGetGuiColorSettingForKey(OOJS_NATIVE_ARGS) {
+static JSValue GlobalGetGuiColorSettingForKey(JSContext* context,
+                                              JSValueConst /*oojsThis*/,
+                                              int argc,
+                                              JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (argc == 0) [[unlikely]] {
@@ -780,7 +810,10 @@ static JSValue GlobalGetGuiColorSettingForKey(OOJS_NATIVE_ARGS) {
 }
 
 // setGuiColorForKey(descriptor : OOColor) : boolean
-static JSValue GlobalSetGuiColorSettingForKey(OOJS_NATIVE_ARGS) {
+static JSValue GlobalSetGuiColorSettingForKey(JSContext* context,
+                                              JSValueConst /*oojsThis*/,
+                                              int argc,
+                                              JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   bool result = false;
@@ -825,7 +858,8 @@ static JSValue GlobalSetGuiColorSettingForKey(OOJS_NATIVE_ARGS) {
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 // takeSnapShot([name : alphanumeric String]) : Boolean
-static JSValue GlobalTakeSnapShot(OOJS_NATIVE_ARGS) {
+static JSValue GlobalTakeSnapShot(JSContext* context, JSValueConst /*oojsThis*/,
+                                  int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> value;
@@ -893,7 +927,9 @@ static JSValue GlobalTakeSnapShot(OOJS_NATIVE_ARGS) {
 #endif
 
 // autoAIForRole(role : String) : String
-static JSValue GlobalAutoAIForRole(OOJS_NATIVE_ARGS) {
+static JSValue GlobalAutoAIForRole(JSContext* context,
+                                   JSValueConst /*oojsThis*/, int argc,
+                                   JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> string;
@@ -916,7 +952,8 @@ static JSValue GlobalAutoAIForRole(OOJS_NATIVE_ARGS) {
 }
 
 // pauseGame() : Boolean
-static JSValue GlobalPauseGame(OOJS_NATIVE_ARGS) {
+static JSValue GlobalPauseGame(JSContext* context, JSValueConst /*oojsThis*/,
+                               int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   bool result = false;
@@ -943,7 +980,8 @@ static JSValue GlobalPauseGame(OOJS_NATIVE_ARGS) {
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 // quitGame() : Boolean
-static JSValue GlobalQuitGame(OOJS_NATIVE_ARGS) {
+static JSValue GlobalQuitGame(JSContext* context, JSValueConst /*oojsThis*/,
+                              int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OO_LOG("script.debug.quit", "{}",

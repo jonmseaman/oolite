@@ -147,7 +147,8 @@ void InitOOJSSoundSource(JSContext* context, JSValueConst global) {
   OOJSRegisterObjectConverter(sSoundSourceClassID, SoundSourceConverter);
 }
 
-static JSValue SoundSourceConstruct(OOJS_NATIVE_ARGS) {
+static JSValue SoundSourceConstruct(JSContext* context, JSValueConst oojsThis,
+                                    int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   if (!OOJS_IS_CONSTRUCTING) [[unlikely]] {
@@ -292,7 +293,8 @@ static JSValue SoundSourceSetProperty(OOJS_SETTER_ARGS) {
 // *** Methods ***
 
 // toString() : String
-static JSValue SoundSourceToString(OOJS_NATIVE_ARGS) {
+static JSValue SoundSourceToString(JSContext* context, JSValueConst oojsThis,
+                                   int /*argc*/, JSValueConst* /*oojsArgv*/) {
   return OOJSCxxObjectWrapperToString(context, OOJS_THIS, sSoundSourceClassID);
 }
 
@@ -327,7 +329,8 @@ static JSValue SoundSourcePlay(OOJS_NATIVE_ARGS) {
 }
 
 // stop()
-static JSValue SoundSourceStop(OOJS_NATIVE_ARGS) {
+static JSValue SoundSourceStop(JSContext* context, JSValueConst oojsThis,
+                               int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOSoundSource* thisv = nullptr;  // null for SoundSource.prototype
@@ -345,7 +348,9 @@ static JSValue SoundSourceStop(OOJS_NATIVE_ARGS) {
 }
 
 // playOrRepeat()
-static JSValue SoundSourcePlayOrRepeat(OOJS_NATIVE_ARGS) {
+static JSValue SoundSourcePlayOrRepeat(JSContext* context,
+                                       JSValueConst oojsThis, int /*argc*/,
+                                       JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOSoundSource* thisv = nullptr;  // null for SoundSource.prototype

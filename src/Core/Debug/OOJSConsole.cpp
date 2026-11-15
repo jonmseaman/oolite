@@ -637,15 +637,16 @@ static std::optional<std::string> SettingKeyForPropertyID(JSContext* context,
         (the enumerate hook was a stub), so for-in and Object.keys() see
    nothing.
 */
-static int ConsoleSettingsGetOwnProperty(JSContext* context,
-                                         JSPropertyDescriptor* desc,
-                                         JSValueConst object, JSAtom propID) {
+static int ConsoleSettingsGetOwnProperty(JSContext* /*context*/,
+                                         JSPropertyDescriptor* /*desc*/,
+                                         JSValueConst /*object*/,
+                                         JSAtom /*propID*/) {
   return false;
 }
 
 static JSValue ConsoleSettingsGetProperty(JSContext* context,
                                           JSValueConst object, JSAtom propID,
-                                          JSValueConst receiver) {
+                                          JSValueConst /*receiver*/) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key = SettingKeyForPropertyID(context, propID);
@@ -699,7 +700,8 @@ static int SetSetting(JSContext* context, JSValueConst object, JSAtom propID,
 
 static int ConsoleSettingsSetProperty(JSContext* context, JSValueConst object,
                                       JSAtom propID, JSValueConst value,
-                                      JSValueConst receiver, int flags) {
+                                      JSValueConst /*receiver*/,
+                                      int /*flags*/) {
   try {
     return SetSetting(context, object, propID, value);
   } catch (...) {
@@ -709,11 +711,9 @@ static int ConsoleSettingsSetProperty(JSContext* context, JSValueConst object,
 }
 
 // Object.defineProperty() and similar: treated as assignment of the value.
-static int ConsoleSettingsDefineOwnProperty(JSContext* context,
-                                            JSValueConst object, JSAtom propID,
-                                            JSValueConst value,
-                                            JSValueConst getter,
-                                            JSValueConst setter, int flags) {
+static int ConsoleSettingsDefineOwnProperty(
+    JSContext* context, JSValueConst object, JSAtom propID, JSValueConst value,
+    JSValueConst /*getter*/, JSValueConst /*setter*/, int flags) {
   try {
     if (!(flags & JS_PROP_HAS_VALUE)) return true;
     return SetSetting(context, object, propID, value);
@@ -799,7 +799,8 @@ static JSValue ConsoleConsoleMessage(OOJS_NATIVE_ARGS) {
 }
 
 // function clearConsole() : void
-static JSValue ConsoleClearConsole(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleClearConsole(JSContext* context, JSValueConst oojsThis,
+                                   int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OODebugMonitor* monitor =
@@ -813,7 +814,8 @@ static JSValue ConsoleClearConsole(OOJS_NATIVE_ARGS) {
 }
 
 // function scriptStack() : Array
-static JSValue ConsoleScriptStack(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleScriptStack(JSContext* context, JSValueConst /*oojsThis*/,
+                                  int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   // The scripts' nodes (a script that has gone, which a timer or definition
@@ -827,7 +829,9 @@ static JSValue ConsoleScriptStack(OOJS_NATIVE_ARGS) {
 }
 
 // function inspectEntity(entity : Entity) : void
-static JSValue ConsoleInspectEntity(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleInspectEntity(JSContext* context,
+                                    JSValueConst /*oojsThis*/, int argc,
+                                    JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   Entity* cxxEntity = nullptr;  // the C++ entity
@@ -1074,7 +1078,9 @@ static JSValue ConsoleCallObjCMethod(OOJS_NATIVE_ARGS) {
 }
 
 // function __setUpCallObjC(object) -- object is expected to be Object.prototye.
-static JSValue ConsoleSetUpCallObjC(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleSetUpCallObjC(JSContext* context,
+                                    JSValueConst /*oojsThis*/, int argc,
+                                    JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (argc < 1 || !JS_IsObject(OOJS_ARGV[0])) [[unlikely]] {
@@ -1140,7 +1146,9 @@ static bool IsIncompleteSyntaxError(JSContext* context, JSValueConst exception,
 }
 
 // function isExecutableJavaScript(this : Object, string : String) : Boolean
-static JSValue ConsoleIsExecutableJavaScript(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleIsExecutableJavaScript(JSContext* context,
+                                             JSValueConst /*oojsThis*/,
+                                             int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   bool result = true;
@@ -1176,7 +1184,9 @@ static JSValue ConsoleIsExecutableJavaScript(OOJS_NATIVE_ARGS) {
 }
 
 // function displayMessagesInClass(class : String) : Boolean
-static JSValue ConsoleDisplayMessagesInClass(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleDisplayMessagesInClass(JSContext* context,
+                                             JSValueConst /*oojsThis*/,
+                                             int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> messageClass;
@@ -1189,7 +1199,10 @@ static JSValue ConsoleDisplayMessagesInClass(OOJS_NATIVE_ARGS) {
 }
 
 // function setDisplayMessagesInClass(class : String, flag : Boolean) : void
-static JSValue ConsoleSetDisplayMessagesInClass(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleSetDisplayMessagesInClass(JSContext* context,
+                                                JSValueConst /*oojsThis*/,
+                                                int argc,
+                                                JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> messageClass;
@@ -1205,7 +1218,9 @@ static JSValue ConsoleSetDisplayMessagesInClass(OOJS_NATIVE_ARGS) {
 }
 
 // function writeLogMarker() : void
-static JSValue ConsoleWriteLogMarker(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleWriteLogMarker(JSContext* context,
+                                     JSValueConst /*oojsThis*/, int /*argc*/,
+                                     JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOLogInsertMarker();
@@ -1215,7 +1230,9 @@ static JSValue ConsoleWriteLogMarker(OOJS_NATIVE_ARGS) {
 }
 
 // function writeMemoryStats() : void
-static JSValue ConsoleWriteMemoryStats(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleWriteMemoryStats(JSContext* context,
+                                       JSValueConst /*oojsThis*/, int /*argc*/,
+                                       JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -1228,7 +1245,10 @@ static JSValue ConsoleWriteMemoryStats(OOJS_NATIVE_ARGS) {
 }
 
 // function writeJSMemoryStats() : void
-static JSValue ConsoleWriteJSMemoryStats(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleWriteJSMemoryStats(JSContext* context,
+                                         JSValueConst /*oojsThis*/,
+                                         int /*argc*/,
+                                         JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -1247,7 +1267,9 @@ static size_t JSHeapSize(JSRuntime* runtime) {
 }
 
 // function garbageCollect() : string
-static JSValue ConsoleGarbageCollect(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleGarbageCollect(JSContext* context,
+                                     JSValueConst /*oojsThis*/, int /*argc*/,
+                                     JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   JSRuntime* runtime = JS_GetRuntime(context);
@@ -1262,7 +1284,8 @@ static JSValue ConsoleGarbageCollect(OOJS_NATIVE_ARGS) {
 }
 
 #if DEBUG
-static JSValue ConsoleDumpHeap(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleDumpHeap(JSContext* context, JSValueConst /*oojsThis*/,
+                               int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   bool OK = false;
@@ -1292,7 +1315,8 @@ static JSValue ConsoleDumpHeap(OOJS_NATIVE_ARGS) {
 
 // function profile(func : function [, Object this = debugConsole.script]) :
 // String
-static JSValue ConsoleProfile(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleProfile(JSContext* context, JSValueConst /*oojsThis*/,
+                              int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOJSIsProfiling()) [[unlikely]] {
@@ -1325,7 +1349,8 @@ static JSValue ConsoleProfile(OOJS_NATIVE_ARGS) {
 
 // function getProfile(func : function [, Object this = debugConsole.script]) :
 // Object { totalTime : Number, jsTime : Number, extensionTime : Number }
-static JSValue ConsoleGetProfile(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleGetProfile(JSContext* context, JSValueConst /*oojsThis*/,
+                                 int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOJSIsProfiling()) [[unlikely]] {
@@ -1355,7 +1380,8 @@ static JSValue ConsoleGetProfile(OOJS_NATIVE_ARGS) {
 
 // function trace(func : function [, Object this = debugConsole.script]) :
 // [return type of func]
-static JSValue ConsoleTrace(OOJS_NATIVE_ARGS) {
+static JSValue ConsoleTrace(JSContext* context, JSValueConst /*oojsThis*/,
+                            int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (OOJSIsProfiling()) [[unlikely]] {
