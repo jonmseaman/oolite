@@ -92,6 +92,7 @@ MA 02110-1301, USA.
 #include "ResourceManager.h"
 #include "ShipEntityAI.h"
 #include "SkyEntity.h"
+#include "SpeechSynthesizer.h"
 #include "StationEntity.h"
 #include "WormholeEntity.h"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -375,15 +376,7 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView,
 
   // Set up speech synthesizer.
 #if OOLITE_SPEECH_SYNTH
-#if OOLITE_ESPEAK
-  int volume = ::OOSound::masterVolume() * 100;
-  espeak_SetParameter(espeakPUNCTUATION, espeakPUNCT_NONE, 0);
-  espeak_SetParameter(espeakVOLUME, volume, 0);
-  espeak_voices = espeak_ListVoices(nullptr);
-  for (espeak_voice_count = 0; espeak_voices[espeak_voice_count];
-       ++espeak_voice_count)
-    /**/;
-#endif
+  oo::SpeechSynthesizer::shared().loadVoices(::OOSound::masterVolume() * 100);
 #endif
 
   ::GameController::sharedController()->logProgress(OO_DESC("loading-ships"));
@@ -505,9 +498,7 @@ void Universe::dealloc() {
 
 #if OOLITE_SPEECH_SYNTH
   speechArray = oo::PList();
-#if OOLITE_ESPEAK
-  espeak_Cancel();
-#endif
+  oo::SpeechSynthesizer::shared().stop();
 #endif
 
   deleteOpenGLObjects();
@@ -7286,10 +7277,9 @@ void Universe::speakWithSubstitutions(const std::optional<std::string>& text) {
           const std::optional<std::string> original_phrase =
               OptionalStringAt(thePair, 0);
 
-          std::size_t replacementIndex;
-#if OOLITE_ESPEAK
-          replacementIndex = thePair.count() > 2 ? 2 : 1;
-#endif
+          const std::size_t replacementIndex =
+              oo::SpeechSynthesizer::shared().pronunciationColumn(
+                  thePair.count());
 
           const std::optional<std::string> replacement_phrase =
               OptionalStringAt(thePair, replacementIndex);
@@ -10468,75 +10458,36 @@ void Universe::setAirResistanceFactor(GLfloat newFactor) {
   airResistanceFactor = OOClamp_0_1_f(newFactor);
 }
 
-// The speech arms. The Mac's is not built.
-#if OOLITE_ESPEAK
-
+// Speech: oo::SpeechSynthesizer's, forwarded.
 void Universe::startSpeakingString(const std::string& text) {
-  // the UTF-8 bytes of the text, up to its first NUL (as strlen measured it)
-  espeak_Synth(
-      text.c_str(), std::string_view(text.c_str()).size() + 1 /* inc. NULL */,
-      0, POS_CHARACTER, 0, espeakCHARS_UTF8 | espeakPHONEMES | espeakENDPAUSE,
-      nullptr, nullptr);
+  oo::SpeechSynthesizer::shared().speak(text);
 }
 
-void Universe::stopSpeaking() { espeak_Cancel(); }
+void Universe::stopSpeaking() { oo::SpeechSynthesizer::shared().stop(); }
 
-bool Universe::isSpeaking() { return espeak_IsPlaying(); }
+bool Universe::isSpeaking() {
+  return oo::SpeechSynthesizer::shared().isSpeaking();
+}
 
 std::optional<std::string> Universe::voiceName(unsigned int index) {
-  if (index >= espeak_voice_count) return std::string("-");
-  return std::string(espeak_voices[index]->name);
+  return oo::SpeechSynthesizer::shared().voiceName(index);
 }
 
 unsigned int Universe::voiceNumber(const std::string& name) {
-  // clang-tidy's own fixes (bugprone-inc-dec-in-conditions,
-  // bugprone-suspicious-string-compare), as the line changed: the same search
-  // from the first voice.
-  unsigned int index = 0;
-  while (espeak_voices[index] &&
-         std::string_view(espeak_voices[index]->name) != name)
-    ++index;
-  return (index < espeak_voice_count) ? index : UINT_MAX;
+  return oo::SpeechSynthesizer::shared().voiceNumber(name);
 }
 
 unsigned int Universe::nextVoice(unsigned int index) {
-  if (++index >= espeak_voice_count) index = 0;
-  return index;
+  return oo::SpeechSynthesizer::shared().nextVoice(index);
 }
 
 unsigned int Universe::prevVoice(unsigned int index) {
-  if (--index >= espeak_voice_count) index = espeak_voice_count - 1;
-  return index;
+  return oo::SpeechSynthesizer::shared().prevVoice(index);
 }
 
 unsigned int Universe::setVoice(unsigned int index, bool isMale) {
-  if (index == UINT_MAX)
-    index = voiceNumber(OOLookUpDescriptionPRIV("espeak-default-voice"));
-
-  if (index < espeak_voice_count) {
-    espeak_VOICE voice = {espeak_voices[index]->name,
-                          nullptr,
-                          nullptr,
-                          static_cast<unsigned char>(isMale ? 1 : 2),
-                          0,
-                          0,
-                          0,
-                          0,
-                          nullptr};
-    espeak_SetVoiceByProperties(&voice);
-  }
-
-  return index;
+  return oo::SpeechSynthesizer::shared().setVoice(index, isMale);
 }
-
-#else
-
-void Universe::startSpeakingString(const std::string& /*text*/) {}
-
-void Universe::stopSpeaking() {}
-
-bool Universe::isSpeaking() { return false; }
-#endif
 
 bool Universe::pauseMessageVisible() { return _pauseMessage; }
 

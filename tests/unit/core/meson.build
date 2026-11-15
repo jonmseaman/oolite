@@ -158,6 +158,7 @@ core_tests = {
     'test_GameController': ['*'],
     'test_Entity': ['*'],
     'test_Universe': ['*'],
+    'test_SpeechSynthesizer': ['*'],
     'test_ShipEntity': ['*'],
     'test_PlayerEntity': ['*'],
     'test_SaveEnumValues': ['*'],

@@ -66,11 +66,6 @@ MA 02110-1301, USA.
 
 class OOMaterial;
 
-#if OOLITE_ESPEAK
-#include <espeak-ng/speak_lib.h>
-
-#endif
-
 class Entity;
 namespace oo {
 class Exception;
@@ -470,10 +465,6 @@ class Universe : public oo::Object {
   std::size_t drawCounter = 0;
 
 #if OOLITE_SPEECH_SYNTH
-#if OOLITE_ESPEAK
-  const espeak_VOICE** espeak_voices = nullptr;
-  unsigned int espeak_voice_count = 0;
-#endif
   oo::PList speechArray;  // [original, replacement(, espeak replacement)] pairs
 #endif
 
@@ -958,18 +949,15 @@ class Universe : public oo::Object {
   void setUpSettings();
   void setUpCargoPods();
   void verifyEntitySessionIDs();
-#if 1  // every platform's arm is a member; the Mac's is not built
+  // Speech, forwarded to oo::SpeechSynthesizer (SpeechSynthesizer.h).
   void startSpeakingString(const std::string& text);
   void stopSpeaking();
   bool isSpeaking();
-#endif
-#if OOLITE_ESPEAK
   std::optional<std::string> voiceName(unsigned int index);
   unsigned int voiceNumber(const std::string& name);
   unsigned int nextVoice(unsigned int index);
   unsigned int prevVoice(unsigned int index);
   unsigned int setVoice(unsigned int index, bool isMale);
-#endif
 
   // Reinitialising and the demo, the initial universe, random
   // positions, removing entities, preloading sounds, wormhole population, graph
