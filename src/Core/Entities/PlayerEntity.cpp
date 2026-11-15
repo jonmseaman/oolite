@@ -434,7 +434,7 @@ PlayerEntity::PlayerEntity() = default;
 PlayerEntity::~PlayerEntity() = default;
 
 PlayerEntity* PlayerEntity::sharedPlayer() {
-  if (EXPECT_NOT(gOOPlayer == nullptr)) {
+  if (gOOPlayer == nullptr) [[unlikely]] {
     // kept for the process: a heap std::shared_ptr that is never deleted
     static std::shared_ptr<::ShipEntity>* gOOPlayerHolder =
         nullptr;  // never deleted
@@ -2026,10 +2026,11 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
         OOCargoQuantity partAmount = oldAmount;
         toRemove = 0;
         while (remainingExcess > 0 && partAmount > 0) {
-          if (EXPECT_NOT(roundedTon && ((units == OOMassUnit::kKilograms &&
-                                         partAmount > MAX_KILOGRAMS_IN_SAFE) ||
-                                        (units == OOMassUnit::kGrams &&
-                                         partAmount > MAX_GRAMS_IN_SAFE)))) {
+          if (roundedTon &&
+              ((units == OOMassUnit::kKilograms &&
+                partAmount > MAX_KILOGRAMS_IN_SAFE) ||
+               (units == OOMassUnit::kGrams && partAmount > MAX_GRAMS_IN_SAFE)))
+              [[unlikely]] {
             toRemove +=
                 (units == OOMassUnit::kKilograms)
                     ? (partAmount > (KILOGRAMS_PER_POD + MAX_KILOGRAMS_IN_SAFE)
@@ -2353,7 +2354,8 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
     if (gc != nullptr) gc->stopAnimationTimer();
   }  // start of critical section
 
-  if (EXPECT_NOT(!OOJavaScriptEngine::sharedEngine()->reset() && stopOnError)) {
+  if (!OOJavaScriptEngine::sharedEngine()->reset() && stopOnError)
+      [[unlikely]] {
     // always (try to) reset the engine, then find
     // out if we need to stop.
     /*
@@ -2814,7 +2816,7 @@ bool PlayerEntity::setUpShipFromDictionary(const oo::PList& shipDict) {
   // set view offsets
   setDefaultViewOffsets();
 
-  if (EXPECT(_scaleFactor == 1.0f)) {
+  if (_scaleFactor == 1.0f) [[likely]] {
     forwardViewOffset =
         VectorForKey(shipDict, "view_position_forward", forwardViewOffset);
     aftViewOffset = VectorForKey(shipDict, "view_position_aft", aftViewOffset);
@@ -2901,7 +2903,8 @@ GLfloat PlayerEntity::lookingAtSunWithThresholdAngleCos(
   GLfloat sunBrightness = 0.0f;
   Vector relativePosition, unitRelativePosition;
 
-  if (EXPECT_NOT(!sun)) return 0.0f;
+  if (!sun) [[unlikely]]
+    return 0.0f;
 
   // check if camera position is shadowed
   OOViewID vdir =
@@ -2915,8 +2918,8 @@ GLfloat PlayerEntity::lookingAtSunWithThresholdAngleCos(
       if (oo::EntityIsPlanet(uni_entities[i]) ||
           (oo::EntityIsShip(uni_entities[i]) && uni_entities[i]->isVisible())) {
         // the player ship can't shadow internal views
-        if (EXPECT(vdir > OOViewID::kStarboard ||
-                   !oo::EntityIsPlayer(uni_entities[i]))) {
+        if (vdir > OOViewID::kStarboard || !oo::EntityIsPlayer(uni_entities[i]))
+            [[likely]] {
           float shadow = 1.5f;
           shadowAtPointOcclusionToValue(viewpointPosition(), 1.0f,
                                         uni_entities[i], sun, &shadow);
@@ -3025,20 +3028,20 @@ void PlayerEntity::update(OOTimeDelta delta_t) {
   OOEntityStatus status = this->status();
   /* Validate that if the status is STATUS_START_GAME we're on one
    * of the few GUI screens which that makes sense for */
-  if (EXPECT_NOT(status == OOEntityStatus::kStartGame &&
-                 gui_screen != OOGUIScreenID::kIntro1 &&
-                 gui_screen != OOGUIScreenID::kShipLibrary &&
-                 gui_screen != OOGUIScreenID::kGameOptions &&
-                 gui_screen != OOGUIScreenID::kStickMapper &&
-                 gui_screen != OOGUIScreenID::kStickProfile &&
-                 gui_screen != OOGUIScreenID::kNewGame &&
-                 gui_screen != OOGUIScreenID::kOXZManager &&
-                 gui_screen != OOGUIScreenID::kLoad &&
-                 gui_screen != OOGUIScreenID::kKeyboard &&
-                 gui_screen != OOGUIScreenID::kKeyboardConfirmClear &&
-                 gui_screen != OOGUIScreenID::kKeyboardConfig &&
-                 gui_screen != OOGUIScreenID::kKeyboardEntry &&
-                 gui_screen != OOGUIScreenID::kKeyboardLayout)) {
+  if (status == OOEntityStatus::kStartGame &&
+      gui_screen != OOGUIScreenID::kIntro1 &&
+      gui_screen != OOGUIScreenID::kShipLibrary &&
+      gui_screen != OOGUIScreenID::kGameOptions &&
+      gui_screen != OOGUIScreenID::kStickMapper &&
+      gui_screen != OOGUIScreenID::kStickProfile &&
+      gui_screen != OOGUIScreenID::kNewGame &&
+      gui_screen != OOGUIScreenID::kOXZManager &&
+      gui_screen != OOGUIScreenID::kLoad &&
+      gui_screen != OOGUIScreenID::kKeyboard &&
+      gui_screen != OOGUIScreenID::kKeyboardConfirmClear &&
+      gui_screen != OOGUIScreenID::kKeyboardConfig &&
+      gui_screen != OOGUIScreenID::kKeyboardEntry &&
+      gui_screen != OOGUIScreenID::kKeyboardLayout) [[unlikely]] {
     // and if not, do a restart of the GUI
     UPDATE_STAGE("setGuiToIntroFirstGo:");
     setGuiToIntroFirstGo(true);  // set up demo mode
@@ -3344,7 +3347,7 @@ void PlayerEntity::doBookkeeping(double delta_t) {
      * This code branch doesn't seem to be used any more - see ~line 6000
      * Should we remove it? - CIM
      */
-    if (EXPECT_NOT(target_system_id != system_id)) {
+    if (target_system_id != system_id) [[unlikely]] {
       // overridden: we're going to a nearby system!
       system_id = target_system_id;
       info_system_id = target_system_id;
@@ -3604,7 +3607,7 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
     scannedEntity = my_entities[i];
 
 #if OO_VARIABLE_TORUS_SPEED
-    if (EXPECT_NOT(needHyperspeedNearest)) {
+    if (needHyperspeedNearest) [[unlikely]] {
       // not visual effects, waypoints, ships, etc.
       if (scannedEntity != this && scannedEntity->canCollide() &&
           (!oo::EntityIsShip(scannedEntity) ||
@@ -3650,7 +3653,7 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
     }
   }
 #if OO_VARIABLE_TORUS_SPEED
-  if (EXPECT_NOT(needHyperspeedNearest)) {
+  if (needHyperspeedNearest) [[unlikely]] {
     // this case should only occur in an otherwise empty
     // interstellar space - unlikely but possible
     hyperspeedFactor = MIN_HYPERSPEED_FACTOR;
@@ -3709,10 +3712,10 @@ bool PlayerEntity::checkEntityForMassLock(Entity* ent, OOScanClass theirClass) {
       oo::EntityIsShip(ent) &&
       (oo::ToShip(ent) != nullptr ? oo::ToShip(ent)->isCloaked() : false);
 
-  if (EXPECT_NOT(ent->isStellarObject())) {
+  if (ent->isStellarObject()) [[unlikely]] {
     Entity* stellar = ent;  // a sun or a planet
-    if (EXPECT(OOStellarBodyPlanetType(stellar) !=
-               OOStellarBodyType::kMiniature)) {
+    if (OOStellarBodyPlanetType(stellar) != OOStellarBodyType::kMiniature)
+        [[likely]] {
       double dist = stellar->zero_distance;
       double rad = stellar->collision_radius;
       double factor = (stellar->isSun()) ? 2.0 : 4.0;
@@ -3725,7 +3728,7 @@ bool PlayerEntity::checkEntityForMassLock(Entity* ent, OOScanClass theirClass) {
       }
     }
   } else if (theirClass != OOScanClass::kNoDraw) {
-    if (EXPECT_NOT(entIsCloakedShip)) {
+    if (entIsCloakedShip) [[unlikely]] {
       theirClass = OOScanClass::kNoDraw;
     }
   }
@@ -4138,8 +4141,8 @@ void PlayerEntity::performWitchspaceCountdownUpdates(OOTimeDelta delta_t) {
   /* TODO: this check should possibly be hasEquipmentItemProviding:,
    * but if it was we'd need to know which item was actually doing
    * the providing so it could be removed. */
-  if (EXPECT_NOT(galactic_witchjump &&
-                 !hasEquipmentItem(oo::PList("EQ_GAL_DRIVE")))) {
+  if (galactic_witchjump && !hasEquipmentItem(oo::PList("EQ_GAL_DRIVE")))
+      [[unlikely]] {
     galactic_witchjump = false;
     setStatus(OOEntityStatus::kInFlight);
     playHyperspaceAborted();
@@ -4650,7 +4653,7 @@ void PlayerEntity::applyRoll(GLfloat roll1, GLfloat climb1) {
   /*	Bugginess may put us in a state where the orientation quat is all
           zeros, at which point it’s impossible to move.
   */
-  if (EXPECT_NOT(quaternion_equal(orientation, kZeroQuaternion))) {
+  if (quaternion_equal(orientation, kZeroQuaternion)) [[unlikely]] {
     if (!quaternion_equal(lastOrientation, kZeroQuaternion)) {
       orientation = lastOrientation;
     } else {
@@ -4992,7 +4995,7 @@ GLfloat PlayerEntity::dialSpeed() {
 GLfloat PlayerEntity::dialHyperSpeed() { return flightSpeed / maxFlightSpeed; }
 
 GLfloat PlayerEntity::dialForwardShield() {
-  if (EXPECT_NOT(maxForwardShieldLevel() <= 0)) {
+  if (maxForwardShieldLevel() <= 0) [[unlikely]] {
     return 0.0;
   }
   GLfloat result = forward_shield / maxForwardShieldLevel();
@@ -5004,7 +5007,7 @@ GLfloat PlayerEntity::dialForwardShield() {
 // (Sends to self are member calls.)
 
 GLfloat PlayerEntity::dialAftShield() {
-  if (EXPECT_NOT(maxAftShieldLevel() <= 0)) {
+  if (maxAftShieldLevel() <= 0) [[unlikely]] {
     return 0.0;
   }
   GLfloat result = aft_shield / maxAftShieldLevel();
@@ -5375,7 +5378,7 @@ void PlayerEntity::validateCompassTarget() {
       new_target = the_planet;
     }
 
-    if (EXPECT_NOT(new_target != getCompassTargetEntity())) {
+    if (new_target != getCompassTargetEntity()) [[unlikely]] {
       setCompassTargetEntity(new_target);
       // a null target is left out of the argument array
       std::vector<oo::PList> compassArguments;
@@ -7578,7 +7581,7 @@ void PlayerEntity::enterGalacticWitchspace() {
   if (!witchJumpChecklist(true)) return;
 
   OOGalaxyID destGalaxy = galaxy_number + 1;
-  if (EXPECT_NOT(destGalaxy >= OO_GALAXIES_AVAILABLE)) {
+  if (destGalaxy >= OO_GALAXIES_AVAILABLE) [[unlikely]] {
     destGalaxy = 0;
   }
 
@@ -8143,8 +8146,8 @@ void PlayerEntity::setGuiToStatusScreen() {
 
   // Contributed by Pleb - show ship model if the appropriate user default key
   // has been set - Nikos 20140127
-  if (EXPECT_NOT(oo::Defaults::standard().boolForKey(
-          "show-ship-model-in-status-screen"))) {
+  if (oo::Defaults::standard().boolForKey("show-ship-model-in-status-screen"))
+      [[unlikely]] {
     if (UNIVERSE != nullptr) UNIVERSE->removeDemoShips();
     const std::optional<std::string> demoShipKey = shipDataKey();
     if (demoShipKey.has_value())
@@ -11898,7 +11901,7 @@ void PlayerEntity::setGuiToMarketInfoScreen() {
 
   // GUI stuff
   {
-    if (EXPECT_NOT(!marketSelectedCommodity.has_value())) {
+    if (!marketSelectedCommodity.has_value()) [[unlikely]] {
       j = oo::kNotFound;
     } else {
       j = IndexOfGood(goods, marketSelectedCommodity);
@@ -13537,7 +13540,7 @@ GLfloat PlayerEntity::fuelChargeRate() {
 
   // Experimental: the state of repair affects the fuel charge rate - more fuel
   // needed for jumps, etc...
-  if (EXPECT(ship_trade_in_factor <= 90 && ship_trade_in_factor >= 75)) {
+  if (ship_trade_in_factor <= 90 && ship_trade_in_factor >= 75) [[likely]] {
     const int tradeInHundreds =
         ship_trade_in_factor /
         100;                        // integer division kept: upstream behaviour

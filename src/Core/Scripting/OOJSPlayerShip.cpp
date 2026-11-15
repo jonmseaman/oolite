@@ -525,8 +525,8 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
           object that isn't player.ship, such as the this of a detached getter
           call) has no private weak reference to the player.
   */
-  if (EXPECT_NOT(OOIsPlayerStale() ||
-                 JS_GetOpaque(thisObj, sPlayerShipClassID) == nullptr)) {
+  if (OOIsPlayerStale() || JS_GetOpaque(thisObj, sPlayerShipClassID) == nullptr)
+      [[unlikely]] {
     return JS_UNDEFINED;
   }
 
@@ -870,7 +870,8 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
 static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale())) return JS_UNDEFINED;
+  if (OOIsPlayerStale()) [[unlikely]]
+    return JS_UNDEFINED;
 
   PlayerEntity* player = OOPlayerForScripting();
   double fValue;
@@ -1245,11 +1246,10 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
          * be broken. Nevertheless, it is not allowed. - CIM */
         // (except when compiled in debugging mode)
 #ifndef OO_DUMP_PLANETINFO
-        if (EXPECT_NOT(
-                (player != nullptr ? player->status() : OOEntityStatus{}) !=
-                    OOEntityStatus::kDocked &&
-                (player != nullptr ? player->status() : OOEntityStatus{}) !=
-                    OOEntityStatus::kLaunching)) {
+        if ((player != nullptr ? player->status() : OOEntityStatus{}) !=
+                OOEntityStatus::kDocked &&
+            (player != nullptr ? player->status() : OOEntityStatus{}) !=
+                OOEntityStatus::kLaunching) [[unlikely]] {
           OOJSReportError(context,
                           "player.ship.targetSystem is read-only unless "
                           "called when docked.");
@@ -1362,7 +1362,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 static JSValue PlayerShipLaunch(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
+  if (OOIsPlayerStale()) [[unlikely]]
+    OOJS_RETURN_VOID;
 
   if (PlayerEntity* player = OOPlayerForScripting())
     player->launchFromStation();
@@ -1375,7 +1376,8 @@ static JSValue PlayerShipLaunch(OOJS_NATIVE_ARGS) {
 static JSValue PlayerShipRemoveAllCargo(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
+  if (OOIsPlayerStale()) [[unlikely]]
+    OOJS_RETURN_VOID;
 
   PlayerEntity* player = OOPlayerForScripting();
 
@@ -1395,13 +1397,14 @@ static JSValue PlayerShipRemoveAllCargo(OOJS_NATIVE_ARGS) {
 static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
+  if (OOIsPlayerStale()) [[unlikely]]
+    OOJS_RETURN_VOID;
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> name;
 
   if (argc > 0) name = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!name.has_value())) {
+  if (!name.has_value()) [[unlikely]] {
     OOJSReportBadArguments(context, "PlayerShip", "useSpecialCargo",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (special cargo description)");
@@ -1420,7 +1423,8 @@ static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS) {
 static JSValue PlayerShipEngageAutopilotToStation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
+  if (OOIsPlayerStale()) [[unlikely]]
+    OOJS_RETURN_VOID;
 
   PlayerEntity* player = OOPlayerForScripting();
   StationEntity* stationForDocking = nullptr;
@@ -1446,7 +1450,8 @@ static JSValue PlayerShipEngageAutopilotToStation(OOJS_NATIVE_ARGS) {
 static JSValue PlayerShipDisengageAutopilot(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
+  if (OOIsPlayerStale()) [[unlikely]]
+    OOJS_RETURN_VOID;
 
   if (PlayerEntity* player = OOPlayerForScripting())
     player->disengageAutopilot();
@@ -1458,7 +1463,8 @@ static JSValue PlayerShipDisengageAutopilot(OOJS_NATIVE_ARGS) {
 static JSValue PlayerShipRequestDockingClearance(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
+  if (OOIsPlayerStale()) [[unlikely]]
+    OOJS_RETURN_VOID;
 
   PlayerEntity* player = OOPlayerForScripting();
   StationEntity* stationForDocking = nullptr;
@@ -1482,7 +1488,8 @@ static JSValue PlayerShipRequestDockingClearance(OOJS_NATIVE_ARGS) {
 static JSValue PlayerShipCancelDockingRequest(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
+  if (OOIsPlayerStale()) [[unlikely]]
+    OOJS_RETURN_VOID;
 
   PlayerEntity* player = OOPlayerForScripting();
   StationEntity* stationForDocking = nullptr;
@@ -1507,7 +1514,8 @@ static JSValue PlayerShipCancelDockingRequest(OOJS_NATIVE_ARGS) {
 static JSValue PlayerShipAwardEquipmentToCurrentPylon(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
+  if (OOIsPlayerStale()) [[unlikely]]
+    OOJS_RETURN_VOID;
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> key;
@@ -1517,7 +1525,7 @@ static JSValue PlayerShipAwardEquipmentToCurrentPylon(OOJS_NATIVE_ARGS) {
   if (argc > 0) key = JSValueToEquipmentKey(context, OOJS_ARGV[0]);
   if (key.has_value())
     eqType = OOEquipmentType::equipmentTypeWithIdentifier(*key);
-  if (EXPECT_NOT(!(eqType != nullptr && eqType->isMissileOrMine()))) {
+  if (!(eqType != nullptr && eqType->isMissileOrMine())) [[unlikely]] {
     OOJSReportBadArguments(context, "PlayerShip",
                            "awardEquipmentToCurrentPylon", std::min(argc, 1),
                            OOJS_ARGV, std::nullopt,
@@ -1551,7 +1559,7 @@ static JSValue PlayerShipAddPassenger(OOJS_NATIVE_ARGS) {
   }
 
   name = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!name.has_value())) {
+  if (!name.has_value()) [[unlikely]] {
     OOJSReportBadArguments(context, "PlayerShip", "addPassenger", 1,
                            &OOJS_ARGV[0], std::nullopt, "string");
     return OOJSNativeFailure(context);
@@ -1585,7 +1593,7 @@ static JSValue PlayerShipRemovePassenger(OOJS_NATIVE_ARGS) {
   bool OK = true;
 
   if (argc > 0) name = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!name.has_value())) {
+  if (!name.has_value()) [[unlikely]] {
     OOJSReportBadArguments(context, "PlayerShip", "removePassenger",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string");
@@ -1620,7 +1628,7 @@ static JSValue PlayerShipAddParcel(OOJS_NATIVE_ARGS) {
   }
 
   name = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!name.has_value())) {
+  if (!name.has_value()) [[unlikely]] {
     OOJSReportBadArguments(context, "PlayerShip", "addParcel", 1, &OOJS_ARGV[0],
                            std::nullopt, "string");
     return OOJSNativeFailure(context);
@@ -1651,7 +1659,7 @@ static JSValue PlayerShipRemoveParcel(OOJS_NATIVE_ARGS) {
   bool OK = true;
 
   if (argc > 0) name = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!name.has_value())) {
+  if (!name.has_value()) [[unlikely]] {
     OOJSReportBadArguments(context, "PlayerShip", "removeParcel",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string");
@@ -1693,7 +1701,7 @@ static JSValue PlayerShipAwardContract(OOJS_NATIVE_ARGS) {
   }
 
   key = OOStringFromJSValue(context, OOJS_ARGV[1]);
-  if (EXPECT_NOT(!key.has_value())) {
+  if (!key.has_value()) [[unlikely]] {
     OOJSReportBadArguments(context, "PlayerShip", "awardContract", 1,
                            &OOJS_ARGV[1], std::nullopt,
                            "string (commodity identifier)");
@@ -1730,7 +1738,7 @@ static JSValue PlayerShipRemoveContract(OOJS_NATIVE_ARGS) {
 
   key = OOStringFromJSValue(context, OOJS_ARGV[0]);
 
-  if (EXPECT_NOT(!key.has_value())) {
+  if (!key.has_value()) [[unlikely]] {
     OOJSReportBadArguments(context, "PlayerShip", "removeContract", 1,
                            &OOJS_ARGV[0], std::nullopt,
                            "string (commodity identifier)");
@@ -2024,7 +2032,7 @@ static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS) {
   if (argc > 1) {
     value = OOStringFromJSValue(context, OOJS_ARGV[1]);
   }
-  if (argc > 2 && EXPECT_NOT((reflow = JS_ToBool(context, OOJS_ARGV[2])) < 0)) {
+  if (argc > 2 && ((reflow = JS_ToBool(context, OOJS_ARGV[2])) < 0)) {
     OOJSReportBadArguments(context, "setMultiFunctionText", "reflow", argc,
                            OOJS_ARGV, std::nullopt, "boolean");
     return OOJSNativeFailure(context);
@@ -2060,8 +2068,7 @@ static JSValue PlayerShipSetPrimedEquipment(OOJS_NATIVE_ARGS) {
                            "string (key)");
     return OOJSNativeFailure(context);
   }
-  if (argc > 1 &&
-      EXPECT_NOT((showMsg = JS_ToBool(context, OOJS_ARGV[1])) < 0)) {
+  if (argc > 1 && ((showMsg = JS_ToBool(context, OOJS_ARGV[1])) < 0)) {
     OOJSReportBadArguments(context, "PlayerShip", "setPrimedEquipment",
                            std::min(argc, 2), OOJS_ARGV, std::nullopt,
                            "boolean");

@@ -211,7 +211,7 @@ static JSValue ClockClockStringForTime(OOJS_NATIVE_ARGS) {
 
   double time;
 
-  if (EXPECT_NOT(argc < 1 || JS_ToFloat64(context, &time, OOJS_ARGV[0]) < 0)) {
+  if (argc < 1 || JS_ToFloat64(context, &time, OOJS_ARGV[0]) < 0) [[unlikely]] {
     if (JS_HasException(context))
       JS_FreeValue(context, JS_GetException(context));
     JSValueConst arg = JS_UNDEFINED;
@@ -234,7 +234,7 @@ static JSValue ClockAddSeconds(OOJS_NATIVE_ARGS) {
   double time;
   const double kMaxTime = 30.0 * 24.0 * 3600.0;  // 30 days
 
-  if (EXPECT_NOT(argc < 1 || JS_ToFloat64(context, &time, OOJS_ARGV[0]) < 0)) {
+  if (argc < 1 || JS_ToFloat64(context, &time, OOJS_ARGV[0]) < 0) [[unlikely]] {
     if (JS_HasException(context))
       JS_FreeValue(context, JS_GetException(context));
     JSValueConst arg = JS_UNDEFINED;

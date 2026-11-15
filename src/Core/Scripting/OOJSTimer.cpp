@@ -354,7 +354,7 @@ static JSValue TimerGetProperty(OOJS_GETTER_ARGS) {
 
   OOJSTimer* timer = nullptr;  // null for Timer.prototype, which has none
 
-  if (EXPECT_NOT(!JSTimerGetTimer(context, thisObj, &timer)))
+  if (!JSTimerGetTimer(context, thisObj, &timer)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   switch (static_cast<TimerProperty>(magic)) {
@@ -383,7 +383,7 @@ static JSValue TimerSetProperty(OOJS_SETTER_ARGS) {
   OOJSTimer* timer = nullptr;  // null for Timer.prototype, which has none
   double fValue;
 
-  if (EXPECT_NOT(!JSTimerGetTimer(context, thisObj, &timer)))
+  if (!JSTimerGetTimer(context, thisObj, &timer)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   switch (static_cast<TimerProperty>(magic)) {
@@ -434,7 +434,7 @@ static JSValue TimerConstruct(OOJS_NATIVE_ARGS) {
   std::shared_ptr<OOJSTimer> timer;
   JSValue callbackThis = JS_NULL;
 
-  if (EXPECT_NOT(!OOJS_IS_CONSTRUCTING)) {
+  if (!OOJS_IS_CONSTRUCTING) [[unlikely]] {
     OOJSReportError(context,
                     "Timer() cannot be called as a function, it must be "
                     "used as a constructor (as in new Timer(...)).");
@@ -487,7 +487,8 @@ static JSValue TimerConstruct(OOJS_NATIVE_ARGS) {
   timer = OOJSTimer::timerWithDelay(delay, interval, context, function,
                                     callbackThis);
   JS_FreeValue(context, callbackThis);
-  if (EXPECT_NOT(!timer)) return OOJSNativeFailure(context);
+  if (!timer) [[unlikely]]
+    return OOJSNativeFailure(context);
 
   if (delay >= 0) {
     // Leave in stopped state if delay is negative
@@ -507,7 +508,7 @@ static JSValue TimerStart(OOJS_NATIVE_ARGS) {
 
   OOJSTimer* thisTimer = nullptr;
 
-  if (EXPECT_NOT(!JSTimerGetTimer(context, OOJS_THIS, &thisTimer)))
+  if (!JSTimerGetTimer(context, OOJS_THIS, &thisTimer)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   OOJS_RETURN_BOOL(thisTimer != nullptr && thisTimer->scheduleTimer());
@@ -521,7 +522,7 @@ static JSValue TimerStop(OOJS_NATIVE_ARGS) {
 
   OOJSTimer* thisTimer = nullptr;
 
-  if (EXPECT_NOT(!JSTimerGetTimer(context, OOJS_THIS, &thisTimer)))
+  if (!JSTimerGetTimer(context, OOJS_THIS, &thisTimer)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   if (thisTimer != nullptr) thisTimer->unscheduleTimer();

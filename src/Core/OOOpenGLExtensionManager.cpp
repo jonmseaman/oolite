@@ -563,7 +563,8 @@ bool OOOpenGLExtensionManager::useLineSmoothing() { return useLineSmoothing_; }
 bool OOOpenGLExtensionManager::useDustShader() { return useDustShader_; }
 
 static unsigned IntegerFromString(const GLubyte** ioString) {
-  if (EXPECT_NOT(ioString == nullptr)) return 0;
+  if (ioString == nullptr) [[unlikely]]
+    return 0;
 
   unsigned result = 0;
   const GLubyte* curr = *ioString;
@@ -853,7 +854,7 @@ bool CheckRegExps(std::shared_ptr<::OORegExpMatcher>& matcher,
   if (const oo::PList::Array* array = regexps.getIf<oo::PList::Array>()) {
     for (const oo::PList& element : *array) {
       const std::string* regexp = element.getIf<std::string>();
-      if (EXPECT_NOT(regexp == nullptr)) {
+      if (regexp == nullptr) [[unlikely]] {
         // Invalid type -- match fails.
         return false;
       }
@@ -909,7 +910,8 @@ oo::PList OOOpenGLExtensionManager::lookUpPerGPUSettingsWithVersionString(
       matcher;  // one for the pass (see MatchesRegExp)
   for (const std::string& key : keys) {
     const oo::PList* config = configurations.get<oo::PList::Dict>(key);
-    if (EXPECT_NOT(config == nullptr)) continue;
+    if (config == nullptr) [[unlikely]]
+      continue;
 
     const oo::PList* match = config->get<oo::PList::Dict>("match");
     const oo::PList* vendorExpr =

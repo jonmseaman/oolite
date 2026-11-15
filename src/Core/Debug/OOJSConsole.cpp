@@ -1077,7 +1077,7 @@ static JSValue ConsoleCallObjCMethod(OOJS_NATIVE_ARGS) {
 static JSValue ConsoleSetUpCallObjC(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(argc < 1 || !JS_IsObject(OOJS_ARGV[0]))) {
+  if (argc < 1 || !JS_IsObject(OOJS_ARGV[0])) [[unlikely]] {
     OOJSReportBadArguments(context, "Console", "__setUpCallObjC", argc,
                            OOJS_ARGV, std::nullopt, "Object.prototype");
     return OOJSNativeFailure(context);
@@ -1295,7 +1295,7 @@ static JSValue ConsoleDumpHeap(OOJS_NATIVE_ARGS) {
 static JSValue ConsoleProfile(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOJSIsProfiling())) {
+  if (OOJSIsProfiling()) [[unlikely]] {
     OOJSReportError(
         context,
         "Profiling functions may not be called while already profiling.");
@@ -1328,7 +1328,7 @@ static JSValue ConsoleProfile(OOJS_NATIVE_ARGS) {
 static JSValue ConsoleGetProfile(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOJSIsProfiling())) {
+  if (OOJSIsProfiling()) [[unlikely]] {
     OOJSReportError(
         context,
         "Profiling functions may not be called while already profiling.");
@@ -1358,7 +1358,7 @@ static JSValue ConsoleGetProfile(OOJS_NATIVE_ARGS) {
 static JSValue ConsoleTrace(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOJSIsProfiling())) {
+  if (OOJSIsProfiling()) [[unlikely]] {
     OOJSReportError(
         context,
         "Profiling functions may not be called while already profiling.");

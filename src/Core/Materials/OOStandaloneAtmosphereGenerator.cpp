@@ -231,9 +231,10 @@ void OOStandaloneAtmosphereGenerator::loadTexture() {
   _height = _info.height = 1 << (_planetScale + _info.planetScaleOffset);
   _width = _info.width = _height * _info.planetAspectRatio;
 
-#define FAIL_IF(cond)               \
-  do {                              \
-    if (EXPECT_NOT(cond)) goto END; \
+#define FAIL_IF(cond)      \
+  do {                     \
+    if (cond) [[unlikely]] \
+      goto END;            \
   } while (0)
 
   aBuffer = OOMakePixelBuffer(4 * static_cast<size_t>(_width) * _height);

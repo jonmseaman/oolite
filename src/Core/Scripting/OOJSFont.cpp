@@ -55,7 +55,7 @@ void InitOOJSFont(JSContext* context, JSValueConst global) {
 static JSValue FontMeasureString(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(argc < 1) || JS_IsUndefined(OOJS_ARGV[0])) {
+  if ((argc < 1) || JS_IsUndefined(OOJS_ARGV[0])) {
     JSValueConst undefined = JS_UNDEFINED;
     OOJSReportBadArguments(context, std::nullopt, "defaultFont.measureString",
                            std::min(argc, 1), &undefined, std::nullopt,

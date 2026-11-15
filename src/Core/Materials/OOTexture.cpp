@@ -140,8 +140,10 @@ std::shared_ptr<OOTexture> OOTexture::loadTextureWithName(
   std::optional<std::string> path;
   bool noFNF;
 
-  if (EXPECT_NOT(!name.has_value())) return nullptr;
-  if (EXPECT_NOT(!sCheckedExtensions)) checkExtensions();
+  if (!name.has_value()) [[unlikely]]
+    return nullptr;
+  if (!sCheckedExtensions) [[unlikely]]
+    checkExtensions();
 
   if (!gOOTextureInfo.anisotropyAvailable ||
       (options & OOTextureFlags::kMinFilterMask) !=
@@ -250,7 +252,7 @@ std::shared_ptr<OOTexture> OOTexture::textureWithGenerator(
 }
 
 OOTexture::OOTexture() {
-  if (EXPECT_NOT(sAllLiveTextures == nullptr))
+  if (sAllLiveTextures == nullptr) [[unlikely]]
     sAllLiveTextures = new std::unordered_set<OOTexture*>;
   sAllLiveTextures->insert(this);
 }
@@ -428,7 +430,7 @@ void OOTexture::addToCaches() {
 
   // Add self to in-use textures cache, as a raw pointer so the texture isn't
   // retained by the cache.
-  if (EXPECT_NOT(sLiveTextureCache == nullptr))
+  if (sLiveTextureCache == nullptr) [[unlikely]]
     sLiveTextureCache = new std::unordered_map<std::string, OOTexture*>;
 
   SET_TRACE_CONTEXT("in-use textures cache - SHOULD NOT RETAIN");
@@ -436,7 +438,7 @@ void OOTexture::addToCaches() {
   CLEAR_TRACE_CONTEXT();
 
   // Add self to recent textures cache.
-  if (EXPECT_NOT(RecentTextures() == nullptr)) {
+  if (RecentTextures() == nullptr) [[unlikely]] {
     RecentTextures() = OOCache::cacheWithPList(oo::PList());
     RecentTextures()->setName(std::string("recent textures"));
     RecentTextures()->setAutoPrune(true);
@@ -460,7 +462,7 @@ void OOTexture::removeFromCaches() {
   OOTexture* cached = OOTextureInObjectNode(
       (RecentTextures() != nullptr) ? RecentTextures()->pListForKey(*cacheKey)
                                     : oo::PList());
-  if (EXPECT_NOT(cached != nullptr && cached == this)) {
+  if (cached != nullptr && cached == this) [[unlikely]] {
     /* Experimental for now: I think the recent crash problems may
      * be because if the last reference to a texture is in
      * sRecentTextures, and the texture is regenerated, it

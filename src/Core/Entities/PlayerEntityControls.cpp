@@ -1870,7 +1870,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
 
               // even if we don't have a witchspace motor, we can still do a
               // default galactic jump (!)
-              if (EXPECT(hasHyperspaceMotor()))
+              if (hasHyperspaceMotor()) [[likely]]
                 witchspaceCountdown = hyperspaceMotorSpinTime;
               else
                 witchspaceCountdown = DEFAULT_HYPERSPACE_SPIN_TIME;
@@ -4723,7 +4723,7 @@ void PlayerEntity::pollViewControls() {
       scanner_zoom_rate = SCANNER_ZOOM_RATE_DOWN;
   }
 
-  if (EXPECT(getHud() != nullptr && getHud()->isCompassActive())) {
+  if (getHud() != nullptr && getHud()->isCompassActive()) [[likely]] {
     // only switch compass modes if
     // there is a compass
     // Compass mode '|'
@@ -5055,8 +5055,8 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias) {
     if (!switching_chart_screens) {
       switching_chart_screens = true;
       // handles http://aegidian.org/bb/viewtopic.php?p=233189#p233189
-      if (EXPECT_NOT(status() == OOEntityStatus::kWitchspaceCountdown &&
-                     gui_screen == OOGUIScreenID::kShortRangeChart)) {
+      if (status() == OOEntityStatus::kWitchspaceCountdown &&
+          gui_screen == OOGUIScreenID::kShortRangeChart) [[unlikely]] {
         // don't switch to LRC if countdown in progress
         switching_chart_screens = false;
       } else if (gui_screen == OOGUIScreenID::kShortRangeChart ||
@@ -5311,9 +5311,8 @@ void PlayerEntity::pollDockedControls(double delta_t) {
     if (pollControls) {
       exceptionContext = "undock";
       if (checkKeyPress(n_key_launch_ship)) {
-        if (EXPECT((gui_screen != OOGUIScreenID::kMission ||
-                    _missionAllowInterrupt) &&
-                   gui_screen != OOGUIScreenID::kKeyboardEntry)) {
+        if ((gui_screen != OOGUIScreenID::kMission || _missionAllowInterrupt) &&
+            gui_screen != OOGUIScreenID::kKeyboardEntry) [[likely]] {
           handleUndockControl();
         }
       }
@@ -5579,7 +5578,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
     case OOGUIScreenID::kOXZManager:
       // release locks on music on this screen
       OOMusicController::sharedController()->stopThemeMusic();
-      if (EXPECT(!oxzmanager->isRestarting())) {
+      if (!oxzmanager->isRestarting()) [[likely]] {
         if (oxzmanager->isAcceptingGUIInput()) {
           if (oxzmanager->isAcceptingTextInput()) {
             if (gameView != nullptr)

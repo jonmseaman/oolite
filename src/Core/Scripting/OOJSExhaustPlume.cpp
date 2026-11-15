@@ -179,12 +179,12 @@ static JSValue ExhaustPlumeSetProperty(OOJS_SETTER_ARGS) {
 
 // *** Methods ***
 
-#define GET_THIS_EXHAUSTPLUME(THISENT)                                      \
-  do {                                                                      \
-    if (EXPECT_NOT(!JSExhaustPlumeGetExhaustPlumeEntity(context, OOJS_THIS, \
-                                                        &(THISENT))))       \
-      return OOJSNativeFailure(context);            /* Exception */         \
-    if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID; /* the C++ plume's */   \
+#define GET_THIS_EXHAUSTPLUME(THISENT)                                        \
+  do {                                                                        \
+    if (!JSExhaustPlumeGetExhaustPlumeEntity(context, OOJS_THIS, &(THISENT))) \
+        [[unlikely]]                                                          \
+      return OOJSNativeFailure(context);            /* Exception */           \
+    if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID; /* the C++ plume's */     \
   } while (0)
 
 static JSValue ExhaustPlumeRemove(OOJS_NATIVE_ARGS) {

@@ -96,7 +96,8 @@ bool OORegExpMatcher::string(const std::string& string,
 
   const std::u16string regExpUnits = oo::utf8ToUtf16(regExp);
   size_t expLength = regExpUnits.size();
-  if (EXPECT_NOT(expLength == 0)) return false;
+  if (expLength == 0) [[unlikely]]
+    return false;
 
   JSContext* context = OOJSAcquireContext();
 

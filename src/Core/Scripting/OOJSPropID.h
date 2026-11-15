@@ -43,7 +43,7 @@ using OOJSVal = JSValue;
 #define OOJSID(str)                            \
   ({                                           \
     static JSAtom idCache = JS_ATOM_NULL;      \
-    if (EXPECT_NOT(idCache == JS_ATOM_NULL))   \
+    if (idCache == JS_ATOM_NULL) [[unlikely]]  \
       idCache = OOJSInternAtomPRIVATE("" str); \
     idCache;                                   \
   })

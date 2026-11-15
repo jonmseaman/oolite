@@ -1249,7 +1249,7 @@ std::optional<std::string> OOOXZManager::installStatusForManifest(
 
 bool OOOXZManager::isRestarting() {
   // for the restart
-  if (EXPECT_NOT(_interfaceState == OXZInterfaceState::kRestarting)) {
+  if (_interfaceState == OXZInterfaceState::kRestarting) [[unlikely]] {
     // Rebuilds OXP search
     ResourceManager::reset();
     if (UNIVERSE != nullptr) UNIVERSE->reinitAndShowDemo(true);

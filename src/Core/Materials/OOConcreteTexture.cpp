@@ -233,9 +233,9 @@ std::optional<std::string> OOConcreteTexture::name() {
 void OOConcreteTexture::apply() {
   OO_ENTER_OPENGL();
 
-  if (EXPECT_NOT(!_loaded))
+  if (!_loaded) [[unlikely]]
     setUpTexture();
-  else if (EXPECT_NOT(!_uploaded))
+  else if (!_uploaded) [[unlikely]]
     uploadTexture();
   else
     OOGL(glBindTexture(glTextureTarget(), _textureName));

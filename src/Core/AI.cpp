@@ -616,7 +616,7 @@ void AI::message(const std::string& ms) {
       NO_TARGET)
     return;  // don't think until launched
 
-  if (EXPECT_NOT(pendingMessages.size() > 32)) {
+  if (pendingMessages.size() > 32) [[unlikely]] {
     // Generate the error, but don't crash Oolite! Fixes bug #18055 - Pending
     // message overflow for thargoids, -> crash !
     OO_LOG_ERR("ai.message.failed.overflow",

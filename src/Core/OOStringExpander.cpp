@@ -362,7 +362,8 @@ OOUnits Expand(OOStringExpansionContext* context, const OOUnits& string,
   const std::size_t size = string.size();
 
   // Avoid stack overflow.
-  if (EXPECT_NOT(size > sizeLimit || recursionLimit == 0)) return string;
+  if (size > sizeLimit || recursionLimit == 0) [[unlikely]]
+    return string;
   sizeLimit -= size;
   recursionLimit--;
 
@@ -492,7 +493,7 @@ OOMaybeUnits ExpandKey(OOStringExpansionContext* context,
   }
 
   // Fail if no balancing bracket.
-  if (EXPECT_NOT(balanceCount != 0)) {
+  if (balanceCount != 0) [[unlikely]] {
     SyntaxWarning(context, "strings.expand.warning.unbalancedOpeningBracket",
                   "%s", "Unbalanced [ in string.");
     return std::nullopt;
@@ -503,7 +504,7 @@ OOMaybeUnits ExpandKey(OOStringExpansionContext* context,
   std::size_t keyStart = idx + 1, keyLength = totalLength - 2;
   if (firstBar != 0) keyLength = firstBar - idx - 1;
 
-  if (EXPECT_NOT(keyLength == 0)) {
+  if (keyLength == 0) [[unlikely]] {
     SyntaxWarning(context, "strings.expand.warning.emptyKey", "%s",
                   "Invalid expansion code [] string. (To avoid this message, "
                   "use %%[%%].)");
@@ -682,7 +683,7 @@ OOMaybeUnits ExpandDigitKey(OOStringExpansionContext* context,
   const oo::PList* entry = sysDescs.at(keyValue);
   if (entry != nullptr && !entry->isArray()) entry = nullptr;
 
-  if (EXPECT_NOT(entry == nullptr)) {
+  if (entry == nullptr) [[unlikely]] {
     if (keyValue >= context->sysDescCount) {
       SyntaxWarning(
           context, "strings.expand.warning.outOfRangeKey",
@@ -1274,7 +1275,7 @@ OOMaybeUnits ExpandSystemNameForGalaxyEscape(OOStringExpansionContext* context,
 
 #define kInvalidGEscapeMessage \
   "String escape code %G must be followed by six integers."
-  if (EXPECT_NOT(size - idx < 8)) {
+  if (size - idx < 8) [[unlikely]] {
     // Too close to end of string to actually have six characters, let alone six
     // digits.
     SyntaxError(context, "strings.expand.invalidJEscape", "%s",
@@ -1338,7 +1339,7 @@ OOMaybeUnits ExpandSystemNameEscape(OOStringExpansionContext* context,
 
 #define kInvalidJEscapeMessage \
   "String escape code %J must be followed by three integers."
-  if (EXPECT_NOT(size - idx < 5)) {
+  if (size - idx < 5) [[unlikely]] {
     // Too close to end of string to actually have three characters, let alone
     // three digits.
     SyntaxError(context, "strings.expand.invalidJEscape", "%s",

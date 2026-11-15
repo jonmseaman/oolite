@@ -91,7 +91,7 @@ OOTimeDelta OOHighResTimeDeltaInSeconds(OOHighResTimeValue startTime,
   uint64_t diff = endTime - startTime;
   static double conversion = 0.0;
 
-  if (EXPECT_NOT(conversion == 0.0)) {
+  if (conversion == 0.0) [[unlikely]] {
     mach_timebase_info_data_t info;
     kern_return_t err = mach_timebase_info(&info);
 

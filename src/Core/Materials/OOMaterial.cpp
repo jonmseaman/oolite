@@ -134,7 +134,7 @@ void OOMaterial::unapplyWithNext(OOMaterial* /*next*/) {
 }
 
 void OOMaterial::willDealloc() {
-  if (EXPECT_NOT(ActiveMaterial().get() == this)) {
+  if (ActiveMaterial().get() == this) [[unlikely]] {
     OO_LOG("shader.dealloc.imbalance", "{}",
            "***** Material deallocated while active, indicating a "
            "retain/release imbalance.");

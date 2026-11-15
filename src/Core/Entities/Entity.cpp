@@ -179,7 +179,7 @@ bool Entity::validForAddToUniverse() {
   std::size_t mySessionID = sessionID();
   std::size_t currentSessionID =
       (UNIVERSE != nullptr ? UNIVERSE->sessionID() : 0);
-  if (EXPECT_NOT(mySessionID != currentSessionID)) {
+  if (mySessionID != currentSessionID) [[unlikely]] {
     OO_LOG_ERR("entity.invalidSession",
                "Entity {} from session {} cannot be added to universe in "
                "session {}. This is an internal error, please report it.",

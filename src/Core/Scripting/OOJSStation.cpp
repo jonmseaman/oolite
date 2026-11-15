@@ -556,7 +556,7 @@ static JSValue StationCanDockShip(OOJS_NATIVE_ARGS) {
       return OOJSNativeFailure(context);
     }
   }
-  if (EXPECT_NOT(shipToCheck == nullptr)) {
+  if (shipToCheck == nullptr) [[unlikely]] {
     OOJSReportBadArguments(context, "Station", "canDockShip", std::min(argc, 1),
                            OOJS_ARGV, std::nullopt, "shipEntity");
     return OOJSNativeFailure(context);
@@ -583,8 +583,8 @@ static JSValue StationDockPlayer(OOJS_NATIVE_ARGS) {
   GameController* gameController =
       (UNIVERSE != nullptr ? UNIVERSE->gameController() : nullptr);
 
-  if (EXPECT_NOT((gameController != nullptr ? gameController->isGamePaused()
-                                            : false))) {
+  if ((gameController != nullptr ? gameController->isGamePaused() : false))
+      [[unlikely]] {
     /*	Station.dockPlayer() was executed while the game was in pause.
             Do we want to return an error or just unpause and continue?
             I think unpausing is the sensible thing to do here - Nikos 20110208
@@ -592,7 +592,8 @@ static JSValue StationDockPlayer(OOJS_NATIVE_ARGS) {
     if (gameController != nullptr) gameController->setGamePaused(false);
   }
 
-  if (EXPECT(!(player != nullptr ? player->PlayerEntity::isDocked() : false))) {
+  if (!(player != nullptr ? player->PlayerEntity::isDocked() : false))
+      [[likely]] {
     // qualified: the final overrider, so the binding
     // test stands in for it
     StationEntity* stationForDockingPlayer = nullptr;
@@ -667,7 +668,7 @@ static JSValue StationLaunchShipWithRole(OOJS_NATIVE_ARGS) {
   GET_THIS_STATION(station);
 
   if (argc > 0) shipRole = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!shipRole.has_value())) {
+  if (!shipRole.has_value()) [[unlikely]] {
     OOJSReportBadArguments(context, "Station", "launchShipWithRole",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (role)");
@@ -1007,8 +1008,8 @@ static JSValue StationSetMarketPrice(OOJS_NATIVE_ARGS) {
       (UNIVERSE != nullptr
            ? UNIVERSE->getCommodities()
            : nullptr);  // null: no good is defined, as a message to nil
-  if (EXPECT_NOT(commodities == nullptr ||
-                 !commodities->goodDefined(commodity.value_or("")))) {
+  if (commodities == nullptr ||
+      !commodities->goodDefined(commodity.value_or(""))) [[unlikely]] {
     OOJSReportBadArguments(context, "Station", "setMarketPrice",
                            std::min(argc, 2), OOJS_ARGV, std::nullopt,
                            "Unrecognised commodity type");
@@ -1017,7 +1018,7 @@ static JSValue StationSetMarketPrice(OOJS_NATIVE_ARGS) {
 
   int32_t price;
   bool gotPrice = OOJSValueToInt32(context, OOJS_ARGV[1], &price);
-  if (EXPECT_NOT(!gotPrice || price < 0)) {
+  if (!gotPrice || price < 0) [[unlikely]] {
     OOJSReportBadArguments(context, "Station", "setMarketPrice",
                            std::min(argc, 2), OOJS_ARGV, std::nullopt,
                            "Price must be at least 0 decicredits");
@@ -1060,8 +1061,8 @@ static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
       (UNIVERSE != nullptr
            ? UNIVERSE->getCommodities()
            : nullptr);  // null: no good is defined, as a message to nil
-  if (EXPECT_NOT(commodities == nullptr ||
-                 !commodities->goodDefined(commodity))) {
+  if (commodities == nullptr || !commodities->goodDefined(commodity))
+      [[unlikely]] {
     OOJSReportBadArguments(context, "Station", "setMarketQuantity",
                            std::min(argc, 2), OOJS_ARGV, std::nullopt,
                            "Unrecognised commodity type");
@@ -1075,10 +1076,10 @@ static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
            ? station->getLocalMarket()
            : static_cast<OOCommodityMarket*>(nullptr));  // null: no capacity,
                                                          // as a message to nil
-  if (EXPECT_NOT(
-          !gotQuantity || quantity < 0 ||
-          static_cast<OOCargoQuantity>(quantity) >
-              ((market != nullptr) ? market->capacityForGood(commodity) : 0))) {
+  if (!gotQuantity || quantity < 0 ||
+      static_cast<OOCargoQuantity>(quantity) >
+          ((market != nullptr) ? market->capacityForGood(commodity) : 0))
+      [[unlikely]] {
     OOJSReportBadArguments(
         context, "Station", "setMarketQuantity", std::min(argc, 2), OOJS_ARGV,
         std::nullopt,

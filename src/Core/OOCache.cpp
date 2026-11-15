@@ -662,7 +662,8 @@ static OOCacheNode* TreeInsert(OOCacheImpl* cache, const std::string& key,
     } else {
       closest = cache->root;
       node = CacheNodeAllocate(key, value);
-      if (EXPECT_NOT(node == nullptr)) return nullptr;
+      if (node == nullptr) [[unlikely]]
+        return nullptr;
 
       order = key.compare(closest->key);
 

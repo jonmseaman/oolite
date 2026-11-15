@@ -48,8 +48,8 @@ void AddPixMap_4(OOPixMap mainPx, OOPixMap otherPx);
 
 bool OOExtractPixMapChannel(OOPixMap* ioPixMap, uint8_t channelIndex,
                             bool compactWhenDone) {
-  if (EXPECT_NOT(ioPixMap == nullptr || !OOIsValidPixMap(*ioPixMap) ||
-                 ioPixMap->format != kOOPixMapRGBA || channelIndex > 3)) {
+  if (ioPixMap == nullptr || !OOIsValidPixMap(*ioPixMap) ||
+      ioPixMap->format != kOOPixMapRGBA || channelIndex > 3) [[unlikely]] {
     return false;
   }
 
@@ -90,13 +90,14 @@ void ExtractChannel_4(OOPixMap* ioPixMap, uint8_t channelIndex) {
 }  // namespace
 
 bool OOPixMapToRGBA(OOPixMap* ioPixMap) {
-  if (EXPECT_NOT(ioPixMap == nullptr || !OOIsValidPixMap(*ioPixMap)))
+  if (ioPixMap == nullptr || !OOIsValidPixMap(*ioPixMap)) [[unlikely]]
     return false;
   if (ioPixMap->format == kOOPixMapRGBA) return true;
 
   OOPixMap temp = OOAllocatePixMap(ioPixMap->width, ioPixMap->height,
                                    static_cast<OOPixMapFormat>(4), 0, 0);
-  if (EXPECT_NOT(OOIsNullPixMap(temp))) return false;
+  if (OOIsNullPixMap(temp)) [[unlikely]]
+    return false;
 
   bool OK = false;
   switch (ioPixMap->format) {
@@ -180,9 +181,10 @@ void ToRGBA_2(OOPixMap srcPx, OOPixMap dstPx) {
 
 bool OOPixMapModulateUniform(OOPixMap* ioPixMap, float f0, float f1, float f2,
                              float f3) {
-  if (EXPECT_NOT(ioPixMap == nullptr || !OOIsValidPixMap(*ioPixMap)))
+  if (ioPixMap == nullptr || !OOIsValidPixMap(*ioPixMap)) [[unlikely]]
     return false;
-  if (EXPECT_NOT(!OOPixMapToRGBA(ioPixMap))) return false;
+  if (!OOPixMapToRGBA(ioPixMap)) [[unlikely]]
+    return false;
 
   ModulateUniform_4(*ioPixMap, f0 * 256.0f, f1 * 256.0f, f2 * 256.0f,
                     f3 * 256.0f);
@@ -236,14 +238,15 @@ void ModulateUniform_4(OOPixMap pixMap, uint16_t f3, uint16_t f2, uint16_t f1,
 }  // namespace
 
 bool OOPixMapModulatePixMap(OOPixMap* ioDstPixMap, OOPixMap otherPixMap) {
-  if (EXPECT_NOT(ioDstPixMap == nullptr || !OOIsValidPixMap(*ioDstPixMap)))
+  if (ioDstPixMap == nullptr || !OOIsValidPixMap(*ioDstPixMap)) [[unlikely]]
     return false;
-  if (EXPECT_NOT(!OOIsValidPixMap(otherPixMap) ||
-                 otherPixMap.format != kOOPixMapRGBA))
+  if (!OOIsValidPixMap(otherPixMap) || otherPixMap.format != kOOPixMapRGBA)
+      [[unlikely]]
     return false;
-  if (EXPECT_NOT(!OOPixMapToRGBA(ioDstPixMap))) return false;
-  if (EXPECT_NOT(ioDstPixMap->width != otherPixMap.width ||
-                 ioDstPixMap->height != otherPixMap.height))
+  if (!OOPixMapToRGBA(ioDstPixMap)) [[unlikely]]
+    return false;
+  if (ioDstPixMap->width != otherPixMap.width ||
+      ioDstPixMap->height != otherPixMap.height) [[unlikely]]
     return false;
 
   ModulatePixMap_4(*ioDstPixMap, otherPixMap);
@@ -297,14 +300,15 @@ void ModulatePixMap_4(OOPixMap mainPx, OOPixMap otherPx) {
 }  // namespace
 
 bool OOPixMapAddPixMap(OOPixMap* ioDstPixMap, OOPixMap otherPixMap) {
-  if (EXPECT_NOT(ioDstPixMap == nullptr || !OOIsValidPixMap(*ioDstPixMap)))
+  if (ioDstPixMap == nullptr || !OOIsValidPixMap(*ioDstPixMap)) [[unlikely]]
     return false;
-  if (EXPECT_NOT(!OOIsValidPixMap(otherPixMap) ||
-                 otherPixMap.format != kOOPixMapRGBA))
+  if (!OOIsValidPixMap(otherPixMap) || otherPixMap.format != kOOPixMapRGBA)
+      [[unlikely]]
     return false;
-  if (EXPECT_NOT(!OOPixMapToRGBA(ioDstPixMap))) return false;
-  if (EXPECT_NOT(ioDstPixMap->width != otherPixMap.width ||
-                 ioDstPixMap->height != otherPixMap.height))
+  if (!OOPixMapToRGBA(ioDstPixMap)) [[unlikely]]
+    return false;
+  if (ioDstPixMap->width != otherPixMap.width ||
+      ioDstPixMap->height != otherPixMap.height) [[unlikely]]
     return false;
 
   AddPixMap_4(*ioDstPixMap, otherPixMap);

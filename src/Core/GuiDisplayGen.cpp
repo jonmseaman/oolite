@@ -1605,7 +1605,7 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
               hilitedText.empty() ? std::string::npos : text.find(hilitedText);
           unsigned leadingSpaces = 0;
 
-          if (EXPECT_NOT(txtLocation == std::string::npos)) {
+          if (txtLocation == std::string::npos) [[unlikely]] {
             // This never happens!
             hilitedText = text;
           } else if (txtLocation > 0) {
@@ -2162,7 +2162,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
     for (i = 0; i < 256; i++) {
       const oo::PList sys_info =
           (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(i) : oo::PList());
-      if (EXPECT_NOT(sys_info.get<bool>("sun_gone_nova"))) {
+      if (sys_info.get<bool>("sun_gone_nova")) [[unlikely]] {
         nearby_systems[num_nearby_systems].gov = -1;  // Flag up nova systems!
       } else {
         nearby_systems[num_nearby_systems].tec =
@@ -2349,7 +2349,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
     } else {
       switch (chart_mode) {
         case OOLongRangeChartMode::kEconomy:
-          if (EXPECT(noNova)) {
+          if (noNova) [[likely]] {
             systemParameter = nearby_systems[i].eco;
             GLfloat ce1 = 1.0f - 0.125f * systemParameter;
             setGLColorFromSetting(
@@ -2361,7 +2361,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
           }
           break;
         case OOLongRangeChartMode::kGovernment:
-          if (EXPECT(noNova)) {
+          if (noNova) [[likely]] {
             systemParameter = nearby_systems[i].gov;
             setGLColorFromSetting(
                 oo::str::format(kGuiChartGovernmentUColor, systemParameter),
@@ -2376,7 +2376,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
           }
           break;
         case OOLongRangeChartMode::kTechLevel:
-          if (EXPECT(noNova)) {
+          if (noNova) [[likely]] {
             systemParameter = nearby_systems[i].tec;
             r = 0.6;
             g = b = 0.20 + (0.05 * static_cast<GLfloat>(systemParameter));
@@ -2387,7 +2387,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
           break;
         case OOLongRangeChartMode::kUnknown:
         case OOLongRangeChartMode::kSunColor:
-          if (EXPECT(noNova)) {
+          if (noNova) [[likely]] {
             r = g = b = 1.0;
             std::shared_ptr<OOColor> sunColor = OOColor::colorWithDescription(
                 ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager()
@@ -2535,7 +2535,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
         }
 
         OODrawString(sys->p_name, x + star.x + 2.0, y + star.y, z, chSize);
-      } else if (EXPECT(sys->gov >= 0)) {
+      } else if (sys->gov >= 0) [[likely]] {
         // Not a nova? Show the info.
         if (concealment[i] >= OO_SYSTEMCONCEALMENT_NODATA) {
           setGLColorFromSetting(kGuiChartLabelColor,

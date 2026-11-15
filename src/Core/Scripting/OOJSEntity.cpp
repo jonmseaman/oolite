@@ -229,13 +229,13 @@ bool EntityFromArgumentList(JSContext* context,
 
   // Sanity checks.
   if (outConsumed != nullptr) *outConsumed = 0;
-  if (EXPECT_NOT(argc == 0 || argv == nullptr || outEntity == nullptr)) {
+  if (argc == 0 || argv == nullptr || outEntity == nullptr) [[unlikely]] {
     OOLogGenericParameterError();
     return false;
   }
 
   // Get value, if possible.
-  if (EXPECT_NOT(!JSValueToEntity(context, argv[0], outEntity))) {
+  if (!JSValueToEntity(context, argv[0], outEntity)) [[unlikely]] {
     // Failed; report bad parameters, if given a class and function.
     if (scriptClass.has_value() && function.has_value()) {
       // The argument described as +stringWithJavaScriptParameters:count:1
@@ -261,7 +261,7 @@ static JSValue EntityGetProperty(OOJS_GETTER_ARGS) {
   Entity* cxxEntity = nullptr;
   Entity* result = nullptr;
 
-  if (EXPECT_NOT(!OOJSEntityGetEntity(context, thisObj, &cxxEntity)))
+  if (!OOJSEntityGetEntity(context, thisObj, &cxxEntity)) [[unlikely]]
     return JS_EXCEPTION;
   if (OOIsStaleEntity(cxxEntity)) {
     if (static_cast<EntityProperty>(magic) == EntityProperty::kIsValid)
@@ -374,7 +374,7 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
   HPVector hpvValue;
   Quaternion qValue;
 
-  if (EXPECT_NOT(!OOJSEntityGetEntity(context, thisObj, &cxxEntity)))
+  if (!OOJSEntityGetEntity(context, thisObj, &cxxEntity)) [[unlikely]]
     return JS_EXCEPTION;
   if (OOIsStaleEntity(cxxEntity)) return JS_UNDEFINED;
   // The C++ members the properties call.

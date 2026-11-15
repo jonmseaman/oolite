@@ -88,7 +88,7 @@ void OOPNGTextureLoader::doLoadTexture() {
     goto FAIL;
   }
 
-  if (EXPECT_NOT(setjmp(png_jmpbuf(png)))) {
+  if (setjmp(png_jmpbuf(png))) [[unlikely]] {
     // libpng will jump here on error.
     _data = nullptr;
     goto FAIL;
@@ -98,8 +98,8 @@ void OOPNGTextureLoader::doLoadTexture() {
 
   png_read_info(png, pngInfo);
   // Read header, get format info and check that it meets our expectations.
-  if (EXPECT_NOT(!png_get_IHDR(png, pngInfo, &pngWidth, &pngHeight, &depth,
-                               &colorType, nullptr, nullptr, nullptr))) {
+  if (!png_get_IHDR(png, pngInfo, &pngWidth, &pngHeight, &depth, &colorType,
+                    nullptr, nullptr, nullptr)) [[unlikely]] {
     OO_LOG("texture.load.png.failed", "Failed to get metadata from PNG {}",
            _path);
     goto FAIL;
@@ -152,7 +152,7 @@ FAIL:
 
 void OOPNGTextureLoader::readBytes(png_bytep bytes, png_size_t count) {
   // Check that we're within the file's bounds
-  if (EXPECT_NOT(length - offset < count)) {
+  if (length - offset < count) [[unlikely]] {
     // (static: png_error() longjmps out of this frame, so nothing here may need
     // destroying)
     static thread_local std::string message;

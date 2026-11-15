@@ -382,7 +382,8 @@ OOManualDispatchAsyncWorkManager::OOManualDispatchAsyncWorkManager() {
 
 bool OOManualDispatchAsyncWorkManager::addTask(
     OOAsyncWorkTask* task, OOAsyncWorkPriority /*priority*/) {
-  if (EXPECT_NOT(task == nullptr)) return false;
+  if (task == nullptr) [[unlikely]]
+    return false;
 
   noteTaskQueued(task);
 
@@ -435,7 +436,8 @@ OOOperationQueueAsyncWorkManager::OOOperationQueueAsyncWorkManager() {
 
 bool OOOperationQueueAsyncWorkManager::addTask(OOAsyncWorkTask* task,
                                                OOAsyncWorkPriority priority) {
-  if (EXPECT_NOT(task == nullptr)) return false;
+  if (task == nullptr) [[unlikely]]
+    return false;
 
   unsigned index = oo::ToUnderlying(OOAsyncWorkPriority::kMedium);
   if (priority == OOAsyncWorkPriority::kLow)
