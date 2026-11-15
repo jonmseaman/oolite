@@ -34,8 +34,8 @@ inline constexpr int kOOBreakPatternMaxSides = 128;
 inline constexpr int kOOBreakPatternMaxVertices =
     (kOOBreakPatternMaxSides + 1) * 2;
 
-#define BREAK_PATTERN_RING_SPACING 50.0
-#define BREAK_PATTERN_RING_SPEED 200.0
+inline constexpr double BREAK_PATTERN_RING_SPACING = 50.0;
+inline constexpr double BREAK_PATTERN_RING_SPEED = 200.0;
 
 struct OOBreakPatternEntityTestAccess;
 
