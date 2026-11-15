@@ -3,7 +3,8 @@
         oo::str: string utilities over UTF-8 std::string, the
    C++ shape of the NSString methods Oolite relies on and of its own NSString
    categories. Every function reproduces what GNUstep base 1.31.1 does,
-   character for character;
+   character for character, except case mapping, which is ICU's simple mapping
+   (the same as GNUstep's on U+0000-U+017F; specs/015-icu-string-tables);
         tests/unit/oofnd/test_string.cpp pins each one against output captured
    from it.
 
@@ -49,7 +50,7 @@
               at run time (DESC, a plist template)              (%@, %p, positional; FormatArg per argument)
 
         Strings are UTF-8 (WTF-8 for a lone surrogate, as oo::PList holds them).
-   Where GNUstep's answer depends on UTF-16 (case tables, character sets,
+   Where GNUstep's answer depends on UTF-16 (case, character sets,
    lengths and indices), the function works on the UTF-16 units exactly as
    NSString does and converts back.
 
@@ -82,6 +83,7 @@
 // ICU (C API): case mapping and localizedCompare.
 #include <unicode/uchar.h>
 #include <unicode/ucol.h>
+#include <unicode/ustring.h>
 #include <unicode/uloc.h>
 
 namespace oo::str {
@@ -245,40 +247,24 @@ inline void dropUtf16ByteOrderMark(std::u16string& u) {
 
 // -initWithBytes:length:encoding:NSUTF8StringEncoding: strict UTF-8 (no
 // overlong forms, no encoded surrogates, nothing above U+10FFFF, no truncated
-// sequence), else nothing.
+// sequence), else nothing. ICU's u_strFromUTF8 refuses the same input.
 inline bool decodeStrictUtf8(const std::uint8_t* p, std::size_t n,
                              std::u16string& out) {
   out.clear();
-  out.reserve(n);
-  std::size_t i = 0;
-  const auto cont = [&](std::size_t k) {
-    return i + k < n && (p[i + k] & 0xC0) == 0x80;
-  };
-  while (i < n) {
-    const std::uint8_t b = p[i];
-    if (b < 0x80) {
-      out += static_cast<char16_t>(b);
-      i += 1;
-    } else if (b >= 0xC2 && b <= 0xDF && cont(1)) {
-      out += static_cast<char16_t>(((b & 0x1F) << 6) | (p[i + 1] & 0x3F));
-      i += 2;
-    } else if (b >= 0xE0 && b <= 0xEF && cont(1) && cont(2) &&
-               !(b == 0xE0 && p[i + 1] < 0xA0) &&
-               !(b == 0xED && p[i + 1] >= 0xA0)) {
-      out += static_cast<char16_t>(
-          ((b & 0x0F) << 12) | ((p[i + 1] & 0x3F) << 6) | (p[i + 2] & 0x3F));
-      i += 3;
-    } else if (b >= 0xF0 && b <= 0xF4 && cont(1) && cont(2) && cont(3) &&
-               !(b == 0xF0 && p[i + 1] < 0x90) &&
-               !(b == 0xF4 && p[i + 1] > 0x8F)) {
-      const std::uint32_t c = ((b & 0x07u) << 18) | ((p[i + 1] & 0x3Fu) << 12) |
-                              ((p[i + 2] & 0x3Fu) << 6) | (p[i + 3] & 0x3Fu);
-      out += static_cast<char16_t>(0xD800 + ((c - 0x10000) >> 10));
-      out += static_cast<char16_t>(0xDC00 + ((c - 0x10000) & 0x3FF));
-      i += 4;
-    } else {
-      return false;
-    }
+  if (n == 0) return true;
+  if (n > static_cast<std::size_t>(INT32_MAX)) return false;
+  const char* bytes = reinterpret_cast<const char*>(p);
+  const auto length = static_cast<int32_t>(n);
+  UErrorCode status = U_ZERO_ERROR;
+  int32_t units = 0;
+  u_strFromUTF8(nullptr, 0, &units, bytes, length, &status);
+  if (status != U_BUFFER_OVERFLOW_ERROR && U_FAILURE(status)) return false;
+  out.resize(static_cast<std::size_t>(units));
+  status = U_ZERO_ERROR;
+  u_strFromUTF8(out.data(), units, nullptr, bytes, length, &status);
+  if (U_FAILURE(status)) {
+    out.clear();
+    return false;
   }
   return true;
 }
@@ -577,14 +563,27 @@ inline std::string replaceOccurrences(std::string_view s,
 
 // -hasPrefix: / -hasSuffix:: literal UTF-16 comparison (a prefix that ends
 // inside a composed sequence or a surrogate pair still matches); an empty
-// prefix or suffix never matches.
+// prefix or suffix never matches. An ASCII prefix or suffix is compared as
+// bytes: utf8ToUtf16 turns each ASCII byte into one ASCII unit and every other
+// byte into non-ASCII units, so the answer is the same.
+namespace detail {
+constexpr bool isAscii(std::string_view s) noexcept {
+  return std::ranges::all_of(
+      s, [](char c) { return static_cast<unsigned char>(c) < 0x80; });
+}
+}  // namespace detail
+
 inline bool hasPrefix(std::string_view s, std::string_view prefix) {
+  if (detail::isAscii(prefix))
+    return !prefix.empty() && s.starts_with(prefix);
   const std::u16string u = utf8ToUtf16(s), p = utf8ToUtf16(prefix);
   return !p.empty() && p.size() <= u.size() &&
          std::u16string_view(u).substr(0, p.size()) == p;
 }
 
 inline bool hasSuffix(std::string_view s, std::string_view suffix) {
+  if (detail::isAscii(suffix))
+    return !suffix.empty() && s.ends_with(suffix);
   const std::u16string u = utf8ToUtf16(s), x = utf8ToUtf16(suffix);
   if (x.empty() || x.size() > u.size()) return false;
   return std::u16string_view(u).substr(u.size() - x.size()) == x;
