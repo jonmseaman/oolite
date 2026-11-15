@@ -52,8 +52,8 @@ inline constexpr int GUI_ROW_FUNCEND =
 inline constexpr int GUI_ROW_INSTRUCT = 18;
 
 // Dictionary keys (of the oo::PList function entries)
-#define KEY_HEADER "header"
-#define KEY_GUIDESC "guiDesc"
-#define KEY_ALLOWABLE "allowable"
-#define KEY_AXISFN "axisfunc"
-#define KEY_BUTTONFN "buttonfunc"
+inline constexpr char KEY_HEADER[] = "header";
+inline constexpr char KEY_GUIDESC[] = "guiDesc";
+inline constexpr char KEY_ALLOWABLE[] = "allowable";
+inline constexpr char KEY_AXISFN[] = "axisfunc";
+inline constexpr char KEY_BUTTONFN[] = "buttonfunc";
