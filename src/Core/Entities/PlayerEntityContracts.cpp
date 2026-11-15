@@ -142,7 +142,8 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
                       rescuee->name().value_or("(null)")),
           nullptr);
     } else if (rescuee->insuranceCredits() && rescuee->legalStatus()) {
-      float reward = (5.0 + government) * rescuee->legalStatus();
+      float reward =
+          static_cast<float>((5.0 + government) * rescuee->legalStatus());
       float insurance = static_cast<float>(10 * rescuee->insuranceCredits());
       if (government > (Ranrot() & 7) || reward >= insurance) {
         // claim bounty for capture, ignore insurance
@@ -195,7 +196,8 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
       added_entry = true;
     } else if (rescuee->legalStatus()) {
       // claim bounty for capture
-      float reward = (5.0 + government) * rescuee->legalStatus();
+      float reward =
+          static_cast<float>((5.0 + government) * rescuee->legalStatus());
       result += oo::str::formatRuntime(
           OO_DESC("capture-reward-for-@@-@-credits"),
           {rescuee->name().value_or("(null)"),
@@ -487,11 +489,11 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
         } else {
           // see if the amount of goods delivered is acceptable
 
-          float percent_delivered = 100.0 *
-                                    static_cast<float>(quantity_on_hand) /
-                                    static_cast<float>(contract_amount);
-          float acceptable_ratio =
-              100.0 - 10.0 * system_id / 256.0;  // down to 90%
+          float percent_delivered =
+              static_cast<float>(100.0 * static_cast<float>(quantity_on_hand) /
+                                 static_cast<float>(contract_amount));
+          float acceptable_ratio = static_cast<float>(
+              100.0 - 10.0 * system_id / 256.0);  // down to 90%
 
           if (percent_delivered >= acceptable_ratio) {
             // remove the goods...
@@ -1792,7 +1794,8 @@ void PlayerEntity::showShipyardInfoForSelection() {
     int cargoRating = shipDict.get<int>("max_cargo");
     int cargo_extra;
     cargo_extra = shipDict.get<int>("extra_cargo", 15);
-    float speedRating = 0.001 * shipDict.get<int>("max_flight_speed");
+    float speedRating =
+        static_cast<float>(0.001 * shipDict.get<int>("max_flight_speed"));
 
     const oo::PList* shipExtras =
         info.get<oo::PList::Array>("extras");  // KEY_EQUIPMENT_EXTRAS
@@ -1869,8 +1872,9 @@ void PlayerEntity::showShipyardModel(const std::string& shipKey,
                                      const oo::PList& shipData,
                                      uint16_t personality) {
   if (dockedStation() == nullptr) return;
-  showShipModelWithKey(shipKey, shipData, personality, 1.2, 0.8, 6.4,
-                       "shipyard");
+  showShipModelWithKey(shipKey, shipData, personality,
+                       static_cast<GLfloat>(1.2), static_cast<GLfloat>(0.8),
+                       static_cast<GLfloat>(6.4), "shipyard");
 }
 
 std::ptrdiff_t PlayerEntity::missingSubEntitiesAdjustment() {
@@ -2213,7 +2217,7 @@ void PlayerEntity::newShipCommonSetup(const std::string& shipKey,
   // new ship, so lose some memory of actions
   // new ship, so lose some memory of player actions
   if (ship_kills >= 6400) {
-    clearRolesFromPlayer(0.1);
+    clearRolesFromPlayer(static_cast<float>(0.1));
   } else if (ship_kills >= 2560) {
     clearRolesFromPlayer(0.25);
   } else {

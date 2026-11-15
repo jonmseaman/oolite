@@ -267,7 +267,9 @@ void PlayerEntity::setGuiToScenarioScreen(int page) {
 }
 
 void PlayerEntity::addScenarioModel(const std::string& shipKey) {
-  showShipModelWithKey(shipKey, oo::PList(), 0, 1.2, 0.8, 6.4, "scenario");
+  showShipModelWithKey(shipKey, oo::PList(), 0, static_cast<GLfloat>(1.2),
+                       static_cast<GLfloat>(0.8), static_cast<GLfloat>(6.4),
+                       "scenario");
 }
 
 void PlayerEntity::showScenarioDetails() {

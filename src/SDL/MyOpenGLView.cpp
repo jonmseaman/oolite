@@ -591,17 +591,20 @@ void MyOpenGLView::updateGLSize(NSSize size) {
   viewSize = size;
 
   if (bounds.size.width / bounds.size.height > 4.0 / 3.0) {
-    display_z = 480.0 * bounds.size.width / bounds.size.height;
-    x_offset = 240.0 * bounds.size.width / bounds.size.height;
+    display_z =
+        static_cast<GLfloat>(480.0 * bounds.size.width / bounds.size.height);
+    x_offset =
+        static_cast<GLfloat>(240.0 * bounds.size.width / bounds.size.height);
     y_offset = 240.0;
   } else {
     display_z = 640.0;
     x_offset = 320.0;
-    y_offset = 320.0 * bounds.size.height / bounds.size.width;
+    y_offset =
+        static_cast<GLfloat>(320.0 * bounds.size.height / bounds.size.width);
   }
 
   float ratio = 0.5;
-  float aspect = bounds.size.height / bounds.size.width;
+  float aspect = static_cast<float>(bounds.size.height / bounds.size.width);
 
   OOGL(glViewport(0, 0, static_cast<GLsizei>(bounds.size.width),
                   static_cast<GLsizei>(bounds.size.height)));
@@ -623,7 +626,7 @@ void MyOpenGLView::setUpBasicOpenGLStateWithSize() {
   } else {
     GLfloat black[4] = {0.0, 0.0, 0.0, 1.0};
     GLfloat white[] = {1.0, 1.0, 1.0, 1.0};
-    GLfloat stars_ambient[] = {0.25, 0.2, 0.25, 1.0};
+    GLfloat stars_ambient[] = {0.25, static_cast<GLfloat>(0.2), 0.25, 1.0};
 
     OOGL(glLightfv(GL_LIGHT1, GL_AMBIENT, black));
     OOGL(glLightfv(GL_LIGHT1, GL_SPECULAR, white));
@@ -1175,11 +1178,15 @@ oo::PList MyOpenGLView::currentScreenMode() {
 }
 
 void MyOpenGLView::setFov(float value, bool fromFraction) {
-  _fov = fromFraction ? value : tan((value / 2) * std::numbers::pi / 180);
+  _fov = fromFraction
+             ? value
+             : static_cast<float>(tan((value / 2) * std::numbers::pi / 180));
 }
 
 float MyOpenGLView::fov(bool inFraction) {
-  return inFraction ? _fov : 2 * atan(_fov) * 180 / std::numbers::pi;
+  return inFraction
+             ? _fov
+             : static_cast<float>(2 * atan(_fov) * 180 / std::numbers::pi);
 }
 
 bool MyOpenGLView::msaa() { return _msaa; }

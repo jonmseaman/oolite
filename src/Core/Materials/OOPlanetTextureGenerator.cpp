@@ -177,10 +177,10 @@ bool OOPlanetTextureGenerator::initWithPlanetInfo(const oo::PList& planetInfo,
     OO_LOG("texture.planet.generate", "Extracting parameters for generator {}",
            description());
 
-    _info.landFraction =
-        OOClamp_0_1_f(planetInfo.get<float>("land_fraction", 0.3));
-    _info.polarFraction =
-        OOClamp_0_1_f(planetInfo.get<float>("polar_fraction", 0.05));
+    _info.landFraction = OOClamp_0_1_f(
+        planetInfo.get<float>("land_fraction", static_cast<float>(0.3)));
+    _info.polarFraction = OOClamp_0_1_f(
+        planetInfo.get<float>("polar_fraction", static_cast<float>(0.05)));
     _info.landColor = FloatRGBFromDictColor(planetInfo, "land_color");
     _info.seaColor = FloatRGBFromDictColor(planetInfo, "sea_color");
     _info.paleLandColor = FloatRGBFromDictColor(planetInfo, "polar_land_color");
@@ -191,8 +191,8 @@ bool OOPlanetTextureGenerator::initWithPlanetInfo(const oo::PList& planetInfo,
              "Extracting atmosphere parameters");
       // we have an atmosphere:
       _info.cloudAlpha = planetInfo.get<float>("cloud_alpha", 1.0f);
-      _info.cloudFraction =
-          OOClamp_0_1_f(planetInfo.get<float>("cloud_fraction", 0.3));
+      _info.cloudFraction = OOClamp_0_1_f(
+          planetInfo.get<float>("cloud_fraction", static_cast<float>(0.3)));
       _info.cloudColor = FloatRGBFromDictColor(planetInfo, "cloud_color");
       _info.paleCloudColor =
           FloatRGBFromDictColor(planetInfo, "polar_cloud_color");
@@ -940,15 +940,17 @@ static bool GenerateFBMNoise3D(OOPlanetTextureGeneratorInfo* info) {
   if (MakePermutationTable(info)) [[likely]] {
     unsigned x, y, width = info->width, height = info->height;
     float lon, lat;  // Longitude and latitude in radians.
-    float dlon = 2.0f * std::numbers::pi / width;
-    float dlat = std::numbers::pi / height;
+    float dlon = static_cast<float>(2.0f * std::numbers::pi / width);
+    float dlat = static_cast<float>(std::numbers::pi / height);
     float* px = info->fbmBuffer.data();
 
-    for (y = 0, lat = -(std::numbers::pi / 2); y < height; y++, lat += dlat) {
+    for (y = 0, lat = static_cast<float>(-(std::numbers::pi / 2)); y < height;
+         y++, lat += dlat) {
       float las = sin(lat);
       float lac = cos(lat);
 
-      for (x = 0, lon = -std::numbers::pi; x < width; x++, lon += dlon) {
+      for (x = 0, lon = static_cast<float>(-std::numbers::pi); x < width;
+           x++, lon += dlon) {
         // FIXME: in real life, we really don't want sin and cos per pixel.
         // Convert spherical coordinates to vector.
         float los = sin(lon);

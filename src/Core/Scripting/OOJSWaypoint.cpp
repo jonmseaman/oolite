@@ -237,7 +237,7 @@ static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
     case kSize:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (fValue > 0.0) {
-          waypoint->setSize(fValue);
+          waypoint->setSize(static_cast<OOScalar>(fValue));
           return JS_UNDEFINED;
         }
       }

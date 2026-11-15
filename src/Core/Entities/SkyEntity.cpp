@@ -109,9 +109,10 @@ void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In,
   }
 
   // Load distribution values
-  clusterChance =
-      systemInfo.get<float>("sky_blur_cluster_chance", SKY_clusterChance);
-  alpha = systemInfo.get<float>("sky_blur_alpha", SKY_alpha);
+  clusterChance = systemInfo.get<float>("sky_blur_cluster_chance",
+                                        static_cast<float>(SKY_clusterChance));
+  alpha =
+      systemInfo.get<float>("sky_blur_alpha", static_cast<float>(SKY_alpha));
   scale = systemInfo.get<float>("sky_blur_scale", SKY_scale);
 
   // Load star count
@@ -187,7 +188,7 @@ bool SkyEntity::changeProperty(const std::string& key, const oo::PList& dict) {
 
 void SkyEntity::update(OOTimeDelta /*delta_t*/) {
   ::PlayerEntity* player = PLAYER;
-  zero_distance = MAX_CLEAR_DEPTH * MAX_CLEAR_DEPTH;
+  zero_distance = static_cast<GLfloat>(MAX_CLEAR_DEPTH * MAX_CLEAR_DEPTH);
   cam_zero_distance = zero_distance;
   if (player != nullptr) {
     position = (player != nullptr ? player->viewpointPosition() : HPVector{});

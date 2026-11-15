@@ -249,10 +249,10 @@ Quaternion quaternion_rotation_betweenHP(HPVector v0, HPVector v1) {
   OOHPScalar s = sqrt((1.0 + v0.x * v1.x + v0.y * v1.y + v0.z * v1.z) * 2.0);
   if (s > 0.0) [[likely]] {
     OOHPScalar is = 1.0 / s;
-    q.x = (v0.y * v1.z - v0.z * v1.y) * is;
-    q.y = (v0.z * v1.x - v0.x * v1.z) * is;
-    q.z = (v0.x * v1.y - v0.y * v1.x) * is;
-    q.w = s * 0.5;
+    q.x = static_cast<OOScalar>((v0.y * v1.z - v0.z * v1.y) * is);
+    q.y = static_cast<OOScalar>((v0.z * v1.x - v0.x * v1.z) * is);
+    q.z = static_cast<OOScalar>((v0.x * v1.y - v0.y * v1.x) * is);
+    q.w = static_cast<OOScalar>(s * 0.5);
   } else {
     // Is this actually a problem?
     if (HPvector_equal(v1, kBasisZHPVector) ||

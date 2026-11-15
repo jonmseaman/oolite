@@ -118,7 +118,8 @@ static GLfloat calcFuelChargeRate(GLfloat myMass) {
   // if anything is wrong, use 1 (the default  charge rate).
   if (myMass <= 0.0 || baseMass <= 0.0) return 1.0;
 
-  GLfloat result = (kMassCharge * myMass / baseMass) + kBaseCharge;
+  GLfloat result =
+      static_cast<GLfloat>((kMassCharge * myMass / baseMass) + kBaseCharge);
 
   // round the result to the second decimal digit.
   result = roundf(result * 100.0f) / 100.0f;
@@ -407,7 +408,9 @@ void ShipEntity::initWithKey(const std::string& key) {
 
 static constexpr std::string_view kBoulderRole = "boulder";
 
-static GLfloat cargo_color[4] = {0.9, 0.9, 0.9, 1.0};     // gray
+static GLfloat cargo_color[4] = {static_cast<GLfloat>(0.9),
+                                 static_cast<GLfloat>(0.9),
+                                 static_cast<GLfloat>(0.9), 1.0};  // gray
 static GLfloat hostile_color[4] = {1.0, 0.25, 0.0, 1.0};  // red/orange
 static GLfloat neutral_color[4] = {1.0, 1.0, 0.0, 1.0};   // yellow
 static GLfloat friendly_color[4] = {0.0, 1.0, 0.0, 1.0};  // green
@@ -415,8 +418,12 @@ static GLfloat missile_color[4] = {0.0, 1.0, 1.0, 1.0};   // cyan
 static GLfloat police_color1[4] = {0.5, 0.0, 1.0, 1.0};   // purpley-blue
 static GLfloat police_color2[4] = {1.0, 0.0, 0.5, 1.0};   // purpley-red
 static GLfloat jammed_color[4] = {0.0, 0.0, 0.0, 0.0};    // clear black
-static GLfloat mascem_color1[4] = {0.3, 0.3, 0.3, 1.0};   // dark gray
-static GLfloat mascem_color2[4] = {0.4, 0.1, 0.4, 1.0};   // purple
+static GLfloat mascem_color1[4] = {
+    static_cast<GLfloat>(0.3), static_cast<GLfloat>(0.3),
+    static_cast<GLfloat>(0.3), 1.0};  // dark gray
+static GLfloat mascem_color2[4] = {static_cast<GLfloat>(0.4),
+                                   static_cast<GLfloat>(0.1),
+                                   static_cast<GLfloat>(0.4), 1.0};  // purple
 static GLfloat scripted_color[4] = {0.0, 0.0, 0.0,
                                     0.0};  // to be defined by script
 
@@ -453,13 +460,14 @@ static bool IsBehaviourHostile(OOBehaviour behaviour) {
 // The stellar bodies are C++ entities: -position and -radius were the members.
 namespace {
 float SurfaceDistanceSqaredV(HPVector reference, Entity* stellar) {
-  float centerDistance =
-      HPmagnitude2(HPvector_subtract(stellar->getPosition(), reference));
-  float r = OOStellarBodyRadius(stellar);  // [stellar radius]
+  float centerDistance = static_cast<float>(
+      HPmagnitude2(HPvector_subtract(stellar->getPosition(), reference)));
+  float r =
+      static_cast<float>(OOStellarBodyRadius(stellar));  // [stellar radius]
   /*	1.35: empirical value used to help determine proximity when non-nested
                   planets are close to each other
           */
-  return centerDistance - 1.35 * r * r;
+  return static_cast<float>(centerDistance - 1.35 * r * r);
 }
 
 float SurfaceDistanceSqared(Entity* reference, Entity* stellar) {
@@ -495,7 +503,7 @@ Vector positionOffsetForShipInRotationToAlignment(ShipEntity* ship,
   switch (padAlign[0]) {
     case static_cast<uint16_t>('c'):
     case static_cast<uint16_t>('C'):
-      result.x = 0.5 * (arbb.min.x + arbb.max.x);
+      result.x = static_cast<OOScalar>(0.5 * (arbb.min.x + arbb.max.x));
       break;
     case static_cast<uint16_t>('M'):
       result.x = arbb.max.x;
@@ -507,7 +515,7 @@ Vector positionOffsetForShipInRotationToAlignment(ShipEntity* ship,
   switch (padAlign[1]) {
     case static_cast<uint16_t>('c'):
     case static_cast<uint16_t>('C'):
-      result.y = 0.5 * (arbb.min.y + arbb.max.y);
+      result.y = static_cast<OOScalar>(0.5 * (arbb.min.y + arbb.max.y));
       break;
     case static_cast<uint16_t>('M'):
       result.y = arbb.max.y;
@@ -519,7 +527,7 @@ Vector positionOffsetForShipInRotationToAlignment(ShipEntity* ship,
   switch (padAlign[2]) {
     case static_cast<uint16_t>('c'):
     case static_cast<uint16_t>('C'):
-      result.z = 0.5 * (arbb.min.z + arbb.max.z);
+      result.z = static_cast<OOScalar>(0.5 * (arbb.min.z + arbb.max.z));
       break;
     case static_cast<uint16_t>('M'):
       result.z = arbb.max.z;
@@ -760,7 +768,7 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
 
   // can it be 'mined' for alloys?
   canFragment = static_cast<unsigned char>(
-      FuzzyBooleanForKey(shipDict, "fragment_chance", 0.9));
+      FuzzyBooleanForKey(shipDict, "fragment_chance", static_cast<float>(0.9)));
   isWreckage = false;
 
   // can subentities be destroyed separately?
@@ -1088,7 +1096,7 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict) {
 
   accuracy = shipDict.get<float>("accuracy", -100.0f);  // Out-of-range default
   if (accuracy < -5.0f || accuracy > 10.0f) {
-    accuracy = (randf() * 10.0) - 5.0;
+    accuracy = static_cast<GLfloat>((randf() * 10.0) - 5.0);
 
     if (accuracy < 0.0f &&
         (scanClass == OOScanClass::kMilitary ||
@@ -1241,8 +1249,9 @@ bool ShipEntity::setUpSubEntities() {
                           : oo::PList());
   }
 
-  no_draw_distance = _profileRadius * _profileRadius * NO_DRAW_DISTANCE_FACTOR *
-                     NO_DRAW_DISTANCE_FACTOR * 2.0;
+  no_draw_distance = static_cast<GLfloat>(_profileRadius * _profileRadius *
+                                          NO_DRAW_DISTANCE_FACTOR *
+                                          NO_DRAW_DISTANCE_FACTOR * 2.0);
 
   return true;
 }
@@ -1255,7 +1264,7 @@ GLfloat ShipEntity::frustumRadius() {
                                 ? exEnt->findCollisionRadius()
                                 : 0;  // a message to nil answered 0
     if (exRadius > exhaust_length) {
-      exhaust_length = exRadius;
+      exhaust_length = static_cast<OOScalar>(exRadius);
     }
   }
   return _profileRadius + exhaust_length;
@@ -1335,8 +1344,8 @@ bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict,
     if (subentity != nullptr)
       subentity->setBehaviour(OOBehaviour::kTrackAsTurret);
     if (subentity != nullptr)
-      subentity->setWeaponRechargeRate(
-          subentDict.get<float>("fire_rate", TURRET_SHOT_FREQUENCY));
+      subentity->setWeaponRechargeRate(subentDict.get<float>(
+          "fire_rate", static_cast<float>(TURRET_SHOT_FREQUENCY)));
     if (subentity != nullptr)
       subentity->setWeaponEnergy(
           subentDict.get<float>("weapon_energy", TURRET_TYPICAL_ENERGY));
@@ -1454,7 +1463,7 @@ void ShipEntity::clearSubEntities() {
   subEntities.clear();
 
   // reset size & mass!
-  collision_radius = findCollisionRadius();
+  collision_radius = static_cast<GLfloat>(findCollisionRadius());
   _profileRadius = collision_radius;
   float density = shipinfoDictionary.get<float>("density", 1.0f);
   if (octree) mass = static_cast<GLfloat>(density * 20.0f * octree->volume());
@@ -1489,9 +1498,9 @@ void ShipEntity::setAccuracy(GLfloat new_accuracy) {
     new_accuracy = 10.0;
   }
   accuracy = new_accuracy;
-  pitch_tolerance = 0.01 * (85.0f + accuracy);
+  pitch_tolerance = static_cast<GLfloat>(0.01 * (85.0f + accuracy));
   // especially against small targets, less good pilots will waste some shots
-  aim_tolerance = 240.0 - (18.0f * accuracy);
+  aim_tolerance = static_cast<GLfloat>(240.0 - (18.0f * accuracy));
 
   if (accuracy >= COMBAT_AI_ISNT_AWFUL && missile_load_time < 0.1) {
     missile_load_time =
@@ -2245,9 +2254,10 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter,
        cruiseSpeed) &&
       ((escorter != nullptr ? escorter->getMaxFlightSpeed() : 0.0f) >
        cruiseSpeed * 0.3))
-    cruiseSpeed = (escorter != nullptr ? escorter->getMaxFlightSpeed() : 0.0f) *
-                  0.99;  // adapt patrolSpeed to the slowest escort but ignore
-                         // the very slow ones.
+    cruiseSpeed = static_cast<GLfloat>(
+        (escorter != nullptr ? escorter->getMaxFlightSpeed() : 0.0f) *
+        0.99);  // adapt patrolSpeed to the slowest escort but ignore
+                // the very slow ones.
 
   if (bounty) {
     int extra = 1 | (ranrot_rand() & 15);
@@ -2383,13 +2393,13 @@ void ShipEntity::addSubentityToCollisionRadius(Entity* subent) {
   if ((oo::ToShip(subent) != nullptr)) {
     // Solid subentity
     if (distance > collision_radius) {
-      collision_radius = distance;
+      collision_radius = static_cast<GLfloat>(distance);
     }
 
     mass += subent->getMass();
   }
   if (distance > _profileRadius) {
-    _profileRadius = distance;
+    _profileRadius = static_cast<GLfloat>(distance);
   }
 }
 
@@ -2421,7 +2431,8 @@ void ShipEntity::addSubentityToCollisionRadius(Entity* subent) {
   if (pod) {
     if (pod != nullptr) pod->setOwner(this);
     if (pod != nullptr)
-      pod->setTemperature(randomEjectaTemperatureWithMaxFactor(0.9));
+      pod->setTemperature(
+          randomEjectaTemperatureWithMaxFactor(static_cast<float>(0.9)));
     if (pod != nullptr) pod->setCommodity("slaves", 1);
     if (pod != nullptr) pod->setCrew(podCrew);
     if (pod != nullptr) pod->switchAITo("oolite-shuttleAI.js");
@@ -2532,25 +2543,27 @@ void ShipEntity::update(OOTimeDelta delta_t) {
 
   if (isDemoShip) {
     if (demoRate > 0) {
-      OOScalar cos1 = cos(
+      OOScalar cos1 = static_cast<OOScalar>(cos(
           std::numbers::pi *
           ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) *
-          demoRate / 11);
-      OOScalar sin1 = sin(
+          demoRate / 11));
+      OOScalar sin1 = static_cast<OOScalar>(sin(
           std::numbers::pi *
           ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) *
-          demoRate / 11);
-      OOScalar cos2 = cos(
+          demoRate / 11));
+      OOScalar cos2 = static_cast<OOScalar>(cos(
           -std::numbers::pi *
           ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) *
-          demoRate / 15);
-      OOScalar sin2 = sin(
+          demoRate / 15));
+      OOScalar sin2 = static_cast<OOScalar>(sin(
           -std::numbers::pi *
           ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) *
-          demoRate / 15);
-      Quaternion q1 = make_quaternion(cos1, sin1 * sqrt(3) / 2, sin1 / 2, 0);
-      Quaternion q2 = make_quaternion(cos2, -sin2 * sqrt(4) / sqrt(5), 0,
-                                      sin2 * sqrt(1) / sqrt(5));
+          demoRate / 15));
+      Quaternion q1 = make_quaternion(
+          cos1, static_cast<OOScalar>(sin1 * sqrt(3) / 2), sin1 / 2, 0);
+      Quaternion q2 = make_quaternion(
+          cos2, static_cast<OOScalar>(-sin2 * sqrt(4) / sqrt(5)), 0,
+          static_cast<OOScalar>(sin2 * sqrt(1) / sqrt(5)));
       setOrientation(quaternion_multiply(
           q2, quaternion_multiply(q1, demoStartOrientation)));
     }
@@ -2744,12 +2757,14 @@ void ShipEntity::update(OOTimeDelta delta_t) {
     //
     float heatThreshold = heatInsulation() * 100.0f;
     if (external_temp > heatThreshold && external_temp > ship_temperature) {
-      ship_temperature += (external_temp - ship_temperature) * delta_t *
-                          SHIP_INSULATION_FACTOR / heatInsulation();
+      ship_temperature +=
+          static_cast<float>((external_temp - ship_temperature) * delta_t *
+                             SHIP_INSULATION_FACTOR / heatInsulation());
     } else {
       if (ship_temperature > SHIP_MIN_CABIN_TEMP) {
-        ship_temperature += (external_temp - heatThreshold - ship_temperature) *
-                            delta_t * SHIP_COOLING_FACTOR / heatInsulation();
+        ship_temperature += static_cast<float>(
+            (external_temp - heatThreshold - ship_temperature) * delta_t *
+            SHIP_COOLING_FACTOR / heatInsulation());
         if (ship_temperature < SHIP_MIN_CABIN_TEMP)
           ship_temperature = SHIP_MIN_CABIN_TEMP;
       }
@@ -2782,7 +2797,7 @@ void ShipEntity::update(OOTimeDelta delta_t) {
     // cloaking device
     if (hasCloakingDevice()) {
       if (cloaking_device_active) {
-        energy -= delta_t * CLOAKING_DEVICE_ENERGY_RATE;
+        energy -= static_cast<GLfloat>(delta_t * CLOAKING_DEVICE_ENERGY_RATE);
         if (energy < CLOAKING_DEVICE_MIN_ENERGY) {
           deactivateCloakingDevice();
           if (energy < 0) energy = 0;
@@ -2793,7 +2808,7 @@ void ShipEntity::update(OOTimeDelta delta_t) {
     // military_jammer
     if (hasMilitaryJammer()) {
       if (military_jammer_active) {
-        energy -= delta_t * MILITARY_JAMMER_ENERGY_RATE;
+        energy -= static_cast<GLfloat>(delta_t * MILITARY_JAMMER_ENERGY_RATE);
         if (energy < MILITARY_JAMMER_MIN_ENERGY) {
           military_jammer_active = false;
           if (energy < 0) energy = 0;
@@ -2873,7 +2888,7 @@ void ShipEntity::update(OOTimeDelta delta_t) {
       applyAttitudeChanges(delta_t);
       applyThrust(delta_t);
       if (energy < maxEnergy) {
-        energy += energy_recharge_rate * delta_t;
+        energy += static_cast<GLfloat>(energy_recharge_rate * delta_t);
         if (energy > maxEnergy) {
           energy = maxEnergy;
           doScriptEvent(OOJSID("shipEnergyBecameFull"));
@@ -2922,17 +2937,19 @@ void ShipEntity::update(OOTimeDelta delta_t) {
   if (status() == OOEntityStatus::kCockpitDisplay) {
     flightYaw = 0.0;
     applyAttitudeChanges(delta_t);
-    GLfloat range2 = 0.1 * HPdistance2(position, _destination) /
-                     (collision_radius * collision_radius);
+    GLfloat range2 =
+        static_cast<GLfloat>(0.1 * HPdistance2(position, _destination) /
+                             (collision_radius * collision_radius));
     if ((range2 > 1.0) || (velocity.z > 0.0)) range2 = 1.0;
-    position = HPvector_add(position, vectorToHPVector(vector_multiply_scalar(
-                                          velocity, range2 * delta_t)));
+    position = HPvector_add(
+        position, vectorToHPVector(vector_multiply_scalar(
+                      velocity, static_cast<OOScalar>(range2 * delta_t))));
   } else {
     processBehaviour(delta_t);
 
     // manage energy
     if (energy < maxEnergy) {
-      energy += energy_recharge_rate * delta_t;
+      energy += static_cast<GLfloat>(energy_recharge_rate * delta_t);
       if (energy > maxEnergy) {
         energy = maxEnergy;
         doScriptEvent(OOJSID("shipEnergyBecameFull"));
@@ -2972,10 +2989,10 @@ void ShipEntity::update(OOTimeDelta delta_t) {
   if (!quaternion_equal(subentityRotationalVelocity, kIdentityQuaternion) &&
       !quaternion_equal(subentityRotationalVelocity, kZeroQuaternion)) {
     Quaternion qf = subentityRotationalVelocity;
-    qf.w *= (1.0 - delta_t);
-    qf.x *= delta_t;
-    qf.y *= delta_t;
-    qf.z *= delta_t;
+    qf.w *= static_cast<OOScalar>((1.0 - delta_t));
+    qf.x *= static_cast<OOScalar>(delta_t);
+    qf.y *= static_cast<OOScalar>(delta_t);
+    qf.z *= static_cast<OOScalar>(delta_t);
     setOrientation(quaternion_multiply(qf, orientation));
   }
 
@@ -3860,7 +3877,7 @@ bool ShipEntity::addEquipmentItem(const std::string& equipmentKeyIn,
     }
     if (equipmentKey == "EQ_SHIELD_ENHANCER") {
       maxEnergy += 256.0f;
-      energy_recharge_rate *= 1.5;
+      energy_recharge_rate *= static_cast<GLfloat>(1.5);
     }
   }
   // add the equipment
@@ -3911,7 +3928,7 @@ void ShipEntity::removeEquipmentItem(const std::string& equipmentKey) {
           if (maxEnergy < energy) energy = maxEnergy;
         } else if (equipmentKey == "EQ_SHIELD_ENHANCER") {
           maxEnergy -= 256.0f;
-          energy_recharge_rate /= 1.5;
+          energy_recharge_rate /= static_cast<GLfloat>(1.5);
           if (maxEnergy < energy) energy = maxEnergy;
         } else if (equipmentKey == "EQ_CARGO_BAY") {
           max_cargo -= extra_cargo;
@@ -4098,7 +4115,7 @@ bool ShipEntity::removeExternalStore(::OOEquipmentType* eqType) {
   } else {
     // All other ships: random role 10% of the cases when auto weapons is set,
     // if a missile_role is defined. Without auto weapons, never random.
-    float randomSelectionChance = chance;
+    float randomSelectionChance = static_cast<float>(chance);
     if (!hasAutoWeapons()) randomSelectionChance = 0.0f;
     if (randomSelectionChance < 0.9f && _missileRole.has_value()) {
       missileType = verifiedMissileTypeFromRole(*_missileRole);
@@ -4324,7 +4341,7 @@ void ShipEntity::behaviour_idle(double delta_t) {
 void ShipEntity::behaviour_tumble(double delta_t) { applySticks(delta_t); }
 
 void ShipEntity::behaviour_tractored(double delta_t) {
-  desired_range = collision_radius * 2.0;
+  desired_range = static_cast<GLfloat>(collision_radius * 2.0);
   ::ShipEntity* hauler = oo::ToShip(owner());
   if ((hauler) && ((hauler != nullptr ? hauler->getIsShip() : false))) {
     _destination =
@@ -4340,24 +4357,24 @@ void ShipEntity::behaviour_tractored(double delta_t) {
     // adjust for difference in velocity (spring rule)
     Vector dv = vector_between(
         getVelocity(), (hauler != nullptr ? hauler->getVelocity() : Vector{}));
-    GLfloat moment = delta_t * 0.25 * tf;
+    GLfloat moment = static_cast<GLfloat>(delta_t * 0.25 * tf);
     velocity.x += moment * dv.x;
     velocity.y += moment * dv.y;
     velocity.z += moment * dv.z;
     // acceleration = force / mass
     // force proportional to distance (spring rule)
     HPVector dp = HPvector_between(position, _destination);
-    moment = delta_t * 0.5 * tf;
-    velocity.x += moment * dp.x;
-    velocity.y += moment * dp.y;
-    velocity.z += moment * dp.z;
+    moment = static_cast<GLfloat>(delta_t * 0.5 * tf);
+    velocity.x += static_cast<OOScalar>(moment * dp.x);
+    velocity.y += static_cast<OOScalar>(moment * dp.y);
+    velocity.z += static_cast<OOScalar>(moment * dp.z);
     // force inversely proportional to distance
-    GLfloat d2 = HPmagnitude2(dp);
-    moment = (d2 > 0.0) ? delta_t * 5.0 * tf / d2 : 0.0;
+    GLfloat d2 = static_cast<GLfloat>(HPmagnitude2(dp));
+    moment = (d2 > 0.0) ? static_cast<GLfloat>(delta_t * 5.0 * tf / d2) : 0.0;
     if (d2 > 0.0) {
-      velocity.x += moment * dp.x;
-      velocity.y += moment * dp.y;
-      velocity.z += moment * dp.z;
+      velocity.x += static_cast<OOScalar>(moment * dp.x);
+      velocity.y += static_cast<OOScalar>(moment * dp.y);
+      velocity.z += static_cast<OOScalar>(moment * dp.z);
     }
     //
     if (status() == OOEntityStatus::kBeingScooped) {
@@ -4425,7 +4442,8 @@ void ShipEntity::behaviour_intercept_target(double delta_t) {
                                "BEHAVIOUR_INTERCEPT_TARGET");
       doScriptEvent(OOJSID("shipAchievedDesiredRange"));
     }
-    desired_speed = maxFlightSpeed * trackPrimaryTarget(delta_t, false);
+    desired_speed = static_cast<GLfloat>(maxFlightSpeed *
+                                         trackPrimaryTarget(delta_t, false));
   } else {
     // = OOBehaviour::kCollectTarget
     ::ShipEntity* target = oo::ToShip(primaryTarget());
@@ -4443,7 +4461,7 @@ void ShipEntity::behaviour_intercept_target(double delta_t) {
     double last_success_factor = success_factor;
     double last_distance = last_success_factor;
     double distance = rangeToDestination();
-    success_factor = distance;
+    success_factor = static_cast<GLfloat>(distance);
     //
     double slowdownTime =
         96.0 /
@@ -4454,14 +4472,14 @@ void ShipEntity::behaviour_intercept_target(double delta_t) {
 
     if ((eta < slowdownTime) &&
         (flightSpeed > maxFlightSpeed * minTurnSpeedFactor))
-      desired_speed =
+      desired_speed = static_cast<GLfloat>(
           flightSpeed *
-          0.75;  // cut speed by 50% to a minimum minTurnSpeedFactor of speed
+          0.75);  // cut speed by 50% to a minimum minTurnSpeedFactor of speed
     else
       desired_speed = maxFlightSpeed;
 
     if (desired_speed < target_speed) {
-      desired_speed += target_speed;
+      desired_speed += static_cast<GLfloat>(target_speed);
       if (target_speed > maxFlightSpeed) {
         noteLostTargetAndGoIdle();
         return;
@@ -4472,20 +4490,21 @@ void ShipEntity::behaviour_intercept_target(double delta_t) {
     }
 
     _destination = target->position;
-    desired_range = 0.5 * target->collision_radius;
+    desired_range = static_cast<GLfloat>(0.5 * target->collision_radius);
     trackDestination(delta_t, false);
 
     //
     if (distance < last_distance) {
       // improvement
-      frustration -= delta_t;
+      frustration -= static_cast<GLfloat>(delta_t);
       if (frustration < 0.0) frustration = 0.0;
     } else {
-      frustration += delta_t * 0.9;
+      frustration += static_cast<GLfloat>(delta_t * 0.9);
       if (frustration > 10.0) {
         // 10s of frustration
         noteFrustration("BEHAVIOUR_INTERCEPT_TARGET");
-        frustration -= 5.0;  // repeat after another five seconds' frustration
+        frustration -= static_cast<GLfloat>(
+            5.0);  // repeat after another five seconds' frustration
       }
     }
   }
@@ -4521,9 +4540,9 @@ void ShipEntity::behaviour_attack_break_off_target(double delta_t) {
     return;
   }
 
-  frustration += delta_t;
+  frustration += static_cast<GLfloat>(delta_t);
   if (frustration > 15.0 && accuracy >= COMBAT_AI_DOGFIGHTER && !canBurn) {
-    desired_speed = maxFlightSpeed / 2.0;
+    desired_speed = static_cast<GLfloat>(maxFlightSpeed / 2.0);
   }
   double aspect = approachAspectToPrimaryTarget();
   if (range > 3000.0 ||
@@ -4577,25 +4596,27 @@ void ShipEntity::behaviour_attack_slow_dogfight(double delta_t) {
     behaviour = OOBehaviour::kAttackTarget;
   } else if (aspect < -0.5) {
     // mostly behind target - try to stay there and keep up
-    desired_speed = fmin(maxFlightSpeed * 0.5,
-                         (target != nullptr ? target->speed() : 0.0) * 0.5);
+    desired_speed = static_cast<GLfloat>(
+        fmin(maxFlightSpeed * 0.5,
+             (target != nullptr ? target->speed() : 0.0) * 0.5));
   } else if (aspect < 0.3) {
     // to side of target - slow right down
-    desired_speed = maxFlightSpeed * 0.1;
+    desired_speed = static_cast<GLfloat>(maxFlightSpeed * 0.1);
   } else {
     // coming to front of target - accelerate for a quick getaway
-    desired_speed = maxFlightSpeed * fmin(aspect * 2.5, 1.0);
+    desired_speed =
+        static_cast<GLfloat>(maxFlightSpeed * fmin(aspect * 2.5, 1.0));
   }
   if (aspect > 0.85) {
     behaviour = OOBehaviour::kAttackBreakOffTarget;
   }
   if (aspect > 0.0) {
-    frustration += delta_t;
+    frustration += static_cast<GLfloat>(delta_t);
   } else {
-    frustration -= delta_t;
+    frustration -= static_cast<GLfloat>(delta_t);
   }
   if (frustration > 10.0) {
-    desired_speed /= 2.0;
+    desired_speed /= static_cast<GLfloat>(2.0);
   } else if (frustration < 0.0) {
     frustration = 0.0;
   }
@@ -4629,7 +4650,7 @@ void ShipEntity::behaviour_evasive_action(double delta_t) {
 
   evasiveAction(delta_t);
 
-  frustration += delta_t;
+  frustration += static_cast<GLfloat>(delta_t);
 
   if (frustration > 0.5) {
     if (behaviour == OOBehaviour::kFleeEvasiveAction) {
@@ -4681,7 +4702,8 @@ void ShipEntity::behaviour_attack_target(double /*delta_t*/) {
         hasTurrets) {  // safety for ships only equipped with turrets
       forward_weapon_real_type =
           OOWeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_PULSE_LASER");
-      forward_weapon_real_temp = COMBAT_AI_WEAPON_TEMP_USABLE * 0.9;
+      forward_weapon_real_temp =
+          static_cast<GLfloat>(COMBAT_AI_WEAPON_TEMP_USABLE * 0.9);
     }
   }
 
@@ -4771,8 +4793,8 @@ void ShipEntity::behaviour_attack_target(double /*delta_t*/) {
       float relativeSpeed = magnitude(vector_subtract(
           getVelocity(),
           (target != nullptr ? target->getVelocity() : kZeroVector)));
-      setEvasiveJink(
-          (range + COMBAT_JINK_OFFSET - relativeSpeed / max_flight_pitch));
+      setEvasiveJink((static_cast<GLfloat>(range + COMBAT_JINK_OFFSET -
+                                           relativeSpeed / max_flight_pitch)));
       behaviour = OOBehaviour::kAttackFlyFromTarget;
     } else {
       bool nearby = range < COMBAT_IN_RANGE_FACTOR *
@@ -4801,8 +4823,8 @@ void ShipEntity::behaviour_attack_target(double /*delta_t*/) {
           float relativeSpeed = magnitude(vector_subtract(
               getVelocity(),
               (target != nullptr ? target->getVelocity() : kZeroVector)));
-          setEvasiveJink(
-              (range + COMBAT_JINK_OFFSET - relativeSpeed / max_flight_pitch));
+          setEvasiveJink((static_cast<GLfloat>(
+              range + COMBAT_JINK_OFFSET - relativeSpeed / max_flight_pitch)));
         }
         // good pilots use behaviour_attack_break_off_target instead
         if (accuracy >= COMBAT_AI_FLEES_BETTER) {
@@ -4934,18 +4956,17 @@ void ShipEntity::behaviour_attack_broadside_target(double delta_t,
       ((isUsingAfterburner) ? 3.0 * afterburnerFactor() : 1.0);
   //	double target_speed = [target speed];
   if (range <= slow_down_range)
-    desired_speed = fmin(
-        0.8 * maxFlightSpeed,
-        fmax(
-            (2.0 - frustration) * maxFlightSpeed,
-            0.1 *
-                maxFlightSpeed));  // within the weapon's range slow down to aim
+    desired_speed = static_cast<GLfloat>(
+        fmin(0.8 * maxFlightSpeed,
+             fmax((2.0 - frustration) * maxFlightSpeed,
+                  0.1 * maxFlightSpeed)));  // within the weapon's range slow
+                                            // down to aim
   else
     desired_speed = max_available_speed;  // use afterburner to approach
 
   double last_success_factor = success_factor;
-  success_factor =
-      trackSideTarget(delta_t, leftside);  // do the actual piloting
+  success_factor = static_cast<GLfloat>(
+      trackSideTarget(delta_t, leftside));  // do the actual piloting
   if (weapon_temp >
       COMBAT_AI_WEAPON_TEMP_USABLE) {  // will probably have more luck with the
                                        // other laser or picking a different
@@ -4967,10 +4988,10 @@ void ShipEntity::behaviour_attack_broadside_target(double delta_t,
 
   /* FIXME: again, basically all of this next bit common with standard attack */
   if ((success_factor > 0.999) || (success_factor > last_success_factor)) {
-    frustration -= delta_t;
+    frustration -= static_cast<GLfloat>(delta_t);
     if (frustration < 0.0) frustration = 0.0;
   } else {
-    frustration += delta_t;
+    frustration += static_cast<GLfloat>(delta_t);
     if (frustration > 3.0) {
       // 3s of frustration
       noteFrustration("BEHAVIOUR_ATTACK_BROADSIDE");
@@ -5045,8 +5066,9 @@ void ShipEntity::behaviour_close_with_target(double delta_t) {
   behaviour = OOBehaviour::kAttackFlyToTargetTwelve;
   double saved_frustration = frustration;
   behaviour_fly_to_target_six(delta_t);
-  frustration = saved_frustration;  // ignore fly-to-12 frustration
-  frustration += delta_t;
+  frustration =
+      static_cast<GLfloat>(saved_frustration);  // ignore fly-to-12 frustration
+  frustration += static_cast<GLfloat>(delta_t);
   if (range <= COMBAT_IN_RANGE_FACTOR * weaponRange || frustration > 5.0) {
     behaviour = OOBehaviour::kAttackTarget;
   } else {
@@ -5091,13 +5113,13 @@ void ShipEntity::behaviour_attack_sniper(double delta_t) {
     }
 
     double last_success_factor = success_factor;
-    success_factor = trackPrimaryTarget(delta_t, false);
+    success_factor = static_cast<GLfloat>(trackPrimaryTarget(delta_t, false));
 
     if ((success_factor > 0.999) || (success_factor > last_success_factor)) {
-      frustration -= delta_t;
+      frustration -= static_cast<GLfloat>(delta_t);
       if (frustration < 0.0) frustration = 0.0;
     } else {
-      frustration += delta_t;
+      frustration += static_cast<GLfloat>(delta_t);
       if (frustration > 3.0) {
         // 3s of frustration
         noteFrustration("BEHAVIOUR_ATTACK_SNIPER");
@@ -5163,14 +5185,16 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t) {
   double target_speed = (target != nullptr ? target->speed() : 0.0);
   double last_success_factor = success_factor;
   double distance = rangeToDestination();
-  success_factor = distance;
+  success_factor = static_cast<GLfloat>(distance);
 
   if (range < slow_down_range &&
       (behaviour == OOBehaviour::kAttackFlyToTargetSix)) {
     if (range < back_off_range) {
-      desired_speed = fmax(0.9 * target_speed, 0.4 * maxFlightSpeed);
+      desired_speed =
+          static_cast<GLfloat>(fmax(0.9 * target_speed, 0.4 * maxFlightSpeed));
     } else {
-      desired_speed = fmax(target_speed * 1.2, maxFlightSpeed);
+      desired_speed =
+          static_cast<GLfloat>(fmax(target_speed * 1.2, maxFlightSpeed));
     }
 
     // avoid head-on collision
@@ -5179,7 +5203,8 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t) {
       behaviour = OOBehaviour::kAttackFlyToTargetTwelve;
   } else {
     if (range < back_off_range) {
-      desired_speed = fmax(0.9 * target_speed, 0.8 * maxFlightSpeed);
+      desired_speed =
+          static_cast<GLfloat>(fmax(0.9 * target_speed, 0.8 * maxFlightSpeed));
     } else {
       desired_speed = max_available_speed;  // use afterburner to approach
     }
@@ -5191,18 +5216,20 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t) {
       (target_speed < 0.2 && !isThargoid() && (getUniversalID() & 14) > 4)) {
     behaviour = OOBehaviour::kAttackFlyToTarget;
     frustration = 0.0;
-    desired_speed = fmax(
-        target_speed,
-        0.4 *
-            maxFlightSpeed);  // within the weapon's range don't use afterburner
+    desired_speed = static_cast<GLfloat>(
+        fmax(target_speed,
+             0.4 * maxFlightSpeed));  // within the weapon's range don't use
+                                      // afterburner
   }
 
   // target-six
   if (behaviour == OOBehaviour::kAttackFlyToTargetSix) {
     // head for a point weapon-range * 0.5 to the six of the target
     //
-    _destination = (target != nullptr ? target->distance_six(0.5 * weaponRange)
-                                      : HPVector{});
+    _destination =
+        (target != nullptr
+             ? target->distance_six(static_cast<GLfloat>(0.5 * weaponRange))
+             : HPVector{});
   }
   // target-twelve
   if (behaviour == OOBehaviour::kAttackFlyToTargetTwelve) {
@@ -5214,8 +5241,8 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t) {
       GLfloat offset = 1000.0;
       GLfloat spacing = 2000.0;
       if (accuracy > 0.0) {
-        offset = accuracy * 750.0;
-        spacing = 2000.0 + (accuracy * 500.0);
+        offset = static_cast<GLfloat>(accuracy * 750.0);
+        spacing = static_cast<GLfloat>(2000.0 + (accuracy * 500.0));
       }
       if (entity_personality & 1) {  // half at random
         offset = -offset;
@@ -5234,9 +5261,9 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t) {
   double confidenceFactor = trackDestination(delta_t, false);
 
   if (success_factor > last_success_factor || confidenceFactor < 0.85)
-    frustration += delta_t;
+    frustration += static_cast<GLfloat>(delta_t);
   else if (frustration > 0.0)
-    frustration -= delta_t * 0.75;
+    frustration -= static_cast<GLfloat>(delta_t * 0.75);
 
   double aspect = approachAspectToPrimaryTarget();
   if (!(forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser()
@@ -5260,18 +5287,19 @@ void ShipEntity::behaviour_attack_mining_target(double delta_t) {
   double range = rangeToPrimaryTarget();
   if (!canStillTrackPrimaryTarget()) {
     noteLostTargetAndGoIdle();
-    desired_speed = maxFlightSpeed * 0.375;
+    desired_speed = static_cast<GLfloat>(maxFlightSpeed * 0.375);
     return;
   } else if ((range < 650) || (proximityAlert() != nullptr)) {
     if (proximityAlert() == nullptr) {
       // NO_TARGET is 0: `== (Entity *)NO_TARGET` was the nil test
-      desired_speed = range * maxFlightSpeed / (650.0 * 16.0);
+      desired_speed =
+          static_cast<GLfloat>(range * maxFlightSpeed / (650.0 * 16.0));
     } else {
       avoidCollision();
     }
   } else {
     // we have a target, its within scanner range, and outside 650
-    desired_speed = maxFlightSpeed * 0.875;
+    desired_speed = static_cast<GLfloat>(maxFlightSpeed * 0.875);
   }
 
   trackPrimaryTarget(delta_t, false);
@@ -5344,15 +5372,17 @@ void ShipEntity::behaviour_attack_fly_to_target(double delta_t) {
            aspect > 0.8) ||
           aim_tolerance * range > COMBAT_AI_CONFIDENCE_FACTOR) {
         if (accuracy >= COMBAT_AI_FLEES_BETTER && aspect > 0.8) {
-          desired_speed = fmax(target_speed * 1.25, 0.8 * maxFlightSpeed);
+          desired_speed = static_cast<GLfloat>(
+              fmax(target_speed * 1.25, 0.8 * maxFlightSpeed));
           // stay at high speed if might be taking return fire
         } else {
-          desired_speed = fmax(
+          desired_speed = static_cast<GLfloat>(fmax(
               target_speed * 1.05,
-              0.25 * maxFlightSpeed);  // within the weapon's range match speed
+              0.25 * maxFlightSpeed));  // within the weapon's range match speed
         }
       } else {  // smart, and not being shot at right now - slow down to attack
-        desired_speed = fmax(0.1 * target_speed, 0.1 * maxFlightSpeed);
+        desired_speed = static_cast<GLfloat>(
+            fmax(0.1 * target_speed, 0.1 * maxFlightSpeed));
       }
     } else {
       if (accuracy < COMBAT_AI_IS_SMART ||
@@ -5361,12 +5391,15 @@ void ShipEntity::behaviour_attack_fly_to_target(double delta_t) {
                 ? oo::ToShip(target)->primaryTarget()
                 : static_cast<Entity*>(nullptr)) == this) ||
           range > weaponRange / 2.0) {
-        desired_speed = fmax(target_speed * 1.5, maxFlightSpeed);
+        desired_speed =
+            static_cast<GLfloat>(fmax(target_speed * 1.5, maxFlightSpeed));
       } else {  // smart, and not being shot at right now - slow down to attack
         if (aspect > -0.25) {
-          desired_speed = fmax(0.5 * target_speed, 0.5 * maxFlightSpeed);
+          desired_speed = static_cast<GLfloat>(
+              fmax(0.5 * target_speed, 0.5 * maxFlightSpeed));
         } else {
-          desired_speed = fmax(1.25 * target_speed, 0.5 * maxFlightSpeed);
+          desired_speed = static_cast<GLfloat>(
+              fmax(1.25 * target_speed, 0.5 * maxFlightSpeed));
         }
       }
     }
@@ -5374,22 +5407,22 @@ void ShipEntity::behaviour_attack_fly_to_target(double delta_t) {
     if (closeQuickly) {
       desired_speed = max_available_speed;  // use afterburner to approach
     } else {
-      desired_speed = fmax(
+      desired_speed = static_cast<GLfloat>(fmax(
           maxFlightSpeed,
           fmin(3.0 * target_speed,
-               max_available_speed));  // possibly use afterburner to approach
+               max_available_speed)));  // possibly use afterburner to approach
     }
   }
 
   double last_success_factor = success_factor;
-  success_factor =
-      trackPrimaryTarget(delta_t, false);  // do the actual piloting
+  success_factor = static_cast<GLfloat>(
+      trackPrimaryTarget(delta_t, false));  // do the actual piloting
 
   if ((success_factor > 0.999) || (success_factor > last_success_factor)) {
-    frustration -= delta_t;
+    frustration -= static_cast<GLfloat>(delta_t);
     if (frustration < 0.0) frustration = 0.0;
   } else {
-    frustration += delta_t;
+    frustration += static_cast<GLfloat>(delta_t);
     if (frustration > 3.0) {
       // 3s of frustration
       noteFrustration("BEHAVIOUR_ATTACK_FLY_TO_TARGET");
@@ -5447,7 +5480,7 @@ void ShipEntity::behaviour_attack_fly_to_target(double delta_t) {
 void ShipEntity::behaviour_attack_fly_from_target(double delta_t) {
   double range = rangeToPrimaryTarget();
   double last_success_factor = success_factor;
-  success_factor = range;
+  success_factor = static_cast<GLfloat>(range);
 
   if (primaryTarget() == nullptr) {
     noteLostTargetAndGoIdle();
@@ -5455,9 +5488,9 @@ void ShipEntity::behaviour_attack_fly_from_target(double delta_t) {
   }
   if (last_success_factor > success_factor) {
     // our target is closing in.
-    frustration += delta_t;
+    frustration += static_cast<GLfloat>(delta_t);
   } else {  // not getting away fast enough?
-    frustration += delta_t / 4.0;
+    frustration += static_cast<GLfloat>(delta_t / 4.0);
   }
 
   if (frustration > 10.0) {
@@ -5476,7 +5509,7 @@ void ShipEntity::behaviour_attack_fly_from_target(double delta_t) {
     }
     setEvasiveJink(z);
 
-    frustration /= 2.0;
+    frustration /= static_cast<GLfloat>(2.0);
   }
   if (desired_speed > maxFlightSpeed) {
     ::ShipEntity* target = oo::ToShip(primaryTarget());
@@ -5563,7 +5596,7 @@ void ShipEntity::behaviour_flee_target(double delta_t) {
   if (canBurn) max_available_speed *= afterburnerFactor();
 
   double last_range = success_factor;
-  success_factor = range;
+  success_factor = static_cast<GLfloat>(range);
 
   if (range > desired_range || range == 0) {
     if (shipAI != nullptr) {
@@ -5575,10 +5608,10 @@ void ShipEntity::behaviour_flee_target(double delta_t) {
 
   if (range > last_range) {
     // improvement
-    frustration -= 0.25 * delta_t;
+    frustration -= static_cast<GLfloat>(0.25 * delta_t);
     if (frustration < 0.0) frustration = 0.0;
   } else {
-    frustration += delta_t;
+    frustration += static_cast<GLfloat>(delta_t);
     if (frustration > 15.0) {
       // 15s of frustration
       noteFrustration("BEHAVIOUR_FLEE_TARGET");
@@ -5597,7 +5630,7 @@ void ShipEntity::behaviour_flee_target(double delta_t) {
   }
 
   if ((hasCascadeMine()) && (range < 10000.0) && canBurn) {
-    float qbomb_chance = 0.01 * delta_t;
+    float qbomb_chance = static_cast<float>(0.01 * delta_t);
     if (randf() < qbomb_chance) {
       launchCascadeMine();
     }
@@ -5664,13 +5697,14 @@ void ShipEntity::behaviour_face_destination(double delta_t) {
     }
   }
 
-  if (flightSpeed == 0) frustration += delta_t;
+  if (flightSpeed == 0) frustration += static_cast<GLfloat>(delta_t);
   if (frustration > 15.0 / max_flight_pitch) {
     // allow more time for slow ships.
     frustration = 0.0;
     noteFrustration("BEHAVIOUR_FACE_DESTINATION");
     if (flightPitch == old_pitch)
-      flightPitch = 0.5 * max_flight_pitch;  // hack to get out of frustration.
+      flightPitch = static_cast<GLfloat>(
+          0.5 * max_flight_pitch);  // hack to get out of frustration.
   }
 
   /* 2009-7-18 Eric: the condition check below is intended to eliminate the
@@ -5684,7 +5718,8 @@ void ShipEntity::behaviour_face_destination(double delta_t) {
   if (flightSpeed == 0 && frustration > 5 && confidenceFactor > 0.5 &&
       ((flightPitch > 0 && old_pitch < 0) ||
        (flightPitch < 0 && old_pitch > 0))) {
-    flightPitch += 0.5 * old_pitch;  // damping with last pitch value.
+    flightPitch += static_cast<GLfloat>(
+        0.5 * old_pitch);  // damping with last pitch value.
   }
 
   if (hasProximityAlertIgnoringTarget(true)) {
@@ -5725,8 +5760,8 @@ void ShipEntity::behaviour_land_on_planet(double delta_t) {
     // We are now turned away from planet. Start landing by flying backward.
     thrust = 0.0;  // stop forward acceleration.
     if (magnitude2(velocity) < MAX_LANDING_SPEED2) {
-      adjustVelocity(
-          vector_multiply_scalar(forwardVector(), -max_thrust * delta_t));
+      adjustVelocity(vector_multiply_scalar(
+          forwardVector(), static_cast<OOScalar>(-max_thrust * delta_t)));
     }
   }
 
@@ -5742,13 +5777,14 @@ void ShipEntity::behaviour_formation_form_up(double delta_t) {
   double eta = (distance - desired_range) / flightSpeed;
   if (eta < 0) eta = 0;
   if ((eta < 5.0) && (leadShip) && (leadShip->isShip))
-    desired_speed = (leadShip != nullptr ? leadShip->getFlightSpeed() : 0.0f) *
-                    (1 + eta * 0.05);
+    desired_speed = static_cast<GLfloat>(
+        (leadShip != nullptr ? leadShip->getFlightSpeed() : 0.0f) *
+        (1 + eta * 0.05));
   else
     desired_speed = maxFlightSpeed;
 
   double last_distance = success_factor;
-  success_factor = distance;
+  success_factor = static_cast<GLfloat>(distance);
 
   // do the actual piloting!!
   trackDestination(delta_t, false);
@@ -5756,22 +5792,22 @@ void ShipEntity::behaviour_formation_form_up(double delta_t) {
   eta =
       eta / 0.51;  // 2% safety margin assuming an average of half current speed
   GLfloat slowdownTime = (thrust > 0.0) ? flightSpeed / (thrust) : 4.0;
-  GLfloat minTurnSpeedFactor =
+  GLfloat minTurnSpeedFactor = static_cast<GLfloat>(
       0.05 * max_flight_pitch *
-      max_flight_roll;  // faster turning implies higher speeds
+      max_flight_roll);  // faster turning implies higher speeds
 
   if ((eta < slowdownTime) &&
       (flightSpeed > maxFlightSpeed * minTurnSpeedFactor))
-    desired_speed =
+    desired_speed = static_cast<GLfloat>(
         flightSpeed *
-        0.50;  // cut speed by 50% to a minimum minTurnSpeedFactor of speed
+        0.50);  // cut speed by 50% to a minimum minTurnSpeedFactor of speed
 
   if (distance < last_distance) {
     // improvement
-    frustration -= 0.25 * delta_t;
+    frustration -= static_cast<GLfloat>(0.25 * delta_t);
     if (frustration < 0.0) frustration = 0.0;
   } else {
-    frustration += delta_t;
+    frustration += static_cast<GLfloat>(delta_t);
     if (frustration > 15.0) {
       if (!leadShip) {
         noteFrustration(
@@ -5812,7 +5848,7 @@ void ShipEntity::behaviour_fly_to_destination(double delta_t) {
     frustration = 0.0;
   } else {
     double last_distance = success_factor;
-    success_factor = distance;
+    success_factor = static_cast<GLfloat>(distance);
 
     // do the actual piloting!!
     double confidenceFactor = trackDestination(delta_t, false);
@@ -5836,27 +5872,28 @@ void ShipEntity::behaviour_fly_to_destination(double delta_t) {
             and the ships runs the risk flying in circles around the target.
        (exclude active escorts)
     */
-    GLfloat eta = ((distance + 1) - desired_range) /
-                  (0.51 * flightSpeed *
-                   confidenceFactor);  // 2% safety margin assuming an average
-                                       // of half current speed
+    GLfloat eta = static_cast<GLfloat>(
+        ((distance + 1) - desired_range) /
+        (0.51 * flightSpeed *
+         confidenceFactor));  // 2% safety margin assuming an average
+                              // of half current speed
     GLfloat slowdownTime = (thrust > 0.0) ? flightSpeed / (thrust) : 4.0;
-    GLfloat minTurnSpeedFactor =
+    GLfloat minTurnSpeedFactor = static_cast<GLfloat>(
         0.05 * max_flight_pitch *
-        max_flight_roll;  // faster turning implies higher speeds
+        max_flight_roll);  // faster turning implies higher speeds
     if (!dockingInstructions.isNull()) {
-      minTurnSpeedFactor /= 10.0;
+      minTurnSpeedFactor /= static_cast<GLfloat>(10.0);
       if (minTurnSpeedFactor * maxFlightSpeed > 20.0) {
-        minTurnSpeedFactor /= 10.0;
+        minTurnSpeedFactor /= static_cast<GLfloat>(10.0);
       }
     }
 
     if (((eta < slowdownTime) &&
          (flightSpeed > maxFlightSpeed * minTurnSpeedFactor)) ||
         (flightSpeed > max_flight_pitch * 5 * confidenceFactor * distance)) {
-      desired_speed =
+      desired_speed = static_cast<GLfloat>(
           flightSpeed *
-          0.50;  // cut speed by 50% to a minimum minTurnSpeedFactor of speed
+          0.50);  // cut speed by 50% to a minimum minTurnSpeedFactor of speed
     }
 
     /* Flight correction block to prevent one possible form of
@@ -5875,7 +5912,7 @@ void ShipEntity::behaviour_fly_to_destination(double delta_t) {
                         upVector());
         if (rollMatch < MAX_COS && rollMatch > -MAX_COS) {
           // not matching rotating - stop until corrected
-          desired_speed = 0.1;
+          desired_speed = static_cast<GLfloat>(0.1);
         } else if (desired_speed <= 0.2) {
           // had previously paused, so return to normal speed
           desired_speed = dockingInstructions.get<float>("speed");
@@ -5885,16 +5922,17 @@ void ShipEntity::behaviour_fly_to_destination(double delta_t) {
 
     if (distance < last_distance) {
       // improvement
-      frustration -= 0.25 * delta_t;
+      frustration -= static_cast<GLfloat>(0.25 * delta_t);
       if (frustration < 0.0) frustration = 0.0;
     } else {
-      frustration += delta_t;
+      frustration += static_cast<GLfloat>(delta_t);
       if ((frustration > slowdownTime * 10.0 && slowdownTime > 0) ||
           (frustration > 15.0)) {
         // 10x slowdownTime or 15s of frustration
         noteFrustration("BEHAVIOUR_FLY_TO_DESTINATION");
-        frustration -= slowdownTime *
-                       5.0;  // repeat after another five units of frustration
+        frustration -= static_cast<GLfloat>(
+            slowdownTime *
+            5.0);  // repeat after another five units of frustration
       }
     }
   }
@@ -5928,8 +5966,8 @@ void ShipEntity::behaviour_avoid_collision(double delta_t) {
   } else {
     ::ShipEntity* prox_ship = oo::ToShip(proximityAlert());
     if (prox_ship) {
-      desired_range =
-          prox_ship->collision_radius * PROXIMITY_AVOID_DISTANCE_FACTOR;
+      desired_range = static_cast<GLfloat>(prox_ship->collision_radius *
+                                           PROXIMITY_AVOID_DISTANCE_FACTOR);
       _destination = prox_ship->position;
     }
     double dq = trackDestination(
@@ -5937,7 +5975,7 @@ void ShipEntity::behaviour_avoid_collision(double delta_t) {
     // Heading towards target with desired_speed > 0, avoids collisions better
     // than setting desired_speed to zero. (tested with boa class cruiser on
     // collisioncourse with buoy)
-    desired_speed = maxFlightSpeed * (0.5 * dq + 0.5);
+    desired_speed = static_cast<GLfloat>(maxFlightSpeed * (0.5 * dq + 0.5));
   }
 }
 
@@ -6023,20 +6061,22 @@ void ShipEntity::behaviour_fly_thru_navpoints(double delta_t) {
 
   GLfloat v0 = 0.0;
 
-  GLfloat r0 = HPdot_product(rel, ref);  // proportion of rel in direction ref
+  GLfloat r0 = static_cast<GLfloat>(
+      HPdot_product(rel, ref));  // proportion of rel in direction ref
 
   // if r0 is negative then we're the wrong side of things
 
-  GLfloat r1 = HPmagnitude(xp);  // distance of position from line
+  GLfloat r1 =
+      static_cast<GLfloat>(HPmagnitude(xp));  // distance of position from line
 
   bool in_cone = (r0 > 0.5 * r1);
 
   if (!in_cone)               // are we in the approach cone ?
-    r1 = 25.0 * flightSpeed;  // aim a few km out!
+    r1 = static_cast<GLfloat>(25.0 * flightSpeed);  // aim a few km out!
   else
-    r1 *= 2.0;
+    r1 *= static_cast<GLfloat>(2.0);
 
-  GLfloat dist2 = HPmagnitude2(rel);
+  GLfloat dist2 = static_cast<GLfloat>(HPmagnitude2(rel));
 
   if (dist2 < desired_range * desired_range) {
     // desired range achieved
@@ -6063,19 +6103,20 @@ void ShipEntity::behaviour_fly_thru_navpoints(double delta_t) {
       desired_range = 1.0;
     else
       desired_range = 100.0;
-    v0 = trackDestination(delta_t, false);
+    v0 = static_cast<GLfloat>(trackDestination(delta_t, false));
     desired_range = temp;
 
     if (dist2 < last_dist2) {
       // improvement
-      frustration -= 0.25 * delta_t;
+      frustration -= static_cast<GLfloat>(0.25 * delta_t);
       if (frustration < 0.0) frustration = 0.0;
     } else {
-      frustration += delta_t;
+      frustration += static_cast<GLfloat>(delta_t);
       if (frustration > 15.0) {
         // 15s of frustration
         noteFrustration("BEHAVIOUR_FLY_THRU_NAVPOINTS");
-        frustration -= 15.0;  // repeat after another 15s of frustration
+        frustration -= static_cast<GLfloat>(
+            15.0);  // repeat after another 15s of frustration
       }
     }
   }
@@ -6358,9 +6399,9 @@ void ShipEntity::drawDebugStuff() {
   if (0 && reportAIMessages) {
     OODebugDrawPoint(HPVectorToVector(_destination),
                      OOColor::blueColor().get());
-    OODebugDrawColoredLine(HPVectorToVector(getPosition()),
-                           HPVectorToVector(_destination),
-                           OOColor::colorWithWhite(0.15, 1.0).get());
+    OODebugDrawColoredLine(
+        HPVectorToVector(getPosition()), HPVectorToVector(_destination),
+        OOColor::colorWithWhite(static_cast<float>(0.15), 1.0).get());
 
     Entity* pTarget = primaryTarget();
     if (pTarget != nullptr) {
@@ -6372,7 +6413,7 @@ void ShipEntity::drawDebugStuff() {
           HPVectorToVector(getPosition()),
           HPVectorToVector(
               (pTarget != nullptr ? pTarget->getPosition() : kZeroHPVector)),
-          OOColor::colorWithRed(0.2, 0.0, 0.0, 1.0).get());
+          OOColor::colorWithRed(static_cast<float>(0.2), 0.0, 0.0, 1.0).get());
     }
 
     Entity* sTarget = targetStation();
@@ -6621,7 +6662,8 @@ void ShipEntity::setOwner(Entity* who_owns_entity) {
 }
 
 void ShipEntity::applyThrust(double delta_t) {
-  GLfloat dt_thrust = SHIP_THRUST_FACTOR * thrust * delta_t;
+  GLfloat dt_thrust =
+      static_cast<GLfloat>(SHIP_THRUST_FACTOR * thrust * delta_t);
   bool canBurn = hasFuelInjection() && (fuel > MIN_FUEL);
   bool isUsingAfterburner = (canBurn && (flightSpeed > maxFlightSpeed) &&
                              (desired_speed >= flightSpeed));
@@ -6655,10 +6697,10 @@ void ShipEntity::applyThrust(double delta_t) {
   // burn fuel at the appropriate rate
   if (isUsingAfterburner) {
     // no fuelconsumption on slowdown
-    fuel_accumulator -= delta_t * afterburner_rate;
+    fuel_accumulator -= static_cast<GLfloat>(delta_t * afterburner_rate);
     while (fuel_accumulator < 0.0) {
       fuel--;
-      fuel_accumulator += 1.0;
+      fuel_accumulator += static_cast<GLfloat>(1.0);
     }
   }
 }
@@ -6702,7 +6744,9 @@ void ShipEntity::applyRoll(GLfloat roll1, GLfloat climb1, GLfloat yaw1) {
 }
 
 void ShipEntity::applyAttitudeChanges(double delta_t) {
-  applyRoll(flightRoll * delta_t, flightPitch * delta_t, flightYaw * delta_t);
+  applyRoll(static_cast<GLfloat>(flightRoll * delta_t),
+            static_cast<GLfloat>(flightPitch * delta_t),
+            static_cast<GLfloat>(flightYaw * delta_t));
 }
 
 void ShipEntity::avoidCollision() {
@@ -6734,8 +6778,8 @@ void ShipEntity::avoidCollision() {
         (prox_ship != nullptr ? prox_ship->getPosition() : HPVector{}),
         0.5);  // point between us and them
 
-    desired_range =
-        prox_ship->collision_radius * PROXIMITY_AVOID_DISTANCE_FACTOR;
+    desired_range = static_cast<GLfloat>(prox_ship->collision_radius *
+                                         PROXIMITY_AVOID_DISTANCE_FACTOR);
 
     behaviour = OOBehaviour::kAvoidCollision;
     pitching_over = true;
@@ -6906,8 +6950,9 @@ void ShipEntity::setProximityAlert(::ShipEntity* other) {
   GLfloat d_right = dot_product(vdiff, v_right);
   if ((d_forward > 0.0) &&
       (flightSpeed > 0.0))  // it's ahead of us and we're moving forward
-    d_forward *= 0.25 * maxFlightSpeed /
-                 flightSpeed;  // extend the collision zone forward up to 400%
+    d_forward *= static_cast<GLfloat>(
+        0.25 * maxFlightSpeed /
+        flightSpeed);  // extend the collision zone forward up to 400%
   double d2 = d_forward * d_forward + d_up * d_up + d_right * d_right;
   double cr2 = collision_radius * 2.0 + other->collision_radius;
   cr2 *= cr2;  // check with twice the combined radius
@@ -6920,10 +6965,12 @@ void ShipEntity::setProximityAlert(::ShipEntity* other) {
     ::ShipEntity* prox = oo::ToShip(proximityAlert());
     if ((prox) && (prox != other)) {
       // check which subtends the greatest angle
-      GLfloat sa_prox = prox->collision_radius * prox->collision_radius /
-                        HPdistance2(position, prox->position);
-      GLfloat sa_other = other->collision_radius * other->collision_radius /
-                         HPdistance2(position, other->position);
+      GLfloat sa_prox =
+          static_cast<GLfloat>(prox->collision_radius * prox->collision_radius /
+                               HPdistance2(position, prox->position));
+      GLfloat sa_other = static_cast<GLfloat>(
+          other->collision_radius * other->collision_radius /
+          HPdistance2(position, other->position));
       if (sa_prox < sa_other) return;
     }
   }
@@ -7357,11 +7404,11 @@ OOAegisStatus ShipEntity::checkForAegis() {
     return OOAegisStatus::kNone;
   }
   // check planet
-  float cr = OOStellarBodyRadius(nearest);
+  float cr = static_cast<float>(OOStellarBodyRadius(nearest));
   float cr2 = cr * cr;
   OOAegisStatus result = OOAegisStatus::kNone;
-  float d2 =
-      HPmagnitude2(HPvector_subtract(nearest->getPosition(), getPosition()));
+  float d2 = static_cast<float>(
+      HPmagnitude2(HPvector_subtract(nearest->getPosition(), getPosition())));
   // not scannerRange: aegis shouldn't depend on that
   float sd2 = SCANNER_MAX_RANGE2 * 10.0f;
 
@@ -7391,9 +7438,9 @@ OOAegisStatus ShipEntity::checkForAegis() {
   ::StationEntity* the_station =
       (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr);
   if (the_station) {
-    sd2 = HPmagnitude2(HPvector_subtract(
+    sd2 = static_cast<float>(HPmagnitude2(HPvector_subtract(
         (the_station != nullptr ? the_station->getPosition() : HPVector{}),
-        getPosition()));
+        getPosition())));
   }
   // again, notional scanner range is intentional
   if (sd2 < SCANNER_MAX_RANGE2 * 4.0f) {
@@ -7415,10 +7462,11 @@ OOAegisStatus ShipEntity::checkForAegis() {
     // are we also close to the main planet?
     ::OOPlanetEntity* mainPlanet =
         (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr);
-    d2 = HPmagnitude2(HPvector_subtract(
+    d2 = static_cast<float>(HPmagnitude2(HPvector_subtract(
         (mainPlanet != nullptr ? mainPlanet->getPosition() : HPVector{}),
-        getPosition()));
-    cr2 = (mainPlanet != nullptr ? mainPlanet->radius() : 0.0);
+        getPosition())));
+    cr2 = (mainPlanet != nullptr ? static_cast<float>(mainPlanet->radius())
+                                 : 0.0);
     cr2 *= cr2;
     if (d2 < cr2 * 9.0f) {
       nearest = mainPlanet;  // the C++ planet
@@ -7734,45 +7782,49 @@ void ShipEntity::applySticks(double delta_t) {
 
   // apply stick movement limits
   if (flightRoll < stick_roll - rate1) {
-    flightRoll = flightRoll + rate1;
+    flightRoll = static_cast<GLfloat>(flightRoll + rate1);
   } else if (flightRoll > stick_roll + rate1) {
-    flightRoll = flightRoll - rate1;
+    flightRoll = static_cast<GLfloat>(flightRoll - rate1);
   } else {
     flightRoll = stick_roll;
   }
 
   if (flightPitch < stick_pitch - rate2) {
-    flightPitch = flightPitch + rate2;
+    flightPitch = static_cast<GLfloat>(flightPitch + rate2);
   } else if (flightPitch > stick_pitch + rate2) {
-    flightPitch = flightPitch - rate2;
+    flightPitch = static_cast<GLfloat>(flightPitch - rate2);
   } else {
     flightPitch = stick_pitch;
   }
 
   if (flightYaw < stick_yaw - rate3) {
-    flightYaw = flightYaw + rate3;
+    flightYaw = static_cast<GLfloat>(flightYaw + rate3);
   } else if (flightYaw > stick_yaw + rate3) {
-    flightYaw = flightYaw - rate3;
+    flightYaw = static_cast<GLfloat>(flightYaw - rate3);
   } else {
     flightYaw = stick_yaw;
   }
 }
 
 void ShipEntity::setRoll(double amount) {
-  flightRoll = amount * std::numbers::pi / 2.0;
+  flightRoll = static_cast<GLfloat>(amount * std::numbers::pi / 2.0);
 }
 
-void ShipEntity::setRawRoll(double amount) { flightRoll = amount; }
+void ShipEntity::setRawRoll(double amount) {
+  flightRoll = static_cast<GLfloat>(amount);
+}
 
 void ShipEntity::setPitch(double amount) {
-  flightPitch = amount * std::numbers::pi / 2.0;
+  flightPitch = static_cast<GLfloat>(amount * std::numbers::pi / 2.0);
 }
 
 void ShipEntity::setYaw(double amount) {
-  flightYaw = amount * std::numbers::pi / 2.0;
+  flightYaw = static_cast<GLfloat>(amount * std::numbers::pi / 2.0);
 }
 
-void ShipEntity::setThrust(double amount) { thrust = amount; }
+void ShipEntity::setThrust(double amount) {
+  thrust = static_cast<GLfloat>(amount);
+}
 
 void ShipEntity::setThrustForDemo(float factor) {
   flightSpeed = factor * maxFlightSpeed;
@@ -8070,9 +8122,13 @@ void ShipEntity::setCargoFlag(OOCargoFlag flag) {
   }
 }
 
-void ShipEntity::setSpeed(double amount) { flightSpeed = amount; }
+void ShipEntity::setSpeed(double amount) {
+  flightSpeed = static_cast<GLfloat>(amount);
+}
 
-void ShipEntity::setDesiredSpeed(double amount) { desired_speed = amount; }
+void ShipEntity::setDesiredSpeed(double amount) {
+  desired_speed = static_cast<GLfloat>(amount);
+}
 
 double ShipEntity::desiredSpeed() { return desired_speed; }
 
@@ -8081,7 +8137,9 @@ double ShipEntity::desiredSpeed() { return desired_speed; }
 
 double ShipEntity::desiredRange() { return desired_range; }
 
-void ShipEntity::setDesiredRange(double amount) { desired_range = amount; }
+void ShipEntity::setDesiredRange(double amount) {
+  desired_range = static_cast<GLfloat>(amount);
+}
 
 double ShipEntity::getCruiseSpeed() { return cruiseSpeed; }
 
@@ -8091,9 +8149,9 @@ void ShipEntity::increase_flight_speed(double delta) {
     factor = afterburnerFactor();
 
   if (flightSpeed < maxFlightSpeed * factor)
-    flightSpeed += delta * factor;
+    flightSpeed += static_cast<GLfloat>(delta * factor);
   else
-    flightSpeed = maxFlightSpeed * factor;
+    flightSpeed = static_cast<GLfloat>(maxFlightSpeed * factor);
 }
 
 void ShipEntity::decrease_flight_speed(double delta) {
@@ -8103,14 +8161,14 @@ void ShipEntity::decrease_flight_speed(double delta) {
   }
 
   if (flightSpeed > factor * delta) {
-    flightSpeed -= factor * delta;
+    flightSpeed -= static_cast<GLfloat>(factor * delta);
   } else {
     flightSpeed = 0;
   }
 }
 
 void ShipEntity::increase_flight_roll(double delta) {
-  flightRoll += delta;
+  flightRoll += static_cast<GLfloat>(delta);
   if (flightRoll > max_flight_roll)
     flightRoll = max_flight_roll;
   else if (flightRoll < -max_flight_roll)
@@ -8118,7 +8176,7 @@ void ShipEntity::increase_flight_roll(double delta) {
 }
 
 void ShipEntity::decrease_flight_roll(double delta) {
-  flightRoll -= delta;
+  flightRoll -= static_cast<GLfloat>(delta);
   if (flightRoll > max_flight_roll)
     flightRoll = max_flight_roll;
   else if (flightRoll < -max_flight_roll)
@@ -8126,7 +8184,7 @@ void ShipEntity::decrease_flight_roll(double delta) {
 }
 
 void ShipEntity::increase_flight_pitch(double delta) {
-  flightPitch += delta;
+  flightPitch += static_cast<GLfloat>(delta);
   if (flightPitch > max_flight_pitch)
     flightPitch = max_flight_pitch;
   else if (flightPitch < -max_flight_pitch)
@@ -8134,7 +8192,7 @@ void ShipEntity::increase_flight_pitch(double delta) {
 }
 
 void ShipEntity::decrease_flight_pitch(double delta) {
-  flightPitch -= delta;
+  flightPitch -= static_cast<GLfloat>(delta);
   if (flightPitch > max_flight_pitch)
     flightPitch = max_flight_pitch;
   else if (flightPitch < -max_flight_pitch)
@@ -8142,7 +8200,7 @@ void ShipEntity::decrease_flight_pitch(double delta) {
 }
 
 void ShipEntity::increase_flight_yaw(double delta) {
-  flightYaw += delta;
+  flightYaw += static_cast<GLfloat>(delta);
   if (flightYaw > max_flight_yaw)
     flightYaw = max_flight_yaw;
   else if (flightYaw < -max_flight_yaw)
@@ -8150,7 +8208,7 @@ void ShipEntity::increase_flight_yaw(double delta) {
 }
 
 void ShipEntity::decrease_flight_yaw(double delta) {
-  flightYaw -= delta;
+  flightYaw -= static_cast<GLfloat>(delta);
   if (flightYaw > max_flight_yaw)
     flightYaw = max_flight_yaw;
   else if (flightYaw < -max_flight_yaw)
@@ -8231,7 +8289,8 @@ int ShipEntity::damage() {
 void ShipEntity::dealEnergyDamage(GLfloat baseDamage, GLfloat range,
                                   GLfloat velocityBias) {
   // this is limited to the player's scanner range
-  GLfloat maxRange = fmin(range * sqrt(baseDamage), SCANNER_MAX_RANGE);
+  GLfloat maxRange =
+      static_cast<GLfloat>(fmin(range * sqrt(baseDamage), SCANNER_MAX_RANGE));
 
   OO_LOG("missile.damage.calc", "Range: {:f} | Damage: {:f} | MaxRange: {:f}",
          range, baseDamage, maxRange);
@@ -8298,7 +8357,7 @@ void ShipEntity::dealEnergyDamage(GLfloat baseDamage, GLfloat range,
   if (UNIVERSE != nullptr)
     UNIVERSE->addEntity(
         oo::MadeEntity(OOExplosionCloudEntity::explosionCloudFromEntity(
-            this, range * 3.0,
+            this, static_cast<float>(range * 3.0),
             (UNIVERSE != nullptr
                  ? UNIVERSE->explosionSetting("oolite-default-ship-explosion")
                  : oo::PList()))));
@@ -8353,7 +8412,8 @@ void ShipEntity::dealMomentumWithinDesiredRange(double amount) {
           d2 = 0.1;
         }
         double moment = amount * desired_range / d2;
-        if (e2 != nullptr) e2->addImpactMoment(vector_normal(p2), moment);
+        if (e2 != nullptr)
+          e2->addImpactMoment(vector_normal(p2), static_cast<GLfloat>(moment));
       }
     }
   }
@@ -8524,9 +8584,12 @@ void ShipEntity::releaseCargoPodsDebris() {
       rpos.y += (ranrot_rand() % 7) - 3;
       rpos.z += (ranrot_rand() % 7) - 3;
       if (container != nullptr) container->setPosition(rpos);
-      v.x = 0.1 * ((ranrot_rand() % speed_low) - speed_low / 2);
-      v.y = 0.1 * ((ranrot_rand() % speed_low) - speed_low / 2);
-      v.z = 0.1 * ((ranrot_rand() % speed_low) - speed_low / 2);
+      v.x = static_cast<OOScalar>(
+          0.1 * ((ranrot_rand() % speed_low) - speed_low / 2));
+      v.y = static_cast<OOScalar>(
+          0.1 * ((ranrot_rand() % speed_low) - speed_low / 2));
+      v.z = static_cast<OOScalar>(
+          0.1 * ((ranrot_rand() % speed_low) - speed_low / 2));
       if (container != nullptr)
         container->setVelocity(vector_add(v, getVelocity()));
       quaternion_set_random(&q);
@@ -8736,8 +8799,9 @@ void ShipEntity::becomeExplosion() {
               if (rock) {
                 float r_speed =
                     (rock != nullptr ? rock->getMaxFlightSpeed() : 0.0f) > 0
-                        ? 2.0 * (rock != nullptr ? rock->getMaxFlightSpeed()
-                                                 : 0.0f)
+                        ? static_cast<float>(
+                              2.0 * (rock != nullptr ? rock->getMaxFlightSpeed()
+                                                     : 0.0f))
                         : defaultSpeed;
                 float cr = (collision_radius < rock->collision_radius)
                                ? collision_radius
@@ -8810,8 +8874,8 @@ void ShipEntity::becomeExplosion() {
             Vector r1 = (octree ? octree->randomPoint() : kZeroVector);
             Vector dir = quaternion_rotate_vector(normalOrientation(), r1);
             HPVector rpos = HPvector_add(vectorToHPVector(dir), xposition);
-            GLfloat lifetime =
-                750.0 * randf() + 250.0 * static_cast<double>(i) + 100.0;
+            GLfloat lifetime = static_cast<GLfloat>(
+                750.0 * randf() + 250.0 * static_cast<double>(i) + 100.0);
             ::ShipEntity* wreck =
                 (UNIVERSE != nullptr
                      ? UNIVERSE->addWreckageFrom(this, "wreckage", rpos, 1.0,
@@ -8857,9 +8921,12 @@ void ShipEntity::becomeExplosion() {
           rpos.y += (ranrot_rand() % 7) - 3;
           rpos.z += (ranrot_rand() % 7) - 3;
           if (plate != nullptr) plate->setPosition(rpos);
-          v.x = 0.1 * ((ranrot_rand() % speed_low) - speed_low / 2);
-          v.y = 0.1 * ((ranrot_rand() % speed_low) - speed_low / 2);
-          v.z = 0.1 * ((ranrot_rand() % speed_low) - speed_low / 2);
+          v.x = static_cast<OOScalar>(
+              0.1 * ((ranrot_rand() % speed_low) - speed_low / 2));
+          v.y = static_cast<OOScalar>(
+              0.1 * ((ranrot_rand() % speed_low) - speed_low / 2));
+          v.z = static_cast<OOScalar>(
+              0.1 * ((ranrot_rand() % speed_low) - speed_low / 2));
           if (plate != nullptr)
             plate->setVelocity(vector_add(v, getVelocity()));
           quaternion_set_random(&q);
@@ -8992,7 +9059,8 @@ Vector ShipEntity::positionOffsetForAlignment(const std::string& align) {
   switch (padAlign[0]) {
     case static_cast<uint16_t>('c'):
     case static_cast<uint16_t>('C'):
-      result.x = 0.5 * (boundingBox.min.x + boundingBox.max.x);
+      result.x =
+          static_cast<OOScalar>(0.5 * (boundingBox.min.x + boundingBox.max.x));
       break;
     case static_cast<uint16_t>('M'):
       result.x = boundingBox.max.x;
@@ -9004,7 +9072,8 @@ Vector ShipEntity::positionOffsetForAlignment(const std::string& align) {
   switch (padAlign[1]) {
     case static_cast<uint16_t>('c'):
     case static_cast<uint16_t>('C'):
-      result.y = 0.5 * (boundingBox.min.y + boundingBox.max.y);
+      result.y =
+          static_cast<OOScalar>(0.5 * (boundingBox.min.y + boundingBox.max.y));
       break;
     case static_cast<uint16_t>('M'):
       result.y = boundingBox.max.y;
@@ -9016,7 +9085,8 @@ Vector ShipEntity::positionOffsetForAlignment(const std::string& align) {
   switch (padAlign[2]) {
     case static_cast<uint16_t>('c'):
     case static_cast<uint16_t>('C'):
-      result.z = 0.5 * (boundingBox.min.z + boundingBox.max.z);
+      result.z =
+          static_cast<OOScalar>(0.5 * (boundingBox.min.z + boundingBox.max.z));
       break;
     case static_cast<uint16_t>('M'):
       result.z = boundingBox.max.z;
@@ -9041,7 +9111,7 @@ void ShipEntity::becomeLargeExplosion(double factor) {
   {
     // two parts to the explosion:
     // 1. fast sparks
-    float how_many = factor;
+    float how_many = static_cast<float>(factor);
     while (how_many > 0.5f) {
       if (UNIVERSE != nullptr)
         UNIVERSE->addEntity(oo::MadeEntity(
@@ -9049,7 +9119,7 @@ void ShipEntity::becomeLargeExplosion(double factor) {
       how_many -= 1.0f;
     }
     // 2. slow clouds
-    how_many = factor;
+    how_many = static_cast<float>(factor);
     while (how_many > 0.5f) {
       if (UNIVERSE != nullptr)
         UNIVERSE->addEntity(oo::MadeEntity(
@@ -9083,7 +9153,8 @@ OOComparisonResult ShipEntity::compareBeaconCodeWith(Entity* other) {
 
 // for shaders, equivalent to 1.76's NPC laserHeatLevel
 GLfloat ShipEntity::weaponRecoveryTime() {
-  float result = (weapon_recharge_rate - shotTime()) / weapon_recharge_rate;
+  float result = static_cast<float>((weapon_recharge_rate - shotTime()) /
+                                    weapon_recharge_rate);
   return OOClamp_0_1_f(result);
 }
 
@@ -9180,7 +9251,7 @@ void ShipEntity::checkScanner() {
                                       : false) &&
         isValidTarget(scan)) {
       distance2_scanned_ships[n_scanned_ships] =
-          HPdistance2(position, scan->position);
+          static_cast<GLfloat>(HPdistance2(position, scan->position));
       if (distance2_scanned_ships[n_scanned_ships] < scannerRange2)
         scanned_ships[n_scanned_ships++] = oo::ToShip(scan);
     }
@@ -9198,7 +9269,7 @@ void ShipEntity::checkScanner() {
                                       : false) &&
         isValidTarget(scan)) {
       distance2_scanned_ships[n_scanned_ships] =
-          HPdistance2(position, scan->position);
+          static_cast<GLfloat>(HPdistance2(position, scan->position));
       if (distance2_scanned_ships[n_scanned_ships] < scannerRange2)
         scanned_ships[n_scanned_ships++] = oo::ToShip(scan);
     }
@@ -9227,7 +9298,7 @@ void ShipEntity::checkScannerIgnoringUnpowered() {
         !(oo::ToShip(scan) != nullptr ? oo::ToShip(scan)->isCloaked()
                                       : false)) {
       distance2_scanned_ships[n_scanned_ships] =
-          HPdistance2(position, scan->position);
+          static_cast<GLfloat>(HPdistance2(position, scan->position));
       if (distance2_scanned_ships[n_scanned_ships] < scannerRange2)
         scanned_ships[n_scanned_ships++] = oo::ToShip(scan);
     }
@@ -9252,7 +9323,7 @@ void ShipEntity::checkScannerIgnoringUnpowered() {
         !(oo::ToShip(scan) != nullptr ? oo::ToShip(scan)->isCloaked()
                                       : false)) {
       distance2_scanned_ships[n_scanned_ships] =
-          HPdistance2(position, scan->position);
+          static_cast<GLfloat>(HPdistance2(position, scan->position));
       if (distance2_scanned_ships[n_scanned_ships] < scannerRange2)
         scanned_ships[n_scanned_ships++] = oo::ToShip(scan);
     }
@@ -9614,7 +9685,7 @@ void ShipEntity::trackOntoTarget(double /* delta_t */, GLfloat dp) {
   vector_to_target = vectorTo(target);
   //
   GLfloat range2 = magnitude2(vector_to_target);
-  GLfloat targetRadius = 0.75 * target->collision_radius;
+  GLfloat targetRadius = static_cast<GLfloat>(0.75 * target->collision_radius);
   GLfloat max_cos = sqrt(1 - targetRadius * targetRadius / range2);
 
   if (dp > max_cos) return;  // ON TARGET!
@@ -9708,7 +9779,7 @@ double ShipEntity::ballTrackLeadingTarget(double delta_t, Entity* target) {
   }
 
   quaternion_rotate_about_axis(&orientation, axis_to_track_by,
-                               thrust * delta_t);
+                               static_cast<OOScalar>(thrust * delta_t));
   orientationChanged();
 
   setStatus(OOEntityStatus::kActive);
@@ -9722,20 +9793,20 @@ void ShipEntity::setEvasiveJink(GLfloat z) {
   if (accuracy < COMBAT_AI_ISNT_AWFUL) {
     jink = kZeroVector;
   } else {
-    jink.x = (ranrot_rand() % 256) - 128.0;
-    jink.y = (ranrot_rand() % 256) - 128.0;
+    jink.x = static_cast<OOScalar>((ranrot_rand() % 256) - 128.0);
+    jink.y = static_cast<OOScalar>((ranrot_rand() % 256) - 128.0);
     jink.z = z;
 
     // make sure we don't accidentally have near-zero jink
     if (jink.x < 0.0) {
-      jink.x -= 128.0;
+      jink.x -= static_cast<OOScalar>(128.0);
     } else {
-      jink.x += 128.0;
+      jink.x += static_cast<OOScalar>(128.0);
     }
     if (jink.y < 0) {
-      jink.y -= 128.0;
+      jink.y -= static_cast<OOScalar>(128.0);
     } else {
-      jink.y += 128.0;
+      jink.y += static_cast<OOScalar>(128.0);
     }
   }
 }
@@ -9833,7 +9904,7 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat) {
     if (accuracy >= COMBAT_AI_FLEES_BETTER) {
       double range = magnitude(relPos);
       if (range > 2000.0) {
-        dist_adjust_factor = range / 2000.0;
+        dist_adjust_factor = static_cast<GLfloat>(range / 2000.0);
         if (accuracy >= COMBAT_AI_FLEES_BETTER_2) {
           dist_adjust_factor *= 3;
         }
@@ -9923,42 +9994,50 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat) {
     // not on course so we must adjust controls..
     if (d_forward < -max_cos) {
       // hack to avoid just flying away from the destination
-      d_up = min_d * 2.0;
+      d_up = static_cast<GLfloat>(min_d * 2.0);
     }
 
     if (d_up > min_d) {
       int factor = static_cast<int>(sqrt(fabs(d_right) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_right > min_d)
-        stick_roll = -max_flight_roll * r_max_factor * factor;  // note#
+        stick_roll = static_cast<GLfloat>(-max_flight_roll * r_max_factor *
+                                          factor);  // note#
       if (d_right < -min_d)
-        stick_roll = +max_flight_roll * r_max_factor * factor;  // note#
+        stick_roll = static_cast<GLfloat>(+max_flight_roll * r_max_factor *
+                                          factor);  // note#
     }
     if (d_up < -min_d) {
       int factor = static_cast<int>(sqrt(fabs(d_right) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_right > min_d)
-        stick_roll = +max_flight_roll * r_max_factor * factor;  // note#
+        stick_roll = static_cast<GLfloat>(+max_flight_roll * r_max_factor *
+                                          factor);  // note#
       if (d_right < -min_d)
-        stick_roll = -max_flight_roll * r_max_factor * factor;  // note#
+        stick_roll = static_cast<GLfloat>(-max_flight_roll * r_max_factor *
+                                          factor);  // note#
     }
 
     if (stick_roll == 0.0) {
       int factor = static_cast<int>(sqrt(fabs(d_up) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_up > min_d)
-        stick_pitch = -max_flight_pitch * reverse * r_max_factor * factor;
+        stick_pitch = static_cast<GLfloat>(-max_flight_pitch * reverse *
+                                           r_max_factor * factor);
       if (d_up < -min_d)
-        stick_pitch = +max_flight_pitch * reverse * r_max_factor * factor;
+        stick_pitch = static_cast<GLfloat>(+max_flight_pitch * reverse *
+                                           r_max_factor * factor);
     }
 
     if (accuracy >= COMBAT_AI_ISNT_AWFUL) {
       // don't overshoot target (helps accuracy at low frame rates)
       if (fabs(d_right) < fabs(stick_roll) * delta_t) {
-        stick_roll = fabs(d_right) / delta_t * (stick_roll < 0 ? -1 : 1);
+        stick_roll = static_cast<GLfloat>(fabs(d_right) / delta_t *
+                                          (stick_roll < 0 ? -1 : 1));
       }
       if (fabs(d_up) < fabs(stick_pitch) * delta_t) {
-        stick_pitch = fabs(d_up) / delta_t * (stick_pitch < 0 ? -0.9 : 0.9);
+        stick_pitch = static_cast<GLfloat>(fabs(d_up) / delta_t *
+                                           (stick_pitch < 0 ? -0.9 : 0.9));
       }
     }
   }
@@ -10063,24 +10142,28 @@ double ShipEntity::trackSideTarget(double delta_t, bool leftside) {
     // not on course so we must adjust controls..
     if (d_right < -max_cos) {
       // hack to avoid just pointing away from the destination
-      d_forward = min_d * 2.0;
+      d_forward = static_cast<GLfloat>(min_d * 2.0);
     }
 
     if (d_forward > min_d) {
       int factor = static_cast<int>(sqrt(fabs(d_up) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_up > min_d)
-        stick_pitch = +max_flight_pitch * r_max_factor * factor;  // note#
+        stick_pitch = static_cast<GLfloat>(+max_flight_pitch * r_max_factor *
+                                           factor);  // note#
       if (d_up < -min_d)
-        stick_pitch = -max_flight_pitch * r_max_factor * factor;  // note#
+        stick_pitch = static_cast<GLfloat>(-max_flight_pitch * r_max_factor *
+                                           factor);  // note#
     }
     if (d_forward < -min_d) {
       int factor = static_cast<int>(sqrt(fabs(d_up) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_up > min_d)
-        stick_pitch = +max_flight_pitch * r_max_factor * factor;  // note#
+        stick_pitch = static_cast<GLfloat>(+max_flight_pitch * r_max_factor *
+                                           factor);  // note#
       if (d_up < -min_d)
-        stick_pitch = -max_flight_pitch * r_max_factor * factor;  // note#
+        stick_pitch = static_cast<GLfloat>(-max_flight_pitch * r_max_factor *
+                                           factor);  // note#
     }
 
     if (fabs(stick_pitch) == 0.0 || fabs(d_forward) > 0.5) {
@@ -10088,11 +10171,13 @@ double ShipEntity::trackSideTarget(double delta_t, bool leftside) {
       int factor = static_cast<int>(sqrt(fabs(d_forward) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_forward > min_d)
-        stick_yaw = -max_flight_yaw * reverse * r_max_factor * factor;
+        stick_yaw = static_cast<GLfloat>(-max_flight_yaw * reverse *
+                                         r_max_factor * factor);
       if (d_forward < -min_d) {
         if (factor < max_factor / 2.0)  // compensate for forward thrust
           factor = static_cast<int>(factor * (2.0));
-        stick_yaw = +max_flight_yaw * reverse * r_max_factor * factor;
+        stick_yaw = static_cast<GLfloat>(+max_flight_yaw * reverse *
+                                         r_max_factor * factor);
       }
     }
   }
@@ -10192,13 +10277,17 @@ double ShipEntity::missileTrackPrimaryTarget(double delta_t) {
 
   // apply damping
   if (flightRoll < 0)
-    flightRoll += (flightRoll < -damping) ? damping : -flightRoll;
+    flightRoll +=
+        static_cast<GLfloat>((flightRoll < -damping) ? damping : -flightRoll);
   if (flightRoll > 0)
-    flightRoll -= (flightRoll > damping) ? damping : flightRoll;
+    flightRoll -=
+        static_cast<GLfloat>((flightRoll > damping) ? damping : flightRoll);
   if (flightPitch < 0)
-    flightPitch += (flightPitch < -damping) ? damping : -flightPitch;
+    flightPitch +=
+        static_cast<GLfloat>((flightPitch < -damping) ? damping : -flightPitch);
   if (flightPitch > 0)
-    flightPitch -= (flightPitch > damping) ? damping : flightPitch;
+    flightPitch -=
+        static_cast<GLfloat>((flightPitch > damping) ? damping : flightPitch);
 
   applySticks(delta_t);
 
@@ -10291,52 +10380,60 @@ double ShipEntity::trackDestination(double delta_t, bool retreat) {
     // not on course so we must adjust controls..
     if (d_forward <= -max_cos || (retreat && d_forward >= max_cos)) {
       // hack to avoid just flying away from the destination
-      d_up = min_d * 2.0;
+      d_up = static_cast<GLfloat>(min_d * 2.0);
     }
 
     if (d_up > min_d) {
       int factor = static_cast<int>(sqrt(fabs(d_right) / fabs(min_d)));
       if (factor > 8) factor = 8;
       if (d_right > min_d)
-        stick_roll = -max_flight_roll * reversePlayer * 0.125 *
-                     factor;  // only reverse sign for the player;
+        stick_roll =
+            static_cast<GLfloat>(-max_flight_roll * reversePlayer * 0.125 *
+                                 factor);  // only reverse sign for the player;
       if (d_right < -min_d)
-        stick_roll = +max_flight_roll * reversePlayer * 0.125 * factor;
+        stick_roll = static_cast<GLfloat>(+max_flight_roll * reversePlayer *
+                                          0.125 * factor);
       if (fabs(d_right) < fabs(stick_roll) * delta_t)
-        stick_roll = fabs(d_right) / delta_t *
-                     (stick_roll < 0 ? -1 : 1);  // don't overshoot heading
+        stick_roll = static_cast<GLfloat>(
+            fabs(d_right) / delta_t *
+            (stick_roll < 0 ? -1 : 1));  // don't overshoot heading
     }
 
     if (d_up < -min_d) {
       int factor = static_cast<int>(sqrt(fabs(d_right) / fabs(min_d)));
       if (factor > 8) factor = 8;
       if (d_right > min_d)
-        stick_roll = +max_flight_roll * reversePlayer * 0.125 *
-                     factor;  // only reverse sign for the player;
+        stick_roll =
+            static_cast<GLfloat>(+max_flight_roll * reversePlayer * 0.125 *
+                                 factor);  // only reverse sign for the player;
       if (d_right < -min_d)
-        stick_roll = -max_flight_roll * reversePlayer * 0.125 * factor;
+        stick_roll = static_cast<GLfloat>(-max_flight_roll * reversePlayer *
+                                          0.125 * factor);
       if (fabs(d_right) < fabs(stick_roll) * delta_t)
-        stick_roll = fabs(d_right) / delta_t *
-                     (stick_roll < 0 ? -1 : 1);  // don't overshoot heading
+        stick_roll = static_cast<GLfloat>(
+            fabs(d_right) / delta_t *
+            (stick_roll < 0 ? -1 : 1));  // don't overshoot heading
     }
 
     if (stick_roll == 0.0) {
       int factor = static_cast<int>(sqrt(fabs(d_up) / fabs(min_d)));
       if (factor > 8) factor = 8;
       if (d_up > min_d)
-        stick_pitch = -max_flight_pitch * reverse * 0.125 *
-                      factor;  // pitch_pitch * reverse;
+        stick_pitch = static_cast<GLfloat>(-max_flight_pitch * reverse * 0.125 *
+                                           factor);  // pitch_pitch * reverse;
       if (d_up < -min_d)
-        stick_pitch = +max_flight_pitch * reverse * 0.125 * factor;
+        stick_pitch =
+            static_cast<GLfloat>(+max_flight_pitch * reverse * 0.125 * factor);
       if (fabs(d_up) < fabs(stick_pitch) * delta_t)
-        stick_pitch = fabs(d_up) / delta_t *
-                      (stick_pitch < 0 ? -1 : 1);  // don't overshoot heading
+        stick_pitch = static_cast<GLfloat>(
+            fabs(d_up) / delta_t *
+            (stick_pitch < 0 ? -1 : 1));  // don't overshoot heading
     }
 
     if (stick_pitch == 0.0) {
       // not sufficiently on course yet, but min_d is too high
       // turn anyway slightly to adjust
-      stick_pitch = 0.01;
+      stick_pitch = static_cast<GLfloat>(0.01);
     }
   }
 
@@ -10399,7 +10496,7 @@ GLfloat ShipEntity::rollToMatchUp(Vector up_vec, GLfloat match_roll) {
 }
 
 GLfloat ShipEntity::rangeToDestination() {
-  return HPdistance(position, _destination);
+  return static_cast<GLfloat>(HPdistance(position, _destination));
 }
 
 std::vector<oo::EntityHold> ShipEntity::collisionExceptions() {
@@ -10521,60 +10618,65 @@ bool ShipEntity::hasProximityAlertIgnoringTarget(bool ignore_target) {
 // thinks is on target
 GLfloat ShipEntity::currentAimTolerance() {
   GLfloat basic_aim = aim_tolerance;
-  GLfloat best_cos = 0.99999;  // ~45m in 10km (track won't go better than 40)
+  GLfloat best_cos = static_cast<GLfloat>(
+      0.99999);  // ~45m in 10km (track won't go better than 40)
   if (accuracy >= COMBAT_AI_ISNT_AWFUL) {
     // better general targeting
-    best_cos = 0.999999;  // ~14m in 10km (track won't go better than 10)
+    best_cos = static_cast<GLfloat>(
+        0.999999);  // ~14m in 10km (track won't go better than 10)
     // if missing, aim better!
-    basic_aim /= 1.0 + (static_cast<GLfloat>(missedShots()) / 4.0);
+    basic_aim /=
+        static_cast<GLfloat>(1.0 + (static_cast<GLfloat>(missedShots()) / 4.0));
   }
   if (accuracy >= COMBAT_AI_TRACKS_CLOSER) {
     // deadly shots
-    best_cos = 0.9999999;  // ~4m in 10km (track won't go better than 4)
+    best_cos = static_cast<GLfloat>(
+        0.9999999);  // ~4m in 10km (track won't go better than 4)
     // and start with extremely good aim circle
-    basic_aim /= 5.0;
+    basic_aim /= static_cast<GLfloat>(5.0);
   }
   if (currentWeaponFacing == OOWeaponFacing::kAft &&
       accuracy < COMBAT_AI_ISNT_AWFUL) {  // bad shots with aft lasers
-    basic_aim *= 1.3;
+    basic_aim *= static_cast<GLfloat>(1.3);
   } else if (currentWeaponFacing == OOWeaponFacing::kPort ||
              currentWeaponFacing ==
                  OOWeaponFacing::kStarboard) {  // everyone a bit worse with
                                                 // side
                                                 // lasers
     if (accuracy < COMBAT_AI_ISNT_AWFUL) {      // especially these
-      basic_aim *= 1.3 + randf();
+      basic_aim *= static_cast<GLfloat>(1.3 + randf());
     } else {
-      basic_aim *= 1.3;
+      basic_aim *= static_cast<GLfloat>(1.3);
     }
   }
   // only apply glare if ship is not shadowed
   if (isSunlit) {
     ::OOSunEntity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
     if (sun) {
-      GLfloat sunGlareAngularSize =
+      GLfloat sunGlareAngularSize = static_cast<GLfloat>(
           atan((sun != nullptr ? sun->radius() : 0.0) /
                HPdistance(getPosition(),
                           (sun != nullptr ? sun->getPosition() : HPVector{}))) *
               SUN_GLARE_MULT_FACTOR +
-          (SUN_GLARE_ADD_FACTOR);
+          (SUN_GLARE_ADD_FACTOR));
       GLfloat glareLevel =
           lookingAtSunWithThresholdAngleCos(cos(sunGlareAngularSize)) *
           (1.0f - getSunGlareFilter());
       if (glareLevel > 0.1f) {
         // looking towards sun can seriously mess up aim (glareLevel 0..1)
-        basic_aim *= (1.0 + glareLevel * 3.0);
+        basic_aim *= static_cast<GLfloat>((1.0 + glareLevel * 3.0));
         //				OO_LOG("aim.debug", "Sun glare affecting
         // aim: {:f} for {}", glareLevel, oo::DescriptionOf(self));
         if (glareLevel > 0.5f) {
           // strong glare makes precise targeting impossible
-          best_cos = 0.99999;
+          best_cos = static_cast<GLfloat>(0.99999);
         }
       }
     }
   }
 
-  GLfloat max_cos = sqrt(1 - (basic_aim * basic_aim / 100000000.0));
+  GLfloat max_cos =
+      static_cast<GLfloat>(sqrt(1 - (basic_aim * basic_aim / 100000000.0)));
 
   if (max_cos < best_cos) {
     return max_cos;
@@ -10681,7 +10783,7 @@ bool ShipEntity::onTarget(OOWeaponFacing direction, OOWeaponType weapon_type) {
   // cosine of 1/3 of half angle subtended by target (mostly they'll
   // fire sooner anyway due to currentAimTolerance, but this should
   // almost always be a solid hit)
-  astq = sqrt(1.0 - radius * radius / (d2 * 9));
+  astq = static_cast<GLfloat>(sqrt(1.0 - radius * radius / (d2 * 9)));
 
   return (fabs(dq) >= astq);
 }
@@ -10898,8 +11000,9 @@ bool ShipEntity::fireTurretCannon(double range) {
 
   origin = HPvector_add(
       origin, vectorToHPVector(vector_multiply_scalar(
-                  vel, collision_radius +
-                           0.5)));  // Start just outside collision sphere
+                  vel, static_cast<OOScalar>(
+                           collision_radius +
+                           0.5))));  // Start just outside collision sphere
   vel = vector_multiply_scalar(vel, TURRET_SHOT_SPEED);  // Shot velocity
 
   Entity* shot = oo::MadeEntity(OOPlasmaShotEntity::shotWithPosition(
@@ -11090,13 +11193,13 @@ bool ShipEntity::fireDirectLaserShotAt(Entity* my_target) {
 
   Quaternion q_laser = quaternion_rotation_between(r_pos, kBasisZVector);
 
-  GLfloat acc_factor = (10.0 - accuracy) * 0.001;
+  GLfloat acc_factor = static_cast<GLfloat>((10.0 - accuracy) * 0.001);
 
-  q_laser.x +=
-      acc_factor * (randf() - 0.5);  // randomise aim a little (+/- 0.005 at
-                                     // accuracy 0, never miss at accuracy 10)
-  q_laser.y += acc_factor * (randf() - 0.5);
-  q_laser.z += acc_factor * (randf() - 0.5);
+  q_laser.x += static_cast<OOScalar>(
+      acc_factor * (randf() - 0.5));  // randomise aim a little (+/- 0.005 at
+                                      // accuracy 0, never miss at accuracy 10)
+  q_laser.y += static_cast<OOScalar>(acc_factor * (randf() - 0.5));
+  q_laser.z += static_cast<OOScalar>(acc_factor * (randf() - 0.5));
   quaternion_normalize(&q_laser);
 
   Quaternion q_save = orientation;  // save rotation
@@ -11355,15 +11458,16 @@ void ShipEntity::throwSparks() {
 
   float w = boundingBox.max.x - boundingBox.min.x;
   float h = boundingBox.max.y - boundingBox.min.y;
-  float m = (w < h) ? 0.25 * w : 0.25 * h;
+  float m =
+      (w < h) ? static_cast<float>(0.25 * w) : static_cast<float>(0.25 * h);
 
   float sz = m * (1 + randf() + randf());  // half minimum dimension on average
 
   Vector vel = vector_multiply_scalar(
       HPVectorToVector(HPvector_subtract(origin, position)), 2.0);
 
-  std::shared_ptr<OOColor> color =
-      OOColor::colorWithHue(0.08 + 0.17 * randf(), 1.0, 1.0, 1.0);
+  std::shared_ptr<OOColor> color = OOColor::colorWithHue(
+      static_cast<float>(0.08 + 0.17 * randf()), 1.0, 1.0, 1.0);
 
   Entity* spark = oo::MadeEntity(OOSparkEntity::sparkWithPosition(
       origin, vel, 2.0 + 3.0 * randf(), sz, color.get()));
@@ -11504,11 +11608,13 @@ Vector ShipEntity::missileLaunchPosition() {
          (start.y < boundingBox.max.y + mcr) &&
          (start.z > boundingBox.min.z - mcr) &&
          (start.z < boundingBox.max.z + mcr)) {
-    start = vector_add(start, vector_multiply_scalar(v_eject, mcr));
+    start = vector_add(
+        start, vector_multiply_scalar(v_eject, static_cast<OOScalar>(mcr)));
   }
 
   vel = vector_add(
-      vel, vector_multiply_scalar(v_forward, flightSpeed + throw_speed));
+      vel, vector_multiply_scalar(
+               v_forward, static_cast<OOScalar>(flightSpeed + throw_speed)));
 
   Quaternion q1 = normalOrientation();
   HPVector origin = HPvector_add(
@@ -11663,16 +11769,19 @@ bool ShipEntity::launchCascadeMine() {
   double random_pitch = randf() - 0.5;  //  -0.5 to +0.5
   quaternion_set_random(&random_direction);
 
-  rpos = HPvector_subtract(
-      getPosition(),
-      vectorToHPVector(vector_multiply_scalar(v_forward, start)));
+  rpos = HPvector_subtract(getPosition(),
+                           vectorToHPVector(vector_multiply_scalar(
+                               v_forward, static_cast<OOScalar>(start))));
 
   double eject_speed = -800.0;
-  vel = vector_multiply_scalar(v_forward, getFlightSpeed() + eject_speed);
+  vel = vector_multiply_scalar(
+      v_forward, static_cast<OOScalar>(getFlightSpeed() + eject_speed));
   eject_speed *= 0.5 * (randf() - 0.5);  //  -0.25x .. +0.25x
-  vel = vector_add(vel, vector_multiply_scalar(v_up, eject_speed));
+  vel = vector_add(
+      vel, vector_multiply_scalar(v_up, static_cast<OOScalar>(eject_speed)));
   eject_speed *= 0.5 * (randf() - 0.5);  //  -0.0625x .. +0.0625x
-  vel = vector_add(vel, vector_multiply_scalar(v_right, eject_speed));
+  vel = vector_add(
+      vel, vector_multiply_scalar(v_right, static_cast<OOScalar>(eject_speed)));
 
   if (bomb != nullptr) bomb->setPosition(rpos);
   if (bomb != nullptr) bomb->setOrientation(random_direction);
@@ -11838,7 +11947,8 @@ OOCargoType ShipEntity::dumpItem(::ShipEntity* cargoObj) {
   // default launching position
   start.x = 0.0;                      // in the middle
   start.y = 0.0;                      //
-  start.z = boundingBox.min.z - jcr;  // 1m behind of bounding box
+  start.z = static_cast<OOScalar>(boundingBox.min.z -
+                                  jcr);  // 1m behind of bounding box
 
   // custom launching position
   start = VectorForKey(shipinfoDictionary, "aft_eject_position", start);
@@ -11852,7 +11962,8 @@ OOCargoType ShipEntity::dumpItem(::ShipEntity* cargoObj) {
          (start.y < boundingBox.max.y + jcr) &&
          (start.z > boundingBox.min.z - jcr) &&
          (start.z < boundingBox.max.z + jcr)) {
-    start = vector_add(start, vector_multiply_scalar(v_eject, jcr));
+    start = vector_add(
+        start, vector_multiply_scalar(v_eject, static_cast<OOScalar>(jcr)));
   }
 
   v_eject = quaternion_rotate_vector(normalOrientation(), start);
@@ -11860,14 +11971,16 @@ OOCargoType ShipEntity::dumpItem(::ShipEntity* cargoObj) {
   v_eject = vector_normal(v_eject);
   v_eject_normal = v_eject;
 
-  v_eject.x += (randf() - randf()) / eject_speed;
-  v_eject.y += (randf() - randf()) / eject_speed;
-  v_eject.z += (randf() - randf()) / eject_speed;
+  v_eject.x += static_cast<OOScalar>((randf() - randf()) / eject_speed);
+  v_eject.y += static_cast<OOScalar>((randf() - randf()) / eject_speed);
+  v_eject.z += static_cast<OOScalar>((randf() - randf()) / eject_speed);
 
-  vel = vector_add(vector_multiply_scalar(v_forward, flightSpeed),
-                   vector_multiply_scalar(v_eject, eject_speed));
-  velocity =
-      vector_add(velocity, vector_multiply_scalar(v_eject, eject_reaction));
+  vel = vector_add(
+      vector_multiply_scalar(v_forward, flightSpeed),
+      vector_multiply_scalar(v_eject, static_cast<OOScalar>(eject_speed)));
+  velocity = vector_add(
+      velocity,
+      vector_multiply_scalar(v_eject, static_cast<OOScalar>(eject_reaction)));
 
   if (jetto != nullptr) jetto->setPosition(rpos);
   if ((jetto != nullptr
@@ -12071,8 +12184,9 @@ bool ShipEntity::collideWithShip(::ShipEntity* other) {
   }
 
   if (!selfDestroyed && !otherDestroyed) {
-    float t = 10.0 * (UNIVERSE != nullptr ? UNIVERSE->getTimeDelta()
-                                          : 0.0);  // 10 ticks
+    float t = static_cast<float>(10.0 * (UNIVERSE != nullptr
+                                             ? UNIVERSE->getTimeDelta()
+                                             : 0.0));  // 10 ticks
 
     HPVector pos1a = HPvector_add(
         getPosition(), vectorToHPVector(vector_multiply_scalar(loc, t * v1a)));
@@ -12434,13 +12548,14 @@ void ShipEntity::takeEnergyDamage(double amount, Entity* entPart,
         amount, oo::LiveOwner(entPart));  // [ent owner]'s C++ entity
   }
 
-  energy -= amount;
+  energy -= static_cast<GLfloat>(amount);
   /* Heat increase from energy impacts will never directly cause
    * overheating - too easy for missile hits to cause an uncredited
    * death by overheating - CIM */
   if (ship_temperature < SHIP_MAX_CABIN_TEMP) {
-    ship_temperature += amount * (mass > 400000 ? 200000 / mass : 0.5) /
-                        heatInsulation();  // SHIP_ENERGY_DAMAGE_TO_HEAT_FACTOR
+    ship_temperature += static_cast<float>(
+        amount * (mass > 400000 ? 200000 / mass : 0.5) /
+        heatInsulation());  // SHIP_ENERGY_DAMAGE_TO_HEAT_FACTOR
     if (ship_temperature > SHIP_MAX_CABIN_TEMP) {
       ship_temperature = SHIP_MAX_CABIN_TEMP;
     }
@@ -12637,7 +12752,7 @@ bool ShipEntity::abandonShip() {
       behaviour = OOBehaviour::kIdle;
       frustration = 0.0;
       setScanClass(OOScanClass::kCargo);  // we're unmanned now!
-      thrust = thrust * 0.5;
+      thrust = static_cast<GLfloat>(thrust * 0.5);
       if (thrust > 5) thrust = 5;  // 5 is the thrust of an escape-capsule
       desired_speed = 0.0;
       if (group()) setGroup(nullptr);  // remove self from group.
@@ -12690,7 +12805,7 @@ void ShipEntity::takeScrapeDamage(double amount, Entity* ent) {
     return;
   }
 
-  energy -= amount;
+  energy -= static_cast<GLfloat>(amount);
   noteTakingDamage(amount, ent, OOShipDamageType::kScrape);
 
   // oops we hit too hard!!!
@@ -12729,7 +12844,7 @@ void ShipEntity::takeHeatDamage(double amount) {
     }
   }
 
-  energy -= amount;
+  energy -= static_cast<GLfloat>(amount);
   throw_sparks = true;
 
   noteTakingDamage(amount, nullptr, OOShipDamageType::kHeat);
@@ -13021,9 +13136,9 @@ bool ShipEntity::acceptAsEscort(::ShipEntity* other_ship) {
            cruiseSpeed) &&
           ((other_ship != nullptr ? other_ship->getMaxFlightSpeed() : 0.0f) >
            cruiseSpeed * 0.3)) {
-        cruiseSpeed =
+        cruiseSpeed = static_cast<GLfloat>(
             (other_ship != nullptr ? other_ship->getMaxFlightSpeed() : 0.0f) *
-            0.99;
+            0.99);
       }
 
       OO_LOG("ship.escort.accept", "{} accepting escort {}.",
@@ -13180,7 +13295,8 @@ void ShipEntity::dockEscorts() {
   // be mutated.
   for (const auto& escortRef : escortArray()) {
     ::ShipEntity* escort = oo::ToShip(escortRef.get());
-    float delay = i++ * 3.0 + 1.5;  // send them off at three second intervals
+    float delay = static_cast<float>(
+        i++ * 3.0 + 1.5);  // send them off at three second intervals
     ::AI* ai =
         (escort != nullptr ? escort->getAI() : static_cast<::AI*>(nullptr));
 
@@ -13602,7 +13718,7 @@ int ShipEntity::checkShipsInVicinityForWitchJumpExit() {
 
   int result = NO_TARGET;
 
-  GLfloat k = 0.1;
+  GLfloat k = static_cast<GLfloat>(0.1);
 
   int ent_count = UNIVERSE->n_entities;
   Entity** uni_entities =
@@ -13620,7 +13736,7 @@ int ShipEntity::checkShipsInVicinityForWitchJumpExit() {
   for (i = 0; (i < ship_count) && (result == NO_TARGET); i++) {
     ::ShipEntity* ship = my_entities[i];
     HPVector delta = HPvector_between(position, ship->position);
-    GLfloat d2 = HPmagnitude2(delta);
+    GLfloat d2 = static_cast<GLfloat>(HPmagnitude2(delta));
     if (!(ship != nullptr ? ship->getIsPlayer() : false) ||
         !(PLAYER != nullptr ? PLAYER->isDocked()
                             : false)) {  // player doesn't block if docked

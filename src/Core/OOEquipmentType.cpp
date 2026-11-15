@@ -609,7 +609,7 @@ GLfloat OOEquipmentType::weaponRange() {
 }
 
 GLfloat OOEquipmentType::weaponEnergyUse() {
-  return _weaponInfo.get<float>("energy", 0.8);
+  return _weaponInfo.get<float>("energy", static_cast<float>(0.8));
 }
 
 GLfloat OOEquipmentType::weaponDamage() {

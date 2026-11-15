@@ -1530,9 +1530,10 @@ oo::PList OOShipRegistry::validateNewStyleStandardSubentityDeclaration(
                   "is too high, using {:.1f}.",
                   weaponRange, shipKey,
                   TURRET_SHOT_RANGE * COMBAT_WEAPON_RANGE_FACTOR);
-      weaponRange =
+      weaponRange = static_cast<float>(
           TURRET_SHOT_RANGE *
-          COMBAT_WEAPON_RANGE_FACTOR;  // approx. range of primary plasma canon.
+          COMBAT_WEAPON_RANGE_FACTOR);  // approx. range of primary plasma
+                                        // canon.
     }
 
     weaponEnergy = declaration.get<float>("weapon_energy", -1.0f);

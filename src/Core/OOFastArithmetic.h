@@ -62,11 +62,11 @@ inline INLINE_CONST_FUNC std::size_t OORoundUpToPowerOf2_NS(std::size_t value) {
 #endif
 
 inline float OOClamp_0_1_f(float value) {
-  return fmax(0.0f, fmin(value, 1.0f));
+  return static_cast<float>(fmax(0.0f, fmin(value, 1.0f)));
 }
 
 inline float OOClamp_n1_1_f(float value) {
-  return fmax(-1.0f, fmin(value, 1.0f));
+  return static_cast<float>(fmax(-1.0f, fmin(value, 1.0f)));
 }
 
 inline double OOClamp_0_1_d(double value) {
@@ -74,7 +74,7 @@ inline double OOClamp_0_1_d(double value) {
 }
 
 inline float OOClamp_0_max_f(float value, float max) {
-  return fmax(0.0f, fmin(value, max));
+  return static_cast<float>(fmax(0.0f, fmin(value, max)));
 }
 
 inline double OOClamp_0_max_d(double value, double max) {

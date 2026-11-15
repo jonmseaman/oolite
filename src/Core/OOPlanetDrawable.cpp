@@ -141,16 +141,17 @@ void OOPlanetDrawable::setLevelOfDetail(float lod) {
 
 void OOPlanetDrawable::calculateLevelOfDetailForViewDistance(float distance) {
   bool simple = (UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false);
-  float drawFactor = (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
-                          ? UNIVERSE->getGameView()->getViewSize()
-                          : NSSize{})
-                         .width /
-                     (simple ? 100.0 : 40.0);
+  float drawFactor = static_cast<float>(
+      (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
+           ? UNIVERSE->getGameView()->getViewSize()
+           : NSSize{})
+          .width /
+      (simple ? 100.0 : 40.0));
   float drawRatio2 =
       drawFactor * _radius /
       sqrtf(distance);  // proportional to size on screen in pixels
 
-  float lod = sqrtf(drawRatio2 * LOD_FACTOR);
+  float lod = sqrtf(static_cast<float>(drawRatio2 * LOD_FACTOR));
   if (simple) {
     lod -= 0.5f / LOD_GRANULARITY;  // Make LOD transitions earlier.
     lod = OOClamp_0_max_f(lod, (LOD_GRANULARITY - 1) /
@@ -335,18 +336,21 @@ void OOPlanetDrawable::debugDrawNormals() {
 
     glColor3f(0.0f, 1.0f, 1.0f);
     GLVertexOOVector(v);
-    GLVertexOOVector(vector_add(v, vector_multiply_scalar(n, _radius * 0.05)));
+    GLVertexOOVector(vector_add(
+        v, vector_multiply_scalar(n, static_cast<OOScalar>(_radius * 0.05))));
 
     Vector b = cross_product(n, kBasisYVector);
     Vector t = vector_flip(true_cross_product(n, b));
 
     glColor3f(1.0f, 1.0f, 0.0f);
     GLVertexOOVector(v);
-    GLVertexOOVector(vector_add(v, vector_multiply_scalar(t, _radius * 0.03)));
+    GLVertexOOVector(vector_add(
+        v, vector_multiply_scalar(t, static_cast<OOScalar>(_radius * 0.03))));
 
     glColor3f(0.0f, 1.0f, 0.0f);
     GLVertexOOVector(v);
-    GLVertexOOVector(vector_add(v, vector_multiply_scalar(b, _radius * 0.03)));
+    GLVertexOOVector(vector_add(
+        v, vector_multiply_scalar(b, static_cast<OOScalar>(_radius * 0.03))));
   }
   OOGLEND();
 

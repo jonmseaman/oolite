@@ -136,9 +136,9 @@ inline Quaternion quaternion_conjugate(Quaternion q) {
 inline void quaternion_set_rotate_about_axis(Quaternion* quat, Vector axis,
                                              OOScalar angle) {
   OOScalar a = angle * 0.5f;
-  OOScalar scale = sin(a);
+  OOScalar scale = static_cast<OOScalar>(sin(a));
 
-  quat->w = cos(a);
+  quat->w = static_cast<OOScalar>(cos(a));
   quat->x = axis.x * scale;
   quat->y = axis.y * scale;
   quat->z = axis.z * scale;
@@ -154,7 +154,8 @@ inline void quaternion_normalize(Quaternion* quat) {
   OOScalar y = quat->y;
   OOScalar z = quat->z;
 
-  OOScalar lv = 1.0f / sqrt(w * w + x * x + y * y + z * z);
+  OOScalar lv =
+      static_cast<OOScalar>(1.0f / sqrt(w * w + x * x + y * y + z * z));
 
   quat->w = lv * w;
   quat->x = lv * x;

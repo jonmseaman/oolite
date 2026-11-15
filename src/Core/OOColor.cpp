@@ -89,7 +89,7 @@ void OOColor::setHue(float h, float s, float b, float a) {
   }
   float f, p, q, t;
   int i;
-  h = fmod(h, 360.0f);
+  h = static_cast<float>(fmod(h, 360.0f));
   if (h < 0.0) h += 360.0f;
   h /= 60.0f;
 
@@ -232,7 +232,7 @@ std::shared_ptr<OOColor> OOColor::colorWithDescription(
   if (factor != 1.0f && result != nullptr) {
     float h, s, b, a;
     result->getHue(&h, &s, &b, &a);
-    h *= 1.0 / 360.0f;  // See note in header.
+    h *= static_cast<float>(1.0 / 360.0f);  // See note in header.
     s *= factor;
     result = colorWithHue(h, s, b, a);
   }
@@ -458,8 +458,8 @@ void OOColor::getHue(float* hue, float* saturation, float* brightness,
   *alpha = rgba[3];
 
   float fRed = rgba[0], fGreen = rgba[1], fBlue = rgba[2];
-  float maxrgb = fmax(fRed, fmax(fGreen, fBlue));
-  float minrgb = fmin(fRed, fmin(fGreen, fBlue));
+  float maxrgb = static_cast<float>(fmax(fRed, fmax(fGreen, fBlue)));
+  float minrgb = static_cast<float>(fmin(fRed, fmin(fGreen, fBlue)));
   float delta = maxrgb - minrgb + 0.0001f;
   float h = 0.0f;
   if (maxrgb == fRed && fGreen >= fBlue) {

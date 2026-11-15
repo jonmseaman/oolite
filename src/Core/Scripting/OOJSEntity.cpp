@@ -404,7 +404,7 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
     case kEnergy:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
         fValue = OOClamp_0_max_d(fValue, cxxEntity->getMaxEnergy());
-        cxxEntity->setEnergy(fValue);
+        cxxEntity->setEnergy(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       JS_FreeValue(context, JS_GetException(context));
@@ -416,7 +416,7 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
           OOJSReportError(context, "entity.maxEnergy must be positive.");
           return JS_EXCEPTION;
         }
-        cxxEntity->setMaxEnergy(fValue);
+        cxxEntity->setMaxEnergy(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       JS_FreeValue(context, JS_GetException(context));

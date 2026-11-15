@@ -1561,7 +1561,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         return playerReadOnly();
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
-        ship->setAccuracy(fValue);
+        ship->setAccuracy(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1594,7 +1594,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kHyperspaceSpinTime:
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
-        ship->setHyperspaceSpinTime(fValue);
+        ship->setHyperspaceSpinTime(static_cast<float>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1699,7 +1699,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kTemperature:
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         fValue = fmax(fValue, 0.0);
-        ship->setTemperature(fValue * SHIP_MAX_CABIN_TEMP);
+        ship->setTemperature(
+            static_cast<GLfloat>(fValue * SHIP_MAX_CABIN_TEMP));
         return JS_UNDEFINED;
       }
       break;
@@ -1707,7 +1708,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kHeatInsulation:
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         fValue = fmax(fValue, 0.125);
-        ship->setHeatInsulation(fValue);
+        ship->setHeatInsulation(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1738,7 +1739,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         return playerReadOnly();
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
-        ship->setReactionTime(fValue);
+        ship->setReactionTime(static_cast<float>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1898,7 +1899,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kScriptedMisjumpRange:
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         if (fValue > 0.0 && fValue < 1.0) {
-          ship->setScriptedMisjumpRange(fValue);
+          ship->setScriptedMisjumpRange(static_cast<GLfloat>(fValue));
           return JS_UNDEFINED;
         } else {
           OOJSReportError(
@@ -1921,7 +1922,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kSunGlareFilter:
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         if (fValue >= 0.0f && fValue <= 1.0f) {
-          ship->setSunGlareFilter(fValue);
+          ship->setSunGlareFilter(static_cast<GLfloat>(fValue));
           return JS_UNDEFINED;
         } else {
           OOJSReportError(
@@ -1939,7 +1940,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       // return playerReadOnly();
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
-        ship->setThrust(OOClamp_0_max_f(fValue, ship->maxThrust()));
+        ship->setThrust(
+            OOClamp_0_max_f(static_cast<float>(fValue), ship->maxThrust()));
         return JS_UNDEFINED;
       }
       break;
@@ -1950,7 +1952,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
           OOJSReportError(context, "ship.maxPitch cannot be negative.");
           return OOJSNativeFailure(context);
         }
-        ship->setMaxFlightPitch(fValue);
+        ship->setMaxFlightPitch(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1961,7 +1963,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
           OOJSReportError(context, "ship.maxSpeed cannot be negative.");
           return OOJSNativeFailure(context);
         }
-        ship->setMaxFlightSpeed(fValue);
+        ship->setMaxFlightSpeed(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1972,7 +1974,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
           OOJSReportError(context, "ship.maxRoll cannot be negative.");
           return OOJSNativeFailure(context);
         }
-        ship->setMaxFlightRoll(fValue);
+        ship->setMaxFlightRoll(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1983,7 +1985,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
           OOJSReportError(context, "ship.maxYaw cannot be negative.");
           return OOJSNativeFailure(context);
         }
-        ship->setMaxFlightYaw(fValue);
+        ship->setMaxFlightYaw(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1994,7 +1996,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
           OOJSReportError(context, "ship.injectorBurnRate cannot be negative.");
           return OOJSNativeFailure(context);
         }
-        ship->setAfterburnerRate(fValue);
+        ship->setAfterburnerRate(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -2023,7 +2025,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
           return OOJSNativeFailure(context);
         }
 #endif
-        ship->setAfterburnerFactor(fValue);
+        ship->setAfterburnerFactor(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -2034,7 +2036,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
           OOJSReportError(context, "ship.maxThrust cannot be negative.");
           return OOJSNativeFailure(context);
         }
-        ship->setMaxThrust(fValue);
+        ship->setMaxThrust(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -2046,7 +2048,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
                           "ship.energyRechargeRate cannot be negative.");
           return OOJSNativeFailure(context);
         }
-        ship->setEnergyRechargeRate(fValue);
+        ship->setEnergyRechargeRate(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;

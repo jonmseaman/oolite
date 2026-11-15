@@ -808,8 +808,8 @@ void OODefaultShaderSynthesizer::writeSpecularLighting() {
   float scaleFactor = 1.0f;
 
   if (!specularColorMap.isNull()) {
-    scaleFactor =
-        specularColorMap.get<double>(kOOTextureSpecifierScaleFactorKey, 1.0f);
+    scaleFactor = static_cast<float>(
+        specularColorMap.get<double>(kOOTextureSpecifierScaleFactorKey, 1.0f));
   }
 
   std::shared_ptr<OOColor> specularColor;  // never null: both functions below
@@ -971,7 +971,7 @@ void OODefaultShaderSynthesizer::writeLightMaps() {
       std::size_t component, componentCount = color->count();
       if (componentCount > 4) componentCount = 4;
       for (component = 0; component < componentCount; component++) {
-        rgba[component] = color->at<double>(component);
+        rgba[component] = static_cast<float>(color->at<double>(component));
       }
       rgba[0] *= rgba[3];
       rgba[1] *= rgba[3];

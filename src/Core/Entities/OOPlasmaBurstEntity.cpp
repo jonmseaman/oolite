@@ -56,9 +56,11 @@ void OOPlasmaBurstEntity::update(OOTimeDelta delta_t) {
   OOLightParticleEntity::update(delta_t);
 
   OOTimeDelta lifeTime = timeElapsedSinceSpawn();
-  float attenuation = OOClamp_0_1_f(1.0f - lifeTime / kPlasmaBurstDuration);
+  float attenuation =
+      OOClamp_0_1_f(static_cast<float>(1.0f - lifeTime / kPlasmaBurstDuration));
 
-  _diameter = kPlasmaBurstInitialSize + lifeTime * kPlasmaBurstGrowthRate;
+  _diameter = static_cast<float>(kPlasmaBurstInitialSize +
+                                 lifeTime * kPlasmaBurstGrowthRate);
 
   _colorComponents[3] = attenuation;
 

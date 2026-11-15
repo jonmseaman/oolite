@@ -577,10 +577,12 @@ float OOCommodities::economicBiasForGood(const oo::PList& good,
     return 0.0;
   } else if (exDiff > imDiff) {
     // closer to the importer, so return -ve
-    return -(1.0 - (static_cast<float>(imDiff) / static_cast<float>(distance)));
+    return static_cast<float>(
+        -(1.0 - (static_cast<float>(imDiff) / static_cast<float>(distance))));
   } else {
     // closer to the exporter, so return +ve
-    return 1.0 - (static_cast<float>(exDiff) / static_cast<float>(distance));
+    return static_cast<float>(
+        1.0 - (static_cast<float>(exDiff) / static_cast<float>(distance)));
   }
 }
 

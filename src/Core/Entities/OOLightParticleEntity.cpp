@@ -64,12 +64,13 @@ void OOLightParticleEntity::initWithDiameter(float diameter) {
   // [super init] could not fail: the constructor ran Entity's -init body.
   {
     _diameter = diameter;
-    no_draw_distance = pow(diameter / 2.0, M_SQRT2) * NO_DRAW_DISTANCE_FACTOR *
-                       NO_DRAW_DISTANCE_FACTOR;
-    no_draw_distance *=
+    no_draw_distance =
+        static_cast<GLfloat>(pow(diameter / 2.0, M_SQRT2) *
+                             NO_DRAW_DISTANCE_FACTOR * NO_DRAW_DISTANCE_FACTOR);
+    no_draw_distance *= static_cast<GLfloat>(
         (UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false)
             ? PARTICLE_DISTANCE_SCALE_LOW
-            : PARTICLE_DISTANCE_SCALE_HIGH;
+            : PARTICLE_DISTANCE_SCALE_HIGH);
 
     _colorComponents[0] = 1.0f;
     _colorComponents[1] = 1.0f;
@@ -108,8 +109,9 @@ void OOLightParticleEntity::drawSubEntityImmediate(bool immediate,
           -- Ahruman 2009-09-20
   */
   Entity* ownerPart = oo::LiveOwner(this);  // -owner's C++ entity
-  cam_zero_distance = ownerPart != nullptr ? ownerPart->camZeroDistance()
-                                           : 0;  // a message to nil answered 0
+  cam_zero_distance = ownerPart != nullptr
+                          ? static_cast<GLfloat>(ownerPart->camZeroDistance())
+                          : 0;  // a message to nil answered 0
   if (no_draw_distance <= cam_zero_distance) return;
 
   Entity* father = ownerPart;
@@ -174,7 +176,7 @@ void OOLightParticleEntity::drawImmediate(bool /*immediate*/,
   OOGL(glDepthMask(GL_FALSE));
 
   GLfloat distanceAttenuation = cam_zero_distance / no_draw_distance;
-  distanceAttenuation = 1.0 - distanceAttenuation;
+  distanceAttenuation = static_cast<GLfloat>(1.0 - distanceAttenuation);
   GLfloat components[4] = {_colorComponents[0], _colorComponents[1],
                            _colorComponents[2],
                            _colorComponents[3] * distanceAttenuation};

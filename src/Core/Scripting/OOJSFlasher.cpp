@@ -224,7 +224,7 @@ static JSValue FlasherSetProperty(OOJS_SETTER_ARGS) {
     case kFrequency:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (fValue >= 0.0) {
-          entity->setFrequency(fValue);
+          entity->setFrequency(static_cast<float>(fValue));
           return JS_UNDEFINED;
         }
       }
@@ -233,7 +233,7 @@ static JSValue FlasherSetProperty(OOJS_SETTER_ARGS) {
     case kFraction:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (fValue > 0.0 && fValue <= 1.0) {
-          entity->setFraction(fValue);
+          entity->setFraction(static_cast<float>(fValue));
           return JS_UNDEFINED;
         }
       }
@@ -241,7 +241,7 @@ static JSValue FlasherSetProperty(OOJS_SETTER_ARGS) {
 
     case kPhase:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        entity->setPhase(fValue);
+        entity->setPhase(static_cast<float>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -249,7 +249,7 @@ static JSValue FlasherSetProperty(OOJS_SETTER_ARGS) {
     case kSize:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (fValue > 0.0) {
-          entity->setDiameter(fValue);
+          entity->setDiameter(static_cast<float>(fValue));
           return JS_UNDEFINED;
         }
       }

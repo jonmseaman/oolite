@@ -206,7 +206,9 @@ void PlayerEntity::stickProfileGraphAxisProfile(GLfloat alpha, Vector screenAt,
                                                 NSSize /*screenSize*/) {
   if (stickProfileScreen != nullptr)
     stickProfileScreen->graphProfile(
-        alpha, make_vector(screenAt.x - 110.0, screenAt.y - 100, screenAt.z),
+        alpha,
+        make_vector(static_cast<OOScalar>(screenAt.x - 110.0), screenAt.y - 100,
+                    screenAt.z),
         NSMakeSize(220, 220));
   return;
 }
@@ -451,28 +453,33 @@ void StickProfileScreen::graphProfile(GLfloat alpha, Vector at, NSSize size) {
   if (!profile) return;
   graphRect = NSMakeRect(at.x, at.y, size.width, size.height);
   OO_ENTER_OPENGL();
-  OOGL(glColor4f(0.2, 0.2, 0.5, alpha));
+  OOGL(glColor4f(static_cast<GLfloat>(0.2), static_cast<GLfloat>(0.2), 0.5,
+                 alpha));
   OOGLBEGIN(GL_QUADS);
   glVertex3f(at.x, at.y, at.z);
-  glVertex3f(at.x + size.width, at.y, at.z);
-  glVertex3f(at.x + size.width, at.y + size.height, at.z);
-  glVertex3f(at.x, at.y + size.height, at.z);
+  glVertex3f(static_cast<GLfloat>(at.x + size.width), at.y, at.z);
+  glVertex3f(static_cast<GLfloat>(at.x + size.width),
+             static_cast<GLfloat>(at.y + size.height), at.z);
+  glVertex3f(at.x, static_cast<GLfloat>(at.y + size.height), at.z);
   OOGLEND();
-  OOGL(glColor4f(0.9, 0.9, 0.9, alpha));
+  OOGL(glColor4f(static_cast<GLfloat>(0.9), static_cast<GLfloat>(0.9),
+                 static_cast<GLfloat>(0.9), alpha));
   OOGL(GLScaledLineWidth(2.0f));
   OOGLBEGIN(GL_LINE_STRIP);
   for (i = 0; static_cast<double>(i) <= size.width - 20; i++) {
     glVertex3f(
         at.x + static_cast<OOScalar>(i) + 10,
-        at.y + 10 +
+        static_cast<GLfloat>(
+            at.y + 10 +
             (size.height - 20) *
-                profile->rawValue((static_cast<float>(i)) / (size.width - 20)),
+                profile->rawValue((static_cast<float>(i)) / (size.width - 20))),
         at.z);
   }
   OOGLEND();
   OOGL(glColor4f(0.5, 0.0, 0.5, alpha));
   GLDrawFilledOval(at.x + 10, at.y + 10, at.z, NSMakeSize(4, 4), 20);
-  GLDrawFilledOval(at.x + size.width - 10, at.y + size.height - 10, at.z,
+  GLDrawFilledOval(static_cast<GLfloat>(at.x + size.width - 10),
+                   static_cast<GLfloat>(at.y + size.height - 10), at.z,
                    NSMakeSize(4, 4), 20);
   spline_profile = dynamic_cast<OOJoystickSplineAxisProfile*>(profile);
   if (spline_profile != nullptr) {
@@ -484,17 +491,20 @@ void StickProfileScreen::graphProfile(GLfloat alpha, Vector at, NSSize size) {
         OOGL(glColor4f(0.0, 1.0, 0.0, alpha));
       }
       point = control_points[i];
-      GLDrawFilledOval(at.x + 10 + point.x * (size.width - 20),
-                       at.y + 10 + point.y * (size.height - 20), at.z,
-                       NSMakeSize(4, 4), 20);
+      GLDrawFilledOval(
+          static_cast<GLfloat>(at.x + 10 + point.x * (size.width - 20)),
+          static_cast<GLfloat>(at.y + 10 + point.y * (size.height - 20)), at.z,
+          NSMakeSize(4, 4), 20);
     }
   }
-  OOGL(glColor4f(0.9, 0.9, 0.0, alpha));
+  OOGL(glColor4f(static_cast<GLfloat>(0.9), static_cast<GLfloat>(0.9), 0.0,
+                 alpha));
   OODrawStringAligned(OO_DESC("oolite-stickprofile-movement"),
-                      at.x + size.width - 5, at.y, at.z, NSMakeSize(8, 10),
-                      true);
+                      static_cast<GLfloat>(at.x + size.width - 5), at.y, at.z,
+                      NSMakeSize(8, 10), true);
   OODrawString(OO_DESC("oolite-stickprofile-response"), at.x,
-               at.y + size.height - 10, at.z, NSMakeSize(8, 10));
+               static_cast<GLfloat>(at.y + size.height - 10), at.z,
+               NSMakeSize(8, 10));
   return;
 }
 

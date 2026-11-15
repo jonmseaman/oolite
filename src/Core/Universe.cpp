@@ -1798,15 +1798,17 @@ void Universe::setUpSpace() {
   /*- the sky backdrop -*/
   // colors...
   float h1 = randf();
-  float h2 = h1 + 1.0 / (1.0 + (Ranrot() % 5));
-  while (h2 > 1.0) h2 -= 1.0;
+  float h2 = static_cast<float>(h1 + 1.0 / (1.0 + (Ranrot() % 5)));
+  while (h2 > 1.0) h2 -= static_cast<float>(1.0);
   float s1 = randf();  // one draw per local, in the order Clang evaluates the
                        // arguments
   double b1 = 0.5 + randf() / 2.0;
-  std::shared_ptr<OOColor> col1 = OOColor::colorWithHue(h1, s1, b1, 1.0);
+  std::shared_ptr<OOColor> col1 =
+      OOColor::colorWithHue(h1, s1, static_cast<float>(b1), 1.0);
   double s2 = 0.5 + randf() / 2.0;
   double b2 = 0.5 + randf() / 2.0;
-  std::shared_ptr<OOColor> col2 = OOColor::colorWithHue(h2, s2, b2, 1.0);
+  std::shared_ptr<OOColor> col2 = OOColor::colorWithHue(
+      h2, static_cast<float>(s2), static_cast<float>(b2), 1.0);
 
   {
     // The sky is C++: its object first, retained as +alloc's was, then the
@@ -1820,9 +1822,9 @@ void Universe::setUpSpace() {
   addEntity(thing);
   //	bgcolor = [(SkyEntity *)thing skyColor];
   //
-  h1 = randf() / 3.0;
+  h1 = static_cast<float>(randf() / 3.0);
   if (h1 > 0.17) {
-    h1 += 0.33;
+    h1 += static_cast<float>(0.33);
   }
 
   ambientLightLevel = systeminfo.get<float>("ambient_level", 1.0);
@@ -1836,7 +1838,8 @@ void Universe::setUpSpace() {
     double saturation = 0.75 * randf();  // one draw per local, in the order
                                          // Clang evaluates the arguments
     double brightness = 0.65 + randf() / 5.0;
-    bgcolor = OOColor::colorWithHue(h1, saturation, brightness, 1.0);
+    bgcolor = OOColor::colorWithHue(h1, static_cast<float>(saturation),
+                                    static_cast<float>(brightness), 1.0);
   }
 
   pale_bgcolor = (bgcolor != nullptr) ? bgcolor->blendedColorWithFraction(
@@ -1854,8 +1857,8 @@ void Universe::setUpSpace() {
   dust->setDustColor(pale_bgcolor.get());
   /*--*/
 
-  float defaultSunFlare = randf() * 0.1;
-  float defaultSunHues = 0.5 + randf() * 0.5;
+  float defaultSunFlare = static_cast<float>(randf() * 0.1);
+  float defaultSunHues = static_cast<float>(0.5 + randf() * 0.5);
   OO_DEBUG_POP_PROGRESS();
 
   // actual entities next...
@@ -1972,7 +1975,9 @@ void Universe::setUpSpace() {
   addEntity(a_sun);
 
   if (sunGoneNova) {
-    if (a_sun != nullptr) a_sun->setRadius(sun_radius, 0.3);
+    if (a_sun != nullptr)
+      a_sun->setRadius(static_cast<GLfloat>(sun_radius),
+                       static_cast<GLfloat>(0.3));
     if (a_sun != nullptr) a_sun->setThrowSparks(true);
     if (a_sun != nullptr) a_sun->setVelocity(kZeroVector);
   }
@@ -1991,8 +1996,8 @@ void Universe::setUpSpace() {
          vf.y, vf.z);
 #endif
   stationPos = HPvector_subtract(
-      stationPos,
-      vectorToHPVector(vector_multiply_scalar(vf, 2.0 * planet_radius)));
+      stationPos, vectorToHPVector(vector_multiply_scalar(
+                      vf, static_cast<OOScalar>(2.0 * planet_radius))));
 
   //// possibly systeminfo has an override for the station
   stationDesc = systeminfo.get<std::string>("station", "coriolis");
@@ -2518,22 +2523,22 @@ void Universe::setLighting() {
     OOGL(glLightfv(GL_LIGHT1, GL_AMBIENT, sun_ambient));
     OOGL(glLightfv(GL_LIGHT1, GL_DIFFUSE, sun_diffuse));
     OOGL(glLightfv(GL_LIGHT1, GL_SPECULAR, sun_specular));
-    sun_pos[0] = the_sun->position.x;
-    sun_pos[1] = the_sun->position.y;
-    sun_pos[2] = the_sun->position.z;
+    sun_pos[0] = static_cast<GLfloat>(the_sun->position.x);
+    sun_pos[1] = static_cast<GLfloat>(the_sun->position.y);
+    sun_pos[2] = static_cast<GLfloat>(the_sun->position.z);
   } else {
     // witchspace
-    stars_ambient[0] = 0.05;
-    stars_ambient[1] = 0.20;
-    stars_ambient[2] = 0.05;
+    stars_ambient[0] = static_cast<GLfloat>(0.05);
+    stars_ambient[1] = static_cast<GLfloat>(0.20);
+    stars_ambient[2] = static_cast<GLfloat>(0.05);
     stars_ambient[3] = 1.0;
-    sun_diffuse[0] = 0.85;
+    sun_diffuse[0] = static_cast<GLfloat>(0.85);
     sun_diffuse[1] = 1.0;
-    sun_diffuse[2] = 0.85;
+    sun_diffuse[2] = static_cast<GLfloat>(0.85);
     sun_diffuse[3] = 1.0;
-    sun_specular[0] = 0.95;
+    sun_specular[0] = static_cast<GLfloat>(0.95);
     sun_specular[1] = 1.0;
-    sun_specular[2] = 0.95;
+    sun_specular[2] = static_cast<GLfloat>(0.95);
     sun_specular[3] = 1.0;
     OOGL(glLightfv(GL_LIGHT1, GL_AMBIENT, sun_ambient));
     OOGL(glLightfv(GL_LIGHT1, GL_DIFFUSE, sun_diffuse));
@@ -2550,19 +2555,19 @@ void Universe::setLighting() {
     else
       r = g = b = a = 0.0f;  // a nil colour wrote nothing; zero, as a message
                              // to nil answers
-    r = r * (1.0 - SUN_AMBIENT_INFLUENCE) +
-        sun_diffuse[0] * SUN_AMBIENT_INFLUENCE;
-    g = g * (1.0 - SUN_AMBIENT_INFLUENCE) +
-        sun_diffuse[1] * SUN_AMBIENT_INFLUENCE;
-    b = b * (1.0 - SUN_AMBIENT_INFLUENCE) +
-        sun_diffuse[2] * SUN_AMBIENT_INFLUENCE;
+    r = static_cast<GLfloat>(r * (1.0 - SUN_AMBIENT_INFLUENCE) +
+                             sun_diffuse[0] * SUN_AMBIENT_INFLUENCE);
+    g = static_cast<GLfloat>(g * (1.0 - SUN_AMBIENT_INFLUENCE) +
+                             sun_diffuse[1] * SUN_AMBIENT_INFLUENCE);
+    b = static_cast<GLfloat>(b * (1.0 - SUN_AMBIENT_INFLUENCE) +
+                             sun_diffuse[2] * SUN_AMBIENT_INFLUENCE);
     GLfloat ambient_level = getAmbientLightLevel();
-    stars_ambient[0] =
-        ambient_level * SKY_AMBIENT_ADJUSTMENT * (1.0 + r) * (1.0 + r);
-    stars_ambient[1] =
-        ambient_level * SKY_AMBIENT_ADJUSTMENT * (1.0 + g) * (1.0 + g);
-    stars_ambient[2] =
-        ambient_level * SKY_AMBIENT_ADJUSTMENT * (1.0 + b) * (1.0 + b);
+    stars_ambient[0] = static_cast<GLfloat>(
+        ambient_level * SKY_AMBIENT_ADJUSTMENT * (1.0 + r) * (1.0 + r));
+    stars_ambient[1] = static_cast<GLfloat>(
+        ambient_level * SKY_AMBIENT_ADJUSTMENT * (1.0 + g) * (1.0 + g));
+    stars_ambient[2] = static_cast<GLfloat>(
+        ambient_level * SKY_AMBIENT_ADJUSTMENT * (1.0 + b) * (1.0 + b));
     stars_ambient[3] = 1.0;
   }
 
@@ -2758,15 +2763,18 @@ HPVector Universe::coordinatesForPosition(HPVector pos,
   GLfloat scale = 1.0;
   switch (c_sys[2]) {
     case 'p':
-      scale = (the_planet != nullptr ? the_planet->radius() : 0.0);
+      scale =
+          (the_planet != nullptr ? static_cast<GLfloat>(the_planet->radius())
+                                 : 0.0);
       break;
 
     case 's':
-      scale = (the_sun != nullptr ? the_sun->radius() : 0.0);
+      scale =
+          (the_sun != nullptr ? static_cast<GLfloat>(the_sun->radius()) : 0.0);
       break;
 
     case 'u':
-      scale = HPmagnitude(HPvector_subtract(p1, p0));
+      scale = static_cast<GLfloat>(HPmagnitude(HPvector_subtract(p1, p0)));
       break;
 
     case 'm':
@@ -2873,16 +2881,18 @@ HPVector Universe::legacyPositionFrom(HPVector pos, const std::string& system) {
   GLfloat scale = 1.0;
   switch (c_sys[2]) {
     case 'p': {
-      scale = 1.0f / (the_planet != nullptr ? the_planet->radius() : 0.0);
+      scale = static_cast<GLfloat>(
+          1.0f / (the_planet != nullptr ? the_planet->radius() : 0.0));
       break;
     }
     case 's': {
-      scale = 1.0f / (the_sun != nullptr ? the_sun->radius() : 0.0);
+      scale = static_cast<GLfloat>(
+          1.0f / (the_sun != nullptr ? the_sun->radius() : 0.0));
       break;
     }
 
     case 'u':
-      scale = 1.0f / HPdistance(p1, p0);
+      scale = static_cast<GLfloat>(1.0f / HPdistance(p1, p0));
       break;
 
     case 'm':
@@ -3028,10 +3038,13 @@ bool Universe::addShipsNearPosition(int howMany, const std::string& desc,
   if (rfactor < 1000) rfactor = 1000;
   BoundingBox launch_bbox;
   bounding_box_reset_to_vector(
-      &launch_bbox, make_vector(launchPos.x - rfactor, launchPos.y - rfactor,
-                                launchPos.z - rfactor));
-  bounding_box_add_xyz(&launch_bbox, launchPos.x + rfactor,
-                       launchPos.y + rfactor, launchPos.z + rfactor);
+      &launch_bbox, make_vector(static_cast<OOScalar>(launchPos.x - rfactor),
+                                static_cast<OOScalar>(launchPos.y - rfactor),
+                                static_cast<OOScalar>(launchPos.z - rfactor)));
+  bounding_box_add_xyz(&launch_bbox,
+                       static_cast<GLfloat>(launchPos.x + rfactor),
+                       static_cast<GLfloat>(launchPos.y + rfactor),
+                       static_cast<GLfloat>(launchPos.z + rfactor));
 
   return addShips(howMany, desc, launch_bbox);
 }
@@ -3046,10 +3059,13 @@ bool Universe::addShipsNearPosition(int howMany, const std::string& desc,
   if (rfactor < 1000) rfactor = 1000;
   BoundingBox launch_bbox;
   bounding_box_reset_to_vector(
-      &launch_bbox, make_vector(launchPos.x - rfactor, launchPos.y - rfactor,
-                                launchPos.z - rfactor));
-  bounding_box_add_xyz(&launch_bbox, launchPos.x + rfactor,
-                       launchPos.y + rfactor, launchPos.z + rfactor);
+      &launch_bbox, make_vector(static_cast<OOScalar>(launchPos.x - rfactor),
+                                static_cast<OOScalar>(launchPos.y - rfactor),
+                                static_cast<OOScalar>(launchPos.z - rfactor)));
+  bounding_box_add_xyz(&launch_bbox,
+                       static_cast<GLfloat>(launchPos.x + rfactor),
+                       static_cast<GLfloat>(launchPos.y + rfactor),
+                       static_cast<GLfloat>(launchPos.z + rfactor));
 
   return addShips(howMany, desc, launch_bbox);
 }
@@ -3069,17 +3085,17 @@ bool Universe::addShips(int howMany, const std::string& desc,
     BoundingBox bbox1 = bbox;
     if ((lx > lz) && (lx > ly)) {
       // longest dimension is x
-      bbox0.min.x += 0.5 * lx;
-      bbox1.max.x -= 0.5 * lx;
+      bbox0.min.x += static_cast<OOScalar>(0.5 * lx);
+      bbox1.max.x -= static_cast<OOScalar>(0.5 * lx);
     } else {
       if (ly > lz) {
         // longest dimension is y
-        bbox0.min.y += 0.5 * ly;
-        bbox1.max.y -= 0.5 * ly;
+        bbox0.min.y += static_cast<OOScalar>(0.5 * ly);
+        bbox1.max.y -= static_cast<OOScalar>(0.5 * ly);
       } else {
         // longest dimension is z
-        bbox0.min.z += 0.5 * lz;
-        bbox1.max.z -= 0.5 * lz;
+        bbox0.min.z += static_cast<OOScalar>(0.5 * lz);
+        bbox1.max.z -= static_cast<OOScalar>(0.5 * lz);
       }
     }
     // place half the ships into each bounding box
@@ -3642,7 +3658,8 @@ void Universe::setUpBreakPattern(HPVector pos, Quaternion q, bool forDocking) {
       ring->setInnerColor(col1.get(), col2.get());
     }
 
-    Vector offset = vector_multiply_scalar(v, i * BREAK_PATTERN_RING_SPACING);
+    Vector offset = vector_multiply_scalar(
+        v, static_cast<OOScalar>(i * BREAK_PATTERN_RING_SPACING));
     ring->setPosition(
         HPvector_add(pos, vectorToHPVector(offset)));  // ahead of the player
     ring->setOrientation(q);
@@ -4964,13 +4981,13 @@ oo::PList Universe::gameSettings() {
 
   result["gameWindow"] = oo::PList(oo::PList::Dict{
       {"width",
-       oo::PList::singleReal(
+       oo::PList::singleReal(static_cast<float>(
            (gameView != nullptr ? gameView->backingViewSize() : NSSize{})
-               .width)},
+               .width))},
       {"height",
-       oo::PList::singleReal(
+       oo::PList::singleReal(static_cast<float>(
            (gameView != nullptr ? gameView->backingViewSize() : NSSize{})
-               .height)},
+               .height))},
       {"fullScreen", oo::PList((gameController() != nullptr
                                     ? gameController()->inFullScreenMode()
                                     : false))},
@@ -5145,9 +5162,9 @@ void Universe::defineFrustum() {
   frustum[2][3] = clip.m[3][3] + clip.m[3][1];
 
   /* Normalize the result */
-  rt =
-      1.0 / sqrt(frustum[2][0] * frustum[2][0] + frustum[2][1] * frustum[2][1] +
-                 frustum[2][2] * frustum[2][2]);
+  rt = static_cast<GLfloat>(1.0 / sqrt(frustum[2][0] * frustum[2][0] +
+                                       frustum[2][1] * frustum[2][1] +
+                                       frustum[2][2] * frustum[2][2]));
   frustum[2][0] *= rt;
   frustum[2][1] *= rt;
   frustum[2][2] *= rt;
@@ -5160,9 +5177,9 @@ void Universe::defineFrustum() {
   frustum[3][3] = clip.m[3][3] - clip.m[3][1];
 
   /* Normalize the result */
-  rt =
-      1.0 / sqrt(frustum[3][0] * frustum[3][0] + frustum[3][1] * frustum[3][1] +
-                 frustum[3][2] * frustum[3][2]);
+  rt = static_cast<GLfloat>(1.0 / sqrt(frustum[3][0] * frustum[3][0] +
+                                       frustum[3][1] * frustum[3][1] +
+                                       frustum[3][2] * frustum[3][2]));
   frustum[3][0] *= rt;
   frustum[3][1] *= rt;
   frustum[3][2] *= rt;
@@ -5254,7 +5271,7 @@ void Universe::drawUniverse() {
       bool demoShipMode =
           (player != nullptr ? player->getShowDemoShips() : false);
 
-      float aspect = viewSize.height / viewSize.width;
+      float aspect = static_cast<float>(viewSize.height / viewSize.width);
 
       if (!displayGUI && wasDisplayGUI) {
         // reset light1 position for the shaders
@@ -5320,18 +5337,18 @@ void Universe::drawUniverse() {
       // We need to bring forward the near plane of the frustum on the long
       // distance pass by this factor to avoid clipping objects at the corner of
       // the window
-      float distanceFactor =
+      float distanceFactor = static_cast<float>(
           sqrt(1 + ((gameView != nullptr ? gameView->fov(true) : 0.0f) *
                     (gameView != nullptr ? gameView->fov(true) : 0.0f) *
-                    (1.0 + 1.0 / (aspect * aspect))));
+                    (1.0 + 1.0 / (aspect * aspect)))));
 
       for (vdist = 0; vdist <= 1; vdist++) {
         float nearPlane = vdist ? 1.0 : INTERMEDIATE_CLEAR_DEPTH;
         float farPlane = vdist ? breakPlane : MAX_CLEAR_DEPTH;
-        float ratio =
+        float ratio = static_cast<float>(
             (displayGUI ? 0.5
                         : (gameView != nullptr ? gameView->fov(true) : 0.0f)) *
-            nearPlane / distanceFactor;  // 0.5 is field of view ratio for GUIs
+            nearPlane / distanceFactor);  // 0.5 is field of view ratio for GUIs
 
         OOGLResetProjection();
         if ((displayGUI && 4 * aspect >= 3) ||
@@ -5428,7 +5445,7 @@ void Universe::drawUniverse() {
           int furthest = draw_count - 1;
           int nearest = 0;
           bool inAtmosphere = airResistanceFactor > 0.01;
-          GLfloat fogFactor = 0.5 / airResistanceFactor;
+          GLfloat fogFactor = static_cast<GLfloat>(0.5 / airResistanceFactor);
           double fog_scale, half_scale;
           GLfloat flat_ambdiff[4] = {1.0, 1.0, 1.0, 1.0};  // for alpha
           GLfloat mat_no[4] = {0.0, 0.0, 0.0, 1.0};        // nothing
@@ -5486,12 +5503,12 @@ void Universe::drawUniverse() {
                 OOGL(glEnable(GL_FOG));
                 OOGL(glFogi(GL_FOG_MODE, GL_LINEAR));
                 OOGL(glFogfv(GL_FOG_COLOR, skyClearColor));
-                OOGL(glFogf(GL_FOG_START, half_scale));
-                OOGL(glFogf(GL_FOG_END, fog_scale));
-                fog_blend = OOClamp_0_1_f(
+                OOGL(glFogf(GL_FOG_START, static_cast<GLfloat>(half_scale)));
+                OOGL(glFogf(GL_FOG_END, static_cast<GLfloat>(fog_scale)));
+                fog_blend = OOClamp_0_1_f(static_cast<float>(
                     (magnitude(drawthing->getCameraRelativePosition()) -
                      half_scale) /
-                    half_scale);
+                    half_scale));
                 drawthing->setAtmosphereFogging(
                     OOColor::colorWithRed(skyClearColor[0], skyClearColor[1],
                                           skyClearColor[2], fog_blend)
@@ -5541,12 +5558,12 @@ void Universe::drawUniverse() {
                 OOGL(glEnable(GL_FOG));
                 OOGL(glFogi(GL_FOG_MODE, GL_LINEAR));
                 OOGL(glFogfv(GL_FOG_COLOR, skyClearColor));
-                OOGL(glFogf(GL_FOG_START, half_scale));
-                OOGL(glFogf(GL_FOG_END, fog_scale));
-                fog_blend = OOClamp_0_1_f(
+                OOGL(glFogf(GL_FOG_START, static_cast<GLfloat>(half_scale)));
+                OOGL(glFogf(GL_FOG_END, static_cast<GLfloat>(fog_scale)));
+                fog_blend = OOClamp_0_1_f(static_cast<float>(
                     (magnitude(drawthing->getCameraRelativePosition()) -
                      half_scale) /
-                    half_scale);
+                    half_scale));
                 drawthing->setAtmosphereFogging(
                     OOColor::colorWithRed(skyClearColor[0], skyClearColor[1],
                                           skyClearColor[2], fog_blend)
@@ -5609,9 +5626,9 @@ void Universe::drawUniverse() {
       OOCheckOpenGLErrors("Universe after drawing entities");
       OO_LOG("universe.profile.draw", "{}", "Begin HUD");
 
-      GLfloat lineWidth =
+      GLfloat lineWidth = static_cast<GLfloat>(
           (gameView != nullptr ? gameView->backingViewSize() : NSSize{}).width /
-          1024.0;  // restore line size
+          1024.0);  // restore line size
       if (lineWidth < 1.0) lineWidth = 1.0;
       if (lineWidth > 1.5)
         lineWidth = 1.5;  // don't overscale; think of ultra-wide screen setups
@@ -5787,10 +5804,12 @@ void Universe::drawWatermarkString(const std::string& watermarkString) {
   const int halfGuiWidth = MAIN_GUI_PIXEL_WIDTH / 2,
             halfGuiHeight =
                 MAIN_GUI_PIXEL_HEIGHT / 2;  // integer halves, as before
-  OODrawString(watermarkString, halfGuiWidth - watermarkStringSize.width + 80,
-               halfGuiHeight - watermarkStringSize.height,
-               (gameView != nullptr ? gameView->getDisplay_z() : 0.0f),
-               NSMakeSize(10, 10));
+  OODrawString(
+      watermarkString,
+      static_cast<GLfloat>(halfGuiWidth - watermarkStringSize.width + 80),
+      static_cast<GLfloat>(halfGuiHeight - watermarkStringSize.height),
+      (gameView != nullptr ? gameView->getDisplay_z() : 0.0f),
+      NSMakeSize(10, 10));
 }
 
 Entity* Universe::entityForUniversalID(OOUniversalID u_id) {
@@ -5926,7 +5945,7 @@ bool Universe::addEntity(Entity* entity) {
     HPVector entity_pos = entity->position;
     HPVector delta = HPvector_between(entity_pos, PLAYER->position);
     double z_distance = HPmagnitude2(delta);
-    entity->zero_distance = z_distance;
+    entity->zero_distance = static_cast<GLfloat>(z_distance);
     unsigned index = n_entities;
     sortedEntities[index] = entity;
     entity->zero_index = index;
@@ -6380,8 +6399,9 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
                            : nullptr);  // retain count = 1
   Quaternion q;
   if (wreck) {
-    GLfloat expected_mass = 0.1f * (ship != nullptr ? ship->getMass() : 0.0f) *
-                            (0.75 + 0.5 * randf());
+    GLfloat expected_mass =
+        static_cast<GLfloat>(0.1f * (ship != nullptr ? ship->getMass() : 0.0f) *
+                             (0.75 + 0.5 * randf()));
     GLfloat wreck_mass = (wreck != nullptr ? wreck->getMass() : 0.0f);
     GLfloat scale_factor = powf(expected_mass / wreck_mass, 0.33333333f) *
                            scale;  // cube root of volume ratio
@@ -6429,9 +6449,9 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
     if (burst != nullptr) burst->setPosition(pos);
     addEntity(oo::MadeEntity(burst));
     if ((target != nullptr ? target->getEnergy() : 0.0f) * randf() < damage) {
-      ::ShipEntity* wreck =
-          addWreckageFrom(target, "oolite-wreckage-chunk", pos, 0.05,
-                          (125.0 + (randf() * 200.0)));
+      ::ShipEntity* wreck = addWreckageFrom(
+          target, "oolite-wreckage-chunk", pos, static_cast<GLfloat>(0.05),
+          (static_cast<GLfloat>(125.0 + (randf() * 200.0))));
       if (wreck) {
         Vector direction = HPVectorToVector(HPvector_normal(HPvector_subtract(
             pos, (target != nullptr ? target->getPosition() : HPVector{}))));
@@ -6504,21 +6524,25 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
       break;
 
     case OOWeaponFacing::kAft:
-      quaternion_rotate_about_axis(&q1, u1, std::numbers::pi);
+      quaternion_rotate_about_axis(&q1, u1,
+                                   static_cast<OOScalar>(std::numbers::pi));
       break;
 
     case OOWeaponFacing::kPort:
-      quaternion_rotate_about_axis(&q1, u1, std::numbers::pi / 2.0);
+      quaternion_rotate_about_axis(
+          &q1, u1, static_cast<OOScalar>(std::numbers::pi / 2.0));
       break;
 
     case OOWeaponFacing::kStarboard:
-      quaternion_rotate_about_axis(&q1, u1, -std::numbers::pi / 2.0);
+      quaternion_rotate_about_axis(
+          &q1, u1, static_cast<OOScalar>(-std::numbers::pi / 2.0));
       break;
   }
 
   basis_vectors_from_quaternion(q1, &r1, nullptr, &f1);
-  HPVector p1 = HPvector_add(
-      p0, vectorToHPVector(vector_multiply_scalar(f1, nearest)));  // endpoint
+  HPVector p1 =
+      HPvector_add(p0, vectorToHPVector(vector_multiply_scalar(
+                           f1, static_cast<OOScalar>(nearest))));  // endpoint
 
   for (i = 0; i < ship_count; i++) {
     ::ShipEntity* e2 = my_entities[i];
@@ -6546,8 +6570,8 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
         }
         hit_entity = e2;
         nearest = hit;
-        p1 = HPvector_add(
-            p0, vectorToHPVector(vector_multiply_scalar(f1, nearest)));
+        p1 = HPvector_add(p0, vectorToHPVector(vector_multiply_scalar(
+                                  f1, static_cast<OOScalar>(nearest))));
       }
     }
   }
@@ -6561,7 +6585,7 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
     }
 
     if (range_ptr != nullptr) {
-      *range_ptr = nearest;
+      *range_ptr = static_cast<GLfloat>(nearest);
     }
   }
 
@@ -6608,13 +6632,16 @@ Entity* Universe::firstEntityTargetedByPlayer() {
   // views count as forward for targeting.
   switch (viewDirection) {
     case OOViewID::kAft:
-      quaternion_rotate_about_axis(&q1, u1, std::numbers::pi);
+      quaternion_rotate_about_axis(&q1, u1,
+                                   static_cast<OOScalar>(std::numbers::pi));
       break;
     case OOViewID::kPort:
-      quaternion_rotate_about_axis(&q1, u1, 0.5 * std::numbers::pi);
+      quaternion_rotate_about_axis(
+          &q1, u1, static_cast<OOScalar>(0.5 * std::numbers::pi));
       break;
     case OOViewID::kStarboard:
-      quaternion_rotate_about_axis(&q1, u1, -0.5 * std::numbers::pi);
+      quaternion_rotate_about_axis(
+          &q1, u1, static_cast<OOScalar>(-0.5 * std::numbers::pi));
       break;
     default:
       break;
@@ -6817,7 +6844,8 @@ std::vector<oo::EntityHold> Universe::findEntitiesMatchingPredicate(
   for (i = 0; i < n_entities; i++) {
     Entity* e2 = sortedEntities[i];
 
-    if (e1 != e2 && EntityInRange(p1, e2, range) && predicate(e2, parameter)) {
+    if (e1 != e2 && EntityInRange(p1, e2, static_cast<float>(range)) &&
+        predicate(e2, parameter)) {
       result.emplace_back(oo::Hold(e2));
     }
   }
@@ -7358,10 +7386,12 @@ void Universe::showGUIMessage(const std::optional<std::string>& text,
   if (message_gui == nullptr) return;  // messages to nil did nothing
   if (scroll) {
     message_gui->printLongText(text, OOGUIAlignment::kCenter, selectedColor,
-                               how_long, std::nullopt, nullptr);
+                               static_cast<float>(how_long), std::nullopt,
+                               nullptr);
   } else {
     message_gui->printLineNoScroll(text, OOGUIAlignment::kCenter, selectedColor,
-                                   how_long, std::nullopt, nullptr);
+                                   static_cast<float>(how_long), std::nullopt,
+                                   nullptr);
   }
   message_gui->setAlpha(1.0f);
 }
@@ -7431,7 +7461,8 @@ void Universe::update(OOTimeDelta inDeltaT) {
             Vector vel;
             Quaternion q2 = kIdentityQuaternion;
 
-            quaternion_rotate_about_y(&q2, std::numbers::pi);
+            quaternion_rotate_about_y(&q2,
+                                      static_cast<OOScalar>(std::numbers::pi));
 
             switch (demo_stage) {
               case DEMO_FLY_IN:
@@ -7443,9 +7474,10 @@ void Universe::update(OOTimeDelta inDeltaT) {
                 demo_stage_time = universal_time + 300.0;
                 break;
               case DEMO_SHOW_THING:
-                vel = make_vector(0, 0,
-                                  DEMO2_VANISHING_DISTANCE *
-                                      demo_ship->collision_radius * 6.0);
+                vel = make_vector(
+                    0, 0,
+                    static_cast<OOScalar>(DEMO2_VANISHING_DISTANCE *
+                                          demo_ship->collision_radius * 6.0));
                 if (demo_ship != nullptr) demo_ship->setVelocity(vel);
                 demo_stage = DEMO_FLY_OUT;
                 demo_stage_time = universal_time + 0.25;
@@ -7492,8 +7524,8 @@ void Universe::update(OOTimeDelta inDeltaT) {
                     // creator's goes with newDemoShip).
                     if (demo_ship != nullptr)
                       demo_ship->setStatus(OOEntityStatus::kCockpitDisplay);
-                    demo_start_z =
-                        DEMO2_VANISHING_DISTANCE * demo_ship->collision_radius;
+                    demo_start_z = static_cast<GLfloat>(
+                        DEMO2_VANISHING_DISTANCE * demo_ship->collision_radius);
                     if (demo_ship != nullptr)
                       demo_ship->setPositionX(0.0f, 0.0f, demo_start_z);
                     if (demo_ship != nullptr)
@@ -7520,8 +7552,8 @@ void Universe::update(OOTimeDelta inDeltaT) {
             }
           }
         } else if (demo_stage == DEMO_FLY_IN) {
-          GLfloat delta =
-              (universal_time - demo_start_time) / DEMO2_FLY_IN_STAGE_TIME;
+          GLfloat delta = static_cast<GLfloat>(
+              (universal_time - demo_start_time) / DEMO2_FLY_IN_STAGE_TIME);
           if (demo_ship != nullptr)
             demo_ship->setPositionX(
                 0.0f,
@@ -9325,7 +9357,8 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
 
   std::map<std::string, oo::PList> resultDictionary;  // by ship ID
 
-  float tech_price_boost = (ship_seed.a + ship_seed.b) / 256.0;
+  float tech_price_boost =
+      static_cast<float>((ship_seed.a + ship_seed.b) / 256.0);
   unsigned i;
   ::PlayerEntity* player = PLAYER;
   ::OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
@@ -10159,9 +10192,9 @@ Quaternion Universe::getWitchspaceExitRotation() {
   //  - trying it without resetting the RNG for now
   //	seed_RNG_only_for_planet_description(system_seed);
 
-  q_result.x = (gen_rnd_number() - 128) / 1024.0;
-  q_result.y = (gen_rnd_number() - 128) / 1024.0;
-  q_result.z = (gen_rnd_number() - 128) / 1024.0;
+  q_result.x = static_cast<OOScalar>((gen_rnd_number() - 128) / 1024.0);
+  q_result.y = static_cast<OOScalar>((gen_rnd_number() - 128) / 1024.0);
+  q_result.z = static_cast<OOScalar>((gen_rnd_number() - 128) / 1024.0);
   q_result.w = 1.0;
   quaternion_normalize(&q_result);
 
@@ -10801,14 +10834,18 @@ void Universe::setUpInitialUniverse() {
 }
 
 float Universe::randomDistanceWithinScanner() {
-  return SCANNER_MAX_RANGE * ((Ranrot() & 255) / 256.0 - 0.5);
+  return static_cast<float>(SCANNER_MAX_RANGE *
+                            ((Ranrot() & 255) / 256.0 - 0.5));
 }
 
 Vector Universe::randomPlaceWithinScannerFrom(Vector pos, Vector route,
                                               double offset) {
-  pos.x += offset * route.x + randomDistanceWithinScanner();
-  pos.y += offset * route.y + randomDistanceWithinScanner();
-  pos.z += offset * route.z + randomDistanceWithinScanner();
+  pos.x +=
+      static_cast<OOScalar>(offset * route.x + randomDistanceWithinScanner());
+  pos.y +=
+      static_cast<OOScalar>(offset * route.y + randomDistanceWithinScanner());
+  pos.z +=
+      static_cast<OOScalar>(offset * route.z + randomDistanceWithinScanner());
 
   return pos;
 }
@@ -11665,7 +11702,8 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
   OOGL(glBindTexture(GL_TEXTURE_2D, passthroughTextureID[0]));
   OOGL(glUniform1i(glGetUniformLocation(final, "scene"), 0));
   OOGL(glUniform1i(glGetUniformLocation(final, "bloom"), bloom()));
-  OOGL(glUniform1f(glGetUniformLocation(final, "uTime"), getTime()));
+  OOGL(glUniform1f(glGetUniformLocation(final, "uTime"),
+                   static_cast<GLfloat>(getTime())));
   OOGL(glUniform2fv(glGetUniformLocation(final, "uResolution"), 1,
                     fboResolution));
   OOGL(glUniform1i(glGetUniformLocation(final, "uPostFX"), currentPostFX()));

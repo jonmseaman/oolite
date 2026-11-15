@@ -55,7 +55,8 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 
 constexpr double OO_WORMHOLE_COLOR_BOOST = 25.0;
-#define OO_WORMHOLE_COLOR_FVEC4 {0.067, 0.067, 1.0, 0.25}
+#define OO_WORMHOLE_COLOR_FVEC4 \
+  {static_cast<GLfloat>(0.067), static_cast<GLfloat>(0.067), 1.0f, 0.25f}
 
 // Static local functions
 static void DrawWormholeCorona(GLfloat inner_radius, GLfloat outer_radius,
@@ -215,7 +216,8 @@ void WormholeEntity::initWormholeTo(OOSystemID s, ::ShipEntity* ship) {
     else
       shrink_factor = 1;
 
-    collision_radius = 0.5 * std::numbers::pi * pow(witch_mass, 1.0 / 3.0);
+    collision_radius = static_cast<GLfloat>(0.5 * std::numbers::pi *
+                                            pow(witch_mass, 1.0 / 3.0));
     expiry_time = now + (witch_mass / WORMHOLE_SHRINK_RATE / shrink_factor);
     travel_time = (distance * distance * 3600);  // Taken from PlayerEntity.h
     arrival_time = now + travel_time;
@@ -230,8 +232,8 @@ void WormholeEntity::initWormholeTo(OOSystemID s, ::ShipEntity* ship) {
       expiry_time = arrival_time - 1.0;
     }
     position = (ship != nullptr ? ship->getPosition() : HPVector{});
-    zero_distance = HPdistance2(
-        (PLAYER != nullptr ? PLAYER->getPosition() : HPVector{}), position);
+    zero_distance = static_cast<GLfloat>(HPdistance2(
+        (PLAYER != nullptr ? PLAYER->getPosition() : HPVector{}), position));
   }
 }
 
@@ -317,8 +319,8 @@ bool WormholeEntity::suckInShip(::ShipEntity* ship) {
   // MKW 2010.11.18 - calculate time it takes for ship to reach wormhole
   // This is for AI ships which get told to enter the wormhole even though they
   // may still be some distance from it when the player exits the system
-  float d = HPdistance(position,
-                       (ship != nullptr ? ship->getPosition() : HPVector{}));
+  float d = static_cast<float>(HPdistance(
+      position, (ship != nullptr ? ship->getPosition() : HPVector{})));
   d -= (ship != nullptr ? ship->collisionRadius() : 0.0f) + collisionRadius();
   if (d > 0.0f) {
     float afterburnerFactor =
@@ -370,7 +372,8 @@ bool WormholeEntity::suckInShip(::ShipEntity* ship) {
     expiry_time = arrival_time - 1.0;
   }
 
-  collision_radius = 0.5 * std::numbers::pi * pow(witch_mass, 1.0 / 3.0);
+  collision_radius =
+      static_cast<GLfloat>(0.5 * std::numbers::pi * pow(witch_mass, 1.0 / 3.0));
 
   if (UNIVERSE != nullptr) UNIVERSE->addWitchspaceJumpEffectForShip(ship);
 
@@ -435,7 +438,7 @@ void WormholeEntity::disgorgeShips() {
         Vector v1 = vector_forward_from_quaternion(q1);
         if (dot_product(v1, kBasisZVector) < -0.99) {
           // a bit more safe distance if right behind the buoy
-          min_d1 *= 3.0;
+          min_d1 *= static_cast<GLfloat>(3.0);
         }
 
         if (fabs(d1) < min_d1) {
@@ -704,9 +707,11 @@ void WormholeEntity::update(OOTimeDelta delta_t) {
   if (witch_mass > 0.0) {
     witch_mass -= WORMHOLE_SHRINK_RATE * delta_t * shrink_factor;
     witch_mass = fmax(witch_mass, 0.0);
-    collision_radius = 0.5 * std::numbers::pi * pow(witch_mass, 1.0 / 3.0);
-    no_draw_distance = collision_radius * collision_radius *
-                       NO_DRAW_DISTANCE_FACTOR * NO_DRAW_DISTANCE_FACTOR;
+    collision_radius = static_cast<GLfloat>(0.5 * std::numbers::pi *
+                                            pow(witch_mass, 1.0 / 3.0));
+    no_draw_distance =
+        static_cast<GLfloat>(collision_radius * collision_radius *
+                             NO_DRAW_DISTANCE_FACTOR * NO_DRAW_DISTANCE_FACTOR);
   }
 
   scanClass =
@@ -747,12 +752,12 @@ void WormholeEntity::drawImmediate(bool /*immediate*/, bool translucent) {
 
     OOGL(glColor4fv(color_fv));
     OOGLBEGIN(GL_TRIANGLE_FAN);
-    GLDrawBallBillboard(0.45 * collision_radius, 4, srzd);
+    GLDrawBallBillboard(static_cast<GLfloat>(0.45 * collision_radius), 4, srzd);
     OOGLEND();
 
-    color_fv[3] = fmin(color_fv[3] * 2.0, 1.0);
-    DrawWormholeCorona(0.45 * collision_radius, collision_radius, 4, srzd,
-                       color_fv);
+    color_fv[3] = static_cast<GLfloat>(fmin(color_fv[3] * 2.0, 1.0));
+    DrawWormholeCorona(static_cast<GLfloat>(0.45 * collision_radius),
+                       collision_radius, 4, srzd, color_fv);
 
     OOGL(glEnable(GL_CULL_FACE));
     OOGL(glDisable(GL_BLEND));
@@ -785,7 +790,7 @@ static void DrawWormholeCorona(GLfloat inner_radius, GLfloat outer_radius,
   r1 = inner_radius * z_distance /
        sqrt(z_distance * z_distance - inner_radius * inner_radius);
 
-  delta = step * std::numbers::pi / 180.0f;
+  delta = static_cast<GLfloat>(step * std::numbers::pi / 180.0f);
   halfStep = 0.5f * delta;
   theta = 0.0f;
 
@@ -801,11 +806,12 @@ static void DrawWormholeCorona(GLfloat inner_radius, GLfloat outer_radius,
     glColor4f(col4v1[0] * q, col4v1[1] * q, col4v1[2] * q, col4v1[3] * rv0);
     glVertex3f(s0, c0, 0.0);
 
-    s1 = r1 * sin(theta - halfStep) * 0.5 * (1.0 + rv1);
-    c1 = r1 * cos(theta - halfStep) * 0.5 * (1.0 + rv1);
-    glColor4f(col4v1[0] * OO_WORMHOLE_COLOR_BOOST,
-              col4v1[1] * OO_WORMHOLE_COLOR_BOOST,
-              col4v1[2] * OO_WORMHOLE_COLOR_BOOST, col4v1[3] * rv0);
+    s1 = static_cast<GLfloat>(r1 * sin(theta - halfStep) * 0.5 * (1.0 + rv1));
+    c1 = static_cast<GLfloat>(r1 * cos(theta - halfStep) * 0.5 * (1.0 + rv1));
+    glColor4f(static_cast<GLfloat>(col4v1[0] * OO_WORMHOLE_COLOR_BOOST),
+              static_cast<GLfloat>(col4v1[1] * OO_WORMHOLE_COLOR_BOOST),
+              static_cast<GLfloat>(col4v1[2] * OO_WORMHOLE_COLOR_BOOST),
+              col4v1[3] * rv0);
     glVertex3f(s1, c1, 0.0);
 
     theta += delta;
@@ -821,11 +827,12 @@ static void DrawWormholeCorona(GLfloat inner_radius, GLfloat outer_radius,
   glColor4f(col4v1[0] * q, col4v1[1] * q, col4v1[2] * q, col4v1[3] * rv0);
   glVertex3f(s0, c0, 0.0);
 
-  s1 = r1 * sin(halfStep) * 0.5 * (1.0 + rv1);
-  c1 = r1 * cos(halfStep) * 0.5 * (1.0 + rv1);
-  glColor4f(col4v1[0] * OO_WORMHOLE_COLOR_BOOST,
-            col4v1[1] * OO_WORMHOLE_COLOR_BOOST,
-            col4v1[2] * OO_WORMHOLE_COLOR_BOOST, col4v1[3] * rv0);
+  s1 = static_cast<GLfloat>(r1 * sin(halfStep) * 0.5 * (1.0 + rv1));
+  c1 = static_cast<GLfloat>(r1 * cos(halfStep) * 0.5 * (1.0 + rv1));
+  glColor4f(static_cast<GLfloat>(col4v1[0] * OO_WORMHOLE_COLOR_BOOST),
+            static_cast<GLfloat>(col4v1[1] * OO_WORMHOLE_COLOR_BOOST),
+            static_cast<GLfloat>(col4v1[2] * OO_WORMHOLE_COLOR_BOOST),
+            col4v1[3] * rv0);
   glVertex3f(s1, c1, 0.0);
   OOGLEND();
 }

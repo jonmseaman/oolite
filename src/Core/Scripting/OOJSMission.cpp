@@ -730,7 +730,8 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
     double zoom;
     if (JS_ToFloat64(context, &zoom, value) == 0) {
       if (zoom >= 1 && zoom <= CHART_MAX_ZOOM) {
-        if (player != nullptr) player->setCustomChartZoom(zoom);
+        if (player != nullptr)
+          player->setCustomChartZoom(static_cast<OOScalar>(zoom));
       } else {
         OOJSReportWarning(
             context,
