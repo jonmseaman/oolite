@@ -161,8 +161,9 @@ inline constexpr std::string_view KEY_EQUIPMENT_MISSILES = "missiles";
 inline constexpr std::string_view KEY_EQUIPMENT_FORWARD_WEAPON =
     "forward_weapon_type";
 inline constexpr std::string_view KEY_EQUIPMENT_AFT_WEAPON = "aft_weapon_type";
-#define KEY_EQUIPMENT_PORT_WEAPON "port_weapon_type"
-#define KEY_EQUIPMENT_STARBOARD_WEAPON "starboard_weapon_type"
+inline constexpr char KEY_EQUIPMENT_PORT_WEAPON[] = "port_weapon_type";
+inline constexpr char KEY_EQUIPMENT_STARBOARD_WEAPON[] =
+    "starboard_weapon_type";
 inline constexpr std::string_view KEY_EQUIPMENT_EXTRAS = "extras";
 inline constexpr std::string_view KEY_WEAPON_FACINGS = "weapon_facings";
 inline constexpr std::string_view KEY_RENOVATION_MULTIPLIER =
@@ -180,9 +181,10 @@ inline constexpr std::string_view PLANETINFO_UNIVERSAL_KEY = "universal";
 inline constexpr std::string_view PLANETINFO_INTERSTELLAR_KEY =
     "interstellar space";
 
-#define OOLITE_EXCEPTION_LOOPING "OoliteLoopingException"
-#define OOLITE_EXCEPTION_DATA_NOT_FOUND "OoliteDataNotFoundException"
-#define OOLITE_EXCEPTION_FATAL "OoliteFatalException"
+inline constexpr char OOLITE_EXCEPTION_LOOPING[] = "OoliteLoopingException";
+inline constexpr char OOLITE_EXCEPTION_DATA_NOT_FOUND[] =
+    "OoliteDataNotFoundException";
+inline constexpr char OOLITE_EXCEPTION_FATAL[] = "OoliteFatalException";
 
 // the distance the sky backdrop is from the camera
 // though it appears at infinity
