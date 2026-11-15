@@ -56,14 +56,13 @@ MA 02110-1301, USA.
 #endif
 
 #include <assert.h>  // IWYU pragma: export
-
-#include "oofnd/objc/OOFoundationTypes.h"  // IWYU pragma: export
-
 #include <limits.h>  // IWYU pragma: export
 #include <stdint.h>  // IWYU pragma: export
 
 #include <algorithm>  // IWYU pragma: export
 #include <utility>
+
+#include "oofnd/objc/OOFoundationTypes.h"  // IWYU pragma: export
 
 #define OOLITE_SDL 1
 

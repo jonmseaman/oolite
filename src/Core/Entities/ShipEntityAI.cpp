@@ -80,6 +80,7 @@
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOFoundationTypes.h"
+
 namespace {
 
 // Whitespace without newlines: whiteSpaceAndNewline without U+000A-U+000D,
@@ -829,6 +830,7 @@ void LogNotAStation(ShipEntity* ship, std::string_view method) {
 void ShipEntity::increaseAlertLevel() {
   LogNotAStation(this, "increaseAlertLevel");
 }
+
 void ShipEntity::decreaseAlertLevel() {
   LogNotAStation(this, "decreaseAlertLevel");
 }
@@ -843,13 +845,19 @@ oo::PList ShipEntity::launchPolice() {
 void ShipEntity::launchDefenseShip() {
   LogNotAStation(this, "launchDefenseShip");
 }
+
 void ShipEntity::launchScavenger() { LogNotAStation(this, "launchScavenger"); }
+
 void ShipEntity::launchMiner() { LogNotAStation(this, "launchMiner"); }
+
 void ShipEntity::launchPirateShip() {
   LogNotAStation(this, "launchPirateShip");
 }
+
 void ShipEntity::launchShuttle() { LogNotAStation(this, "launchShuttle"); }
+
 void ShipEntity::launchTrader() { LogNotAStation(this, "launchTrader"); }
+
 void ShipEntity::launchEscort() { LogNotAStation(this, "launchEscort"); }
 
 bool ShipEntity::launchPatrol() {
@@ -860,6 +868,7 @@ bool ShipEntity::launchPatrol() {
 void ShipEntity::launchShipWithRole(const std::string& /* param */) {
   LogNotAStation(this, "launchShipWithRole:");
 }  // called by name
+
 void ShipEntity::abortAllDockings() {
   LogNotAStation(this, "abortAllDockings");
 }

@@ -40,6 +40,7 @@ static RNG_Seed rnd_seed;
 // TODO: Why is this based on a static? Should change to
 // OOMungeCheckSum(&checkSum, value);
 static int32_t checksum;
+
 void clear_checksum() { checksum = 0; }
 
 int16_t munge_checksum(std::int64_t value_) {

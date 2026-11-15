@@ -40,6 +40,7 @@ MA 02110-1301, USA.
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
+
 namespace {
 
 /*	The named colours colorWithDescription() accepts: the class methods

@@ -159,6 +159,7 @@ struct OOPrioritizedTaskQueue {
 class OOOperationQueueAsyncWorkManager : public OOAsyncWorkManagerInternal {
  public:
   OOOperationQueueAsyncWorkManager();
+
   // The workers use the queue, and they belong to the base class, whose members
   // outlive this class's: join them before the queue goes.
   ~OOOperationQueueAsyncWorkManager() override { shutdown(); }

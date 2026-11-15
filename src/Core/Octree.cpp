@@ -362,6 +362,7 @@ static bool isHitByLineSub(const int* octbuffer, unsigned char* collbuffer,
 
 static bool hasCollided = false;
 static GLfloat hit_dist = 0.0;
+
 static bool isHitByLine(const int* octbuffer, unsigned char* collbuffer,
                         int level, GLfloat rad, Vector v0, Vector v1,
                         Vector off, int face_hit) {

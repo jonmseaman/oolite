@@ -315,12 +315,15 @@ constexpr std::uint32_t OOTCPEncodeVersion(std::uint32_t format,
          ((format << 8) & kOOTCPProtocolVersionMajorMask) |
          (minor & kOOTCPProtocolVersionMinorMask);
 }
+
 constexpr std::uint32_t OOTCPVersionFormat(std::uint32_t version) {
   return (version & kOOTCPProtocolVersionFormatMask) >> 16;
 }
+
 constexpr std::uint32_t OOTCPVersionMajor(std::uint32_t version) {
   return (version & kOOTCPProtocolVersionMajorMask) >> 8;
 }
+
 constexpr std::uint32_t OOTCPVersionMinor(std::uint32_t version) {
   return version & kOOTCPProtocolVersionMinorMask;
 }

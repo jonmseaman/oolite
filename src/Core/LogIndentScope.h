@@ -36,6 +36,7 @@ namespace oo {
 class LogIndentScope {
  public:
   LogIndentScope() { log::indent(); }
+
   ~LogIndentScope() { log::outdent(); }
 
   LogIndentScope(const LogIndentScope&) = delete;

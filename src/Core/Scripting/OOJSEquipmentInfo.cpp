@@ -282,7 +282,6 @@ OOEquipmentType* JSValueToEquipmentType(JSContext* context,
     return OOEquipmentType::equipmentTypeWithIdentifier(*string)
         .get();  // borrowed: the registry holds it
   return nullptr;
-
 }
 
 std::optional<std::string> JSValueToEquipmentKey(JSContext* context,
@@ -318,7 +317,6 @@ std::optional<std::string> JSValueToEquipmentKeyRelaxed(JSContext* context,
 
   if (outExists != nullptr) *outExists = exists;
   return result;
-
 }
 
 // *** Implementation stuff ***

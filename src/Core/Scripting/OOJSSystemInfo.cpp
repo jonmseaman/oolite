@@ -229,12 +229,15 @@ std::optional<std::string> ManifestString(const oo::PList& manifest) {
 OOGalaxyID GalaxyOf(OOSystemInfo* info) {
   return (info != nullptr) ? info->galaxy() : 0;
 }
+
 OOSystemID SystemOf(OOSystemInfo* info) {
   return (info != nullptr) ? info->system() : 0;
 }
+
 NSPoint CoordinatesOf(OOSystemInfo* info) {
   return (info != nullptr) ? info->coordinates() : NSMakePoint(0, 0);
 }
+
 oo::PList ValueForKey(OOSystemInfo* info,
                       const std::optional<std::string>& key) {
   return (info != nullptr) ? info->valueForKey(key) : oo::PList();
@@ -494,7 +497,6 @@ JSValue GetJSSystemInfoForSystem(JSContext* context, OOGalaxyID galaxy,
   sCachedSystem = system;
 
   return result;
-
 }
 
 static JSValue SystemInfoToString(OOJS_NATIVE_ARGS) {
@@ -514,7 +516,6 @@ static void SystemInfoFinalize(JSRuntime* runtime, JSValueConst thisObj) {
 
   OOJSCxxObjectWrapperFinalize(
       runtime, thisObj);  // clearJSSelf(), the slot's release, the empty slot
-
 }
 
 // *** Exotic property behaviour (replaces SpiderMonkey class hooks) ***

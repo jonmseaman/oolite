@@ -48,6 +48,7 @@ template <std::size_t N>
 struct AtomName {
   // Implicit on purpose: a string literal converts to it.
   consteval AtomName(const char (&name)[N]) { std::copy_n(name, N, chars); }
+
   char chars[N] = {};
 };
 

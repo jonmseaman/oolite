@@ -98,6 +98,7 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
      answer as nil (EntityHelpers.h, OOEntityHold.h).
   */
   bool hasObject() const noexcept { return _hasObject && !_disposing; }
+
   void setMadeWithObject() noexcept {
     _hasObject = true;
   }  // the creators' (oo::MadeEntity())
@@ -457,10 +458,13 @@ class EntityWeakPListForeign final : public PListForeign {
  public:
   explicit EntityWeakPListForeign(Entity* entity)
       : _entity(oo::share(entity)) {}
+
   Entity* entity() const noexcept { return _entity.lock().get(); }
+
   std::string className() const override {
     return "OOWeakReference";
   }  // what the proxy's class was
+
   std::string description()
       const override;  // the entity's description, or <Dead OOWeakReference
                        // 0x...> (Entity.cpp)

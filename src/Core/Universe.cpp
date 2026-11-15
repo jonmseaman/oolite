@@ -160,6 +160,7 @@ extern Entity* gOOJSPlayerIfStale;
 Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
 
 static bool MaintainLinkedLists(Universe* uni);
+
 namespace {
 bool EntityInRange(HPVector p1, Entity* e2, float range);
 }  // namespace
@@ -3279,7 +3280,6 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
     success = addEntity(vis);  // retained globally now (created goes on return)
   }
   return success ? vis : nullptr;
-
 }
 
 // Adding ships within a radius and on routes, role categories, witchspace
@@ -3391,7 +3391,6 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
   // The creator's reference goes when ship does (on return): the universe
   // holds the ship by now if it was added.
   return success ? ship.get() : nullptr;
-
 }
 
 std::vector<oo::EntityHold> Universe::addShipsAt(HPVector pos,
@@ -3421,7 +3420,6 @@ std::vector<oo::EntityHold> Universe::addShipsAt(HPVector pos,
   }
 
   return ships;  // empty where nil was returned
-
 }
 
 std::vector<oo::EntityHold> Universe::addShipsToRoute(const std::string& route,
@@ -4401,7 +4399,6 @@ std::optional<std::string> Universe::randomShipKeyForRoleRespectingConditions(
 
   // If we got here, some ships existed but all failed conditions test.
   return std::nullopt;
-
 }
 
 std::shared_ptr<::ShipEntity> Universe::newShipWithRole(
@@ -4454,7 +4451,6 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithRole(
   }
 
   return ship;
-
 }
 
 std::shared_ptr<Entity> Universe::newVisualEffectWithName(
@@ -4484,7 +4480,6 @@ std::shared_ptr<Entity> Universe::newVisualEffectWithName(
   }
 
   return effect;
-
 }
 
 std::shared_ptr<::ShipEntity> Universe::newSubentityWithName(
@@ -4557,7 +4552,6 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithName(
   }
 
   return ship;
-
 }
 
 std::shared_ptr<::ShipEntity> Universe::newDockWithName(
@@ -4598,7 +4592,6 @@ std::shared_ptr<::ShipEntity> Universe::newDockWithName(
   }
 
   return dock;
-
 }
 
 std::shared_ptr<::ShipEntity> Universe::newShipWithName(
@@ -4624,7 +4617,6 @@ bool Universe::isStationShipDictionary(const oo::PList& dict) {
   isStation = dict.get<bool>("is_carrier", isStation);
 
   return isStation;
-
 }
 
 std::optional<std::string> Universe::defaultAIForRole(const std::string& role) {
@@ -6821,7 +6813,6 @@ std::vector<oo::EntityHold> Universe::findEntitiesMatchingPredicate(
   OOJSResumeTimeLimiter();
 
   return result;
-
 }
 
 Entity* Universe::findOneEntityMatchingPredicate(
@@ -8351,7 +8342,6 @@ oo::PList Universe::generateSystemData(OOSystemID s, bool /*useCache*/) {
   return (systemManager != nullptr
               ? systemManager->getPropertiesForSystemKey(systemKey)
               : oo::PList());
-
 }
 
 oo::PList Universe::currentSystemData() {
@@ -8383,7 +8373,6 @@ oo::PList Universe::currentSystemData() {
 
     return interstellarDict;
   }
-
 }
 
 bool Universe::inInterstellarSpace() { return sun() == nullptr; }
@@ -8698,10 +8687,15 @@ std::shared_ptr<RouteElement> RouteElement::elementWithLocation(
 }
 
 OOSystemID RouteElement::parent() { return _parent; }
+
 OOSystemID RouteElement::location() { return _location; }
+
 double RouteElement::cost() { return _cost; }
+
 double RouteElement::distance() { return _distance; }
+
 double RouteElement::time() { return _time; }
+
 int RouteElement::jumps() { return _jumps; }
 
 }  // namespace

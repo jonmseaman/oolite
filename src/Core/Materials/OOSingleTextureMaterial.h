@@ -76,7 +76,9 @@ class OOSingleTextureMaterial : public OOBasicMaterial {
   std::optional<std::string> descriptionComponents() const override;
   bool doApply() override;
   void unapplyWithNext(OOMaterial* next) override;
+
   size_t objectSize() const override { return sizeof *this; }
+
   void ensureFinishedLoading() override;
   bool isFinishedLoading() override;
   bool wantsNormalsAsTextureCoordinates() override;

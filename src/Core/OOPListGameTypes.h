@@ -68,7 +68,9 @@ template <>
 struct PListGet<Vector> {
   using Result = Vector;
   using Fallback = Vector;
+
   static Vector defaultFallback() { return kZeroVector; }
+
   static Vector from(const PList* v, Vector fallback) {
     return OOVectorFromPList(v, fallback);
   }
@@ -78,7 +80,9 @@ template <>
 struct PListGet<HPVector> {
   using Result = HPVector;
   using Fallback = HPVector;
+
   static HPVector defaultFallback() { return kZeroHPVector; }
+
   static HPVector from(const PList* v, HPVector fallback) {
     return OOHPVectorFromPList(v, fallback);
   }
@@ -88,7 +92,9 @@ template <>
 struct PListGet<Quaternion> {
   using Result = Quaternion;
   using Fallback = Quaternion;
+
   static Quaternion defaultFallback() { return kIdentityQuaternion; }
+
   static Quaternion from(const PList* v, Quaternion fallback) {
     return OOQuaternionFromPList(v, fallback);
   }

@@ -72,9 +72,11 @@ struct RawSetting {
   static RawSetting string(std::string s) {
     return {Kind::kString, std::move(s), false};
   }
+
   static RawSetting boolean(bool b) {
     return {Kind::kBoolean, std::string(), b};
   }
+
   static RawSetting other(std::string description) {
     return {Kind::kOther, std::move(description), false};
   }
@@ -106,6 +108,7 @@ inline bool isWord(std::string_view s, std::string_view lowerWord) noexcept {
 // allocates nothing.
 struct StringHash {
   using is_transparent = void;
+
   std::size_t operator()(std::string_view s) const noexcept {
     return std::hash<std::string_view>{}(s);
   }
@@ -205,15 +208,19 @@ inline std::string composeLine(const Options& options,
 // ------------------------------------------------------------------
 
 inline unsigned indentLevel() { return detail::indentState().level; }
+
 inline void indent() { ++detail::indentState().level; }
+
 inline void outdent() {
   unsigned& level = detail::indentState().level;
   if (level != 0) --level;
 }
+
 inline void pushIndent() {
   detail::IndentState& s = detail::indentState();
   s.stack.push_back(s.level);
 }
+
 inline bool popIndent();  // below: underflow is reported through the logger
 
 // --- the logger
@@ -235,16 +242,19 @@ class Logger {
   void setInitialized(bool initialized) noexcept {
     initialized_.store(initialized);
   }
+
   bool initialized() const noexcept { return initialized_.load(); }
 
   Options options() const {
     std::lock_guard<std::mutex> lock(mutex_);
     return options_;
   }
+
   void setOptions(const Options& options) {
     std::lock_guard<std::mutex> lock(mutex_);
     options_ = options;
   }
+
   void setShowClassTemporarily(bool show) {
     std::lock_guard<std::mutex> lock(mutex_);
     options_.showClass = show;
@@ -385,8 +395,11 @@ class Logger {
     };
     Kind kind = Kind::kOff;
     std::string metaclass;
+
     static Value on() { return {Kind::kOn, {}}; }
+
     static Value off() { return {Kind::kOff, {}}; }
+
     static Value meta(std::string m) { return {Kind::kMeta, std::move(m)}; }
   };
 

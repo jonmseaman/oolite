@@ -157,6 +157,7 @@ I saturatingParse(std::string_view buf) noexcept {
 inline std::int64_t longLongValue(std::u16string_view s) noexcept {
   return saturatingParse<std::int64_t>(intBuf(s));
 }
+
 inline int intValue(std::u16string_view s) noexcept {
   return static_cast<int>(saturatingParse<long>(intBuf(s)));
 }
@@ -549,7 +550,9 @@ template <class T>
 struct PListGet<T> {
   using Result = T;
   using Fallback = T;
+
   static constexpr T defaultFallback() noexcept { return T(0); }
+
   static T from(const PList* v, T fallback) noexcept {
     if constexpr (sizeof(T) == sizeof(std::int64_t) && std::is_signed_v<T>) {
       return static_cast<T>(
@@ -575,7 +578,9 @@ template <>
 struct PListGet<bool> {
   using Result = bool;
   using Fallback = bool;
+
   static constexpr bool defaultFallback() noexcept { return false; }
+
   static bool from(const PList* v, bool fallback) noexcept {
     return plist_get::boolFrom(v, fallback);
   }
@@ -586,7 +591,9 @@ template <class F>
 struct PListGet<F> {
   using Result = F;
   using Fallback = F;
+
   static constexpr F defaultFallback() noexcept { return F(0); }
+
   static F from(const PList* v, F fallback) noexcept {
     return plist_get::realFrom<F>(v, fallback);
   }
@@ -596,7 +603,9 @@ template <class F>
 struct PListGet<NonNegative<F>> {
   using Result = F;
   using Fallback = F;
+
   static constexpr F defaultFallback() noexcept { return F(0); }
+
   static F from(const PList* v, F fallback) noexcept {
     return plist_get::nonNegativeRealFrom<F>(v, fallback);
   }
@@ -609,7 +618,9 @@ template <>
 struct PListGet<std::string> {
   using Result = std::string;
   using Fallback = std::string;
+
   static std::string defaultFallback() { return {}; }
+
   static std::string from(const PList* v, std::string fallback) {
     if (v == nullptr) return fallback;
     if (const std::string* s = v->getIf<std::string>()) return *s;
@@ -623,7 +634,9 @@ template <>
 struct PListGet<PList> {
   using Result = const PList*;
   using Fallback = const PList*;
+
   static constexpr const PList* defaultFallback() noexcept { return nullptr; }
+
   static const PList* from(const PList* v, const PList* fallback) noexcept {
     return v != nullptr ? v : fallback;
   }
@@ -638,7 +651,9 @@ template <class K>
 struct PListGet<K> {
   using Result = const PList*;
   using Fallback = const PList*;
+
   static constexpr const PList* defaultFallback() noexcept { return nullptr; }
+
   static const PList* from(const PList* v, const PList* fallback) noexcept {
     return (v != nullptr && v->getIf<K>() != nullptr) ? v : fallback;
   }

@@ -170,7 +170,9 @@ class OOShaderMaterial : public OOBasicMaterial {
   void ensureFinishedLoading() override;
   bool isFinishedLoading() override;
   void unapplyWithNext(OOMaterial* next) override;
+
   size_t objectSize() const override { return sizeof *this; }
+
   void setBindingTarget(Entity* target) override;
   bool permitSpecular() override;
 #ifdef OO_DEBUG_MONITOR_ENABLED

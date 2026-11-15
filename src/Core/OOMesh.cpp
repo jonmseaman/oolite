@@ -92,6 +92,7 @@ constexpr std::string_view kOOLogMeshTooManyMaterials =
   do {                                                                       \
     _stopwatchLastTime = Profile(tag, _stopwatch.get(), _stopwatchLastTime); \
   } while (0)
+
 static OOTimeDelta Profile(std::string_view tag,
                            OOProfilingStopwatch* stopwatch,
                            OOTimeDelta lastTime) {
@@ -139,6 +140,7 @@ void OOCacheManagerSetMeshData(const oo::PList& inData,
 class OOMeshBuffer : public oo::Object {
  public:
   explicit OOMeshBuffer(oo::Data bytes) : data_(std::move(bytes)) {}
+
   oo::Data& data() noexcept { return data_; }
 
  private:
@@ -811,7 +813,6 @@ bool OOMesh::initWithName(const std::string& name,
 #endif
   }
   return loaded;
-
 }
 
 std::shared_ptr<OOMesh> OOMesh::mutableCopyWithZone(OOZone* /*zone*/) {
@@ -872,7 +873,6 @@ oo::PList OOMesh::modelData() {
     result["tangent data"] = oo::PList(tanData->second->data());
   }
   return oo::PList(std::move(result));
-
 }
 
 bool OOMesh::setModelFromModelData(const oo::PList& dict,
@@ -969,7 +969,6 @@ bool OOMesh::setModelFromModelData(const oo::PList& dict,
   }
 
   return true;
-
 }
 
 bool OOMesh::loadData(const std::string& filename, float scale) {
@@ -1404,7 +1403,6 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
   PROFILE("finished setUpVertexArrays");
 
   return true;
-
 }
 
 #if SCRIBBLE
@@ -1517,7 +1515,6 @@ bool OOMesh::setUpVertexArrays() {
 
   _displayLists.count = tri_index;  // total number of triangle vertices
   return true;
-
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -1716,7 +1713,6 @@ void OOMesh::checkNormalsAndAdjustWinding() {
       _faces[i].t[2] = f0;
     }
   }
-
 }
 
 void OOMesh::generateFaceTangents() {
@@ -1759,7 +1755,6 @@ void OOMesh::generateFaceTangents() {
                                         vector_multiply_scalar(vProjAC, dtAB)));
     }
   }
-
 }
 
 void OOMesh::calculateVertexNormalsAndTangentsWithFaceRefs(
@@ -1802,7 +1797,6 @@ void OOMesh::calculateVertexNormalsAndTangentsWithFaceRefs(
     _normals[i] = normal_sum;
     _tangents[i] = tangent_sum;
   }
-
 }
 
 void OOMesh::calculateVertexTangentsWithFaceRefs(VertexFaceRef* faceRefs) {
@@ -1848,7 +1842,6 @@ void OOMesh::calculateVertexTangentsWithFaceRefs(VertexFaceRef* faceRefs) {
 
     _tangents[i] = tangent_sum;
   }
-
 }
 
 /* profiling suggests this function takes a lot of time - almost all
@@ -1879,7 +1872,6 @@ void OOMesh::getNormal(Vector* outNormal, Vector* outTangent,
 
   *outNormal = vector_normal_or_fallback(normal_sum, kBasisZVector);
   *outTangent = vector_normal_or_fallback(tangent_sum, kBasisXVector);
-
 }
 
 void OOMesh::calculateBoundingVolumes() {
@@ -1921,7 +1913,6 @@ void OOMesh::calculateBoundingVolumes() {
       NO_DRAW_DISTANCE_FACTOR;  // no longer based on the collision radius
 
   _collisionRadius = sqrtf(result);
-
 }
 
 void OOMesh::rescaleByFactor(GLfloat factor) {

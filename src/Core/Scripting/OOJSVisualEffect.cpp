@@ -231,7 +231,6 @@ static bool JSVisualEffectGetVisualEffectEntity(
 
   *outEntity = effect;
   return true;
-
 }
 
 // The bodies the C++ effect's overrides call.
@@ -774,7 +773,6 @@ static JSValue VisualEffectSetMaterialsInternal(OOJS_NATIVE_ARGS,
   OOJS_END_FULL_NATIVE
 
   OOJS_RETURN_BOOL(success);
-
 }
 
 static JSValue VisualEffectScale(OOJS_NATIVE_ARGS) {

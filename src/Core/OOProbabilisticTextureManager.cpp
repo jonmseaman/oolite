@@ -44,6 +44,7 @@ SOFTWARE.
 #include "oofnd/Object.hpp"
 #include "oofnd/PListDescription.hpp"
 #include "oofnd/String.hpp"
+
 namespace {
 
 // oo_stringForKey: a string, a number's string value, or nil.

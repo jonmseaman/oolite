@@ -104,14 +104,18 @@ static bool AppendVertex(TessPolygonData* data, NSPoint vertex);
 #ifndef NDEBUG
 static void SVGDumpBegin(TessPolygonData* data);
 static void SVGDumpEnd(TessPolygonData* data);
+
 namespace {
 void SVGDumpBeginGroup(TessPolygonData* data, std::string_view name);
 }
+
 static void SVGDumpEndGroup(TessPolygonData* data);
+
 namespace {
 void SVGDumpAppendBaseContour(TessPolygonData* data,
                               const OOPolygonContour& points);
 }
+
 static void SVGDumpBeginPrimitive(TessPolygonData* data);
 static void SVGDumpEndPrimitive(TessPolygonData* data);
 static void SVGDumpAppendTriangle(TessPolygonData* data, NSPoint v0, NSPoint v1,

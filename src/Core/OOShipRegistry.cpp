@@ -69,6 +69,7 @@ SOFTWARE.
 #include "oofnd/PListDescription.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
+
 namespace {
 
 OOShipRegistry* sSingleton = nullptr;  // the one +1 is never released

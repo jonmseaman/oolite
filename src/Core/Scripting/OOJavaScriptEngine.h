@@ -201,6 +201,7 @@ struct JSFunctionPredicateParameter {
                    // exception will have been reported.
                    // This also supresses further filtering.
 };
+
 bool JSFunctionPredicate(Entity* entity, void* parameter);
 
 // YES for ships and (normal) planets. Parameter: ignored.

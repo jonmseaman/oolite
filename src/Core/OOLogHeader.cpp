@@ -100,7 +100,7 @@ void OOPrintLogHeader() {
 #endif
 
   const std::vector<std::string> featureStrings = {
-// User features
+      // User features
       "OpenAL",
 
 #if OO_SHADERS

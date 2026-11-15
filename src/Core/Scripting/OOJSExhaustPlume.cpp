@@ -105,7 +105,6 @@ static bool JSExhaustPlumeGetExhaustPlumeEntity(
 
   *outEntity = exhaust;
   return true;
-
 }
 
 // The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the C++

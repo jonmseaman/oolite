@@ -633,6 +633,7 @@ OOMaybeUnits ApplyOneOperator(const OOMaybeUnits& string, const OOUnits& op,
     OOMaybeUnits (*function)(const OOMaybeUnits& string,
                              const OOMaybeUnits& param);
   } operators[] = {
+
 #define OPERATOR(name) {u## #name, Operator_##name}
       OPERATOR(dcr),       OPERATOR(cr),       OPERATOR(icr), OPERATOR(idcr),
       OPERATOR(precision), OPERATOR(multiply), OPERATOR(add),
@@ -887,6 +888,7 @@ const OOSelectorTable* SpecialSubstitutionSelectors() {
       {"commander_bounty", "commanderBountyAsString"},
       {"credits_number", "creditsFormattedForSubstitution"},
       {"_oo_legacy_credits_number", "creditsFormattedForLegacySubstitution"}};
+
   unsigned i, count = std::size(selectors);
 
   specials = new OOSelectorTable;

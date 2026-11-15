@@ -104,12 +104,15 @@ namespace {
 ShipEntity* ShipPart(Entity* entity) {
   return dynamic_cast<ShipEntity*>(entity);
 }
+
 OOVisualEffectEntity* EffectPart(Entity* entity) {
   return dynamic_cast<OOVisualEffectEntity*>(entity);
 }
+
 PlayerEntity* PlayerEntityPart(Entity* entity) {
   return dynamic_cast<PlayerEntity*>(entity);
 }
+
 ProxyPlayerEntity* ProxyPart(Entity* entity) {
   return dynamic_cast<ProxyPlayerEntity*>(entity);
 }

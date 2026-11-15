@@ -113,7 +113,6 @@ static bool JSWormholeGetWormholeEntity(JSContext* context,
   // The wormhole is a WormholeEntity.
   *outEntity = dynamic_cast<WormholeEntity*>(entity);
   return *outEntity != nullptr;
-
 }
 
 // The bodies of WormholeEntity's JS members.

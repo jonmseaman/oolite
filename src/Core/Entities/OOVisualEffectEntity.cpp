@@ -74,6 +74,7 @@ MA 02110-1301, USA.
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
+
 namespace {
 
 // -objectForKey: as plist data (a null PList when absent), for
@@ -148,7 +149,6 @@ bool OOVisualEffectEntity::initWithKey(const std::string& key,
   _haveExecutedSpawnAction = false;
 
   return true;
-
 }
 
 bool OOVisualEffectEntity::setUpVisualEffectFromDictionary(
@@ -210,7 +210,6 @@ bool OOVisualEffectEntity::setUpVisualEffectFromDictionary(
   setScript(OptionalStringForKey(effectDict, "script"));
 
   return true;
-
 }
 
 OOVisualEffectEntity::~OOVisualEffectEntity() {

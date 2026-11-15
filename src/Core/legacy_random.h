@@ -98,6 +98,7 @@ namespace oo {
 // std::mt19937 seeded once by std::random_device. Game thread only.
 Random_Seed RandomDescriptionSeed();
 }  // namespace oo
+
 RNG_Seed currentRandomSeed();
 void setRandomSeed(RNG_Seed a_seed);
 

@@ -225,7 +225,6 @@ static bool JSStationGetStationEntity(JSContext* context,
 
   *outEntity = station;
   return true;
-
 }
 
 static bool JSStationGetShipEntity(JSContext* context, JSValueConst shipObj,
@@ -245,7 +244,6 @@ static bool JSStationGetShipEntity(JSContext* context, JSValueConst shipObj,
 
   *outEntity = oo::ToShip(entity);
   return true;
-
 }
 
 /*	The SpiderMonkey methods treated a failed lookup of this as a no-op (a

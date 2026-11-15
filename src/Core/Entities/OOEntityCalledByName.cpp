@@ -67,18 +67,23 @@ namespace {
 ShipEntity* ShipPart(Entity* entity) {
   return dynamic_cast<ShipEntity*>(entity);
 }
+
 StationEntity* StationPart(Entity* entity) {
   return dynamic_cast<StationEntity*>(entity);
 }
+
 DockEntity* DockPart(Entity* entity) {
   return dynamic_cast<DockEntity*>(entity);
 }
+
 PlayerEntity* PlayerEntityPart(Entity* entity) {
   return dynamic_cast<PlayerEntity*>(entity);
 }
+
 ProxyPlayerEntity* ProxyPart(Entity* entity) {
   return dynamic_cast<ProxyPlayerEntity*>(entity);
 }
+
 OOVisualEffectEntity* EffectPart(Entity* entity) {
   return dynamic_cast<OOVisualEffectEntity*>(entity);
 }
@@ -174,6 +179,7 @@ namespace {
 bool AnswersPlanet(Entity* entity) {
   return dynamic_cast<OOPlanetEntity*>(entity) != nullptr;
 }
+
 bool AnswersBeacon(Entity* entity) {
   return dynamic_cast<OOWaypointEntity*>(entity) != nullptr ||
          ShipPart(entity) != nullptr || EffectPart(entity) != nullptr;
@@ -183,21 +189,25 @@ void Facade_addToLinkedLists(Entity* entity) {
   if (entity == nullptr) return;
   entity->addToLinkedLists();
 }
+
 Vector Facade_airColorAsVector(Entity* entity) {
   if (entity == nullptr) return {};
   OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(entity);
   return planet != nullptr ? planet->airColorAsVector() : kZeroVector;
 }
+
 float Facade_airColorMixRatio(Entity* entity) {
   if (entity == nullptr) return {};
   OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(entity);
   return planet != nullptr ? planet->airColorMixRatio() : 0.0f;
 }
+
 float Facade_airDensity(Entity* entity) {
   if (entity == nullptr) return {};
   OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(entity);
   return planet != nullptr ? planet->airDensity() : 0.0f;
 }
+
 OOHUDBeaconIcon* Facade_beaconDrawable(Entity* entity) {
   if (entity == nullptr) return {};
   if (ShipEntity* ship = ShipPart(entity)) return ship->beaconDrawable();
@@ -206,67 +216,83 @@ OOHUDBeaconIcon* Facade_beaconDrawable(Entity* entity) {
   OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(entity);
   return waypoint != nullptr ? waypoint->beaconDrawable() : nullptr;
 }
+
 double Facade_camZeroDistance(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->camZeroDistance();
 }
+
 GLfloat Facade_cameraRangeBack(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->cameraRangeBack();
 }
+
 GLfloat Facade_cameraRangeFront(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->cameraRangeFront();
 }
+
 Vector Facade_cameraRelativePosition(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getCameraRelativePosition();
 }
+
 bool Facade_canCollide(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->canCollide();
 }
+
 GLfloat Facade_collisionRadius(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->collisionRadius();
 }
+
 void Facade_deleteJSSelf(Entity* entity) {
   if (entity == nullptr) return;
   entity->deleteJSSelf();
 }
+
 GLfloat Facade_distanceTravelled(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getDistanceTravelled();
 }
+
 void Facade_dumpSelfState(Entity* entity) {
   if (entity == nullptr) return;
   entity->dumpSelfState();
 }
+
 void Facade_dumpState(Entity* entity) {
   if (entity == nullptr) return;
   entity->dumpState();
 }
+
 GLfloat Facade_energy(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getEnergy();
 }
+
 double Facade_findCollisionRadius(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->findCollisionRadius();
 }
+
 OOColor* Facade_fogUniform(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->fogUniform().get();
 }
+
 GLfloat Facade_frustumRadius(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->frustumRadius();
 }
+
 Vector Facade_illuminationColorAsVector(Entity* entity) {
   if (entity == nullptr) return {};
   OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(entity);
   return planet != nullptr ? planet->illuminationColorAsVector() : kZeroVector;
 }
+
 bool Facade_isBeacon(Entity* entity) {
   if (entity == nullptr) return {};
   if (ShipEntity* ship = ShipPart(entity)) return ship->isBeacon();
@@ -275,28 +301,34 @@ bool Facade_isBeacon(Entity* entity) {
   OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(entity);
   return waypoint != nullptr ? waypoint->isBeacon() : false;
 }
+
 bool Facade_isCascadeWeapon(Entity* entity) {
   if (entity == nullptr) return {};
   OOQuiriumCascadeEntity* cascade =
       dynamic_cast<OOQuiriumCascadeEntity*>(entity);
   return cascade != nullptr ? cascade->isCascadeWeapon() : false;
 }
+
 bool Facade_isDock(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->isDock();
 }
+
 bool Facade_isEffect(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->isEffect();
 }
+
 bool Facade_isImmuneToBreakPatternHide(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getIsImmuneToBreakPatternHide();
 }
+
 bool Facade_isInSpace(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->isInSpace();
 }
+
 bool Facade_isJammingScanning(Entity* entity) {
   if (entity == nullptr) return {};
   if (ShipEntity* ship = ShipPart(entity)) return ship->isJammingScanning();
@@ -305,74 +337,92 @@ bool Facade_isJammingScanning(Entity* entity) {
   OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(entity);
   return waypoint != nullptr ? waypoint->isJammingScanning() : false;
 }
+
 bool Facade_isPlanet(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->isPlanet();
 }
+
 bool Facade_isPlayer(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getIsPlayer();
 }
+
 bool Facade_isShip(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getIsShip();
 }
+
 bool Facade_isSky(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->isSky();
 }
+
 bool Facade_isStation(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getIsStation();
 }
+
 bool Facade_isStellarObject(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->isStellarObject();
 }
+
 bool Facade_isSubEntity(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getIsSubEntity();
 }
+
 bool Facade_isSun(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->isSun();
 }
+
 bool Facade_isSunlit(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getIsSunlit();
 }
+
 bool Facade_isVisible(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->isVisible();
 }
+
 bool Facade_isVisibleToScripts(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->isVisibleToScripts();
 }
+
 bool Facade_isVisualEffect(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getIsVisualEffect();
 }
+
 bool Facade_isWaypoint(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->isWaypoint();
 }
+
 bool Facade_isWormhole(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getIsWormhole();
 }
+
 std::size_t Facade_lastDrawCounter(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getLastDrawCounter();
 }
+
 GLfloat Facade_mass(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getMass();
 }
+
 GLfloat Facade_maxEnergy(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getMaxEnergy();
 }
+
 Entity* Facade_nextBeacon(Entity* entity) {
   if (entity == nullptr) return {};
   if (ShipEntity* ship = ShipPart(entity)) return ship->nextBeacon();
@@ -381,27 +431,33 @@ Entity* Facade_nextBeacon(Entity* entity) {
   OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(entity);
   return waypoint != nullptr ? waypoint->nextBeacon() : nullptr;
 }
+
 Quaternion Facade_normalOrientation(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->normalOrientation();
 }
+
 Quaternion Facade_orientation(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getOrientation();
 }
+
 void Facade_orientationChanged(Entity* entity) {
   if (entity == nullptr) return;
   entity->orientationChanged();
 }
+
 Entity* Facade_owner(Entity* entity) {
   // the owner's C++ entity
   if (entity == nullptr) return {};
   return entity->owner();
 }
+
 Entity* Facade_parentEntity(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->parentEntity();
 }
+
 Entity* Facade_prevBeacon(Entity* entity) {
   if (entity == nullptr) return {};
   if (ShipEntity* ship = ShipPart(entity)) return ship->prevBeacon();
@@ -410,96 +466,119 @@ Entity* Facade_prevBeacon(Entity* entity) {
   OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(entity);
   return waypoint != nullptr ? waypoint->prevBeacon() : nullptr;
 }
+
 Vector Facade_relativePosition(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->relativePosition();
 }
+
 void Facade_removeFromLinkedLists(Entity* entity) {
   if (entity == nullptr) return;
   entity->removeFromLinkedLists();
 }
+
 Entity* Facade_rootShipEntity(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->rootShipEntity();
 }
+
 OOScanClass Facade_scanClass(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getScanClass();
 }
+
 std::size_t Facade_sessionID(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->sessionID();
 }
+
 GLfloat Facade_spawnTime(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getSpawnTime();
 }
+
 double Facade_speed(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->speed();
 }
+
 OOEntityStatus Facade_status(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->status();
 }
+
 Entity* Facade_superShaderBindingTarget(Entity* entity) {
   // the parent's C++ entity
   if (entity == nullptr) return {};
   return entity->superShaderBindingTarget();
 }
+
 Vector Facade_terminatorThresholdVector(Entity* entity) {
   if (entity == nullptr) return {};
   OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(entity);
   return planet != nullptr ? planet->terminatorThresholdVector() : kZeroVector;
 }
+
 void Facade_throwSparks(Entity* entity) {
   if (entity == nullptr) return;
   entity->throwSparks();
 }
+
 bool Facade_throwingSparks(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->throwingSparks();
 }
+
 GLfloat Facade_timeElapsedSinceSpawn(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->timeElapsedSinceSpawn();
 }
+
 OOUniversalID Facade_universalID(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getUniversalID();
 }
+
 GLfloat Facade_universalTime(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->universalTime();
 }
+
 void Facade_updateCameraRelativePosition(Entity* entity) {
   if (entity == nullptr) return;
   entity->updateCameraRelativePosition();
 }
+
 void Facade_updateLinkedLists(Entity* entity) {
   if (entity == nullptr) return;
   entity->updateLinkedLists();
 }
+
 bool Facade_validForAddToUniverse(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->validForAddToUniverse();
 }
+
 Vector Facade_velocity(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getVelocity();
 }
+
 void Facade_warnAboutHostiles(Entity* entity) {
   if (entity == nullptr) return;
   entity->warnAboutHostiles();
 }
+
 void Facade_wasAddedToUniverse(Entity* entity) {
   if (entity == nullptr) return;
   entity->wasAddedToUniverse();
 }
+
 void Facade_wasRemovedFromUniverse(Entity* entity) {
   if (entity == nullptr) return;
   entity->wasRemovedFromUniverse();
 }
+
 double Facade_zeroDistance(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->zeroDistance();

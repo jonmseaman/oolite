@@ -63,6 +63,7 @@ std::string DescriptionOf(OOALObjectRef object) {
 // literals. Called from OOTCPStreamDecoder.c through OOALSTR(), so it keeps C
 // linkage.
 OOALStringRef OOALGetConstantString(const char* string);
+
 OOALStringRef OOALGetConstantString(const char* string) {
   // Never destroyed (Google style: no non-trivial static destructors).
   static auto& sStrings =
