@@ -90,6 +90,7 @@ MA 02110-1301, USA.
 #include "ResourceManager.h"
 #include "ShipEntity.h"
 #include "ShipEntityAI.h"
+#include "SpeechSynthesizer.h"
 #include "StationEntity.h"
 #include "Universe.h"
 #include "legacy_random.h"
@@ -4010,9 +4011,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       vol = static_cast<int>(OOClampInteger(vol, 0, 20));
       ::OOSound::setMasterVolume(0.05 * vol);
       playChangedOption();
-#if OOLITE_ESPEAK
-      espeak_SetParameter(espeakVOLUME, vol * 5, 0);
-#endif
+      oo::SpeechSynthesizer::shared().setVolume(vol * 5);
       if (vol > 0) {
         const std::string soundVolumeWordDesc =
             OO_DESC("gameoptions-sound-volume");

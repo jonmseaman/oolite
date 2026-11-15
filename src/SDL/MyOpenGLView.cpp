@@ -38,6 +38,7 @@ MA 02110-1301, USA.
 #include "OOVersion.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
+#include "SpeechSynthesizer.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
@@ -425,15 +426,12 @@ bool MyOpenGLView::init() {
   OO_LOG("process.args", "{}", cmdLineArgsStr);
 
 #if OOLITE_SPEECH_SYNTH
-#if OOLITE_ESPEAK
-  if (!SDL_getenv("ESPEAK_DATA_PATH")) {
-    espeak_Initialize(
-        AUDIO_OUTPUT_PLAYBACK, 100,
-        ResourceManager::builtInPath().value_or(std::string()).c_str(), 0);
-  } else {
-    espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, 100, nullptr, 0);
-  }
-#endif
+  // espeak's data comes with the game unless ESPEAK_DATA_PATH names it.
+  oo::SpeechSynthesizer::shared().initialize(
+      SDL_getenv("ESPEAK_DATA_PATH") == nullptr
+          ? std::optional<std::string>(
+                ResourceManager::builtInPath().value_or(std::string()))
+          : std::nullopt);
 #endif
 
   matrixManager = oo::makeShared<OOOpenGLMatrixManager>();
