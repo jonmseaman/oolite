@@ -25,6 +25,8 @@ MA 02110-1301, USA.
 
 #include "OOSDLJoystickManager.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <format>
 #include <functional>
 #include <map>
@@ -224,7 +226,7 @@ void OOSDLJoystickManager::decodeAxisEvent(SDL_JoyAxisEvent* evt) {
       break;
     case AXIS_THRUST:
       // Normalize the thrust setting.
-      axstate[static_cast<unsigned long long>(function)] =
+      axstate[static_cast<std::size_t>(function)] =
           static_cast<float>(65536 - (axisvalue + 32768)) / 65536;
       break;
     case AXIS_ROLL:
@@ -232,17 +234,16 @@ void OOSDLJoystickManager::decodeAxisEvent(SDL_JoyAxisEvent* evt) {
     case AXIS_YAW:
     case AXIS_VIEWX:
     case AXIS_VIEWY:
-      axstate[static_cast<unsigned long long>(function)] =
-          axisvalue / STICK_NORMALDIV;
+      axstate[static_cast<std::size_t>(function)] = axisvalue / STICK_NORMALDIV;
       break;
     // TODO AXIS_FIELD_OF_VIEW
     default:
       // set the state with no modification.
-      axstate[static_cast<unsigned long long>(function)] = axisvalue / 32768;
+      axstate[static_cast<std::size_t>(function)] = axisvalue / 32768;
   }
   if ((function == AXIS_PITCH) && invertPitch)
-    axstate[static_cast<unsigned long long>(function)] =
-        -1.0 * axstate[static_cast<unsigned long long>(function)];
+    axstate[static_cast<std::size_t>(function)] =
+        -1.0 * axstate[static_cast<std::size_t>(function)];
 }
 
 void OOSDLJoystickManager::decodeButtonEvent(SDL_JoyButtonEvent* evt) {
@@ -281,10 +282,10 @@ void OOSDLJoystickManager::decodeButtonEvent(SDL_JoyButtonEvent* evt) {
   }
   true_butstate[evt->which][evt->button] = bs;
   if (function >= 0) {
-    butstate[static_cast<unsigned long long>(function)] = bs;
+    butstate[static_cast<std::size_t>(function)] = bs;
   }
   if (guifunction >= 0) {
-    butstate[static_cast<unsigned long long>(guifunction)] = bs;
+    butstate[static_cast<std::size_t>(guifunction)] = bs;
   }
 }
 

@@ -778,7 +778,7 @@ static JSValue PlayerSetEscapePodDestination(JSContext* context,
         if (nDests > 0) {
           for (i = --nDests; i > 0; i--) {
             if (sDests[i].get<bool>("nova")) {
-              sDests.erase(sDests.begin() + static_cast<long long>(i));
+              sDests.erase(sDests.begin() + static_cast<std::ptrdiff_t>(i));
             }
           }
         }

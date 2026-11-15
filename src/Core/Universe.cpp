@@ -1431,7 +1431,7 @@ void Universe::setUpUniverseFromStation() {
       setSystemTo(sys);
       int index = 0;
       while (entities.size() > 2) {
-        Entity* ent = entities[static_cast<unsigned long long>(index)].get();
+        Entity* ent = entities[static_cast<std::size_t>(index)].get();
         if ((ent != player) && (ent != dockedStation)) {
           if (ent->isStation)  // clear out queues
             if (oo::ToStation(ent) != nullptr) oo::ToStation(ent)->clear();
@@ -2953,8 +2953,7 @@ bool Universe::addShipsAtPosition(int howMany, const std::string& desc,
   HPVector launchPos = coordinatesForPosition(pos, system, &scalar);
   GLfloat distance_from_center = 0.0;
   HPVector v_from_center, ship_pos;
-  std::vector<HPVector> ship_positions(
-      static_cast<unsigned long long>(howMany));
+  std::vector<HPVector> ship_positions(static_cast<std::size_t>(howMany));
   int i = 0;
   int scale_up_after = 0;
   int current_shell = 0;
@@ -2992,10 +2991,9 @@ bool Universe::addShipsAtPosition(int howMany, const std::string& desc,
       int j = i - 1;
       while (safe && (j >= current_shell)) {
         safe =
-            (safe &&
-             (HPdistance2(ship_pos,
-                          ship_positions[static_cast<unsigned long long>(j)]) >
-              safe_distance2));
+            (safe && (HPdistance2(ship_pos,
+                                  ship_positions[static_cast<std::size_t>(j)]) >
+                      safe_distance2));
         j--;
       }
       if (!safe) {
@@ -3021,7 +3019,7 @@ bool Universe::addShipsAtPosition(int howMany, const std::string& desc,
 
     // [self addEntity:ship];	// OOEntityStatus::kInFlight, AI state GLOBAL
 
-    ship_positions[static_cast<unsigned long long>(i)] = ship_pos;
+    ship_positions[static_cast<std::size_t>(i)] = ship_pos;
     i++;
     if (i > scale_up_after) {
       current_shell = i;
@@ -5242,7 +5240,7 @@ void Universe::drawUniverse() {
       Vector view_dir, view_up;
       OOMatrix view_matrix;
       int ent_count = static_cast<int>(n_entities);
-      std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+      std::vector<Entity*> my_entities(static_cast<std::size_t>(
           ent_count));  // each one's object retained and autoreleased
       int draw_count = 0;
       ::PlayerEntity* player = PLAYER;
@@ -5274,7 +5272,7 @@ void Universe::drawUniverse() {
         Entity* e = sortedEntities[i];  // ordered NEAREST -> FURTHEST AWAY
         if (e->isVisible()) {
           (void)oo::autorelease(oo::Hold(e));  // retained, autoreleased
-          my_entities[static_cast<unsigned long long>(draw_count++)] = e;
+          my_entities[static_cast<std::size_t>(draw_count++)] = e;
         }
       }
 
@@ -5305,13 +5303,13 @@ void Universe::drawUniverse() {
       drawCounter++;
       float breakPlane = INTERMEDIATE_CLEAR_DEPTH;
       for (int entityIndex = 0; entityIndex < draw_count; entityIndex++) {
-        if (my_entities[static_cast<unsigned long long>(entityIndex)]
+        if (my_entities[static_cast<std::size_t>(entityIndex)]
                 ->cameraRangeFront() > breakPlane) {
           continue;
         }
-        if (my_entities[static_cast<unsigned long long>(entityIndex)]
+        if (my_entities[static_cast<std::size_t>(entityIndex)]
                 ->cameraRangeBack() > breakPlane) {
-          breakPlane = my_entities[static_cast<unsigned long long>(entityIndex)]
+          breakPlane = my_entities[static_cast<std::size_t>(entityIndex)]
                            ->cameraRangeBack();
         }
       }
@@ -5446,7 +5444,7 @@ void Universe::drawUniverse() {
 
           //		DRAW ALL THE OPAQUE ENTITIES
           for (i = furthest; i >= nearest; i--) {
-            drawthing = my_entities[static_cast<unsigned long long>(i)];
+            drawthing = my_entities[static_cast<std::size_t>(i)];
             OOEntityStatus d_status = oo::EntityStatus(drawthing);
 
             if (bpHide && !drawthing->isImmuneToBreakPatternHide) continue;
@@ -6128,11 +6126,11 @@ bool Universe::isVectorClearFromEntity(Entity* e1, double dist, HPVector p2) {
 
   int i;
   int ent_count = static_cast<int>(n_entities);
-  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
-      ent_count));                              // each one's object retained
+  std::vector<Entity*> my_entities(
+      static_cast<std::size_t>(ent_count));     // each one's object retained
   std::vector<oo::EntityHold> my_holds;         // each one's object, held
   for (i = 0; i < ent_count; i++)
-    my_entities[static_cast<unsigned long long>(i)] =
+    my_entities[static_cast<std::size_t>(i)] =
         oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
 
   if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
@@ -6142,7 +6140,7 @@ bool Universe::isVectorClearFromEntity(Entity* e1, double dist, HPVector p2) {
     f1 = make_HPvector(0, 0, 1);
 
   for (i = 0; i < ent_count; i++) {
-    Entity* e2 = my_entities[static_cast<unsigned long long>(i)];
+    Entity* e2 = my_entities[static_cast<std::size_t>(i)];
     if ((e2 != e1) && (e2->canCollide())) {
       HPVector epos = e2->position;
       epos.x -= p1.x;
@@ -6198,11 +6196,11 @@ Entity* Universe::hazardOnRouteFromEntity(Entity* e1, double dist,
   Entity* result = nullptr;
   int i;
   int ent_count = static_cast<int>(n_entities);
-  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
-      ent_count));                              // each one's object retained
+  std::vector<Entity*> my_entities(
+      static_cast<std::size_t>(ent_count));     // each one's object retained
   std::vector<oo::EntityHold> my_holds;         // each one's object, held
   for (i = 0; i < ent_count; i++)
-    my_entities[static_cast<unsigned long long>(i)] =
+    my_entities[static_cast<std::size_t>(i)] =
         oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
 
   if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
@@ -6212,7 +6210,7 @@ Entity* Universe::hazardOnRouteFromEntity(Entity* e1, double dist,
     f1 = make_HPvector(0, 0, 1);
 
   for (i = 0; (i < ent_count) && (!result); i++) {
-    Entity* e2 = my_entities[static_cast<unsigned long long>(i)];
+    Entity* e2 = my_entities[static_cast<std::size_t>(i)];
     if ((e2 != e1) && (e2->canCollide())) {
       HPVector epos = e2->position;
       epos.x -= p1.x;
@@ -6261,11 +6259,11 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
   HPVector result = p2;
   int i;
   int ent_count = static_cast<int>(n_entities);
-  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
-      ent_count));                              // each one's object retained
+  std::vector<Entity*> my_entities(
+      static_cast<std::size_t>(ent_count));     // each one's object retained
   std::vector<oo::EntityHold> my_holds;         // each one's object, held
   for (i = 0; i < ent_count; i++)
-    my_entities[static_cast<unsigned long long>(i)] =
+    my_entities[static_cast<std::size_t>(i)] =
         oo::HoldIn(my_holds, sortedEntities[i]);  // retained
   HPVector p1 = e1->position;
   HPVector v1 = p2;
@@ -6283,7 +6281,7 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
     f1 = make_HPvector(0, 0, 1);
 
   for (i = 0; i < ent_count; i++) {
-    Entity* e2 = my_entities[static_cast<unsigned long long>(i)];
+    Entity* e2 = my_entities[static_cast<std::size_t>(i)];
     if ((e2 != e1) && (e2->canCollide())) {
       HPVector epos = e2->position;
       epos.x -= p1.x;
@@ -6493,15 +6491,14 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
   int i;
   int ent_count = static_cast<int>(n_entities);
   int ship_count = 0;
-  std::vector<::ShipEntity*> my_entities(
-      static_cast<unsigned long long>(ent_count));
+  std::vector<::ShipEntity*> my_entities(static_cast<std::size_t>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
 
   for (i = 0; i < ent_count; i++) {
     Entity* ent = sortedEntities[i];
     if (ent != srcEntity && ent != parent && oo::EntityIsShip(ent) &&
         ent->canCollide()) {
-      my_entities[static_cast<unsigned long long>(ship_count++)] =
+      my_entities[static_cast<std::size_t>(ship_count++)] =
           (oo::ToShip(ent) != nullptr ? oo::HoldIn(my_holds, oo::ToShip(ent))
                                       : static_cast<::ShipEntity*>(nullptr));
     }
@@ -6548,7 +6545,7 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
                            f1, static_cast<OOScalar>(nearest))));  // endpoint
 
   for (i = 0; i < ship_count; i++) {
-    ::ShipEntity* e2 = my_entities[static_cast<unsigned long long>(i)];
+    ::ShipEntity* e2 = my_entities[static_cast<std::size_t>(i)];
     if (e2 == nullptr)
       continue;  // (every one is a ship: the list holds the ships)
 
@@ -6609,15 +6606,15 @@ Entity* Universe::firstEntityTargetedByPlayer() {
   int i;
   int ent_count = static_cast<int>(n_entities);
   int ship_count = 0;
-  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
-      ent_count));                              // each one's object retained
+  std::vector<Entity*> my_entities(
+      static_cast<std::size_t>(ent_count));     // each one's object retained
   std::vector<oo::EntityHold> my_holds;         // each one's object, held
 
   for (i = 0; i < ent_count; i++) {
     if ((oo::EntityIsShip(sortedEntities[i]) &&
          !oo::EntityIsPlayer(sortedEntities[i])) ||
         sortedEntities[i]->getIsWormhole()) {
-      my_entities[static_cast<unsigned long long>(ship_count++)] =
+      my_entities[static_cast<std::size_t>(ship_count++)] =
           oo::HoldIn(my_holds, sortedEntities[i]);
     }
   }
@@ -6663,7 +6660,7 @@ Entity* Universe::firstEntityTargetedByPlayer() {
   }
 
   for (i = 0; i < ship_count; i++) {
-    Entity* e2 = my_entities[static_cast<unsigned long long>(i)];
+    Entity* e2 = my_entities[static_cast<std::size_t>(i)];
     if (e2->canCollide() && e2->getScanClass() != OOScanClass::kNoDraw) {
       Vector rp = HPVectorToVector(HPvector_subtract(e2->getPosition(), p1));
       OOScalar dist2 = magnitude2(rp);
@@ -9069,7 +9066,7 @@ oo::PList Universe::routeFromSystem(OOSystemID start, OOSystemID goal,
       for (j = 0; j < ns.size(); j++) {
         ::RouteElement* ce = cheapest[elemI->location()].get();
         OOSystemID n = ns[j];
-        if (concealed[static_cast<unsigned long long>(n)]) {
+        if (concealed[static_cast<std::size_t>(n)]) {
           continue;
         }
         OOSystemID c = ce->location();
@@ -9549,7 +9546,7 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
                            // (unless it is 1, which might be a bug)
         int optionIndex = static_cast<int>(Ranrot() % options.size());
         const std::optional<std::string> equipmentKey =
-            options[static_cast<unsigned long long>(optionIndex)];
+            options[static_cast<std::size_t>(optionIndex)];
         ::OOEquipmentType* item =
             equipmentKey.has_value()
                 ? OOEquipmentType::equipmentTypeWithIdentifier(*equipmentKey)
@@ -10031,7 +10028,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
   // (the search range 0..i-2 never looks at the entry just before)
   for (i = static_cast<std::ptrdiff_t>(base_extra_equipment.size()) - 1; i > 0;
        i--) {
-    eq_key = base_extra_equipment[static_cast<unsigned long long>(i)];
+    eq_key = base_extra_equipment[static_cast<std::size_t>(i)];
     const auto searchEnd = base_extra_equipment.begin() + (i - 1);
     if (eq_key.has_value() &&
         std::find(base_extra_equipment.begin(), searchEnd, eq_key) != searchEnd)
@@ -10041,7 +10038,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
   // do we at least have the same equipment as a standard ship?
   for (i = static_cast<std::ptrdiff_t>(base_extra_equipment.size()) - 1; i >= 0;
        i--) {
-    eq_key = base_extra_equipment[static_cast<unsigned long long>(i)];
+    eq_key = base_extra_equipment[static_cast<std::size_t>(i)];
     if (eq_key.has_value() &&
         std::find(ship_extra_equipment.begin(), ship_extra_equipment.end(),
                   *eq_key) != ship_extra_equipment.end())
@@ -10057,7 +10054,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
   for (i = static_cast<std::ptrdiff_t>(ship_extra_equipment.size()) - 1; i >= 0;
        i--) {
     item = OOEquipmentType::equipmentTypeWithIdentifier(
-               ship_extra_equipment[static_cast<unsigned long long>(i)])
+               ship_extra_equipment[static_cast<std::size_t>(i)])
                .get();
     if ((item != nullptr ? item->isPortableBetweenShips() : false))
       ship_extra_equipment.erase(ship_extra_equipment.begin() + i);
@@ -10069,7 +10066,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
     extra_equipment_value +=
         ((UNIVERSE != nullptr
               ? UNIVERSE->getEquipmentPriceForKey(
-                    ship_extra_equipment[static_cast<unsigned long long>(i)])
+                    ship_extra_equipment[static_cast<std::size_t>(i)])
               : 0) /
          10);
 
@@ -10352,24 +10349,23 @@ void Universe::allShipsDoScriptEvent(
   int i;
   int ent_count = static_cast<int>(n_entities);
   int ship_count = 0;
-  std::vector<::ShipEntity*> my_ships(
-      static_cast<unsigned long long>(ent_count));
+  std::vector<::ShipEntity*> my_ships(static_cast<std::size_t>(ent_count));
   std::vector<oo::EntityHold> ship_holds;  // my_ships[i]'s object, held
   for (i = 0; i < ent_count; i++) {
     if (sortedEntities[i]->isShip) {
-      my_ships[static_cast<unsigned long long>(ship_count++)] = oo::ToShip(
+      my_ships[static_cast<std::size_t>(ship_count++)] = oo::ToShip(
           oo::HoldIn(ship_holds, sortedEntities[i]));  // retained (its object)
     }
   }
 
   for (i = 0; i < ship_count; i++) {
-    ::ShipEntity* se = my_ships[static_cast<unsigned long long>(i)];
+    ::ShipEntity* se = my_ships[static_cast<std::size_t>(i)];
     if (se != nullptr) se->doScriptEvent(event);
     if (message.has_value()) {
       if (se != nullptr && se->getAI() != nullptr)
         se->getAI()->reactToMessage(*message, "global message");
     }
-    ship_holds[static_cast<unsigned long long>(i)].reset();  //	released
+    ship_holds[static_cast<std::size_t>(i)].reset();  //	released
   }
 }
 
@@ -11264,7 +11260,7 @@ void Universe::prunePreloadingPlanetMaterials() {
   while (i--) {
     if (_preloadingPlanetMaterials[i]->isFinishedLoading()) {
       _preloadingPlanetMaterials.erase(_preloadingPlanetMaterials.begin() +
-                                       static_cast<long long>(i));
+                                       static_cast<std::ptrdiff_t>(i));
     }
   }
 }

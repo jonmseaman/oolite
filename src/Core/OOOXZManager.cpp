@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <expected>
@@ -1971,8 +1972,9 @@ std::vector<oo::PList> OOOXZManager::installOptions() {
     end = _filteredList.count();
   }
   const oo::PList::Array& all = Elements(_filteredList);
-  return std::vector<oo::PList>(all.begin() + static_cast<long long>(start),
-                                all.begin() + static_cast<long long>(end));
+  return std::vector<oo::PList>(
+      all.begin() + static_cast<std::ptrdiff_t>(start),
+      all.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
 OOGUIRow OOOXZManager::showInstallOptions() {
@@ -2198,8 +2200,9 @@ std::vector<oo::PList> OOOXZManager::removeOptions() {
     end = _filteredList.count();
   }
   const oo::PList::Array& all = Elements(_filteredList);
-  return std::vector<oo::PList>(all.begin() + static_cast<long long>(start),
-                                all.begin() + static_cast<long long>(end));
+  return std::vector<oo::PList>(
+      all.begin() + static_cast<std::ptrdiff_t>(start),
+      all.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
 OOGUIRow OOOXZManager::showRemoveOptions() {

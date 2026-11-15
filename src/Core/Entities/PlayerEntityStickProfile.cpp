@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 #include "PlayerEntityStickProfile.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <format>
 #include <string>
 #include <vector>
@@ -490,7 +492,7 @@ void StickProfileScreen::graphProfile(GLfloat alpha, Vector at, NSSize size) {
       } else {
         OOGL(glColor4f(0.0, 1.0, 0.0, alpha));
       }
-      point = control_points[static_cast<unsigned long long>(i)];
+      point = control_points[static_cast<std::size_t>(i)];
       GLDrawFilledOval(
           static_cast<GLfloat>(at.x + 10 + point.x * (size.width - 20)),
           static_cast<GLfloat>(at.y + 10 + point.y * (size.height - 20)), at.z,

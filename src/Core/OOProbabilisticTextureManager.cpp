@@ -28,6 +28,7 @@ SOFTWARE.
 #include "OOProbabilisticTextureManager.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <memory>
 #include <optional>
@@ -137,12 +138,12 @@ bool OOProbabilisticTextureManager::initWithPListName(
         if (texture != nullptr) {
           _textures[_count] = texture;
           _prob[_count] =
-              probability +
-              (galID >= 0 ? _probMaxGal[static_cast<unsigned long long>(galID)]
-                          : _probMax);
+              probability + (galID >= 0
+                                 ? _probMaxGal[static_cast<std::size_t>(galID)]
+                                 : _probMax);
           _galaxy[_count] = (galID >= 0 ? galID : -1);
           if (galID >= 0) {
-            _probMaxGal[static_cast<unsigned long long>(galID)] += probability;
+            _probMaxGal[static_cast<std::size_t>(galID)] += probability;
           } else {
             for (j = 0; j <= kOOMaximumGalaxyID; j++)
               _probMaxGal[j] += probability;
@@ -181,7 +182,7 @@ OOTexture* OOProbabilisticTextureManager::selectTexture() {
 
   selection = randfWithSeed(&_seed);
 
-  selection *= _probMaxGal[static_cast<unsigned long long>(galID)];
+  selection *= _probMaxGal[static_cast<std::size_t>(galID)];
 
   for (i = 0; i != _count; ++i) {
     if (_galaxy[i] == -1 || _galaxy[i] == galID) {
@@ -201,7 +202,7 @@ OOTexture* OOProbabilisticTextureManager::selectTexture() {
            "{}: overrun! Galaxy List requirements not met. Choosing first "
            "texture available for galaxy.",
            __PRETTY_FUNCTION__);
-    return _textures[static_cast<unsigned long long>(hold)].get();
+    return _textures[static_cast<std::size_t>(hold)].get();
   }
 
   OO_LOG("probabilisticTextureManager.internalFailure",

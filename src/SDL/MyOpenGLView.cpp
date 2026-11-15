@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_timer.h>
 
+#include <cstdint>
 #include <memory>
 #include <numbers>
 #include <string>
@@ -902,8 +903,7 @@ std::vector<oo::PList> MyOpenGLView::getScreenSizeArray() {
 }
 
 NSSize MyOpenGLView::modeAsSize(int sizeIndex) {
-  const oo::PList& mode =
-      screenSizes.at(static_cast<unsigned long long>(sizeIndex));
+  const oo::PList& mode = screenSizes.at(static_cast<std::size_t>(sizeIndex));
   return NSMakeSize(mode.get<int>(kOODisplayWidth),
                     mode.get<int>(kOODisplayHeight));
 }
@@ -1145,7 +1145,7 @@ int MyOpenGLView::indexOfDisplayModeForWidth(unsigned int d_width,
   modeCount = static_cast<int>(screenSizes.size());
 
   for (i = 0; i < modeCount; i++) {
-    const oo::PList& mode = screenSizes[static_cast<unsigned long long>(i)];
+    const oo::PList& mode = screenSizes[static_cast<std::size_t>(i)];
     modeWidth = static_cast<unsigned int>(mode.get<int>(kOODisplayWidth));
     modeHeight = static_cast<unsigned int>(mode.get<int>(kOODisplayHeight));
     modeRefresh =
@@ -1167,8 +1167,7 @@ int MyOpenGLView::indexOfDisplayModeForWidth(unsigned int d_width,
 }
 
 NSSize MyOpenGLView::currentScreenSize() {
-  const oo::PList& mode =
-      screenSizes.at(static_cast<unsigned long long>(currentSize));
+  const oo::PList& mode = screenSizes.at(static_cast<std::size_t>(currentSize));
 
   if (mode) {
     return NSMakeSize(mode.get<int>(kOODisplayWidth),
@@ -1179,7 +1178,7 @@ NSSize MyOpenGLView::currentScreenSize() {
 }
 
 oo::PList MyOpenGLView::currentScreenMode() {
-  return screenSizes.at(static_cast<unsigned long long>(currentSize));
+  return screenSizes.at(static_cast<std::size_t>(currentSize));
 }
 
 void MyOpenGLView::setFov(float value, bool fromFraction) {

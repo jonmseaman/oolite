@@ -25,6 +25,7 @@
 #include "PlayerEntityLoadSave.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <expected>
 #include <format>
@@ -425,8 +426,7 @@ std::optional<std::string> PlayerEntity::commanderSelector() {
       default: {
         if (idx < 0 || static_cast<std::size_t>(idx) >= cdrDetailArray.size())
           break;  // (-objectAtIndex: raised)
-        const oo::PList cdr =
-            cdrDetailArray[static_cast<unsigned long long>(idx)];
+        const oo::PList cdr = cdrDetailArray[static_cast<std::size_t>(idx)];
         if (cdr.get<bool>("isSavedGame")) {
           return OptionalStringValue(cdr.find("saved_game_path"));
         } else {
@@ -472,11 +472,10 @@ void PlayerEntity::saveCommanderInputHandler() {
     if (guiSelectedRow != MOREROW && guiSelectedRow != BACKROW) {
       showCommanderShip(idx);
       if (idx >= 0 && static_cast<std::size_t>(idx) < cdrDetailArray.size() &&
-          cdrDetailArray[static_cast<unsigned long long>(idx)].get<bool>(
+          cdrDetailArray[static_cast<std::size_t>(idx)].get<bool>(
               "isSavedGame"))  // don't show things that aren't saved games
         commanderNameString =
-            CommanderSaveName(
-                cdrDetailArray[static_cast<unsigned long long>(idx)])
+            CommanderSaveName(cdrDetailArray[static_cast<std::size_t>(idx)])
                 .value_or("");
       else
         commanderNameString =
@@ -537,7 +536,7 @@ void PlayerEntity::saveCommanderInputHandler() {
       int idx = (guiSelectedRow - STARTROW) + (currentPage * NUMROWS);
       const oo::PList cdr =
           (idx >= 0 && static_cast<std::size_t>(idx) < cdrDetailArray.size())
-              ? cdrDetailArray[static_cast<unsigned long long>(idx)]
+              ? cdrDetailArray[static_cast<std::size_t>(idx)]
               : oo::PList();  // (-objectAtIndex: raised)
 
       if (!cdr.isNull() && !cdr.get<bool>("isSavedGame")) {
@@ -1250,8 +1249,7 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
   if (cdrArrayIndex < 0 ||
       static_cast<std::size_t>(cdrArrayIndex) >= cdrDetailArray.size())
     return;  // (-objectAtIndex: raised)
-  const oo::PList cdr =
-      cdrDetailArray[static_cast<unsigned long long>(cdrArrayIndex)];
+  const oo::PList cdr = cdrDetailArray[static_cast<std::size_t>(cdrArrayIndex)];
 
   gui->setText("", CDRDESCROW, OOGUIAlignment::kLeft);
   gui->setText("", CDRDESCROW + 1, OOGUIAlignment::kLeft);
