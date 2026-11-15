@@ -512,7 +512,7 @@ void OOConcreteTexture::uploadTextureDataWithMipMap(
     return;
 
   while (0 < w && 0 < h) {
-    OOGL(glTexImage2D(GL_TEXTURE_2D, level++,
+    OOGL(glTexImage2D(GL_TEXTURE_2D, static_cast<GLint>(level++),
                       static_cast<GLint>(internalFormat),
                       static_cast<GLsizei>(w), static_cast<GLsizei>(h), 0,
                       glFormat, type, bytes));
@@ -553,10 +553,10 @@ void OOConcreteTexture::uploadTextureCubeMapDataWithMipMap(
     unsigned w = _width, level = 0;
 
     while (0 < w) {
-      OOGL(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + side, level++,
-                        static_cast<GLint>(internalFormat),
-                        static_cast<GLsizei>(w), static_cast<GLsizei>(w), 0,
-                        glFormat, type, bytes));
+      OOGL(glTexImage2D(
+          GL_TEXTURE_CUBE_MAP_POSITIVE_X + side, static_cast<GLint>(level++),
+          static_cast<GLint>(internalFormat), static_cast<GLsizei>(w),
+          static_cast<GLsizei>(w), 0, glFormat, type, bytes));
       if (!mipMap) break;
       bytes += w * w * components;
       w >>= 1;

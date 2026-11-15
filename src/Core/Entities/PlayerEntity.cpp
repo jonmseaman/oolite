@@ -784,10 +784,11 @@ void PlayerEntity::loadCargoPodsForType(const std::string& type,
           }
         } else {
           // try to squeeze any surplus, up to half a ton, in the manifest.
-          int amount = (shipCommodityData != nullptr
-                            ? shipCommodityData->quantityForGood(type)
-                            : 0) +
-                       static_cast<OOCargoQuantity>(smaller_quantity);
+          int amount =
+              static_cast<int>((shipCommodityData != nullptr
+                                    ? shipCommodityData->quantityForGood(type)
+                                    : 0) +
+                               static_cast<OOCargoQuantity>(smaller_quantity));
           if (amount > MAX_GRAMS_IN_SAFE && unit == OOMassUnit::kGrams)
             amount = MAX_GRAMS_IN_SAFE;
           else if (amount > MAX_KILOGRAMS_IN_SAFE &&

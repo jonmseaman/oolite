@@ -13280,7 +13280,8 @@ void ShipEntity::deployEscorts() {
   escortCount = idleEscorts.size();
   if (escortCount == 0) return;
 
-  deployCount = static_cast<std::size_t>(ranrot_rand()) % escortCount + 1;
+  deployCount = static_cast<unsigned>(
+      static_cast<std::size_t>(ranrot_rand()) % escortCount + 1);
 
   // Deploy deployCount idle escorts.
   target = oo::ToShip(primaryTarget());
