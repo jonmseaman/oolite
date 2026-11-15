@@ -5,7 +5,6 @@
 #include "oofnd/objc/OOAssert.h"
 
 #include <cstdarg>
-#include <cstdint>
 #include <cstdio>
 #include <string>
 
@@ -32,22 +31,22 @@ std::string FormatV(const char* format, va_list args) {
   // gnustep-base NSLogv()ed the same text first; its NSLog hook logged it in
   // class "gnustep".
   if (oo::log::willDisplay("gnustep"))
-    oo::log::message("gnustep", nullptr, nullptr, 0, "{}", reason);
+    oo::log::logger().write("gnustep", nullptr, nullptr, 0, reason);
   OORaiseException(OOInternalInconsistencyException, "%s", reason.c_str());
   __builtin_unreachable();
 }
 
 }  // namespace
 
-void OOAssertFailedInFunction(const char* function, const char* file,
-                              std::int32_t line, const char* format, ...) {
+void OOAssertFailedInFunction(const std::source_location& where,
+                              const char* format, ...) {
   va_list args;
   va_start(args, format);
   const std::string message = FormatV(format, args);
   va_end(args);
 
-  std::string reason = std::string(file != nullptr ? file : "") + ":" +
-                       std::to_string(line) + "  Assertion failed in " +
-                       (function != nullptr ? function : "") + ".  " + message;
+  std::string reason = std::string(where.file_name()) + ":" +
+                       std::to_string(where.line()) + "  Assertion failed in " +
+                       where.function_name() + ".  " + message;
   Fail(reason);
 }

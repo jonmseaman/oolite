@@ -31,6 +31,7 @@ MA 02110-1301, USA.
 #include <map>
 #include <optional>
 #include <set>
+#include <source_location>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -239,10 +240,10 @@ OOMaybeUnits ApplyOneOperator(const OOMaybeUnits& string, const OOUnits& op,
         Errors that are not syntax or invalid keys are reported with
    OO_LOG_ERR().
 */
-void SyntaxIssue(OOStringExpansionContext* context, const char* function,
-                 const char* fileName, std::size_t line,
-                 const char* logMessageClass, const char* prefix,
-                 const char* format, ...) OO_PRINTF_FORMAT(7, 8);
+void SyntaxIssue(OOStringExpansionContext* context,
+                 const std::source_location& where, const char* logMessageClass,
+                 const char* prefix, const char* format, ...)
+    OO_PRINTF_FORMAT(5, 6);
 void ReportJavaScriptWarning(JSContext* jsc, const char* format, ...)
     __attribute__((format(printf, 2, 3)));
 }  // namespace
@@ -250,13 +251,13 @@ void ReportJavaScriptWarning(JSContext* jsc, const char* format, ...)
 // OOLOG_WARNING_PREFIX's text, as a C string.
 #define kSyntaxIssuePrefix "----- WARNING: "
 
-#define SyntaxError(CONTEXT, CLASS, FORMAT, ...)                              \
-  SyntaxIssue(CONTEXT, OOLOG_FUNCTION_NAME, OOLOG_FILE_NAME, __LINE__, CLASS, \
+#define SyntaxError(CONTEXT, CLASS, FORMAT, ...)                 \
+  SyntaxIssue(CONTEXT, ::std::source_location::current(), CLASS, \
               kSyntaxIssuePrefix, FORMAT __VA_OPT__(, ) __VA_ARGS__)
 
 #if WARNINGS
-#define SyntaxWarning(CONTEXT, CLASS, FORMAT, ...)                            \
-  SyntaxIssue(CONTEXT, OOLOG_FUNCTION_NAME, OOLOG_FILE_NAME, __LINE__, CLASS, \
+#define SyntaxWarning(CONTEXT, CLASS, FORMAT, ...)               \
+  SyntaxIssue(CONTEXT, ::std::source_location::current(), CLASS, \
               kSyntaxIssuePrefix, FORMAT __VA_OPT__(, ) __VA_ARGS__)
 #else
 #define SyntaxWarning(...) \
@@ -1596,10 +1597,9 @@ bool HasSuffix(const OOUnits& string, std::u16string_view suffix) {
              suffix;
 }
 
-void SyntaxIssue(OOStringExpansionContext* context, const char* function,
-                 const char* fileName, std::size_t line,
-                 const char* logMessageClass, const char* prefix,
-                 const char* format, ...) {
+void SyntaxIssue(OOStringExpansionContext* context,
+                 const std::source_location& where, const char* logMessageClass,
+                 const char* prefix, const char* format, ...) {
   OOCParameterAssert(context != nullptr);
 
   va_list args;
@@ -1619,8 +1619,8 @@ void SyntaxIssue(OOStringExpansionContext* context, const char* function,
       ReportJavaScriptWarning(jsc, "%s", message.c_str());
       OOJSRelinquishContext(jsc);
     } else {
-      oo::log::logger().write(logMessageClass, function, fileName,
-                              static_cast<std::uint32_t>(line),
+      oo::log::logger().write(logMessageClass, where.function_name(),
+                              where.file_name(), where.line(),
                               std::string(prefix) + message);
     }
   }

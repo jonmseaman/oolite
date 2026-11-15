@@ -50,5 +50,5 @@ void OOLogSetShowMessageClass(bool flag);
 // Change message class visibility without saving to user defaults.
 void OOLogSetShowMessageClassTemporary(bool flag);
 
-// Utility function to strip path components from __FILE__ strings:
+// Utility function to strip path components from source file paths:
 // oo::log::abbreviatedFileName().
