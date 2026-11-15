@@ -34,11 +34,10 @@ SOFTWARE.
 
 #if OO_SHADERS
 
-#include <string.h>
-
 #include <format>
 #include <optional>
 #include <string_view>
+#include <variant>
 
 #include "OOFunctionAttributes.h"
 #include "OOMaths.h"
@@ -58,7 +57,7 @@ std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithName(
   if (!result->initWithName(uniformName, shaderProgram)) return nullptr;
   {
     result->type = kOOShaderUniformTypeInt;
-    result->value.constInt = constValue;
+    result->value = constValue;
   }
 
   return result;
@@ -72,7 +71,7 @@ std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithName(
   if (!result->initWithName(uniformName, shaderProgram)) return nullptr;
   {
     result->type = kOOShaderUniformTypeFloat;
-    result->value.constFloat = constValue;
+    result->value = constValue;
   }
 
   return result;
@@ -86,8 +85,8 @@ std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithName(
   if (!result->initWithName(uniformName, shaderProgram)) return nullptr;
   {
     result->type = kOOShaderUniformTypeVector;
-    memcpy(result->value.constVector, constValue,
-           sizeof result->value.constVector);
+    result->value = std::array<GLfloat, 4>{constValue[0], constValue[1],
+                                           constValue[2], constValue[3]};
   }
 
   return result;
@@ -105,10 +104,9 @@ std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithName(
   if (!result->initWithName(uniformName, shaderProgram)) return nullptr;
   {
     result->type = kOOShaderUniformTypeVector;
-    result->value.constVector[0] = constValue->redComponent();
-    result->value.constVector[1] = constValue->greenComponent();
-    result->value.constVector[2] = constValue->blueComponent();
-    result->value.constVector[3] = constValue->alphaComponent();
+    result->value = std::array<GLfloat, 4>{
+        constValue->redComponent(), constValue->greenComponent(),
+        constValue->blueComponent(), constValue->alphaComponent()};
   }
 
   return result;
@@ -123,13 +121,11 @@ std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithName(
   {
     if (asMatrix) {
       result->type = kOOShaderUniformTypeMatrix;
-      result->value.constMatrix = OOMatrixForQuaternionRotation(constValue);
+      result->value = OOMatrixForQuaternionRotation(constValue);
     } else {
       result->type = kOOShaderUniformTypeVector;
-      result->value.constVector[0] = constValue.x;
-      result->value.constVector[1] = constValue.y;
-      result->value.constVector[2] = constValue.z;
-      result->value.constVector[3] = constValue.w;
+      result->value = std::array<GLfloat, 4>{constValue.x, constValue.y,
+                                             constValue.z, constValue.w};
     }
   }
 
@@ -144,7 +140,7 @@ std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithName(
   if (!result->initWithName(uniformName, shaderProgram)) return nullptr;
   {
     result->type = kOOShaderUniformTypeMatrix;
-    result->value.constMatrix = constValue;
+    result->value = constValue;
   }
 
   return result;
@@ -185,7 +181,7 @@ std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithName(
   result->convertToMatrix =
       oo::Any(options & OOUniformConvertOptions::kToMatrix);
   result->type = boundType;
-  result->value.binding.cxxGet = get;
+  result->value = Binding{get};
   result->cxxTargetOnly = true;
   result->cxxProperty = property;
   result->cxxTarget = oo::share(target);
@@ -264,21 +260,21 @@ std::optional<std::string> OOShaderUniform::description() {
   } else {
     switch (type) {
       case kOOShaderUniformTypeInt:
-        valueDesc = std::format("{}", value.constInt);
+        valueDesc = std::format("{}", std::get<GLint>(value));
         break;
 
       case kOOShaderUniformTypeFloat:
-        valueDesc = std::format("{:g}", value.constFloat);
+        valueDesc = std::format("{:g}", std::get<GLfloat>(value));
         break;
 
       case kOOShaderUniformTypeVector: {
-        Vector v = {value.constVector[0], value.constVector[1],
-                    value.constVector[2]};
+        const auto& vector = std::get<std::array<GLfloat, 4>>(value);
+        Vector v = {vector[0], vector[1], vector[2]};
         valueDesc = VectorDescription(v);
       } break;
 
       case kOOShaderUniformTypeMatrix:
-        valueDesc = OOMatrixDescription(value.constMatrix);
+        valueDesc = OOMatrixDescription(std::get<OOMatrix>(value));
         break;
     }
   }
@@ -369,7 +365,7 @@ void OOShaderUniform::setEntityBindingTarget(Entity* target) {
   OOShaderMemberBinding memberBinding = {};
   if (target != nullptr && hooks != nullptr &&
       hooks->memberBinding(target, cxxProperty.c_str(), &memberBinding)) {
-    value.binding.cxxGet = memberBinding.get;
+    value = Binding{memberBinding.get};
     cxxTarget = oo::share(memberBinding.target);
     type = memberBinding.type;
     entityMember = true;
@@ -382,7 +378,7 @@ void OOShaderUniform::setEntityBindingTarget(Entity* target) {
      object answered), so the binding failed and was logged; with no object (or
      no hooks) nothing was bound or logged.
   */
-  value.binding.cxxGet = nullptr;
+  value = Binding{};
   cxxTarget.reset();
   isActiveBinding = false;
   if (target != nullptr && hooks != nullptr &&
@@ -421,19 +417,20 @@ bool OOShaderUniform::initWithName(const std::string& uniformName,
 void OOShaderUniform::applySimple() {
   switch (type) {
     case kOOShaderUniformTypeInt:
-      OOGL(glUniform1iARB(location, value.constInt));
+      OOGL(glUniform1iARB(location, std::get<GLint>(value)));
       break;
 
     case kOOShaderUniformTypeFloat:
-      OOGL(glUniform1fARB(location, value.constFloat));
+      OOGL(glUniform1fARB(location, std::get<GLfloat>(value)));
       break;
 
     case kOOShaderUniformTypeVector:
-      OOGL(glUniform4fvARB(location, 1, value.constVector));
+      OOGL(glUniform4fvARB(location, 1,
+                           std::get<std::array<GLfloat, 4>>(value).data()));
       break;
 
     case kOOShaderUniformTypeMatrix:
-      GLUniformMatrix(location, value.constMatrix);
+      GLUniformMatrix(location, std::get<OOMatrix>(value));
   }
 }
 
@@ -453,7 +450,7 @@ void OOShaderUniform::applyBinding() {
           do nothing. Shaders can specify a default value for uniforms, which
           will be used when no setting has been provided by the host program.
 
-          I considered clearing value.binding.object if the underlying object is
+          I considered clearing the binding if the underlying object is
           gone, but adding code to save a small amount of spacein a case that
           shouldn't occur in normal usage is silly.
   */
@@ -461,13 +458,14 @@ void OOShaderUniform::applyBinding() {
   // its type uses. Nothing else is bound.
   OOShaderBindingValue member = {};
   if (!cxxTargetOnly && !entityMember) return;
-  if (value.binding.cxxGet == nullptr) return;
+  const auto* binding = std::get_if<Binding>(&value);
+  if (binding == nullptr || binding->cxxGet == nullptr) return;
   {
     // The C++ target (the entity, or the C++ object), held weakly: once it has
     // gone, nothing is set.
     oo::Object* cxxObject = cxxTarget.lock().get();
     if (cxxObject == nullptr) return;
-    value.binding.cxxGet(cxxObject, member);
+    binding->cxxGet(cxxObject, member);
   }
 
   switch (type) {
