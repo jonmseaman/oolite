@@ -48,9 +48,19 @@ bool ScanHPVectorFromString(const std::optional<std::string>& xyzString,
                             HPVector* outVector);
 bool ScanQuaternionFromString(const std::optional<std::string>& wxyzString,
                               Quaternion* outQuaternion);
-bool ScanVectorAndQuaternionFromString(
-    const std::optional<std::string>& xyzwxyzString, Vector* outVector,
-    Quaternion* outQuaternion);
+
+// A position and an orientation, as ScanVectorAndQuaternionFromString() reads
+// them.
+namespace oo {
+struct VectorAndQuaternion {
+  Vector vector;
+  Quaternion quaternion;
+};
+}  // namespace oo
+
+// std::nullopt (and an error logged) unless the string has seven floats.
+std::optional<oo::VectorAndQuaternion> ScanVectorAndQuaternionFromString(
+    const std::optional<std::string>& xyzwxyzString);
 
 Vector VectorFromString(const std::optional<std::string>& xyzString,
                         Vector defaultValue);
