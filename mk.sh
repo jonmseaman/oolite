@@ -89,7 +89,14 @@ meson_setup() {
             exit 1
         fi
     fi
-    # clangd and clang-tidy (-p .) read the compile database from this directory's root.
+    copy_compile_commands "$build_dir"
+}
+
+# clangd and clang-tidy (-p .) read the compile database from this directory's root.
+# Meson rewrites the build directory's copy on any reconfigure, including one that
+# `meson compile` runs itself, so every step that can reconfigure copies it again.
+copy_compile_commands() {
+    local build_dir="$1"
     if [[ -f "$build_dir/compile_commands.json" ]]; then
         cp -f "$build_dir/compile_commands.json" compile_commands.json
     fi
@@ -105,6 +112,7 @@ meson_compile() {
         fi
         exit 1
     fi
+    copy_compile_commands "$build_dir"
 }
 
 meson_configure() {
@@ -118,6 +126,7 @@ meson_configure() {
         fi
         exit 1
     fi
+    copy_compile_commands "$build_dir"
 }
 
 meson_install() {
@@ -457,8 +466,8 @@ if [[ "$ACTION" == "tidy" ]]; then
         exit 1
     fi
     if [[ ! -f compile_commands.json ]]; then
-        echo "--> No compile database yet: building the test flavour first"
-        "$SCRIPT_DIR/mk.sh" build test
+        echo "--> No compile database yet: building the dev flavour first"
+        "$SCRIPT_DIR/mk.sh" build dev
     fi
     echo "--> Running $("$clang_tidy" --version | grep -m1 -i 'version')"
     tidy_extra_args=()
