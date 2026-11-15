@@ -102,9 +102,9 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
 #include "oofnd/objc/OOFoundationTypes.h"
-#define CUSTOM_VIEW_ROTATE_SPEED 1.0
-#define CUSTOM_VIEW_ZOOM_SPEED 5.0
-#define CUSTOM_VIEW_SPEED_REDUCTION_FACTOR 0.3
+constexpr double CUSTOM_VIEW_ROTATE_SPEED = 1.0;
+constexpr double CUSTOM_VIEW_ZOOM_SPEED = 5.0;
+constexpr double CUSTOM_VIEW_SPEED_REDUCTION_FACTOR = 0.3;
 
 // Whether any of the keys is down. Every key is read, as the "a | b | c" it
 // replaces read them all (a bitwise OR of bools, which clang flags once
