@@ -13398,14 +13398,7 @@ void ShipEntity::sendExpandedMessage(const std::string& message_text,
     return;
   }
 
-  Random_Seed very_random_seed;
-  very_random_seed.a = rand() & 255;
-  very_random_seed.b = rand() & 255;
-  very_random_seed.c = rand() & 255;
-  very_random_seed.d = rand() & 255;
-  very_random_seed.e = rand() & 255;
-  very_random_seed.f = rand() & 255;
-  seed_RNG_only_for_planet_description(very_random_seed);
+  seed_RNG_only_for_planet_description(oo::RandomDescriptionSeed());
 
   // The specials dictionary as +dictionaryWithObjectsAndKeys: built it: it
   // ended at the first nil.
@@ -13490,14 +13483,7 @@ void ShipEntity::receiveCommsMessage(const std::string& message_text,
 
 void ShipEntity::commsMessage(const std::string& valueString,
                               bool unpilotedOverride) {
-  Random_Seed very_random_seed;
-  very_random_seed.a = rand() & 255;
-  very_random_seed.b = rand() & 255;
-  very_random_seed.c = rand() & 255;
-  very_random_seed.d = rand() & 255;
-  very_random_seed.e = rand() & 255;
-  very_random_seed.f = rand() & 255;
-  seed_RNG_only_for_planet_description(very_random_seed);
+  seed_RNG_only_for_planet_description(oo::RandomDescriptionSeed());
 
   broadcastMessage(valueString, unpilotedOverride);
 }

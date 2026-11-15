@@ -1242,14 +1242,7 @@ oo::PList PlayerEntity::commanderShipDisplayName_string() {
 
 std::optional<std::string> PlayerEntity::expandMessage(
     const std::string& valueString) {
-  Random_Seed very_random_seed;
-  very_random_seed.a = rand() & 255;
-  very_random_seed.b = rand() & 255;
-  very_random_seed.c = rand() & 255;
-  very_random_seed.d = rand() & 255;
-  very_random_seed.e = rand() & 255;
-  very_random_seed.f = rand() & 255;
-  seed_RNG_only_for_planet_description(very_random_seed);
+  seed_RNG_only_for_planet_description(oo::RandomDescriptionSeed());
   return replaceVariablesInString(
       OOExpand(valueString).value_or(std::string()));
 }
