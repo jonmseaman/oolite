@@ -193,37 +193,31 @@ void GLDrawFilledOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
   OOGLEND();
 }
 
-void GLDrawPoints(OOGLVector* points, int n) {
-  int i;
+void GLDrawPoints(std::span<const OOGLVector> points) {
   OO_ENTER_OPENGL();
   OOGLBEGIN(GL_LINE_STRIP);
-  for (i = 0; i < n; i++) {
-    glVertex3f(points->x, points->y, points->z);
-    points++;
+  for (const OOGLVector& point : points) {
+    glVertex3f(point.x, point.y, point.z);
   }
   OOGLEND();
   return;
 }
 
-void GLDrawFilledPoints(OOGLVector* points, int n) {
-  int i;
+void GLDrawFilledPoints(std::span<const OOGLVector> points) {
   OO_ENTER_OPENGL();
   OOGLBEGIN(GL_TRIANGLE_FAN);
-  for (i = 0; i < n; i++) {
-    glVertex3f(points->x, points->y, points->z);
-    points++;
+  for (const OOGLVector& point : points) {
+    glVertex3f(point.x, point.y, point.z);
   }
   OOGLEND();
   return;
 }
 
-void GLDrawQuadStrip(OOGLVector* points, int n) {
-  int i;
+void GLDrawQuadStrip(std::span<const OOGLVector> points) {
   OO_ENTER_OPENGL();
   OOGLBEGIN(GL_QUAD_STRIP);
-  for (i = 0; i < n; i++) {
-    glVertex3f(points->x, points->y, points->z);
-    points++;
+  for (const OOGLVector& point : points) {
+    glVertex3f(point.x, point.y, point.z);
   }
   OOGLEND();
   return;
