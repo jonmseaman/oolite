@@ -29,7 +29,6 @@ SOFTWARE.
 
 #include "OOCPUInfo.h"  // IWYU pragma: keep: the endianness and CPU macros its #if lines test
 #include "OOJavaScriptEngine.h"  // IWYU pragma: keep: OOJS_PROFILE, which its #if lines test
-#include "OOSound.h"
 #include "OOVersion.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Log.hpp"
@@ -98,9 +97,7 @@ void OOPrintLogHeader() {
 
   const std::vector<std::string> featureStrings = {
 // User features
-#if OOLITE_OPENAL
       "OpenAL",
-#endif
 
 #if OO_SHADERS
       "GLSL shaders",
