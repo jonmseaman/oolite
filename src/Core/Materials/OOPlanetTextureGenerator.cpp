@@ -687,10 +687,10 @@ static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q,
 #define RECIP_COASTLINE_PORTION (160.0f)
 #define COASTLINE_PORTION (1.0f / RECIP_COASTLINE_PORTION)
 #define SHALLOWS (2.0f * COASTLINE_PORTION)  // increased shallows area.
-#define RECIP_SHALLOWS (1.0f / SHALLOWS)
+  constexpr auto RECIP_SHALLOWS = (1.0f / SHALLOWS);
 // N.B.: DEEPS can't be more than RECIP_COASTLINE_PORTION * COASTLINE_PORTION!
 #define DEEPS (40.0f * COASTLINE_PORTION)
-#define RECIP_DEEPS (1.0f / DEEPS)
+  constexpr auto RECIP_DEEPS = (1.0f / DEEPS);
 
   const FloatRGB white = {1.0f, 1.0f, 1.0f};
   FloatRGB diffuse;
