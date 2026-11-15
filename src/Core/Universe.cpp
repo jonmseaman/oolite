@@ -1217,7 +1217,8 @@ std::string OOLookUpPluralDescriptionPRIV(const std::string& key,
 
       switch (command) {
         case 0:
-          goto passed;  // end of string
+          // end of string: passed
+          return OOLookUpDescriptionPRIV(std::format("{}%{}", key, index));
 
         case '~':
           flag = !flag;
@@ -1255,7 +1256,6 @@ std::string OOLookUpPluralDescriptionPRIV(const std::string& key,
     }
   }
 
-passed:
   return OOLookUpDescriptionPRIV(std::format("{}%{}", key, index));
 }
 

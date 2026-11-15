@@ -275,7 +275,6 @@ static void DumpMipMap(void* data, OOPixMapDimension width,
 OOPixMap OOScalePixMap(OOPixMap srcPx, OOPixMapDimension dstWidth,
                        OOPixMapDimension dstHeight, bool leaveSpaceForMipMaps) {
   OOPixMap dstPx = {}, sparePx = {};
-  bool OK = true;
 
   //	Sanity check.
   if (!OOIsValidPixMap(srcPx)) [[unlikely]] {
@@ -294,8 +293,7 @@ OOPixMap OOScalePixMap(OOPixMap srcPx, OOPixMapDimension dstWidth,
 
     dstPx = OOAllocatePixMap(srcPx.width, dstHeight, srcPx.format, 0, dstSize);
     if (!OOIsValidPixMap(dstPx)) [[unlikely]] {
-      OK = false;
-      goto FAIL;
+      return kOONullPixMap;  // the buffers of srcPx and sparePx go with them
     }
 
     StretchVertically(srcPx, dstPx);
@@ -325,8 +323,7 @@ OOPixMap OOScalePixMap(OOPixMap srcPx, OOPixMapDimension dstWidth,
           OOAllocatePixMap(dstWidth, srcPx.height, srcPx.format, 0, dstSize);
     }
     if (!OOIsValidPixMap(dstPx)) [[unlikely]] {
-      OK = false;
-      goto FAIL;
+      return kOONullPixMap;  // the buffers of srcPx and sparePx go with them
     }
 
     StretchHorizontally(srcPx, dstPx);
@@ -345,9 +342,8 @@ OOPixMap OOScalePixMap(OOPixMap srcPx, OOPixMapDimension dstWidth,
   }
 
   // dstPx is now the result.
-  OK = EnsureCorrectDataSize(&dstPx, leaveSpaceForMipMaps);
+  const bool OK = EnsureCorrectDataSize(&dstPx, leaveSpaceForMipMaps);
 
-FAIL:
   // The buffers of srcPx and sparePx that dstPx does not use go with them.
   return OK ? dstPx : kOONullPixMap;
 }

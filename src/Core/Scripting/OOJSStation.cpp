@@ -877,13 +877,23 @@ static JSValue StationSetInterface(OOJS_NATIVE_ARGS) {
   JSValue value = JS_UNDEFINED;
   JSValue callback = JS_UNDEFINED;
   JSValue params = JS_UNDEFINED;
-  std::string errorDescription;
 
   std::optional<std::string> title;
   std::optional<std::string> summary;
   std::optional<std::string> category;
   std::shared_ptr<OOJSInterfaceDefinition> definition;
   OOJSInterfaceDefinition* cxxDefinition = nullptr;
+
+  // Frees what is held so far, reports the bad arguments and fails.
+  auto fail = [&](const char* errorDescription) {
+    JS_FreeValue(context, callback);
+    JS_FreeValue(context, value);
+    JS_FreeValue(context, params);
+    OOJSReportBadArguments(context, "Station", "setInterface",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           errorDescription);
+    return OOJSNativeFailure(context);
+  };
 
   // SpiderMonkey's JS_ValueToObject() boxed primitives. (It gave no object for
   // undefined, which then could not work; treat it as invalid.)
@@ -895,26 +905,23 @@ static JSValue StationSetInterface(OOJS_NATIVE_ARGS) {
     }
   }
   if (!JS_IsObject(params)) {
-    errorDescription = "key [, definition]";
-    goto fail;
+    return fail("key [, definition]");
   }
 
   // get and validate title
   value = GetParam(context, params, "title");
   if (JS_IsUndefined(value)) {
-    errorDescription =
+    return fail(
         "key [, definition]; if definition is set, it must have a 'title' "
-        "property.";
-    goto fail;
+        "property.");
   }
   title = OOStringFromJSValue(context, value);
   JS_FreeValue(context, value);
   value = JS_UNDEFINED;
   if (!title.has_value() || title->empty()) {
-    errorDescription =
+    return fail(
         "key [, definition]; if definition is set, 'title' property must be a "
-        "non-empty string.";
-    goto fail;
+        "non-empty string.");
   }
 
   // get category with default
@@ -933,33 +940,28 @@ static JSValue StationSetInterface(OOJS_NATIVE_ARGS) {
   // get and validate summary
   value = GetParam(context, params, "summary");
   if (JS_IsUndefined(value)) {
-    errorDescription =
+    return fail(
         "key [, definition]; if definition is set, it must have a 'summary' "
-        "property.";
-    goto fail;
+        "property.");
   }
   summary = OOStringFromJSValue(context, value);
   JS_FreeValue(context, value);
   value = JS_UNDEFINED;
   if (!summary.has_value() || summary->empty()) {
-    errorDescription =
+    return fail(
         "key [, definition]; if definition is set, 'summary' property must be "
-        "a non-empty string.";
-    goto fail;
+        "a non-empty string.");
   }
 
   // get and validate callback
   callback = GetParam(context, params, "callback");
   if (JS_IsUndefined(callback)) {
-    errorDescription =
+    return fail(
         "key [, definition]; if definition is set, it must have a 'callback' "
-        "property.";
-    goto fail;
+        "property.");
   }
   if (!OOJSValueIsFunction(context, callback)) {
-    errorDescription =
-        "key [, definition]; 'callback' property must be a function.";
-    goto fail;
+    return fail("key [, definition]; 'callback' property must be a function.");
   }
 
   // C++ (its façade was deleted); the station keeps it (std::shared_ptr).
@@ -995,14 +997,6 @@ static JSValue StationSetInterface(OOJS_NATIVE_ARGS) {
     station->setInterfaceDefinition(definition.get(), key.value_or(""));
 
   OOJS_RETURN_VOID;
-
-fail:
-  JS_FreeValue(context, callback);
-  JS_FreeValue(context, value);
-  JS_FreeValue(context, params);
-  OOJSReportBadArguments(context, "Station", "setInterface", std::min(argc, 1),
-                         OOJS_ARGV, std::nullopt, errorDescription);
-  return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }

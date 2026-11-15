@@ -1428,6 +1428,13 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
   OOShipGroup* group = nullptr;
   std::shared_ptr<OOColor> colorForScript;
   bool exists;  // JSValueToEquipmentKeyRelaxed()'s out parameter
+  auto playerReadOnly = [&] {
+    OOJSReportError(context, "player.ship.%s is read-only.",
+                    OOStringFromJSPropertyMagic(magic, sShipProperties,
+                                                OOJS_COUNT(sShipProperties))
+                        .c_str());
+    return OOJSNativeFailure(context);
+  };
 
   if (!JSShipGetShipEntity(context, thisObj, &entity)) [[unlikely]]
     return OOJSNativeFailure(context);
@@ -1442,7 +1449,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     using enum ShipProperty;
     case kName:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
@@ -1453,7 +1460,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kDisplayName:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
@@ -1486,7 +1493,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kPrimaryRole:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
@@ -1497,7 +1504,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kAIState:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
@@ -1509,7 +1516,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kBeaconCode:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       sValue = OOStringFromJSValue(context, value);
       if (!sValue.has_value() || sValue->empty()) {
@@ -1538,7 +1545,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kBeaconLabel:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         ship->setBeaconLabel(sValue);
@@ -1548,7 +1555,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kAccuracy:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         ship->setAccuracy(fValue);
@@ -1645,7 +1652,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kAIFoundTarget:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       if (JS_IsNull(value)) {
         ship->setFoundTarget(nullptr);
@@ -1658,7 +1665,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kAIPrimaryAggressor:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       if (JS_IsNull(value)) {
         ship->setPrimaryAggressor(nullptr);
@@ -1725,7 +1732,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kReactionTime:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         ship->setReactionTime(fValue);
@@ -1749,7 +1756,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kIsBoulder:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       if (((bValue = JS_ToBool(context, value)) >= 0)) {
         ship->setIsBoulder(bValue);
@@ -1759,7 +1766,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kDestination:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       if (JSValueToHPVector(context, value, &hpvValue)) {
         // use setEscortDestination rather than setDestination as
@@ -1771,7 +1778,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kDesiredSpeed:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         ship->setDesiredSpeed(fmax(fValue, 0.0));
@@ -1788,7 +1795,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       // PlayerEntity's control path, so a write here would be silently
       // reverted.
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         // NEGATIVE IS REFUSED, NOT CLAMPED, matching maxSpeed/maxPitch/maxRoll
@@ -1818,7 +1825,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kDesiredRange:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         ship->setDesiredRange(fmax(fValue, 0.0));
@@ -2098,7 +2105,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kMaxEscorts:
       if (ship->getIsPlayer()) [[unlikely]]
-        goto playerReadOnly;
+        return playerReadOnly();
 
       if (OOJSValueToInt32(context, value, &iValue)) {
         OOShipGroup* escortGroup = ship->escortGroup();
@@ -2136,13 +2143,6 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
   OOJSReportBadPropertyValue(context, thisObj, magic, sShipProperties,
                              OOJS_COUNT(sShipProperties), value);
-  return OOJSNativeFailure(context);
-
-playerReadOnly:
-  OOJSReportError(context, "player.ship.%s is read-only.",
-                  OOStringFromJSPropertyMagic(magic, sShipProperties,
-                                              OOJS_COUNT(sShipProperties))
-                      .c_str());
   return OOJSNativeFailure(context);
 
   // Not used (yet)

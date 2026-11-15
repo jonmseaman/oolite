@@ -56,7 +56,7 @@ SOFTWARE.
 #include "oofnd/Defaults.hpp"  // IWYU pragma: keep: used only without NDEBUG
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"  // IWYU pragma: keep: used only without NDEBUG
+#include "oofnd/objc/OOException.h"  // oo::Finally
 
 #ifndef APIENTRY
 #define APIENTRY
@@ -278,7 +278,6 @@ bool OOPolygonSprite::loadPolygons(const oo::PList& dataArray,
                                    float outlineWidth) {
   OOCParameterAssert(dataArray);
 
-  GLUtesselator* tesselator = nullptr;
   std::vector<OOPolygonContour>
       contours;  // the tesselator points into these until the end
   std::vector<OOPolygonContour>
@@ -296,52 +295,48 @@ bool OOPolygonSprite::loadPolygons(const oo::PList& dataArray,
   // regrowing.
   polygonData.data.reserve(100 * 2);
 
-  tesselator = gluNewTess();
-  if (tesselator == nullptr) {
-    polygonData.OK = false;
-    goto END;
-  }
+  std::unique_ptr<GLUtesselator, decltype(&gluDeleteTess)> tesselator(
+      gluNewTess(), &gluDeleteTess);
+  // Ends the SVG dump on every return, before the tesselator is deleted.
+  const oo::Finally endDump([&] { SVGDumpEnd(&polygonData); });
+  if (tesselator == nullptr) return false;
 
   contours = DataArrayToPoints(&polygonData, dataArray);
 
   /*** Tesselate polygon fill ***/
-  gluTessCallback(tesselator, GLU_TESS_BEGIN_DATA,
+  gluTessCallback(tesselator.get(), GLU_TESS_BEGIN_DATA,
                   reinterpret_cast<TessFuncPtr>(TessBeginCallback));
-  gluTessCallback(tesselator, GLU_TESS_VERTEX_DATA,
+  gluTessCallback(tesselator.get(), GLU_TESS_VERTEX_DATA,
                   reinterpret_cast<TessFuncPtr>(TessVertexCallback));
-  gluTessCallback(tesselator, GLU_TESS_END_DATA,
+  gluTessCallback(tesselator.get(), GLU_TESS_END_DATA,
                   reinterpret_cast<TessFuncPtr>(TessEndCallback));
-  gluTessCallback(tesselator, GLU_TESS_ERROR_DATA,
+  gluTessCallback(tesselator.get(), GLU_TESS_ERROR_DATA,
                   reinterpret_cast<TessFuncPtr>(ErrorCallback));
-  gluTessCallback(tesselator, GLU_TESS_COMBINE_DATA,
+  gluTessCallback(tesselator.get(), GLU_TESS_COMBINE_DATA,
                   reinterpret_cast<TessFuncPtr>(TessCombineCallback));
 
-  gluTessBeginPolygon(tesselator, &polygonData);
+  gluTessBeginPolygon(tesselator.get(), &polygonData);
   SVGDumpBeginGroup(&polygonData, "Fill");
 
   std::size_t contourCount, contourIndex;
   contourCount = contours.size();
   for (contourIndex = 0; contourIndex < contourCount && polygonData.OK;
        contourIndex++) {
-    SubmitVertices(tesselator, &polygonData, contours[contourIndex]);
+    SubmitVertices(tesselator.get(), &polygonData, contours[contourIndex]);
   }
 
-  gluTessEndPolygon(tesselator);
+  gluTessEndPolygon(tesselator.get());
   SVGDumpEndGroup(&polygonData);
 
   if (polygonData.OK) {
     _solidData = std::move(polygonData.data);
     _solidData.shrink_to_fit();
   }
-  if (!polygonData.OK) goto END;
+  if (!polygonData.OK) return false;
 
   /*** Tesselate polygon outline ***/
-  gluDeleteTess(tesselator);
-  tesselator = gluNewTess();
-  if (tesselator == nullptr) {
-    polygonData.OK = false;
-    goto END;
-  }
+  tesselator.reset(gluNewTess());
+  if (tesselator == nullptr) return false;
 
   polygonData.data = {};
   polygonData.data.reserve(100 * 2);
@@ -349,19 +344,20 @@ bool OOPolygonSprite::loadPolygons(const oo::PList& dataArray,
   polygonData.generatingOutline = true;
 #endif
 
-  gluTessCallback(tesselator, GLU_TESS_BEGIN_DATA,
+  gluTessCallback(tesselator.get(), GLU_TESS_BEGIN_DATA,
                   reinterpret_cast<TessFuncPtr>(TessBeginCallback));
-  gluTessCallback(tesselator, GLU_TESS_VERTEX_DATA,
+  gluTessCallback(tesselator.get(), GLU_TESS_VERTEX_DATA,
                   reinterpret_cast<TessFuncPtr>(TessVertexCallback));
-  gluTessCallback(tesselator, GLU_TESS_END_DATA,
+  gluTessCallback(tesselator.get(), GLU_TESS_END_DATA,
                   reinterpret_cast<TessFuncPtr>(TessEndCallback));
-  gluTessCallback(tesselator, GLU_TESS_ERROR_DATA,
+  gluTessCallback(tesselator.get(), GLU_TESS_ERROR_DATA,
                   reinterpret_cast<TessFuncPtr>(ErrorCallback));
-  gluTessCallback(tesselator, GLU_TESS_COMBINE_DATA,
+  gluTessCallback(tesselator.get(), GLU_TESS_COMBINE_DATA,
                   reinterpret_cast<TessFuncPtr>(TessCombineCallback));
-  gluTessProperty(tesselator, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_POSITIVE);
+  gluTessProperty(tesselator.get(), GLU_TESS_WINDING_RULE,
+                  GLU_TESS_WINDING_POSITIVE);
 
-  gluTessBeginPolygon(tesselator, &polygonData);
+  gluTessBeginPolygon(tesselator.get(), &polygonData);
   SVGDumpBeginGroup(&polygonData, "Outline");
 
   outlineWidth *= 0.5f;  // Half the width in, half the width out.
@@ -373,12 +369,12 @@ bool OOPolygonSprite::loadPolygons(const oo::PList& dataArray,
 
     outlineContours.push_back(
         BuildOutlineContour(contour, outlineWidth, false));
-    SubmitVertices(tesselator, &polygonData, outlineContours.back());
+    SubmitVertices(tesselator.get(), &polygonData, outlineContours.back());
     outlineContours.push_back(BuildOutlineContour(contour, outlineWidth, true));
-    SubmitVertices(tesselator, &polygonData, outlineContours.back());
+    SubmitVertices(tesselator.get(), &polygonData, outlineContours.back());
   }
 
-  gluTessEndPolygon(tesselator);
+  gluTessEndPolygon(tesselator.get());
   SVGDumpEndGroup(&polygonData);
 
   if (polygonData.OK) {
@@ -386,9 +382,6 @@ bool OOPolygonSprite::loadPolygons(const oo::PList& dataArray,
     _outlineData.shrink_to_fit();
   }
 
-END:
-  SVGDumpEnd(&polygonData);
-  gluDeleteTess(tesselator);
   return polygonData.OK;
 }
 

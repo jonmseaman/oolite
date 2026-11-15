@@ -593,6 +593,23 @@ static int SystemInfoSetOnPrototypeChain(JSContext* context, JSValueConst obj,
                                          JSAtom prop, JSValueConst value,
                                          JSValueConst receiver, int flags,
                                          bool* outHandled) {
+  // A read-only property: ignored, or a TypeError where the caller asks.
+  auto readOnly = [&]() -> int {
+    /*	QuickJS does not expose whether the calling code is strict, so
+            assignments to read-only properties are ignored except when the
+            caller explicitly asks for an exception (JS_PROP_THROW).
+    */
+    if (flags & JS_PROP_THROW) {
+      JSValue propName = JS_AtomToString(context, prop);
+      const char* name = JS_ToCString(context, propName);
+      JS_ThrowTypeError(context, "'%s' is read-only", name ? name : "?");
+      JS_FreeCString(context, name);
+      JS_FreeValue(context, propName);
+      return -1;
+    }
+    return false;
+  };
+
   JSValue proto = JS_GetPrototype(context, obj);
   *outHandled = true;
 
@@ -607,7 +624,7 @@ static int SystemInfoSetOnPrototypeChain(JSContext* context, JSValueConst obj,
       JS_FreeValue(context, proto);
       if (desc.flags & JS_PROP_GETSET) {
         JS_FreeValue(context, desc.getter);
-        if (JS_IsUndefined(desc.setter)) goto readOnly;
+        if (JS_IsUndefined(desc.setter)) return readOnly();
         JSValue result = JS_Call(context, desc.setter, receiver, 1, &value);
         JS_FreeValue(context, desc.setter);
         if (JS_IsException(result)) return -1;
@@ -615,7 +632,7 @@ static int SystemInfoSetOnPrototypeChain(JSContext* context, JSValueConst obj,
         return true;
       }
       JS_FreeValue(context, desc.value);
-      if (!(desc.flags & JS_PROP_WRITABLE)) goto readOnly;
+      if (!(desc.flags & JS_PROP_WRITABLE)) return readOnly();
       *outHandled = false;
       return true;
     }
@@ -629,21 +646,6 @@ static int SystemInfoSetOnPrototypeChain(JSContext* context, JSValueConst obj,
   JS_FreeValue(context, proto);
   *outHandled = false;
   return true;
-
-readOnly:
-  /*	QuickJS does not expose whether the calling code is strict, so
-          assignments to read-only properties are ignored except when the
-          caller explicitly asks for an exception (JS_PROP_THROW).
-  */
-  if (flags & JS_PROP_THROW) {
-    JSValue propName = JS_AtomToString(context, prop);
-    const char* name = JS_ToCString(context, propName);
-    JS_ThrowTypeError(context, "'%s' is read-only", name ? name : "?");
-    JS_FreeCString(context, name);
-    JS_FreeValue(context, propName);
-    return -1;
-  }
-  return false;
 }
 
 static int SystemInfoExoticGetOwnProperty(JSContext* context,
