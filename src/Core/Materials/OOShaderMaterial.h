@@ -86,7 +86,7 @@ class OOShaderMaterial : public OOBasicMaterial {
      1; }
 
           will be transformed into:
-                  #define OO_ENGINE_LEVEL 1
+                  inline constexpr int OO_ENGINE_LEVEL = 1;
 
           Null where the initialiser failed (it answered nil).
   */
