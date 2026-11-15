@@ -16,8 +16,9 @@ oolite_includes = [oolite_third_party_includes]
 oolite_override_options = []
 oolite_link_args = []
 # The game's own warnings on top of meson's warning level. C-style casts are errors in review
-# (clang-tidy google-readability-casting is fatal); the compiler reports them too.
-oolite_cpp_args = ['-Wold-style-cast']
+# (clang-tidy google-readability-casting is fatal); the compiler reports them too. -Wunused and
+# -Wsign-compare report nothing today; keep it that way.
+oolite_cpp_args = ['-Wold-style-cast', '-Wunused', '-Wsign-compare']
 oolite_dependencies = [
     dependency('sdl3', include_type: 'system'),
     dependency('libpng', include_type: 'system'),
