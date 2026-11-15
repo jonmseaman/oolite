@@ -47,7 +47,7 @@ SOFTWARE.
 #include "oofnd/Object.hpp"
 #include "oofnd/objc/OOObject.h"
 
-#define OOAL_STREAM_CHUNK_SIZE (sizeof(char) * 409600)
+inline constexpr auto OOAL_STREAM_CHUNK_SIZE = (sizeof(char) * 409600);
 
 class OOALSoundDecoder : public oo::Object {
  public:
