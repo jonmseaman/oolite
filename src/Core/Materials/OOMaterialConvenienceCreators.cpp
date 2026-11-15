@@ -311,9 +311,8 @@ std::shared_ptr<OOMaterial> OOMaterial::defaultShaderMaterialWithName(
 std::shared_ptr<OOMaterial> OOMaterial::materialWithName(
     const std::optional<std::string>& name,
     const std::optional<std::string>& cacheKey, const oo::PList& configuration,
-    const oo::PList& macros, Entity* object,
-    bool smooth)  // Internally, this flg really means "force use of shaders".
-{
+    const oo::PList& macros, Entity* object, bool smooth) {
+  // Internally, this flg really means "force use of shaders".
   std::shared_ptr<OOMaterial> result;
 
 #if OO_SHADERS

@@ -965,8 +965,8 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
     }
 
     case kCrew:
-      if (ship->getCrew().has_value())  // unpiloted: nil, as before
-      {
+      if (ship->getCrew().has_value()) {
+        // unpiloted: nil, as before
         const std::vector<oo::PList> entries = ship->crewForScripting();
         result = oo::PList(oo::PList::Array(entries.begin(), entries.end()));
       }
@@ -1505,9 +1505,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       if (EXPECT_NOT(ship->getIsPlayer())) goto playerReadOnly;
 
       sValue = OOStringFromJSValue(context, value);
-      if (!sValue.has_value() ||
-          sValue->empty())  // nil and "" alike, as -length gave 0 for both
-      {
+      if (!sValue.has_value() || sValue->empty()) {
+        // nil and "" alike, as -length gave 0 for both
         if (ship->isBeacon()) {
           if (UNIVERSE != nullptr)
             UNIVERSE->clearBeacon(entity);  // the C++ entity
@@ -1520,8 +1519,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       } else {
         if (ship->isBeacon()) {
           ship->setBeaconCode(sValue);
-        } else  // Universe needs to update beacon lists in this case only
-        {
+        } else {
+          // Universe needs to update beacon lists in this case only
           ship->setBeaconCode(sValue);
           if (UNIVERSE != nullptr)
             UNIVERSE->setNextBeacon(entity);  // the C++ entity
@@ -2244,9 +2243,8 @@ static JSValue ShipExitAI(OOJS_NATIVE_ARGS) {
   }
   thisAI = ship->getAI();
 
-  if (thisAI != nullptr &&
-      thisAI->hasSuspendedStateMachines())  // no AI: none, as a message to nil
-  {
+  if (thisAI != nullptr && thisAI->hasSuspendedStateMachines()) {
+    // no AI: none, as a message to nil
     if (argc > 0) {
       message = OOStringFromJSValue(context, OOJS_ARGV[0]);
     }
@@ -2445,11 +2443,9 @@ static JSValue ShipAddCargoEntity(OOJS_NATIVE_ARGS) {
                            "scoopable entity.");
     return OOJSNativeFailure(context);
   }
-  if (target == nullptr ||
-      target->getScanClass() !=
-          OOScanClass::kCargo)  // none: OOScanClass::kNoDraw, as a message to
-                                // nil
-  {
+  if (target == nullptr || target->getScanClass() != OOScanClass::kCargo) {
+    // none: OOScanClass::kNoDraw, as a message to
+    // nil
     OOJSReportWarningForCaller(context, "PlayerShip", "addCargoEntity",
                                "Scoopable entity not cargo.");
     return OOJSNativeFailure(context);
@@ -2709,8 +2705,8 @@ static JSValue ShipRunLegacyScriptActions(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  if (target != nullptr)  // Not stale reference
-  {
+  if (target != nullptr) {
+    // Not stale reference
     if (player != nullptr) player->setScriptTarget(thisEnt);
     if (player != nullptr)
       player->runUnsanitizedScriptActions(
@@ -2749,8 +2745,8 @@ static JSValue ShipCommsMessage(OOJS_NATIVE_ARGS) {
 
   if (argc < 2) {
     ship->commsMessage(*message, true);  // generic broadcast
-  } else if (target != nullptr)          // Not stale reference
-  {
+  } else if (target != nullptr) {
+    // Not stale reference
     ship->sendMessage(*message, target, true);  // ship-to-ship narrowcast
   }
   OOJS_RETURN_VOID;
@@ -2960,8 +2956,8 @@ static JSValue ShipRemoveEquipment(OOJS_NATIVE_ARGS) {
                 -1);  // thisEnt is not null here
         } else
           OK = false;
-      } else  // EQ_CARGO_BAY
-      {
+      } else {
+        // EQ_CARGO_BAY
         // player cargo bay removal handled in script
         if (ship->getIsPlayer() ||
             ship->extraCargo() <= ship->availableCargoSpace()) {
@@ -3580,9 +3576,8 @@ JSValue RemoveOrExplodeShip(OOJS_NATIVE_ARGS, bool explode) {
   }
 
   if (thisEnt ==
-      oo::ToShip((UNIVERSE != nullptr ? UNIVERSE->station()
-                                      : nullptr)))  // the C++ station
-  {
+      oo::ToShip((UNIVERSE != nullptr ? UNIVERSE->station() : nullptr))) {
+    // the C++ station
     // Allow exploding of main station (e.g. nova mission)
     if (UNIVERSE != nullptr) UNIVERSE->unMagicMainStation();
   }
@@ -3841,9 +3836,8 @@ static JSValue ShipPatrolReportIn(OOJS_NATIVE_ARGS) {
                            std::nullopt, "target");
     return OOJSNativeFailure(context);
   }
-  if (target != nullptr &&
-      target->getIsStation())  // none: not a station, as a message to nil
-  {
+  if (target != nullptr && target->getIsStation()) {
+    // none: not a station, as a message to nil
     StationEntity* station = oo::ToStation(target);  // the C++ ship
     station->acceptPatrolReportFrom(thisEnt);
   }
@@ -3894,9 +3888,8 @@ static JSValue ShipEnterWormhole(OOJS_NATIVE_ARGS) {
                    !OOJSEntityGetEntity(context, OOJS_ARGV[0], &hole))))) {
     ship->enterPlayerWormhole();
   } else {
-    if (hole == nullptr ||
-        !hole->getIsWormhole())  // none: not a wormhole, as a message to nil
-    {
+    if (hole == nullptr || !hole->getIsWormhole()) {
+      // none: not a wormhole, as a message to nil
       OOJSReportBadArguments(context, "Ship", "enterWormhole", 1U, OOJS_ARGV,
                              std::nullopt, "[wormhole]");
       return OOJSNativeFailure(context);

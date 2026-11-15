@@ -431,8 +431,8 @@ bool OOPListSchemaVerifier::delegateVerifierWithPropertyList(
     const oo::PList& localSchema) {
   bool result;
 
-  if (_delegate != nullptr)  // as above
-  {
+  if (_delegate != nullptr) {
+    // as above
     try {
       result = _delegate->verifierFailedForProperty(
           this, rootPList, name, subPList, error, localSchema);

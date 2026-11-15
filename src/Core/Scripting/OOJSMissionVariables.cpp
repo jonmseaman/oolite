@@ -141,10 +141,9 @@ static JSValue ValueForMissionVariable(JSContext* context,
 
   if (mvar.isNull()) return JS_UNDEFINED;
 
-  if (const std::string* string =
-          mvar.getIf<std::string>())  // Currently there should only be strings,
-                                      // but we may want to change this.
-  {
+  if (const std::string* string = mvar.getIf<std::string>()) {
+    // Currently there should only be strings,
+    // but we may want to change this.
     if (OOIsNumberLiteral(*string, true)) {
       return JS_NewNumber(
           context, oo::str::doubleValue(*string));  // as NSString's doubleValue

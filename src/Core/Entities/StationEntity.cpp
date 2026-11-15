@@ -101,10 +101,9 @@ oo::PList OOMakeDockingInstructions(
 // NPC launchers. Several are called by name for a station's part.
 
 // Exposed to AI
-oo::PList StationEntity::launchIndependentShip(
-    const std::string& role)  // called by name: the ship launched, as an
-                              // Object node (null: none)
-{
+oo::PList StationEntity::launchIndependentShip(const std::string& role) {
+  // called by name: the ship launched, as an
+  // Object node (null: none)
   ShipEntity* self = this;
   if (!hasLaunchDock()) {
     OO_LOG("station.launchShip.impossible",
@@ -198,8 +197,8 @@ oo::PList StationEntity::launchIndependentShip(
 }
 
 // Exposed to AI
-oo::PList StationEntity::launchPolice()  // called by name
-{
+oo::PList StationEntity::launchPolice() {
+  // called by name
   std::vector<oo::EntityHold> result;  // the police ships' objects, held
   if (!hasLaunchDock()) {
     OO_LOG("station.launchShip.impossible",
@@ -737,9 +736,8 @@ oo::PList StationEntity::launchPolice()  // called by name
 }
 
 // Exposed to AI
-void StationEntity::launchShipWithRole(
-    const std::string& role)  // called by name
-{
+void StationEntity::launchShipWithRole(const std::string& role) {
+  // called by name
   if (!hasLaunchDock()) {
     OO_LOG("station.launchShip.impossible",
            "Cancelled launch for a ship with role {}, as the {} has no launch "
@@ -1072,8 +1070,8 @@ bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
 
   double unitime = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
 
-  if (getHasNPCTraffic())  // removed the 'isRotatingStation' restriction.
-  {
+  if (getHasNPCTraffic()) {
+    // removed the 'isRotatingStation' restriction.
     docked_shuttles = ranrot_rand() & 3;    // 0..3;
     shuttle_launch_interval = 15.0 * 60.0;  // every 15 minutes
     last_shuttle_launch_time =
@@ -1525,9 +1523,8 @@ oo::PList StationEntity::dockingInstructionsForShip(::ShipEntity* ship) {
   }
 
   if ((ship != nullptr ? ship->getIsPlayer() : false) &&
-      (ship != nullptr ? ship->legalStatus() : int{}) >
-          50)  // note: non-player fugitives dock as normal
-  {
+      (ship != nullptr ? ship->legalStatus() : int{}) > 50) {
+    // note: non-player fugitives dock as normal
     // refuse docking to the fugitive player
     return OOMakeDockingInstructions(
         this, (ship != nullptr ? ship->getPosition() : HPVector{}), 0, 100,
@@ -2101,9 +2098,8 @@ void StationEntity::addShipToStationCount(::ShipEntity* ship) {
            (ship != nullptr ? ship->hasPrimaryRole("defense_ship") : false)) {
     if (0 < defenders_launched) defenders_launched--;
   } else if ((ship != nullptr ? ship->hasPrimaryRole("scavenger") : false) ||
-             (ship != nullptr ? ship->hasPrimaryRole("miner")
-                              : false))  // treat miners and scavengers alike!
-  {
+             (ship != nullptr ? ship->hasPrimaryRole("miner") : false)) {
+    // treat miners and scavengers alike!
     if (0 < scavengers_launched) scavengers_launched--;
   }
 }
@@ -2157,8 +2153,8 @@ void StationEntity::takeEnergyDamage(double amount, Entity* entPart,
     if (hasNewAI() || isEnergyMine) {
       unsigned b = isEnergyMine ? 96 : 64;
       if ((oo::ToShip(other) != nullptr ? oo::ToShip(other)->getBounty() : 0) >=
-          b)  // already a hardened criminal?
-      {
+          b) {
+        // already a hardened criminal?
         b *= 1.5;  // bigger bounty!
       }
       if (oo::ToShip(other) != nullptr)
@@ -2169,8 +2165,8 @@ void StationEntity::takeEnergyDamage(double amount, Entity* entPart,
       launchPolice();
     }
 
-    if (isEnergyMine)  // don't blow up!
-    {
+    if (isEnergyMine) {
+      // don't blow up!
       increaseAlertLevel();
       respondToAttackFrom(entPart, other);
       return;
@@ -2284,8 +2280,8 @@ void StationEntity::becomeExplosion() {
     if (player != nullptr) player->warnAboutHostiles();  // sound a klaxon
   }
 
-  if (scanClass == OOScanClass::kRock)  // ie we're a rock hermit or similar
-  {
+  if (scanClass == OOScanClass::kRock) {
+    // ie we're a rock hermit or similar
     // set the role so that we break up into rocks!
     setPrimaryRole("asteroid");
     being_mined = true;
@@ -2420,9 +2416,8 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
   //  apply to all stations?
   if (!result &&
       this == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr) &&
-      (other != nullptr ? other->getBounty() : 0) >
-          50)  // do not grant docking clearance to fugitives
-  {
+      (other != nullptr ? other->getBounty() : 0) > 50) {
+    // do not grant docking clearance to fugitives
     sendExpandedMessage("[station-docking-clearance-H-clearance-refused]",
                         other);
     if ((other != nullptr ? other->getIsPlayer() : false))
@@ -2431,11 +2426,8 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
     result = "DOCKING_CLEARANCE_DENIED_SHIP_FUGITIVE";
   }
 
-  if (!result &&
-      (other != nullptr
-           ? other->hasHostileTarget()
-           : false))  // do not grant docking clearance to hostile ships.
-  {
+  if (!result && (other != nullptr ? other->hasHostileTarget() : false)) {
+    // do not grant docking clearance to hostile ships.
     sendExpandedMessage("[station-docking-clearance-denied]", other);
     if ((other != nullptr ? other->getIsPlayer() : false))
       if (player != nullptr)
@@ -2443,9 +2435,9 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
     result = "DOCKING_CLEARANCE_DENIED_SHIP_HOSTILE";
   }
 
-  if (!hasEligibleDock())  // make sure at least one dock could plausibly accept
-                           // the player
-  {
+  if (!hasEligibleDock()) {
+    // make sure at least one dock could plausibly accept
+    // the player
     if ((other != nullptr ? other->getIsPlayer() : false)) {
       if (player != nullptr)
         player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
@@ -2453,8 +2445,8 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
     sendExpandedMessage("[station-docking-clearance-denied-no-docks]", other);
 
     result = "DOCKING_CLEARANCE_DENIED_NO_DOCKS";
-  } else if (!hasClearDock())  // skip check if at least one dock clear
-  {
+  } else if (!hasClearDock()) {
+    // skip check if at least one dock clear
     // Put ship in queue if we've got incoming or outgoing traffic or
     // if the player is waiting for manual clearance and we are not
     // the player

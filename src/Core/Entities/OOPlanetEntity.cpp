@@ -696,9 +696,8 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
       // altitude is kept to a minimum positive value to avoid sudden black
       // skies
       if (alt <= 0.0) alt = 1e-4;
-      if (EXPECT_NOT(alt > 0 &&
-                     alt <= 1.0))  // ensure aleph is clamped between 0 and 1
-      {
+      if (EXPECT_NOT(alt > 0 && alt <= 1.0)) {
+        // ensure aleph is clamped between 0 and 1
         double aleph = 1.0 - alt;
         double aleph2 = aleph * aleph;
 
@@ -774,9 +773,8 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
           _cloudsShaderDrawable->setRadius(collision_radius);
       }
       if ((PLAYER != nullptr ? PLAYER->findNearestPlanet()
-                             : static_cast<OOPlanetEntity*>(nullptr)) ==
-          this)  // ensure no problems in case of more than one planets
-      {
+                             : static_cast<OOPlanetEntity*>(nullptr)) == this) {
+        // ensure no problems in case of more than one planets
         if (UNIVERSE != nullptr)
           UNIVERSE->setAirResistanceFactor(
               0.0f);  // out of atmosphere - no air friction
@@ -925,9 +923,8 @@ bool OOPlanetEntity::planetHasStation() {
 
   if (station &&
       HPdistance((station != nullptr ? station->getPosition() : HPVector{}),
-                 position) <
-          4 * collision_radius)  // there is a station in range.
-  {
+                 position) < 4 * collision_radius) {
+    // there is a station in range.
     return true;
   }
   return false;
@@ -1119,9 +1116,8 @@ void OOPlanetEntity::setTextureFileName(
     if (_normSpecMapName.has_value()) {
       normalMap = OOTexture::textureWithConfiguration(
           CubeMapTextureSpec(*_normSpecMapName));
-      if (normalMap !=
-          nullptr)  // OOTexture will have logged a file-not-found warning.
-      {
+      if (normalMap != nullptr) {
+        // OOTexture will have logged a file-not-found warning.
         if (shadersOn) {
           normalMap->ensureFinishedLoading();  // only know if it is a cube map
                                                // if it's loaded

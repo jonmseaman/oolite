@@ -219,10 +219,9 @@ std::vector<oo::EntityHold> OOShipGroup::memberArrayExcludingLeader() {
 
 bool OOShipGroup::containsShip(::ShipEntity* ship) {
   for (::ShipEntity* containedShip : OOShipGroupMembers(this)) {
-    if (ship != nullptr &&
-        ship == containedShip)  // what -isEqual: of their objects answered
-                                // (identity)
-    {
+    if (ship != nullptr && ship == containedShip) {
+      // what -isEqual: of their objects answered
+      // (identity)
       return true;
     }
   }
@@ -263,10 +262,9 @@ bool OOShipGroup::removeShip(::ShipEntity* ship) {
   OOShipGroupCursor shipEnum(this);
   shipEnum.setPerformCleanup(false);
   while ((containedShip = shipEnum.next())) {
-    if (ship != nullptr &&
-        ship == containedShip)  // what -isEqual: of their objects answered
-                                // (identity)
-    {
+    if (ship != nullptr && ship == containedShip) {
+      // what -isEqual: of their objects answered
+      // (identity)
       index = shipEnum.index() - 1;
       _members[index] = _members[--_count];
       foundIt = true;

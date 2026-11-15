@@ -240,17 +240,17 @@ void OOSunEntity::update(OOTimeDelta delta_t) {
   rotMatrix = OOMatrixForBillboard(
       position, (player != nullptr ? player->viewpointPosition() : HPVector{}));
 
-  if (throw_sparks && _novaExpansionRate > 0.0f)  // going NOVA!
-  {
-    if (_novaCountdown >= 0.0)  // countdown
-    {
+  if (throw_sparks && _novaExpansionRate > 0.0f) {
+    // going NOVA!
+    if (_novaCountdown >= 0.0) {
+      // countdown
       _novaCountdown -= delta_t;
       if (corona_speed_factor < 5.0) {
         corona_speed_factor += 0.75 * delta_t;
       }
     } else {
-      if (_novaExpansionTimer <= 60.0)  // expand for a minute
-      {
+      if (_novaExpansionTimer <= 60.0) {
+        // expand for a minute
         double sky_bri = 1.0 - 1.5 * _novaExpansionTimer;
         if (sky_bri < 0) {
           if (UNIVERSE != nullptr)

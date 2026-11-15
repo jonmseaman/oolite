@@ -471,8 +471,8 @@ static void SplitGeometryX(GeometryData* data, GeometryData* dPlus,
       AddTriangle(dMinus, data->triangles[i]);
       done_tri = true;
     }
-    if (!done_tri)  // triangle must cross x == 0.0
-    {
+    if (!done_tri) {
+      // triangle must cross x == 0.0
       OOScalar i01, i12, i20;
       if (v0.x == v1.x)
         i01 = -1.0f;
@@ -584,8 +584,8 @@ static void SplitGeometryY(GeometryData* data, GeometryData* dPlus,
       AddTriangle(dMinus, data->triangles[i]);
       done_tri = true;
     }
-    if (!done_tri)  // triangle must cross y == 0.0
-    {
+    if (!done_tri) {
+      // triangle must cross y == 0.0
       OOScalar i01, i12, i20;
 
       if (v0.y == v1.y)
@@ -697,8 +697,8 @@ static void SplitGeometryZ(GeometryData* data, GeometryData* dPlus,
       AddTriangle(dMinus, data->triangles[i]);
       done_tri = true;
     }
-    if (!done_tri)  // triangle must cross z == 0.0
-    {
+    if (!done_tri) {
+      // triangle must cross z == 0.0
       OOScalar i01, i12, i20;
 
       if (v0.z == v1.z)

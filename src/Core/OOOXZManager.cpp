@@ -452,9 +452,8 @@ std::optional<std::string> OOOXZManager::humanSize(std::size_t bytes) {
     return OO_DESC("oolite-oxzmanager-missing-field");
   } else if (bytes < 1024) {
     return "<1 kB";
-  } else if (bytes < static_cast<std::size_t>(1024) *
-                         1024)  // the product in std::size_t
-  {
+  } else if (bytes < static_cast<std::size_t>(1024) * 1024) {
+    // the product in std::size_t
     return std::format("{} kB", static_cast<size_t>(bytes >> 10));
   } else {
     return std::format("{:.2f} MB", (static_cast<float>(bytes >> 10)) / 1024);
@@ -1687,8 +1686,8 @@ void OOOXZManager::processSelection() {
       }
       return;
     }
-  } else if (selection == OXZ_GUI_ROW_UPDATE)  // also == _CANCEL
-  {
+  } else if (selection == OXZ_GUI_ROW_UPDATE) {
+    // also == _CANCEL
     if (_interfaceState == OXZInterfaceState::kRemoving) {
       _interfaceState = OXZInterfaceState::kPickRemove;
       _downloadStatus = OXZDownloadStatus::kNone;
@@ -1714,16 +1713,15 @@ void OOOXZManager::processSelection() {
   } else if (selection == OXZ_GUI_ROW_INSTALL) {
     _interfaceState = OXZInterfaceState::kPickInstall;
   } else if (selection == OXZ_GUI_ROW_INSTALLED) {
-    if (_interfaceState ==
-        OXZInterfaceState::kDependencies)  // also == _PROCEED_ALL
-    {
+    if (_interfaceState == OXZInterfaceState::kDependencies) {
+      // also == _PROCEED_ALL
       _downloadAllDependencies = true;
       installOXZ(_item);
     } else {
       _interfaceState = OXZInterfaceState::kPickInstalled;
     }
-  } else if (selection == OXZ_GUI_ROW_REMOVE)  // also == _PROCEED
-  {
+  } else if (selection == OXZ_GUI_ROW_REMOVE) {
+    // also == _PROCEED
     if (_interfaceState == OXZInterfaceState::kDependencies) {
       installOXZ(_item);
     } else if (_interfaceState == OXZInterfaceState::kNoData) {

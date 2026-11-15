@@ -106,10 +106,9 @@ void OOFlasherEntity::update(OOTimeDelta delta_t) {
     float wave = sinf(_frequency * M_PI * (_time + _phase));
     std::size_t count = _colors.size();
     if (count > 1 && wave < 0) {
-      if (!_justSwitched &&
-          wave > _wave)  // don't test for wave >= _wave - could give wrong
-                         // results with very low frequencies
-      {
+      if (!_justSwitched && wave > _wave) {
+        // don't test for wave >= _wave - could give wrong
+        // results with very low frequencies
         _justSwitched = true;
         ++_activeColor;
         _activeColor %= count;  //_activeColor = ++_activeColor % count; is

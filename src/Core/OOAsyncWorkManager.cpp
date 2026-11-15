@@ -54,8 +54,8 @@ namespace {
 */
 class TaskQueue {
  public:
-  bool enqueue(OOAsyncWorkTask* task)  // false if task is null
-  {
+  bool enqueue(OOAsyncWorkTask* task) {
+    // false if task is null
     if (task == nullptr) return false;
     {
       std::lock_guard<std::mutex> lock(_mutex);
@@ -65,9 +65,8 @@ class TaskQueue {
     return true;
   }
 
-  std::shared_ptr<OOAsyncWorkTask>
-  dequeue()  // blocks until the queue is non-empty
-  {
+  std::shared_ptr<OOAsyncWorkTask> dequeue() {
+    // blocks until the queue is non-empty
     std::unique_lock<std::mutex> lock(_mutex);
     while (_tasks.empty()) _available.wait(lock);
     std::shared_ptr<OOAsyncWorkTask> task = std::move(_tasks.front());
@@ -85,8 +84,8 @@ class TaskQueue {
     return task;
   }
 
-  std::shared_ptr<OOAsyncWorkTask> tryDequeue()  // null if empty
-  {
+  std::shared_ptr<OOAsyncWorkTask> tryDequeue() {
+    // null if empty
     std::lock_guard<std::mutex> lock(_mutex);
     if (_tasks.empty()) return {};
     std::shared_ptr<OOAsyncWorkTask> task = std::move(_tasks.front());

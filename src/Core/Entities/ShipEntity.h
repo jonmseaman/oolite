@@ -214,8 +214,8 @@ struct ShipEntityTestAccess;  // the unit tests' reader of the private members
         Every data member is zero-initialised.
 */
 class ShipEntity : public OOEntityWithDrawable,
-                   public cxx::OOSubEntityInterface  // <OOSubEntity>
-{
+                   public cxx::OOSubEntityInterface {
+  // <OOSubEntity>
  public:
   /*	-initWithKey:definition:'s body between [super init] and the set-up
      from the dictionary. initShipSetUp() runs it, and then the set-up. Run

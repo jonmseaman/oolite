@@ -366,8 +366,8 @@ static JSValue MissionMarkSystem(OOJS_NATIVE_ARGS) {
           player->addMissionDestinationMarker(
               (player != nullptr ? player->defaultMarker(dest) : oo::PList()));
       }
-    } else  // must be object, from above
-    {
+    } else {
+      // must be object, from above
       oo::PList marker =
           MarkerFromJSObject(context, OOJS_ARGV[i], "markSystem");
       OOSystemID system = marker.get<int>("system", -1);
@@ -415,8 +415,8 @@ static JSValue MissionUnmarkSystem(OOJS_NATIVE_ARGS) {
           result = false;
         }
       }
-    } else  // must be object, from above
-    {
+    } else {
+      // must be object, from above
       oo::PList marker =
           MarkerFromJSObject(context, OOJS_ARGV[i], "unmarkSystem");
       OOSystemID system = marker.get<int>("system", -1);

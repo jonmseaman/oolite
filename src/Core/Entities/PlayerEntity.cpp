@@ -549,8 +549,8 @@ GLfloat PlayerEntity::baseMass() {
   if (sBaseMass <= 0.0) {
     // First call with initialised mass (in [UNIVERSE setUpInitialUniverse]) is
     // always to the cobra 3, even when starting with a savegame.
-    if (getMass() > 0.0)  // bootstrap the base mass.
-    {
+    if (getMass() > 0.0) {
+      // bootstrap the base mass.
       OO_LOG("fuelPrices", "Setting Cobra3 base mass to: {:.2f} ", getMass());
       sBaseMass = getMass();
     } else {
@@ -582,8 +582,8 @@ void PlayerEntity::unloadAllCargoPodsForType(const std::string& type,
         // transfer
         manifest->addQuantity(
             (cargoItem != nullptr ? cargoItem->commodityAmount() : 0), type);
-      } else  // undefined
-      {
+      } else {
+        // undefined
         OO_LOG("player.badCargoPod",
                "Cargo pod {} has bad commodity type, rejecting.",
                oo::EntityDescription(cargoItem));
@@ -621,8 +621,8 @@ void PlayerEntity::unloadCargoPodsForType(const std::string& type,
             cargoItem->setCommodity(*co_type, (amount - cargoToGo));
           cargoToGo = 0;
         }
-      } else  // undefined
-      {
+      } else {
+        // undefined
         OO_LOG("player.badCargoPod",
                "Cargo pod {} has bad commodity type (COMMODITY_UNDEFINED), "
                "rejecting.",
@@ -1649,9 +1649,8 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
     target_chart_focus = chart_focus_coordinates;
 
     found_system_id = dict.get<int>("found_system_id", -1);
-  } else
-  // compatibility for loading 1.80 savegames
-  {
+  } else {
+    // compatibility for loading 1.80 savegames
     galaxy_number = dict.get<std::size_t>("galaxy_number");
 
     if (UNIVERSE != nullptr) UNIVERSE->setGalaxyTo(galaxy_number, true);
@@ -2226,8 +2225,8 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
       }
       missiles = missileCount;
     }
-  } else  // no missile_roles
-  {
+  } else {
+    // no missile_roles
     for (std::size_t i = 0; i < missiles; i++) {
       missile_list[i] =
           OOEquipmentType::equipmentTypeWithIdentifier("EQ_MISSILE").get();
@@ -2352,10 +2351,9 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
     if (gc != nullptr) gc->stopAnimationTimer();
   }  // start of critical section
 
-  if (EXPECT_NOT(!OOJavaScriptEngine::sharedEngine()->reset() &&
-                 stopOnError))  // always (try to) reset the engine, then find
-                                // out if we need to stop.
-  {
+  if (EXPECT_NOT(!OOJavaScriptEngine::sharedEngine()->reset() && stopOnError)) {
+    // always (try to) reset the engine, then find
+    // out if we need to stop.
     /*
             Occasionally there's a racing condition between timers being deleted
             and the js engine needing to be reset: the engine reset stops the
@@ -2964,10 +2962,8 @@ GLfloat PlayerEntity::lookingAtSunWithThresholdAngleCos(
     cause extreme flickering of the glare at certain ranges to the
     sun. The real test is just that it's not still 999 - CIM
    */
-  if (thresholdAngleCos <= measuredCosAbs &&
-      measuredCosAbs <=
-          1.1f)  // angle from viewpoint to sun <= desired threshold
-  {
+  if (thresholdAngleCos <= measuredCosAbs && measuredCosAbs <= 1.1f) {
+    // angle from viewpoint to sun <= desired threshold
     sunBrightness =
         (measuredCos - thresholdAngleCos) / (1.0f - thresholdAngleCos);
     //		/* glare.debug */ raw brightness = %f,sunBrightness);
@@ -2985,8 +2981,8 @@ GLfloat PlayerEntity::insideAtmosphereFraction() {
   GLfloat insideAtmoFrac = 0.0f;
 
   if ((UNIVERSE != nullptr ? UNIVERSE->getAirResistanceFactor() : 0.0f) >
-      0.01)  // player is inside planetary atmosphere
-  {
+      0.01) {
+    // player is inside planetary atmosphere
     insideAtmoFrac = 1.0f - (dialAltitude() *
                              static_cast<GLfloat>(PLAYER_DIAL_MAX_ALTITUDE) /
                              (10.0f * static_cast<GLfloat>(ATMOSPHERE_DEPTH)));
@@ -3104,8 +3100,8 @@ void PlayerEntity::doBookkeeping(double delta_t) {
   GLfloat air_friction = 0.0f;
   air_friction =
       0.5f * (UNIVERSE != nullptr ? UNIVERSE->getAirResistanceFactor() : 0.0f);
-  if (air_friction < 0.005f)  // aRF < 0.01
-  {
+  if (air_friction < 0.005f) {
+    // aRF < 0.01
     // stops mysteriously overheating and exploding in the middle of empty space
     air_friction = 0;
   }
@@ -3346,9 +3342,8 @@ void PlayerEntity::doBookkeeping(double delta_t) {
      * This code branch doesn't seem to be used any more - see ~line 6000
      * Should we remove it? - CIM
      */
-    if (EXPECT_NOT(target_system_id !=
-                   system_id))  // overridden: we're going to a nearby system!
-    {
+    if (EXPECT_NOT(target_system_id != system_id)) {
+      // overridden: we're going to a nearby system!
       system_id = target_system_id;
       info_system_id = target_system_id;
       if (UNIVERSE != nullptr) UNIVERSE->setSystemTo(system_id);
@@ -3381,9 +3376,8 @@ void PlayerEntity::doBookkeeping(double delta_t) {
         (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(_dockTarget)
                              : nullptr);  // main station in the original
                                           // system, unless overridden.
-    if (dockTargetEntity != nullptr &&
-        dockTargetEntity->getIsStation())  // fails if _dockTarget is NO_TARGET
-    {
+    if (dockTargetEntity != nullptr && dockTargetEntity->getIsStation()) {
+      // fails if _dockTarget is NO_TARGET
       if (doppelganger != nullptr)
         doppelganger->becomeExplosion();  // blow up the doppelganger
       // restore player ship
@@ -3401,8 +3395,8 @@ void PlayerEntity::doBookkeeping(double delta_t) {
       if (UNIVERSE != nullptr)
         UNIVERSE->setBlockJSPlayerShipProps(false);  // re-enable player.ship!
       enterDock(oo::ToStation(dockTargetEntity));
-    } else  // no dock target? dock target is not a station? game over!
-    {
+    } else {
+      // no dock target? dock target is not a station? game over!
       setStatus(OOEntityStatus::kDead);
       //[self playGameOver];	// no death explosion sounds for player pods
       // no shipDied events for player pods, either
@@ -3603,8 +3597,8 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
   bool needHyperspeedNearest = true;
   double hsnDistance = 0;
 #endif
-  for (i = 0; i < ent_count; i++)  // scanner lollypops
-  {
+  for (i = 0; i < ent_count; i++) {
+    // scanner lollypops
     scannedEntity = my_entities[i];
 
 #if OO_VARIABLE_TORUS_SPEED
@@ -3826,9 +3820,8 @@ void PlayerEntity::updateClocks(OOTimeDelta delta_t) {
   script_time += delta_t;
   unsigned prev_day = floor(ship_clock / 86400);
   ship_clock += delta_t;
-  if (ship_clock_adjust >
-      0.0)  // adjust for coming out of warp (add LY * LY hrs)
-  {
+  if (ship_clock_adjust > 0.0) {
+    // adjust for coming out of warp (add LY * LY hrs)
     double fine_adjust = delta_t * 7200.0;
     if (ship_clock_adjust > 86400)       // more than a day
       fine_adjust = delta_t * 115200.0;  // 16 times faster
@@ -4050,8 +4043,8 @@ void PlayerEntity::resetAutopilotAI() {
   ::AI* myAI = getAI();
   // JSAI: will need changing if oolite-dockingAI.js written
   if ((myAI != nullptr ? myAI->name() : std::optional<std::string>()) !=
-      std::string(PLAYER_DOCKING_AI_NAME))  // (no AI never matched)
-  {
+      std::string(PLAYER_DOCKING_AI_NAME)) {
+    // (no AI never matched)
     setAITo(std::string(PLAYER_DOCKING_AI_NAME));
   }
   if (myAI != nullptr) myAI->clearAllData();
@@ -4343,8 +4336,8 @@ void PlayerEntity::gameOverFadeToBW() {
 // Target is valid if it's within Scanner range, AND
 // Target is a ship AND is not cloaked or jamming, OR
 // Target is a wormhole AND player has the Wormhole Scanner
-bool PlayerEntity::isValidTarget(Entity* target)  // the C++ entity
-{
+bool PlayerEntity::isValidTarget(Entity* target) {
+  // the C++ entity
   // Just in case we got called with a bad target.
   if (!target) return false;
 
@@ -4358,8 +4351,8 @@ bool PlayerEntity::isValidTarget(Entity* target)  // the C++ entity
     if ((targetShip != nullptr ? targetShip->isCloaked()
                                : false) ||  // checks for cloaked ships
         ((targetShip != nullptr ? targetShip->isJammingScanning() : false) &&
-         !hasMilitaryScannerFilter()))  // checks for activated jammer
-    {
+         !hasMilitaryScannerFilter())) {
+      // checks for activated jammer
       return false;
     }
     OOEntityStatus tstatus =
@@ -5222,8 +5215,8 @@ void PlayerEntity::addRoleForAggression(::ShipEntity* victim) {
   times++;
   roleWeightFlags.insert_or_assign(
       *role, oo::PList::signedInteger(static_cast<std::int64_t>(times)));
-  if ((times & (times - 1)) == 0)  // is power of 2
-  {
+  if ((times & (times - 1)) == 0) {
+    // is power of 2
     addRoleToPlayer(*role);
   }
 }
@@ -5234,8 +5227,8 @@ void PlayerEntity::addRoleForMining() {
   times++;
   roleWeightFlags.insert_or_assign(
       role, oo::PList::signedInteger(static_cast<std::int64_t>(times)));
-  if ((times & (times - 1)) == 0)  // is power of 2
-  {
+  if ((times & (times - 1)) == 0) {
+    // is power of 2
     addRoleToPlayer(role);
   }
 }
@@ -5332,10 +5325,8 @@ void PlayerEntity::validateCompassTarget() {
   Entity* the_target = primaryTarget();
   Entity* beacon = nextBeacon();
   if (isInSpace() && the_sun && the_planet  // be in a system
-      &&
-      !(the_sun != nullptr ? the_sun->goneNova()
-                           : false))  // and the system has not been novabombed
-  {
+      && !(the_sun != nullptr ? the_sun->goneNova() : false)) {
+    // and the system has not been novabombed
     Entity* new_target = nullptr;  // the C++ entities
     OOAegisStatus aegis = checkForAegis();
 
@@ -5574,9 +5565,8 @@ std::optional<std::string> PlayerEntity::dialTargetName() {
   // identFromShip().
   if (WormholeEntity* wh = dynamic_cast<WormholeEntity*>(target_entity)) {
     result = wh->identFromShip(this);
-  } else if (::ShipEntity* ship =
-                 oo::ToShip(target_entity))  // what answered -identFromShip:
-  {
+  } else if (::ShipEntity* ship = oo::ToShip(target_entity)) {
+    // what answered -identFromShip:
     result = ship->identFromShip(this);
   }
 
@@ -5617,9 +5607,8 @@ void PlayerEntity::setMultiFunctionText(const std::optional<std::string>& text,
 
 bool PlayerEntity::setMultiFunctionDisplay(
     std::size_t index, const std::optional<std::string>& key) {
-  if (index >=
-      ((hud != nullptr) ? hud->mfdCount() : 0))  // a nil HUD answered 0
-  {
+  if (index >= ((hud != nullptr) ? hud->mfdCount() : 0)) {
+    // a nil HUD answered 0
     // is first inactive display
     const auto inactive =
         std::find(multiFunctionDisplaySettings.begin(),
@@ -6346,9 +6335,8 @@ GLfloat PlayerEntity::doesHitLine(HPVector v0, HPVector v1,
     shields = true;
   }
 
-  for (const oo::EntityHold& seRef :
-       shipSubEntities())  // the -shipSubEntityEnumerator order
-  {
+  for (const oo::EntityHold& seRef : shipSubEntities()) {
+    // the -shipSubEntityEnumerator order
     ::ShipEntity* se = oo::ToShip(seRef.get());
     if (se == nullptr) continue;  // (shipSubEntities() answers ships)
     HPVector p0 =
@@ -6463,9 +6451,8 @@ void PlayerEntity::takeEnergyDamage(double amount, Entity* entPart,
     energy = 0.0;  // explicitly set energy to zero when cascading, in case an
                    // oxp raised the energy in noteTakingDamage.
 
-  if (energy <=
-      0.0)  // use normal ship temperature calculations for heat damage
-  {
+  if (energy <= 0.0) {
+    // use normal ship temperature calculations for heat damage
     if (oo::EntityIsShip(other)) {
       if (oo::ToShip(other) != nullptr)
         oo::ToShip(other)->noteTargetDestroyed(this);
@@ -6902,9 +6889,8 @@ void PlayerEntity::collectBountyFor(::ShipEntity* other) {
                         : OOScanClass{});  // **tgape** change (+line)
   bool killAward = (other != nullptr ? other->countsAsKill() : false);
 
-  if ((other != nullptr ? other->isPolice()
-                        : false))  // oops, we shot a copper!
-  {
+  if ((other != nullptr ? other->isPolice() : false)) {
+    // oops, we shot a copper!
     markAsOffender(64, OOLegalStatusReason::kAttackedPolice);
   }
 
@@ -6914,10 +6900,8 @@ void PlayerEntity::collectBountyFor(::ShipEntity* other) {
   if ((killIsCargo) || (killClass == OOScanClass::kBuoy) ||
       (killClass == OOScanClass::kRock)) {
     // EMMSTRAN: no killaward (but full bounty) for tharglets?
-    if (!(other != nullptr
-              ? other->hasRole("tharglet")
-              : false))  // okay, we'll count tharglets as proper kills
-    {
+    if (!(other != nullptr ? other->hasRole("tharglet") : false)) {
+      // okay, we'll count tharglets as proper kills
       score /= 10;        // reduce bounty awarded
       killAward = false;  // don't award a kill
     }
@@ -6975,9 +6959,8 @@ bool PlayerEntity::takeInternalDamage() {
   ::OOEquipmentType* eqType = nullptr;
   unsigned damageableCounter = 0;
   GLfloat damageableOdds = 0.0;
-  for (const std::string& key :
-       equipmentKeys())  // the -equipmentEnumerator order
-  {
+  for (const std::string& key : equipmentKeys()) {
+    // the -equipmentEnumerator order
     eqType = OOEquipmentType::equipmentTypeWithIdentifier(key).get();
     if ((eqType != nullptr ? eqType->canBeDamaged() : false)) {
       damageableCounter++;
@@ -7132,9 +7115,8 @@ void PlayerEntity::enterDock(::StationEntity* station) {
   setDockedStation(station);
   doScriptEvent(OOJSID("shipWillDockWithStation"), station);
 
-  if (hud != nullptr &&
-      !hud->nonlinearScanner())  // (a message to nil did nothing)
-  {
+  if (hud != nullptr && !hud->nonlinearScanner()) {
+    // (a message to nil did nothing)
     hud->setScannerZoom(1.0);
   }
   ident_engaged = false;
@@ -7319,9 +7301,8 @@ void PlayerEntity::leaveDock(::StationEntity* station) {
   gui_screen = OOGUIScreenID::kMain;
   noteGUIDidChangeFrom(oldScreen, gui_screen);
 
-  if (hud != nullptr &&
-      !hud->nonlinearScanner())  // (a message to nil did nothing)
-  {
+  if (hud != nullptr && !hud->nonlinearScanner()) {
+    // (a message to nil did nothing)
     hud->setScannerZoom(1.0);
   }
   loadCargoPods();
@@ -7399,9 +7380,8 @@ void PlayerEntity::witchStart() {
   // to ensure that at least the docking music stops playing
   if (autopilot_engaged) disengageAutopilot();
 
-  if (hud != nullptr &&
-      !hud->nonlinearScanner())  // (a message to nil did nothing)
-  {
+  if (hud != nullptr && !hud->nonlinearScanner()) {
+    // (a message to nil did nothing)
     hud->setScannerZoom(1.0);
   }
   safeAllMissiles();
@@ -7427,9 +7407,8 @@ void PlayerEntity::witchStart() {
   scanner_zoom_rate = 0.0f;
   if (UNIVERSE != nullptr) UNIVERSE->setDisplayText(false);
 
-  if (!getWormhole() &&
-      !galactic_witchjump)  // galactic hyperspace does not generate a wormhole
-  {
+  if (!getWormhole() && !galactic_witchjump) {
+    // galactic hyperspace does not generate a wormhole
     OO_LOG(kOOLogInconsistentState, "{}",
            "Internal Error : Player entering witchspace with no wormhole.");
   }
@@ -7767,9 +7746,9 @@ void PlayerEntity::enterWitchspace() {
   if (malfunc && !misjump) {
     // some malfunctions will start fuel leaks, some will result in no witchjump
     // at all.
-    if (takeInternalDamage())  // Depending on ship type and loaded cargo, this
-                               // will be true for 20 - 50% of the time.
-    {
+    if (takeInternalDamage()) {
+      // Depending on ship type and loaded cargo, this
+      // will be true for 20 - 50% of the time.
       playWitchjumpFailure();
       setStatus(OOEntityStatus::kInFlight);
       doScriptEvent(OOJSID("playerJumpFailed"), {oo::PList("malfunction")});
@@ -7941,8 +7920,8 @@ void PlayerEntity::leaveWitchspace() {
   // following other ships, the player tends to ram the back of the ships, or
   // even jump on top of is when the ship jumped without initial speed, which is
   // messy. To avoid this problem, a small wormhole displacement is added.
-  if (wormhole)  // will be nil for galactic jump
-  {
+  if (wormhole) {
+    // will be nil for galactic jump
     if ((wormhole != nullptr ? wormhole->getShipsInTransit() : oo::PList())
             .count() > 0) {
       // player is not allone in his wormhole, synchronise player and wormhole
@@ -7965,9 +7944,8 @@ void PlayerEntity::leaveWitchspace() {
       }
 
       HPVector distance = HPvector_subtract(whpos, pos);
-      if (HPmagnitude2(distance) <
-          min_d1 * min_d1)  // within safety distance from the buoy?
-      {
+      if (HPmagnitude2(distance) < min_d1 * min_d1) {
+        // within safety distance from the buoy?
         // the wormhole is to close to the buoy. Move both player and wormhole
         // away from it in the x-y plane.
         distance.z = 0;
@@ -9270,9 +9248,9 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
                 OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_AUTOSAVE));
 
     // volume control
-    if (::OOSound::isSoundOK())  // (+respondsToSelector:@selector(masterVolume)
-                                 // was always YES)
-    {
+    if (::OOSound::isSoundOK()) {
+      // (+respondsToSelector:@selector(masterVolume)
+      // was always YES)
       double volume = 100.0 * ::OOSound::masterVolume();
       int vol = (volume / 5.0 + 0.5);  // avoid rounding errors
       const std::string soundVolumeWordDesc =
@@ -9796,8 +9774,8 @@ void PlayerEntity::setGuiToEquipShipScreen(
       KEY_WEAPON_FACINGS,
       weaponFacings());  // use defaults  explicitly
 
-  if (eqKeyForSelectFacing.has_value())  // Weapons purchase subscreen.
-  {
+  if (eqKeyForSelectFacing.has_value()) {
+    // Weapons purchase subscreen.
     skip = 1;  // show the back button
     // The 3 lines below are needed by the present GUI. TODO:create a sane GUI.
     // Kaks - 20090915 & 201005
@@ -9806,9 +9784,9 @@ void PlayerEntity::setGuiToEquipShipScreen(
     equipmentAllowed.push_back(*eqKeyForSelectFacing);
   } else
     for (const std::shared_ptr<::OOEquipmentType>& eqTypeRef :
-         OOEquipmentType::allEquipmentTypesOutfitting())  // (i counts at the
-                                                          // end of the body)
-    {
+         OOEquipmentType::allEquipmentTypesOutfitting()) {
+      // (i counts at the
+      // end of the body)
       ::OOEquipmentType* eqType = eqTypeRef.get();
       const std::string eqKey =
           (eqType != nullptr ? eqType->identifier()
@@ -9843,8 +9821,8 @@ void PlayerEntity::setGuiToEquipShipScreen(
         OOTechLevelID originalMinTechLevel = minTechLevel;
 
         while (minTechLevel > 0 && minTechLevel > originalMinTechLevel - 3 &&
-               !(dayRnd & 7))  // bargain tech days every 1/8 days
-        {
+               !(dayRnd & 7)) {
+          // bargain tech days every 1/8 days
           dayRnd = dayRnd >> 2;
           minTechLevel--;  // occasional bonus items according to TL
         }
@@ -9912,8 +9890,8 @@ void PlayerEntity::setGuiToEquipShipScreen(
     std::size_t count = equipmentAllowed.size();
 
     if (count > 0) {
-      if (skip > 0)  // lose the first row to Back <--
-      {
+      if (skip > 0) {
+        // lose the first row to Back <--
         unsigned previous;
 
         if (count <= n_rows || skip < n_rows)
@@ -10067,10 +10045,10 @@ void PlayerEntity::setGuiToEquipShipScreen(
                                 .get(),
                             row);
             }
-            if (displayRow)  // Always true for the first pass. The first pass
-                             // is used to display the name of the weapon being
-                             // purchased.
-            {
+            if (displayRow) {
+              // Always true for the first pass. The first pass
+              // is used to display the name of the weapon being
+              // purchased.
               priceString = std::format(" {} ", OOCredits(price * multiplier));
 
               gui->setKey(eqKey, row);
@@ -10142,17 +10120,17 @@ void PlayerEntity::setGuiToEquipShipScreen(
                : oo::PList());
       setEquipScreenBackgroundDescriptor(background);
       gui->setBackgroundTextureDescriptor(background);
-    } else if (eqKeyForSelectFacing.has_value())  // weapon purchase
-    {
+    } else if (eqKeyForSelectFacing.has_value()) {
+      // weapon purchase
       const oo::PList bgDescriptor =
           (UNIVERSE != nullptr
                ? UNIVERSE->screenTextureDescriptorForKey("mount_weapon")
                : oo::PList());
       if (!bgDescriptor.isNull())
         gui->setBackgroundTextureDescriptor(bgDescriptor);
-    } else  // Returning from a weapon purchase. (Also called, redundantly, when
-            // paging)
-    {
+    } else {
+      // Returning from a weapon purchase. (Also called, redundantly, when
+      // paging)
       gui->setBackgroundTextureDescriptor(equipScreenBackgroundDescriptor());
     }
   }
@@ -10277,8 +10255,8 @@ void PlayerEntity::setGuiToInterfacesScreen(int skip) {
     std::size_t count = interfaceKeys.size();
 
     if (count > 0) {
-      if (skip > 0)  // lose the first row to Back <--
-      {
+      if (skip > 0) {
+        // lose the first row to Back <--
         unsigned previous;
 
         if (count <= n_rows || skip < static_cast<std::ptrdiff_t>(n_rows)) {
@@ -10772,9 +10750,8 @@ void PlayerEntity::buySelectedItem() {
   bool isRepair = hasEquipmentItem(
       OptionalKeyPList((eqInfo != nullptr ? eqInfo->damagedIdentifier()
                                           : std::optional<std::string>())));
-  if (tryBuyingItem(key.value_or(
-          std::string())))  // (a nil key bought nothing, as "" does)
-  {
+  if (tryBuyingItem(key.value_or(std::string()))) {
+    // (a nil key bought nothing, as "" does)
     if (credits == old_credits) {
       // laser pre-purchase, or free equipment
       playMenuNavigationDown();
@@ -10809,10 +10786,9 @@ void PlayerEntity::buySelectedItem() {
                            oo::PList::signedInteger(
                                static_cast<long long>(old_credits - credits))};
       doScriptEvent(OOJSID("playerBoughtEquipment"), boughtArguments);
-      if (gui_screen ==
-          OOGUIScreenID::kEquipShip)  // if we haven't changed gui screen inside
-                                      // playerBoughtEquipment
-      {
+      if (gui_screen == OOGUIScreenID::kEquipShip) {
+        // if we haven't changed gui screen inside
+        // playerBoughtEquipment
         // show any change due to playerBoughtEquipment
         setGuiToEquipShipScreen(0);
         // then try to go back where we were
@@ -10840,8 +10816,8 @@ OOCreditsQuantity PlayerEntity::adjustPriceByScriptForEqKey(
     ::OOScript* condScript =
         (UNIVERSE != nullptr ? UNIVERSE->getConditionScript(*condition_script)
                              : nullptr);
-    if (condScript != nullptr)  // should always be non-nil, but just in case
-    {
+    if (condScript != nullptr) {
+      // should always be non-nil, but just in case
       JSContext* JScontext = OOJSAcquireContext();
       bool OK;
       OOJSVal result = OOJSUndefinedValue();
@@ -11029,8 +11005,8 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
     OOCreditsQuantity creditsForRefuel =
         (fuelCapacity() - getFuel()) * pricePerUnit;
 #endif
-    if (credits >= creditsForRefuel)  // Ensure we don't overflow
-    {
+    if (credits >= creditsForRefuel) {
+      // Ensure we don't overflow
       credits -= creditsForRefuel;
       fuel = fuelCapacity();
       return true;
@@ -11176,10 +11152,8 @@ bool PlayerEntity::setWeaponMount(OOWeaponFacing facing,
 
   // weapon allowed (or NONE)?
   if (eqKey != "EQ_WEAPON_NONE") {
-    if (!canAddEquipment(
-            eqKey,
-            context.value_or(std::string())))  // nil context read as "", as now
-    {
+    if (!canAddEquipment(eqKey, context.value_or(std::string()))) {
+      // nil context read as "", as now
       return false;
     }
   }
@@ -11273,9 +11247,8 @@ OOCargoQuantity PlayerEntity::cargoQuantityForType(const std::string& type) {
     for (i = cargo.size() - 1; i >= 0; i--) {
       cargoItem = oo::ToShip(cargo[i].get());
       if ((cargoItem != nullptr ? cargoItem->commodityType()
-                                : std::optional<std::string>()) ==
-          type)  // (a nil commodity type never matched)
-      {
+                                : std::optional<std::string>()) == type) {
+        // (a nil commodity type never matched)
         amount += (cargoItem != nullptr ? cargoItem->commodityAmount() : 0);
       }
     }
@@ -11317,8 +11290,8 @@ OOCargoQuantity PlayerEntity::setCargoQuantityForType(const std::string& type,
   }
 
   if (inPods) {
-    if (amount > oldAmount)  // increase
-    {
+    if (amount > oldAmount) {
+      // increase
       loadCargoPodsForType(type, (amount - oldAmount));
     } else {
       unloadCargoPodsForType(type, (oldAmount - amount));
@@ -12077,8 +12050,8 @@ bool PlayerEntity::tryBuyingCommodity(const std::string& index, bool all) {
           // going from < n500 to >= n500 would increase pods needed by 1
           purchase = MAX_KILOGRAMS_IN_SAFE - manifest_quantity;  // max possible
         }
-      } else  // OOMassUnit::kGrams
-      {
+      } else {
+        // OOMassUnit::kGrams
         if (manifest_quantity % GRAMS_PER_POD <= MAX_GRAMS_IN_SAFE &&
             (manifest_quantity + purchase) % GRAMS_PER_POD >
                 MAX_GRAMS_IN_SAFE) {
@@ -12467,9 +12440,9 @@ bool PlayerEntity::removeExternalStore(::OOEquipmentType* eqType) {
             : ((void)(missileForPylon(i) != nullptr
                           ? missileForPylon(i)->getPrimaryRole()
                           : std::optional<std::string>()),
-               false))  // nil: NO, after still choosing a primary role, as
-                        // -hasPrimaryRole: did
-    {
+               false)) {
+      // nil: NO, after still choosing a primary role, as
+      // -hasPrimaryRole: did
       removeFromPylon(i);
 
       // Just remove one at a time.
@@ -12794,10 +12767,9 @@ void PlayerEntity::setTrumbleValueFrom(const oo::PList& trumbleValue) {
     if (possible_cheat && !info_failed)
       OO_LOG("cheat.verified", "{}",
              "CHEAT DEFEATED - that's not the way to get rid of trumbles!");
-  } else
-  // if trumbleValue comes in as nil, then probably someone has toyed with the
-  // save file by removing the entire trumbles array
-  {
+  } else {
+    // if trumbleValue comes in as nil, then probably someone has toyed with the
+    // save file by removing the entire trumbles array
     OO_LOG("cheat.tentative", "{}", "POSSIBLE CHEAT DETECTED");
     info_failed = true;
   }
@@ -12855,9 +12827,8 @@ void PlayerEntity::mungChecksumWithString(
     const std::optional<std::string>& str) {
   if (!str.has_value()) return;
 
-  for (char16_t unit : oo::utf8ToUtf16(
-           *str))  // the UTF-16 units, as -characterAtIndex: gave them
-  {
+  for (char16_t unit : oo::utf8ToUtf16(*str)) {
+    // the UTF-16 units, as -characterAtIndex: gave them
     munge_checksum(unit);
   }
 }
@@ -12887,8 +12858,8 @@ void PlayerEntity::setFoundTarget(Entity* targetEntity) {
 }
 
 // override shipentity addTarget to implement target_memory
-void PlayerEntity::addTarget(Entity* targetEntity)  // the C++ entity
-{
+void PlayerEntity::addTarget(Entity* targetEntity) {
+  // the C++ entity
   if (status() != OOEntityStatus::kInFlight &&
       status() != OOEntityStatus::kWitchspaceCountdown)
     return;
@@ -12940,9 +12911,8 @@ void PlayerEntity::addTarget(Entity* targetEntity)  // the C++ entity
   if (ident_engaged) {
     playIdentLockedOn();
     printIdentLockedOnForMissile(false);
-  } else if (oo::EntityIsShip(targetEntity) &&
-             weaponsOnline())  // Only let missiles target-lock onto ships
-  {
+  } else if (oo::EntityIsShip(targetEntity) && weaponsOnline()) {
+    // Only let missiles target-lock onto ships
     if ((oo::ToShip(missile_entity[activeMissile].get()) != nullptr
              ? oo::ToShip(missile_entity[activeMissile].get())->getIsMissile()
              : false)) {
@@ -12952,8 +12922,8 @@ void PlayerEntity::addTarget(Entity* targetEntity)  // the C++ entity
             ->addTarget(targetEntity);
       playMissileLockedOn();
       printIdentLockedOnForMissile(true);
-    } else  // It's a mine or something
-    {
+    } else {
+      // It's a mine or something
       missile_status = OOMissileStatus::kArmed;
       playIdentLockedOn();
       printIdentLockedOnForMissile(false);
@@ -12979,8 +12949,8 @@ std::vector<std::weak_ptr<Entity>> PlayerEntity::targetMemory() {
 
 bool PlayerEntity::moveTargetMemoryBy(std::ptrdiff_t delta) {
   unsigned i = 0;
-  while (i++ < PLAYER_TARGET_MEMORY_SIZE)  // limit loops
-  {
+  while (i++ < PLAYER_TARGET_MEMORY_SIZE) {
+    // limit loops
     std::ptrdiff_t idx =
         static_cast<std::ptrdiff_t>(target_memory_index) + delta;
     while (idx < 0) idx += PLAYER_TARGET_MEMORY_SIZE;
@@ -12989,9 +12959,8 @@ bool PlayerEntity::moveTargetMemoryBy(std::ptrdiff_t delta) {
 
     const std::weak_ptr<Entity>& targ_ref =
         target_memory.at(target_memory_index);
-    if (!oo::isUnset(
-            targ_ref))  // a weak reference (-isProxy), not an empty slot
-    {
+    if (!oo::isUnset(targ_ref)) {
+      // a weak reference (-isProxy), not an empty slot
       ::ShipEntity* potential_target = oo::ToShip(targ_ref.lock().get());
 
       if ((potential_target) && (potential_target->isShip) &&
@@ -13900,10 +13869,8 @@ bool PlayerEntity::setExtraGuiScreenKeys(
       // if we find this name already in the array, remove it
       if (def_existing && def_existing->name().has_value() &&
           def_existing->name() ==
-              ((definition != nullptr)
-                   ? definition->name()
-                   : std::nullopt))  // (-isEqualToString: of nil was NO)
-      {
+              ((definition != nullptr) ? definition->name() : std::nullopt)) {
+        // (-isEqualToString: of nil was NO)
         newarray.erase(newarray.begin() + static_cast<std::ptrdiff_t>(i));
       } else {
         // check whether any of those keycodes is already in use on this screen
@@ -13913,11 +13880,9 @@ bool PlayerEntity::setExtraGuiScreenKeys(
         const oo::PList::Dict* keydefsDict = keydefs.getIf<oo::PList::Dict>();
 
         for (const auto& [key, keydef] :
-             (keydefsDict != nullptr)
-                 ? *keydefsDict
-                 : oo::PList::Dict())  // byte order (was -allKeys order): only
-                                       // the log order can differ
-        {
+             (keydefsDict != nullptr) ? *keydefsDict : oo::PList::Dict()) {
+          // byte order (was -allKeys order): only
+          // the log order can differ
           std::size_t j = checklist.size();
           while (j--) {
             // the "%@" texts of the two key-code arrays

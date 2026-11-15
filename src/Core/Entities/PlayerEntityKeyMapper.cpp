@@ -813,8 +813,8 @@ void PlayerEntity::handleKeyConfigEntryKeys(::GuiDisplayGen* gui,
     if (gameView != nullptr) gameView->clearKeys();  // try to stop key bounces
     setGuiToKeyConfigScreen(true);
   }
-  if ((gameView != nullptr ? gameView->isDown(27) : false))  // escape
-  {
+  if ((gameView != nullptr ? gameView->isDown(27) : false)) {
+    // escape
     if (gameView != nullptr) gameView->suppressKeysUntilKeyUp();
     // don't update function key
     setGuiToKeyConfigScreen(true);
@@ -980,8 +980,8 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
 
   const oo::PList overrides = loadKeySettings();
 
-  if (keyFunctions.empty())  // the list is never empty once built
-  {
+  if (keyFunctions.empty()) {
+    // the list is never empty once built
     keyFunctions = keyFunctionList();
   }
 
@@ -1582,9 +1582,8 @@ void PlayerEntity::handleKeyboardLayoutEntryKeys(::GuiDisplayGen* gui,
     if (gameView != nullptr) gameView->clearKeys();  // try to stop key bounces
     setGuiToKeyMapperScreen(0, true);
   }
-  if ((gameView != nullptr ? gameView->isDown(27)
-                           : false))  // escape - return without change
-  {
+  if ((gameView != nullptr ? gameView->isDown(27) : false)) {
+    // escape - return without change
     if (gameView != nullptr) gameView->clearKeys();  // try to stop key bounces
     setGuiToKeyMapperScreen(0, true);
   }
@@ -2041,8 +2040,8 @@ void PlayerEntity::saveKeySetting(const std::string& key) {
   // see if we've set the key settings to blank - in which case, delete the
   // override
   if ((key_list.at(0) != nullptr ? key_list.at(0)->get<long long>("key") : 0) ==
-      0)  // -integerValue
-  {
+      0) {
+    // -integerValue
     if (key_list.count() == 1 ||
         (key_list.count() > 1 && IsEmptyString(key_list.at(1)->find("key")))) {
       deleteKeySetting(key);

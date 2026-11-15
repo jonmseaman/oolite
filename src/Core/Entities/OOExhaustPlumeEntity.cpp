@@ -168,8 +168,8 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
                        0.1f;  // random fluctuations
   GLfloat green_factor = speed * ex_emissive[1] * hyper_fade;
 
-  if (speed > 1.0f)  // afterburner!
-  {
+  if (speed > 1.0f) {
+    // afterburner!
     red_factor = 1.5;
   }
 
@@ -553,11 +553,8 @@ void OOExhaustPlumeEntity::saveToLastFrame() {
   _nextFrame = (_nextFrame + 1) % kExhaustFrameCount;
 }
 
-Frame OOExhaustPlumeEntity::frameAtTime(
-    double t_frame,
-    Frame
-        frame_zero)  // t_frame is relative to now ie. -0.5 = half a second ago.
-{
+Frame OOExhaustPlumeEntity::frameAtTime(double t_frame, Frame frame_zero) {
+  // t_frame is relative to now ie. -0.5 = half a second ago.
   if (t_frame >= 0.0) return frame_zero;
 
   Frame frame_one;
@@ -566,15 +563,13 @@ Frame OOExhaustPlumeEntity::frameAtTime(
   double moment_in_time = frame_zero.timeframe + t_frame;
   double period, f0;
 
-  if (moment_in_time > _trackTime)  // between the last saved frame and now
-  {
+  if (moment_in_time > _trackTime) {
+    // between the last saved frame and now
     frame_one = _track[t1];  // last saved moment
     period = (moment_in_time - t_frame) - _trackTime;
     f0 = 1.0 + t_frame / period;
-  } else if (moment_in_time <
-             _track[_nextFrame]
-                 .timeframe)  // more than kExhaustFrameCount frames back
-  {
+  } else if (moment_in_time < _track[_nextFrame].timeframe) {
+    // more than kExhaustFrameCount frames back
     return _track[_nextFrame];
   } else {
     while (moment_in_time < _track[t1].timeframe) {

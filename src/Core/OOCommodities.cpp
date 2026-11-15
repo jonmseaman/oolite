@@ -197,8 +197,8 @@ std::shared_ptr<OOCommodityMarket> OOCommodities::generateManifestForPlayer() {
   std::shared_ptr<OOCommodityMarket> market =
       oo::makeShared<OOCommodityMarket>();
 
-  for (const auto& [commodity, info] : _commodityLists)  // key order
-  {
+  for (const auto& [commodity, info] : _commodityLists) {
+    // key order
     oo::PList good =
         info.isDict()
             ? info
@@ -220,8 +220,8 @@ std::shared_ptr<OOCommodityMarket> OOCommodities::generateBlankMarket() {
   std::shared_ptr<OOCommodityMarket> market =
       oo::makeShared<OOCommodityMarket>();
 
-  for (const auto& [commodity, info] : _commodityLists)  // key order
-  {
+  for (const auto& [commodity, info] : _commodityLists) {
+    // key order
     oo::PList good =
         info.isDict()
             ? info
@@ -350,8 +350,8 @@ OOCommodities::generateMarketForSystemWithEconomy(
   std::shared_ptr<OOCommodityMarket> market =
       oo::makeShared<OOCommodityMarket>();
 
-  for (const auto& [commodity, info] : _commodityLists)  // key order
-  {
+  for (const auto& [commodity, info] : _commodityLists) {
+    // key order
     oo::PList good = info;
     OOCargoQuantity q = generateQuantityForGood(good, economy);
     // main system market limited to 127 units of each item
@@ -397,8 +397,8 @@ std::shared_ptr<OOCommodityMarket> OOCommodities::generateMarketForStation(
   OOCommodityMarket* mainMarket =
       (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket() : nullptr);
 
-  for (const auto& [commodity, info] : _commodityLists)  // key order
-  {
+  for (const auto& [commodity, info] : _commodityLists) {
+    // key order
     oo::PList good = info;
     OOCargoQuantity baseCapacity =
         good.get<unsigned int>(kOOCommodityCapacity, MAIN_SYSTEM_MARKET_LIMIT);
@@ -466,9 +466,8 @@ bool OOCommodities::goodDefined(const std::string& key) {
 }
 
 std::optional<std::string> OOCommodities::goodNamed(const std::string& name) {
-  for (const auto& [key, info] :
-       _commodityLists)  // key order (was hash order): the first match wins
-  {
+  for (const auto& [key, info] : _commodityLists) {
+    // key order (was hash order): the first match wins
     const std::optional<std::string> commodityName =
         StringFor(info, kOOCommodityName);
     const std::optional<std::string> expanded =

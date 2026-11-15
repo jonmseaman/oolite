@@ -43,9 +43,8 @@ OOMusic::~OOMusic() {
 }
 
 std::shared_ptr<OOMusic> OOMusic::initWithContentsOfFile(
-    const std::optional<std::string>&
-        inPath)  // OOSound's designated initializer, overridden
-{
+    const std::optional<std::string>& inPath) {
+  // OOSound's designated initializer, overridden
   std::shared_ptr<OOMusic> self =
       std::shared_ptr<OOMusic>(new OOMusic(), oo::Dispose{});
   {

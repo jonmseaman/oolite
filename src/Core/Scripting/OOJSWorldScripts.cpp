@@ -100,9 +100,8 @@ static int WorldScriptsGetOwnProperty(JSContext* context,
                      std::string, std::shared_ptr<OOScript>>>());  // kept while
                                                                    // script is
                                                                    // used
-      for (const auto& [name, scriptRef] :
-           worldScripts)  // the last of a name, as the dictionary kept
-      {
+      for (const auto& [name, scriptRef] : worldScripts) {
+        // the last of a name, as the dictionary kept
         if (name == *scriptName && scriptRef.get() != nullptr)
           script = scriptRef.get();
       }

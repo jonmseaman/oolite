@@ -64,10 +64,9 @@ using OOVisualEffectSubEntities = std::vector<oo::EntityHold>;
         A global C++ class, made by oo::NewVisualEffectObject(); the names found
    on it by name are in OOEntityCalledByNameTable.h.
 */
-class OOVisualEffectEntity
-    : public OOEntityWithDrawable,
-      public cxx::OOSubEntityInterface  // <OOSubEntity, OOBeaconEntity>
-{
+class OOVisualEffectEntity : public OOEntityWithDrawable,
+                             public cxx::OOSubEntityInterface {
+  // <OOSubEntity, OOBeaconEntity>
  public:
   ~OOVisualEffectEntity();
 
