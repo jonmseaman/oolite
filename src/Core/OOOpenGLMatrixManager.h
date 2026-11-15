@@ -28,15 +28,16 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <memory>
+#include <string_view>
 #include <vector>
 
 #include "OOMaths.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
-extern const char* ooliteStandardMatrixUniforms[];
 
 inline constexpr int OOLITE_GL_MATRIX_MODELVIEW = 0;
 inline constexpr int OOLITE_GL_MATRIX_PROJECTION =
@@ -65,6 +66,26 @@ inline constexpr int OOLITE_GL_MATRIX_MODELVIEW_PROJECTION_INVERSE_TRANSPOSE =
     OOLITE_GL_MATRIX_PROJECTION_INVERSE_TRANSPOSE + 1;
 inline constexpr int OOLITE_GL_MATRIX_END =
     OOLITE_GL_MATRIX_MODELVIEW_PROJECTION_INVERSE_TRANSPOSE + 1;
+
+// The GLSL names of the standard matrices, indexed by OOLITE_GL_MATRIX_*.
+// Each is a literal, so data() is NUL-terminated.
+inline constexpr auto ooliteStandardMatrixUniforms =
+    std::to_array<std::string_view>({
+        "ooliteModelView",
+        "ooliteProjection",
+        "ooliteModelViewProjection",
+        "ooliteNormalMatrix",
+        "ooliteModelViewInverse",
+        "ooliteProjectionInverse",
+        "ooliteModelViewProjectionInverse",
+        "ooliteModelViewTranspose",
+        "ooliteProjectionTranspose",
+        "ooliteModelViewProjectionTranspose",
+        "ooliteModelViewInverseTranspose",
+        "ooliteProjectionInverseTranspose",
+        "ooliteModelViewProjectionInverseTranspose",
+    });
+static_assert(ooliteStandardMatrixUniforms.size() == OOLITE_GL_MATRIX_END);
 
 class OOOpenGLMatrixStack : public oo::Object {
  public:

@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #include <time.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -469,49 +470,50 @@ void OOJavaScriptEngine::sendMonitorLogMessage(
 */
 static void RemoveNonSpiderMonkeyGlobals(JSContext* context,
                                          JSValueConst global) {
-  static const char* const kSpiderMonkeyGlobals[] = {"undefined",
-                                                     "NaN",
-                                                     "Infinity",
-                                                     "eval",
-                                                     "isNaN",
-                                                     "isFinite",
-                                                     "parseFloat",
-                                                     "parseInt",
-                                                     "escape",
-                                                     "unescape",
-                                                     "decodeURI",
-                                                     "encodeURI",
-                                                     "decodeURIComponent",
-                                                     "encodeURIComponent",
-                                                     "Object",
-                                                     "Function",
-                                                     "Array",
-                                                     "Boolean",
-                                                     "Number",
-                                                     "String",
-                                                     "Date",
-                                                     "RegExp",
-                                                     "Math",
-                                                     "JSON",
-                                                     "Error",
-                                                     "InternalError",
-                                                     "EvalError",
-                                                     "RangeError",
-                                                     "ReferenceError",
-                                                     "SyntaxError",
-                                                     "TypeError",
-                                                     "URIError",
-                                                     "ArrayBuffer",
-                                                     "Int8Array",
-                                                     "Uint8Array",
-                                                     "Uint8ClampedArray",
-                                                     "Int16Array",
-                                                     "Uint16Array",
-                                                     "Int32Array",
-                                                     "Uint32Array",
-                                                     "Float32Array",
-                                                     "Float64Array",
-                                                     "Proxy"};
+  static constexpr auto kSpiderMonkeyGlobals =
+      std::to_array<std::string_view>({"undefined",
+                                       "NaN",
+                                       "Infinity",
+                                       "eval",
+                                       "isNaN",
+                                       "isFinite",
+                                       "parseFloat",
+                                       "parseInt",
+                                       "escape",
+                                       "unescape",
+                                       "decodeURI",
+                                       "encodeURI",
+                                       "decodeURIComponent",
+                                       "encodeURIComponent",
+                                       "Object",
+                                       "Function",
+                                       "Array",
+                                       "Boolean",
+                                       "Number",
+                                       "String",
+                                       "Date",
+                                       "RegExp",
+                                       "Math",
+                                       "JSON",
+                                       "Error",
+                                       "InternalError",
+                                       "EvalError",
+                                       "RangeError",
+                                       "ReferenceError",
+                                       "SyntaxError",
+                                       "TypeError",
+                                       "URIError",
+                                       "ArrayBuffer",
+                                       "Int8Array",
+                                       "Uint8Array",
+                                       "Uint8ClampedArray",
+                                       "Int16Array",
+                                       "Uint16Array",
+                                       "Int32Array",
+                                       "Uint32Array",
+                                       "Float32Array",
+                                       "Float64Array",
+                                       "Proxy"});
 
   JSPropertyEnum* properties = nullptr;
   uint32_t count = 0;
@@ -524,10 +526,9 @@ static void RemoveNonSpiderMonkeyGlobals(JSContext* context,
   for (uint32_t i = 0; i < count; i++) {
     const char* name = JS_AtomToCString(context, properties[i].atom);
     bool keep = (name == nullptr);
-    for (size_t j = 0; !keep && j < sizeof kSpiderMonkeyGlobals /
-                                        sizeof *kSpiderMonkeyGlobals;
-         j++) {
-      keep = (std::string_view(name) == kSpiderMonkeyGlobals[j]);
+    if (!keep) {
+      keep = std::ranges::find(kSpiderMonkeyGlobals, std::string_view(name)) !=
+             kSpiderMonkeyGlobals.end();
     }
     JS_FreeCString(context, name);
     if (!keep) JS_DeleteProperty(context, global, properties[i].atom, 0);
