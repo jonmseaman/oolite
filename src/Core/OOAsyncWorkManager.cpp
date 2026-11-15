@@ -210,7 +210,6 @@ std::vector<std::jthread> StartWorkThreads(Body body, unsigned count) {
 }
 
 void SetUpWorkThread(unsigned threadNumber) {
-  oo::thread::setCurrentPriority(0.5);
   oo::thread::setCurrentName("OOAsyncWorkManager thread " +
                              std::to_string(threadNumber));
 }
