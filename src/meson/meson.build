@@ -52,11 +52,11 @@ oolite_dependencies += quickjs_dep
 # added lacks it. (Compiler checks can't use a subproject's dependency, so read
 # its header.)
 if import('fs').read(
-    meson.project_source_root() / 'subprojects' / 'quickjs-0.17.0' / 'quickjs.h',
+    meson.project_source_root() / 'third_party' / 'quickjs-0.17.0' / 'quickjs.h',
 ).contains('JS_SetFunctionCallHook')
     add_project_arguments('-DOOJS_QUICKJS_CALL_HOOK=1', language: c_family)
 else
-    warning('subprojects/quickjs-ng predates Oolite\'s function call hook patch, so the profiler will time natives only. Run "meson subprojects update --reset quickjs-ng" and rebuild.')
+    warning('third_party/quickjs-0.17.0 predates Oolite\'s function call hook patch, so the profiler will time natives only. Run "meson subprojects update --reset quickjs-ng" and rebuild.')
 endif
 
 if get_option('b_lto')

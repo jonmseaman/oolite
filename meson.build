@@ -2,6 +2,8 @@ project(
     'oolite',
     ['c', 'cpp'],
     meson_version: '>= 1.4.0',
+    # Meson's wraps (QuickJS-ng) live beside the copied third-party code.
+    subproject_dir: 'third_party',
     version: run_command(
         'bash',
         files('ShellScripts/common/get_version.sh'),
@@ -10,7 +12,7 @@ project(
     ).stdout().strip(),
     default_options: [
         'optimization=2',
-        # Always use the bundled, patched QuickJS-ng (see subprojects/quickjs-ng.wrap):
+        # Always use the bundled, patched QuickJS-ng (see third_party/quickjs-ng.wrap):
         # an unpatched system build breaks OXPs that rely on SpiderMonkey behaviour.
         'force_fallback_for=quickjs-ng',
     ],
@@ -101,7 +103,6 @@ if get_option('dev_release')
 endif
 
 # dependencies, compiler/linker flags and build
-subdir('third_party')
 subdir('src')
 
 if get_option('quickjs_poc')

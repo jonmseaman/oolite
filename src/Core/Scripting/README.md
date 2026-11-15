@@ -7,8 +7,8 @@ this file describes how existing OXP scripts are kept working.
 ## Building
 
 QuickJS-ng is built from source as a Meson subproject
-(`subprojects/quickjs-ng.wrap`), with Oolite's patches from
-`subprojects/packagefiles/quickjs-ng/` applied. The bundled copy is always
+(`third_party/quickjs-ng.wrap`), with Oolite's patches from
+`third_party/packagefiles/quickjs-ng/` applied. The bundled copy is always
 used, even if a system `quickjs-ng` is installed (`force_fallback_for` in the
 top-level `meson.build`), because an unpatched build changes behaviour OXPs rely
 on. The flatpak manifest provides the same source and patches, since
@@ -70,7 +70,7 @@ Behaviour that needed emulating, all in the engine core:
 - **Properties on primitives.** SpiderMonkey 1.8.5 silently ignored
   `"str".foo = 1` even in strict code (Route Planner relies on this); QuickJS
   throws. QuickJS-ng is patched to match
-  (`subprojects/packagefiles/quickjs-ng/`), and a warning
+  (`third_party/packagefiles/quickjs-ng/`), and a warning
   (`script.javaScript.init.unpatchedEngine`) is logged if Oolite is somehow
   linked against an unpatched QuickJS-ng. An upstream option to replace the
   patch has been requested (quickjs-ng/quickjs#1837).

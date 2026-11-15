@@ -568,7 +568,7 @@ static void LoadCompatibilityScript(JSContext* context) {
     sLegacyConstRewriter = JS_DupValue(context, result);
   JS_FreeValue(context, result);
 
-  /*	The bundled QuickJS-ng is patched (subprojects/packagefiles/quickjs-ng)
+  /*	The bundled QuickJS-ng is patched (third_party/packagefiles/quickjs-ng)
           for SpiderMonkey behaviour OXPs rely on. Warn if this one isn't, e.g.
           a system library.
   */

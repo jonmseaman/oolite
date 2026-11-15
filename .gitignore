@@ -30,11 +30,11 @@ tests/__pycache__
 # Debug output
 /core
 
-# Meson subproject checkouts (wrap files are tracked)
-/subprojects/*/
-!/subprojects/packagefiles/
-/subprojects/packagecache/
-/subprojects/.wraplock
+# What meson fetches into third_party/ (its subproject_dir) for a wrap: the extracted source and
+# the download cache. The wrap files, packagefiles/ and the copied libraries are tracked.
+/third_party/quickjs-*/
+/third_party/packagecache/
+/third_party/.wraplock
 
 # Node packages (tools/oxp-upgrade, eslint)
 node_modules/

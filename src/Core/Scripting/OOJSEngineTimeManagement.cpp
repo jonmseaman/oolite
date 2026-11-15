@@ -54,7 +54,7 @@ SOFTWARE.
 
         The profiler is the SpiderMonkey one. JavaScript functions are profiled
         through the function call hook added by Oolite's QuickJS-ng patch
-        (subprojects/packagefiles/quickjs-ng/0004-oolite-function-call-hook.patch),
+        (third_party/packagefiles/quickjs-ng/0004-oolite-function-call-hook.patch),
         which stands in for SpiderMonkey's MOZ_TRACE_JSCALLS function callback.
         OOJS_QUICKJS_CALL_HOOK is set when building with the bundled, patched
         QuickJS-ng; with a system QuickJS-ng, only natives are profiled.
