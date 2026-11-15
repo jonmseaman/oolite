@@ -1,8 +1,6 @@
 oolite_sources = []
-# Vendored third-party code (MiniZip, stb_image_write, tinyexr, miniz). It keeps its upstream
-# source (it is not Oolite's C++), so it builds as its own library, without oolite_cpp_args.
-oolite_vendored_sources = []
-oolite_includes = []
+# The game's sources include the third-party headers (third_party/meson.build).
+oolite_includes = [oolite_third_party_includes]
 oolite_override_options = []
 oolite_link_args = []
 # The game's own warnings on top of meson's warning level. C-style casts are errors in review
@@ -33,10 +31,11 @@ oolite_override_options += ['cpp_std=c++23']
 subdir('Core')
 subdir('SDL')
 
-oolite_vendored_lib = static_library(
-    'oolite_vendored',
-    oolite_vendored_sources,
-    include_directories: oolite_includes,
+# The third-party code builds as its own library, without oolite_cpp_args.
+oolite_third_party_lib = static_library(
+    'oolite_third_party',
+    oolite_third_party_sources,
+    include_directories: oolite_third_party_includes,
     # zlib's headers for MiniZip (the game links zlib itself); oolite_dependencies would compile
     # oofnd's sources into this library again.
     dependencies: [dependency('zlib', include_type: 'system').partial_dependency(compile_args: true, includes: true)],
@@ -45,7 +44,7 @@ oolite_vendored_lib = static_library(
 )
 # Its objects, not the archive: an LTO archive needs an archiver that indexes LLVM bitcode
 # (llvm-ar), and GNU ar, which the Windows CI image has, leaves every symbol unresolved.
-oolite_dependencies += [declare_dependency(objects: oolite_vendored_lib.extract_all_objects(recursive: true))]
+oolite_dependencies += [declare_dependency(objects: oolite_third_party_lib.extract_all_objects(recursive: true))]
 
 appname = 'oolite'
 exe_rpath = host_os == 'darwin' ? '@executable_path' : '$ORIGIN'
