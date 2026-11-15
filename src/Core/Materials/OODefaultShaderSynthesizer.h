@@ -110,8 +110,14 @@ class OODefaultShaderSynthesizer : public oo::Object {
   std::size_t assignIDForTexture(const oo::PList& textureSpec);
   std::size_t textureIDForSpec(const oo::PList& textureSpec);
   void setUpOneTexture(const oo::PList& textureSpec);
-  void getSampleName(std::string* outSampleName, std::string* outSwizzleOp,
-                     const oo::PList& textureSpec);  // swizzle "" = none
+
+  // A texture's sample variable and its swizzle ("" = none).
+  struct SampleName {
+    std::string sample;
+    std::string swizzle;
+  };
+
+  SampleName getSampleName(const oo::PList& textureSpec);
 
 #ifndef NDEBUG
   using Stage = void (OODefaultShaderSynthesizer::*)();
