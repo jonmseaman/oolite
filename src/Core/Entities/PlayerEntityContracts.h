@@ -54,7 +54,7 @@ inline constexpr std::string_view CONTRACT_KEY_FEE = "fee";
 inline constexpr std::string_view CONTRACT_KEY_PREMIUM = "premium";
 inline constexpr std::string_view CONTRACT_KEY_RISK = "risk";
 
-#define MAX_CONTRACT_REP 70
+inline constexpr int MAX_CONTRACT_REP = 70;
 
 inline constexpr int GUI_ROW_PASSENGERS_LABELS = 1;
 inline constexpr int GUI_ROW_PASSENGERS_START = 2;
