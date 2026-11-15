@@ -912,12 +912,12 @@ bool OOShipRegistry::removeUnusableEntries(oo::PList& ioData, bool shipMode) {
     bool remove = false;
 
     if (shipEntry.get<bool>("is_template") ||
-        shipEntry.get<bool>("_oo_deferred_remove"))
+        shipEntry.get<bool>("_oo_deferred_remove")) {
       remove = true;
-    else if (shipMode &&
-             StringForKey(&shipEntry, "roles").value_or("").empty() &&
-             !shipEntry.get<bool>("_oo_is_subentity") &&
-             !shipEntry.get<bool>("_oo_is_effect")) {
+    } else if (shipMode &&
+               StringForKey(&shipEntry, "roles").value_or("").empty() &&
+               !shipEntry.get<bool>("_oo_is_subentity") &&
+               !shipEntry.get<bool>("_oo_is_effect")) {
       OO_LOG_ERR("shipData.load.error",
                  "the shipdata.plist entry \"{}\" specifies no {}.", shipKey,
                  "roles");

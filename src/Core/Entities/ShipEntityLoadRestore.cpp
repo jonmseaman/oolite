@@ -249,9 +249,12 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
     const std::optional<std::string> primaryRole =
         OptionalStringForKey(dict, KEY_PRIMARY_ROLE);
     if (primaryRole.has_value()) {
-      if (ship != nullptr) ship->setPrimaryRole(*primaryRole);
-    } else
+      if (ship != nullptr) {
+        ship->setPrimaryRole(*primaryRole);
+      }
+    } else {
       ship->primaryRole = std::nullopt;  // as -setPrimaryRole: stored nil
+    }
 
   } else {
     // Unknown ship; fall back on role if desired and possible.

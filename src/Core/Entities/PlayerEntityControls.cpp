@@ -636,9 +636,9 @@ oo::PList PlayerEntity::processKeyCode(const oo::PList& key_def) {
       if (length == 1 || (iValue == 0 && length != 0)) {
         keychar = oo::utf8ToUtf16(keystring)[0] &
                   0x00ff;  // uses lower byte of unichar
-      } else if (iValue <= 0xFF)
+      } else if (iValue <= 0xFF) {
         keychar = iValue;
-      else {
+      } else {
         OO_LOG_WARN("testing", "continue hit for key {}.",
                     oo::DescriptionOf(nullptr));
         defNew["key"] = *value;
@@ -1296,8 +1296,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                 UNIVERSE->addMessage(OO_DESC("fuel-out"), 1.5);
           }
           afterburner_engaged = (fuel > 0);
-        } else
+        } else {
           afterburner_engaged = false;
+        }
 
         if ((!afterburner_engaged) && (afterburnerSoundLooping))
           stopAfterburnerSound();
@@ -1424,8 +1425,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                           {oo::PList(weaponsOnline())});
             weaponsOnlineToggle_pressed = true;
           }
-        } else
+        } else {
           weaponsOnlineToggle_pressed = false;
+        }
 
         exceptionContext = "missile fire";
         //  shoot 'm'   // launch missile
@@ -1436,8 +1438,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             fireMissile();
             fire_missile_pressed = true;
           }
-        } else
+        } else {
           fire_missile_pressed = false;
+        }
 
         exceptionContext = "next missile";
         //  shoot 'y'   // next missile
@@ -1448,8 +1451,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             selectNextMissile();
           }
           next_missile_pressed = true;
-        } else
+        } else {
           next_missile_pressed = false;
+        }
 
         exceptionContext = "next target";
         //	'+' // next target
@@ -1460,8 +1464,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             moveTargetMemoryBy(+1);
           }
           next_target_pressed = true;
-        } else
+        } else {
           next_target_pressed = false;
+        }
 
         exceptionContext = "previous target";
         //	'-' // previous target
@@ -1472,8 +1477,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             moveTargetMemoryBy(-1);
           }
           previous_target_pressed = true;
-        } else
+        } else {
           previous_target_pressed = false;
+        }
 
         exceptionContext = "ident R";
         //  shoot 'r'   // switch on ident system
@@ -1483,8 +1489,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             handleButtonIdent();
           }
           ident_pressed = true;
-        } else
+        } else {
           ident_pressed = false;
+        }
 
         exceptionContext = "prime equipment";
         // prime equipment 'N' - selects equipment to use with keypress
@@ -1545,8 +1552,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           }
           prime_equipment_pressed = true;
 
-        } else
+        } else {
           prime_equipment_pressed = false;
+        }
 
         exceptionContext = "activate equipment";
         // activate equipment 'n' - runs the activated() function inside the
@@ -1558,8 +1566,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                                       OOPrimedEquipmentMode::kActivated);
           }
           activate_equipment_pressed = true;
-        } else
+        } else {
           activate_equipment_pressed = false;
+        }
 
         exceptionContext = "mode equipment";
         // mode equipment 'b' - runs the mode() function inside the equipment's
@@ -1571,8 +1580,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                                       OOPrimedEquipmentMode::kMode);
           }
           mode_equipment_pressed = true;
-        } else
+        } else {
           mode_equipment_pressed = false;
+        }
 
         exceptionContext = "fast equipment A";
         if (checkKeyPress(n_key_fastactivate_equipment_a) ||
@@ -1583,8 +1593,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                 OOPrimedEquipmentMode::kActivated);
           }
           fastactivate_a_pressed = true;
-        } else
+        } else {
           fastactivate_a_pressed = false;
+        }
 
         exceptionContext = "fast equipment B";
         if (checkKeyPress(n_key_fastactivate_equipment_b) ||
@@ -1595,8 +1606,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                 OOPrimedEquipmentMode::kActivated);
           }
           fastactivate_b_pressed = true;
-        } else
+        } else {
           fastactivate_b_pressed = false;
+        }
 
         exceptionContext = "custom equipment";
         // loop through all the objects in the customEquipActivation array
@@ -1627,8 +1639,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                                           OOPrimedEquipmentMode::kActivated);
               }
               customActivatePressed[i] = true;
-            } else
+            } else {
               customActivatePressed[i] = false;
+            }
 
             // check to see if the key or button was pressed for mode
             if ((key_mod != nullptr && checkKeyPress(*key_mod)) ||
@@ -1642,8 +1655,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                                           OOPrimedEquipmentMode::kMode);
               }
               customModePressed[i] = true;
-            } else
+            } else {
               customModePressed[i] = false;
+            }
           }
         }
 
@@ -1656,8 +1670,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             targetNearestIncomingMissile();
           }
           target_incoming_missile_pressed = true;
-        } else
+        } else {
           target_incoming_missile_pressed = false;
+        }
 
         exceptionContext = "missile T";
         //  shoot 't'   // switch on missile targeting
@@ -1669,8 +1684,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             handleButtonTargetMissile();
           }
           target_missile_pressed = true;
-        } else
+        } else {
           target_missile_pressed = false;
+        }
 
         exceptionContext = "missile U";
         //  shoot 'u'   // disarm missile targeting
@@ -1693,8 +1709,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             ident_engaged = false;
           }
           safety_pressed = true;
-        } else
+        } else {
           safety_pressed = false;
+        }
 
         exceptionContext = "ECM";
         //  shoot 'e'   // ECM
@@ -1761,8 +1778,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             joyButtonState[BUTTON_ROTATECARGO]) {
           if ((!rotateCargo_pressed) && (cargoCount() > 0)) rotateCargo();
           rotateCargo_pressed = true;
-        } else
+        } else {
           rotateCargo_pressed = false;
+        }
 
         exceptionContext = "autopilot C";
         // autopilot 'c'
@@ -1772,8 +1790,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             handleAutopilotOn(false);
           }
           autopilot_key_pressed = true;
-        } else
+        } else {
           autopilot_key_pressed = false;
+        }
 
         exceptionContext = "autopilot shift-C";
         // autopilot 'C' - fast-autopilot
@@ -1824,8 +1843,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             }
           }
           hyperspace_pressed = true;
-        } else
+        } else {
           hyperspace_pressed = false;
+        }
 
         exceptionContext = "galactic hyperspace";
         // Galactic hyperspace 'g'
@@ -1872,8 +1892,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             }
           }
           galhyperspace_pressed = true;
-        } else
+        } else {
           galhyperspace_pressed = false;
+        }
       }
 
 #if OO_FOV_INFLIGHT_CONTROL_ENABLED
@@ -1921,8 +1942,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           if (target == nullptr) target = this;
           target->dumpState();
         }
-      } else
+      } else {
         dump_target_state_pressed = false;
+      }
 #endif
 
       //  text displays
@@ -1986,8 +2008,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             UNIVERSE->addMessage("Entity List dumped. Debugging OFF", 3);
         }
         dump_entity_list_pressed = true;
-      } else
+      } else {
         dump_entity_list_pressed = false;
+      }
 
       // look for debugging keys
       if (checkKeyPress(n_key_debug_full) &&
@@ -2026,8 +2049,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           }
         }
         autopilot_key_pressed = true;
-      } else
+      } else {
         autopilot_key_pressed = false;
+      }
 
       if (checkKeyPress(n_key_debug_bounding_boxes) &&
           (gameView != nullptr ? gameView->getAllowingStringInput()
@@ -2069,8 +2093,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             UNIVERSE->setTimeAccelerationFactor(newTimeAccelerationFactor);
         }
         leftRightKeyPressed = true;
-      } else
+      } else {
         leftRightKeyPressed = false;
+      }
 
       if (checkKeyPress(n_key_debug_off) &&
           (gameView != nullptr ? gameView->getAllowingStringInput()
@@ -2458,8 +2483,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             moving = true;
             target_chart_focus = cursor_coordinates;
           }
-        } else
+        } else {
           pressedArrow = pressedArrow == 1 ? 0 : pressedArrow;
+        }
 
         if (checkNavKeyPress(n_key_gui_arrow_right)) {
           if ((nextSystem || nextSystemOnRoute) && pressedArrow != 2) {
@@ -2484,8 +2510,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             moving = true;
             target_chart_focus = cursor_coordinates;
           }
-        } else
+        } else {
           pressedArrow = pressedArrow == 2 ? 0 : pressedArrow;
+        }
 
         if (checkNavKeyPress(n_key_gui_arrow_down)) {
           if (nextSystem && pressedArrow != 3) {
@@ -2498,8 +2525,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             moving = true;
           }
           target_chart_focus = cursor_coordinates;
-        } else
+        } else {
           pressedArrow = pressedArrow == 3 ? 0 : pressedArrow;
+        }
 
         if (checkNavKeyPress(n_key_gui_arrow_up)) {
           if (nextSystem && pressedArrow != 4) {
@@ -2512,8 +2540,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             moving = true;
           }
           target_chart_focus = cursor_coordinates;
-        } else
+        } else {
           pressedArrow = pressedArrow == 4 ? 0 : pressedArrow;
+        }
         if ((cursor_moving) && (!moving)) {
           if (found_system_id == -1) {
             target_system_id =
@@ -2636,8 +2665,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       if (checkKeyPress(n_key_launch_ship, true)) handleUndockControl();
       if (gui_screen == OOGUIScreenID::kSave) {
         saveCommanderInputHandler();
-      } else
+      } else {
         pollControls = true;
+      }
       break;
 
     case OOGUIScreenID::kSaveOverwrite:
@@ -2832,9 +2862,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
           // override showInformation _completely_ with itemText
           if ((weaponType != nullptr
                    ? weaponType->identifier()
-                   : std::optional<std::string>()) == "EQ_WEAPON_NONE")
+                   : std::optional<std::string>()) == "EQ_WEAPON_NONE") {
             itemText = OO_DESC("no-weapon-enter-to-install");
-          else {
+          } else {
             const std::string weaponName =
                 (OOEquipmentType::equipmentTypeWithIdentifier(
                      OOEquipmentIdentifierFromWeaponType(weaponType)
@@ -2856,8 +2886,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
           }
 
           showInformationForSelectedUpgradeWithFormatString(itemText);
-        } else
+        } else {
           showInformationForSelectedUpgrade();
+        }
       }
 
       if (checkKeyPress(n_key_gui_arrow_left) ||
@@ -3036,8 +3067,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
           }
         }
         spacePressed = true;
-      } else
+      } else {
         spacePressed = false;
+      }
       break;
     case OOGUIScreenID::kStatus:
       handleGUIUpDownArrowKeys();
@@ -3315,8 +3347,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             }
           }
           extra_gui_key_pressed = true;
-        } else
+        } else {
           extra_gui_key_pressed = false;
+        }
       }
     }
   }
@@ -3708,8 +3741,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 
         hdrMaxBrightnessControlPressed = true;
       }
-    } else
+    } else {
       hdrMaxBrightnessControlPressed = false;
+    }
   }
 #endif
 
@@ -3863,8 +3897,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
         timeLastKeyPress = script_time;
       }
       speechVoiceSelectKeyPressed = true;
-    } else
+    } else {
       speechVoiceSelectKeyPressed = false;
+    }
   }
 
   if (guiSelectedRow ==
@@ -3896,8 +3931,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
         }
       }
       speechGenderSelectKeyPressed = true;
-    } else
+    } else {
       speechGenderSelectKeyPressed = false;
+    }
   }
 #endif
 #endif
@@ -3938,8 +3974,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       }
     }
     musicModeKeyPressed = true;
-  } else
+  } else {
     musicModeKeyPressed = false;
+  }
 
   if ((guiSelectedRow == OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_AUTOSAVE)) &&
       ((checkKeyPress(n_key_gui_arrow_right) ||
@@ -3997,15 +4034,17 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
             std::format("{}{}{} ", soundVolumeWordDesc, v1_string, v0_string),
             OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_VOLUME),
             OOGUIAlignment::kCenter);
-      } else
+      } else {
         gui->setText(OO_DESC("gameoptions-sound-volume-mute"),
                      OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_VOLUME),
                      OOGUIAlignment::kCenter);
+      }
       timeLastKeyPress = script_time;
     }
     volumeControlPressed = true;
-  } else
+  } else {
     volumeControlPressed = false;
+  }
 
   if ((guiSelectedRow == OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_FOV)) &&
       ((checkKeyPress(n_key_gui_arrow_right) ||
@@ -4044,8 +4083,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       timeLastKeyPress = script_time;
     }
     fovControlPressed = true;
-  } else
+  } else {
     fovControlPressed = false;
+  }
 
   // color blind mode
   if ((guiSelectedRow ==
@@ -4088,8 +4128,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
                    OOGUIAlignment::kCenter);
     }
     colorblindModeControlPressed = true;
-  } else
+  } else {
     colorblindModeControlPressed = false;
+  }
 
   if (!(gameView != nullptr ? gameView->hdrOutput() : false)) {
     if ((guiSelectedRow ==
@@ -4156,8 +4197,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
                      OOGUIAlignment::kCenter);
       }
       hdrPaperWhiteControlPressed = true;
-    } else
+    } else {
       hdrPaperWhiteControlPressed = false;
+    }
   }
 #endif
 
@@ -4227,8 +4269,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
           OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SHADEREFFECTS));
     }
     shaderSelectKeyPressed = true;
-  } else
+  } else {
     shaderSelectKeyPressed = false;
+  }
 
 #if OOLITE_SDL
   if ((guiSelectedRow ==
@@ -4454,8 +4497,9 @@ void PlayerEntity::pollCustomViewControls() {
                                 // we just want an external view
     }
     customView_pressed = true;
-  } else
+  } else {
     customView_pressed = false;
+  }
   double this_time =
       oo::date::monotonicSeconds();  // intervals only (last_time)
   if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}) >
@@ -4665,8 +4709,9 @@ void PlayerEntity::pollViewControls() {
       }
     }
     zoom_pressed = true;
-  } else
+  } else {
     zoom_pressed = false;
+  }
 
   // Unzoom scanner 'Z'
   if ((checkKeyPress(n_key_scanner_unzoom) &&
@@ -4995,8 +5040,9 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias) {
       if (gui_screen == OOGUIScreenID::kStatus) {
         noteGUIWillChangeTo(OOGUIScreenID::kManifest);
         setGuiToManifestScreen();
-      } else
+      } else {
         setGuiToStatusScreen();
+      }
       checkScript();
     }
   } else {
@@ -5117,8 +5163,9 @@ void PlayerEntity::pollGameOverControls(double /*delta_t*/) {
       shot_time = INITIAL_SHOT_TIME;  // forces immediate restart
     }
     spacePressed = true;
-  } else
+  } else {
     spacePressed = false;
+  }
 }
 
 static bool toggling_music;
@@ -5671,8 +5718,9 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
                 extraKey = key;
               }
               extra_key_pressed = true;
-            } else
+            } else {
               extra_key_pressed = false;
+            }
           }
         }
         if (checkKeyPress(n_key_gui_select) ||

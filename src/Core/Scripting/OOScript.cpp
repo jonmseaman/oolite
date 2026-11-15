@@ -90,9 +90,9 @@ OOScript::worldScriptsAtPath(const std::string& path) {
   // Second, try to load a JavaScript.
   if (!result.has_value()) {
     filePath = oo::str::appendingPathComponent(path, "script.js");
-    if (OOOxzFileExistsAtPath(filePath))
+    if (OOOxzFileExistsAtPath(filePath)) {
       foundScript = true;
-    else {
+    } else {
       filePath = oo::str::appendingPathComponent(path, "script.es");
       if (OOOxzFileExistsAtPath(filePath)) foundScript = true;
     }
@@ -106,9 +106,10 @@ OOScript::worldScriptsAtPath(const std::string& path) {
         result = std::vector<std::shared_ptr<OOScript>>{script};
         OO_LOG("script.load.parseOK",
                "Successfully loaded JavaScript script {}", filePath);
-      } else
+      } else {
         OO_LOG_ERR("script.load.parseError",
                    "Failed to load JavaScript script {}", filePath);
+      }
 
       oo::log::outdentIf("script.load.javaScript");
     }

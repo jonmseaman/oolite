@@ -337,9 +337,12 @@ std::optional<std::string> OOShaderUniform::description() {
 
 void OOShaderUniform::apply() {
   if (isBinding) {
-    if (isActiveBinding) applyBinding();
-  } else
+    if (isActiveBinding) {
+      applyBinding();
+    }
+  } else {
     applySimple();
+  }
 }
 
 void OOShaderUniform::setEntityBindingTarget(Entity* target) {

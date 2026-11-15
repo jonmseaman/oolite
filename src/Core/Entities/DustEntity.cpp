@@ -314,8 +314,11 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
       OOShaderProgram* program = getShader();
       if (program != nullptr) program->apply();
       // A message to a nil uniform (the initialiser answered nil) did nothing.
-      for (const std::shared_ptr<OOShaderUniform>& uniform : uniforms)
-        if (uniform != nullptr) uniform->apply();
+      for (const std::shared_ptr<OOShaderUniform>& uniform : uniforms) {
+        if (uniform != nullptr) {
+          uniform->apply();
+        }
+      }
     } else
 #endif
     {

@@ -217,7 +217,7 @@ void OOSetReallyRandomRANROTAndRndSeeds() {
 }
 
 OORandomState OOSaveRandomState() {
-  return (OORandomState){.ranrot = sRANROT, .rnd = rnd_seed};
+  return OORandomState{.ranrot = sRANROT, .rnd = rnd_seed};
 }
 
 void OORestoreRandomState(OORandomState state) {

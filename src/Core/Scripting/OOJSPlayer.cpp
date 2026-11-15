@@ -745,12 +745,13 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
           sDests = *array;
         std::size_t i = 0, nDests = sDests.size();
 
-        if (nDests > 0)
+        if (nDests > 0) {
           for (i = --nDests; i > 0; i--) {
             if (sDests[i].get<bool>("nova")) {
               sDests.erase(sDests.begin() + i);
             }
           }
+        }
 
         // i is back to 0, nDests could have changed...
         nDests = sDests.size();

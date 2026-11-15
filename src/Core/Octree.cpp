@@ -355,8 +355,9 @@ static bool isHitByLineSub(const int* octbuffer, unsigned char* collbuffer,
     Vector moveLine = offsetForOctant(octantMask, rad);
     return isHitByLine(octbuffer, collbuffer, nextLevel + octantMask, rd2, v0,
                        v1, moveLine, 0);
-  } else
+  } else {
     return false;
+  }
 }
 
 static bool hasCollided = false;

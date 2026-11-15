@@ -335,11 +335,11 @@ bool OOEquipmentType::initWithInfo(const oo::PList& info) {
 
       oo::PList legacyConditions;
       const oo::PList* value = extraInfo.find("conditions");
-      if (value != nullptr && value->isString())
+      if (value != nullptr && value->isString()) {
         legacyConditions = oo::PList(oo::PList::Array{*value});
-      else if (value != nullptr && value->isArray())
+      } else if (value != nullptr && value->isArray()) {
         legacyConditions = *value;
-      else if (value != nullptr) {
+      } else if (value != nullptr) {
         OO_LOG("equipment.load",
                "***** ERROR: {} for equipment item {} is not a string or an "
                "array.",

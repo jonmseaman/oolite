@@ -2953,22 +2953,26 @@ static JSValue ShipRemoveEquipment(OOJS_NATIVE_ARGS) {
       if (*key == "EQ_PASSENGER_BERTH") {
         if (ship->passengerCapacity() > ship->passengerCount()) {
           // must be the player's ship!
-          if (ship->getIsPlayer())
+          if (ship->getIsPlayer()) {
             static_cast<PlayerEntity*>(thisEnt)->changePassengerBerths(
                 -1);  // thisEnt is not null here
-        } else
+          }
+        } else {
           OK = false;
+        }
       } else {
         // EQ_CARGO_BAY
         // player cargo bay removal handled in script
         if (ship->getIsPlayer() ||
             ship->extraCargo() <= ship->availableCargoSpace()) {
           ship->removeEquipmentItem(*key);
-        } else
+        } else {
           OK = false;
+        }
       }
-    } else
+    } else {
       ship->removeEquipmentItem(*key);
+    }
   }
 
   OOJS_RETURN_BOOL(OK);

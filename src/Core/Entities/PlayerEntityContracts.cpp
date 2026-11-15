@@ -813,27 +813,27 @@ void PlayerEntity::erodeReputation() {
   int pl_unknown = ReputationValue(reputation, std::string(PARCEL_UNKNOWN_KEY));
 
   if (c_unknown < MAX_CONTRACT_REP) {
-    if (c_bad > 0)
+    if (c_bad > 0) {
       c_bad--;
-    else {
+    } else {
       if (c_good > 0) c_good--;
     }
     c_unknown++;
   }
 
   if (p_unknown < MAX_CONTRACT_REP) {
-    if (p_bad > 0)
+    if (p_bad > 0) {
       p_bad--;
-    else {
+    } else {
       if (p_good > 0) p_good--;
     }
     p_unknown++;
   }
 
   if (pl_unknown < MAX_CONTRACT_REP) {
-    if (pl_bad > 0)
+    if (pl_bad > 0) {
       pl_bad--;
-    else {
+    } else {
       if (pl_good > 0) pl_good--;
     }
     pl_unknown++;
@@ -1649,9 +1649,9 @@ void PlayerEntity::setGuiToShipyardScreen(std::size_t skip) {
     int startRow = GUI_ROW_SHIPYARD_START;
     std::ptrdiff_t previous = 0;
 
-    if (shipCount <= MAX_ROWS_SHIPS_FOR_SALE)
+    if (shipCount <= MAX_ROWS_SHIPS_FOR_SALE) {
       skip = 0;
-    else {
+    } else {
       if (skip > 0) {
         rowCount -= 1;
         startRow += 1;

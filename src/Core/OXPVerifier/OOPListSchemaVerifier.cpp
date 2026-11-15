@@ -358,8 +358,9 @@ std::optional<std::string> OOPListSchemaVerifier::descriptionForKeyPath(
       } else if (const std::string* string = component.getIf<std::string>()) {
         if (!first) result += ".";
         result += *string;
-      } else
+      } else {
         return std::nullopt;
+      }
       first = false;
     }
   }
@@ -410,8 +411,9 @@ bool OOPListSchemaVerifier::delegateVerifierWithPropertyList(
             "Value at %s does not match delegated type \"%s\".",
             KeyPathToString(keyPath).c_str(),
             oo::DescriptionOf(typeKey).c_str());
-      } else
+      } else {
         *outError = std::nullopt;
+      }
     }
   } else {
     if (!_badDelegateWarning) {
@@ -523,8 +525,9 @@ bool OOPListSchemaVerifier::verifyPList(
     if (!tentative && !IsFailureAlreadyReportedError(*error)) {
       *outStop = !delegateVerifierWithPropertyList(rootPList, name, subProperty,
                                                    *error, subSchema);
-    } else if (tentative)
+    } else if (tentative) {
       *outStop = true;
+    }
   }
 
   if (outError != nullptr && error.has_value()) *outError = error;
@@ -694,13 +697,13 @@ std::string ApplyStringFilter(
         return filterUnits.substr(prefixLength);
       };
 
-      if (*filter == "lowerCase")
+      if (*filter == "lowerCase") {
         result = oo::utf8ToUtf16(oo::str::lowercase(oo::utf16ToUtf8(result)));
-      else if (*filter == "upperCase")
+      } else if (*filter == "upperCase") {
         result = oo::utf8ToUtf16(oo::str::uppercase(oo::utf16ToUtf8(result)));
-      else if (*filter == "capitalized")
+      } else if (*filter == "capitalized") {
         result = oo::utf8ToUtf16(oo::str::capitalized(oo::utf16ToUtf8(result)));
-      else if (oo::str::hasPrefix(*filter, "truncFront:")) {
+      } else if (oo::str::hasPrefix(*filter, "truncFront:")) {
         result = SubstringToIndex(
             result, static_cast<unsigned long long>(static_cast<std::size_t>(
                         oo::str::intValue(oo::utf16ToUtf8(argument(11))))));

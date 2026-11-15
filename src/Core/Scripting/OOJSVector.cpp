@@ -392,9 +392,9 @@ bool VectorFromArgumentList(JSContext* context, const std::string& scriptClass,
                             JSValueConst* argv, HPVector* outVector,
                             int* outConsumed) {
   if (VectorFromArgumentListNoErrorInternal(context, argc, argv, outVector,
-                                            outConsumed, false))
+                                            outConsumed, false)) {
     return true;
-  else {
+  } else {
     OOJSReportBadArguments(context, scriptClass, function, argc, argv,
                            "Could not construct vector from parameters",
                            "Vector, Entity or array of three numbers");
@@ -815,8 +815,9 @@ static JSValue VectorRotationTo(OOJS_NATIVE_ARGS) {
                                               argc, argv, &limit, nullptr)))
       return JS_EXCEPTION;
     gotLimit = true;
-  } else
+  } else {
     gotLimit = false;
+  }
 
   if (gotLimit)
     result = quaternion_limited_rotation_between(

@@ -473,12 +473,13 @@ void OOOperationQueueAsyncWorkManager::workThread(unsigned threadNumber,
             queue.pop_front();
           }
         }
-        if (task == nullptr)
+        if (task == nullptr) {
           _operationQueue.available.wait(lock, stop, [this] {
             return !_operationQueue.tasks[0].empty() ||
                    !_operationQueue.tasks[1].empty() ||
                    !_operationQueue.tasks[2].empty();
           });
+        }
       }
     }
     if (task == nullptr) break;  // stop requested

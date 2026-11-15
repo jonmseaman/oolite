@@ -119,8 +119,9 @@ inline bool decodeUtf8Strict(const unsigned char* p, std::size_t n,
     } else if (b >= 0xF0 && b <= 0xF4) {
       c = b & 0x07u;
       len = 4;
-    } else
+    } else {
       return false;
+    }
     if (i + len > n) return false;
     for (std::size_t k = 1; k < len; ++k) {
       if ((p[i + k] & 0xC0) != 0x80) return false;
@@ -170,13 +171,13 @@ inline std::optional<Data> decodeBase64IgnoringUnknown(const unsigned char* src,
       c -= 'A';
     else if (c >= 'a' && c <= 'z')
       c = c - 'a' + 26;
-    else if (c >= '0' && c <= '9')
+    else if (c >= '0' && c <= '9') {
       c = c - '0' + 52;
-    else if (c == '/')
+    } else if (c == '/') {
       c = 63;
-    else if (c == '+')
+    } else if (c == '+') {
       c = 62;
-    else if (c == '=') {
+    } else if (c == '=') {
       while (i < length) {
         c = src[i++];
         if (c != '=') {
@@ -582,11 +583,11 @@ class OldStyleScanner {
           result =
               PList::unsignedInteger(std::strtoull(buf.c_str(), nullptr, 10));
       } else if (type == 'B') {
-        if (buf[0] == 'Y')
+        if (buf[0] == 'Y') {
           result = PList(true);
-        else if (buf[0] == 'N')
+        } else if (buf[0] == 'N') {
           result = PList(false);
-        else {
+        } else {
           err_ = "bad value for bool";
           return std::nullopt;
         }

@@ -138,8 +138,9 @@ inline bool isStrictUtf8(std::string_view s) noexcept {
     } else if (b >= 0xF0 && b <= 0xF4) {
       len = 4;
       c = b & 0x07u;
-    } else
+    } else {
       return false;
+    }
     if (i + len > n) return false;
     for (std::size_t k = 1; k < len; ++k) {
       if ((p[i + k] & 0xC0) != 0x80) return false;
@@ -274,13 +275,13 @@ inline Data decodeMimeBase64(std::string_view source) {
       c -= 'A';
     else if (c >= 'a' && c <= 'z')
       c = c - 'a' + 26;
-    else if (c >= '0' && c <= '9')
+    else if (c >= '0' && c <= '9') {
       c = c - '0' + 52;
-    else if (c == '/' || c == '_')
+    } else if (c == '/' || c == '_') {
       c = 63;
-    else if (c == '+' || c == '-')
+    } else if (c == '+' || c == '-') {
       c = 62;
-    else if (c == '=') {
+    } else if (c == '=') {
       c = -1;
       pad++;
     } else {

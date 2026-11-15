@@ -679,13 +679,13 @@ bool OOInterpretTextureSpecifier(const oo::PList& specifier,
               specifier.get<std::string>("extract_channel");
           if (extractChannel == "r")
             options |= OOTextureFlags::kExtractChannelR;
-          else if (extractChannel == "g")
+          else if (extractChannel == "g") {
             options |= OOTextureFlags::kExtractChannelG;
-          else if (extractChannel == "b")
+          } else if (extractChannel == "b") {
             options |= OOTextureFlags::kExtractChannelB;
-          else if (extractChannel == "a")
+          } else if (extractChannel == "a") {
             options |= OOTextureFlags::kExtractChannelA;
-          else {
+          } else {
             OO_LOG_WARN("texture.load.extractChannel.invalid",
                         "Unknown value \"{}\" for extract_channel in specifier "
                         "\"{}\" (should be \"r\", \"g\", \"b\" or \"a\").",

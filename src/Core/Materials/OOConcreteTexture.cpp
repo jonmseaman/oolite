@@ -443,13 +443,14 @@ void OOConcreteTexture::uploadTexture() {
 
     // Select min filter
     const OOTextureFlags minFilter = _options & OOTextureFlags::kMinFilterMask;
-    if (minFilter == OOTextureFlags::kMinFilterNearest)
+    if (minFilter == OOTextureFlags::kMinFilterNearest) {
       filter = GL_NEAREST;
-    else if (minFilter == OOTextureFlags::kMinFilterMipMap) {
+    } else if (minFilter == OOTextureFlags::kMinFilterMipMap) {
       mipMap = true;
       filter = GL_LINEAR_MIPMAP_LINEAR;
-    } else
+    } else {
       filter = GL_LINEAR;
+    }
     OOGL(glTexParameteri(texTarget, GL_TEXTURE_MIN_FILTER, filter));
 
 #if GL_EXT_texture_filter_anisotropic

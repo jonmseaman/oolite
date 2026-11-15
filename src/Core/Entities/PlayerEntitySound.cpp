@@ -404,8 +404,9 @@ void PlayerEntity::updateFuelScoopSoundWithInterval(OOTimeDelta delta_t) {
        * interface beep position */
       playInterfaceBeep("[scoop]");
       scoopSoundPlayTime = 0.5;
-    } else
+    } else {
       scoopSoundPlayTime = 0.0;
+    }
   }
   if (!scoopOverride) {
     scoopSoundPlayTime = 0.0;
