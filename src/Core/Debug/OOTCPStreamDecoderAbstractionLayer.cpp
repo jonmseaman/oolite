@@ -64,7 +64,9 @@ std::string DescriptionOf(OOALObjectRef object) {
 // linkage.
 OOALStringRef OOALGetConstantString(const char* string);
 OOALStringRef OOALGetConstantString(const char* string) {
-  static std::map<const char*, std::unique_ptr<OOALObject>> sStrings;
+  // Never destroyed (Google style: no non-trivial static destructors).
+  static auto& sStrings =
+      *new std::map<const char*, std::unique_ptr<OOALObject>>;
 
   std::unique_ptr<OOALObject>& value = sStrings[string];
   if (value == nullptr) {
