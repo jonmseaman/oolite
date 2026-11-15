@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 #include "Universe.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -8858,8 +8859,8 @@ OOSystemID Universe::findSystemNumberAtCoords(NSPoint coords, OOGalaxyID g,
     NSPoint ipos =
         (systemManager != nullptr ? systemManager->getCoordinatesForSystem(i, g)
                                   : NSMakePoint(0, 0));
-    dx = ABS(coords.x - ipos.x);
-    dy = ABS(coords.y - ipos.y);
+    dx = std::abs(coords.x - ipos.x);
+    dy = std::abs(coords.y - ipos.y);
 
     if (dx > dy)
       distance = (dx + dx + dy) / 2;
