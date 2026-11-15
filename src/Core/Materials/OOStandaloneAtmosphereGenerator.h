@@ -34,7 +34,7 @@ MA 02110-1301, USA.
 #include "OOTextureGenerator.h"
 #include "oofnd/PList.hpp"
 
-typedef struct OOStandaloneAtmosphereGeneratorInfo {
+struct OOStandaloneAtmosphereGeneratorInfo {
   RANROTSeed seed;
 
   unsigned width;
@@ -55,7 +55,7 @@ typedef struct OOStandaloneAtmosphereGeneratorInfo {
   unsigned planetAspectRatio;
   unsigned planetScaleOffset;
   bool perlin3d;
-} OOStandaloneAtmosphereGeneratorInfo;
+};
 
 /*	A leaf of the texture generators, over OOTextureGenerator. Its one
    caller (OOPlanetEntity) calls the static members; the texture takes the C++

@@ -67,28 +67,28 @@ struct CGPoint {
   double x;
   double y;
 };
-typedef struct CGPoint CGPoint;
-typedef struct CGPoint NSPoint;
+using CGPoint = struct CGPoint;
+using NSPoint = struct CGPoint;
 
 struct CGSize {
   double width;
   double height;
 };
-typedef struct CGSize CGSize;
-typedef struct CGSize NSSize;
+using CGSize = struct CGSize;
+using NSSize = struct CGSize;
 
 struct CGRect {
   CGPoint origin;
   CGSize size;
 };
-typedef struct CGRect CGRect;
-typedef struct CGRect NSRect;
+using CGRect = struct CGRect;
+using NSRect = struct CGRect;
 
 static const NSPoint NSZeroPoint = {0.0, 0.0};
 static const NSSize NSZeroSize = {0.0, 0.0};
 static const NSRect NSZeroRect = {{0.0, 0.0}, {0.0, 0.0}};
 
-typedef struct _NSRange NSRange;
+using NSRange = struct _NSRange;
 struct _NSRange {
   std::size_t location;
   std::size_t length;

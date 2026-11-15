@@ -139,8 +139,8 @@ struct OOShaderBindingValue {
 namespace oo {
 class Object;
 }
-typedef void (*OOShaderMemberGetter)(oo::Object* target,
-                                     OOShaderBindingValue& outValue);
+using OOShaderMemberGetter = void (*)(oo::Object* target,
+                                      OOShaderBindingValue& outValue);
 
 struct OOShaderMemberBinding {
   OOShaderUniformType type;

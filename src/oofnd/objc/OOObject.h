@@ -7,4 +7,4 @@
 
 #include <stdint.h>
 
-typedef struct OOZone OOZone;
+using OOZone = struct OOZone;

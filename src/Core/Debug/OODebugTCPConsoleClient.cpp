@@ -124,8 +124,8 @@ constexpr std::uint8_t kStreamStatusError = 7;
 const uintptr_t kNoSocket = ~static_cast<uintptr_t>(0);
 
 #if OOLITE_WINDOWS
-typedef SOCKET OOSocket;
-typedef int OOSocketLength;
+using OOSocket = SOCKET;
+using OOSocketLength = int;
 int LastSocketError(void) { return WSAGetLastError(); }
 bool ErrorIsWouldBlock(int error) { return error == WSAEWOULDBLOCK; }
 bool ErrorIsConnectInProgress(int error) { return error == WSAEWOULDBLOCK; }

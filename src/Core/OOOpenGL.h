@@ -220,11 +220,11 @@ void GLDrawFilledOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
         Draw array of points, as outline and fill respectively.
 */
 
-typedef struct {
+using OOGLVector = struct {
   GLfloat x;
   GLfloat y;
   GLfloat z;
-} OOGLVector;
+};
 
 void GLDrawPoints(OOGLVector* points, int n);
 void GLDrawFilledPoints(OOGLVector* points, int n);

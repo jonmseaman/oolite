@@ -240,17 +240,17 @@ constexpr std::string_view OOEnumName(OODockingClearanceStatus value) noexcept {
   return {};
 }
 
-typedef uint32_t OOCargoQuantity;
-typedef int32_t OOCargoQuantityDelta;
+using OOCargoQuantity = uint32_t;
+using OOCargoQuantityDelta = int32_t;
 
-typedef uint16_t OOFuelQuantity;
+using OOFuelQuantity = uint16_t;
 
-typedef uint64_t OOCreditsQuantity;
+using OOCreditsQuantity = uint64_t;
 #define kOOMaxCredits ULLONG_MAX
 
-typedef uint16_t OOKeyCode;
+using OOKeyCode = uint16_t;
 
-typedef uint16_t OOUniversalID;  // Valid IDs range from 100 to 1000.
+using OOUniversalID = uint16_t;  // Valid IDs range from 100 to 1000.
 
 inline constexpr int UNIVERSE_MAX_ENTITIES = 2048;
 inline constexpr int NO_TARGET = 0;
@@ -259,22 +259,22 @@ inline constexpr int MAX_ENTITY_UID =
     MIN_ENTITY_UID + UNIVERSE_MAX_ENTITIES + 1;
 
 inline constexpr int kOOVariableTechLevel = 99;
-typedef std::size_t OOTechLevelID;  // 0..14, 99 is special. oo::kNotFound is
+using OOTechLevelID = std::size_t;  // 0..14, 99 is special. oo::kNotFound is
                                     // used, so std::size_t required.
 
-typedef uint8_t OOGovernmentID;  // 0..7
-typedef uint8_t OOEconomyID;     // 0..7
+using OOGovernmentID = uint8_t;  // 0..7
+using OOEconomyID = uint8_t;     // 0..7
 
-typedef uint8_t OOGalaxyID;  // 0..7
-typedef int16_t OOSystemID;  // 0..255, -1 for interstellar space (?)
+using OOGalaxyID = uint8_t;  // 0..7
+using OOSystemID = int16_t;  // 0..255, -1 for interstellar space (?)
 
 inline constexpr int kOOMaximumGalaxyID = 7;
 inline constexpr int kOOMaximumSystemID = 255;
 inline constexpr int kOOMinimumSystemID = -1;
 inline constexpr int kOOSystemIDInterstellarSpace = kOOMinimumSystemID;
 
-typedef double OOTimeAbsolute;
-typedef double OOTimeDelta;
+using OOTimeAbsolute = double;
+using OOTimeDelta = double;
 
 // One weapon mount. Encoded "i" (OOTypeEncodings.h): a by-name call answers it
 // as a number.
@@ -296,7 +296,7 @@ static_assert(oo::ToUnderlying(OOWeaponFacing::kStarboard) == 8);
 
 // A set of mounts, as shipdata, shipyard.plist and JS give it: a number with an
 // OOWeaponFacing bit per mount.
-typedef std::uint8_t OOWeaponFacingSet;
+using OOWeaponFacingSet = std::uint8_t;
 
 inline constexpr OOWeaponFacingSet kOOValidWeaponFacings = oo::ToUnderlying(
     OOWeaponFacing::kNone | OOWeaponFacing::kForward | OOWeaponFacing::kAft |

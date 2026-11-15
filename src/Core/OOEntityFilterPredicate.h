@@ -35,17 +35,17 @@ MA 02110-1301, USA.
 
 #include "Universe.h"
 
-typedef struct {
+using ChainedEntityPredicateParameter = struct {
   EntityFilterPredicate predicate;
   void* parameter;
-} ChainedEntityPredicateParameter;
+};
 
-typedef struct {
+using BinaryOperationPredicateParameter = struct {
   EntityFilterPredicate predicate1;
   void* parameter1;
   EntityFilterPredicate predicate2;
   void* parameter2;
-} BinaryOperationPredicateParameter;
+};
 
 bool YESPredicate(Entity* entity,
                   void* parameter);  // Parameter: ignored. Always returns YES.

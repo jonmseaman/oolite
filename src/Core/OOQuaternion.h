@@ -33,12 +33,12 @@ MA 02110-1301, USA.
 #include "OOHPVector.h"
 #include "OOVector.h"
 
-typedef struct Quaternion {
+struct Quaternion {
   OOScalar w;
   OOScalar x;
   OOScalar y;
   OOScalar z;
-} Quaternion;
+};
 
 extern const Quaternion kIdentityQuaternion;  // 1, 0, 0, 0
 extern const Quaternion kZeroQuaternion;      // 0, 0, 0, 0

@@ -33,10 +33,10 @@ MA 02110-1301, USA.
 #include "OOHPVector.h"
 #include "OOVector.h"
 
-typedef struct {
+using BoundingBox = struct {
   Vector min;
   Vector max;
-} BoundingBox;
+};
 
 extern const BoundingBox kZeroBoundingBox; /* (0, 0, 0), (0, 0, 0) */
 

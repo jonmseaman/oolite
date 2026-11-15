@@ -64,7 +64,7 @@ class OOTexture;
    a test that stands in for OOTexture can still see a C++
    generator; a file that uses the textures imports OOTexture.h itself.
 */
-typedef OOPixMapFormat OOTextureDataFormat;
+using OOTextureDataFormat = OOPixMapFormat;
 
 /*	The path is a UTF-8 std::string (never empty once initialised: a nil
    path failed -init); paths passed in are std::optional where the old code

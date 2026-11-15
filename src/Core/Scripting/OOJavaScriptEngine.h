@@ -205,7 +205,7 @@ inline bool OOIsNullObjectNode(const oo::PList& plist) {
 class Entity;
 
 // OOEntityFilterPredicate wrapping a JavaScript function.
-typedef struct {
+using JSFunctionPredicateParameter = struct {
   JSContext* context;
   JSValueConst function;  // Caller is responsible for ensuring this is a
                           // function object (using OOJSValueIsFunction()).
@@ -213,7 +213,7 @@ typedef struct {
   bool errorFlag;  // Set if a JS exception occurs. The
                    // exception will have been reported.
                    // This also supresses further filtering.
-} JSFunctionPredicateParameter;
+};
 bool JSFunctionPredicate(Entity* entity, void* parameter);
 
 // YES for ships and (normal) planets. Parameter: ignored.

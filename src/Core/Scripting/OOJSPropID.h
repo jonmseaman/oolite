@@ -32,8 +32,8 @@ MA 02110-1301, USA.
         SpiderMonkey). Declared here, rather than in OOJavaScriptEngine.h, so
    game headers imported by OOJavaScriptEngine.h can use them.
 */
-typedef JSAtom OOJSPropID;
-typedef JSValue OOJSVal;
+using OOJSPropID = JSAtom;
+using OOJSVal = JSValue;
 
 /*
         OOJSID(string literal)

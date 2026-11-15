@@ -75,7 +75,7 @@ SOFTWARE.
 #include <timeapi.h>
 
 #define OO_PROFILING_STOPWATCH_WINDOWS 1
-typedef DWORD OOHighResTimeValue;  // Rolls over once every 50 days, but we can
+using OOHighResTimeValue = DWORD;  // Rolls over once every 50 days, but we can
                                    // live with that.
 
 // Note: timeGetTime returns time in milliseconds. This results in lower time
@@ -119,7 +119,7 @@ OOINLINE OOHighResTimeValue OOGetHighResTime(void) {
 #define OO_PROFILING_STOPWATCH_GETTIMEOFDAY 1
 #include <sys/time.h>
 
-typedef struct timeval OOHighResTimeValue;
+using OOHighResTimeValue = timeval;
 
 OOINLINE OOHighResTimeValue OOGetHighResTime(void) {
   struct timeval tv;

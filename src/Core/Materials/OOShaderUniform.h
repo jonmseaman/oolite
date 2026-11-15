@@ -67,8 +67,8 @@ class Entity;                 // Entity.h: the materials' binding target
    does for an entity target. The target is held weakly: once it has gone,
    -apply sets nothing.
 */
-typedef void (*OOShaderCxxBindingGetter)(oo::Object* target,
-                                         OOShaderBindingValue& outValue);
+using OOShaderCxxBindingGetter = void (*)(oo::Object* target,
+                                          OOShaderBindingValue& outValue);
 
 class OOShaderUniform : public oo::Object {
  public:
