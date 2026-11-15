@@ -55,10 +55,13 @@ template <class T>
 class WeakSet {
  public:
   WeakSet() = default;
+
   explicit WeakSet(std::size_t capacityHint) { entries_.reserve(capacityHint); }
 
   WeakSet(const WeakSet& other) { addLiveFrom(other); }
+
   WeakSet(WeakSet&&) noexcept = default;
+
   WeakSet& operator=(const WeakSet& other) {
     if (this != &other) {
       WeakSet copy(other);
@@ -66,6 +69,7 @@ class WeakSet {
     }
     return *this;
   }
+
   WeakSet& operator=(WeakSet&&) noexcept = default;
   ~WeakSet() = default;
 

@@ -253,7 +253,6 @@ bool EntityFromArgumentList(JSContext* context,
   // Success.
   if (outConsumed != nullptr) *outConsumed = 1;
   return true;
-
 }
 
 static JSValue EntityGetProperty(OOJS_GETTER_ARGS) {

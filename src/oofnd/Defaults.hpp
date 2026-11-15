@@ -462,6 +462,7 @@ class Defaults {
   }
 
   const std::string& domainName() const noexcept { return domainName_; }
+
   fs::Path domainPath(std::string_view domain) const {
     return directory_ / fs::pathFromUTF8(std::string(domain) + ".plist");
   }
@@ -485,10 +486,12 @@ class Defaults {
     if (!v.isString()) return std::nullopt;
     return std::move(*v.getIf<std::string>());
   }
+
   PList arrayForKey(std::string_view key) const {
     PList v = object(key);
     return v.isArray() ? v : PList();
   }
+
   PList dictionaryForKey(std::string_view key) const {
     PList v = object(key);
     return v.isDict() ? v : PList();
@@ -500,6 +503,7 @@ class Defaults {
       return defaults_detail::stringBoolValue(*s);
     return v.isNumber() && v.boolValue();  // NaN is true, -0 false
   }
+
   std::int64_t integerForKey(std::string_view key) const {
     const PList v = object(key);
     if (const std::string* s = v.getIf<std::string>())
@@ -508,12 +512,14 @@ class Defaults {
       return defaults_detail::realIntegerValue(*d);
     return v.isNumber() ? v.int64Value() : 0;
   }
+
   double doubleForKey(std::string_view key) const {
     const PList v = object(key);
     if (const std::string* s = v.getIf<std::string>())
       return defaults_detail::stringDoubleValue(*s);
     return v.isNumber() ? v.doubleValue() : 0.0;
   }
+
   float floatForKey(std::string_view key) const {
     return static_cast<float>(doubleForKey(key));
   }
@@ -532,20 +538,25 @@ class Defaults {
     application_[k] = value;
     changes_[k] = std::move(value);
   }
+
   void setBool(std::string_view key, bool value) {
     setObject(key, PList(value));
   }
+
   void setInteger(std::string_view key, std::int64_t value) {
     setObject(key, PList(value));
   }
+
   void setDouble(std::string_view key, double value) {
     setObject(key, PList(value));
   }
+
   void setFloat(std::string_view key, float value) {
     setObject(key, PList(value));
     std::lock_guard<std::mutex> lock(mutex_);
     floatKeys_.insert(std::string(key));
   }
+
   void removeObject(std::string_view key) {
     std::lock_guard<std::mutex> lock(mutex_);
     const std::string k(key);

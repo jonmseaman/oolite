@@ -52,12 +52,17 @@ static JSValue SoundGetProperty(OOJS_GETTER_ARGS);
 // OOJSSoundHolder (OOJSSound.h): the JS glue of a Sound object's slot.
 OOJSSoundHolder::OOJSSoundHolder(OOSound* inSound)
     : _sound(oo::share(inSound)) {}
+
 OOJSSoundHolder::~OOJSSoundHolder() = default;
+
 OOSound* OOJSSoundHolder::sound() const { return _sound.get(); }
+
 JSValue OOJSSoundHolder::jsValueInContext(JSContext* context) {
   return OOJSSoundJSValueInContext(_sound.get(), context);
 }
+
 void OOJSSoundHolder::clearJSSelf(JSValueConst) {}  // no wrapper is kept
+
 std::optional<std::string> OOJSSoundHolder::jsDescription() {
   return OOJSSoundJSDescription(_sound.get());
 }
@@ -157,7 +162,6 @@ OOSound* SoundFromJSValue(JSContext* context, JSValueConst value) {
   OOJSResumeTimeLimiter();
 
   return result;
-
 }
 
 // *** Implementation stuff ***

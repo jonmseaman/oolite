@@ -131,7 +131,9 @@ class OOShipGroupCursor {
   explicit OOShipGroupCursor(OOShipGroup* group);
 
   ::ShipEntity* next();  // nil at the end
+
   std::size_t index() const { return _index; }
+
   void setPerformCleanup(bool flag) { _considerCleanup = flag; }
 
   // Public so ShipGroupIterate() can peek at both these and OOShipGroup's

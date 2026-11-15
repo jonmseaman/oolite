@@ -38,7 +38,6 @@ MA 02110-1301, USA.
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
-
 inline constexpr int OOLITE_GL_MATRIX_MODELVIEW = 0;
 inline constexpr int OOLITE_GL_MATRIX_PROJECTION =
     OOLITE_GL_MATRIX_MODELVIEW + 1;

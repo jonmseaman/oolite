@@ -158,7 +158,6 @@ JSValue JSQuaternionWithQuaternion(JSContext* context, Quaternion quaternion) {
   JS_SetOpaque(result, priv.release());
 
   return result;
-
 }
 
 bool QuaternionToJSValue(JSContext* context, Quaternion quaternion,
@@ -173,7 +172,6 @@ bool QuaternionToJSValue(JSContext* context, Quaternion quaternion,
 
   *outValue = object;
   return true;
-
 }
 
 bool JSValueToQuaternion(JSContext* context, JSValueConst value,
@@ -260,7 +258,6 @@ bool JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj,
   }
 
   return false;
-
 }
 
 static bool GetThisQuaternion(JSContext* context, JSValueConst quaternionObj,
@@ -339,7 +336,6 @@ static bool QuaternionFromArgumentListNoErrorInternal(
   if (outConsumed != nullptr) *outConsumed = 4;
 
   return true;
-
 }
 
 // EMMSTRAN: remove outConsumed, since it can only be 1 except in failure
@@ -407,7 +403,6 @@ static JSValue QuaternionGetProperty(JSContext* context, JSValueConst thisObj,
   }
 
   return JS_NewFloat64(context, fValue);
-
 }
 
 static JSValue QuaternionSetProperty(JSContext* context, JSValueConst thisObj,
@@ -453,7 +448,6 @@ static JSValue QuaternionSetProperty(JSContext* context, JSValueConst thisObj,
 
   JSQuaternionSetQuaternion(context, thisObj, quaternion);
   return JS_UNDEFINED;
-
 }
 
 static void QuaternionFinalize(JSRuntime* /*runtime*/, JSValueConst thisObj) {
@@ -530,7 +524,6 @@ static JSValue QuaternionMultiply(OOJS_NATIVE_ARGS) {
   result = quaternion_multiply(thisq, thatq);
 
   OOJS_RETURN_QUATERNION(result);
-
 }
 
 // dot(q : quaternionExpression) : Number
@@ -549,7 +542,6 @@ static JSValue QuaternionDot(OOJS_NATIVE_ARGS) {
   result = quaternion_dot_product(thisq, thatq);
 
   OOJS_RETURN_DOUBLE(result);
-
 }
 
 // rotate(axis : vectorExpression, angle : Number) : Quaternion
@@ -579,7 +571,6 @@ static JSValue QuaternionRotate(OOJS_NATIVE_ARGS) {
   // Else no angle specified, so don't rotate and pass value through unchanged.
 
   OOJS_RETURN_QUATERNION(thisq);
-
 }
 
 // rotateX(angle : Number) : Quaternion
@@ -598,7 +589,6 @@ static JSValue QuaternionRotateX(OOJS_NATIVE_ARGS) {
   quaternion_rotate_about_x(&quat, angle);
 
   OOJS_RETURN_QUATERNION(quat);
-
 }
 
 // rotateY(angle : Number) : Quaternion
@@ -617,7 +607,6 @@ static JSValue QuaternionRotateY(OOJS_NATIVE_ARGS) {
   quaternion_rotate_about_y(&quat, angle);
 
   OOJS_RETURN_QUATERNION(quat);
-
 }
 
 // rotateZ(angle : Number) : Quaternion
@@ -636,7 +625,6 @@ static JSValue QuaternionRotateZ(OOJS_NATIVE_ARGS) {
   quaternion_rotate_about_z(&quat, angle);
 
   OOJS_RETURN_QUATERNION(quat);
-
 }
 
 // normalize() : Quaternion

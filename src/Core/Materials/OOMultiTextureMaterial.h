@@ -62,6 +62,7 @@ class OOMultiTextureMaterial : public OOBasicMaterial {
   void ensureFinishedLoading() override;
   void apply() override;
   void unapplyWithNext(OOMaterial* next) override;
+
   size_t objectSize() const override { return sizeof *this; }
 #ifdef OO_DEBUG_MONITOR_ENABLED
   std::vector<std::shared_ptr<OOTexture>> allTextures() override;

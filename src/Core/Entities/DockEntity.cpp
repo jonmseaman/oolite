@@ -110,7 +110,6 @@ void DockEntity::initDockDefaults() {
   disallowed_docking_collides = false;
   allow_launching = true;
   virtual_dock = false;
-
 }
 
 void DockEntity::willDealloc() { clearIdLocks(nullptr); }
@@ -254,7 +253,6 @@ bool DockEntity::setUpShipFromDictionary(const oo::PList& dict) {
   if (!ShipEntity::setUpShipFromDictionary(dict)) return false;
 
   return true;
-
 }
 
 void DockEntity::update(OOTimeDelta delta_t) {

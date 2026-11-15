@@ -108,12 +108,15 @@ inline void OOJSRelinquishContext(JSContext* context) { (void)context; }
 #define OOJSFreeValue(context, value) JS_FreeValue((context), (value))
 #define OOJSUndefinedValue() JS_UNDEFINED
 #define OOJSNullValue() JS_NULL
+
 inline bool OOJSValueIsUndefined(JSValueConst value) {
   return JS_IsUndefined(value);
 }
+
 inline JSValue OOJSValueFromDouble(JSContext* context, double value) {
   return JS_NewNumber(context, value);
 }
+
 // JavaScript truthiness (like JS_ValueToBoolean()); NO if conversion throws.
 bool OOJSValueToBOOL(JSContext* context, JSValueConst value);
 
@@ -401,6 +404,7 @@ const char* OOJSClassName(JSClassID classID);
 
 void OOJSRegisterSubclass(JSClassID subclass, JSClassID superclass);
 bool OOJSIsSubclass(JSClassID putativeSubclass, JSClassID superclass);
+
 inline bool OOJSIsMemberOfSubclass(JSContext* /*context*/, JSValueConst object,
                                    JSClassID superclass) {
   return JS_IsObject(object) &&

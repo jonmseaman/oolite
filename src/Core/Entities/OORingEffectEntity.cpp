@@ -49,6 +49,7 @@ MA 02110-1301, USA.
 #define kShrinkingRingOuterGrowthFactor (-2.0)
 
 constexpr int kCircleSegments = 65;
+
 static struct {
   float x, y;
 } sCircleVerts[kCircleSegments];  // holds vector coordinates for a unit circle

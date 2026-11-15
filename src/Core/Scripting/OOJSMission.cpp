@@ -65,6 +65,7 @@ static JSValue MissionSetInstructionsInternal(JSContext* context, int argc,
 */
 static JSValue sCallbackFunction;
 static JSValue sCallbackThis;
+
 // The script that set the callback, shared. The holder is never deleted, so
 // exit(0) runs no script's destructor after the engine has gone.
 static std::shared_ptr<OOJSScript>& CallbackScript() {

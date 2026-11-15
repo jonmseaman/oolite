@@ -56,7 +56,9 @@ class OOJSTimer : public OOScriptTimer, public ::OOJSPrivateObject {
   ~OOJSTimer() override;
 
   std::optional<std::string> descriptionComponents() const override;
+
   std::string className() const override { return "OOJSTimer"; }
+
   std::optional<std::string> oo_jsClassName() override;
 
   void timerFired() override;

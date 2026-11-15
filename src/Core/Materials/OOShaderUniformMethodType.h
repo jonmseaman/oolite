@@ -179,6 +179,7 @@ constexpr OOShaderUniformType ShaderUniformTypeOf(ValueType type) {
    (borrowed).
 */
 class OOColor;
+
 struct OOShaderBindingValue {
   std::int64_t i;
   double f;
@@ -198,6 +199,7 @@ struct OOShaderBindingValue {
 namespace oo {
 class Object;
 }
+
 using OOShaderMemberGetter = void (*)(oo::Object* target,
                                       OOShaderBindingValue& outValue);
 
@@ -214,6 +216,7 @@ struct OOShaderMemberBinding {
    still link without them; with none registered an entity target binds nothing.
 */
 class Entity;
+
 struct OOShaderEntityHooks {
   // -superShaderBindingTarget: the entity a "bind to super" uniform binds to
   // next, or null.
@@ -229,6 +232,7 @@ struct OOShaderEntityHooks {
   // -randomSeedForShaders, where the entity's object answers it.
   bool (*randomSeed)(Entity* entity, uint32_t* outSeed);
 };
+
 void OOSetShaderEntityHooks(const OOShaderEntityHooks& hooks) noexcept;
 const OOShaderEntityHooks*
 OOShaderEntityHooksIfSet() noexcept;  // null where none is registered

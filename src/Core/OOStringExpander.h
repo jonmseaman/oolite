@@ -362,14 +362,19 @@ Random_Seed OOStringExpanderDefaultRandomSeed();
 inline oo::PList OOCastParam(const std::string& value) {
   return oo::PList(value);
 }
+
 inline oo::PList OOCastParam(const char* value) { return oo::PList(value); }
+
 inline oo::PList OOCastParam(const std::optional<std::string>& value) {
   return value.has_value() ? oo::PList(*value) : oo::PList();
 }
+
 inline oo::PList OOCastParam(float value) {
   return oo::PList::singleReal(value);
 }
+
 inline oo::PList OOCastParam(double value) { return oo::PList(value); }
+
 inline oo::PList OOCastParam(long double value) {
   return oo::PList(static_cast<double>(value));
 }

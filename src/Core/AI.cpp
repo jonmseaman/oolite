@@ -390,6 +390,7 @@ std::size_t AI::stackDepth() { return aiStack.size(); }
 
 #ifndef NDEBUG
 struct AIStackElement;
+
 struct AIStackElement {
   AIStackElement* back;
   ::ShipEntity* owner;

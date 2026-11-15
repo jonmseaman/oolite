@@ -1,3 +1,4 @@
 BasedOnStyle: Google
 Language: Cpp
 Standard: Latest      # C++23
+SeparateDefinitionBlocks: Always

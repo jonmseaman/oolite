@@ -509,7 +509,9 @@ class XMLPListReader {
   static constexpr int kEOF = -1;
 
   int cget() { return cp_ < cend_ ? bytes_[cp_++] : kEOF; }
+
   int byteAt(std::size_t i) const { return i < cend_ ? bytes_[i] : kEOF; }
+
   bool fail() {
     abort_ = true;
     return false;

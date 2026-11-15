@@ -142,7 +142,9 @@ class OOTextureLoader : public ::OOAsyncWorkTask {
   // The work manager's task: on a work thread, then on the main thread. The
   // every loader has a completion.
   void performAsyncTask() override;
+
   bool hasCompleteAsyncTask() const override { return true; }
+
   void completeAsyncTask() override;
 
   // The state.

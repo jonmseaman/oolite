@@ -133,10 +133,13 @@ class PopulatorDefinitionForeign final : public oo::PListForeign {
   explicit PopulatorDefinitionForeign(
       std::shared_ptr<OOJSPopulatorDefinition> definition)
       : definition_(std::move(definition)) {}
+
   OOJSPopulatorDefinition* definition() const noexcept {
     return definition_.get();
   }
+
   std::string className() const override { return "OOJSPopulatorDefinition"; }
+
   std::string description() const override {
     return "<OOJSPopulatorDefinition>";
   }

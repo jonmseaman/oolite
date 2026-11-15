@@ -122,7 +122,9 @@ class OOAsyncCacheWriter : public OOAsyncWorkTask {
       const oo::PList& cacheContents);
 
   void performAsyncTask() override;
+
   bool hasCompleteAsyncTask() const override { return true; }
+
   void completeAsyncTask() override;
 
  private:

@@ -43,7 +43,7 @@ SOFTWARE.
 #include <string_view>
 #include <utility>
 
-#include "Entity.h"  // an entity's -inspect
+#include "Entity.h"                        // an entity's -inspect
 #include "EntityOOJavaScriptExtensions.h"  // IWYU pragma: keep: used only in OO_DEBUG builds
 #include "OOConstToString.h"
 #include "OODebugFlags.h"
@@ -417,7 +417,6 @@ JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor) {
   }
 
   return object;
-
 }
 
 static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
@@ -577,6 +576,7 @@ static JSValue ConsoleSetProperty(OOJS_SETTER_ARGS) {
 namespace {
 
 [[maybe_unused]] bool DoWeDefineAllDebugFlags(OODebugFlags flags);
+
 bool DoWeDefineAllDebugFlags(OODebugFlags flags) {
   /*	This function doesn't do anything, but will generate a warning
           (Enumeration value 'kFoo' not handled in switch) if a debug flag

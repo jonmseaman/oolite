@@ -98,7 +98,9 @@ class OOPriorityQueueOf {
 
  private:
   static size_t LeftChild(size_t n) { return (n << 1) + 1; }
+
   static size_t RightChild(size_t n) { return (n << 1) + 2; }
+
   static size_t Parent(size_t n) { return ((n + 1) >> 1) - 1; }
 
   void bubbleUpFrom(size_t i) {

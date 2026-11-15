@@ -77,6 +77,7 @@ class Exception : public std::exception {
 
   // UTF-8, owned by the exception: valid while it is alive.
   const char* name() const noexcept { return _name.c_str(); }
+
   const char* reason() const noexcept { return _reason.c_str(); }
 
   // The reason, as a standard exception reports it.
@@ -94,6 +95,7 @@ class CaughtOOException {
 
   // [exception name], [exception reason]: UTF-8, valid while the handler runs.
   const char* name() const { return _exception->name(); }
+
   const char* reason() const { return _exception->reason(); }
 
   // The exception itself, for an interface that still takes one.
@@ -114,6 +116,7 @@ template <typename Body>
 class Finally {
  public:
   explicit Finally(Body body) : _body(std::move(body)) {}
+
   ~Finally() noexcept(false) { _body(); }
 
   Finally(const Finally&) = delete;

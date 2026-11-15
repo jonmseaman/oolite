@@ -76,6 +76,7 @@ MA 02110-1301, USA.
         macros below when profiling is enabled.
 */
 struct OOJSProfileStackFrame;
+
 struct OOJSProfileStackFrame {
   OOJSProfileStackFrame* back;  // Stack link
   const void* key;       // Key to look up profile entries: the function name.
@@ -108,7 +109,9 @@ class OOJSProfileScope {
   explicit OOJSProfileScope(const char* function) {
     OOJSProfileEnter(&_frame, function);
   }
+
   ~OOJSProfileScope() { OOJSProfileExit(&_frame); }
+
   OOJSProfileScope(const OOJSProfileScope&) = delete;
   OOJSProfileScope& operator=(const OOJSProfileScope&) = delete;
 
@@ -158,7 +161,6 @@ class OOJSProfileScope {
 */
 void OOJSReportCurrentException(JSContext* context);
 
-
 #define OOJS_BEGIN_FULL_NATIVE(context)               \
   {                                                   \
     OOJSFullNativeScope oojsFullNativeScope(context); \
@@ -177,7 +179,9 @@ class OOJSFullNativeScope {
   explicit OOJSFullNativeScope(JSContext* /*context*/) {
     OOJSPauseTimeLimiter();
   }
+
   ~OOJSFullNativeScope() { OOJSResumeTimeLimiter(); }
+
   OOJSFullNativeScope(const OOJSFullNativeScope&) = delete;
   OOJSFullNativeScope& operator=(const OOJSFullNativeScope&) = delete;
 };

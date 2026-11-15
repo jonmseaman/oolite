@@ -21,11 +21,13 @@ class Object : public std::enable_shared_from_this<Object> {
 
  protected:
   Object() noexcept = default;
+
   // Copying gives a new, unowned object (as the reference-counted base's copy
   // did); assignment leaves ownership alone. (enable_shared_from_this's own
   // copy constructor leaves the copy's weak reference empty.)
   Object(const Object& other) noexcept
       : std::enable_shared_from_this<Object>(other) {}
+
   Object& operator=(const Object&) noexcept { return *this; }
 
   // Called once, by the deleter, after the last owner has released the object

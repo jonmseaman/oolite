@@ -62,6 +62,7 @@ static std::shared_ptr<OOTexture>& ShotTexture() {
       *new std::shared_ptr<OOTexture>();
   return texture;
 }
+
 // The texture, made on first use and given up by a graphics reset. The holder
 // is never deleted, so exit(0) frees no texture after the GL context has gone.
 static std::shared_ptr<OOTexture>& ShotTexture2() {

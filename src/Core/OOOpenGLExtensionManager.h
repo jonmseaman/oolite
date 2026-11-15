@@ -153,6 +153,7 @@ class OOOpenGLExtensionManager : public oo::Object {
 };
 
 inline bool OOShadersSupported() INLINE_PURE_FUNC;
+
 inline bool OOShadersSupported() {
   return OOOpenGLExtensionManager::sharedManager()->shadersSupported();
 }

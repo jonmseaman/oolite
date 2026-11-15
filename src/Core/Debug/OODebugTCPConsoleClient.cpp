@@ -126,18 +126,26 @@ const uintptr_t kNoSocket = ~static_cast<uintptr_t>(0);
 #if OOLITE_WINDOWS
 using OOSocket = SOCKET;
 using OOSocketLength = int;
+
 int LastSocketError() { return WSAGetLastError(); }
+
 bool ErrorIsWouldBlock(int error) { return error == WSAEWOULDBLOCK; }
+
 bool ErrorIsConnectInProgress(int error) { return error == WSAEWOULDBLOCK; }
+
 bool ErrorIsAbortOnSend(int error) { return error == WSAECONNABORTED; }
+
 bool ErrorIsConnectionGone(int error) {
   return error == WSAECONNRESET || error == WSAECONNABORTED;
 }
+
 void CloseSocket(OOSocket s) { closesocket(s); }
+
 bool SetNonBlocking(OOSocket s) {
   u_long on = 1;
   return ioctlsocket(s, FIONBIO, &on) == 0;
 }
+
 constexpr int kSendFlags = 0;
 
 // The error's system text, as GNUstep's error object gave it (FormatMessage,
@@ -162,18 +170,25 @@ std::optional<std::string> SocketErrorDescription(int error) {
 #else
 using OOSocket = int;
 using OOSocketLength = socklen_t;
+
 int LastSocketError() { return errno; }
+
 bool ErrorIsWouldBlock(int error) {
   return error == EWOULDBLOCK || error == EAGAIN;
 }
+
 bool ErrorIsConnectInProgress(int error) { return error == EINPROGRESS; }
+
 bool ErrorIsAbortOnSend(int error) {
   return error == EPIPE || error == ECONNABORTED;
 }
+
 bool ErrorIsConnectionGone(int error) {
   return error == ECONNRESET || error == ECONNABORTED;
 }
+
 void CloseSocket(OOSocket s) { close(s); }
+
 bool SetNonBlocking(OOSocket s) {
   int flags = fcntl(s, F_GETFL, 0);
   return flags != -1 && fcntl(s, F_SETFL, flags | O_NONBLOCK) != -1;

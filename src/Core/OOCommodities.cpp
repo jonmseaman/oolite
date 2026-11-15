@@ -50,6 +50,7 @@ MA 02110-1301, USA.
 #include "oofnd/Log.hpp"
 #include "oofnd/Object.hpp"
 #include "oofnd/PListDescription.hpp"
+
 namespace {
 
 // keys in trade-goods.plist (sort_order, trumble_opinion, comment and

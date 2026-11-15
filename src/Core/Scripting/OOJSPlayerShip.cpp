@@ -2295,5 +2295,4 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
   }
 
   return true;
-
 }

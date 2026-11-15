@@ -95,15 +95,19 @@ std::string EntityClassName(Entity* entity);
 inline bool EntityIsShip(Entity* entity) {
   return entity != nullptr && entity->getIsShip();
 }
+
 inline bool EntityIsSubEntity(Entity* entity) {
   return entity != nullptr && entity->getIsSubEntity();
 }
+
 inline bool EntityIsPlayer(Entity* entity) {
   return entity != nullptr && entity->getIsPlayer();
 }
+
 inline bool EntityIsPlanet(Entity* entity) {
   return entity != nullptr && entity->isPlanet();
 }
+
 inline OOEntityStatus EntityStatus(Entity* entity) {
   return entity != nullptr ? entity->status() : OOEntityStatus{};
 }

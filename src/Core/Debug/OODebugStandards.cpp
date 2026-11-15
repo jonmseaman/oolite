@@ -39,13 +39,17 @@ SOFTWARE.
 #ifndef OO_DEBUG_MONITOR_ENABLED
 // in release mode, stubs
 void OOStandardsDeprecated(const std::string& message) {}
+
 void OOStandardsError(const std::string& message) {}
+
 bool OOEnforceStandards() { return false; }
+
 void OOSetStandardsForOXPVerifierMode() {}
 
 #else
 
 void OOStandardsSetup();
+
 namespace {
 
 void OOStandardsInternal(const std::string& type, const std::string& message);

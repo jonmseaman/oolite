@@ -123,6 +123,7 @@ inline char16_t bmpOr(char16_t c, UChar32 mapped) noexcept {
 inline char16_t toUpper(char16_t c) noexcept {
   return detail::bmpOr(c, u_toupper(c));
 }
+
 inline char16_t toLower(char16_t c) noexcept {
   return detail::bmpOr(c, u_tolower(c));
 }
@@ -133,6 +134,7 @@ inline std::size_t length(std::string_view s) { return utf8ToUtf16(s).size(); }
 inline std::string uppercase(std::string_view s) {
   return detail::mapUnits(s, toUpper);
 }
+
 inline std::string lowercase(std::string_view s) {
   return detail::mapUnits(s, toLower);
 }
@@ -203,9 +205,11 @@ std::string trimTrailing(std::string_view s, Pred isMember) {
 inline std::string trimLeadingWhitespaceAndNewlines(std::string_view s) {
   return trimLeading(s, isWhitespaceOrNewline);
 }
+
 inline std::string trimTrailingWhitespaceAndNewlines(std::string_view s) {
   return trimTrailing(s, isWhitespaceOrNewline);
 }
+
 inline std::string trimWhitespaceAndNewlines(std::string_view s) {
   return trimTrailingWhitespaceAndNewlines(trimLeadingWhitespaceAndNewlines(s));
 }
@@ -365,6 +369,7 @@ inline std::string vformat(const char* fmt, va_list args) {
 }
 
 OO_PRINTF_FORMAT(1, 2)
+
 inline std::string format(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -664,6 +669,7 @@ struct PathParts {
 };
 
 constexpr bool isPathSep(char c) noexcept { return c == '/' || c == '\\'; }
+
 constexpr bool isAsciiLetter(char c) noexcept {
   return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
@@ -910,6 +916,7 @@ inline int localizedCompare(std::string_view a, std::string_view b,
   struct Closer {
     void operator()(UCollator* c) const noexcept { ucol_close(c); }
   };
+
   // One collator per thread (a UCollator is not shared across threads),
   // reopened only when the locale changes: ucol_open is far too slow to pay per
   // comparison in a sort.
@@ -943,9 +950,11 @@ inline int localizedCompare(std::string_view a, std::string_view b) {
 inline int intValue(std::string_view s) {
   return plist_get::intValue(utf8ToUtf16(s));
 }
+
 inline std::int64_t longLongValue(std::string_view s) {
   return plist_get::longLongValue(utf8ToUtf16(s));
 }
+
 inline double doubleValue(std::string_view s) {
   return plist_get::doubleValue(utf8ToUtf16(s));
 }
@@ -1002,26 +1011,38 @@ class FormatArg {
   enum class Kind { kNull, kText, kSigned, kUnsigned, kReal, kPointer };
 
   FormatArg() noexcept = default;
+
   FormatArg(std::string_view text) : kind_(Kind::kText), text_(text) {}
+
   FormatArg(const std::string& text) : kind_(Kind::kText), text_(text) {}
+
   FormatArg(const char* text)
       : kind_(text != nullptr ? Kind::kText : Kind::kNull),
         text_(text != nullptr ? text : "") {}
+
   FormatArg(int v) noexcept : kind_(Kind::kSigned), signed_(v) {}
+
   FormatArg(long v) noexcept : kind_(Kind::kSigned), signed_(v) {}
+
   FormatArg(long long v) noexcept : kind_(Kind::kSigned), signed_(v) {}
+
   FormatArg(unsigned v) noexcept : kind_(Kind::kUnsigned), unsigned_(v) {}
+
   FormatArg(unsigned long v) noexcept : kind_(Kind::kUnsigned), unsigned_(v) {}
+
   FormatArg(unsigned long long v) noexcept
       : kind_(Kind::kUnsigned), unsigned_(v) {}
+
   FormatArg(double v) noexcept : kind_(Kind::kReal), real_(v) {}
 
   static FormatArg null() noexcept { return FormatArg(); }
+
   static FormatArg single(float v) noexcept {
     FormatArg a(static_cast<double>(v));
     a.single_ = true;
     return a;
   }
+
   static FormatArg pointer(const void* p) noexcept {
     FormatArg a;
     if (p != nullptr) {
@@ -1032,7 +1053,9 @@ class FormatArg {
   }
 
   Kind kind() const noexcept { return kind_; }
+
   const std::string& text() const noexcept { return text_; }
+
   bool isSingle() const noexcept { return single_; }
 
   std::int64_t asSigned() const noexcept {
@@ -1048,11 +1071,13 @@ class FormatArg {
         return 0;
     }
   }
+
   std::uint64_t asUnsigned() const noexcept {
     return kind_ == Kind::kUnsigned || kind_ == Kind::kPointer
                ? unsigned_
                : static_cast<std::uint64_t>(asSigned());
   }
+
   double asReal() const noexcept {
     switch (kind_) {
       case Kind::kReal:

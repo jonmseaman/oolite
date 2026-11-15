@@ -160,6 +160,7 @@ static bool CacheRemove(OOCacheImpl* cache, const std::string& key);
 static const oo::PList* CacheRetrieve(OOCacheImpl* cache,
                                       const std::string& key);
 static unsigned CacheGetCount(OOCacheImpl* cache);
+
 namespace {
 bool CacheRemoveOldest(OOCacheImpl* cache, const std::string& logKey);
 std::vector<oo::PList> CacheArrayOfContentsByAge(OOCacheImpl* cache);

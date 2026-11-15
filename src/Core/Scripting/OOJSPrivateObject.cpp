@@ -83,7 +83,6 @@ bool OOJSGetCxxPrivateImpl(JSContext* context, JSValueConst object,
   JSClassID ignored;
   *outObject = OOJSCxxPrivateFromOpaque(JS_GetAnyOpaque(object, &ignored));
   return true;
-
 }
 
 // OOJSObjectWrapperFinalize(): -oo_clearJSSelf: to the object, then the slot is
@@ -103,7 +102,6 @@ void OOJSCxxObjectWrapperFinalize(JSRuntime* /*runtime*/,
     JS_SetOpaque(thisObj, nullptr);
     holder.reset();  // the slot's release
   }
-
 }
 
 // OOJSObjectWrapperToString(): the object's -oo_jsDescription, else

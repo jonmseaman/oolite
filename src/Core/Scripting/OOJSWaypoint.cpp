@@ -120,7 +120,6 @@ static bool JSWaypointGetWaypointEntity(JSContext* context,
 
   *outEntity = waypoint;
   return true;
-
 }
 
 // The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the C++

@@ -103,11 +103,15 @@ static const JSCFunctionListEntry sSoundSourceMethods[] = {
 // object's slot.
 OOJSSoundSourceHolder::OOJSSoundSourceHolder(OOSoundSource* inSource)
     : _source(oo::share(inSource)) {}
+
 OOJSSoundSourceHolder::~OOJSSoundSourceHolder() = default;
+
 OOSoundSource* OOJSSoundSourceHolder::source() const { return _source.get(); }
+
 JSValue OOJSSoundSourceHolder::jsValueInContext(JSContext* context) {
   return OOJSSoundSourceJSValueInContext(_source.get(), context);
 }
+
 void OOJSSoundSourceHolder::clearJSSelf(JSValueConst) {}  // no wrapper is kept
 
 std::optional<std::string> OOJSSoundSourceHolder::jsDescription() {

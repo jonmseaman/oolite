@@ -140,6 +140,7 @@ void OOLogOutputHandlerClose() {
 }
 
 void OOLogOutputHandlerStartLoggingToStdout() { sWriteToStdout = true; }
+
 void OOLogOutputHandlerStopLoggingToStdout() { sWriteToStdout = false; }
 
 void OOLogOutputHandlerFlushIfDue() {

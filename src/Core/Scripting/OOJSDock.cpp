@@ -122,7 +122,6 @@ static bool JSDockGetDockEntity(JSContext* context, JSValueConst dockObj,
 
   *outEntity = dock;
   return true;
-
 }
 
 static bool JSDockGetShipEntity(JSContext* context, JSValueConst shipObj,
@@ -142,7 +141,6 @@ static bool JSDockGetShipEntity(JSContext* context, JSValueConst shipObj,
 
   *outEntity = oo::ToShip(entity);
   return true;
-
 }
 
 // The bodies of DockEntity's class questions, which DockEntity's overrides

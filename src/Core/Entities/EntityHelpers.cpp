@@ -50,9 +50,11 @@ namespace {
 ShipEntity* ShipPart(Entity* entity) {
   return dynamic_cast<ShipEntity*>(entity);
 }
+
 OOVisualEffectEntity* EffectPart(Entity* entity) {
   return dynamic_cast<OOVisualEffectEntity*>(entity);
 }
+
 OOWaypointEntity* WaypointPart(Entity* entity) {
   return dynamic_cast<OOWaypointEntity*>(entity);
 }

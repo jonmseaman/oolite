@@ -49,6 +49,7 @@ SOFTWARE.
 static size_t OOReadOXZVorbis(void* ptr, size_t size, size_t nmemb,
                               void* datasource);
 static int OOCloseOXZVorbis(void* datasource);
+
 // not practical to implement these
 // static int OOSeekOXZVorbis  (void *datasource, ogg_int64_t offset, int
 // whence); static long OOTellOXZVorbis (void *datasource);

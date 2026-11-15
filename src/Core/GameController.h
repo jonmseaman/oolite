@@ -109,6 +109,7 @@ class GameController : public oo::Object {
   void applicationDidFinishLaunching();
 
   void exitAppWithContext(const std::string& context);
+
   void exitAppCommandQ();
 
   // nullopt: no saved game to load (was nil).
