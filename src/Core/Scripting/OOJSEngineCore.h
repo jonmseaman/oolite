@@ -89,7 +89,7 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOFoundationTypes.h"
 
 // Number of entries in a JSCFunctionListEntry (or other) array.
-#define OOJS_COUNT(array) (sizeof(array) / sizeof *(array))
+#define OOJS_COUNT(array) (std::size(array))
 
 // There is only one context, created on the main thread.
 inline JSContext* OOJSAcquireContext() {

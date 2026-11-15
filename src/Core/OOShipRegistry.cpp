@@ -480,8 +480,7 @@ void OOShipRegistry::loadDemoShips() {
   oo::PList::Array demoShips = initialEntries;
   // -removeObject: took every equal entry out
   auto removeEntry = [&demoShips](const oo::PList& entry) {
-    demoShips.erase(std::remove(demoShips.begin(), demoShips.end(), entry),
-                    demoShips.end());
+    std::erase(demoShips, entry);
   };
 
   // Note: iterate over initialDemoShips to avoid mutating the collection being
@@ -513,9 +512,9 @@ void OOShipRegistry::loadDemoShips() {
             OOJSVal args[] = {OOJSValueFromPList(context, oo::PList(*shipKey))};
 
             OK = (condScript != nullptr
-                      ? condScript->callMethod(
-                            OOJSID("allowShowLibraryShip"), context, args,
-                            sizeof args / sizeof *args, &result)
+                      ? condScript->callMethod(OOJSID("allowShowLibraryShip"),
+                                               context, args, std::size(args),
+                                               &result)
                       : false);
 
             if (OK) allow_use = OOJSValueToBOOL(context, result);

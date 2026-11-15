@@ -10833,8 +10833,8 @@ OOCreditsQuantity PlayerEntity::adjustPriceByScriptForEqKey(
 
       OK = (condScript != nullptr
                 ? condScript->callMethod(OOJSID("updateEquipmentPrice"),
-                                         JScontext, args,
-                                         sizeof args / sizeof *args, &result)
+                                         JScontext, args, std::size(args),
+                                         &result)
                 : false);
 
       if (OK) {
@@ -12281,7 +12281,7 @@ void PlayerEntity::validateCustomEquipActivationArray() {
   int i;
   bool update = false;
   std::optional<std::string> equipmentKey;
-  if (customEquipActivation.size() == 0) return;
+  if (customEquipActivation.empty()) return;
   for (i = customEquipActivation.size() - 1; i >= 0; i--) {
     equipmentKey = StringForKey(customEquipActivation[i], CUSTOMEQUIP_EQUIPKEY);
     ::OOEquipmentType* eq =

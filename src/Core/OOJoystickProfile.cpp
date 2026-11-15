@@ -388,7 +388,7 @@ bool OOJoystickSplineAxisProfile::makeSegments() {
 
   left.x = 0.0;
   left.y = 0.0;
-  if (controlPoints_.size() == 0) {
+  if (controlPoints_.empty()) {
     right.x = 1.0;
     right.y = 1.0;
     segment = OOJoystickSplineSegment::segmentWithData(left, right);
