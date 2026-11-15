@@ -29,7 +29,6 @@ SOFTWARE.
 
 #include <algorithm>
 #include <cstdint>
-#include <cstring>
 #include <memory>
 #include <optional>
 #include <string>
@@ -191,12 +190,21 @@ void OOBasicMaterial::setEmissionColor(OOColor* color) {
   }
 }
 
+namespace {
+
+// A colour's four components, from one array to another.
+void CopyComponents(const GLfloat from[4], GLfloat to[4]) {
+  std::copy_n(from, 4, to);
+}
+
+}  // namespace
+
 void OOBasicMaterial::getDiffuseComponents(GLfloat outComponents[4]) {
-  memcpy(outComponents, diffuse, 4 * sizeof *outComponents);
+  CopyComponents(diffuse, outComponents);
 }
 
 void OOBasicMaterial::setDiffuseComponents(const GLfloat components[4]) {
-  memcpy(diffuse, components, 4 * sizeof *components);
+  CopyComponents(components, diffuse);
 }
 
 void OOBasicMaterial::setAmbientAndDiffuseComponents(
@@ -206,27 +214,27 @@ void OOBasicMaterial::setAmbientAndDiffuseComponents(
 }
 
 void OOBasicMaterial::getSpecularComponents(GLfloat outComponents[4]) {
-  memcpy(outComponents, specular, 4 * sizeof *outComponents);
+  CopyComponents(specular, outComponents);
 }
 
 void OOBasicMaterial::setSpecularComponents(const GLfloat components[4]) {
-  memcpy(specular, components, 4 * sizeof *components);
+  CopyComponents(components, specular);
 }
 
 void OOBasicMaterial::getAmbientComponents(GLfloat outComponents[4]) {
-  memcpy(outComponents, ambient, 4 * sizeof *outComponents);
+  CopyComponents(ambient, outComponents);
 }
 
 void OOBasicMaterial::setAmbientComponents(const GLfloat components[4]) {
-  memcpy(ambient, components, 4 * sizeof *components);
+  CopyComponents(components, ambient);
 }
 
 void OOBasicMaterial::getEmissionComponents(GLfloat outComponents[4]) {
-  memcpy(outComponents, emission, 4 * sizeof *outComponents);
+  CopyComponents(emission, outComponents);
 }
 
 void OOBasicMaterial::setEmissionComponents(const GLfloat components[4]) {
-  memcpy(emission, components, 4 * sizeof *components);
+  CopyComponents(components, emission);
 }
 
 void OOBasicMaterial::setDiffuseRed(GLfloat r, GLfloat g, GLfloat b,
