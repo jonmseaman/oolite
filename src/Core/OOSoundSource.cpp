@@ -25,9 +25,12 @@ SOFTWARE.
 
 */
 
+#include "OOSoundSource.h"
+
 #include <format>
 
-#include "OOSoundInternal.h"
+#include "OOALSoundChannel.h"
+#include "OOALSoundMixer.h"
 #include "oofnd/String.hpp"
 
 namespace {
@@ -123,8 +126,6 @@ bool OOSoundSource::isPlaying() { return _channel != nullptr; }
 void OOSoundSource::play() {
   if (sound() == nullptr) return;
 
-  OOSoundAcquireLock();
-
   if (_channel) stop();
 
   ::OOSoundMixer* mixer = ::OOSoundMixer::sharedMixer();
@@ -146,8 +147,6 @@ void OOSoundSource::play() {
       }) == sPlayingSoundSources->end()) {
     sPlayingSoundSources->emplace_back(oo::share(this));
   }
-
-  OOSoundReleaseLock();
 }
 
 void OOSoundSource::playOrRepeat() {
@@ -158,8 +157,6 @@ void OOSoundSource::playOrRepeat() {
 }
 
 void OOSoundSource::stop() {
-  OOSoundAcquireLock();
-
   if (nullptr != _channel) {
     _channel->setDelegate(&sStoppedSourceHandler);
     _channel->stop();
@@ -175,8 +172,6 @@ void OOSoundSource::stop() {
     // nothing after it touches the object.
     const std::shared_ptr<OOSoundSource> lastHold = std::move(_playingHold);
   }
-
-  OOSoundReleaseLock();
 }
 
 void OOSoundSource::stopAll() {
@@ -265,8 +260,6 @@ void OOSoundSource::positionRelativeTo(OOSoundReferencePoint* /*inPoint*/) {}
 void OOSoundSource::channel(::OOSoundChannel* channel, OOSound* /*sound*/) {
   assert(_channel == channel);
 
-  OOSoundAcquireLock();
-
   if (--_remainingCount) {
     _channel->playSound(sound(), false);
   } else {
@@ -277,10 +270,8 @@ void OOSoundSource::channel(::OOSoundChannel* channel, OOSound* /*sound*/) {
     // The playing hold goes at the return and may free this source: nothing
     // after it touches the object.
     const std::shared_ptr<OOSoundSource> lastHold = std::move(_playingHold);
-    OOSoundReleaseLock();
     return;
   }
-  OOSoundReleaseLock();
 }
 
 void OOSoundSource::channelOfStoppedSource(::OOSoundChannel* inChannel,
