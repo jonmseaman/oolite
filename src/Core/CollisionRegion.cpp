@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 #include "CollisionRegion.h"
 
 #include <format>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -388,23 +389,23 @@ void CollisionRegion::findCollisions() {
 
 namespace {
 
-// an outValue of 1 means it's just being occluded.
-bool entityByEntityOcclusionToValue(Entity* e1, Entity* e2,
-                                    OOSunEntity* the_sun, float* outValue) {
+// A value of 1 means it's just being occluded.
+Occlusion entityByEntityOcclusion(Entity* e1, Entity* e2,
+                                  OOSunEntity* the_sun) {
   if (e1 == e2) [[unlikely]] {
     // you can't shade self
-    return false;
+    return {false, 1.5f};
   }
-  return shadowAtPointOcclusionToValue(e1->position, e1->collision_radius, e2,
-                                       the_sun, outValue);
+  return shadowAtPointOcclusion(e1->position, e1->collision_radius, e2,
+                                the_sun);
 }
 
 }  // namespace
 
-// an outValue of 1 means it's just being occluded.
-bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
-                                   OOSunEntity* the_sun, float* outValue) {
-  *outValue = 1.5f;  // initial 'fully lit' value
+// A value of 1 means it's just being occluded.
+Occlusion shadowAtPointOcclusion(HPVector e1pos, GLfloat e1rad, Entity* e2,
+                                 OOSunEntity* the_sun) {
+  float value = 1.5f;  // initial 'fully lit' value
 
   GLfloat cr_e2;
   if (EntityIsShip(e2)) {
@@ -415,7 +416,7 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
   }
   if (cr_e2 < e1rad) {
     // smaller can't shade bigger
-    return false;
+    return {false, value};
   }
 
   // tested in construction of e2 list
@@ -465,11 +466,11 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
        * - CIM
        */
       if (d2_e2 < minbb * minbb) {
-        *outValue = static_cast<float>(0.1);
-        return true;
+        value = static_cast<float>(0.1);
+        return {true, value};
       }
     }
-    return false;
+    return {false, value};
   }
 
   GLfloat cr_sun = the_sun->collision_radius;
@@ -478,7 +479,7 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
   if (cr_e2 * cr_e2 < cr2_sun_scaled) {
     // if solar disc projected to the distance of e2 > collision radius it can't
     // be shaded by e2
-    return false;
+    return {false, value};
   }
 
   // check angles subtended by sun and occluder
@@ -507,22 +508,22 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
 
   float phi = acos(dot_product(
       v_sun, v_e2));  // angle between sun and e2 from e1's viewpoint
-  *outValue = (phi / theta_diff);  // 1 means just occluded, < 1 means in shadow
+  value = (phi / theta_diff);  // 1 means just occluded, < 1 means in shadow
 
   if (phi > theta_diff) {
     // sun is not occluded
-    return false;
+    return {false, value};
   }
 
   // all tests done e1 is in shade!
-  return true;
+  return {true, value};
 }
 
 namespace {
 
 bool testEntityOccludedByEntity(Entity* e1, Entity* e2, OOSunEntity* the_sun) {
-  float tmp;  // we're not interested in the amount of occlusion just now.
-  return entityByEntityOcclusionToValue(e1, e2, the_sun, &tmp);
+  // we're not interested in the amount of occlusion just now.
+  return entityByEntityOcclusion(e1, e2, the_sun).occluded;
 }
 
 }  // namespace
@@ -621,9 +622,10 @@ void CollisionRegion::findShadowedEntities() {
 
       // test planets
       for (j = 0; j < n_planets; j++) {
-        float occlusionNumber;
-        if (entityByEntityOcclusionToValue(e1, planets[j], the_sun,
-                                           &occlusionNumber)) {
+        const Occlusion occlusion =
+            entityByEntityOcclusion(e1, planets[j], the_sun);
+        const float occlusionNumber = occlusion.value;
+        if (occlusion.occluded) {
           e1->isSunlit = false;
           e1->shadingEntityID = EntityUniversalID(planets[j]);
           break;

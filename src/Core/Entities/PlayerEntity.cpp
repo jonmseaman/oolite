@@ -31,6 +31,7 @@ MA 02110-1301, USA.
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <expected>
 #include <format>
 #include <functional>
 #include <map>
@@ -2952,9 +2953,9 @@ GLfloat PlayerEntity::lookingAtSunWithThresholdAngleCos(
         // the player ship can't shadow internal views
         if (vdir > OOViewID::kStarboard || !oo::EntityIsPlayer(uni_entities[i]))
             [[likely]] {
-          float shadow = 1.5f;
-          shadowAtPointOcclusionToValue(viewpointPosition(), 1.0f,
-                                        uni_entities[i], sun, &shadow);
+          const float shadow = shadowAtPointOcclusion(viewpointPosition(), 1.0f,
+                                                      uni_entities[i], sun)
+                                   .value;
           /* BUG: if the shadowing entity is not spherical, this gives
            * over-shadowing. True elsewhere as well, but not so obvious there.
            */

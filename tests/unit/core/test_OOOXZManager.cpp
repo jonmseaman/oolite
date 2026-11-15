@@ -172,7 +172,7 @@ void SetUp() {
   stdfs::create_directories(CacheDirectory());
   OO_CHECK(OOWriteXMLPListToFile(
       oo::PList(std::move(cached)),
-      Generic(CacheDirectory() / "Oolite-manifests.plist"), nullptr));
+      Generic(CacheDirectory() / "Oolite-manifests.plist")));
 }
 
 std::string Str(const oo::PList& manifest, std::string_view key) {
@@ -407,7 +407,7 @@ OO_TEST(manifestDownload) {
                              "Bob Builder", "Cobra variants", {}, -1,
                              "file:///nowhere/alpha-3.0.oxz"));
     OO_CHECK(OOWriteXMLPListToFile(oo::PList(std::move(index)),
-                                   Generic(sRoot / "index.plist"), nullptr));
+                                   Generic(sRoot / "index.plist")));
     const std::string url = "file:///" + Generic(sRoot / "index.plist");
     oo::Defaults::standard().setObject("oxz-index-url", oo::PList(url));
     OO_CHECK_EQ(DataURL().value_or("(none)"), url);

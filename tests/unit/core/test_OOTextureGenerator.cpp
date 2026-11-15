@@ -127,8 +127,15 @@ OO_TEST(enqueueLoadsOnTheWorkManager) {
     OO_CHECK(generator->enqueue());
     OOPixMap pixMap = kOONullPixMap;
     OOTextureDataFormat format = kOOPixMapInvalidFormat;
-    uint32_t width = 0, height = 0;
-    OO_CHECK(generator->getResult(&pixMap, &format, &width, &height));
+    uint32_t width = 0;
+    const std::optional<OOTextureLoader::Result> loaded =
+        generator->getResult();
+    OO_CHECK(loaded.has_value());
+    if (loaded) {
+      pixMap = loaded->pixMap;
+      format = loaded->format;
+      width = loaded->originalWidth;
+    }
     OO_CHECK(gLoads == loads + 1 && generator->isReady());
     OO_CHECK(pixMap.width == 8 && pixMap.height == 8 && width == 8 &&
              format == kOOPixMapRGBA);

@@ -87,11 +87,19 @@ class OOTextureLoader : public ::OOAsyncWorkTask {
 
   bool isReady();
 
-  /*	Return value indicates success. This may only be called once (subsequent
-          attempts will return failure), and only on the main thread.
+  // A finished load: the pixels, their format, and the image's size before it
+  // was scaled.
+  struct Result {
+    OOPixMap pixMap;
+    OOTextureDataFormat format;
+    uint32_t originalWidth;
+    uint32_t originalHeight;
+  };
+
+  /*	Empty on failure. This may only be called once (subsequent attempts
+     fail), and only on the main thread.
   */
-  virtual bool getResult(OOPixMap* result, OOTextureDataFormat* outFormat,
-                         uint32_t* outWidth, uint32_t* outHeight);
+  virtual std::optional<Result> getResult();
 
   /*	Hopefully-unique string for texture loader; analagous, but not
      identical, to corresponding texture cacheKey.
@@ -168,7 +176,13 @@ class OOTextureLoader : public ::OOAsyncWorkTask {
   static void setUp();
 
   void applySettings();
-  void getDesiredWidth(OOPixMapDimension* outDesiredWidth,
-                       OOPixMapDimension* outDesiredHeight);
+
+  struct DesiredSize {
+    OOPixMapDimension width;
+    OOPixMapDimension height;
+  };
+
+  // The size the texture is scaled to (and marks a cube map as one).
+  DesiredSize getDesiredSize();
   void generateMipMapsForCubeMap();
 };

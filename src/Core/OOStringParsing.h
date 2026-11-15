@@ -38,16 +38,16 @@ MA 02110-1301, USA.
 
 // Tokens of a string: oo::str::tokens (oofnd/String.hpp).
 
-// Note: these functions will leave their out values untouched if they fail (and
-// return NO). They will not log an error if passed a null string (nullopt; but
-// will return NO). This means they can be used to, say, read dictionary entries
-// which might not exist. They also ignore any extra components in the string.
-bool ScanVectorFromString(const std::optional<std::string>& xyzString,
-                          Vector* outVector);
-bool ScanHPVectorFromString(const std::optional<std::string>& xyzString,
-                            HPVector* outVector);
-bool ScanQuaternionFromString(const std::optional<std::string>& wxyzString,
-                              Quaternion* outQuaternion);
+// Note: these functions answer nullopt if they fail. They will not log an error
+// if passed a null string (nullopt), so they can be used to, say, read
+// dictionary entries which might not exist. They also ignore any extra
+// components in the string.
+std::optional<Vector> ScanVectorFromString(
+    const std::optional<std::string>& xyzString);
+std::optional<HPVector> ScanHPVectorFromString(
+    const std::optional<std::string>& xyzString);
+std::optional<Quaternion> ScanQuaternionFromString(
+    const std::optional<std::string>& wxyzString);
 
 // A position and an orientation, as ScanVectorAndQuaternionFromString() reads
 // them.

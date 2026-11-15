@@ -30,6 +30,7 @@ SOFTWARE.
 #include <algorithm>
 #include <format>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "OOColor.h"
@@ -127,12 +128,15 @@ bool OOCombinedEmissionMapGenerator::initWithEmissionMapSpec(
 
   OOCParameterAssert(illuminationMapSpec.isNull() || !isCombinedMap);
 
-  OOTextureFlags options;
-  GLfloat anisotropy;
-  GLfloat lodBias;
-  OOInterpretTextureSpecifier(spec, nullptr, &options, &anisotropy, &lodBias,
-                              true);
-  options = OOApplyTextureOptionDefaults(options);
+  // A specifier that is not one leaves the defaults (they were uninitialised).
+  const OOTextureSpecifier interpreted =
+      OOInterpretTextureSpecifier(spec, true)
+          .value_or(OOTextureSpecifier{"", OOTextureFlags::kDefaultOptions,
+                                       kOOTextureDefaultAnisotropy,
+                                       kOOTextureDefaultLODBias});
+  OOTextureFlags options = OOApplyTextureOptionDefaults(interpreted.options);
+  const GLfloat anisotropy = interpreted.anisotropy;
+  const GLfloat lodBias = interpreted.lodBias;
 
   if (initWithPath(std::string("<generated emission map>"), options)) {
     /*	Illumination contribution is:
@@ -184,13 +188,17 @@ bool OOCombinedEmissionMapGenerator::initWithEmissionMapSpec(
               this would be done asynchronously, but that requires dependency
               management in OOAsyncWorkManager.
       */
-      OOTextureDataFormat format;
+      // A loader that fails leaves a null pixmap, as its getResult did.
+      auto PixMapOf = [](OOTextureLoader& loader) {
+        const std::optional<OOTextureLoader::Result> loaded =
+            loader.getResult();
+        return loaded.has_value() ? loaded->pixMap : kOONullPixMap;
+      };
       if (!_emissionSpec.isNull()) {
         const std::shared_ptr<OOTextureLoader> emissionMapLoader =
             OOTextureLoader::loaderWithTextureSpecifier(
                 _emissionSpec, OOTextureFlags::kNone, std::string("Textures"));
-        if (emissionMapLoader)
-          emissionMapLoader->getResult(&_emissionPx, &format, nullptr, nullptr);
+        if (emissionMapLoader) _emissionPx = PixMapOf(*emissionMapLoader);
 #ifndef NDEBUG
         _emissionDesc =
             (emissionMapLoader ? emissionMapLoader->shortDescription()
@@ -203,8 +211,7 @@ bool OOCombinedEmissionMapGenerator::initWithEmissionMapSpec(
                 _illuminationSpec, OOTextureFlags::kNone,
                 std::string("Textures"));
         if (illuminationMapLoader)
-          illuminationMapLoader->getResult(&_illuminationPx, &format, nullptr,
-                                           nullptr);
+          _illuminationPx = PixMapOf(*illuminationMapLoader);
 #ifndef NDEBUG
         _illuminationDesc =
             (illuminationMapLoader ? illuminationMapLoader->shortDescription()

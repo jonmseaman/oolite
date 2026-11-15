@@ -202,17 +202,13 @@ std::shared_ptr<OOTexture> OOTexture::loadTextureWithConfiguration(
 
 std::shared_ptr<OOTexture> OOTexture::textureWithConfiguration(
     const oo::PList& configuration, OOTextureFlags extraOptions) {
-  std::string name;
-  OOTextureFlags options = OOTextureFlags::kNone;
-  GLfloat anisotropy = 0.0f;
-  GLfloat lodBias = 0.0f;
+  const std::optional<OOTextureSpecifier> spec =
+      OOInterpretTextureSpecifier(configuration, false);
+  if (!spec.has_value()) return nullptr;
 
-  if (!OOInterpretTextureSpecifier(configuration, &name, &options, &anisotropy,
-                                   &lodBias, false))
-    return nullptr;
-
-  return loadTextureWithName(name, "Textures", options | extraOptions,
-                             anisotropy, lodBias);
+  return loadTextureWithName(spec->name, "Textures",
+                             spec->options | extraOptions, spec->anisotropy,
+                             spec->lodBias);
 }
 
 std::shared_ptr<OOTexture> OOTexture::nullTexture() {
@@ -613,11 +609,8 @@ uint8_t OOTextureComponentsForFormat(OOTextureDataFormat format) {
 
 bool OOCubeMapsAvailable() { return gOOTextureInfo.cubeMapAvailable; }
 
-bool OOInterpretTextureSpecifier(const oo::PList& specifier,
-                                 std::string* outName,
-                                 OOTextureFlags* outOptions,
-                                 float* outAnisotropy, float* outLODBias,
-                                 bool ignoreExtract) {
+std::optional<OOTextureSpecifier> OOInterpretTextureSpecifier(
+    const oo::PList& specifier, bool ignoreExtract) {
   std::string name;
   OOTextureFlags options = OOTextureFlags::kDefaultOptions;
   float anisotropy = kOOTextureDefaultAnisotropy;
@@ -635,7 +628,7 @@ bool OOInterpretTextureSpecifier(const oo::PList& specifier,
           "texture.load.noName",
           "Invalid texture configuration dictionary (must specify name):\n{}",
           oo::DescriptionOf(specifier));
-      return false;
+      return std::nullopt;
     }
     name = specifier.get<std::string>(kOOTextureSpecifierNameKey);
 
@@ -711,17 +704,12 @@ bool OOInterpretTextureSpecifier(const oo::PList& specifier,
              (specifier.type() == oo::PList::Type::kObject)
                  ? std::string("(null)")
                  : std::string(oo::typeName(specifier.type())));
-    return false;
+    return std::nullopt;
   }
 
-  if (name.empty()) return false;
+  if (name.empty()) return std::nullopt;
 
-  if (outName != nullptr) *outName = name;
-  if (outOptions != nullptr) *outOptions = options;
-  if (outAnisotropy != nullptr) *outAnisotropy = anisotropy;
-  if (outLODBias != nullptr) *outLODBias = lodBias;
-
-  return true;
+  return OOTextureSpecifier{std::move(name), options, anisotropy, lodBias};
 }
 
 oo::PList OOMakeTextureSpecifier(const std::string& name,
@@ -893,15 +881,11 @@ std::string OOGenerateTextureCacheKey(
 }
 
 std::string OOTextureCacheKeyForSpecifier(const oo::PList& specifier) {
-  // Left as initialised when the specifier is not understood (they were
-  // uninitialised).
-  std::string name;
-  OOTextureFlags options = OOTextureFlags::kNone;
-  float anisotropy = 0.0f;
-  float lodBias = 0.0f;
-
-  OOInterpretTextureSpecifier(specifier, &name, &options, &anisotropy, &lodBias,
-                              false);
-  return OOGenerateTextureCacheKey("Textures", name, options, anisotropy,
-                                   lodBias);
+  // An empty name, no options and zeros when the specifier is not understood
+  // (they were uninitialised).
+  const OOTextureSpecifier spec =
+      OOInterpretTextureSpecifier(specifier, false)
+          .value_or(OOTextureSpecifier{"", OOTextureFlags::kNone, 0.0f, 0.0f});
+  return OOGenerateTextureCacheKey("Textures", spec.name, spec.options,
+                                   spec.anisotropy, spec.lodBias);
 }

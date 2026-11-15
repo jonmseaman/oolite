@@ -121,8 +121,11 @@ struct Generated {
 
 void Generate(OOTextureGenerator* generator, Generated& generated) {
   OO_CHECK(generator->enqueue());
-  generated.ok =
-      generator->getResult(&generated.pixMap, &generated.format, NULL, NULL);
+  if (std::optional<OOTextureLoader::Result> loaded = generator->getResult()) {
+    generated.ok = true;
+    generated.pixMap = loaded->pixMap;
+    generated.format = loaded->format;
+  }
 }
 
 void ClearCache() {
@@ -249,9 +252,14 @@ OO_TEST(cxxApi) {
     OOPixMap pixMap = kOONullPixMap;
     OOTextureDataFormat format = kOOPixMapInvalidFormat;
     generator->completeAsyncTask();
-    OO_CHECK(generator->getResultFormatWidthHeight(&pixMap, &format, nullptr,
-                                                   nullptr) &&
-             format == kOOPixMapRGBA && pixMap.width == 512);
+    const std::optional<OOTextureLoader::Result> loaded =
+        generator->getResultFormatWidthHeight();
+    if (loaded) {
+      pixMap = loaded->pixMap;
+      format = loaded->format;
+    }
+    OO_CHECK(loaded.has_value() && format == kOOPixMapRGBA &&
+             pixMap.width == 512);
     OOFreePixMap(&pixMap);
 
     std::shared_ptr<OOTexture> texture;

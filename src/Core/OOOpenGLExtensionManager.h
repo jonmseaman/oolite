@@ -79,8 +79,14 @@ class OOOpenGLExtensionManager : public oo::Object {
   std::size_t majorVersionNumber();
   std::size_t minorVersionNumber();
   std::size_t releaseVersionNumber();
-  void getVersionMajor(unsigned* outMajor, unsigned* outMinor,
-                       unsigned* outRelease);
+
+  struct Version {
+    unsigned major;
+    unsigned minor;
+    unsigned release;
+  };
+
+  Version version();
   bool versionIsAtLeastMajor(unsigned maj, unsigned min);
 
   std::optional<std::string> vendorString();

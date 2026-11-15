@@ -34,6 +34,7 @@ SOFTWARE.
 #include <cstring>
 #include <format>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <typeinfo>
@@ -113,14 +114,13 @@ std::shared_ptr<OOTextureLoader> OOTextureLoader::loaderWithPath(
 std::shared_ptr<OOTextureLoader> OOTextureLoader::loaderWithTextureSpecifier(
     const oo::PList& specifier, OOTextureFlags extraOptions,
     const std::optional<std::string>& folder) {
-  std::string name;
   std::optional<std::string> path;
-  OOTextureFlags options = OOTextureFlags::kNone;
 
-  if (!OOInterpretTextureSpecifier(specifier, &name, &options, nullptr, nullptr,
-                                   false))
-    return nullptr;
-  options |= extraOptions;
+  const std::optional<OOTextureSpecifier> spec =
+      OOInterpretTextureSpecifier(specifier, false);
+  if (!spec.has_value()) return nullptr;
+  const std::string& name = spec->name;
+  OOTextureFlags options = spec->options | extraOptions;
   path = ResourceManager::pathForFileNamed(name, folder);
   if (!path.has_value()) {
     if (!oo::Any(options & OOTextureFlags::kNoFNFMessage)) {
@@ -261,37 +261,25 @@ std::optional<std::string> OOTextureLoader::path() { return _path; }
 
 bool OOTextureLoader::isReady() { return _ready; }
 
-bool OOTextureLoader::getResult(OOPixMap* result,
-                                OOTextureDataFormat* outFormat,
-                                uint32_t* outWidth, uint32_t* outHeight) {
-  OOCParameterAssert(result != nullptr && outFormat != nullptr);
-
-  bool OK = true;
-
+std::optional<OOTextureLoader::Result> OOTextureLoader::getResult() {
   if (!_ready) {
     // The work manager knows the task as the C++ loader.
     OOAsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(this);
   }
-  if (_data == nullptr) OK = false;
+  if (_data == nullptr) return std::nullopt;
 
-  if (OK) {
-    *result = OOMakePixMap(
-        std::move(_data), _width, _height,
-        static_cast<OOPixMapFormat>(OOTextureComponentsForFormat(_format)), 0,
-        0);
-    _data = nullptr;
-    *outFormat = _format;
-    OK = OOIsValidPixMap(*result);
-    if (outWidth != nullptr) *outWidth = _originalWidth;
-    if (outHeight != nullptr) *outHeight = _originalHeight;
-  }
-
-  if (!OK) {
-    *result = kOONullPixMap;
-    *outFormat = kOOTextureDataInvalid;
-  }
-
-  return OK;
+  Result result{
+      .pixMap = OOMakePixMap(
+          std::move(_data), _width, _height,
+          static_cast<OOPixMapFormat>(OOTextureComponentsForFormat(_format)), 0,
+          0),
+      .format = _format,
+      .originalWidth = _originalWidth,
+      .originalHeight = _originalHeight,
+  };
+  _data = nullptr;
+  if (!OOIsValidPixMap(result.pixMap)) return std::nullopt;
+  return result;
 }
 
 std::optional<std::string> OOTextureLoader::cacheKey() {
@@ -415,7 +403,9 @@ void OOTextureLoader::applySettings() {
     }
   }
 
-  getDesiredWidth(&desiredWidth, &desiredHeight);
+  const DesiredSize desired = getDesiredSize();
+  desiredWidth = desired.width;
+  desiredHeight = desired.height;
 
   if (_isCubeMap && !OOCubeMapsAvailable()) {
     OOPixMapToRGBA(&pixMap);
@@ -498,8 +488,7 @@ void OOTextureLoader::applySettings() {
   // All done.
 }
 
-void OOTextureLoader::getDesiredWidth(OOPixMapDimension* outDesiredWidth,
-                                      OOPixMapDimension* outDesiredHeight) {
+OOTextureLoader::DesiredSize OOTextureLoader::getDesiredSize() {
   OOPixMapDimension desiredWidth, desiredHeight;
 
   // Work out appropriate final size for textures.
@@ -546,8 +535,7 @@ void OOTextureLoader::getDesiredWidth(OOPixMapDimension* outDesiredWidth,
     desiredHeight = _height;
   }
 
-  if (outDesiredWidth != nullptr) *outDesiredWidth = desiredWidth;
-  if (outDesiredHeight != nullptr) *outDesiredHeight = desiredHeight;
+  return {desiredWidth, desiredHeight};
 }
 
 void OOTextureLoader::completeAsyncTask() { _ready = true; }

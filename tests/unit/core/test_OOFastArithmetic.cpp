@@ -78,7 +78,7 @@ OO_TEST(roundsUpToThePowerOfTwo) {
 }
 
 OO_TEST(aTwoPixelSideScalesToTwo) {
-  // OOTextureLoader::getDesiredWidth and OOTextureVerifierStage: (2 * side) / 3
+  // OOTextureLoader::getDesiredSize and OOTextureVerifierStage: (2 * side) / 3
   // (OORoundUpToPowerOf2_PixMap is the 32-bit one).
   volatile uint32_t side = 2;
   OO_CHECK(OORoundUpToPowerOf2_32((2 * side) / 3) == 2);

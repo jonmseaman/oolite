@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 #include <array>  // IWYU pragma: keep: used only with DEBUG_GRAPHVIZ
 #include <cstdint>
 #include <format>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
@@ -39,14 +40,13 @@ MA 02110-1301, USA.
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
 
-bool ScanVectorFromString(const std::optional<std::string>& xyzString,
-                          Vector* outVector) {
+std::optional<Vector> ScanVectorFromString(
+    const std::optional<std::string>& xyzString) {
   GLfloat xyz[] = {0.0, 0.0, 0.0};
   int i = 0;
   std::string_view error;
 
-  assert(outVector != nullptr);
-  if (!xyzString.has_value()) return false;
+  if (!xyzString.has_value()) return std::nullopt;
 
   oo::str::Scanner scanner(*xyzString);
   while (!scanner.isAtEnd() && i < 3 && error.empty()) {
@@ -55,36 +55,26 @@ bool ScanVectorFromString(const std::optional<std::string>& xyzString,
 
   if (error.empty() && i < 3) error = "found less than three float values.";
 
-  if (error.empty()) {
-    *outVector = make_vector(xyz[0], xyz[1], xyz[2]);
-    return true;
-  } else {
-    OO_LOG_ERR("strings.conversion.vector", "cannot make vector from '{}': {}",
-               *xyzString, error);
-    return false;
-  }
+  if (error.empty()) return make_vector(xyz[0], xyz[1], xyz[2]);
+  OO_LOG_ERR("strings.conversion.vector", "cannot make vector from '{}': {}",
+             *xyzString, error);
+  return std::nullopt;
 }
 
-bool ScanHPVectorFromString(const std::optional<std::string>& xyzString,
-                            HPVector* outVector) {
-  Vector scanVector;
-  assert(outVector != nullptr);
-  bool result = ScanVectorFromString(xyzString, &scanVector);
-  if (!result) {
-    return false;
-  }
-  *outVector = vectorToHPVector(scanVector);
-  return true;
+std::optional<HPVector> ScanHPVectorFromString(
+    const std::optional<std::string>& xyzString) {
+  const std::optional<Vector> scanned = ScanVectorFromString(xyzString);
+  if (!scanned.has_value()) return std::nullopt;
+  return vectorToHPVector(*scanned);
 }
 
-bool ScanQuaternionFromString(const std::optional<std::string>& wxyzString,
-                              Quaternion* outQuaternion) {
+std::optional<Quaternion> ScanQuaternionFromString(
+    const std::optional<std::string>& wxyzString) {
   GLfloat wxyz[] = {1.0, 0.0, 0.0, 0.0};
   int i = 0;
   std::string_view error;
 
-  assert(outQuaternion != nullptr);
-  if (!wxyzString.has_value()) return false;
+  if (!wxyzString.has_value()) return std::nullopt;
 
   oo::str::Scanner scanner(*wxyzString);
   while (!scanner.isAtEnd() && i < 4 && error.empty()) {
@@ -93,18 +83,18 @@ bool ScanQuaternionFromString(const std::optional<std::string>& wxyzString,
 
   if (error.empty() && i < 4) error = "found less than four float values.";
 
-  if (error.empty()) {
-    outQuaternion->w = wxyz[0];
-    outQuaternion->x = wxyz[1];
-    outQuaternion->y = wxyz[2];
-    outQuaternion->z = wxyz[3];
-    quaternion_normalize(outQuaternion);
-    return true;
-  } else {
+  if (!error.empty()) {
     OO_LOG_ERR("strings.conversion.quaternion",
                "cannot make quaternion from '{}': {}", *wxyzString, error);
-    return false;
+    return std::nullopt;
   }
+  Quaternion result;
+  result.w = wxyz[0];
+  result.x = wxyz[1];
+  result.y = wxyz[2];
+  result.z = wxyz[3];
+  quaternion_normalize(&result);
+  return result;
 }
 
 std::optional<oo::VectorAndQuaternion> ScanVectorAndQuaternionFromString(
@@ -143,16 +133,12 @@ std::optional<oo::VectorAndQuaternion> ScanVectorAndQuaternionFromString(
 
 Vector VectorFromString(const std::optional<std::string>& xyzString,
                         Vector defaultValue) {
-  Vector result;
-  if (!ScanVectorFromString(xyzString, &result)) result = defaultValue;
-  return result;
+  return ScanVectorFromString(xyzString).value_or(defaultValue);
 }
 
 Quaternion QuaternionFromString(const std::optional<std::string>& wxyzString,
                                 Quaternion defaultValue) {
-  Quaternion result;
-  if (!ScanQuaternionFromString(wxyzString, &result)) result = defaultValue;
-  return result;
+  return ScanQuaternionFromString(wxyzString).value_or(defaultValue);
 }
 
 std::string StringFromPoint(NSPoint point) {

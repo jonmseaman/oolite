@@ -91,8 +91,13 @@ struct Result {
 
 Result GetResult(OOTextureLoader* loader) {
   Result result;
-  result.ok = loader->getResult(&result.pixMap, &result.format,
-                                &result.originalWidth, &result.originalHeight);
+  if (std::optional<OOTextureLoader::Result> loaded = loader->getResult()) {
+    result.ok = true;
+    result.pixMap = loaded->pixMap;
+    result.format = loaded->format;
+    result.originalWidth = loaded->originalWidth;
+    result.originalHeight = loaded->originalHeight;
+  }
   return result;
 }
 
@@ -267,8 +272,12 @@ OO_TEST(cxxApi) {
         loader.get(), OOAsyncWorkPriority::kMedium));
     OOPixMap pixMap = kOONullPixMap;
     OOTextureDataFormat format = kOOPixMapInvalidFormat;
-    OO_CHECK(loader->getResult(&pixMap, &format, nullptr, nullptr) &&
-             loader->isReady());
+    std::optional<OOTextureLoader::Result> loaded = loader->getResult();
+    if (loaded) {
+      pixMap = loaded->pixMap;
+      format = loaded->format;
+    }
+    OO_CHECK(loaded.has_value() && loader->isReady());
     OO_CHECK(format == kOOPixMapRGBA && pixMap.width == 8 &&
              ((const uint8_t*)pixMap.pixels)[0] == 1);
     OOFreePixMap(&pixMap);
@@ -277,7 +286,12 @@ OO_TEST(cxxApi) {
     std::shared_ptr<OOTextureLoader> made =
         OOTextureLoader::loaderWithPath(path, OOTextureFlags::kMinFilterLinear);
     OO_CHECK(dynamic_cast<OOPNGTextureLoader*>(made.get()) != nullptr);
-    OO_CHECK(made->getResult(&pixMap, &format, nullptr, nullptr));
+    loaded = made->getResult();
+    if (loaded) {
+      pixMap = loaded->pixMap;
+      format = loaded->format;
+    }
+    OO_CHECK(loaded.has_value());
     OOFreePixMap(&pixMap);
 
     // Reading on its own (as libpng's read callback does): the loader reads its

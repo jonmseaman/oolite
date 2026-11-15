@@ -148,11 +148,9 @@ OO_TEST(readsTheDriver) {
     OO_CHECK(manager->majorVersionNumber() == major);
     OO_CHECK(manager->minorVersionNumber() == minor);
     OO_CHECK(manager->releaseVersionNumber() == release);
-    unsigned gotMajor = 99, gotMinor = 99, gotRelease = 99;
-    manager->getVersionMajor(&gotMajor, &gotMinor, &gotRelease);
-    OO_CHECK(gotMajor == major && gotMinor == minor && gotRelease == release);
-    manager->getVersionMajor(NULL, &gotMinor, NULL);  // NULL outs are skipped
-    OO_CHECK(gotMinor == minor);
+    const OOOpenGLExtensionManager::Version got = manager->version();
+    OO_CHECK(got.major == major && got.minor == minor && got.release == release);
+    OO_CHECK(manager->version().minor == minor);  // one part on its own
     OO_CHECK(manager->versionIsAtLeastMajor(major, minor));
     OO_CHECK(manager->versionIsAtLeastMajor(major - 1, minor + 100));
     OO_CHECK(!manager->versionIsAtLeastMajor(major, minor + 1));

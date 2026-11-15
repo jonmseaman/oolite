@@ -107,8 +107,14 @@ class CollisionRegion : public oo::Object {
   CollisionRegion* parentRegion = {};
 };
 
-/* Given a region centred at e1pos with a radius of e1rad, the depth
- * of shadowing cast by e2 from the_sun is recorded in outValue, with
- * >1 = no shadow, <1 = shadow */
-bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
-                                   OOSunEntity* the_sun, float* outValue);
+// Whether e2 shades the point, and the depth of its shadow: >1 = no shadow,
+// <1 = shadow. The value is given either way.
+struct Occlusion {
+  bool occluded;
+  float value;
+};
+
+/* Given a region centred at e1pos with a radius of e1rad, the occlusion of
+ * the_sun by e2. */
+Occlusion shadowAtPointOcclusion(HPVector e1pos, GLfloat e1rad, Entity* e2,
+                                 OOSunEntity* the_sun);

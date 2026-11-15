@@ -2654,11 +2654,11 @@ void ShipEntity::update(OOTimeDelta delta_t) {
                             dot_product(dpos, v_forward));
             Vector pos0 = {0, 0, 0};
             const auto contact = closeContactsInfo.find(other_key);
-            ScanVectorFromString(
-                contact != closeContactsInfo.end()
-                    ? std::optional<std::string>(contact->second)
-                    : std::nullopt,
-                &pos0);
+            if (const std::optional<Vector> scanned = ScanVectorFromString(
+                    contact != closeContactsInfo.end()
+                        ? std::optional<std::string>(contact->second)
+                        : std::nullopt))
+              pos0 = *scanned;
             // send AI messages about the contact
             const std::weak_ptr<Entity> temp = _primaryTarget;
             _primaryTarget = std::weak_ptr<Entity>(oo::share(other));
