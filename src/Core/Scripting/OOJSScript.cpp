@@ -600,21 +600,20 @@ oo::PList::Dict OOJSScript::defaultPropertiesFromPath(
       StringForKey(manifest, std::string(kOOManifestIdentifier));
   if (manifest && !(identifier.has_value() &&
                     oo::str::hasPrefix(*identifier, "__oolite.tmp."))) {
-    if (manifest.get<oo::PList>(std::string(kOOManifestVersion)) != nullptr) {
+    if (manifest.get<oo::PList>(kOOManifestVersion) != nullptr) {
       properties["version"] = ValueForKey(
           StringForKey(manifest, std::string(kOOManifestVersion)), "version");
     }
-    if (manifest.get<oo::PList>(std::string(kOOManifestIdentifier)) !=
-        nullptr) {
+    if (manifest.get<oo::PList>(kOOManifestIdentifier) != nullptr) {
       // used for system info
       properties[kLocalManifestProperty] =
           ValueForKey(identifier, kLocalManifestProperty);
     }
-    if (manifest.get<oo::PList>(std::string(kOOManifestAuthor)) != nullptr) {
+    if (manifest.get<oo::PList>(kOOManifestAuthor) != nullptr) {
       properties["author"] = ValueForKey(
           StringForKey(manifest, std::string(kOOManifestAuthor)), "author");
     }
-    if (manifest.get<oo::PList>(std::string(kOOManifestLicense)) != nullptr) {
+    if (manifest.get<oo::PList>(kOOManifestLicense) != nullptr) {
       properties["license"] = ValueForKey(
           StringForKey(manifest, std::string(kOOManifestLicense)), "license");
     }

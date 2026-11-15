@@ -1996,7 +1996,7 @@ void ShipEntity::setUpMixedEscorts() {
 
   const oo::PList systeminfo =
       (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList());
-  government = systeminfo.get<unsigned char>(std::string(KEY_GOVERNMENT));
+  government = systeminfo.get<unsigned char>(KEY_GOVERNMENT);
 
   ::OOShipGroup* escortGroup = this->escortGroup();
   if (group() == nullptr) {
@@ -3728,12 +3728,11 @@ bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey,
           registry->shipyardInfoForKey(shipDataKey().value_or(""));
       std::set<std::string> options;
       const oo::PList* standardEquipment =
-          shipyardInfo.find(std::string(KEY_STANDARD_EQUIPMENT));
+          shipyardInfo.find(KEY_STANDARD_EQUIPMENT);
       for (const oo::PList* list :
-           {ArrayForKey(shipyardInfo, std::string(KEY_OPTIONAL_EQUIPMENT)),
+           {ArrayForKey(shipyardInfo, KEY_OPTIONAL_EQUIPMENT),
             standardEquipment != nullptr
-                ? ArrayForKey(*standardEquipment,
-                              std::string(KEY_EQUIPMENT_EXTRAS))
+                ? ArrayForKey(*standardEquipment, KEY_EQUIPMENT_EXTRAS)
                 : nullptr}) {
         for (std::size_t i = 0; list != nullptr && i < list->count(); i++) {
           if (const std::string* option = list->at(i)->getIf<std::string>())
@@ -13550,7 +13549,7 @@ bool ShipEntity::isMining() {
 }
 
 void ShipEntity::interpretAIMessage(const std::string& ms) {
-  if (oo::str::hasPrefix(ms, std::string(AIMS_AGGRESSOR_SWITCHED_TARGET))) {
+  if (oo::str::hasPrefix(ms, AIMS_AGGRESSOR_SWITCHED_TARGET)) {
     // if I'm under attack send a thank-you message to the rescuer
     //
     const std::vector<std::string> tokens = oo::str::tokens(ms);

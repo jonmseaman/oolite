@@ -166,8 +166,7 @@ bool FoundIgnoringCase(const std::optional<std::string>& haystack,
 // raised on -rangeOfString:options:; it is skipped.)
 bool TagFoundIgnoringCase(const oo::PList& manifest,
                           const std::string& needle) {
-  const oo::PList* tags =
-      manifest.get<oo::PList::Array>(std::string(kOOManifestTags));
+  const oo::PList* tags = manifest.get<oo::PList::Array>(kOOManifestTags);
   if (tags == nullptr) return false;
   for (const oo::PList& tag : *tags->getIf<oo::PList::Array>()) {
     if (const std::string* string = tag.getIf<std::string>()) {
@@ -269,8 +268,7 @@ std::optional<std::string> FirstDescriptionLine(const oo::PList& manifest) {
 
 // [tags componentsJoinedByString:@", "] (nullopt: no tags array).
 std::optional<std::string> JoinedTags(const oo::PList& manifest) {
-  const oo::PList* tags =
-      manifest.get<oo::PList::Array>(std::string(kOOManifestTags));
+  const oo::PList* tags = manifest.get<oo::PList::Array>(kOOManifestTags);
   if (tags == nullptr) return std::nullopt;
   std::string result;
   bool first = true;
@@ -588,7 +586,7 @@ bool OOOXZManager::applyFilterByDays(const oo::PList& manifest,
     return false;
   } else {
     std::size_t updated =
-        manifest.get<unsigned long long>(std::string(kOOManifestUploadDate));
+        manifest.get<unsigned long long>(kOOManifestUploadDate);
     std::size_t now =
         static_cast<std::size_t>(oo::date::timeIntervalSince1970());
     return (updated + (86400 * i) > now);
@@ -919,9 +917,9 @@ bool OOOXZManager::processDownloadedOXZ() {
   ResourceManager::resetManifestKnowledgeForOXZManager();
 
   const oo::PList* requiredNode =
-      downloadedManifest.find(std::string(kOOManifestRequiresOXPs));
+      downloadedManifest.find(kOOManifestRequiresOXPs);
   if (requiredNode == nullptr || !requiredNode->isArray()) {
-    requiredNode = expectedManifest.find(std::string(kOOManifestRequiresOXPs));
+    requiredNode = expectedManifest.find(kOOManifestRequiresOXPs);
   }
   const oo::PList::Array& requiredOXPs =
       (requiredNode != nullptr && requiredNode->isArray())
@@ -1276,7 +1274,7 @@ bool OOOXZManager::installOXZ(std::size_t item) {
     // can't be installed on this version of Oolite, or already is installed
     return false;
   }
-  const oo::PList* url = manifest.find(std::string(kOOManifestDownloadURL));
+  const oo::PList* url = manifest.find(kOOManifestDownloadURL);
   if (url == nullptr) {
     OO_LOG("oxz.manager.error", "{}",
            "Manifest does not have a download URL - cannot install");
@@ -2126,11 +2124,10 @@ OOGUIRow OOOXZManager::showInstallOptions() {
               Columns({OO_DESC("oolite-oxzmanager-infoline-url"), infoUrl}),
               OXZ_GUI_ROW_LISTINFO1);
       }
-      std::size_t size =
-          manifest.get<unsigned int>(std::string(kOOManifestFileSize), 0);
+      std::size_t size = manifest.get<unsigned int>(kOOManifestFileSize, 0);
 
-      std::size_t timestamp = manifest.get<unsigned long long>(
-          std::string(kOOManifestUploadDate), 0);
+      std::size_t timestamp =
+          manifest.get<unsigned long long>(kOOManifestUploadDate, 0);
       if (timestamp > 0) {
         // list of installable OXZs
         // keep only the first part of the date string description, which should

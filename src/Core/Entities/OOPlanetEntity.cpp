@@ -219,22 +219,19 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
   _name.reset();
   // A nil planet info read nil for the name, which then falls back to nothing.
   const std::optional<std::string> infoName =
-      planetInfo ? std::optional<std::string>(planetInfo.get<std::string>(
-                       std::string(KEY_PLANETNAME), "%H"))
+      planetInfo ? std::optional<std::string>(
+                       planetInfo.get<std::string>(KEY_PLANETNAME, "%H"))
                  : std::nullopt;
   const std::optional<std::string> planetName =
-      infoName.has_value()
-          ? std::optional<std::string>(
-                dict.get<std::string>(std::string(KEY_PLANETNAME), *infoName))
-          : OptionalStringForKey(dict, std::string(KEY_PLANETNAME));
+      infoName.has_value() ? std::optional<std::string>(dict.get<std::string>(
+                                 KEY_PLANETNAME, *infoName))
+                           : OptionalStringForKey(dict, KEY_PLANETNAME);
   setName(planetName.has_value() ? OOExpand(*planetName) : std::nullopt);
 
-  int radius_km = dict.get<int>(std::string(KEY_RADIUS),
-                                planetInfo.get<int>(std::string(KEY_RADIUS)));
+  int radius_km = dict.get<int>(KEY_RADIUS, planetInfo.get<int>(KEY_RADIUS));
   collision_radius = radius_km * 10.0;  // Scale down by a factor of 100
   OOTechLevelID techLevel =
-      dict.get<int>(std::string(KEY_TECHLEVEL),
-                    planetInfo.get<int>(std::string(KEY_TECHLEVEL)));
+      dict.get<int>(KEY_TECHLEVEL, planetInfo.get<int>(KEY_TECHLEVEL));
 
   if (techLevel > 14) techLevel = 14;
   _shuttlesOnGround = 1 + techLevel / 2;

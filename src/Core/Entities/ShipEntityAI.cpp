@@ -1586,9 +1586,9 @@ void ShipEntity::scanForOffenders() {
   float gov_factor =
       0.4 *
       (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
-          .get<int>(std::string(
-              KEY_GOVERNMENT));  // 0 .. 7 (0 anarchic .. 7 most stable) -->
-                                 // [0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8]
+          .get<int>(
+              KEY_GOVERNMENT);  // 0 .. 7 (0 anarchic .. 7 most stable) -->
+                                // [0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8]
   //
   if ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) == nullptr)
     gov_factor = 1.0;

@@ -2163,15 +2163,14 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
         nearby_systems[num_nearby_systems].gov = -1;  // Flag up nova systems!
       } else {
         nearby_systems[num_nearby_systems].tec =
-            sys_info.get<int>(std::string(KEY_TECHLEVEL));
-        nearby_systems[num_nearby_systems].eco =
-            sys_info.get<int>(std::string(KEY_ECONOMY));
+            sys_info.get<int>(KEY_TECHLEVEL);
+        nearby_systems[num_nearby_systems].eco = sys_info.get<int>(KEY_ECONOMY);
         nearby_systems[num_nearby_systems].gov =
-            sys_info.get<int>(std::string(KEY_GOVERNMENT));
+            sys_info.get<int>(KEY_GOVERNMENT);
       }
       nearby_systems[num_nearby_systems].sysid = i;
       nearby_systems[num_nearby_systems].p_name =
-          sys_info.get<std::string>(std::string(KEY_NAME));
+          sys_info.get<std::string>(KEY_NAME);
       nearby_systems[num_nearby_systems].nova =
           (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(i) : oo::PList())
               .get<bool>("sun_gone_nova");

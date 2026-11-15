@@ -299,7 +299,7 @@ void PlayerEntity::updateFunction(
   // What moved?
   int function;
   const oo::PList& entry = StickFunctionAt(stickFunctions, selFunctionIdx);
-  if (hwDict.get<bool>(std::string(STICK_ISAXIS))) {
+  if (hwDict.get<bool>(STICK_ISAXIS)) {
     function = entry.get<int>(KEY_AXISFN);
     if (function == AXIS_THRUST) {
       stickHandler->unsetButtonFunction(BUTTON_INCTHRUST);
@@ -350,7 +350,7 @@ void PlayerEntity::updateFunction(
             CustomEquipFields(customEquipActivation, function))
       (*custEquipDict)[key] = hwDict;
     checkCustomEquipButtons(hwDict, function);
-    oo::Defaults::standard().setObject(std::string(KEYCONFIG_CUSTOMEQUIP),
+    oo::Defaults::standard().setObject(KEYCONFIG_CUSTOMEQUIP,
                                        oo::PList(customEquipActivation));
   } else {
     if (function >= BUTTON_GUILEFT && function <= BUTTON_GUISELECT) {
@@ -441,7 +441,7 @@ void PlayerEntity::removeFunction(int idx) {
   if (!custom) {
     stickHandler->saveStickSettings();
   } else {
-    oo::Defaults::standard().setObject(std::string(KEYCONFIG_CUSTOMEQUIP),
+    oo::Defaults::standard().setObject(KEYCONFIG_CUSTOMEQUIP,
                                        oo::PList(customEquipActivation));
   }
 
@@ -857,13 +857,13 @@ std::vector<oo::PList> PlayerEntity::stickFunctionList() {
       funcList.push_back(makeStickGuiDict(
           std::format("{} '{}'", OO_DESC("stickmapper-cust-activate").c_str(),
                       OptionalStringForKey(customEquipActivation[i],
-                                           std::string(CUSTOMEQUIP_EQUIPNAME))
+                                           CUSTOMEQUIP_EQUIPNAME)
                           .value_or("(null)")),
           HW_BUTTON, STICK_NOFUNCTION, (i + 10000)));
       funcList.push_back(makeStickGuiDict(
           std::format("{} '{}'", OO_DESC("stickmapper-cust-mode").c_str(),
                       OptionalStringForKey(customEquipActivation[i],
-                                           std::string(CUSTOMEQUIP_EQUIPNAME))
+                                           CUSTOMEQUIP_EQUIPNAME)
                           .value_or("(null)")),
           HW_BUTTON, STICK_NOFUNCTION, (i + 20000)));
     }
