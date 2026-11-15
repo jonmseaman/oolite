@@ -46,7 +46,6 @@ MA 02110-1301, USA.
 #include "OOCallByName.h"
 #include "OOPlanetEntity.h"  // the root-entity rows
 #include "OOQuiriumCascadeEntity.h"
-#include "OOTypeEncodings.h"  // the rows' measured encodings
 #include "OOVisualEffectEntity.h"
 #include "OOWaypointEntity.h"
 #include "PlayerEntity.h"
@@ -55,6 +54,7 @@ MA 02110-1301, USA.
 #include "ShipEntityAI.h"
 #include "StationEntity.h"
 #include "Universe.h"
+#include "ValueType.h"
 #include "oofnd/Log.hpp"
 
 namespace {
@@ -726,19 +726,42 @@ enum class Kind : std::uint8_t {
   kUnsupported
 };
 
-// Classifies a method's return type encoding as the Objective-C dispatcher did.
-Kind ResultKind(std::string_view encoding) {
-  std::string_view type = encoding;
-  while (!type.empty() && std::string_view("rnNoORV").find(type.front()) !=
-                              std::string_view::npos)
-    type.remove_prefix(1);
-  if (type == "v") return Kind::kVoid;
-  if (type == "@") return Kind::kObject;
-  if (encoding == kOOTypeEncoding<oo::PList>) return Kind::kPList;
-  if (type.size() == 1 &&
-      std::string_view("cCsSiIlLqQfdB").find(type.front()) !=
-          std::string_view::npos)
-    return Kind::kVoid;
+// Classifies a method's return type as the Objective-C dispatcher did: a
+// scalar result (bool to double, enums included) is ignored like a void one.
+Kind ResultKind(oo::ValueType type) {
+  switch (type) {
+    case oo::ValueType::kVoid:
+    case oo::ValueType::kBool:
+    case oo::ValueType::kChar:
+    case oo::ValueType::kUChar:
+    case oo::ValueType::kShort:
+    case oo::ValueType::kUShort:
+    case oo::ValueType::kInt:
+    case oo::ValueType::kUInt:
+    case oo::ValueType::kLong:
+    case oo::ValueType::kULong:
+    case oo::ValueType::kLongLong:
+    case oo::ValueType::kULongLong:
+    case oo::ValueType::kFloat:
+    case oo::ValueType::kDouble:
+      return Kind::kVoid;
+    case oo::ValueType::kObject:
+      return Kind::kObject;
+    case oo::ValueType::kPList:
+      return Kind::kPList;
+    case oo::ValueType::kVector:
+    case oo::ValueType::kHPVector:
+    case oo::ValueType::kQuaternion:
+    case oo::ValueType::kMatrix:
+    case oo::ValueType::kPoint:
+    case oo::ValueType::kRect:
+    case oo::ValueType::kBoundingBox:
+    case oo::ValueType::kColor:
+    case oo::ValueType::kString:
+    case oo::ValueType::kOptionalString:
+    case oo::ValueType::kOther:
+      return Kind::kUnsupported;
+  }
   return Kind::kUnsupported;
 }
 
@@ -789,21 +812,13 @@ std::string_view ObjectClassName(Entity*) { return "Entity"; }
 
 /*	The line OOCallByName logged for a method whose signature the call
    cannot use (LogBadSignature), for a tabled name that applies:
-   the class of the entity's object, as the category method was its; the type
-   encoding is the row's, @encode() of the result, of self and _cmd and of the
-   argument, without the frame offsets the method's encoding had.
+   the class of the entity's object, as the category method was its, and the
+   kind of the row's result.
 */
 void LogBadSignature(Entity* entity, const OOEntityByNameRow& row) {
-  std::string encoding = std::string(row.result) + kOOTypeEncoding<OOObjCId> +
-                         kOOTypeEncoding<OOObjCSelector>;
-  if (row.argument == OOEntityByNameArgument::kString)
-    encoding += kOOTypeEncoding<const std::string&>;
-  if (row.argument == OOEntityByNameArgument::kPList)
-    encoding += kOOTypeEncoding<const oo::PList&>;
-  OO_LOG_ERR(
-      "callByName.badSignature",
-      "-[{} {}] has no signature a by-name call can use (type encoding {}).",
-      ObjectClassName(entity), row.name, encoding);
+  OO_LOG_ERR("callByName.badSignature",
+             "-[{} {}] has no signature a by-name call can use (returns {}).",
+             ObjectClassName(entity), row.name, oo::ValueTypeName(row.result));
 }
 
 // A tabled name that applies, called or logged; none for any other name (the

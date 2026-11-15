@@ -2,9 +2,9 @@
         Unit tests for src/Core/Materials/OOShaderUniformMethodType.h.
 
         The shader uniform member tables give the type of a bound member's
-   return type by its encoding (OOShaderUniformTypeFromEncoding(), which
-   compares it with a table of known ones). This pins the type each encoding is
-   given (the ones the table has, and those it has not): typesFromEncodings,
+   return type by its value type (oo::ShaderUniformTypeOf(), from the kind
+   oo::kValueType<> gives the type). This pins the type each return type is
+   given (the ones a uniform has, and those it has not): typesFromEncodings,
    encodingsTheTableHasNot. Run: tests/run.sh unit
 */
 
@@ -13,7 +13,7 @@
 
 #include "OORegExpMatcher.h"
 #include "OOShaderUniformMethodType.h"
-#include "OOTypeEncodings.h"  // @encode()'s measured literals
+#include "ValueType.h"
 #include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 
@@ -52,12 +52,11 @@ OOShaderSetting OOShaderSettingFromString(const std::string& string) {
 
 namespace {
 
-// The type of a return type, by its encoding: the member tables' rows give
-// @encode() of their types, the measured literals kOOTypeEncoding<> (id's keyed
-// OOObjCId).
+// The type of a return type, by its value type: the member tables' rows give
+// oo::kValueType<> of their types (an object result's keyed oo::ObjectResult).
 template <typename T>
 OOShaderUniformType TypeOf() {
-  return OOShaderUniformTypeFromEncoding(kOOTypeEncoding<T>);
+  return oo::ShaderUniformTypeOf(oo::kValueType<T>);
 }
 
 }  // namespace
@@ -81,7 +80,7 @@ OO_TEST(typesFromEncodings) {
   OO_CHECK(TypeOf<Quaternion>() == kOOShaderUniformTypeQuaternion);
   OO_CHECK(TypeOf<OOMatrix>() == kOOShaderUniformTypeMatrix);
   OO_CHECK(TypeOf<NSPoint>() == kOOShaderUniformTypePoint);
-  OO_CHECK(TypeOf<OOObjCId>() == kOOShaderUniformTypeObject);
+  OO_CHECK(TypeOf<oo::ObjectResult>() == kOOShaderUniformTypeObject);
 }
 
 /*	The types the table has no row for, through the encoding.
@@ -95,7 +94,7 @@ OO_TEST(encodingsTheTableHasNot) {
   OO_CHECK(TypeOf<unsigned long long>() == kOOShaderUniformTypeInvalid);
   OO_CHECK(TypeOf<void>() == kOOShaderUniformTypeInvalid);
   OO_CHECK(TypeOf<NSRect>() == kOOShaderUniformTypeInvalid);
-  OO_CHECK(OOShaderUniformTypeFromEncoding(NULL) ==
+  OO_CHECK(oo::ShaderUniformTypeOf(oo::ValueType::kOther) ==
            kOOShaderUniformTypeInvalid);
 }
 

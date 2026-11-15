@@ -35,6 +35,7 @@ MA 02110-1301, USA.
 
 #include "OOEnumFlags.h"
 #include "OOMaths.h"
+#include "ValueType.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/OOObject.h"
 
@@ -79,7 +80,7 @@ struct OOEntityByNameValue {
 struct OOEntityByNameRow {
   const char* name;  // the selector's name
   OOByName flags;
-  const char* result;  // @encode() of the declared result type
+  oo::ValueType result;  // the declared result type's kind (ValueType.h)
   OOEntityByNameArgument argument;
   // The method's body on the entity, given the argument its kind takes; a PList
   // result, else null.

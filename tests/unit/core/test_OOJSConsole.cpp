@@ -360,7 +360,6 @@ class Entity;
 std::optional<std::string> OOStringFromJSValueEvenIfNull(JSContext *, JSValueConst)  { std::abort(); }
 std::optional<std::string> OOJSEntityJSClassName(Entity *)  { std::abort(); }
 bool OOJSCallEntityMethod(JSContext *, Entity *, const std::string &, int, JSValueConst *, JSValue *)  { std::abort(); }
-OOShaderUniformType OOShaderUniformTypeFromEncoding(const char *)  { std::abort(); }
 // oo::EntityIn() reads ::TestEntityObject's _cxxEntity ivar; its offset variable is
 // emitted by the game's Entity implementation, which this test does not link. The name
 // is the one clang gives it: the ivar's type encoding, with its '=' written as byte 2.

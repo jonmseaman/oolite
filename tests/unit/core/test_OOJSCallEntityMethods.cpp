@@ -55,9 +55,8 @@ struct OracleRow {
 // The matcher's classification of a by-name row's method (its declared result
 // and argument).
 std::optional<OracleRow> Oracle(const OOEntityByNameRow& row) {
-  const bool voidResult = std::strcmp(row.result, kOOTypeEncoding<void>) == 0;
-  const bool plistResult =
-      std::strcmp(row.result, kOOTypeEncoding<oo::PList>) == 0;
+  const bool voidResult = row.result == oo::ValueType::kVoid;
+  const bool plistResult = row.result == oo::ValueType::kPList;
   switch (row.argument) {
     case OOEntityByNameArgument::kNone:
       if (voidResult)
@@ -67,7 +66,7 @@ std::optional<OracleRow> Oracle(const OOEntityByNameRow& row) {
         return OracleRow{OOJSCallEntityMethodForm::kPListVoid,
                          kOOShaderUniformTypeInvalid};
       return OracleRow{OOJSCallEntityMethodForm::kTyped,
-                       OOShaderUniformTypeFromEncoding(row.result)};
+                       oo::ShaderUniformTypeOf(row.result)};
     case OOEntityByNameArgument::kString:
       if (voidResult)
         return OracleRow{OOJSCallEntityMethodForm::kVoidString,
@@ -117,7 +116,7 @@ OO_TEST(tableIsTheMatchersSafeSet) {
       const OOJSCallEntityMethodRow& entry = *found->second;
       bool same = (entry.form == row.form);
       if (same && row.form == OOJSCallEntityMethodForm::kTyped)
-        same = (OOShaderUniformTypeFromEncoding(entry.encoding) == row.type);
+        same = (oo::ShaderUniformTypeOf(entry.type) == row.type);
       if (!same) different += " " + name;
     }
     OO_CHECK_EQ(missing, std::string());
@@ -146,7 +145,7 @@ OO_TEST(tableLeavesOutUnsafeNames) {
                                 row.name[std::strlen(row.name) - 1] == ':');
     OO_CHECK(takesString == endsWithColon);
     OO_CHECK((row.form == OOJSCallEntityMethodForm::kTyped) ==
-             (row.encoding != nullptr));
+             (row.type != oo::ValueType::kVoid));
   }
 }
 
@@ -174,7 +173,7 @@ OO_TEST(everyNameIsAnsweredByTheCxxEntity) {
           typedMismatch += std::string(" ") + row.name;
         continue;
       }
-      switch (OOShaderUniformTypeFromEncoding(row.encoding)) {
+      switch (oo::ShaderUniformTypeOf(row.type)) {
         case kOOShaderUniformTypeInvalid:
         case kOOShaderUniformTypeHPVector:
         case kOOShaderUniformTypeMatrix:

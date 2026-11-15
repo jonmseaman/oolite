@@ -159,6 +159,7 @@ core_tests = {
     'test_Entity': ['*'],
     'test_Universe': ['*'],
     'test_SpeechSynthesizer': ['*'],
+    'test_ValueType': ['*'],
     'test_ShipEntity': ['*'],
     'test_PlayerEntity': ['*'],
     'test_SaveEnumValues': ['*'],
