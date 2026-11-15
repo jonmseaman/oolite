@@ -45,11 +45,11 @@ inline constexpr std::string_view kOODisplayWidth = "Width";
 inline constexpr std::string_view kOODisplayHeight = "Height";
 inline constexpr std::string_view kOODisplayRefreshRate = "RefreshRate";
 
-#define DISPLAY_MIN_COLOURS 32
-#define DISPLAY_MIN_WIDTH 640
-#define DISPLAY_MIN_HEIGHT 480
-#define DISPLAY_MAX_WIDTH 7680  // 8K gaming, yay!!
-#define DISPLAY_MAX_HEIGHT 4320
+inline constexpr int DISPLAY_MIN_COLOURS = 32;
+inline constexpr int DISPLAY_MIN_WIDTH = 640;
+inline constexpr int DISPLAY_MIN_HEIGHT = 480;
+inline constexpr int DISPLAY_MAX_WIDTH = 7680;  // 8K gaming, yay!!
+inline constexpr int DISPLAY_MAX_HEIGHT = 4320;
 
 /*	The abstract base of the Mac
         full-screen controllers, which are Mac-only and not in this tree. Its
