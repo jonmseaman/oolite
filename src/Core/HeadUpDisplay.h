@@ -66,19 +66,19 @@ inline constexpr int ZOOM_INDICATOR_CENTRE_X = 108;
 inline constexpr int ZOOM_INDICATOR_CENTRE_Y = -216;
 inline constexpr float ZOOM_INDICATOR_WIDTH = 11.0f;
 inline constexpr float ZOOM_INDICATOR_HEIGHT = 14.0f;
-#define ZOOM_LEVELS_IMAGE "zoom.png"
+inline constexpr char ZOOM_LEVELS_IMAGE[] = "zoom.png";
 
-#define COMPASS_IMAGE "compass.png"
+inline constexpr char COMPASS_IMAGE[] = "compass.png";
 inline constexpr int COMPASS_CENTRE_X = 132;
 inline constexpr int COMPASS_CENTRE_Y = -216;
 inline constexpr int COMPASS_SIZE = 56;
 inline constexpr int COMPASS_HALF_SIZE = 28;
-#define COMPASS_REDDOT_IMAGE "reddot.png"
-#define COMPASS_GREENDOT_IMAGE "greendot.png"
+inline constexpr char COMPASS_REDDOT_IMAGE[] = "reddot.png";
+inline constexpr char COMPASS_GREENDOT_IMAGE[] = "greendot.png";
 inline constexpr int COMPASS_DOT_SIZE = 16;
 inline constexpr int COMPASS_HALF_DOT_SIZE = 8;
 
-#define AEGIS_IMAGE "aegis.png"
+inline constexpr char AEGIS_IMAGE[] = "aegis.png";
 inline constexpr int AEGIS_CENTRE_X = -132;
 inline constexpr int AEGIS_CENTRE_Y = -216;
 inline constexpr int AEGIS_WIDTH = 24;
@@ -192,45 +192,45 @@ inline constexpr double SCOOPSTATUS_HEIGHT = 16.0;
 inline constexpr int MFD_TEXT_WIDTH = 10;
 inline constexpr int MFD_TEXT_HEIGHT = 10;
 
-#define DIALS_KEY "dials"
-#define LEGENDS_KEY "legends"
-#define MFDS_KEY "multi_function_displays"
-#define X_KEY "x"
-#define Y_KEY "y"
-#define X_ORIGIN_KEY "x_origin"
-#define Y_ORIGIN_KEY "y_origin"
-#define SPACING_KEY "spacing"
-#define ALPHA_KEY "alpha"
-#define SELECTOR_KEY "selector"
-#define IMAGE_KEY "image"
-#define WIDTH_KEY "width"
-#define HEIGHT_KEY "height"
-#define SPRITE_KEY "sprite"
-#define DRAW_SURROUND_KEY "draw_surround"
-#define EQUIPMENT_REQUIRED_KEY "equipment_required"
-#define ALERT_CONDITIONS_KEY "alert_conditions"
-#define VIEWSCREEN_KEY "viewscreen_only"
-#define DIAL_REQUIRED_KEY "with_dial"
-#define LABELLED_KEY "labelled"
-#define TEXT_KEY "text"
-#define RGB_COLOR_KEY "rgb_color"
+inline constexpr char DIALS_KEY[] = "dials";
+inline constexpr char LEGENDS_KEY[] = "legends";
+inline constexpr char MFDS_KEY[] = "multi_function_displays";
+inline constexpr char X_KEY[] = "x";
+inline constexpr char Y_KEY[] = "y";
+inline constexpr char X_ORIGIN_KEY[] = "x_origin";
+inline constexpr char Y_ORIGIN_KEY[] = "y_origin";
+inline constexpr char SPACING_KEY[] = "spacing";
+inline constexpr char ALPHA_KEY[] = "alpha";
+inline constexpr char SELECTOR_KEY[] = "selector";
+inline constexpr char IMAGE_KEY[] = "image";
+inline constexpr char WIDTH_KEY[] = "width";
+inline constexpr char HEIGHT_KEY[] = "height";
+inline constexpr char SPRITE_KEY[] = "sprite";
+inline constexpr char DRAW_SURROUND_KEY[] = "draw_surround";
+inline constexpr char EQUIPMENT_REQUIRED_KEY[] = "equipment_required";
+inline constexpr char ALERT_CONDITIONS_KEY[] = "alert_conditions";
+inline constexpr char VIEWSCREEN_KEY[] = "viewscreen_only";
+inline constexpr char DIAL_REQUIRED_KEY[] = "with_dial";
+inline constexpr char LABELLED_KEY[] = "labelled";
+inline constexpr char TEXT_KEY[] = "text";
+inline constexpr char RGB_COLOR_KEY[] = "rgb_color";
 #define COLOR_KEY "color"
 #define COLOR_KEY_LOW "color_low"
 #define COLOR_KEY_MEDIUM "color_medium"
 #define COLOR_KEY_HIGH "color_high"
 #define COLOR_KEY_CRITICAL "color_critical"
 #define COLOR_KEY_SURROUND "color_surround"
-#define N_BARS_KEY "n_bars"
-#define CUSTOM_DIAL_KEY "data_source"
+inline constexpr char N_BARS_KEY[] = "n_bars";
+inline constexpr char CUSTOM_DIAL_KEY[] = "data_source";
 
-#define ROWS_KEY "rows"
-#define COLUMNS_KEY "columns"
-#define ROW_HEIGHT_KEY "row_height"
-#define ROW_START_KEY "row_start"
-#define TITLE_KEY "title"
-#define BACKGROUND_RGBA_KEY "background_rgba"
-#define OVERALL_ALPHA_KEY "overall_alpha"
-#define NONLINEAR_SCANNER "nonlinear_scanner"
+inline constexpr char ROWS_KEY[] = "rows";
+inline constexpr char COLUMNS_KEY[] = "columns";
+inline constexpr char ROW_HEIGHT_KEY[] = "row_height";
+inline constexpr char ROW_START_KEY[] = "row_start";
+inline constexpr char TITLE_KEY[] = "title";
+inline constexpr char BACKGROUND_RGBA_KEY[] = "background_rgba";
+inline constexpr char OVERALL_ALPHA_KEY[] = "overall_alpha";
+inline constexpr char NONLINEAR_SCANNER[] = "nonlinear_scanner";
 
 #define Z1                                                   \
   (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr \
