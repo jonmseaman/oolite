@@ -30,7 +30,7 @@ MA 02110-1301, USA.
 #include "WormholeEntity.h"
 
 /*
-        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and
+        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_SCOPE() are C++ try/catch and
         scope guards (OOJSEngineNativeWrappers.h). The category on
         WormholeEntity is two free functions (OOJSWormhole.h).
 */
@@ -99,7 +99,7 @@ JSClassID JSWormholeClassID() { return sWormholeClassID; }
 static bool JSWormholeGetWormholeEntity(JSContext* context,
                                         JSValueConst wormholeObj,
                                         WormholeEntity** outEntity) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
@@ -114,7 +114,6 @@ static bool JSWormholeGetWormholeEntity(JSContext* context,
   *outEntity = dynamic_cast<WormholeEntity*>(entity);
   return *outEntity != nullptr;
 
-  OOJS_PROFILE_EXIT
 }
 
 // The bodies of WormholeEntity's JS members.

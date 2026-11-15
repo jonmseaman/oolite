@@ -185,7 +185,7 @@ bool VectorToJSValue(JSContext* context, Vector vector, JSValue* outValue) {
 }
 
 JSValue JSVectorWithHPVector(JSContext* context, HPVector vector) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // The object's private data, deleted by the class finaliser.
   std::unique_ptr<HPVector> priv(new (std::nothrow) HPVector(vector));
@@ -197,11 +197,10 @@ JSValue JSVectorWithHPVector(JSContext* context, HPVector vector) {
 
   return result;
 
-  OOJS_PROFILE_EXIT
 }
 
 bool HPVectorToJSValue(JSContext* context, HPVector vector, JSValue* outValue) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   JSValue object = JSVectorWithHPVector(context, vector);
   if (EXPECT_NOT(JS_IsException(object))) {
@@ -212,7 +211,6 @@ bool HPVectorToJSValue(JSContext* context, HPVector vector, JSValue* outValue) {
   *outValue = object;
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 bool NSPointToVectorJSValue(JSContext* context, NSPoint point,
@@ -249,7 +247,7 @@ static bool GetArrayElementNumber(JSContext* context, JSValueConst array,
 
 bool JSObjectGetVector(JSContext* context, JSValueConst vectorObj,
                        HPVector* outVector) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector* priv = nullptr;
   int64_t arrayLength;
@@ -306,7 +304,6 @@ bool JSObjectGetVector(JSContext* context, JSValueConst vectorObj,
 
   return false;
 
-  OOJS_PROFILE_EXIT
 }
 
 static bool GetThisVector(JSContext* context, JSValueConst vectorObj,
@@ -325,7 +322,7 @@ bool JSVectorSetVector(JSContext* context, JSValueConst vectorObj,
 
 bool JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj,
                          HPVector vector) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector* priv = nullptr;
 
@@ -345,7 +342,6 @@ bool JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj,
 
   return false;
 
-  OOJS_PROFILE_EXIT
 }
 
 static bool VectorFromArgumentListNoErrorInternal(JSContext* context, int argc,
@@ -353,7 +349,7 @@ static bool VectorFromArgumentListNoErrorInternal(JSContext* context, int argc,
                                                   HPVector* outVector,
                                                   int* outConsumed,
                                                   bool permitNumberList) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   double x, y, z;
 
@@ -389,7 +385,6 @@ static bool VectorFromArgumentListNoErrorInternal(JSContext* context, int argc,
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // EMMSTRAN: remove outConsumed, since it can only be 1 except in failure
@@ -421,7 +416,7 @@ bool VectorFromArgumentListNoError(JSContext* context, int argc,
 
 static JSValue VectorGetProperty(JSContext* context, JSValueConst thisObj,
                                  int magic) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector vector;
   OOHPScalar fValue;
@@ -451,12 +446,11 @@ static JSValue VectorGetProperty(JSContext* context, JSValueConst thisObj,
 
   return JS_NewFloat64(context, fValue);
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue VectorSetProperty(JSContext* context, JSValueConst thisObj,
                                  JSValueConst value, int magic) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector vector;
   double dval;
@@ -493,20 +487,18 @@ static JSValue VectorSetProperty(JSContext* context, JSValueConst thisObj,
   JSVectorSetHPVector(context, thisObj, vector);
   return JS_UNDEFINED;
 
-  OOJS_PROFILE_EXIT
 }
 
 static void VectorFinalize(JSRuntime* runtime, JSValueConst thisObj) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   delete static_cast<HPVector*>(JS_GetOpaque(thisObj, sVectorClassID));
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 static JSValue VectorConstruct(JSContext* context, JSValueConst newTarget,
                                int argc, JSValueConst* argv) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector vector = kZeroHPVector;
 
@@ -522,7 +514,6 @@ static JSValue VectorConstruct(JSContext* context, JSValueConst newTarget,
 
   return JSVectorWithHPVector(context, vector);
 
-  OOJS_PROFILE_EXIT
 }
 
 // *** Methods ***
@@ -558,7 +549,7 @@ static JSValue VectorToSource(OOJS_NATIVE_ARGS) {
 
 // add(v : vectorExpression) : Vector3D
 static JSValue VectorAdd(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, thatv, result;
 
@@ -572,12 +563,11 @@ static JSValue VectorAdd(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // subtract(v : vectorExpression) : Vector3D
 static JSValue VectorSubtract(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, thatv, result;
 
@@ -591,12 +581,11 @@ static JSValue VectorSubtract(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // distanceTo(v : vectorExpression) : Number
 static JSValue VectorDistanceTo(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, thatv;
   double result;
@@ -611,12 +600,11 @@ static JSValue VectorDistanceTo(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_DOUBLE(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // squaredDistanceTo(v : vectorExpression) : Number
 static JSValue VectorSquaredDistanceTo(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, thatv;
   double result;
@@ -633,12 +621,11 @@ static JSValue VectorSquaredDistanceTo(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_DOUBLE(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // multiply(n : Number) : Vector3D
 static JSValue VectorMultiply(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, result;
   double scalar;
@@ -653,12 +640,11 @@ static JSValue VectorMultiply(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // dot(v : vectorExpression) : Number
 static JSValue VectorDot(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, thatv;
   double result;
@@ -673,12 +659,11 @@ static JSValue VectorDot(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_DOUBLE(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // angleTo(v : vectorExpression) : Number
 static JSValue VectorAngleTo(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, thatv;
   double result;
@@ -698,12 +683,11 @@ static JSValue VectorAngleTo(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_DOUBLE(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // cross(v : vectorExpression) : Vector3D
 static JSValue VectorCross(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, thatv, result;
 
@@ -717,12 +701,11 @@ static JSValue VectorCross(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // tripleProduct(v : vectorExpression, u : vectorExpression) : Number
 static JSValue VectorTripleProduct(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, thatv, theotherv;
   double result;
@@ -744,12 +727,11 @@ static JSValue VectorTripleProduct(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_DOUBLE(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // direction() : Vector3D
 static JSValue VectorDirection(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, result;
 
@@ -760,12 +742,11 @@ static JSValue VectorDirection(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // magnitude() : Number
 static JSValue VectorMagnitude(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv;
   double result;
@@ -777,12 +758,11 @@ static JSValue VectorMagnitude(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_DOUBLE(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // squaredMagnitude() : Number
 static JSValue VectorSquaredMagnitude(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv;
   double result;
@@ -795,12 +775,11 @@ static JSValue VectorSquaredMagnitude(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_DOUBLE(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // rotationTo(v : vectorExpression [, limit : Number]) : Quaternion
 static JSValue VectorRotationTo(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, thatv;
   double limit;
@@ -836,12 +815,11 @@ static JSValue VectorRotationTo(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_QUATERNION(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // rotateBy(q : quaternionExpression) : Vector3D
 static JSValue VectorRotateBy(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv, result;
   Quaternion q;
@@ -856,12 +834,11 @@ static JSValue VectorRotateBy(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // toArray() : Array
 static JSValue VectorToArray(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector thisv;
 
@@ -884,14 +861,13 @@ static JSValue VectorToArray(OOJS_NATIVE_ARGS) {
 
   return result;
 
-  OOJS_PROFILE_EXIT
 }
 
 // *** Static methods ***
 
 // interpolate(v : Vector3D, u : Vector3D, alpha : Number) : Vector3D
 static JSValue VectorStaticInterpolate(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   HPVector av, bv;
   double interp;
@@ -928,12 +904,11 @@ INSUFFICIENT_ARGUMENTS:
                          "vector expression, vector expression and number");
   return JS_EXCEPTION;
 
-  OOJS_PROFILE_EXIT
 }
 
 // random([maxLength : Number]) : Vector3D
 static JSValue VectorStaticRandom(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   double maxLength;
 
@@ -943,12 +918,11 @@ static JSValue VectorStaticRandom(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(OOHPVectorRandomSpatial(maxLength));
 
-  OOJS_PROFILE_EXIT
 }
 
 // randomDirection([scale : Number]) : Vector3D
 static JSValue VectorStaticRandomDirection(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   double scale;
 
@@ -958,12 +932,11 @@ static JSValue VectorStaticRandomDirection(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(HPvector_multiply_scalar(OORandomUnitHPVector(), scale));
 
-  OOJS_PROFILE_EXIT
 }
 
 // randomDirectionAndLength([maxLength : Number]) : Vector3D
 static JSValue VectorStaticRandomDirectionAndLength(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   double maxLength;
 
@@ -973,7 +946,6 @@ static JSValue VectorStaticRandomDirectionAndLength(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(OOHPVectorRandomRadial(maxLength));
 
-  OOJS_PROFILE_EXIT
 }
 
 #ifndef OOJS_POC_HARNESS

@@ -145,7 +145,7 @@ void InitOOJSQuaternion(JSContext* context, JSValueConst global) {
 }
 
 JSValue JSQuaternionWithQuaternion(JSContext* context, Quaternion quaternion) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // The object's private data, deleted by the class finaliser.
   std::unique_ptr<Quaternion> priv(new (std::nothrow) Quaternion(quaternion));
@@ -157,12 +157,11 @@ JSValue JSQuaternionWithQuaternion(JSContext* context, Quaternion quaternion) {
 
   return result;
 
-  OOJS_PROFILE_EXIT
 }
 
 bool QuaternionToJSValue(JSContext* context, Quaternion quaternion,
                          JSValue* outValue) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   JSValue object = JSQuaternionWithQuaternion(context, quaternion);
   if (EXPECT_NOT(JS_IsException(object))) {
@@ -173,7 +172,6 @@ bool QuaternionToJSValue(JSContext* context, Quaternion quaternion,
   *outValue = object;
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 bool JSValueToQuaternion(JSContext* context, JSValueConst value,
@@ -194,7 +192,7 @@ static bool GetArrayElementNumber(JSContext* context, JSValueConst array,
 
 bool JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj,
                            Quaternion* outQuaternion) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion* priv = nullptr;
   int64_t arrayLength;
@@ -260,7 +258,6 @@ bool JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj,
 
   return false;
 
-  OOJS_PROFILE_EXIT
 }
 
 static bool GetThisQuaternion(JSContext* context, JSValueConst quaternionObj,
@@ -276,7 +273,7 @@ static bool GetThisQuaternion(JSContext* context, JSValueConst quaternionObj,
 
 bool JSQuaternionSetQuaternion(JSContext* context, JSValueConst quaternionObj,
                                Quaternion quaternion) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion* priv = nullptr;
 
@@ -295,13 +292,12 @@ bool JSQuaternionSetQuaternion(JSContext* context, JSValueConst quaternionObj,
 
   return false;
 
-  OOJS_PROFILE_EXIT
 }
 
 static bool QuaternionFromArgumentListNoErrorInternal(
     JSContext* context, int argc, JSValueConst* argv, Quaternion* outQuaternion,
     int* outConsumed, bool permitNumberList) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   double w, x, y, z;
 
@@ -339,7 +335,6 @@ static bool QuaternionFromArgumentListNoErrorInternal(
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // EMMSTRAN: remove outConsumed, since it can only be 1 except in failure
@@ -373,7 +368,7 @@ bool QuaternionFromArgumentListNoError(JSContext* context, int argc,
 
 static JSValue QuaternionGetProperty(JSContext* context, JSValueConst thisObj,
                                      int magic) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion quaternion;
   GLfloat fValue;  // Single precision, as in the SpiderMonkey version.
@@ -408,12 +403,11 @@ static JSValue QuaternionGetProperty(JSContext* context, JSValueConst thisObj,
 
   return JS_NewFloat64(context, fValue);
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue QuaternionSetProperty(JSContext* context, JSValueConst thisObj,
                                      JSValueConst value, int magic) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion quaternion;
   double dval;
@@ -455,20 +449,18 @@ static JSValue QuaternionSetProperty(JSContext* context, JSValueConst thisObj,
   JSQuaternionSetQuaternion(context, thisObj, quaternion);
   return JS_UNDEFINED;
 
-  OOJS_PROFILE_EXIT
 }
 
 static void QuaternionFinalize(JSRuntime* runtime, JSValueConst thisObj) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   delete static_cast<Quaternion*>(JS_GetOpaque(thisObj, sQuaternionClassID));
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 static JSValue QuaternionConstruct(JSContext* context, JSValueConst newTarget,
                                    int argc, JSValueConst* argv) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion quaternion = kIdentityQuaternion;
 
@@ -484,7 +476,6 @@ static JSValue QuaternionConstruct(JSContext* context, JSValueConst newTarget,
 
   return JSQuaternionWithQuaternion(context, quaternion);
 
-  OOJS_PROFILE_EXIT
 }
 
 // *** Methods ***
@@ -520,7 +511,7 @@ static JSValue QuaternionToSource(OOJS_NATIVE_ARGS) {
 
 // multiply(q : quaternionExpression) : Quaternion
 static JSValue QuaternionMultiply(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion thisq, thatq, result;
 
@@ -534,12 +525,11 @@ static JSValue QuaternionMultiply(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_QUATERNION(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // dot(q : quaternionExpression) : Number
 static JSValue QuaternionDot(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion thisq, thatq;
   OOScalar result;
@@ -554,12 +544,11 @@ static JSValue QuaternionDot(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_DOUBLE(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // rotate(axis : vectorExpression, angle : Number) : Quaternion
 static JSValue QuaternionRotate(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion thisq;
   HPVector axis;
@@ -585,12 +574,11 @@ static JSValue QuaternionRotate(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_QUATERNION(thisq);
 
-  OOJS_PROFILE_EXIT
 }
 
 // rotateX(angle : Number) : Quaternion
 static JSValue QuaternionRotateX(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion quat;
   double angle;
@@ -605,12 +593,11 @@ static JSValue QuaternionRotateX(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_QUATERNION(quat);
 
-  OOJS_PROFILE_EXIT
 }
 
 // rotateY(angle : Number) : Quaternion
 static JSValue QuaternionRotateY(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion quat;
   double angle;
@@ -625,12 +612,11 @@ static JSValue QuaternionRotateY(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_QUATERNION(quat);
 
-  OOJS_PROFILE_EXIT
 }
 
 // rotateZ(angle : Number) : Quaternion
 static JSValue QuaternionRotateZ(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion quat;
   double angle;
@@ -645,12 +631,11 @@ static JSValue QuaternionRotateZ(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_QUATERNION(quat);
 
-  OOJS_PROFILE_EXIT
 }
 
 // normalize() : Quaternion
 static JSValue QuaternionNormalize(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion quat;
 
@@ -661,12 +646,11 @@ static JSValue QuaternionNormalize(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_QUATERNION(quat);
 
-  OOJS_PROFILE_EXIT
 }
 
 // conjugate() : Quaternion
 static JSValue QuaternionConjugate(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion quat, result;
 
@@ -677,12 +661,11 @@ static JSValue QuaternionConjugate(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_QUATERNION(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // vectorForward() : Vector
 static JSValue QuaternionVectorForward(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion thisq;
   Vector result;
@@ -695,12 +678,11 @@ static JSValue QuaternionVectorForward(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VECTOR(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // vectorUp() : Vector
 static JSValue QuaternionVectorUp(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion thisq;
   Vector result;
@@ -712,12 +694,11 @@ static JSValue QuaternionVectorUp(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VECTOR(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // vectorRight() : Vector
 static JSValue QuaternionVectorRight(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion thisq;
   Vector result;
@@ -729,12 +710,11 @@ static JSValue QuaternionVectorRight(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VECTOR(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // toArray() : Array
 static JSValue QuaternionToArray(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Quaternion thisq;
 
@@ -759,16 +739,14 @@ static JSValue QuaternionToArray(OOJS_NATIVE_ARGS) {
 
   return result;
 
-  OOJS_PROFILE_EXIT
 }
 
 // *** Static methods ***
 
 // random() : Quaternion
 static JSValue QuaternionStaticRandom(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   OOJS_RETURN_QUATERNION(OORandomQuaternion());
 
-  OOJS_PROFILE_EXIT
 }

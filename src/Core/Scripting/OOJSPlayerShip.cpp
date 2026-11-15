@@ -2158,7 +2158,7 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
                               OOSystemID* destination, double* eta, double* fee,
                               double* premium, const std::string& functionName,
                               unsigned* risk) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   OOCParameterAssert(context != nullptr && argv != nullptr &&
                      start != nullptr && destination != nullptr &&
@@ -2224,5 +2224,4 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }

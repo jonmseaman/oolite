@@ -120,7 +120,7 @@ JSClassID JSFlasherClassID() { return sFlasherClassID; }
 
 static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
                                       OOFlasherEntity** outEntity) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
@@ -138,7 +138,6 @@ static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
   *outEntity = flasher;
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // The bodies of OOFlasherEntity (OOJavaScriptExtensions), which the C++ class's

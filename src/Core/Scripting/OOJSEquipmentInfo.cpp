@@ -267,7 +267,7 @@ void InitOOJSEquipmentInfo(JSContext* context, JSValueConst global) {
 
 OOEquipmentType* JSValueToEquipmentType(JSContext* context,
                                         JSValueConst value) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   if (JS_IsObject(value)) {
     if (JS_GetClassID(value) == sEquipmentInfoClassID) {
@@ -283,7 +283,6 @@ OOEquipmentType* JSValueToEquipmentType(JSContext* context,
         .get();  // borrowed: the registry holds it
   return nullptr;
 
-  OOJS_PROFILE_EXIT
 }
 
 std::optional<std::string> JSValueToEquipmentKey(JSContext* context,
@@ -295,7 +294,7 @@ std::optional<std::string> JSValueToEquipmentKey(JSContext* context,
 std::optional<std::string> JSValueToEquipmentKeyRelaxed(JSContext* context,
                                                         JSValueConst value,
                                                         bool* outExists) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   std::optional<std::string> result;
   bool exists = false;
@@ -320,7 +319,6 @@ std::optional<std::string> JSValueToEquipmentKeyRelaxed(JSContext* context,
   if (outExists != nullptr) *outExists = exists;
   return result;
 
-  OOJS_PROFILE_EXIT
 }
 
 // *** Implementation stuff ***

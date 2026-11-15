@@ -458,7 +458,7 @@ void InitOOJSSystemInfo(JSContext* context, JSValueConst global) {
 
 JSValue GetJSSystemInfoForSystem(JSContext* context, OOGalaxyID galaxy,
                                  OOSystemID system) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // Use cached object if possible.
   if (JS_IsObject(sCachedSystemInfo) && sCachedGalaxy == galaxy &&
@@ -495,7 +495,6 @@ JSValue GetJSSystemInfoForSystem(JSContext* context, OOGalaxyID galaxy,
 
   return result;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue SystemInfoToString(OOJS_NATIVE_ARGS) {
@@ -505,7 +504,7 @@ static JSValue SystemInfoToString(OOJS_NATIVE_ARGS) {
 }
 
 static void SystemInfoFinalize(JSRuntime* runtime, JSValueConst thisObj) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // Clear now-stale cache entry if appropriate.
   if (JS_IsObject(sCachedSystemInfo) &&
@@ -516,7 +515,6 @@ static void SystemInfoFinalize(JSRuntime* runtime, JSValueConst thisObj) {
   OOJSCxxObjectWrapperFinalize(
       runtime, thisObj);  // clearJSSelf(), the slot's release, the empty slot
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 // *** Exotic property behaviour (replaces SpiderMonkey class hooks) ***

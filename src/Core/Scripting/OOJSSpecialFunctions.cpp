@@ -67,9 +67,9 @@ JSValue JSSpecialFunctionsObjectWrapper(JSContext* context) {
 }
 
 static JSValue SpecialJSWarning(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER  // These functions are exception-safe
+  OOJS_PROFILE_SCOPE();  // These functions are exception-safe
 
-      if (EXPECT_NOT(argc < 1)) {
+  if (EXPECT_NOT(argc < 1)) {
     OOJSReportBadArguments(context, "special", "jsWarning", argc, OOJS_ARGV,
                            std::nullopt, "string");
     return JS_EXCEPTION;
@@ -83,7 +83,6 @@ static JSValue SpecialJSWarning(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED

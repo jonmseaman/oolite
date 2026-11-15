@@ -313,7 +313,7 @@ std::shared_ptr<ShipEntity> oo::NewShipObject(
 
 // The ship's set-up from its key and definition.
 bool ShipEntity::initShipSetUp(const std::string& key, const oo::PList& dict) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   initWithKey(key);
 
@@ -328,7 +328,6 @@ bool ShipEntity::initShipSetUp(const std::string& key, const oo::PList& dict) {
   }
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // The -dealloc body after the subclasses' parts and the weak reference's drop,
@@ -597,7 +596,7 @@ bool ShipEntity::isShipWithSubEntityShip(Entity* other) {
 // C++ ship.
 
 bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // Settings shared by players & NPCs.
   //
@@ -895,12 +894,11 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // setUpShipFromDictionary:, subentity serialisation and set-up.
 bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   if (!setUpFromDictionary(shipDict)) return false;
 
@@ -1164,7 +1162,6 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict) {
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 void ShipEntity::setSubIdx(std::size_t value) { _subIdx = value; }
@@ -1214,7 +1211,7 @@ void ShipEntity::deserializeShipSubEntitiesFrom(const std::string& string) {
 }
 
 bool ShipEntity::setUpSubEntities() {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   unsigned int i;
   const oo::PList shipDict = shipInfoDictionary();
@@ -1250,7 +1247,6 @@ bool ShipEntity::setUpSubEntities() {
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 GLfloat ShipEntity::frustumRadius() {
@@ -1268,7 +1264,7 @@ GLfloat ShipEntity::frustumRadius() {
 }
 
 bool ShipEntity::setUpOneSubentity(const oo::PList& subentDict) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   const std::optional<std::string> type = StringForKey(subentDict, "type");
   if (type == "flasher") {
@@ -1277,7 +1273,6 @@ bool ShipEntity::setUpOneSubentity(const oo::PList& subentDict) {
     return setUpOneStandardSubentity(subentDict, type == "ball_turret");
   }
 
-  OOJS_PROFILE_EXIT
 }
 
 bool ShipEntity::setUpOneFlasher(const oo::PList& subentDict) {

@@ -207,7 +207,7 @@ JSClassID JSStationClassID() { return sStationClassID; }
 static bool JSStationGetStationEntity(JSContext* context,
                                       JSValueConst stationObj,
                                       StationEntity** outEntity) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
@@ -225,12 +225,11 @@ static bool JSStationGetStationEntity(JSContext* context,
   *outEntity = station;
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 static bool JSStationGetShipEntity(JSContext* context, JSValueConst shipObj,
                                    ShipEntity** outEntity) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
@@ -246,7 +245,6 @@ static bool JSStationGetShipEntity(JSContext* context, JSValueConst shipObj,
   *outEntity = oo::ToShip(entity);
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 /*	The SpiderMonkey methods treated a failed lookup of this as a no-op (a

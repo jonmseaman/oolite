@@ -3285,7 +3285,7 @@ void Universe::witchspaceShipWithPrimaryRole(const std::string& role) {
 }
 
 Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // minimise the time between creating ship & assigning position.
 
@@ -3301,7 +3301,6 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
   }
   return success ? vis : nullptr;
 
-  OOJS_PROFILE_EXIT
 }
 
 // Adding ships within a radius and on routes, role categories, witchspace
@@ -3310,7 +3309,7 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
 
 ::ShipEntity* Universe::addShipAt(HPVector pos, const std::string& role,
                                   GLfloat radius) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // minimise the time between creating ship & assigning position.
   if (radius == static_cast<GLfloat>(oo::kNotFound)) {
@@ -3414,14 +3413,13 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
   // holds the ship by now if it was added.
   return success ? ship.get() : nullptr;
 
-  OOJS_PROFILE_EXIT
 }
 
 std::vector<oo::EntityHold> Universe::addShipsAt(HPVector pos,
                                                  const std::string& role,
                                                  unsigned count, GLfloat radius,
                                                  bool isGroup) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   std::vector<oo::EntityHold> ships;
   ships.reserve(count);
@@ -3445,7 +3443,6 @@ std::vector<oo::EntityHold> Universe::addShipsAt(HPVector pos,
 
   return ships;  // empty where nil was returned
 
-  OOJS_PROFILE_EXIT
 }
 
 std::vector<oo::EntityHold> Universe::addShipsToRoute(const std::string& route,
@@ -4366,7 +4363,7 @@ bool Universe::canInstantiateShip(const std::string& shipKey) {
 
 std::optional<std::string> Universe::randomShipKeyForRoleRespectingConditions(
     const std::string& role) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ::OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
   std::optional<std::string> shipKey;
@@ -4426,12 +4423,11 @@ std::optional<std::string> Universe::randomShipKeyForRoleRespectingConditions(
   // If we got here, some ships existed but all failed conditions test.
   return std::nullopt;
 
-  OOJS_PROFILE_EXIT
 }
 
 std::shared_ptr<::ShipEntity> Universe::newShipWithRole(
     const std::string& role) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   std::shared_ptr<::ShipEntity> ship;
   std::optional<std::string> shipKey;
@@ -4480,12 +4476,11 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithRole(
 
   return ship;
 
-  OOJS_PROFILE_EXIT
 }
 
 std::shared_ptr<Entity> Universe::newVisualEffectWithName(
     const std::string& effectKey) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   oo::PList effectDict;
   std::shared_ptr<Entity> effect;  // the effect, owned
@@ -4511,7 +4506,6 @@ std::shared_ptr<Entity> Universe::newVisualEffectWithName(
 
   return effect;
 
-  OOJS_PROFILE_EXIT
 }
 
 std::shared_ptr<::ShipEntity> Universe::newSubentityWithName(
@@ -4532,7 +4526,7 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithName(
 std::shared_ptr<::ShipEntity> Universe::newShipWithName(
     const std::string& shipKey, bool usePlayerProxy, bool isSubentity,
     float scale) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   oo::PList shipDict;
   std::shared_ptr<::ShipEntity> ship;
@@ -4585,12 +4579,11 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithName(
 
   return ship;
 
-  OOJS_PROFILE_EXIT
 }
 
 std::shared_ptr<::ShipEntity> Universe::newDockWithName(
     const std::string& shipDataKey, float scale) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   oo::PList shipDict;
   std::shared_ptr<::ShipEntity> dock;  // its object
@@ -4627,7 +4620,6 @@ std::shared_ptr<::ShipEntity> Universe::newDockWithName(
 
   return dock;
 
-  OOJS_PROFILE_EXIT
 }
 
 std::shared_ptr<::ShipEntity> Universe::newShipWithName(
@@ -4636,7 +4628,7 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithName(
 }
 
 bool Universe::isStationShipDictionary(const oo::PList& dict) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   if (dict.isNull()) return false;
 
@@ -4654,7 +4646,6 @@ bool Universe::isStationShipDictionary(const oo::PList& dict) {
 
   return isStation;
 
-  OOJS_PROFILE_EXIT
 }
 
 std::optional<std::string> Universe::defaultAIForRole(const std::string& role) {
@@ -6825,7 +6816,7 @@ unsigned Universe::countShipsMatchingPredicate(EntityFilterPredicate predicate,
 std::vector<oo::EntityHold> Universe::findEntitiesMatchingPredicate(
     EntityFilterPredicate predicate, void* parameter, double range,
     Entity* e1) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   unsigned i;
   HPVector p1;
@@ -6854,7 +6845,6 @@ std::vector<oo::EntityHold> Universe::findEntitiesMatchingPredicate(
 
   return result;
 
-  OOJS_PROFILE_EXIT
 }
 
 Entity* Universe::findOneEntityMatchingPredicate(
@@ -8372,7 +8362,7 @@ oo::PList Universe::generateSystemData(OOSystemID s) {
 
 // cache isn't handled this way any more
 oo::PList Universe::generateSystemData(OOSystemID s, bool /*useCache*/) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // TODO: At the moment this method is only called for systems in the
   // same galaxy. At some point probably needs generalising to have a
@@ -8387,11 +8377,10 @@ oo::PList Universe::generateSystemData(OOSystemID s, bool /*useCache*/) {
               ? systemManager->getPropertiesForSystemKey(systemKey)
               : oo::PList());
 
-  OOJS_PROFILE_EXIT
 }
 
 oo::PList Universe::currentSystemData() {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   if (!inInterstellarSpace()) {
     return generateSystemData(systemID);
@@ -8420,7 +8409,6 @@ oo::PList Universe::currentSystemData() {
     return interstellarDict;
   }
 
-  OOJS_PROFILE_EXIT
 }
 
 bool Universe::inInterstellarSpace() { return sun() == nullptr; }
