@@ -1444,12 +1444,11 @@ void ShipEntity::setDestinationWithinTarget() {
     Quaternion q;
     quaternion_set_random(&q);
     Vector v = vector_forward_from_quaternion(q);
-    GLfloat d =
-        (randf() - randf()) *
-        the_target
-            ->collision_radius;  // NOLINT(misc-redundant-expression): two
-                                 // independent randf() draws, pre-existing;
-                                 // behaviour unchanged by this retarget.
+    // Two independent draws, the left one first (as the expression's
+    // operands were evaluated).
+    const GLfloat draw1 = randf();
+    const GLfloat draw2 = randf();
+    GLfloat d = (draw1 - draw2) * the_target->collision_radius;
     _destination =
         make_HPvector(pos.x + d * v.x, pos.y + d * v.y, pos.z + d * v.z);
   }
