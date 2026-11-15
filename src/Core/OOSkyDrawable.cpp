@@ -514,11 +514,10 @@ std::unique_ptr<OOSkyQuadSet> OOSkyQuadSet::initWithQuadsWithTexture(
 
 // Hejl / Burgess-Dawson filmic tone mapping
 // this algorithm has gamma correction already embedded
-#define SKYCOLOR_TONEMAP_COMPONENT(skyColorComponent)              \
-  do {                                                             \
-    x = std::max(0.0, (skyColorComponent) - 0.004);                \
-    *col++ = (x * (6.2 * x + 0.5)) / (x * (6.2 * x + 1.7) + 0.06); \
-  } while (0)
+  auto skyColorTonemapComponent = [&](GLfloat skyColorComponent) {
+    x = std::max(0.0, skyColorComponent - 0.004);
+    *col++ = (x * (6.2 * x + 0.5)) / (x * (6.2 * x + 1.7) + 0.06);
+  };
 
   std::unique_ptr<OOSkyQuadSet> self =
       std::make_unique<OOSkyQuadSet>();  // [super init] could not fail
@@ -573,9 +572,9 @@ std::unique_ptr<OOSkyQuadSet> OOSkyQuadSet::initWithQuadsWithTexture(
             *col++ = pow(b, 1.0 / 2.2);
           } else {
             // gamma correctioin + filmic tone mapping
-            SKYCOLOR_TONEMAP_COMPONENT(r);
-            SKYCOLOR_TONEMAP_COMPONENT(g);
-            SKYCOLOR_TONEMAP_COMPONENT(b);
+            skyColorTonemapComponent(r);
+            skyColorTonemapComponent(g);
+            skyColorTonemapComponent(b);
           }
           *col++ = 1.0f;  // Alpha is unused but needs to be there
         }
