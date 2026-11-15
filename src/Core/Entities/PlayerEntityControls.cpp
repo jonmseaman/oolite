@@ -62,7 +62,6 @@ MA 02110-1301, USA.
 #include "OOFastArithmetic.h"
 #include "OOFoundation.h"
 #include "OOFullScreenController.h"
-#include "OOFunctionAttributes.h"
 #include "OOGUIScreenID.h"
 #include "OOJSEngineCore.h"
 #include "OOJSGuiScreenKeyDefinition.h"

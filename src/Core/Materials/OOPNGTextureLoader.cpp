@@ -33,7 +33,6 @@ SOFTWARE.
 #include <string>
 
 #include "OOCPUInfoEndian.h"
-#include "OOFunctionAttributes.h"
 #include "OOPixMap.h"
 #include "OOTexture.h"
 #include "oofnd/Log.hpp"

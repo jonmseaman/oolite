@@ -39,7 +39,6 @@ SOFTWARE.
 #include <string_view>
 #include <variant>
 
-#include "OOFunctionAttributes.h"
 #include "OOMaths.h"
 #include "OOShaderProgram.h"
 #include "OOShaderUniformMethodType.h"
