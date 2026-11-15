@@ -218,7 +218,7 @@ inline constexpr std::string_view PLANETINFO_INTERSTELLAR_KEY =
 class Universe : public oo::Object {
  public:
   Universe();
-  ~Universe();
+  ~Universe() override;
 
   /*	The new universe, owned by the caller (the game controller; it is also
      gSharedUniverse). A second universe while one exists is destroyed (its

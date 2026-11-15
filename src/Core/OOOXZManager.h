@@ -128,7 +128,7 @@ class OOOXZManager : public oo::Object {
   // The shared manager, made on first use; borrowed, never released.
   static OOOXZManager* sharedManager();
 
-  ~OOOXZManager();
+  ~OOOXZManager() override;
 
   std::optional<std::string>
   installPath();  // oo::ResourcePaths::managedAddOnsDirectory()

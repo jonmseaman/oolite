@@ -494,7 +494,7 @@ class OOJSValue : public oo::PListForeign {
   static std::shared_ptr<OOJSValue> valueWithJSValue(JSValueConst value,
                                                      JSContext* context);
 
-  ~OOJSValue();
+  ~OOJSValue() override;
 
   // The held value, owned by the caller (a new reference).
   JSValue jsValueInContext(JSContext* context);
