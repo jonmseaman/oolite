@@ -104,7 +104,7 @@ inline void breakDate(double sinceReferenceDate, std::int64_t& y, int& mo,
 }
 
 inline void appendBase64(std::string& out, const Data& data) {
-  static constexpr char kB64[] =
+  static constexpr std::string_view kB64 =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   const std::uint8_t* src = data.bytes();
   const std::size_t n = data.length();
@@ -243,7 +243,7 @@ class OldStyleWriter {
   // forever for more than 32 bytes at indentation 0. Byte-identical for 0-4 and
   // 8 bytes.
   static void formatData(const Data& d, unsigned indent, std::string& out) {
-    static constexpr char kHex[] = "0123456789ABCDEF";
+    static constexpr std::string_view kHex = "0123456789ABCDEF";
     const std::uint8_t* b = d.bytes();
     out += '<';
     for (std::size_t i = 0; i != d.length(); ++i) {
@@ -348,7 +348,7 @@ inline void appendXMLString(std::string& out, const std::string& s) {
     out += s;
     return;
   }
-  static constexpr char kHex[] = "0123456789ABCDEF";
+  static constexpr std::string_view kHex = "0123456789ABCDEF";
   std::u16string map;
   map.reserve(u.size() + 16);
   for (std::size_t i = 0; i < u.size(); ++i) {

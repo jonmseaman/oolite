@@ -32,6 +32,7 @@ MA 02110-1301, USA.
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "MyOpenGLView.h"
@@ -66,19 +67,19 @@ inline constexpr int ZOOM_INDICATOR_CENTRE_X = 108;
 inline constexpr int ZOOM_INDICATOR_CENTRE_Y = -216;
 inline constexpr float ZOOM_INDICATOR_WIDTH = 11.0f;
 inline constexpr float ZOOM_INDICATOR_HEIGHT = 14.0f;
-inline constexpr char ZOOM_LEVELS_IMAGE[] = "zoom.png";
+inline constexpr std::string_view kZoomLevelsImage = "zoom.png";
 
-inline constexpr char COMPASS_IMAGE[] = "compass.png";
+inline constexpr std::string_view kCompassImage = "compass.png";
 inline constexpr int COMPASS_CENTRE_X = 132;
 inline constexpr int COMPASS_CENTRE_Y = -216;
 inline constexpr int COMPASS_SIZE = 56;
 inline constexpr int COMPASS_HALF_SIZE = 28;
-inline constexpr char COMPASS_REDDOT_IMAGE[] = "reddot.png";
-inline constexpr char COMPASS_GREENDOT_IMAGE[] = "greendot.png";
+inline constexpr std::string_view kCompassReddotImage = "reddot.png";
+inline constexpr std::string_view kCompassGreendotImage = "greendot.png";
 inline constexpr int COMPASS_DOT_SIZE = 16;
 inline constexpr int COMPASS_HALF_DOT_SIZE = 8;
 
-inline constexpr char AEGIS_IMAGE[] = "aegis.png";
+inline constexpr std::string_view kAegisImage = "aegis.png";
 inline constexpr int AEGIS_CENTRE_X = -132;
 inline constexpr int AEGIS_CENTRE_Y = -216;
 inline constexpr int AEGIS_WIDTH = 24;
@@ -192,45 +193,45 @@ inline constexpr double SCOOPSTATUS_HEIGHT = 16.0;
 inline constexpr int MFD_TEXT_WIDTH = 10;
 inline constexpr int MFD_TEXT_HEIGHT = 10;
 
-inline constexpr char DIALS_KEY[] = "dials";
-inline constexpr char LEGENDS_KEY[] = "legends";
-inline constexpr char MFDS_KEY[] = "multi_function_displays";
-inline constexpr char X_KEY[] = "x";
-inline constexpr char Y_KEY[] = "y";
-inline constexpr char X_ORIGIN_KEY[] = "x_origin";
-inline constexpr char Y_ORIGIN_KEY[] = "y_origin";
-inline constexpr char SPACING_KEY[] = "spacing";
-inline constexpr char ALPHA_KEY[] = "alpha";
-inline constexpr char SELECTOR_KEY[] = "selector";
-inline constexpr char IMAGE_KEY[] = "image";
-inline constexpr char WIDTH_KEY[] = "width";
-inline constexpr char HEIGHT_KEY[] = "height";
-inline constexpr char SPRITE_KEY[] = "sprite";
-inline constexpr char DRAW_SURROUND_KEY[] = "draw_surround";
-inline constexpr char EQUIPMENT_REQUIRED_KEY[] = "equipment_required";
-inline constexpr char ALERT_CONDITIONS_KEY[] = "alert_conditions";
-inline constexpr char VIEWSCREEN_KEY[] = "viewscreen_only";
-inline constexpr char DIAL_REQUIRED_KEY[] = "with_dial";
-inline constexpr char LABELLED_KEY[] = "labelled";
-inline constexpr char TEXT_KEY[] = "text";
-inline constexpr char RGB_COLOR_KEY[] = "rgb_color";
+inline constexpr std::string_view kDialsKey = "dials";
+inline constexpr std::string_view kLegendsKey = "legends";
+inline constexpr std::string_view kMfdsKey = "multi_function_displays";
+inline constexpr std::string_view kXKey = "x";
+inline constexpr std::string_view kYKey = "y";
+inline constexpr std::string_view kXOriginKey = "x_origin";
+inline constexpr std::string_view kYOriginKey = "y_origin";
+inline constexpr std::string_view kSpacingKey = "spacing";
+inline constexpr std::string_view kAlphaKey = "alpha";
+inline constexpr std::string_view kSelectorKey = "selector";
+inline constexpr std::string_view kImageKey = "image";
+inline constexpr std::string_view kWidthKey = "width";
+inline constexpr std::string_view kHeightKey = "height";
+inline constexpr std::string_view kSpriteKey = "sprite";
+inline constexpr std::string_view kDrawSurroundKey = "draw_surround";
+inline constexpr std::string_view kEquipmentRequiredKey = "equipment_required";
+inline constexpr std::string_view kAlertConditionsKey = "alert_conditions";
+inline constexpr std::string_view kViewscreenKey = "viewscreen_only";
+inline constexpr std::string_view kDialRequiredKey = "with_dial";
+inline constexpr std::string_view kLabelledKey = "labelled";
+inline constexpr std::string_view kTextKey = "text";
+inline constexpr std::string_view kRgbColorKey = "rgb_color";
 #define COLOR_KEY "color"
 #define COLOR_KEY_LOW "color_low"
 #define COLOR_KEY_MEDIUM "color_medium"
 #define COLOR_KEY_HIGH "color_high"
 #define COLOR_KEY_CRITICAL "color_critical"
 #define COLOR_KEY_SURROUND "color_surround"
-inline constexpr char N_BARS_KEY[] = "n_bars";
-inline constexpr char CUSTOM_DIAL_KEY[] = "data_source";
+inline constexpr std::string_view kNBarsKey = "n_bars";
+inline constexpr std::string_view kCustomDialKey = "data_source";
 
-inline constexpr char ROWS_KEY[] = "rows";
-inline constexpr char COLUMNS_KEY[] = "columns";
-inline constexpr char ROW_HEIGHT_KEY[] = "row_height";
-inline constexpr char ROW_START_KEY[] = "row_start";
-inline constexpr char TITLE_KEY[] = "title";
-inline constexpr char BACKGROUND_RGBA_KEY[] = "background_rgba";
-inline constexpr char OVERALL_ALPHA_KEY[] = "overall_alpha";
-inline constexpr char NONLINEAR_SCANNER[] = "nonlinear_scanner";
+inline constexpr std::string_view kRowsKey = "rows";
+inline constexpr std::string_view kColumnsKey = "columns";
+inline constexpr std::string_view kRowHeightKey = "row_height";
+inline constexpr std::string_view kRowStartKey = "row_start";
+inline constexpr std::string_view kTitleKey = "title";
+inline constexpr std::string_view kBackgroundRgbaKey = "background_rgba";
+inline constexpr std::string_view kOverallAlphaKey = "overall_alpha";
+inline constexpr std::string_view kNonlinearScanner = "nonlinear_scanner";
 
 #define Z1                                                   \
   (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr \
