@@ -118,7 +118,7 @@ inline constexpr int OO_POSTFX_CRTBADSIGNAL = OO_POSTFX_CRT + 1;
 inline constexpr int OO_POSTFX_ENDOFLIST =
     OO_POSTFX_CRTBADSIGNAL + 1;  // keep this for last
 
-#define SHADERS_MIN OOShaderSetting::kOff
+inline constexpr auto SHADERS_MIN = OOShaderSetting::kOff;
 
 inline constexpr int MAX_MESSAGES = 5;
 
@@ -197,7 +197,8 @@ inline constexpr float TIME_ACCELERATION_FACTOR_MAX = 16.0f;
 #define DEMO_LIGHT_POSITION 5000.0f, 25000.0f, -10000.0f
 
 #define MIN_DISTANCE_TO_BUOY 750.0f  // don't add ships within this distance
-#define MIN_DISTANCE_TO_BUOY2 (MIN_DISTANCE_TO_BUOY * MIN_DISTANCE_TO_BUOY)
+inline constexpr auto MIN_DISTANCE_TO_BUOY2 =
+    (MIN_DISTANCE_TO_BUOY * MIN_DISTANCE_TO_BUOY);
 
 // if this is changed, also change oolite-populator.js
 // once this number has been in a stable release, cannot easily be changed
