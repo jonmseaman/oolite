@@ -157,16 +157,16 @@ Random_Seed OOStringExpanderDefaultRandomSeed();
         "arpad.goret...@gmail.com" (full name not available). Source:
         https://groups.google.com/forum/?fromgroups=#!topic/comp.std.c/d-6Mj5Lko_s
 
-        This version relies on the GCC/Clang ##__VA_ARGS__ extension to handle
-        zero-length lists. It supports up to 62 arguments.
+        This version uses __VA_OPT__ to handle zero-length lists. It supports
+        up to 62 arguments.
 
         OOEXPAND_MAP applies a unary macro or function to each element of a
         parameter or initializer list. For example, "OOEXPAND_MAP(foo, 1, 2, 3)"
         is equivalent to "foo(1), foo(2), foo(3)".
 */
 
-#define OOEXPAND_ARGUMENT_COUNT(...)               \
-  OOEXPAND_ARGUMENT_COUNT_INNER(_0, ##__VA_ARGS__, \
+#define OOEXPAND_ARGUMENT_COUNT(...)                           \
+  OOEXPAND_ARGUMENT_COUNT_INNER(_0 __VA_OPT__(, ) __VA_ARGS__, \
                                 OOEXPAND_ARGUMENT_COUNT_63_VALUES())
 #define OOEXPAND_ARGUMENT_COUNT_INNER(...) \
   OOEXPAND_ARGUMENT_COUNT_EXTRACT_64TH_ARG(__VA_ARGS__)

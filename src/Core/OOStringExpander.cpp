@@ -251,12 +251,12 @@ void ReportJavaScriptWarning(JSContext* jsc, const char* format, ...)
 
 #define SyntaxError(CONTEXT, CLASS, FORMAT, ...)                              \
   SyntaxIssue(CONTEXT, OOLOG_FUNCTION_NAME, OOLOG_FILE_NAME, __LINE__, CLASS, \
-              kSyntaxIssuePrefix, FORMAT, ##__VA_ARGS__)
+              kSyntaxIssuePrefix, FORMAT __VA_OPT__(, ) __VA_ARGS__)
 
 #if WARNINGS
 #define SyntaxWarning(CONTEXT, CLASS, FORMAT, ...)                            \
   SyntaxIssue(CONTEXT, OOLOG_FUNCTION_NAME, OOLOG_FILE_NAME, __LINE__, CLASS, \
-              kSyntaxIssuePrefix, FORMAT, ##__VA_ARGS__)
+              kSyntaxIssuePrefix, FORMAT __VA_OPT__(, ) __VA_ARGS__)
 #else
 #define SyntaxWarning(...) \
   do {                     \
