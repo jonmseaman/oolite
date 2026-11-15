@@ -22,13 +22,13 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOCommodityMarket.h"
-
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "OOCommodities.h"
+#include "OOCommodityMarket.h"
 #include "OOStringExpander.h"
 
 namespace {
@@ -178,7 +178,7 @@ OOCreditsQuantity OOCommodityMarket::priceForGood(const std::string& good) {
   if (definition == nullptr) {
     return 0;
   }
-  return definition->get<unsigned long long>(kPriceCurrent);
+  return definition->get<std::uint64_t>(kPriceCurrent);
 }
 
 OOCargoQuantity OOCommodityMarket::quantityForGood(const std::string& good) {
@@ -202,7 +202,7 @@ std::size_t OOCommodityMarket::exportLegalityForGood(const std::string& good) {
   if (definition == nullptr) {
     return 0;
   }
-  return definition->get<unsigned long long>(kLegalityExport);
+  return definition->get<std::uint64_t>(kLegalityExport);
 }
 
 std::size_t OOCommodityMarket::importLegalityForGood(const std::string& good) {
@@ -210,7 +210,7 @@ std::size_t OOCommodityMarket::importLegalityForGood(const std::string& good) {
   if (definition == nullptr) {
     return 0;
   }
-  return definition->get<unsigned long long>(kLegalityImport);
+  return definition->get<std::uint64_t>(kLegalityImport);
 }
 
 OOCargoQuantity OOCommodityMarket::capacityForGood(const std::string& good) {
@@ -304,7 +304,7 @@ void OOCommodityMarket::loadStationAmounts(const oo::PList& amounts) {
     loadedOK = false;
     const std::optional<std::string> good = SavedGoodKey(loaded);
     q = loaded.at<unsigned int>(1);
-    p = loaded.at<unsigned long long>(2);
+    p = loaded.at<std::uint64_t>(2);
     // old save games might have more in the array, but we don't care
     if (!good.has_value() || !setQuantity(q, *good)) {
       // then it's an array from a 1.80-or-earlier save game and

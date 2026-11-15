@@ -229,9 +229,9 @@ OOColor* ReticleColorAt(const std::vector<std::shared_ptr<OOColor>>& colors,
                         std::size_t index) {
   if (EXPECT_NOT(index >= colors.size())) {
     OORaiseException(OORangeException,
-                     "Index %lu is out of range %lu (in 'objectAtIndex:')",
-                     static_cast<unsigned long>(index),
-                     static_cast<unsigned long>(colors.size()));
+                     "Index %zu is out of range %zu (in 'objectAtIndex:')",
+                     static_cast<std::size_t>(index),
+                     static_cast<std::size_t>(colors.size()));
   }
   return colors[index].get();
 }

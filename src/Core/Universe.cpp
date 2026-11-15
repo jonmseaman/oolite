@@ -882,26 +882,26 @@ const oo::PList* EquipmentExtraInfo(const oo::PList& item) {
 }
 
 // A missing dictionary gives 0, not the fallback.
-unsigned long long ExtraInfoValue(const oo::PList* extra, std::string_view key,
-                                  unsigned long long fallback) {
-  return (extra != nullptr) ? extra->get<unsigned long long>(key, fallback) : 0;
+std::uint64_t ExtraInfoValue(const oo::PList* extra, std::string_view key,
+                             std::uint64_t fallback) {
+  return (extra != nullptr) ? extra->get<std::uint64_t>(key, fallback) : 0;
 }
 
 // equipment.plist order: explicit sort_order, then tech level, then price (ties
 // keep file order).
 bool equipmentSort(const oo::PList& one, const oo::PList& two) {
-  unsigned long long comp1 =
+  std::uint64_t comp1 =
       ExtraInfoValue(EquipmentExtraInfo(one), "sort_order", 1000);
-  unsigned long long comp2 =
+  std::uint64_t comp2 =
       ExtraInfoValue(EquipmentExtraInfo(two), "sort_order", 1000);
   if (comp1 != comp2) return comp1 < comp2;
 
-  comp1 = one.at<unsigned long long>(EQUIPMENT_TECH_LEVEL_INDEX);
-  comp2 = two.at<unsigned long long>(EQUIPMENT_TECH_LEVEL_INDEX);
+  comp1 = one.at<std::uint64_t>(EQUIPMENT_TECH_LEVEL_INDEX);
+  comp2 = two.at<std::uint64_t>(EQUIPMENT_TECH_LEVEL_INDEX);
   if (comp1 != comp2) return comp1 < comp2;
 
-  comp1 = one.at<unsigned long long>(EQUIPMENT_PRICE_INDEX);
-  comp2 = two.at<unsigned long long>(EQUIPMENT_PRICE_INDEX);
+  comp1 = one.at<std::uint64_t>(EQUIPMENT_PRICE_INDEX);
+  comp2 = two.at<std::uint64_t>(EQUIPMENT_PRICE_INDEX);
   return comp1 < comp2;
 }
 
@@ -909,20 +909,20 @@ bool equipmentSort(const oo::PList& one, const oo::PList& two) {
 bool equipmentSortOutfitting(const oo::PList& one, const oo::PList& two) {
   const oo::PList* extra1 = EquipmentExtraInfo(one);
   const oo::PList* extra2 = EquipmentExtraInfo(two);
-  unsigned long long comp1 =
+  std::uint64_t comp1 =
       ExtraInfoValue(extra1, "purchase_sort_order",
                      ExtraInfoValue(extra1, "sort_order", 1000));
-  unsigned long long comp2 =
+  std::uint64_t comp2 =
       ExtraInfoValue(extra2, "purchase_sort_order",
                      ExtraInfoValue(extra2, "sort_order", 1000));
   if (comp1 != comp2) return comp1 < comp2;
 
-  comp1 = one.at<unsigned long long>(EQUIPMENT_TECH_LEVEL_INDEX);
-  comp2 = two.at<unsigned long long>(EQUIPMENT_TECH_LEVEL_INDEX);
+  comp1 = one.at<std::uint64_t>(EQUIPMENT_TECH_LEVEL_INDEX);
+  comp2 = two.at<std::uint64_t>(EQUIPMENT_TECH_LEVEL_INDEX);
   if (comp1 != comp2) return comp1 < comp2;
 
-  comp1 = one.at<unsigned long long>(EQUIPMENT_PRICE_INDEX);
-  comp2 = two.at<unsigned long long>(EQUIPMENT_PRICE_INDEX);
+  comp1 = one.at<std::uint64_t>(EQUIPMENT_PRICE_INDEX);
+  comp2 = two.at<std::uint64_t>(EQUIPMENT_PRICE_INDEX);
   return comp1 < comp2;
 }
 
@@ -1015,9 +1015,8 @@ void RemoveKeyAt(std::vector<std::string>& keys, unsigned index) {
   if (index >= keys.size()) {
     OORaiseException(
         OORangeException,
-        "Index %lu is out of range %lu (in 'removeObjectAtIndex:')",
-        static_cast<unsigned long>(index),
-        static_cast<unsigned long>(keys.size()));
+        "Index %zu is out of range %zu (in 'removeObjectAtIndex:')",
+        static_cast<std::size_t>(index), static_cast<std::size_t>(keys.size()));
   }
   keys.erase(keys.begin() + index);
 }
@@ -1062,10 +1061,8 @@ std::string ExpandKey(const std::string& key) {
 
 // -compare: of the two offers' price numbers (unsigned long long).
 int comparePrice(const oo::PList& offer1, const oo::PList& offer2) {
-  const unsigned long long price1 =
-      offer1.get<unsigned long long>(SHIPYARD_KEY_PRICE);
-  const unsigned long long price2 =
-      offer2.get<unsigned long long>(SHIPYARD_KEY_PRICE);
+  const std::uint64_t price1 = offer1.get<std::uint64_t>(SHIPYARD_KEY_PRICE);
+  const std::uint64_t price2 = offer2.get<std::uint64_t>(SHIPYARD_KEY_PRICE);
   return (price1 < price2) ? -1 : (price1 > price2) ? 1 : 0;
 }
 
@@ -1198,7 +1195,7 @@ std::string OOLookUpPluralDescriptionPRIV(const std::string& key,
     return *tmp;
   }
   int unsigned i;
-  long int index;
+  std::int64_t index;
 
   for (index = i = 0; i < conditions->count(); ++index, ++i) {
     const std::optional<std::string> condition =
@@ -1206,7 +1203,7 @@ std::string OOLookUpPluralDescriptionPRIV(const std::string& key,
     if (!condition.has_value()) break;
     const char* cond = condition->c_str();
 
-    long int input = count;
+    std::int64_t input = count;
     bool flag = false;  // we XOR test results with this
 
     while (isspace(*cond)) ++cond;
@@ -1225,7 +1222,7 @@ std::string OOLookUpPluralDescriptionPRIV(const std::string& key,
           continue;
       }
 
-      long int param = strtol(cond, const_cast<char**>(&cond), 10);
+      auto param = strtol(cond, const_cast<char**>(&cond), 10);
 
       switch (command) {
         case '#':
@@ -4351,7 +4348,7 @@ std::optional<std::string> Universe::randomShipKeyForRoleRespectingConditions(
   std::shared_ptr<OOMutableProbabilitySet> pset;
 
 #if PROFILE_SHIP_SELECTION
-  static unsigned long profTotal = 0, profSlowPath = 0;
+  static std::uint64_t profTotal = 0, profSlowPath = 0;
   ++profTotal;
 #endif
 
@@ -4658,7 +4655,7 @@ OOCreditsQuantity Universe::getEquipmentPriceForKey(const std::string& eq_key) {
           OptionalStringAt(itemData, EQUIPMENT_KEY_INDEX);
 
       if (itemType.has_value() && *itemType == eq_key) {
-        return itemData.at<unsigned long long>(EQUIPMENT_PRICE_INDEX);
+        return itemData.at<std::uint64_t>(EQUIPMENT_PRICE_INDEX);
       }
     }
   }
@@ -8729,7 +8726,7 @@ oo::PList Universe::nearbyDestinationsWithinRange(double range) {
   NSPoint here =
       (PLAYER != nullptr ? PLAYER->getGalaxy_coordinates() : NSPoint{});
 
-  for (unsigned short i = 0; i < 256; i++) {
+  for (std::uint16_t i = 0; i < 256; i++) {
     NSPoint there = coordinatesForSystem(i);
     double dist =
         distanceBetweenPlanetPositions(here.x, here.y, there.x, there.y);
@@ -9324,9 +9321,9 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
   RANROTSeed personalitySeed = RanrotSeedFromRandomSeed(ship_seed);
 
   for (i = 0; i < 256; i++) {
-    long long reference_time = 0x1000000 * floor(current_time / 0x1000000);
+    std::int64_t reference_time = 0x1000000 * floor(current_time / 0x1000000);
 
-    long long c_time =
+    std::int64_t c_time =
         ship_seed.a * 0x10000 + ship_seed.b * 0x100 + ship_seed.c;
     double ship_sold_time = reference_time + c_time;
 
@@ -9814,8 +9811,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
         "calculation, but does not exist. Setting ship value to 0.",
         ship_desc.value_or("(null)"));
   } else {
-    base_price =
-        shipyard_info.get<unsigned long long>(SHIPYARD_KEY_PRICE, 0ULL);
+    base_price = shipyard_info.get<std::uint64_t>(SHIPYARD_KEY_PRICE, 0ULL);
   }
 
   if (base_price == 0ULL) return base_price;
@@ -9907,7 +9903,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
 
   // needs to be a signed value, we can then subtract from the base price, if
   // less than standard equipment.
-  long long extra_equipment_value =
+  std::int64_t extra_equipment_value =
       ship_max_passengers *
       (UNIVERSE != nullptr
            ? UNIVERSE->getEquipmentPriceForKey("EQ_PASSENGER_BERTH")
@@ -10017,8 +10013,8 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
 
   // we'll return at least the scrap value
   // TODO: calculate scrap value based on the size of the ship.
-  if (static_cast<long long>(scrap_value) >
-      static_cast<long long>(base_price) + extra_equipment_value)
+  if (static_cast<std::int64_t>(scrap_value) >
+      static_cast<std::int64_t>(base_price) + extra_equipment_value)
     return scrap_value;
 
   return base_price + extra_equipment_value;

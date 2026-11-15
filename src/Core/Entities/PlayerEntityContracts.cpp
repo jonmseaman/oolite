@@ -22,8 +22,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "PlayerEntityContracts.h"
-
+#include <cstdint>
 #include <format>
 #include <memory>
 #include <set>
@@ -41,6 +40,7 @@ MA 02110-1301, USA.
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "PlayerEntity.h"
+#include "PlayerEntityContracts.h"
 #include "ShipEntityAI.h"
 #include "StationEntity.h"
 #include "Universe.h"
@@ -251,7 +251,7 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
       // we've arrived in system!
       if (dest_eta > 0) {
         // and in good time
-        long long fee = passenger_info.get<long long>(CONTRACT_KEY_FEE);
+        std::int64_t fee = passenger_info.get<std::int64_t>(CONTRACT_KEY_FEE);
         while ((randf() < 0.75) && (dest_eta > 3600)) {
           // delivered with more than an hour to spare
           // and a decent customer?
@@ -280,8 +280,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
              passenger_info});
       } else {
         // but we're late!
-        long long fee =
-            passenger_info.get<long long>(CONTRACT_KEY_FEE) / 2;  // halve fare
+        std::int64_t fee = passenger_info.get<std::int64_t>(CONTRACT_KEY_FEE) /
+                           2;  // halve fare
         while (randf() < 0.5)  // maybe halve fare a few times!
           fee /= 2;
         credits += 10 * fee;
@@ -334,7 +334,7 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
       // we've arrived in system!
       if (dest_eta > 0) {
         // and in good time
-        long long fee = parcel_info.get<long long>(CONTRACT_KEY_FEE);
+        std::int64_t fee = parcel_info.get<std::int64_t>(CONTRACT_KEY_FEE);
         while ((randf() < 0.75) && (dest_eta > 86400)) {
           // delivered with more than a day to spare
           // and a decent customer?
@@ -365,8 +365,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
 
       } else {
         // but we're late!
-        long long fee =
-            parcel_info.get<long long>(CONTRACT_KEY_FEE) / 2;  // halve fare
+        std::int64_t fee =
+            parcel_info.get<std::int64_t>(CONTRACT_KEY_FEE) / 2;  // halve fare
         while (randf() < 0.5)  // maybe halve fare a few times!
           fee /= 2;
         credits += 10 * fee;
@@ -1574,7 +1574,7 @@ std::vector<std::string> ShipyardLabelsRow(GuiDisplayGen* gui) {
 }  // namespace
 
 OOCreditsQuantity PlayerEntity::priceForShipKey(const std::string& key) {
-  return CurrentShipyardEntry(key).get<unsigned long long>(
+  return CurrentShipyardEntry(key).get<std::uint64_t>(
       "price");  // SHIPYARD_KEY_PRICE
 }
 
@@ -1683,7 +1683,7 @@ void PlayerEntity::setGuiToShipyardScreen(std::size_t skip) {
            i++) {
         const oo::PList& ship_info = shipyard[i + skip];
         OOCreditsQuantity ship_price =
-            ship_info.get<unsigned long long>("price");  // SHIPYARD_KEY_PRICE
+            ship_info.get<std::uint64_t>("price");  // SHIPYARD_KEY_PRICE
         const oo::PList* ship =
             ship_info.get<oo::PList::Dict>("ship");  // SHIPYARD_KEY_SHIP
         std::optional<std::string> shipName =
@@ -1816,7 +1816,7 @@ void PlayerEntity::showShipyardInfoForSelection() {
     if (shipKey) {
       showShipyardModel(
           *shipKey, shipDict,
-          info.get<unsigned short>("personality"));  // SHIPYARD_KEY_PERSONALITY
+          info.get<std::uint16_t>("personality"));  // SHIPYARD_KEY_PERSONALITY
     }
   } else {
     // the key is a particular model of ship which we must expand...
@@ -1878,14 +1878,14 @@ OOCreditsQuantity PlayerEntity::tradeInValue() {
           for-sale ships.
           -- Ahruman 20070707, fix applied 20070708
   */
-  unsigned long long value =
+  std::uint64_t value =
       (UNIVERSE != nullptr ? UNIVERSE->tradeInValueForCommanderDictionary(
                                  commanderDataDictionary())
                            : 0);
   value -=
       value * 0.006 *
       missingSubEntitiesAdjustment();  // TODO: 0.006 might need rethinking.
-  const unsigned long long rounded =
+  const std::uint64_t rounded =
       ((value * 75 * ship_trade_in_factor) + 5000) /
       10000;  // Multiply by two percentages, divide by 100*100. The +5000 is to
               // get normal rounding.
@@ -1936,7 +1936,7 @@ bool PlayerEntity::buySelectedShip() {
   // first check you can afford it!
   const oo::PList shipInfo = CurrentShipyardEntry(key);
   OOCreditsQuantity price =
-      shipInfo.get<unsigned long long>("price");  // SHIPYARD_KEY_PRICE
+      shipInfo.get<std::uint64_t>("price");  // SHIPYARD_KEY_PRICE
   OOCreditsQuantity tradeIn = tradeInValue();
 
   if (credits + tradeIn < price * 10) return false;  // you can't afford it!
@@ -2022,7 +2022,7 @@ bool PlayerEntity::buySelectedShip() {
 
   setStatus(OOEntityStatus::kDocked);
   setEntityPersonalityInt(
-      shipInfo.get<unsigned short>("personality"));  // SHIPYARD_KEY_PERSONALITY
+      shipInfo.get<std::uint16_t>("personality"));  // SHIPYARD_KEY_PERSONALITY
 
   // adjust the clock forward by an hour
   ship_clock_adjust += 3600.0;
@@ -2077,8 +2077,8 @@ bool PlayerEntity::replaceShipWithNamedShip(const std::string& shipKey) {
     }
   }
 
-  setEntityPersonalityInt(ship_info.get<unsigned short>(
-      "personality"));  // SHIPYARD_KEY_PERSONALITY
+  setEntityPersonalityInt(
+      ship_info.get<std::uint16_t>("personality"));  // SHIPYARD_KEY_PERSONALITY
 
   return true;
 }

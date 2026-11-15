@@ -22,8 +22,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "PlayerEntityScriptMethods.h"
-
+#include <cstdint>
 #include <format>
 #include <memory>
 #include <string>
@@ -34,6 +33,7 @@ MA 02110-1301, USA.
 #include "OOStringParsing.h"
 #include "OOSystemDescriptionManager.h"
 #include "PlayerEntityLoadSave.h"
+#include "PlayerEntityScriptMethods.h"
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
@@ -340,8 +340,8 @@ std::optional<std::string> PlayerEntity::creditsFormattedForSubstitution() {
 std::optional<std::string>
 PlayerEntity::creditsFormattedForLegacySubstitution() {
   OOCreditsQuantity tenthsOfCredits = deciCredits();
-  unsigned long long integerCredits = tenthsOfCredits / 10;
-  unsigned long long tenths = tenthsOfCredits % 10;
+  std::uint64_t integerCredits = tenthsOfCredits / 10;
+  std::uint64_t tenths = tenthsOfCredits % 10;
 
   return std::format("{}.{}", integerCredits, tenths);
 }

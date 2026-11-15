@@ -22,9 +22,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOStringParsing.h"
-
 #include <array>  // IWYU pragma: keep: used only with DEBUG_GRAPHVIZ
+#include <cstdint>
 #include <format>
 #include <set>
 #include <string>
@@ -34,6 +33,7 @@ MA 02110-1301, USA.
 #include "OOFunctionAttributes.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJavaScriptEngine.h"
+#include "OOStringParsing.h"
 #include "Universe.h"
 #include "legacy_random.h"
 #include "oofnd/Scanner.hpp"
@@ -273,7 +273,7 @@ std::string OOStringFromDeciCredits(OOCreditsQuantity tenthsOfCredits,
   OOJSRelinquishContext(context);
 
   if (EXPECT_NOT(!result.has_value()))
-    result = std::format("{}", static_cast<long>(tenthsOfCredits) / 10);
+    result = std::format("{}", static_cast<std::int64_t>(tenthsOfCredits) / 10);
 
   reentrancyLock = false;
 

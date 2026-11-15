@@ -566,7 +566,7 @@ double DoubleValue(const OOMaybeUnits& string) {
   return string.has_value() ? oo::plist_get::doubleValue(*string) : 0.0;
 }
 
-long long LongLongValue(const OOMaybeUnits& string) {
+std::int64_t LongLongValue(const OOMaybeUnits& string) {
   return string.has_value() ? oo::plist_get::longLongValue(*string) : 0;
 }
 
@@ -1460,9 +1460,9 @@ OOUnits Digram(const std::optional<std::string>& digrams, const OOUnits& units,
     if (digrams.has_value()) {
       OORaiseException(
           OORangeException,
-          "in substringWithRange:, range { %lu, 2 } extends beyond size (%lu)",
-          static_cast<unsigned long>(location),
-          static_cast<unsigned long>(units.size()));
+          "in substringWithRange:, range { %zu, 2 } extends beyond size (%zu)",
+          static_cast<std::size_t>(location),
+          static_cast<std::size_t>(units.size()));
     }
     return OOUnits();
   }

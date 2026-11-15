@@ -25,14 +25,14 @@ SOFTWARE.
 
 */
 
-#include "OOJSFrameCallbacks.h"
-
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <new>
 #include <string>
 #include <vector>
 
+#include "OOJSFrameCallbacks.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/objc/OOAssert.h"
@@ -454,7 +454,7 @@ static void QueueDeferredOperation(const std::string& opType,
 static void RunDeferredOperations(JSContext* context) {
   FCBLog("script.frameCallback.debug.run-deferred",
          "Running {} deferred frame callback operations.",
-         (long)sDeferredOps->size());
+         static_cast<std::uint64_t>(sDeferredOps->size()));
   FCBLogIndentIf("script.frameCallback.debug.run-deferred");
 
   for (const DeferredOperation& operation : *sDeferredOps) {

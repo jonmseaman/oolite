@@ -26,12 +26,11 @@ SOFTWARE.
 
 */
 
-#include "OOALSoundDecoder.h"
-
 #include <vorbis/vorbisfile.h>
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <format>
@@ -41,6 +40,7 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "OOALSoundDecoder.h"
 #include "OOLogging.h"
 #include "oofnd/String.hpp"
 #include "unzip.h"
@@ -297,7 +297,7 @@ bool OOALSoundVorbisCodec::readCreatingBuffer(std::vector<char>& out) {
   char* dst;
   size_t sizeInFrames = 0;
   int remaining;
-  long framesRead;
+  std::int64_t framesRead;
   // 16-bit samples, either two or one track
   int frameSize = isStereo() ? 4 : 2;
   ogg_int64_t totalSizeInFrames;
@@ -348,7 +348,7 @@ bool OOALSoundVorbisCodec::readCreatingBuffer(std::vector<char>& out) {
 size_t OOALSoundVorbisCodec::streamToBuffer(char* buffer) {
   int remaining = OOAL_STREAM_CHUNK_SIZE;
   size_t streamed = 0;
-  long framesRead;
+  std::int64_t framesRead;
 
   char* dst = buffer;
   std::array<char, 4096> pcmout{};

@@ -87,7 +87,7 @@ inline std::string description(Clock::time_point t, int utcOffsetMinutes) {
   // calendar: no time-zone database and no gmtime, so the result does not
   // depend on the C runtime.
   const sys_seconds local =
-      floor<seconds>(t) + minutes(static_cast<long long>(utcOffsetMinutes));
+      floor<seconds>(t) + minutes(static_cast<std::int64_t>(utcOffsetMinutes));
   const sys_days day = floor<days>(local);
   const year_month_day date{day};
   const hh_mm_ss<seconds> time{local - day};

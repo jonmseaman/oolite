@@ -50,6 +50,7 @@
 #include <stdlib.h>
 
 #include <cstddef>
+#include <cstdint>
 
 #ifdef __cplusplus
 namespace oo {
@@ -107,8 +108,8 @@ inline NSRange NSMakeRange(std::size_t location, std::size_t length) {
     fprintf(
         stderr,
         "oofnd: NSMakeRange(%llu, %llu): range location + length too great\n",
-        static_cast<unsigned long long>(location),
-        static_cast<unsigned long long>(length));
+        static_cast<std::uint64_t>(location),
+        static_cast<std::uint64_t>(length));
     abort();
   }
   range.location = location;

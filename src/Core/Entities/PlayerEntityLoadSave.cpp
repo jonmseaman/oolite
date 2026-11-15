@@ -22,9 +22,8 @@
 
  */
 
-#include "PlayerEntityLoadSave.h"
-
 #include <algorithm>
+#include <cstdint>
 #include <format>
 #include <string>
 #include <utility>
@@ -40,6 +39,7 @@
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "OOXMLExtensions.h"
+#include "PlayerEntityLoadSave.h"
 #include "ResourceManager.h"
 #include "ShipEntityAI.h"
 #include "StationEntity.h"
@@ -1376,8 +1376,8 @@ int PlayerEntity::findIndexOfCommander(const std::string& cdrName) {
 namespace {
 
 uint16_t PersonalityForCommanderDict(const oo::PList& dict) {
-  uint16_t personality = dict.get<unsigned short>("entity_personality",
-                                                  ENTITY_PERSONALITY_INVALID);
+  uint16_t personality =
+      dict.get<std::uint16_t>("entity_personality", ENTITY_PERSONALITY_INVALID);
 
   if (personality == ENTITY_PERSONALITY_INVALID) {
     // For pre-1.74 saved games, generate a default personality based on some

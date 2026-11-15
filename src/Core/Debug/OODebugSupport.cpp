@@ -27,12 +27,12 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-#include "OODebugSupport.h"
-
+#include <cstdint>
 #include <memory>
 #include <string>
 
 #include "OODebugMonitor.h"
+#include "OODebugSupport.h"
 #include "OODebugTCPConsoleClient.h"
 #include "OOJavaScriptEngine.h"
 #include "ResourceManager.h"
@@ -41,7 +41,7 @@ void OOInitDebugSupport() {
   std::optional<std::string> debugOXPPath;
   oo::PList debugSettings;
   std::optional<std::string> consoleHost;
-  unsigned short consolePort = 0;
+  std::uint16_t consolePort = 0;
   std::shared_ptr<OODebuggerInterface> debugger;
   bool activateDebugConsole = false;
 
@@ -66,7 +66,7 @@ void OOInitDebugSupport() {
         (consoleHostValue->isString() || consoleHostValue->isNumber())) {
       consoleHost = debugSettings.get<std::string>("console-host");
     }
-    consolePort = debugSettings.get<unsigned short>("console-port");
+    consolePort = debugSettings.get<std::uint16_t>("console-port");
 
     // Use the TCP debugger connection.
     {

@@ -22,10 +22,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "PlayerEntityKeyMapper.h"
-
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <map>
 #include <optional>
@@ -38,6 +37,7 @@ MA 02110-1301, USA.
 #include "HeadUpDisplay.h"
 #include "OOEquipmentType.h"
 #include "OOJoystickManager.h"
+#include "PlayerEntityKeyMapper.h"
 #include "ResourceManager.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/PList.hpp"
@@ -45,8 +45,8 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 
 static std::size_t key_index;
-static long current_row;
-static long kbd_row = GUI_ROW_KC_FUNCSTART;
+static OOGUIRow current_row;
+static OOGUIRow kbd_row = GUI_ROW_KC_FUNCSTART;
 static bool has_error = false;
 static bool last_shift = false;
 
@@ -557,8 +557,8 @@ void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow) {
 
     if (key_list.count() > i) {
       const oo::PList& def = *key_list.at(i);
-      k_int =
-          static_cast<OOKeyCode>(def.get<long long>("key"));  // -integerValue
+      k_int = static_cast<OOKeyCode>(
+          def.get<std::int64_t>("key"));  // -integerValue
       if (k_int > 0) {
         keystring = keyCodeDescription(k_int);
         if (def.get<bool>("shift") == true)
@@ -741,7 +741,7 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen() {
   const oo::PList* def = key_list.at(key_index);
   // if ([key isEqualToString:@"(not set)"]) key = @"";
   OOKeyCode k_int = static_cast<OOKeyCode>(
-      def != nullptr ? def->get<long long>("key") : 0);  // -integerValue
+      def != nullptr ? def->get<std::int64_t>("key") : 0);  // -integerValue
   if (gameView != nullptr) gameView->resetTypedString();
   if (gameView != nullptr)
     gameView->setTypedString(
@@ -858,8 +858,8 @@ void PlayerEntity::updateShiftKeyDefinition(const std::string& key,
   if (key == "shift") {
     // force the key into upper or lower case, to limit invalid key combos as
     // much as possible
-    std::ptrdiff_t k_int =
-        static_cast<OOKeyCode>(key_def.get<long long>("key"));  // -integerValue
+    std::ptrdiff_t k_int = static_cast<OOKeyCode>(
+        key_def.get<std::int64_t>("key"));  // -integerValue
     if (k_int > 0) {
       const std::optional<std::string> keystring = keyCodeDescription(k_int);
       std::optional<std::string> newstring;
@@ -2014,7 +2014,7 @@ bool PlayerEntity::compareKeyEntries(const oo::PList& first,
                                      const oo::PList& second) {
   // "key" as -integerValue read it (a string or a number); the modifiers as
   // -boolValue
-  if (first.get<long long>("key") == second.get<long long>("key")) {
+  if (first.get<std::int64_t>("key") == second.get<std::int64_t>("key")) {
     if (first.get<bool>("shift") == second.get<bool>("shift") &&
         first.get<bool>("mod1") == second.get<bool>("mod1") &&
         first.get<bool>("mod2") == second.get<bool>("mod2"))
@@ -2028,7 +2028,7 @@ bool PlayerEntity::compareKeyEntries(const oo::PList& first,
 void PlayerEntity::saveKeySetting(const std::string& key) {
   // check for a blank entry
   oo::PList::Array* keys = key_list.getIf<oo::PList::Array>();
-  if (key_list.count() > 1 && key_list.at(1)->get<long long>("key") == 0) {
+  if (key_list.count() > 1 && key_list.at(1)->get<std::int64_t>("key") == 0) {
     keys->erase(keys->begin() + 1);
   }
   // make sure the primary and alternate keys are different
@@ -2039,8 +2039,8 @@ void PlayerEntity::saveKeySetting(const std::string& key) {
   }
   // see if we've set the key settings to blank - in which case, delete the
   // override
-  if ((key_list.at(0) != nullptr ? key_list.at(0)->get<long long>("key") : 0) ==
-      0) {
+  if ((key_list.at(0) != nullptr ? key_list.at(0)->get<std::int64_t>("key")
+                                 : 0) == 0) {
     // -integerValue
     if (key_list.count() == 1 ||
         (key_list.count() > 1 && IsEmptyString(key_list.at(1)->find("key")))) {

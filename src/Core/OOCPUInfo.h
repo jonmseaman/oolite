@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 #include <stdint.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <set>
 #include <string>
 
@@ -53,8 +54,8 @@ std::string OOCPUDescription(void);  // UTF-8
 void OOCPUID(int CPUInfo[4], int InfoType);
 
 struct OOMemoryStatus {
-  unsigned long long ooPhysicalMemory;
-  unsigned long long ooAvailableMemory;
+  std::uint64_t ooPhysicalMemory;
+  std::uint64_t ooAvailableMemory;
 };
 OOMemoryStatus OOSystemMemoryStatus(void);
 #endif

@@ -29,16 +29,16 @@ SOFTWARE.
 
 // A plain C++ unit: the protocol header spells OOALSTR as a handle.
 #define OO_PLAIN_CPP_UNIT 1
-#include "OOTCPStreamDecoder.h"
-
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <cstdint>
 #include <memory>
 #include <new>
 
 #include "OODebugTCPConsoleProtocol.h"
+#include "OOTCPStreamDecoder.h"
 
 #ifdef OO_LOG_DEBUG_PROTOCOL_PACKETS
 extern void LogOOTCPStreamDecoderPacket(OOALDictionaryRef packet);
@@ -167,8 +167,8 @@ void OOTCPStreamDecoderReceiveBytes(OOTCPStreamDecoderRef decoder,
             OOALSTR(
                 "OOTCPStreamDecoder internal error: reached unreachable state. "
                 "nextSize = %zu, bufferUsed = %zu, nextPacketData = %@."),
-            static_cast<unsigned long>(decoder->nextSize),
-            static_cast<unsigned long>(decoder->headerSpaceUsed),
+            static_cast<std::uint64_t>(decoder->nextSize),
+            static_cast<std::uint64_t>(decoder->headerSpaceUsed),
             decoder->nextPacketData);
     }
   }

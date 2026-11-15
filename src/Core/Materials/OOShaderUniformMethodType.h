@@ -30,6 +30,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <cstdint>
+
 #include "OOOpenGLExtensionManager.h"
 
 #if OO_SHADERS || defined(OO_DEBUG_MONITOR_ENABLED)
@@ -178,7 +180,7 @@ constexpr OOShaderUniformType ShaderUniformTypeOf(ValueType type) {
 */
 class OOColor;
 struct OOShaderBindingValue {
-  long long i;
+  std::int64_t i;
   double f;
   Vector v;
   HPVector hpv;

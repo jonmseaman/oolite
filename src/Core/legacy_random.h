@@ -31,6 +31,8 @@ MA 02110-1301, USA.
 #include <math.h>
 #include <stdint.h>
 
+#include <cstdint>
+
 #include "OOFunctionAttributes.h"
 
 struct Random_Seed {
@@ -54,7 +56,7 @@ extern const Random_Seed kNilRandomSeed;
 
 // checksum stuff
 void clear_checksum(void);
-int16_t munge_checksum(long long value);
+int16_t munge_checksum(std::int64_t value);
 
 // cunning price rounding routine:
 double cunningFee(double value,

@@ -24,10 +24,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOOXZManager.h"
-
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <cstdio>
 #include <format>
 #include <memory>
@@ -43,6 +42,7 @@ MA 02110-1301, USA.
 #include "OOCacheManager.h"
 #include "OOColor.h"
 #include "OOManifestProperties.h"
+#include "OOOXZManager.h"
 #include "OOPListParsing.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
@@ -587,8 +587,7 @@ bool OOOXZManager::applyFilterByDays(const oo::PList& manifest,
   if (i < 1) {
     return false;
   } else {
-    std::size_t updated =
-        manifest.get<unsigned long long>(kOOManifestUploadDate);
+    std::size_t updated = manifest.get<std::uint64_t>(kOOManifestUploadDate);
     std::size_t now =
         static_cast<std::size_t>(oo::date::timeIntervalSince1970());
     return (updated + (86400 * i) > now);
@@ -1536,8 +1535,8 @@ void OOOXZManager::gui() {
       if (_downloadStatus == OXZDownloadStatus::kComplete) {
         const auto doneText = DescFormat(
             OO_DESC("oolite-oxzmanager-progress-done-%u-%u"),
-            {static_cast<unsigned long long>(_oxzList.count()),
-             static_cast<unsigned long long>(
+            {static_cast<std::uint64_t>(_oxzList.count()),
+             static_cast<std::uint64_t>(
                  managedOXZs()
                      .count())});  // (evaluated, as a message's arguments
                                    // were, whether or not there is a GUI)
@@ -2128,7 +2127,7 @@ OOGUIRow OOOXZManager::showInstallOptions() {
       std::size_t size = manifest.get<unsigned int>(kOOManifestFileSize, 0);
 
       std::size_t timestamp =
-          manifest.get<unsigned long long>(kOOManifestUploadDate, 0);
+          manifest.get<std::uint64_t>(kOOManifestUploadDate, 0);
       if (timestamp > 0) {
         // list of installable OXZs
         // keep only the first part of the date string description, which should
@@ -2477,7 +2476,7 @@ std::string OOOXZManager::extractOXZ(std::size_t item) {
   if (!error) {
     extractionLog +=
         DescFormat(OO_DESC("oolite-oxzmanager-extract-log-num-u-extracted"),
-                   {static_cast<unsigned long long>(counter)});
+                   {static_cast<std::uint64_t>(counter)});
     extractionLog += DescFormat(
         OO_DESC("oolite-oxzmanager-extract-log-extracted-to-@"), {*path});
   }
@@ -2485,7 +2484,8 @@ std::string OOOXZManager::extractOXZ(std::size_t item) {
   return extractionLog;
 }
 
-void OOOXZManager::downloadDidReceiveResponse(long long expectedContentLength) {
+void OOOXZManager::downloadDidReceiveResponse(
+    std::int64_t expectedContentLength) {
   _downloadStatus = OXZDownloadStatus::kReceiving;
   OO_LOG("oxz.manager.debug", "{}", "Download receiving");
   _downloadExpected = expectedContentLength;

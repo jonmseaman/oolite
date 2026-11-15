@@ -28,10 +28,9 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-#include "OODebugMonitor.h"
-
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <map>
 #include <memory>
@@ -43,6 +42,7 @@ SOFTWARE.
 #include <vector>
 
 #include "OOConcreteTexture.h"
+#include "OODebugMonitor.h"
 #include "OODrawable.h"
 #include "OOJSConsole.h"
 #include "OOJSEngineTimeManagement.h"
@@ -251,8 +251,8 @@ oo::PList OODebugMonitor::configurationValueForKey(const std::string& key) {
   return *result;
 }
 
-long long OODebugMonitor::configurationIntValueForKey(const std::string& key,
-                                                      long long value) {
+std::int64_t OODebugMonitor::configurationIntValueForKey(const std::string& key,
+                                                         std::int64_t value) {
   // -longLongValue of the stored NSString or NSNumber; anything else gives the
   // default.
   const oo::PList object = configurationValueForKey(key);
@@ -264,11 +264,11 @@ long long OODebugMonitor::configurationIntValueForKey(const std::string& key,
     case oo::PList::Type::kInteger: {
       const oo::PList::Integer& integer = *object.getIf<oo::PList::Integer>();
       return integer.isUnsigned
-                 ? static_cast<long long>(integer.unsignedValue())
+                 ? static_cast<std::int64_t>(integer.unsignedValue())
                  : integer.value;
     }
     case oo::PList::Type::kReal:
-      return static_cast<long long>(*object.getIf<double>());
+      return static_cast<std::int64_t>(*object.getIf<double>());
     default:
       return value;
   }
@@ -590,10 +590,10 @@ size_t OODebugMonitor::dumpJSMemoryStatistics() {
 
   OOJSRelinquishContext(context);
 
-  writeMemStat(
-      std::format("JavaScript heap: {} ({} objects, next collection at {})",
-                  SizeString(jsSize), static_cast<long long>(usage.obj_count),
-                  SizeString(jsGCThreshold)));
+  writeMemStat(std::format(
+      "JavaScript heap: {} ({} objects, next collection at {})",
+      SizeString(jsSize), static_cast<std::int64_t>(usage.obj_count),
+      SizeString(jsGCThreshold)));
   return jsSize;
 }
 

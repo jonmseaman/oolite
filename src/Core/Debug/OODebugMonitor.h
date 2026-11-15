@@ -43,6 +43,7 @@ SOFTWARE.
 #include <quickjs.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
@@ -95,8 +96,8 @@ class OODebugMonitor : public oo::PListForeign,
   void showJSConsole();
 
   oo::PList configurationValueForKey(const std::string& key);
-  long long configurationIntValueForKey(const std::string& key,
-                                        long long value);
+  std::int64_t configurationIntValueForKey(const std::string& key,
+                                           std::int64_t value);
   void setConfigurationValue(const oo::PList& value, const std::string& key);
 
   std::vector<std::string> configurationKeys();  // sorted case-insensitively

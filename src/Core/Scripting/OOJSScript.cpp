@@ -26,8 +26,7 @@ MA 02110-1301, USA.
 #define OO_CACHE_JS_SCRIPTS 1
 #endif
 
-#include "OOJSScript.h"
-
+#include <cstdint>
 #include <format>
 #include <memory>
 #include <string>
@@ -36,6 +35,7 @@ MA 02110-1301, USA.
 
 #include "Entity.h"
 #include "OOJSEngineTimeManagement.h"
+#include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
 #include "oofnd/Notification.hpp"
 #if OO_CACHE_JS_SCRIPTS
@@ -827,8 +827,8 @@ static std::string SourceHash(std::string_view source) {
     hash ^= static_cast<unsigned char>(c);
     hash *= 0x100000001b3ULL;
   }
-  return std::format("{:016x}:{}", static_cast<unsigned long long>(hash),
-                     static_cast<unsigned long>(source.size()));
+  return std::format("{:016x}:{}", static_cast<std::uint64_t>(hash),
+                     static_cast<std::uint64_t>(source.size()));
 }
 
 // The entry's member, or null.

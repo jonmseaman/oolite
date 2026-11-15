@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <cstdint>
+
 #include "OOMathsBase.h"
 
 /* Clamp to range. */
@@ -89,10 +91,10 @@ inline double OOClamp_0_max_d(double value, double max) {
   return fmax(0.0, fmin(value, max));
 }
 
-inline long long OOClampInteger(long long value, long long minValue,
-                                long long maxValue) ALWAYS_INLINE_FUNC;
-inline long long OOClampInteger(long long value, long long minValue,
-                                long long maxValue) {
+inline std::int64_t OOClampInteger(std::int64_t value, std::int64_t minValue,
+                                   std::int64_t maxValue) ALWAYS_INLINE_FUNC;
+inline std::int64_t OOClampInteger(std::int64_t value, std::int64_t minValue,
+                                   std::int64_t maxValue) {
   return (minValue < value) ? ((value < maxValue) ? value : maxValue)
                             : minValue;
 }

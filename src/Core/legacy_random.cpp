@@ -23,13 +23,14 @@ MA 02110-1301, USA.
 
 */
 
-#include "legacy_random.h"
-
 #include <assert.h>
 #include <math.h>
 #include <stdint.h>
 
+#include <cstdint>
 #include <format>
+
+#include "legacy_random.h"
 
 const Random_Seed kNilRandomSeed = {0};
 
@@ -40,7 +41,7 @@ static RNG_Seed rnd_seed;
 static int32_t checksum;
 void clear_checksum() { checksum = 0; }
 
-int16_t munge_checksum(long long value_) {
+int16_t munge_checksum(std::int64_t value_) {
   uint32_t value = static_cast<uint32_t>(value_);
   int32_t mult1 = (value & 15) + 8;
   checksum += value;
@@ -57,7 +58,7 @@ double cunningFee(double value, double precision) {
   double superfee = 100000.0;
   double max = 1 + precision;
   double min = 1 - precision;
-  unsigned long long rounded_fee = superfee * floor(0.5 + fee / superfee);
+  std::uint64_t rounded_fee = superfee * floor(0.5 + fee / superfee);
   if (rounded_fee == 0) rounded_fee = 1;
   double ratio = fee / static_cast<double>(rounded_fee);
 

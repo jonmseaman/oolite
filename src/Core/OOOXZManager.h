@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <cstdint>
 #include <cstdio>
 #include <memory>
 #include <optional>
@@ -218,7 +219,7 @@ class OOOXZManager : public oo::Object {
 
   /* The download's callbacks (HTTP client events) */
   void downloadDidFailWithError(const std::string& error);
-  void downloadDidReceiveResponse(long long expectedContentLength);
+  void downloadDidReceiveResponse(std::int64_t expectedContentLength);
   void downloadDidReceiveData(const std::string& data);
   void downloadDidFinishLoading();
 

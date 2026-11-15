@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include <cstdint>
+
 #include "OOMaths.h"
 
 // routines concerning octree voxels
@@ -69,7 +71,8 @@ int checkCorner(Vector p, GLfloat rd) {
   return corners;
 }
 
-Vector lineIntersectionWithFace(Vector p1, Vector p2, long mask, GLfloat rd) {
+Vector lineIntersectionWithFace(Vector p1, Vector p2, std::int32_t mask,
+                                GLfloat rd) {
   if (CUBE_FACE_RIGHT & mask)
     return make_vector(rd, p1.y + (p2.y - p1.y) * (rd - p1.x) / (p2.x - p1.x),
                        p1.z + (p2.z - p1.z) * (rd - p1.x) / (p2.x - p1.x));
@@ -97,7 +100,8 @@ Vector lineIntersectionWithFace(Vector p1, Vector p2, long mask, GLfloat rd) {
   return p1;
 }
 
-int checkPoint(Vector p1, Vector p2, GLfloat alpha, long mask, GLfloat rd) {
+int checkPoint(Vector p1, Vector p2, GLfloat alpha, std::int32_t mask,
+               GLfloat rd) {
   Vector pp;
   pp.x = p1.x + alpha * (p2.x - p1.x);
   pp.y = p1.y + alpha * (p2.y - p1.y);

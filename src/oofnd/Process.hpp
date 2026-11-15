@@ -116,7 +116,7 @@ inline unsigned processorCount() {
 
 inline std::string operatingSystemVersionString() {
 #if defined(_WIN32)
-  const unsigned long version = GetVersion();
+  const auto version = GetVersion();
   return std::to_string(version & 0xFFu) + "." +
          std::to_string((version >> 8) & 0xFFu);
 #else
