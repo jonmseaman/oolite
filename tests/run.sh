@@ -8,12 +8,11 @@
 #                                        component; needs no display and no virtualenv
 #     tests/run.sh component --windowed  the windowed half only: Gherkin scenarios over the
 #                                        debug console
-#     tests/run.sh gui         PyAutoGUI tier (real window; do not touch the mouse)
 #     tests/run.sh smoke       launch_snapshot.py via mk.sh
-#     tests/run.sh all         unit, component, smoke, then gui, stopping at the first failure
+#     tests/run.sh all         unit, component, then smoke, stopping at the first failure
 #     tests/run.sh venv        create/refresh the virtualenv only
 #
-# Extra arguments after the tier go to pytest (component, gui). For the component tier, -k <name>
+# Extra arguments after the tier go to pytest (component). For the component tier, -k <name>
 # also picks the C++ programs whose meson test name contains <name>; with --cpp, a name that
 # matches no program is an error:
 #     tests/run.sh component -k s1
@@ -31,7 +30,7 @@ cd "$ROOT"
 BUILD_TYPE=${BUILD_TYPE:-dev}
 VENV=${OO_VENV:-build/.venv-tests}
 REQ_STAMP="$VENV/.requirements-stamp"
-REQ_FILES=(tests/component/requirements.txt tests/gui/requirements.txt)
+REQ_FILES=(tests/component/requirements.txt)
 
 find_python() {
     local p
@@ -158,12 +157,6 @@ run_component() {
     return "$windowed_status"
 }
 
-run_gui() {
-    require_build
-    # A missing pyautogui or a non-Windows host must fail, never skip silently.
-    OO_GUI_REQUIRE=1 "$(venv_python)" -m pytest tests/gui -x -q "$@"
-}
-
 run_smoke() {
     require_build
     ./mk.sh test "$BUILD_TYPE"
@@ -176,11 +169,10 @@ case "$tier" in
     venv)      ensure_venv ;;
     unit)      run_unit ;;  # no Python needed; meson drives it
     component) run_component "$@" ;;
-    gui)       ensure_venv; run_gui "$@" ;;
     smoke)     run_smoke ;;
-    all)       ensure_venv; run_unit; run_component; run_smoke; run_gui ;;
+    all)       ensure_venv; run_unit; run_component; run_smoke ;;
     *)
-        sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+        sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         [[ -z "$tier" ]] || exit 2
         ;;
 esac

@@ -4,10 +4,7 @@ The console drives the game through JS, and there is no JS for "the player press
 asserting that a key does what it is bound to do therefore has to press it, the way a keyboard
 does, into the game's own window - and read the effect back over the console.
 
-The recipe is the GUI tier's (tests/gui/conftest.py ``GameWindow.press_key`` / ``focus``),
-restated rather than imported: that module pulls in pyautogui, its fixtures and its own desktop
-lock, and two tiers sharing one helper file is a merge conflict waiting to happen. What carries
-over, and why:
+The recipe, and why:
 
 * SendInput by SCANCODE, not keybd_event. Oolite's SDL3 build dispatches keys by scancode
   (MyOpenGLView+Input reads ``kbd_event->scancode``), and an event with no scancode never arrives.
@@ -16,7 +13,7 @@ over, and why:
   must be seen up again before the next press or it reads as auto-repeat.
 * The window must own the foreground: synthetic input goes to the focused window, not to the one
   you meant. SetForegroundWindow alone is refused from a background process, so the input queues
-  are attached for the call, as G1 does.
+  are attached for the call.
 
 Windows only. This takes the foreground, so the component tier runs alone on the desktop, one
 scenario at a time (see the ``world`` fixture in conftest.py). Like console.py
@@ -64,10 +61,9 @@ VK_CODES = {
 # the set is here so a key added later gets the right answer without anyone remembering to ask.
 EXTENDED_VK_CODES = frozenset({0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x2D, 0x2E})
 
-# Longer than the GUI tier's 0.15 s / 0.25 s, and measured, not padded. That tier parks Mesa's
-# opengl32.dll and runs on the desktop's GL; this one renders on the llvmpipe that conftest.py
-# stages, and in the tutorial's flight scenes that draws 6-9 frames a second (a frame callback
-# counted over a minute of lesson 1). At ~140 ms a frame a 0.15 s press can fall between two key
+# Measured, not padded. This tier renders on the llvmpipe that conftest.py stages, and in the
+# tutorial's flight scenes that draws 6-9 frames a second (a frame callback counted over a minute
+# of lesson 1). At ~140 ms a frame a 0.15 s press can fall between two key
 # polls, and did: the first T1 run lost an "n" at lesson 1 step 1. 0.4 s is about three frames
 # down and three up, so each press is sampled down and then seen released before the next.
 KEY_HOLD_SECONDS = float(os.environ.get("OO_COMPONENT_KEY_HOLD", "0.4"))
@@ -170,7 +166,7 @@ class GameKeyboard:
                             f"{WINDOW_TIMEOUT_SECONDS}s")
 
     def focus(self):
-        """Give the game window the foreground, and verify it, as G1's GameWindow.focus does."""
+        """Give the game window the foreground, and verify it."""
         if self.hwnd is None or not self._user32.IsWindow(self.hwnd):
             self.hwnd = self._find_window()
         if self._user32.GetForegroundWindow() == self.hwnd:

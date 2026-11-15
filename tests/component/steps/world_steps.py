@@ -120,7 +120,7 @@ def universe_seeded_with(world, seed):
     there is a docked player and a station, but no AI runs, so spawned ships sit in AIState
     GLOBAL with no target for ever. Measured: 90 s, zero movement, zero targets. A save has to be
     loaded to get a live universe, and there is no JS route out of the intro screen - that is
-    keyboard work and belongs to the GUI tier.
+    keyboard work: it needs real key presses (keyboard.py).
 
     The system must also be empty, and a loaded save is anything but: the standard scenario opens
     with roughly 80 entities including 32 pirates and 5 police. "No ship with role pirate
