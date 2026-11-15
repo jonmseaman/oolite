@@ -447,17 +447,68 @@ struct StateItem {
                 const OOOpenGLState& target);
 };
 
+/*	The items' readers and writers that call OOGL are named function
+   templates, not lambdas, so the name OOGL notes (__FUNCTION__) is the
+   function's.
+*/
+#if OO_GL_STATE_VERIFICATION
+template <StateFlag OOOpenGLState::* Field>
+void ReadStateFlag(const StateItem& item, OOOpenGLState& state) {
+  OO_ENTER_OPENGL();
+  OOGL(state.*Field = static_cast<StateFlag>(glIsEnabled(item.cap)));
+}
+#endif
+
+template <StateFlag OOOpenGLState::* Field>
+void WriteStateFlag(const StateItem& item, const OOOpenGLState& source,
+                    const OOOpenGLState& target) {
+  OO_ENTER_OPENGL();
+  if (source.*Field != target.*Field && source.*Field != StateFlag::kMaybe &&
+      target.*Field != StateFlag::kMaybe) {
+    if (target.*Field != StateFlag::kFalse) {
+      OOGL(glEnable(item.cap));
+    } else {
+      OOGL(glDisable(item.cap));
+    }
+  }
+}
+
+#if OO_GL_STATE_VERIFICATION
+template <bool OOOpenGLState::* Field>
+void ReadClientStateFlag(const StateItem& item, OOOpenGLState& state) {
+  OO_ENTER_OPENGL();
+  OOGL(state.*Field = glIsEnabled(item.cap));
+}
+#endif
+
+template <bool OOOpenGLState::* Field>
+void WriteClientStateFlag(const StateItem& item, const OOOpenGLState& source,
+                          const OOOpenGLState& target) {
+  OO_ENTER_OPENGL();
+  if (source.*Field != target.*Field) {
+    if (target.*Field) {
+      OOGL(glEnableClientState(item.cap));
+    } else {
+      OOGL(glDisableClientState(item.cap));
+    }
+  }
+}
+
+#if OO_GL_STATE_VERIFICATION
+template <GLint OOOpenGLState::* Field>
+void ReadInt(const StateItem& item, OOOpenGLState& state) {
+  OO_ENTER_OPENGL();
+  OOGL(glGetIntegerv(item.cap, &(state.*Field)));
+}
+#endif
+
 template <StateFlag OOOpenGLState::* Field>
 constexpr StateItem StateFlagItem(std::string_view name, GLenum cap) {
   return {
       .name = name,
       .cap = cap,
 #if OO_GL_STATE_VERIFICATION
-      .read =
-          [](const StateItem& item, OOOpenGLState& state) {
-            OO_ENTER_OPENGL();
-            OOGL(state.*Field = static_cast<StateFlag>(glIsEnabled(item.cap)));
-          },
+      .read = ReadStateFlag<Field>,
       .equal =
           [](const OOOpenGLState& a, const OOOpenGLState& b) {
             return a.*Field == b.*Field || a.*Field == StateFlag::kMaybe ||
@@ -475,20 +526,7 @@ constexpr StateItem StateFlagItem(std::string_view name, GLenum cap) {
             return true;
           },
 #endif
-      .write =
-          [](const StateItem& item, const OOOpenGLState& source,
-             const OOOpenGLState& target) {
-            OO_ENTER_OPENGL();
-            if (source.*Field != target.*Field &&
-                source.*Field != StateFlag::kMaybe &&
-                target.*Field != StateFlag::kMaybe) {
-              if (target.*Field != StateFlag::kFalse) {
-                OOGL(glEnable(item.cap));
-              } else {
-                OOGL(glDisable(item.cap));
-              }
-            }
-          },
+      .write = WriteStateFlag<Field>,
   };
 }
 
@@ -498,11 +536,7 @@ constexpr StateItem ClientStateFlagItem(std::string_view name, GLenum array) {
       .name = name,
       .cap = array,
 #if OO_GL_STATE_VERIFICATION
-      .read =
-          [](const StateItem& item, OOOpenGLState& state) {
-            OO_ENTER_OPENGL();
-            OOGL(state.*Field = glIsEnabled(item.cap));
-          },
+      .read = ReadClientStateFlag<Field>,
       .equal = [](const OOOpenGLState& a,
                   const OOOpenGLState& b) { return a.*Field == b.*Field; },
       .mismatch =
@@ -514,18 +548,7 @@ constexpr StateItem ClientStateFlagItem(std::string_view name, GLenum array) {
             return true;
           },
 #endif
-      .write =
-          [](const StateItem& item, const OOOpenGLState& source,
-             const OOOpenGLState& target) {
-            OO_ENTER_OPENGL();
-            if (source.*Field != target.*Field) {
-              if (target.*Field) {
-                OOGL(glEnableClientState(item.cap));
-              } else {
-                OOGL(glDisableClientState(item.cap));
-              }
-            }
-          },
+      .write = WriteClientStateFlag<Field>,
   };
 }
 
@@ -562,11 +585,7 @@ constexpr StateItem IntItem(std::string_view name, GLenum query) {
       .name = name,
       .cap = query,
 #if OO_GL_STATE_VERIFICATION
-      .read =
-          [](const StateItem& item, OOOpenGLState& state) {
-            OO_ENTER_OPENGL();
-            OOGL(glGetIntegerv(item.cap, &(state.*Field)));
-          },
+      .read = ReadInt<Field>,
       .equal = [](const OOOpenGLState& a,
                   const OOOpenGLState& b) { return a.*Field == b.*Field; },
       .mismatch =
