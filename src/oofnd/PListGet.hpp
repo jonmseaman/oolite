@@ -561,8 +561,8 @@ struct PListGet<T> {
       return static_cast<T>(plist_get::unsignedLongLongFrom(
           v, fallback));  // OOUnsignedLongLongFromObject
     } else {
-      // OO_DEFINE_CLAMP: OOClampInteger(OOLongLongFromObject(v, fallback), MIN,
-      // MAX).
+      // OO_DEFINE_CLAMP: OOLongLongFromObject(v, fallback) clamped to T's
+      // range.
       const std::int64_t ll =
           plist_get::longLongFrom(v, static_cast<std::int64_t>(fallback));
       const std::int64_t lo =

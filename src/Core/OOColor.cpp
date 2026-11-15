@@ -356,9 +356,10 @@ std::shared_ptr<OOColor> OOColor::blendedColorWithFraction(float fraction,
     color->getRed(&rgba1[0], &rgba1[1], &rgba1[2], &rgba1[3]);
 
   std::shared_ptr<OOColor> result = oo::makeShared<OOColor>();
-  result->setRed(
-      OOLerp(rgba[0], rgba1[0], fraction), OOLerp(rgba[1], rgba1[1], fraction),
-      OOLerp(rgba[2], rgba1[2], fraction), OOLerp(rgba[3], rgba1[3], fraction));
+  result->setRed(std::lerp(rgba[0], rgba1[0], fraction),
+                 std::lerp(rgba[1], rgba1[1], fraction),
+                 std::lerp(rgba[2], rgba1[2], fraction),
+                 std::lerp(rgba[3], rgba1[3], fraction));
 
   return result;
 }
