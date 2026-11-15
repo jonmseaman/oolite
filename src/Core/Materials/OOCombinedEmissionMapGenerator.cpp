@@ -70,8 +70,8 @@ void ScaleToMatch(OOPixMap* pmA, OOPixMap* pmB) {
   OOCParameterAssert(pmA != nullptr && pmB != nullptr &&
                      OOIsValidPixMap(*pmA) && OOIsValidPixMap(*pmB));
 
-  OOPixMapDimension minWidth = MIN(pmA->width, pmB->width);
-  OOPixMapDimension minHeight = MIN(pmA->height, pmB->height);
+  OOPixMapDimension minWidth = std::min(pmA->width, pmB->width);
+  OOPixMapDimension minHeight = std::min(pmA->height, pmB->height);
 
   if (pmA->width != minWidth || pmA->height != minHeight) {
     *pmA = OOScalePixMap(*pmA, minWidth, minHeight, false);

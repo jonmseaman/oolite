@@ -273,7 +273,8 @@ static JSValue GlobalExpandDescription(OOJS_NATIVE_ARGS) {
   if (argc > 0) string = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!string.has_value()) {
     OOJSReportBadArguments(context, std::nullopt, "expandDescription",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt, "string");
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string");
     return JS_EXCEPTION;
   }
   if (argc > 1) {
@@ -300,7 +301,8 @@ static JSValue GlobalKeyBindingDescription(OOJS_NATIVE_ARGS) {
   if (argc > 0) string = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!string.has_value()) {
     OOJSReportBadArguments(context, std::nullopt, "keyBindingDescription",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt, "string");
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string");
     return JS_EXCEPTION;
   }
 
@@ -325,7 +327,8 @@ static JSValue GlobalExpandMissionText(OOJS_NATIVE_ARGS) {
   if (argc > 0) string = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!string.has_value()) {
     OOJSReportBadArguments(context, std::nullopt, "expandMissionText",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt, "string");
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string");
     return JS_EXCEPTION;
   }
   if (argc > 1) {
@@ -355,7 +358,8 @@ static JSValue GlobalDisplayNameForCommodity(OOJS_NATIVE_ARGS) {
   if (argc > 0) string = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!string.has_value()) {
     OOJSReportBadArguments(context, std::nullopt, "displayNameForCommodity",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt, "string");
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string");
     return JS_EXCEPTION;
   }
   OOJS_RETURN_PLIST(oo::PList(CommodityDisplayNameForSymbolicName(*string)));
@@ -474,7 +478,7 @@ static JSValue GlobalSetExtraGuiScreenKeys(OOJS_NATIVE_ARGS) {
   PlayerEntity* player = OOPlayerForScripting();
   // The SpiderMonkey version always described two arguments from argv[1] on;
   // don't read past argv.
-  int defArgc = MIN(argc - 1, 2);
+  int defArgc = std::min(argc - 1, 2);
 
   if (EXPECT_NOT(argc < 1)) {
     OOJSReportBadArguments(context, std::nullopt, "setExtraGuiScreenKeys", 0,
@@ -892,8 +896,9 @@ static JSValue GlobalAutoAIForRole(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) string = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!string.has_value()) {
-    OOJSReportBadArguments(context, std::nullopt, "autoAIForRole", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "string");
+    OOJSReportBadArguments(context, std::nullopt, "autoAIForRole",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string");
     return JS_EXCEPTION;
   }
 

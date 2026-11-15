@@ -273,7 +273,7 @@ static JSValue OoliteSetProperty(OOJS_SETTER_ARGS) {
 
     case kPostFX:
       if (OOJSValueToInt32(context, value, &iValue)) {
-        iValue = MAX(iValue, 0);
+        iValue = std::max(iValue, 0);
         if (UNIVERSE != nullptr) UNIVERSE->setCurrentPostFX(iValue);
         return JS_UNDEFINED;
       }

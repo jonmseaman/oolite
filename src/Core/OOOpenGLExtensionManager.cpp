@@ -385,7 +385,7 @@ void OOOpenGLExtensionManager::reset() {
   GLint texImageUnitOverride =
       gpuConfig.get<int>("texture_image_units", textureImageUnitCount_);
   if (texImageUnitOverride < textureImageUnitCount_)
-    textureImageUnitCount_ = MAX(texImageUnitOverride, 0);
+    textureImageUnitCount_ = std::max(texImageUnitOverride, 0);
 #endif
 
 #if OO_USE_VBO
@@ -399,7 +399,7 @@ void OOOpenGLExtensionManager::reset() {
   GLint texUnitOverride =
       gpuConfig.get<int>("texture_units", textureUnitCount_);
   if (texUnitOverride < textureUnitCount_)
-    textureUnitCount_ = MAX(texUnitOverride, 0);
+    textureUnitCount_ = std::max(texUnitOverride, 0);
 #endif
 
   usePointSmoothing_ =

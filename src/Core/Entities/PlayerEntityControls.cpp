@@ -3947,7 +3947,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       if (checkKeyPress(n_key_gui_arrow_left) || joyButtonState[BUTTON_GUILEFT])
         mode--;
 
-      musicController->setMode(static_cast<OOMusicMode>(MAX(mode, 0)));
+      musicController->setMode(static_cast<OOMusicMode>(std::max(mode, 0)));
 
       if (static_cast<int>(musicController->mode()) != initialMode) {
         playChangedOption();

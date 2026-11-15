@@ -80,6 +80,8 @@ MA 02110-1301, USA.
 #include <limits.h>  // IWYU pragma: export
 #include <stdint.h>  // IWYU pragma: export
 
+#include <algorithm>  // IWYU pragma: export
+
 #define OOLITE_SDL 1
 
 #ifdef WIN32
@@ -91,24 +93,6 @@ MA 02110-1301, USA.
 
 #ifdef LINUX
 #define OOLITE_LINUX 1
-#endif
-
-#if !defined(MAX)
-#define MAX(A, B)            \
-  ({                         \
-    __typeof__(A) __a = (A); \
-    __typeof__(B) __b = (B); \
-    __a > __b ? __a : __b;   \
-  })
-#endif
-
-#if !defined(MIN)
-#define MIN(A, B)            \
-  ({                         \
-    __typeof__(A) __a = (A); \
-    __typeof__(B) __b = (B); \
-    __a < __b ? __a : __b;   \
-  })
 #endif
 
 #ifdef HAVE_LIBESPEAK

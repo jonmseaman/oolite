@@ -781,7 +781,7 @@ void DockEntity::addShipToShipsOnApproach(::ShipEntity* ship) {
           8;  // 16  point step position
       float c2 = cos(offset_id2 * M_PI * ONE_EIGHTH);
       float s2 = sin(offset_id2 * M_PI * ONE_EIGHTH);
-      float ssize = MAX(port_depth, 1500.0);
+      float ssize = std::max(port_depth, 1500.0f);
       rx += c2 * ssize;
       ry += s2 * ssize;
       rz += ssize * (static_cast<float>(offset_id3) / 4.0);

@@ -2744,10 +2744,11 @@ void PlayerEntity::completeSetUpAndSetTarget(bool /*setTarget*/) {
   {
     const oo::PList startLimit =
         oo::Defaults::standard().object("start-script-limit-value");
-    doWorldScriptEvent(OOJSID("startUp"), context, nullptr, 0,
-                       MAX(0.0, oo::PListGet<float>::from(
-                                    startLimit.isNull() ? nullptr : &startLimit,
-                                    kOOJSLongTimeLimit)));
+    doWorldScriptEvent(
+        OOJSID("startUp"), context, nullptr, 0,
+        std::max(0.0f, oo::PListGet<float>::from(
+                           startLimit.isNull() ? nullptr : &startLimit,
+                           kOOJSLongTimeLimit)));
   }
   OOJSRelinquishContext(context);
 }
@@ -3234,8 +3235,8 @@ void PlayerEntity::doBookkeeping(double delta_t) {
      occurrence at this time and it has been fixed inside the
      oolite-equipment-control.js script. - Nikos 20160104.
    */
-  float rechargeFwd = MIN(shieldRechargeFwd, fwdMax - forward_shield);
-  float rechargeAft = MIN(shieldRechargeAft, aftMax - aft_shield);
+  float rechargeFwd = std::min(shieldRechargeFwd, fwdMax - forward_shield);
+  float rechargeAft = std::min(shieldRechargeAft, aftMax - aft_shield);
 
   // Note: we've simplified this a little, so if either shield is below
   //       the critical threshold, we allocate all energy.  Ideally we
@@ -3248,7 +3249,7 @@ void PlayerEntity::doBookkeeping(double delta_t) {
     float minEnergyBankLevel =
         (UNIVERSE != nullptr ? UNIVERSE->getGlobalSettings() : oo::PList())
             .get<float>("shield_charge_energybank_threshold", 0.25);
-    energyForShields = MAX(
+    energyForShields = std::max(
         0.0, energy - 0.1 -
                  (maxEnergy *
                   minEnergyBankLevel));  // NB: The - 0.1 ensures the energy
@@ -3258,11 +3259,11 @@ void PlayerEntity::doBookkeeping(double delta_t) {
   }
 
   if (forward_shield < aft_shield) {
-    rechargeFwd = MIN(rechargeFwd, energyForShields);
-    rechargeAft = MIN(rechargeAft, energyForShields - rechargeFwd);
+    rechargeFwd = std::min(rechargeFwd, energyForShields);
+    rechargeAft = std::min(rechargeAft, energyForShields - rechargeFwd);
   } else {
-    rechargeAft = MIN(rechargeAft, energyForShields);
-    rechargeFwd = MIN(rechargeFwd, energyForShields - rechargeAft);
+    rechargeAft = std::min(rechargeAft, energyForShields);
+    rechargeFwd = std::min(rechargeFwd, energyForShields - rechargeAft);
   }
 
   // 3. Recharge shields, drain banks, and clamp values
@@ -7571,7 +7572,7 @@ double PlayerEntity::hyperspaceJumpDistance() {
 }
 
 OOFuelQuantity PlayerEntity::fuelRequiredForJump() {
-  return 10.0 * MAX(0.1, hyperspaceJumpDistance());
+  return 10.0 * std::max(0.1, hyperspaceJumpDistance());
 }
 
 bool PlayerEntity::hasSufficientFuelForJump() {
@@ -13729,7 +13730,7 @@ void PlayerEntity::penaltyForUnauthorizedDocking() {
 
   if (clearedToDock()) return;
 
-  amountToPay = MIN(maximumFine, calculatedFine);
+  amountToPay = std::min(maximumFine, calculatedFine);
   credits -= amountToPay;
   addMessageToReport(
       oo::str::formatRuntime(OO_DESC("station-docking-clearance-fined-@-cr"),

@@ -2396,9 +2396,9 @@ void PlayerEntity::sendAllShipsAway() {
         ::AI* se1AI =
             (se1 != nullptr ? se1->getAI() : static_cast<::AI*>(nullptr));
         if (se1 != nullptr)
-          se1->setFuel(
-              MAX(PLAYER_MAX_FUEL,
-                  (se1 != nullptr ? se1->fuelCapacity() : OOFuelQuantity{})));
+          se1->setFuel(std::max(
+              static_cast<OOFuelQuantity>(PLAYER_MAX_FUEL),
+              (se1 != nullptr ? se1->fuelCapacity() : OOFuelQuantity{})));
         if (se1 != nullptr)
           se1->setAITo(
               "exitingTraderAI.plist");  // lets them return to their previous

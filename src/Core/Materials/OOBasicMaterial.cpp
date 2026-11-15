@@ -268,7 +268,7 @@ void OOBasicMaterial::setEmissionRed(GLfloat r, GLfloat g, GLfloat b,
 uint8_t OOBasicMaterial::shininess() { return _shininess; }
 
 void OOBasicMaterial::setShininess(uint8_t value) {
-  _shininess = MIN(value, 128);
+  _shininess = std::min<uint8_t>(value, 128);
 }
 
 bool OOBasicMaterial::permitSpecular() {

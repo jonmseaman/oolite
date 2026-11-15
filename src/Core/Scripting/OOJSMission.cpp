@@ -349,8 +349,9 @@ static JSValue MissionMarkSystem(OOJS_NATIVE_ARGS) {
       // (JSVAL_IS_OBJECT() was also true for null, which converts to 0 and so
       // never gets here.)
       if (!JS_IsObject(OOJS_ARGV[i])) {
-        OOJSReportBadArguments(context, "Mission", "markSystem", MIN(argc, 1),
-                               OOJS_ARGV, std::nullopt, "numbers or objects");
+        OOJSReportBadArguments(context, "Mission", "markSystem",
+                               std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                               "numbers or objects");
         return JS_EXCEPTION;
       }
     }
@@ -392,8 +393,9 @@ static JSValue MissionUnmarkSystem(OOJS_NATIVE_ARGS) {
   for (i = 0; i < argc; i++) {
     if (!ValueToInt32NoError(context, OOJS_ARGV[i], &dest)) {
       if (!JS_IsObject(OOJS_ARGV[i])) {
-        OOJSReportBadArguments(context, "Mission", "unmarkSystem", MIN(argc, 1),
-                               OOJS_ARGV, std::nullopt, "numbers or objects");
+        OOJSReportBadArguments(context, "Mission", "unmarkSystem",
+                               std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                               "numbers or objects");
         return JS_EXCEPTION;
       }
     }
@@ -628,7 +630,7 @@ static JSValue MissionRunScreen(OOJS_NATIVE_ARGS) {
     }
   }
   if (!JS_IsObject(params)) {
-    OOJSReportBadArguments(context, "mission", "runScreen", MIN(argc, 1),
+    OOJSReportBadArguments(context, "mission", "runScreen", std::min(argc, 1),
                            &OOJS_ARGV[0], std::nullopt, "parameter object");
     return JS_EXCEPTION;
   }

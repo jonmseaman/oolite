@@ -316,7 +316,7 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
     if (argc > 0 && JS_IsNull(OOJS_ARGV[0]))
       OOJS_RETURN_VOID;  // OK, do nothing for null ship.
 
-    OOJSReportBadArguments(context, "ShipGroup", "addShip", MIN(argc, 1),
+    OOJSReportBadArguments(context, "ShipGroup", "addShip", std::min(argc, 1),
                            OOJS_ARGV, std::nullopt, "ship");
     return OOJSNativeFailure(context);
   }
@@ -415,8 +415,8 @@ static JSValue ShipGroupRemoveShip(OOJS_NATIVE_ARGS) {
     if (argc > 0 && JS_IsNull(OOJS_ARGV[0]))
       OOJS_RETURN_VOID;  // OK, do nothing for null ship.
 
-    OOJSReportBadArguments(context, "ShipGroup", "removeShip", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "ship");
+    OOJSReportBadArguments(context, "ShipGroup", "removeShip",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt, "ship");
     return OOJSNativeFailure(context);
   }
 
@@ -442,8 +442,8 @@ static JSValue ShipGroupContainsShip(OOJS_NATIVE_ARGS) {
     if (argc > 0 && JS_IsNull(OOJS_ARGV[0]))
       OOJS_RETURN_BOOL(false);  // OK, return false for null ship.
 
-    OOJSReportBadArguments(context, "ShipGroup", "containsShip", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "ship");
+    OOJSReportBadArguments(context, "ShipGroup", "containsShip",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt, "ship");
     return OOJSNativeFailure(context);
   }
 

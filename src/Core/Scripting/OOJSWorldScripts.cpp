@@ -145,7 +145,7 @@ static int WorldScriptsGetOwnPropertyNames(JSContext* context,
     uint32_t i, count = static_cast<uint32_t>(names.size());
 
     JSPropertyEnum* table = static_cast<JSPropertyEnum*>(
-        js_malloc(context, sizeof *table * MAX(count, 1U)));
+        js_malloc(context, sizeof *table * std::max(count, 1U)));
     if (table == nullptr) return -1;
 
     for (i = 0; i < count; i++) {

@@ -1388,8 +1388,8 @@ bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
                       std::shared_ptr<OOTimeProfile>* outProfile) {
   // Get function.
   if (argc < 1 || !OOJSValueIsFunction(context, argv[0])) {
-    OOJSReportBadArguments(context, "Console", nominalFunction, MIN(argc, 1),
-                           argv, std::nullopt, "function");
+    OOJSReportBadArguments(context, "Console", nominalFunction,
+                           std::min(argc, 1), argv, std::nullopt, "function");
     return false;
   }
   JSValueConst function = argv[0];

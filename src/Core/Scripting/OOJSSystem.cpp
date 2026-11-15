@@ -761,7 +761,7 @@ static JSValue SystemAddPlanet(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!key.has_value())) {
-    OOJSReportBadArguments(context, "System", "addPlanet", MIN(argc, 1),
+    OOJSReportBadArguments(context, "System", "addPlanet", std::min(argc, 1),
                            OOJS_ARGV, std::nullopt, "string (planet key)");
     return OOJSNativeFailure(context);
   }
@@ -787,7 +787,7 @@ static JSValue SystemAddMoon(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!key.has_value())) {
-    OOJSReportBadArguments(context, "System", "addMoon", MIN(argc, 1),
+    OOJSReportBadArguments(context, "System", "addMoon", std::min(argc, 1),
                            OOJS_ARGV, std::nullopt, "string (planet key)");
     return OOJSNativeFailure(context);
   }
@@ -828,7 +828,7 @@ static JSValue SystemCountShipsWithPrimaryRole(OOJS_NATIVE_ARGS) {
   if (argc > 0) role = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!role.has_value())) {
     OOJSReportBadArguments(context, "System", "countShipsWithPrimaryRole",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (role)");
     return OOJSNativeFailure(context);
   }
@@ -864,7 +864,7 @@ static JSValue SystemCountShipsWithRole(OOJS_NATIVE_ARGS) {
   if (argc > 0) role = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!role.has_value())) {
     OOJSReportBadArguments(context, "System", "countShipsWithRole",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (role)");
     return OOJSNativeFailure(context);
   }
@@ -900,7 +900,7 @@ static JSValue SystemShipsWithPrimaryRole(OOJS_NATIVE_ARGS) {
   if (argc > 0) role = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!role.has_value())) {
     OOJSReportBadArguments(context, "System", "countShipsWithRole",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (role)");
     return OOJSNativeFailure(context);
   }
@@ -934,8 +934,9 @@ static JSValue SystemShipsWithRole(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) role = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!role.has_value())) {
-    OOJSReportBadArguments(context, "System", "shipsWithRole", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "string (role)");
+    OOJSReportBadArguments(context, "System", "shipsWithRole",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string (role)");
     return OOJSNativeFailure(context);
   }
 
@@ -969,7 +970,7 @@ static JSValue SystemCountEntitiesWithScanClass(OOJS_NATIVE_ARGS) {
   if (argc > 0) scanClass = OOScanClassFromJSValue(context, OOJS_ARGV[0]);
   if (scanClass == OOScanClass::kNotSet) {
     OOJSReportBadArguments(context, "System", "countEntitiesWithScanClass",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (scan class)");
     return OOJSNativeFailure(context);
   }
@@ -1005,7 +1006,7 @@ static JSValue SystemEntitiesWithScanClass(OOJS_NATIVE_ARGS) {
   if (argc > 0) scanClass = OOScanClassFromJSValue(context, OOJS_ARGV[0]);
   if (scanClass == OOScanClass::kNotSet) {
     OOJSReportBadArguments(context, "System", "countEntitiesWithScanClass",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (scan class)");
     return OOJSNativeFailure(context);
   }
@@ -1346,8 +1347,9 @@ static JSValue SystemLegacySpawnShip(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!key.has_value()) {
-    OOJSReportBadArguments(context, "System", "legacy_spawnShip", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "string (ship key)");
+    OOJSReportBadArguments(context, "System", "legacy_spawnShip",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string (ship key)");
     return OOJSNativeFailure(context);
   }
 
@@ -1371,8 +1373,9 @@ static JSValue SystemStaticSystemNameForID(OOJS_NATIVE_ARGS) {
   if (argc < 1 || !OOJSValueToInt32(context, OOJS_ARGV[0], &systemID) ||
       systemID < -1 || kOOMaximumSystemID < systemID)  // -1 interstellar space!
   {
-    OOJSReportBadArguments(context, "System", "systemNameForID", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "system ID");
+    OOJSReportBadArguments(context, "System", "systemNameForID",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "system ID");
     return OOJSNativeFailure(context);
   }
 
@@ -1395,8 +1398,9 @@ static JSValue SystemStaticSystemIDForName(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) name = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!name.has_value()) {
-    OOJSReportBadArguments(context, "System", "systemIDForName", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "string");
+    OOJSReportBadArguments(context, "System", "systemIDForName",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string");
     return OOJSNativeFailure(context);
   }
 
@@ -1459,15 +1463,16 @@ static JSValue SystemAddVisualEffect(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!key.has_value()) {
-    OOJSReportBadArguments(context, "System", "addVisualEffect", MIN(argc, 1),
-                           &OOJS_ARGV[0], std::nullopt, "string (key)");
+    OOJSReportBadArguments(context, "System", "addVisualEffect",
+                           std::min(argc, 1), &OOJS_ARGV[0], std::nullopt,
+                           "string (key)");
     return OOJSNativeFailure(context);
   }
 
   if (!VectorFromArgumentListNoError(context, argc - 1, OOJS_ARGV + 1, &where,
                                      &consumed)) {
     OOJSReportBadArguments(context, "System", "addVisualEffect",
-                           MIN(argc - 1, 1), &OOJS_ARGV[1], std::nullopt,
+                           std::min(argc - 1, 1), &OOJS_ARGV[1], std::nullopt,
                            "vector");
     return OOJSNativeFailure(context);
   }
@@ -1506,14 +1511,14 @@ static JSValue SystemSetPopulator(OOJS_NATIVE_ARGS) {
   JSValue params = JS_UNDEFINED;
 
   if (argc < 1) {
-    OOJSReportBadArguments(context, "System", "setPopulator", MIN(argc, 0),
+    OOJSReportBadArguments(context, "System", "setPopulator", std::min(argc, 0),
                            &OOJS_ARGV[0], std::nullopt,
                            "string (key), object (settings)");
     return OOJSNativeFailure(context);
   }
   key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!key.has_value()) {
-    OOJSReportBadArguments(context, "System", "setPopulator", MIN(argc, 0),
+    OOJSReportBadArguments(context, "System", "setPopulator", std::min(argc, 0),
                            &OOJS_ARGV[0], std::nullopt, "key, settings");
     return OOJSNativeFailure(context);
   }
@@ -1533,15 +1538,16 @@ static JSValue SystemSetPopulator(OOJS_NATIVE_ARGS) {
       }
     }
     if (!JS_IsObject(params)) {
-      OOJSReportBadArguments(context, "System", "setPopulator", MIN(argc, 1),
-                             OOJS_ARGV, std::nullopt, "key, settings");
+      OOJSReportBadArguments(context, "System", "setPopulator",
+                             std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                             "key, settings");
       return OOJSNativeFailure(context);
     }
     JSValue callback = GetParam(context, params, "callback");
     if (JS_IsUndefined(callback)) {
       JS_FreeValue(context, params);
-      OOJSReportBadArguments(context, "System", "setPopulator", MIN(argc, 1),
-                             OOJS_ARGV, std::nullopt,
+      OOJSReportBadArguments(context, "System", "setPopulator",
+                             std::min(argc, 1), OOJS_ARGV, std::nullopt,
                              "settings must have a 'callback' property.");
       return OOJSNativeFailure(context);
     }
@@ -1600,14 +1606,14 @@ static JSValue SystemSetWaypoint(OOJS_NATIVE_ARGS) {
   Quaternion orientation;
 
   if (argc < 1) {
-    OOJSReportBadArguments(context, "System", "setWaypoint", MIN(argc, 0),
+    OOJSReportBadArguments(context, "System", "setWaypoint", std::min(argc, 0),
                            &OOJS_ARGV[0], std::nullopt,
                            "key, position, orientation, definition");
     return OOJSNativeFailure(context);
   }
   key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!key.has_value()) {
-    OOJSReportBadArguments(context, "System", "setWaypoint", MIN(argc, 0),
+    OOJSReportBadArguments(context, "System", "setWaypoint", std::min(argc, 0),
                            &OOJS_ARGV[0], std::nullopt,
                            "key, position, orientation, definition");
     return OOJSNativeFailure(context);
@@ -1618,20 +1624,20 @@ static JSValue SystemSetWaypoint(OOJS_NATIVE_ARGS) {
   } else {
     // adding
     if (!JSValueToHPVector(context, OOJS_ARGV[1], &position)) {
-      OOJSReportBadArguments(context, "System", "setWaypoint", MIN(argc, 2),
-                             OOJS_ARGV, std::nullopt,
+      OOJSReportBadArguments(context, "System", "setWaypoint",
+                             std::min(argc, 2), OOJS_ARGV, std::nullopt,
                              "key, position, orientation, definition");
       return OOJSNativeFailure(context);
     }
     if (!JSValueToQuaternion(context, OOJS_ARGV[2], &orientation)) {
-      OOJSReportBadArguments(context, "System", "setWaypoint", MIN(argc, 3),
-                             OOJS_ARGV, std::nullopt,
+      OOJSReportBadArguments(context, "System", "setWaypoint",
+                             std::min(argc, 3), OOJS_ARGV, std::nullopt,
                              "key, position, orientation, definition");
       return OOJSNativeFailure(context);
     }
     if (!JS_IsObject(OOJS_ARGV[3]) || JS_IsNull(OOJS_ARGV[3])) {
-      OOJSReportBadArguments(context, "System", "setWaypoint", MIN(argc, 4),
-                             OOJS_ARGV, std::nullopt,
+      OOJSReportBadArguments(context, "System", "setWaypoint",
+                             std::min(argc, 4), OOJS_ARGV, std::nullopt,
                              "key, position, orientation, definition");
       return OOJSNativeFailure(context);
     }
@@ -1675,14 +1681,14 @@ static JSValue SystemAddShipsOrGroup(JSContext* context, int argc,
 
   if (argc > 0) role = OOStringFromJSValue(context, argv[0]);
   if (!role.has_value()) {
-    OOJSReportBadArguments(context, "System", func, MIN(argc, 1), &argv[0],
+    OOJSReportBadArguments(context, "System", func, std::min(argc, 1), &argv[0],
                            std::nullopt, "string (role)");
     return JS_EXCEPTION;
   }
   if (argc < 2 || !OOJSValueToInt32(context, argv[1], &count) || count < 1 ||
       64 < count) {
-    OOJSReportBadArguments(context, "System", func, MIN(argc - 1, 1), &argv[1],
-                           std::nullopt,
+    OOJSReportBadArguments(context, "System", func, std::min(argc - 1, 1),
+                           &argv[1], std::nullopt,
                            "number (positive count no greater than 64)");
     return JS_EXCEPTION;
   }
@@ -1694,16 +1700,16 @@ static JSValue SystemAddShipsOrGroup(JSContext* context, int argc,
   } else {
     if (!VectorFromArgumentListNoError(context, argc - 2, argv + 2, &where,
                                        &consumed)) {
-      OOJSReportBadArguments(context, "System", func, MIN(argc - 2, 1),
+      OOJSReportBadArguments(context, "System", func, std::min(argc - 2, 1),
                              &argv[2], std::nullopt, "vector");
       return JS_EXCEPTION;
     }
 
     if (argc > 2 + consumed) {
       if (JS_ToFloat64(context, &radius, argv[2 + consumed]) < 0) {
-        OOJSReportBadArguments(context, "System", func,
-                               MIN(argc - 2 - consumed, 1), &argv[2 + consumed],
-                               std::nullopt, "number (radius)");
+        OOJSReportBadArguments(
+            context, "System", func, std::min(argc - 2 - consumed, 1),
+            &argv[2 + consumed], std::nullopt, "number (radius)");
         return JS_EXCEPTION;
       }
     }
@@ -1756,14 +1762,14 @@ static JSValue SystemAddShipsOrGroupToRoute(JSContext* context, int argc,
 
   if (argc > 0) role = OOStringFromJSValue(context, argv[0]);
   if (!role.has_value()) {
-    OOJSReportBadArguments(context, "System", func, MIN(argc, 1), &argv[0],
+    OOJSReportBadArguments(context, "System", func, std::min(argc, 1), &argv[0],
                            std::nullopt, "string (role)");
     return JS_EXCEPTION;
   }
   if (argc < 2 || !OOJSValueToInt32(context, argv[1], &count) || count < 1 ||
       64 < count) {
-    OOJSReportBadArguments(context, "System", func, MIN(argc - 1, 1), &argv[1],
-                           std::nullopt,
+    OOJSReportBadArguments(context, "System", func, std::min(argc - 1, 1),
+                           &argv[1], std::nullopt,
                            "number (positive count no greater than 64)");
     return JS_EXCEPTION;
   }
@@ -1771,7 +1777,7 @@ static JSValue SystemAddShipsOrGroupToRoute(JSContext* context, int argc,
   if (argc > 2) {
     if (JS_ToFloat64(context, &where, argv[2]) != 0 || !isfinite(where) ||
         where < 0.0f || where > 1.0f) {
-      OOJSReportBadArguments(context, "System", func, MIN(argc - 2, 1),
+      OOJSReportBadArguments(context, "System", func, std::min(argc - 2, 1),
                              &argv[2], std::nullopt,
                              "number (position along route)");
       return JS_EXCEPTION;
@@ -1782,7 +1788,7 @@ static JSValue SystemAddShipsOrGroupToRoute(JSContext* context, int argc,
       if (route.has_value()) route = oo::str::lowercase(*route);
 
       if (!route.has_value() || validRoutes.count(*route) == 0) {
-        OOJSReportBadArguments(context, "System", func, MIN(argc - 3, 1),
+        OOJSReportBadArguments(context, "System", func, std::min(argc - 3, 1),
                                &argv[3], std::nullopt,
                                "string (route specifier)");
         return JS_EXCEPTION;
