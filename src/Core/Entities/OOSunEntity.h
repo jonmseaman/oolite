@@ -50,7 +50,7 @@ inline constexpr double MAX_CORONAFLARE = 600000.0;  // nova flare
 
 #if SUN_DIRECT_VISION_GLARE
 inline constexpr double SUN_GLARE_MULT_FACTOR = 3.0;
-#define SUN_GLARE_ADD_FACTOR (std::numbers::pi / 16.0)
+inline constexpr auto SUN_GLARE_ADD_FACTOR = (std::numbers::pi / 16.0);
 inline constexpr float SUN_GLARE_CORONA_FACTOR = 0.5f;
 #else
 inline constexpr double SUN_GLARE_CORONA_FACTOR = 1.5;
