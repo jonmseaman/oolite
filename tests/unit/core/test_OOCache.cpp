@@ -233,4 +233,61 @@ OO_TEST(holdsALiveObject) {
   cache = nullptr;
 }
 
+// An object whose destructor looks itself up in the cache, as a texture does
+// (OOTexture::removeFromCaches()): the cache holds its last reference. Once
+// the cache itself is going, the lookup finds no cache, as a texture finds
+// RecentTextures() empty.
+namespace {
+
+class SelfLookingUpForeign final : public oo::PListForeign {
+ public:
+  SelfLookingUpForeign(std::weak_ptr<OOCache> cache, std::string key,
+                      int* destroyed)
+      : _cache(std::move(cache)), _key(std::move(key)), _destroyed(destroyed) {}
+
+  ~SelfLookingUpForeign() override {
+    ++*_destroyed;
+    // The lookup moves the key's entry to the young end, as the texture's
+    // does; the value found is never this object.
+    if (const std::shared_ptr<OOCache> cache = _cache.lock())
+      (void)cache->pListForKey(_key);
+  }
+
+  std::string className() const override { return "SelfLookingUpForeign"; }
+  std::string description() const override { return "<SelfLookingUpForeign>"; }
+
+ private:
+  std::weak_ptr<OOCache> _cache;
+  std::string _key;
+  int* _destroyed;
+};
+
+}  // namespace
+
+OO_TEST(aValueMayUseTheCacheAsItGoes) {
+  std::shared_ptr<OOCache> cache = OOCache::cacheWithPList(oo::PList());
+  int destroyed = 0;
+  auto Add = [&](const std::string& key) {
+    cache->setPList(oo::PList(oo::PList::Object(
+                        oo::makeShared<SelfLookingUpForeign>(cache, key,
+                                                            &destroyed))),
+                    key);
+  };
+
+  Add("a");
+  Add("b");
+  cache->removePListForKey("a");  // its value was the last reference
+  OO_CHECK(destroyed == 1);
+  OO_CHECK(cache->pListForKey("a").isNull());
+
+  Add("b");  // replaces b's value, the last reference to the old one
+  OO_CHECK(destroyed == 2);
+  OO_CHECK(!cache->pListForKey("b").isNull());
+
+  cache->setPruneThreshold(kOOCacheMinimumPruneThreshold);
+  for (int i = 0; i < 30; ++i) Add("p" + std::to_string(i));
+  OO_CHECK(destroyed > 2);  // pruning dropped the oldest values
+  OO_CHECK(cache->pListsByAge().size() <= kOOCacheMinimumPruneThreshold);
+}
+
 OO_TEST_MAIN()
