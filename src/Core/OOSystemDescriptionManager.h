@@ -66,7 +66,7 @@ inline constexpr int OO_SYSTEM_LAYERS = 4;
 #define OO_GALAXIES_AVAILABLE (kOOMaximumGalaxyID + 1)
 #define OO_SYSTEMS_AVAILABLE OO_SYSTEMS_PER_GALAXY* OO_GALAXIES_AVAILABLE
 // don't bother caching interstellar properties
-#define OO_SYSTEM_CACHE_LENGTH OO_SYSTEMS_AVAILABLE
+inline constexpr auto OO_SYSTEM_CACHE_LENGTH = OO_SYSTEMS_AVAILABLE;
 
 /*	OOSystemDescriptionEntry is used only by the manager. The universe holds
    the manager as std::shared_ptr.
