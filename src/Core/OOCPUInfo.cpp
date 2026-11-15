@@ -33,13 +33,13 @@ MA 02110-1301, USA.
 
 #if (OOLITE_LINUX || OOLITE_WINDOWS || OOLITE_MACOS)
 // Workaround for clang/glibc incompatibility.
-#if !OOLITE_HAVE_CLANG
+#ifndef __clang__
 #define __block __glibc_block
 #endif
 #include <unistd.h>  // IWYU pragma: keep (sysconf, off Windows)
 
 #include <format>
-#if !OOLITE_HAVE_CLANG
+#ifndef __clang__
 #undef __block
 #endif
 #endif

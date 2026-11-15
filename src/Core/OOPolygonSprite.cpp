@@ -42,6 +42,7 @@ SOFTWARE.
 
 #include "OOPolygonSprite.h"
 
+#include <cmath>
 #include <format>
 #include <memory>
 #include <string>
@@ -446,8 +447,8 @@ std::vector<OOPolygonContour> DataArrayToPoints(TessPolygonData* data,
 
       // Skip bad or duplicate vertices.
       if (x == oldX && y == oldY) continue;
-      if (isnan(x) || isnan(y)) continue;
-      if (!isfinite(x) || !isfinite(y)) continue;
+      if (std::isnan(x) || std::isnan(y)) continue;
+      if (!std::isfinite(x) || !std::isfinite(y)) continue;
 
       area += x * oldY - oldX * y;
 
@@ -542,7 +543,7 @@ OOPolygonContour BuildOutlineContour(const OOPolygonContour& dataArray,
       NSPoint t = PtNormal(PtAdd(a, b));
       NSPoint v = PtScale(PtRotACW(t), width / PtDot(t, a));
 
-      if (!isnan(v.x) && !isnan(v.y)) {
+      if (!std::isnan(v.x) && !std::isnan(v.y)) {
         result.push_back(PtAdd(v, current));
       }
     } else {
@@ -550,10 +551,10 @@ OOPolygonContour BuildOutlineContour(const OOPolygonContour& dataArray,
       NSPoint v1 = PtScale(PtAdd(PtRotACW(a), a), width);
       NSPoint v2 = PtScale(PtSub(PtRotACW(b), b), width);
 
-      if (!isnan(v1.x) && !isnan(v1.y)) {
+      if (!std::isnan(v1.x) && !std::isnan(v1.y)) {
         result.push_back(PtAdd(v1, current));
       }
-      if (!isnan(v2.x) && !isnan(v2.y)) {
+      if (!std::isnan(v2.x) && !std::isnan(v2.y)) {
         result.push_back(PtAdd(v2, current));
       }
     }

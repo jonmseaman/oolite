@@ -286,7 +286,7 @@ int main(int argc, char* argv[]) {
             "no\n"
 #endif
             "Built with "
-#if OOLITE_HAVE_CLANG
+#ifdef __clang__
             "Clang version " STRINGIFY(__clang_major__) "." STRINGIFY(
                 __clang_minor__) "." STRINGIFY(__clang_patchlevel__)
 #else
