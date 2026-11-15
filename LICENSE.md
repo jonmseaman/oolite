@@ -147,7 +147,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ----------------------------------------------------------
 QuickJS-ng, the JavaScript engine, is built into the game from its release source with Oolite's patches
-(subprojects/packagefiles) and is subject to the following license:
+(third_party/packagefiles) and is subject to the following license:
 
 The MIT License (MIT)
 
@@ -246,6 +246,6 @@ license: <https://creativecommons.org/licenses/by/3.0/>
 ----------------------------------------------------------
 
 Oolite makes use of various external open source libraries. QuickJS-ng is the one modified for the game: its source is
-the release named in *subprojects/quickjs-ng.wrap*, and the changes Oolite applies to it are the patches in
-*subprojects/packagefiles*, each of which describes its change.
+the release named in *third_party/quickjs-ng.wrap*, and the changes Oolite applies to it are the patches in
+*third_party/packagefiles*, each of which describes its change.
 
