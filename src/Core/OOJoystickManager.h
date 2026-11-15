@@ -285,13 +285,13 @@ static_assert(BUTTON_end == 55);
 #endif
 
 // Stick constants
-#define MAX_STICKS 4
-#define MAX_AXES 16
+inline constexpr int MAX_STICKS = 4;
+inline constexpr int MAX_AXES = 16;
 #define MAX_REAL_BUTTONS 64
 #define MAX_HATS 4
 #define MAX_BUTTONS (MAX_REAL_BUTTONS + 4 * MAX_HATS)
-#define STICK_NOFUNCTION -1
-#define STICK_AXISUNASSIGNED -10.0
+inline constexpr int STICK_NOFUNCTION = -1;
+inline constexpr double STICK_AXISUNASSIGNED = -10.0;
 
 #define STICK_PRECISIONFAC 3
 #define STICK_NORMALDIV 32768
@@ -308,7 +308,7 @@ inline constexpr int HW_BUTTON = 2;
 
 // The threshold at which an axis can trigger a call back.
 // The max of abs(axis) is 32767.
-#define AXCBTHRESH 20000
+inline constexpr int AXCBTHRESH = 20000;
 
 // Dictionary keys - used in the defaults file
 inline constexpr std::string_view AXIS_SETTINGS =
