@@ -763,7 +763,7 @@ bool OOMesh::initWithName(const std::string& name,
                           const oo::PList& shadersDict, bool smooth,
                           const oo::PList& macros, Entity* target, float scale,
                           bool cacheWriteable) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // The mesh is new (the factory made it; -init's defaults, which loading
   // overwrites). It answers whether it loaded: the factory drops it when not,
@@ -812,7 +812,6 @@ bool OOMesh::initWithName(const std::string& name,
   }
   return loaded;
 
-  OOJS_PROFILE_EXIT
 }
 
 std::shared_ptr<OOMesh> OOMesh::mutableCopyWithZone(OOZone* /*zone*/) {
@@ -832,7 +831,7 @@ std::shared_ptr<OOMesh> OOMesh::mutableCopyWithZone(OOZone* /*zone*/) {
 }
 
 oo::PList OOMesh::modelData() {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   bool includeNormals =
       IsPerVertexNormalMode(static_cast<OOMeshNormalMode>(_normalMode));
@@ -874,12 +873,11 @@ oo::PList OOMesh::modelData() {
   }
   return oo::PList(std::move(result));
 
-  OOJS_PROFILE_EXIT
 }
 
 bool OOMesh::setModelFromModelData(const oo::PList& dict,
                                    const std::string& fileName) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   unsigned i;
 
@@ -972,11 +970,10 @@ bool OOMesh::setModelFromModelData(const oo::PList& dict,
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 bool OOMesh::loadData(const std::string& filename, float scale) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   std::optional<oo::str::Scanner>
       scanner;  // made from the preprocessed text below
@@ -1408,7 +1405,6 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 #if SCRIBBLE
@@ -1445,7 +1441,7 @@ void OOMesh::resetGraphicsState() {
 }
 
 bool OOMesh::setUpVertexArrays() {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   std::size_t fi, vi, mi;
 
@@ -1522,7 +1518,6 @@ bool OOMesh::setUpVertexArrays() {
   _displayLists.count = tri_index;  // total number of triangle vertices
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -1679,7 +1674,7 @@ static float FaceAreaCorrect(GLuint* vertIndices, Vector* vertices) {
 }
 
 void OOMesh::checkNormalsAndAdjustWinding() {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Vector calculatedNormal;
   OOMeshFaceCount i;
@@ -1722,11 +1717,10 @@ void OOMesh::checkNormalsAndAdjustWinding() {
     }
   }
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 void OOMesh::generateFaceTangents() {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   OOMeshFaceCount i;
   for (i = 0; i < faceCount; i++) {
@@ -1766,12 +1760,11 @@ void OOMesh::generateFaceTangents() {
     }
   }
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 void OOMesh::calculateVertexNormalsAndTangentsWithFaceRefs(
     VertexFaceRef* faceRefs) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   OOCParameterAssert(faceRefs != nullptr);
 
@@ -1810,11 +1803,10 @@ void OOMesh::calculateVertexNormalsAndTangentsWithFaceRefs(
     _tangents[i] = tangent_sum;
   }
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 void OOMesh::calculateVertexTangentsWithFaceRefs(VertexFaceRef* faceRefs) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   OOCParameterAssert(faceRefs != nullptr);
 
@@ -1857,7 +1849,6 @@ void OOMesh::calculateVertexTangentsWithFaceRefs(VertexFaceRef* faceRefs) {
     _tangents[i] = tangent_sum;
   }
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 /* profiling suggests this function takes a lot of time - almost all
@@ -1865,7 +1856,7 @@ void OOMesh::calculateVertexTangentsWithFaceRefs(VertexFaceRef* faceRefs) {
 void OOMesh::getNormal(Vector* outNormal, Vector* outTangent,
                        OOMeshVertexCount v_index,
                        OOMeshSmoothGroup smoothGroup) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   assert(outNormal != nullptr && outTangent != nullptr);
 
@@ -1889,11 +1880,10 @@ void OOMesh::getNormal(Vector* outNormal, Vector* outTangent,
   *outNormal = vector_normal_or_fallback(normal_sum, kBasisZVector);
   *outTangent = vector_normal_or_fallback(tangent_sum, kBasisXVector);
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 void OOMesh::calculateBoundingVolumes() {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   OOMeshVertexCount i;
   float d_squared, length_longest_axis, length_shortest_axis;
@@ -1932,7 +1922,6 @@ void OOMesh::calculateBoundingVolumes() {
 
   _collisionRadius = sqrtf(result);
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 void OOMesh::rescaleByFactor(GLfloat factor) {

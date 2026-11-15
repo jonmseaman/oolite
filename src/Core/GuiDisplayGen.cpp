@@ -1068,7 +1068,7 @@ bool GuiDisplayGen::preloadGUITexture(const oo::PList& descriptor) {
 oo::PList GuiDisplayGen::textureDescriptorFromJSValue(
     JSValue value, JSContext* context,
     const std::optional<std::string>& callerDescription) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   oo::PList result;
 
@@ -1105,7 +1105,6 @@ oo::PList GuiDisplayGen::textureDescriptorFromJSValue(
 
   return result;
 
-  OOJS_PROFILE_EXIT
 }
 
 void GuiDisplayGen::setStatusPage(std::ptrdiff_t pageNum) {

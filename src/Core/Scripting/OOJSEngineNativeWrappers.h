@@ -6,21 +6,11 @@ Exception safety and profiling macros.
 
 Every JavaScript native callback that could concievably throw
 should begin with OOJS_NATIVE_ENTER() and end with
+OOJS_NATIVE_EXIT; a native using the pair _must_ return before
 OOJS_NATIVE_EXIT. Callbacks which have been carefully audited for potential
 exceptions, and support functions called from JavaScript native callbacks,
-may start with OOJS_PROFILE_ENTER and end with OOJS_PROFILE_EXIT to be
-included in profiling reports.
-
-Functions using either of these pairs _must_ return before
-OOJS_NATIVE_EXIT/OOJS_PROFILE_EXIT, or they will crash.
-
-For functions with a non-scalar return type, OOJS_PROFILE_EXIT should be
-replaced with OOJS_PROFILE_EXIT_VAL(returnValue). The returnValue is never
-used (and should be a constant expression), but is required to placate the
-compiler.
-
-For values with void return, use OOJS_PROFILE_EXIT_VOID. It is not
-necessary to insert a return statement before OOJS_PROFILE_EXIT_VOID.
+may begin with OOJS_PROFILE_SCOPE(); to be included in profiling reports: one
+line, the profiler frame lasting to the end of the enclosing block.
 
 
 JavaScript support for Oolite
@@ -65,14 +55,14 @@ MA 02110-1301, USA.
 /*	Profiling of native functions (the debug console's profile(),
    getProfile() and trace()), as in SpiderMonkey builds without
    MOZ_TRACE_JSCALLS: time is attributed to natives bracketed by
-   OOJS_NATIVE_ENTER/EXIT or OOJS_PROFILE_ENTER/EXIT, and everything else counts
-   as JavaScript time.
+   OOJS_NATIVE_ENTER/EXIT or timed by OOJS_PROFILE_SCOPE(), and everything else
+   counts as JavaScript time.
 */
 #define OOJS_PROFILE (OOLITE_DEBUG && !OOJS_POC_HARNESS)
 
 /*	OOJS_NATIVE_ENTER()/OOJS_NATIVE_EXIT bracket natives that call into
         code which may throw; the exception is converted into a JS
-        error. OOJS_PROFILE_ENTER/EXIT bracket natives that cannot throw. When
+        error. OOJS_PROFILE_SCOPE() times natives that cannot throw. When
         OOJS_PROFILE is set, both also record the time spent in the native for
         the profiler.
 */
@@ -111,8 +101,8 @@ void OOJSProfileExit(OOJSProfileStackFrame* frame);
    the scope ends, by return or by exception.
 */
 
-// The scope OOJS_PROFILE_ENTER opens: enters the frame, and exits it however
-// the scope ends.
+// The scope OOJS_PROFILE_SCOPE() declares: enters the frame, and exits it
+// however the scope ends.
 class OOJSProfileScope {
  public:
   explicit OOJSProfileScope(const char* function) {
@@ -126,13 +116,7 @@ class OOJSProfileScope {
   OOJSProfileStackFrame _frame = {};
 };
 
-#define OOJS_PROFILE_ENTER_NAMED(NAME)       \
-  {                                          \
-    OOJSProfileScope oojsProfileScope(NAME); \
-    {
-#define OOJS_PROFILE_EXIT \
-  }                       \
-  }
+#define OOJS_PROFILE_SCOPE() OOJSProfileScope oojsProfileScope(__FUNCTION__)
 
 #define OOJS_NATIVE_ENTER(cx)                        \
   {                                                  \
@@ -149,8 +133,7 @@ class OOJSProfileScope {
 
 #else
 
-#define OOJS_PROFILE_ENTER_NAMED(NAME) {
-#define OOJS_PROFILE_EXIT }
+#define OOJS_PROFILE_SCOPE() static_cast<void>(0)
 
 #define OOJS_NATIVE_ENTER(cx)            \
   {                                      \
@@ -175,8 +158,6 @@ class OOJSProfileScope {
 */
 void OOJSReportCurrentException(JSContext* context);
 
-#define OOJS_PROFILE_ENTER OOJS_PROFILE_ENTER_NAMED(__FUNCTION__)
-#define OOJS_PROFILE_EXIT_VOID OOJS_PROFILE_EXIT
 
 #define OOJS_BEGIN_FULL_NATIVE(context)               \
   {                                                   \

@@ -88,7 +88,7 @@ JSClassID JSExhaustPlumeClassID() { return sExhaustPlumeClassID; }
 
 static bool JSExhaustPlumeGetExhaustPlumeEntity(
     JSContext* context, JSValueConst jsobj, OOExhaustPlumeEntity** outEntity) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
@@ -106,7 +106,6 @@ static bool JSExhaustPlumeGetExhaustPlumeEntity(
   *outEntity = exhaust;
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the C++

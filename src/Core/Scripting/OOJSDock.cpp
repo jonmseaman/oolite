@@ -105,7 +105,7 @@ JSClassID JSDockClassID() { return sDockClassID; }
 */
 static bool JSDockGetDockEntity(JSContext* context, JSValueConst dockObj,
                                 DockEntity** outEntity) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
@@ -123,12 +123,11 @@ static bool JSDockGetDockEntity(JSContext* context, JSValueConst dockObj,
   *outEntity = dock;
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 static bool JSDockGetShipEntity(JSContext* context, JSValueConst shipObj,
                                 ShipEntity** outEntity) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
@@ -144,7 +143,6 @@ static bool JSDockGetShipEntity(JSContext* context, JSValueConst shipObj,
   *outEntity = oo::ToShip(entity);
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // The bodies of DockEntity's class questions, which DockEntity's overrides

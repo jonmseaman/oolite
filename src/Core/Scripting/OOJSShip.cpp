@@ -3435,7 +3435,7 @@ static JSValue ShipSetShaders(OOJS_NATIVE_ARGS) {
 namespace {
 JSValue ShipSetMaterialsInternal(OOJS_NATIVE_ARGS, ShipEntity* thisEnt,
                                  bool fromShaders) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   JSValueConst params = JS_UNDEFINED;
   oo::PList materials;
@@ -3507,7 +3507,6 @@ JSValue ShipSetMaterialsInternal(OOJS_NATIVE_ARGS, ShipEntity* thisEnt,
 
   OOJS_RETURN_BOOL(success);
 
-  OOJS_PROFILE_EXIT
 }
 }  // namespace
 
@@ -3547,7 +3546,7 @@ static JSValue ShipExitSystem(OOJS_NATIVE_ARGS) {
 }
 
 static JSValue ShipUpdateEscortFormation(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3556,12 +3555,11 @@ static JSValue ShipUpdateEscortFormation(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 namespace {
 JSValue RemoveOrExplodeShip(OOJS_NATIVE_ARGS, bool explode) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
 
@@ -3604,12 +3602,11 @@ JSValue RemoveOrExplodeShip(OOJS_NATIVE_ARGS, bool explode) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 }  // namespace
 
 static JSValue ShipClearDefenseTargets(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3618,11 +3615,10 @@ static JSValue ShipClearDefenseTargets(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipAddDefenseTarget(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   ShipEntity* target = nullptr;
@@ -3642,11 +3638,10 @@ static JSValue ShipAddDefenseTarget(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipRemoveDefenseTarget(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   ShipEntity* target = nullptr;
@@ -3666,11 +3661,10 @@ static JSValue ShipRemoveDefenseTarget(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipAddCollisionException(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   ShipEntity* target = nullptr;
@@ -3696,11 +3690,10 @@ static JSValue ShipAddCollisionException(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipRemoveCollisionException(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   ShipEntity* target = nullptr;
@@ -3724,12 +3717,11 @@ static JSValue ShipRemoveCollisionException(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 // getMaterials()
 static JSValue ShipGetMaterials(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
 
@@ -3741,12 +3733,11 @@ static JSValue ShipGetMaterials(OOJS_NATIVE_ARGS) {
     result = oo::PList(oo::PList::Dict{});  // empty rather than null
   OOJS_RETURN_PLIST(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // getShaders()
 static JSValue ShipGetShaders(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
 
@@ -3758,11 +3749,10 @@ static JSValue ShipGetShaders(OOJS_NATIVE_ARGS) {
     result = oo::PList(oo::PList::Dict{});  // empty rather than null
   OOJS_RETURN_PLIST(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipBroadcastCascadeImminent(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3771,11 +3761,10 @@ static JSValue ShipBroadcastCascadeImminent(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipBecomeCascadeExplosion(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3784,11 +3773,10 @@ static JSValue ShipBecomeCascadeExplosion(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipOfferToEscort(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   ShipEntity* mother = nullptr;
@@ -3808,11 +3796,10 @@ static JSValue ShipOfferToEscort(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_BOOL(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipRequestHelpFromGroup(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
 
@@ -3823,11 +3810,10 @@ static JSValue ShipRequestHelpFromGroup(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPatrolReportIn(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   ShipEntity* target = nullptr;
@@ -3849,11 +3835,10 @@ static JSValue ShipPatrolReportIn(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipMarkTargetForFines(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
 
@@ -3868,11 +3853,10 @@ static JSValue ShipMarkTargetForFines(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_BOOL(ok);
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipEnterWormhole(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   Entity* hole = nullptr;
@@ -3906,11 +3890,10 @@ static JSValue ShipEnterWormhole(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipNotifyGroupOfWormhole(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3920,11 +3903,10 @@ static JSValue ShipNotifyGroupOfWormhole(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipThrowSpark(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3933,11 +3915,10 @@ static JSValue ShipThrowSpark(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformAttack(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3946,11 +3927,10 @@ static JSValue ShipPerformAttack(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformCollect(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3959,11 +3939,10 @@ static JSValue ShipPerformCollect(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformEscort(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3972,11 +3951,10 @@ static JSValue ShipPerformEscort(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformFaceDestination(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3985,11 +3963,10 @@ static JSValue ShipPerformFaceDestination(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformFlee(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -3998,11 +3975,10 @@ static JSValue ShipPerformFlee(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformFlyToRangeFromDestination(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4011,11 +3987,10 @@ static JSValue ShipPerformFlyToRangeFromDestination(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformHold(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4024,11 +3999,10 @@ static JSValue ShipPerformHold(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformIdle(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4037,11 +4011,10 @@ static JSValue ShipPerformIdle(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformIntercept(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4050,11 +4023,10 @@ static JSValue ShipPerformIntercept(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformLandOnPlanet(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4063,11 +4035,10 @@ static JSValue ShipPerformLandOnPlanet(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformMining(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4076,11 +4047,10 @@ static JSValue ShipPerformMining(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformScriptedAI(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4089,11 +4059,10 @@ static JSValue ShipPerformScriptedAI(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformScriptedAttackAI(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4102,11 +4071,10 @@ static JSValue ShipPerformScriptedAttackAI(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformStop(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4115,11 +4083,10 @@ static JSValue ShipPerformStop(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipPerformTumble(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4128,11 +4095,10 @@ static JSValue ShipPerformTumble(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipRequestDockingInstructions(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4141,11 +4107,10 @@ static JSValue ShipRequestDockingInstructions(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_PLIST(ship->getDockingInstructions());  // nil maps to null
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipRecallDockingInstructions(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4154,11 +4119,10 @@ static JSValue ShipRecallDockingInstructions(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_PLIST(ship->getDockingInstructions());  // nil maps to null
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipBroadcastDistressMessage(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4167,11 +4131,10 @@ static JSValue ShipBroadcastDistressMessage(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipCheckCourseToDestination(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4185,11 +4148,10 @@ static JSValue ShipCheckCourseToDestination(OOJS_NATIVE_ARGS) {
   OOJS_RETURN(
       OOJSValueFromCxxObject(context, hazard));  // the C++ hazard's JS value
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipGetSafeCourseToDestination(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   GET_THIS_SHIP(thisEnt);
@@ -4202,11 +4164,10 @@ static JSValue ShipGetSafeCourseToDestination(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(waypoint);
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipCheckScanner(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   int onlyCheckPowered = false;
@@ -4236,11 +4197,10 @@ static JSValue ShipCheckScanner(OOJS_NATIVE_ARGS) {
   }
   OOJS_RETURN_PLIST(oo::PList(std::move(scanResult)));
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipAdjustCargo(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   std::optional<std::string> commodity;
@@ -4283,12 +4243,11 @@ static JSValue ShipAdjustCargo(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_BOOL(ok);
 
-  OOJS_PROFILE_EXIT
 }
 
 /* 0 = no significant damage or consumable loss, higher numbers mean some */
 static JSValue ShipDamageAssessment(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   int assessment = 0;
@@ -4311,11 +4270,10 @@ static JSValue ShipDamageAssessment(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_INT(assessment);
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   ShipEntity* thisEnt = nullptr;
   int fullCheck = false;
@@ -4440,7 +4398,6 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_DOUBLE(assessment);
 
-  OOJS_PROFILE_EXIT
 }
 
 static double ShipThreatAssessmentWeapon(OOWeaponType wt) {

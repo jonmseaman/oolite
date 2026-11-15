@@ -137,7 +137,7 @@ std::shared_ptr<Entity> oo::NewVisualEffect(const std::string& key,
 */
 bool OOVisualEffectEntity::initWithKey(const std::string& key,
                                        const oo::PList& dict) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   _effectKey = key;
 
@@ -149,12 +149,11 @@ bool OOVisualEffectEntity::initWithKey(const std::string& key,
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 bool OOVisualEffectEntity::setUpVisualEffectFromDictionary(
     const oo::PList& effectDict) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   effectinfoDictionary = effectDict;
   if (effectinfoDictionary.isNull())
@@ -212,7 +211,6 @@ bool OOVisualEffectEntity::setUpVisualEffectFromDictionary(
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 OOVisualEffectEntity::~OOVisualEffectEntity() {

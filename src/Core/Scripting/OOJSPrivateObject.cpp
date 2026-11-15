@@ -59,7 +59,7 @@ bool OOJSSetCxxPrivate(JSValueConst jsObject,
 // object is taken as it is (a C++ slot holds no weak reference to unpack).
 bool OOJSGetCxxPrivateImpl(JSContext* context, JSValueConst object,
                            JSClassID requiredClassID, oo::Object** outObject) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   OOCParameterAssert(context != nullptr && requiredClassID != 0 &&
                      outObject != nullptr);
@@ -84,14 +84,13 @@ bool OOJSGetCxxPrivateImpl(JSContext* context, JSValueConst object,
   *outObject = OOJSCxxPrivateFromOpaque(JS_GetAnyOpaque(object, &ignored));
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // OOJSObjectWrapperFinalize(): -oo_clearJSSelf: to the object, then the slot is
 // emptied and its holder deleted (the slot's release).
 void OOJSCxxObjectWrapperFinalize(JSRuntime* /*runtime*/,
                                   JSValueConst thisObj) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   JSClassID ignored;
   std::unique_ptr<std::shared_ptr<oo::Object>> holder(
@@ -105,7 +104,6 @@ void OOJSCxxObjectWrapperFinalize(JSRuntime* /*runtime*/,
     holder.reset();  // the slot's release
   }
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 // OOJSObjectWrapperToString(): the object's -oo_jsDescription, else

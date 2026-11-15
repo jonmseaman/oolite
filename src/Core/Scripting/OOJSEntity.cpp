@@ -225,7 +225,7 @@ bool EntityFromArgumentList(JSContext* context,
                             const std::optional<std::string>& function,
                             int argc, JSValueConst* argv, Entity** outEntity,
                             int* outConsumed) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // Sanity checks.
   if (outConsumed != nullptr) *outConsumed = 0;
@@ -253,7 +253,6 @@ bool EntityFromArgumentList(JSContext* context,
   if (outConsumed != nullptr) *outConsumed = 1;
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue EntityGetProperty(OOJS_GETTER_ARGS) {
@@ -458,7 +457,7 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 static JSValue EntityDumpState(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Entity* thisEnt = nullptr;
   OOJSEntityGetEntity(context, OOJS_THIS, &thisEnt);
@@ -466,6 +465,5 @@ static JSValue EntityDumpState(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
 }
 #endif

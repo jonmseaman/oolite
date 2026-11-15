@@ -44,6 +44,7 @@ SOFTWARE.
 #include <utility>
 
 #include "Entity.h"  // an entity's -inspect
+#include "EntityOOJavaScriptExtensions.h"  // IWYU pragma: keep: used only in OO_DEBUG builds
 #include "OOConstToString.h"
 #include "OODebugFlags.h"
 #include "OODebugMonitor.h"
@@ -54,6 +55,7 @@ SOFTWARE.
 #include "OOLogHeader.h"  // OOPlatformDescription()
 #include "OOLoggingExtended.h"
 #include "OOOpenGLExtensionManager.h"
+#include "ResourceManager.h"  // IWYU pragma: keep: used only in DEBUG builds
 #include "oofnd/AutoreleaseScope.hpp"  // IWYU pragma: keep: used only with OOJS_PROFILE
 #include "oofnd/PList.hpp"
 #if OO_DEBUG
@@ -365,7 +367,7 @@ oo::PList ConsoleConverter(JSContext* /*context*/, JSValueConst object) {
 }  // namespace
 
 JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // The classes belong to the context, so are set up again after every reset.
   JSValue consolePrototype = (sConsoleClassID != 0)
@@ -416,7 +418,6 @@ JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor) {
 
   return object;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
