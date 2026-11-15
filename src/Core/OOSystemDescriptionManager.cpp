@@ -49,10 +49,6 @@ constexpr std::string_view kOOScriptedChangeJoiner = "~|~";
 
 }  // namespace
 
-// likely maximum number of planetinfo properties to be applied to a system
-// just for efficiency - no harm in exceeding it
-#define OO_LIKELY_PROPERTIES_PER_SYSTEM 50
-
 namespace {
 
 constexpr const char* kOOSystemLayerProperty = "layer";
