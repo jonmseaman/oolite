@@ -1285,12 +1285,12 @@ OOMaybeUnits ExpandSystemNameForGalaxyEscape(OOStringExpansionContext* context,
     return std::nullopt;
   }
 
-  char hundreds = characters[idx + 2];
-  char tens = characters[idx + 3];
-  char units = characters[idx + 4];
-  char galHundreds = characters[idx + 5];
-  char galTens = characters[idx + 6];
-  char galUnits = characters[idx + 7];
+  char hundreds = static_cast<char>(characters[idx + 2]);
+  char tens = static_cast<char>(characters[idx + 3]);
+  char units = static_cast<char>(characters[idx + 4]);
+  char galHundreds = static_cast<char>(characters[idx + 5]);
+  char galTens = static_cast<char>(characters[idx + 6]);
+  char galUnits = static_cast<char>(characters[idx + 7]);
 
   if (!(isdigit(hundreds) && isdigit(tens) && isdigit(units) &&
         isdigit(galHundreds) && isdigit(galTens) && isdigit(galUnits))) {
@@ -1349,9 +1349,9 @@ OOMaybeUnits ExpandSystemNameEscape(OOStringExpansionContext* context,
     return std::nullopt;
   }
 
-  char hundreds = characters[idx + 2];
-  char tens = characters[idx + 3];
-  char units = characters[idx + 4];
+  char hundreds = static_cast<char>(characters[idx + 2]);
+  char tens = static_cast<char>(characters[idx + 3]);
+  char units = static_cast<char>(characters[idx + 4]);
 
   if (!(isdigit(hundreds) && isdigit(tens) && isdigit(units))) {
     SyntaxError(context, "strings.expand.invalidJEscape", "%s",

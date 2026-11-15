@@ -562,8 +562,10 @@ OOCreditsQuantity OOCommodities::samplePriceForCommodity(
 // positive = exporter; negative = importer; range -1.0 .. +1.0
 float OOCommodities::economicBiasForGood(const oo::PList& good,
                                          OOEconomyID economy) {
-  OOEconomyID exporter = good.get<int>(kOOCommodityPeakExport);
-  OOEconomyID importer = good.get<int>(kOOCommodityPeakImport);
+  OOEconomyID exporter =
+      static_cast<OOEconomyID>(good.get<int>(kOOCommodityPeakExport));
+  OOEconomyID importer =
+      static_cast<OOEconomyID>(good.get<int>(kOOCommodityPeakImport));
 
   // *2 and /2 to work in ints at this stage
   int exDiff = abs(economy - exporter) * 2;

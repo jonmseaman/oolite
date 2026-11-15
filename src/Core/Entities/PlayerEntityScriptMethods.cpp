@@ -308,7 +308,7 @@ oo::PList PlayerEntity::validatedMarker(const oo::PList& marker) {
     result["system"] = oo::PList::signedInteger(0);
     return oo::PList(std::move(result));
   }
-  OOSystemID dest = marker.get<int>("system");
+  OOSystemID dest = static_cast<OOSystemID>(marker.get<int>("system"));
   // FIXME: parameters
   if (dest < 0 || dest > kOOMaximumSystemID) {
     return oo::PList();

@@ -3216,7 +3216,8 @@ void Universe::witchspaceShipWithPrimaryRole(const std::string& role) {
         // remove escorts if we feel safe
         int nx = (ship != nullptr ? ship->pendingEscortCount() : uint8_t{}) -
                  2 * (1 + (Ranrot() & 3));  // remove 2,4,6, or 8 escorts
-        if (ship != nullptr) ship->setPendingEscortCount((nx > 0) ? nx : 0);
+        if (ship != nullptr)
+          ship->setPendingEscortCount((nx > 0) ? static_cast<uint8_t>(nx) : 0);
       }
     }
     if (role == "pirate") {
@@ -3353,7 +3354,9 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
           // remove escorts if we feel safe
           int nx = pendingEscortCount -
                    2 * (1 + (Ranrot() & 3));  // remove 2,4,6, or 8 escorts
-          if (ship != nullptr) ship->setPendingEscortCount((nx > 0) ? nx : 0);
+          if (ship != nullptr)
+            ship->setPendingEscortCount((nx > 0) ? static_cast<uint8_t>(nx)
+                                                 : 0);
         }
       }
     }
@@ -5854,7 +5857,7 @@ bool Universe::addEntity(Entity* entity) {
           return false;
         }
       }
-      entity->setUniversalID(next_universal_id);
+      entity->setUniversalID(static_cast<OOUniversalID>(next_universal_id));
       entity_for_uid[next_universal_id] = entity;
       if (oo::EntityIsShip(entity)) {
         se = oo::ToShip(entity);
@@ -8195,8 +8198,10 @@ void Universe::setGalaxyTo(OOGalaxyID g, bool forced) {
     {
       for (i = 0; i < 256; i++) {
         system_names[i] = SystemPropertyString(
-            (systemManager != nullptr ? systemManager->getProperty("name", i, g)
-                                      : oo::PList()));
+            (systemManager != nullptr
+                 ? systemManager->getProperty("name",
+                                              static_cast<OOSystemID>(i), g)
+                 : oo::PList()));
       }
     }
   }
@@ -8638,7 +8643,7 @@ OOSystemID Universe::findSystemFromName(const std::string& sysName) {
     // a missing name matched nothing
     if (system_names[i].has_value() &&
         oo::str::lowercase(*system_names[i]) == match) {
-      return i;
+      return static_cast<OOSystemID>(i);
     }
   }
   return -1;  // no match found!
@@ -8746,13 +8751,15 @@ OOSystemID Universe::findNeighbouringSystemToCoords(NSPoint coords,
     // repeat three times for surety
     for (i = 0; i < 256; i++) {
       // flood fill out from system zero
-      NSPoint ipos = (systemManager != nullptr
-                          ? systemManager->getCoordinatesForSystem(i, g)
-                          : NSMakePoint(0, 0));
+      NSPoint ipos =
+          (systemManager != nullptr ? systemManager->getCoordinatesForSystem(
+                                          static_cast<OOSystemID>(i), g)
+                                    : NSMakePoint(0, 0));
       for (j = 0; j < 256; j++) {
-        NSPoint jpos = (systemManager != nullptr
-                            ? systemManager->getCoordinatesForSystem(j, g)
-                            : NSMakePoint(0, 0));
+        NSPoint jpos =
+            (systemManager != nullptr ? systemManager->getCoordinatesForSystem(
+                                            static_cast<OOSystemID>(j), g)
+                                      : NSMakePoint(0, 0));
         double dist =
             distanceBetweenPlanetPositions(ipos.x, ipos.y, jpos.x, jpos.y);
         if (dist <= MAX_JUMP_RANGE) {
@@ -8765,13 +8772,14 @@ OOSystemID Universe::findNeighbouringSystemToCoords(NSPoint coords,
   OOSystemID system = 0;
   for (i = 0; i < 256; i++) {
     NSPoint ipos =
-        (systemManager != nullptr ? systemManager->getCoordinatesForSystem(i, g)
+        (systemManager != nullptr ? systemManager->getCoordinatesForSystem(
+                                        static_cast<OOSystemID>(i), g)
                                   : NSMakePoint(0, 0));
     distance = distanceBetweenPlanetPositions(
         static_cast<int>(coords.x), static_cast<int>(coords.y), ipos.x, ipos.y);
     if ((connected[i]) && (distance < min_dist) && (distance != 0.0)) {
       min_dist = distance;
-      system = i;
+      system = static_cast<OOSystemID>(i);
     }
   }
 
@@ -8794,13 +8802,15 @@ OOSystemID Universe::findConnectedSystemAtCoords(NSPoint coords, OOGalaxyID g) {
     // repeat three times for surety
     for (i = 0; i < 256; i++) {
       // flood fill out from system zero
-      NSPoint ipos = (systemManager != nullptr
-                          ? systemManager->getCoordinatesForSystem(i, g)
-                          : NSMakePoint(0, 0));
+      NSPoint ipos =
+          (systemManager != nullptr ? systemManager->getCoordinatesForSystem(
+                                          static_cast<OOSystemID>(i), g)
+                                    : NSMakePoint(0, 0));
       for (j = 0; j < 256; j++) {
-        NSPoint jpos = (systemManager != nullptr
-                            ? systemManager->getCoordinatesForSystem(j, g)
-                            : NSMakePoint(0, 0));
+        NSPoint jpos =
+            (systemManager != nullptr ? systemManager->getCoordinatesForSystem(
+                                            static_cast<OOSystemID>(j), g)
+                                      : NSMakePoint(0, 0));
         double dist =
             distanceBetweenPlanetPositions(ipos.x, ipos.y, jpos.x, jpos.y);
         if (dist <= MAX_JUMP_RANGE) {
@@ -8813,13 +8823,14 @@ OOSystemID Universe::findConnectedSystemAtCoords(NSPoint coords, OOGalaxyID g) {
   OOSystemID system = 0;
   for (i = 0; i < 256; i++) {
     NSPoint ipos =
-        (systemManager != nullptr ? systemManager->getCoordinatesForSystem(i, g)
+        (systemManager != nullptr ? systemManager->getCoordinatesForSystem(
+                                        static_cast<OOSystemID>(i), g)
                                   : NSMakePoint(0, 0));
     distance = distanceBetweenPlanetPositions(
         static_cast<int>(coords.x), static_cast<int>(coords.y), ipos.x, ipos.y);
     if ((connected[i]) && (distance < min_dist)) {
       min_dist = distance;
-      system = i;
+      system = static_cast<OOSystemID>(i);
     }
   }
 
@@ -8898,9 +8909,9 @@ NSPoint Universe::findSystemCoordinatesWithPrefix(const std::string& p_fix,
         (!exactMatch && oo::str::hasPrefix(system_name, p_fix))) {
       /* Only used in player-based search routines */
       const oo::PList systemInfo =
-          (systemManager != nullptr
-               ? systemManager->getPropertiesForSystem(i, galaxyID)
-               : oo::PList());
+          (systemManager != nullptr ? systemManager->getPropertiesForSystem(
+                                          static_cast<OOSystemID>(i), galaxyID)
+                                    : oo::PList());
       std::ptrdiff_t concealment =
           systemInfo.get<int>("concealment", OO_SYSTEMCONCEALMENT_NONE);
       if (concealment >= OO_SYSTEMCONCEALMENT_NONAME) {
@@ -8910,10 +8921,10 @@ NSPoint Universe::findSystemCoordinatesWithPrefix(const std::string& p_fix,
 
       system_found[i] = true;
       if (result < 0) {
-        system_coords =
-            (systemManager != nullptr
-                 ? systemManager->getCoordinatesForSystem(i, galaxyID)
-                 : NSMakePoint(0, 0));
+        system_coords = (systemManager != nullptr
+                             ? systemManager->getCoordinatesForSystem(
+                                   static_cast<OOSystemID>(i), galaxyID)
+                             : NSMakePoint(0, 0));
         result = i;
       }
     }
@@ -8964,9 +8975,9 @@ oo::PList Universe::routeFromSystem(OOSystemID start, OOSystemID goal,
   std::array<bool, 256> concealed;
   for (i = 0; i < 256; i++) {
     const oo::PList systemInfo =
-        (systemManager != nullptr
-             ? systemManager->getPropertiesForSystem(i, galaxyID)
-             : oo::PList());
+        (systemManager != nullptr ? systemManager->getPropertiesForSystem(
+                                        static_cast<OOSystemID>(i), galaxyID)
+                                  : oo::PList());
     std::ptrdiff_t concealment =
         systemInfo.get<int>("concealment", OO_SYSTEMCONCEALMENT_NONE);
     if (concealment >= OO_SYSTEMCONCEALMENT_NOTHING) {
@@ -8974,7 +8985,7 @@ oo::PList Universe::routeFromSystem(OOSystemID start, OOSystemID goal,
       neighbours[i].clear();
       concealed[i] = true;
     } else {
-      neighbours[i] = neighboursToSystem(i);
+      neighbours[i] = neighboursToSystem(static_cast<OOSystemID>(i));
       concealed[i] = false;
     }
   }

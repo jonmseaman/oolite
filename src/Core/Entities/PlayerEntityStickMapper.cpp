@@ -262,7 +262,8 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
     const oo::PList& entry = StickFunctionAt(stickFunctions, selFunctionIdx);
     int hw = IntValueForKey(entry, KEY_ALLOWABLE);
     stickHandler->setCallback(
-        [this](const oo::PList& hwDict) { updateFunction(hwDict); }, hw);
+        [this](const oo::PList& hwDict) { updateFunction(hwDict); },
+        static_cast<char>(hw));
 
     // Print instructions
     std::string instructions;

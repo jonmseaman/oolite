@@ -708,9 +708,10 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace,
 
   // check if we're clear of nearby masses
   ::ShipEntity* blocker = oo::ToShip(
-      (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(
-                                 checkShipsInVicinityForWitchJumpExit())
-                           : nullptr));
+      (UNIVERSE != nullptr
+           ? UNIVERSE->entityForUniversalID(static_cast<OOUniversalID>(
+                 checkShipsInVicinityForWitchJumpExit()))
+           : nullptr));
   if (blocker) {
     setFoundTarget(blocker);
     if (shipAI != nullptr)
@@ -726,7 +727,7 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace,
       i = ranrot_rand() % n_dests;
     }
 
-    targetSystem = sDests.at(i)->get<int>("sysID");
+    targetSystem = static_cast<OOSystemID>(sDests.at(i)->get<int>("sysID"));
   } else {
     targetSystem = systemID;
 
@@ -2583,7 +2584,8 @@ void ShipEntity::setTargetToLastStation() {
 
 void ShipEntity::addFuel(const std::string& fuel_number) {
   // called by name
-  setFuel(getFuel() + oo::str::intValue(fuel_number) * 10);
+  setFuel(static_cast<OOFuelQuantity>(getFuel() +
+                                      oo::str::intValue(fuel_number) * 10));
 }
 
 void ShipEntity::scriptActionOnTarget(const std::string& action) {

@@ -168,8 +168,8 @@ void OOSystemDescriptionManager::setProperties(const oo::PList& properties,
   if (tokens.count() == 2 &&
       tokens.at<std::size_t>(0) < OO_GALAXIES_AVAILABLE &&
       tokens.at<std::size_t>(1) < OO_SYSTEMS_PER_GALAXY) {
-    OOGalaxyID g = tokens.at<std::size_t>(0);
-    OOSystemID s = tokens.at<std::size_t>(1);
+    OOGalaxyID g = static_cast<OOGalaxyID>(tokens.at<std::size_t>(0));
+    OOSystemID s = static_cast<OOSystemID>(tokens.at<std::size_t>(1));
     std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
       OO_LOG("system.description.error",
@@ -199,8 +199,8 @@ void OOSystemDescriptionManager::setProperty(
       tokens.at<std::size_t>(1) < OO_SYSTEMS_PER_GALAXY) {
     saveScriptedChangeToProperty(property, key, layer, value, manifest);
 
-    OOGalaxyID g = tokens.at<std::size_t>(0);
-    OOSystemID s = tokens.at<std::size_t>(1);
+    OOGalaxyID g = static_cast<OOGalaxyID>(tokens.at<std::size_t>(0));
+    OOSystemID s = static_cast<OOSystemID>(tokens.at<std::size_t>(1));
     std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
       OO_LOG("system.description.error",
@@ -345,8 +345,8 @@ oo::PList OOSystemDescriptionManager::getPropertiesForSystemKey(
   if (tokens.count() == 2 &&
       tokens.at<std::size_t>(0) < OO_GALAXIES_AVAILABLE &&
       tokens.at<std::size_t>(1) < OO_SYSTEMS_PER_GALAXY) {
-    OOGalaxyID g = tokens.at<std::size_t>(0);
-    OOSystemID s = tokens.at<std::size_t>(1);
+    OOGalaxyID g = static_cast<OOGalaxyID>(tokens.at<std::size_t>(0));
+    OOSystemID s = static_cast<OOSystemID>(tokens.at<std::size_t>(1));
     std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
       OO_LOG("system.description.error",

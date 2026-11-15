@@ -636,7 +636,7 @@ oo::PList PlayerEntity::processKeyCode(const oo::PList& key_def) {
         keychar = oo::utf8ToUtf16(keystring)[0] &
                   0x00ff;  // uses lower byte of unichar
       } else if (iValue <= 0xFF) {
-        keychar = iValue;
+        keychar = static_cast<unsigned char>(iValue);
       } else {
         OO_LOG_WARN("testing", "continue hit for key {}.",
                     oo::DescriptionOf(nullptr));

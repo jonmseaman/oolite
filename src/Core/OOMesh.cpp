@@ -773,8 +773,8 @@ bool OOMesh::initWithName(const std::string& name,
   // as [self release] did.
   bool loaded = false;
   {
-    _normalMode = oo::ToUnderlying(smooth ? OOMeshNormalMode::kSmooth
-                                          : OOMeshNormalMode::kPerFace);
+    _normalMode = static_cast<uint8_t>(oo::ToUnderlying(
+        smooth ? OOMeshNormalMode::kSmooth : OOMeshNormalMode::kPerFace));
     _cacheWriteable = cacheWriteable;
 
 #if OOMESH_PROFILE
@@ -957,7 +957,7 @@ bool OOMesh::setModelFromModelData(const oo::PList& dict,
   // Copy material keys (oo_stringAtIndex: a string, or a number's
   // -stringValue).
   const oo::PList::Array& keys = *mtlKeys->getIf<oo::PList::Array>();
-  materialCount = keys.size();
+  materialCount = static_cast<OOMeshMaterialCount>(keys.size());
   for (i = 0; i != materialCount; ++i) {
     const oo::PList& key = keys[i];
     if (key.isString() || key.isNumber()) {
@@ -1143,7 +1143,7 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
           if (!scanner->scanInt(&g)) failFlag = true;
           if (!scanner->scanInt(&b)) failFlag = true;
           if (!failFlag) {
-            _faces[j].smoothGroup = r;
+            _faces[j].smoothGroup = static_cast<OOMeshSmoothGroup>(r);
           } else {
             failString +=
                 std::format("Failed to read a color for face[{}] in FACES\n",
@@ -1225,7 +1225,8 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
             materialKey = std::move(scannedKey);
             const auto indexIt = texFileName2Idx.find(materialKey);
             if (indexIt != texFileName2Idx.end()) {
-              _faces[j].materialIndex = indexIt->second;
+              _faces[j].materialIndex =
+                  static_cast<OOMeshMaterialIndex>(indexIt->second);
             } else {
               if (materialCount == kOOMeshMaxMaterials) {
                 OO_LOG(kOOLogMeshTooManyMaterials,
@@ -1988,7 +1989,7 @@ static void VFRAddFace(VertexFaceRef* vfr, std::size_t index) {
   OOCParameterAssert(vfr != nullptr);
 
   if (index < UINT16_MAX && vfr->internCount < kVertexFaceDefInternalCount) {
-    vfr->internFaces[vfr->internCount++] = index;
+    vfr->internFaces[vfr->internCount++] = static_cast<uint16_t>(index);
   } else {
     vfr->extra.push_back(index);
   }

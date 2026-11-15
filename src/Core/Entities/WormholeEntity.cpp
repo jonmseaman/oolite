@@ -105,8 +105,8 @@ void WormholeEntity::initWithDict(const oo::PList& dict) {
       oo::AutoreleaseScope pool;  // was @autoreleasepool
       // wormholes from pre-1.80 savegames using "origin_seed" and "dest_seed"
       // currently get defaults set; will probably disappear unnoticed
-      origin = dict.get<int>("origin_id", 0);
-      destination = dict.get<int>("dest_id", 255);
+      origin = static_cast<OOSystemID>(dict.get<int>("origin_id", 0));
+      destination = static_cast<OOSystemID>(dict.get<int>("dest_id", 255));
 
       originCoords = SystemCoordinates(
           origin, (PLAYER != nullptr ? PLAYER->galaxyNumber() : OOGalaxyID{}));

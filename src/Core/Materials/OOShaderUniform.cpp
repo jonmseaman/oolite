@@ -366,7 +366,7 @@ void OOShaderUniform::setEntityBindingTarget(Entity* target) {
       hooks->memberBinding(target, cxxProperty.c_str(), &memberBinding)) {
     value = Binding{memberBinding.get};
     cxxTarget = oo::share(memberBinding.target);
-    type = memberBinding.type;
+    type = static_cast<uint8_t>(memberBinding.type);
     entityMember = true;
     isActiveBinding = true;
     return;

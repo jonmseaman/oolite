@@ -1387,8 +1387,9 @@ uint16_t PersonalityForCommanderDict(const oo::PList& dict) {
         OptionalStringValue(dict.find("ship_desc"));
     const std::optional<std::string> playerName =
         OptionalStringValue(dict.find("player_name"));
-    personality = (shipDesc ? oo::str::ooHash(*shipDesc) : 0) *
-                  (playerName ? oo::str::ooHash(*playerName) : 0);
+    personality =
+        static_cast<uint16_t>((shipDesc ? oo::str::ooHash(*shipDesc) : 0) *
+                              (playerName ? oo::str::ooHash(*playerName) : 0));
   }
 
   return personality & ENTITY_PERSONALITY_MAX;

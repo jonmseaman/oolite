@@ -911,7 +911,8 @@ void HeadUpDisplay::setScannerUltraZoom(bool newValue) {
 
 void HeadUpDisplay::refreshLastTransmitter() {
   Entity* lt =
-      (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(last_transmitter)
+      (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(
+                                 static_cast<OOUniversalID>(last_transmitter))
                            : nullptr);
   if ((lt == nullptr) || (!(lt->isShip))) return;
   ::ShipEntity* st = oo::ToShip(lt);
@@ -1772,7 +1773,8 @@ void HeadUpDisplay::drawScannerZoomIndicator(const oo::PList& info) {
 
   OOGLBEGIN(GL_QUADS);
   if (zoomLevel / 10 > 0)
-    drawCharacterQuad(48 + zoomLevel / 10, cx - 0.8 * siz.width, cy, z1, siz);
+    drawCharacterQuad(static_cast<uint8_t>(48 + zoomLevel / 10),
+                      cx - 0.8 * siz.width, cy, z1, siz);
   drawCharacterQuad(48 + zoomLevel % 10, cx - 0.4 * siz.width, cy, z1, siz);
   drawCharacterQuad(58, cx, cy, z1, siz);
   drawCharacterQuad(49, cx + 0.3 * siz.width, cy, z1, siz);
@@ -4420,7 +4422,7 @@ void OODrawPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y,
         OOColor::colorWithRed(ce1, 1.0f, 0.0f, 1.0f).get(), 1.0);
 
     // see OODrawHilightedPlanetInfo
-    cx += drawCharacterQuad(23 - eco, cx, y, z,
+    cx += drawCharacterQuad(static_cast<uint8_t>(23 - eco), cx, y, z,
                             siz);  // characters 16..23 are economy symbols
     HeadUpDisplayUniverseGUISetGLColorFromSetting(
         oo::str::format(kGuiChartGovernmentUColor, static_cast<size_t>(gov)),
@@ -4430,7 +4432,7 @@ void OODrawPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y,
             .get(),
         1.0);
 
-    cx += drawCharacterQuad(gov, cx, y, z, siz) -
+    cx += drawCharacterQuad(static_cast<uint8_t>(gov), cx, y, z, siz) -
           sF6KernGovt;  // charcters 0..7 are government symbols
     HeadUpDisplayUniverseGUISetGLColorFromSetting(
         kGuiChartTechColor, OOColor::colorWithRed(0.5, 1.0f, 1.0f, 1.0f).get(),
