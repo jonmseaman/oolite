@@ -724,7 +724,8 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
 // *** Methods ***
 
 // toString() : String
-static JSValue SystemToString(OOJS_NATIVE_ARGS) {
+static JSValue SystemToString(JSContext* context, JSValueConst /*oojsThis*/,
+                              int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -746,7 +747,8 @@ static JSValue SystemToString(OOJS_NATIVE_ARGS) {
 }
 
 // addPlanet(key : String) : Planet
-static JSValue SystemAddPlanet(OOJS_NATIVE_ARGS) {
+static JSValue SystemAddPlanet(JSContext* context, JSValueConst /*oojsThis*/,
+                               int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -772,7 +774,8 @@ static JSValue SystemAddPlanet(OOJS_NATIVE_ARGS) {
 }
 
 // addMoon(key : String) : Planet
-static JSValue SystemAddMoon(OOJS_NATIVE_ARGS) {
+static JSValue SystemAddMoon(JSContext* context, JSValueConst /*oojsThis*/,
+                             int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -798,7 +801,9 @@ static JSValue SystemAddMoon(OOJS_NATIVE_ARGS) {
 }
 
 // sendAllShipsAway()
-static JSValue SystemSendAllShipsAway(OOJS_NATIVE_ARGS) {
+static JSValue SystemSendAllShipsAway(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int /*argc*/,
+                                      JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -811,7 +816,10 @@ static JSValue SystemSendAllShipsAway(OOJS_NATIVE_ARGS) {
 
 // countShipsWithPrimaryRole(role : String [, relativeTo : Entity [, range :
 // Number]]) : Number
-static JSValue SystemCountShipsWithPrimaryRole(OOJS_NATIVE_ARGS) {
+static JSValue SystemCountShipsWithPrimaryRole(JSContext* context,
+                                               JSValueConst /*oojsThis*/,
+                                               int argc,
+                                               JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
@@ -847,7 +855,9 @@ static JSValue SystemCountShipsWithPrimaryRole(OOJS_NATIVE_ARGS) {
 
 // countShipsWithRole(role : String [, relativeTo : Entity [, range : Number]])
 // : Number
-static JSValue SystemCountShipsWithRole(OOJS_NATIVE_ARGS) {
+static JSValue SystemCountShipsWithRole(JSContext* context,
+                                        JSValueConst /*oojsThis*/, int argc,
+                                        JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
@@ -883,7 +893,9 @@ static JSValue SystemCountShipsWithRole(OOJS_NATIVE_ARGS) {
 
 // shipsWithPrimaryRole(role : String [, relativeTo : Entity [, range :
 // Number]]) : Array (Entity)
-static JSValue SystemShipsWithPrimaryRole(OOJS_NATIVE_ARGS) {
+static JSValue SystemShipsWithPrimaryRole(JSContext* context,
+                                          JSValueConst /*oojsThis*/, int argc,
+                                          JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
@@ -918,7 +930,9 @@ static JSValue SystemShipsWithPrimaryRole(OOJS_NATIVE_ARGS) {
 
 // shipsWithRole(role : String [, relativeTo : Entity [, range : Number]]) :
 // Array (Entity)
-static JSValue SystemShipsWithRole(OOJS_NATIVE_ARGS) {
+static JSValue SystemShipsWithRole(JSContext* context,
+                                   JSValueConst /*oojsThis*/, int argc,
+                                   JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
@@ -953,7 +967,10 @@ static JSValue SystemShipsWithRole(OOJS_NATIVE_ARGS) {
 
 // countEntitiesWithScanClass(scanClass : String [, relativeTo : Entity [, range
 // : Number]]) : Number
-static JSValue SystemCountEntitiesWithScanClass(OOJS_NATIVE_ARGS) {
+static JSValue SystemCountEntitiesWithScanClass(JSContext* context,
+                                                JSValueConst /*oojsThis*/,
+                                                int argc,
+                                                JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   OOScanClass scanClass = OOScanClass::kNotSet;
@@ -989,7 +1006,9 @@ static JSValue SystemCountEntitiesWithScanClass(OOJS_NATIVE_ARGS) {
 
 // entitiesWithScanClass(scanClass : String [, relativeTo : Entity [, range :
 // Number]]) : Array (Entity)
-static JSValue SystemEntitiesWithScanClass(OOJS_NATIVE_ARGS) {
+static JSValue SystemEntitiesWithScanClass(JSContext* context,
+                                           JSValueConst /*oojsThis*/, int argc,
+                                           JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   OOScanClass scanClass = OOScanClass::kNotSet;
@@ -1025,7 +1044,9 @@ static JSValue SystemEntitiesWithScanClass(OOJS_NATIVE_ARGS) {
 
 // filteredEntities(this : Object, predicate : Function [, relativeTo : Entity
 // [, range : Number]]) : Array (Entity)
-static JSValue SystemFilteredEntities(OOJS_NATIVE_ARGS) {
+static JSValue SystemFilteredEntities(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int argc,
+                                      JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   JSValue jsThis = JS_UNDEFINED;
@@ -1092,7 +1113,9 @@ static JSValue SystemFilteredEntities(OOJS_NATIVE_ARGS) {
 }
 
 // locationFromCode(populator_named_region : String)
-static JSValue SystemLocationFromCode(OOJS_NATIVE_ARGS) {
+static JSValue SystemLocationFromCode(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int argc,
+                                      JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> code;
@@ -1124,25 +1147,31 @@ static JSValue SystemLocationFromCode(OOJS_NATIVE_ARGS) {
 
 // addShips(role : String, count : Number [, position: Vector [, radius:
 // Number]]) : Array of Ship
-static JSValue SystemAddShips(OOJS_NATIVE_ARGS) {
+static JSValue SystemAddShips(JSContext* context, JSValueConst /*oojsThis*/,
+                              int argc, JSValueConst* oojsArgv) {
   return SystemAddShipsOrGroup(context, argc, OOJS_ARGV, false);
 }
 
 // addGroup(role : String, count : Number [, position: Vector [, radius:
 // Number]]) : ShipGroup
-static JSValue SystemAddGroup(OOJS_NATIVE_ARGS) {
+static JSValue SystemAddGroup(JSContext* context, JSValueConst /*oojsThis*/,
+                              int argc, JSValueConst* oojsArgv) {
   return SystemAddShipsOrGroup(context, argc, OOJS_ARGV, true);
 }
 
 // addShipsToRoute(role : String, count : Number [, position: Number [, route:
 // String]])
-static JSValue SystemAddShipsToRoute(OOJS_NATIVE_ARGS) {
+static JSValue SystemAddShipsToRoute(JSContext* context,
+                                     JSValueConst /*oojsThis*/, int argc,
+                                     JSValueConst* oojsArgv) {
   return SystemAddShipsOrGroupToRoute(context, argc, OOJS_ARGV, false);
 }
 
 // addGroupToRoute(role : String, count : Number,  position: Number[, route:
 // String])
-static JSValue SystemAddGroupToRoute(OOJS_NATIVE_ARGS) {
+static JSValue SystemAddGroupToRoute(JSContext* context,
+                                     JSValueConst /*oojsThis*/, int argc,
+                                     JSValueConst* oojsArgv) {
   return SystemAddShipsOrGroupToRoute(context, argc, OOJS_ARGV, true);
 }
 
@@ -1152,7 +1181,9 @@ static JSValue SystemAddGroupToRoute(OOJS_NATIVE_ARGS) {
 */
 
 // legacy_addShips(role : String, count : Number)
-static JSValue SystemLegacyAddShips(OOJS_NATIVE_ARGS) {
+static JSValue SystemLegacyAddShips(JSContext* context,
+                                    JSValueConst /*oojsThis*/, int argc,
+                                    JSValueConst* oojsArgv) {
   OOStandardsDeprecated("system.legacy_addShips() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
@@ -1180,7 +1211,9 @@ static JSValue SystemLegacyAddShips(OOJS_NATIVE_ARGS) {
 }
 
 // legacy_addSystemShips(role : String, count : Number, location : Number)
-static JSValue SystemLegacyAddSystemShips(OOJS_NATIVE_ARGS) {
+static JSValue SystemLegacyAddSystemShips(JSContext* context,
+                                          JSValueConst /*oojsThis*/, int argc,
+                                          JSValueConst* oojsArgv) {
   OOStandardsDeprecated("system.legacy_addSystemShips() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
@@ -1212,7 +1245,9 @@ static JSValue SystemLegacyAddSystemShips(OOJS_NATIVE_ARGS) {
 
 // legacy_addShipsAt(role : String, count : Number, coordScheme : String, coords
 // : vectorExpression)
-static JSValue SystemLegacyAddShipsAt(OOJS_NATIVE_ARGS) {
+static JSValue SystemLegacyAddShipsAt(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int argc,
+                                      JSValueConst* oojsArgv) {
   OOStandardsDeprecated("system.legacy_addShipsAt() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
@@ -1249,7 +1284,10 @@ static JSValue SystemLegacyAddShipsAt(OOJS_NATIVE_ARGS) {
 
 // legacy_addShipsAtPrecisely(role : String, count : Number, coordScheme :
 // String, coords : vectorExpression)
-static JSValue SystemLegacyAddShipsAtPrecisely(OOJS_NATIVE_ARGS) {
+static JSValue SystemLegacyAddShipsAtPrecisely(JSContext* context,
+                                               JSValueConst /*oojsThis*/,
+                                               int argc,
+                                               JSValueConst* oojsArgv) {
   OOStandardsDeprecated("system.legacy_addShipsAtPrecisely() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
@@ -1286,7 +1324,10 @@ static JSValue SystemLegacyAddShipsAtPrecisely(OOJS_NATIVE_ARGS) {
 
 // legacy_addShipsWithinRadius(role : String, count : Number, coordScheme :
 // String, coords : vectorExpression, radius : Number)
-static JSValue SystemLegacyAddShipsWithinRadius(OOJS_NATIVE_ARGS) {
+static JSValue SystemLegacyAddShipsWithinRadius(JSContext* context,
+                                                JSValueConst /*oojsThis*/,
+                                                int argc,
+                                                JSValueConst* oojsArgv) {
   OOStandardsDeprecated("system.legacy_addShipsWithinRadius() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
@@ -1326,7 +1367,9 @@ static JSValue SystemLegacyAddShipsWithinRadius(OOJS_NATIVE_ARGS) {
 }
 
 // legacy_spawnShip(key : string)
-static JSValue SystemLegacySpawnShip(OOJS_NATIVE_ARGS) {
+static JSValue SystemLegacySpawnShip(JSContext* context,
+                                     JSValueConst /*oojsThis*/, int argc,
+                                     JSValueConst* oojsArgv) {
   OOStandardsDeprecated("system.legacy_spawnShip() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
@@ -1353,7 +1396,9 @@ static JSValue SystemLegacySpawnShip(OOJS_NATIVE_ARGS) {
 // *** Static methods ***
 
 // systemNameForID(ID : Number) : String
-static JSValue SystemStaticSystemNameForID(OOJS_NATIVE_ARGS) {
+static JSValue SystemStaticSystemNameForID(JSContext* context,
+                                           JSValueConst /*oojsThis*/, int argc,
+                                           JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   int32_t systemID;
@@ -1378,7 +1423,9 @@ static JSValue SystemStaticSystemNameForID(OOJS_NATIVE_ARGS) {
 }
 
 // systemIDForName(name : String) : Number
-static JSValue SystemStaticSystemIDForName(OOJS_NATIVE_ARGS) {
+static JSValue SystemStaticSystemIDForName(JSContext* context,
+                                           JSValueConst /*oojsThis*/, int argc,
+                                           JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> name;
@@ -1406,7 +1453,9 @@ static JSValue SystemStaticSystemIDForName(OOJS_NATIVE_ARGS) {
 }
 
 // infoForSystem(galaxyID : Number, systemID : Number) : SystemInfo
-static JSValue SystemStaticInfoForSystem(OOJS_NATIVE_ARGS) {
+static JSValue SystemStaticInfoForSystem(JSContext* context,
+                                         JSValueConst /*oojsThis*/, int argc,
+                                         JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   int32_t galaxyID;
@@ -1441,7 +1490,9 @@ static JSValue SystemStaticInfoForSystem(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue SystemAddVisualEffect(OOJS_NATIVE_ARGS) {
+static JSValue SystemAddVisualEffect(JSContext* context,
+                                     JSValueConst /*oojsThis*/, int argc,
+                                     JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
@@ -1491,7 +1542,8 @@ static JSValue GetParam(JSContext* context, JSValueConst object,
   return value;
 }
 
-static JSValue SystemSetPopulator(OOJS_NATIVE_ARGS) {
+static JSValue SystemSetPopulator(JSContext* context, JSValueConst /*oojsThis*/,
+                                  int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
@@ -1586,7 +1638,8 @@ static JSValue SystemSetPopulator(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue SystemSetWaypoint(OOJS_NATIVE_ARGS) {
+static JSValue SystemSetWaypoint(JSContext* context, JSValueConst /*oojsThis*/,
+                                 int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;

@@ -52,7 +52,8 @@ void InitOOJSFont(JSContext* context, JSValueConst global) {
 
 // MARK: Methods
 
-static JSValue FontMeasureString(OOJS_NATIVE_ARGS) {
+static JSValue FontMeasureString(JSContext* context, JSValueConst /*oojsThis*/,
+                                 int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if ((argc < 1) || JS_IsUndefined(OOJS_ARGV[0])) {

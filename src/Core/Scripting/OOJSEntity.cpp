@@ -170,7 +170,8 @@ std::optional<std::string> OOJSEntityHolder::jsDescription() {
   return (held != nullptr) ? held->jsDescription() : std::nullopt;
 }
 
-JSValue OOJSEntityToString(OOJS_NATIVE_ARGS) {
+JSValue OOJSEntityToString(JSContext* context, JSValueConst oojsThis,
+                           int /*argc*/, JSValueConst* /*oojsArgv*/) {
   return OOJSCxxObjectWrapperToString(context, OOJS_THIS, sEntityClassID);
 }
 
@@ -456,7 +457,8 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-static JSValue EntityDumpState(OOJS_NATIVE_ARGS) {
+static JSValue EntityDumpState(JSContext* context, JSValueConst oojsThis,
+                               int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   Entity* thisEnt = nullptr;
@@ -464,6 +466,5 @@ static JSValue EntityDumpState(OOJS_NATIVE_ARGS) {
   if (thisEnt != nullptr) thisEnt->dumpState();  // the C++ member
 
   OOJS_RETURN_VOID;
-
 }
 #endif

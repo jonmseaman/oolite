@@ -341,7 +341,8 @@ static bool ValueToInt32NoError(JSContext* context, JSValueConst value,
 }
 
 // markSystem(integer+)
-static JSValue MissionMarkSystem(OOJS_NATIVE_ARGS) {
+static JSValue MissionMarkSystem(JSContext* context, JSValueConst /*oojsThis*/,
+                                 int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -387,7 +388,9 @@ static JSValue MissionMarkSystem(OOJS_NATIVE_ARGS) {
 }
 
 // unmarkSystem(integer+)
-static JSValue MissionUnmarkSystem(OOJS_NATIVE_ARGS) {
+static JSValue MissionUnmarkSystem(JSContext* context,
+                                   JSValueConst /*oojsThis*/, int argc,
+                                   JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -440,7 +443,9 @@ static JSValue MissionUnmarkSystem(OOJS_NATIVE_ARGS) {
 }
 
 // addMessageText(text : String)
-static JSValue MissionAddMessageText(OOJS_NATIVE_ARGS) {
+static JSValue MissionAddMessageText(JSContext* context,
+                                     JSValueConst /*oojsThis*/, int argc,
+                                     JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -464,12 +469,16 @@ static JSValue MissionAddMessageText(OOJS_NATIVE_ARGS) {
 }
 
 // setInstructionsKey(instructionsKey: String [, missionKey : String])
-static JSValue MissionSetInstructionsKey(OOJS_NATIVE_ARGS) {
+static JSValue MissionSetInstructionsKey(JSContext* context,
+                                         JSValueConst /*oojsThis*/, int argc,
+                                         JSValueConst* oojsArgv) {
   return MissionSetInstructionsInternal(context, argc, OOJS_ARGV, true);
 }
 
 // setInstructions(instructions: String [, missionKey : String])
-static JSValue MissionSetInstructions(OOJS_NATIVE_ARGS) {
+static JSValue MissionSetInstructions(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int argc,
+                                      JSValueConst* oojsArgv) {
   return MissionSetInstructionsInternal(context, argc, OOJS_ARGV, false);
 }
 
@@ -608,7 +617,8 @@ static void GetParameterBool(JSContext* context, JSValueConst object,
 
 // runScreen(params: dict, callBack:function) - if the callback function is
 // null, emulate the old style runMissionScreen
-static JSValue MissionRunScreen(OOJS_NATIVE_ARGS) {
+static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
+                                int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -926,7 +936,9 @@ static JSValue MissionRunScreen(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue MissionRunShipLibrary(OOJS_NATIVE_ARGS) {
+static JSValue MissionRunShipLibrary(JSContext* context,
+                                     JSValueConst /*oojsThis*/, int /*argc*/,
+                                     JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();

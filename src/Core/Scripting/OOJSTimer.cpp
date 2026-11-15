@@ -503,7 +503,8 @@ static JSValue TimerConstruct(OOJS_NATIVE_ARGS) {
 // *** Methods ***
 
 // start() : Boolean
-static JSValue TimerStart(OOJS_NATIVE_ARGS) {
+static JSValue TimerStart(JSContext* context, JSValueConst oojsThis,
+                          int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOJSTimer* thisTimer = nullptr;
@@ -517,7 +518,8 @@ static JSValue TimerStart(OOJS_NATIVE_ARGS) {
 }
 
 // stop()
-static JSValue TimerStop(OOJS_NATIVE_ARGS) {
+static JSValue TimerStop(JSContext* context, JSValueConst oojsThis,
+                         int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOJSTimer* thisTimer = nullptr;
@@ -532,6 +534,7 @@ static JSValue TimerStop(OOJS_NATIVE_ARGS) {
 }
 
 // toString() : String
-static JSValue TimerToString(OOJS_NATIVE_ARGS) {
+static JSValue TimerToString(JSContext* context, JSValueConst oojsThis,
+                             int /*argc*/, JSValueConst* /*oojsArgv*/) {
   return OOJSCxxObjectWrapperToString(context, OOJS_THIS, sTimerClassID);
 }

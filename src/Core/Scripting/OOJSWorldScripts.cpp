@@ -88,7 +88,7 @@ static std::optional<std::string> ScriptNameForPropertyID(JSContext* context,
 
 static int WorldScriptsGetOwnProperty(JSContext* context,
                                       JSPropertyDescriptor* desc,
-                                      JSValueConst object, JSAtom propID) {
+                                      JSValueConst /*object*/, JSAtom propID) {
   try {
     PlayerEntity* player = OOPlayerForScripting();
     std::optional<std::string> scriptName;
@@ -136,7 +136,7 @@ static int WorldScriptsGetOwnProperty(JSContext* context,
 static int WorldScriptsGetOwnPropertyNames(JSContext* context,
                                            JSPropertyEnum** outTable,
                                            uint32_t* outCount,
-                                           JSValueConst object) {
+                                           JSValueConst /*object*/) {
   /*	In order to support enumeration of world scripts (e.g.,
           for (name in worldScripts) { ... }), report each name.
           QuickJS frees the table and its atoms.

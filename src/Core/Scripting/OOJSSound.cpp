@@ -204,14 +204,16 @@ static OOSound* GetNamedSound(const std::string& name) {
 // *** Methods ***
 
 // toString() : String
-static JSValue SoundToString(OOJS_NATIVE_ARGS) {
+static JSValue SoundToString(JSContext* context, JSValueConst oojsThis,
+                             int /*argc*/, JSValueConst* /*oojsArgv*/) {
   return OOJSCxxObjectWrapperToString(context, OOJS_THIS, sSoundClassID);
 }
 
 // *** Static methods ***
 
 // load(name : String) : Sound
-static JSValue SoundStaticLoad(OOJS_NATIVE_ARGS) {
+static JSValue SoundStaticLoad(JSContext* context, JSValueConst /*oojsThis*/,
+                               int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> name;
@@ -233,7 +235,10 @@ static JSValue SoundStaticLoad(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue SoundStaticMusicSoundSource(OOJS_NATIVE_ARGS) {
+static JSValue SoundStaticMusicSoundSource(JSContext* context,
+                                           JSValueConst /*oojsThis*/,
+                                           int /*argc*/,
+                                           JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
   OOSoundSource* musicSource = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -244,7 +249,9 @@ static JSValue SoundStaticMusicSoundSource(OOJS_NATIVE_ARGS) {
 }
 
 // playMusic(name : String [, loop : Boolean] [, gain : float])
-static JSValue SoundStaticPlayMusic(OOJS_NATIVE_ARGS) {
+static JSValue SoundStaticPlayMusic(JSContext* context,
+                                    JSValueConst /*oojsThis*/, int argc,
+                                    JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> name;
@@ -287,7 +294,9 @@ static JSValue SoundStaticPlayMusic(OOJS_NATIVE_ARGS) {
 }
 
 // Sound.stopMusic([name : String])
-static JSValue SoundStaticStopMusic(OOJS_NATIVE_ARGS) {
+static JSValue SoundStaticStopMusic(JSContext* context,
+                                    JSValueConst /*oojsThis*/, int argc,
+                                    JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> name;

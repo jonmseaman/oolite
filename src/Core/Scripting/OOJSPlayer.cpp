@@ -463,7 +463,8 @@ static JSValue PlayerSetProperty(OOJS_SETTER_ARGS) {
 // *** Methods ***
 
 // commsMessage(message : String [, duration : Number])
-static JSValue PlayerCommsMessage(OOJS_NATIVE_ARGS) {
+static JSValue PlayerCommsMessage(JSContext* context, JSValueConst /*oojsThis*/,
+                                  int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> message;
@@ -491,7 +492,9 @@ static JSValue PlayerCommsMessage(OOJS_NATIVE_ARGS) {
 }
 
 // consoleMessage(message : String [, duration : Number])
-static JSValue PlayerConsoleMessage(OOJS_NATIVE_ARGS) {
+static JSValue PlayerConsoleMessage(JSContext* context,
+                                    JSValueConst /*oojsThis*/, int argc,
+                                    JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> message;
@@ -513,7 +516,8 @@ static JSValue PlayerConsoleMessage(OOJS_NATIVE_ARGS) {
 }
 
 // endScenario(scenario : String)
-static JSValue PlayerEndScenario(OOJS_NATIVE_ARGS) {
+static JSValue PlayerEndScenario(JSContext* context, JSValueConst /*oojsThis*/,
+                                 int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> scenario;
@@ -532,7 +536,10 @@ static JSValue PlayerEndScenario(OOJS_NATIVE_ARGS) {
 }
 
 // increaseContractReputation()
-static JSValue PlayerIncreaseContractReputation(OOJS_NATIVE_ARGS) {
+static JSValue PlayerIncreaseContractReputation(JSContext* context,
+                                                JSValueConst /*oojsThis*/,
+                                                int /*argc*/,
+                                                JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -543,7 +550,10 @@ static JSValue PlayerIncreaseContractReputation(OOJS_NATIVE_ARGS) {
 }
 
 // decreaseContractReputation()
-static JSValue PlayerDecreaseContractReputation(OOJS_NATIVE_ARGS) {
+static JSValue PlayerDecreaseContractReputation(JSContext* context,
+                                                JSValueConst /*oojsThis*/,
+                                                int /*argc*/,
+                                                JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -554,7 +564,10 @@ static JSValue PlayerDecreaseContractReputation(OOJS_NATIVE_ARGS) {
 }
 
 // increaseParcelReputation()
-static JSValue PlayerIncreaseParcelReputation(OOJS_NATIVE_ARGS) {
+static JSValue PlayerIncreaseParcelReputation(JSContext* context,
+                                              JSValueConst /*oojsThis*/,
+                                              int /*argc*/,
+                                              JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -565,7 +578,10 @@ static JSValue PlayerIncreaseParcelReputation(OOJS_NATIVE_ARGS) {
 }
 
 // decreaseParcelReputation()
-static JSValue PlayerDecreaseParcelReputation(OOJS_NATIVE_ARGS) {
+static JSValue PlayerDecreaseParcelReputation(JSContext* context,
+                                              JSValueConst /*oojsThis*/,
+                                              int /*argc*/,
+                                              JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -576,7 +592,10 @@ static JSValue PlayerDecreaseParcelReputation(OOJS_NATIVE_ARGS) {
 }
 
 // increasePassengerReputation()
-static JSValue PlayerIncreasePassengerReputation(OOJS_NATIVE_ARGS) {
+static JSValue PlayerIncreasePassengerReputation(JSContext* context,
+                                                 JSValueConst /*oojsThis*/,
+                                                 int /*argc*/,
+                                                 JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -587,7 +606,10 @@ static JSValue PlayerIncreasePassengerReputation(OOJS_NATIVE_ARGS) {
 }
 
 // decreasePassengerReputation()
-static JSValue PlayerDecreasePassengerReputation(OOJS_NATIVE_ARGS) {
+static JSValue PlayerDecreasePassengerReputation(JSContext* context,
+                                                 JSValueConst /*oojsThis*/,
+                                                 int /*argc*/,
+                                                 JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -598,7 +620,10 @@ static JSValue PlayerDecreasePassengerReputation(OOJS_NATIVE_ARGS) {
 }
 
 // addMessageToArrivalReport(message : String)
-static JSValue PlayerAddMessageToArrivalReport(OOJS_NATIVE_ARGS) {
+static JSValue PlayerAddMessageToArrivalReport(JSContext* context,
+                                               JSValueConst /*oojsThis*/,
+                                               int argc,
+                                               JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> report;
@@ -618,7 +643,8 @@ static JSValue PlayerAddMessageToArrivalReport(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue PlayerAudioMessage(OOJS_NATIVE_ARGS) {
+static JSValue PlayerAudioMessage(JSContext* context, JSValueConst /*oojsThis*/,
+                                  int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> audioMessage;
@@ -641,7 +667,8 @@ static JSValue PlayerAudioMessage(OOJS_NATIVE_ARGS) {
 }
 
 // replaceShip (shipyard-key : String)
-static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS) {
+static JSValue PlayerReplaceShip(JSContext* context, JSValueConst /*oojsThis*/,
+                                 int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> shipKey;
@@ -699,7 +726,9 @@ static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS) {
 }
 
 // setEscapePodDestination(Entity | 'NEARBY_SYSTEM')
-static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
+static JSValue PlayerSetEscapePodDestination(JSContext* context,
+                                             JSValueConst /*oojsThis*/,
+                                             int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   if (!OOIsPlayerStale()) [[unlikely]] {
@@ -798,7 +827,9 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
 }
 
 // setPlayerRole (role-key : String [, index : Number])
-static JSValue PlayerSetPlayerRole(OOJS_NATIVE_ARGS) {
+static JSValue PlayerSetPlayerRole(JSContext* context,
+                                   JSValueConst /*oojsThis*/, int argc,
+                                   JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
@@ -833,7 +864,9 @@ static JSValue PlayerSetPlayerRole(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue PlayerStopAudioMessage(OOJS_NATIVE_ARGS) {
+static JSValue PlayerStopAudioMessage(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int /*argc*/,
+                                      JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
   if ((UNIVERSE != nullptr ? UNIVERSE->isSpeaking() : false)) {
     if (UNIVERSE != nullptr) UNIVERSE->stopSpeaking();

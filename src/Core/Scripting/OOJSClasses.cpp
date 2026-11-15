@@ -112,7 +112,7 @@ bool OOJSIsSubclass(JSClassID putativeSubclass, JSClassID superclass) {
   return false;
 }
 
-static void RecordSharedProperties(JSContext* context, JSClassID classID,
+static void RecordSharedProperties(JSContext* /*context*/, JSClassID classID,
                                    const JSCFunctionListEntry* properties,
                                    size_t count) {
   SharedPropertyTable* table = &sSharedProperties[classID];
