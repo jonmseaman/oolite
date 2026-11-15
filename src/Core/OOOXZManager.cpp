@@ -636,11 +636,10 @@ bool OOOXZManager::validateFilter(const std::string& input) {
   return false;
 }
 
-void OOOXZManager::setCurrentDownload(oo::http::Download* download,
-                                      const std::string& label) {
+void OOOXZManager::setCurrentDownload(
+    std::unique_ptr<oo::http::Download> download, const std::string& label) {
   // Deleting the previous download cancels it and frees it.
-  delete _currentDownload;
-  _currentDownload = download;
+  _currentDownload = std::move(download);
   _currentDownloadName = label;
 }
 
@@ -669,7 +668,7 @@ bool OOOXZManager::beginDownload(const std::string& url) {
       std::format("Oolite/{}", bundleVersion.value_or(""));
   // A download always starts: a URL it cannot fetch arrives as a failure
   // callback.
-  oo::http::Download* download = new oo::http::Download(url, userAgent);
+  auto download = std::make_unique<oo::http::Download>(url, userAgent);
   _downloadProgress = 0;
   _downloadExpected = 0;
   std::string label = OO_DESC("oolite-oxzmanager-download-label-list");
@@ -680,7 +679,7 @@ bool OOOXZManager::beginDownload(const std::string& url) {
                 .value_or("");
   }
 
-  setCurrentDownload(download, label);  // owns it
+  setCurrentDownload(std::move(download), label);
   OO_LOG("oxz.manager.debug",
          "Download request received, using {} and downloading to {}", url,
          downloadPath().value_or("(null)"));
@@ -2547,8 +2546,7 @@ void OOOXZManager::downloadDidFinishLoading() {
     fclose(_fileWriter);
     _fileWriter = nullptr;
   }
-  delete _currentDownload;
-  _currentDownload = nullptr;
+  _currentDownload.reset();
   if (_interfaceState == OXZInterfaceState::kUpdating) {
     if (!processDownloadedManifests()) {
       _downloadStatus = OXZDownloadStatus::kError;
@@ -2573,6 +2571,5 @@ void OOOXZManager::downloadDidFailWithError(const std::string& error) {
     fclose(_fileWriter);
     _fileWriter = nullptr;
   }
-  delete _currentDownload;
-  _currentDownload = nullptr;
+  _currentDownload.reset();
 }

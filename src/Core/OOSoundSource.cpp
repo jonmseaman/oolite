@@ -191,14 +191,13 @@ void OOSoundSource::stopAll() {
           end up empty we may as well use the original set and let a new one be
           set up lazily.
   */
-  std::vector<std::shared_ptr<OOSoundSource>>* playing = sPlayingSoundSources;
-  sPlayingSoundSources = nullptr;
+  const std::unique_ptr<std::vector<std::shared_ptr<OOSoundSource>>> playing(
+      std::exchange(sPlayingSoundSources, nullptr));
 
   if (playing != nullptr) {
     // In the order they started playing (the set's hash order before).
     for (const std::shared_ptr<OOSoundSource>& source : *playing)
       source->stop();
-    delete playing;
   }
 }
 
