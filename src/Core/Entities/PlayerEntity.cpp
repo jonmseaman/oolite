@@ -9137,16 +9137,15 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
 
   // GUI stuff
   {
-#define OO_SETACCESSCONDITIONFORROW(condition, row)     \
-  do {                                                  \
-    if ((condition)) {                                  \
-      gui->setKey(std::string(GUI_KEY_OK), (row));      \
-    } else {                                            \
-      gui->setColor(OOColor::grayColor().get(), (row)); \
-    }                                                   \
-  } while (0)
     bool startingGame = status() == OOEntityStatus::kStartGame;
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
+    auto setAccessConditionForRow = [&](bool condition, OOGUIRow row) {
+      if (condition) {
+        gui->setKey(std::string(GUI_KEY_OK), row);
+      } else {
+        gui->setColor(OOColor::grayColor().get(), row);
+      }
+    };
     GUI_ROW_INIT(gui);
 
     int first_sel_row = OOGUIFirstRow(GUI_ROW_GAMEOPTIONS_END_OF_LIST) -
@@ -9346,8 +9345,8 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
                      OOGUIAlignment::kCenter);
         break;
     }
-    OO_SETACCESSCONDITIONFORROW(
-        !startingGame, OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH));
+    setAccessConditionForRow(!startingGame,
+                             OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH));
 
 #if OOLITE_ESPEAK
     {
@@ -9361,7 +9360,7 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
       gui->setText(message,
                    OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_LANGUAGE),
                    OOGUIAlignment::kCenter);
-      OO_SETACCESSCONDITIONFORROW(
+      setAccessConditionForRow(
           !startingGame,
           OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_LANGUAGE));
 
@@ -9370,7 +9369,7 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
       gui->setText(message,
                    OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_GENDER),
                    OOGUIAlignment::kCenter);
-      OO_SETACCESSCONDITIONFORROW(
+      setAccessConditionForRow(
           !startingGame,
           OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_GENDER));
     }
@@ -9392,7 +9391,7 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
     gui->setText(OO_DESC("gameoptions-joystick-configuration"),
                  OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_STICKMAPPER),
                  OOGUIAlignment::kCenter);
-    OO_SETACCESSCONDITIONFORROW(
+    setAccessConditionForRow(
         OOJoystickManager::sharedStickHandler()->joystickCount(),
         OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_STICKMAPPER));
 
@@ -9479,7 +9478,7 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
                    OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DOCKINGCLEARANCE),
                    OOGUIAlignment::kCenter);
     }
-    OO_SETACCESSCONDITIONFORROW(
+    setAccessConditionForRow(
         !startingGame,
         OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DOCKINGCLEARANCE));
 

@@ -86,10 +86,6 @@ using OOHighResTimeValue = DWORD;  // Rolls over once every 50 days, but we can
 // an implementation based on the Win32 API QueryPerformanceCounter function -
 // Nikos 20100615.
 #define OOGetHighResTime timeGetTime
-#define OODisposeHighResTime(time) \
-  do {                             \
-    (void)time;                    \
-  } while (0)
 #define OOCopyHighResTime(time) (static_cast<OOHighResTimeValue>(time))
 
 #else
@@ -129,13 +125,12 @@ inline OOHighResTimeValue OOGetHighResTime(void) {
   return tv;
 }
 
-#define OODisposeHighResTime(time) \
-  do {                             \
-    (void)time;                    \
-  } while (0)
 #define OOCopyHighResTime(time) (static_cast<OOHighResTimeValue>(time))
 
 #endif
+
+// Neither kind of value owns anything, so there is nothing to free.
+inline void OODisposeHighResTime(const OOHighResTimeValue& /*time*/) {}
 
 OOTimeDelta OOHighResTimeDeltaInSeconds(OOHighResTimeValue startTime,
                                         OOHighResTimeValue endTime);
