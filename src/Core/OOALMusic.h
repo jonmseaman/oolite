@@ -33,6 +33,9 @@ SOFTWARE.
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "OOALSound.h"
 #include "OOFoundation.h"
 #include "OOSoundSource.h"

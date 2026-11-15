@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 */
 
 #include <format>
+#include <memory>
+#include <string>
 #include <typeinfo>
 
 #include "Entity.h"

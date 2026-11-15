@@ -25,6 +25,10 @@ MA 02110-1301, USA.
 
 #include "OOJSGlobal.h"
 
+#include <algorithm>
+#include <memory>
+#include <string>
+
 #include "GameController.h"
 #include "GuiDisplayGen.h"
 #include "MyOpenGLView.h"

@@ -29,6 +29,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <memory>
+
 #include "OOPixMap.h"
 #include "OOTexture.h"
 #include "OOTextureGenerator.h"

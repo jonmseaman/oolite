@@ -27,6 +27,9 @@ SOFTWARE.
 
 #include "OOShaderUniform.h"
 
+#include <memory>
+#include <string>
+
 #include "Entity.h"  // the shader binding targets' informal protocols (-superShaderBindingTarget)
 
 #if OO_SHADERS

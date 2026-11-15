@@ -27,6 +27,11 @@ MA 02110-1301, USA.
 
 #include "OOJSOolite.h"
 
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "MyOpenGLView.h"
 #include "OOConstToString.h"
 #include "OOJavaScriptEngine.h"

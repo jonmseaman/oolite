@@ -33,9 +33,11 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #endif
 
+#include <algorithm>
 #include <format>
 #include <memory>
 #include <new>
+#include <string>
 
 /*
         The Vector3D class, in the design of upstream #768's OOJSVector.m: the

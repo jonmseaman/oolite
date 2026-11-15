@@ -37,9 +37,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "OOColor.h"
 #include "OODescription.h"

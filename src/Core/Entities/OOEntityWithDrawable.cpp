@@ -24,6 +24,9 @@ MA 02110-1301, USA.
 
 #include "OOEntityWithDrawable.h"
 
+#include <utility>
+#include <vector>
+
 #include "OODrawable.h"
 #include "OOTexture.h"  // allTextures() destroys std::shared_ptr<OOTexture>s
 #include "Universe.h"

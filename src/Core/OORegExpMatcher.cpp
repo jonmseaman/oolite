@@ -27,6 +27,9 @@ SOFTWARE.
 
 #include "OORegExpMatcher.h"
 
+#include <memory>
+#include <string>
+
 #include "OOJSFunction.h"
 #include "OOJavaScriptEngine.h"
 #include "oofnd/String.hpp"

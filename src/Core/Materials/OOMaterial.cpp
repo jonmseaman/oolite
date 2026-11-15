@@ -28,7 +28,11 @@ SOFTWARE.
 #include "OOMaterial.h"
 
 #include <format>
+#include <memory>
+#include <string>
 #include <typeinfo>
+#include <utility>
+#include <vector>
 
 #include "OODemangle.h"
 #include "OOFunctionAttributes.h"

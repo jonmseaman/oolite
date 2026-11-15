@@ -11,7 +11,9 @@ can check what was logged.
 #include "OOLogStub.h"
 
 #include <cstdio>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "oofnd/Log.hpp"
 

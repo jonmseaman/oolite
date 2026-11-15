@@ -27,6 +27,10 @@ SOFTWARE.
 
 #include "OOMultiTextureMaterial.h"
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "OOCombinedEmissionMapGenerator.h"
 #include "OOMacroOpenGL.h"
 #include "OOMaterialSpecifier.h"

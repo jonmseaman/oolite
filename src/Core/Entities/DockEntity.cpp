@@ -24,8 +24,14 @@ MA 02110-1301, USA.
 
 #include "DockEntity.h"
 
+#include <algorithm>
 #include <format>
+#include <map>
+#include <memory>
+#include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include "AI.h"
 #include "EntityOOJavaScriptExtensions.h"

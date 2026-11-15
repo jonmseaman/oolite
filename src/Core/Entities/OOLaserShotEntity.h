@@ -27,6 +27,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "OOMaths.h"
 #include "OOTexture.h"
 #include "OOTypes.h"

@@ -26,6 +26,9 @@ MA 02110-1301, USA.
 #include "OOScriptTimer.h"
 
 #include <format>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "OOLogging.h"
 #include "OOPriorityQueue.h"

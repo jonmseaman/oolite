@@ -28,6 +28,8 @@ MA 02110-1301, USA.
 
 #include "OOJSCall.h"
 
+#include <string>
+
 #include "EntityPListForeign.h"  // oo::EntityObjectNode, oo::EntityShortDescription
 #include "OOCallByName.h"
 #include "OOColor.h"               // a colour result (kMethodTypeColorVoid)

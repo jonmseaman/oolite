@@ -27,6 +27,8 @@ MA 02110-1301, USA.
 #include <cstdarg>
 #include <cstdlib>
 #include <format>
+#include <memory>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 

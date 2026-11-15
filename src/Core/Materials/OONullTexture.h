@@ -30,6 +30,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <string>
+
 #include "OOTexture.h"
 
 /*	OOTexture's nullTexture() answers the shared instance itself.

@@ -27,6 +27,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "Entity.h"
 
 // A global class over Entity, made with quiriumCascadeFromShip();

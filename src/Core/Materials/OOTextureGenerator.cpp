@@ -27,6 +27,8 @@ SOFTWARE.
 
 #include "OOTextureGenerator.h"
 
+#include <string>
+
 #include "OOAsyncWorkManager.h"
 #include "OOTexture.h"
 

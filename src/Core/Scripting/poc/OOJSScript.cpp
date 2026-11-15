@@ -24,6 +24,9 @@ MA 02110-1301, USA.
 
 #include "OOJSScript.h"
 
+#include <memory>
+#include <string>
+
 #include "oofnd/Data.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"

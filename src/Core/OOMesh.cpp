@@ -35,9 +35,16 @@ MA 02110-1301, USA.
 
 #include "OOMesh.h"
 
+#include <algorithm>
 #include <cstring>
 #include <format>
+#include <functional>
+#include <map>
+#include <memory>
+#include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include "Entity.h"  // for NO_DRAW_DISTANCE_FACTOR.
 #include "OOBasicMaterial.h"

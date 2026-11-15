@@ -29,6 +29,9 @@ MA 02110-1301, USA.
 #include "EntityOOJavaScriptExtensions.h"
 
 #include <format>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "OOJSEntity.h"
 #include "OOJSPrivateObject.h"

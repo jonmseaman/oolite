@@ -29,6 +29,9 @@ SOFTWARE.
 
 #include "OODebugSupport.h"
 
+#include <memory>
+#include <string>
+
 #include "OODebugMonitor.h"
 #include "OODebugTCPConsoleClient.h"
 #include "OOJavaScriptEngine.h"

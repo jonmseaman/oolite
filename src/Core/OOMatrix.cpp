@@ -26,6 +26,7 @@ MA 02110-1301, USA.
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
 
 #include <format>
+#include <string>
 
 #include "OOMaths.h"
 #include "OOOpenGLCheck.h"  // OOGL()

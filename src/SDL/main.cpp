@@ -22,6 +22,9 @@ MA 02110-1301, USA.
 
 */
 
+#include <memory>
+#include <string>
+
 #include "GameController.h"
 #include "OOLoggingExtended.h"
 #include "OOVersion.h"

@@ -25,7 +25,10 @@ MA 02110-1301, USA.
 #include "PlayerEntityScriptMethods.h"
 
 #include <format>
+#include <memory>
+#include <string>
 #include <string_view>
+#include <utility>
 
 #include "OOCommodities.h"
 #include "OOStringParsing.h"

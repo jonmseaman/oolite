@@ -35,6 +35,9 @@ MA 02110-1301, USA.
 #include "OOShipGroup.h"
 
 #include <format>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "ShipEntity.h"
 #include "oofnd/String.hpp"

@@ -24,10 +24,12 @@ MA 02110-1301, USA.
 
 #include "GuiDisplayGen.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <format>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>

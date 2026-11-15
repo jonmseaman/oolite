@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 
 #include <cstring>
 #include <format>
+#include <memory>
+#include <string>
 
 #include "AI.h"
 #include "MyOpenGLView.h"

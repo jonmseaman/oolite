@@ -23,6 +23,9 @@ MA 02110-1301, USA.
 
 #include "OOJSDock.h"
 
+#include <algorithm>
+#include <string>
+
 #include "DockEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"

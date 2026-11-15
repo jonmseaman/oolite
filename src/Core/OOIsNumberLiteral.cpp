@@ -26,6 +26,8 @@
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
 #include "OOIsNumberLiteral.h"
 
+#include <string>
+
 #if 0
 #include "oofnd/Log.hpp"
 #define FAIL(s)                                                                \

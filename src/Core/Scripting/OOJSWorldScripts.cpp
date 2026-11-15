@@ -25,6 +25,11 @@ MA 02110-1301, USA.
 
 #include "OOJSWorldScripts.h"
 
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "OOScript.h"

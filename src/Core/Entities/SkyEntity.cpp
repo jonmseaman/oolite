@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 #include "SkyEntity.h"
 
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>

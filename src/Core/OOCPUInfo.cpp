@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 
 #include <bit>
 #include <cstring>
+#include <string>
 
 #if (OOLITE_LINUX || OOLITE_WINDOWS || OOLITE_MACOS)
 // Workaround for clang/glibc incompatibility.

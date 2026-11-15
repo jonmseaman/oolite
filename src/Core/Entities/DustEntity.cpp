@@ -40,6 +40,9 @@ MA 02110-1301, USA.
 
 #include <cstring>
 #include <format>
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "PlayerEntity.h"
 

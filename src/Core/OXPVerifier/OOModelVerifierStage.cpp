@@ -26,6 +26,9 @@ MA 02110-1301, USA.
 #include "OOModelVerifierStage.h"
 
 #include <format>
+#include <memory>
+#include <string>
+#include <utility>
 
 #if OO_OXP_VERIFIER_ENABLED
 

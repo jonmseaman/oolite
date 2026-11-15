@@ -25,6 +25,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+
 #include "OOLightParticleEntity.h"
 
 // A global class over OOLightParticleEntity, made with burstWithPosition().

@@ -25,9 +25,11 @@ MA 02110-1301, USA.
 
 #include <time.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <format>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>

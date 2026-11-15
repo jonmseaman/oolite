@@ -29,6 +29,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <string>
+
 #include "OOOpenGLExtensionManager.h"
 #include "OOTexture.h"
 

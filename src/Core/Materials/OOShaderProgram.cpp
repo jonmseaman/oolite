@@ -25,6 +25,8 @@ SOFTWARE.
 
 */
 
+#include <memory>
+
 #include "OOOpenGLExtensionManager.h"  // IWYU pragma: keep: defines OO_SHADERS, which guards this file
 
 #if OO_SHADERS

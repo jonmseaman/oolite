@@ -50,6 +50,13 @@ SOFTWARE.
 #include "OOFileScannerVerifierStage.h"
 
 #include <format>
+#include <functional>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 #if OO_OXP_VERIFIER_ENABLED
 

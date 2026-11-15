@@ -26,6 +26,9 @@ MA 02110-1301, USA.
 #include "OOQuiriumCascadeEntity.h"
 
 #include <format>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "OOMacroOpenGL.h"
 #include "PlayerEntity.h"

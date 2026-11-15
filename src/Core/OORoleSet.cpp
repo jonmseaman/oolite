@@ -28,6 +28,11 @@ SOFTWARE.
 #include "OORoleSet.h"
 
 #include <format>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "OOMaths.h"  // randf()
 #include "oofnd/String.hpp"

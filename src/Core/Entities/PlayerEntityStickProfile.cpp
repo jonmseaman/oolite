@@ -25,6 +25,8 @@ MA 02110-1301, USA.
 #include "PlayerEntityStickProfile.h"
 
 #include <format>
+#include <string>
+#include <vector>
 
 #include "HeadUpDisplay.h"
 #include "OOJoystickManager.h"

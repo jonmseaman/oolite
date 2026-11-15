@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #include "OOCheckEquipmentPListVerifierStage.h"
 
 #include <format>
+#include <string>
 
 #if OO_OXP_VERIFIER_ENABLED
 

@@ -31,6 +31,7 @@ SOFTWARE.
 
 #include <algorithm>
 #include <optional>
+#include <string>
 
 #include "OOJSEngineCore.h"
 #include "OOStringWidth.h"

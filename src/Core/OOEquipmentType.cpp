@@ -29,7 +29,13 @@ SOFTWARE.
 
 #include <algorithm>
 #include <format>
+#include <functional>
+#include <map>
+#include <memory>
+#include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include "OOCacheManager.h"
 #include "OOColor.h"

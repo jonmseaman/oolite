@@ -27,7 +27,11 @@ MA 02110-1301, USA.
 #include "AIGraphViz.h"
 
 #include <format>
+#include <map>
+#include <set>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "OOStringParsing.h"
 #include "ResourceManager.h"

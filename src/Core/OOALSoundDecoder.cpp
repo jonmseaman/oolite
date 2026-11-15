@@ -30,9 +30,16 @@ SOFTWARE.
 
 #include <vorbis/vorbisfile.h>
 
+#include <algorithm>
 #include <array>
+#include <cstdio>
 #include <cstring>
 #include <format>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "OOLogging.h"
 #include "oofnd/String.hpp"

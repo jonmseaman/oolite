@@ -9,6 +9,8 @@ Oolite
 // Kept first, in a block of its own: which header comes first decides whether
 // MinGW's or the UCRT's printf/strtod family is used.
 
+#include <string>
+
 #include "GameController.h"
 #include "MyOpenGLView.h"
 #include "OOSDLJoystickManager.h"

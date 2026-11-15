@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #endif
 #include <memory>
 #include <new>
+#include <string>
 
 #include "OOJavaScriptEngine.h"
 

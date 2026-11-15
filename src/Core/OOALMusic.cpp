@@ -28,6 +28,9 @@ SOFTWARE.
 
 #include "OOALMusic.h"
 
+#include <memory>
+#include <string>
+
 namespace {
 
 OOMusic* sPlayingMusic = nullptr;

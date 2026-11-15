@@ -36,6 +36,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <memory>
+
 #include "OOALSound.h"
 #include "OOFoundation.h"
 #include "OOMaths.h"

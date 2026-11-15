@@ -27,10 +27,12 @@ SOFTWARE.
 
 #include "OOShaderMaterial.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <format>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>

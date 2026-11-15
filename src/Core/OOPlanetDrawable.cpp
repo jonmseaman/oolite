@@ -24,6 +24,11 @@
 
 #include "OOPlanetDrawable.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "MyOpenGLView.h"
 #include "OOMacroOpenGL.h"
 #include "OOOpenGL.h"

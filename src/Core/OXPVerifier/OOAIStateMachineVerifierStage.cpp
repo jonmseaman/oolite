@@ -26,7 +26,9 @@ MA 02110-1301, USA.
 #include "OOAIStateMachineVerifierStage.h"
 
 #include <format>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "OOPListParsing.h"
 

@@ -28,6 +28,9 @@ SOFTWARE.
 
 #include "OOALStreamedSound.h"
 
+#include <memory>
+#include <string>
+
 #include "OOALSoundDecoder.h"
 
 // The decoder is released by its std::shared_ptr, the chunk buffer by its
