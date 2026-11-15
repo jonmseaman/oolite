@@ -70,7 +70,7 @@ constexpr std::string_view OOEnumName(OOShaderSetting value) noexcept {
   return {};
 }
 
-#define NULL_SHADER (static_cast<GLhandleARB>(0))
+inline constexpr auto NULL_SHADER = (static_cast<GLhandleARB>(0));
 
 // GLhandleARB is a pointer type on macOS and an integer elsewhere; convert it
 // to a GLuint for the core GL 2.0+ shader API.
