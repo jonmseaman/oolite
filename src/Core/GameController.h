@@ -65,7 +65,7 @@ class Universe;
 /*	The application controller: the class shell, its state and accessors;
    the frame loop and deferred calls; start-up, splash and progress messages,
         exit and the player file; the SDL full-screen members
-        (SDL/GameController.cpp), the former FullScreen category.
+        (end of GameController.cpp), the former FullScreen category.
 */
 class GameController : public oo::Object {
  public:
@@ -200,7 +200,7 @@ class GameController : public oo::Object {
   void windowDidResize();
 
 #if OOLITE_SDL
-  // Full screen (SDL/GameController.cpp): the former FullScreen
+  // Full screen (SDL only): the former FullScreen
   // category. -displayModes is getDisplayModes(), as the state has a
   // displayModes.
   void setUpDisplayModes();  // internal use only
