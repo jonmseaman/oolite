@@ -36,7 +36,7 @@ SOFTWARE.
 #include "oofnd/String.hpp"
 #include "unzip.h"
 
-#define ZIP_BUFFER_SIZE 8192
+constexpr int ZIP_BUFFER_SIZE = 8192;
 
 std::optional<oo::Data> OODataFromOXZFile(const std::string& path) {
   const std::vector<std::string> components = oo::str::pathComponents(path);
