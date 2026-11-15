@@ -240,13 +240,13 @@ static oo::PList SanitizeCondition(const std::string& condition,
     else if (comparatorString == "lessthan")
       comparatorValue = OOComparisonType::kLessThan;
     else if (comparatorString == "greaterthan" ||
-             comparatorString == "morethan")
+             comparatorString == "morethan") {
       comparatorValue = OOComparisonType::kGreaterThan;
-    else if (comparatorString == "oneof")
+    } else if (comparatorString == "oneof") {
       comparatorValue = OOComparisonType::kOneOf;
-    else if (comparatorString == "undefined")
+    } else if (comparatorString == "undefined") {
       comparatorValue = OOComparisonType::kUndefined;
-    else {
+    } else {
       OO_LOG("script.debug.syntax.badComparison",
              "***** SCRIPT ERROR: in {} (\"{}\"), unknown comparison operator "
              "\"{}\", will return NO.",

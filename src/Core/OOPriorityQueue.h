@@ -107,8 +107,9 @@ class OOPriorityQueueOf {
       if (oo::ToUnderlying(_comparator(_heap[i].get(), _heap[pi].get())) < 0) {
         std::swap(_heap[i], _heap[pi]);
         i = pi;
-      } else
+      } else {
         break;
+      }
     }
   }
 
@@ -129,8 +130,9 @@ class OOPriorityQueueOf {
         // Exchange parent with lowest-priority child
         std::swap(_heap[i], _heap[next]);
         i = next;
-      } else
+      } else {
         break;
+      }
     }
   }
 

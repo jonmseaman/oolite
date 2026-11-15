@@ -51,7 +51,7 @@ inline bool OOTriangleIsDegenerate(Triangle tri) CONST_FUNC;
 /*** Only inline definitions beyond this point ***/
 
 inline Triangle make_triangle(Vector v0, Vector v1, Vector v2) {
-  return (Triangle){{v0, v1, v2}};
+  return Triangle{{v0, v1, v2}};
 }
 
 inline Vector calculateNormalForTriangle(Triangle* tri) {

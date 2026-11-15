@@ -553,14 +553,14 @@ std::string OOJSScript::scriptNameFromPath(
   std::string truncatedPath;
   std::string theName;
 
-  if (!path.has_value())
+  if (!path.has_value()) {
     theName = oo::str::pointerDescription(
         this);  // (the script's address, as self's was)
-  else {
+  } else {
     lastComponent = oo::str::lastPathComponent(*path);
-    if (!oo::str::hasPrefix(lastComponent, "script."))
+    if (!oo::str::hasPrefix(lastComponent, "script.")) {
       theName = lastComponent;
-    else {
+    } else {
       truncatedPath = oo::str::deletingLastPathComponent(*path);
       if (0 == oo::str::caseInsensitiveCompare(
                    oo::str::lastPathComponent(truncatedPath), "Config")) {

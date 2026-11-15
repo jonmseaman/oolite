@@ -112,8 +112,9 @@ std::string ExpandTildeInPath(const std::string& path) {
     if (i == path.size() || IsPathSeparator(path[i])) {
       if (!component.empty()) result += "/" + component;
       component.clear();
-    } else
+    } else {
       component += path[i];
+    }
   }
   return result;
 }

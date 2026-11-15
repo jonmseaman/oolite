@@ -379,7 +379,7 @@ static JSValue GlobalRandomName(OOJS_NATIVE_ARGS) {
           so randomName() isn't repeatable.
   */
   RNG_Seed savedSeed = currentRandomSeed();
-  setRandomSeed((RNG_Seed){
+  setRandomSeed(RNG_Seed{
       static_cast<int32_t>(Ranrot()), static_cast<int32_t>(Ranrot()),
       static_cast<int32_t>(Ranrot()), static_cast<int32_t>(Ranrot())});
 

@@ -1090,8 +1090,9 @@ inline std::string padUnits(const std::string& text, int width, int precision,
       std::u16string units = utf8ToUtf16(body);
       units.resize(static_cast<std::size_t>(precision));
       body = utf16ToUtf8(units);
-    } else
+    } else {
       body.resize(static_cast<std::size_t>(precision));
+    }
     length = static_cast<std::size_t>(precision);
   }
   if (width > 0 && length < static_cast<std::size_t>(width)) {
@@ -1154,10 +1155,11 @@ inline std::string formatInteger(unsigned long long magnitude, bool negative,
   const auto result = std::to_chars(
       buffer.data(), buffer.data() + buffer.size(), magnitude, base);
   std::string digits(buffer.data(), result.ptr);
-  if (conversion == 'X')
+  if (conversion == 'X') {
     std::transform(digits.begin(), digits.end(), digits.begin(), [](char c) {
       return c >= 'a' && c <= 'f' ? static_cast<char>(c - 'a' + 'A') : c;
     });
+  }
   if (f.precision == 0 && magnitude == 0) digits.clear();
   if (f.precision > 0 && digits.size() < static_cast<std::size_t>(f.precision))
     digits.insert(0, static_cast<std::size_t>(f.precision) - digits.size(),
@@ -1179,11 +1181,11 @@ inline std::string formatReal(double value, char conversion,
   const bool upper =
       conversion == 'F' || conversion == 'E' || conversion == 'G';
   std::string digits;
-  if (std::isnan(value))
+  if (std::isnan(value)) {
     digits = "nan";
-  else if (std::isinf(value))
+  } else if (std::isinf(value)) {
     digits = "inf";
-  else {
+  } else {
     const int precision = f.precision < 0 ? 6 : f.precision;
     const char lower =
         static_cast<char>(upper ? conversion - 'A' + 'a' : conversion);
@@ -1201,10 +1203,11 @@ inline std::string formatReal(double value, char conversion,
       digits.insert(e == std::string::npos ? digits.size() : e, 1, '.');
     }
   }
-  if (upper)
+  if (upper) {
     std::transform(digits.begin(), digits.end(), digits.begin(), [](char c) {
       return c >= 'a' && c <= 'z' ? static_cast<char>(c - 'a' + 'A') : c;
     });
+  }
   const std::string_view sign =
       negative ? "-" : (f.plus ? "+" : (f.space ? " " : ""));
   return padNumber(sign, "", digits, f, std::isfinite(value));
@@ -1288,8 +1291,9 @@ inline std::string formatRuntime(std::string_view fmt,
         left = true;
         width = -width;
       }
-    } else if (p < fmt.size() && fmt[p] >= '0' && fmt[p] <= '9')
+    } else if (p < fmt.size() && fmt[p] >= '0' && fmt[p] <= '9') {
       width = readNumber(p);
+    }
     if (p < fmt.size() && fmt[p] == '.') {
       ++p;
       if (p < fmt.size() && fmt[p] == '*') {
@@ -1301,9 +1305,12 @@ inline std::string formatRuntime(std::string_view fmt,
                 ? (p = q + 1, static_cast<std::size_t>(n - 1))
                 : next++;
         precision = static_cast<int>(argAt(index).asSigned());
-        if (precision < 0) precision = -1;
-      } else
+        if (precision < 0) {
+          precision = -1;
+        }
+      } else {
         precision = readNumber(p);
+      }
     }
     std::string length;
     while (p < fmt.size() &&

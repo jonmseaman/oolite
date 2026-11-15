@@ -198,9 +198,9 @@ void OOMusicController::setMode(OOMusicMode mode) {
     if (_mode == OOMusicMode::kITunes) pauseiTunes();
     _mode = mode;
 
-    if (_mode == OOMusicMode::kOff)
+    if (_mode == OOMusicMode::kOff) {
       stop();
-    else
+    } else {
       switch (_special) {
         case kSpecialNone:
           stop();
@@ -222,6 +222,7 @@ void OOMusicController::setMode(OOMusicMode mode) {
           playMissionMusic();
           break;
       }
+    }
 
     std::optional<std::string> modeString;
     switch (_mode) {

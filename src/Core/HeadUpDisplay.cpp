@@ -3576,8 +3576,9 @@ void HeadUpDisplay::drawStickSensitivityIndicator(const oo::PList& /*info*/) {
     siz.width -= _crosshairWidth * lineWidth / 2;
     siz.height -= _crosshairWidth * lineWidth / 2;
     GLDrawOval(x, y, z1, siz, 10);
-  } else if (div < 1.0)  // insensitive mode (shouldn't happen)
+  } else if (div < 1.0) {  // insensitive mode (shouldn't happen)
     GLDrawFilledOval(x, y, z1, siz, 10);
+  }
 
   OOGL(GLScaledLineWidth(lineWidth));  // reset
 }

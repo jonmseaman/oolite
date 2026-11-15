@@ -3165,10 +3165,10 @@ void PlayerEntity::doBookkeeping(double delta_t) {
   if (ecm_in_operation) {
     UPDATE_STAGE("updating ECM");
 
-    if (energy > 0.0)
+    if (energy > 0.0) {
       energy -= static_cast<float>(ECM_ENERGY_DRAIN_FACTOR *
                                    delta_t);  // drain energy because of the ECM
-    else {
+    } else {
       ecm_in_operation = false;
       if (UNIVERSE != nullptr)
         UNIVERSE->addMessage(OO_DESC("ecm-out-of-juice"), 3.0);
@@ -3307,11 +3307,11 @@ void PlayerEntity::doBookkeeping(double delta_t) {
     ship_temperature +=
         flightSpeed * air_friction * deltaInsulation;  // wind_speed
 
-    if (external_temp > heatThreshold && external_temp > ship_temperature)
+    if (external_temp > heatThreshold && external_temp > ship_temperature) {
       ship_temperature +=
           static_cast<float>((external_temp - ship_temperature) *
                              SHIP_INSULATION_FACTOR * deltaInsulation);
-    else {
+    } else {
       if (ship_temperature > SHIP_MIN_CABIN_TEMP)
         ship_temperature += static_cast<float>(
             (external_temp - heatThreshold - ship_temperature) *
@@ -3831,8 +3831,9 @@ void PlayerEntity::updateClocks(OOTimeDelta delta_t) {
       ship_clock -= fine_adjust;
       ship_clock_adjust += fine_adjust;
     }
-  } else
+  } else {
     ship_clock_adjust = 0.0;
+  }
 
   unsigned now_day = floor(ship_clock / 86400.0);
   while (prev_day < now_day) {
@@ -7483,8 +7484,9 @@ bool PlayerEntity::witchJumpChecklist(bool isGalacticJump) {
       playWitchjumpInsufficientFuel();
       setStatus(OOEntityStatus::kInFlight);
       doScriptEvent(OOJSID("playerJumpFailed"), {oo::PList("no target")});
-    } else
+    } else {
       playHyperspaceNoTarget();
+    }
 
     return false;
   }
@@ -7498,8 +7500,9 @@ bool PlayerEntity::witchJumpChecklist(bool isGalacticJump) {
       playWitchjumpDistanceTooGreat();
       setStatus(OOEntityStatus::kInFlight);
       doScriptEvent(OOJSID("playerJumpFailed"), {oo::PList("too far")});
-    } else
+    } else {
       playHyperspaceDistanceTooGreat();
+    }
 
     return false;
   }
@@ -7514,8 +7517,9 @@ bool PlayerEntity::witchJumpChecklist(bool isGalacticJump) {
       setStatus(OOEntityStatus::kInFlight);
       doScriptEvent(OOJSID("playerJumpFailed"),
                     {oo::PList("insufficient fuel")});
-    } else
+    } else {
       playHyperspaceNoFuel();
+    }
 
     return false;
   }
@@ -9093,13 +9097,15 @@ void PlayerEntity::setGuiToChartScreenFrom(OOGUIScreenID oldScreen) {
           (UNIVERSE != nullptr ? UNIVERSE->getSystemName(found_system_id)
                                : std::optional<std::string>());
       if (foundName.has_value()) {
-        if (UNIVERSE != nullptr)
+        if (UNIVERSE != nullptr) {
           UNIVERSE->findSystemCoordinatesWithPrefix(
               oo::str::lowercase(*foundName), true);
-      } else
+        }
+      } else {
         for (int i = 0; i < 256; i++)
           (UNIVERSE != nullptr ? UNIVERSE->systemsFound() : nullptr)[i] =
               false;  // a nil prefix matched no system, clearing every flag
+      }
     }
     noteGUIDidChangeFrom(oldScreen, gui_screen);
   }
@@ -9779,7 +9785,7 @@ void PlayerEntity::setGuiToEquipShipScreen(
     equipmentAllowed.push_back(*eqKeyForSelectFacing);
     equipmentAllowed.push_back(*eqKeyForSelectFacing);
     equipmentAllowed.push_back(*eqKeyForSelectFacing);
-  } else
+  } else {
     for (const std::shared_ptr<::OOEquipmentType>& eqTypeRef :
          OOEquipmentType::allEquipmentTypesOutfitting()) {
       // (i counts at the
@@ -9851,6 +9857,7 @@ void PlayerEntity::setGuiToEquipShipScreen(
       }
       i++;
     }
+  }
   if (searchStatus != OOEntityStatus::kTest && showKey.has_value()) {
     last_outfitting_key = showKey;
   }
@@ -9891,9 +9898,9 @@ void PlayerEntity::setGuiToEquipShipScreen(
         // lose the first row to Back <--
         unsigned previous;
 
-        if (count <= n_rows || skip < n_rows)
+        if (count <= n_rows || skip < n_rows) {
           previous = 0;  // single page
-        else {
+        } else {
           previous = skip - (n_rows - 2);  // multi-page.
           if (previous < 2)
             previous = 0;  // if only one previous item, just show it
@@ -12725,9 +12732,9 @@ void PlayerEntity::setTrumbleValueFrom(const oo::PList& trumbleValue) {
 
   if (!trumbleValue.isNull()) {
     bool possible_cheat = false;
-    if (!trumbleValue.isArray())
+    if (!trumbleValue.isArray()) {
       info_failed = true;
-    else {
+    } else {
       const oo::PList& values = trumbleValue;
       if (values.count() >= 1) putativeNTrumbles = values.at<int>(0);
       if (values.count() >= 2) putativeHash = values.at<int>(1);

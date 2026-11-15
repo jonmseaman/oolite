@@ -480,9 +480,9 @@ OOMaybeUnits ExpandKey(OOStringExpansionContext* context,
   bool allDigits = true;
 
   for (end = idx + 1; end < size && balanceCount > 0; end++) {
-    if (characters[end] == ']')
+    if (characters[end] == ']') {
       balanceCount--;
-    else {
+    } else {
       if (characters[end] == '[')
         balanceCount++;
       else if (characters[end] == '|' && firstBar == 0)

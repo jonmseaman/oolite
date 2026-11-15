@@ -419,9 +419,9 @@ std::optional<std::string> PlayerEntity::commanderSelector() {
         if (idx < 0 || static_cast<std::size_t>(idx) >= cdrDetailArray.size())
           break;  // (-objectAtIndex: raised)
         const oo::PList cdr = cdrDetailArray[idx];
-        if (cdr.get<bool>("isSavedGame"))
+        if (cdr.get<bool>("isSavedGame")) {
           return OptionalStringValue(cdr.find("saved_game_path"));
-        else {
+        } else {
           if (IsCommandModifierKeyDown(gameView) ||
               (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                    : false)) {
@@ -876,9 +876,9 @@ void PlayerEntity::writePlayerToPath(const std::string& path) {
   // The save dictionary as a property list, converted once (its float values
   // stay single reals, written %0.7g as before).
   const oo::PList dict = commanderDataDictionary();
-  if (dict.isNull())
+  if (dict.isNull()) {
     errDesc = "could not construct commander data dictionary.";
-  else {
+  } else {
     didSave = OOWriteXMLPListToFile(dict, path, &errDesc);
   }
   if (didSave) {

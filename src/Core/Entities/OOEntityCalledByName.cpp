@@ -91,9 +91,9 @@ namespace {
 template <auto Function>
 oo::PList OOEntityByNameAdaptNone(Entity* entity, const std::string*,
                                   const oo::PList*) {
-  if constexpr (std::is_same_v<decltype(Function(entity)), oo::PList>)
+  if constexpr (std::is_same_v<decltype(Function(entity)), oo::PList>) {
     return Function(entity);
-  else {
+  } else {
     (void)Function(entity);
     return oo::PList();
   }
@@ -102,9 +102,10 @@ oo::PList OOEntityByNameAdaptNone(Entity* entity, const std::string*,
 template <auto Function>
 oo::PList OOEntityByNameAdaptString(Entity* entity, const std::string* string,
                                     const oo::PList*) {
-  if constexpr (std::is_same_v<decltype(Function(entity, *string)), oo::PList>)
+  if constexpr (std::is_same_v<decltype(Function(entity, *string)),
+                               oo::PList>) {
     return Function(entity, *string);
-  else {
+  } else {
     (void)Function(entity, *string);
     return oo::PList();
   }
@@ -113,9 +114,9 @@ oo::PList OOEntityByNameAdaptString(Entity* entity, const std::string* string,
 template <auto Function>
 oo::PList OOEntityByNameAdaptPList(Entity* entity, const std::string*,
                                    const oo::PList* plist) {
-  if constexpr (std::is_same_v<decltype(Function(entity, *plist)), oo::PList>)
+  if constexpr (std::is_same_v<decltype(Function(entity, *plist)), oo::PList>) {
     return Function(entity, *plist);
-  else {
+  } else {
     (void)Function(entity, *plist);
     return oo::PList();
   }
@@ -134,13 +135,13 @@ void OOEntityByNameTyped(Entity* entity, OOEntityByNameValue& value) {
     // converted it
     const long long bits = static_cast<unsigned char>(Function(entity));
     value.integer = (bits > 127) ? bits - 256 : bits;
-  } else if constexpr (std::is_integral_v<Result> || std::is_enum_v<Result>)
+  } else if constexpr (std::is_integral_v<Result> || std::is_enum_v<Result>) {
     value.integer = static_cast<long long>(Function(entity));
-  else if constexpr (std::is_floating_point_v<Result>)
+  } else if constexpr (std::is_floating_point_v<Result>) {
     value.real = static_cast<double>(Function(entity));
-  else if constexpr (std::is_same_v<Result, Vector>)
+  } else if constexpr (std::is_same_v<Result, Vector>) {
     value.vector = Function(entity);
-  else if constexpr (std::is_same_v<Result, Quaternion>)
+  } else if constexpr (std::is_same_v<Result, Quaternion>)
     value.quaternion = Function(entity);
   else if constexpr (std::is_same_v<Result, OOColor*>)
     value.color = Function(entity);  // borrowed

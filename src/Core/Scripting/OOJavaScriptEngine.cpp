@@ -1532,10 +1532,10 @@ std::optional<std::string> OOJSConcatenationOfStringsFromJavaScriptValues(
   for (i = 0; i != count; ++i) {
     std::optional<std::string> element =
         OOStringFromJSValueEvenIfNull(context, values[i]);
-    if (!result)
+    if (!result) {
       result = element;  // a nil element left the result nil, as -mutableCopy
                          // of nil did
-    else {
+    } else {
       *result += separator;
       if (element) *result += *element;
     }

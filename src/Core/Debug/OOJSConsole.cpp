@@ -774,8 +774,8 @@ static JSValue ConsoleConsoleMessage(OOJS_NATIVE_ARGS) {
     // Attempt to get two numbers, specifying an emphasis range.
     if (JS_ToFloat64(context, &location, OOJS_ARGV[2]) == 0 &&
         JS_ToFloat64(context, &length, OOJS_ARGV[3]) == 0) {
-      emphasisRange = (NSRange){static_cast<std::size_t>(location),
-                                static_cast<std::size_t>(length)};
+      emphasisRange = NSRange{static_cast<std::size_t>(location),
+                              static_cast<std::size_t>(length)};
     }
   }
 
@@ -1400,9 +1400,9 @@ bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
 
   // Get "this" object.
   JSValue thisObj;
-  if (argc > 1)
+  if (argc > 1) {
     thisObj = JS_DupValue(context, argv[1]);
-  else {
+  } else {
     JSValue debugConsole =
         OODebugMonitor::sharedDebugMonitor()->jsValueInContext(context);
     thisObj = JS_GetPropertyStr(context, debugConsole, "script");

@@ -2198,9 +2198,9 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter,
       "autoAImap.plist", "Config", true);
   const std::optional<std::string> mappedAI =
       StringForKey(autoAIMap, defaultRole);
-  if (mappedAI.has_value())
+  if (mappedAI.has_value()) {
     autoAI = *mappedAI;
-  else {
+  } else {
     // no 'wingman' defined in autoAImap?
     autoAI = autoAIMap.get<std::string>("escort", "nullAI.plist");
   }
@@ -2748,10 +2748,10 @@ void ShipEntity::update(OOTimeDelta delta_t) {
     // work on the ship temperature
     //
     float heatThreshold = heatInsulation() * 100.0f;
-    if (external_temp > heatThreshold && external_temp > ship_temperature)
+    if (external_temp > heatThreshold && external_temp > ship_temperature) {
       ship_temperature += (external_temp - ship_temperature) * delta_t *
                           SHIP_INSULATION_FACTOR / heatInsulation();
-    else {
+    } else {
       if (ship_temperature > SHIP_MIN_CABIN_TEMP) {
         ship_temperature += (external_temp - heatThreshold - ship_temperature) *
                             delta_t * SHIP_COOLING_FACTOR / heatInsulation();
@@ -3393,10 +3393,10 @@ bool ShipEntity::hasAllEquipment(const oo::PList& equipmentKeys,
 
   // Make sure it's an array, using a single-element list if it's a string.
   std::vector<std::string> keys;
-  if (const std::string* key = equipmentKeys.getIf<std::string>())
+  if (const std::string* key = equipmentKeys.getIf<std::string>()) {
     keys.push_back(*key);
-  else if (const oo::PList::Array* elements =
-               equipmentKeys.getIf<oo::PList::Array>()) {
+  } else if (const oo::PList::Array* elements =
+                 equipmentKeys.getIf<oo::PList::Array>()) {
     for (const oo::PList& element : *elements) {
       const std::string* elementKey = element.getIf<std::string>();
       // A key that is not a string is never held: the whole test fails, as it
@@ -3404,8 +3404,9 @@ bool ShipEntity::hasAllEquipment(const oo::PList& equipmentKeys,
       if (elementKey == nullptr) return false;
       keys.push_back(*elementKey);
     }
-  } else
+  } else {
     return false;
+  }
 
   // All must match: order-insensitive.
   for (const std::string& key : keys) {
@@ -4600,8 +4601,9 @@ void ShipEntity::behaviour_attack_slow_dogfight(double delta_t) {
   }
   if (frustration > 10.0) {
     desired_speed /= 2.0;
-  } else if (frustration < 0.0)
+  } else if (frustration < 0.0) {
     frustration = 0.0;
+  }
 
   trackPrimaryTarget(delta_t, false);
 
@@ -5571,9 +5573,12 @@ void ShipEntity::behaviour_flee_target(double delta_t) {
   success_factor = range;
 
   if (range > desired_range || range == 0) {
-    if (shipAI != nullptr) shipAI->message("REACHED_SAFETY");
-  } else
+    if (shipAI != nullptr) {
+      shipAI->message("REACHED_SAFETY");
+    }
+  } else {
     desired_speed = max_available_speed;
+  }
 
   if (range > last_range) {
     // improvement
@@ -5775,12 +5780,12 @@ void ShipEntity::behaviour_formation_form_up(double delta_t) {
   } else {
     frustration += delta_t;
     if (frustration > 15.0) {
-      if (!leadShip)
+      if (!leadShip) {
         noteFrustration(
             "BEHAVIOUR_FORMATION_FORM_UP");  // escorts never reach their
                                              // destination when following
                                              // leader.
-      else if (distance > 0.5 * scannerRange && !pitching_over) {
+      } else if (distance > 0.5 * scannerRange && !pitching_over) {
         pitching_over =
             true;  // Force the ship in a 180 degree turn. Do it here to allow
                    // escorts to break out formation for some seconds.
@@ -6317,9 +6322,10 @@ void ShipEntity::drawImmediate(bool immediate, bool translucent) {
   // Draw bounding boxes if we have to before going for the subentities.
   // TODO: the translucent flag here makes very little sense. Something's wrong
   // with the matrices.
-  if (translucent)
+  if (translucent) {
     drawDebugStuff();
-  else if (OODebugFlagIsOn(OODebugFlags::kBoundingBoxes) && !getIsSubEntity()) {
+  } else if (OODebugFlagIsOn(OODebugFlags::kBoundingBoxes) &&
+             !getIsSubEntity()) {
     OODebugDrawBoundingBox(getBoundingBox());
     OODebugDrawColoredBoundingBox(totalBoundingBox,
                                   OOColor::purpleColor().get());
@@ -6480,12 +6486,13 @@ GLfloat* ShipEntity::scannerDisplayColorForShip(
 
   // no scripted scanner display colors defined, proceed as per standard
   if (isJammingScanning()) {
-    if (!(otherShip != nullptr ? otherShip->hasMilitaryScannerFilter() : false))
+    if (!(otherShip != nullptr ? otherShip->hasMilitaryScannerFilter()
+                               : false)) {
       return jammed_color;
-    else {
-      if (flash)
+    } else {
+      if (flash) {
         return mascem_color1;
-      else {
+      } else {
         if (isHostile)
           return hostile_color;
         else
@@ -11453,9 +11460,10 @@ Vector ShipEntity::missileLaunchPosition() {
       while (++i < missiles) missile_list[i - 1] = missile_list[i];
       missiles--;
     }
-  } else
+  } else {
     missile = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(*identifier)
                                    : nullptr);
+  }
 
   if (EXPECT_NOT(missile == nullptr)) return nullptr;
 
@@ -11984,9 +11992,9 @@ bool ShipEntity::collideWithShip(::ShipEntity* other) {
 
   // are they moving apart at over 1m/s already?
   if (v2b < 0.0f) {
-    if (v2b < -1.0f)
+    if (v2b < -1.0f) {
       return false;
-    else {
+    } else {
       position = HPvector_subtract(position, hploc);  // adjust self position
       v = kZeroVector;  // go for the 1m/s solution
     }
@@ -12365,8 +12373,9 @@ bool ShipEntity::cascadeIfAppropriateWithDamageAmount(double amount,
       if ((fuel > MIN_FUEL) || isStation) {
         // we have fuel onboard so we can still go pop, or we are a station
         // which can
-      } else
+      } else {
         break;
+      }
 
     case OOScanClass::kStation:
     case OOScanClass::kMine:
@@ -13365,9 +13374,12 @@ void ShipEntity::sendMessage(const std::string& message_text,
     static_cast<PlayerEntity*>(other_ship)
         ->receiveCommsMessage(expandedMessage, this);
     messageTime = 6.0;
-    if (UNIVERSE != nullptr) UNIVERSE->resetCommsLogColor();
-  } else if (other_ship != nullptr)
+    if (UNIVERSE != nullptr) {
+      UNIVERSE->resetCommsLogColor();
+    }
+  } else if (other_ship != nullptr) {
     other_ship->receiveCommsMessage(expandedMessage, this);
+  }
 }
 
 void ShipEntity::sendExpandedMessage(const std::string& message_text,
@@ -13743,9 +13755,9 @@ oo::PList ShipEntity::getScriptInfo() {
 }
 
 void ShipEntity::overrideScriptInfo(const oo::PList& override) {
-  if (scriptInfo.isNull())
+  if (scriptInfo.isNull()) {
     scriptInfo = override;
-  else if (!override.isNull()) {
+  } else if (!override.isNull()) {
     // both are dictionaries: a copy with the override's entries added,
     // replacing duplicates
     oo::PList::Dict newInfo = *scriptInfo.getIf<oo::PList::Dict>();

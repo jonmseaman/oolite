@@ -1710,7 +1710,7 @@ void Universe::setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2) {
 #ifdef OO_DUMP_PLANETINFO
   OO_LOG("planetinfo.record", "planet zpos = {:f}", planet_zpos);
 #endif
-  if (a_planet != nullptr) a_planet->setPosition((HPVector){0, 0, planet_zpos});
+  if (a_planet != nullptr) a_planet->setPosition(HPVector{0, 0, planet_zpos});
   if (a_planet != nullptr) a_planet->setEnergy(1000000.0);
 
   if (allPlanets.size() > 0) {
@@ -3503,8 +3503,9 @@ std::vector<oo::EntityHold> Universe::addShipsToRoute(const std::string& route,
     if (station() == nullptr) return {};
     point1 = (station() != nullptr ? station()->getPosition() : HPVector{});
     radius = (station() != nullptr ? station()->collisionRadius() : 0.0f);
-  } else
+  } else {
     return {};  // no route specifier? We shouldn't be here!
+  }
 
   // shorten the route by scanner range & radius, otherwise ships could be
   // created inside the route destination.
@@ -4506,8 +4507,9 @@ std::shared_ptr<Entity> Universe::newVisualEffectWithName(
              "***** Oolite Exception : '{}' in [Universe "
              "newVisualEffectWithName: {} ] *****",
              exception->reason(), effectKey);
-    } else
+    } else {
       throw;
+    }
   }
 
   return effect;
@@ -4573,8 +4575,9 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithName(
              "***** Oolite Exception : '{}' in [Universe newShipWithName: {} ] "
              "*****",
              exception->reason(), shipKey);
-    } else
+    } else {
       throw;
+    }
   }
 
   // Set primary role to same as ship name, if ship name is also a role.
@@ -4614,8 +4617,9 @@ std::shared_ptr<::ShipEntity> Universe::newDockWithName(
              "***** Oolite Exception : '{}' in [Universe newDockWithName: {} ] "
              "*****",
              exception->reason(), shipDataKey);
-    } else
+    } else {
       throw;
+    }
   }
 
   // Set primary role to same as name, if ship name is also a role.
@@ -6787,9 +6791,9 @@ unsigned Universe::countEntitiesMatchingPredicate(
   for (i = 0; i < n_entities; i++) {
     Entity* e2 = sortedEntities[i];
     if (e2 != e1 && predicate(e2, parameter)) {
-      if (range < 0)
+      if (range < 0) {
         distance = -1;  // Negative range means infinity
-      else {
+      } else {
         cr = range + e2->collision_radius;
         distance = HPdistance2(e2->position, p1) - cr * cr;
       }
@@ -7018,7 +7022,7 @@ void Universe::setViewDirection(OOViewID vd) {
 
     case OOViewID::kGUIDisplay:
       setDisplayText(true);
-      setMainLightPosition((Vector){DEMO_LIGHT_POSITION});
+      setMainLightPosition(Vector{DEMO_LIGHT_POSITION});
       guiSelected = true;
       break;
 
@@ -9541,8 +9545,9 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
               // All included equip has a 10% discount.
               eqPrice *=
                   (tech_price_boost + eqTechLevel - techlevel) * 90 / 100;
-            } else
+            } else {
               break;  // Bar this upgrade.
+            }
           }
 
           if ((item != nullptr ? item->incompatibleEquipment()
@@ -9921,12 +9926,13 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
             10;
       }
     }
-  } else
+  } else {
     ship_missiles_value =
         ship_missiles *
         (UNIVERSE != nullptr ? UNIVERSE->getEquipmentPriceForKey("EQ_MISSILE")
                              : 0) /
         10;
+  }
 
   // needs to be a signed value, we can then subtract from the base price, if
   // less than standard equipment.

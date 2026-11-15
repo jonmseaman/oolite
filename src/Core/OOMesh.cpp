@@ -553,14 +553,15 @@ unsigned OOMesh::octreeDepth() {
   }
   size = (xs + ys) / 2.0f;  // Use average of two largest
 
-  if (size < static_cast<GLfloat>(kOctreeSmallSizeThreshold))
+  if (size < static_cast<GLfloat>(kOctreeSmallSizeThreshold)) {
     result = kSmallOctreeDepth;
-  else
+  } else {
     while (result < kMaxOctreeDepth) {
       if (size < threshold) break;
       threshold *= 2.0f;
       result++;
     }
+  }
 
   OO_LOG("mesh.load.octree.size",
          "Selected octree depth {} for size {:g} for {}", result, size,
@@ -964,9 +965,9 @@ bool OOMesh::setModelFromModelData(const oo::PList& dict,
   materialCount = keys.size();
   for (i = 0; i != materialCount; ++i) {
     const oo::PList& key = keys[i];
-    if (key.isString() || key.isNumber())
+    if (key.isString() || key.isNumber()) {
       materialKeys[i] = oo::PListGet<std::string>::from(&key, std::string());
-    else {
+    } else {
       OO_LOG("mesh.load.error.badCacheData",
              "Ignoring bad cache data for mesh \"{}\".", fileName);
       return false;
@@ -1065,9 +1066,9 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
     scanner->setScanLocation(0);  // reset
     if (scanner->scanString("NVERTS")) {
       int n_v;
-      if (scanner->scanInt(&n_v))
+      if (scanner->scanInt(&n_v)) {
         vertexCount = n_v;
-      else {
+      } else {
         failFlag = true;
         failString += "Failed to read value of NVERTS\n";
       }
@@ -1268,11 +1269,12 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
               if (!failFlag) {
                 _faces[j].s[i] = s / max_x;
                 _faces[j].t[i] = t / max_y;
-              } else
+              } else {
                 failString += std::format(
                     "Failed to read s t coordinates for vertex[{}] in face[{}] "
                     "in TEXTURES\n",
                     static_cast<int>(i), static_cast<int>(j));
+              }
             }
           }
         }

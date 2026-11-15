@@ -621,11 +621,11 @@ static void APIENTRY TessVertexCallback(void* vertexData, void* polygonData) {
       break;
 
     case GL_TRIANGLE_FAN:
-      if (vCount == 0)
+      if (vCount == 0) {
         data->pending0 = vertex;
-      else if (vCount == 1)
+      } else if (vCount == 1) {
         data->pending1 = vertex;
-      else {
+      } else {
         data->OK = AppendVertex(data, data->pending0) &&
                    AppendVertex(data, data->pending1) &&
                    AppendVertex(data, vertex);
@@ -635,11 +635,11 @@ static void APIENTRY TessVertexCallback(void* vertexData, void* polygonData) {
       break;
 
     case GL_TRIANGLE_STRIP:
-      if (vCount == 0)
+      if (vCount == 0) {
         data->pending0 = vertex;
-      else if (vCount == 1)
+      } else if (vCount == 1) {
         data->pending1 = vertex;
-      else {
+      } else {
         /*	In order to produce consistent winding, the vertex->triangle
                 order for GL_TRIANGLE_STRIP is:
                 0, 1, 2

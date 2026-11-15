@@ -467,9 +467,9 @@ inline std::optional<double> parseCalendarDate(std::string_view s, bool zulu) {
         break;
       case 'z': {
         long sign = 1, zone = 0;
-        if (at(src) == '+')
+        if (at(src) == '+') {
           ++src;
-        else if (at(src) == '-') {
+        } else if (at(src) == '-') {
           sign = -1;
           ++src;
         }

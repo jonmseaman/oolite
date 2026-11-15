@@ -174,9 +174,9 @@ inline bool scanDoubleAt(std::u16string_view s, std::size_t& location,
   if (loc >= length) return false;
 
   bool negativeMantissa = false;
-  if (s[loc] == u'+')
+  if (s[loc] == u'+') {
     ++loc;
-  else if (s[loc] == u'-') {
+  } else if (s[loc] == u'-') {
     ++loc;
     negativeMantissa = true;
   }
@@ -232,9 +232,9 @@ inline bool scanDoubleAt(std::u16string_view s, std::size_t& location,
     if (loc >= length) {
       loc = saveExpLoc;
     } else {
-      if (s[loc] == u'+')
+      if (s[loc] == u'+') {
         ++loc;
-      else if (s[loc] == u'-') {
+      } else if (s[loc] == u'-') {
         ++loc;
         negativeExponent = true;
       }

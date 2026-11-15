@@ -1053,8 +1053,9 @@ void ShipEntity::scanForNearestMerchantman() {
       if (PIRATES_PREFER_PLAYER && (d2 < desired_range * desired_range) &&
           ship->isPlayer && isPirate()) {
         d2 = 0.0;
-      } else
+      } else {
         d2 = distance2_scanned_ships[i];
+      }
       if (d2 < found_d2) {
         found_d2 = d2;
         setFoundTarget(ship);

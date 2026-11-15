@@ -2089,14 +2089,14 @@ void StationEntity::noteDockedShip(::ShipEntity* ship) {
 }
 
 void StationEntity::addShipToStationCount(::ShipEntity* ship) {
-  if ((ship != nullptr ? ship->isShuttle() : false))
+  if ((ship != nullptr ? ship->isShuttle() : false)) {
     docked_shuttles++;
-  else if ((ship != nullptr ? ship->isTrader() : false) &&
-           !(ship != nullptr ? ship->getIsPlayer() : false))
+  } else if ((ship != nullptr ? ship->isTrader() : false) &&
+             !(ship != nullptr ? ship->getIsPlayer() : false)) {
     docked_traders++;
-  else if (((ship != nullptr ? ship->isPolice() : false) &&
-            !(ship != nullptr ? ship->isEscort() : false)) ||
-           (ship != nullptr ? ship->hasPrimaryRole("defense_ship") : false)) {
+  } else if (((ship != nullptr ? ship->isPolice() : false) &&
+              !(ship != nullptr ? ship->isEscort() : false)) ||
+             (ship != nullptr ? ship->hasPrimaryRole("defense_ship") : false)) {
     if (0 < defenders_launched) defenders_launched--;
   } else if ((ship != nullptr ? ship->hasPrimaryRole("scavenger") : false) ||
              (ship != nullptr ? ship->hasPrimaryRole("miner") : false)) {
