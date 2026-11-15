@@ -36,7 +36,7 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/OOObject.h"
 
-#define OCTREE_MIN_HALF_WIDTH 1.0
+inline constexpr double OCTREE_MIN_HALF_WIDTH = 1.0;
 
 #if !defined(OODEBUGLDRAWING_DISABLE) && !defined(OO_DEBUG_MONITOR_ENABLED)
 #define OODEBUGLDRAWING_DISABLE 1
