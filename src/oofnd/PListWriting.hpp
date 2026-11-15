@@ -648,15 +648,13 @@ class JSON5Writer {
         out += "\"}";
         return true;
       case PList::Type::kDate: {
-        long y;
+        std::int64_t y;
         int mo, d, h, mi, s;
         breakDate(v.getIf<PList::Date>()->sinceReferenceDate, y, mo, d, h, mi,
                   s);
-        char buf[64];
-        std::snprintf(buf, sizeof buf,
-                      "{$date: \"%04ld-%02d-%02dT%02d:%02d:%02dZ\"}", y, mo, d,
-                      h, mi, s);
-        out += buf;
+        out +=
+            std::format("{{$date: \"{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z\"}}",
+                        y, mo, d, h, mi, s);
         return true;
       }
       case PList::Type::kArray: {
