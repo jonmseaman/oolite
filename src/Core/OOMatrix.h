@@ -34,9 +34,9 @@ MA 02110-1301, USA.
 #include "OOQuaternion.h"
 #include "OOVector.h"
 
-typedef struct OOMatrix {
+struct OOMatrix {
   OOScalar m[4][4];
-} OOMatrix;
+};
 
 extern const OOMatrix kIdentityMatrix; /* {1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1,
                                           0}, {0, 0, 0, 1} */

@@ -46,12 +46,12 @@ MA 02110-1301, USA.
 #include "OOTexture.h"
 #include "ShipEntity.h"
 
-typedef struct {
+using Frame = struct {
   double timeframe;  // universal time for this frame
   HPVector position;
   Quaternion orientation;
   Vector k;  // direction vectors
-} Frame;
+};
 
 inline constexpr int kExhaustFrameCount = 16;
 

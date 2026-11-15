@@ -241,9 +241,9 @@ class OOSound;
 
 class OOTextureSprite;  // C++ (OOTextureSprite.h)
 
-typedef std::ptrdiff_t OOGUIRow;      // -1 for none
-typedef std::ptrdiff_t OOGUITabStop;  // negative value = right align text
-typedef OOGUITabStop OOGUITabSettings[GUI_MAX_COLUMNS];
+using OOGUIRow = std::ptrdiff_t;      // -1 for none
+using OOGUITabStop = std::ptrdiff_t;  // negative value = right align text
+using OOGUITabSettings = OOGUITabStop[GUI_MAX_COLUMNS];
 
 /*	The members marked virtual are the ones the whole-game unit tests
    (test_OOOXZManager, test_OOJSPlayerShip) stand in for with C++ subclasses

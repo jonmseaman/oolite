@@ -26,6 +26,7 @@ Checks: >
   google-readability-casting,
   misc-include-cleaner
 WarningsAsErrors: >
+  modernize-use-using,
   bugprone-*,
   performance-*,
   cppcoreguidelines-no-malloc,

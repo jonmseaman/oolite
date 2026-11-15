@@ -69,7 +69,7 @@ class WormholeEntity;
 class OOFlasherEntity;
 class OOExhaustPlumeEntity;  // Universe.h's, for the members of
                              // ShipEntityAI.cpp's scans.
-typedef bool (*EntityFilterPredicate)(Entity* entity, void* parameter);
+using EntityFilterPredicate = bool (*)(Entity* entity, void* parameter);
 
 #define MAX_TARGETS 24
 #define RAIDER_MAX_CARGO 5
@@ -195,7 +195,7 @@ inline constexpr std::string_view AIMS_AGGRESSOR_SWITCHED_TARGET =
         WEAPON_THARGOID_LASER			= 10,
         WEAPON_UNDEFINED
         } OOWeaponType; */
-typedef OOEquipmentType* OOWeaponType;
+using OOWeaponType = OOEquipmentType*;
 
 enum class OOAlertCondition : std::int32_t {
   // Alert conditions are used by player and station entities.

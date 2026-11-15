@@ -65,7 +65,7 @@ class OOTextureGenerator;
 #define kOOTextureDefaultAnisotropy 0.5
 #define kOOTextureDefaultLODBias -0.25
 
-typedef OOPixMapFormat OOTextureDataFormat;
+using OOTextureDataFormat = OOPixMapFormat;
 
 inline constexpr OOTextureDataFormat kOOTextureDataInvalid =
     kOOPixMapInvalidFormat;

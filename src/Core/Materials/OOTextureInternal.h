@@ -46,13 +46,13 @@ std::string OOGenerateTextureCacheKey(
     OOTextureFlags options, float anisotropy, float lodBias);
 std::string OOTextureCacheKeyForSpecifier(const oo::PList& specifier);
 
-typedef struct OOTextureInfo {
+struct OOTextureInfo {
   GLfloat anisotropyScale;
   unsigned anisotropyAvailable : 1, clampToEdgeAvailable : 1,
       clientStorageAvailable : 1, textureLODBiasAvailable : 1,
       rectangleTextureAvailable : 1, cubeMapAvailable : 1,
       textureMaxLevelAvailable : 1;
-} OOTextureInfo;
+};
 
 extern OOTextureInfo gOOTextureInfo;
 

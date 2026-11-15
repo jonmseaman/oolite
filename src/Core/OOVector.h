@@ -31,16 +31,16 @@ MA 02110-1301, USA.
 
 #ifndef OOMATHS_EXTERNAL_VECTOR_TYPES
 
-typedef struct Vector {
+struct Vector {
   OOScalar x;
   OOScalar y;
   OOScalar z;
-} Vector;
+};
 
-typedef struct Vector2D {
+struct Vector2D {
   OOScalar x;
   OOScalar y;
-} Vector2D;
+};
 
 #endif
 

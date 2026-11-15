@@ -43,10 +43,10 @@ SOFTWARE.
 
 class OOMaterial;
 
-typedef struct {
+using OODebugWFState = struct {
   std::shared_ptr<OOMaterial> material;  // from OODebugBeginWireframe(),
                                          // given up by OODebugEndWireframe()
-} OODebugWFState;
+};
 
 OODebugWFState OODebugBeginWireframe(
     bool ignoreZ);  // bool, not bool: the .cpp's bool is windows.h's int

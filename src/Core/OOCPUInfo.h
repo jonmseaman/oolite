@@ -66,10 +66,10 @@ std::size_t OOCPUCount(void);
 std::string OOCPUDescription(void);  // UTF-8
 void OOCPUID(int CPUInfo[4], int InfoType);
 
-typedef struct {
+using OOMemoryStatus = struct {
   unsigned long long ooPhysicalMemory;
   unsigned long long ooAvailableMemory;
-} OOMemoryStatus;
+};
 OOMemoryStatus OOSystemMemoryStatus(void);
 #endif
 
@@ -77,7 +77,7 @@ OOMemoryStatus OOSystemMemoryStatus(void);
 #include <windows.h>
 
 // IsWow64Process, to check for a 64/32 bit system: windows.h's BOOL is an int
-typedef BOOL(WINAPI* IW64PFP)(HANDLE, BOOL*);
+using IW64PFP = BOOL(WINAPI*)(HANDLE, BOOL*);
 bool is64BitSystem(void);
 std::string operatingSystemFullVersion(void);  // UTF-8
 #endif

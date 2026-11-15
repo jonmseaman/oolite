@@ -32,14 +32,14 @@ SOFTWARE.
 
 #include "OOTCPStreamDecoderAbstractionLayer.h"
 
-typedef struct OOTCPStreamDecoder* OOTCPStreamDecoderRef;
+using OOTCPStreamDecoderRef = struct OOTCPStreamDecoder*;
 
-typedef void (*OOTCPStreamDecoderPacketCallback)(void* cbInfo,
-                                                 OOALStringRef packetType,
-                                                 OOALDictionaryRef packet);
-typedef void (*OOTCPStreamDecoderErrorCallback)(void* cbInfo,
-                                                OOALStringRef errorDesc);
-typedef void (*OOTCPStreamDecoderFinalizeCallback)(void* cbInfo);
+using OOTCPStreamDecoderPacketCallback = void (*)(void* cbInfo,
+                                                  OOALStringRef packetType,
+                                                  OOALDictionaryRef packet);
+using OOTCPStreamDecoderErrorCallback = void (*)(void* cbInfo,
+                                                 OOALStringRef errorDesc);
+using OOTCPStreamDecoderFinalizeCallback = void (*)(void* cbInfo);
 
 OOTCPStreamDecoderRef OOTCPStreamDecoderCreate(
     OOTCPStreamDecoderPacketCallback packetCB,
