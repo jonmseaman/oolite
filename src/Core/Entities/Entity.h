@@ -38,6 +38,7 @@ MA 02110-1301, USA.
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "CollisionRegion.h"
@@ -441,7 +442,7 @@ OOScanClass OOScanClassFromString(const std::string& string);
    failed).
 */
 struct OOShaderMemberBinding;  // OOShaderUniformMethodType.h
-bool EntityShaderMemberBindingFor(Entity* entity, const char* property,
+bool EntityShaderMemberBindingFor(Entity* entity, std::string_view property,
                                   OOShaderMemberBinding* outBinding);
 
 #include "oofnd/PList.hpp"
