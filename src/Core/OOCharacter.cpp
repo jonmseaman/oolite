@@ -146,7 +146,7 @@ std::optional<std::string> OOCharacter::planetOfOrigin() {
   const oo::PList originInfo =
       (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(planetIDOfOrigin())
                            : oo::PList());
-  const oo::PList* name = originInfo.find(std::string(KEY_NAME));
+  const oo::PList* name = originInfo.find(KEY_NAME);
   if (name == nullptr || !name->isString())
     return std::nullopt;  // (the value was returned as it stood; it is a
                           // string)
@@ -194,9 +194,9 @@ void OOCharacter::basicSetUp() {
       (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(planetIDOfOrigin())
                            : oo::PList());
   const std::optional<std::string> planet =
-      OptionalStringForKey(originInfo, std::string(KEY_NAME));
+      OptionalStringForKey(originInfo, KEY_NAME);
   OOGovernmentID government = originInfo.get<int>(
-      std::string(KEY_GOVERNMENT));  // 0 .. 7 (0 anarchic .. 7 most stable)
+      KEY_GOVERNMENT);  // 0 .. 7 (0 anarchic .. 7 most stable)
   int criminalTendency = government ^ 0x07;
 
   // determine the character's species

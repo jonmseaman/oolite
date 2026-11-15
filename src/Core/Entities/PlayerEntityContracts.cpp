@@ -236,22 +236,20 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
         passengers[i];  // a copy: the entry may be removed below (it was
                         // retained)
     const std::optional<std::string> passenger_name =
-        OptionalStringForKey(passenger_info, std::string(PASSENGER_KEY_NAME));
-    int dest = passenger_info.get<int>(std::string(CONTRACT_KEY_DESTINATION));
+        OptionalStringForKey(passenger_info, PASSENGER_KEY_NAME);
+    int dest = passenger_info.get<int>(CONTRACT_KEY_DESTINATION);
     // the system name can change via script
     const std::optional<std::string> passenger_dest_name =
         (UNIVERSE != nullptr ? UNIVERSE->getSystemName(dest)
                              : std::optional<std::string>());
     int dest_eta =
-        passenger_info.get<double>(std::string(CONTRACT_KEY_ARRIVAL_TIME)) -
-        ship_clock;
+        passenger_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
 
     if (system_id == dest) {
       // we've arrived in system!
       if (dest_eta > 0) {
         // and in good time
-        long long fee =
-            passenger_info.get<long long>(std::string(CONTRACT_KEY_FEE));
+        long long fee = passenger_info.get<long long>(CONTRACT_KEY_FEE);
         while ((randf() < 0.75) &&
                (dest_eta > 3600))  // delivered with more than an hour to spare
                                    // and a decent customer?
@@ -267,13 +265,12 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
                                    {TextArg(passenger_name), OOIntCredits(fee),
                                     TextArg(passenger_dest_name)}) +
             "\n";
-        if (passenger_info.get<unsigned int>(std::string(CONTRACT_KEY_RISK),
-                                             0) > 0) {
+        if (passenger_info.get<unsigned int>(CONTRACT_KEY_RISK, 0) > 0) {
           addRoleToPlayer("trader-courier+");
         }
 
-        increasePassengerReputation(RepForRisk(passenger_info.get<unsigned int>(
-            std::string(CONTRACT_KEY_RISK), 0)));
+        increasePassengerReputation(
+            RepForRisk(passenger_info.get<unsigned int>(CONTRACT_KEY_RISK, 0)));
         passengers.erase(passengers.begin() + i--);
         doScriptEvent(
             OOJSID("playerCompletedContract"),
@@ -283,8 +280,7 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
       } else {
         // but we're late!
         long long fee =
-            passenger_info.get<long long>(std::string(CONTRACT_KEY_FEE)) /
-            2;                 // halve fare
+            passenger_info.get<long long>(CONTRACT_KEY_FEE) / 2;  // halve fare
         while (randf() < 0.5)  // maybe halve fare a few times!
           fee /= 2;
         credits += 10 * fee;
@@ -294,8 +290,7 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
                                    {TextArg(passenger_name), OOIntCredits(fee),
                                     TextArg(passenger_dest_name)}) +
             "\n";
-        if (passenger_info.get<unsigned int>(std::string(CONTRACT_KEY_RISK),
-                                             0) > 0) {
+        if (passenger_info.get<unsigned int>(CONTRACT_KEY_RISK, 0) > 0) {
           addRoleToPlayer("trader-courier+");
         }
 
@@ -313,8 +308,8 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
                                          {TextArg(passenger_name)}) +
                   "\n";
 
-        decreasePassengerReputation(RepForRisk(passenger_info.get<unsigned int>(
-            std::string(CONTRACT_KEY_RISK), 0)));
+        decreasePassengerReputation(
+            RepForRisk(passenger_info.get<unsigned int>(CONTRACT_KEY_RISK, 0)));
         passengers.erase(passengers.begin() + i--);
         doScriptEvent(OOJSID("playerCompletedContract"),
                       {oo::PList("passenger"), oo::PList("failed"),
@@ -329,18 +324,16 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
     const oo::PList parcel_info =
         parcels[i];  // a copy: the entry may be removed below (it was retained)
     const std::optional<std::string> parcel_name =
-        OptionalStringForKey(parcel_info, std::string(PASSENGER_KEY_NAME));
-    int dest = parcel_info.get<int>(std::string(CONTRACT_KEY_DESTINATION));
+        OptionalStringForKey(parcel_info, PASSENGER_KEY_NAME);
+    int dest = parcel_info.get<int>(CONTRACT_KEY_DESTINATION);
     int dest_eta =
-        parcel_info.get<double>(std::string(CONTRACT_KEY_ARRIVAL_TIME)) -
-        ship_clock;
+        parcel_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
 
     if (system_id == dest) {
       // we've arrived in system!
       if (dest_eta > 0) {
         // and in good time
-        long long fee =
-            parcel_info.get<long long>(std::string(CONTRACT_KEY_FEE));
+        long long fee = parcel_info.get<long long>(CONTRACT_KEY_FEE);
         while ((randf() < 0.75) &&
                (dest_eta > 86400))  // delivered with more than a day to spare
                                     // and a decent customer?
@@ -357,12 +350,11 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
                                    {TextArg(parcel_name), OOIntCredits(fee)}) +
             "\n";
 
-        increaseParcelReputation(RepForRisk(
-            parcel_info.get<unsigned int>(std::string(CONTRACT_KEY_RISK), 0)));
+        increaseParcelReputation(
+            RepForRisk(parcel_info.get<unsigned int>(CONTRACT_KEY_RISK, 0)));
 
         parcels.erase(parcels.begin() + i--);
-        if (parcel_info.get<unsigned int>(std::string(CONTRACT_KEY_RISK), 0) >
-            0) {
+        if (parcel_info.get<unsigned int>(CONTRACT_KEY_RISK, 0) > 0) {
           addRoleToPlayer("trader-courier+");
         }
         doScriptEvent(
@@ -374,8 +366,7 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
       } else {
         // but we're late!
         long long fee =
-            parcel_info.get<long long>(std::string(CONTRACT_KEY_FEE)) /
-            2;                 // halve fare
+            parcel_info.get<long long>(CONTRACT_KEY_FEE) / 2;  // halve fare
         while (randf() < 0.5)  // maybe halve fare a few times!
           fee /= 2;
         credits += 10 * fee;
@@ -384,8 +375,7 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
             oo::str::formatRuntime(OO_DESC("parcel-delivered-late-@-@"),
                                    {TextArg(parcel_name), OOIntCredits(fee)}) +
             "\n";
-        if (parcel_info.get<unsigned int>(std::string(CONTRACT_KEY_RISK), 0) >
-            0) {
+        if (parcel_info.get<unsigned int>(CONTRACT_KEY_RISK, 0) > 0) {
           addRoleToPlayer("trader-courier+");
         }
         parcels.erase(parcels.begin() + i--);
@@ -402,8 +392,8 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
                                          {TextArg(parcel_name)}) +
                   "\n";
 
-        decreaseParcelReputation(RepForRisk(
-            parcel_info.get<unsigned int>(std::string(CONTRACT_KEY_RISK), 0)));
+        decreaseParcelReputation(
+            RepForRisk(parcel_info.get<unsigned int>(CONTRACT_KEY_RISK, 0)));
         parcels.erase(parcels.begin() + i--);
         doScriptEvent(OOJSID("playerCompletedContract"),
                       {oo::PList("parcel"), oo::PList("failed"),
@@ -419,23 +409,21 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
         contracts[i];  // a copy: the entry may be removed below (it was
                        // retained)
     const std::optional<std::string> contract_cargo_desc =
-        OptionalStringForKey(contract_info, std::string(CARGO_KEY_DESCRIPTION));
-    int dest = contract_info.get<int>(std::string(CONTRACT_KEY_DESTINATION));
+        OptionalStringForKey(contract_info, CARGO_KEY_DESCRIPTION);
+    int dest = contract_info.get<int>(CONTRACT_KEY_DESTINATION);
     int dest_eta =
-        contract_info.get<double>(std::string(CONTRACT_KEY_ARRIVAL_TIME)) -
-        ship_clock;
+        contract_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
 
     if (system_id == dest) {
       // no longer needed
       // int premium = 10 *
       // oo::PListView(contract_info).get<float>(CONTRACT_KEY_PREMIUM);
-      int fee = 10 * contract_info.get<float>(std::string(CONTRACT_KEY_FEE));
+      int fee = 10 * contract_info.get<float>(CONTRACT_KEY_FEE);
 
       const std::string contract_cargo_type = contract_info.get<std::string>(
-          std::string(CARGO_KEY_TYPE));  // a missing type was nil, which the
-                                         // market read as ""
-      int contract_amount =
-          contract_info.get<int>(std::string(CARGO_KEY_AMOUNT));
+          CARGO_KEY_TYPE);  // a missing type was nil, which the
+                            // market read as ""
+      int contract_amount = contract_info.get<int>(CARGO_KEY_AMOUNT);
 
       int quantity_on_hand =
           (shipCommodityData != nullptr
@@ -577,7 +565,7 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
       unsigned j;
       for (j = 0; j < passengers.size(); j++) {
         const oo::PList* passenger_name = passengers[j].find(
-            std::string(PASSENGER_KEY_NAME));  // -isEqual: to the record's key
+            PASSENGER_KEY_NAME);  // -isEqual: to the record's key
         if (passenger_name != nullptr && passenger_name->isString() &&
             *passenger_name->getIf<std::string>() == names[i])
           on_board = true;
@@ -626,9 +614,8 @@ OOCargoQuantity PlayerEntity::contractedVolumeForGood(const std::string& good) {
   OOCargoQuantity total = 0;
   for (unsigned i = 0; i < contracts.size(); i++) {
     const oo::PList& contract_info = contracts[i];
-    if (OptionalStringForKey(contract_info, std::string(CARGO_KEY_TYPE)) ==
-        good) {
-      total += contract_info.get<std::size_t>(std::string(CARGO_KEY_AMOUNT));
+    if (OptionalStringForKey(contract_info, CARGO_KEY_TYPE) == good) {
+      total += contract_info.get<std::size_t>(CARGO_KEY_AMOUNT);
     }
   }
   return total;
@@ -962,7 +949,7 @@ bool PlayerEntity::removePassenger(
 
   for (i = 0; i < passengers.size(); i++) {
     const std::optional<std::string> this_name =
-        OptionalStringForKey(passengers[i], std::string(PASSENGER_KEY_NAME));
+        OptionalStringForKey(passengers[i], PASSENGER_KEY_NAME);
 
     if (this_name == Name) {
       passengers.erase(passengers.begin() + i);
@@ -1023,7 +1010,7 @@ bool PlayerEntity::removeParcel(
 
   for (i = 0; i < parcels.size(); i++) {
     const std::optional<std::string> this_name =
-        OptionalStringForKey(parcels[i], std::string(PASSENGER_KEY_NAME));
+        OptionalStringForKey(parcels[i], PASSENGER_KEY_NAME);
 
     if (this_name == Name) {
       parcels.erase(parcels.begin() + i);
@@ -1130,14 +1117,13 @@ bool PlayerEntity::removeContract(
 
   for (i = 0; i < contracts.size(); i++) {
     const oo::PList& contractInfo = contracts[i];
-    unsigned cargoDest =
-        contractInfo.get<int>(std::string(CONTRACT_KEY_DESTINATION));
+    unsigned cargoDest = contractInfo.get<int>(CONTRACT_KEY_DESTINATION);
     const std::optional<std::string> cargoType =
-        OptionalStringForKey(contractInfo, std::string(CARGO_KEY_TYPE));
+        OptionalStringForKey(contractInfo, CARGO_KEY_TYPE);
 
     if (cargoType == type && cargoDest == dest) {
       const std::optional<std::string> cargoID =
-          OptionalStringForKey(contractInfo, std::string(CARGO_KEY_ID));
+          OptionalStringForKey(contractInfo, CARGO_KEY_ID);
       if (cargoID) contract_record.erase(*cargoID);
       contracts.erase(contracts.begin() + i);
       return true;
@@ -1176,17 +1162,15 @@ std::vector<std::string> PlayerEntity::contractsListFromEntries(
     // identical to the corresponding CONTRACT_KEYs
     const std::optional<std::string> destination =
         (UNIVERSE != nullptr ? UNIVERSE->getSystemName(contract_info.get<int>(
-                                   std::string(CONTRACT_KEY_DESTINATION)))
+                                   CONTRACT_KEY_DESTINATION))
                              : std::optional<std::string>());
     int dest_eta =
-        contract_info.get<double>(std::string(CONTRACT_KEY_ARRIVAL_TIME)) -
-        ship_clock;
+        contract_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
     const std::optional<std::string> deadline =
         (UNIVERSE != nullptr ? UNIVERSE->shortTimeDescription(dest_eta)
                              : std::optional<std::string>());
 
-    OOCreditsQuantity fee =
-        contract_info.get<int>(std::string(CONTRACT_KEY_FEE));
+    OOCreditsQuantity fee = contract_info.get<int>(CONTRACT_KEY_FEE);
     const std::optional<std::string> feeDesc =
         std::optional<std::string>(OOIntCredits(fee));
 

@@ -816,7 +816,7 @@ std::optional<std::string> StationEntity::jsClassName() {
 OOTechLevelID StationEntity::getEquivalentTechLevel() {
   if (equivalentTechLevel == oo::kNotFound) {
     return (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
-        .get<int>(std::string(KEY_TECHLEVEL));
+        .get<int>(KEY_TECHLEVEL);
   } else {
     return equivalentTechLevel;
   }

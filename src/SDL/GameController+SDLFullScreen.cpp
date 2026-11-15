@@ -40,12 +40,10 @@ namespace {
 const oo::PList* FindDisplayMode(const oo::PList::Array& modes,
                                  unsigned int d_width, unsigned int d_height,
                                  unsigned int d_refresh) {
-  unsigned int modeWidth, modeHeight, modeRefresh;
-
   for (const oo::PList& mode : modes) {
-    modeWidth = mode.get<int>(std::string(kOODisplayWidth));
-    modeHeight = mode.get<int>(std::string(kOODisplayHeight));
-    modeRefresh = mode.get<int>(std::string(kOODisplayRefreshRate));
+    unsigned int modeWidth = mode.get<int>(kOODisplayWidth);
+    unsigned int modeHeight = mode.get<int>(kOODisplayHeight);
+    unsigned int modeRefresh = mode.get<int>(kOODisplayRefreshRate);
     if ((modeWidth == d_width) && (modeHeight == d_height) &&
         (modeRefresh == d_refresh)) {
       return &mode;
@@ -63,12 +61,11 @@ void GameController::setUpDisplayModes() {
   const std::vector<oo::PList> modes =
       (_gameView != nullptr ? _gameView->getScreenSizeArray()
                             : std::vector<oo::PList>());
-  unsigned int modeWidth, modeHeight;
 
   displayModes.clear();
   for (const oo::PList& mode : modes) {
-    modeWidth = mode.get<int>(std::string(kOODisplayWidth));
-    modeHeight = mode.get<int>(std::string(kOODisplayHeight));
+    unsigned int modeWidth = mode.get<int>(kOODisplayWidth);
+    unsigned int modeHeight = mode.get<int>(kOODisplayHeight);
 
     if (modeWidth < DISPLAY_MIN_WIDTH || modeWidth > DISPLAY_MAX_WIDTH ||
         modeHeight < DISPLAY_MIN_HEIGHT || modeHeight > DISPLAY_MAX_HEIGHT)
@@ -79,9 +76,9 @@ void GameController::setUpDisplayModes() {
   const oo::PList currentMode =
       (_gameView != nullptr ? _gameView->currentScreenMode() : oo::PList());
   if (currentMode) {
-    width = currentMode.get<int>(std::string(kOODisplayWidth));
-    height = currentMode.get<int>(std::string(kOODisplayHeight));
-    refresh = currentMode.get<int>(std::string(kOODisplayRefreshRate));
+    width = currentMode.get<int>(kOODisplayWidth);
+    height = currentMode.get<int>(kOODisplayHeight);
+    refresh = currentMode.get<int>(kOODisplayRefreshRate);
   } else {
     NSSize fsmSize =
         (_gameView != nullptr ? _gameView->currentScreenSize() : NSSize{});
