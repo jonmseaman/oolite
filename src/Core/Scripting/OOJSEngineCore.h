@@ -641,16 +641,17 @@ JSValue OOJSObjectWrapperToString(JSContext* context, JSValueConst thisObj,
 // Callback-based (JS_CGETSET_MAGIC_DEF2). Read-only properties are defined
 // without a setter.
 #define OOJS_PROP_READWRITE_CB JS_PROP_ENUMERABLE
-#define OOJS_PROP_READONLY_CB JS_PROP_ENUMERABLE
+inline constexpr auto OOJS_PROP_READONLY_CB = JS_PROP_ENUMERABLE;
 inline constexpr int OOJS_PROP_HIDDEN_READWRITE_CB = 0;
 inline constexpr int OOJS_PROP_HIDDEN_READONLY_CB = 0;
 
 // Slot-based (JS_DefinePropertyValue*).
-#define OOJS_PROP_READWRITE (JS_PROP_ENUMERABLE | JS_PROP_WRITABLE)
-#define OOJS_PROP_READONLY JS_PROP_ENUMERABLE
-#define OOJS_PROP_HIDDEN_READWRITE JS_PROP_WRITABLE
+inline constexpr auto OOJS_PROP_READWRITE =
+    (JS_PROP_ENUMERABLE | JS_PROP_WRITABLE);
+inline constexpr auto OOJS_PROP_READONLY = JS_PROP_ENUMERABLE;
+inline constexpr auto OOJS_PROP_HIDDEN_READWRITE = JS_PROP_WRITABLE;
 #define OOJS_PROP_HIDDEN_READONLY 0
-#define OOJS_METHOD_READONLY OOJS_PROP_HIDDEN_READONLY
+inline constexpr auto OOJS_METHOD_READONLY = OOJS_PROP_HIDDEN_READONLY;
 
 // A property's magic number, QuickJS's int16_t: a property-ID enum class's
 // value, or a plain number.
