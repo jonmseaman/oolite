@@ -119,7 +119,7 @@ MethodType MethodTypeOfRow(const OOJSCallEntityMethodRow& row) {
 */
 bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
                 JSValueConst* argv, JSValue* outResult, Entity* entity) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   std::optional<std::string> selectorString;
   std::optional<std::string> paramString;
@@ -313,7 +313,6 @@ bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
 
   return !error;
 
-  OOJS_PROFILE_EXIT
 }
 }  // namespace
 

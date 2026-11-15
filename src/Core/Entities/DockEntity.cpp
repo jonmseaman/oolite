@@ -105,14 +105,11 @@ std::shared_ptr<::ShipEntity> DockEntity::newDockObject(const std::string& key,
 }
 
 void DockEntity::initDockDefaults() {
-  OOJS_PROFILE_ENTER
-
   allow_docking = true;
   disallowed_docking_collides = false;
   allow_launching = true;
   virtual_dock = false;
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 void DockEntity::willDealloc() { clearIdLocks(nullptr); }
@@ -248,7 +245,7 @@ void DockEntity::clearAllIdLocks() {
 }
 
 bool DockEntity::setUpShipFromDictionary(const oo::PList& dict) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   isShip = true;
   isStation = false;
@@ -257,7 +254,6 @@ bool DockEntity::setUpShipFromDictionary(const oo::PList& dict) {
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 void DockEntity::update(OOTimeDelta delta_t) {

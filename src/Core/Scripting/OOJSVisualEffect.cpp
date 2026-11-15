@@ -46,7 +46,7 @@ MA 02110-1301, USA.
 /*
         The class is a static JSClassDef registered with OOJSRegisterClass(),
         its properties a JSCFunctionListEntry table whose magic is the property
-        ID, as in #768. OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are
+        ID, as in #768. OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_SCOPE() are
         C++ try/catch and scope guards (OOJSEngineNativeWrappers.h). The
         category on OOVisualEffectEntity is free functions; restoreSubEntities()
         calls the function that holds -subEntitiesForScript's body.
@@ -215,7 +215,7 @@ JSClassID JSVisualEffectClassID() { return sVisualEffectClassID; }
 static bool JSVisualEffectGetVisualEffectEntity(
     JSContext* context, JSValueConst visualEffectObj,
     OOVisualEffectEntity** outEntity) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
@@ -232,7 +232,6 @@ static bool JSVisualEffectGetVisualEffectEntity(
   *outEntity = effect;
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // The bodies the C++ effect's overrides call.
@@ -603,7 +602,7 @@ static JSValue VisualEffectRemove(OOJS_NATIVE_ARGS) {
 
 // getMaterials()
 static JSValue VisualEffectGetMaterials(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   oo::PList result;
   OOVisualEffectEntity* thisEnt = nullptr;
@@ -615,12 +614,11 @@ static JSValue VisualEffectGetMaterials(OOJS_NATIVE_ARGS) {
     result = oo::PList(oo::PList::Dict{});  // an empty dictionary
   OOJS_RETURN_PLIST(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // getShaders()
 static JSValue VisualEffectGetShaders(OOJS_NATIVE_ARGS) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   oo::PList result;
   OOVisualEffectEntity* thisEnt = nullptr;
@@ -632,7 +630,6 @@ static JSValue VisualEffectGetShaders(OOJS_NATIVE_ARGS) {
     result = oo::PList(oo::PList::Dict{});  // an empty dictionary
   OOJS_RETURN_PLIST(result);
 
-  OOJS_PROFILE_EXIT
 }
 
 // setMaterials(params: dict, [shaders: dict])  // sets materials dictionary.
@@ -697,7 +694,7 @@ static JSValue VisualEffectSetShaders(OOJS_NATIVE_ARGS) {
 static JSValue VisualEffectSetMaterialsInternal(OOJS_NATIVE_ARGS,
                                                 OOVisualEffectEntity* thisEnt,
                                                 bool fromShaders) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   JSValueConst params = JS_UNDEFINED;
   oo::PList materials;
@@ -775,7 +772,6 @@ static JSValue VisualEffectSetMaterialsInternal(OOJS_NATIVE_ARGS,
 
   OOJS_RETURN_BOOL(success);
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue VisualEffectScale(OOJS_NATIVE_ARGS) {

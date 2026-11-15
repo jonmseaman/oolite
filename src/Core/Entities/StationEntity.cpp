@@ -780,13 +780,12 @@ std::shared_ptr<::ShipEntity> StationEntity::newStationObject(
 }
 
 void StationEntity::initStationDefaults() {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   isStation = true;
   _shipsOnHold.removeAll();  // a new, empty set
   hasBreakPattern = true;
 
-  OOJS_PROFILE_EXIT_VOID
 }
 
 void StationEntity::willDealloc() {
@@ -990,7 +989,7 @@ std::vector<oo::EntityHold> StationEntity::dockSubEntities() {
 }
 
 bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   isShip = true;
   isStation = true;
@@ -1099,7 +1098,6 @@ bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
   }
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // used to set up a virtual dock if necessary

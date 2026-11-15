@@ -133,7 +133,7 @@ void InitOOJSSound(JSContext* context, JSValueConst global) {
 }
 
 OOSound* SoundFromJSValue(JSContext* context, JSValueConst value) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   OOSound* result = nullptr;
 
@@ -158,7 +158,6 @@ OOSound* SoundFromJSValue(JSContext* context, JSValueConst value) {
 
   return result;
 
-  OOJS_PROFILE_EXIT
 }
 
 // *** Implementation stuff ***

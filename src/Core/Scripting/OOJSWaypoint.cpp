@@ -35,7 +35,7 @@ MA 02110-1301, USA.
         its properties a JSCFunctionListEntry table whose magic is the property
         ID, as in #768.
 
-        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and
+        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_SCOPE() are C++ try/catch and
         scope guards (OOJSEngineNativeWrappers.h). The category on
         OOWaypointEntity is free functions; the natives call the C++
         OOWaypointEntity's members.
@@ -102,7 +102,7 @@ JSClassID JSWaypointClassID() { return sWaypointClassID; }
 static bool JSWaypointGetWaypointEntity(JSContext* context,
                                         JSValueConst waypointObj,
                                         OOWaypointEntity** outEntity) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
@@ -121,7 +121,6 @@ static bool JSWaypointGetWaypointEntity(JSContext* context,
   *outEntity = waypoint;
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 // The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the C++

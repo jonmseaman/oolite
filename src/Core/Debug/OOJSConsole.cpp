@@ -367,7 +367,7 @@ oo::PList ConsoleConverter(JSContext* /*context*/, JSValueConst object) {
 }  // namespace
 
 JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // The classes belong to the context, so are set up again after every reset.
   JSValue consolePrototype = (sConsoleClassID != 0)
@@ -418,7 +418,6 @@ JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor) {
 
   return object;
 
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {

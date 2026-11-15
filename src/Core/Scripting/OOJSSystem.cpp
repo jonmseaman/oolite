@@ -1821,7 +1821,7 @@ static bool GetRelativeToAndRange(JSContext* context,
                                   const std::string& methodName, int* ioArgc,
                                   JSValueConst** ioArgv, Entity** outRelativeTo,
                                   double* outRange) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   // No NULL arguments accepted.
   assert(ioArgc && ioArgv && outRelativeTo && outRange);
@@ -1853,13 +1853,12 @@ static bool GetRelativeToAndRange(JSContext* context,
 
   return true;
 
-  OOJS_PROFILE_EXIT
 }
 
 static std::vector<oo::EntityHold> FindJSVisibleEntities(
     EntityFilterPredicate predicate, void* parameter, Entity* relativeTo,
     double range) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   std::vector<oo::EntityHold> result;
   BinaryOperationPredicateParameter param = {
@@ -1881,24 +1880,22 @@ static std::vector<oo::EntityHold> FindJSVisibleEntities(
   }
   return result;  // empty for no matches, as the empty array was
 
-  OOJS_PROFILE_EXIT
 }
 
 static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate,
                                              void* parameter,
                                              Entity* relativeTo, double range) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   BinaryOperationPredicateParameter param = {IsShipPredicate, nullptr,
                                              predicate, parameter};
   return FindJSVisibleEntities(ANDPredicate, &param, relativeTo, range);
 
-  OOJS_PROFILE_EXIT
 }
 
 static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
                                                     Entity* relativeTo) {
-  OOJS_PROFILE_ENTER
+  OOJS_PROFILE_SCOPE();
 
   Entity *ea = a,  // the C++ entities
       *eb = b;
@@ -1915,5 +1912,4 @@ static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
   else
     return OOComparisonResult::kSame;
 
-  OOJS_PROFILE_EXIT
 }

@@ -81,7 +81,7 @@ Behaviour that needed emulating, all in the engine core:
   and that object is the result unless the function returns an object. The
   `unpatchedEngine` check tests for this too.
 - **Profiling.** In debug builds `OOJS_PROFILE` is on, as with SpiderMonkey:
-  natives bracketed by `OOJS_NATIVE_ENTER`/`OOJS_PROFILE_ENTER` are timed, and
+  natives bracketed by `OOJS_NATIVE_ENTER` or opening with `OOJS_PROFILE_SCOPE()` are timed, and
   the debug console's `profile()`, `getProfile()` and `trace()` work. As in
   SpiderMonkey builds without `MOZ_TRACE_JSCALLS` (the usual case), only
   natives are profiled; other time is reported as JavaScript time.
