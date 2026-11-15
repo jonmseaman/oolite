@@ -107,15 +107,13 @@ bool ScanQuaternionFromString(const std::optional<std::string>& wxyzString,
   }
 }
 
-bool ScanVectorAndQuaternionFromString(
-    const std::optional<std::string>& xyzwxyzString, Vector* outVector,
-    Quaternion* outQuaternion) {
+std::optional<oo::VectorAndQuaternion> ScanVectorAndQuaternionFromString(
+    const std::optional<std::string>& xyzwxyzString) {
   GLfloat xyzwxyz[] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
   int i = 0;
   std::string_view error;
 
-  assert(outVector != nullptr && outQuaternion != nullptr);
-  if (!xyzwxyzString.has_value()) return false;
+  if (!xyzwxyzString.has_value()) return std::nullopt;
 
   oo::str::Scanner scanner(*xyzwxyzString);
   while (!scanner.isAtEnd() && i < 7 && error.empty()) {
@@ -129,18 +127,18 @@ bool ScanVectorAndQuaternionFromString(
     OO_LOG_ERR("strings.conversion.quaternion",
                "cannot make vector and quaternion from '{}': {}",
                *xyzwxyzString, error);
-    return false;
+    return std::nullopt;
   }
 
-  outVector->x = xyzwxyz[0];
-  outVector->y = xyzwxyz[1];
-  outVector->z = xyzwxyz[2];
-  outQuaternion->w = xyzwxyz[3];
-  outQuaternion->x = xyzwxyz[4];
-  outQuaternion->y = xyzwxyz[5];
-  outQuaternion->z = xyzwxyz[6];
-
-  return true;
+  oo::VectorAndQuaternion result;
+  result.vector.x = xyzwxyz[0];
+  result.vector.y = xyzwxyz[1];
+  result.vector.z = xyzwxyz[2];
+  result.quaternion.w = xyzwxyz[3];
+  result.quaternion.x = xyzwxyz[4];
+  result.quaternion.y = xyzwxyz[5];
+  result.quaternion.z = xyzwxyz[6];
+  return result;
 }
 
 Vector VectorFromString(const std::optional<std::string>& xyzString,

@@ -2851,7 +2851,12 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     }
     if (!ship) return false;
 
-    ScanVectorAndQuaternionFromString(joined(2, 7), &model_p0, &model_q);
+    // A string that does not scan leaves both as they were.
+    if (const std::optional<oo::VectorAndQuaternion> scanned =
+            ScanVectorAndQuaternionFromString(joined(2, 7))) {
+      model_p0 = scanned->vector;
+      model_q = scanned->quaternion;
+    }
 
     Vector model_offset = positionOffsetForShipInRotationToAlignment(
         ship.get(), model_q, i_info[9]);
@@ -2892,7 +2897,12 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
              : nullptr);  // retain count = 1
     if (!doppelganger) return false;
 
-    ScanVectorAndQuaternionFromString(joined(1, 7), &model_p0, &model_q);
+    // A string that does not scan leaves both as they were.
+    if (const std::optional<oo::VectorAndQuaternion> scanned =
+            ScanVectorAndQuaternionFromString(joined(1, 7))) {
+      model_p0 = scanned->vector;
+      model_q = scanned->quaternion;
+    }
 
     Vector model_offset = positionOffsetForShipInRotationToAlignment(
         doppelganger.get(), model_q, i_info[8]);
