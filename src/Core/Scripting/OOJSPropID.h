@@ -26,6 +26,9 @@ MA 02110-1301, USA.
 
 #include <quickjs.h>
 
+#include <algorithm>
+#include <cstddef>
+
 #include "OOFunctionAttributes.h"
 
 /*	Engine-neutral names for a property ID and a value (jsid and jsval with
@@ -35,16 +38,32 @@ MA 02110-1301, USA.
 using OOJSPropID = JSAtom;
 using OOJSVal = JSValue;
 
+JSAtom OOJSInternAtomPRIVATE(const char* name);
+
+namespace oo::js {
+
+// A string literal as a template argument, so that each distinct name has its
+// own cached atom.
+template <std::size_t N>
+struct AtomName {
+  // Implicit on purpose: a string literal converts to it.
+  consteval AtomName(const char (&name)[N]) { std::copy_n(name, N, chars); }
+  char chars[N] = {};
+};
+
+// The interned atom for Name: made the first time it is asked for (a
+// thread-safe static), then kept for the life of the process, as atoms are.
+template <AtomName Name>
+JSAtom Atom() {
+  static const JSAtom atom = OOJSInternAtomPRIVATE(Name.chars);
+  return atom;
+}
+
+}  // namespace oo::js
+
 /*
         OOJSID(string literal)
-        Macro to create a property ID. The string is interned the first time the
-        macro is hit, then cached; the atom lives as long as the runtime.
+        A property ID for a string literal: oo::js::Atom<literal>(). Kept as a
+        macro because tests call it by this name.
 */
-#define OOJSID(str)                            \
-  ({                                           \
-    static JSAtom idCache = JS_ATOM_NULL;      \
-    if (idCache == JS_ATOM_NULL) [[unlikely]]  \
-      idCache = OOJSInternAtomPRIVATE("" str); \
-    idCache;                                   \
-  })
-JSAtom OOJSInternAtomPRIVATE(const char* name);
+#define OOJSID(str) (oo::js::Atom<"" str>())
