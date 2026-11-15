@@ -442,9 +442,9 @@ if [[ "$ACTION" == "format" || "$ACTION" == "format-check" ]]; then
 fi
 
 # Intercept global action 'tidy': .clang-tidy's checks over the game's own sources, read from the
-# root compile database that a build writes. A WarningsAsErrors finding fails the run. Vendored
-# code (MiniZip, EXRSnapshotSupport) is skipped: its .clang-tidy turns every check off, and
-# clang-tidy exits nonzero when no check is enabled.
+# root compile database that a build writes. A WarningsAsErrors finding fails the run. Only src/
+# is tidied: third-party code is in third_party/, whose .clang-tidy turns every check off (and
+# clang-tidy exits nonzero when no check is enabled).
 if [[ "$ACTION" == "tidy" ]]; then
     tidy_bin_dir=""
     if [[ -x /opt/homebrew/opt/llvm@22/bin/run-clang-tidy ]]; then
@@ -468,7 +468,7 @@ if [[ "$ACTION" == "tidy" ]]; then
     fi
     tidy_status=0
     "$run_clang_tidy" -p . -quiet -clang-tidy-binary "$clang_tidy" ${tidy_extra_args[@]+"${tidy_extra_args[@]}"} \
-        '^(?!.*/(MiniZip|EXRSnapshotSupport)/).*/src/(Core|SDL|oofnd)/.*\.cpp$' || tidy_status=$?
+        '^.*/src/.*\.cpp$' || tidy_status=$?
     trap - ERR
     popd > /dev/null
     if [[ $tidy_status -ne 0 ]]; then

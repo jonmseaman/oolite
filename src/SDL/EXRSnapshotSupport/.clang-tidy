@@ -1,2 +1,0 @@
-# Vendored code (EXRSnapshotSupport): not tidied. Overrides the checks in the root .clang-tidy.
-Checks: '-*'

@@ -93,7 +93,5 @@ CheckOptions:
     ^::strrchr$,std::string_view::rfind,;^::strstr$,std::string_view::find,;
     ^::strtok$,oo::str::split,;^::sprintf$,std::format,;^::snprintf$,std::format,;
     ^::atoi$,std::from_chars,;^::atof$,std::from_chars,
-HeaderFilterRegex: '.*/src/(Core|SDL|oofnd)/.*'
-# Vendored code is not ours to tidy. Headers are excluded here; the .clang-tidy files inside
-# src/Core/MiniZip and src/SDL/EXRSnapshotSupport switch every check off for the sources there.
-ExcludeHeaderFilterRegex: '.*/(MiniZip|EXRSnapshotSupport)/.*|.*/stb_image_write\.h'
+# Everything under src/ is Oolite's own; third-party code is in third_party/, outside it.
+HeaderFilterRegex: '.*/src/.*'
