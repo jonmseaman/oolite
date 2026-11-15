@@ -156,8 +156,7 @@ bool PathListContains(const std::vector<std::string>& searchPaths,
 void RemovePath(std::vector<std::string>& searchPaths,
                 const std::optional<std::string>& path) {
   if (!path.has_value()) return;
-  searchPaths.erase(std::remove(searchPaths.begin(), searchPaths.end(), *path),
-                    searchPaths.end());
+  std::erase(searchPaths, *path);
 }
 
 // Whether +stringWithUTF8String: would have accepted these bytes (it returns

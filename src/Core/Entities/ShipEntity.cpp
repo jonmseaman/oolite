@@ -3690,8 +3690,8 @@ bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey,
 
         OK = (condScript != nullptr
                   ? condScript->callMethod(OOJSID("allowAwardEquipment"),
-                                           JScontext, args,
-                                           sizeof args / sizeof *args, &result)
+                                           JScontext, args, std::size(args),
+                                           &result)
                   : false);
 
         if (OK) allow_addition = OOJSValueToBOOL(JScontext, result);
@@ -13056,8 +13056,7 @@ void ShipEntity::refreshEscortPositions() {
       result = OOJSUndefinedValue();
       OK = (script != nullptr
                 ? script->callMethod(OOJSID("coordinatesForEscortPosition"),
-                                     context, args, sizeof args / sizeof *args,
-                                     &result)
+                                     context, args, std::size(args), &result)
                 : false);
 
       if (OK) OK = JSValueToVector(context, result, &_escortPositions[i]);

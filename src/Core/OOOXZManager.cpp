@@ -258,7 +258,7 @@ void DependencyStackAdd(std::vector<oo::PList>& stack, const oo::PList& item) {
 
 void DependencyStackRemove(std::vector<oo::PList>& stack,
                            const oo::PList& item) {
-  stack.erase(std::remove(stack.begin(), stack.end(), item), stack.end());
+  std::erase(stack, item);
 }
 
 // The first line of a manifest's description (nullopt: no description, as the

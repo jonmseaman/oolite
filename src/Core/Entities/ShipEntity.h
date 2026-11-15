@@ -1584,7 +1584,7 @@ class ShipEntity : public OOEntityWithDrawable,
 #define ShipScriptEvent(context, ship, event, ...)                           \
   do {                                                                       \
     OOJSVal argv[] = {__VA_ARGS__};                                          \
-    int argc = sizeof argv / sizeof *argv;                                   \
+    int argc = std::size(argv);                                              \
     if (ShipEntity* ooScriptEventShip_ = (ship))                             \
       ooScriptEventShip_->doScriptEvent(OOJSID(event), context, argv, argc); \
     for (int oojsArgIndex = 0; oojsArgIndex < argc; oojsArgIndex++) {        \

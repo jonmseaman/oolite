@@ -396,7 +396,7 @@ oo::PList OOCastParam(E value) {
 // +dictionaryWithObjects:forKeys:count: did.
 inline oo::PList OOExpandArgumentDictionary(
     std::initializer_list<oo::PList::Dict::value_type> entries) {
-  if (entries.size() == 0) return oo::PList();
+  if (std::empty(entries)) return oo::PList();
   oo::PList::Dict dictionary;
   for (const auto& entry : entries) {
     if (!entry.second.isNull())
