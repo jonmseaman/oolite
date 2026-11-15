@@ -47,7 +47,7 @@ MA 02110-1301, USA.
 
 inline constexpr int STICKPROFILE_TYPE_STANDARD = 1;
 inline constexpr int STICKPROFILE_TYPE_SPLINE = 2;
-#define STICKPROFILE_MAX_POWER 10.0
+inline constexpr double STICKPROFILE_MAX_POWER = 10.0;
 
 class OOJoystickSplineSegment;  // private to OOJoystickProfile.cpp
 
