@@ -53,8 +53,8 @@ MA 02110-1301, USA.
 #include "stb_image_write.h"
 
 // The save and snapshot directory names.
-#define SAVEDIR "oolite-saves"
-#define SNAPSHOTDIR "snapshots"
+constexpr char SAVEDIR[] = "oolite-saves";
+constexpr char SNAPSHOTDIR[] = "snapshots";
 
 int SaveEXRSnapshot(const char* outfilename, int width, int height,
                     const float* rgb);
