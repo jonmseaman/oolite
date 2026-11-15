@@ -332,13 +332,12 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
     ShipEntity* thisGroupLeader =
         (cxxGroup != nullptr) ? cxxGroup->leader() : nullptr;
 
-    if ((thisGroupLeader != nullptr ? thisGroupLeader->escortGroup()
-                                    : static_cast<OOShipGroup*>(nullptr)) ==
-        thisGroup)  // escort group!
-    {
-      if (((cxxGroup != nullptr) ? cxxGroup->count() : 0) >
-          1)  // already with some escorts
-      {
+    if ((thisGroupLeader != nullptr
+             ? thisGroupLeader->escortGroup()
+             : static_cast<OOShipGroup*>(nullptr)) == thisGroup) {
+      // escort group!
+      if (((cxxGroup != nullptr) ? cxxGroup->count() : 0) > 1) {
+        // already with some escorts
         OOShipGroup* thatGroup =
             (ship != nullptr ? ship->group()
                              : static_cast<OOShipGroup*>(nullptr));
@@ -349,9 +348,8 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
                  ? ((cxxThatGroup != nullptr) ? cxxThatGroup->leader()
                                               : nullptr)
                        ->escortGroup()
-                 : static_cast<OOShipGroup*>(nullptr)) ==
-                thatGroup)  // new escort already escorting!
-        {
+                 : static_cast<OOShipGroup*>(nullptr)) == thatGroup) {
+          // new escort already escorting!
           OOJSReportWarningForCaller(
               context, "ShipGroup", "addShip",
               "Ship %s cannot be assigned to two escort groups, ignoring.",
@@ -362,8 +360,8 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
                     ? thisGroupLeader->acceptAsEscort(ship)
                     : false);
         }
-      } else  // [thisGroup count] == 1, default unescorted ship?
-      {
+      } else {
+        // [thisGroup count] == 1, default unescorted ship?
         if ((thisGroupLeader != nullptr ? thisGroupLeader->escortGroup()
                                         : static_cast<OOShipGroup*>(nullptr)) ==
             (thisGroupLeader != nullptr ? thisGroupLeader->group()

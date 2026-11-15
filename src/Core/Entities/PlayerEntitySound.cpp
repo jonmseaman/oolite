@@ -413,8 +413,8 @@ void PlayerEntity::updateFuelScoopSoundWithInterval(OOTimeDelta delta_t) {
 void PlayerEntity::updateAfterburnerSound() {
   static uint8_t which = 0;
 
-  if (!afterburner_engaged)  // end the loop cycle
-  {
+  if (!afterburner_engaged) {
+    // end the loop cycle
     afterburnerSoundLooping = false;
   }
 

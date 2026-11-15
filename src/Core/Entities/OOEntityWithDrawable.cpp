@@ -84,8 +84,8 @@ void OOEntityWithDrawable::drawImmediate(bool /*immediate*/, bool translucent) {
           return;
         }
       }
-    } else  // is subentity
-    {
+    } else {
+      // is subentity
       // don't bother with frustum culling within 1km, as above - CIM
       if (cam_zero_distance >
           (collision_radius + 1000) * (collision_radius + 1000)) {

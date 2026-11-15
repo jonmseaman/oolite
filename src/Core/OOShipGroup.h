@@ -143,16 +143,14 @@ class OOShipGroupCursor {
 /*	A group carried through plist data as a PList::Object node: the group is
    the node's foreign object.
 */
-inline oo::PList OOShipGroupObjectNode(
-    OOShipGroup* group)  // null group -> null PList
-{
+inline oo::PList OOShipGroupObjectNode(OOShipGroup* group) {
+  // null group -> null PList
   if (group == nullptr) return oo::PList();
   return oo::PList(oo::PList::Object(oo::share(group)));
 }
 
-inline OOShipGroup* OOShipGroupInObjectNode(
-    const oo::PList& plist)  // null for any other node
-{
+inline OOShipGroup* OOShipGroupInObjectNode(const oo::PList& plist) {
+  // null for any other node
   const oo::PList::Object* node = plist.getIf<oo::PList::Object>();
   return (node != nullptr) ? dynamic_cast<OOShipGroup*>(node->get()) : nullptr;
 }

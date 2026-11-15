@@ -859,8 +859,8 @@ void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
     showKey =
         "show-console-on-error";  // if not a warning, it's a proper error.
   const oo::PList showValue = configurationValueForKey(std::string(showKey));
-  if (oo::plist_get::boolFrom(&showValue, false))  // OOBooleanFromObject
-  {
+  if (oo::plist_get::boolFrom(&showValue, false)) {
+    // OOBooleanFromObject
     showJSConsole();
   }
 }
@@ -871,8 +871,8 @@ void OODebugMonitor::jsEngine(
     const std::optional<std::string>& /*messageClass*/) {
   appendJSConsoleLine(message, "log");
   const oo::PList showValue = configurationValueForKey("show-console-on-log");
-  if (oo::plist_get::boolFrom(&showValue, false))  // OOBooleanFromObject
-  {
+  if (oo::plist_get::boolFrom(&showValue, false)) {
+    // OOBooleanFromObject
     showJSConsole();
   }
 }

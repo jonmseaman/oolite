@@ -234,21 +234,20 @@ void OOExplosionCloudEntity::update(OOTimeDelta delta_t) {
 
     particleColor[i][3] = newAlpha;
     if (color_order != "white") {
-      if (particleColor[i][tertiary] > 0.0f)  // fade blue (white to yellow)
-      {
+      if (particleColor[i][tertiary] > 0.0f) {
+        // fade blue (white to yellow)
         particleColor[i][tertiary] -= fdelta_t * 0.5f * fadeRate;
         if (particleColor[i][tertiary] < 0.0f) {
           particleColor[i][tertiary] = 0.0f;
         }
-      } else if (particleColor[i][secondary] >
-                 0.0f)  // fade green (yellow to red)
-      {
+      } else if (particleColor[i][secondary] > 0.0f) {
+        // fade green (yellow to red)
         particleColor[i][secondary] -= fdelta_t * fadeRate;
         if (particleColor[i][secondary] < 0.0f) {
           particleColor[i][secondary] = 0.0f;
         }
-      } else if (particleColor[i][primary] > 0.0f)  // fade red (red to black)
-      {
+      } else if (particleColor[i][primary] > 0.0f) {
+        // fade red (red to black)
         particleColor[i][primary] -= fdelta_t * 2.0f * fadeRate;
         if (particleColor[i][primary] < 0.0f) {
           particleColor[i][primary] = 0.0f;

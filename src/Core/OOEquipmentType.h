@@ -219,16 +219,14 @@ class OOEquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
 /*	A type carried through plist data as a PList::Object node: the type is
    the node's foreign object.
 */
-inline oo::PList OOEquipmentTypeObjectNode(
-    OOEquipmentType* type)  // null type -> null PList
-{
+inline oo::PList OOEquipmentTypeObjectNode(OOEquipmentType* type) {
+  // null type -> null PList
   if (type == nullptr) return oo::PList();
   return oo::PList(oo::PList::Object(oo::share(type)));
 }
 
-inline OOEquipmentType* OOEquipmentTypeInObjectNode(
-    const oo::PList& plist)  // null for any other node
-{
+inline OOEquipmentType* OOEquipmentTypeInObjectNode(const oo::PList& plist) {
+  // null for any other node
   const oo::PList::Object* node = plist.getIf<oo::PList::Object>();
   return (node != nullptr) ? dynamic_cast<OOEquipmentType*>(node->get())
                            : nullptr;

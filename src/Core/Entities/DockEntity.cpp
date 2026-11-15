@@ -277,8 +277,8 @@ void DockEntity::update(OOTimeDelta delta_t) {
 // avoid possibility of shooting the virtual dock damaging the station
 void DockEntity::noteTakingDamage(double amount, Entity* entity,
                                   OOShipDamageType type) {
-  if (virtual_dock)  // can't be damaged
-  {
+  if (virtual_dock) {
+    // can't be damaged
     return;
   }
   ShipEntity::noteTakingDamage(amount, entity, type);
@@ -286,8 +286,8 @@ void DockEntity::noteTakingDamage(double amount, Entity* entity,
 
 void DockEntity::takeEnergyDamage(double amount, Entity* ent, Entity* other,
                                   const std::string& weaponIdentifier) {
-  if (virtual_dock)  // can't be damaged
-  {
+  if (virtual_dock) {
+    // can't be damaged
     return;
   }
   ShipEntity::takeEnergyDamage(amount, ent, other, weaponIdentifier);
@@ -295,8 +295,8 @@ void DockEntity::takeEnergyDamage(double amount, Entity* ent, Entity* other,
 
 // virtual docks are invisible
 void DockEntity::drawImmediate(bool immediate, bool translucent) {
-  if (virtual_dock)  // not drawn
-  {
+  if (virtual_dock) {
+    // not drawn
     return;
   }
   ShipEntity::drawImmediate(immediate, translucent);
@@ -368,9 +368,8 @@ void DockEntity::abortAllDockings() {
           OODockingClearanceStatus::kRequested) {
     if (HPmagnitude2(HPvector_subtract(
             (player != nullptr ? player->getPosition() : HPVector{}),
-            absolutePositionForSubentity())) >
-        2250000)  // within 1500m of the dock
-    {
+            absolutePositionForSubentity())) > 2250000) {
+      // within 1500m of the dock
       if (station != nullptr)
         station->sendExpandedMessage(
             "[station-docking-clearance-abort-cancelled]", player);
@@ -512,9 +511,9 @@ oo::PList DockEntity::dockingInstructionsForShip(::ShipEntity* ship) {
           "BACK_OFF", false, -1);
 
     float dot = HPdot_product(launchVector, delta);
-    if (dot < 0)  // approaching from the wrong side of the station - construct
-                  // a vector to the side of the station.
-    {
+    if (dot < 0) {
+      // approaching from the wrong side of the station - construct
+      // a vector to the side of the station.
       HPVector approachVector =
           HPcross_product(HPvector_normal(delta), launchVector);
       approachVector = HPcross_product(
@@ -592,11 +591,9 @@ oo::PList DockEntity::dockingInstructionsForShip(::ShipEntity* ship) {
                                // - twice advised range
   HPVector delta = HPvector_subtract(ship->position, coords);
 
-  if (HPmagnitude2(delta) >
-      max_allowed_range *
-          max_allowed_range)  // too far from the coordinates - do not remove
-                              // them from the stack!
-  {
+  if (HPmagnitude2(delta) > max_allowed_range * max_allowed_range) {
+    // too far from the coordinates - do not remove
+    // them from the stack!
     if ((docking_stage == 1) && (HPmagnitude2(delta) < 1000000.0))  // 1km*1km
       speedAdvised *= 0.5;  // half speed
 
@@ -635,17 +632,16 @@ oo::PList DockEntity::dockingInstructionsForShip(::ShipEntity* ship) {
 
   if (oo::LiveEntity(id_lock[docking_stage]) == nullptr &&
       oo::LiveEntity(id_lock[docking_stage + 1]) == nullptr &&
-      oo::LiveEntity(id_lock[docking_stage + 2]) ==
-          nullptr)  // check three stages ahead
-  {
+      oo::LiveEntity(id_lock[docking_stage + 2]) == nullptr) {
+    // check three stages ahead
     // approach is clear - move to next position
     //
 
     // clear any previously owned docking stages
     clearIdLocks(ship);
 
-    if (docking_stage > 1)  // don't claim first docking stage
-    {
+    if (docking_stage > 1) {
+      // don't claim first docking stage
       id_lock[docking_stage] = std::weak_ptr<Entity>(
           oo::share(ship));  // otherwise - claim this docking stage
     }
@@ -857,9 +853,8 @@ void DockEntity::abortDockingForShip(::ShipEntity* ship) {
             OODockingClearanceStatus::kRequested) {
       if (HPmagnitude2(HPvector_subtract(
               (player != nullptr ? player->getPosition() : HPVector{}),
-              absolutePositionForSubentity())) >
-          2250000)  // within 1500m of the dock
-      {
+              absolutePositionForSubentity())) > 2250000) {
+        // within 1500m of the dock
         if (oo::ToShip(parentEntity()) != nullptr)
           oo::ToShip(parentEntity())
               ->sendExpandedMessage(
@@ -1059,9 +1054,8 @@ bool DockEntity::shipIsInDockingCorridor(::ShipEntity* ship) {
     }
 
     // in lane
-    if (0.90 * arbb.max.z + 0.10 * arbb.min.z <
-        0.0)  // we're 90% in docking position!
-    {
+    if (0.90 * arbb.max.z + 0.10 * arbb.min.z < 0.0) {
+      // we're 90% in docking position!
       pullInShipIfPermitted(ship);
     }
     return true;
@@ -1078,8 +1072,8 @@ bool DockEntity::shipIsInDockingCorridor(::ShipEntity* ship) {
 
   if ((arbb.min.x > -safety * ww) && (arbb.max.x < safety * ww) &&
       (arbb.min.y > -safety * hh) && (arbb.max.y < safety * hh)) {
-    if (arbb.min.z < 0.0)  // got our nose inside
-    {
+    if (arbb.min.z < 0.0) {
+      // got our nose inside
       if ((arbb.min.x < -ww && arbb.max.x > ww) ||
           (arbb.min.y < -hh && arbb.max.y > hh)) {
         /* No matter how much safety margin there is, if the
@@ -1163,9 +1157,8 @@ void DockEntity::launchShip(::ShipEntity* ship) {
   double launchSpeed =
       0.5 * (ship != nullptr ? ship->getMaxFlightSpeed() : 0.0f);
   if ((station != nullptr ? station->getMaxFlightSpeed() : 0.0f) > 0 &&
-      (station != nullptr ? station->getFlightSpeed() : 0.0f) >
-          0)  // is self a carrier in flight.
-  {
+      (station != nullptr ? station->getFlightSpeed() : 0.0f) > 0) {
+    // is self a carrier in flight.
     launchSpeed =
         0.5 * (ship != nullptr ? ship->getMaxFlightSpeed() : 0.0f) *
         (1.0 + (station != nullptr ? station->getFlightSpeed() : 0.0f) /
@@ -1321,12 +1314,12 @@ bool DockEntity::dockingCorridorIsEmpty() {
         HPdistance2((station != nullptr ? station->getPosition() : HPVector{}),
                     ship->getPosition());
     if ((ship != station) && (d2 < 25000000) &&
-        (ship->status() != OOEntityStatus::kDocked))  // within 5km
-    {
+        (ship->status() != OOEntityStatus::kDocked)) {
+      // within 5km
       HPVector ppos = absolutePositionForSubentity();
       d2 = HPdistance2(ppos, ship->position);
-      if (d2 < 4000000)  // within 2km of the port entrance
-      {
+      if (d2 < 4000000) {
+        // within 2km of the port entrance
         Quaternion q1 =
             (station != nullptr ? station->getOrientation() : Quaternion{});
         q1 = quaternion_multiply(orientation, q1);
@@ -1384,15 +1377,15 @@ void DockEntity::clearDockingCorridor() {
         HPdistance2((station != nullptr ? station->getPosition() : HPVector{}),
                     ship->getPosition());
     if ((ship != station) && (d2 < 25000000) &&
-        (ship->status() != OOEntityStatus::kDocked))  // within 5km
-    {
+        (ship->status() != OOEntityStatus::kDocked)) {
+      // within 5km
       HPVector ppos = absolutePositionForSubentity();
       float time_out = -15.00;  // 15 secs
       do {
         isClear = true;
         d2 = HPdistance2(ppos, ship->position);
-        if (d2 < 4000000)  // within 2km of the port entrance
-        {
+        if (d2 < 4000000) {
+          // within 2km of the port entrance
           Quaternion q1 =
               (station != nullptr ? station->getOrientation() : Quaternion{});
           q1 = quaternion_multiply(orientation, q1);

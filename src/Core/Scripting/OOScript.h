@@ -125,16 +125,14 @@ void OOScriptAutorelease(std::shared_ptr<OOScript> script);
 /*	A script carried through plist data as a PList::Object node, as
    oo::PListObject() and oo::ObjectIn() carry it.
 */
-inline oo::PList OOScriptObjectNode(
-    OOScript* script)  // null script -> null PList
-{
+inline oo::PList OOScriptObjectNode(OOScript* script) {
+  // null script -> null PList
   if (script == nullptr) return oo::PList();
   return oo::PList(oo::PList::Object(oo::share(script)));
 }
 
-inline OOScript* OOScriptInObjectNode(
-    const oo::PList& plist)  // null for any other node
-{
+inline OOScript* OOScriptInObjectNode(const oo::PList& plist) {
+  // null for any other node
   const oo::PList::Object* node = plist.getIf<oo::PList::Object>();
   return (node != nullptr) ? dynamic_cast<OOScript*>(node->get()) : nullptr;
 }

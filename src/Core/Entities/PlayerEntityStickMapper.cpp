@@ -284,9 +284,8 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
 
 // Callback function, called by JoystickHandler when the callback
 // is set. The dictionary contains the thing that was pressed/moved.
-void PlayerEntity::updateFunction(
-    const oo::PList& hwDict)  // called by name (joystick callback)
-{
+void PlayerEntity::updateFunction(const oo::PList& hwDict) {
+  // called by name (joystick callback)
   OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
   waitingForStickCallback = false;
 
@@ -465,8 +464,8 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, std::size_t skip) {
                                OO_DESC("stickmapper-column-type")},
       GUI_ROW_HEADING);
 
-  if (stickFunctions.empty())  // (the list is never empty once built)
-  {
+  if (stickFunctions.empty()) {
+    // (the list is never empty once built)
     stickFunctions = stickFunctionList();
   }
   const oo::PList assignedAxes = stickHandler->axisFunctions();

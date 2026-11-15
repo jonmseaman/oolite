@@ -61,8 +61,8 @@ bool EntityChecksCloseCollisionWith(Entity* entity, Entity* other) {
 
 }  // namespace
 
-CollisionRegion::CollisionRegion()  // Designated initializer.
-{
+CollisionRegion::CollisionRegion() {
+  // Designated initializer.
   {
     entity_array.reserve(COLLISION_MAX_ENTITIES);
 

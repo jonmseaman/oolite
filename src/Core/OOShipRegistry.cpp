@@ -217,8 +217,8 @@ void OOShipRegistry::init() {
     }
     _effectData = cache->pListForKey(kVisualEffectDataCacheKey,
                                      kVisualEffectRegistryCacheName);
-    if (_shipData.count() == 0)  // Don't accept nil or empty
-    {
+    if (_shipData.count() == 0) {
+      // Don't accept nil or empty
       loadShipData();
       if (_shipData.count() == 0) {
         OORaiseException("OOShipRegistryLoadFailure",
@@ -504,9 +504,8 @@ void OOShipRegistry::loadDemoShips() {
           ::OOScript* condScript =
               (UNIVERSE != nullptr ? UNIVERSE->getConditionScript(*conditions)
                                    : nullptr);
-          if (condScript !=
-              nullptr)  // should always be non-nil, but just in case
-          {
+          if (condScript != nullptr) {
+            // should always be non-nil, but just in case
             JSContext* context = OOJSAcquireContext();
             bool OK;
             bool allow_use = false;
@@ -1537,9 +1536,7 @@ oo::PList OOShipRegistry::validateNewStyleStandardSubentityDeclaration(
     }
 
     weaponEnergy = declaration.get<float>("weapon_energy", -1.0f);
-    if (weaponEnergy > 100.0f)
-
-    {
+    if (weaponEnergy > 100.0f) {
       OO_LOG_WARN("shipData.load.warning.turret.badWeaponEnergy",
                   "ball turret weapon energy of {:g} for subentity of ship {} "
                   "is too high, using 100.",

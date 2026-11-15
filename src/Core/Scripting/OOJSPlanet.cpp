@@ -299,8 +299,8 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
 
       OOJSPauseTimeLimiter();
 
-      if (planet != nullptr)  // false only for null
-      {
+      if (planet != nullptr) {
+        // false only for null
         if (!sValue.has_value()) {
           OOJSReportWarning(context, "Expected texture string. Value not set.");
         } else {

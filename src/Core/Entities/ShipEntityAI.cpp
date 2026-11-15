@@ -92,10 +92,9 @@ bool IsWhitespace(char16_t c) {
 
 // A debug context "<description> suffix" in debug builds, nil (nullopt)
 // otherwise.
-std::optional<std::string> DebugContext(
-    Entity* entity,
-    std::string_view suffix)  // the entity's object's short description
-{
+std::optional<std::string> DebugContext(Entity* entity,
+                                        std::string_view suffix) {
+  // the entity's object's short description
 #ifndef NDEBUG
   return std::format("{} {}", oo::EntityShortDescription(entity), suffix);
 #else
@@ -117,8 +116,8 @@ int RandArgument(const std::string& token) {
 // AI category, OOAIPrivate (ship and station) and the station stubs. Members of
 // ShipEntity defined in the category's file.
 
-void ShipEntity::setAITo(const std::string& aiString)  // called by name
-{
+void ShipEntity::setAITo(const std::string& aiString) {
+  // called by name
   std::string ai = aiString;
   // don't try to load real AIs if the game hasn't started yet
   if (!(PLAYER != nullptr ? PLAYER->scriptsLoaded() : false)) {
@@ -133,8 +132,8 @@ void ShipEntity::setAITo(const std::string& aiString)  // called by name
   } else {
     const std::optional<std::string> path =
         ResourceManager::pathForFileNamed(ai + ".js", std::string("AIs"));
-    if (!path)  // no js, use plist
-    {
+    if (!path) {
+      // no js, use plist
       setAITo(ai + ".plist");
     } else {
       setAITo(ai + ".js");
@@ -161,8 +160,8 @@ void ShipEntity::setAIScript(const std::string& aiString) {
   }
 }
 
-void ShipEntity::switchAITo(const std::string& aiString)  // called by name
-{
+void ShipEntity::switchAITo(const std::string& aiString) {
+  // called by name
   setAITo(aiString);
   if (getAI() != nullptr) getAI()->clearStack();
 }
@@ -200,8 +199,8 @@ void ShipEntity::groupAttackTarget() {
 
   if (target == nullptr) return;
 
-  if (group() == nullptr)  // ship is alone!
-  {
+  if (group() == nullptr) {
+    // ship is alone!
     setFoundTarget(target);
     if (shipAI != nullptr)
       shipAI->reactToMessage("GROUP_ATTACK_TARGET", "groupAttackTarget");
@@ -228,8 +227,8 @@ void ShipEntity::groupAttackTarget() {
              ? (ship != nullptr ? ship->escortGroup()
                                 : static_cast<OOShipGroup*>(nullptr))
                    ->count()
-             : 0) > 1)  // Ship has a seperate escort group.
-    {
+             : 0) > 1) {
+      // Ship has a seperate escort group.
       for (const oo::EntityHold& escortRef :
            ((ship != nullptr ? ship->escortGroup()
                              : static_cast<OOShipGroup*>(nullptr)) != nullptr
@@ -636,9 +635,9 @@ void ShipEntity::broadcastDistressMessageWithDumping(bool dumpCargo) {
                     ? ship->getCrew()
                     : std::optional<
                           std::vector<std::shared_ptr<OOCharacter>>>())
-                   .has_value())  // Only clean ships can have their distress
-                                  // calls accepted
-    {
+                   .has_value()) {
+      // Only clean ships can have their distress
+      // calls accepted
       if (ship != nullptr)
         ship->doScriptEvent(OOJSID("distressMessageReceived"), aggressor_ship,
                             this);
@@ -734,8 +733,8 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace,
       if (systemID == sDests.at(i)->get<int>("sysID")) break;
     }
 
-    if (i == n_dests)  // no match found
-    {
+    if (i == n_dests) {
+      // no match found
       return false;
     }
   }
@@ -834,9 +833,9 @@ void ShipEntity::decreaseAlertLevel() {
   LogNotAStation(this, "decreaseAlertLevel");
 }
 
-oo::PList ShipEntity::launchPolice()  // called by name: StationEntity's
-                                      // returns the ships launched
-{
+oo::PList ShipEntity::launchPolice() {
+  // called by name: StationEntity's
+  // returns the ships launched
   LogNotAStation(this, "launchPolice");
   return oo::PList();
 }
@@ -887,21 +886,20 @@ void StationEntity::acceptDistressMessageFrom(::ShipEntity* other) {
 // PureAI part 1: state, speed, scans for prey and loot, planets, legal status.
 // Members of ShipEntity defined in the category's file.
 
-void ShipEntity::setStateTo(const std::string& state)  // called by name
-{
+void ShipEntity::setStateTo(const std::string& state) {
+  // called by name
   if (getAI() != nullptr) getAI()->setState(state);
 }
 
-void ShipEntity::pauseAI(const std::string& intervalString)  // called by name
-{
+void ShipEntity::pauseAI(const std::string& intervalString) {
+  // called by name
   if (shipAI != nullptr)
     shipAI->setNextThinkTime((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) +
                              oo::str::doubleValue(intervalString));
 }
 
-void ShipEntity::randomPauseAI(
-    const std::string& intervalString)  // called by name
-{
+void ShipEntity::randomPauseAI(const std::string& intervalString) {
+  // called by name
   const std::vector<std::string> tokens = oo::str::tokens(intervalString);
   double start, end;
 
@@ -921,9 +919,8 @@ void ShipEntity::randomPauseAI(
                              (start + (end - start) * randf()));
 }
 
-void ShipEntity::dropMessages(
-    const std::string& messageString)  // called by name
-{
+void ShipEntity::dropMessages(const std::string& messageString) {
+  // called by name
   for (const std::string& message : oo::str::split(messageString, ",")) {
     if (shipAI != nullptr)
       shipAI->dropMessage(oo::str::trimTrailing(
@@ -950,9 +947,8 @@ void ShipEntity::setDestinationToJinkPosition() {
       true;  // don't complete roll first, but immediately start with pitching.
 }
 
-void ShipEntity::setDesiredRangeTo(
-    const std::string& rangeString)  // called by name
-{
+void ShipEntity::setDesiredRangeTo(const std::string& rangeString) {
+  // called by name
   desired_range = oo::str::doubleValue(rangeString);
 }
 
@@ -962,22 +958,20 @@ void ShipEntity::setDesiredRangeForWaypoint() {
            50.0);  // some ships need a longer range to reach a waypoint.
 }
 
-void ShipEntity::setSpeedTo(const std::string& speedString)  // called by name
-{
+void ShipEntity::setSpeedTo(const std::string& speedString) {
+  // called by name
   desired_speed = oo::str::doubleValue(speedString);
 }
 
-void ShipEntity::setSpeedFactorTo(
-    const std::string& speedString)  // called by name
-{
+void ShipEntity::setSpeedFactorTo(const std::string& speedString) {
+  // called by name
   desired_speed = maxFlightSpeed * oo::str::doubleValue(speedString);
 }
 
 void ShipEntity::setSpeedToCruiseSpeed() { desired_speed = cruiseSpeed; }
 
-void ShipEntity::setThrustFactorTo(
-    const std::string& thrustFactorString)  // called by name
-{
+void ShipEntity::setThrustFactorTo(const std::string& thrustFactorString) {
+  // called by name
   thrust = OOClamp_0_1_f(oo::str::doubleValue(thrustFactorString)) * max_thrust;
 }
 
@@ -990,10 +984,8 @@ void ShipEntity::setTargetToPrimaryAggressor() {
   // if we're already busy attacking a target we don't necessarily want to break
   // off
   //
-  if (hasHostileTarget() &&
-      randf() <
-          0.75)  // if I'm attacking, ignore 75% of new aggressor's attacks
-  {
+  if (hasHostileTarget() && randf() < 0.75) {
+    // if I'm attacking, ignore 75% of new aggressor's attacks
     // but add them as a secondary target anyway
     addDefenseTarget(primeAggressor);
     return;
@@ -1141,9 +1133,8 @@ void ShipEntity::scanForLoot() {
             OOEntityStatus::kBeingScooped) {
       if ((!isPolice()) ||
           ((other != nullptr ? other->commodityType()
-                             : std::optional<std::string>()) ==
-           "slaves"))  // police only rescue lifepods and slaves
-      {
+                             : std::optional<std::string>()) == "slaves")) {
+        // police only rescue lifepods and slaves
         GLfloat d2 = distance2_scanned_ships[i];
         if (d2 < found_d2) {
           found_d2 = d2;
@@ -1246,9 +1237,8 @@ void ShipEntity::getWitchspaceEntryCoordinates() {
 
   if (station &&
       HPdistance2((station != nullptr ? station->getPosition() : HPVector{}),
-                  position) <
-          SCANNER_MAX_RANGE2)  // there is a station in range.
-  {
+                  position) < SCANNER_MAX_RANGE2) {
+    // there is a station in range.
     Vector vr = vector_multiply_scalar(
         (station != nullptr ? station->rightVector() : Vector{}),
         10000);  // 10km from station
@@ -1434,9 +1424,8 @@ void ShipEntity::checkOwnLegalStatus() {
   if (shipAI != nullptr) shipAI->message("SELF_CLEAN");
 }
 
-void ShipEntity::exitAIWithMessage(
-    const std::string& message)  // called by name
-{
+void ShipEntity::exitAIWithMessage(const std::string& message) {
+  // called by name
   if (shipAI != nullptr)
     shipAI->exitStateMachineWithMessage(
         message.empty() ? std::string("RESTARTED") : message);
@@ -1619,10 +1608,9 @@ void ShipEntity::scanForOffenders() {
           (legal_factor > worst_legal_factor)) {
         if (group == nullptr ||
             group != (ship != nullptr ? ship->group()
-                                      : static_cast<OOShipGroup*>(
-                                            nullptr)))  // fellows with bounty
-                                                        // can't be offenders
-        {
+                                      : static_cast<OOShipGroup*>(nullptr))) {
+          // fellows with bounty
+          // can't be offenders
           setFoundTarget(ship);
           worst_legal_factor = legal_factor;
         }
@@ -1691,14 +1679,13 @@ void ShipEntity::wormholeGroup() {
   }
 }
 
-void ShipEntity::commsMessage(const std::string& valueString)  // called by name
-{
+void ShipEntity::commsMessage(const std::string& valueString) {
+  // called by name
   commsMessage(valueString, false);
 }
 
-void ShipEntity::commsMessageByUnpiloted(
-    const std::string& valueString)  // called by name
-{
+void ShipEntity::commsMessageByUnpiloted(const std::string& valueString) {
+  // called by name
   commsMessage(valueString, true);
 }
 
@@ -1772,11 +1759,10 @@ void ShipEntity::thargonCheckMother() {
       setOwner(mother);
       if ((mother != nullptr ? mother->group()
                              : static_cast<OOShipGroup*>(nullptr)) !=
-          (mother != nullptr
-               ? mother->escortGroup()
-               : static_cast<OOShipGroup*>(nullptr)))  // avoid adding thargon
-                                                       // to an escort group.
-      {
+          (mother != nullptr ? mother->escortGroup()
+                             : static_cast<OOShipGroup*>(nullptr))) {
+        // avoid adding thargon
+        // to an escort group.
         setGroup((mother != nullptr ? mother->group()
                                     : static_cast<OOShipGroup*>(nullptr)));
       }
@@ -1835,8 +1821,8 @@ void ShipEntity::fightOrFleeHostiles() {
   }
 
   // consider launching a missile
-  if (missiles > 2)  // keep a reserve
-  {
+  if (missiles > 2) {
+    // keep a reserve
     if (randf() < 0.50) {
       setPrimaryAggressor(foundTarget());
       addTarget(foundTarget());
@@ -1910,8 +1896,8 @@ void ShipEntity::scanForFormationLeader() {
     if ((ship != this) && (!ship->isPlayer) && (ship->scanClass == scanClass) &&
         (ship != nullptr ? ship->primaryTarget()
                          : static_cast<Entity*>(nullptr)) != this &&
-        !(ship != nullptr ? ship->isCloaked() : false))  // look for alike
-    {
+        !(ship != nullptr ? ship->isCloaked() : false)) {
+      // look for alike
       GLfloat d2 = distance2_scanned_ships[i];
       if ((d2 < found_d2) &&
           (ship != nullptr ? ship->canAcceptEscort(this) : false)) {
@@ -1935,8 +1921,8 @@ void ShipEntity::scanForFormationLeader() {
   }
 }
 
-void ShipEntity::messageMother(const std::string& msgString)  // called by name
-{
+void ShipEntity::messageMother(const std::string& msgString) {
+  // called by name
   ::ShipEntity* mother = oo::ToShip(owner());
   if (mother != nullptr && mother != this) {
     if (mother != nullptr)
@@ -1944,8 +1930,8 @@ void ShipEntity::messageMother(const std::string& msgString)  // called by name
   }
 }
 
-void ShipEntity::messageSelf(const std::string& msgString)  // called by name
-{
+void ShipEntity::messageSelf(const std::string& msgString) {
+  // called by name
   sendAIMessage(msgString);
 }
 
@@ -2105,9 +2091,8 @@ void ShipEntity::checkForMotherStation() {
   if (shipAI != nullptr) shipAI->message("STATION_FOUND");
 }
 
-void ShipEntity::sendTargetCommsMessage(
-    const std::string& message)  // called by name
-{
+void ShipEntity::sendTargetCommsMessage(const std::string& message) {
+  // called by name
   ::ShipEntity* ship = oo::ToShip(primaryTarget());
   if ((ship == nullptr) ||
       ((ship != nullptr ? ship->status() : OOEntityStatus{}) ==
@@ -2135,9 +2120,8 @@ void ShipEntity::markTargetForFines() {
   }
 }
 
-void ShipEntity::markTargetForOffence(
-    const std::string& valueString)  // called by name
-{
+void ShipEntity::markTargetForOffence(const std::string& valueString) {
+  // called by name
   if ((isStation) || (scanClass == OOScanClass::kPolice)) {
     ::ShipEntity* ship = oo::ToShip(primaryTarget());
     if ((ship == nullptr) ||
@@ -2290,8 +2274,8 @@ void ShipEntity::requestNewTarget() {
   checkFoundTarget();
 }
 
-void ShipEntity::rollD(const std::string& die_number)  // called by name
-{
+void ShipEntity::rollD(const std::string& die_number) {
+  // called by name
   int die_sides = oo::str::intValue(die_number);
   if (die_sides > 0) {
     int die_roll = 1 + (ranrot_rand() % die_sides);
@@ -2304,90 +2288,87 @@ void ShipEntity::rollD(const std::string& die_number)  // called by name
 }
 
 void ShipEntity::scanForNearestShipWithPrimaryRole(
-    const std::string& scanRole)  // called by name
-{
+    const std::string& scanRole) {
+  // called by name
   scanForNearestShipWithPredicate(
       HasPrimaryRolePredicate,
       const_cast<std::string*>(
           &scanRole));  // the predicate reads a std::string
 }
 
-void ShipEntity::scanForNearestShipHavingRole(
-    const std::string& scanRole)  // called by name
-{
+void ShipEntity::scanForNearestShipHavingRole(const std::string& scanRole) {
+  // called by name
   scanForNearestShipWithPredicate(
       HasRolePredicate, const_cast<std::string*>(
                             &scanRole));  // the predicate reads a std::string
 }
 
 void ShipEntity::scanForNearestShipWithAnyPrimaryRole(
-    const std::string& scanRoles)  // called by name
-{
+    const std::string& scanRoles) {
+  // called by name
   std::vector<std::string> roles =
       oo::str::tokens(scanRoles);  // the predicate reads the role strings
   scanForNearestShipWithPredicate(HasPrimaryRoleInSetPredicate, &roles);
 }
 
-void ShipEntity::scanForNearestShipHavingAnyRole(
-    const std::string& scanRoles)  // called by name
-{
+void ShipEntity::scanForNearestShipHavingAnyRole(const std::string& scanRoles) {
+  // called by name
   std::vector<std::string> roles =
       oo::str::tokens(scanRoles);  // the predicate reads the role strings
   scanForNearestShipWithPredicate(HasRoleInSetPredicate, &roles);
 }
 
 void ShipEntity::scanForNearestShipWithScanClass(
-    const std::string& scanScanClass)  // called by name
-{
+    const std::string& scanScanClass) {
+  // called by name
   OOScanClass wantedClass = OOScanClassFromString(
       scanScanClass);  // the predicate reads an OOScanClass
   scanForNearestShipWithPredicate(HasScanClassPredicate, &wantedClass);
 }
 
 void ShipEntity::scanForNearestShipWithoutPrimaryRole(
-    const std::string& scanRole)  // called by name
-{
+    const std::string& scanRole) {
+  // called by name
   scanForNearestShipWithNegatedPredicate(
       HasPrimaryRolePredicate,
       const_cast<std::string*>(
           &scanRole));  // the predicate reads a std::string
 }
 
-void ShipEntity::scanForNearestShipNotHavingRole(
-    const std::string& scanRole)  // called by name
-{
+void ShipEntity::scanForNearestShipNotHavingRole(const std::string& scanRole) {
+  // called by name
   scanForNearestShipWithNegatedPredicate(
       HasRolePredicate, const_cast<std::string*>(
                             &scanRole));  // the predicate reads a std::string
 }
 
 void ShipEntity::scanForNearestShipWithoutAnyPrimaryRole(
-    const std::string& scanRoles)  // called by name
-{
+    const std::string& scanRoles) {
+  // called by name
   std::vector<std::string> roles =
       oo::str::tokens(scanRoles);  // the predicate reads the role strings
   scanForNearestShipWithNegatedPredicate(HasPrimaryRoleInSetPredicate, &roles);
 }
 
 void ShipEntity::scanForNearestShipNotHavingAnyRole(
-    const std::string& scanRoles)  // called by name
-{
+    const std::string& scanRoles) {
+  // called by name
   std::vector<std::string> roles =
       oo::str::tokens(scanRoles);  // the predicate reads the role strings
   scanForNearestShipWithNegatedPredicate(HasRoleInSetPredicate, &roles);
 }
 
 void ShipEntity::scanForNearestShipWithoutScanClass(
-    const std::string& scanScanClass)  // called by name
-{
+    const std::string& scanScanClass) {
+  // called by name
   OOScanClass wantedClass = OOScanClassFromString(
       scanScanClass);  // the predicate reads an OOScanClass
   scanForNearestShipWithNegatedPredicate(HasScanClassPredicate, &wantedClass);
 }
 
 void ShipEntity::scanForNearestShipMatchingPredicate(
-    const std::string& predicateExpression)  // called by name
-{
+    const std::string& predicateExpression) {
+  // called by name
   /*	Takes a boolean-valued JS expression where "ship" is the ship being
    evaluated and "this" is our ship's ship script. the expression is
    turned into a JS function of the form:
@@ -2485,9 +2466,8 @@ void ShipEntity::scanForNearestShipMatchingPredicate(
   OOJSRelinquishContext(context);
 }
 
-void ShipEntity::setCoordinates(
-    const std::string& system_x_y_z)  // called by name
-{
+void ShipEntity::setCoordinates(const std::string& system_x_y_z) {
+  // called by name
   const std::vector<std::string> tokens = oo::str::tokens(system_x_y_z);
 
   if (tokens.size() != 4) {
@@ -2592,14 +2572,13 @@ void ShipEntity::setTargetToLastStation() {
   }
 }
 
-void ShipEntity::addFuel(const std::string& fuel_number)  // called by name
-{
+void ShipEntity::addFuel(const std::string& fuel_number) {
+  // called by name
   setFuel(getFuel() + oo::str::intValue(fuel_number) * 10);
 }
 
-void ShipEntity::scriptActionOnTarget(
-    const std::string& action)  // called by name
-{
+void ShipEntity::scriptActionOnTarget(const std::string& action) {
+  // called by name
   ::PlayerEntity* player = PLAYER;
   ::ShipEntity* targEnt = oo::ToShip(primaryTarget());
   ::ShipEntity* oldTarget = nullptr;
@@ -2647,9 +2626,8 @@ void ShipEntity::scriptActionOnTarget(
   }
 }
 
-void ShipEntity::safeScriptActionOnTarget(
-    const std::string& action)  // called by name
-{
+void ShipEntity::safeScriptActionOnTarget(const std::string& action) {
+  // called by name
   ::PlayerEntity* player = PLAYER;
   ::ShipEntity* targEnt = oo::ToShip(primaryTarget());
   ::ShipEntity* oldTarget = nullptr;
@@ -2674,16 +2652,14 @@ void ShipEntity::safeScriptActionOnTarget(
 }
 
 // Send own ship script a message.
-void ShipEntity::sendScriptMessage(
-    const std::string& message)  // called by name
-{
+void ShipEntity::sendScriptMessage(const std::string& message) {
+  // called by name
   const std::vector<std::string> components = oo::str::tokens(message);
 
   if (components.size() == 1) {
     doScriptEvent(OOJSIDFromString(message));
-  } else if (!components
-                  .empty())  // (an empty message raised at -objectAtIndex:0)
-  {
+  } else if (!components.empty()) {
+    // (an empty message raised at -objectAtIndex:0)
     const std::string& function = components[0];
     oo::PList::Array
         arguments;  // one argument: an array of the other components
@@ -2701,8 +2677,8 @@ void ShipEntity::explodeSelf() {
   getDestroyedBy(nullptr, OOShipDamageType::kEnergy);
 }
 
-void ShipEntity::ai_debugMessage(const std::string& message)  // called by name
-{
+void ShipEntity::ai_debugMessage(const std::string& message) {
+  // called by name
   std::string desc =
       std::format("{} {}", getName().value_or("(null)"), getUniversalID());
   if (getIsPlayer()) desc = "player autopilot";
@@ -2711,9 +2687,8 @@ void ShipEntity::ai_debugMessage(const std::string& message)  // called by name
 }
 
 // racing code TODO
-void ShipEntity::targetFirstBeaconWithCode(
-    const std::string& code)  // called by name
-{
+void ShipEntity::targetFirstBeaconWithCode(const std::string& code) {
+  // called by name
   const std::vector<oo::EntityHold> all_beacons =
       (UNIVERSE != nullptr
            ? UNIVERSE->listBeaconsWithCode(code)
@@ -2726,9 +2701,8 @@ void ShipEntity::targetFirstBeaconWithCode(
   }
 }
 
-void ShipEntity::targetNextBeaconWithCode(
-    const std::string& code)  // called by name
-{
+void ShipEntity::targetNextBeaconWithCode(const std::string& code) {
+  // called by name
   const std::vector<oo::EntityHold> all_beacons =
       (UNIVERSE != nullptr
            ? UNIVERSE->listBeaconsWithCode(code)

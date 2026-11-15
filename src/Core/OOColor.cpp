@@ -271,78 +271,78 @@ std::shared_ptr<OOColor> OOColor::colorFromString(
                       rgbaValue[2] * factor, rgbaValue[3] * factor);
 }
 
-std::shared_ptr<OOColor> OOColor::blackColor()  // 0.0 white
-{
+std::shared_ptr<OOColor> OOColor::blackColor() {
+  // 0.0 white
   return colorWithWhite(0.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::darkGrayColor()  // 0.333 white
-{
+std::shared_ptr<OOColor> OOColor::darkGrayColor() {
+  // 0.333 white
   return colorWithWhite(1.0f / 3.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::lightGrayColor()  // 0.667 white
-{
+std::shared_ptr<OOColor> OOColor::lightGrayColor() {
+  // 0.667 white
   return colorWithWhite(2.0f / 3.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::whiteColor()  // 1.0 white
-{
+std::shared_ptr<OOColor> OOColor::whiteColor() {
+  // 1.0 white
   return colorWithWhite(1.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::grayColor()  // 0.5 white
-{
+std::shared_ptr<OOColor> OOColor::grayColor() {
+  // 0.5 white
   return colorWithWhite(0.5f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::redColor()  // 1.0, 0.0, 0.0 RGB
-{
+std::shared_ptr<OOColor> OOColor::redColor() {
+  // 1.0, 0.0, 0.0 RGB
   return colorWithRed(1.0f, 0.0f, 0.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::greenColor()  // 0.0, 1.0, 0.0 RGB
-{
+std::shared_ptr<OOColor> OOColor::greenColor() {
+  // 0.0, 1.0, 0.0 RGB
   return colorWithRed(0.0f, 1.0f, 0.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::blueColor()  // 0.0, 0.0, 1.0 RGB
-{
+std::shared_ptr<OOColor> OOColor::blueColor() {
+  // 0.0, 0.0, 1.0 RGB
   return colorWithRed(0.0f, 0.0f, 1.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::cyanColor()  // 0.0, 1.0, 1.0 RGB
-{
+std::shared_ptr<OOColor> OOColor::cyanColor() {
+  // 0.0, 1.0, 1.0 RGB
   return colorWithRed(0.0f, 1.0f, 1.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::yellowColor()  // 1.0, 1.0, 0.0 RGB
-{
+std::shared_ptr<OOColor> OOColor::yellowColor() {
+  // 1.0, 1.0, 0.0 RGB
   return colorWithRed(1.0f, 1.0f, 0.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::magentaColor()  // 1.0, 0.0, 1.0 RGB
-{
+std::shared_ptr<OOColor> OOColor::magentaColor() {
+  // 1.0, 0.0, 1.0 RGB
   return colorWithRed(1.0f, 0.0f, 1.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::orangeColor()  // 1.0, 0.5, 0.0 RGB
-{
+std::shared_ptr<OOColor> OOColor::orangeColor() {
+  // 1.0, 0.5, 0.0 RGB
   return colorWithRed(1.0f, 0.5f, 0.0f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::purpleColor()  // 0.5, 0.0, 0.5 RGB
-{
+std::shared_ptr<OOColor> OOColor::purpleColor() {
+  // 0.5, 0.0, 0.5 RGB
   return colorWithRed(0.5f, 0.0f, 0.5f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::brownColor()  // 0.6, 0.4, 0.2 RGB
-{
+std::shared_ptr<OOColor> OOColor::brownColor() {
+  // 0.6, 0.4, 0.2 RGB
   return colorWithRed(0.6f, 0.4f, 0.2f, 1.0f);
 }
 
-std::shared_ptr<OOColor> OOColor::clearColor()  // 0.0 white, 0.0 alpha
-{
+std::shared_ptr<OOColor> OOColor::clearColor() {
+  // 0.0 white, 0.0 alpha
   return colorWithWhite(0.0f, 0.0f);
 }
 

@@ -98,9 +98,8 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
   // set random colors
   int col1 = r0 & 7;
   int col2 = r1 & 7;
-  while (((col1 == 7) || (col1 == 0)) &&
-         ((col2 == 7) || (col2 == 0)))  // monochrome not allowed
-  {
+  while (((col1 == 7) || (col1 == 0)) && ((col2 == 7) || (col2 == 0))) {
+    // monochrome not allowed
     if (col1 == col2)
       col1 = ranrot_rand() & 7;
     else
@@ -500,8 +499,8 @@ void OOTrumble::updateTrumble(double delta_t) {
   //
   size += delta_t * growth_rate;
   hunger += delta_t * (growth_rate + TRUMBLE_GROWTH_RATE);
-  if (size > max_size)  // fully_grown.. stop growing
-  {
+  if (size > max_size) {
+    // fully_grown.. stop growing
     size = max_size;
     growth_rate = 0.0;
   }

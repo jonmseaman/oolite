@@ -375,9 +375,8 @@ void OOConcreteTexture::setUpTexture() {
 
   // This will block until loading is completed, if necessary.
   if (_loader != nullptr &&
-      _loader->getResult(&pm, &_format, &_originalWidth,
-                         &_originalHeight))  // a message to nil answered NO
-  {
+      _loader->getResult(&pm, &_format, &_originalWidth, &_originalHeight)) {
+    // a message to nil answered NO
     _bytes = OOPixMapOwnedBuffer(pm);
     _width = pm.width;
     _height = pm.height;

@@ -195,8 +195,8 @@ static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
         if (waypoint->isBeacon()) {
           if (UNIVERSE != nullptr) UNIVERSE->clearBeacon(waypoint);
           if ((PLAYER != nullptr ? PLAYER->nextBeaconEntity() : nullptr) ==
-              waypoint)  // not virtual, so the binding test stands in for it
-          {
+              waypoint) {
+            // not virtual, so the binding test stands in for it
             if (PLAYER != nullptr)
               PLAYER->PlayerEntity::setCompassMode(
                   OOCompassMode::kPlanet);  // qualified: the final overrider,
@@ -207,8 +207,8 @@ static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
       } else {
         if (waypoint->isBeacon()) {
           waypoint->setBeaconCode(sValue);
-        } else  // Universe needs to update beacon lists in this case only
-        {
+        } else {
+          // Universe needs to update beacon lists in this case only
           waypoint->setBeaconCode(sValue);
           if (UNIVERSE != nullptr) UNIVERSE->setNextBeacon(waypoint);
         }

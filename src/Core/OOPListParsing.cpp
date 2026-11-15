@@ -47,8 +47,8 @@ oo::PList OOPropertyListFromData(const std::optional<oo::Data>& data,
     const std::expected<oo::PList, oo::PListError> parsed =
         oo::parsePropertyList(bytes);
     if (parsed) result = *parsed;
-    if (result.isNull())  // parser failed
-    {
+    if (result.isNull()) {
+      // parser failed
       // Ensure we can say something sensible...
       const std::string error = parsed ? std::string("<no error message>")
                                        : parsed.error().description();

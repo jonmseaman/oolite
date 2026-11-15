@@ -418,10 +418,9 @@ std::vector<oo::EntityHold> OOVisualEffectEntity::flasherEnumerator() {
 
 void OOVisualEffectEntity::drawSubEntityImmediate(bool immediate,
                                                   bool translucent) {
-  if (cam_zero_distance >
-      no_draw_distance)  // this test provides an opportunity to do simple LoD
-                         // culling
-  {
+  if (cam_zero_distance > no_draw_distance) {
+    // this test provides an opportunity to do simple LoD
+    // culling
     return;  // TOO FAR AWAY
   }
   OOGLPushModelView();
@@ -593,8 +592,8 @@ void OOVisualEffectEntity::drawImmediate(bool immediate, bool translucent) {
   OOGLPopModelView();
 
   // Draw subentities.
-  if (!immediate)  // TODO: is this relevant any longer?
-  {
+  if (!immediate) {
+    // TODO: is this relevant any longer?
     Entity* subEntity = nullptr;
     for (const auto& subEntityRef : SubEntitiesOf(_subEntities)) {
       subEntity = subEntityRef.get();

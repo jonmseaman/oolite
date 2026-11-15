@@ -410,8 +410,8 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
         if ((entity != nullptr ? entity->isBeacon() : false)) {
           if (UNIVERSE != nullptr) UNIVERSE->clearBeacon(entity);
           if ((PLAYER != nullptr ? PLAYER->nextBeaconEntity() : nullptr) ==
-              entity)  // not virtual, so the binding test stands in for it
-          {
+              entity) {
+            // not virtual, so the binding test stands in for it
             if (PLAYER != nullptr)
               PLAYER->PlayerEntity::setCompassMode(
                   OOCompassMode::kPlanet);  // qualified: the final overrider,
@@ -422,8 +422,8 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
       } else {
         if ((entity != nullptr ? entity->isBeacon() : false)) {
           if (entity != nullptr) entity->setBeaconCode(sValue);
-        } else  // Universe needs to update beacon lists in this case only
-        {
+        } else {
+          // Universe needs to update beacon lists in this case only
           if (entity != nullptr) entity->setBeaconCode(sValue);
           if (UNIVERSE != nullptr) UNIVERSE->setNextBeacon(entity);
         }

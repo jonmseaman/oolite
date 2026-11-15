@@ -153,9 +153,8 @@ void PlayerEntity::awardCommodityType(const std::string& type,
             amount -= smaller_quantity;
           }
         }
-      } else if (!specialCargo)
-      // no adding TCs while special cargo in hold
-      {
+      } else if (!specialCargo) {
+        // no adding TCs while special cargo in hold
         // put each ton in a separate container
         while (amount) {
           if (cargo.size() < maxAvailableCargoSpace()) {

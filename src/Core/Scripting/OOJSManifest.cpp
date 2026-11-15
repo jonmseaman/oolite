@@ -232,9 +232,9 @@ static bool ManifestSetProperty(JSContext* context, JSValueConst thisObj,
   if (unit == OOMassUnit::kTons &&
       (entity != nullptr ? entity->PlayerEntity::getSpecialCargo()
                          : std::optional<std::string>())
-          .has_value())  // qualified: the final overrider, so the binding test
-                         // stands in for it
-  {
+          .has_value()) {
+    // qualified: the final overrider, so the binding test
+    // stands in for it
     OOJSReportWarning(context,
                       "PlayerShip.manifest['foo'] - cannot modify cargo "
                       "tonnage when Special Cargo is in use.");

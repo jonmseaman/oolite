@@ -230,16 +230,14 @@ class OOTexture : public oo::PListForeign {
 /*	A texture carried through plist data as a PList::Object node: the
    texture is the node's foreign object.
 */
-inline oo::PList OOTextureObjectNode(
-    OOTexture* texture)  // null texture -> null PList
-{
+inline oo::PList OOTextureObjectNode(OOTexture* texture) {
+  // null texture -> null PList
   if (texture == nullptr) return oo::PList();
   return oo::PList(oo::PList::Object(oo::share(texture)));
 }
 
-inline OOTexture* OOTextureInObjectNode(
-    const oo::PList& plist)  // null for any other node
-{
+inline OOTexture* OOTextureInObjectNode(const oo::PList& plist) {
+  // null for any other node
   const oo::PList::Object* node = plist.getIf<oo::PList::Object>();
   return (node != nullptr) ? dynamic_cast<OOTexture*>(node->get()) : nullptr;
 }

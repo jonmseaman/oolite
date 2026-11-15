@@ -745,9 +745,9 @@ void GuiDisplayGen::leaveLastLine() {
   rowFadeTime[i] = 0.4f;  // fade the last line...
 }
 
-oo::PList GuiDisplayGen::getLastLines()  // text, colour, fade time - text,
-                                         // colour, fade time
-{
+oo::PList GuiDisplayGen::getLastLines() {
+  // text, colour, fade time - text,
+  // colour, fade time
   if (n_rows < 1) return oo::PList();
 
   // we have at least 1 row!
@@ -1125,9 +1125,8 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
   HeadUpDisplay* hud =
       (PLAYER != nullptr ? PLAYER->getHud()
                          : static_cast<HeadUpDisplay*>(nullptr));
-  if (hud != nullptr &&
-      hud->getAllowBigGui())  // a nil HUD (or player) answered NO
-  {
+  if (hud != nullptr && hud->getAllowBigGui()) {
+    // a nil HUD (or player) answered NO
     maxRows += STATUS_EQUIPMENT_BIGGUI_EXTRA_ROWS;
   }
   std::size_t itemsPerColumn = maxRows;
@@ -1145,16 +1144,16 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
   // 16ipp
 
   i = itemsPerColumn * 2 + 2;
-  if (eqptCount > i)  // don't fit in one page?
-  {
+  if (eqptCount > i) {
+    // don't fit in one page?
     if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
       UNIVERSE->gameController()
           ->setMouseInteractionModeForUIWithMouseInteraction(true);
 
     i = itemsPerColumn * 4;  // total items in the first and last pages
     itemsPerColumn--;        // for all the middle pages.
-    if (eqptCount <= i)      // two pages
-    {
+    if (eqptCount <= i) {
+      // two pages
       pageCount++;
       if (statusPage == 1) {
         start = 0;
@@ -1162,8 +1161,8 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
         statusPage = 2;
         start = i / statusPage;  // for the for loop
       }
-    } else  // three or more
-    {
+    } else {
+      // three or more
       pageCount =
           ceil(static_cast<float>(eqptCount - i) / (itemsPerColumn * 2)) + 2;
       statusPage =
@@ -1244,8 +1243,8 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
       // Damaged items show up orange.
       setGLColorFromSetting("status_equipment_damaged_color",
                             OOColor::orangeColor().get(), 1.0);
-    } else  /// add color selection here
-    {
+    } else {
+      /// add color selection here
       ::OOColor* dispCol = nullptr;
       if (const oo::PList::Array* row = info.getIf<oo::PList::Array>()) {
         if (row->size() > 2) dispCol = OOColorInObjectNode((*row)[2]);
@@ -1332,13 +1331,13 @@ int GuiDisplayGen::drawGUI(GLfloat alpha, bool drawCursor) {
     if (fade_sign) {
       fade_alpha += static_cast<float>(
           fade_sign * (UNIVERSE != nullptr ? UNIVERSE->getTimeDelta() : 0.0));
-      if (fade_alpha < 0.05f)  // done fading out
-      {
+      if (fade_alpha < 0.05f) {
+        // done fading out
         fade_alpha = 0.0f;
         fade_sign = 0.0f;
       }
-      if (fade_alpha >= max_alpha)  // done fading in
-      {
+      if (fade_alpha >= max_alpha) {
+        // done fading in
         fade_alpha = max_alpha;
         fade_sign = 0.0f;
       }
@@ -1784,8 +1783,8 @@ void GuiDisplayGen::drawSystemMarker(const oo::PList& marker, GLfloat x,
   OOGLEND();
 }
 
-OOSystemID GuiDisplayGen::targetNextFoundSystem(int direction)  // +1 , 0 , -1
-{
+OOSystemID GuiDisplayGen::targetNextFoundSystem(int direction) {
+  // +1 , 0 , -1
   OOSystemID sys = (PLAYER != nullptr ? PLAYER->targetSystemID() : 0);
   if ((PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) !=
           OOGUIScreenID::kShortRangeChart &&
@@ -1904,8 +1903,8 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
       double d = distanceBetweenPlanetPositions(starabs.x, starabs.y,
                                                 star2abs.x, star2abs.y);
 
-      if (d <= jumpRange)  // another_commander - Default to 7.0 LY.
-      {
+      if (d <= jumpRange) {
+        // another_commander - Default to 7.0 LY.
         star2.x = static_cast<float>(star2abs.x * hscale);
         star2.y = static_cast<float>(star2abs.y * vscale);
         if (optimizeBy == OORouteType::kNone) {
@@ -2330,8 +2329,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
 
     if (markedDestinations.has_value()) {
       const auto markersIt = markedDestinations->find(i);
-      if (markersIt != markedDestinations->end())  // is marked
-      {
+      if (markersIt != markedDestinations->end()) {
+        // is marked
         GLfloat base_size = 0.5f * blob_size + 2.5f;
         drawSystemMarkers(oo::PList(oo::PList::Array(markersIt->second.begin(),
                                                      markersIt->second.end())),
@@ -2512,16 +2511,14 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
       continue;
     star.x = static_cast<float>(sys_coordinates.x * hscale + hoffset);
     star.y = static_cast<float>(sys_coordinates.y * vscale + voffset);
-    if (sys->sysid ==
-        target)  // not overlapping twin? (example: Divees & Tezabi in galaxy 5)
-    {
+    if (sys->sysid == target) {
+      // not overlapping twin? (example: Divees & Tezabi in galaxy 5)
       targetIdx = i;  // we have a winner!
     }
 
     if (zoom < CHART_ZOOM_SHOW_LABELS) {
-      if (!(player != nullptr ? player->showInfoFlag()
-                              : false))  // System's name
-      {
+      if (!(player != nullptr ? player->showInfoFlag() : false)) {
+        // System's name
         d = distanceBetweenPlanetPositions(
             galaxy_coordinates.x, galaxy_coordinates.y, sys_coordinates.x,
             sys_coordinates.y);
@@ -2534,8 +2531,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
         }
 
         OODrawString(sys->p_name, x + star.x + 2.0, y + star.y, z, chSize);
-      } else if (EXPECT(sys->gov >= 0))  // Not a nova? Show the info.
-      {
+      } else if (EXPECT(sys->gov >= 0)) {
+        // Not a nova? Show the info.
         if (concealment[i] >= OO_SYSTEMCONCEALMENT_NODATA) {
           setGLColorFromSetting(kGuiChartLabelColor,
                                 OOColor::yellowColor().get(), alpha);
@@ -2573,8 +2570,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
 
         OODrawHilightedString(sys->p_name, x + star.x + 2.0, y + star.y, z,
                               chSize);
-      } else if (sys->gov >= 0)  // Not a nova? Show the info.
-      {
+      } else if (sys->gov >= 0) {
+        // Not a nova? Show the info.
         if (concealment[targetIdx] >= OO_SYSTEMCONCEALMENT_NODATA) {
           setGLColorFromSetting(kGuiChartLabelColor,
                                 OOColor::yellowColor().get(), alpha);

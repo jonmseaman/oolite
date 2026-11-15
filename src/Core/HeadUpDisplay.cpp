@@ -406,9 +406,9 @@ void HeadUpDisplay::initWithDictionary(
                       OOColor::cyanColor()};
   }
 
-  if (!areTrumblesToBeDrawn)  // naughty - a hud with no built-in drawTrumbles:
-                              // - one must be added!
-  {
+  if (!areTrumblesToBeDrawn) {
+    // naughty - a hud with no built-in drawTrumbles:
+    // - one must be added!
     const oo::PList trumble_dial_info(oo::PList::Dict{
         {SELECTOR_KEY, oo::PList(std::string("drawTrumbles:"))}});
     addDial(trumble_dial_info);
@@ -581,8 +581,8 @@ void HeadUpDisplay::resetGuis(const oo::PList& info) {
 
   if (gui_info != nullptr && gui_info->count() == 0) {
     // exists and it's empty. complete reset.
-    if (gui != nullptr)  // messages to nil did nothing
-    {
+    if (gui != nullptr) {
+      // messages to nil did nothing
       gui->setCurrentRow(8);
       gui->setDrawPosition(make_vector(0.0, -40.0, 640.0));
       gui->resizeTo(NSMakeSize(480, 160), 19, std::nullopt);
@@ -640,8 +640,8 @@ void HeadUpDisplay::resetGuis(const oo::PList& info) {
     // exists and it's empty. complete reset.
     if (UNIVERSE != nullptr) UNIVERSE->setAutoCommLog(true);
     if (UNIVERSE != nullptr) UNIVERSE->setPermanentCommLog(false);
-    if (gui != nullptr)  // messages to nil did nothing
-    {
+    if (gui != nullptr) {
+      // messages to nil did nothing
       gui->setCurrentRow(9);
       gui->setDrawPosition(make_vector(0.0, 180.0, 640.0));
       gui->resizeTo(NSMakeSize(360, 120), 12, std::nullopt);
@@ -989,10 +989,9 @@ void HeadUpDisplay::drawDials() {
     drawHUDItem(sCurrentDrawItem->info);
   }
 
-  if (EXPECT_NOT(
-          !_compassUpdated && _compassActive &&
-          checkPlayerInSystemFlight()))  // compass gone / broken / disabled ?
-  {
+  if (EXPECT_NOT(!_compassUpdated && _compassActive &&
+                 checkPlayerInSystemFlight())) {
+    // compass gone / broken / disabled ?
     // trigger the targetChanged event with whom == null
     _compassActive = false;
     if (PLAYER != nullptr)
@@ -1233,10 +1232,9 @@ void HeadUpDisplay::drawHUDItem(const oo::PList& info) {
   OOVerifyOpenGLState();
 }
 
-void HeadUpDisplay::drawSurroundInternal(
-    const oo::PList& /*info*/,
-    const GLfloat color[4])  // the geometry is the current item's cached info
-{
+void HeadUpDisplay::drawSurroundInternal(const oo::PList& /*info*/,
+                                         const GLfloat color[4]) {
+  // the geometry is the current item's cached info
   std::ptrdiff_t x, y;
   NSSize siz;
   GLfloat alpha = overallAlpha;
@@ -1297,8 +1295,8 @@ void HeadUpDisplay::drawMultiFunctionDisplay(const oo::PList& info,
   std::ptrdiff_t i, x, y;
   NSSize siz, tmpsiz;
   if ((player1 != nullptr ? player1->guiScreen() : OOGUIScreenID{}) !=
-      OOGUIScreenID::kMain)  // don't draw on text screens
-  {
+      OOGUIScreenID::kMain) {
+    // don't draw on text screens
     return;
   }
   GLfloat alpha =
@@ -1474,8 +1472,8 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
     // 20000.0), rotMatrix); 	GLDrawNonlinearCascadeWeapon( scanner_cx,
     // scanner_cy, z1, siz, p, 6000, zoom, alpha );
     //}
-    for (i = 0; i < ent_count; i++)  // scanner lollypops
-    {
+    for (i = 0; i < ent_count; i++) {
+      // scanner lollypops
       scannedEntity = my_entities[i];
 
       drawClass = scannedEntity->getScanClass();
@@ -1827,8 +1825,8 @@ void HeadUpDisplay::drawCompass(const oo::PList& info) {
 
   if (checkPlayerInSystemFlight() &&
       (PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) !=
-          OOEntityStatus::kLaunching)  // normal system
-  {
+          OOEntityStatus::kLaunching) {
+    // normal system
     Entity* reference =
         (PLAYER != nullptr ? PLAYER->getCompassTargetEntity()
                            : static_cast<Entity*>(nullptr));  // the C++ entity
@@ -1899,10 +1897,9 @@ void HeadUpDisplay::drawCompass(const oo::PList& info) {
   }
 }
 
-void HeadUpDisplay::drawAegis(
-    const oo::PList& /*info*/)  // the geometry is the current item's cached
-                                // info
-{
+void HeadUpDisplay::drawAegis(const oo::PList& /*info*/) {
+  // the geometry is the current item's cached
+  // info
   if (((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}) ==
        OOViewID::kGUIDisplay) ||
       ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) == nullptr) ||
@@ -2007,9 +2004,8 @@ void HeadUpDisplay::drawSecondaryTargetReticle(const oo::PList& info) {
               .at(i);  // an empty slot (was OONull) is an empty ref
       // An empty slot is an empty reference; a set one whose entity has gone
       // gives null from oo::LiveEntity below.
-      if (!oo::isUnset(
-              sec_ref))  // a weak reference (-isProxy), not an empty slot
-      {
+      if (!oo::isUnset(sec_ref)) {
+        // a weak reference (-isProxy), not an empty slot
         Entity* secondary =
             oo::LiveEntity(sec_ref);  // +0, null once its object has gone
         if (secondary != nullptr && secondary != primary) {
@@ -2196,8 +2192,8 @@ void HeadUpDisplay::drawCustomLight(const oo::PList& info) {
            ? PLAYER->dialCustomColor(
                  OptionalStringIn(info, CUSTOM_DIAL_KEY).value_or(""))
            : std::shared_ptr<OOColor>());
-  if (color != nullptr)  // a message to nil left the colour as it was
-  {
+  if (color != nullptr) {
+    // a message to nil left the colour as it was
     color->getRed(&light_color[0], &light_color[1], &light_color[2],
                   &light_color[3]);
   }
@@ -2847,8 +2843,8 @@ OOPolygonSprite* IconForMissileRole(const std::string& role) {
     std::shared_ptr<OOPolygonSprite> made;
     if (!iconDef.isNull())
       made = OOPolygonSprite::initWithDataArray(iconDef, kOutlineWidth, key);
-    if (made == nullptr)  // No custom icon or bad data
-    {
+    if (made == nullptr) {
+      // No custom icon or bad data
       /*	Backwards compatibility note:
               The old implementation used suffixes "MISSILE" and "MINE" (without
               the underscore), and didn't draw anything if neither was found. I
@@ -3278,8 +3274,8 @@ void HeadUpDisplay::drawPrimedEquipment(const oo::PList& info) {
 void HeadUpDisplay::drawASCTarget(const oo::PList& info) {
   if (!(checkPlayerInSystemFlight() &&
         (PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) !=
-            OOEntityStatus::kLaunching))  // normal system
-  {
+            OOEntityStatus::kLaunching)) {
+    // normal system
     // Can't have compass target when docked, etc. (matches blip condition)
     return;
   }
@@ -3537,9 +3533,8 @@ void HeadUpDisplay::drawStickSensitivityIndicator(const oo::PList& /*info*/) {
                                                 // registered factory
   struct CachedInfo cached;
 
-  if (stickHandler == nullptr ||
-      !stickHandler->joystickCount())  // a message to nil answered 0
-  {
+  if (stickHandler == nullptr || !stickHandler->joystickCount()) {
+    // a message to nil answered 0
     return;  // no need to draw if no joystick fitted
   }
 
@@ -3812,9 +3807,8 @@ void hudDrawReticleOnTarget(
   if (target == nullptr || player1 == nullptr) {
     return;
   }
-  if (HeadUpDisplayPlayerGuiScreen(player1) !=
-      OOGUIScreenID::kMain)  // don't draw on text screens
-  {
+  if (HeadUpDisplayPlayerGuiScreen(player1) != OOGUIScreenID::kMain) {
+    // don't draw on text screens
     return;
   }
 
@@ -4050,9 +4044,8 @@ void hudDrawReticleOnTarget(
 
 void hudDrawWaypoint(Entity* waypoint, PlayerEntity* player1, GLfloat /*z1*/,
                      GLfloat alpha, bool selected, GLfloat scale) {
-  if (HeadUpDisplayPlayerGuiScreen(player1) !=
-      OOGUIScreenID::kMain)  // don't draw on text screens
-  {
+  if (HeadUpDisplayPlayerGuiScreen(player1) != OOGUIScreenID::kMain) {
+    // don't draw on text screens
     return;
   }
 
@@ -4651,8 +4644,8 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
         w1 = wdiv;
         if (i % 5 == 0) w1 = w1 * 2.5;
         if (i % 10 == 0) w1 = w1 * 2.0;
-        if (w1 > 3.5)  // don't draw tiny marks
-        {
+        if (w1 > 3.5) {
+          // don't draw tiny marks
           glVertex3f(x - w1, y + h1, z);
           glVertex3f(x + w1, y + h1, z);
           glVertex3f(x - w1, y - h1, z);

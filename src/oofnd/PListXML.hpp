@@ -167,10 +167,8 @@ inline std::string charsetForXml(std::string_view xml) {
   if ((ptr[0] == 0xFE && ptr[1] == 0xFF) || (ptr[0] == 0xFF && ptr[1] == 0xFE))
     return "utf-16";
   if (ptr[0] == 0xEF && ptr[1] == 0xBB && ptr[2] == 0xBF) return "utf-8";
-  if (ptr[0] == 0 ||
-      ptr[1] ==
-          0)  // GNUstep's two- and four-byte patterns all have one of these
-  {
+  if (ptr[0] == 0 || ptr[1] == 0) {
+    // GNUstep's two- and four-byte patterns all have one of these
     const bool four =
         (ptr[0] == 0 && ptr[1] == 0) || (ptr[2] == 0 && ptr[3] == 0);
     return four ? "ucs-4" : "utf-16";
@@ -368,8 +366,8 @@ class XMLPListReader {
     while (!abort_) {
       if (c == '<' || c == kEOF || c == '&') {
         if (c == '<') ignorable_ = true;
-        if (cp_ - vp > 1)  // push out any characters collected so far
-        {
+        if (cp_ - vp > 1) {
+          // push out any characters collected so far
           std::size_t p = cp_ - 1;
           if (ignorable_) {
             if (whitespace_)
@@ -801,8 +799,8 @@ class XMLPListReader {
       return;
     } else if (name == "data") {
       for (unsigned char ch : value_) {
-        if (ch >= 0x80)  // -dataUsingEncoding:NSASCIIStringEncoding is nil
-        {
+        if (ch >= 0x80) {
+          // -dataUsingEncoding:NSASCIIStringEncoding is nil
           abort_ = true;
           return;
         }
