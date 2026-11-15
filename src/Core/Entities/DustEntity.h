@@ -43,7 +43,7 @@ MA 02110-1301, USA.
 #endif
 
 #define DUST_SCALE 2000
-#define DUST_N_PARTICLES 600
+inline constexpr int DUST_N_PARTICLES = 600;
 
 /*	The universe makes the dust with oo::makeShared<DustEntity>() and
    init(), and finds it with dynamic_cast. It is its own graphics reset client
