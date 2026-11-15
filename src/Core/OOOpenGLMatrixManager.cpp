@@ -33,21 +33,6 @@ MA 02110-1301, USA.
 #include "OOMacroOpenGL.h"
 #include "Universe.h"
 
-const char* ooliteStandardMatrixUniforms[] = {
-    "ooliteModelView",
-    "ooliteProjection",
-    "ooliteModelViewProjection",
-    "ooliteNormalMatrix",
-    "ooliteModelViewInverse",
-    "ooliteProjectionInverse",
-    "ooliteModelViewProjectionInverse",
-    "ooliteModelViewTranspose",
-    "ooliteProjectionTranspose",
-    "ooliteModelViewProjectionTranspose",
-    "ooliteModelViewInverseTranspose",
-    "ooliteProjectionInverseTranspose",
-    "ooliteModelViewProjectionInverseTranspose"};
-
 // -init and -dealloc only called super: the implicit constructor and
 // destructor.
 
@@ -336,8 +321,8 @@ oo::PList OOOpenGLMatrixManager::standardMatrixUniformLocations(
   OO_ENTER_OPENGL();
 
   for (i = 0; i < OOLITE_GL_MATRIX_END; i++) {
-    location =
-        glGetUniformLocationARB(program, ooliteStandardMatrixUniforms[i]);
+    location = glGetUniformLocationARB(program,
+                                       ooliteStandardMatrixUniforms[i].data());
     if (location >= 0) {
       if (i == OOLITE_GL_MATRIX_NORMAL) {
         locationSet.push_back(oo::PList(oo::PList::Array{
