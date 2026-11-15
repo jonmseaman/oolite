@@ -466,9 +466,9 @@ static const uint8_t kGradients[kGradientCount][3] = {
         the negations are precalculated.
 */
 inline float TDot3(const uint8_t grad[3], float x, float y, float z) {
-  float xt[3] = {-x, 0.0f, x};
-  float yt[3] = {-y, 0.0f, y};
-  float zt[3] = {-z, 0.0f, z};
+  std::array<float, 3> xt = {-x, 0.0f, x};
+  std::array<float, 3> yt = {-y, 0.0f, y};
+  std::array<float, 3> zt = {-z, 0.0f, z};
 
   return xt[grad[0]] + yt[grad[1]] + zt[grad[2]];
 }

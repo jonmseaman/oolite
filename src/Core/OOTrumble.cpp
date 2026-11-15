@@ -24,6 +24,7 @@ MA 02110-1301, USA.
 
 #include "OOTrumble.h"
 
+#include <array>
 #include <memory>
 #include <string>
 #include <utility>
@@ -71,7 +72,7 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
   // set color points
   int r0 = static_cast<int>(digram[0]);
   int r1 = static_cast<int>(digram[1]);
-  int pointscheme[6] = {1, 1, 0, 0, 1, 1};
+  std::array<int, 6> pointscheme = {1, 1, 0, 0, 1, 1};
   int ps = r0 >> 2;  // first digram determines pattern of points
   pointscheme[0] = (ps >> 3) & 1;
   pointscheme[1] = (ps >> 2) & 1;
@@ -80,8 +81,8 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
   pointscheme[4] = (ps >> 2) & 1;
   pointscheme[5] = (ps >> 3) & 1;
 
-  GLfloat c1[4] = {1.0, 1.0, 1.0, 1.0};
-  GLfloat c2[4] = {1.0, 0.0, 0.0, 1.0};
+  std::array<GLfloat, 4> c1 = {1.0, 1.0, 1.0, 1.0};
+  std::array<GLfloat, 4> c2 = {1.0, 0.0, 0.0, 1.0};
 
   // I am missing something. Please clarify the intent of the following
   // statement. The next statement shift the result of adding two masked values

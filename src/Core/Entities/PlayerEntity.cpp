@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 #include <assert.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -12639,7 +12640,7 @@ void PlayerEntity::setUpTrumbles() {
   std::u16string
       trumbleDigrams;  // UTF-16 units, as the old mutable string held them
   uint16_t xchar = static_cast<uint16_t>(0);
-  uint16_t digramchars[2];
+  std::array<uint16_t, 2> digramchars;
 
   while (trumbleDigrams.size() < PLAYER_MAX_TRUMBLES + 2) {
     const std::optional<std::string> commanderName = this->commanderName();
