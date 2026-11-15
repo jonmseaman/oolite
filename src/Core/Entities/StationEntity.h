@@ -54,15 +54,15 @@ static_assert(oo::ToUnderlying(OOStationAlertLevel::kGreen) == 1);
 static_assert(oo::ToUnderlying(OOStationAlertLevel::kYellow) == 2);
 static_assert(oo::ToUnderlying(OOStationAlertLevel::kRed) == 3);
 
-#define STATION_MAX_POLICE 8
+inline constexpr int STATION_MAX_POLICE = 8;
 
-#define STATION_DELAY_BETWEEN_LAUNCHES 6.0
+inline constexpr double STATION_DELAY_BETWEEN_LAUNCHES = 6.0;
 
-#define STATION_LAUNCH_RETRY_INTERVAL 2.0
+inline constexpr double STATION_LAUNCH_RETRY_INTERVAL = 2.0;
 
 #define MAX_DOCKING_STAGES 16
 
-#define DOCKING_CLEARANCE_WINDOW 126.0
+inline constexpr double DOCKING_CLEARANCE_WINDOW = 126.0;
 
 /*	The station's state and members.
 
