@@ -40,7 +40,7 @@ SOFTWARE.
 #include "Universe.h"
 #include "oofnd/PList.hpp"
 
-#define FACE GL_FRONT_AND_BACK
+constexpr auto FACE = GL_FRONT_AND_BACK;
 
 namespace {
 
