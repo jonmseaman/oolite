@@ -92,24 +92,25 @@ inline bool hasLoneSurrogate(std::u16string_view u) noexcept {
 
 // Seconds since 2001-01-01Z -> "%Y-%m-%d?%H:%M:%S" fields in UTC (proleptic
 // Gregorian).
-inline void breakDate(double sinceReferenceDate, long& y, int& mo, int& d,
-                      int& h, int& mi, int& s) {
+inline void breakDate(double sinceReferenceDate, std::int64_t& y, int& mo,
+                      int& d, int& h, int& mi, int& s) {
   const double t = std::floor(sinceReferenceDate);
-  const long long days = static_cast<long long>(std::floor(t / 86400.0));
-  const long long secs = static_cast<long long>(t) - days * 86400;
+  const std::int64_t days = static_cast<std::int64_t>(std::floor(t / 86400.0));
+  const std::int64_t secs = static_cast<std::int64_t>(t) - days * 86400;
   // civil_from_days (H. Hinnant) on days since 1970-01-01; 2001-01-01 is day
   // 11323.
-  const long long z = days + 11323 + 719468;
-  const long long era = (z >= 0 ? z : z - 146096) / 146097;
-  const long long doe = z - era * 146097;
-  const long long yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-  long long year = yoe + era * 400;
-  const long long doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-  const long long mp = (5 * doy + 2) / 153;
+  const std::int64_t z = days + 11323 + 719468;
+  const std::int64_t era = (z >= 0 ? z : z - 146096) / 146097;
+  const std::int64_t doe = z - era * 146097;
+  const std::int64_t yoe =
+      (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+  std::int64_t year = yoe + era * 400;
+  const std::int64_t doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+  const std::int64_t mp = (5 * doy + 2) / 153;
   d = static_cast<int>(doy - (153 * mp + 2) / 5 + 1);
   mo = static_cast<int>(mp < 10 ? mp + 3 : mp - 9);
   if (mo <= 2) ++year;
-  y = static_cast<long>(year);
+  y = year;
   h = static_cast<int>(secs / 3600);
   mi = static_cast<int>((secs % 3600) / 60);
   s = static_cast<int>(secs % 60);
@@ -471,7 +472,7 @@ inline void appendXML(std::string& out, const PList& v, unsigned level) {
       out += "</data>\n";
       return;
     case PList::Type::kDate: {
-      long y;
+      std::int64_t y;
       int mo, d, h, mi, s;
       breakDate(v.getIf<PList::Date>()->sinceReferenceDate, y, mo, d, h, mi, s);
       out += "<date>";

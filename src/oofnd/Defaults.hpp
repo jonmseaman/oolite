@@ -283,10 +283,10 @@ inline void appendOpenStep(std::string& out, const PList& v, unsigned level,
     case PList::Type::kInteger: {
       const PList::Integer& i = *v.getIf<PList::Integer>();
       appendOpenStepString(
-          out, i.isUnsigned
-                   ? std::format("{}", static_cast<unsigned long long>(
-                                           i.unsignedValue()))
-                   : std::format("{}", static_cast<long long>(i.value)));
+          out,
+          i.isUnsigned
+              ? std::format("{}", static_cast<std::uint64_t>(i.unsignedValue()))
+              : std::format("{}", static_cast<std::int64_t>(i.value)));
       return;
     }
     case PList::Type::kReal: {

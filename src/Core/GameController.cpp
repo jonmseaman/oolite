@@ -317,7 +317,7 @@ void GameController::setEcoQoS(bool efficiencyModeRequested) {
             setEfficiencyMode ? IDLE_PRIORITY_CLASS : NORMAL_PRIORITY_CLASS))) {
       OO_LOG("gameController.setEcoQos",
              "SetPriorityClass failed with error {}",
-             static_cast<unsigned long>(GetLastError()));
+             static_cast<std::uint32_t>(GetLastError()));
     }
 
     PROCESS_POWER_THROTTLING_STATE powerThrottling;
@@ -331,7 +331,7 @@ void GameController::setEcoQoS(bool efficiencyModeRequested) {
             sizeof(powerThrottling)))) {
       OO_LOG("gameController.setEcoQos",
              "SetProcessInformation failed with error {}",
-             static_cast<unsigned long>(GetLastError()));
+             static_cast<std::uint32_t>(GetLastError()));
     }
   }
 #endif
@@ -541,7 +541,7 @@ void GameController::runFrameLoop() {
             Sleep(static_cast<DWORD>(ceil(remaining * 1000.0)));
 #else
             std::this_thread::sleep_for(std::chrono::milliseconds(
-                static_cast<long long>(ceil(remaining * 1000.0))));
+                static_cast<std::int64_t>(ceil(remaining * 1000.0))));
 #endif
           }
         }

@@ -12,6 +12,7 @@ Usage: oojs-quickjs-poc <tests directory>
 */
 
 #include <chrono>
+#include <cstdint>
 #include <cstdio>
 #include <ctime>
 #include <format>
@@ -192,7 +193,7 @@ int main(int argc, const char* argv[]) {
   std::size_t leaked = engine->shutDown();
   Check(leaked == 0,
         std::format("runtime destroyed with no leaked objects ({} alive)",
-                    static_cast<unsigned long>(leaked)));
+                    static_cast<std::uint64_t>(leaked)));
 
   fprintf(stdout, "\n%u checks, %u failures\n", sChecks, sFailures);
   return sFailures == 0 ? 0 : 1;

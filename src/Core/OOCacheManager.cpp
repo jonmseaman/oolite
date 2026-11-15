@@ -45,6 +45,7 @@ MA 02110-1301, USA.
 #if PROFILE_WRITES
 #include "OOProfilingStopwatch.h"
 #endif
+#include <cstdint>
 #include <cstring>
 #include <format>
 #include <functional>
@@ -62,8 +63,8 @@ constexpr const char* kCacheKeyFormatVersion = "format version";
 constexpr const char* kCacheKeyCaches = "caches";
 }  // namespace
 
-constexpr unsigned long long kEndianTagValue = 0x0123456789ABCDEFULL;
-constexpr unsigned long long kFormatVersionValue = 219;
+constexpr std::uint64_t kEndianTagValue = 0x0123456789ABCDEFULL;
+constexpr std::uint64_t kFormatVersionValue = 219;
 
 static OOCacheManager* sSingleton =
     nullptr;  // +1, never released (the retained singleton)

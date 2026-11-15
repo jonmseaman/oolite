@@ -945,7 +945,7 @@ inline int localizedCompare(std::string_view a, std::string_view b) {
 inline int intValue(std::string_view s) {
   return plist_get::intValue(utf8ToUtf16(s));
 }
-inline long long longLongValue(std::string_view s) {
+inline std::int64_t longLongValue(std::string_view s) {
   return plist_get::longLongValue(utf8ToUtf16(s));
 }
 inline double doubleValue(std::string_view s) {
@@ -1037,23 +1037,23 @@ class FormatArg {
   const std::string& text() const noexcept { return text_; }
   bool isSingle() const noexcept { return single_; }
 
-  long long asSigned() const noexcept {
+  std::int64_t asSigned() const noexcept {
     switch (kind_) {
       case Kind::kSigned:
         return signed_;
       case Kind::kUnsigned:
       case Kind::kPointer:
-        return static_cast<long long>(unsigned_);
+        return static_cast<std::int64_t>(unsigned_);
       case Kind::kReal:
-        return static_cast<long long>(real_);
+        return static_cast<std::int64_t>(real_);
       default:
         return 0;
     }
   }
-  unsigned long long asUnsigned() const noexcept {
+  std::uint64_t asUnsigned() const noexcept {
     return kind_ == Kind::kUnsigned || kind_ == Kind::kPointer
                ? unsigned_
-               : static_cast<unsigned long long>(asSigned());
+               : static_cast<std::uint64_t>(asSigned());
   }
   double asReal() const noexcept {
     switch (kind_) {
@@ -1072,8 +1072,8 @@ class FormatArg {
   Kind kind_ = Kind::kNull;
   bool single_ = false;
   std::string text_;
-  long long signed_ = 0;
-  unsigned long long unsigned_ = 0;
+  std::int64_t signed_ = 0;
+  std::uint64_t unsigned_ = 0;
   double real_ = 0.0;
 };
 
@@ -1145,7 +1145,7 @@ inline std::string padNumber(std::string_view sign, std::string_view prefix,
   return pad + std::string(sign) + std::string(prefix) + digits;
 }
 
-inline std::string formatInteger(unsigned long long magnitude, bool negative,
+inline std::string formatInteger(std::uint64_t magnitude, bool negative,
                                  bool isSigned, char conversion,
                                  const FormatSpec& f) {
   const int base = conversion == 'o'
@@ -1359,16 +1359,16 @@ inline std::string formatRuntime(std::string_view fmt,
       }
       case 'd':
       case 'i': {
-        long long v = take().asSigned();
+        std::int64_t v = take().asSigned();
         if (length == "hh")
           v = static_cast<signed char>(v);
         else if (length == "h")
           v = static_cast<short>(v);
         else if (length.empty())
           v = static_cast<int>(v);
-        const unsigned long long magnitude =
-            v < 0 ? 0ull - static_cast<unsigned long long>(v)
-                  : static_cast<unsigned long long>(v);
+        const std::uint64_t magnitude =
+            v < 0 ? 0ull - static_cast<std::uint64_t>(v)
+                  : static_cast<std::uint64_t>(v);
         out += detail::formatInteger(magnitude, v < 0, true, 'd', spec);
         break;
       }
@@ -1376,7 +1376,7 @@ inline std::string formatRuntime(std::string_view fmt,
       case 'x':
       case 'X':
       case 'o': {
-        unsigned long long v = take().asUnsigned();
+        std::uint64_t v = take().asUnsigned();
         if (length == "hh")
           v = static_cast<unsigned char>(v);
         else if (length == "h")

@@ -67,6 +67,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <cstdlib>
 #include <functional>
 #include <optional>
@@ -125,9 +126,9 @@ struct PathEnvironment {
     const std::wstring wname = fs::pathFromUTF8(name).native();
     std::wstring value(256, L'\0');
     for (;;) {
-      const unsigned long n =
+      const auto n =
           ::GetEnvironmentVariableW(wname.c_str(), value.data(),
-                                    static_cast<unsigned long>(value.size()));
+                                    static_cast<std::uint32_t>(value.size()));
       if (n == 0)
         return std::nullopt;  // unset (an empty value also reads as unset, as
                               // in SDL_getenv)

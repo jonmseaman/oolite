@@ -25,14 +25,15 @@ SOFTWARE.
 
 */
 
-#include "OOPixMap.h"
-
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <format>
 #include <memory>
 #include <string>
 #include <utility>
+
+#include "OOPixMap.h"
 
 const OOPixMap kOONullPixMap = {.pixels = nullptr,
                                 .width = 0,
@@ -216,7 +217,7 @@ bool OOIsValidPixMapFormat(OOPixMapFormat format) {
 }
 
 #ifndef NDEBUG
-unsigned short OOPixMapBytesPerPixelForFormat(OOPixMapFormat format) {
+std::uint16_t OOPixMapBytesPerPixelForFormat(OOPixMapFormat format) {
   switch (format) {
     case kOOPixMapInvalidFormat:
       return 0;

@@ -25,13 +25,13 @@ SOFTWARE.
 
 */
 
-#include "OOLogHeader.h"
-
+#include <cstdint>
 #include <string>
 #include <vector>
 
 #include "OOCPUInfo.h"  // IWYU pragma: keep: the endianness and CPU macros its #if lines test
 #include "OOJavaScriptEngine.h"  // IWYU pragma: keep: OOJS_PROFILE, which its #if lines test
+#include "OOLogHeader.h"
 #include "OOVersion.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Log.hpp"
@@ -203,13 +203,13 @@ std::string OOPlatformDescription() {
 #include <format>
 
 static std::optional<std::string> GetSysCtlString(const char* name);
-static unsigned long long GetSysCtlInt(const char* name);
+static std::uint64_t GetSysCtlInt(const char* name);
 static std::string GetCPUDescription();
 
 namespace {
 std::string AdditionalLogHeaderInfo() {
   std::optional<std::string> sysModel;
-  unsigned long long sysPhysMem;
+  std::uint64_t sysPhysMem;
 
   sysModel = GetSysCtlString("hw.model");
   sysPhysMem = GetSysCtlInt("hw.memsize");
@@ -240,11 +240,11 @@ std::string AdditionalLogHeaderInfo() {
 static std::string GetCPUDescription() {
   std::optional<std::string> typeStr, subTypeStr;
 
-  unsigned long long sysCPUType = GetSysCtlInt("hw.cputype");
-  unsigned long long sysCPUFamily = GetSysCtlInt("hw.cpufamily");
-  unsigned long long sysCPUFrequency = GetSysCtlInt("hw.cpufrequency");
-  unsigned long long sysCPUCount = GetSysCtlInt("hw.physicalcpu");
-  unsigned long long sysLogicalCPUCount = GetSysCtlInt("hw.logicalcpu");
+  std::uint64_t sysCPUType = GetSysCtlInt("hw.cputype");
+  std::uint64_t sysCPUFamily = GetSysCtlInt("hw.cpufamily");
+  std::uint64_t sysCPUFrequency = GetSysCtlInt("hw.cpufrequency");
+  std::uint64_t sysCPUCount = GetSysCtlInt("hw.physicalcpu");
+  std::uint64_t sysLogicalCPUCount = GetSysCtlInt("hw.logicalcpu");
 
   /*	Note: CPU_TYPE_STRING tells us the build architecture. This gets the
           physical CPU type. They may differ, for instance, when running under
@@ -333,8 +333,8 @@ static std::optional<std::string> GetSysCtlString(const char* name) {
   return buffer;
 }
 
-static unsigned long long GetSysCtlInt(const char* name) {
-  unsigned long long llresult = 0;
+static std::uint64_t GetSysCtlInt(const char* name) {
+  std::uint64_t llresult = 0;
   unsigned int intresult = 0;
   size_t size;
 

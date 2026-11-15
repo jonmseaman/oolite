@@ -1081,29 +1081,28 @@ oo::PList PlayerEntity::clock_number() {
 oo::PList PlayerEntity::clock_secs_number() {
   // called by name; returns the game
   // time in seconds
-  return oo::PList::unsignedInteger(
-      static_cast<unsigned long long>(ship_clock));
+  return oo::PList::unsignedInteger(static_cast<std::uint64_t>(ship_clock));
 }
 
 oo::PList PlayerEntity::clock_mins_number() {
   // called by name; returns the game
   // time in minutes
   return oo::PList::unsignedInteger(
-      static_cast<unsigned long long>(ship_clock / 60.0));
+      static_cast<std::uint64_t>(ship_clock / 60.0));
 }
 
 oo::PList PlayerEntity::clock_hours_number() {
   // called by name; returns the
   // game time in hours
   return oo::PList::unsignedInteger(
-      static_cast<unsigned long long>(ship_clock / 3600.0));
+      static_cast<std::uint64_t>(ship_clock / 3600.0));
 }
 
 oo::PList PlayerEntity::clock_days_number() {
   // called by name; returns the game
   // time in days
   return oo::PList::unsignedInteger(
-      static_cast<unsigned long long>(ship_clock / 86400.0));
+      static_cast<std::uint64_t>(ship_clock / 86400.0));
 }
 
 oo::PList PlayerEntity::fuelLevel_number() {

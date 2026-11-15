@@ -68,7 +68,7 @@ enum class OOEntityByNameArgument : std::uint8_t {
 // callObjC() reads the member its row's type names. (An object result, which no
 // row answers, is not kept.)
 struct OOEntityByNameValue {
-  long long integer = 0;
+  std::int64_t integer = 0;
   double real = 0;
   Vector vector{};
   Quaternion quaternion{};

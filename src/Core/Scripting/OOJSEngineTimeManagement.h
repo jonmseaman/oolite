@@ -34,6 +34,7 @@ SOFTWARE.
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <set>
@@ -181,7 +182,7 @@ class OOTimeProfileEntry : public oo::Object {
   oo::PList propertyListRepresentation();
 
   std::optional<std::string> _function;  // nullopt when created without a name
-  unsigned long _hitCount = {};
+  std::uint64_t _hitCount = {};
   double _totalTimeSum = {};
   double _selfTimeSum = {};
   double _totalTimeMax = {};

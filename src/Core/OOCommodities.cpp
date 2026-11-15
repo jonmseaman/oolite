@@ -118,12 +118,11 @@ void Set(oo::PList& info, std::string_view key, oo::PList value) {
 // -oo_setUnsignedInteger:forKey: / -oo_setInteger:forKey:
 // (+numberWithUnsignedInteger: / +numberWithInteger:, which oo::PListFrom reads
 // as an unsigned / signed integer).
-void SetUnsigned(oo::PList& info, std::string_view key,
-                 unsigned long long value) {
+void SetUnsigned(oo::PList& info, std::string_view key, std::uint64_t value) {
   Set(info, key, oo::PList::unsignedInteger(value));
 }
 
-void SetSigned(oo::PList& info, std::string_view key, long long value) {
+void SetSigned(oo::PList& info, std::string_view key, std::int64_t value) {
   Set(info, key, oo::PList::signedInteger(value));
 }
 
@@ -556,7 +555,7 @@ OOCreditsQuantity OOCommodities::samplePriceForCommodity(
       good = modifyGood(good, script, nullptr, system, true);
     }
   }
-  return good.get<unsigned long long>(kOOCommodityPriceCurrent);
+  return good.get<std::uint64_t>(kOOCommodityPriceCurrent);
 }
 
 // positive = exporter; negative = importer; range -1.0 .. +1.0
@@ -656,20 +655,22 @@ oo::PList OOCommodities::updateInfoFor(const oo::PList& good,
                                        const oo::PList& rule,
                                        OOCargoQuantity maxCapacity) {
   oo::PList tmp = good;
-  long long import = rule.get<long long>(kOOCommodityMarketLegalityImport, -1);
+  std::int64_t import =
+      rule.get<std::int64_t>(kOOCommodityMarketLegalityImport, -1);
   if (import >= 0) {
     SetSigned(tmp, kOOCommodityLegalityImport, import);
   }
 
-  long long exportValue =
-      rule.get<long long>(kOOCommodityMarketLegalityExport, -1);
+  std::int64_t exportValue =
+      rule.get<std::int64_t>(kOOCommodityMarketLegalityExport, -1);
   if (exportValue >= 0) {
     SetSigned(tmp, kOOCommodityLegalityExport,
               import);  // (sic: upstream writes the import value here)
   }
 
-  long long capacity = rule.get<long long>(kOOCommodityMarketCapacity, -1);
-  if (capacity >= 0 && capacity <= static_cast<long long>(maxCapacity)) {
+  std::int64_t capacity =
+      rule.get<std::int64_t>(kOOCommodityMarketCapacity, -1);
+  if (capacity >= 0 && capacity <= static_cast<std::int64_t>(maxCapacity)) {
     SetSigned(tmp, kOOCommodityCapacity, capacity);
   } else {
     // set to the station max capacity

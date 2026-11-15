@@ -40,6 +40,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <ctime>
 #include <format>
@@ -156,7 +157,7 @@ inline std::string timeStamp(std::chrono::system_clock::time_point when) {
   const std::time_t seconds =
       static_cast<std::time_t>(ms >= 0 ? ms / 1000 : (ms - 999) / 1000);
   const int milli =
-      static_cast<int>(ms - static_cast<long long>(seconds) * 1000);
+      static_cast<int>(ms - static_cast<std::int64_t>(seconds) * 1000);
   std::tm tm{};
 #ifdef _WIN32
   localtime_s(&tm, &seconds);
@@ -172,7 +173,7 @@ inline std::string timeStamp(std::chrono::system_clock::time_point when) {
 inline std::string composeLine(const Options& options,
                                std::string_view messageClass,
                                const char* function, const char* file,
-                               unsigned long line, std::string_view message,
+                               std::uint32_t line, std::string_view message,
                                unsigned indentLevel, std::string_view time) {
   const std::string fn = function != nullptr ? function : "(null)";
   std::string text;
@@ -351,7 +352,7 @@ class Logger {
   // prefixes, time, indentation, then the sink. Does not test the class (the
   // macros do, as OOLog's do).
   void write(std::string_view messageClass, const char* function,
-             const char* file, unsigned long line, std::string_view message) {
+             const char* file, std::uint32_t line, std::string_view message) {
     const Options o = options();
     const std::string time = o.showTime
                                  ? timeStamp(std::chrono::system_clock::now())
@@ -507,7 +508,7 @@ inline void outdentIf(std::string_view messageClass) {
 // __FILE__, __LINE__ (the macros below supply them).
 template <class... Args>
 void message(std::string_view messageClass, const char* function,
-             const char* file, unsigned long line,
+             const char* file, std::uint32_t line,
              std::format_string<Args...> format, Args&&... args) {
   logger().write(messageClass, function, file, line,
                  std::format(format, std::forward<Args>(args)...));
@@ -515,7 +516,7 @@ void message(std::string_view messageClass, const char* function,
 
 template <class... Args>
 void messageWithPrefix(std::string_view messageClass, const char* function,
-                       const char* file, unsigned long line,
+                       const char* file, std::uint32_t line,
                        std::string_view prefix,
                        std::format_string<Args...> format, Args&&... args) {
   if (!willDisplay(messageClass)) return;

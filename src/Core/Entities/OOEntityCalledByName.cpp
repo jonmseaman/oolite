@@ -32,8 +32,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOEntityCalledByName.h"
-
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <string>
@@ -47,6 +46,7 @@ MA 02110-1301, USA.
 #include "Entity.h"
 #include "GameController.h"  // OOScheduleDeferredCall (oo::ScheduleEntityCall, the player's selectors called by name)
 #include "OOCallByName.h"
+#include "OOEntityCalledByName.h"
 #include "OOPlanetEntity.h"  // the root-entity rows
 #include "OOQuiriumCascadeEntity.h"
 #include "OOVisualEffectEntity.h"
@@ -133,10 +133,10 @@ void OOEntityByNameTyped(Entity* entity, OOEntityByNameValue& value) {
                        sizeof(Result) == 1) {
     // a signed char (bool): its value, sign kept, as OOCallIntegerMethod()
     // converted it
-    const long long bits = static_cast<unsigned char>(Function(entity));
+    const std::int64_t bits = static_cast<unsigned char>(Function(entity));
     value.integer = (bits > 127) ? bits - 256 : bits;
   } else if constexpr (std::is_integral_v<Result> || std::is_enum_v<Result>) {
-    value.integer = static_cast<long long>(Function(entity));
+    value.integer = static_cast<std::int64_t>(Function(entity));
   } else if constexpr (std::is_floating_point_v<Result>) {
     value.real = static_cast<double>(Function(entity));
   } else if constexpr (std::is_same_v<Result, Vector>) {

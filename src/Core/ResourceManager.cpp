@@ -22,11 +22,10 @@ MA 02110-1301, USA.
 
 */
 
-#include "ResourceManager.h"
-
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <functional>
 #include <map>
@@ -48,6 +47,7 @@ MA 02110-1301, USA.
 #include "OOManifestProperties.h"
 #include "OOPListParsing.h"
 #include "OOSystemDescriptionManager.h"
+#include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Defaults.hpp"
@@ -259,9 +259,9 @@ void ReplaceArrayElement(oo::PList& array, std::size_t index,
   if (index >= elements.size()) {
     OORaiseException(
         OORangeException,
-        "Index %lu is out of range %lu (in 'replaceObjectAtIndex:withObject:')",
-        static_cast<unsigned long>(index),
-        static_cast<unsigned long>(elements.size()));
+        "Index %zu is out of range %zu (in 'replaceObjectAtIndex:withObject:')",
+        static_cast<std::size_t>(index),
+        static_cast<std::size_t>(elements.size()));
   }
   elements[index] = value;
 }
@@ -1970,7 +1970,7 @@ void ResourceManager::mergeRoleCategories(const oo::PList& catData,
         categoryEntries.try_emplace(key, oo::PList::Array()).first->second;
     const oo::PList* catDataEntry = catData.get<oo::PList::Array>(key);
     OO_LOG("shipData.load.roleCategories", "Adding {} entries for category {}",
-           static_cast<long>(static_cast<unsigned long>(
+           static_cast<std::uint64_t>(static_cast<std::uint64_t>(
                catDataEntry != nullptr ? catDataEntry->count() : 0)),
            key);
     if (catDataEntry == nullptr) continue;

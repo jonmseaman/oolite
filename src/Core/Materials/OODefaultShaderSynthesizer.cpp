@@ -25,9 +25,8 @@ SOFTWARE.
 
 */
 
-#include "OODefaultShaderSynthesizer.h"
-
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <map>
 #include <memory>
@@ -39,6 +38,7 @@ SOFTWARE.
 #include <vector>
 
 #include "OOColor.h"
+#include "OODefaultShaderSynthesizer.h"
 #include "OOMaterialSpecifier.h"
 #include "OOTexture.h"
 #include "ResourceManager.h"
@@ -1381,7 +1381,7 @@ oo::PList CanonicalizeMaterialSpecifier(
 }
 
 std::string FormatFloat(double value) {
-  long long intValue = value;
+  std::int64_t intValue = value;
   if (value == intValue) {
     return std::format("{}.0", intValue);
   } else {

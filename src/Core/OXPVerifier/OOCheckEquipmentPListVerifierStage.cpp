@@ -23,10 +23,11 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOCheckEquipmentPListVerifierStage.h"
-
+#include <cstdint>
 #include <format>
 #include <string>
+
+#include "OOCheckEquipmentPListVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -136,13 +137,13 @@ void OOCheckEquipmentPListVerifierStage::runCheckWithEquipment(
             integers; the use of a negative default will catch both negative
             values and unconvertible values.
     */
-    if (entry.at<long>(EQUIPMENT_TECH_LEVEL_INDEX, -1) < 0) {
+    if (entry.at<std::int64_t>(EQUIPMENT_TECH_LEVEL_INDEX, -1) < 0) {
       OO_LOG("verifyOXP.equipmentPList.badElementType",
              "***** ERROR: tech level for entry {} of equipment.plist is not a "
              "positive integer.",
              entryDesc);
     }
-    if (entry.at<long>(EQUIPMENT_PRICE_INDEX, -1) < 0) {
+    if (entry.at<std::int64_t>(EQUIPMENT_PRICE_INDEX, -1) < 0) {
       OO_LOG("verifyOXP.equipmentPList.badElementType",
              "***** ERROR: price for entry {} of equipment.plist is not a "
              "positive integer.",

@@ -22,8 +22,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOSunEntity.h"
-
+#include <cstdint>
 #include <cstring>
 #include <format>
 #include <memory>
@@ -38,6 +37,7 @@ MA 02110-1301, USA.
 #include "OOMacroOpenGL.h"
 #include "OOPlanetEntity.h"
 #include "OOStringExpander.h"
+#include "OOSunEntity.h"
 #include "PlayerEntity.h"
 #include "ShipEntityAI.h"
 #include "Universe.h"
@@ -468,7 +468,7 @@ void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
   GLfloat rv0, rv1, rv2, c0, c1, c2;
   GLfloat pt0, pt1;
 
-  unsigned short i, j, k;
+  std::uint16_t i, j, k;
   GLfloat theta = 0.0f, delta;
   delta = M_PI / 180.0f;  // Convert step from degrees to radians
   pt0 = (1.0 - corona_stage) * corona_blending;

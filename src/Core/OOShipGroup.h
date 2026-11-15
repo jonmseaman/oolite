@@ -33,6 +33,7 @@ MA 02110-1301, USA.
 #include <quickjs.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <set>
@@ -109,7 +110,7 @@ class OOShipGroup : public oo::PListForeign, public ::OOJSPrivateObject {
   std::size_t updateCount();
 
   std::size_t _count = {}, _capacity = {};
-  unsigned long _updateCount = {};
+  std::uint64_t _updateCount = {};
   // Weak references to the ships' C++ parts: each reads null exactly when the
   // object's reference did. _capacity slots, the first _count in use.
   std::vector<std::weak_ptr<Entity>> _members = {};

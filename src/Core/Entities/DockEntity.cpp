@@ -52,9 +52,9 @@ namespace {
 
 // [shipsOnApproach allKeys]: a snapshot, since the loops over it change the
 // map.
-std::vector<unsigned short> ShipIDsIn(
-    const std::map<unsigned short, std::vector<oo::PList>>& queue) {
-  std::vector<unsigned short> shipIDs;
+std::vector<OOUniversalID> ShipIDsIn(
+    const std::map<OOUniversalID, std::vector<oo::PList>>& queue) {
+  std::vector<OOUniversalID> shipIDs;
   shipIDs.reserve(queue.size());
   for (const auto& [shipID, coordinatesStack] : queue)
     shipIDs.push_back(shipID);
@@ -313,7 +313,7 @@ void DockEntity::drawImmediate(bool immediate, bool translucent) {
 std::size_t DockEntity::pruneAndCountShipsOnApproach() {
   // Remove dead entities.
   // Enumerate over a snapshot of the keys because we mutate the map.
-  for (unsigned short idObj : ShipIDsIn(shipsOnApproach)) {
+  for (OOUniversalID idObj : ShipIDsIn(shipsOnApproach)) {
     ::ShipEntity* ship = oo::ToShip((
         UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(idObj) : nullptr));
     /* Remove ships from the approach queue if they are dead, or
@@ -347,7 +347,7 @@ void DockEntity::abortAllDockings() {
 
   no_docking_while_launching = true;
 
-  for (unsigned short idObj : ShipIDsIn(shipsOnApproach)) {
+  for (OOUniversalID idObj : ShipIDsIn(shipsOnApproach)) {
     ::ShipEntity* ship = oo::ToShip((
         UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(idObj) : nullptr));
     if ((ship != nullptr ? ship->getIsShip() : false)) {
@@ -405,8 +405,8 @@ void DockEntity::abortAllDockings() {
 }
 
 void DockEntity::autoDockShipsInQueue(
-    std::map<unsigned short, std::vector<oo::PList>>& queue) {
-  for (unsigned short idObj : ShipIDsIn(queue)) {
+    std::map<OOUniversalID, std::vector<oo::PList>>& queue) {
+  for (OOUniversalID idObj : ShipIDsIn(queue)) {
     ::ShipEntity* ship = oo::ToShip((
         UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(idObj) : nullptr));
     if ((ship != nullptr ? ship->getIsShip() : false)) {
@@ -475,8 +475,8 @@ oo::PList DockEntity::dockingInstructionsForShip(::ShipEntity* ship) {
 
   OOUniversalID ship_id =
       (ship != nullptr ? ship->getUniversalID() : OOUniversalID{});
-  const unsigned short shipID =
-      static_cast<unsigned short>(ship_id);  // +numberWithUnsignedShort:
+  const OOUniversalID shipID =
+      static_cast<OOUniversalID>(ship_id);  // +numberWithUnsignedShort:
   ::StationEntity* station = oo::ToStation(parentEntity());
 
   HPVector launchVector = HPvector_forward_from_quaternion(quaternion_multiply(
@@ -701,7 +701,7 @@ void DockEntity::addShipToShipsOnApproach(::ShipEntity* ship) {
   int corridor_count = 9;
   int corridor_final_approach = 3;
 
-  const unsigned short shipID = static_cast<unsigned short>(
+  const OOUniversalID shipID = static_cast<OOUniversalID>(
       ship != nullptr ? ship->getUniversalID()
                       : OOUniversalID{});  // +numberWithUnsignedShort:
   ::StationEntity* station = oo::ToStation(parentEntity());
@@ -845,8 +845,8 @@ void DockEntity::noteDockingForShip(::ShipEntity* ship) {
 void DockEntity::abortDockingForShip(::ShipEntity* ship) {
   OOUniversalID ship_id =
       (ship != nullptr ? ship->getUniversalID() : OOUniversalID{});
-  const unsigned short shipID =
-      static_cast<unsigned short>(ship_id);  // +numberWithUnsignedShort:
+  const OOUniversalID shipID =
+      static_cast<OOUniversalID>(ship_id);  // +numberWithUnsignedShort:
 
   shipsOnApproach.erase(shipID);
 
@@ -896,8 +896,8 @@ bool DockEntity::shipIsInDockingQueue(::ShipEntity* ship) {
 
   OOUniversalID ship_id =
       (ship != nullptr ? ship->getUniversalID() : OOUniversalID{});
-  const unsigned short shipID =
-      static_cast<unsigned short>(ship_id);  // +numberWithUnsignedShort:
+  const OOUniversalID shipID =
+      static_cast<OOUniversalID>(ship_id);  // +numberWithUnsignedShort:
 
   if (shipsOnApproach.contains(shipID)) {
     return true;

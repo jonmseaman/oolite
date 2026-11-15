@@ -22,10 +22,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "GuiDisplayGen.h"
-
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <format>
 #include <map>
@@ -37,6 +36,7 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "GameController.h"
+#include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
 #include "OOJavaScriptEngine.h"
 #include "OOStringExpander.h"
@@ -1696,9 +1696,9 @@ void GuiDisplayGen::setStarChartTitle() {
                  false)
            : 0);
 
-  const std::string location_key = std::format("long-range-chart-title-{}-{}",
-                                               static_cast<int>(galaxy_number),
-                                               static_cast<long>(system_id));
+  const std::string location_key = std::format(
+      "long-range-chart-title-{}-{}", static_cast<int>(galaxy_number),
+      static_cast<std::int64_t>(system_id));
   if (!(UNIVERSE != nullptr ? UNIVERSE->descriptionForKey(location_key)
                             : std::optional<std::string>())) {
     const std::string gal_key = std::format("long-range-chart-title-{}",
@@ -1925,7 +1925,8 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
               OOColor::colorWithDescription(systemManager->getProperty(
                   "link_color",
                   std::format("interstellar: {} {} {}", static_cast<int>(g),
-                              static_cast<long>(i), static_cast<long>(j))));
+                              static_cast<std::int64_t>(i),
+                              static_cast<std::int64_t>(j))));
 
           if (thisConnectionColor == nullptr) {
             thisConnectionColor = defaultConnectionColor;
@@ -1940,7 +1941,8 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
               OOColor::colorWithDescription(systemManager->getProperty(
                   "link_color",
                   std::format("interstellar: {} {} {}", static_cast<int>(g),
-                              static_cast<long>(j), static_cast<long>(i))));
+                              static_cast<std::int64_t>(j),
+                              static_cast<std::int64_t>(i))));
 
           if (thatConnectionColor == nullptr) {
             thatConnectionColor = thisConnectionColor;
