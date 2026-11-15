@@ -42,10 +42,8 @@ SOFTWARE.
 #include <string>
 
 #include "OOAsyncWorkManager.h"
-#include "OOOpenGL.h"
 #include "OOPixMap.h"
 #include "OOTextureFlags.h"
-#include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
 class OOTexture;

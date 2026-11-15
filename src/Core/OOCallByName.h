@@ -51,7 +51,6 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOObject.h"
 
 /*	An entity's method called by name: the same call on the entity's C++
    part. A name in the generated table (OOEntityCalledByNameTable.h) is answered

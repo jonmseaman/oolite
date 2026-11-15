@@ -55,7 +55,6 @@ SOFTWARE.
 #include "OOJSPrivateObject.h"          // the console's JS glue
 #include "OOJavaScriptEngineMonitor.h"  // the engine's monitor, a C++ interface
 #include "oofnd/Notification.hpp"
-#include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
 class OOJavaScriptEngine;

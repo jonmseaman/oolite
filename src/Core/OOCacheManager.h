@@ -39,7 +39,6 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "OOAsyncWorkManager.h"
-#include "OOFoundation.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 

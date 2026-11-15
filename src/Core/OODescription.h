@@ -39,7 +39,6 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "oofnd/PListDescription.hpp"
-#include "oofnd/objc/OOObject.h"
 
 namespace oo {
 
