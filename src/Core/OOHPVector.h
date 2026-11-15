@@ -27,6 +27,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <cmath>
+
 #include "OOMathsBase.h"
 
 // Each maths header includes what it uses, so OOMaths.h may list them in any
@@ -242,8 +244,8 @@ inline HPVector HPvector_add(HPVector a, HPVector b) {
 
 inline HPVector OOHPVectorInterpolate(HPVector a, HPVector b,
                                       OOHPScalar where) {
-  return make_HPvector(OOLerpd(a.x, b.x, where), OOLerpd(a.y, b.y, where),
-                       OOLerpd(a.z, b.z, where));
+  return make_HPvector(std::lerp(a.x, b.x, where), std::lerp(a.y, b.y, where),
+                       std::lerp(a.z, b.z, where));
 }
 
 inline HPVector OOHPVectorTowards(HPVector a, HPVector b, OOHPScalar where) {

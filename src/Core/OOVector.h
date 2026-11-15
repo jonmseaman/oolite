@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <cmath>
+
 #include "OOFastArithmetic.h"
 #include "OOMathsBase.h"
 
@@ -224,8 +226,8 @@ inline Vector vector_add(Vector a, Vector b) {
 }
 
 inline Vector OOVectorInterpolate(Vector a, Vector b, OOScalar where) {
-  return make_vector(OOLerp(a.x, b.x, where), OOLerp(a.y, b.y, where),
-                     OOLerp(a.z, b.z, where));
+  return make_vector(std::lerp(a.x, b.x, where), std::lerp(a.y, b.y, where),
+                     std::lerp(a.z, b.z, where));
 }
 
 inline Vector OOVectorTowards(Vector a, Vector b, OOScalar where) {
