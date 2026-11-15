@@ -1,3 +1,3 @@
-#define IDI_OOLITE 101
-#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
-#define RT_MANIFEST 24
+inline constexpr int IDI_OOLITE = 101;
+inline constexpr int CREATEPROCESS_MANIFEST_RESOURCE_ID = 1;
+inline constexpr int RT_MANIFEST = 24;
