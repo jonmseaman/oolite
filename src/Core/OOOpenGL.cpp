@@ -24,6 +24,7 @@ MA 02110-1301, USA.
 
 #include "OOOpenGL.h"
 
+#include <cmath>
 #include <format>
 #include <string>
 
@@ -234,7 +235,7 @@ void GLScaledPointSize(GLfloat size) {
 GLfloat GLGetDisplayScaleFactor() { return sDisplayScaleFactor; }
 
 void GLSetDisplayScaleFactor(GLfloat factor) {
-  OOCParameterAssert(factor >= 0.0f && isfinite(factor));
+  OOCParameterAssert(factor >= 0.0f && std::isfinite(factor));
   sDisplayScaleFactor = factor;
 }
 

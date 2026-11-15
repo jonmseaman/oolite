@@ -114,11 +114,7 @@ static OOTimeDelta Profile(std::string_view tag,
    lives in a std::vector for the duration of -loadData:scaleFactor:.
 */
 
-#if OOLITE_64_BIT
 constexpr int kVertexFaceDefInternalCount = 11;  // sizeof (VertexFaceRef) = 32
-#else
-constexpr int kVertexFaceDefInternalCount = 5;  // sizeof (VertexFaceRef) = 16
-#endif
 
 struct VertexFaceRef {
   uint16_t internCount;

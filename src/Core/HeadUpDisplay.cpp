@@ -832,7 +832,7 @@ void HeadUpDisplay::addDial(const oo::PList& info) {
             "not implemented.",
             hudName.value_or("(null)").c_str(), selectorString->c_str());
 
-  //  handle the case above with NS_BLOCK_ASSERTIONS too.
+  //  handle the case above too, in case the assertion lets it through.
   if (dial == nullptr) {
     OO_LOG_ERR("hud.dial.invalidSelector",
                "HUD dial in {} uses selector \"{}\"  which is in whitelist, "

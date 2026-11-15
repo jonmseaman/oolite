@@ -6,13 +6,13 @@
    pass UTF-8 strings with %s, never %@.
 
         LIVE IN EVERY FLAVOUR, deployment (NDEBUG) included, because
-   Foundation's were. Upstream's OOFoundation.h defines NS_BLOCK_ASSERTIONS iff
-   NDEBUG, but only AFTER it imports the Foundation umbrella header, and
-   gnustep-base's include-guarded exception header picks the blocked or live
-   assertion macros when it is first parsed, so the define came too late and
-   never blocked anything. Blocking these under NDEBUG skips the side effect in
-   PlayerEntity's -deferredInit assertion (the player's ship set-up), and a
-   deployment build cannot launch.
+   Foundation's were. Upstream's OOFoundation.h defines Foundation's
+   assertion-blocking macro iff NDEBUG, but only AFTER it imports the Foundation
+   umbrella header, and gnustep-base's include-guarded exception header picks
+   the blocked or live assertion macros when it is first parsed, so the define
+   came too late and never blocked anything. Blocking these under NDEBUG skips
+   the side effect in PlayerEntity's -deferredInit assertion (the player's ship
+   set-up), and a deployment build cannot launch.
 
         The arguments are always evaluated. A false condition logs one line in
    message class "gnustep" (where gnustep-base's assertion log went) and raises
