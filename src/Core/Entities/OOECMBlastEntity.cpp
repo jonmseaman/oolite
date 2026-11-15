@@ -36,8 +36,8 @@ MA 02110-1301, USA.
 
 // NOTE: these values are documented for scripting, be careful about changing
 // them.
-#define ECM_EFFECT_DURATION 2.0
-#define ECM_PULSE_COUNT 4
+constexpr double ECM_EFFECT_DURATION = 2.0;
+constexpr int ECM_PULSE_COUNT = 4;
 #define ECM_PULSE_INTERVAL \
   (ECM_EFFECT_DURATION / static_cast<double>(ECM_PULSE_COUNT))
 
