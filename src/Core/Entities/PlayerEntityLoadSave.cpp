@@ -50,7 +50,7 @@
 
 // Name of modifier key used to issue commands. See also
 // IsCommandModifierKeyDown().
-#define COMMAND_MODIFIER_KEY "Ctrl"
+constexpr char COMMAND_MODIFIER_KEY[] = "Ctrl";
 
 namespace {
 
