@@ -169,6 +169,8 @@ show_help() {  # Script Help Menu
     echo -e "  \033[36mformat\033[0m                         Reformat src/ in place with clang-format (as the CI check expects)"
     echo -e "  \033[36mformat-check\033[0m                   Report src/ files clang-format would change, without editing"
     echo -e "  \033[36mtidy\033[0m                           Run .clang-tidy's checks over src/; fail on a WarningsAsErrors finding"
+    echo -e "  \033[36mlint\033[0m                           Report cpplint's Google-style findings over src/ (CPPLINT.cfg)"
+    echo -e "  \033[36mlint-naming\033[0m                    Report names that break Google's naming rules over src/ (clang-tidy)"
     echo -e "  \033[36mhelp\033[0m                           Show this breakdown menu"
     echo ""
     echo "Build Types:"
@@ -445,8 +447,10 @@ fi
 # root compile database that a build writes. A WarningsAsErrors finding fails the run. Vendored
 # code (MiniZip, EXRSnapshotSupport) is skipped: its .clang-tidy turns every check off, and
 # clang-tidy exits nonzero when no check is enabled.
-if [[ "$ACTION" == "tidy" ]]; then
-    tidy_bin_dir=""
+# Sets run_clang_tidy, clang_tidy and tidy_extra_args for 'tidy' and 'lint-naming', building the
+# test flavour first if there is no compile database yet.
+prepare_clang_tidy() {
+    local tidy_bin_dir=""
     if [[ -x /opt/homebrew/opt/llvm@22/bin/run-clang-tidy ]]; then
         tidy_bin_dir=/opt/homebrew/opt/llvm@22/bin  # clang-tidy 22, the version CI's clang-format uses
     fi
@@ -466,9 +470,15 @@ if [[ "$ACTION" == "tidy" ]]; then
         # Homebrew's clang-tidy does not apply the compiler driver's default SDK.
         tidy_extra_args+=("-extra-arg=-isysroot$(xcrun --show-sdk-path)")
     fi
+}
+# The game's own translation units: vendored code (MiniZip, EXRSnapshotSupport) is left out.
+tidy_file_regex='^(?!.*/(MiniZip|EXRSnapshotSupport)/).*/src/(Core|SDL|oofnd)/.*\.cpp$'
+
+if [[ "$ACTION" == "tidy" ]]; then
+    prepare_clang_tidy
     tidy_status=0
     "$run_clang_tidy" -p . -quiet -clang-tidy-binary "$clang_tidy" ${tidy_extra_args[@]+"${tidy_extra_args[@]}"} \
-        '^(?!.*/(MiniZip|EXRSnapshotSupport)/).*/src/(Core|SDL|oofnd)/.*\.cpp$' || tidy_status=$?
+        "$tidy_file_regex" || tidy_status=$?
     trap - ERR
     popd > /dev/null
     if [[ $tidy_status -ne 0 ]]; then
@@ -476,6 +486,75 @@ if [[ "$ACTION" == "tidy" ]]; then
         exit 1
     fi
     echo "✅ Oolite task 'tidy' completed successfully"
+    exit 0
+fi
+
+# Intercept global action 'lint': cpplint over the game's own sources with CPPLINT.cfg's settings;
+# the CPPLINT.cfg files under src/ leave out vendored code and the hand-laid tables. It reports:
+# findings do not fail the run. The full report is written to build/lint/cpplint.txt.
+if [[ "$ACTION" == "lint" ]]; then
+    cpplint_version=2.0.2  # Keep in step with CPPLINT.cfg; another version reports differently.
+    cpplint_install="uv tool install cpplint==$cpplint_version (or: pipx install cpplint==$cpplint_version)"
+    if ! command -v cpplint > /dev/null; then
+        echo "❌ cpplint not found. Install cpplint $cpplint_version: $cpplint_install" >&2
+        exit 1
+    fi
+    if ! cpplint --version | grep -qx "cpplint $cpplint_version"; then
+        echo "❌ cpplint $cpplint_version is required, found $(cpplint --version | grep -m1 '^cpplint '). Install it: $cpplint_install" >&2
+        exit 1
+    fi
+    lint_files=()
+    while IFS= read -r -d '' file; do
+        lint_files+=("$file")
+    done < <(git ls-files -z -- 'src/*.h' 'src/*.hpp' 'src/*.c' 'src/*.cpp')
+    mkdir -p build/lint
+    lint_report=build/lint/cpplint.txt
+    echo "--> Running cpplint $cpplint_version over ${#lint_files[@]} files"
+    lint_status=0
+    cpplint --quiet --counting=detailed "${lint_files[@]}" > "$lint_report" 2>&1 || lint_status=$?
+    if ! grep -q '^Total errors found' "$lint_report" && [[ $lint_status -ne 0 ]]; then
+        cat "$lint_report" >&2
+        echo "❌ cpplint failed to run (exit $lint_status); see above." >&2
+        exit 1
+    fi
+    grep -E '\] \[[1-5]\]$' "$lint_report" || true
+    echo "--> Findings by category"
+    sed -n "s/^Category '\(.*\)' errors found: \(.*\)$/\2 \1/p" "$lint_report" | sort -rn |
+        awk '{ printf "  %6d  %s\n", $1, $2 }'
+    echo "--> $(grep -m1 '^Total errors found' "$lint_report" || echo 'Total errors found: 0'), in $(
+        grep -E '\] \[[1-5]\]$' "$lint_report" | cut -d: -f1 | sort -u | wc -l | tr -d ' ') files" \
+        "(report: $lint_report)"
+    trap - ERR
+    popd > /dev/null
+    echo "✅ Oolite task 'lint' completed successfully"
+    exit 0
+fi
+
+# Intercept global action 'lint-naming': Google's naming rules (tools/lint/google-naming.clang-tidy)
+# over the same files as 'tidy'. It reports: findings do not fail the run. A header's finding is
+# listed once, however many translation units include it. The full output, with each finding's
+# source line, is written to build/lint/naming-raw.txt; the deduplicated list to naming.txt.
+if [[ "$ACTION" == "lint-naming" ]]; then
+    prepare_clang_tidy
+    mkdir -p build/lint
+    naming_status=0
+    "$run_clang_tidy" -p . -quiet -clang-tidy-binary "$clang_tidy" \
+        -config-file tools/lint/google-naming.clang-tidy ${tidy_extra_args[@]+"${tidy_extra_args[@]}"} \
+        "$tidy_file_regex" > build/lint/naming-raw.txt 2>&1 || naming_status=$?
+    grep -E 'warning: invalid case style' build/lint/naming-raw.txt | sed -E 's#^[^:]*/src/#src/#' |
+        sort -u > build/lint/naming.txt || true
+    cat build/lint/naming.txt
+    echo "--> Findings by kind of name"
+    sed -E "s/.*invalid case style for ([^']+) '.*/\1/" build/lint/naming.txt | sort | uniq -c | sort -rn |
+        awk '{ n = $1; $1 = ""; printf "  %6d %s\n", n, $0 }'
+    echo "--> Total: $(wc -l < build/lint/naming.txt | tr -d ' ') names (report: build/lint/naming.txt)"
+    trap - ERR
+    popd > /dev/null
+    if [[ $naming_status -ne 0 ]]; then
+        echo "❌ clang-tidy failed on a file (a compile error?); see build/lint/naming-raw.txt." >&2
+        exit 1
+    fi
+    echo "✅ Oolite task 'lint-naming' completed successfully"
     exit 0
 fi
 

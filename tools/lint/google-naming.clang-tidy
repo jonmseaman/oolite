@@ -1,0 +1,53 @@
+# Google style naming (https://google.github.io/styleguide/cppguide.html#Naming), as a
+# report-only clang-tidy pass. ./mk.sh lint-naming runs it; cpplint does not check names.
+#
+# This is not the root .clang-tidy: there readability-identifier-naming is a WarningsAsErrors
+# check, so ./mk.sh tidy and CI would fail on every name below that the code does not yet follow.
+# When a kind of name has been swept, move its options into the root .clang-tidy.
+#
+# What clang-tidy cannot tell apart, and so reports anyway:
+# - Accessors and mutators, which Google lets be named like variables (count(), set_count()).
+# - Struct data members, which Google writes without the trailing underscore; only private and
+#   protected members get the suffix here, and struct members are usually public.
+Checks: '-*,readability-identifier-naming'
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*/src/(Core|SDL|oofnd)/.*'
+ExcludeHeaderFilterRegex: '.*/(MiniZip|EXRSnapshotSupport)/.*|.*/stb_image_write\.h'
+CheckOptions:
+  # Types: MyExcitingClass, MyExcitingEnum.
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.UnionCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.TypedefCase: CamelCase
+  readability-identifier-naming.TypeAliasCase: CamelCase
+  readability-identifier-naming.TypeTemplateParameterCase: CamelCase
+  readability-identifier-naming.ConceptCase: CamelCase
+  # Functions: AddTableEntry(), DeleteUrl().
+  readability-identifier-naming.FunctionCase: CamelCase
+  readability-identifier-naming.MethodCase: CamelCase
+  # Variables and parameters: table_name; class data members: table_name_.
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.ParameterCase: lower_case
+  readability-identifier-naming.PublicMemberCase: lower_case
+  readability-identifier-naming.PrivateMemberCase: lower_case
+  readability-identifier-naming.PrivateMemberSuffix: _
+  readability-identifier-naming.ProtectedMemberCase: lower_case
+  readability-identifier-naming.ProtectedMemberSuffix: _
+  # Constants with static storage duration: kDaysInAWeek.
+  readability-identifier-naming.ConstexprVariableCase: CamelCase
+  readability-identifier-naming.ConstexprVariablePrefix: k
+  readability-identifier-naming.GlobalConstantCase: CamelCase
+  readability-identifier-naming.GlobalConstantPrefix: k
+  readability-identifier-naming.StaticConstantCase: CamelCase
+  readability-identifier-naming.StaticConstantPrefix: k
+  readability-identifier-naming.ClassConstantCase: CamelCase
+  readability-identifier-naming.ClassConstantPrefix: k
+  # Enumerators: kOutOfMemory.
+  readability-identifier-naming.EnumConstantCase: CamelCase
+  readability-identifier-naming.EnumConstantPrefix: k
+  readability-identifier-naming.ScopedEnumConstantCase: CamelCase
+  readability-identifier-naming.ScopedEnumConstantPrefix: k
+  # Namespaces: websearch::index; macros: MY_MACRO_THAT_SCARES_SMALL_CHILDREN.
+  readability-identifier-naming.NamespaceCase: lower_case
+  readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
