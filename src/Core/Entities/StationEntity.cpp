@@ -834,8 +834,8 @@ HPVector StationEntity::beaconPosition() {
   double buoy_distance = 10000.0;  // distance from station entrance
   Vector v_f = vector_forward_from_quaternion(getOrientation());
   HPVector result = HPvector_add(
-      getPosition(),
-      vectorToHPVector(vector_multiply_scalar(v_f, buoy_distance)));
+      getPosition(), vectorToHPVector(vector_multiply_scalar(
+                         v_f, static_cast<OOScalar>(buoy_distance))));
 
   return result;
 }
@@ -1137,7 +1137,7 @@ bool StationEntity::setUpSubEntities() {
   // no real docks, make a virtual one
   // position and orientation as OOPropertyListFromVector /
   // OOPropertyListFromQuaternion built them (floats)
-  Vector dockPosition = make_vector(0, 0, port_radius);
+  Vector dockPosition = make_vector(0, 0, static_cast<OOScalar>(port_radius));
   oo::PList::Dict virtualDockDict;
   virtualDockDict["type"] = oo::PList("standard");
   virtualDockDict["subentity_key"] = oo::PList("oolite-dock-virtual");

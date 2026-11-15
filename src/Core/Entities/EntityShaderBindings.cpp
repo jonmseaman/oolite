@@ -53,7 +53,7 @@ static unsigned UnsignedIntValueOf(const oo::PList& value) {
 
 // Clock time.
 GLfloat Entity::clock() {
-  return (PLAYER != nullptr ? PLAYER->clockTime() : 0.0);
+  return (PLAYER != nullptr ? static_cast<GLfloat>(PLAYER->clockTime()) : 0.0);
 }
 
 // System "flavour" numbers.

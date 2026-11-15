@@ -82,7 +82,7 @@ void OOQuiriumCascadeEntity::update(OOTimeDelta delta_t) {
   rotMatrix = OOMatrixForBillboard(
       position, (PLAYER != nullptr ? PLAYER->getPosition() : HPVector{}));
 
-  GLfloat tf = _timePassed / kQuiriumCascadeDuration;
+  GLfloat tf = static_cast<GLfloat>(_timePassed / kQuiriumCascadeDuration);
   GLfloat stf = tf * tf;
   GLfloat expansionSpeed = 0.0;
   if (_timePassed > 0) {
@@ -90,9 +90,10 @@ void OOQuiriumCascadeEntity::update(OOTimeDelta delta_t) {
     expansionSpeed = fmin(240.0f + 10.0f / (tf * tf), 1000.0f);
   }
 
-  collision_radius += delta_t * expansionSpeed;  // expand
-  energy =
-      delta_t * (100000 - 90000 * tf);  // adjusted to take into account delta_t
+  collision_radius += static_cast<GLfloat>(delta_t * expansionSpeed);  // expand
+  energy = static_cast<GLfloat>(
+      delta_t *
+      (100000 - 90000 * tf));  // adjusted to take into account delta_t
 
   _color[3] = OOClamp_0_1_f(0.5f * ((0.025f / tf) + 1.0f - stf));
 

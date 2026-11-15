@@ -482,7 +482,7 @@ void OOShaderUniform::applyBinding() {
 
     case kOOShaderUniformTypeFloat:
     case kOOShaderUniformTypeDouble:
-      fVal = member.f;
+      fVal = static_cast<GLfloat>(member.f);
       isFloat = true;
       break;
 

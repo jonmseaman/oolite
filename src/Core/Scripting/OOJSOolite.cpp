@@ -271,7 +271,8 @@ static JSValue OoliteSetProperty(OOJS_SETTER_ARGS) {
         float currentColorSaturation =
             (gameView != nullptr ? gameView->colorSaturation() : 0.0f);
         if (gameView != nullptr)
-          gameView->adjustColorSaturation(fValue - currentColorSaturation);
+          gameView->adjustColorSaturation(
+              static_cast<float>(fValue - currentColorSaturation));
         return JS_UNDEFINED;
       }
       break;

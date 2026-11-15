@@ -468,7 +468,8 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
     case kScaleX:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (fValue > 0.0) {
-          if (entity != nullptr) entity->setScaleX(fValue);
+          if (entity != nullptr)
+            entity->setScaleX(static_cast<GLfloat>(fValue));
           return JS_UNDEFINED;
         }
       }
@@ -477,7 +478,8 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
     case kScaleY:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (fValue > 0.0) {
-          if (entity != nullptr) entity->setScaleY(fValue);
+          if (entity != nullptr)
+            entity->setScaleY(static_cast<GLfloat>(fValue));
           return JS_UNDEFINED;
         }
       }
@@ -486,7 +488,8 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
     case kScaleZ:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (fValue > 0.0) {
-          if (entity != nullptr) entity->setScaleZ(fValue);
+          if (entity != nullptr)
+            entity->setScaleZ(static_cast<GLfloat>(fValue));
           return JS_UNDEFINED;
         }
       }
@@ -494,21 +497,24 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
 
     case kHullHeatLevel:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (entity != nullptr) entity->setHullHeatLevel(fValue);
+        if (entity != nullptr)
+          entity->setHullHeatLevel(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
 
     case kShaderFloat1:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (entity != nullptr) entity->setShaderFloat1(fValue);
+        if (entity != nullptr)
+          entity->setShaderFloat1(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
 
     case kShaderFloat2:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (entity != nullptr) entity->setShaderFloat2(fValue);
+        if (entity != nullptr)
+          entity->setShaderFloat2(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -797,9 +803,9 @@ static JSValue VisualEffectScale(OOJS_NATIVE_ARGS) {
   }
 
   // set all three scales
-  if (thisEnt != nullptr) thisEnt->setScaleX(scale);
-  if (thisEnt != nullptr) thisEnt->setScaleY(scale);
-  if (thisEnt != nullptr) thisEnt->setScaleZ(scale);
+  if (thisEnt != nullptr) thisEnt->setScaleX(static_cast<GLfloat>(scale));
+  if (thisEnt != nullptr) thisEnt->setScaleY(static_cast<GLfloat>(scale));
+  if (thisEnt != nullptr) thisEnt->setScaleZ(static_cast<GLfloat>(scale));
 
   return JS_UNDEFINED;
   OOJS_NATIVE_EXIT

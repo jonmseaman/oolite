@@ -574,8 +574,8 @@ OOPolygonContour BuildOutlineContour(const OOPolygonContour& dataArray,
 static bool AppendVertex(TessPolygonData* data, NSPoint vertex) {
   OOCParameterAssert(data != nullptr);
 
-  data->data.push_back(vertex.x);
-  data->data.push_back(vertex.y);
+  data->data.push_back(static_cast<float>(vertex.x));
+  data->data.push_back(static_cast<float>(vertex.y));
   return true;
 }
 

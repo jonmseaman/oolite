@@ -270,14 +270,16 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
 
     case kAirColorMixRatio:
       if (JS_ToFloat64(context, &dValue, value) == 0) {
-        if (planet != nullptr) planet->setAirColorMixRatio(dValue);
+        if (planet != nullptr)
+          planet->setAirColorMixRatio(static_cast<float>(dValue));
         return JS_UNDEFINED;
       }
       break;
 
     case kAirDensity:
       if (JS_ToFloat64(context, &dValue, value) == 0) {
-        if (planet != nullptr) planet->setAirDensity(dValue);
+        if (planet != nullptr)
+          planet->setAirDensity(static_cast<float>(dValue));
         return JS_UNDEFINED;
       }
       break;

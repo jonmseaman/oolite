@@ -424,9 +424,10 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
   // more.
   //
   // check projected sizes of discs
-  GLfloat d2_sun = HPdistance2(e1pos, the_sun->position);
-  GLfloat d2_e2sun = HPdistance2(e2->position, the_sun->position);
-  GLfloat d2_e2 = HPdistance2(e1pos, e2->position);
+  GLfloat d2_sun = static_cast<GLfloat>(HPdistance2(e1pos, the_sun->position));
+  GLfloat d2_e2sun =
+      static_cast<GLfloat>(HPdistance2(e2->position, the_sun->position));
+  GLfloat d2_e2 = static_cast<GLfloat>(HPdistance2(e1pos, e2->position));
 
   if (d2_e2sun > d2_sun) {
     // you are nearer the sun than the potential occluder, so it
@@ -464,7 +465,7 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
        * - CIM
        */
       if (d2_e2 < minbb * minbb) {
-        *outValue = 0.1;
+        *outValue = static_cast<float>(0.1);
         return true;
       }
     }
@@ -490,7 +491,7 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
   if (d2_e < cr_e2) {
     // then we're "inside" the object. Calculate as if we were on
     // the edge of it to avoid taking asin(x>1)
-    theta_diff = asin(1) - asin(cr_sun / sqrt(d2_sun));
+    theta_diff = static_cast<float>(asin(1) - asin(cr_sun / sqrt(d2_sun)));
   } else {
     theta_diff = asin(cr_e2 / d2_e) - asin(cr_sun / sqrt(d2_sun));
   }

@@ -94,8 +94,8 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
   //
   // GILES: It's the second one, we're just determining a pseudo random max_size
   // from the first digram
-  max_size =
-      0.90 + 0.50 * ((r0 & 0x38) + ((r1 & 0x38) >> 3)) / 63.0;  // inheritable
+  max_size = static_cast<GLfloat>(
+      0.90 + 0.50 * ((r0 & 0x38) + ((r1 & 0x38) >> 3)) / 63.0);  // inheritable
 
   // seed the random number generator
   //
@@ -118,24 +118,24 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
   c2[1] = static_cast<GLfloat>((col2 >> 1) & 1);
   c2[2] = static_cast<GLfloat>((col2 >> 2) & 1);
   if (col1 == 0) {
-    c1[0] = 0.5 + 0.1 * c2[1];
-    c1[1] = 0.5 + 0.1 * c2[2];
+    c1[0] = static_cast<float>(0.5 + 0.1 * c2[1]);
+    c1[1] = static_cast<float>(0.5 + 0.1 * c2[2]);
     c1[2] = 0.5;
   }
   if (col1 == 7) {
-    c1[0] = 1.0 - 0.1 * c2[1];
-    c1[1] = 1.0 - 0.1 * c2[2];
-    c1[2] = 0.9;
+    c1[0] = static_cast<float>(1.0 - 0.1 * c2[1]);
+    c1[1] = static_cast<float>(1.0 - 0.1 * c2[2]);
+    c1[2] = static_cast<float>(0.9);
   }
   if (col2 == 0) {
-    c2[0] = 0.5 + 0.1 * c1[2];
-    c2[1] = 0.5 + 0.1 * c1[0];
+    c2[0] = static_cast<float>(0.5 + 0.1 * c1[2]);
+    c2[1] = static_cast<float>(0.5 + 0.1 * c1[0]);
     c2[2] = 0.5;
   }
   if (col2 == 7) {
-    c2[0] = 1.0 - 0.1 * c1[2];
-    c2[1] = 1.0 - 0.1 * c1[0];
-    c2[2] = 0.9;
+    c2[0] = static_cast<float>(1.0 - 0.1 * c1[2]);
+    c2[1] = static_cast<float>(1.0 - 0.1 * c1[0]);
+    c2[2] = static_cast<float>(0.9);
   }
 
   //	position and motion
@@ -148,8 +148,9 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
 
   //	rotation
   //
-  rotation = TRUMBLE_MAX_ROTATION * (randf() - randf());
-  rotational_velocity = TRUMBLE_MAX_ROTATIONAL_VELOCITY * (randf() - randf());
+  rotation = static_cast<GLfloat>(TRUMBLE_MAX_ROTATION * (randf() - randf()));
+  rotational_velocity = static_cast<GLfloat>(TRUMBLE_MAX_ROTATIONAL_VELOCITY *
+                                             (randf() - randf()));
 
   //
   int i;
@@ -165,12 +166,14 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
   }
   //
   for (i = 0; i < 4; i++) {
-    colorEyes[i] = 0.2 * (2.0 * pointColor[3][i] + 2.0 * pointColor[1][i] +
-                          1.0);  // eyes - paler than average
-    colorBase[i] = 0.5 * (pointColor[2][i] + pointColor[3][i]);  // mouth
+    colorEyes[i] = static_cast<GLfloat>(
+        0.2 * (2.0 * pointColor[3][i] + 2.0 * pointColor[1][i] +
+               1.0));  // eyes - paler than average
+    colorBase[i] = static_cast<GLfloat>(
+        0.5 * (pointColor[2][i] + pointColor[3][i]));  // mouth
   }
   //
-  size = 0.5 * (1.0 + randf());
+  size = static_cast<GLfloat>(0.5 * (1.0 + randf()));
   calcGrowthRate();
   hunger = 0.0;
   discomfort = 0.0;
@@ -211,7 +214,7 @@ void OOTrumble::spawnFrom(OOTrumble* parentTrumble) {
     setupForPlayer(player,
                    oo::utf16ToUtf8(std::u16string(newdigram, newdigram + 2)));
     //
-    size = parentTrumble->getSize() * 0.4;
+    size = static_cast<GLfloat>(parentTrumble->getSize() * 0.4);
     if (size < 0.5) size = 0.5;  // minimum size
     position = parentTrumble->getPosition();
     rotation = parentTrumble->getRotation();
@@ -223,8 +226,9 @@ void OOTrumble::spawnFrom(OOTrumble* parentTrumble) {
     position.y = (ranrot_rand() & 15) * 28 - 210;
     randomizeMotionX();
     randomizeMotionY();
-    rotation = TRUMBLE_MAX_ROTATION * (randf() - randf());
-    rotational_velocity = TRUMBLE_MAX_ROTATIONAL_VELOCITY * (randf() - randf());
+    rotation = static_cast<GLfloat>(TRUMBLE_MAX_ROTATION * (randf() - randf()));
+    rotational_velocity = static_cast<GLfloat>(TRUMBLE_MAX_ROTATIONAL_VELOCITY *
+                                               (randf() - randf()));
   }
   hunger = 0.25;
   calcGrowthRate();
@@ -234,7 +238,7 @@ void OOTrumble::spawnFrom(OOTrumble* parentTrumble) {
 
 void OOTrumble::calcGrowthRate() {
   float rsize = size / max_size;
-  growth_rate = TRUMBLE_GROWTH_RATE * (1.0 - rsize);
+  growth_rate = static_cast<GLfloat>(TRUMBLE_GROWTH_RATE * (1.0 - rsize));
 }
 
 uint16_t* OOTrumble::getDigram() { return digram; }
@@ -300,13 +304,15 @@ void OOTrumble::actionSpawn() {
 void OOTrumble::randomizeMotionX() {
   movement.x = 36 * (randf() - 0.5);
   movement.x += (movement.x > 0) ? 2.0 : -2.0;
-  rotational_velocity = TRUMBLE_MAX_ROTATIONAL_VELOCITY * (randf() - randf());
+  rotational_velocity = static_cast<GLfloat>(TRUMBLE_MAX_ROTATIONAL_VELOCITY *
+                                             (randf() - randf()));
 }
 
 void OOTrumble::randomizeMotionY() {
   movement.y = 36 * (randf() - 0.5);
   movement.y += (movement.y > 0) ? 2.0 : -2.0;
-  rotational_velocity = TRUMBLE_MAX_ROTATIONAL_VELOCITY * (randf() - randf());
+  rotational_velocity = static_cast<GLfloat>(TRUMBLE_MAX_ROTATIONAL_VELOCITY *
+                                             (randf() - randf()));
 }
 
 void OOTrumble::drawTrumble(double z) {
@@ -326,7 +332,9 @@ void OOTrumble::drawTrumble(double z) {
 
   OOGLPushModelView();
 
-  OOGLTranslateModelView(make_vector(position.x, position.y, z));
+  OOGLTranslateModelView(make_vector(static_cast<OOScalar>(position.x),
+                                     static_cast<OOScalar>(position.y),
+                                     static_cast<OOScalar>(z)));
   OOGLMultModelView(OOMatrixForRotationZ(rotation));
 
   if (texture != nullptr) texture->apply();  // a message to nil did nothing
@@ -337,27 +345,27 @@ void OOTrumble::drawTrumble(double z) {
   OOGLBEGIN(GL_TRIANGLE_FAN);
   glColor4fv(pointColor[3]);
   glTexCoord2f(0.25, 0.5);
-  glVertex2f(0.0, -0.5 * ht);
+  glVertex2f(0.0, static_cast<GLfloat>(-0.5 * ht));
 
   glColor4fv(pointColor[0]);
   glTexCoord2f(0.0, 0.5);
-  glVertex2f(-0.5 * wd, -0.5 * ht);
+  glVertex2f(static_cast<GLfloat>(-0.5 * wd), static_cast<GLfloat>(-0.5 * ht));
 
   glColor4fv(pointColor[1]);
   glTexCoord2f(0.0, 0.0);
-  glVertex2f(-0.5 * wd, 0.5 * ht);
+  glVertex2f(static_cast<GLfloat>(-0.5 * wd), static_cast<GLfloat>(0.5 * ht));
 
   glColor4fv(pointColor[2]);
   glTexCoord2f(0.25, 0.0);
-  glVertex2f(0.0, 0.5 * ht);
+  glVertex2f(0.0, static_cast<GLfloat>(0.5 * ht));
 
   glColor4fv(pointColor[4]);
   glTexCoord2f(0.5, 0.0);
-  glVertex2f(0.5 * wd, 0.5 * ht);
+  glVertex2f(static_cast<GLfloat>(0.5 * wd), static_cast<GLfloat>(0.5 * ht));
 
   glColor4fv(pointColor[5]);
   glTexCoord2f(0.5, 0.5);
-  glVertex2f(0.5 * wd, -0.5 * ht);
+  glVertex2f(static_cast<GLfloat>(0.5 * wd), static_cast<GLfloat>(-0.5 * ht));
   OOGLEND();
 
   //
@@ -377,22 +385,23 @@ void OOTrumble::drawTrumble(double z) {
       break;
   }
 
-  OOGLTranslateModelView(
-      make_vector(eye_position.x * wd, eye_position.y * ht, 0.0));
+  OOGLTranslateModelView(make_vector(static_cast<OOScalar>(eye_position.x * wd),
+                                     static_cast<OOScalar>(eye_position.y * ht),
+                                     0.0));
 
   OOGL(glColor4fv(colorEyes));
   OOGLBEGIN(GL_QUADS);
   glTexCoord2f(0.5, eyeTextureOffset);
-  glVertex2f(-0.5 * wd, 0.20 * ht);
+  glVertex2f(static_cast<GLfloat>(-0.5 * wd), static_cast<GLfloat>(0.20 * ht));
 
   glTexCoord2f(1.0, eyeTextureOffset);
-  glVertex2f(0.5 * wd, 0.20 * ht);
+  glVertex2f(static_cast<GLfloat>(0.5 * wd), static_cast<GLfloat>(0.20 * ht));
 
-  glTexCoord2f(1.0, eyeTextureOffset + 0.25);
-  glVertex2f(0.5 * wd, -0.30 * ht);
+  glTexCoord2f(1.0, static_cast<GLfloat>(eyeTextureOffset + 0.25));
+  glVertex2f(static_cast<GLfloat>(0.5 * wd), static_cast<GLfloat>(-0.30 * ht));
 
-  glTexCoord2f(0.5, eyeTextureOffset + 0.25);
-  glVertex2f(-0.5 * wd, -0.30 * ht);
+  glTexCoord2f(0.5, static_cast<GLfloat>(eyeTextureOffset + 0.25));
+  glVertex2f(static_cast<GLfloat>(-0.5 * wd), static_cast<GLfloat>(-0.30 * ht));
   OOGLEND();
 
   //
@@ -416,21 +425,24 @@ void OOTrumble::drawTrumble(double z) {
   }
 
   OOGLTranslateModelView(
-      make_vector(mouth_position.x * wd, mouth_position.y * ht, 0.0));
+      make_vector(static_cast<OOScalar>(mouth_position.x * wd),
+                  static_cast<OOScalar>(mouth_position.y * ht), 0.0));
 
   OOGL(glColor4fv(colorBase));
   OOGLBEGIN(GL_QUADS);
   glTexCoord2f(0.0, mouthTextureOffset);
-  glVertex2f(-0.25 * wd, -0.10 * ht);
+  glVertex2f(static_cast<GLfloat>(-0.25 * wd),
+             static_cast<GLfloat>(-0.10 * ht));
 
   glTexCoord2f(0.25, mouthTextureOffset);
-  glVertex2f(0.25 * wd, -0.10 * ht);
+  glVertex2f(static_cast<GLfloat>(0.25 * wd), static_cast<GLfloat>(-0.10 * ht));
 
-  glTexCoord2f(0.25, mouthTextureOffset + 0.125);
-  glVertex2f(0.25 * wd, -0.35 * ht);
+  glTexCoord2f(0.25, static_cast<GLfloat>(mouthTextureOffset + 0.125));
+  glVertex2f(static_cast<GLfloat>(0.25 * wd), static_cast<GLfloat>(-0.35 * ht));
 
-  glTexCoord2f(0.0, mouthTextureOffset + 0.125);
-  glVertex2f(-0.25 * wd, -0.35 * ht);
+  glTexCoord2f(0.0, static_cast<GLfloat>(mouthTextureOffset + 0.125));
+  glVertex2f(static_cast<GLfloat>(-0.25 * wd),
+             static_cast<GLfloat>(-0.35 * ht));
   OOGLEND();
 
   // finally..
@@ -452,12 +464,12 @@ void OOTrumble::updateTrumble(double delta_t) {
       p_mov.y = -p_mov.y;
       break;
     case OOViewID::kStarboard:
-      t = p_mov.x;
+      t = static_cast<GLfloat>(p_mov.x);
       p_mov.x = -p_mov.y;
       p_mov.y = t;
       break;
     case OOViewID::kPort:
-      t = p_mov.x;
+      t = static_cast<GLfloat>(p_mov.x);
       p_mov.x = p_mov.y;
       p_mov.y = -t;
       break;
@@ -469,11 +481,11 @@ void OOTrumble::updateTrumble(double delta_t) {
 
   // movement
   //
-  GLfloat wd = 0.5 * 96 * size;
-  GLfloat ht = 0.5 * 96 * size;
+  GLfloat wd = static_cast<GLfloat>(0.5 * 96 * size);
+  GLfloat ht = static_cast<GLfloat>(0.5 * 96 * size);
   //
-  GLfloat bumpx = 320 * 1.5 - wd;
-  GLfloat bumpy = 240 * 1.5 - ht;
+  GLfloat bumpx = static_cast<GLfloat>(320 * 1.5 - wd);
+  GLfloat bumpy = static_cast<GLfloat>(240 * 1.5 - ht);
   //
   position.x += delta_t * movement.x;
   if ((position.x < -bumpx) || (position.x > bumpx)) {
@@ -488,23 +500,23 @@ void OOTrumble::updateTrumble(double delta_t) {
 
   // rotation
   //
-  rotation += delta_t * (rotational_velocity + p_mov.y);
+  rotation += static_cast<GLfloat>(delta_t * (rotational_velocity + p_mov.y));
   if (animation != trumble_animation::kDie) {
     if (rotation < -TRUMBLE_MAX_ROTATION) {
       rotation = -TRUMBLE_MAX_ROTATION;
-      rotational_velocity =
-          TRUMBLE_MAX_ROTATIONAL_VELOCITY * 0.5 * (randf() + randf());
+      rotational_velocity = static_cast<GLfloat>(
+          TRUMBLE_MAX_ROTATIONAL_VELOCITY * 0.5 * (randf() + randf()));
     }
     if (rotation > TRUMBLE_MAX_ROTATION) {
       rotation = TRUMBLE_MAX_ROTATION;
-      rotational_velocity =
-          -TRUMBLE_MAX_ROTATIONAL_VELOCITY * 0.5 * (randf() + randf());
+      rotational_velocity = static_cast<GLfloat>(
+          -TRUMBLE_MAX_ROTATIONAL_VELOCITY * 0.5 * (randf() + randf()));
     }
   }
   // growth
   //
-  size += delta_t * growth_rate;
-  hunger += delta_t * (growth_rate + TRUMBLE_GROWTH_RATE);
+  size += static_cast<GLfloat>(delta_t * growth_rate);
+  hunger += static_cast<GLfloat>(delta_t * (growth_rate + TRUMBLE_GROWTH_RATE));
   if (size > max_size) {
     // fully_grown.. stop growing
     size = max_size;
@@ -517,8 +529,10 @@ void OOTrumble::updateTrumble(double delta_t) {
   // feelings
   //
   GLfloat temp = (player != nullptr ? player->hullHeatLevel() : 0.0f);
-  discomfort += delta_t * hunger * 0.02 * (1.0 - hunger);
-  if (temp > 0.33) discomfort += delta_t * (temp - 0.33) * (temp - 0.33) * 0.05;
+  discomfort += static_cast<GLfloat>(delta_t * hunger * 0.02 * (1.0 - hunger));
+  if (temp > 0.33)
+    discomfort +=
+        static_cast<GLfloat>(delta_t * (temp - 0.33) * (temp - 0.33) * 0.05);
   if (discomfort > 1.0) discomfort = 1.0;  // clamp
 
   // feeding & reproducing
@@ -541,13 +555,13 @@ void OOTrumble::updateTrumble(double delta_t) {
           (cargopod != nullptr ? cargopod->commodityType()
                                : std::optional<std::string>())
               .value_or("");  // nil arrived as ""
-      float yumminess =
+      float yumminess = static_cast<float>(
           (1.0 + randf()) *
           ((UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket() : nullptr) !=
                    nullptr
                ? UNIVERSE->getCommodityMarket()->trumbleOpinionForGood(
                      cargo_type)
-               : 0.0f);
+               : 0.0f));
       if (yumminess > mostYummy) {
         selectedCargopod = cargopod;
         mostYummy = yumminess;
@@ -560,7 +574,7 @@ void OOTrumble::updateTrumble(double delta_t) {
 
       trumbleAppetiteAccumulator += hunger;
       hunger = 0.0;
-      discomfort -= mostYummy * 0.5;
+      discomfort -= static_cast<GLfloat>(mostYummy * 0.5);
       if (discomfort < 0.0) discomfort = 0.0;
       if (trumbleAppetiteAccumulator > 10.0) {
         // eaten all of this cargo!
@@ -580,7 +594,7 @@ void OOTrumble::updateTrumble(double delta_t) {
 
         if (UNIVERSE != nullptr) UNIVERSE->addMessage(ms, 4.5);
         if (cargopods != nullptr) oo::EraseHold(*cargopods, selectedCargopod);
-        trumbleAppetiteAccumulator -= 10.0;
+        trumbleAppetiteAccumulator -= static_cast<float>(10.0);
 
         // consider breeding - must be full grown and happy
         if ((size > 0.95) && (discomfort < 0.25)) {
@@ -756,7 +770,7 @@ void OOTrumble::updateShudder(double delta_t) {
   animationTime += delta_t;
   if (animationTime > animationDuration) {
     // feel better
-    discomfort *= 0.9;
+    discomfort *= static_cast<GLfloat>(0.9);
     // blink or idle
     actionIdle();
     if (randf() < 0.1) actionBlink();
@@ -781,23 +795,23 @@ void OOTrumble::updatePop(double delta_t) {
     // squeal here!
     PlayTrumbleSqueal();
   }
-  float pc = animationTime / animationDuration;
+  float pc = static_cast<float>(animationTime / animationDuration);
 
   // fading alpha
-  colorPoint1[1] *= (1.0 - delta_t);
-  colorPoint2[1] *= (1.0 - delta_t);
-  colorPoint1[2] *= (1.0 - delta_t);
-  colorPoint2[2] *= (1.0 - delta_t);
-  colorPoint1[3] = (1.0 - pc);
-  colorPoint2[3] = (1.0 - pc);
-  colorBase[3] = (1.0 - pc);
+  colorPoint1[1] *= static_cast<GLfloat>((1.0 - delta_t));
+  colorPoint2[1] *= static_cast<GLfloat>((1.0 - delta_t));
+  colorPoint1[2] *= static_cast<GLfloat>((1.0 - delta_t));
+  colorPoint2[2] *= static_cast<GLfloat>((1.0 - delta_t));
+  colorPoint1[3] = (static_cast<GLfloat>(1.0 - pc));
+  colorPoint2[3] = (static_cast<GLfloat>(1.0 - pc));
+  colorBase[3] = (static_cast<GLfloat>(1.0 - pc));
 
   // falling
   movement.y -= delta_t * 98.0;
-  rotational_velocity *= (1.0 + delta_t);
+  rotational_velocity *= static_cast<GLfloat>((1.0 + delta_t));
 
   // shrinking
-  size -= delta_t * (1.0 - pc) * size;
+  size -= static_cast<GLfloat>(delta_t * (1.0 - pc) * size);
 
   animationTime += delta_t;
   if (animationTime > animationDuration) {
@@ -808,8 +822,8 @@ void OOTrumble::updatePop(double delta_t) {
 
 void OOTrumble::updateSleep(double delta_t) {
   if (!static_cast<bool>(animationTime)) {
-    saved_float1 = eye_position.y;
-    saved_float2 = mouth_position.y;
+    saved_float1 = static_cast<GLfloat>(eye_position.y);
+    saved_float2 = static_cast<GLfloat>(mouth_position.y);
   }
   eyeFrame = trumble_eyes::kShut;
   int pc = static_cast<int>(512 * animationTime / animationDuration);
@@ -837,8 +851,8 @@ void OOTrumble::updateSleep(double delta_t) {
 void OOTrumble::updateSpawn(double delta_t) {
   movement.x *= (1.0 - delta_t);
   movement.y *= (1.0 - delta_t);
-  rotation *= (1.0 - delta_t);
-  rotational_velocity *= (1.0 - delta_t);
+  rotation *= static_cast<GLfloat>((1.0 - delta_t));
+  rotational_velocity *= static_cast<GLfloat>((1.0 - delta_t));
   eyeFrame = trumble_eyes::kWide;
   mouthFrame = trumble_mouth::kPout;
   int pc = static_cast<int>(256 * animationTime / animationDuration);

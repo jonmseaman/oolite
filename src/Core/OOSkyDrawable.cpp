@@ -173,7 +173,8 @@ void OOSkyDrawable::renderOpaqueParts() {
 
   // Make stars dim in atmosphere. Note: works OK on night side because sky is
   // dark blue, not black.
-  GLfloat fogColor[4] = {0.02, 0.02, 0.02, 1.0};
+  GLfloat fogColor[4] = {static_cast<GLfloat>(0.02), static_cast<GLfloat>(0.02),
+                         static_cast<GLfloat>(0.02), 1.0};
   OOGL(glFogfv(GL_FOG_COLOR, fogColor));
 
   if (_displayListName != 0) {
@@ -289,7 +290,8 @@ void OOSkyDrawable::setUpStars(OOColor* color1, OOColor* color2) {
             : nullptr;  // Not retained, since sStarTextures is never released.
 
     // Select scale; calculate centre position and offset to first corner.
-    size = (1 + (ranrot_rand() % 6)) * SKY_ELEMENT_SCALE_FACTOR;
+    size = static_cast<float>((1 + (ranrot_rand() % 6)) *
+                              SKY_ELEMENT_SCALE_FACTOR);
     middle = vector_multiply_scalar(vk, BILLBOARD_DEPTH);
     offset = vector_multiply_scalar(vector_add(vi, vj), 0.5f * size);
 
@@ -358,17 +360,18 @@ void OOSkyDrawable::setUpNebulae(OOColor* color1, OOColor* color2,
                                           // is never released.
 
       middle = vector_multiply_scalar(vk, BILLBOARD_DEPTH);
-      offset = vector_multiply_scalar(vector_add(vi, vj), 0.5f * size);
+      offset = vector_multiply_scalar(vector_add(vi, vj),
+                                      static_cast<OOScalar>(0.5f * size));
 
       // Rotate vi and vj by a random angle
       r2 = randf() * std::numbers::pi * 2.0;
-      quaternion_rotate_about_axis(&q, vk, r2);
+      quaternion_rotate_about_axis(&q, vk, static_cast<OOScalar>(r2));
       vi = vector_right_from_quaternion(q);
       vj = vector_up_from_quaternion(q);
 
       // Scale the "side" vectors.
-      vj = vector_multiply_scalar(vj, size);
-      vi = vector_multiply_scalar(vi, size);
+      vj = vector_multiply_scalar(vj, static_cast<OOScalar>(size));
+      vi = vector_multiply_scalar(vi, static_cast<OOScalar>(size));
 
       // Set up corners.
       currQuad->corners[0] = vector_subtract(middle, offset);
@@ -378,10 +381,10 @@ void OOSkyDrawable::setUpNebulae(OOColor* color1, OOColor* color2,
 
       // Shuffle direction quat around a bit to spread the cluster out.
       size = NEBULA_SHUFFLE_FACTOR / (nebulaScale * SKY_ELEMENT_SCALE_FACTOR);
-      q.x += size * (randf() - 0.5);
-      q.y += size * (randf() - 0.5);
-      q.z += size * (randf() - 0.5);
-      q.w += size * (randf() - 0.5);
+      q.x += static_cast<OOScalar>(size * (randf() - 0.5));
+      q.y += static_cast<OOScalar>(size * (randf() - 0.5));
+      q.z += static_cast<OOScalar>(size * (randf() - 0.5));
+      q.w += static_cast<OOScalar>(size * (randf() - 0.5));
       quaternion_normalize(&q);
 
       ++i;
@@ -515,8 +518,9 @@ std::unique_ptr<OOSkyQuadSet> OOSkyQuadSet::initWithQuadsWithTexture(
 // Hejl / Burgess-Dawson filmic tone mapping
 // this algorithm has gamma correction already embedded
   auto skyColorTonemapComponent = [&](GLfloat skyColorComponent) {
-    x = std::max(0.0, skyColorComponent - 0.004);
-    *col++ = (x * (6.2 * x + 0.5)) / (x * (6.2 * x + 1.7) + 0.06);
+    x = static_cast<GLfloat>(std::max(0.0, skyColorComponent - 0.004));
+    *col++ = static_cast<GLfloat>((x * (6.2 * x + 0.5)) /
+                                  (x * (6.2 * x + 1.7) + 0.06));
   };
 
   std::unique_ptr<OOSkyQuadSet> self =
@@ -567,9 +571,9 @@ std::unique_ptr<OOSkyQuadSet> OOSkyQuadSet::initWithQuadsWithTexture(
             *col++ = b;
           } else if (skyColorCorrection == 1) {
             // gamma correction only
-            *col++ = pow(r, 1.0 / 2.2);
-            *col++ = pow(g, 1.0 / 2.2);
-            *col++ = pow(b, 1.0 / 2.2);
+            *col++ = static_cast<GLfloat>(pow(r, 1.0 / 2.2));
+            *col++ = static_cast<GLfloat>(pow(g, 1.0 / 2.2));
+            *col++ = static_cast<GLfloat>(pow(b, 1.0 / 2.2));
           } else {
             // gamma correctioin + filmic tone mapping
             skyColorTonemapComponent(r);
@@ -661,7 +665,8 @@ std::shared_ptr<OOColor> SaturatedColorInRange(OOColor* color1, OOColor* color2,
               : nullptr;
   if (color != nullptr) color->getHue(&hue, &saturation, &brightness, &alpha);
 
-  saturation = 0.5 * saturation + 0.5;  // move saturation up a notch!
+  saturation = static_cast<float>(0.5 * saturation +
+                                  0.5);  // move saturation up a notch!
 
   /*	NOTE: this changes the hue, because getHue:... produces hue values
           in [0, 360], but colorWithCalibratedHue:... takes hue values in
@@ -671,7 +676,7 @@ std::shared_ptr<OOColor> SaturatedColorInRange(OOColor* color1, OOColor* color2,
     /* now nebula colours can be independently set, correct the
      * range so they behave expectedly if they have actually been
      * set in planetinfo */
-    hue /= 360.0;
+    hue /= static_cast<float>(360.0);
   }
   /* else keep it how it was before so the nebula hues are clearer */
 

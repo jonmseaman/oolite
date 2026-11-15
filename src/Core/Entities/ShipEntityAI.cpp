@@ -348,8 +348,8 @@ void ShipEntity::performScriptedAttackAI() {
 }
 
 void ShipEntity::performBuoyTumble() {
-  stick_roll = 0.10;
-  stick_pitch = 0.15;
+  stick_roll = static_cast<GLfloat>(0.10);
+  stick_pitch = static_cast<GLfloat>(0.15);
   behaviour = OOBehaviour::kTumble;
   frustration = 0.0;
 }
@@ -361,8 +361,8 @@ void ShipEntity::performStop() {
 }
 
 void ShipEntity::performTumble() {
-  stick_roll = max_flight_roll * 2.0 * (randf() - 0.5);
-  stick_pitch = max_flight_pitch * 2.0 * (randf() - 0.5);
+  stick_roll = static_cast<GLfloat>(max_flight_roll * 2.0 * (randf() - 0.5));
+  stick_pitch = static_cast<GLfloat>(max_flight_pitch * 2.0 * (randf() - 0.5));
   behaviour = OOBehaviour::kTumble;
   frustration = 0.0;
 }
@@ -959,30 +959,33 @@ void ShipEntity::setDestinationToJinkPosition() {
 
 void ShipEntity::setDesiredRangeTo(const std::string& rangeString) {
   // called by name
-  desired_range = oo::str::doubleValue(rangeString);
+  desired_range = static_cast<GLfloat>(oo::str::doubleValue(rangeString));
 }
 
 void ShipEntity::setDesiredRangeForWaypoint() {
-  desired_range =
+  desired_range = static_cast<GLfloat>(
       fmax(maxFlightSpeed / max_flight_pitch / 6,
-           50.0);  // some ships need a longer range to reach a waypoint.
+           50.0));  // some ships need a longer range to reach a waypoint.
 }
 
 void ShipEntity::setSpeedTo(const std::string& speedString) {
   // called by name
-  desired_speed = oo::str::doubleValue(speedString);
+  desired_speed = static_cast<GLfloat>(oo::str::doubleValue(speedString));
 }
 
 void ShipEntity::setSpeedFactorTo(const std::string& speedString) {
   // called by name
-  desired_speed = maxFlightSpeed * oo::str::doubleValue(speedString);
+  desired_speed =
+      static_cast<GLfloat>(maxFlightSpeed * oo::str::doubleValue(speedString));
 }
 
 void ShipEntity::setSpeedToCruiseSpeed() { desired_speed = cruiseSpeed; }
 
 void ShipEntity::setThrustFactorTo(const std::string& thrustFactorString) {
   // called by name
-  thrust = OOClamp_0_1_f(oo::str::doubleValue(thrustFactorString)) * max_thrust;
+  thrust = OOClamp_0_1_f(
+               static_cast<float>(oo::str::doubleValue(thrustFactorString))) *
+           max_thrust;
 }
 
 void ShipEntity::setTargetToPrimaryAggressor() {
@@ -1230,7 +1233,8 @@ void ShipEntity::getWitchspaceEntryCoordinates() {
    * 10s forward -*/
   if (!UNIVERSE) {
     Vector vr = vector_multiply_scalar(
-        v_forward, maxFlightSpeed * 10.0);  // 10 second flying away
+        v_forward,
+        static_cast<OOScalar>(maxFlightSpeed * 10.0));  // 10 second flying away
     coordinates = HPvector_add(position, vectorToHPVector(vr));
     return;
   }
@@ -1258,7 +1262,8 @@ void ShipEntity::getWitchspaceEntryCoordinates() {
                      vectorToHPVector(vr));
   } else {
     Vector vr = vector_multiply_scalar(
-        v_forward, maxFlightSpeed * 10.0);  // 10 second flying away
+        v_forward,
+        static_cast<OOScalar>(maxFlightSpeed * 10.0));  // 10 second flying away
     coordinates = HPvector_add(position, vectorToHPVector(vr));
   }
 }
@@ -1361,7 +1366,8 @@ void ShipEntity::setCourseToPlanet() {
     p1 = HPvector_normal(p1);
     _destination =
         HPvector_add(p_pos, HPvector_multiply_scalar(p1, p_cr));  // on surface
-    desired_range = collision_radius + 100.0;  // +100m from the destination
+    desired_range = static_cast<GLfloat>(collision_radius +
+                                         100.0);  // +100m from the destination
   } else {
     if (shipAI != nullptr) shipAI->message("NO_PLANET_FOUND");
   }
@@ -1582,12 +1588,12 @@ void ShipEntity::findNewDefenseTarget() {
 void ShipEntity::scanForOffenders() {
   /*-- Locates all the ships in range and compares their legal status or bounty
    * against ranrot_rand() & 255 - chooses the worst offender --*/
-  float gov_factor =
+  float gov_factor = static_cast<float>(
       0.4 *
       (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
           .get<int>(
-              KEY_GOVERNMENT);  // 0 .. 7 (0 anarchic .. 7 most stable) -->
-                                // [0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8]
+              KEY_GOVERNMENT));  // 0 .. 7 (0 anarchic .. 7 most stable) -->
+                                 // [0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8]
   //
   if ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) == nullptr)
     gov_factor = 1.0;
@@ -2174,9 +2180,9 @@ void ShipEntity::recallStoredTarget() {
   bool found = false;
 
   if (oldTarget && !(oldTarget != nullptr ? oldTarget->isCloaked() : false)) {
-    GLfloat range2 = HPdistance2(
+    GLfloat range2 = static_cast<GLfloat>(HPdistance2(
         (oldTarget != nullptr ? oldTarget->getPosition() : HPVector{}),
-        position);
+        position));
     if (range2 <= scannerRange * scannerRange && range2 <= SCANNER_MAX_RANGE2) {
       found = true;
     }

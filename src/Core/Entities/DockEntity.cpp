@@ -490,7 +490,7 @@ oo::PList DockEntity::dockingInstructionsForShip(::ShipEntity* ship) {
     HPVector delta =
         HPvector_subtract((ship != nullptr ? ship->getPosition() : HPVector{}),
                           absolutePositionForSubentity());
-    float ship_distance = HPmagnitude(delta);
+    float ship_distance = static_cast<float>(HPmagnitude(delta));
 
     if (ship_distance > SCANNER_MAX_RANGE) {
       // too far away - don't claim a docking slot by not putting on
@@ -511,7 +511,7 @@ oo::PList DockEntity::dockingInstructionsForShip(::ShipEntity* ship) {
           (ship != nullptr ? ship->getMaxFlightSpeed() : 0.0f), 5000,
           "BACK_OFF", false, -1);
 
-    float dot = HPdot_product(launchVector, delta);
+    float dot = static_cast<float>(HPdot_product(launchVector, delta));
     if (dot < 0) {
       // approaching from the wrong side of the station - construct
       // a vector to the side of the station.
@@ -596,7 +596,7 @@ oo::PList DockEntity::dockingInstructionsForShip(::ShipEntity* ship) {
     // too far from the coordinates - do not remove
     // them from the stack!
     if ((docking_stage == 1) && (HPmagnitude2(delta) < 1000000.0))  // 1km*1km
-      speedAdvised *= 0.5;  // half speed
+      speedAdvised *= static_cast<float>(0.5);  // half speed
 
     return DockingInstructions(station, coords, speedAdvised, rangeAdvised,
                                "APPROACH_COORDINATES", false, docking_stage);
@@ -752,8 +752,8 @@ void DockEntity::addShipToShipsOnApproach(::ShipEntity* ship) {
     float corridor_length =
         port_depth * static_cast<float>(corridor_distance[i]);
 
-    float rx = s * port_depth * offset;
-    float ry = c * port_depth * offset;
+    float rx = static_cast<float>(s * port_depth * offset);
+    float ry = static_cast<float>(c * port_depth * offset);
     float rz = corridor_length;
     // if there are many ships on approach, randomise coordinates a bit
     if ((i == corridor_count - 1) && countOfShipsInDockingQueue()) {
@@ -777,12 +777,14 @@ void DockEntity::addShipToShipsOnApproach(::ShipEntity* ship) {
           ((ship != nullptr ? ship->entityPersonalityInt() : GLint{}) &
            0xf00) >>
           8;  // 16  point step position
-      float c2 = cos(offset_id2 * std::numbers::pi * ONE_EIGHTH);
-      float s2 = sin(offset_id2 * std::numbers::pi * ONE_EIGHTH);
+      float c2 =
+          static_cast<float>(cos(offset_id2 * std::numbers::pi * ONE_EIGHTH));
+      float s2 =
+          static_cast<float>(sin(offset_id2 * std::numbers::pi * ONE_EIGHTH));
       float ssize = std::max(port_depth, 1500.0f);
       rx += c2 * ssize;
       ry += s2 * ssize;
-      rz += ssize * (static_cast<float>(offset_id3) / 4.0);
+      rz += static_cast<float>(ssize * (static_cast<float>(offset_id3) / 4.0));
 
       //			// docking.debug: Adjusted coordinates by
       // c2/s2/ssize factors
@@ -969,16 +971,20 @@ bool DockEntity::shipIsInDockingCorridor(::ShipEntity* ship) {
   bool rotationsMatch = (rotatedShip == rotatedPort);
   if (rotationsMatch) {
     // the ship and port are both bigger in x than y
-    while (shipbb.max.x - shipbb.min.x > ww * 0.90) ww *= 1.25;
-    while (shipbb.max.y - shipbb.min.y > hh * 0.90) hh *= 1.25;
+    while (shipbb.max.x - shipbb.min.x > ww * 0.90)
+      ww *= static_cast<GLfloat>(1.25);
+    while (shipbb.max.y - shipbb.min.y > hh * 0.90)
+      hh *= static_cast<GLfloat>(1.25);
   } else {
     // the ship and port have different x/y biggerness
-    while (shipbb.max.y - shipbb.min.y > ww * 0.90) ww *= 1.25;
-    while (shipbb.max.x - shipbb.min.x > hh * 0.90) hh *= 1.25;
+    while (shipbb.max.y - shipbb.min.y > ww * 0.90)
+      ww *= static_cast<GLfloat>(1.25);
+    while (shipbb.max.x - shipbb.min.x > hh * 0.90)
+      hh *= static_cast<GLfloat>(1.25);
   }
 
-  ww *= 0.5;
-  hh *= 0.5;
+  ww *= static_cast<GLfloat>(0.5);
+  hh *= static_cast<GLfloat>(0.5);
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   if ((ship != nullptr ? ship->getIsPlayer() : false) &&
@@ -992,7 +998,7 @@ bool DockEntity::shipIsInDockingCorridor(::ShipEntity* ship) {
     if (arbb.max.y < hh) laneFlags |= 4;
     if (arbb.min.y > -hh) laneFlags |= 8;
     inLane = laneFlags == 0xF;
-    range = 0.90 * arbb.max.z + 0.10 * arbb.min.z;
+    range = static_cast<float>(0.90 * arbb.max.z + 0.10 * arbb.min.z);
 
     OO_LOG("docking.debug",
            "Normalised port dimensions are {:g} x {:g} x {:g}.  Player "
@@ -1176,8 +1182,9 @@ void DockEntity::launchShip(::ShipEntity* ship) {
       (bb.max.x - bb.min.x < bb.max.y - bb.min.y)) {
     quaternion_rotate_about_axis(
         &q1, launchVector,
-        std::numbers::pi *
-            0.5);  // to account for the slot being at 90 degrees to vertical
+        static_cast<OOScalar>(
+            std::numbers::pi *
+            0.5));  // to account for the slot being at 90 degrees to vertical
   }
   if (ship != nullptr) ship->setNormalOrientation(q1);
   // launch position
@@ -1189,8 +1196,9 @@ void DockEntity::launchShip(::ShipEntity* ship) {
   if ((ship != nullptr ? ship->hasEscorts() : false))
     no_docking_while_launching = true;
   // launch speed
-  launchVel =
-      vector_add(launchVel, vector_multiply_scalar(launchVector, launchSpeed));
+  launchVel = vector_add(
+      launchVel,
+      vector_multiply_scalar(launchVector, static_cast<OOScalar>(launchSpeed)));
   launchSpeed = magnitude(launchVel);
   if (ship != nullptr) ship->setSpeed(launchSpeed);
   if (ship != nullptr) ship->setVelocity(launchVel);
@@ -1396,8 +1404,9 @@ void DockEntity::clearDockingCorridor() {
           //
           Vector v_out = vector_forward_from_quaternion(q1);
           Vector r_pos =
-              make_vector(ship->position.x - ppos.x, ship->position.y - ppos.y,
-                          ship->position.z - ppos.z);
+              make_vector(static_cast<OOScalar>(ship->position.x - ppos.x),
+                          static_cast<OOScalar>(ship->position.y - ppos.y),
+                          static_cast<OOScalar>(ship->position.z - ppos.z));
           if (static_cast<bool>(r_pos.x) || static_cast<bool>(r_pos.y) ||
               static_cast<bool>(r_pos.z))
             r_pos = vector_normal(r_pos);
@@ -1412,7 +1421,7 @@ void DockEntity::clearDockingCorridor() {
 
             // okay it's in the way .. give it a wee nudge (0.25s)
             if (ship != nullptr) ship->update(0.25);
-            time_out += 0.25;
+            time_out += static_cast<float>(0.25);
           }
           if (time_out > 0) {
             HPVector v1 = HPvector_forward_from_quaternion(orientation);

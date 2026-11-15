@@ -207,7 +207,10 @@ bool HPVectorToJSValue(JSContext* context, HPVector vector, JSValue* outValue) {
 
 bool NSPointToVectorJSValue(JSContext* context, NSPoint point,
                             JSValue* outValue) {
-  return VectorToJSValue(context, make_vector(point.x, point.y, 0), outValue);
+  return VectorToJSValue(context,
+                         make_vector(static_cast<OOScalar>(point.x),
+                                     static_cast<OOScalar>(point.y), 0),
+                         outValue);
 }
 
 bool JSValueToHPVector(JSContext* context, JSValueConst value,
@@ -790,8 +793,9 @@ static JSValue VectorRotationTo(OOJS_NATIVE_ARGS) {
   }
 
   if (gotLimit)
-    result = quaternion_limited_rotation_between(
-        HPVectorToVector(thisv), HPVectorToVector(thatv), limit);
+    result = quaternion_limited_rotation_between(HPVectorToVector(thisv),
+                                                 HPVectorToVector(thatv),
+                                                 static_cast<float>(limit));
   else
     result = quaternion_rotation_between(HPVectorToVector(thisv),
                                          HPVectorToVector(thatv));

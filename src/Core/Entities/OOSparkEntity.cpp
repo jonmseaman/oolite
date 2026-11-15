@@ -46,7 +46,7 @@ void OOSparkEntity::initWithPosition(HPVector pos, Vector vel,
   {
     setPosition(pos);
     setVelocity(vel);
-    _duration = _timeRemaining = duration;
+    _duration = _timeRemaining = static_cast<GLfloat>(duration);
     setCollisionRadius(2.0);
 
     // A message to a nil colour did nothing.
@@ -62,7 +62,7 @@ void OOSparkEntity::update(OOTimeDelta delta_t) {
 }
 
 void OOSparkEntity::performUpdate(OOTimeDelta delta_t) {
-  _timeRemaining -= delta_t;
+  _timeRemaining -= static_cast<GLfloat>(delta_t);
 
   float mix = OOClamp_0_1_f(_timeRemaining / _duration);
 

@@ -67,8 +67,10 @@ A leaf of Entity. The class is global.
 #include "oofnd/PListGet.hpp"
 #include "oofnd/objc/OOAssert.h"
 
-#define OO_TERMINATOR_THRESHOLD_VECTOR_DEFAULT \
-  (make_vector(0.105, 0.18, 0.28))  // used to be (0.1, 0.105, 0.12);
+#define OO_TERMINATOR_THRESHOLD_VECTOR_DEFAULT                   \
+  (make_vector(                                                  \
+      static_cast<OOScalar>(0.105), static_cast<OOScalar>(0.18), \
+      static_cast<OOScalar>(0.28)))  // used to be (0.1, 0.105, 0.12);
 
 namespace {
 
@@ -230,7 +232,8 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
   setName(planetName.has_value() ? OOExpand(*planetName) : std::nullopt);
 
   int radius_km = dict.get<int>(KEY_RADIUS, planetInfo.get<int>(KEY_RADIUS));
-  collision_radius = radius_km * 10.0;  // Scale down by a factor of 100
+  collision_radius =
+      static_cast<GLfloat>(radius_km * 10.0);  // Scale down by a factor of 100
   OOTechLevelID techLevel =
       dict.get<int>(KEY_TECHLEVEL, planetInfo.get<int>(KEY_TECHLEVEL));
 
@@ -248,11 +251,12 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
   int percent_land =
       planetInfo.get<int>("percent_land", 24 + (gen_rnd_number() % 48));
   SetInfo(planetInfo, "land_fraction",
-          oo::PList::singleReal(0.01 * percent_land));  // +numberWithFloat:
+          oo::PList::singleReal(
+              static_cast<float>(0.01 * percent_land)));  // +numberWithFloat:
 
   int percent_ice = planetInfo.get<int>("percent_ice", 5);
   SetInfo(planetInfo, "polar_fraction",
-          oo::PList::singleReal(0.01 * percent_ice));
+          oo::PList::singleReal(static_cast<float>(0.01 * percent_ice)));
 
   RNG_Seed savedRndSeed = currentRandomSeed();
 
@@ -285,19 +289,19 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
                              : OOGraphicsDetail{}) >= OOGraphicsDetail::kShaders
             ? collision_radius
             : collision_radius + ATMOSPHERE_DEPTH;
-    _atmosphereDrawable =
-        OOPlanetDrawable::atmosphereWithRadius(atmosphereRadius);
-    _cloudsShaderDrawable =
-        OOPlanetDrawable::atmosphereWithRadius(atmosphereRadius);
+    _atmosphereDrawable = OOPlanetDrawable::atmosphereWithRadius(
+        static_cast<float>(atmosphereRadius));
+    _cloudsShaderDrawable = OOPlanetDrawable::atmosphereWithRadius(
+        static_cast<float>(atmosphereRadius));
     _atmosphereShaderDrawable = OOPlanetDrawable::atmosphereWithRadius(
-        collision_radius + ATMOSPHERE_DEPTH);
+        static_cast<float>(collision_radius + ATMOSPHERE_DEPTH));
 
     // convert the atmosphere settings to generic 'material parameters'
     percent_land = 100 - dict.get<int>("percent_cloud",
                                        100 - (3 + (gen_rnd_number() & 31) +
                                               (gen_rnd_number() & 31)));
     SetInfo(planetInfo, "cloud_fraction",
-            oo::PList::singleReal(0.01 * percent_land));
+            oo::PList::singleReal(static_cast<float>(0.01 * percent_land)));
     setUpAtmosphereParametersWithSourceInfo(dict, planetInfo);
     // planetInfo now contains a valid air_color
     _airColor = oo::share(ColorForKey(planetInfo, "air_color"));
@@ -345,7 +349,8 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
 
   // Orientation should be handled by the code that calls this planetEntity.
   // Starting with a default value anyway.
-  orientation = Quaternion{M_SQRT1_2, M_SQRT1_2, 0, 0};
+  orientation = Quaternion{static_cast<OOScalar>(M_SQRT1_2),
+                           static_cast<OOScalar>(M_SQRT1_2), 0, 0};
   _atmosphereOrientation = kIdentityQuaternion;
   _rotationAxis = vector_up_from_quaternion(orientation);
 
@@ -547,8 +552,10 @@ void OOPlanetEntity::setUpColorParametersWithSourceInfo(
 
     // add a cloud_color tinge to sky blue({0.66, 0.3, 1}).
     seaHSB = vector_add(
-        landHSB, (Vector{1.333, 0.6, 2}));  // 1 part cloud, 2 parts sky blue
-    scale_vector(&seaHSB, 0.333);
+        landHSB,
+        (Vector{static_cast<OOScalar>(1.333), static_cast<OOScalar>(0.6),
+                2}));  // 1 part cloud, 2 parts sky blue
+    scale_vector(&seaHSB, static_cast<OOScalar>(0.333));
 
     float cloudAlpha =
         OOClamp_0_1_f(sourceInfo.get<float>("cloud_alpha", 1.0f));
@@ -598,11 +605,12 @@ bool OOPlanetEntity::initAsMiniatureVersionOfPlanet(OOPlanetEntity* planet) {
   scanClass = OOScanClass::kNoDraw;
   setStatus(OOEntityStatus::kCockpitDisplay);
 
-  collision_radius = planet->collision_radius * PLANET_MINIATURE_FACTOR;
+  collision_radius =
+      static_cast<GLfloat>(planet->collision_radius * PLANET_MINIATURE_FACTOR);
   orientation = planet->orientation;
   _rotationAxis = planet->_rotationAxis;
   _atmosphereOrientation = planet->_atmosphereOrientation;
-  _rotationalVelocity = 0.04;
+  _rotationalVelocity = static_cast<float>(0.04);
 
   _terminatorThresholdVector = planet->_terminatorThresholdVector;
 
@@ -623,16 +631,16 @@ bool OOPlanetEntity::initAsMiniatureVersionOfPlanet(OOPlanetEntity* planet) {
                                   ? planet->_atmosphereShaderDrawable->copy()
                                   : std::shared_ptr<OOPlanetDrawable>();
   if (_atmosphereDrawable)
-    _atmosphereDrawable->setRadius(
+    _atmosphereDrawable->setRadius(static_cast<float>(
         collision_radius + ATMOSPHERE_DEPTH * PLANET_MINIATURE_FACTOR *
-                               2.0);  // not to scale: invisible otherwise
+                               2.0));  // not to scale: invisible otherwise
   if (_cloudsShaderDrawable)
-    _cloudsShaderDrawable->setRadius(
+    _cloudsShaderDrawable->setRadius(static_cast<float>(
         collision_radius + ATMOSPHERE_DEPTH * PLANET_MINIATURE_FACTOR *
-                               2.0);  // not to scale: invisible otherwise
+                               2.0));  // not to scale: invisible otherwise
   if (_atmosphereShaderDrawable)
-    _atmosphereShaderDrawable->setRadius(
-        collision_radius + ATMOSPHERE_DEPTH * PLANET_MINIATURE_FACTOR * 2.0);
+    _atmosphereShaderDrawable->setRadius(static_cast<float>(
+        collision_radius + ATMOSPHERE_DEPTH * PLANET_MINIATURE_FACTOR * 2.0));
 
   _planetDrawable->setLevelOfDetail(0.8f);
   if (_atmosphereDrawable) _atmosphereDrawable->setLevelOfDetail(0.8f);
@@ -706,8 +714,9 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
 
         // night sky, reddish flash on entering the atmosphere, low light
         // pollution otherwhise
-        std::shared_ptr<OOColor> mixColor = OOColor::colorWithRed(
-            ((alt > 0.98) ? 30.0f : 0.1f), 0.1f, 0.1f, aleph);
+        std::shared_ptr<OOColor> mixColor =
+            OOColor::colorWithRed(((alt > 0.98) ? 30.0f : 0.1f), 0.1f, 0.1f,
+                                  static_cast<float>(aleph));
 
         // occlusion rate: .9 is 18 degrees after the terminus, where twilight
         // ends. 1 is the terminus, 1.033 is 6 degrees before the terminus,
@@ -717,7 +726,8 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
             0.06;  // from 0.97 to 1.03
 
         if (rate <= 1.0 && rate > 0.0) [[likely]] {
-          mixColor = mixColor->blendedColorWithFraction(rate, _airColor.get());
+          mixColor = mixColor->blendedColorWithFraction(
+              static_cast<float>(rate), _airColor.get());
           // TODO: properly calculated pink sky - needs to depend on sun's
           // angular size, and its angular height on the horizon.
           /*
@@ -733,36 +743,42 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
           if (PLAYER->isSunlit && _airColor != nullptr) mixColor = _airColor;
         }
         if (UNIVERSE != nullptr)
-          UNIVERSE->setSkyColorRed(mixColor->redComponent() * aleph2,
-                                   mixColor->greenComponent() * aleph2,
-                                   mixColor->blueComponent() * aleph, aleph);
+          UNIVERSE->setSkyColorRed(
+              static_cast<GLfloat>(mixColor->redComponent() * aleph2),
+              static_cast<GLfloat>(mixColor->greenComponent() * aleph2),
+              static_cast<GLfloat>(mixColor->blueComponent() * aleph),
+              static_cast<GLfloat>(aleph));
         double atmosphereRadius =
             canDrawShaderAtmosphere
                 ? collision_radius
                 : collision_radius + (ATMOSPHERE_DEPTH * alt);
-        _atmosphereDrawable->setRadius(atmosphereRadius);
+        _atmosphereDrawable->setRadius(static_cast<float>(atmosphereRadius));
         if (_cloudsShaderDrawable)
-          _cloudsShaderDrawable->setRadius(atmosphereRadius);
+          _cloudsShaderDrawable->setRadius(
+              static_cast<float>(atmosphereRadius));
         if (_atmosphereShaderDrawable)
-          _atmosphereShaderDrawable->setRadius(collision_radius +
-                                               (ATMOSPHERE_DEPTH * alt));
+          _atmosphereShaderDrawable->setRadius(
+              static_cast<float>(collision_radius + (ATMOSPHERE_DEPTH * alt)));
         // apply air resistance for the ship, not the camera. Although
         // setSkyColorRed has already set the air resistance to aleph, override
         // it immediately
         if (UNIVERSE != nullptr)
-          UNIVERSE->setAirResistanceFactor(OOClamp_0_1_f(1.0 - trueAlt));
+          UNIVERSE->setAirResistanceFactor(
+              OOClamp_0_1_f(static_cast<float>(1.0 - trueAlt)));
       }
     } else {
       // No atmosphere: [nil radius] was 0, and the messages to nil did nothing.
       if ((_atmosphereDrawable ? _atmosphereDrawable->radius() : 0.0f) <
           collision_radius + ATMOSPHERE_DEPTH) [[unlikely]] {
         if (_atmosphereDrawable)
-          _atmosphereDrawable->setRadius(collision_radius + ATMOSPHERE_DEPTH);
+          _atmosphereDrawable->setRadius(
+              static_cast<float>(collision_radius + ATMOSPHERE_DEPTH));
         if (_cloudsShaderDrawable)
-          _cloudsShaderDrawable->setRadius(collision_radius * ATMOSPHERE_DEPTH);
+          _cloudsShaderDrawable->setRadius(
+              static_cast<float>(collision_radius * ATMOSPHERE_DEPTH));
         if (_atmosphereShaderDrawable)
-          _atmosphereShaderDrawable->setRadius(collision_radius +
-                                               ATMOSPHERE_DEPTH);
+          _atmosphereShaderDrawable->setRadius(
+              static_cast<float>(collision_radius + ATMOSPHERE_DEPTH));
       }
       if (canDrawShaderAtmosphere &&
           (_atmosphereDrawable ? _atmosphereDrawable->radius() : 0.0f) !=
@@ -790,11 +806,13 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
       launchShuttle();
   }
 
-  quaternion_rotate_about_axis(&orientation, _rotationAxis,
-                               _rotationalVelocity * delta_t);
+  quaternion_rotate_about_axis(
+      &orientation, _rotationAxis,
+      static_cast<OOScalar>(_rotationalVelocity * delta_t));
   // atmosphere orientation is relative to the orientation of the planet
-  quaternion_rotate_about_axis(&_atmosphereOrientation, kBasisYVector,
-                               _atmosphereRotationalVelocity * delta_t);
+  quaternion_rotate_about_axis(
+      &_atmosphereOrientation, kBasisYVector,
+      static_cast<OOScalar>(_atmosphereRotationalVelocity * delta_t));
 
   orientationChanged();
 
@@ -830,7 +848,8 @@ void OOPlanetEntity::drawImmediate(bool /*immediate*/, bool /*translucent*/) {
   }
   if (!(UNIVERSE != nullptr
             ? UNIVERSE->viewFrustumIntersectsSphereAt(
-                  cameraRelativePosition, (radius() + ATMOSPHERE_DEPTH))
+                  cameraRelativePosition,
+                  (static_cast<GLfloat>(radius() + ATMOSPHERE_DEPTH)))
             : false)) {
     // Don't draw
     return;
@@ -1001,7 +1020,7 @@ void OOPlanetEntity::setRotationalVelocity(double v) {
   if (hasAtmosphere()) {
     // FIXME: change atmosphere rotation speed proportionally
   }
-  _rotationalVelocity = v;
+  _rotationalVelocity = static_cast<float>(v);
 }
 
 // this method is visible to shader bindings, hence it returns vector

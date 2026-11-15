@@ -144,14 +144,15 @@ void GLDrawBallBillboard(GLfloat radius, GLfloat step, GLfloat z_distance) {
 
   OO_ENTER_OPENGL();
 
-  r = radius * z_distance / sqrt(z_distance * z_distance - radius * radius);
-  delta =
-      step * std::numbers::pi / 180.0f;  // Convert step from degrees to radians
+  r = static_cast<GLfloat>(radius * z_distance /
+                           sqrt(z_distance * z_distance - radius * radius));
+  delta = static_cast<GLfloat>(step * std::numbers::pi /
+                               180.0f);  // Convert step from degrees to radians
 
   glVertex3i(0, 0, 0);
   for (i = 0; i < (std::numbers::pi * 2.0); i += delta) {
-    s = r * sin(i);
-    c = r * cos(i);
+    s = static_cast<GLfloat>(r * sin(i));
+    c = static_cast<GLfloat>(r * cos(i));
     glVertex3f(s, c, 0.0);
   }
   glVertex3f(0.0, r, 0.0);  // repeat the zero value to close
@@ -159,17 +160,18 @@ void GLDrawBallBillboard(GLfloat radius, GLfloat step, GLfloat z_distance) {
 
 static void GLDrawOvalPoints(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
                              GLfloat step) {
-  GLfloat ww = 0.5 * siz.width;
-  GLfloat hh = 0.5 * siz.height;
+  GLfloat ww = static_cast<GLfloat>(0.5 * siz.width);
+  GLfloat hh = static_cast<GLfloat>(0.5 * siz.height);
   GLfloat theta;
   GLfloat delta;
 
   OO_ENTER_OPENGL();
 
-  delta = step * std::numbers::pi / 180.0f;
+  delta = static_cast<GLfloat>(step * std::numbers::pi / 180.0f);
 
   for (theta = 0.0f; theta < (2.0f * std::numbers::pi); theta += delta) {
-    glVertex3f(x + ww * sin(theta), y + hh * cos(theta), z);
+    glVertex3f(static_cast<GLfloat>(x + ww * sin(theta)),
+               static_cast<GLfloat>(y + hh * cos(theta)), z);
   }
   glVertex3f(x, y + hh, z);
 }

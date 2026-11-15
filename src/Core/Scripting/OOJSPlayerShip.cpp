@@ -891,7 +891,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
     using enum PlayerShipProperty;
     case kFuelLeakRate:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (player != nullptr) player->setFuelLeakRate(fValue);
+        if (player != nullptr)
+          player->setFuelLeakRate(static_cast<float>(fValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1100,42 +1101,48 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kForwardShield:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (player != nullptr) player->setForwardShieldLevel(fValue);
+        if (player != nullptr)
+          player->setForwardShieldLevel(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
 
     case kAftShield:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (player != nullptr) player->setAftShieldLevel(fValue);
+        if (player != nullptr)
+          player->setAftShieldLevel(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }
       break;
 
     case kMaxForwardShield:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (player != nullptr) player->setMaxForwardShieldLevel(fValue);
+        if (player != nullptr)
+          player->setMaxForwardShieldLevel(static_cast<float>(fValue));
         return JS_UNDEFINED;
       }
       break;
 
     case kMaxAftShield:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (player != nullptr) player->setMaxAftShieldLevel(fValue);
+        if (player != nullptr)
+          player->setMaxAftShieldLevel(static_cast<float>(fValue));
         return JS_UNDEFINED;
       }
       break;
 
     case kForwardShieldRechargeRate:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (player != nullptr) player->setForwardShieldRechargeRate(fValue);
+        if (player != nullptr)
+          player->setForwardShieldRechargeRate(static_cast<float>(fValue));
         return JS_UNDEFINED;
       }
       break;
 
     case kAftShieldRechargeRate:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (player != nullptr) player->setAftShieldRechargeRate(fValue);
+        if (player != nullptr)
+          player->setAftShieldRechargeRate(static_cast<float>(fValue));
         return JS_UNDEFINED;
       }
       break;

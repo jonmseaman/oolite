@@ -269,12 +269,12 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
 
   GLfloat* fogcolor =
       (UNIVERSE != nullptr ? UNIVERSE->getSkyClearColor() : nullptr);
-  float idealDustSize =
+  float idealDustSize = static_cast<float>(
       (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
            ? UNIVERSE->getGameView()->getViewSize()
            : NSSize{})
           .width /
-      800.0f;
+      800.0f);
 
   bool warp_stars = (player != nullptr ? player->atHyperspeed() : false);
   float dustIntensity;
@@ -299,7 +299,8 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   }
   if (fogcolor[3] > 0.0) {
     // fade out dust when entering atmosphere (issue #100)
-    dustIntensity = OOClamp_0_1_f(dustIntensity - (fogcolor[3] * 3.0));
+    dustIntensity =
+        OOClamp_0_1_f(static_cast<float>(dustIntensity - (fogcolor[3] * 3.0)));
   }
 
   if (dustIntensity > 0.0) {

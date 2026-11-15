@@ -109,7 +109,8 @@ void OOFlasherEntity::update(OOTimeDelta delta_t) {
   _time += delta_t;
 
   if (_frequency != 0) {
-    float wave = sinf(_frequency * std::numbers::pi * (_time + _phase));
+    float wave = sinf(
+        static_cast<float>(_frequency * std::numbers::pi * (_time + _phase)));
     std::size_t count = _colors.size();
     if (count > 1 && wave < 0) {
       if (!_justSwitched && wave > _wave) {
@@ -125,7 +126,8 @@ void OOFlasherEntity::update(OOTimeDelta delta_t) {
       _justSwitched = false;
     }
 
-    float threshold = cosf(_brightfraction * std::numbers::pi);
+    float threshold =
+        cosf(static_cast<float>(_brightfraction * std::numbers::pi));
 
     float brightness = _brightfraction;
     if (wave > threshold) {

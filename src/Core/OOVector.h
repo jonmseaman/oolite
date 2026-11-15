@@ -252,13 +252,15 @@ inline OOScalar magnitude2(Vector vec) {
   return vec.x * vec.x + vec.y * vec.y + vec.z * vec.z;
 }
 
-inline OOScalar magnitude(Vector vec) { return sqrt(magnitude2(vec)); }
+inline OOScalar magnitude(Vector vec) {
+  return static_cast<OOScalar>(sqrt(magnitude2(vec)));
+}
 
 inline Vector vector_normal_or_fallback(Vector vec, Vector fallback) {
   OOScalar mag2 = magnitude2(vec);
   if (mag2 == 0.0f) [[unlikely]]
     return fallback;
-  return vector_multiply_scalar(vec, 1.0f / sqrt(mag2));
+  return vector_multiply_scalar(vec, static_cast<OOScalar>(1.0f / sqrt(mag2)));
 }
 
 inline Vector vector_normal_or_xbasis(Vector vec) {

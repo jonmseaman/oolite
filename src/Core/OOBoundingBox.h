@@ -65,22 +65,22 @@ HPVector OOHPRandomPositionInBoundingBox(BoundingBox bb);
 /*** Only inline definitions beyond this point ***/
 
 inline void bounding_box_add_vector(BoundingBox* box, Vector vec) {
-  box->min.x = fmin(box->min.x, vec.x);
-  box->max.x = fmax(box->max.x, vec.x);
-  box->min.y = fmin(box->min.y, vec.y);
-  box->max.y = fmax(box->max.y, vec.y);
-  box->min.z = fmin(box->min.z, vec.z);
-  box->max.z = fmax(box->max.z, vec.z);
+  box->min.x = static_cast<OOScalar>(fmin(box->min.x, vec.x));
+  box->max.x = static_cast<OOScalar>(fmax(box->max.x, vec.x));
+  box->min.y = static_cast<OOScalar>(fmin(box->min.y, vec.y));
+  box->max.y = static_cast<OOScalar>(fmax(box->max.y, vec.y));
+  box->min.z = static_cast<OOScalar>(fmin(box->min.z, vec.z));
+  box->max.z = static_cast<OOScalar>(fmax(box->max.z, vec.z));
 }
 
 inline void bounding_box_add_xyz(BoundingBox* box, GLfloat x, GLfloat y,
                                  GLfloat z) {
-  box->min.x = fmin(box->min.x, x);
-  box->max.x = fmax(box->max.x, x);
-  box->min.y = fmin(box->min.y, y);
-  box->max.y = fmax(box->max.y, y);
-  box->min.z = fmin(box->min.z, z);
-  box->max.z = fmax(box->max.z, z);
+  box->min.x = static_cast<OOScalar>(fmin(box->min.x, x));
+  box->max.x = static_cast<OOScalar>(fmax(box->max.x, x));
+  box->min.y = static_cast<OOScalar>(fmin(box->min.y, y));
+  box->max.y = static_cast<OOScalar>(fmax(box->max.y, y));
+  box->min.z = static_cast<OOScalar>(fmin(box->min.z, z));
+  box->max.z = static_cast<OOScalar>(fmax(box->max.z, z));
 }
 
 inline void bounding_box_reset(BoundingBox* box) { *box = kZeroBoundingBox; }

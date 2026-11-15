@@ -1301,8 +1301,9 @@ int GuiDisplayGen::drawGUI(GLfloat alpha, bool drawCursor) {
   if (alpha > 0.05f) {
     ::PlayerEntity* player = PLAYER;
 
-    drawGLDisplay(x - 0.5f * size_in_pixels.width,
-                  y - 0.5f * size_in_pixels.height, z, alpha);
+    drawGLDisplay(static_cast<GLfloat>(x - 0.5f * size_in_pixels.width),
+                  static_cast<GLfloat>(y - 0.5f * size_in_pixels.height), z,
+                  alpha);
 
     if (this == (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr)) {
       if ((player != nullptr ? player->guiScreen() : OOGUIScreenID{}) ==
@@ -1315,14 +1316,16 @@ int GuiDisplayGen::drawGUI(GLfloat alpha, bool drawCursor) {
           backgroundSpecial == OOGUIBackgroundSpecial::kCustom ||
           backgroundSpecial == OOGUIBackgroundSpecial::kCustomAnaQuickest ||
           backgroundSpecial == OOGUIBackgroundSpecial::kCustomAnaShortest) {
-        drawStarChart(x - 0.5f * size_in_pixels.width,
-                      y - 0.5f * size_in_pixels.height, z, alpha, false);
+        drawStarChart(static_cast<GLfloat>(x - 0.5f * size_in_pixels.width),
+                      static_cast<GLfloat>(y - 0.5f * size_in_pixels.height), z,
+                      alpha, false);
       }
       if (backgroundSpecial == OOGUIBackgroundSpecial::kLong ||
           backgroundSpecial == OOGUIBackgroundSpecial::kLongAnaQuickest ||
           backgroundSpecial == OOGUIBackgroundSpecial::kLongAnaShortest) {
-        drawStarChart(x - 0.5f * size_in_pixels.width,
-                      y - 0.5f * size_in_pixels.height, z, alpha, true);
+        drawStarChart(static_cast<GLfloat>(x - 0.5f * size_in_pixels.width),
+                      static_cast<GLfloat>(y - 0.5f * size_in_pixels.height), z,
+                      alpha, true);
       }
       if ((player != nullptr ? player->guiScreen() : OOGUIScreenID{}) ==
           OOGUIScreenID::kStatus) {
@@ -1467,9 +1470,10 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
                      backgroundAlpha * backgroundColor->alphaComponent()));
       OOGLBEGIN(GL_QUADS);
       glVertex3f(x + 0.0f, y + 0.0f, z);
-      glVertex3f(x + size_in_pixels.width, y + 0.0f, z);
-      glVertex3f(x + size_in_pixels.width, y + size_in_pixels.height, z);
-      glVertex3f(x + 0.0f, y + size_in_pixels.height, z);
+      glVertex3f(static_cast<GLfloat>(x + size_in_pixels.width), y + 0.0f, z);
+      glVertex3f(static_cast<GLfloat>(x + size_in_pixels.width),
+                 static_cast<GLfloat>(y + size_in_pixels.height), z);
+      glVertex3f(x + 0.0f, static_cast<GLfloat>(y + size_in_pixels.height), z);
       OOGLEND();
     }
   }
@@ -1477,9 +1481,9 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
   // show the 'foreground', aka overlay!
 
   if (foregroundSprite.get() != nullptr) {
-    foregroundSprite->blitCentredToX(x + 0.5f * size_in_pixels.width,
-                                     y + 0.5f * size_in_pixels.height, z,
-                                     alpha);
+    foregroundSprite->blitCentredToX(
+        static_cast<float>(x + 0.5f * size_in_pixels.width),
+        static_cast<float>(y + 0.5f * size_in_pixels.height), z, alpha);
   }
 
   if (!RowInRange(selectedRow, selectableRange))
@@ -1498,9 +1502,11 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
 
     OODrawString(
         *title,
-        x + static_cast<GLfloat>(pixel_row_center) - strsize.width / 2.0,
-        y + size_in_pixels.height - pixel_title_size.height, z,
-        titleCharacterSize);
+        static_cast<GLfloat>(x + static_cast<GLfloat>(pixel_row_center) -
+                             strsize.width / 2.0),
+        static_cast<GLfloat>(y + size_in_pixels.height -
+                             pixel_title_size.height),
+        z, titleCharacterSize);
 
     // draw a horizontal divider
     //
@@ -1508,13 +1514,21 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
                           OOColor::colorWithWhite(0.75, 1.0).get(), alpha);
 
     OOGLBEGIN(GL_QUADS);
-    glVertex3f(x + 0, y + size_in_pixels.height - pixel_title_size.height + 4,
+    glVertex3f(x + 0,
+               static_cast<GLfloat>(y + size_in_pixels.height -
+                                    pixel_title_size.height + 4),
                z);
-    glVertex3f(x + size_in_pixels.width,
-               y + size_in_pixels.height - pixel_title_size.height + 4, z);
-    glVertex3f(x + size_in_pixels.width,
-               y + size_in_pixels.height - pixel_title_size.height + 2, z);
-    glVertex3f(x + 0, y + size_in_pixels.height - pixel_title_size.height + 2,
+    glVertex3f(static_cast<GLfloat>(x + size_in_pixels.width),
+               static_cast<GLfloat>(y + size_in_pixels.height -
+                                    pixel_title_size.height + 4),
+               z);
+    glVertex3f(static_cast<GLfloat>(x + size_in_pixels.width),
+               static_cast<GLfloat>(y + size_in_pixels.height -
+                                    pixel_title_size.height + 2),
+               z);
+    glVertex3f(x + 0,
+               static_cast<GLfloat>(y + size_in_pixels.height -
+                                    pixel_title_size.height + 2),
                z);
     OOGLEND();
   }
@@ -1546,25 +1560,32 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
             break;
         }
         if (i == static_cast<unsigned>(selectedRow)) {
-          NSRect block =
-              OORectFromString(text, x + rowPosition[i].x + 2,
-                               y + rowPosition[i].y + 2, characterSize);
+          NSRect block = OORectFromString(
+              text, static_cast<GLfloat>(x + rowPosition[i].x + 2),
+              static_cast<GLfloat>(y + rowPosition[i].y + 2), characterSize);
           OOStopDrawingStrings();
           setGLColorFromSetting(kGuiSelectedRowBackgroundColor,
                                 OOColor::redColor().get(), alpha);
           OOGLBEGIN(GL_QUADS);
-          glVertex3f(block.origin.x, block.origin.y, z);
-          glVertex3f(block.origin.x + block.size.width, block.origin.y, z);
-          glVertex3f(block.origin.x + block.size.width,
-                     block.origin.y + block.size.height, z);
-          glVertex3f(block.origin.x, block.origin.y + block.size.height, z);
+          glVertex3f(static_cast<GLfloat>(block.origin.x),
+                     static_cast<GLfloat>(block.origin.y), z);
+          glVertex3f(static_cast<GLfloat>(block.origin.x + block.size.width),
+                     static_cast<GLfloat>(block.origin.y), z);
+          glVertex3f(static_cast<GLfloat>(block.origin.x + block.size.width),
+                     static_cast<GLfloat>(block.origin.y + block.size.height),
+                     z);
+          glVertex3f(static_cast<GLfloat>(block.origin.x),
+                     static_cast<GLfloat>(block.origin.y + block.size.height),
+                     z);
           OOGLEND();
           setGLColorFromSetting(kGuiSelectedRowColor,
                                 OOColor::blackColor().get(), alpha);
           OOStartDrawingStrings();
         }
-        OODrawStringQuadsAligned(text, x + rowPosition[i].x,
-                                 y + rowPosition[i].y, z, characterSize, false);
+        OODrawStringQuadsAligned(text,
+                                 static_cast<GLfloat>(x + rowPosition[i].x),
+                                 static_cast<GLfloat>(y + rowPosition[i].y), z,
+                                 characterSize, false);
 
         // draw cursor at end of current Row
         //
@@ -1585,11 +1606,14 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
                                 OOColor::redColor().get(),
                                 row_alpha[i] * g_alpha);
           OOGLBEGIN(GL_QUADS);
-          glVertex3f(tr.origin.x, tr.origin.y, z);
-          glVertex3f(tr.origin.x + tr.size.width, tr.origin.y, z);
-          glVertex3f(tr.origin.x + tr.size.width, tr.origin.y + tr.size.height,
-                     z);
-          glVertex3f(tr.origin.x, tr.origin.y + tr.size.height, z);
+          glVertex3f(static_cast<GLfloat>(tr.origin.x),
+                     static_cast<GLfloat>(tr.origin.y), z);
+          glVertex3f(static_cast<GLfloat>(tr.origin.x + tr.size.width),
+                     static_cast<GLfloat>(tr.origin.y), z);
+          glVertex3f(static_cast<GLfloat>(tr.origin.x + tr.size.width),
+                     static_cast<GLfloat>(tr.origin.y + tr.size.height), z);
+          glVertex3f(static_cast<GLfloat>(tr.origin.x),
+                     static_cast<GLfloat>(tr.origin.y + tr.size.height), z);
           OOGLEND();
           OOStartDrawingStrings();
         }
@@ -1642,16 +1666,17 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
           }
 
           // baseline text rect, needed for correct highlight positioning.
-          NSRect block =
-              OORectFromString(text, x + rowPosition[i].x + 2,
-                               y + rowPosition[i].y + 2, characterSize);
+          NSRect block = OORectFromString(
+              text, static_cast<GLfloat>(x + rowPosition[i].x + 2),
+              static_cast<GLfloat>(y + rowPosition[i].y + 2), characterSize);
 
           if (!isLeftAligned) {
             rowPosition[i].x -= block.size.width + 3;
           }
-          block = OORectFromString(hilitedText,
-                                   x + rowPosition[i].x + 1 + leadingSpaces,
-                                   y + rowPosition[i].y + 2, characterSize);
+          block = OORectFromString(
+              hilitedText,
+              static_cast<GLfloat>(x + rowPosition[i].x + 1 + leadingSpaces),
+              static_cast<GLfloat>(y + rowPosition[i].y + 2), characterSize);
           block.size.width += 3;
 
           if (i == static_cast<unsigned>(selectedRow)) {
@@ -1659,19 +1684,25 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
             setGLColorFromSetting(kGuiSelectedRowBackgroundColor,
                                   OOColor::redColor().get(), alpha);
             OOGLBEGIN(GL_QUADS);
-            glVertex3f(block.origin.x, block.origin.y, z);
-            glVertex3f(block.origin.x + block.size.width, block.origin.y, z);
-            glVertex3f(block.origin.x + block.size.width,
-                       block.origin.y + block.size.height, z);
-            glVertex3f(block.origin.x, block.origin.y + block.size.height, z);
+            glVertex3f(static_cast<GLfloat>(block.origin.x),
+                       static_cast<GLfloat>(block.origin.y), z);
+            glVertex3f(static_cast<GLfloat>(block.origin.x + block.size.width),
+                       static_cast<GLfloat>(block.origin.y), z);
+            glVertex3f(static_cast<GLfloat>(block.origin.x + block.size.width),
+                       static_cast<GLfloat>(block.origin.y + block.size.height),
+                       z);
+            glVertex3f(static_cast<GLfloat>(block.origin.x),
+                       static_cast<GLfloat>(block.origin.y + block.size.height),
+                       z);
             OOGLEND();
             setGLColorFromSetting(kGuiSelectedRowColor,
                                   OOColor::blackColor().get(), alpha);
             OOStartDrawingStrings();
           }
-          OODrawStringQuadsAligned(text, x + rowPosition[i].x,
-                                   y + rowPosition[i].y, z, characterSize,
-                                   false);
+          OODrawStringQuadsAligned(text,
+                                   static_cast<GLfloat>(x + rowPosition[i].x),
+                                   static_cast<GLfloat>(y + rowPosition[i].y),
+                                   z, characterSize, false);
         }
       }
     }
@@ -1768,7 +1799,7 @@ void GuiDisplayGen::drawSystemMarker(const oo::PList& marker, GLfloat x,
     glVertex3f(x - mark_size, y + mark_size, z);
     glVertex3f(x + mark_size, y - mark_size, z);
   } else if (shape == "MARKER_PLUS") {
-    mark_size *= 1.4;  // match volumes
+    mark_size *= static_cast<GLfloat>(1.4);  // match volumes
     glVertex3f(x, y - mark_size, z);
     glVertex3f(x, y + mark_size, z);
     glVertex3f(x - mark_size, y, z);
@@ -1783,7 +1814,7 @@ void GuiDisplayGen::drawSystemMarker(const oo::PList& marker, GLfloat x,
     glVertex3f(x + mark_size, y - mark_size, z);
     glVertex3f(x - mark_size, y - mark_size, z);
   } else if (shape == "MARKER_DIAMOND") {
-    mark_size *= 1.4;  // match volumes
+    mark_size *= static_cast<GLfloat>(1.4);  // match volumes
     glVertex3f(x, y - mark_size, z);
     glVertex3f(x - mark_size, y, z);
     glVertex3f(x - mark_size, y, z);
@@ -1870,10 +1901,10 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
   std::shared_ptr<OOColor> thisConnectionColor;
   std::shared_ptr<OOColor> thatConnectionColor;
 
-  float jumpRange =
+  float jumpRange = static_cast<float>(
       MAX_JUMP_RANGE * ((optimizeBy == OORouteType::kNone)
                             ? (PLAYER != nullptr ? PLAYER->dialFuel() : 0.0f)
-                            : 1.0);
+                            : 1.0));
 
   std::ptrdiff_t concealment[256];
   for (std::size_t i = 0; i < 256; i++) {
@@ -1926,12 +1957,14 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
           currentJumpColorStart->getRed(&lr, &lg, &lb, &la);
           currentJumpColorEnd->getRed(&lr2, &lg2, &lb2, &la2);
           OOGL(glColor4f(lr, lg, lb, la * alpha));
-          glVertex3f(x + star.x, y + star.y, z);
+          glVertex3f(static_cast<GLfloat>(x + star.x),
+                     static_cast<GLfloat>(y + star.y), z);
 
-          float frac = (d / jumpRange);
+          float frac = (static_cast<float>(d / jumpRange));
           OOGL(glColor4f(std::lerp(lr, lr2, frac), std::lerp(lg, lg2, frac),
                          std::lerp(lb, lb2, frac), std::lerp(la, la2, frac)));
-          glVertex3f(x + star2.x, y + star2.y, z);
+          glVertex3f(static_cast<GLfloat>(x + star2.x),
+                     static_cast<GLfloat>(y + star2.y), z);
 
         } else {
           thisConnectionColor =
@@ -1947,7 +1980,8 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
           thisConnectionColor->getRed(&lr, &lg, &lb, &la);
           OOGL(glColor4f(lr, lg, lb, la * alpha));
 
-          glVertex3f(x + star.x, y + star.y, z);
+          glVertex3f(static_cast<GLfloat>(x + star.x),
+                     static_cast<GLfloat>(y + star.y), z);
 
           // and the other colour for the other end
           thatConnectionColor =
@@ -1963,7 +1997,8 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
           thatConnectionColor->getRed(&lr, &lg, &lb, &la);
           OOGL(glColor4f(lr, lg, lb, la * alpha));
 
-          glVertex3f(x + star2.x, y + star2.y, z);
+          glVertex3f(static_cast<GLfloat>(x + star2.x),
+                     static_cast<GLfloat>(y + star2.y), z);
         }
       }
     }
@@ -2008,8 +2043,10 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
       star2.y = static_cast<float>(star2abs.y * vscale);
 
       OOGLBEGIN(GL_LINES);
-      glVertex3f(x + star.x, y + star.y, z);
-      glVertex3f(x + star2.x, y + star2.y, z);
+      glVertex3f(static_cast<GLfloat>(x + star.x),
+                 static_cast<GLfloat>(y + star.y), z);
+      glVertex3f(static_cast<GLfloat>(x + star2.x),
+                 static_cast<GLfloat>(y + star2.y), z);
       OOGLEND();
 
       // Label the route, if not already labelled
@@ -2018,7 +2055,8 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
         OODrawString((UNIVERSE != nullptr ? UNIVERSE->systemNameIndex(loc)
                                           : std::optional<std::string>())
                          .value_or(""),
-                     x + star.x + 2.0, y + star.y, z, NSMakeSize(8, 8));
+                     static_cast<GLfloat>(x + star.x + 2.0),
+                     static_cast<GLfloat>(y + star.y), z, NSMakeSize(8, 8));
       }
     }
     // Label the destination, which was not included in the above loop.
@@ -2028,7 +2066,8 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
         OODrawString((UNIVERSE != nullptr ? UNIVERSE->systemNameIndex(loc)
                                           : std::optional<std::string>())
                          .value_or(""),
-                     x + star2.x + 2.0, y + star2.y, z, NSMakeSize(10, 10));
+                     static_cast<GLfloat>(x + star2.x + 2.0),
+                     static_cast<GLfloat>(y + star2.y), z, NSMakeSize(10, 10));
       }
     }
   }
@@ -2115,14 +2154,35 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
   double aspect_ratio = viewSize.width / viewSize.height;
 
   // default colours - match those in HeadUpDisplay:OODrawPlanetInfo
-  GLfloat govcol[] = {0.5, 0.0, 0.7, 0.7, 0.5, 0.3, 0.0, 1.0,
-                      0.3, 1.0, 0.8, 0.1, 1.0, 0.0, 0.0, 0.1,
-                      0.5, 1.0, 0.7, 0.7, 0.7, 0.7, 1.0, 1.0};
+  GLfloat govcol[] = {0.5,
+                      0.0,
+                      static_cast<GLfloat>(0.7),
+                      static_cast<GLfloat>(0.7),
+                      0.5,
+                      static_cast<GLfloat>(0.3),
+                      0.0,
+                      1.0,
+                      static_cast<GLfloat>(0.3),
+                      1.0,
+                      static_cast<GLfloat>(0.8),
+                      static_cast<GLfloat>(0.1),
+                      1.0,
+                      0.0,
+                      0.0,
+                      static_cast<GLfloat>(0.1),
+                      0.5,
+                      1.0,
+                      static_cast<GLfloat>(0.7),
+                      static_cast<GLfloat>(0.7),
+                      static_cast<GLfloat>(0.7),
+                      static_cast<GLfloat>(0.7),
+                      1.0,
+                      1.0};
 
   if (aspect_ratio > 4.0 / 3.0) {
-    pixelRatio = viewSize.height / 480.0;
+    pixelRatio = static_cast<OOScalar>(viewSize.height / 480.0);
   } else {
-    pixelRatio = viewSize.width / 640.0;
+    pixelRatio = static_cast<OOScalar>(viewSize.width / 640.0);
   }
 
   std::ptrdiff_t textRow =
@@ -2248,8 +2308,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
     if (!routeInfo.isNull()) routeExists = true;
 
     drawAdvancedNavArrayAtX(
-        x + hoffset, y + voffset, z, alpha,
-        (planetNumber != destNumber ? routeInfo : oo::PList()),
+        static_cast<float>(x + hoffset), static_cast<float>(y + voffset), z,
+        alpha, (planetNumber != destNumber ? routeInfo : oo::PList()),
         advancedNavArrayMode, zoom);
 
     if (routeExists) {
@@ -2264,8 +2324,9 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
       }
     }
   } else {
-    drawAdvancedNavArrayAtX(x + hoffset, y + voffset, z, alpha, oo::PList(),
-                            OORouteType::kNone, zoom);
+    drawAdvancedNavArrayAtX(static_cast<float>(x + hoffset),
+                            static_cast<float>(y + voffset), z, alpha,
+                            oo::PList(), OORouteType::kNone, zoom);
   }
   if (!routeExists) {
     NSPoint targetCoordinates =
@@ -2298,7 +2359,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
     setGLColorFromSetting(kGuiChartRangeColor, OOColor::greenColor().get(),
                           alpha);
 
-    GLDrawOval(x + cu.x, y + cu.y, z,
+    GLDrawOval(static_cast<GLfloat>(x + cu.x), static_cast<GLfloat>(y + cu.y),
+               z,
                NSMakeSize(static_cast<float>(fuel * hscale),
                           2 * static_cast<float>(fuel * vscale)),
                5);
@@ -2309,14 +2371,16 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
   setGLColorFromSetting(kGuiChartCrosshairColor, OOColor::greenColor().get(),
                         alpha);
 
-  drawCrossHairsWithSize(12 / zoom + 2, x + cu.x, y + cu.y, z);
+  drawCrossHairsWithSize(12 / zoom + 2, static_cast<GLfloat>(x + cu.x),
+                         static_cast<GLfloat>(y + cu.y), z);
 
   // draw crosshairs over cursor
   //
   setGLColorFromSetting(kGuiChartCursorColor, OOColor::redColor().get(), alpha);
   cu = NSMakePoint(static_cast<float>(hscale * cursor_coordinates.x + hoffset),
                    static_cast<float>(vscale * cursor_coordinates.y + voffset));
-  drawCrossHairsWithSize(7 / zoom + 2, x + cu.x, y + cu.y, z);
+  drawCrossHairsWithSize(7 / zoom + 2, static_cast<GLfloat>(x + cu.x),
+                         static_cast<GLfloat>(y + cu.y), z);
 
   // draw marks and stars
   //
@@ -2341,8 +2405,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
 
     const oo::PList systemInfo = systemManager->getPropertiesForSystem(
         static_cast<OOSystemID>(i), galaxy_id);
-    float blob_factor =
-        guiUserSettings.get<float>(kGuiChartCircleScale, 0.0017);
+    float blob_factor = guiUserSettings.get<float>(kGuiChartCircleScale,
+                                                   static_cast<float>(0.0017));
     float blob_size =
         (1.0f + blob_factor * systemInfo.get<float>("radius")) / zoom;
     if (blob_size < 0.5) blob_size = 0.5;
@@ -2362,13 +2426,15 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
         GLfloat base_size = 0.5f * blob_size + 2.5f;
         drawSystemMarkers(oo::PList(oo::PList::Array(markersIt->second.begin(),
                                                      markersIt->second.end())),
-                          x + star.x, y + star.y, z, alpha, base_size);
+                          static_cast<GLfloat>(x + star.x),
+                          static_cast<GLfloat>(y + star.y), z, alpha,
+                          base_size);
       }
     }
 
     if (concealment[i] >= OO_SYSTEMCONCEALMENT_NODATA) {
       // no system data available
-      r = g = b = 0.7;
+      r = g = b = static_cast<GLfloat>(0.7);
       OOGL(glColor4f(r, g, b, alpha));
     } else {
       switch (chart_mode) {
@@ -2380,7 +2446,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                 oo::str::format(kGuiChartEconomyUColor, systemParameter),
                 OOColor::colorWithRed(ce1, 1.0f, 0.0f, 1.0f).get(), 1.0);
           } else {
-            r = g = b = 0.3;
+            r = g = b = static_cast<GLfloat>(0.3);
             OOGL(glColor4f(r, g, b, alpha));
           }
           break;
@@ -2395,17 +2461,18 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                     .get(),
                 1.0);
           } else {
-            r = g = b = 0.3;
+            r = g = b = static_cast<GLfloat>(0.3);
             OOGL(glColor4f(r, g, b, alpha));
           }
           break;
         case OOLongRangeChartMode::kTechLevel:
           if (noNova) [[likely]] {
             systemParameter = nearby_systems[i].tec;
-            r = 0.6;
-            g = b = 0.20 + (0.05 * static_cast<GLfloat>(systemParameter));
+            r = static_cast<GLfloat>(0.6);
+            g = b = static_cast<GLfloat>(
+                0.20 + (0.05 * static_cast<GLfloat>(systemParameter)));
           } else {
-            r = g = b = 0.3;
+            r = g = b = static_cast<GLfloat>(0.3);
           }
           OOGL(glColor4f(r, g, b, alpha));
           break;
@@ -2425,7 +2492,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
             }
           } else {
             r = 1.0;
-            g = 0.2;
+            g = static_cast<GLfloat>(0.2);
             b = 0.0;
           }
           OOGL(glColor4f(r, g, b, alpha));
@@ -2433,7 +2500,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
       }
     }
 
-    GLDrawFilledOval(x + star.x, y + star.y, z,
+    GLDrawFilledOval(static_cast<GLfloat>(x + star.x),
+                     static_cast<GLfloat>(y + star.y), z,
                      NSMakeSize(blob_size, blob_size), 15);
   }
 
@@ -2467,7 +2535,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
       }
 
       bool mark = systemsFound[i];
-      float marker_size = 8.0 / zoom;
+      float marker_size = static_cast<float>(8.0 / zoom);
       NSPoint sys_coordinates = systemManager->getCoordinatesForSystem(
           static_cast<OOSystemID>(i), galaxy_id);
 
@@ -2480,10 +2548,14 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
         star.x = static_cast<float>(sys_coordinates.x * hscale + hoffset);
         star.y = static_cast<float>(sys_coordinates.y * vscale + voffset);
         OOGLBEGIN(GL_LINE_LOOP);
-        glVertex3f(x + star.x - marker_size, y + star.y - marker_size, z);
-        glVertex3f(x + star.x + marker_size, y + star.y - marker_size, z);
-        glVertex3f(x + star.x + marker_size, y + star.y + marker_size, z);
-        glVertex3f(x + star.x - marker_size, y + star.y + marker_size, z);
+        glVertex3f(static_cast<GLfloat>(x + star.x - marker_size),
+                   static_cast<GLfloat>(y + star.y - marker_size), z);
+        glVertex3f(static_cast<GLfloat>(x + star.x + marker_size),
+                   static_cast<GLfloat>(y + star.y - marker_size), z);
+        glVertex3f(static_cast<GLfloat>(x + star.x + marker_size),
+                   static_cast<GLfloat>(y + star.y + marker_size), z);
+        glVertex3f(static_cast<GLfloat>(x + star.x - marker_size),
+                   static_cast<GLfloat>(y + star.y + marker_size), z);
         OOGLEND();
         if (i == foundIndex || n_matches == 1) {
           if (n_matches == 1) foundSystem = 0;
@@ -2496,7 +2568,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                      ? UNIVERSE->systemNameIndex(static_cast<OOSystemID>(i))
                      : std::optional<std::string>())
                     .value_or(""),
-                x + star.x + 2.0, y + star.y - 10.0f, z,
+                static_cast<GLfloat>(x + star.x + 2.0),
+                static_cast<GLfloat>(y + star.y - 10.0f), z,
                 NSMakeSize(10 * systemNameScale, 10 * systemNameScale));
             setGLColorFromSetting(kGuiChartMatchBoxColor,
                                   OOColor::greenColor().get(), alpha);
@@ -2506,7 +2579,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                                                   static_cast<OOSystemID>(i))
                                             : std::optional<std::string>())
                            .value_or(""),
-                       x + star.x + 2.0, y + star.y - 10.0f, z,
+                       static_cast<GLfloat>(x + star.x + 2.0),
+                       static_cast<GLfloat>(y + star.y - 10.0f), z,
                        NSMakeSize(10 * systemNameScale, 10 * systemNameScale));
         }
       }
@@ -2563,16 +2637,19 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                                 OOColor::yellowColor().get(), alpha);
         }
 
-        OODrawString(sys->p_name, x + star.x + 2.0, y + star.y, z, chSize);
+        OODrawString(sys->p_name, static_cast<GLfloat>(x + star.x + 2.0),
+                     static_cast<GLfloat>(y + star.y), z, chSize);
       } else if (sys->gov >= 0) [[likely]] {
         // Not a nova? Show the info.
         if (concealment[i] >= OO_SYSTEMCONCEALMENT_NODATA) {
           setGLColorFromSetting(kGuiChartLabelColor,
                                 OOColor::yellowColor().get(), alpha);
-          OODrawHilightedString("???", x + star.x + 2.0, y + star.y, z, chSize);
+          OODrawHilightedString("???", static_cast<GLfloat>(x + star.x + 2.0),
+                                static_cast<GLfloat>(y + star.y), z, chSize);
         } else {
-          OODrawPlanetInfo(sys->gov, sys->eco, sys->tec, x + star.x + 2.0,
-                           y + star.y + 2.0, z, chSize);
+          OODrawPlanetInfo(sys->gov, sys->eco, sys->tec,
+                           static_cast<GLfloat>(x + star.x + 2.0),
+                           static_cast<GLfloat>(y + star.y + 2.0), z, chSize);
         }
       }
     }
@@ -2603,17 +2680,20 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                                 OOColor::yellowColor().get(), alpha);
         }
 
-        OODrawHilightedString(sys->p_name, x + star.x + 2.0, y + star.y, z,
-                              chSize);
+        OODrawHilightedString(sys->p_name,
+                              static_cast<GLfloat>(x + star.x + 2.0),
+                              static_cast<GLfloat>(y + star.y), z, chSize);
       } else if (sys->gov >= 0) {
         // Not a nova? Show the info.
         if (concealment[targetIdx] >= OO_SYSTEMCONCEALMENT_NODATA) {
           setGLColorFromSetting(kGuiChartLabelColor,
                                 OOColor::yellowColor().get(), alpha);
-          OODrawHilightedString("???", x + star.x + 2.0, y + star.y, z, chSize);
+          OODrawHilightedString("???", static_cast<GLfloat>(x + star.x + 2.0),
+                                static_cast<GLfloat>(y + star.y), z, chSize);
         } else {
           OODrawHilightedPlanetInfo(sys->gov, sys->eco, sys->tec,
-                                    x + star.x + 2.0, y + star.y + 2.0, z,
+                                    static_cast<GLfloat>(x + star.x + 2.0),
+                                    static_cast<GLfloat>(y + star.y + 2.0), z,
                                     chSize);
         }
       }
@@ -2667,7 +2747,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
   cu = NSMakePoint(
       static_cast<float>(hscale * info_system_coordinates.x + hoffset),
       static_cast<float>(vscale * info_system_coordinates.y + voffset));
-  GLDrawOval(x + cu.x, y + cu.y, z,
+  GLDrawOval(static_cast<GLfloat>(x + cu.x), static_cast<GLfloat>(y + cu.y), z,
              NSMakeSize(6.0f / zoom + 2.0f, 6.0f / zoom + 2.0f), 5);
 
   // disable draw clipping
@@ -2683,13 +2763,13 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                  static_cast<double>((textRow - 1) * MAIN_GUI_ROW_HEIGHT) -
                  pixel_title_size.height),
              z);
-  glVertex3f(x + size_in_pixels.width,
+  glVertex3f(static_cast<GLfloat>(x + size_in_pixels.width),
              static_cast<GLfloat>(
                  y + size_in_pixels.height -
                  static_cast<double>((textRow - 1) * MAIN_GUI_ROW_HEIGHT) -
                  pixel_title_size.height),
              z);
-  glVertex3f(x + size_in_pixels.width,
+  glVertex3f(static_cast<GLfloat>(x + size_in_pixels.width),
              static_cast<GLfloat>(
                  y + size_in_pixels.height -
                  static_cast<double>((textRow - 1) * MAIN_GUI_ROW_HEIGHT) -

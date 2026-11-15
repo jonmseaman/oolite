@@ -276,7 +276,8 @@ static JSValue SoundSourceSetProperty(OOJS_SETTER_ARGS) {
     case kVolume:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
         fValue = OOClamp_0_max_d(fValue, 1);
-        if (soundSource != nullptr) soundSource->setGain(fValue);
+        if (soundSource != nullptr)
+          soundSource->setGain(static_cast<float>(fValue));
         return JS_UNDEFINED;
       }
       break;

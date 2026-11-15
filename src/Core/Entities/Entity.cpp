@@ -704,7 +704,7 @@ void Entity::moveForward(double amount) {
   HPVector forward = HPvector_multiply_scalar(
       HPvector_forward_from_quaternion(orientation), amount);
   position = HPvector_add(position, forward);
-  distanceTravelled += amount;
+  distanceTravelled += static_cast<GLfloat>(amount);
 }
 
 OOMatrix Entity::rotationMatrix() { return rotMatrix; }
@@ -738,19 +738,24 @@ void Entity::update(OOTimeDelta delta_t) {
     if (getIsSubEntity()) {
       // A message to a nil owner answered 0.
       Entity* ownerEntity = owner();
-      zero_distance = ownerEntity != nullptr ? ownerEntity->zeroDistance() : 0;
+      zero_distance = ownerEntity != nullptr
+                          ? static_cast<GLfloat>(ownerEntity->zeroDistance())
+                          : 0;
       cam_zero_distance =
-          ownerEntity != nullptr ? ownerEntity->camZeroDistance() : 0;
+          ownerEntity != nullptr
+              ? static_cast<GLfloat>(ownerEntity->camZeroDistance())
+              : 0;
       updateCameraRelativePosition();
     } else {
-      zero_distance = HPdistance2(PLAYER->position, position);
-      cam_zero_distance = HPdistance2(
+      zero_distance =
+          static_cast<GLfloat>(HPdistance2(PLAYER->position, position));
+      cam_zero_distance = static_cast<GLfloat>(HPdistance2(
           (PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector{}),
-          position);
+          position));
       updateCameraRelativePosition();
     }
   } else {
-    zero_distance = HPmagnitude2(position);
+    zero_distance = static_cast<GLfloat>(HPmagnitude2(position));
     cam_zero_distance = zero_distance;
     cameraRelativePosition = HPVectorToVector(position);
   }
@@ -869,13 +874,15 @@ void Entity::setLastDrawCounter(std::size_t drawCounter) {
 
 // For shader bindings.
 GLfloat Entity::universalTime() {
-  return (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
+  return (UNIVERSE != nullptr ? static_cast<GLfloat>(UNIVERSE->getTime())
+                              : 0.0);
 }
 
-GLfloat Entity::getSpawnTime() { return spawnTime; }
+GLfloat Entity::getSpawnTime() { return static_cast<GLfloat>(spawnTime); }
 
 GLfloat Entity::timeElapsedSinceSpawn() {
-  return (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - spawnTime;
+  return static_cast<GLfloat>(
+      (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - spawnTime);
 }
 
 void Entity::setAtmosphereFogging(OOColor* fogging) {

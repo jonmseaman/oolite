@@ -62,8 +62,10 @@ void OORingEffectEntity::initialize() {
 
   unsigned i;
   for (i = 0; i < kCircleSegments; i++) {
-    sCircleVerts[i].x = sinf(i * 2 * std::numbers::pi / (kCircleSegments - 1));
-    sCircleVerts[i].y = cosf(i * 2 * std::numbers::pi / (kCircleSegments - 1));
+    sCircleVerts[i].x = sinf(
+        static_cast<float>(i * 2 * std::numbers::pi / (kCircleSegments - 1)));
+    sCircleVerts[i].y = cosf(
+        static_cast<float>(i * 2 * std::numbers::pi / (kCircleSegments - 1)));
   }
 }
 
@@ -107,8 +109,10 @@ std::shared_ptr<OORingEffectEntity> OORingEffectEntity::shrinkingRingFromEntity(
     Entity* sourceEntity) {
   std::shared_ptr<OORingEffectEntity> result = ringFromEntity(sourceEntity);
   if (result != nullptr) {
-    result->_innerGrowthRate *= kShrinkingRingInnerGrowthFactor;
-    result->_outerGrowthRate *= kShrinkingRingOuterGrowthFactor;
+    result->_innerGrowthRate *=
+        static_cast<GLfloat>(kShrinkingRingInnerGrowthFactor);
+    result->_outerGrowthRate *=
+        static_cast<GLfloat>(kShrinkingRingOuterGrowthFactor);
   }
   return result;
 }
@@ -119,10 +123,10 @@ std::optional<std::string> OORingEffectEntity::descriptionComponents() const {
 
 void OORingEffectEntity::update(OOTimeDelta delta_t) {
   Entity::update(delta_t);
-  _timePassed += delta_t;
+  _timePassed += static_cast<GLfloat>(delta_t);
 
-  _innerRadius += delta_t * _innerGrowthRate;
-  _outerRadius += delta_t * _outerGrowthRate;
+  _innerRadius += static_cast<GLfloat>(delta_t * _innerGrowthRate);
+  _outerRadius += static_cast<GLfloat>(delta_t * _outerGrowthRate);
 
   if (_timePassed > kRingDuration) {
     if (UNIVERSE != nullptr) UNIVERSE->removeEntity(this);
@@ -139,8 +143,10 @@ void OORingEffectEntity::drawImmediate(bool /*immediate*/, bool translucent) {
 
   GLfloat alpha = OOClamp_0_1_f((kRingDuration - _timePassed) / kRingAttack);
 
-  GLfloat ex_em_hi[4] = {0.6, 0.8, 1.0, alpha};  // pale blue
-  GLfloat ex_em_lo[4] = {0.2, 0.0, 1.0, 0.0};    // purplish-blue-black
+  GLfloat ex_em_hi[4] = {static_cast<GLfloat>(0.6), static_cast<GLfloat>(0.8),
+                         1.0, alpha};  // pale blue
+  GLfloat ex_em_lo[4] = {static_cast<GLfloat>(0.2), 0.0, 1.0,
+                         0.0};  // purplish-blue-black
 
   OOGLBEGIN(GL_TRIANGLE_STRIP);
   for (unsigned i = 0; i < kCircleSegments; i++) {

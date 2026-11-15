@@ -143,10 +143,14 @@ Vector OOVectorMultiplyMatrix(Vector v, OOMatrix m) {
 HPVector OOHPVectorMultiplyMatrix(HPVector v, OOMatrix m) {
   OOScalar x, y, z, w;
 
-  x = m.m[0][0] * v.x + m.m[1][0] * v.y + m.m[2][0] * v.z + m.m[3][0];
-  y = m.m[0][1] * v.x + m.m[1][1] * v.y + m.m[2][1] * v.z + m.m[3][1];
-  z = m.m[0][2] * v.x + m.m[1][2] * v.y + m.m[2][2] * v.z + m.m[3][2];
-  w = m.m[0][3] * v.x + m.m[1][3] * v.y + m.m[2][3] * v.z + m.m[3][3];
+  x = static_cast<OOScalar>(m.m[0][0] * v.x + m.m[1][0] * v.y +
+                            m.m[2][0] * v.z + m.m[3][0]);
+  y = static_cast<OOScalar>(m.m[0][1] * v.x + m.m[1][1] * v.y +
+                            m.m[2][1] * v.z + m.m[3][1]);
+  z = static_cast<OOScalar>(m.m[0][2] * v.x + m.m[1][2] * v.y +
+                            m.m[2][2] * v.z + m.m[3][2]);
+  w = static_cast<OOScalar>(m.m[0][3] * v.x + m.m[1][3] * v.y +
+                            m.m[2][3] * v.z + m.m[3][3]);
 
   w = 1.0f / w;
   return make_HPvector(x * w, y * w, z * w);

@@ -215,8 +215,8 @@ inline OOMatrix OOMatrixFromBasisVectors(Vector i, Vector j, Vector k) {
 OOMatrix OOMatrixForRotationX(OOScalar angle) {
   OOScalar s, c;
 
-  s = sin(angle);
-  c = cos(angle);
+  s = static_cast<OOScalar>(sin(angle));
+  c = static_cast<OOScalar>(cos(angle));
 
   return OOMatrixConstruct(1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1);
 }
@@ -224,8 +224,8 @@ OOMatrix OOMatrixForRotationX(OOScalar angle) {
 OOMatrix OOMatrixForRotationY(OOScalar angle) {
   OOScalar s, c;
 
-  s = sin(angle);
-  c = cos(angle);
+  s = static_cast<OOScalar>(sin(angle));
+  c = static_cast<OOScalar>(cos(angle));
 
   return OOMatrixConstruct(c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1);
 }
@@ -233,8 +233,8 @@ OOMatrix OOMatrixForRotationY(OOScalar angle) {
 OOMatrix OOMatrixForRotationZ(OOScalar angle) {
   OOScalar s, c;
 
-  s = sin(angle);
-  c = cos(angle);
+  s = static_cast<OOScalar>(sin(angle));
+  c = static_cast<OOScalar>(cos(angle));
 
   return OOMatrixConstruct(c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 }
