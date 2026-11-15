@@ -36,9 +36,9 @@ MA 02110-1301, USA.
 #include "OOMaths.h"
 #include "oofnd/Object.hpp"
 
-#define COLLISION_REGION_BORDER_RADIUS 32000.0f
-#define COLLISION_MAX_ENTITIES 128
-#define MINIMUM_SHADOWING_ENTITY_RADIUS 75.0
+inline constexpr float COLLISION_REGION_BORDER_RADIUS = 32000.0f;
+inline constexpr int COLLISION_MAX_ENTITIES = 128;
+inline constexpr double MINIMUM_SHADOWING_ENTITY_RADIUS = 75.0;
 
 class Entity;
 class OOSunEntity;
