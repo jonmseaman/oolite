@@ -617,20 +617,20 @@ void PlayerEntity::playLaserHit(bool hit, Vector weaponOffset,
     if (Sounds().weaponPool != nullptr)
       Sounds().weaponPool->playSoundWithKey(
           WeaponSoundKey(weaponShotHit, weaponIdentifier, "[player-laser-hit]"),
-          1.0f, 0.05, static_cast<bool>(true), weaponOffset);
+          1.0f, 0.05, true, weaponOffset);
   } else {
     if (Sounds().weaponPool != nullptr)
       Sounds().weaponPool->playSoundWithKey(
           WeaponSoundKey(weaponShotMiss, weaponIdentifier,
                          "[player-laser-miss]"),
-          1.0f, 0.05, static_cast<bool>(true), weaponOffset);
+          1.0f, 0.05, true, weaponOffset);
   }
 }
 
 void PlayerEntity::playWeaponOverheated(Vector weaponOffset) {
   if (Sounds().weaponPool != nullptr)
-    Sounds().weaponPool->playSoundWithKey(
-        "[weapon-overheat]", static_cast<bool>(false), weaponOffset);
+    Sounds().weaponPool->playSoundWithKey("[weapon-overheat]", false,
+                                          weaponOffset);
 }
 
 void PlayerEntity::playMissileLaunched(Vector weaponOffset,

@@ -440,10 +440,9 @@ void HeadUpDisplay::initWithDictionary(
 
   reticleTargetSensitive = info.get<bool>("reticle_target_sensitive", false);
   propertiesReticleTargetSensitive = oo::PList(oo::PList::Dict{
-      {"isAccurate", oo::PList(static_cast<bool>(true))},
+      {"isAccurate", oo::PList(true)},
       {"timeLastAccuracyProbabilityCalculation",
-       oo::PList(static_cast<double>(
-           (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0)))}});
+       oo::PList((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0))}});
 
   cloakIndicatorOnStatusLight =
       info.get<bool>("cloak_indicator_on_status_light", true);
@@ -3895,8 +3894,7 @@ void hudDrawReticleOnTarget(
                                       : probabilityAccuracy;
             (*propertiesReticleTargetSensitive
                   ->getIf<oo::PList::Dict>())["isAccurate"] =
-                oo::PList(static_cast<bool>(
-                    (randf() < probabilityAccuracy) ? true : false));
+                oo::PList(((randf() < probabilityAccuracy) ? true : false));
 
             // Store the time the last accuracy probability has been performed
             (*propertiesReticleTargetSensitive->getIf<

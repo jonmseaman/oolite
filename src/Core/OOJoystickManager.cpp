@@ -290,7 +290,7 @@ oo::PList OOJoystickManager::axisFunctions() {
     for (j = 0; j < MAX_STICKS; j++) {
       if (axismap[j][i] >= 0) {
         oo::PList::Dict fnDict;
-        fnDict[std::string(STICK_ISAXIS)] = oo::PList(static_cast<bool>(true));
+        fnDict[std::string(STICK_ISAXIS)] = oo::PList(true);
         fnDict[std::string(STICK_NUMBER)] = oo::PList(j);
         fnDict[std::string(STICK_AXBUT)] = oo::PList(i);
         fnList[ENUMKEY(axismap[j][i])] = oo::PList(std::move(fnDict));
@@ -309,7 +309,7 @@ oo::PList OOJoystickManager::buttonFunctions() {
     for (j = 0; j < MAX_STICKS; j++) {
       if (buttonmap[j][i] >= 0) {
         oo::PList::Dict fnDict;
-        fnDict[std::string(STICK_ISAXIS)] = oo::PList(static_cast<bool>(false));
+        fnDict[std::string(STICK_ISAXIS)] = oo::PList(false);
         fnDict[std::string(STICK_NUMBER)] = oo::PList(j);
         fnDict[std::string(STICK_AXBUT)] = oo::PList(i);
         fnList[ENUMKEY(buttonmap[j][i])] = oo::PList(std::move(fnDict));
@@ -328,7 +328,7 @@ oo::PList OOJoystickManager::guiButtonFunctions() {
     for (j = 0; j < MAX_STICKS; j++) {
       if (guibuttonmap[j][i] >= 0) {
         oo::PList::Dict fnDict;
-        fnDict[std::string(STICK_ISAXIS)] = oo::PList(static_cast<bool>(false));
+        fnDict[std::string(STICK_ISAXIS)] = oo::PList(false);
         fnDict[std::string(STICK_NUMBER)] = oo::PList(j);
         fnDict[std::string(STICK_AXBUT)] = oo::PList(i);
         fnList[ENUMKEY(guibuttonmap[j][i])] = oo::PList(std::move(fnDict));

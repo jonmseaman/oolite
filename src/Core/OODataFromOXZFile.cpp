@@ -185,5 +185,5 @@ bool OOOxzFileExistsAtPath(const std::string& path) {
     }
   }
   unzClose(uf);
-  return static_cast<bool>(result);
+  return result;
 }

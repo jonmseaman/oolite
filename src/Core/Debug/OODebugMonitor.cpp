@@ -790,7 +790,7 @@ oo::PList OODebugMonitor::normalizeConfigValue(const oo::PList& value,
     } else if (oo::str::hasPrefix(key, "show-console")) {
       boolValue = oo::plist_get::boolFrom(
           &value, false);  // OOBooleanFromObject (a null value: NO)
-      return oo::PList(static_cast<bool>(boolValue));
+      return oo::PList(boolValue);
     }
   }
 

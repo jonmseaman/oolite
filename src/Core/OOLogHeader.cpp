@@ -355,7 +355,7 @@ std::string AdditionalLogHeaderInfo(void) {
 
   return std::format(
       "{} {} processor{} detected. System RAM: {} MB (free: {} MB).",
-      cpuDescription, static_cast<unsigned>(cpuCount), cpuCount != 1 ? "s" : "",
+      cpuDescription, cpuCount, cpuCount != 1 ? "s" : "",
       systemMemoryStatus.ooPhysicalMemory,
       systemMemoryStatus.ooAvailableMemory);
 }

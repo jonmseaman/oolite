@@ -179,7 +179,7 @@ void OOSDLJoystickManager::decodeAxisEvent(SDL_JoyAxisEvent* evt) {
     // ...then check if axis moved more than AXCBTHRESH - (fix for BUG #17482)
     if (axisvalue > AXCBTHRESH) {
       oo::PList::Dict fnDict;
-      fnDict[std::string(STICK_ISAXIS)] = oo::PList(static_cast<bool>(true));
+      fnDict[std::string(STICK_ISAXIS)] = oo::PList(true);
       fnDict[std::string(STICK_NUMBER)] =
           oo::PList(static_cast<int>(evt->which));
       fnDict[std::string(STICK_AXBUT)] = oo::PList(static_cast<int>(evt->axis));
@@ -240,7 +240,7 @@ void OOSDLJoystickManager::decodeButtonEvent(SDL_JoyButtonEvent* evt) {
   // Is there a callback we need to make?
   if (cbCallback && (cbHardware & HW_BUTTON)) {
     oo::PList::Dict fnDict;
-    fnDict[std::string(STICK_ISAXIS)] = oo::PList(static_cast<bool>(false));
+    fnDict[std::string(STICK_ISAXIS)] = oo::PList(false);
     fnDict[std::string(STICK_NUMBER)] = oo::PList(static_cast<int>(evt->which));
     fnDict[std::string(STICK_AXBUT)] = oo::PList(static_cast<int>(evt->button));
     cbHardware = 0;

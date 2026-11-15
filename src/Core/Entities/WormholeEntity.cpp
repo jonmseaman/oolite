@@ -842,7 +842,7 @@ oo::PList WormholeEntity::getDict() {
   myDict["arrival_time"] = oo::PList(arrival_time);
   myDict["estimated_arrival_time"] = oo::PList(estimated_arrival_time);
   myDict["position"] = OOPListFromHPVector(position);  // -oo_setHPVector:
-  myDict["misjump"] = oo::PList(static_cast<bool>(_misjump));
+  myDict["misjump"] = oo::PList(_misjump);
 
   oo::PList::Array shipArray;
   shipArray.reserve(shipsInTransit.size());
