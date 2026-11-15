@@ -68,7 +68,7 @@ inline constexpr int MAX_TARGETS = 24;
 inline constexpr int RAIDER_MAX_CARGO = 5;
 inline constexpr int MERCHANTMAN_MAX_CARGO = 125;
 
-#define PIRATES_PREFER_PLAYER true
+inline constexpr auto PIRATES_PREFER_PLAYER = true;
 
 inline constexpr float TURRET_MINIMUM_COS = 0.20f;
 
@@ -111,16 +111,19 @@ inline constexpr int SHIPENTITY_MAX_MISSILES = 32;
 inline constexpr float TURRET_TYPICAL_ENERGY = 25.0f;
 #define TURRET_SHOT_SPEED 2000.0f
 #define TURRET_SHOT_DURATION 3.0
-#define TURRET_SHOT_RANGE (TURRET_SHOT_SPEED * TURRET_SHOT_DURATION)
+inline constexpr auto TURRET_SHOT_RANGE =
+    (TURRET_SHOT_SPEED * TURRET_SHOT_DURATION);
 #define TURRET_SHOT_FREQUENCY \
   (TURRET_SHOT_DURATION * TURRET_SHOT_DURATION * TURRET_SHOT_DURATION / 100.0)
 
 #define NPC_PLASMA_SPEED 1500.0f
 #define MAIN_PLASMA_DURATION 5.0
-#define NPC_PLASMA_RANGE (MAIN_PLASMA_DURATION * NPC_PLASMA_SPEED)
+inline constexpr auto NPC_PLASMA_RANGE =
+    (MAIN_PLASMA_DURATION * NPC_PLASMA_SPEED);
 
 #define PLAYER_PLASMA_SPEED 1000.0f
-#define PLAYER_PLASMA_RANGE (MAIN_PLASMA_DURATION * PLAYER_PLASMA_SPEED)
+inline constexpr auto PLAYER_PLASMA_RANGE =
+    (MAIN_PLASMA_DURATION * PLAYER_PLASMA_SPEED);
 
 inline constexpr float TRACTOR_FORCE = 2500.0f;
 
@@ -170,11 +173,12 @@ inline constexpr float COMBAT_AI_FLEES_BETTER_2 = 9.0f;
 inline constexpr float COMBAT_AI_STANDARD_REACTION_TIME = 1.5f;
 
 #define MAX_LANDING_SPEED 50.0
-#define MAX_LANDING_SPEED2 (MAX_LANDING_SPEED * MAX_LANDING_SPEED)
+inline constexpr auto MAX_LANDING_SPEED2 =
+    (MAX_LANDING_SPEED * MAX_LANDING_SPEED);
 
 #define MAX_COS \
   0.995  // cos(5 degrees) is close enough in most cases for navigation
-#define MAX_COS2 (MAX_COS * MAX_COS)
+inline constexpr auto MAX_COS2 = (MAX_COS * MAX_COS);
 
 #include "OOBehaviour.h"
 
