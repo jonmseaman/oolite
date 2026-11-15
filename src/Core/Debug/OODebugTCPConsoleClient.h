@@ -33,6 +33,7 @@ SOFTWARE.
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <utility>
 
@@ -133,7 +134,7 @@ class OODebugTCPConsoleClient : public OODebuggerInterface {
 
   void closeConnection();
 
-  bool sendBytes(const void* bytes, size_t count);
+  bool sendBytes(std::span<const std::byte> bytes);
   void sendDictionary(const oo::PList& dictionary);
 
   // Packet type and parameter names are OODebugTCPConsoleProtocol.h's constants
@@ -147,7 +148,7 @@ class OODebugTCPConsoleClient : public OODebuggerInterface {
                       paramKey);  // a null value or empty key: the type alone
 
   bool openSocketToHost(const std::string& address, uint16_t port);
-  std::ptrdiff_t receive(uint8_t* buffer, size_t length);
+  std::ptrdiff_t receive(std::span<uint8_t> buffer);
   bool isWaitingForInput();
   bool hasPendingErrorEvent();
   uintptr_t socket();
