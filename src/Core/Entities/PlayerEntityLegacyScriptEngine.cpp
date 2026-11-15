@@ -2962,12 +2962,13 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     // Quaternion model_q = { 0.83, 0.365148, 0.182574, 0.0 }; // shows new
     // planets' north pole. Quaternion model_q = { 0.83, -0.365148, 0.182574,
     // 0.0 }; // shows new planets' south pole.
-    Quaternion model_q = {0.83, 0.12, 0.44,
-                          0.0};  // new planets - default orientation.
+    Quaternion defaultOrientation = {
+        0.83, 0.12, 0.44, 0.0};  // new planets - default orientation.
     OO_LOG(kOOLogDebugProcessSceneStringAddMiniPlanet,
            "::::: adding {} to scene:'{}'", i_key,
            oo::EntityDescription(doppelganger));
-    if (doppelganger != nullptr) doppelganger->setOrientation(model_q);
+    if (doppelganger != nullptr)
+      doppelganger->setOrientation(defaultOrientation);
     // HPVect: mission screen coordinates are small enough that we don't need
     // high-precision for calculations
     if (doppelganger != nullptr)

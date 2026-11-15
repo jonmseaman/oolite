@@ -1703,9 +1703,9 @@ void OOMesh::checkNormalsAndAdjustWinding() {
         norm.z * calculatedNormal.z < 0) {
       // normal lies in the WRONG direction!
       // reverse the winding
-      int v0 = _faces[i].vertex[0];
+      int firstVertex = _faces[i].vertex[0];
       _faces[i].vertex[0] = _faces[i].vertex[2];
-      _faces[i].vertex[2] = v0;
+      _faces[i].vertex[2] = firstVertex;
 
       GLfloat f0 = _faces[i].s[0];
       _faces[i].s[0] = _faces[i].s[2];

@@ -488,11 +488,7 @@ void OOVisualEffectEntity::setScaleX(GLfloat factor) {
       oo::ToEffect(se)->setScaleX(factor);
     } else if (OOSubEntityInterface* cxxSub =
                    dynamic_cast<OOSubEntityInterface*>(se)) {
-      cxxSub->rescaleBy(flasher_factor);
-    } else {
-      if (OOSubEntityInterface* cxxSub =
-              dynamic_cast<OOSubEntityInterface*>(se))
-        cxxSub->rescaleBy(flasher_factor);  // every effect sub-entity adopts it
+      cxxSub->rescaleBy(flasher_factor);  // every effect sub-entity adopts it
     }
   }
 
@@ -516,11 +512,7 @@ void OOVisualEffectEntity::setScaleY(GLfloat factor) {
       oo::ToEffect(se)->setScaleY(factor);
     } else if (OOSubEntityInterface* cxxSub =
                    dynamic_cast<OOSubEntityInterface*>(se)) {
-      cxxSub->rescaleBy(flasher_factor);
-    } else {
-      if (OOSubEntityInterface* cxxSub =
-              dynamic_cast<OOSubEntityInterface*>(se))
-        cxxSub->rescaleBy(flasher_factor);  // every effect sub-entity adopts it
+      cxxSub->rescaleBy(flasher_factor);  // every effect sub-entity adopts it
     }
   }
 
@@ -544,11 +536,7 @@ void OOVisualEffectEntity::setScaleZ(GLfloat factor) {
       oo::ToEffect(se)->setScaleZ(factor);
     } else if (OOSubEntityInterface* cxxSub =
                    dynamic_cast<OOSubEntityInterface*>(se)) {
-      cxxSub->rescaleBy(flasher_factor);
-    } else {
-      if (OOSubEntityInterface* cxxSub =
-              dynamic_cast<OOSubEntityInterface*>(se))
-        cxxSub->rescaleBy(flasher_factor);  // every effect sub-entity adopts it
+      cxxSub->rescaleBy(flasher_factor);  // every effect sub-entity adopts it
     }
   }
 

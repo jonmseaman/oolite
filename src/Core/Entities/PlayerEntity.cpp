@@ -10572,19 +10572,19 @@ void PlayerEntity::setGuiToIntroFirstGo(bool justCobra) {
       if ((arguments[i] == "-message") && (i < arguments.size() - 1)) {
         OOGUIRow ms_start = msgLine;
         const std::string& message = arguments[i + 1];
-        OOGUIRow i = msgLine =
+        OOGUIRow row = msgLine =
             gui->addLongText(message, ms_start, OOGUIAlignment::kCenter);
-        for (i--; i >= ms_start; i--) {
-          gui->setColor(OOColor::magentaColor().get(), i);
+        for (row--; row >= ms_start; row--) {
+          gui->setColor(OOColor::magentaColor().get(), row);
         }
       }
       if (arguments[i] == "-showversion") {
         OOGUIRow ms_start = msgLine;
         const std::string version = "Version " OO_VERSION_FULL;
-        OOGUIRow i = msgLine =
+        OOGUIRow row = msgLine =
             gui->addLongText(version, ms_start, OOGUIAlignment::kCenter);
-        for (i--; i >= ms_start; i--) {
-          gui->setColor(OOColor::magentaColor().get(), i);
+        for (row--; row >= ms_start; row--) {
+          gui->setColor(OOColor::magentaColor().get(), row);
         }
       }
     }
@@ -11958,17 +11958,18 @@ void PlayerEntity::setGuiToMarketInfoScreen() {
         (shipCommodityData != nullptr
              ? shipCommodityData->commentForGood(selectedCommodity)
              : std::optional<std::string>());
-    OOGUIRow i = 0;
+    OOGUIRow row = 0;
     if (!info.has_value() || info->empty()) {
-      i = gui->addLongText(OO_DESC("oolite-commodity-no-comment"),
-                           GUI_ROW_MARKET_START + 2, OOGUIAlignment::kLeft);
+      row = gui->addLongText(OO_DESC("oolite-commodity-no-comment"),
+                             GUI_ROW_MARKET_START + 2, OOGUIAlignment::kLeft);
     } else {
-      i = gui->addLongText(info, GUI_ROW_MARKET_START + 2,
-                           OOGUIAlignment::kLeft);
+      row = gui->addLongText(info, GUI_ROW_MARKET_START + 2,
+                             OOGUIAlignment::kLeft);
     }
-    for (i--; i > GUI_ROW_MARKET_START + 2; --i) {
+    for (row--; row > GUI_ROW_MARKET_START + 2; --row) {
       gui->setColor(
-          gui->colorFromSetting(kGuiMarketDescriptionColor, nullptr).get(), i);
+          gui->colorFromSetting(kGuiMarketDescriptionColor, nullptr).get(),
+          row);
     }
 
     showMarketCashAndLoadLine();

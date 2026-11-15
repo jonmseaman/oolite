@@ -967,10 +967,10 @@ void OODefaultShaderSynthesizer::writeLightMaps() {
     }
 
     if (color != nullptr) {
-      std::size_t idx, count = color->count();
-      if (count > 4) count = 4;
-      for (idx = 0; idx < count; idx++) {
-        rgba[idx] = color->at<double>(idx);
+      std::size_t component, componentCount = color->count();
+      if (componentCount > 4) componentCount = 4;
+      for (component = 0; component < componentCount; component++) {
+        rgba[component] = color->at<double>(component);
       }
       rgba[0] *= rgba[3];
       rgba[1] *= rgba[3];

@@ -1620,20 +1620,21 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
             bounds[5] = ship->v_up;
             scale_vector(&bounds[5], bb.min.y);
             // rotate the view
-            int i;
-            for (i = 0; i < 6; i++) {
-              bounds[i] =
-                  OOVectorMultiplyMatrix(vector_add(bounds[i], rp), rotMatrix);
+            int corner;
+            for (corner = 0; corner < 6; corner++) {
+              bounds[corner] = OOVectorMultiplyMatrix(
+                  vector_add(bounds[corner], rp), rotMatrix);
               if (nonlinear_scanner) {
-                bounds[i] =
-                    nonlinearScannerScale(bounds[i], zoom, 0.5 * siz.width);
+                bounds[corner] = nonlinearScannerScale(bounds[corner], zoom,
+                                                       0.5 * siz.width);
               } else {
-                scale_vector(&bounds[i], upscale);
+                scale_vector(&bounds[corner], upscale);
               }
-              bounds[i] = make_vector(
-                  bounds[i].x + scanner_cx,
-                  bounds[i].z * z_factor + bounds[i].y * y_factor + scanner_cy,
-                  z1);
+              bounds[corner] =
+                  make_vector(bounds[corner].x + scanner_cx,
+                              bounds[corner].z * z_factor +
+                                  bounds[corner].y * y_factor + scanner_cy,
+                              z1);
             }
             // draw the diamond
             //
