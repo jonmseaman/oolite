@@ -1420,6 +1420,7 @@ void OOOXZManager::gui() {
         gui->addLongText(OO_DESC("oolite-oxzmanager-intro"),
                          OXZ_GUI_ROW_FIRSTRUN, OOGUIAlignment::kLeft);
       // fall through
+      [[fallthrough]];
     case OXZInterfaceState::kPickInstall:
     case OXZInterfaceState::kPickInstalled:
     case OXZInterfaceState::kPickRemove:

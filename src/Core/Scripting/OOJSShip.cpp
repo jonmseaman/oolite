@@ -1579,6 +1579,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         ship->setEntityPersonalityInt(iValue);
         return JS_UNDEFINED;
       }
+      [[fallthrough]];  // as upstream: a value that is not an int32 is tried as
+                        // the spin time
 
     case kHyperspaceSpinTime:
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {

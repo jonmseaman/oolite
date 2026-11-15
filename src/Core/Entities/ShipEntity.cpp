@@ -12376,6 +12376,7 @@ bool ShipEntity::cascadeIfAppropriateWithDamageAmount(double amount,
       } else {
         break;
       }
+      [[fallthrough]];
 
     case OOScanClass::kStation:
     case OOScanClass::kMine:
