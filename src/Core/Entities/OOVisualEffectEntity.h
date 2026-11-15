@@ -68,7 +68,7 @@ class OOVisualEffectEntity : public OOEntityWithDrawable,
                              public cxx::OOSubEntityInterface {
   // <OOSubEntity, OOBeaconEntity>
  public:
-  ~OOVisualEffectEntity();
+  ~OOVisualEffectEntity() override;
 
   /*	-initWithKey:definition:'s body after [super init] (the constructor
      ran Entity's): false where the initialiser released itself and answered

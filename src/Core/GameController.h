@@ -63,7 +63,7 @@ class GameController : public oo::Object {
   static GameController* sharedController();
 
   GameController();
-  ~GameController();
+  ~GameController() override;
 
   bool finishedLaunching();
 

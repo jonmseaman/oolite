@@ -65,7 +65,7 @@ class OOJavaScriptEngine : public oo::Object {
   // The shared engine, made on first use; borrowed, never released.
   static OOJavaScriptEngine* sharedEngine();
 
-  ~OOJavaScriptEngine();
+  ~OOJavaScriptEngine() override;
 
   JSContext* context();
   // The global object, borrowed; invalidated by reset().

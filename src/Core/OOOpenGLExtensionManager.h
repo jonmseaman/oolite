@@ -56,7 +56,7 @@ class OOOpenGLExtensionManager : public oo::Object {
   */
   static OOOpenGLExtensionManager* sharedManager();
 
-  ~OOOpenGLExtensionManager();
+  ~OOOpenGLExtensionManager() override;
 
   /*	A headless game has no GL context: set before the manager is first
      used, and reset() then reports no GL, no extensions and no shaders
