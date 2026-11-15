@@ -41,6 +41,7 @@
 #include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
 #include "HeadUpDisplay.h"
+#include "LogIndentScope.h"
 #include "OOCharacter.h"
 #include "OODebugStandards.h"
 #include "OOJSStation.h"
@@ -1368,7 +1369,7 @@ void StationEntity::dumpSelfState() {
     OO_LOG("dumpState.stationEntity",
            "{} Ships on hold (unsorted):", _shipsOnHold.count());
 
-    oo::log::indent();
+    const oo::LogIndentScope indent;
     unsigned i = 1;
     for (const auto& shipRef : _shipsOnHold.allObjects()) {
       ::ShipEntity* ship = oo::ToShip(shipRef.get());
@@ -1383,7 +1384,6 @@ void StationEntity::dumpSelfState() {
                               : std::optional<std::string>())
                  .value_or("(null)"));
     }
-    oo::log::outdent();
   }
 }
 

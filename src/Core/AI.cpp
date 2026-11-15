@@ -35,6 +35,7 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "GameController.h"
+#include "LogIndentScope.h"
 #include "OOCacheManager.h"
 #include "OOCallByName.h"
 #include "OOPListParsing.h"
@@ -248,7 +249,7 @@ void AI::reportStackOverflow() {
                currentState.value_or("(null)"), trailer);
 
     if (stackDump) {
-      OOLogIndent();
+      const oo::LogIndentScope indent;
 
       std::size_t count = aiStack.size();
       while (count--) {
@@ -257,8 +258,6 @@ void AI::reportStackOverflow() {
                preservedMachine->name().value_or("(null)"),
                preservedMachine->state().value_or("(null)"));
       }
-
-      OOLogOutdent();
     }
   }
 }

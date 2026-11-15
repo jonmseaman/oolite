@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 #include <numbers>
 #include <string>
 
+#include "LogIndentScope.h"
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"  // IWYU pragma: keep: used only without NDEBUG or with OO_CHECK_GL_HEAVY
 #include "OOMacroOpenGL.h"
@@ -99,9 +100,10 @@ bool OOCheckOpenGLErrors(const std::function<std::string()>& context) {
 
 #if OO_CHECK_GL_HEAVY
   if (errorOccurred) {
-    OOLogIndent();
-    LogOpenGLState();
-    OOLogOutdent();
+    {
+      const oo::LogIndentScope indent;
+      LogOpenGLState();
+    }
     while (glGetError() != 0) {
     }  // Suppress any errors caused by LogOpenGLState().
   }
@@ -261,7 +263,7 @@ void LogOpenGLState() {
   OO_ENTER_OPENGL();
 
   OO_LOG(kOOLogOpenGLStateDump, "{}", "OpenGL state dump:");
-  OOLogIndent();
+  const oo::LogIndentScope indent;
 
   GLDumpMaterialState();
   GLDumpCullingState();
@@ -278,8 +280,6 @@ void LogOpenGLState() {
   GLDumpStateFlags();
 
   OOCheckOpenGLErrors("After state dump");
-
-  OOLogOutdent();
 }
 
 std::string OOGLColorToString(GLfloat color[4]) {
@@ -317,7 +317,7 @@ static void GLDumpLightState(unsigned lightIdx) {
          OOGLFlagToString(enabled));
 
   if (enabled) {
-    OOLogIndent();
+    const oo::LogIndentScope indent;
 
     OOGL(glGetLightfv(GL_LIGHT1, GL_AMBIENT, color));
     OO_LOG(kOOLogOpenGLStateDump, "Ambient: {}", OOGLColorToString(color));
@@ -325,8 +325,6 @@ static void GLDumpLightState(unsigned lightIdx) {
     OO_LOG(kOOLogOpenGLStateDump, "Diffuse: {}", OOGLColorToString(color));
     OOGL(glGetLightfv(GL_LIGHT1, GL_SPECULAR, color));
     OO_LOG(kOOLogOpenGLStateDump, "Specular: {}", OOGLColorToString(color));
-
-    OOLogOutdent();
   }
 }
 
@@ -339,7 +337,7 @@ static void GLDumpMaterialState() {
   OO_ENTER_OPENGL();
 
   OO_LOG(kOOLogOpenGLStateDump, "{}", "Material state:");
-  OOLogIndent();
+  const oo::LogIndentScope indent;
 
   OOGL(glGetMaterialfv(GL_FRONT, GL_AMBIENT, color));
   OO_LOG(kOOLogOpenGLStateDump, "Ambient: {}", OOGLColorToString(color));
@@ -391,8 +389,6 @@ static void GLDumpMaterialState() {
            OOGLEnumToString(textureUnit));
   }
 #endif
-
-  OOLogOutdent();
 }
 
 static void GLDumpCullingState() {
@@ -404,7 +400,7 @@ static void GLDumpCullingState() {
   if (enabled) {
     GLint value;
 
-    OOLogIndent();
+    const oo::LogIndentScope indent;
 
     OOGL(glGetIntegerv(GL_CULL_FACE_MODE, &value));
     OO_LOG(kOOLogOpenGLStateDump, "Cull face mode: {}",
@@ -413,8 +409,6 @@ static void GLDumpCullingState() {
     OOGL(glGetIntegerv(GL_FRONT_FACE, &value));
     OO_LOG(kOOLogOpenGLStateDump, "Front face direction: {}",
            OOGLEnumToString(value));
-
-    OOLogOutdent();
   }
 }
 
@@ -429,7 +423,7 @@ static void GLDumpFogState() {
   OOGL(enabled = glIsEnabled(GL_FOG));
   OO_LOG(kOOLogOpenGLStateDump, "Fog: {}", OOGLFlagToString(enabled));
   if (enabled) {
-    OOLogIndent();
+    const oo::LogIndentScope indent;
 
     OOGL(glGetIntegerv(GL_FOG_MODE, &value));
     OO_LOG(kOOLogOpenGLStateDump, "Fog mode: {}", OOGLEnumToString(value));
@@ -446,8 +440,6 @@ static void GLDumpFogState() {
 
     OOGL(glGetFloatv(GL_FOG_DENSITY, &index));
     OO_LOG(kOOLogOpenGLStateDump, "Fog index: {:g}", index);
-
-    OOLogOutdent();
   }
 }
 
@@ -464,7 +456,7 @@ static void GLDumpStateFlags() {
   } while (0)
 
   OO_LOG(kOOLogOpenGLStateDump, "{}", "Selected state flags:");
-  OOLogIndent();
+  const oo::LogIndentScope indent;
 
   DUMP_STATE_FLAG(GL_VERTEX_ARRAY);
   DUMP_STATE_FLAG(GL_NORMAL_ARRAY);
@@ -473,8 +465,6 @@ static void GLDumpStateFlags() {
   DUMP_STATE_FLAG(GL_TEXTURE_2D);
   DUMP_STATE_FLAG(GL_DEPTH_TEST);
   DUMP_GET_FLAG(GL_DEPTH_WRITEMASK);
-
-  OOLogOutdent();
 
 #undef DUMP_STATE_FLAG
 }

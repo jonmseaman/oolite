@@ -60,6 +60,7 @@ SOFTWARE.
 
 #if OO_OXP_VERIFIER_ENABLED
 
+#include "LogIndentScope.h"
 #include "ResourceManager.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
@@ -266,7 +267,7 @@ oo::PList OOFileScannerVerifierStage::plistNamed(
         OO_LOG("verifyOXP.plist.parseError",
                "Could not interpret property list {}.",
                displayName.value_or("(null)"));
-        oo::log::indent();
+        const oo::LogIndentScope indent;
         if (errorString.has_value()) {
           for (std::string errorLine : oo::str::split(*errorString, "\n")) {
             while (oo::str::hasPrefix(errorLine, "\t")) {
@@ -275,7 +276,6 @@ oo::PList OOFileScannerVerifierStage::plistNamed(
             OO_LOG("verifyOXP.plist.parseError", "{}", errorLine);
           }
         }
-        oo::log::outdent();
       }
     }
   }

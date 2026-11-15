@@ -47,6 +47,7 @@ MA 02110-1301, USA.
 #include "GameController.h"
 #include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
+#include "LogIndentScope.h"
 #include "MyOpenGLView.h"
 #include "OOAsyncWorkManager.h"
 #include "OOBreakPatternEntity.h"
@@ -11719,12 +11720,13 @@ void Universe::debugDumpEntities() {
          static_cast<size_t>(entities.size()),
          static_cast<unsigned>(n_entities));
 
-  OOLogIndent();
-  for (i = 0; i < show_count; i++) {
-    OO_LOG("universe.objectDump", "Ent:{:4}  {}", static_cast<unsigned>(i),
-           sortedEntities[i]->descriptionForObjDump().value_or("(null)"));
+  {
+    const oo::LogIndentScope indent;
+    for (i = 0; i < show_count; i++) {
+      OO_LOG("universe.objectDump", "Ent:{:4}  {}", static_cast<unsigned>(i),
+             sortedEntities[i]->descriptionForObjDump().value_or("(null)"));
+    }
   }
-  OOLogOutdent();
 
   if (entities.size() != n_entities) {
     OO_LOG("universe.objectDump", "entities = {}",
