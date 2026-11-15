@@ -67,7 +67,7 @@ constexpr std::string_view OOEnumName(OORouteType value) noexcept {
 #include "OOLongRangeChartMode.h"
 #include "OOViewID.h"
 
-// Encoded "i" (OOTypeEncodings.h): a by-name call answers it as a number.
+// An int to a by-name call (ValueType.h): it answers it as a number.
 enum class OOAegisStatus : std::int32_t {
   kNone,
   kCloseToAnyPlanet,
@@ -276,8 +276,8 @@ inline constexpr int kOOSystemIDInterstellarSpace = kOOMinimumSystemID;
 using OOTimeAbsolute = double;
 using OOTimeDelta = double;
 
-// One weapon mount. Encoded "i" (OOTypeEncodings.h): a by-name call answers it
-// as a number.
+// One weapon mount. An int to a by-name call (ValueType.h): it answers it as
+// a number.
 enum class OOWeaponFacing : std::uint8_t {
   kNone = 0,
   kForward = 1,

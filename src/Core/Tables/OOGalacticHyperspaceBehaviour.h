@@ -1,7 +1,7 @@
 /*	OOGalacticHyperspaceBehaviour.h
 
 The values of the galactic hyperspace behaviour: planetinfo.plist, JS and
-callObjC (encoded "i", OOTypeEncodings.h), and the names the game reads and
+callObjC (an int, ValueType.h), and the names the game reads and
 writes for them. It was OOGalacticHyperspaceBehaviour.tbl, an X-macro table.
 */
 

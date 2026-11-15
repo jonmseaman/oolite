@@ -26,47 +26,13 @@ SOFTWARE.
 */
 
 /*
-        For shader uniform binding to work, it is necessary to be able to tell
-   the return type of a method. This is done by comparing the return type
-   encoding of the method to those of methods in a template class, one method
-   for each supported return type. The encodings compared are the member
-   tables' rows', @encode() of the member's type.
-
-        The encoding is platform-defined, so to stay implementation-agnostic the
-   template encodings are the compiler's own, @encode() of each type: what the
-   runtime records for a method returning that type; its measured literals,
-   kOOTypeEncoding<> (OOTypeEncodings.h).
+        The entities' shader hooks. A binding's uniform type comes from its
+   row's value type, oo::ShaderUniformTypeOf (OOShaderUniformMethodType.h).
 */
 
 #include "OOShaderUniformMethodType.h"
 
 #if OO_SHADERS || defined(OO_DEBUG_MONITOR_ENABLED)
-
-#include <string_view>
-
-#include "OOColor.h"
-#include "OOMaths.h"
-#include "OOTypeEncodings.h"  // @encode()'s measured literals; OOColor * the complete class's, as the bindings' own
-
-static bool sInited = false;
-static const char* sTemplates[kOOShaderUniformTypeCount];
-
-static void InitTemplates();
-
-OOShaderUniformType OOShaderUniformTypeFromEncoding(const char* typeCode) {
-  unsigned i;
-
-  if (EXPECT_NOT(sInited == false)) InitTemplates();
-  if (EXPECT_NOT(typeCode == nullptr)) return kOOShaderUniformTypeInvalid;
-
-  for (i = kOOShaderUniformTypeInvalid + 1; i != kOOShaderUniformTypeCount;
-       ++i) {
-    if (sTemplates[i] != nullptr &&
-        std::string_view(sTemplates[i]) == std::string_view(typeCode))
-      return static_cast<OOShaderUniformType>(i);
-  }
-  return kOOShaderUniformTypeInvalid;
-}
 
 // The entities' hooks: none until the entities register theirs.
 namespace {
@@ -81,36 +47,6 @@ void OOSetShaderEntityHooks(const OOShaderEntityHooks& hooks) noexcept {
 
 const OOShaderEntityHooks* OOShaderEntityHooksIfSet() noexcept {
   return sEntityHooksSet ? &sEntityHooks : nullptr;
-}
-
-static void InitTemplates() {
-// Each was the return type of a template method (-signedCharMethod and so on).
-#define GET_TEMPLATE(enumValue, type)              \
-  do {                                             \
-    sTemplates[enumValue] = kOOTypeEncoding<type>; \
-  } while (0)
-
-  GET_TEMPLATE(kOOShaderUniformTypeChar, signed char);
-  GET_TEMPLATE(kOOShaderUniformTypeUnsignedChar, unsigned char);
-  GET_TEMPLATE(kOOShaderUniformTypeShort, signed short);
-  GET_TEMPLATE(kOOShaderUniformTypeUnsignedShort, unsigned short);
-  GET_TEMPLATE(kOOShaderUniformTypeInt, signed int);
-  GET_TEMPLATE(kOOShaderUniformTypeUnsignedInt, unsigned int);
-  GET_TEMPLATE(kOOShaderUniformTypeLong, signed long);
-  GET_TEMPLATE(kOOShaderUniformTypeUnsignedLong, unsigned long);
-  GET_TEMPLATE(kOOShaderUniformTypeFloat, float);
-  GET_TEMPLATE(kOOShaderUniformTypeDouble, double);
-  GET_TEMPLATE(kOOShaderUniformTypeVector, Vector);
-  GET_TEMPLATE(kOOShaderUniformTypeHPVector, HPVector);
-  GET_TEMPLATE(kOOShaderUniformTypeQuaternion, Quaternion);
-  GET_TEMPLATE(kOOShaderUniformTypeMatrix, OOMatrix);
-  GET_TEMPLATE(kOOShaderUniformTypePoint, NSPoint);
-  // The colour bindings (laserColor, fogUniform) answer the C++ colour
-  // (OOShaderUniform.cpp).
-  GET_TEMPLATE(kOOShaderUniformTypeColor, OOColor*);
-  GET_TEMPLATE(kOOShaderUniformTypeObject, OOObjCId);  // id's
-
-  sInited = true;
 }
 
 #endif  // OO_SHADERS

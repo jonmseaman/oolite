@@ -1,7 +1,7 @@
 /*	OOCompassMode.h
 
-The values of the compass mode: shaders, saves, JS and callObjC (encoded "i",
-OOTypeEncodings.h), and the names the game reads and writes for them.
+The values of the compass mode: shaders, saves, JS and callObjC (an int,
+ValueType.h), and the names the game reads and writes for them.
 It was OOCompassMode.tbl, an X-macro table.
 */
 

@@ -1,6 +1,6 @@
 /*	OOGUIScreenID.h
 
-The values of a GUI screen: JS and callObjC (encoded "i", OOTypeEncodings.h) see
+The values of a GUI screen: JS and callObjC (an int, ValueType.h) see
 it. The numbers are the program's ordinals (kMain is 0, which OOJSGlobal reads
 as no screen too), not the -1 that OOGUIScreenID.tbl wrote for every screen and
 its macro discarded; and the names the game reads and writes for them. It was

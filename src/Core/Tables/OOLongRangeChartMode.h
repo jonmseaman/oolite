@@ -3,7 +3,7 @@
 The values of the long-range chart's colour mode: saved games hold it as
 chart_colour_mode (PlayerEntity.cpp), so the numbers are the program's ordinals,
 pinned below, and not OOLongRangeChartMode.tbl's value column, which its macro
-discarded. JS and callObjC (encoded "i", OOTypeEncodings.h) see it too; and the
+discarded. JS and callObjC (an int, ValueType.h) see it too; and the
 names the game reads and writes for them. It was OOLongRangeChartMode.tbl, an
 X-macro table.
 */

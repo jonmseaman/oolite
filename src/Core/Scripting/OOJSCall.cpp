@@ -102,8 +102,7 @@ MethodType MethodTypeOfRow(const OOJSCallEntityMethodRow& row) {
     case OOJSCallEntityMethodForm::kPListVoid:
       return kMethodTypePListVoid;
     case OOJSCallEntityMethodForm::kTyped:
-      return static_cast<MethodType>(
-          OOShaderUniformTypeFromEncoding(row.encoding));
+      return static_cast<MethodType>(oo::ShaderUniformTypeOf(row.type));
   }
   return kMethodTypeInvalid;
 }

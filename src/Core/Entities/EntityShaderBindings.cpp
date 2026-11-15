@@ -37,12 +37,12 @@ MA 02110-1301, USA.
 #include "Entity.h"
 #include "OOPlanetEntity.h"
 #include "OOShaderUniformMethodType.h"  // the shader binding member table
-#include "OOTypeEncodings.h"            // the rows' measured encodings
 #include "OOVisualEffectEntity.h"
 #include "OOWaypointEntity.h"
 #include "PlayerEntity.h"
 #include "ProxyPlayerEntity.h"
 #include "ShipEntity.h"
+#include "ValueType.h"
 
 // -unsignedIntValue of the number a system-data query returned (nil: 0).
 static unsigned UnsignedIntValueOf(const oo::PList& value) {
@@ -142,31 +142,30 @@ void StoreShaderBindingValue(OOShaderBindingValue& out, R value) {
 
 struct EntityShaderBindingRow {
   const char* name;
-  const char* encoding;  // @encode() of the method's return type
+  oo::ValueType type;  // the method's return type's kind
   bool (*answers)(Entity* part);
   void (*get)(Entity* part, OOShaderBindingValue& out);
 };
 
 constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
-    {"position", kOOTypeEncoding<HPVector>,
-     [](Entity*) -> bool { return true; },
+    {"position", oo::kValueType<HPVector>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> HPVector { return part->getPosition(); }());
      }},
-    {"orientation", kOOTypeEncoding<Quaternion>,
+    {"orientation", oo::kValueType<Quaternion>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> Quaternion { return part->getOrientation(); }());
      }},
-    {"relativePosition", kOOTypeEncoding<Vector>,
+    {"relativePosition", oo::kValueType<Vector>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> Vector { return part->relativePosition(); }());
      }},
-    {"viewpointOffset", kOOTypeEncoding<Vector>,
+    {"viewpointOffset", oo::kValueType<Vector>,
      [](Entity* part) -> bool { return PlayerEntityPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
@@ -174,101 +173,99 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->viewpointOffset() : kZeroVector;
        }());
      }},
-    {"collisionRadius", kOOTypeEncoding<GLfloat>,
+    {"collisionRadius", oo::kValueType<GLfloat>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> GLfloat { return part->collisionRadius(); }());
      }},
-    {"mass", kOOTypeEncoding<GLfloat>, [](Entity*) -> bool { return true; },
+    {"mass", oo::kValueType<GLfloat>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> GLfloat { return part->getMass(); }());
      }},
-    {"energy", kOOTypeEncoding<GLfloat>, [](Entity*) -> bool { return true; },
+    {"energy", oo::kValueType<GLfloat>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> GLfloat { return part->getEnergy(); }());
      }},
-    {"maxEnergy", kOOTypeEncoding<GLfloat>,
-     [](Entity*) -> bool { return true; },
+    {"maxEnergy", oo::kValueType<GLfloat>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> GLfloat { return part->getMaxEnergy(); }());
      }},
-    {"universalTime", kOOTypeEncoding<GLfloat>,
+    {"universalTime", oo::kValueType<GLfloat>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> GLfloat { return part->universalTime(); }());
      }},
-    {"spawnTime", kOOTypeEncoding<GLfloat>,
-     [](Entity*) -> bool { return true; },
+    {"spawnTime", oo::kValueType<GLfloat>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> GLfloat { return part->getSpawnTime(); }());
      }},
-    {"timeElapsedSinceSpawn", kOOTypeEncoding<GLfloat>,
+    {"timeElapsedSinceSpawn", oo::kValueType<GLfloat>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
          return part->timeElapsedSinceSpawn();
        }());
      }},
-    {"throwingSparks", kOOTypeEncoding<bool>,
+    {"throwingSparks", oo::kValueType<bool>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> bool { return part->throwingSparks(); }());
      }},
-    {"clock", kOOTypeEncoding<GLfloat>, [](Entity*) -> bool { return true; },
+    {"clock", oo::kValueType<GLfloat>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out,
                                [part]() -> GLfloat { return part->clock(); }());
      }},
-    {"pseudoFixedD100", kOOTypeEncoding<unsigned>,
+    {"pseudoFixedD100", oo::kValueType<unsigned>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> unsigned { return part->pseudoFixedD100(); }());
      }},
-    {"pseudoFixedD256", kOOTypeEncoding<unsigned>,
+    {"pseudoFixedD256", oo::kValueType<unsigned>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> unsigned { return part->pseudoFixedD256(); }());
      }},
-    {"systemGovernment", kOOTypeEncoding<unsigned>,
+    {"systemGovernment", oo::kValueType<unsigned>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> unsigned { return part->systemGovernment(); }());
      }},
-    {"systemEconomy", kOOTypeEncoding<unsigned>,
+    {"systemEconomy", oo::kValueType<unsigned>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> unsigned { return part->systemEconomy(); }());
      }},
-    {"systemTechLevel", kOOTypeEncoding<unsigned>,
+    {"systemTechLevel", oo::kValueType<unsigned>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> unsigned { return part->systemTechLevel(); }());
      }},
-    {"systemPopulation", kOOTypeEncoding<unsigned>,
+    {"systemPopulation", oo::kValueType<unsigned>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> unsigned { return part->systemPopulation(); }());
      }},
-    {"systemProductivity", kOOTypeEncoding<unsigned>,
+    {"systemProductivity", oo::kValueType<unsigned>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> unsigned { return part->systemProductivity(); }());
      }},
-    {"isBeacon", kOOTypeEncoding<bool>,
+    {"isBeacon", oo::kValueType<bool>,
      [](Entity* part) -> bool {
        return dynamic_cast<OOWaypointEntity*>(part) != nullptr ||
               ShipPart(part) != nullptr || EffectPart(part) != nullptr;
@@ -282,7 +279,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return waypoint != nullptr ? waypoint->isBeacon() : false;
        }());
      }},
-    {"isFrangible", kOOTypeEncoding<bool>,
+    {"isFrangible", oo::kValueType<bool>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> bool {
@@ -290,7 +287,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getIsFrangible() : false;
        }());
      }},
-    {"isCloaked", kOOTypeEncoding<bool>,
+    {"isCloaked", oo::kValueType<bool>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> bool {
@@ -298,7 +295,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->isCloaked() : false;
        }());
      }},
-    {"isJammingScanning", kOOTypeEncoding<bool>,
+    {"isJammingScanning", oo::kValueType<bool>,
      [](Entity* part) -> bool {
        return dynamic_cast<OOWaypointEntity*>(part) != nullptr ||
               ShipPart(part) != nullptr || EffectPart(part) != nullptr;
@@ -313,7 +310,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return waypoint != nullptr ? waypoint->isJammingScanning() : false;
        }());
      }},
-    {"hasMilitaryScannerFilter", kOOTypeEncoding<bool>,
+    {"hasMilitaryScannerFilter", oo::kValueType<bool>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> bool {
@@ -321,7 +318,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->hasMilitaryScannerFilter() : false;
        }());
      }},
-    {"messageTime", kOOTypeEncoding<double>,
+    {"messageTime", oo::kValueType<double>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> double {
@@ -329,7 +326,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getMessageTime() : double{};
        }());
      }},
-    {"escortCount", kOOTypeEncoding<uint8_t>,
+    {"escortCount", oo::kValueType<uint8_t>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> uint8_t {
@@ -337,7 +334,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->escortCount() : uint8_t{};
        }());
      }},
-    {"hasHostileTarget", kOOTypeEncoding<bool>,
+    {"hasHostileTarget", oo::kValueType<bool>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> bool {
@@ -345,7 +342,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->hasHostileTarget() : false;
        }());
      }},
-    {"weaponRange", kOOTypeEncoding<GLfloat>,
+    {"weaponRange", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -353,7 +350,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getWeaponRange() : GLfloat{};
        }());
      }},
-    {"scannerRange", kOOTypeEncoding<GLfloat>,
+    {"scannerRange", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -361,7 +358,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getScannerRange() : GLfloat{};
        }());
      }},
-    {"withinStationAegis", kOOTypeEncoding<bool>,
+    {"withinStationAegis", oo::kValueType<bool>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> bool {
@@ -369,7 +366,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->withinStationAegis() : false;
        }());
      }},
-    {"fuel", kOOTypeEncoding<OOFuelQuantity>,
+    {"fuel", oo::kValueType<OOFuelQuantity>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> OOFuelQuantity {
@@ -377,7 +374,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getFuel() : OOFuelQuantity{};
        }());
      }},
-    {"flightPitch", kOOTypeEncoding<GLfloat>,
+    {"flightPitch", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -385,7 +382,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getFlightPitch() : GLfloat{};
        }());
      }},
-    {"flightRoll", kOOTypeEncoding<GLfloat>,
+    {"flightRoll", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -393,7 +390,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getFlightRoll() : GLfloat{};
        }());
      }},
-    {"flightYaw", kOOTypeEncoding<GLfloat>,
+    {"flightYaw", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -401,7 +398,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getFlightYaw() : GLfloat{};
        }());
      }},
-    {"flightSpeed", kOOTypeEncoding<GLfloat>,
+    {"flightSpeed", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -409,7 +406,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getFlightSpeed() : GLfloat{};
        }());
      }},
-    {"maxFlightSpeed", kOOTypeEncoding<GLfloat>,
+    {"maxFlightSpeed", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -417,7 +414,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getMaxFlightSpeed() : GLfloat{};
        }());
      }},
-    {"speedFactor", kOOTypeEncoding<GLfloat>,
+    {"speedFactor", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -425,7 +422,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->speedFactor() : GLfloat{};
        }());
      }},
-    {"damage", kOOTypeEncoding<int>,
+    {"damage", oo::kValueType<int>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> int {
@@ -433,7 +430,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->damage() : int{};
        }());
      }},
-    {"laserHeatLevel", kOOTypeEncoding<GLfloat>,
+    {"laserHeatLevel", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -441,7 +438,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->laserHeatLevel() : GLfloat{};
        }());
      }},
-    {"hullHeatLevel", kOOTypeEncoding<GLfloat>,
+    {"hullHeatLevel", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool {
        return EffectPart(part) != nullptr || ShipPart(part) != nullptr;
      },
@@ -453,7 +450,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->hullHeatLevel() : GLfloat{};
        }());
      }},
-    {"entityPersonality", kOOTypeEncoding<GLfloat>,
+    {"entityPersonality", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -461,7 +458,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->entityPersonality() : GLfloat{};
        }());
      }},
-    {"entityPersonalityInt", kOOTypeEncoding<GLint>,
+    {"entityPersonalityInt", oo::kValueType<GLint>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLint {
@@ -469,7 +466,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->entityPersonalityInt() : GLint{};
        }());
      }},
-    {"numberOfScannedShips", kOOTypeEncoding<int>,
+    {"numberOfScannedShips", oo::kValueType<int>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> int {
@@ -477,7 +474,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->numberOfScannedShips() : int{};
        }());
      }},
-    {"destination", kOOTypeEncoding<HPVector>,
+    {"destination", oo::kValueType<HPVector>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> HPVector {
@@ -485,7 +482,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->destination() : kZeroHPVector;
        }());
      }},
-    {"rangeToDestination", kOOTypeEncoding<GLfloat>,
+    {"rangeToDestination", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -493,7 +490,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->rangeToDestination() : GLfloat{};
        }());
      }},
-    {"rangeToPrimaryTarget", kOOTypeEncoding<double>,
+    {"rangeToPrimaryTarget", oo::kValueType<double>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> double {
@@ -501,7 +498,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->rangeToPrimaryTarget() : double{};
        }());
      }},
-    {"isHulk", kOOTypeEncoding<bool>,
+    {"isHulk", oo::kValueType<bool>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> bool {
@@ -509,7 +506,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->getIsHulk() : false;
        }());
      }},
-    {"lightsActive", kOOTypeEncoding<bool>,
+    {"lightsActive", oo::kValueType<bool>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> bool {
@@ -517,7 +514,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->lightsActive() : false;
        }());
      }},
-    {"legalStatus", kOOTypeEncoding<int>,
+    {"legalStatus", oo::kValueType<int>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> int {
@@ -525,12 +522,12 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->legalStatus() : int{};
        }());
      }},
-    {"velocity", kOOTypeEncoding<Vector>, [](Entity*) -> bool { return true; },
+    {"velocity", oo::kValueType<Vector>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
            out, [part]() -> Vector { return part->getVelocity(); }());
      }},
-    {"missileCapacity", kOOTypeEncoding<std::size_t>,
+    {"missileCapacity", oo::kValueType<std::size_t>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> std::size_t {
@@ -538,7 +535,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->missileCapacity() : std::size_t{};
        }());
      }},
-    {"missileCount", kOOTypeEncoding<std::size_t>,
+    {"missileCount", oo::kValueType<std::size_t>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> std::size_t {
@@ -546,7 +543,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->missileCount() : std::size_t{};
        }());
      }},
-    {"fuelLeakRate", kOOTypeEncoding<float>,
+    {"fuelLeakRate", oo::kValueType<float>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -558,7 +555,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->fuelLeakRate() : float{};
        }());
      }},
-    {"massLocked", kOOTypeEncoding<bool>,
+    {"massLocked", oo::kValueType<bool>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -570,7 +567,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->massLocked() : false;
        }());
      }},
-    {"atHyperspeed", kOOTypeEncoding<bool>,
+    {"atHyperspeed", oo::kValueType<bool>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -582,7 +579,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->atHyperspeed() : false;
        }());
      }},
-    {"dialForwardShield", kOOTypeEncoding<GLfloat>,
+    {"dialForwardShield", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -594,7 +591,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->dialForwardShield() : GLfloat{};
        }());
      }},
-    {"dialAftShield", kOOTypeEncoding<GLfloat>,
+    {"dialAftShield", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -606,7 +603,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->dialAftShield() : GLfloat{};
        }());
      }},
-    {"dialMissileStatus", kOOTypeEncoding<OOMissileStatus>,
+    {"dialMissileStatus", oo::kValueType<OOMissileStatus>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -619,7 +616,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
                                   : OOMissileStatus{};
        }());
      }},
-    {"dialFuelScoopStatus", kOOTypeEncoding<OOFuelScoopStatus>,
+    {"dialFuelScoopStatus", oo::kValueType<OOFuelScoopStatus>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -632,7 +629,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
                                   : OOFuelScoopStatus{};
        }());
      }},
-    {"compassMode", kOOTypeEncoding<OOCompassMode>,
+    {"compassMode", oo::kValueType<OOCompassMode>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -644,7 +641,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->getCompassMode() : OOCompassMode{};
        }());
      }},
-    {"dialIdentEngaged", kOOTypeEncoding<bool>,
+    {"dialIdentEngaged", oo::kValueType<bool>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -656,7 +653,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->dialIdentEngaged() : false;
        }());
      }},
-    {"alertCondition", kOOTypeEncoding<OOAlertCondition>,
+    {"alertCondition", oo::kValueType<OOAlertCondition>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> OOAlertCondition {
@@ -664,7 +661,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->alertCondition() : OOAlertCondition{};
        }());
      }},
-    {"trumbleCount", kOOTypeEncoding<std::size_t>,
+    {"trumbleCount", oo::kValueType<std::size_t>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -679,7 +676,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
     // The other names whitelist.plist permits, each
     // with its return type, whether it applies and its getter.
     // The planet's five:
-    {"airColorAsVector", kOOTypeEncoding<Vector>,
+    {"airColorAsVector", oo::kValueType<Vector>,
      [](Entity* part) -> bool {
        return dynamic_cast<OOPlanetEntity*>(part) != nullptr;
      },
@@ -689,7 +686,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return planet != nullptr ? planet->airColorAsVector() : kZeroVector;
        }());
      }},
-    {"illuminationColorAsVector", kOOTypeEncoding<Vector>,
+    {"illuminationColorAsVector", oo::kValueType<Vector>,
      [](Entity* part) -> bool {
        return dynamic_cast<OOPlanetEntity*>(part) != nullptr;
      },
@@ -700,7 +697,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
                                   : kZeroVector;
        }());
      }},
-    {"airColorMixRatio", kOOTypeEncoding<float>,
+    {"airColorMixRatio", oo::kValueType<float>,
      [](Entity* part) -> bool {
        return dynamic_cast<OOPlanetEntity*>(part) != nullptr;
      },
@@ -710,7 +707,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return planet != nullptr ? planet->airColorMixRatio() : 0.0f;
        }());
      }},
-    {"airDensity", kOOTypeEncoding<float>,
+    {"airDensity", oo::kValueType<float>,
      [](Entity* part) -> bool {
        return dynamic_cast<OOPlanetEntity*>(part) != nullptr;
      },
@@ -720,7 +717,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return planet != nullptr ? planet->airDensity() : 0.0f;
        }());
      }},
-    {"terminatorThresholdVector", kOOTypeEncoding<Vector>,
+    {"terminatorThresholdVector", oo::kValueType<Vector>,
      [](Entity* part) -> bool {
        return dynamic_cast<OOPlanetEntity*>(part) != nullptr;
      },
@@ -732,14 +729,14 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
        }());
      }},
     // The root's own:
-    {"cameraRelativePosition", kOOTypeEncoding<Vector>,
+    {"cameraRelativePosition", oo::kValueType<Vector>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
          return part->getCameraRelativePosition();
        }());
      }},
-    {"fogUniform", kOOTypeEncoding<OOColor*>,
+    {"fogUniform", oo::kValueType<OOColor*>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(
@@ -747,7 +744,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      }},  // borrowed: the entity holds it
     // The ship family's, found by name (an effect's part answers the three
     // vectors too):
-    {"forwardVector", kOOTypeEncoding<Vector>,
+    {"forwardVector", oo::kValueType<Vector>,
      [](Entity* part) -> bool {
        return EffectPart(part) != nullptr || ShipPart(part) != nullptr;
      },
@@ -759,7 +756,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->forwardVector() : kZeroVector;
        }());
      }},
-    {"upVector", kOOTypeEncoding<Vector>,
+    {"upVector", oo::kValueType<Vector>,
      [](Entity* part) -> bool {
        return EffectPart(part) != nullptr || ShipPart(part) != nullptr;
      },
@@ -771,7 +768,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->upVector() : kZeroVector;
        }());
      }},
-    {"rightVector", kOOTypeEncoding<Vector>,
+    {"rightVector", oo::kValueType<Vector>,
      [](Entity* part) -> bool {
        return EffectPart(part) != nullptr || ShipPart(part) != nullptr;
      },
@@ -783,7 +780,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->rightVector() : kZeroVector;
        }());
      }},
-    {"weaponRecoveryTime", kOOTypeEncoding<GLfloat>,
+    {"weaponRecoveryTime", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -791,7 +788,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->weaponRecoveryTime() : GLfloat{};
        }());
      }},
-    {"laserHeatLevelAft", kOOTypeEncoding<GLfloat>,
+    {"laserHeatLevelAft", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -799,7 +796,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->laserHeatLevelAft() : GLfloat{};
        }());
      }},
-    {"laserHeatLevelForward", kOOTypeEncoding<GLfloat>,
+    {"laserHeatLevelForward", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -807,7 +804,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->laserHeatLevelForward() : GLfloat{};
        }());
      }},
-    {"laserHeatLevelPort", kOOTypeEncoding<GLfloat>,
+    {"laserHeatLevelPort", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -815,7 +812,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->laserHeatLevelPort() : GLfloat{};
        }());
      }},
-    {"laserHeatLevelStarboard", kOOTypeEncoding<GLfloat>,
+    {"laserHeatLevelStarboard", oo::kValueType<GLfloat>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -823,7 +820,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->laserHeatLevelStarboard() : GLfloat{};
        }());
      }},
-    {"tradeInFactor", kOOTypeEncoding<int>,
+    {"tradeInFactor", oo::kValueType<int>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
@@ -837,7 +834,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      }},
     // The visual effect's, found by name: any entity answers these, 0 for any
     // but an effect's part.
-    {"shaderFloat1", kOOTypeEncoding<GLfloat>,
+    {"shaderFloat1", oo::kValueType<GLfloat>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -845,7 +842,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return effect != nullptr ? effect->shaderFloat1() : GLfloat{};
        }());
      }},
-    {"shaderFloat2", kOOTypeEncoding<GLfloat>,
+    {"shaderFloat2", oo::kValueType<GLfloat>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
@@ -853,21 +850,21 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return effect != nullptr ? effect->shaderFloat2() : GLfloat{};
        }());
      }},
-    {"shaderInt1", kOOTypeEncoding<int>, [](Entity*) -> bool { return true; },
+    {"shaderInt1", oo::kValueType<int>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> int {
          OOVisualEffectEntity* effect = EffectPart(part);
          return effect != nullptr ? effect->shaderInt1() : 0;
        }());
      }},
-    {"shaderInt2", kOOTypeEncoding<int>, [](Entity*) -> bool { return true; },
+    {"shaderInt2", oo::kValueType<int>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> int {
          OOVisualEffectEntity* effect = EffectPart(part);
          return effect != nullptr ? effect->shaderInt2() : 0;
        }());
      }},
-    {"shaderVector1", kOOTypeEncoding<Vector>,
+    {"shaderVector1", oo::kValueType<Vector>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
@@ -875,7 +872,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return effect != nullptr ? effect->shaderVector1() : kZeroVector;
        }());
      }},
-    {"shaderVector2", kOOTypeEncoding<Vector>,
+    {"shaderVector2", oo::kValueType<Vector>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
@@ -920,8 +917,7 @@ bool EntityShaderMemberBindingFor(Entity* entity, const char* property,
   if (found == rows.end()) return false;
   const EntityShaderBindingRow& row = kEntityShaderBindings[found->second];
   if (!row.answers(entity)) return false;  // the selector path fails as it did
-  const OOShaderUniformType type =
-      OOShaderUniformTypeFromEncoding(row.encoding);
+  const OOShaderUniformType type = oo::ShaderUniformTypeOf(row.type);
   if (type == kOOShaderUniformTypeInvalid)
     return false;  // likewise ("unsupported type")
   *outBinding = {type, getters[found->second], entity};
