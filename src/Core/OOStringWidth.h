@@ -32,6 +32,4 @@ MA 02110-1301, USA.
 
 #include <string>
 
-#include "oofnd/objc/OOFoundationTypes.h"
-
 double OOStringWidthInEm(const std::string& text);

@@ -35,25 +35,8 @@ SOFTWARE.
 
 #pragma once
 
-#include <algorithm>
-#include <chrono>
-#include <condition_variable>
-#include <cstddef>
-#include <cstdint>
-#include <functional>
-#include <map>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <set>
-#include <string>
-#include <string_view>
-#include <unordered_map>
 #include <unordered_set>
-#include <utility>
-#include <vector>
 
-#include "OOFoundation.h"
 #include "oofnd/Object.hpp"
 
 // A client: the one method, resetGraphicsState(), as a pure virtual. It
@@ -69,7 +52,7 @@ class OOGraphicsResetManager : public oo::Object {
   // The shared manager, made on first use; borrowed, never released.
   static OOGraphicsResetManager* sharedManager();
 
-  ~OOGraphicsResetManager();
+  ~OOGraphicsResetManager() override;
 
   // Clients are not retained; null is never registered.
   void registerCxxClient(OOGraphicsResetClient* client);

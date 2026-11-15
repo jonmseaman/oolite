@@ -31,7 +31,6 @@ SOFTWARE.
 
 #include "OOOpenGL.h"
 #include "oofnd/Object.hpp"
-#include "oofnd/PList.hpp"
 
 class OOColor;
 
