@@ -85,7 +85,7 @@ MA 02110-1301, USA.
         OOJSEngineTimeManagement.m, but needs to be declared on the stack by the
         macros below when profiling is enabled.
 */
-using OOJSProfileStackFrame = struct OOJSProfileStackFrame;
+struct OOJSProfileStackFrame;
 struct OOJSProfileStackFrame {
   OOJSProfileStackFrame* back;  // Stack link
   const void* key;  // Key to look up profile entries: the function name, or the

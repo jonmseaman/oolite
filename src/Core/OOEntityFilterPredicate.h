@@ -35,12 +35,12 @@ MA 02110-1301, USA.
 
 #include "Universe.h"
 
-using ChainedEntityPredicateParameter = struct {
+struct ChainedEntityPredicateParameter {
   EntityFilterPredicate predicate;
   void* parameter;
 };
 
-using BinaryOperationPredicateParameter = struct {
+struct BinaryOperationPredicateParameter {
   EntityFilterPredicate predicate1;
   void* parameter1;
   EntityFilterPredicate predicate2;

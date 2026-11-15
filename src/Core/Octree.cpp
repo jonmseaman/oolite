@@ -45,7 +45,7 @@ MA 02110-1301, USA.
   } while (0)
 #endif
 
-using Octree_details = struct Octree_details {
+struct Octree_details {
   GLfloat radius;
   const int* octree;
   unsigned char* octree_collision;

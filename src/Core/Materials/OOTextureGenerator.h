@@ -31,11 +31,11 @@ SOFTWARE.
 
 #include "OOTextureLoader.h"
 
-using FloatRGB = struct {
+struct FloatRGB {
   float r, g, b;
 };
 
-using FloatRGBA = struct {
+struct FloatRGBA {
   float r, g, b, a;
 };
 

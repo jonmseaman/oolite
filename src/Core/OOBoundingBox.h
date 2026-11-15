@@ -33,7 +33,7 @@ MA 02110-1301, USA.
 #include "OOHPVector.h"
 #include "OOVector.h"
 
-using BoundingBox = struct {
+struct BoundingBox {
   Vector min;
   Vector max;
 };

@@ -205,7 +205,7 @@ inline bool OOIsNullObjectNode(const oo::PList& plist) {
 class Entity;
 
 // OOEntityFilterPredicate wrapping a JavaScript function.
-using JSFunctionPredicateParameter = struct {
+struct JSFunctionPredicateParameter {
   JSContext* context;
   JSValueConst function;  // Caller is responsible for ensuring this is a
                           // function object (using OOJSValueIsFunction()).

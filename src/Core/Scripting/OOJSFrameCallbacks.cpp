@@ -83,7 +83,7 @@ constexpr uint32_t kIDIncrement =
              // still uses all 2^32 values.
 #endif
 
-using CallbackEntry = struct {
+struct CallbackEntry {
   JSValue callback;  // Owned.
   uint32_t trackingID;
   uint32_t _padding;
@@ -97,7 +97,7 @@ using CallbackEntry = struct {
 */
 static std::vector<CallbackEntry> sCallbacks;
 // A deferred add or remove.
-using DeferredOperation = struct {
+struct DeferredOperation {
   std::string operation;  // "add" or "remove"
   uint32_t trackingID;
   std::shared_ptr<OOJSValue> value;  // the callback, for "add"

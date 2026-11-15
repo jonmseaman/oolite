@@ -51,11 +51,11 @@ MA 02110-1301, USA.
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
-using OORGBAComponents = struct {
+struct OORGBAComponents {
   float r, g, b, a;
 };
 
-using OOHSBAComponents = struct {
+struct OOHSBAComponents {
   float h, s, b, a;
 };
 

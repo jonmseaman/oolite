@@ -13,7 +13,7 @@
 
 #define kOOPlanetDataLevels 6
 
-using OOPlanetDataLevel = struct {
+struct OOPlanetDataLevel {
   unsigned vertexCount;
   unsigned faceCount;
   GLenum type;

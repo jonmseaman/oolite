@@ -118,8 +118,8 @@ MA 02110-1301, USA.
 #define OOCACHE_PERFORM_INTEGRITY_CHECKS 0
 #endif
 
-using OOCacheImpl = struct OOCacheImpl;
-using OOCacheNode = struct OOCacheNode;
+struct OOCacheImpl;
+struct OOCacheNode;
 
 struct OOCacheImpl {
   // Splay tree root
