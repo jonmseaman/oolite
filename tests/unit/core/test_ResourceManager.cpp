@@ -659,7 +659,7 @@ OO_TEST(json5FilesStandInForPlists) {
   (void)ResourceManager::paths();
 
   const oo::PList smart = ResourceManager::dictionaryFromFilesNamed(
-      "oo-test-json5.plist", std::string("Config"), MERGE_SMART, false);
+      "oo-test-json5.plist", std::string("Config"), OOResourceMergeMode::kSmart, false);
   std::printf("  JSON5 + plist, MERGE_SMART: %s\n",
               oo::DescriptionOf(smart).c_str());
   OO_CHECK(smart.find("base") != nullptr && smart.find("fromA") != nullptr);
