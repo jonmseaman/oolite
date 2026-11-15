@@ -29,6 +29,9 @@ SOFTWARE.
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "OOColor.h"  // the colour readers answer std::shared_ptr<OOColor>
 #include "OOFoundation.h"
 #include "oofnd/PList.hpp"

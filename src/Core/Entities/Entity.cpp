@@ -25,6 +25,9 @@ MA 02110-1301, USA.
 #include "Entity.h"
 
 #include <format>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "CollisionRegion.h"
 #include "DockEntity.h"

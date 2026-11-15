@@ -48,6 +48,8 @@ SOFTWARE.
 #include "OOTypes.h"
 #endif
 
+#include <memory>
+
 #include "oofnd/Object.hpp"
 
 /*	Platform-specific high-resolution timer:

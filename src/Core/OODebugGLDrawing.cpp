@@ -29,6 +29,9 @@ SOFTWARE.
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
 #include "OODebugGLDrawing.h"
 
+#include <memory>
+#include <utility>
+
 #include "OOMacroOpenGL.h"
 #include "OOMaterialState.h"
 #include "OOOpenGL.h"

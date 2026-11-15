@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 #include "OOLaserShotEntity.h"
 
 #include <format>
+#include <memory>
+#include <string>
 
 #include "MyOpenGLView.h"
 #include "OOGraphicsResetManager.h"

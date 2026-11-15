@@ -10,6 +10,8 @@ buffers and property lists, implemented over oofnd.
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include <string>
+
 /*	The handles are opaque in C and C++ alike: a struct OOALObject, defined
    in OOTCPStreamDecoderAbstractionLayer.cpp, holding a string, a data buffer or
    a property list (an oo::PList). Handles made by a Create/FromData function

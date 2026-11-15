@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 #include "OOXMLExtensions.h"
 
+#include <string>
+
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/PListWriting.hpp"
 

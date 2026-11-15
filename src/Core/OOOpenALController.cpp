@@ -25,6 +25,9 @@ MA 02110-1301, USA.
 
 #include "OOOpenALController.h"
 
+#include <memory>
+#include <utility>
+
 #include "OOALSoundMixer.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/Process.hpp"

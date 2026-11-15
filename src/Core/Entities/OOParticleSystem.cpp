@@ -26,7 +26,11 @@ MA 02110-1301, USA.
 
 #include "OOParticleSystem.h"
 
+#include <algorithm>
 #include <format>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "MyOpenGLView.h"
 #include "OOLightParticleEntity.h"

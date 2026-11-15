@@ -27,6 +27,8 @@ SOFTWARE.
 
 #include "OOJSEngineTimeManagement.h"
 
+#include <memory>
+
 #include "oofnd/PList.hpp"
 
 #if OOJS_PROFILE

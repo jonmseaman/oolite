@@ -25,6 +25,9 @@ MA 02110-1301, USA.
 
 #include "OOCheckShipDataPListVerifierStage.h"
 
+#include <string>
+#include <vector>
+
 #include "OOModelVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED

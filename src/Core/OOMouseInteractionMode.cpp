@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #include "OOMouseInteractionMode.h"
 
 #include <format>
+#include <string>
 
 std::string OOStringFromMouseInteractionMode(OOMouseInteractionMode mode) {
   switch (mode) {

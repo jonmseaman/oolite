@@ -26,6 +26,9 @@ MA 02110-1301, USA.
 
 #include <algorithm>
 #include <cstring>
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "OODebugFlags.h"
 #include "OODebugGLDrawing.h"

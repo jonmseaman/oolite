@@ -25,6 +25,10 @@ MA 02110-1301, USA.
 
 #include "OOJSPlanet.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "OOJSEntity.h"
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"

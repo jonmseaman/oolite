@@ -35,9 +35,12 @@ MA 02110-1301, USA.
 #include "OOEntityCalledByName.h"
 
 #include <cstring>
+#include <memory>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <unordered_map>
+#include <utility>
 
 #include "AI.h"
 #include "DockEntity.h"

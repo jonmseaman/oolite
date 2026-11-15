@@ -28,7 +28,10 @@ SOFTWARE.
 #include "OODrawable.h"
 
 #include <format>
+#include <string>
 #include <typeinfo>
+#include <utility>
+#include <vector>
 
 #include "OODemangle.h"
 #include "oofnd/AutoreleaseScope.hpp"

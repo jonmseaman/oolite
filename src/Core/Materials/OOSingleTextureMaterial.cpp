@@ -27,6 +27,10 @@ SOFTWARE.
 
 #include "OOSingleTextureMaterial.h"
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "OOFunctionAttributes.h"
 #include "OOTexture.h"
 

@@ -27,6 +27,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <string>
+
 #include "OOFileScannerVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED

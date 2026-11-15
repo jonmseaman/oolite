@@ -27,6 +27,9 @@ SOFTWARE.
 
 #include "OONullTexture.h"
 
+#include <memory>
+#include <string>
+
 #include "OOFoundation.h"
 
 namespace {

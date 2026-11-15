@@ -27,6 +27,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+
 #include "OOLightParticleEntity.h"
 
 /*	The ship and the universe call the factories.

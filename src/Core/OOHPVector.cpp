@@ -23,6 +23,8 @@ MA 02110-1301, USA.
 */
 
 #include <format>
+#include <string>
+#include <vector>
 
 #include "OOMaths.h"
 #include "legacy_random.h"  // randf

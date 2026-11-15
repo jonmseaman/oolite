@@ -25,6 +25,10 @@ MA 02110-1301, USA.
 
 #include "OOJSPopulatorDefinition.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "OOJSScript.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"

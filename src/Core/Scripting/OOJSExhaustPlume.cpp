@@ -23,6 +23,8 @@ MA 02110-1301, USA.
 
 #include "OOJSExhaustPlume.h"
 
+#include <string>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOExhaustPlumeEntity.h"
 #include "OOJSEntity.h"

@@ -25,6 +25,11 @@ MA 02110-1301, USA.
 
 #include "OOFlasherEntity.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "OOColor.h"
 #include "OOJSFlasher.h"
 

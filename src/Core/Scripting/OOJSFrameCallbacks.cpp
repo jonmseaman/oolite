@@ -28,7 +28,9 @@ SOFTWARE.
 #include "OOJSFrameCallbacks.h"
 
 #include <algorithm>
+#include <memory>
 #include <new>
+#include <string>
 #include <vector>
 
 #include "oofnd/Date.hpp"

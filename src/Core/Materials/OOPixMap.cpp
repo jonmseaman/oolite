@@ -30,6 +30,9 @@ SOFTWARE.
 #include <algorithm>
 #include <cstring>
 #include <format>
+#include <memory>
+#include <string>
+#include <utility>
 
 const OOPixMap kOONullPixMap = {.pixels = nullptr,
                                 .width = 0,

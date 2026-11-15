@@ -47,6 +47,11 @@ MA 02110-1301, USA.
 #endif
 #include <cstring>
 #include <format>
+#include <functional>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "oofnd/objc/OOAssert.h"
 

@@ -29,6 +29,8 @@ SOFTWARE.
 
 #include <assert.h>
 
+#include <memory>
+
 #include "OOALSound.h"
 #include "OOALSoundChannel.h"
 #include "OOFoundation.h"

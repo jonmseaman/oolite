@@ -26,6 +26,10 @@ MA 02110-1301, USA.
 #include "ShipEntityLoadRestore.h"
 
 #include <array>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "AI.h"
 #include "OOEquipmentType.h"

@@ -27,6 +27,8 @@ SOFTWARE.
 
 */
 
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "OOFoundation.h"

@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+#include <string>
 #include <utility>
 
 #include "OOEnumFlags.h"

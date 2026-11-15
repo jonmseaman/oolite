@@ -23,6 +23,10 @@ MA 02110-1301, USA.
 
 #include "OOJSFlasher.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOColor.h"
 #include "OOFlasherEntity.h"

@@ -24,10 +24,12 @@ MA 02110-1301, USA.
 
 #include "OOJSSystemInfo.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <format>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>

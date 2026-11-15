@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 
 #include "OOOpenGLMatrixManager.h"
 
+#include <utility>
+
 #include "MyOpenGLView.h"
 #include "OOMacroOpenGL.h"
 #include "Universe.h"

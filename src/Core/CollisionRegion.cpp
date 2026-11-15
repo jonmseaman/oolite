@@ -25,6 +25,8 @@ MA 02110-1301, USA.
 #include "CollisionRegion.h"
 
 #include <format>
+#include <string>
+#include <vector>
 
 #include "Entity.h"
 #include "OODebugFlags.h"

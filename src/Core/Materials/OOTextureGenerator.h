@@ -29,6 +29,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <string>
+
 #include "OOTextureLoader.h"
 
 struct FloatRGB {

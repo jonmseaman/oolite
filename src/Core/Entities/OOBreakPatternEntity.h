@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+
 #include "Entity.h"
 
 inline constexpr int kOOBreakPatternMaxSides = 128;

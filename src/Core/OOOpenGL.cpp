@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 #include "OOOpenGL.h"
 
 #include <format>
+#include <string>
 
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"  // IWYU pragma: keep: used only without NDEBUG or with OO_CHECK_GL_HEAVY

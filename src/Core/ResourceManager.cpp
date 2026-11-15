@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #include <format>
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>

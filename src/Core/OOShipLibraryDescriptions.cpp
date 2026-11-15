@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 #include "OOShipLibraryDescriptions.h"
 
+#include <string>
+
 #include "OOStringExpander.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"

@@ -27,7 +27,10 @@ MA 02110-1301, USA.
 
 #include "OOBreakPatternEntity.h"
 
+#include <algorithm>
 #include <cstring>
+#include <memory>
+#include <string>
 
 #include "OOColor.h"
 #include "OOMacroOpenGL.h"

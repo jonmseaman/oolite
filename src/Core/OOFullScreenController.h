@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
 #include <string_view>
 
 #include "MyOpenGLView.h"  // std::shared_ptr<MyOpenGLView>

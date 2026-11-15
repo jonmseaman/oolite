@@ -25,6 +25,10 @@ MA 02110-1301, USA.
 
 #include "OOCheckRequiresPListVerifierStage.h"
 
+#include <string>
+#include <utility>
+#include <vector>
+
 #if OO_OXP_VERIFIER_ENABLED
 
 #include "OOFileScannerVerifierStage.h"

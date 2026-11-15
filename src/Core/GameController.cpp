@@ -48,6 +48,7 @@ MA 02110-1301, USA.
 #include <cstddef>  // IWYU pragma: keep: NULL, in the Windows code
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>

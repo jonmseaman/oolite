@@ -25,6 +25,9 @@ MA 02110-1301, USA.
 
 #include "OOJSGuiScreenKeyDefinition.h"
 
+#include <memory>
+#include <string>
+
 #include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
 #include "oofnd/Notification.hpp"

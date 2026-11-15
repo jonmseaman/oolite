@@ -24,6 +24,9 @@ MA 02110-1301, USA.
 
 #include "OOJSManifest.h"
 
+#include <algorithm>
+#include <string>
+
 #include "OOCommodities.h"
 #include "OOCommodityMarket.h"
 #include "OOJSPlayer.h"

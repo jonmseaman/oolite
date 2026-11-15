@@ -27,6 +27,9 @@ SOFTWARE.
 
 #include "OOALSoundChannel.h"
 
+#include <memory>
+#include <utility>
+
 #include "OOALSound.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"

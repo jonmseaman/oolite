@@ -35,6 +35,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "OOJSPrivateObject.h"
 #include "oofnd/Object.hpp"
 

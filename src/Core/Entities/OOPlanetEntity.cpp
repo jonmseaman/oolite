@@ -29,6 +29,7 @@ A leaf of Entity. The class is global.
 #include <array>
 #include <format>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>

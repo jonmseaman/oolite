@@ -41,6 +41,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <string>
+
 #include "OOFoundation.h"
 #include "oofnd/PList.hpp"
 

@@ -25,7 +25,11 @@ MA 02110-1301, USA.
 #include "PlayerEntityContracts.h"
 
 #include <format>
+#include <memory>
 #include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "AI.h"
 #include "GuiDisplayGen.h"

@@ -26,6 +26,11 @@ SOFTWARE.
 
 */
 
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
+
 #include "Universe.h"  // IWYU pragma: keep: used only with OO_LOCALIZATION_TOOLS
 
 #if OO_LOCALIZATION_TOOLS
