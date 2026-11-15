@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <functional>
 #include <map>
@@ -489,25 +490,24 @@ void ShipEntity::enterTargetWormhole() {
     int ent_count = static_cast<int>(UNIVERSE->n_entities);
     Entity** uni_entities =
         UNIVERSE->sortedEntities;  // grab the public sorted list
-    std::vector<std::shared_ptr<Entity>> wormholes(
-        static_cast<unsigned long long>(
-            ent_count));  // kept for the loop, as the objects were retained
+    std::vector<std::shared_ptr<Entity>> wormholes(static_cast<std::size_t>(
+        ent_count));  // kept for the loop, as the objects were retained
     int i;
     int wh_count = 0;
     for (i = 0; i < ent_count; i++)
       if (uni_entities[i]->isWormhole)
-        wormholes[static_cast<unsigned long long>(wh_count++)] =
+        wormholes[static_cast<std::size_t>(wh_count++)] =
             oo::share(uni_entities[i]);
     //
     // double found_d2 = scannerRange * scannerRange;
     for (i = 0; i < wh_count; i++) {
-      Entity* wh = wormholes[static_cast<unsigned long long>(i)].get();
+      Entity* wh = wormholes[static_cast<std::size_t>(i)].get();
       double d2 = HPdistance2(position, wh->position);
       if (d2 < found_d2) {
         whole = static_cast<WormholeEntity*>(wh);
         found_d2 = d2;
       }
-      wormholes[static_cast<unsigned long long>(i)] = nullptr;
+      wormholes[static_cast<std::size_t>(i)] = nullptr;
     }
   }
 
@@ -2541,9 +2541,8 @@ void ShipEntity::setTargetToRandomStation() {
   int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<std::shared_ptr<Entity>> my_entities(
-      static_cast<unsigned long long>(
-          ent_count));  // kept for the search, as the objects were retained
+  std::vector<std::shared_ptr<Entity>> my_entities(static_cast<std::size_t>(
+      ent_count));  // kept for the search, as the objects were retained
   ::StationEntity *station = nullptr, *my_station = nullptr;
   double maxRange2 = desired_range * desired_range;
   int i;
@@ -2559,7 +2558,7 @@ void ShipEntity::setTargetToRandomStation() {
           HPdistance2(position,
                       (my_station != nullptr ? my_station->getPosition()
                                              : HPVector{})) < maxRange2) {
-        my_entities[static_cast<unsigned long long>(station_count++)] =
+        my_entities[static_cast<std::size_t>(station_count++)] =
             oo::share(uni_entities[i]);  //	retained
       }
     }
@@ -2567,22 +2566,22 @@ void ShipEntity::setTargetToRandomStation() {
 
   if (station_count != 0) {
     // select a random station
-    station = oo::ToStation(my_entities[static_cast<unsigned long long>(
-                                            ranrot_rand() % station_count)]
-                                .get());
+    station = oo::ToStation(
+        my_entities[static_cast<std::size_t>(ranrot_rand() % station_count)]
+            .get());
     // if more than one candidate do not select main station
     if (station == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr) &&
         station_count > 1) {
       while (station == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr)) {
-        station = oo::ToStation(my_entities[static_cast<unsigned long long>(
-                                                ranrot_rand() % station_count)]
-                                    .get());
+        station = oo::ToStation(
+            my_entities[static_cast<std::size_t>(ranrot_rand() % station_count)]
+                .get());
       }
     }
   }
 
   for (i = 0; i < station_count; i++)
-    my_entities[static_cast<unsigned long long>(i)] = nullptr;  //	released
+    my_entities[static_cast<std::size_t>(i)] = nullptr;  //	released
   //
   if (station) {
     addTarget(station);

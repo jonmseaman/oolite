@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 
 #include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 
 #include "oofnd/Date.hpp"
@@ -76,11 +77,11 @@ double OOGameClock::timeOfDay() const {
   }
   // Local time of day, as the ship clock's start has always read it.
   const oo::date::Clock::time_point now = oo::date::Clock::now();
-  long long secondOfDay =
-      (static_cast<long long>(
+  std::int64_t secondOfDay =
+      (static_cast<std::int64_t>(
            std::chrono::floor<std::chrono::seconds>(now.time_since_epoch())
                .count()) +
-       static_cast<long long>(oo::date::localUTCOffsetMinutes(now)) * 60) %
+       static_cast<std::int64_t>(oo::date::localUTCOffsetMinutes(now)) * 60) %
       86400;
   if (secondOfDay < 0) secondOfDay += 86400;
   return static_cast<double>(secondOfDay);

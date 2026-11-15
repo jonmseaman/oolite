@@ -25,6 +25,7 @@ SOFTWARE.
 
 */
 
+#include <cstdint>
 #include <memory>
 
 #include "OOOpenGLExtensionManager.h"  // IWYU pragma: keep: defines OO_SHADERS, which guards this file
@@ -583,7 +584,7 @@ std::string GetGLSLInfoLog(GLhandleARB shaderObject) {
     result.clear();
     for (GLint i = 0; i < length - 1; ++i) {
       const unsigned char b =
-          static_cast<unsigned char>(log[static_cast<unsigned long long>(i)]);
+          static_cast<unsigned char>(log[static_cast<std::size_t>(i)]);
       if (b < 0x80) {
         result += static_cast<char>(b);
       } else {
@@ -643,8 +644,8 @@ std::optional<std::string> OOTranslateGLSL330To120(
       const std::string location =
           (*match)[1].matched ? (*match)[1].str() : std::string("0");
       result.replace(
-          static_cast<unsigned long long>(match->position(0)),
-          static_cast<unsigned long long>(match->length(0)),
+          static_cast<std::size_t>(match->position(0)),
+          static_cast<std::size_t>(match->length(0)),
           "#define " + (*match)[2].str() + " gl_FragData[" + location + "]");
     }
     source = result;

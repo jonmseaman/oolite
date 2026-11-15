@@ -8049,7 +8049,7 @@ bool ShipEntity::removeCargo(const std::string& commodity,
              ? oo::ToShip(cargo[i].get())->commodityType()
              : std::optional<std::string>()) == commodity) {
       amount--;
-      cargo.erase(cargo.begin() + static_cast<long long>(i));
+      cargo.erase(cargo.begin() + static_cast<std::ptrdiff_t>(i));
     }
     // check above means array index can't underflow here
     i--;
@@ -11906,7 +11906,7 @@ void ShipEntity::dumpCargo() { dumpCargoItem(std::nullopt); }
     if (jetto != nullptr) {
       dumpItem(jetto);  // OOScanClass::kCargo, OOEntityStatus::kInFlight, AI
                         // state GLOBAL
-      cargo.erase(cargo.begin() + static_cast<long long>(i));
+      cargo.erase(cargo.begin() + static_cast<std::ptrdiff_t>(i));
       broadcastAIMessage("CARGO_DUMPED");  // goes only to 16 nearby ships in
                                            // range, but that should be enough.
       unsigned shipIndex;
@@ -13353,13 +13353,13 @@ void ShipEntity::setTargetToNearestStationIncludingHostiles(
   int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(static_cast<unsigned long long>(ent_count));
+  std::vector<Entity*> my_entities(static_cast<std::size_t>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   int i;
   int station_count = 0;
   for (i = 0; i < ent_count; i++)
     if (uni_entities[i]->isStation)
-      my_entities[static_cast<unsigned long long>(station_count++)] =
+      my_entities[static_cast<std::size_t>(station_count++)] =
           oo::HoldIn(my_holds, uni_entities[i]);  //	retained
   //
   ::StationEntity *thing = nullptr, *station = nullptr;
@@ -13367,7 +13367,7 @@ void ShipEntity::setTargetToNearestStationIncludingHostiles(
       nearest2 = SCANNER_MAX_RANGE2 *
                  1000000.0;  // 1000x typical scanner range (25600 km), squared.
   for (i = 0; i < station_count; i++) {
-    thing = oo::ToStation(my_entities[static_cast<unsigned long long>(i)]);
+    thing = oo::ToStation(my_entities[static_cast<std::size_t>(i)]);
     range2 = HPdistance2(position, thing->position);
     if (range2 < nearest2 &&
         (includeHostiles ||
@@ -13735,19 +13735,18 @@ int ShipEntity::checkShipsInVicinityForWitchJumpExit() {
   int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<::ShipEntity*> my_entities(
-      static_cast<unsigned long long>(ent_count));
+  std::vector<::ShipEntity*> my_entities(static_cast<std::size_t>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   int i;
 
   int ship_count = 0;
   for (i = 0; i < ent_count; i++)
     if ((uni_entities[i]->isShip) && (uni_entities[i] != this))
-      my_entities[static_cast<unsigned long long>(ship_count++)] =
+      my_entities[static_cast<std::size_t>(ship_count++)] =
           oo::HoldIn(my_holds, oo::ToShip(uni_entities[i]));  //	retained
   //
   for (i = 0; (i < ship_count) && (result == NO_TARGET); i++) {
-    ::ShipEntity* ship = my_entities[static_cast<unsigned long long>(i)];
+    ::ShipEntity* ship = my_entities[static_cast<std::size_t>(i)];
     HPVector delta = HPvector_between(position, ship->position);
     GLfloat d2 = static_cast<GLfloat>(HPmagnitude2(delta));
     if (!(ship != nullptr ? ship->getIsPlayer() : false) ||

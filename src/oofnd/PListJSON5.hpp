@@ -204,7 +204,8 @@ inline std::optional<double> parseJSON5Date(std::string_view s) {
   const int yoe = y - era * 400;
   const int doy = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1;
   const int doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
-  const long long days = static_cast<long long>(era) * 146097 + doe - 719468;
+  const std::int64_t days =
+      static_cast<std::int64_t>(era) * 146097 + doe - 719468;
   return static_cast<double>(days - 11323) * 86400.0 +
          static_cast<double>(hour * 3600 + minute * 60 + second);
 }

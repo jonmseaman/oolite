@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 #include "PlayerEntityStickMapper.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <format>
 #include <string>
 #include <string_view>
@@ -391,10 +393,9 @@ void PlayerEntity::checkCustomEquipButtons(const oo::PList& stickFn, int idx) {
   for (i = 0; static_cast<std::size_t>(i) < customEquipActivation.size(); i++) {
     if (i != idx) {
       const oo::PList original =
-          customEquipActivation[static_cast<unsigned long long>(i)];
-      oo::PList& custEquip =
-          customEquipActivation[static_cast<unsigned long long>(
-              i)];  // edited in place
+          customEquipActivation[static_cast<std::size_t>(i)];
+      oo::PList& custEquip = customEquipActivation[static_cast<std::size_t>(
+          i)];  // edited in place
       oo::PList::Dict* custEquipDict = custEquip.getIf<oo::PList::Dict>();
       const oo::PList* bf = original.find(activateKey);
       if (IntegerIn(bf, stickNumberKey) ==
@@ -873,20 +874,18 @@ std::vector<oo::PList> PlayerEntity::stickFunctionList() {
     for (i = 0; static_cast<std::size_t>(i) < customEquipActivation.size();
          i++) {
       funcList.push_back(makeStickGuiDict(
-          std::format(
-              "{} '{}'", OO_DESC("stickmapper-cust-activate").c_str(),
-              OptionalStringForKey(
-                  customEquipActivation[static_cast<unsigned long long>(i)],
-                  CUSTOMEQUIP_EQUIPNAME)
-                  .value_or("(null)")),
+          std::format("{} '{}'", OO_DESC("stickmapper-cust-activate").c_str(),
+                      OptionalStringForKey(
+                          customEquipActivation[static_cast<std::size_t>(i)],
+                          CUSTOMEQUIP_EQUIPNAME)
+                          .value_or("(null)")),
           HW_BUTTON, STICK_NOFUNCTION, (i + 10000)));
       funcList.push_back(makeStickGuiDict(
-          std::format(
-              "{} '{}'", OO_DESC("stickmapper-cust-mode").c_str(),
-              OptionalStringForKey(
-                  customEquipActivation[static_cast<unsigned long long>(i)],
-                  CUSTOMEQUIP_EQUIPNAME)
-                  .value_or("(null)")),
+          std::format("{} '{}'", OO_DESC("stickmapper-cust-mode").c_str(),
+                      OptionalStringForKey(
+                          customEquipActivation[static_cast<std::size_t>(i)],
+                          CUSTOMEQUIP_EQUIPNAME)
+                          .value_or("(null)")),
           HW_BUTTON, STICK_NOFUNCTION, (i + 20000)));
     }
   }

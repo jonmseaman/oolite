@@ -25,6 +25,8 @@ MA 02110-1301, USA.
 #include "OOTrumble.h"
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -155,15 +157,15 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
   //
   int i;
   for (i = 0; i < 4; i++) {
-    colorPoint1[i] = c1[static_cast<unsigned long long>(i)];
-    colorPoint2[i] = c2[static_cast<unsigned long long>(i)];
+    colorPoint1[i] = c1[static_cast<std::size_t>(i)];
+    colorPoint2[i] = c2[static_cast<std::size_t>(i)];
   }
   //
   for (i = 0; i < 6; i++) {
     pointColor[i] = colorPoint1;
-    if (pointscheme[static_cast<unsigned long long>(i)] == 0)
+    if (pointscheme[static_cast<std::size_t>(i)] == 0)
       pointColor[i] = colorPoint1;
-    if (pointscheme[static_cast<unsigned long long>(i)] == 1)
+    if (pointscheme[static_cast<std::size_t>(i)] == 1)
       pointColor[i] = colorPoint2;
   }
   //

@@ -36,6 +36,8 @@ MA 02110-1301, USA.
 #include "OOMesh.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <format>
 #include <functional>
@@ -1487,7 +1489,7 @@ bool OOMesh::setUpVertexArrays() {
           int v = static_cast<int>(_faces[fi].vertex[vi]);
           if (IsPerVertexNormalMode(
                   static_cast<OOMeshNormalMode>(_normalMode))) {
-            if (is_edge_vertex[static_cast<unsigned long long>(v)]) {
+            if (is_edge_vertex[static_cast<std::size_t>(v)]) {
               const NormalAndTangent smoothed = getNormal(
                   static_cast<OOMeshVertexCount>(v), _faces[fi].smoothGroup);
               normal = smoothed.normal;

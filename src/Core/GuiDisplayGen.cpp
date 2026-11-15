@@ -458,12 +458,12 @@ void GuiDisplayGen::setShowAdvancedNavArray(bool inFlag) {
 
 void GuiDisplayGen::setColor(::OOColor* color, OOGUIRow row) {
   if (RowInRange(row, rowRange))
-    rowColor[static_cast<unsigned long long>(row)] = oo::share(color);
+    rowColor[static_cast<std::size_t>(row)] = oo::share(color);
 }
 
 oo::PList GuiDisplayGen::objectForRow(OOGUIRow row) {
   if (RowInRange(row, rowRange))
-    return rowText[static_cast<unsigned long long>(
+    return rowText[static_cast<std::size_t>(
         row)];  // a string, or an array of column strings
   else
     return oo::PList();  // null, where this was nil
@@ -481,7 +481,7 @@ OOGUIRow GuiDisplayGen::rowForKey(const std::optional<std::string>& key) {
 
 std::optional<std::string> GuiDisplayGen::keyForRow(OOGUIRow row) {
   if (RowInRange(row, rowRange))
-    return rowKey[static_cast<unsigned long long>(row)];
+    return rowKey[static_cast<std::size_t>(row)];
   else
     return std::nullopt;
 }
@@ -498,7 +498,7 @@ bool GuiDisplayGen::setSelectedRow(OOGUIRow row) {
     return true;
   }
   if (RowInRange(row, selectableRange)) {
-    if (!IsSkipKey(rowKey[static_cast<unsigned long long>(row)])) {
+    if (!IsSkipKey(rowKey[static_cast<std::size_t>(row)])) {
       selectedRow = row;
       reportSelectedRow(static_cast<int>(row));
       return true;
@@ -510,7 +510,7 @@ bool GuiDisplayGen::setSelectedRow(OOGUIRow row) {
 bool GuiDisplayGen::setNextRow(int direction) {
   OOGUIRow row = selectedRow + direction;
   while (RowInRange(row, selectableRange)) {
-    if (!IsSkipKey(rowKey[static_cast<unsigned long long>(row)])) {
+    if (!IsSkipKey(rowKey[static_cast<std::size_t>(row)])) {
       selectedRow = row;
       reportSelectedRow(static_cast<int>(row));
       return true;
@@ -566,7 +566,7 @@ void GuiDisplayGen::reportSelectedRow(int row) {
 void GuiDisplayGen::setNoSelectedRow() { selectedRow = -1; }
 
 std::optional<std::string> GuiDisplayGen::selectedRowText() {
-  const oo::PList& text = rowText[static_cast<unsigned long long>(selectedRow)];
+  const oo::PList& text = rowText[static_cast<std::size_t>(selectedRow)];
   if (const std::string* string = text.getIf<std::string>()) return *string;
   if (text.isArray()) {
     const oo::PList* first = text.at(0);  // the first column
@@ -583,7 +583,7 @@ std::optional<std::string> GuiDisplayGen::selectedRowKey() {
       (static_cast<unsigned>(selectedRow) >= rowKey.size()))
     return std::nullopt;
   else
-    return rowKey[static_cast<unsigned long long>(selectedRow)];
+    return rowKey[static_cast<std::size_t>(selectedRow)];
 }
 
 void GuiDisplayGen::setShowTextCursor(bool yesno) { showTextCursor = yesno; }
@@ -617,8 +617,8 @@ void GuiDisplayGen::overrideTabs(OOGUITabSettings stops,
       len = GUI_MAX_COLUMNS;
     }
     for (i = 0; i < len; i++) {
-      stops[i] = static_cast<OOGUITabStop>(override->at<std::size_t>(
-          i, static_cast<unsigned long long>(stops[i])));
+      stops[i] = static_cast<OOGUITabStop>(
+          override->at<std::size_t>(i, static_cast<std::size_t>(stops[i])));
     }
   }
 }
@@ -642,20 +642,19 @@ void GuiDisplayGen::clearAndKeepBackground(bool keepBackground) {
 }
 
 void GuiDisplayGen::setKey(const std::string& str, OOGUIRow row) {
-  if (RowInRange(row, rowRange))
-    rowKey[static_cast<unsigned long long>(row)] = str;
+  if (RowInRange(row, rowRange)) rowKey[static_cast<std::size_t>(row)] = str;
 }
 
 void GuiDisplayGen::setText(const std::string& str, OOGUIRow row) {
   if (RowInRange(row, rowRange)) {
-    rowText[static_cast<unsigned long long>(row)] = oo::PList(str);
+    rowText[static_cast<std::size_t>(row)] = oo::PList(str);
   }
 }
 
 void GuiDisplayGen::setText(const std::optional<std::string>& str, OOGUIRow row,
                             OOGUIAlignment alignment) {
   if (str.has_value() && RowInRange(row, rowRange)) {
-    rowText[static_cast<unsigned long long>(row)] = oo::PList(*str);
+    rowText[static_cast<std::size_t>(row)] = oo::PList(*str);
     rowAlignment[row] = alignment;
   }
 }
@@ -877,8 +876,7 @@ void GuiDisplayGen::setArray(const std::vector<std::string>& arr,
   if (RowInRange(row, rowRange)) {
     oo::PList::Array columns;
     for (const std::string& column : arr) columns.push_back(oo::PList(column));
-    rowText[static_cast<unsigned long long>(row)] =
-        oo::PList(std::move(columns));
+    rowText[static_cast<std::size_t>(row)] = oo::PList(std::move(columns));
   }
 }
 
@@ -1187,8 +1185,8 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
                (static_cast<float>(itemsPerColumn * 2))) +
           2);
       statusPage = static_cast<std::size_t>(static_cast<std::ptrdiff_t>(
-          std::clamp<std::int64_t>(static_cast<const long long>(statusPage), 1,
-                                   static_cast<const long long>(pageCount))));
+          std::clamp<std::int64_t>(static_cast<std::int64_t>(statusPage), 1,
+                                   static_cast<std::int64_t>(pageCount))));
       start = (statusPage == 1)
                   ? 0
                   : static_cast<std::ptrdiff_t>(
@@ -1264,9 +1262,9 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
   if (statusPage == 1 || statusPage == pageCount) itemsPerColumn++;
   eqptCount = static_cast<std::size_t>(
       static_cast<std::ptrdiff_t>(std::clamp<std::int64_t>(
-          static_cast<const long long>(eqptCount), 1,
-          static_cast<const long long>(static_cast<std::size_t>(start) +
-                                       itemsPerColumn * 2))));
+          static_cast<std::int64_t>(eqptCount), 1,
+          static_cast<std::int64_t>(static_cast<std::size_t>(start) +
+                                    itemsPerColumn * 2))));
   for (i = static_cast<std::size_t>(start); i < eqptCount; i++) {
     const oo::PList& info = (*eqptArray)[i];
     std::string name = info.at<std::string>(0);

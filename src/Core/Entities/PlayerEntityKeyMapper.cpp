@@ -130,7 +130,7 @@ const oo::PList& KeyFunctionAt(const std::vector<oo::PList>& functions,
                                std::ptrdiff_t index) {
   static const oo::PList none;
   return (index >= 0 && static_cast<std::size_t>(index) < functions.size())
-             ? functions[static_cast<unsigned long long>(index)]
+             ? functions[static_cast<std::size_t>(index)]
              : none;
 }
 
@@ -1474,7 +1474,7 @@ std::vector<oo::PList> PlayerEntity::keyFunctionList() {
     for (i = 0; static_cast<std::size_t>(i) < customEquipActivation.size();
          i++) {
       const oo::PList equip =
-          customEquipActivation[static_cast<unsigned long long>(i)];
+          customEquipActivation[static_cast<std::size_t>(i)];
       const std::string equipName = DescriptionOfString(OptionalStringForKey(
           equip, CUSTOMEQUIP_EQUIPNAME));  // %@: "(null)" for nil
       const std::string equipKey = DescriptionOfString(

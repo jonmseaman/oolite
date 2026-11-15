@@ -1362,7 +1362,7 @@ void HeadUpDisplay::drawMultiFunctionDisplay(const oo::PList& info,
   GLColorWithOverallAlpha(mfd_color, alpha);
   for (i = 0; i < 10; i++) {
     if (static_cast<std::size_t>(i) < lines.size()) {
-      const std::string& line = lines[static_cast<unsigned long long>(i)];
+      const std::string& line = lines[static_cast<std::size_t>(i)];
       y0 -= static_cast<GLfloat>(siz.height);
       // all lines should be shorter than the size of the MFD
       GLfloat textwidth = static_cast<GLfloat>(
@@ -1458,13 +1458,13 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
   int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+  std::vector<Entity*> my_entities(static_cast<std::size_t>(
       ent_count));  // the C++ entities, their objects retained
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   Entity* scannedEntity = nullptr;
 
   for (i = 0; i < ent_count; i++) {
-    my_entities[static_cast<unsigned long long>(i)] =
+    my_entities[static_cast<std::size_t>(i)] =
         oo::HoldIn(my_holds, uni_entities[i]);  // retained
   }
 
@@ -1498,7 +1498,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
     //}
     for (i = 0; i < ent_count; i++) {
       // scanner lollypops
-      scannedEntity = my_entities[static_cast<unsigned long long>(i)];
+      scannedEntity = my_entities[static_cast<std::size_t>(i)];
 
       drawClass = scannedEntity->getScanClass();
 
@@ -1648,26 +1648,23 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
             // rotate the view
             int corner;
             for (corner = 0; corner < 6; corner++) {
-              bounds[static_cast<unsigned long long>(corner)] =
-                  OOVectorMultiplyMatrix(
-                      vector_add(
-                          bounds[static_cast<unsigned long long>(corner)], rp),
-                      rotMatrix);
+              bounds[static_cast<std::size_t>(corner)] = OOVectorMultiplyMatrix(
+                  vector_add(bounds[static_cast<std::size_t>(corner)], rp),
+                  rotMatrix);
               if (nonlinear_scanner) {
-                bounds[static_cast<unsigned long long>(corner)] =
+                bounds[static_cast<std::size_t>(corner)] =
                     nonlinearScannerScale(
-                        bounds[static_cast<unsigned long long>(corner)], zoom,
+                        bounds[static_cast<std::size_t>(corner)], zoom,
                         0.5 * siz.width);
               } else {
-                scale_vector(&bounds[static_cast<unsigned long long>(corner)],
+                scale_vector(&bounds[static_cast<std::size_t>(corner)],
                              upscale);
               }
-              bounds[static_cast<unsigned long long>(corner)] = make_vector(
-                  bounds[static_cast<unsigned long long>(corner)].x +
+              bounds[static_cast<std::size_t>(corner)] = make_vector(
+                  bounds[static_cast<std::size_t>(corner)].x +
                       static_cast<OOScalar>(scanner_cx),
-                  bounds[static_cast<unsigned long long>(corner)].z * z_factor +
-                      bounds[static_cast<unsigned long long>(corner)].y *
-                          y_factor +
+                  bounds[static_cast<std::size_t>(corner)].z * z_factor +
+                      bounds[static_cast<std::size_t>(corner)].y * y_factor +
                       static_cast<GLfloat>(scanner_cy),
                   z1);
             }
@@ -4667,13 +4664,11 @@ void OODrawHilightedPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y,
   hisize.width = 0.0f;
 
   // see OODrawPlanetInfo
-  hisize.width +=
-      siz.width * sGlyphWidths[static_cast<unsigned long long>(23 - eco)];
-  hisize.width +=
-      siz.width * sGlyphWidths[static_cast<unsigned long long>(gov)] - 1.0;
+  hisize.width += siz.width * sGlyphWidths[static_cast<std::size_t>(23 - eco)];
+  hisize.width += siz.width * sGlyphWidths[static_cast<std::size_t>(gov)] - 1.0;
   if (tl > 9) hisize.width += siz.width * sGlyphWidths[49] - 2.0;
   hisize.width +=
-      siz.width * sGlyphWidths[static_cast<unsigned long long>(48 + (tl % 10))];
+      siz.width * sGlyphWidths[static_cast<std::size_t>(48 + (tl % 10))];
 
   OOSetOpenGLState(OOOpenGLStateID::kOverlay);
 
@@ -4712,10 +4707,10 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
       spacepos.z = centre.z + r0 * sin(theta);
       scannerpos =
           HeadUpDisplay::nonlinearScannerScale(spacepos, zoom, 0.5 * siz.width);
-      ring[static_cast<unsigned long long>(i)].x = x + scannerpos.x;
-      ring[static_cast<unsigned long long>(i)].y =
+      ring[static_cast<std::size_t>(i)].x = x + scannerpos.x;
+      ring[static_cast<std::size_t>(i)].y =
           y + scannerpos.z * z_factor + scannerpos.y * y_factor;
-      ring[static_cast<unsigned long long>(i)].z = z;
+      ring[static_cast<std::size_t>(i)].z = z;
     }
     spacepos.x = centre.x + r0;
     spacepos.y = 0;
@@ -4739,28 +4734,28 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
   scannerpos =
       HeadUpDisplay::nonlinearScannerScale(spacepos, zoom, 0.5 * siz.width);
   for (i = 0; i <= 24; i++) {
-    strip[static_cast<unsigned long long>(2 * i + 1)].x = x + scannerpos.x;
-    strip[static_cast<unsigned long long>(2 * i + 1)].y =
+    strip[static_cast<std::size_t>(2 * i + 1)].x = x + scannerpos.x;
+    strip[static_cast<std::size_t>(2 * i + 1)].y =
         y + scannerpos.y * y_factor + scannerpos.z * z_factor;
-    strip[static_cast<unsigned long long>(2 * i + 1)].z = z;
+    strip[static_cast<std::size_t>(2 * i + 1)].z = z;
   }
   for (i = 1; i <= 24; i++) {
     theta = static_cast<GLfloat>(i * std::numbers::pi / 24);
     for (j = 0; j <= 24; j++) {
       phi = static_cast<GLfloat>(j * std::numbers::pi / 12);
       // copy point from bottom edge of previous strip into top edge position
-      strip[static_cast<unsigned long long>(2 * j)] =
-          strip[static_cast<unsigned long long>(2 * j + 1)];
+      strip[static_cast<std::size_t>(2 * j)] =
+          strip[static_cast<std::size_t>(2 * j + 1)];
 
       spacepos.x = centre.x + radius * sin(theta) * cos(phi);
       spacepos.y = centre.y + radius * cos(theta);
       spacepos.z = centre.z + radius * sin(theta) * sin(phi);
       scannerpos =
           HeadUpDisplay::nonlinearScannerScale(spacepos, zoom, 0.5 * siz.width);
-      strip[static_cast<unsigned long long>(2 * j + 1)].x = x + scannerpos.x;
-      strip[static_cast<unsigned long long>(2 * j + 1)].y =
+      strip[static_cast<std::size_t>(2 * j + 1)].x = x + scannerpos.x;
+      strip[static_cast<std::size_t>(2 * j + 1)].y =
           y + scannerpos.y * y_factor + scannerpos.z * z_factor;
-      strip[static_cast<unsigned long long>(2 * j + 1)].z = z;
+      strip[static_cast<std::size_t>(2 * j + 1)].z = z;
     }
     GLDrawQuadStrip(strip);
   }

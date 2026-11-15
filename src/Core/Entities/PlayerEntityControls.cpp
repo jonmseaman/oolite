@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <initializer_list>
 #include <map>
@@ -3475,7 +3476,7 @@ void PlayerEntity::pollMarketScreenControls() {
               (goodsIndex >= 0 &&
                goodsIndex < static_cast<std::ptrdiff_t>(goods.size()))
                   ? std::optional<std::string>(
-                        goods[static_cast<unsigned long long>(goodsIndex)])
+                        goods[static_cast<std::size_t>(goodsIndex)])
                   : std::nullopt;
           setGuiToMarketScreen();
         }
@@ -3518,7 +3519,7 @@ void PlayerEntity::pollMarketScreenControls() {
               (goodsIndex >= 0 &&
                goodsIndex < static_cast<std::ptrdiff_t>(goods.size()))
                   ? std::optional<std::string>(
-                        goods[static_cast<unsigned long long>(goodsIndex)])
+                        goods[static_cast<std::size_t>(goodsIndex)])
                   : std::nullopt;
           setGuiToMarketInfoScreen();
         }

@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 
 #include "OOJoystickManager.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <string>
@@ -98,7 +100,7 @@ NSPoint OOJoystickManager::viewAxis() {
 }
 
 bool OOJoystickManager::getButtonState(int function) {
-  return butstate[static_cast<unsigned long long>(function)];
+  return butstate[static_cast<std::size_t>(function)];
 }
 
 const bool* OOJoystickManager::getAllButtonStates() { return butstate.data(); }
@@ -108,8 +110,7 @@ bool OOJoystickManager::isButtonDown(int button, int stickNum) {
 }
 
 double OOJoystickManager::getAxisState(int function) {
-  if (axstate[static_cast<unsigned long long>(function)] ==
-      STICK_AXISUNASSIGNED) {
+  if (axstate[static_cast<std::size_t>(function)] == STICK_AXISUNASSIGNED) {
     return STICK_AXISUNASSIGNED;
   }
   switch (function) {
@@ -117,43 +118,43 @@ double OOJoystickManager::getAxisState(int function) {
       if (precisionMode) {
         return (roll_profile != nullptr
                     ? roll_profile->value(
-                          axstate[static_cast<unsigned long long>(function)])
+                          axstate[static_cast<std::size_t>(function)])
                     : 0.0) /
                STICK_PRECISIONFAC;
       } else {
         return (roll_profile != nullptr
                     ? roll_profile->value(
-                          axstate[static_cast<unsigned long long>(function)])
+                          axstate[static_cast<std::size_t>(function)])
                     : 0.0);
       }
     case AXIS_PITCH:
       if (precisionMode) {
         return (pitch_profile != nullptr
                     ? pitch_profile->value(
-                          axstate[static_cast<unsigned long long>(function)])
+                          axstate[static_cast<std::size_t>(function)])
                     : 0.0) /
                STICK_PRECISIONFAC;
       } else {
         return (pitch_profile != nullptr
                     ? pitch_profile->value(
-                          axstate[static_cast<unsigned long long>(function)])
+                          axstate[static_cast<std::size_t>(function)])
                     : 0.0);
       }
     case AXIS_YAW:
       if (precisionMode) {
         return (yaw_profile != nullptr
                     ? yaw_profile->value(
-                          axstate[static_cast<unsigned long long>(function)])
+                          axstate[static_cast<std::size_t>(function)])
                     : 0.0) /
                STICK_PRECISIONFAC;
       } else {
         return (yaw_profile != nullptr
                     ? yaw_profile->value(
-                          axstate[static_cast<unsigned long long>(function)])
+                          axstate[static_cast<std::size_t>(function)])
                     : 0.0);
       }
     default:
-      return axstate[static_cast<unsigned long long>(function)];
+      return axstate[static_cast<std::size_t>(function)];
   }
 }
 
@@ -382,10 +383,10 @@ void OOJoystickManager::setFunctionForAxis(int axis, int function,
   // commander has to waggle the throttle to wake it up). Other axes
   // set as default.
   if (function == AXIS_THRUST) {
-    axstate[static_cast<unsigned long long>(function)] =
+    axstate[static_cast<std::size_t>(function)] =
         static_cast<float>(65536 - (axisvalue + 32768)) / 65536;
   } else {
-    axstate[static_cast<unsigned long long>(function)] =
+    axstate[static_cast<std::size_t>(function)] =
         static_cast<float>(axisvalue) / STICK_NORMALDIV;
   }
 }
@@ -428,8 +429,7 @@ void OOJoystickManager::unsetAxisFunction(int function) {
     for (j = 0; j < MAX_STICKS; j++) {
       if (axismap[j][i] == function) {
         axismap[j][i] = STICK_NOFUNCTION;
-        axstate[static_cast<unsigned long long>(function)] =
-            STICK_AXISUNASSIGNED;
+        axstate[static_cast<std::size_t>(function)] = STICK_AXISUNASSIGNED;
         break;
       }
     }
@@ -483,10 +483,10 @@ void OOJoystickManager::clearMappings() {
 void OOJoystickManager::clearStickStates() {
   int i, j;
   for (i = 0; i < AXIS_end; i++) {
-    axstate[static_cast<unsigned long long>(i)] = STICK_AXISUNASSIGNED;
+    axstate[static_cast<std::size_t>(i)] = STICK_AXISUNASSIGNED;
   }
   for (i = 0; i < BUTTON_end; i++) {
-    butstate[static_cast<unsigned long long>(i)] = 0;
+    butstate[static_cast<std::size_t>(i)] = 0;
   }
   for (i = 0; i < MAX_BUTTONS; i++) {
     for (j = 0; j < MAX_STICKS; j++) {
@@ -497,7 +497,7 @@ void OOJoystickManager::clearStickStates() {
 
 void OOJoystickManager::clearStickButtonState(int stickButton) {
   if (stickButton >= 0 && stickButton < BUTTON_end) {
-    butstate[static_cast<unsigned long long>(stickButton)] = 0;
+    butstate[static_cast<std::size_t>(stickButton)] = 0;
   }
 }
 

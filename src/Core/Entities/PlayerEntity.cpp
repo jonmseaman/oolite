@@ -582,7 +582,7 @@ void PlayerEntity::unloadAllCargoPodsForType(const std::string& type,
   // step through the cargo pods adding in the quantities
   for (i = cargoCount - 1; i >= 0; i--) {
     ::ShipEntity* cargoItem =
-        oo::ToShip(cargo[static_cast<unsigned long long>(i)].get());
+        oo::ToShip(cargo[static_cast<std::size_t>(i)].get());
     const std::optional<std::string> commodityType =
         (cargoItem != nullptr ? cargoItem->commodityType()
                               : std::optional<std::string>());
@@ -615,7 +615,7 @@ void PlayerEntity::unloadCargoPodsForType(const std::string& type,
 
   // step through the cargo pods removing pods or quantities
   for (i = n_cargo - 1; (i >= 0 && cargoToGo > 0); i--) {
-    cargoItem = oo::ToShip(cargo[static_cast<unsigned long long>(i)].get());
+    cargoItem = oo::ToShip(cargo[static_cast<std::size_t>(i)].get());
     co_type = (cargoItem != nullptr ? cargoItem->commodityType()
                                     : std::optional<std::string>());
     if (!co_type.has_value() || *co_type == type) {
@@ -1896,10 +1896,9 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
   // iterate downwards; lets us remove invalid ones as we go
   for (std::ptrdiff_t i = static_cast<std::ptrdiff_t>(contracts.size()) - 1;
        i >= 0; i--) {
-    oo::PList contractInfo =
-        contracts[static_cast<unsigned long long>(i)].isDict()
-            ? contracts[static_cast<unsigned long long>(i)]
-            : oo::PList(oo::PList::Dict());
+    oo::PList contractInfo = contracts[static_cast<std::size_t>(i)].isDict()
+                                 ? contracts[static_cast<std::size_t>(i)]
+                                 : oo::PList(oo::PList::Dict());
     const oo::PList* cargoType = contractInfo.find(CARGO_KEY_TYPE);
     // if the trade good ID is an int
     if (cargoType != nullptr && cargoType->isNumber()) {
@@ -1908,7 +1907,7 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
       (*contractInfo.getIf<oo::PList::Dict>())[std::string(CARGO_KEY_TYPE)] =
           oo::PList(
               OOCommodities::legacyCommodityType(legacy_type).value_or(""));
-      contracts[static_cast<unsigned long long>(i)] = std::move(contractInfo);
+      contracts[static_cast<std::size_t>(i)] = std::move(contractInfo);
     } else {
       // -oo_stringForKey: (nil when absent)
       const oo::PList* typeValue = contractInfo.find(CARGO_KEY_TYPE);
@@ -2007,12 +2006,11 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
     for (std::ptrdiff_t i = static_cast<std::ptrdiff_t>(passengers.size()) - 1;
          i >= max_passengers; i--) {
       const oo::PList* passengerName =
-          passengers[static_cast<unsigned long long>(i)].find(
-              PASSENGER_KEY_NAME);
+          passengers[static_cast<std::size_t>(i)].find(PASSENGER_KEY_NAME);
       if (passengerName != nullptr &&
           (passengerName->isString() || passengerName->isNumber()))
         passenger_record.erase(
-            passengers[static_cast<unsigned long long>(i)].get<std::string>(
+            passengers[static_cast<std::size_t>(i)].get<std::string>(
                 PASSENGER_KEY_NAME));  // -oo_stringForKey:
       passengers.erase(passengers.begin() + i);
     }
@@ -3623,12 +3621,12 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
   int i, ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+  std::vector<Entity*> my_entities(static_cast<std::size_t>(
       ent_count));  // the C++ entities, their objects retained
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   Entity* scannedEntity = nullptr;
   for (i = 0; i < ent_count; i++) {
-    my_entities[static_cast<unsigned long long>(i)] =
+    my_entities[static_cast<std::size_t>(i)] =
         oo::HoldIn(my_holds, uni_entities[i]);  // retained
   }
   bool massLocked = false;
@@ -3639,7 +3637,7 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
 #endif
   for (i = 0; i < ent_count; i++) {
     // scanner lollypops
-    scannedEntity = my_entities[static_cast<unsigned long long>(i)];
+    scannedEntity = my_entities[static_cast<std::size_t>(i)];
 
 #if OO_VARIABLE_TORUS_SPEED
     if (needHyperspeedNearest) [[unlikely]] {
@@ -6852,7 +6850,7 @@ void PlayerEntity::rotateCargo() {
   // cargo to the last place this means the cargo gets to be sorted as it is
   // rotated through
   for (i = 1; i < (n_cargo - rotates); i++) {
-    pod = oo::ToShip(cargo[static_cast<unsigned long long>(i)].get());
+    pod = oo::ToShip(cargo[static_cast<std::size_t>(i)].get());
     if (sameContents((pod != nullptr ? pod->commodityType()
                                      : std::optional<std::string>()))) {
       podHold = oo::Hold(pod);  // retained while it moves
@@ -7140,14 +7138,14 @@ void PlayerEntity::loseTargetStatus() {
   int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(static_cast<unsigned long long>(ent_count));
+  std::vector<Entity*> my_entities(static_cast<std::size_t>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   int i;
   for (i = 0; i < ent_count; i++)
-    my_entities[static_cast<unsigned long long>(i)] =
+    my_entities[static_cast<std::size_t>(i)] =
         oo::HoldIn(my_holds, uni_entities[i]);  //	retained (its object)
   for (i = 0; i < ent_count; i++) {
-    Entity* thing = my_entities[static_cast<unsigned long long>(i)];
+    Entity* thing = my_entities[static_cast<std::size_t>(i)];
     if (thing->isShip) {
       ::ShipEntity* ship = oo::ToShip(thing);
       if (this == (ship != nullptr ? ship->primaryTarget()
@@ -10374,7 +10372,7 @@ void PlayerEntity::setGuiToInterfacesScreen(int skip) {
                      (row - start_row < static_cast<OOGUIRow>(n_rows));
            i++) {
         const std::string& interfaceKey =
-            interfaceKeys[static_cast<unsigned long long>(i)];
+            interfaceKeys[static_cast<std::size_t>(i)];
         ::OOJSInterfaceDefinition* definition =
             interfaces->find(interfaceKey)->second.get();
 
@@ -11355,7 +11353,7 @@ OOCargoQuantity PlayerEntity::cargoQuantityForType(const std::string& type) {
     ::ShipEntity* cargoItem = nullptr;
 
     for (i = static_cast<std::ptrdiff_t>(cargo.size() - 1); i >= 0; i--) {
-      cargoItem = oo::ToShip(cargo[static_cast<unsigned long long>(i)].get());
+      cargoItem = oo::ToShip(cargo[static_cast<std::size_t>(i)].get());
       if ((cargoItem != nullptr ? cargoItem->commodityType()
                                 : std::optional<std::string>()) == type) {
         // (a nil commodity type never matched)
@@ -11853,9 +11851,8 @@ void PlayerEntity::setGuiToMarketScreen() {
           ++i;
           continue;
         }
-        showMarketScreenDataLine(
-            row, good, localMarket,
-            quantityInHold[static_cast<unsigned long long>(i++)]);
+        showMarketScreenDataLine(row, good, localMarket,
+                                 quantityInHold[static_cast<std::size_t>(i++)]);
         if (good == selectedCommodity) {
           active_row = row;
         }
@@ -12410,7 +12407,7 @@ void PlayerEntity::validateCustomEquipActivationArray() {
   if (customEquipActivation.empty()) return;
   for (i = static_cast<int>(customEquipActivation.size() - 1); i >= 0; i--) {
     equipmentKey =
-        StringForKey(customEquipActivation[static_cast<unsigned long long>(i)],
+        StringForKey(customEquipActivation[static_cast<std::size_t>(i)],
                      CUSTOMEQUIP_EQUIPKEY);
     ::OOEquipmentType* eq =
         (equipmentKey.has_value()
@@ -12776,10 +12773,9 @@ void PlayerEntity::setUpTrumbles() {
   int i;
   for (i = 0; i < PLAYER_MAX_TRUMBLES; i++) {
     digramchars[0] =
-        (trumbleDigrams[static_cast<unsigned long long>(i)] & 0x007f) | 0x0020;
+        (trumbleDigrams[static_cast<std::size_t>(i)] & 0x007f) | 0x0020;
     digramchars[1] =
-        ((trumbleDigrams[static_cast<unsigned long long>(i + 1)] ^ xchar) &
-         0x007f) |
+        ((trumbleDigrams[static_cast<std::size_t>(i + 1)] ^ xchar) & 0x007f) |
         0x0020;
     xchar = digramchars[0];
     const std::string digramstring = {
