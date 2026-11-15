@@ -1076,7 +1076,8 @@ static JSValue SystemInfoSamplePrice(OOJS_NATIVE_ARGS) {
   std::optional<std::string> commodityScript =
       ManifestString(ValueForKey(thisInfo, std::string("commodity_script")));
   OOCreditsQuantity price = commodities->samplePriceForCommodity(
-      commodity.value_or(""), economy, commodityScript, SystemOf(thisInfo));
+      commodity.value_or(""), static_cast<OOEconomyID>(economy),
+      commodityScript, SystemOf(thisInfo));
 
   return JS_NewNumber(context, price);
 

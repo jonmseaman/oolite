@@ -1809,7 +1809,7 @@ OOSystemID GuiDisplayGen::targetNextFoundSystem(int direction) {
         last = i;
       }
       if (systemIndex == static_cast<int>(count)) {
-        sys = i;
+        sys = static_cast<OOSystemID>(i);
       }
       count++;
     }
@@ -1820,14 +1820,14 @@ OOSystemID GuiDisplayGen::targetNextFoundSystem(int direction) {
   // loop back if needed.
   if (systemIndex < 0) {
     systemIndex = count - 1;
-    sys = last;
+    sys = static_cast<OOSystemID>(last);
   }
   if (systemIndex >= static_cast<int>(count)) {
     systemIndex = 0;
-    sys = first;
+    sys = static_cast<OOSystemID>(first);
   }
 
-  foundSystem = systemIndex;
+  foundSystem = static_cast<OOSystemID>(systemIndex);
   return sys;
 }
 
@@ -1866,8 +1866,9 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
 
   std::ptrdiff_t concealment[256];
   for (std::size_t i = 0; i < 256; i++) {
-    concealment[i] = systemManager->getPropertiesForSystem(i, g).get<int>(
-        "concealment", OO_SYSTEMCONCEALMENT_NONE);
+    concealment[i] =
+        systemManager->getPropertiesForSystem(static_cast<OOSystemID>(i), g)
+            .get<int>("concealment", OO_SYSTEMCONCEALMENT_NONE);
   }
 
   OOGLBEGIN(GL_LINES);
@@ -1983,10 +1984,10 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
     }
     OOSystemID loc;
     for (i = 0; i < route_hops; i++) {
-      loc = route.at<int>(i);
+      loc = static_cast<OOSystemID>(route.at<int>(i));
       starabs = systemManager->getCoordinatesForSystem(loc, g);
-      star2abs =
-          systemManager->getCoordinatesForSystem(route.at<int>(i + 1), g);
+      star2abs = systemManager->getCoordinatesForSystem(
+          static_cast<OOSystemID>(route.at<int>(i + 1)), g);
 
       star.x = static_cast<float>(starabs.x * hscale);
       star.y = static_cast<float>(starabs.y * vscale);
@@ -2010,7 +2011,7 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
     }
     // Label the destination, which was not included in the above loop.
     if (zoom > CHART_ZOOM_SHOW_LABELS) {
-      loc = route.at<int>(i);
+      loc = static_cast<OOSystemID>(route.at<int>(i));
       if (concealment[loc] < OO_SYSTEMCONCEALMENT_NONAME) {
         OODrawString((UNIVERSE != nullptr ? UNIVERSE->systemNameIndex(loc)
                                           : std::optional<std::string>())
@@ -2088,8 +2089,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
 
   std::ptrdiff_t concealment[256];
   for (i = 0; i < 256; i++) {
-    const oo::PList systemInfo =
-        systemManager->getPropertiesForSystem(i, galaxy_id);
+    const oo::PList systemInfo = systemManager->getPropertiesForSystem(
+        static_cast<OOSystemID>(i), galaxy_id);
     concealment[i] =
         systemInfo.get<int>("concealment", OO_SYSTEMCONCEALMENT_NONE);
   }
@@ -2163,7 +2164,9 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
     num_nearby_systems = 0;
     for (i = 0; i < 256; i++) {
       const oo::PList sys_info =
-          (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(i) : oo::PList());
+          (UNIVERSE != nullptr
+               ? UNIVERSE->generateSystemData(static_cast<OOSystemID>(i))
+               : oo::PList());
       if (sys_info.get<bool>("sun_gone_nova")) [[unlikely]] {
         nearby_systems[num_nearby_systems].gov = -1;  // Flag up nova systems!
       } else {
@@ -2173,11 +2176,13 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
         nearby_systems[num_nearby_systems].gov =
             sys_info.get<int>(KEY_GOVERNMENT);
       }
-      nearby_systems[num_nearby_systems].sysid = i;
+      nearby_systems[num_nearby_systems].sysid = static_cast<OOSystemID>(i);
       nearby_systems[num_nearby_systems].p_name =
           sys_info.get<std::string>(KEY_NAME);
       nearby_systems[num_nearby_systems].nova =
-          (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(i) : oo::PList())
+          (UNIVERSE != nullptr
+               ? UNIVERSE->generateSystemData(static_cast<OOSystemID>(i))
+               : oo::PList())
               .get<bool>("sun_gone_nova");
       num_nearby_systems++;
     }
@@ -2302,8 +2307,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
   OOGL(glColor4f(1.0f, 1.0f, 0.75f, alpha));  // pale yellow
 
   for (i = 0; i < num_nearby_systems; i++) {
-    NSPoint sys_coordinates =
-        systemManager->getCoordinatesForSystem(i, galaxy_id);
+    NSPoint sys_coordinates = systemManager->getCoordinatesForSystem(
+        static_cast<OOSystemID>(i), galaxy_id);
 
     dx = fabs(chart_centre_coordinates.x - sys_coordinates.x);
     dy = fabs(chart_centre_coordinates.y - sys_coordinates.y);
@@ -2317,8 +2322,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
       continue;
     }
 
-    const oo::PList systemInfo =
-        systemManager->getPropertiesForSystem(i, galaxy_id);
+    const oo::PList systemInfo = systemManager->getPropertiesForSystem(
+        static_cast<OOSystemID>(i), galaxy_id);
     float blob_factor =
         guiUserSettings.get<float>(kGuiChartCircleScale, 0.0017);
     float blob_size =
@@ -2394,8 +2399,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
             std::shared_ptr<OOColor> sunColor = OOColor::colorWithDescription(
                 ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager()
                                       : nullptr) != nullptr
-                     ? UNIVERSE->getSystemManager()->getProperty("sun_color", i,
-                                                                 galaxy_id)
+                     ? UNIVERSE->getSystemManager()->getProperty(
+                           "sun_color", static_cast<OOSystemID>(i), galaxy_id)
                      : oo::PList()));
             if (sunColor != nullptr) {
               sunColor->getRed(&r, &g, &b, &alpha);
@@ -2446,8 +2451,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
 
       bool mark = systemsFound[i];
       float marker_size = 8.0 / zoom;
-      NSPoint sys_coordinates =
-          systemManager->getCoordinatesForSystem(i, galaxy_id);
+      NSPoint sys_coordinates = systemManager->getCoordinatesForSystem(
+          static_cast<OOSystemID>(i), galaxy_id);
 
       dx = fabs(chart_centre_coordinates.x - sys_coordinates.x);
       dy = fabs(chart_centre_coordinates.y - sys_coordinates.y);
@@ -2470,8 +2475,9 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
             setGLColorFromSetting(kGuiChartMatchLabelColor,
                                   OOColor::cyanColor().get(), alpha);
             OODrawString(
-                (UNIVERSE != nullptr ? UNIVERSE->systemNameIndex(i)
-                                     : std::optional<std::string>())
+                (UNIVERSE != nullptr
+                     ? UNIVERSE->systemNameIndex(static_cast<OOSystemID>(i))
+                     : std::optional<std::string>())
                     .value_or(""),
                 x + star.x + 2.0, y + star.y - 10.0f, z,
                 NSMakeSize(10 * systemNameScale, 10 * systemNameScale));
@@ -2479,7 +2485,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                                   OOColor::greenColor().get(), alpha);
           }
         } else if (zoom > CHART_ZOOM_SHOW_LABELS) {
-          OODrawString((UNIVERSE != nullptr ? UNIVERSE->systemNameIndex(i)
+          OODrawString((UNIVERSE != nullptr ? UNIVERSE->systemNameIndex(
+                                                  static_cast<OOSystemID>(i))
                                             : std::optional<std::string>())
                            .value_or(""),
                        x + star.x + 2.0, y + star.y - 10.0f, z,

@@ -371,13 +371,16 @@ static JSValue MissionMarkSystem(JSContext* context, JSValueConst /*oojsThis*/,
       if (!OOEnforceStandards()) {
         if (player != nullptr)
           player->addMissionDestinationMarker(
-              (player != nullptr ? player->defaultMarker(dest) : oo::PList()));
+              (player != nullptr
+                   ? player->defaultMarker(static_cast<OOSystemID>(dest))
+                   : oo::PList()));
       }
     } else {
       // must be object, from above
       oo::PList marker =
           MarkerFromJSObject(context, OOJS_ARGV[i], "markSystem");
-      OOSystemID system = marker.get<int>("system", -1);
+      OOSystemID system =
+          static_cast<OOSystemID>(marker.get<int>("system", -1));
       if (system >= 0) {
         if (player != nullptr) player->addMissionDestinationMarker(marker);
       }
@@ -418,7 +421,8 @@ static JSValue MissionUnmarkSystem(JSContext* context,
       if (!OOEnforceStandards()) {
         if (!(player != nullptr
                   ? player->removeMissionDestinationMarker(
-                        (player != nullptr ? player->defaultMarker(dest)
+                        (player != nullptr ? player->defaultMarker(
+                                                 static_cast<OOSystemID>(dest))
                                            : oo::PList()))
                   : false)) {
           result = false;
@@ -428,7 +432,8 @@ static JSValue MissionUnmarkSystem(JSContext* context,
       // must be object, from above
       oo::PList marker =
           MarkerFromJSObject(context, OOJS_ARGV[i], "unmarkSystem");
-      OOSystemID system = marker.get<int>("system", -1);
+      OOSystemID system =
+          static_cast<OOSystemID>(marker.get<int>("system", -1));
       if (system >= 0) {
         if (!(player != nullptr ? player->removeMissionDestinationMarker(marker)
                                 : false)) {
@@ -817,7 +822,7 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
           JS_HasException(context)) {
         JS_FreeValue(context, JS_GetException(context));
       }
-      demoShip->setEntityPersonalityInt(personality);
+      demoShip->setEntityPersonalityInt(static_cast<uint16_t>(personality));
     }
     JS_FreeValue(context, value);
 

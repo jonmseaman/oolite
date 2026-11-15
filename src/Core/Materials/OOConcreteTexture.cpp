@@ -521,7 +521,7 @@ void OOConcreteTexture::uploadTextureDataWithMipMap(
   }
 
   // Note: we only reach here if (mipMap).
-  _mipLevels = level - 1;
+  _mipLevels = static_cast<uint8_t>(level - 1);
   OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, _mipLevels));
 }
 

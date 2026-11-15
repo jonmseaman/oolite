@@ -135,7 +135,7 @@ inline std::size_t skipUnicodeSpace(std::string_view s) noexcept {
     const auto b = [&](std::size_t k) {
       return i + k < s.size() ? static_cast<unsigned char>(s[i + k]) : 0u;
     };
-    if (isAsciiSpace(b(0))) {
+    if (isAsciiSpace(static_cast<unsigned char>(b(0)))) {
       i += 1;
       continue;
     }

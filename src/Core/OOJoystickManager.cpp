@@ -364,7 +364,7 @@ void OOJoystickManager::setFunctionForAxis(int axis, int function,
 
   int16_t axisvalue = getAxisWithStick(stickNum, axis);
   unsetAxisFunction(function);
-  axismap[stickNum][axis] = function;
+  axismap[stickNum][axis] = static_cast<int8_t>(function);
 
   // initialize the throttle to what it's set to now (or else the
   // commander has to waggle the throttle to wake it up). Other axes
@@ -389,7 +389,7 @@ void OOJoystickManager::setFunctionForButton(int button, int function,
       }
     }
   }
-  buttonmap[stickNum][button] = function;
+  buttonmap[stickNum][button] = static_cast<int8_t>(function);
 }
 
 void OOJoystickManager::setGuiFunctionForButton(int button, int function,
@@ -405,7 +405,7 @@ void OOJoystickManager::setGuiFunctionForButton(int button, int function,
       }
     }
   }
-  guibuttonmap[stickNum][button] = function;
+  guibuttonmap[stickNum][button] = static_cast<int8_t>(function);
 }
 
 void OOJoystickManager::unsetAxisFunction(int function) {

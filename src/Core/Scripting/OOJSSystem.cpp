@@ -477,7 +477,8 @@ static JSValue SystemGetProperty(OOJS_GETTER_ARGS) {
         case kGovernmentDescription:
           result =
               oo::PList(OODisplayStringFromGovernmentID(
-                            systemData.get<int>(KEY_GOVERNMENT))
+                            static_cast<OOGovernmentID>(
+                                systemData.get<int>(KEY_GOVERNMENT)))
                             .value_or(std::string(OO_DESC("not-applicable"))));
           break;
 
@@ -486,7 +487,8 @@ static JSValue SystemGetProperty(OOJS_GETTER_ARGS) {
 
         case kEconomyDescription:
           result = oo::PList(
-              OODisplayStringFromEconomyID(systemData.get<int>(KEY_ECONOMY))
+              OODisplayStringFromEconomyID(
+                  static_cast<OOEconomyID>(systemData.get<int>(KEY_ECONOMY)))
                   .value_or(std::string(OO_DESC("not-applicable"))));
           break;
 
@@ -1414,9 +1416,10 @@ static JSValue SystemStaticSystemNameForID(JSContext* context,
   if (systemID == -1)
     OOJS_RETURN_PLIST(oo::PList(std::string(OO_DESC("interstellar-space"))));
   else
-    OOJS_RETURN_STRING_OR_NULL((UNIVERSE != nullptr
-                                    ? UNIVERSE->getSystemName(systemID)
-                                    : std::optional<std::string>()));
+    OOJS_RETURN_STRING_OR_NULL(
+        (UNIVERSE != nullptr
+             ? UNIVERSE->getSystemName(static_cast<OOSystemID>(systemID))
+             : std::optional<std::string>()));
 
   OOJS_NATIVE_EXIT
 }
@@ -1484,7 +1487,9 @@ static JSValue SystemStaticInfoForSystem(JSContext* context,
     return OOJSNativeFailure(context);
   }
 
-  OOJS_RETURN(GetJSSystemInfoForSystem(context, galaxyID, systemID));
+  OOJS_RETURN(GetJSSystemInfoForSystem(context,
+                                       static_cast<OOGalaxyID>(galaxyID),
+                                       static_cast<OOSystemID>(systemID)));
 
   OOJS_NATIVE_EXIT
 }

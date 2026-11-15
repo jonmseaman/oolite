@@ -862,7 +862,8 @@ void PlayerEntity::updateShiftKeyDefinition(const std::string& key,
     std::ptrdiff_t k_int = static_cast<OOKeyCode>(
         key_def.get<std::int64_t>("key"));  // -integerValue
     if (k_int > 0) {
-      const std::optional<std::string> keystring = keyCodeDescription(k_int);
+      const std::optional<std::string> keystring =
+          keyCodeDescription(static_cast<OOKeyCode>(k_int));
       std::optional<std::string> newstring;
       if (keystring && oo::str::length(*keystring) == 1) {
         // try switching the case. for characters that can't be switched (eg

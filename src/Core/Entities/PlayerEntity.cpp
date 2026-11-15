@@ -1039,7 +1039,7 @@ OOSystemID PlayerEntity::nextHopTargetSystemID() {
     return target_system_id;
   }
   const oo::PList* route = routeInfo.get<oo::PList::Array>("route");
-  return (route != nullptr) ? route->at<int>(1) : 0;
+  return (route != nullptr) ? static_cast<OOSystemID>(route->at<int>(1)) : 0;
 }
 
 OOSystemID PlayerEntity::infoSystemID() { return info_system_id; }
@@ -1103,7 +1103,8 @@ void PlayerEntity::nextInfoSystem() {
   for (i = 0; i < route->count(); i++) {
     if (route->at<int>(i) == info_system_id) {
       if (i + 1 < route->count()) {
-        setInfoSystemID(route->at<unsigned int>(i + 1), true);
+        setInfoSystemID(static_cast<OOSystemID>(route->at<unsigned int>(i + 1)),
+                        true);
         return;
       }
       break;
@@ -1131,7 +1132,8 @@ void PlayerEntity::previousInfoSystem() {
   for (i = 0; i < route->count(); i++) {
     if (route->at<int>(i) == info_system_id) {
       if (i > 0) {
-        setInfoSystemID(route->at<unsigned int>(i - 1), true);
+        setInfoSystemID(static_cast<OOSystemID>(route->at<unsigned int>(i - 1)),
+                        true);
         return;
       }
       break;
@@ -1230,9 +1232,11 @@ oo::PList PlayerEntity::commanderDataDictionary() {
       result["current_system_name"] = oo::PList(*systemName);
     const oo::PList systemData =
         (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList());
-    OOGovernmentID government = systemData.get<int>(KEY_GOVERNMENT);
+    OOGovernmentID government =
+        static_cast<OOGovernmentID>(systemData.get<int>(KEY_GOVERNMENT));
     OOTechLevelID techlevel = systemData.get<int>(KEY_TECHLEVEL);
-    OOEconomyID economy = systemData.get<int>(KEY_ECONOMY);
+    OOEconomyID economy =
+        static_cast<OOEconomyID>(systemData.get<int>(KEY_ECONOMY));
     result["current_system_government"] =
         oo::PList::unsignedInteger(static_cast<std::uint16_t>(government));
     result["current_system_techlevel"] =
@@ -1606,13 +1610,13 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
 
   // newer savegames use galaxy_id
   if (StringForKey(dict, "galaxy_id").has_value()) {
-    galaxy_number = dict.get<std::size_t>("galaxy_id");
+    galaxy_number = static_cast<OOGalaxyID>(dict.get<std::size_t>("galaxy_id"));
     if (galaxy_number >= OO_GALAXIES_AVAILABLE) {
       return false;
     }
     if (UNIVERSE != nullptr) UNIVERSE->setGalaxyTo(galaxy_number, true);
 
-    system_id = dict.get<int>("system_id");
+    system_id = static_cast<OOSystemID>(dict.get<int>("system_id"));
     if (system_id < 0 || system_id >= OO_SYSTEMS_PER_GALAXY) {
       return false;
     }
@@ -1641,8 +1645,10 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
     if (longRangeChartMode == OOLongRangeChartMode::kUnknown)
       longRangeChartMode = OOLongRangeChartMode::kSunColor;
 
-    target_system_id = dict.get<int>("target_id", system_id);
-    previous_system_id = dict.get<int>("previous_system_id", system_id);
+    target_system_id =
+        static_cast<OOSystemID>(dict.get<int>("target_id", system_id));
+    previous_system_id =
+        static_cast<OOSystemID>(dict.get<int>("previous_system_id", system_id));
     info_system_id = target_system_id;
     coord_vals = CoordinateTokens(
         ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) !=
@@ -1656,10 +1662,12 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
     chart_focus_coordinates = chart_centre_coordinates;
     target_chart_focus = chart_focus_coordinates;
 
-    found_system_id = dict.get<int>("found_system_id", -1);
+    found_system_id =
+        static_cast<OOSystemID>(dict.get<int>("found_system_id", -1));
   } else {
     // compatibility for loading 1.80 savegames
-    galaxy_number = dict.get<std::size_t>("galaxy_number");
+    galaxy_number =
+        static_cast<OOGalaxyID>(dict.get<std::size_t>("galaxy_number"));
 
     if (UNIVERSE != nullptr) UNIVERSE->setGalaxyTo(galaxy_number, true);
 
@@ -2066,15 +2074,15 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
     credits = OODeciCreditsFromPList(&creditsValue);
   }
 
-  fuel = dict.get<unsigned int>("fuel", fuel);
-  galaxy_number = dict.get<int>("galaxy_number");
+  fuel = static_cast<OOFuelQuantity>(dict.get<unsigned int>("fuel", fuel));
+  galaxy_number = static_cast<OOGalaxyID>(dict.get<int>("galaxy_number"));
   //
   const oo::PList shipyard_info =
       shipDataKey.has_value()
           ? OOShipRegistry::sharedRegistry()->shipyardInfoForKey(*shipDataKey)
           : oo::PList();
-  OOWeaponFacingSet available_facings =
-      shipyard_info.get<unsigned int>(KEY_WEAPON_FACINGS, weaponFacings());
+  OOWeaponFacingSet available_facings = static_cast<OOWeaponFacingSet>(
+      shipyard_info.get<unsigned int>(KEY_WEAPON_FACINGS, weaponFacings()));
 
   if (OOWeaponFacingIsIn(available_facings, OOWeaponFacing::kForward))
     forward_weapon_type = OOWeaponTypeFromEquipmentIdentifierLegacy(
@@ -2148,7 +2156,8 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
   for (size_t systemIndex = 0;
        savedSystems.isArray() && systemIndex < savedSystems.count();
        systemIndex++) {
-    roleSystemList.push_back(savedSystems.at<int>(systemIndex));  // -intValue
+    roleSystemList.push_back(static_cast<OOSystemID>(
+        savedSystems.at<int>(systemIndex)));  // -intValue
   }
 
   // mission_variables
@@ -7462,9 +7471,10 @@ bool PlayerEntity::witchJumpChecklist(bool isGalacticJump) {
     // check nearby masses
     // UPDATE_STAGE("checking for mass blockage");
     ::ShipEntity* blocker = oo::ToShip(
-        (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(
-                                   checkShipsInVicinityForWitchJumpExit())
-                             : nullptr));
+        (UNIVERSE != nullptr
+             ? UNIVERSE->entityForUniversalID(static_cast<OOUniversalID>(
+                   checkShipsInVicinityForWitchJumpExit()))
+             : nullptr));
     if (blocker) {
       if (UNIVERSE != nullptr) UNIVERSE->clearPreviousMessage();
       const std::string blockerName =
@@ -8160,8 +8170,9 @@ void PlayerEntity::setGuiToStatusScreen() {
     if (UNIVERSE != nullptr) UNIVERSE->removeDemoShips();
     const std::optional<std::string> demoShipKey = shipDataKey();
     if (demoShipKey.has_value())
-      showShipModelWithKey(*demoShipKey, oo::PList(), entityPersonalityInt(),
-                           2.5, 1.7, 8.0, "GUI_SCREEN_STATUS");
+      showShipModelWithKey(*demoShipKey, oo::PList(),
+                           static_cast<uint16_t>(entityPersonalityInt()), 2.5,
+                           1.7, 8.0, "GUI_SCREEN_STATUS");
     setShowDemoShips(true);
   } else {
     setShowDemoShips(false);
@@ -8702,14 +8713,15 @@ oo::PList::Array PlayerEntity::contractsListForScriptingFromArray(
           oo::PList::unsignedInteger(dict.get<unsigned int>(CONTRACT_KEY_RISK));
     }
 
-    OOSystemID planet = dict.get<int>(CONTRACT_KEY_DESTINATION);
+    OOSystemID planet =
+        static_cast<OOSystemID>(dict.get<int>(CONTRACT_KEY_DESTINATION));
     std::optional<std::string> planetName =
         (UNIVERSE != nullptr ? UNIVERSE->getSystemName(planet)
                              : std::optional<std::string>());
     contract[std::string(CONTRACT_KEY_DESTINATION)] =
         oo::PList::unsignedInteger(static_cast<unsigned int>(planet));
     setString(contract, "destinationName", planetName);
-    planet = dict.get<int>(CONTRACT_KEY_START);
+    planet = static_cast<OOSystemID>(dict.get<int>(CONTRACT_KEY_START));
     planetName = (UNIVERSE != nullptr ? UNIVERSE->getSystemName(planet)
                                       : std::optional<std::string>());
     contract[std::string(CONTRACT_KEY_START)] =
@@ -8793,12 +8805,14 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
     std::string government_desc =
         StringForKey(infoSystemData, KEY_GOVERNMENT_DESC)
             .value_or(OODisplayStringFromGovernmentID(
-                          infoSystemData.get<int>(KEY_GOVERNMENT))
+                          static_cast<OOGovernmentID>(
+                              infoSystemData.get<int>(KEY_GOVERNMENT)))
                           .value_or(""));
     std::string economy_desc =
         StringForKey(infoSystemData, KEY_ECONOMY_DESC)
             .value_or(OODisplayStringFromEconomyID(
-                          infoSystemData.get<int>(KEY_ECONOMY))
+                          static_cast<OOEconomyID>(
+                              infoSystemData.get<int>(KEY_ECONOMY)))
                           .value_or(""));
     std::string inhabitants =
         StringForKey(infoSystemData, KEY_INHABITANTS)
@@ -12542,9 +12556,9 @@ void PlayerEntity::receiveCommsMessage(const std::string& message_text,
 void PlayerEntity::getFined() {
   if (legalStatusValue == 0) return;  // nothing to pay for
 
-  OOGovernmentID local_gov =
+  OOGovernmentID local_gov = static_cast<OOGovernmentID>(
       (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
-          .get<int>(KEY_GOVERNMENT);
+          .get<int>(KEY_GOVERNMENT));
   if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false))
     local_gov = 1;  // equivalent to Feudal. I'm assuming any station in
                     // interstellar space is military. -- Ahruman 2008-05-29
@@ -13776,7 +13790,8 @@ void PlayerEntity::initialiseMissionDestinations(const oo::PList& destinations,
     OOSystemID dest;
     for (size_t legacyMarker = 0; legacyMarker < legacy.count();
          legacyMarker++) {
-      dest = legacy.at<int>(legacyMarker);  // -intValue
+      dest =
+          static_cast<OOSystemID>(legacy.at<int>(legacyMarker));  // -intValue
       addMissionDestinationMarker(defaultMarker(dest));
     }
   }
