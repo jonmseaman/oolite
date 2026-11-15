@@ -42,7 +42,6 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include <condition_variable>
 #include <memory>
 #include <optional>
 #include <string>
@@ -54,6 +53,8 @@ MA 02110-1301, USA.
 inline constexpr unsigned kOOCacheMinimumPruneThreshold = 25U;
 inline constexpr unsigned kOOCacheDefaultPruneThreshold = 200U;
 inline constexpr unsigned kOOCacheNoPrune = 0xFFFFFFFFU;
+
+struct OOCacheImpl;
 
 class OOCache : public oo::Object {
  public:
@@ -105,12 +106,7 @@ class OOCache : public oo::Object {
 
   void loadFromArray(const oo::PList& inArray);
 
-#if DEBUG_GRAPHVIZ
-  void appendNodesFromSubTree(struct OOCacheNode* subTree,
-                              std::string& ioString);
-#endif
-
-  struct OOCacheImpl* cache = {};
+  std::unique_ptr<OOCacheImpl> cache;
   unsigned _pruneThreshold =
       {};                // (the ivar was pruneThreshold, now the getter's name)
   bool _autoPrune = {};  // (autoPrune, likewise)
