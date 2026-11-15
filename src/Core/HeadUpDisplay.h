@@ -88,37 +88,37 @@ inline constexpr int SPEED_BAR_CENTRE_X = 200;
 inline constexpr int SPEED_BAR_CENTRE_Y = -145;
 inline constexpr int SPEED_BAR_WIDTH = 80;
 inline constexpr int SPEED_BAR_HEIGHT = 8;
-#define SPEED_BAR_DRAW_SURROUND true
+inline constexpr auto SPEED_BAR_DRAW_SURROUND = true;
 
 inline constexpr int ROLL_BAR_CENTRE_X = 200;
 inline constexpr int ROLL_BAR_CENTRE_Y = -160;
 inline constexpr int ROLL_BAR_WIDTH = 80;
 inline constexpr int ROLL_BAR_HEIGHT = 8;
-#define ROLL_BAR_DRAW_SURROUND true
+inline constexpr auto ROLL_BAR_DRAW_SURROUND = true;
 
 inline constexpr int PITCH_BAR_CENTRE_X = 200;
 inline constexpr int PITCH_BAR_CENTRE_Y = -170;
 inline constexpr int PITCH_BAR_WIDTH = 80;
 inline constexpr int PITCH_BAR_HEIGHT = 8;
-#define PITCH_BAR_DRAW_SURROUND true
+inline constexpr auto PITCH_BAR_DRAW_SURROUND = true;
 
 inline constexpr int ENERGY_GAUGE_CENTRE_X = 200;
 inline constexpr int ENERGY_GAUGE_CENTRE_Y = -205;
 inline constexpr int ENERGY_GAUGE_WIDTH = 80;
 inline constexpr int ENERGY_GAUGE_HEIGHT = 48;
-#define ENERGY_GAUGE_DRAW_SURROUND true
+inline constexpr auto ENERGY_GAUGE_DRAW_SURROUND = true;
 
 inline constexpr int FORWARD_SHIELD_BAR_CENTRE_X = -200;
 inline constexpr int FORWARD_SHIELD_BAR_CENTRE_Y = -146;
 inline constexpr int FORWARD_SHIELD_BAR_WIDTH = 80;
 inline constexpr int FORWARD_SHIELD_BAR_HEIGHT = 8;
-#define FORWARD_SHIELD_BAR_DRAW_SURROUND true
+inline constexpr auto FORWARD_SHIELD_BAR_DRAW_SURROUND = true;
 
 inline constexpr int AFT_SHIELD_BAR_CENTRE_X = -200;
 inline constexpr int AFT_SHIELD_BAR_CENTRE_Y = -162;
 inline constexpr int AFT_SHIELD_BAR_WIDTH = 80;
 inline constexpr int AFT_SHIELD_BAR_HEIGHT = 8;
-#define AFT_SHIELD_BAR_DRAW_SURROUND true
+inline constexpr auto AFT_SHIELD_BAR_DRAW_SURROUND = true;
 
 inline constexpr int FUEL_BAR_CENTRE_X = -200;
 inline constexpr int FUEL_BAR_CENTRE_Y = -179;
@@ -149,7 +149,7 @@ inline constexpr int MISSILES_DISPLAY_X = -228;
 inline constexpr int MISSILES_DISPLAY_Y = -224;
 inline constexpr int MISSILES_DISPLAY_SPACING = 16;
 #define MISSILE_ICON_WIDTH 12
-#define MISSILE_ICON_HEIGHT MISSILE_ICON_WIDTH
+inline constexpr auto MISSILE_ICON_HEIGHT = MISSILE_ICON_WIDTH;
 
 inline constexpr int PRIMED_DISPLAY_X = -144;
 inline constexpr int PRIMED_DISPLAY_Y = -256;
