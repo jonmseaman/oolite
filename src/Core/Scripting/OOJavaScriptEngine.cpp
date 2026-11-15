@@ -93,7 +93,7 @@ MA 02110-1301, USA.
 #endif
 
 #define OOJS_RUNTIME_SIZE_MiB 256
-#define OOJS_STACK_SIZE (1024 * 1024)
+constexpr auto OOJS_STACK_SIZE = (1024 * 1024);
 
 #if OO_DEBUG
 #define OOJS_TIME_LIMIT (0.2)  // seconds
