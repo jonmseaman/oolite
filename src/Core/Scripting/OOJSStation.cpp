@@ -521,7 +521,7 @@ static JSValue StationAbortDockingForShip(OOJS_NATIVE_ARGS) {
   if (JS_HasException(context)) return JS_EXCEPTION;
   if (argc == 0) {
     OOJSReportBadArguments(context, "Station", "abortDockingForShip",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "ship in docking queue");
     return OOJSNativeFailure(context);
   }
@@ -556,7 +556,7 @@ static JSValue StationCanDockShip(OOJS_NATIVE_ARGS) {
     }
   }
   if (EXPECT_NOT(shipToCheck == nullptr)) {
-    OOJSReportBadArguments(context, "Station", "canDockShip", MIN(argc, 1),
+    OOJSReportBadArguments(context, "Station", "canDockShip", std::min(argc, 1),
                            OOJS_ARGV, std::nullopt, "shipEntity");
     return OOJSNativeFailure(context);
   }
@@ -672,7 +672,7 @@ static JSValue StationLaunchShipWithRole(OOJS_NATIVE_ARGS) {
   if (argc > 0) shipRole = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!shipRole.has_value())) {
     OOJSReportBadArguments(context, "Station", "launchShipWithRole",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (role)");
     return OOJSNativeFailure(context);
   }
@@ -845,8 +845,9 @@ static JSValue StationSetInterface(OOJS_NATIVE_ARGS) {
   GET_THIS_STATION(station);
 
   if (argc < 1) {
-    OOJSReportBadArguments(context, "Station", "setInterface", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "key [, definition]");
+    OOJSReportBadArguments(context, "Station", "setInterface",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "key [, definition]");
     return OOJSNativeFailure(context);
   }
   std::optional<std::string> key = OOStringFromJSValue(context, OOJS_ARGV[0]);
@@ -983,7 +984,7 @@ fail:
   JS_FreeValue(context, callback);
   JS_FreeValue(context, value);
   JS_FreeValue(context, params);
-  OOJSReportBadArguments(context, "Station", "setInterface", MIN(argc, 1),
+  OOJSReportBadArguments(context, "Station", "setInterface", std::min(argc, 1),
                          OOJS_ARGV, std::nullopt, errorDescription);
   return OOJSNativeFailure(context);
 
@@ -997,8 +998,9 @@ static JSValue StationSetMarketPrice(OOJS_NATIVE_ARGS) {
   GET_THIS_STATION(station);
 
   if (argc < 2) {
-    OOJSReportBadArguments(context, "Station", "setMarketPrice", MIN(argc, 2),
-                           OOJS_ARGV, std::nullopt, "commodity, credits");
+    OOJSReportBadArguments(context, "Station", "setMarketPrice",
+                           std::min(argc, 2), OOJS_ARGV, std::nullopt,
+                           "commodity, credits");
     return OOJSNativeFailure(context);
   }
 
@@ -1010,8 +1012,8 @@ static JSValue StationSetMarketPrice(OOJS_NATIVE_ARGS) {
            : nullptr);  // null: no good is defined, as a message to nil
   if (EXPECT_NOT(commodities == nullptr ||
                  !commodities->goodDefined(commodity.value_or("")))) {
-    OOJSReportBadArguments(context, "Station", "setMarketPrice", MIN(argc, 2),
-                           OOJS_ARGV, std::nullopt,
+    OOJSReportBadArguments(context, "Station", "setMarketPrice",
+                           std::min(argc, 2), OOJS_ARGV, std::nullopt,
                            "Unrecognised commodity type");
     return OOJSNativeFailure(context);
   }
@@ -1019,8 +1021,8 @@ static JSValue StationSetMarketPrice(OOJS_NATIVE_ARGS) {
   int32_t price;
   bool gotPrice = OOJSValueToInt32(context, OOJS_ARGV[1], &price);
   if (EXPECT_NOT(!gotPrice || price < 0)) {
-    OOJSReportBadArguments(context, "Station", "setMarketPrice", MIN(argc, 2),
-                           OOJS_ARGV, std::nullopt,
+    OOJSReportBadArguments(context, "Station", "setMarketPrice",
+                           std::min(argc, 2), OOJS_ARGV, std::nullopt,
                            "Price must be at least 0 decicredits");
     return OOJSNativeFailure(context);
   }
@@ -1050,7 +1052,7 @@ static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
 
   if (argc < 2) {
     OOJSReportBadArguments(context, "Station", "setMarketQuantity",
-                           MIN(argc, 2), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 2), OOJS_ARGV, std::nullopt,
                            "commodity, units");
     return OOJSNativeFailure(context);
   }
@@ -1064,7 +1066,7 @@ static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
   if (EXPECT_NOT(commodities == nullptr ||
                  !commodities->goodDefined(commodity))) {
     OOJSReportBadArguments(context, "Station", "setMarketQuantity",
-                           MIN(argc, 2), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 2), OOJS_ARGV, std::nullopt,
                            "Unrecognised commodity type");
     return OOJSNativeFailure(context);
   }
@@ -1081,7 +1083,7 @@ static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
           static_cast<OOCargoQuantity>(quantity) >
               ((market != nullptr) ? market->capacityForGood(commodity) : 0))) {
     OOJSReportBadArguments(
-        context, "Station", "setMarketQuantity", MIN(argc, 2), OOJS_ARGV,
+        context, "Station", "setMarketQuantity", std::min(argc, 2), OOJS_ARGV,
         std::nullopt,
         "Quantity must be between 0 and the station market capacity");
     return OOJSNativeFailure(context);
@@ -1158,7 +1160,7 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
   */
   if (argc != 1 || (!JS_IsNull(OOJS_ARGV[0]) && !JS_IsObject(OOJS_ARGV[0]))) {
     OOJSReportBadArguments(context, "Station", "addShipToShipyard",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "shipyard item definition");
     return OOJSNativeFailure(context);
   }
@@ -1187,7 +1189,7 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
   // validate each element of the dictionary
   if (shipyardDefinition.isNull()) {
     OOJSReportBadArguments(context, "Station", "addShipToShipyard",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "valid dictionary object");
     return OOJSNativeFailure(context);
   }
@@ -1200,7 +1202,7 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
   }
   if (shipyardDefinition.find(KEY_SHORT_DESCRIPTION) == nullptr) {
     OOJSReportBadArguments(context, "Station", "addShipToShipyard",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "'short_description' in dictionary");
     return OOJSNativeFailure(context);
   }
@@ -1210,7 +1212,7 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
   if (!shipyardDefinition.get<oo::PList>(
           std::string(SHIPYARD_KEY_SHIPDATA_KEY))) {
     OOJSReportBadArguments(context, "Station", "addShipToShipyard",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "'shipdata_key' in dictionary");
     return OOJSNativeFailure(context);
   }
@@ -1268,7 +1270,7 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
           oo::PList::unsignedInteger(price);
     } else {
       OOJSReportBadArguments(context, "Station", "addShipToShipyard",
-                             MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                             std::min(argc, 1), OOJS_ARGV, std::nullopt,
                              "'price' in dictionary");
       return OOJSNativeFailure(context);
     }
@@ -1410,7 +1412,7 @@ static JSValue StationRemoveShipFromShipyard(OOJS_NATIVE_ARGS) {
       static_cast<std::size_t>(shipIndex) + 1 >
           (shipyard != nullptr ? shipyard->size() : 0)) {
     OOJSReportBadArguments(context, "Station", "removeShipFromShipyard",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "valid ship index");
     return OOJSNativeFailure(context);
   }

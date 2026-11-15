@@ -1543,7 +1543,7 @@ void OOMesh::debugDrawNormals() {
     // Draw normal
     length = magnitude2(n);
     blend = fabs(length - 1) * 5.0;
-    color[0] = MIN(blend, 1.0f);
+    color[0] = std::min(blend, 1.0f);
     color[1] = 1.0f - color[0];
     color[2] = color[1];
     glColor3fv(color);

@@ -1221,8 +1221,9 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
   }
   if (statusPage > 1 && statusPage < pageCount) {
     setSelectableRange(NSMakeRange(
-        firstRow, MIN(firstRow + maxRows,
-                      static_cast<std::size_t>(GUI_DEFAULT_ROWS - firstRow))));
+        firstRow,
+        std::min(firstRow + maxRows,
+                 static_cast<std::size_t>(GUI_DEFAULT_ROWS - firstRow))));
     // default selected row to 'More -->' if we are looking at one of the middle
     // pages
     if (getSelectedRow() == -1) setSelectedRow(firstRow + maxRows);
@@ -1584,7 +1585,8 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
     }
     if (rowText[i].isArray()) {
       const oo::PList& array = rowText[i];
-      std::size_t j, max_columns = MIN(array.count(), n_columns);
+      std::size_t j, max_columns = std::min(
+                         array.count(), static_cast<std::size_t>(n_columns));
       bool isLeftAligned;
 
       for (j = 0; j < max_columns; j++) {

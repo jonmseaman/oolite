@@ -989,7 +989,7 @@ static JSValue VectorToCoordinateSystem(OOJS_NATIVE_ARGS) {
   if (argc > 0) coordScheme = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!coordScheme.has_value())) {
     OOJSReportBadArguments(context, "Vector3D", "toCoordinateSystem",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "coordinate system");
     return OOJSNativeFailure(context);
   }
@@ -1020,7 +1020,7 @@ static JSValue VectorFromCoordinateSystem(OOJS_NATIVE_ARGS) {
   if (argc > 0) coordScheme = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!coordScheme.has_value())) {
     OOJSReportBadArguments(context, "Vector3D", "fromCoordinateSystem",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "coordinate system");
     return OOJSNativeFailure(context);
   }

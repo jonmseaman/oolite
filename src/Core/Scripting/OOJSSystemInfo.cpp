@@ -984,7 +984,7 @@ static JSValue SystemInfoDistanceToSystem(OOJS_NATIVE_ARGS) {
   if (argc < 1 || !JS_IsObject(OOJS_ARGV[0]) ||
       !JSSystemInfoGetSystemInfo(context, OOJS_ARGV[0], &otherInfo)) {
     OOJSReportBadArguments(context, "SystemInfo", "distanceToSystem",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "system info");
     return OOJSNativeFailure(context);
   }
@@ -1019,8 +1019,9 @@ static JSValue SystemInfoRouteToSystem(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   if (argc < 1 || !JS_IsObject(OOJS_ARGV[0]) ||
       !JSSystemInfoGetSystemInfo(context, OOJS_ARGV[0], &otherInfo)) {
-    OOJSReportBadArguments(context, "SystemInfo", "routeToSystem", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "system info");
+    OOJSReportBadArguments(context, "SystemInfo", "routeToSystem",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "system info");
     return OOJSNativeFailure(context);
   }
 
@@ -1065,8 +1066,8 @@ static JSValue SystemInfoSamplePrice(OOJS_NATIVE_ARGS) {
       OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(commodities == nullptr ||
                  !commodities->goodDefined(commodity.value_or("")))) {
-    OOJSReportBadArguments(context, "SystemInfo", "samplePrice", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt,
+    OOJSReportBadArguments(context, "SystemInfo", "samplePrice",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "Unrecognised commodity type");
     return OOJSNativeFailure(context);
   }
@@ -1115,20 +1116,20 @@ static JSValue SystemInfoSetPropertyMethod(OOJS_NATIVE_ARGS) {
   int32_t iValue;
 
   if (argc < 3) {
-    OOJSReportBadArguments(context, "SystemInfo", "setProperty", MIN(argc, 3),
-                           OOJS_ARGV, std::nullopt,
+    OOJSReportBadArguments(context, "SystemInfo", "setProperty",
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "setProperty(layer, property, value [,manifest])");
     return OOJSNativeFailure(context);
   }
   if (!OOJSValueToInt32(context, OOJS_ARGV[0], &iValue)) {
-    OOJSReportBadArguments(context, "SystemInfo", "setProperty", MIN(argc, 3),
-                           OOJS_ARGV, std::nullopt,
+    OOJSReportBadArguments(context, "SystemInfo", "setProperty",
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "setProperty(layer, property, value [,manifest])");
     return OOJSNativeFailure(context);
   }
   if (iValue < 0 || iValue >= OO_SYSTEM_LAYERS) {
-    OOJSReportBadArguments(context, "SystemInfo", "setProperty", MIN(argc, 3),
-                           OOJS_ARGV, std::nullopt,
+    OOJSReportBadArguments(context, "SystemInfo", "setProperty",
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "layer must be 0, 1, 2 or 3");
     return OOJSNativeFailure(context);
   }
@@ -1250,21 +1251,21 @@ static JSValue SystemInfoStaticSetInterstellarProperty(OOJS_NATIVE_ARGS) {
 
   if (argc < 6) {
     OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
-                           MIN(argc, 3), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "setProperty(galaxy, fromsystem, tosystem, "
                            "layer, property, value [,manifest])");
     return OOJSNativeFailure(context);
   }
   if (!OOJSValueToInt32(context, OOJS_ARGV[0], &iValue)) {
     OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
-                           MIN(argc, 3), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "setProperty(galaxy, fromsystem, tosystem, "
                            "layer, property, value [,manifest])");
     return OOJSNativeFailure(context);
   }
   if (iValue < 0 || iValue > kOOMaximumGalaxyID) {
     OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
-                           MIN(argc, 3), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "galaxy out of range");
     return OOJSNativeFailure(context);
   } else {
@@ -1273,14 +1274,14 @@ static JSValue SystemInfoStaticSetInterstellarProperty(OOJS_NATIVE_ARGS) {
 
   if (!OOJSValueToInt32(context, OOJS_ARGV[1], &iValue)) {
     OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
-                           MIN(argc, 3), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "setProperty(galaxy, fromsystem, tosystem, "
                            "layer, property, value [,manifest])");
     return OOJSNativeFailure(context);
   }
   if (iValue < 0 || iValue > kOOMaximumSystemID) {
     OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
-                           MIN(argc, 3), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "fromsystem out of range");
     return OOJSNativeFailure(context);
   } else {
@@ -1289,14 +1290,14 @@ static JSValue SystemInfoStaticSetInterstellarProperty(OOJS_NATIVE_ARGS) {
 
   if (!OOJSValueToInt32(context, OOJS_ARGV[2], &iValue)) {
     OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
-                           MIN(argc, 3), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "setProperty(galaxy, fromsystem, tosystem, "
                            "layer, property, value [,manifest])");
     return OOJSNativeFailure(context);
   }
   if (iValue < 0 || iValue > kOOMaximumSystemID) {
     OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
-                           MIN(argc, 3), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "tosystem out of range");
     return OOJSNativeFailure(context);
   } else {
@@ -1305,14 +1306,14 @@ static JSValue SystemInfoStaticSetInterstellarProperty(OOJS_NATIVE_ARGS) {
 
   if (!OOJSValueToInt32(context, OOJS_ARGV[3], &iValue)) {
     OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
-                           MIN(argc, 3), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "setProperty(galaxy, fromsystem, tosystem, "
                            "layer, property, value [,manifest])");
     return OOJSNativeFailure(context);
   }
   if (iValue < 0 || iValue >= OO_SYSTEM_LAYERS) {
     OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
-                           MIN(argc, 3), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 3), OOJS_ARGV, std::nullopt,
                            "layer must be 0, 1, 2 or 3");
     return OOJSNativeFailure(context);
   }

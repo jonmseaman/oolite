@@ -350,7 +350,7 @@ static JSValue ManifestComment(OOJS_NATIVE_ARGS) {
     good = OOStringFromJSValue(context, OOJS_ARGV[0]);
   }
   if (!good.has_value()) {
-    OOJSReportBadArguments(context, "Manifest", "comment", MIN(argc, 1),
+    OOJSReportBadArguments(context, "Manifest", "comment", std::min(argc, 1),
                            OOJS_ARGV, std::nullopt, "good");
     return JS_EXCEPTION;
   }
@@ -379,7 +379,7 @@ static JSValue ManifestSetComment(OOJS_NATIVE_ARGS) {
     information = OOStringFromJSValue(context, OOJS_ARGV[1]);
   }
   if (!good.has_value() || !information.has_value()) {
-    OOJSReportBadArguments(context, "Manifest", "setComment", MIN(argc, 2),
+    OOJSReportBadArguments(context, "Manifest", "setComment", std::min(argc, 2),
                            OOJS_ARGV, std::nullopt,
                            "good and information text");
     return JS_EXCEPTION;
@@ -406,8 +406,8 @@ static JSValue ManifestShortComment(OOJS_NATIVE_ARGS) {
     good = OOStringFromJSValue(context, OOJS_ARGV[0]);
   }
   if (!good.has_value()) {
-    OOJSReportBadArguments(context, "Manifest", "shortComment", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "good");
+    OOJSReportBadArguments(context, "Manifest", "shortComment",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt, "good");
     return JS_EXCEPTION;
   }
 
@@ -435,8 +435,8 @@ static JSValue ManifestSetShortComment(OOJS_NATIVE_ARGS) {
     information = OOStringFromJSValue(context, OOJS_ARGV[1]);
   }
   if (!good.has_value() || !information.has_value()) {
-    OOJSReportBadArguments(context, "Manifest", "setShortComment", MIN(argc, 2),
-                           OOJS_ARGV, std::nullopt,
+    OOJSReportBadArguments(context, "Manifest", "setShortComment",
+                           std::min(argc, 2), OOJS_ARGV, std::nullopt,
                            "good and information text");
     return JS_EXCEPTION;
   }

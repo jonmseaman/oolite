@@ -144,7 +144,7 @@ bool OOTextureLoader::initWithPath(const std::optional<std::string>& inPath,
 
   _options = options;
 
-  _maxSize = MIN(sUserMaxSize, sGLMaxSize);
+  _maxSize = std::min(sUserMaxSize, sGLMaxSize);
 
   _generateMipMaps = (options & OOTextureFlags::kMinFilterMask) ==
                      OOTextureFlags::kMinFilterMipMap;
@@ -154,7 +154,7 @@ bool OOTextureLoader::initWithPath(const std::optional<std::string>& inPath,
     _shrinkThreshold = kNeverShrinkThreshold;
   } else if (oo::Any(options & OOTextureFlags::kExtraShrink)) {
     _shrinkThreshold = kExtraShrinkThreshold;
-    _maxSize = MIN(_maxSize, static_cast<uint32_t>(kExtraShrinkMaxSize));
+    _maxSize = std::min(_maxSize, static_cast<uint32_t>(kExtraShrinkMaxSize));
   } else {
     _shrinkThreshold = kDefaultShrinkThreshold;
   }
@@ -301,7 +301,7 @@ void OOTextureLoader::setUp() {
   // Load two maximum sizes - graphics hardware limit and user-specified limit.
   GLint maxSize = 0;  // headless: no GL to ask
   if (OOGraphicsAvailable()) OOGL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize));
-  sGLMaxSize = MAX(maxSize, 64);
+  sGLMaxSize = std::max(maxSize, 64);
   OO_LOG("texture.load.rescale.maxSize", "GL maximum texture size: {}",
          static_cast<unsigned>(sGLMaxSize));
 
@@ -317,7 +317,7 @@ void OOTextureLoader::setUp() {
     OO_LOG("texture.load.rescale.maxSize", "User maximum texture size: {}",
            static_cast<unsigned>(sUserMaxSize));
   sUserMaxSize = OORoundUpToPowerOf2_32(sUserMaxSize);
-  sUserMaxSize = MAX(sUserMaxSize, 64U);
+  sUserMaxSize = std::max(sUserMaxSize, 64U);
 
   sHaveSetUp = true;
 }
@@ -414,7 +414,7 @@ void OOTextureLoader::applySettings() {
 
   if (_isCubeMap && !OOCubeMapsAvailable()) {
     OOPixMapToRGBA(&pixMap);
-    desiredHeight = MIN(desiredWidth * 2, 512U);
+    desiredHeight = std::min(desiredWidth * 2, 512U);
     if (sReducedDetail && desiredHeight > kCubeShrinkThreshold)
       desiredHeight /= 2;
     desiredWidth = desiredHeight * 2;
@@ -504,11 +504,11 @@ void OOTextureLoader::getDesiredWidth(OOPixMapDimension* outDesiredWidth,
       _isCubeMap = true;
 
       desiredWidth = OORoundUpToPowerOf2_PixMap((2 * _width) / 3);
-      desiredWidth = MIN(desiredWidth, sGLMaxSize / 8);
+      desiredWidth = std::min(desiredWidth, sGLMaxSize / 8);
       if (sReducedDetail) {
         if (256 < desiredWidth) desiredWidth /= 2;
       }
-      desiredWidth = MIN(desiredWidth, sUserMaxSize / 4);
+      desiredWidth = std::min(desiredWidth, sUserMaxSize / 4);
 
       desiredHeight = desiredWidth * 6;
     } else {
@@ -522,8 +522,8 @@ void OOTextureLoader::getDesiredWidth(OOPixMapDimension* outDesiredWidth,
         desiredHeight = _height;
       }
 
-      desiredWidth = MIN(desiredWidth, sGLMaxSize);
-      desiredHeight = MIN(desiredHeight, sGLMaxSize);
+      desiredWidth = std::min(desiredWidth, sGLMaxSize);
+      desiredHeight = std::min(desiredHeight, sGLMaxSize);
 
       if (!_avoidShrinking) {
         if (sReducedDetail) {
@@ -531,8 +531,8 @@ void OOTextureLoader::getDesiredWidth(OOPixMapDimension* outDesiredWidth,
           if (_shrinkThreshold < desiredHeight) desiredHeight /= 2;
         }
 
-        desiredWidth = MIN(desiredWidth, _maxSize);
-        desiredHeight = MIN(desiredHeight, _maxSize);
+        desiredWidth = std::min(desiredWidth, _maxSize);
+        desiredHeight = std::min(desiredHeight, _maxSize);
       }
     }
   } else {

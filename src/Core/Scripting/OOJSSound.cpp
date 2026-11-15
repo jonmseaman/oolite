@@ -217,8 +217,8 @@ static JSValue SoundStaticLoad(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) name = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!name.has_value()) {
-    OOJSReportBadArguments(context, "Sound", "load", MIN(argc, 1), OOJS_ARGV,
-                           std::nullopt, "string");
+    OOJSReportBadArguments(context, "Sound", "load", std::min(argc, 1),
+                           OOJS_ARGV, std::nullopt, "string");
     return OOJSNativeFailure(context);
   }
 
@@ -251,7 +251,7 @@ static JSValue SoundStaticPlayMusic(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) name = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!name.has_value()) {
-    OOJSReportBadArguments(context, "Sound", "playMusic", MIN(argc, 1),
+    OOJSReportBadArguments(context, "Sound", "playMusic", std::min(argc, 1),
                            OOJS_ARGV, std::nullopt, "string");
     return OOJSNativeFailure(context);
   }

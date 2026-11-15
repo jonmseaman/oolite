@@ -668,8 +668,9 @@ static JSValue EquipmentInfoStaticInfoForKey(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!key.has_value()) {
-    OOJSReportBadArguments(context, "EquipmentInfo", "infoForKey", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "string");
+    OOJSReportBadArguments(context, "EquipmentInfo", "infoForKey",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string");
     return OOJSNativeFailure(context);
   }
 

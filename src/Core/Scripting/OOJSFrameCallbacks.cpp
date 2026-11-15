@@ -249,7 +249,8 @@ static JSValue GlobalAddFrameCallback(OOJS_NATIVE_ARGS) {
   JSValueConst callback = OOJS_ARGV[0];
   if (EXPECT_NOT(argc < 1 || !OOJSValueIsFunction(context, callback))) {
     OOJSReportBadArguments(context, std::nullopt, "addFrameCallback",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt, "function");
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "function");
     return JS_EXCEPTION;
   }
 
@@ -291,7 +292,7 @@ static JSValue GlobalRemoveFrameCallback(OOJS_NATIVE_ARGS) {
     if (JS_HasException(context))
       JS_FreeValue(context, JS_GetException(context));
     OOJSReportBadArguments(context, std::nullopt, "removeFrameCallback",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "frame callback tracking ID");
     return JS_EXCEPTION;
   }
