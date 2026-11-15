@@ -64,7 +64,7 @@ class DebugConsole:
         # Without a save the game sits on the main-menu demo: there is a docked player and a
         # station, but the simulation is not running, so spawned ships never leave AIState GLOBAL
         # and never acquire a target. -load starts a real game (src/SDL/main.m:167). There is no
-        # JS route out of the intro screen - that is keyboard work and belongs to the GUI tier.
+        # JS route out of the intro screen - that needs real key presses (keyboard.py).
         self.load_save = load_save
         self.output_dir = os.path.abspath(output_dir) if output_dir else None
         self.host = host
