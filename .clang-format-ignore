@@ -1,0 +1,2 @@
+# Hand-laid-out macro lists; clang-format would wrap them into one unreadable run.
+src/Core/UniverseVirtualMembers.h
