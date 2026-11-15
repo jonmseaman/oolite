@@ -415,12 +415,6 @@ void OOPlanetTextureGenerator::loadTexture() {
   _height = _info.height = 1 << (_planetScale + _info.planetScaleOffset);
   _width = _info.width = _height * _info.planetAspectRatio;
 
-#define FAIL_IF(cond)      \
-  do {                     \
-    if (cond) [[unlikely]] \
-      goto END;            \
-  } while (0)
-
   buffer = OOMakePixelBuffer(4 * static_cast<size_t>(_width) * _height);
   px = buffer->data();
 
@@ -434,12 +428,10 @@ void OOPlanetTextureGenerator::loadTexture() {
     apx = aBuffer->data();
   }
 
-  FAIL_IF(!FillFBMBuffer(&_info));
+  if (FillFBMBuffer(&_info)) [[likely]] {
 #if DEBUG_DUMP_RAW
-  dumpNoiseBuffer(_info.fbmBuffer.data());
+    dumpNoiseBuffer(_info.fbmBuffer.data());
 #endif
-
-  {
     float paleClouds =
         (_info.cloudFraction * _info.fbmBuffer[0] < 1.0f - _info.cloudFraction)
             ? 0.0f
@@ -566,7 +558,6 @@ void OOPlanetTextureGenerator::loadTexture() {
     _format = kOOTextureDataRGBA;
   }
 
-END:
   _info.fbmBuffer = std::vector<float>();
   _info.qBuffer = std::vector<float>();
   if (success) {
@@ -946,9 +937,7 @@ static bool MakePermutationTable(OOPlanetTextureGeneratorInfo* info) {
 static bool GenerateFBMNoise3D(OOPlanetTextureGeneratorInfo* info) {
   bool OK = false;
 
-  FAIL_IF(!MakePermutationTable(info));
-
-  {
+  if (MakePermutationTable(info)) [[likely]] {
     unsigned x, y, width = info->width, height = info->height;
     float lon, lat;  // Longitude and latitude in radians.
     float dlon = 2.0f * std::numbers::pi / width;
@@ -994,7 +983,6 @@ static bool GenerateFBMNoise3D(OOPlanetTextureGeneratorInfo* info) {
     }
   }
 
-END:
   info->permutations = std::vector<uint16_t>();
   return OK;
 }
