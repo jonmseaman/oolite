@@ -135,8 +135,7 @@ bool ManifestListContains(const oo::PList& manifest, const std::string& key,
 // The strings of a required_by set (held as a sorted array of unique strings).
 std::set<std::string> ManifestRequiredBy(const oo::PList& manifest) {
   std::set<std::string> result;
-  const oo::PList* list =
-      manifest.get<oo::PList::Array>(std::string(kOOManifestRequiredBy));
+  const oo::PList* list = manifest.get<oo::PList::Array>(kOOManifestRequiredBy);
   if (list == nullptr) return result;
   for (const oo::PList& element : *list->getIf<oo::PList::Array>()) {
     if (const std::string* elementString = element.getIf<std::string>())
@@ -1029,8 +1028,8 @@ bool ResourceManager::areRequirementsFulfilled(
 
 bool ResourceManager::manifestHasConflicts(const oo::PList& manifest,
                                            bool logErrors) {
-  const oo::PList* conflicts = manifest.get<oo::PList::Array>(
-      std::string(kOOManifestConflictOXPs), nullptr);
+  const oo::PList* conflicts =
+      manifest.get<oo::PList::Array>(kOOManifestConflictOXPs, nullptr);
   // if it has a non-empty conflict_oxps list
   if (conflicts != nullptr && conflicts->count() > 0) {
     // iterate over that list
@@ -1099,8 +1098,8 @@ void ResourceManager::filterSearchPathsForConflicts(
 
 bool ResourceManager::manifestHasMissingDependencies(const oo::PList& manifest,
                                                      bool logErrors) {
-  const oo::PList* requireds = manifest.get<oo::PList::Array>(
-      std::string(kOOManifestRequiresOXPs), nullptr);
+  const oo::PList* requireds =
+      manifest.get<oo::PList::Array>(kOOManifestRequiresOXPs, nullptr);
   // if it has a non-empty required_oxps list
   if (requireds != nullptr && requireds->count() > 0) {
     // iterate over that list
@@ -1249,7 +1248,7 @@ void ResourceManager::filterSearchPathsToExcludeScenarioOnlyPaths(
     if (entry != sOXPManifests.end()) {
       const oo::PList manifest = entry->second;
       if (ManifestListContains(manifest, std::string(kOOManifestTags),
-                               std::string(kOOManifestTagScenarioOnly))) {
+                               kOOManifestTagScenarioOnly)) {
         RemovePath(searchPaths,
                    ManifestString(manifest, std::string(kOOManifestFilePath)));
         sOXPManifests.erase(identifier);

@@ -1086,9 +1086,9 @@ std::string ExpandKey(const std::string& key) {
 // -compare: of the two offers' price numbers (unsigned long long).
 int comparePrice(const oo::PList& offer1, const oo::PList& offer2) {
   const unsigned long long price1 =
-      offer1.get<unsigned long long>(std::string(SHIPYARD_KEY_PRICE));
+      offer1.get<unsigned long long>(SHIPYARD_KEY_PRICE);
   const unsigned long long price2 =
-      offer2.get<unsigned long long>(std::string(SHIPYARD_KEY_PRICE));
+      offer2.get<unsigned long long>(SHIPYARD_KEY_PRICE);
   return (price1 < price2) ? -1 : (price1 > price2) ? 1 : 0;
 }
 
@@ -1097,16 +1097,12 @@ int comparePrice(const oo::PList& offer1, const oo::PList& offer2) {
    always carry one.
 */
 int compareName(const oo::PList& offer1, const oo::PList& offer2) {
-  const oo::PList* ship1 =
-      offer1.get<oo::PList::Dict>(std::string(SHIPYARD_KEY_SHIP));
-  const oo::PList* ship2 =
-      offer2.get<oo::PList::Dict>(std::string(SHIPYARD_KEY_SHIP));
+  const oo::PList* ship1 = offer1.get<oo::PList::Dict>(SHIPYARD_KEY_SHIP);
+  const oo::PList* ship2 = offer2.get<oo::PList::Dict>(SHIPYARD_KEY_SHIP);
   const std::optional<std::string> name1 =
-      (ship1 != nullptr) ? OptionalStringIn(*ship1, std::string(KEY_NAME))
-                         : std::nullopt;
+      (ship1 != nullptr) ? OptionalStringIn(*ship1, KEY_NAME) : std::nullopt;
   const std::optional<std::string> name2 =
-      (ship2 != nullptr) ? OptionalStringIn(*ship2, std::string(KEY_NAME))
-                         : std::nullopt;
+      (ship2 != nullptr) ? OptionalStringIn(*ship2, KEY_NAME) : std::nullopt;
 
   const int result = (name1.has_value() && name2.has_value())
                          ? oo::str::compare(oo::str::lowercase(*name1),
@@ -1768,7 +1764,7 @@ void Universe::setUpSpace() {
   const oo::PList systeminfo =
       (systemManager != nullptr ? systemManager->getPropertiesForCurrentSystem()
                                 : oo::PList());
-  unsigned techlevel = systeminfo.get<unsigned int>(std::string(KEY_TECHLEVEL));
+  unsigned techlevel = systeminfo.get<unsigned int>(KEY_TECHLEVEL);
   std::optional<std::string> stationDesc,
       defaultStationDesc;  // the default is never set: nullopt, as nil
   std::shared_ptr<OOColor> bgcolor;
@@ -1970,7 +1966,7 @@ void Universe::setUpSpace() {
   } else {
     sunSettings["corona_flare"] = oo::PList::singleReal(defaultSunFlare);
   }
-  if (const oo::PList* value = systeminfo.find(std::string(KEY_SUNNAME))) {
+  if (const oo::PList* value = systeminfo.find(KEY_SUNNAME)) {
     sunSettings[std::string(KEY_SUNNAME)] = *value;
   }
   const oo::PList sun_dict(std::move(sunSettings));
@@ -3223,7 +3219,7 @@ void Universe::witchspaceShipWithPrimaryRole(const std::string& role) {
   OOGovernmentID government;
 
   systeminfo = currentSystemData();
-  government = systeminfo.get<unsigned char>(std::string(KEY_GOVERNMENT));
+  government = systeminfo.get<unsigned char>(KEY_GOVERNMENT);
 
   ship = newShipWithRole(role);  // retain count = 1
 
@@ -3389,7 +3385,7 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
           (ship != nullptr ? ship->pendingEscortCount() : uint8_t{});
       if (pendingEscortCount > 0) {
         OOGovernmentID government =
-            currentSystemData().get<unsigned char>(std::string(KEY_GOVERNMENT));
+            currentSystemData().get<unsigned char>(KEY_GOVERNMENT);
         if ((Ranrot() % 7) < government)  // remove escorts if we feel safe
         {
           int nx = pendingEscortCount -
@@ -8281,7 +8277,7 @@ void Universe::setSystemTo(OOSystemID s) {
   targetSystemID = s;
 
   systemData = generateSystemData(targetSystemID);
-  economy = systemData.get<unsigned char>(std::string(KEY_ECONOMY));
+  economy = systemData.get<unsigned char>(KEY_ECONOMY);
   scriptName = OptionalStringIn(systemData, "market_script");
 
   commodityMarket =
@@ -9443,19 +9439,17 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
       techlevel = specialTL;
     } else {
       // otherwise use default for system
-      techlevel = systemInfo.get<unsigned int>(std::string(KEY_TECHLEVEL));
+      techlevel = systemInfo.get<unsigned int>(KEY_TECHLEVEL);
     }
     unsigned ship_index =
         (ship_seed.d * 0x100 + ship_seed.e) % keysForShips.size();
     const std::string ship_key = keysForShips[ship_index];
     const oo::PList ship_info = registry->shipyardInfoForKey(ship_key);
-    OOTechLevelID ship_techlevel =
-        ship_info.get<int>(std::string(KEY_TECHLEVEL));
+    OOTechLevelID ship_techlevel = ship_info.get<int>(KEY_TECHLEVEL);
 
-    double chance =
-        1.0 - pow(1.0 - ship_info.get<double>(std::string(KEY_CHANCE)),
-                  std::max(static_cast<OOTechLevelID>(1),
-                           techlevel - ship_techlevel));
+    double chance = 1.0 - pow(1.0 - ship_info.get<double>(KEY_CHANCE),
+                              std::max(static_cast<OOTechLevelID>(1),
+                                       techlevel - ship_techlevel));
 
     // seed random number generator
     int superRand1 = ship_seed.a * 0x10000 + ship_seed.c * 0x100 + ship_seed.e;
@@ -9474,16 +9468,14 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
       std::optional<std::string> shipName =
           OptionalStringIn(shipDict, "display_name");
       if (!shipName.has_value())
-        shipName = OptionalStringIn(shipDict, std::string(KEY_NAME));
-      OOCreditsQuantity price =
-          ship_info.get<unsigned int>(std::string(KEY_PRICE));
+        shipName = OptionalStringIn(shipDict, KEY_NAME);
+      OOCreditsQuantity price = ship_info.get<unsigned int>(KEY_PRICE);
       OOCreditsQuantity base_price = price;
       const oo::PList* standardEquipment =
-          ship_info.get<oo::PList::Dict>(std::string(KEY_STANDARD_EQUIPMENT));
+          ship_info.get<oo::PList::Dict>(KEY_STANDARD_EQUIPMENT);
       const oo::PList* standardExtras =
           (standardEquipment != nullptr)
-              ? standardEquipment->get<oo::PList::Array>(
-                    std::string(KEY_EQUIPMENT_EXTRAS))
+              ? standardEquipment->get<oo::PList::Array>(KEY_EQUIPMENT_EXTRAS)
               : nullptr;
       oo::PList::Array extras = (standardExtras != nullptr)
                                     ? *standardExtras->getIf<oo::PList::Array>()
@@ -9491,16 +9483,15 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
       std::optional<std::string> fwdWeaponString =
           (standardEquipment != nullptr)
               ? OptionalStringIn(*standardEquipment,
-                                 std::string(KEY_EQUIPMENT_FORWARD_WEAPON))
+                                 KEY_EQUIPMENT_FORWARD_WEAPON)
               : std::nullopt;
       std::optional<std::string> aftWeaponString =
           (standardEquipment != nullptr)
-              ? OptionalStringIn(*standardEquipment,
-                                 std::string(KEY_EQUIPMENT_AFT_WEAPON))
+              ? OptionalStringIn(*standardEquipment, KEY_EQUIPMENT_AFT_WEAPON)
               : std::nullopt;
 
       const oo::PList* optionalEquipment =
-          ship_info.get<oo::PList::Array>(std::string(KEY_OPTIONAL_EQUIPMENT));
+          ship_info.get<oo::PList::Array>(KEY_OPTIONAL_EQUIPMENT);
       std::vector<std::optional<std::string>> options;
       if (optionalEquipment != nullptr) {
         for (std::size_t k = 0; k < optionalEquipment->count(); k++)
@@ -9517,7 +9508,7 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
       shortShipDescription += TextOrNull(shipName) + ":";
 
       OOWeaponFacingSet availableFacings =
-          ship_info.get<unsigned int>(std::string(KEY_WEAPON_FACINGS),
+          ship_info.get<unsigned int>(KEY_WEAPON_FACINGS,
                                       kOOValidWeaponFacings) &
           kOOValidWeaponFacings;
 
@@ -9528,11 +9519,9 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
       // port and starboard weapons are not modified in the shipyard
       //  apply fwd and aft weapons to the ship
       if (fwdWeapon && fwdWeaponString)
-        SetInDict(shipDict, std::string(KEY_EQUIPMENT_FORWARD_WEAPON),
-                  *fwdWeaponString);
+        SetInDict(shipDict, KEY_EQUIPMENT_FORWARD_WEAPON, *fwdWeaponString);
       if (aftWeapon && aftWeaponString)
-        SetInDict(shipDict, std::string(KEY_EQUIPMENT_AFT_WEAPON),
-                  *aftWeaponString);
+        SetInDict(shipDict, KEY_EQUIPMENT_AFT_WEAPON, *aftWeaponString);
 
       int passengerBerthCount = 0;
       bool customised = false;
@@ -9706,7 +9695,7 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
               price += eqPrice;
               fwdWeaponString = equipmentKey;
               fwdWeapon = new_weapon;
-              SetInDict(shipDict, std::string(KEY_EQUIPMENT_FORWARD_WEAPON),
+              SetInDict(shipDict, KEY_EQUIPMENT_FORWARD_WEAPON,
                         *fwdWeaponString);
               weaponCustomized = true;
               fwdWeaponDesc = eqShortDesc;
@@ -9726,8 +9715,7 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
                 price += eqPrice;
                 aftWeaponString = equipmentKey;
                 aftWeapon = new_weapon;
-                SetInDict(shipDict, std::string(KEY_EQUIPMENT_AFT_WEAPON),
-                          *aftWeaponString);
+                SetInDict(shipDict, KEY_EQUIPMENT_AFT_WEAPON, *aftWeaponString);
               } else {
                 RemoveOption(options, equipmentKey);  // dont try again
               }
@@ -9876,8 +9864,8 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
         "calculation, but does not exist. Setting ship value to 0.",
         ship_desc.value_or("(null)"));
   } else {
-    base_price = shipyard_info.get<unsigned long long>(
-        std::string(SHIPYARD_KEY_PRICE), 0ULL);
+    base_price =
+        shipyard_info.get<unsigned long long>(SHIPYARD_KEY_PRICE, 0ULL);
   }
 
   if (base_price == 0ULL) return base_price;
@@ -9916,30 +9904,28 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
   }
 
   const oo::PList* basicInfoEntry =
-      shipyard_info.get<oo::PList::Dict>(std::string(KEY_STANDARD_EQUIPMENT));
+      shipyard_info.get<oo::PList::Dict>(KEY_STANDARD_EQUIPMENT);
   const oo::PList basic_info =
       (basicInfoEntry != nullptr) ? *basicInfoEntry : oo::PList();
-  unsigned base_missiles =
-      basic_info.get<unsigned int>(std::string(KEY_EQUIPMENT_MISSILES));
+  unsigned base_missiles = basic_info.get<unsigned int>(KEY_EQUIPMENT_MISSILES);
   OOCreditsQuantity base_missiles_value =
       base_missiles *
       (UNIVERSE != nullptr ? UNIVERSE->getEquipmentPriceForKey("EQ_MISSILE")
                            : 0) /
       10;
   std::optional<std::string> base_weapon_key =
-      OptionalStringIn(basic_info, std::string(KEY_EQUIPMENT_FORWARD_WEAPON));
+      OptionalStringIn(basic_info, KEY_EQUIPMENT_FORWARD_WEAPON);
   OOCreditsQuantity base_weapons_value = priceOf(base_weapon_key) / 10;
   std::vector<std::optional<std::string>> base_extra_equipment;
   if (const oo::PList* baseExtras =
-          basic_info.get<oo::PList::Array>(std::string(KEY_EQUIPMENT_EXTRAS))) {
+          basic_info.get<oo::PList::Array>(KEY_EQUIPMENT_EXTRAS)) {
     for (std::size_t k = 0; k < baseExtras->count(); k++)
       base_extra_equipment.push_back(OptionalStringAt(*baseExtras, k));
   }
   std::string weapon_key;
 
   // was aft_weapon defined as standard equipment ?
-  base_weapon_key =
-      OptionalStringIn(basic_info, std::string(KEY_EQUIPMENT_AFT_WEAPON));
+  base_weapon_key = OptionalStringIn(basic_info, KEY_EQUIPMENT_AFT_WEAPON);
   if (base_weapon_key.has_value())
     base_weapons_value += priceOf(base_weapon_key) / 10;
 
@@ -10099,7 +10085,7 @@ std::optional<std::string> Universe::brochureDescriptionWithDictionary(
   }
 
   std::string desc =
-      "The " + TextOrNull(OptionalStringIn(dict, std::string(KEY_NAME))) + ".";
+      "The " + TextOrNull(OptionalStringIn(dict, KEY_NAME)) + ".";
 
   // cargo capacity and expansion
   OOCargoQuantity max_cargo = dict.get<unsigned int>("max_cargo");

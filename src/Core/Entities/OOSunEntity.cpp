@@ -142,7 +142,7 @@ void OOSunEntity::initSunWithColor(OOColor* sun_color, const oo::PList& dict) {
   setSunColor(sun_color);
 
   // A nil dictionary read nil for the name (messaging nil), not the default.
-  setName(dict ? OOExpand(dict.get<std::string>(std::string(KEY_SUNNAME),
+  setName(dict ? OOExpand(dict.get<std::string>(KEY_SUNNAME,
                                                 "[oolite-default-star-name]"))
                : std::nullopt);
 

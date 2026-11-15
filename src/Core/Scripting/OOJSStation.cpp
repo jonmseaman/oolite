@@ -1209,8 +1209,7 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
   result[std::string(KEY_SHORT_DESCRIPTION)] =
       ValueForKey(StringForKey(shipyardDefinition, "short_description"),
                   KEY_SHORT_DESCRIPTION);
-  if (!shipyardDefinition.get<oo::PList>(
-          std::string(SHIPYARD_KEY_SHIPDATA_KEY))) {
+  if (!shipyardDefinition.get<oo::PList>(SHIPYARD_KEY_SHIPDATA_KEY)) {
     OOJSReportBadArguments(context, "Station", "addShipToShipyard",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "'shipdata_key' in dictionary");
@@ -1218,7 +1217,7 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
   }
   // get the shipInfo and shipyardInfo for this key
   const std::optional<std::string> shipKey =
-      StringForKey(shipyardDefinition, std::string(SHIPYARD_KEY_SHIPDATA_KEY));
+      StringForKey(shipyardDefinition, SHIPYARD_KEY_SHIPDATA_KEY);
   OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
   // A copy of the registry's entry: -dictionaryWithDictionary: made an empty
   // one for an unknown key, never nil, so an unknown key goes on to the tests
@@ -1257,14 +1256,13 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
   std::string shipID = std::format("{:06x}-{:06x}", superRand1, superRand2);
   result[std::string(SHIPYARD_KEY_ID)] = shipID;
 
-  if (!shipyardDefinition.get<oo::PList>(std::string(SHIPYARD_KEY_PRICE))) {
+  if (!shipyardDefinition.get<oo::PList>(SHIPYARD_KEY_PRICE)) {
     // if not provided, get the price from the registry
-    OOCreditsQuantity price =
-        shipyardInfo.get<unsigned int>(std::string(KEY_PRICE));
+    OOCreditsQuantity price = shipyardInfo.get<unsigned int>(KEY_PRICE);
     result[std::string(SHIPYARD_KEY_PRICE)] = oo::PList::unsignedInteger(price);
   } else {
     OOCreditsQuantity price =
-        shipyardDefinition.get<unsigned int>(std::string(SHIPYARD_KEY_PRICE));
+        shipyardDefinition.get<unsigned int>(SHIPYARD_KEY_PRICE);
     if (price > 0) {
       result[std::string(SHIPYARD_KEY_PRICE)] =
           oo::PList::unsignedInteger(price);
@@ -1276,30 +1274,27 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
     }
   }
 
-  if (!shipyardDefinition.get<oo::PList>(
-          std::string(SHIPYARD_KEY_PERSONALITY))) {
+  if (!shipyardDefinition.get<oo::PList>(SHIPYARD_KEY_PERSONALITY)) {
     // default to 0 if not supplied
     result[std::string(SHIPYARD_KEY_PERSONALITY)] =
         oo::PList::unsignedInteger(0);
   } else {
-    result[std::string(SHIPYARD_KEY_PERSONALITY)] =
-        oo::PList::unsignedInteger(shipyardDefinition.get<unsigned int>(
-            std::string(SHIPYARD_KEY_PERSONALITY)));
+    result[std::string(SHIPYARD_KEY_PERSONALITY)] = oo::PList::unsignedInteger(
+        shipyardDefinition.get<unsigned int>(SHIPYARD_KEY_PERSONALITY));
   }
 
   const oo::PList* standardEquipment =
-      shipyardInfo.get<oo::PList::Dict>(std::string(KEY_STANDARD_EQUIPMENT));
+      shipyardInfo.get<oo::PList::Dict>(KEY_STANDARD_EQUIPMENT);
   oo::PList extras;
-  if (const oo::PList* definedExtras = shipyardDefinition.get<oo::PList::Array>(
-          std::string(KEY_EQUIPMENT_EXTRAS)))
+  if (const oo::PList* definedExtras =
+          shipyardDefinition.get<oo::PList::Array>(KEY_EQUIPMENT_EXTRAS))
     extras = *definedExtras;
   else {
     // pick up defaults if extras not supplied (-arrayWithArray: made an empty
     // array of a missing one)
     const oo::PList* standardExtras =
         (standardEquipment != nullptr)
-            ? standardEquipment->get<oo::PList::Array>(
-                  std::string(KEY_EQUIPMENT_EXTRAS))
+            ? standardEquipment->get<oo::PList::Array>(KEY_EQUIPMENT_EXTRAS)
             : nullptr;
     extras = (standardExtras != nullptr) ? *standardExtras
                                          : oo::PList(oo::PList::Array());
@@ -1308,16 +1303,14 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
     // go looking for lasers and add them directly to our shipInfo
     std::optional<std::string> fwdWeaponString =
         (standardEquipment != nullptr)
-            ? StringForKey(*standardEquipment,
-                           std::string(KEY_EQUIPMENT_FORWARD_WEAPON))
+            ? StringForKey(*standardEquipment, KEY_EQUIPMENT_FORWARD_WEAPON)
             : std::nullopt;
     std::optional<std::string> aftWeaponString =
         (standardEquipment != nullptr)
-            ? StringForKey(*standardEquipment,
-                           std::string(KEY_EQUIPMENT_AFT_WEAPON))
+            ? StringForKey(*standardEquipment, KEY_EQUIPMENT_AFT_WEAPON)
             : std::nullopt;
     OOWeaponFacingSet availableFacings =
-        shipyardInfo.get<unsigned int>(std::string(KEY_WEAPON_FACINGS),
+        shipyardInfo.get<unsigned int>(KEY_WEAPON_FACINGS,
                                        kOOValidWeaponFacings) &
         kOOValidWeaponFacings;
 

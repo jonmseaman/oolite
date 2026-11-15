@@ -943,8 +943,8 @@ std::vector<oo::PList> MyOpenGLView::getScreenSizeArray() {
 
 NSSize MyOpenGLView::modeAsSize(int sizeIndex) {
   const oo::PList& mode = screenSizes.at(sizeIndex);
-  return NSMakeSize(mode.get<int>(std::string(kOODisplayWidth)),
-                    mode.get<int>(std::string(kOODisplayHeight)));
+  return NSMakeSize(mode.get<int>(kOODisplayWidth),
+                    mode.get<int>(kOODisplayHeight));
 }
 
 #endif
@@ -1183,9 +1183,9 @@ int MyOpenGLView::indexOfDisplayModeForWidth(unsigned int d_width,
 
   for (i = 0; i < modeCount; i++) {
     const oo::PList& mode = screenSizes[i];
-    modeWidth = mode.get<int>(std::string(kOODisplayWidth));
-    modeHeight = mode.get<int>(std::string(kOODisplayHeight));
-    modeRefresh = mode.get<int>(std::string(kOODisplayRefreshRate));
+    modeWidth = mode.get<int>(kOODisplayWidth);
+    modeHeight = mode.get<int>(kOODisplayHeight);
+    modeRefresh = mode.get<int>(kOODisplayRefreshRate);
     if ((modeWidth == d_width) && (modeHeight == d_height) &&
         (modeRefresh == d_refresh)) {
       OO_LOG("display.mode.found", "Found mode {}", oo::DescriptionOf(mode));
@@ -1206,8 +1206,8 @@ NSSize MyOpenGLView::currentScreenSize() {
   const oo::PList& mode = screenSizes.at(currentSize);
 
   if (mode) {
-    return NSMakeSize(mode.get<int>(std::string(kOODisplayWidth)),
-                      mode.get<int>(std::string(kOODisplayHeight)));
+    return NSMakeSize(mode.get<int>(kOODisplayWidth),
+                      mode.get<int>(kOODisplayHeight));
   }
   OO_LOG("display.mode.unknown", "{}", "Screen size unknown!");
   return NSMakeSize(WINDOW_SIZE_DEFAULT_WIDTH, WINDOW_SIZE_DEFAULT_HEIGHT);

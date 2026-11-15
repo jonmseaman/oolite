@@ -329,7 +329,7 @@ void PlayerEntity::initKeyConfigSettings() {
 
   // load custom equipment keys/buttons (the live entries, edited in place)
   const oo::PList savedCustomEquip =
-      defaults.arrayForKey(std::string(KEYCONFIG_CUSTOMEQUIP));
+      defaults.arrayForKey(KEYCONFIG_CUSTOMEQUIP);
   const oo::PList::Array* customEntries =
       savedCustomEquip.getIf<oo::PList::Array>();
   customEquipActivation =
@@ -338,7 +338,7 @@ void PlayerEntity::initKeyConfigSettings() {
   customModePressed.assign(customEquipActivation.size(), false);
 
   // update with overrides from defaults file (unprocessed, as before)
-  const oo::PList overrides = defaults.object(std::string(KEYCONFIG_OVERRIDES));
+  const oo::PList overrides = defaults.object(KEYCONFIG_OVERRIDES);
   if (const oo::PList::Dict* dict = overrides.getIf<oo::PList::Dict>()) {
     for (const auto& entry : *dict) kdic2[entry.first] = entry.second;
   }
@@ -1608,24 +1608,24 @@ void PlayerEntity::pollFlightControls(double delta_t) {
         for (std::size_t i = 0; i < customEquipActivation.size(); i++) {
           const oo::PList& item = customEquipActivation[i];
           const std::string equipKey =
-              item.get<std::string>(std::string(CUSTOMEQUIP_EQUIPKEY));
+              item.get<std::string>(CUSTOMEQUIP_EQUIPKEY);
           // check if the player has the equip item installed
           if (hasOneEquipmentItem(equipKey, false, false)) {
-            const oo::PList* key_act = item.get<oo::PList::Array>(
-                std::string(CUSTOMEQUIP_KEYACTIVATE));
+            const oo::PList* key_act =
+                item.get<oo::PList::Array>(CUSTOMEQUIP_KEYACTIVATE);
             const oo::PList* key_mod =
-                item.get<oo::PList::Array>(std::string(CUSTOMEQUIP_KEYMODE));
-            const oo::PList* but_act = item.get<oo::PList::Dict>(
-                std::string(CUSTOMEQUIP_BUTTONACTIVATE));
+                item.get<oo::PList::Array>(CUSTOMEQUIP_KEYMODE);
+            const oo::PList* but_act =
+                item.get<oo::PList::Dict>(CUSTOMEQUIP_BUTTONACTIVATE);
             const oo::PList* but_mod =
-                item.get<oo::PList::Dict>(std::string(CUSTOMEQUIP_BUTTONMODE));
+                item.get<oo::PList::Dict>(CUSTOMEQUIP_BUTTONMODE);
             // if so,
             // check to see if the key or button was pressed for activate
             if ((key_act != nullptr && checkKeyPress(*key_act)) ||
                 (but_act != nullptr &&
                  OOJoystickManager::sharedStickHandler()->isButtonDown(
-                     but_act->get<int>(std::string(STICK_AXBUT)),
-                     but_act->get<int>(std::string(STICK_NUMBER))))) {
+                     but_act->get<int>(STICK_AXBUT),
+                     but_act->get<int>(STICK_NUMBER)))) {
               if (!customActivatePressed[i]) {
                 // initate the activate JS code
                 activatePrimableEquipment(eqScriptIndexForKey(equipKey),
@@ -1639,8 +1639,8 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             if ((key_mod != nullptr && checkKeyPress(*key_mod)) ||
                 (but_mod != nullptr &&
                  OOJoystickManager::sharedStickHandler()->isButtonDown(
-                     but_mod->get<int>(std::string(STICK_AXBUT)),
-                     but_mod->get<int>(std::string(STICK_NUMBER))))) {
+                     but_mod->get<int>(STICK_AXBUT),
+                     but_mod->get<int>(STICK_NUMBER)))) {
               if (!customModePressed[i]) {
                 // initiate the activate JS code
                 activatePrimableEquipment(eqScriptIndexForKey(equipKey),
@@ -3776,9 +3776,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
     const oo::PList* modeEntry =
         modes.at(static_cast<std::size_t>(displayModeIndex));
     const oo::PList mode = (modeEntry != nullptr) ? *modeEntry : oo::PList();
-    int modeWidth = mode.get<int>(std::string(kOODisplayWidth));
-    int modeHeight = mode.get<int>(std::string(kOODisplayHeight));
-    int modeRefresh = mode.get<int>(std::string(kOODisplayRefreshRate));
+    int modeWidth = mode.get<int>(kOODisplayWidth);
+    int modeHeight = mode.get<int>(kOODisplayHeight);
+    int modeRefresh = mode.get<int>(kOODisplayRefreshRate);
     if (controller != nullptr)
       controller->setDisplayWidth(modeWidth, modeHeight, modeRefresh);
 
@@ -6038,7 +6038,7 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking) {
       int fine_chance = ranrot_rand() & 0x03ff;  //	0..1023
       int government = 1 + (UNIVERSE != nullptr ? UNIVERSE->currentSystemData()
                                                 : oo::PList())
-                               .get<int>(std::string(KEY_GOVERNMENT));  // 1..8
+                               .get<int>(KEY_GOVERNMENT);  // 1..8
       if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false))
         government =
             2;  // equivalent to Feudal. I'm assuming any station in

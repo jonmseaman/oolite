@@ -67,7 +67,6 @@ WarningsAsErrors: >
   -performance-no-automatic-move,
   -performance-no-int-to-ptr,
   -performance-prefer-single-char-overloads,
-  -performance-string-view-conversions,
   -performance-type-promotion-in-math-fn,
   -performance-unnecessary-copy-initialization,
   -performance-unnecessary-value-param,

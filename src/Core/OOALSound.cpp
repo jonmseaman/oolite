@@ -64,9 +64,9 @@ bool OOSound::setUp() {
     if (controller != nullptr) {
       sIsSoundOK = true;
       oo::Defaults& prefs = oo::Defaults::standard();
-      float volume = prefs.object(std::string(KEY_VOLUME_CONTROL)).isNull()
+      float volume = prefs.object(KEY_VOLUME_CONTROL).isNull()
                          ? 0.5f
-                         : prefs.floatForKey(std::string(KEY_VOLUME_CONTROL));
+                         : prefs.floatForKey(KEY_VOLUME_CONTROL);
       setMasterVolume(volume);
     }
   }
@@ -85,7 +85,7 @@ void OOSound::setMasterVolume(float fraction) {
   if (fraction != (controller != nullptr ? controller->masterVolume() : 0.0f)) {
     if (controller != nullptr) controller->setMasterVolume(fraction);
     oo::Defaults::standard().setFloat(
-        std::string(KEY_VOLUME_CONTROL),
+        KEY_VOLUME_CONTROL,
         controller != nullptr ? controller->masterVolume() : 0.0f);
   }
 }

@@ -1223,10 +1223,9 @@ oo::PList PlayerEntity::commanderDataDictionary() {
       result["current_system_name"] = oo::PList(*systemName);
     const oo::PList systemData =
         (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList());
-    OOGovernmentID government =
-        systemData.get<int>(std::string(KEY_GOVERNMENT));
-    OOTechLevelID techlevel = systemData.get<int>(std::string(KEY_TECHLEVEL));
-    OOEconomyID economy = systemData.get<int>(std::string(KEY_ECONOMY));
+    OOGovernmentID government = systemData.get<int>(KEY_GOVERNMENT);
+    OOTechLevelID techlevel = systemData.get<int>(KEY_TECHLEVEL);
+    OOEconomyID economy = systemData.get<int>(KEY_ECONOMY);
     result["current_system_government"] =
         oo::PList::unsignedInteger(static_cast<unsigned short>(government));
     result["current_system_techlevel"] =
@@ -1431,7 +1430,7 @@ oo::PList PlayerEntity::commanderDataDictionary() {
   if (const std::optional<std::string> value = shipDataKey())
     result["ship_desc"] = oo::PList(*value);
   if (const std::optional<std::string> value =
-          StringForKey(shipInfoDictionary(), std::string(KEY_NAME)))
+          StringForKey(shipInfoDictionary(), KEY_NAME))
     result["ship_name"] = oo::PList(*value);
 
   // custom view no.
@@ -1873,20 +1872,18 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
        i >= 0; i--) {
     oo::PList contractInfo =
         contracts[i].isDict() ? contracts[i] : oo::PList(oo::PList::Dict());
-    const oo::PList* cargoType = contractInfo.find(std::string(CARGO_KEY_TYPE));
+    const oo::PList* cargoType = contractInfo.find(CARGO_KEY_TYPE);
     // if the trade good ID is an int
     if (cargoType != nullptr && cargoType->isNumber()) {
       // look it up, and replace with a string
-      std::size_t legacy_type =
-          contractInfo.get<std::size_t>(std::string(CARGO_KEY_TYPE));
+      std::size_t legacy_type = contractInfo.get<std::size_t>(CARGO_KEY_TYPE);
       (*contractInfo.getIf<oo::PList::Dict>())[std::string(CARGO_KEY_TYPE)] =
           oo::PList(
               OOCommodities::legacyCommodityType(legacy_type).value_or(""));
       contracts[i] = std::move(contractInfo);
     } else {
       // -oo_stringForKey: (nil when absent)
-      const oo::PList* typeValue =
-          contractInfo.find(std::string(CARGO_KEY_TYPE));
+      const oo::PList* typeValue = contractInfo.find(CARGO_KEY_TYPE);
       const std::optional<std::string> new_type =
           (typeValue != nullptr && typeValue->isString())
               ? std::optional<std::string>(*typeValue->getIf<std::string>())
@@ -1981,12 +1978,11 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
                 static_cast<unsigned>(max_passengers));
     for (std::ptrdiff_t i = static_cast<std::ptrdiff_t>(passengers.size()) - 1;
          i >= max_passengers; i--) {
-      const oo::PList* passengerName =
-          passengers[i].find(std::string(PASSENGER_KEY_NAME));
+      const oo::PList* passengerName = passengers[i].find(PASSENGER_KEY_NAME);
       if (passengerName != nullptr &&
           (passengerName->isString() || passengerName->isNumber()))
         passenger_record.erase(passengers[i].get<std::string>(
-            std::string(PASSENGER_KEY_NAME)));  // -oo_stringForKey:
+            PASSENGER_KEY_NAME));  // -oo_stringForKey:
       passengers.erase(passengers.begin() + i);
     }
   }
@@ -2069,8 +2065,8 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
       shipDataKey.has_value()
           ? OOShipRegistry::sharedRegistry()->shipyardInfoForKey(*shipDataKey)
           : oo::PList();
-  OOWeaponFacingSet available_facings = shipyard_info.get<unsigned int>(
-      std::string(KEY_WEAPON_FACINGS), weaponFacings());
+  OOWeaponFacingSet available_facings =
+      shipyard_info.get<unsigned int>(KEY_WEAPON_FACINGS, weaponFacings());
 
   if (OOWeaponFacingIsIn(available_facings, OOWeaponFacing::kForward))
     forward_weapon_type = OOWeaponTypeFromEquipmentIdentifierLegacy(
@@ -8695,44 +8691,42 @@ oo::PList::Array PlayerEntity::contractsListForScriptingFromArray(
     const oo::PList& dict = contracts_array[i];
     if (forCargo) {
       // commodity, quantity - keep consistency between .manifest and .contracts
-      setString(contract, "commodity",
-                StringForKey(dict, std::string(CARGO_KEY_TYPE)));
+      setString(contract, "commodity", StringForKey(dict, CARGO_KEY_TYPE));
       contract["quantity"] =
-          oo::PList::unsignedInteger(static_cast<unsigned int>(dict.get<int>(
-              std::string(CARGO_KEY_AMOUNT))));  // +numberWithUnsignedInt:
+          oo::PList::unsignedInteger(static_cast<unsigned int>(
+              dict.get<int>(CARGO_KEY_AMOUNT)));  // +numberWithUnsignedInt:
       setString(contract, "description",
-                StringForKey(dict, std::string(CARGO_KEY_DESCRIPTION)));
+                StringForKey(dict, CARGO_KEY_DESCRIPTION));
     } else {
       setString(contract, std::string(PASSENGER_KEY_NAME),
-                StringForKey(dict, std::string(PASSENGER_KEY_NAME)));
-      contract[std::string(CONTRACT_KEY_RISK)] = oo::PList::unsignedInteger(
-          dict.get<unsigned int>(std::string(CONTRACT_KEY_RISK)));
+                StringForKey(dict, PASSENGER_KEY_NAME));
+      contract[std::string(CONTRACT_KEY_RISK)] =
+          oo::PList::unsignedInteger(dict.get<unsigned int>(CONTRACT_KEY_RISK));
     }
 
-    OOSystemID planet = dict.get<int>(std::string(CONTRACT_KEY_DESTINATION));
+    OOSystemID planet = dict.get<int>(CONTRACT_KEY_DESTINATION);
     std::optional<std::string> planetName =
         (UNIVERSE != nullptr ? UNIVERSE->getSystemName(planet)
                              : std::optional<std::string>());
     contract[std::string(CONTRACT_KEY_DESTINATION)] =
         oo::PList::unsignedInteger(static_cast<unsigned int>(planet));
     setString(contract, "destinationName", planetName);
-    planet = dict.get<int>(std::string(CONTRACT_KEY_START));
+    planet = dict.get<int>(CONTRACT_KEY_START);
     planetName = (UNIVERSE != nullptr ? UNIVERSE->getSystemName(planet)
                                       : std::optional<std::string>());
     contract[std::string(CONTRACT_KEY_START)] =
         oo::PList::unsignedInteger(static_cast<unsigned int>(planet));
     setString(contract, "startName", planetName);
 
-    int dest_eta =
-        dict.get<double>(std::string(CONTRACT_KEY_ARRIVAL_TIME)) - ship_clock;
+    int dest_eta = dict.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
     contract["eta"] = oo::PList::signedInteger(dest_eta);
     setString(contract, "etaDescription",
               (UNIVERSE != nullptr ? UNIVERSE->shortTimeDescription(dest_eta)
                                    : std::optional<std::string>()));
-    contract[std::string(CONTRACT_KEY_PREMIUM)] = oo::PList::signedInteger(
-        dict.get<int>(std::string(CONTRACT_KEY_PREMIUM)));
+    contract[std::string(CONTRACT_KEY_PREMIUM)] =
+        oo::PList::signedInteger(dict.get<int>(CONTRACT_KEY_PREMIUM));
     contract[std::string(CONTRACT_KEY_FEE)] =
-        oo::PList::signedInteger(dict.get<int>(std::string(CONTRACT_KEY_FEE)));
+        oo::PList::signedInteger(dict.get<int>(CONTRACT_KEY_FEE));
     result.emplace_back(std::move(contract));
   }
 
@@ -8763,7 +8757,7 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
   std::ptrdiff_t concealment =
       infoSystemData.get<int>("concealment", OO_SYSTEMCONCEALMENT_NONE);
   const std::string infoSystemName =
-      StringForKey(infoSystemData, std::string(KEY_NAME))
+      StringForKey(infoSystemData, KEY_NAME)
           .value_or(
               std::string());  // (a nil name raised in the expansions below)
 
@@ -8793,30 +8787,29 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
     gui->overrideTabs(tab_stops, kGuiSystemdataTabs, 3);
     gui->setTabStops(tab_stops);
 
-    std::size_t techLevel =
-        infoSystemData.get<int>(std::string(KEY_TECHLEVEL)) + 1;
-    int population = infoSystemData.get<int>(std::string(KEY_POPULATION));
-    int productivity = infoSystemData.get<int>(std::string(KEY_PRODUCTIVITY));
-    int radius = infoSystemData.get<int>(std::string(KEY_RADIUS));
+    std::size_t techLevel = infoSystemData.get<int>(KEY_TECHLEVEL) + 1;
+    int population = infoSystemData.get<int>(KEY_POPULATION);
+    int productivity = infoSystemData.get<int>(KEY_PRODUCTIVITY);
+    int radius = infoSystemData.get<int>(KEY_RADIUS);
 
     std::string government_desc =
-        StringForKey(infoSystemData, std::string(KEY_GOVERNMENT_DESC))
+        StringForKey(infoSystemData, KEY_GOVERNMENT_DESC)
             .value_or(OODisplayStringFromGovernmentID(
-                          infoSystemData.get<int>(std::string(KEY_GOVERNMENT)))
+                          infoSystemData.get<int>(KEY_GOVERNMENT))
                           .value_or(""));
     std::string economy_desc =
-        StringForKey(infoSystemData, std::string(KEY_ECONOMY_DESC))
+        StringForKey(infoSystemData, KEY_ECONOMY_DESC)
             .value_or(OODisplayStringFromEconomyID(
-                          infoSystemData.get<int>(std::string(KEY_ECONOMY)))
+                          infoSystemData.get<int>(KEY_ECONOMY))
                           .value_or(""));
     std::string inhabitants =
-        StringForKey(infoSystemData, std::string(KEY_INHABITANTS))
+        StringForKey(infoSystemData, KEY_INHABITANTS)
             .value_or(std::string());  // (nil raised in the expansion)
     std::optional<std::string> system_desc =
-        StringForKey(infoSystemData, std::string(KEY_DESCRIPTION));
+        StringForKey(infoSystemData, KEY_DESCRIPTION);
 
     std::string populationDesc =
-        StringForKey(infoSystemData, std::string(KEY_POPULATION_DESC))
+        StringForKey(infoSystemData, KEY_POPULATION_DESC)
             .value_or(OOExpandKeyWithSeed(kNilRandomSeed, "sysdata-pop-value",
                                           population)
                           .value_or(std::string()));
@@ -9010,18 +9003,15 @@ PlayerEntity::markedDestinations() {
   OOSystemID sysid;
 
   for (i = 0; i < passengers.size(); i++) {
-    sysid =
-        passengers[i].get<unsigned char>(std::string(CONTRACT_KEY_DESTINATION));
+    sysid = passengers[i].get<unsigned char>(CONTRACT_KEY_DESTINATION);
     PrepareMarkedDestination(destinations, passengerContractMarker(sysid));
   }
   for (i = 0; i < parcels.size(); i++) {
-    sysid =
-        parcels[i].get<unsigned char>(std::string(CONTRACT_KEY_DESTINATION));
+    sysid = parcels[i].get<unsigned char>(CONTRACT_KEY_DESTINATION);
     PrepareMarkedDestination(destinations, parcelContractMarker(sysid));
   }
   for (i = 0; i < contracts.size(); i++) {
-    sysid =
-        contracts[i].get<unsigned char>(std::string(CONTRACT_KEY_DESTINATION));
+    sysid = contracts[i].get<unsigned char>(CONTRACT_KEY_DESTINATION);
     PrepareMarkedDestination(destinations, cargoContractMarker(sysid));
   }
 
@@ -9194,10 +9184,9 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
     }
     if (mode == nullptr) return;  // Got a better idea?
 
-    unsigned modeWidth = mode->get<unsigned int>(std::string(kOODisplayWidth));
-    unsigned modeHeight =
-        mode->get<unsigned int>(std::string(kOODisplayHeight));
-    float modeRefresh = mode->get<float>(std::string(kOODisplayRefreshRate));
+    unsigned modeWidth = mode->get<unsigned int>(kOODisplayWidth);
+    unsigned modeHeight = mode->get<unsigned int>(kOODisplayHeight);
+    float modeRefresh = mode->get<float>(kOODisplayRefreshRate);
 
     bool runningOnPrimaryDisplayDevice =
         (gameView != nullptr ? gameView->isRunningOnPrimaryDisplayDevice()
@@ -9721,7 +9710,7 @@ OOWeaponFacingSet PlayerEntity::availableFacings() {
   const oo::PList shipyardInfo =
       registry->shipyardInfoForKey(shipDataKey().value_or(""));
   unsigned available_facings = shipyardInfo.get<unsigned int>(
-      std::string(KEY_WEAPON_FACINGS),
+      KEY_WEAPON_FACINGS,
       weaponFacings());  // use defaults  explicitly
 
   return available_facings & kOOValidWeaponFacings;
@@ -9758,7 +9747,7 @@ void PlayerEntity::setGuiToEquipShipScreen(
   double priceFactor = 1.0;
   OOTechLevelID techlevel =
       (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
-          .get<int>(std::string(KEY_TECHLEVEL));
+          .get<int>(KEY_TECHLEVEL);
 
   ::StationEntity* dockedStation = this->dockedStation();
   if (dockedStation) {
@@ -9788,20 +9777,19 @@ void PlayerEntity::setGuiToEquipShipScreen(
       if (item->isString()) options.insert(*item->getIf<std::string>());
     }
   };
-  addOptions(
-      shipyardInfo.get<oo::PList::Array>(std::string(KEY_OPTIONAL_EQUIPMENT)));
+  addOptions(shipyardInfo.get<oo::PList::Array>(KEY_OPTIONAL_EQUIPMENT));
 
   // add standard items too!
   const oo::PList* standardEquipment =
-      shipyardInfo.get<oo::PList::Dict>(std::string(KEY_STANDARD_EQUIPMENT));
-  addOptions(standardEquipment != nullptr
-                 ? standardEquipment->get<oo::PList::Array>(
-                       std::string(KEY_EQUIPMENT_EXTRAS))
-                 : nullptr);
+      shipyardInfo.get<oo::PList::Dict>(KEY_STANDARD_EQUIPMENT);
+  addOptions(
+      standardEquipment != nullptr
+          ? standardEquipment->get<oo::PList::Array>(KEY_EQUIPMENT_EXTRAS)
+          : nullptr);
 
   unsigned i = 0;
   unsigned available_facings = shipyardInfo.get<unsigned int>(
-      std::string(KEY_WEAPON_FACINGS),
+      KEY_WEAPON_FACINGS,
       weaponFacings());  // use defaults  explicitly
 
   if (eqKeyForSelectFacing.has_value())  // Weapons purchase subscreen.
@@ -11098,7 +11086,7 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
     if (techLevel == oo::kNotFound)
       techLevel =
           (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
-              .get<unsigned int>(std::string(KEY_TECHLEVEL));
+              .get<unsigned int>(KEY_TECHLEVEL);
 
     credits -= price;
     ship_trade_in_factor +=
@@ -11174,7 +11162,7 @@ bool PlayerEntity::setWeaponMount(OOWeaponFacing facing,
       OOShipRegistry::sharedRegistry()->shipyardInfoForKey(
           shipDataKey().value_or(""));
   unsigned available_facings = shipyardInfo.get<unsigned int>(
-      std::string(KEY_WEAPON_FACINGS),
+      KEY_WEAPON_FACINGS,
       weaponFacings());  // use defaults  explicitly
 
   // facing exists?
@@ -12269,8 +12257,8 @@ void PlayerEntity::addEquipmentWithScriptToCustomKeyArray(
     if (eqScripts[i].first == equipmentKey) {
       // check if this equipment item is already in the array
       for (j = 0; j < customEquipActivation.size(); j++) {
-        if (StringForKey(customEquipActivation[j],
-                         std::string(CUSTOMEQUIP_EQUIPKEY)) == equipmentKey)
+        if (StringForKey(customEquipActivation[j], CUSTOMEQUIP_EQUIPKEY) ==
+            equipmentKey)
           return;
       }
       // if we get here, this item is new
@@ -12300,7 +12288,7 @@ void PlayerEntity::addEquipmentWithScriptToCustomKeyArray(
       customActivatePressed.push_back(false);
       customModePressed.push_back(false);
 
-      oo::Defaults::standard().setObject(std::string(KEYCONFIG_CUSTOMEQUIP),
+      oo::Defaults::standard().setObject(KEYCONFIG_CUSTOMEQUIP,
                                          oo::PList(customEquipActivation));
       return;
     }
@@ -12313,8 +12301,7 @@ void PlayerEntity::validateCustomEquipActivationArray() {
   std::optional<std::string> equipmentKey;
   if (customEquipActivation.size() == 0) return;
   for (i = customEquipActivation.size() - 1; i >= 0; i--) {
-    equipmentKey = StringForKey(customEquipActivation[i],
-                                std::string(CUSTOMEQUIP_EQUIPKEY));
+    equipmentKey = StringForKey(customEquipActivation[i], CUSTOMEQUIP_EQUIPKEY);
     ::OOEquipmentType* eq =
         (equipmentKey.has_value()
              ? OOEquipmentType::equipmentTypeWithIdentifier(*equipmentKey).get()
@@ -12327,7 +12314,7 @@ void PlayerEntity::validateCustomEquipActivationArray() {
     }
   }
   if (update) {
-    oo::Defaults::standard().setObject(std::string(KEYCONFIG_CUSTOMEQUIP),
+    oo::Defaults::standard().setObject(KEYCONFIG_CUSTOMEQUIP,
                                        oo::PList(customEquipActivation));
   }
 }
@@ -12562,7 +12549,7 @@ void PlayerEntity::getFined() {
 
   OOGovernmentID local_gov =
       (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
-          .get<int>(std::string(KEY_GOVERNMENT));
+          .get<int>(KEY_GOVERNMENT);
   if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false))
     local_gov = 1;  // equivalent to Feudal. I'm assuming any station in
                     // interstellar space is military. -- Ahruman 2008-05-29
@@ -12611,7 +12598,7 @@ double PlayerEntity::renovationFactor() {
   ::OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
   const oo::PList shipyardInfo =
       registry->shipyardInfoForKey(shipDataKey().value_or(""));
-  return shipyardInfo.get<double>(std::string(KEY_RENOVATION_MULTIPLIER), 1.0);
+  return shipyardInfo.get<double>(KEY_RENOVATION_MULTIPLIER, 1.0);
 }
 
 void PlayerEntity::setDefaultViewOffsets() {

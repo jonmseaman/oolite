@@ -473,38 +473,32 @@ static JSValue SystemGetProperty(OOJS_GETTER_ARGS) {
           break;
 
         case kGovernment:
-          return JS_NewInt32(context,
-                             systemData.get<int>(std::string(KEY_GOVERNMENT)));
+          return JS_NewInt32(context, systemData.get<int>(KEY_GOVERNMENT));
 
         case kGovernmentDescription:
           result =
               oo::PList(OODisplayStringFromGovernmentID(
-                            systemData.get<int>(std::string(KEY_GOVERNMENT)))
+                            systemData.get<int>(KEY_GOVERNMENT))
                             .value_or(std::string(OO_DESC("not-applicable"))));
           break;
 
         case kEconomy:
-          return JS_NewInt32(context,
-                             systemData.get<int>(std::string(KEY_ECONOMY)));
+          return JS_NewInt32(context, systemData.get<int>(KEY_ECONOMY));
 
         case kEconomyDescription:
-          result =
-              oo::PList(OODisplayStringFromEconomyID(
-                            systemData.get<int>(std::string(KEY_ECONOMY)))
-                            .value_or(std::string(OO_DESC("not-applicable"))));
+          result = oo::PList(
+              OODisplayStringFromEconomyID(systemData.get<int>(KEY_ECONOMY))
+                  .value_or(std::string(OO_DESC("not-applicable"))));
           break;
 
         case kTechLevel:
-          return JS_NewInt32(context,
-                             systemData.get<int>(std::string(KEY_TECHLEVEL)));
+          return JS_NewInt32(context, systemData.get<int>(KEY_TECHLEVEL));
 
         case kPopulation:
-          return JS_NewInt32(context,
-                             systemData.get<int>(std::string(KEY_POPULATION)));
+          return JS_NewInt32(context, systemData.get<int>(KEY_POPULATION));
 
         case kProductivity:
-          return JS_NewInt32(
-              context, systemData.get<int>(std::string(KEY_PRODUCTIVITY)));
+          return JS_NewInt32(context, systemData.get<int>(KEY_PRODUCTIVITY));
 
         default:
           OOJSReportBadPropertySelector(context, thisObj, magic,

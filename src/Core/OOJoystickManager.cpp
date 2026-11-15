@@ -212,13 +212,13 @@ void OOJoystickManager::saveProfileForAxis(int axis) {
     dict["Type"] = oo::PList("Standard");
   }
   if (axis == AXIS_ROLL) {
-    defaults.setObject(std::string(STICK_ROLL_AXIS_PROFILE_SETTING),
+    defaults.setObject(STICK_ROLL_AXIS_PROFILE_SETTING,
                        oo::PList(std::move(dict)));
   } else if (axis == AXIS_PITCH) {
-    defaults.setObject(std::string(STICK_PITCH_AXIS_PROFILE_SETTING),
+    defaults.setObject(STICK_PITCH_AXIS_PROFILE_SETTING,
                        oo::PList(std::move(dict)));
   } else if (axis == AXIS_YAW) {
-    defaults.setObject(std::string(STICK_YAW_AXIS_PROFILE_SETTING),
+    defaults.setObject(STICK_YAW_AXIS_PROFILE_SETTING,
                        oo::PList(std::move(dict)));
   }
   return;
@@ -231,11 +231,11 @@ void OOJoystickManager::loadProfileForAxis(int axis) {
   std::shared_ptr<OOJoystickSplineAxisProfile> spline_profile;
 
   if (axis == AXIS_ROLL) {
-    dict = defaults.object(std::string(STICK_ROLL_AXIS_PROFILE_SETTING));
+    dict = defaults.object(STICK_ROLL_AXIS_PROFILE_SETTING);
   } else if (axis == AXIS_PITCH) {
-    dict = defaults.object(std::string(STICK_PITCH_AXIS_PROFILE_SETTING));
+    dict = defaults.object(STICK_PITCH_AXIS_PROFILE_SETTING);
   } else if (axis == AXIS_YAW) {
-    dict = defaults.object(std::string(STICK_YAW_AXIS_PROFILE_SETTING));
+    dict = defaults.object(STICK_YAW_AXIS_PROFILE_SETTING);
   } else {
     return;
   }
@@ -339,9 +339,9 @@ oo::PList OOJoystickManager::guiButtonFunctions() {
 }
 
 void OOJoystickManager::setFunction(int function, const oo::PList& stickFn) {
-  bool isAxis = stickFn.get<bool>(std::string(STICK_ISAXIS)) ? true : false;
-  int stickNum = stickFn.get<int>(std::string(STICK_NUMBER));
-  int stickAxBt = stickFn.get<int>(std::string(STICK_AXBUT));
+  bool isAxis = stickFn.get<bool>(STICK_ISAXIS) ? true : false;
+  int stickNum = stickFn.get<int>(STICK_NUMBER);
+  int stickAxBt = stickFn.get<int>(STICK_AXBUT);
 
   if (isAxis) {
     setFunctionForAxis(stickAxBt, function, stickNum);
@@ -495,9 +495,9 @@ void OOJoystickManager::clearCallback() {
 void OOJoystickManager::saveStickSettings() {
   oo::Defaults& defaults = oo::Defaults::standard();
 
-  defaults.setObject(std::string(AXIS_SETTINGS), axisFunctions());
-  defaults.setObject(std::string(BUTTON_SETTINGS), buttonFunctions());
-  defaults.setObject(std::string(GUI_BUTTON_SETTINGS), guiButtonFunctions());
+  defaults.setObject(AXIS_SETTINGS, axisFunctions());
+  defaults.setObject(BUTTON_SETTINGS, buttonFunctions());
+  defaults.setObject(GUI_BUTTON_SETTINGS, guiButtonFunctions());
   saveProfileForAxis(AXIS_ROLL);
   saveProfileForAxis(AXIS_PITCH);
   saveProfileForAxis(AXIS_YAW);
@@ -507,11 +507,9 @@ void OOJoystickManager::saveStickSettings() {
 void OOJoystickManager::loadStickSettings() {
   clearMappings();
   oo::Defaults& defaults = oo::Defaults::standard();
-  const oo::PList axisSettings = defaults.object(std::string(AXIS_SETTINGS));
-  const oo::PList buttonSettings =
-      defaults.object(std::string(BUTTON_SETTINGS));
-  const oo::PList guiButtonSettings =
-      defaults.object(std::string(GUI_BUTTON_SETTINGS));
+  const oo::PList axisSettings = defaults.object(AXIS_SETTINGS);
+  const oo::PList buttonSettings = defaults.object(BUTTON_SETTINGS);
+  const oo::PList guiButtonSettings = defaults.object(GUI_BUTTON_SETTINGS);
   // Keys are visited in byte order (they came in hash order): where two
   // settings claim the same stick axis or button, the last one still wins.
   if (axisSettings) {
