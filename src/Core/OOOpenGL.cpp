@@ -30,7 +30,6 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "LogIndentScope.h"
-#include "OOFunctionAttributes.h"
 #include "OOLogging.h"  // IWYU pragma: keep: used only without NDEBUG or with OO_CHECK_GL_HEAVY
 #include "OOMacroOpenGL.h"
 // std::numbers::pi: Windows' <math.h> leaves it out unless _USE_MATH_DEFINES is

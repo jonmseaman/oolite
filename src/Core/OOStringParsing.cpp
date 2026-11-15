@@ -32,7 +32,6 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
-#include "OOFunctionAttributes.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJavaScriptEngine.h"
 #include "Universe.h"

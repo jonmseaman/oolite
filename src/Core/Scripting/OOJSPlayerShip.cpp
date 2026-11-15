@@ -41,7 +41,6 @@ MA 02110-1301, USA.
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
 #include "OOEquipmentType.h"
-#include "OOFunctionAttributes.h"
 #include "OOJSEntity.h"
 #include "OOJSEquipmentInfo.h"
 #include "OOJSPlayer.h"
