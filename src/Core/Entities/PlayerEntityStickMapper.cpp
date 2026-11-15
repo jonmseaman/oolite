@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 
 #include <format>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -898,20 +899,20 @@ oo::PList PlayerEntity::makeStickGuiDict(const std::string& what, int allowable,
 
   // -length / -substringToIndex: count UTF-16 units
   const std::u16string units = oo::utf8ToUtf16(what);
-  guiDict[KEY_GUIDESC] =
+  guiDict[std::string(KEY_GUIDESC)] =
       units.size() > 50 ? oo::utf16ToUtf8(units.substr(0, 28)) + "..." : what;
-  guiDict[KEY_ALLOWABLE] =
+  guiDict[std::string(KEY_ALLOWABLE)] =
       oo::PList::signedInteger(allowable);  // +numberWithInt:
-  if (axisfn >= 0) guiDict[KEY_AXISFN] = oo::PList::signedInteger(axisfn);
-  if (butfn >= 0) guiDict[KEY_BUTTONFN] = oo::PList::signedInteger(butfn);
+  if (axisfn >= 0) guiDict[std::string(KEY_AXISFN)] = oo::PList::signedInteger(axisfn);
+  if (butfn >= 0) guiDict[std::string(KEY_BUTTONFN)] = oo::PList::signedInteger(butfn);
   return oo::PList(std::move(guiDict));
 }
 
 oo::PList PlayerEntity::makeStickGuiDictHeader(const std::string& header) {
   oo::PList::Dict guiDict;
-  guiDict[KEY_HEADER] = header;
-  guiDict[KEY_ALLOWABLE] = "";
-  guiDict[KEY_AXISFN] = "";
-  guiDict[KEY_BUTTONFN] = "";
+  guiDict[std::string(KEY_HEADER)] = header;
+  guiDict[std::string(KEY_ALLOWABLE)] = "";
+  guiDict[std::string(KEY_AXISFN)] = "";
+  guiDict[std::string(KEY_BUTTONFN)] = "";
   return oo::PList(std::move(guiDict));
 }

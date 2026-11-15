@@ -4523,7 +4523,7 @@ std::shared_ptr<Entity> Universe::newVisualEffectWithName(
     const auto exception = oo::CurrentOOException();
     if (!exception) throw;  // not an OOException: it goes on up, as before
     if (std::string_view(exception->name()) ==
-        OOLITE_EXCEPTION_DATA_NOT_FOUND) {
+        kOoliteExceptionDataNotFound) {
       OO_LOG(kOOLogException,
              "***** Oolite Exception : '{}' in [Universe "
              "newVisualEffectWithName: {} ] *****",
@@ -4589,7 +4589,7 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithName(
     const auto exception = oo::CurrentOOException();
     if (!exception) throw;  // not an OOException: it goes on up, as before
     if (std::string_view(exception->name()) ==
-        OOLITE_EXCEPTION_DATA_NOT_FOUND) {
+        kOoliteExceptionDataNotFound) {
       OO_LOG(kOOLogException,
              "***** Oolite Exception : '{}' in [Universe newShipWithName: {} ] "
              "*****",
@@ -4629,7 +4629,7 @@ std::shared_ptr<::ShipEntity> Universe::newDockWithName(
     const auto exception = oo::CurrentOOException();
     if (!exception) throw;  // not an OOException: it goes on up, as before
     if (std::string_view(exception->name()) ==
-        OOLITE_EXCEPTION_DATA_NOT_FOUND) {
+        kOoliteExceptionDataNotFound) {
       OO_LOG(kOOLogException,
              "***** Oolite Exception : '{}' in [Universe newDockWithName: {} ] "
              "*****",
@@ -10492,7 +10492,7 @@ bool Universe::useShaders() {
 void Universe::handleOoliteException(const oo::Exception* exception) {
   if (exception != nullptr) {
     const oo::CaughtOOException caught(exception);
-    if (std::string_view(caught.name()) == OOLITE_EXCEPTION_FATAL) {
+    if (std::string_view(caught.name()) == kOoliteExceptionFatal) {
       ::PlayerEntity* player = PLAYER;
       if (player != nullptr) player->setStatus(OOEntityStatus::kHandlingError);
 

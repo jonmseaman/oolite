@@ -684,7 +684,7 @@ void PlayerEntity::createCargoPodWithType(const std::string& type,
     OO_LOG_ERR("player.loadCargoPods.noContainer", "{}",
                "couldn't create a container in [PlayerEntity loadCargoPods]");
     // throw an exception here...
-    OORaiseException(OOLITE_EXCEPTION_FATAL,
+    OORaiseException(kOoliteExceptionFatal,
                      "[PlayerEntity loadCargoPods] failed to create a "
                      "container for cargo with role 'cargopod'");
   }

@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <format>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -50,7 +51,7 @@
 
 // Name of modifier key used to issue commands. See also
 // IsCommandModifierKeyDown().
-constexpr char COMMAND_MODIFIER_KEY[] = "Ctrl";
+constexpr std::string_view kCommandModifierKey = "Ctrl";
 
 namespace {
 
@@ -1254,7 +1255,7 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
   if (cdr.get<bool>("isFolder")) {
     const std::string folderDesc = oo::str::formatRuntime(
         OO_DESC("loadsavescreen-hold-@-and-press-return-to-open-folder-@"),
-        {COMMAND_MODIFIER_KEY,
+        {kCommandModifierKey,
          oo::str::lastPathComponent(cdr.get<std::string>("saved_game_path"))});
     gui->setColor(OOColor::orangeColor().get(), CDRDESCROW);
     gui->addLongText(folderDesc, CDRDESCROW, OOGUIAlignment::kLeft);
@@ -1265,7 +1266,7 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
     const std::string folderDesc = oo::str::formatRuntime(
         OO_DESC(
             "loadsavescreen-hold-@-and-press-return-to-open-parent-folder-@"),
-        {COMMAND_MODIFIER_KEY,
+        {kCommandModifierKey,
          oo::str::lastPathComponent(cdr.get<std::string>("saved_game_path"))});
     gui->setColor(OOColor::orangeColor().get(), CDRDESCROW);
     gui->addLongText(folderDesc, CDRDESCROW, OOGUIAlignment::kLeft);

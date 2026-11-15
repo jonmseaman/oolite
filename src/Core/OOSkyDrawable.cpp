@@ -435,7 +435,7 @@ void OOSkyDrawable::loadStarTextures() {
       sStarTextures = sStarTexturesHolder->get();
     }
     if (sStarTextures == nullptr) {
-      OORaiseException(OOLITE_EXCEPTION_DATA_NOT_FOUND,
+      OORaiseException(kOoliteExceptionDataNotFound,
                        "No star textures could be loaded.");
     }
   }
@@ -460,7 +460,7 @@ void OOSkyDrawable::loadNebulaTextures() {
       sNebulaTextures = sNebulaTexturesHolder->get();
     }
     if (sNebulaTextures == nullptr) {
-      OORaiseException(OOLITE_EXCEPTION_DATA_NOT_FOUND,
+      OORaiseException(kOoliteExceptionDataNotFound,
                        "No nebula textures could be loaded.");
     }
   }

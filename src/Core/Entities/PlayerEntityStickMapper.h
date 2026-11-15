@@ -32,6 +32,8 @@ MA 02110-1301, USA.
  * in PlayerEntity.h. This header stays for the files that include it.
  */
 
+#include <string_view>
+
 #include "GuiDisplayGen.h"
 #include "MyOpenGLView.h"
 #include "Universe.h"
@@ -52,8 +54,8 @@ inline constexpr int GUI_ROW_FUNCEND =
 inline constexpr int GUI_ROW_INSTRUCT = 18;
 
 // Dictionary keys (of the oo::PList function entries)
-inline constexpr char KEY_HEADER[] = "header";
-inline constexpr char KEY_GUIDESC[] = "guiDesc";
-inline constexpr char KEY_ALLOWABLE[] = "allowable";
-inline constexpr char KEY_AXISFN[] = "axisfunc";
-inline constexpr char KEY_BUTTONFN[] = "buttonfunc";
+inline constexpr std::string_view KEY_HEADER = "header";
+inline constexpr std::string_view KEY_GUIDESC = "guiDesc";
+inline constexpr std::string_view KEY_ALLOWABLE = "allowable";
+inline constexpr std::string_view KEY_AXISFN = "axisfunc";
+inline constexpr std::string_view KEY_BUTTONFN = "buttonfunc";

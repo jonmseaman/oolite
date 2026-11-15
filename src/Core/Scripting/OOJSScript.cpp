@@ -32,6 +32,7 @@ MA 02110-1301, USA.
 #include <format>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -612,7 +613,7 @@ oo::PList::Dict OOJSScript::defaultPropertiesFromPath(
     }
     if (manifest.get<oo::PList>(kOOManifestIdentifier) != nullptr) {
       // used for system info
-      properties[kLocalManifestProperty] =
+      properties[std::string(kLocalManifestProperty)] =
           ValueForKey(identifier, kLocalManifestProperty);
     }
     if (manifest.get<oo::PList>(kOOManifestAuthor) != nullptr) {
@@ -858,11 +859,11 @@ static JSValue CompileScriptWithName(
         match. As before, the whole cache is cleared when the Oolite version or
         the search paths change (see OOCacheManager and ResourceManager).
 */
-static constexpr char kCompiledScriptCache[] = "compiled QuickJS scripts";
-static constexpr char kCompiledScriptKeyHash[] = "source hash";
-static constexpr char kCompiledScriptKeyEngine[] = "engine";
-static constexpr char kCompiledScriptKeyFormat[] = "format";
-static constexpr char kCompiledScriptKeyBytecode[] = "bytecode";
+static constexpr std::string_view kCompiledScriptCache = "compiled QuickJS scripts";
+static constexpr std::string_view kCompiledScriptKeyHash = "source hash";
+static constexpr std::string_view kCompiledScriptKeyEngine = "engine";
+static constexpr std::string_view kCompiledScriptKeyFormat = "format";
+static constexpr std::string_view kCompiledScriptKeyBytecode = "bytecode";
 // Increment when the compiled text or the way it is run changes.
 constexpr int kCompiledScriptFormat = 1;
 
@@ -890,7 +891,7 @@ static const oo::PList* EntryMember(const oo::PList::Dict& entry,
 static JSValue CachedCompiledScript(JSContext* context, const std::string& path,
                                     std::string_view source) {
   const oo::PList cached =
-      OOCacheManager::sharedCache()->pListForKey(path, kCompiledScriptCache);
+      OOCacheManager::sharedCache()->pListForKey(path, std::string(kCompiledScriptCache));
   const oo::PList::Dict* entry = cached.getIf<oo::PList::Dict>();
   if (entry == nullptr) return JS_UNDEFINED;
 
@@ -957,7 +958,7 @@ static void CacheCompiledScript(JSContext* context, const std::string& path,
                 oo::PList::unsignedInteger(kCompiledScriptFormat));
 
   OOCacheManager::sharedCache()->setPList(oo::PList(std::move(entry)), path,
-                                          kCompiledScriptCache);
+                                          std::string(kCompiledScriptCache));
   OO_LOG("script.javaScript.cache.store", "Cached compiled script {}.", path);
 }
 #endif

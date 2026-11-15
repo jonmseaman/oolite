@@ -55,8 +55,8 @@ MA 02110-1301, USA.
 #include "stb_image_write.h"
 
 // The save and snapshot directory names.
-constexpr char SAVEDIR[] = "oolite-saves";
-constexpr char SNAPSHOTDIR[] = "snapshots";
+constexpr std::string_view kSavedir = "oolite-saves";
+constexpr std::string_view kSnapshotdir = "snapshots";
 
 int SaveEXRSnapshot(const char* outfilename, int width, int height,
                     const float* rgb);
@@ -1446,8 +1446,8 @@ void MyOpenGLView::dumpRGBAToFileNamed(const std::string& name, uint8_t* bytes,
   std::string dumpFile = oo::str::appendingPathComponent(
       oo::str::appendingPathComponent(
           oo::fs::utf8String(oo::ResourcePaths::current().homeDirectory()),
-          SAVEDIR),
-      SNAPSHOTDIR);
+          kSavedir),
+      kSnapshotdir);
   dumpFile = oo::str::appendingPathComponent(dumpFile, name + ".png");
 
   SDL_Surface* tmpSurface = SDL_CreateSurfaceFrom(
@@ -1467,8 +1467,8 @@ void MyOpenGLView::dumpRGBToFileNamed(const std::string& name, uint8_t* bytes,
   std::string dumpFile = oo::str::appendingPathComponent(
       oo::str::appendingPathComponent(
           oo::fs::utf8String(oo::ResourcePaths::current().homeDirectory()),
-          SAVEDIR),
-      SNAPSHOTDIR);
+          kSavedir),
+      kSnapshotdir);
   dumpFile = oo::str::appendingPathComponent(dumpFile, name + ".png");
 
   SDL_Surface* tmpSurface = SDL_CreateSurfaceFrom(
@@ -1487,8 +1487,8 @@ void MyOpenGLView::dumpGrayToFileNamed(const std::string& name, uint8_t* bytes,
   std::string dumpFile = oo::str::appendingPathComponent(
       oo::str::appendingPathComponent(
           oo::fs::utf8String(oo::ResourcePaths::current().homeDirectory()),
-          SAVEDIR),
-      SNAPSHOTDIR);
+          kSavedir),
+      kSnapshotdir);
   dumpFile = oo::str::appendingPathComponent(dumpFile, name + ".png");
 
   SDL_Surface* tmpSurface =
@@ -1520,8 +1520,8 @@ void MyOpenGLView::dumpGrayAlphaToFileNamed(const std::string& name,
   std::string dumpFile = oo::str::appendingPathComponent(
       oo::str::appendingPathComponent(
           oo::fs::utf8String(oo::ResourcePaths::current().homeDirectory()),
-          SAVEDIR),
-      SNAPSHOTDIR);
+          kSavedir),
+      kSnapshotdir);
   dumpFile = oo::str::appendingPathComponent(dumpFile, name + ".png");
 
   SDL_Surface* tmpSurface = SDL_CreateSurface(
