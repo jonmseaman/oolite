@@ -80,7 +80,7 @@ std::shared_ptr<OOExhaustPlumeEntity> OOExhaustPlumeEntity::exhaustForShip(
 bool OOExhaustPlumeEntity::initForShip(::ShipEntity* ship,
                                        const std::vector<std::string>& tokens,
                                        float scaleFactor) {
-  if (tokens.size() == 0) {
+  if (tokens.empty()) {
     return false;
   }
 

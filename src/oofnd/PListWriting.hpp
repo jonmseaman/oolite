@@ -421,7 +421,7 @@ inline std::string_view xmlIndent(unsigned index) noexcept {
       "\t\t\t\t\t      ",
       "\t\t\t\t\t\t",
   };
-  constexpr unsigned count = sizeof kIndents / sizeof kIndents[0];
+  constexpr unsigned count = std::size(kIndents);
   return kIndents[index < count ? index : count - 1];
 }
 

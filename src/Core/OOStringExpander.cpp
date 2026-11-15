@@ -887,7 +887,7 @@ const OOSelectorTable* SpecialSubstitutionSelectors() {
       {"commander_bounty", "commanderBountyAsString"},
       {"credits_number", "creditsFormattedForSubstitution"},
       {"_oo_legacy_credits_number", "creditsFormattedForLegacySubstitution"}};
-  unsigned i, count = sizeof selectors / sizeof *selectors;
+  unsigned i, count = std::size(selectors);
 
   specials = new OOSelectorTable;
   for (i = 0; i < count; i++) {

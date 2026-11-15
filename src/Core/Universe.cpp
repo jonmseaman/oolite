@@ -4310,10 +4310,10 @@ bool Universe::canInstantiateShip(const std::string& shipKey) {
       OOJSVal result = OOJSUndefinedValue();
       OOJSVal args[] = {OOJSValueFromPList(context, oo::PList(shipKey))};
 
-      OK = (condScript != nullptr ? condScript->callMethod(
-                                        OOJSID("allowSpawnShip"), context, args,
-                                        sizeof args / sizeof *args, &result)
-                                  : false);
+      OK = (condScript != nullptr
+                ? condScript->callMethod(OOJSID("allowSpawnShip"), context,
+                                         args, std::size(args), &result)
+                : false);
 
       if (OK) allow_instantiation = OOJSValueToBOOL(context, result);
 
@@ -9348,8 +9348,7 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
 
           OK = (condScript != nullptr
                     ? condScript->callMethod(OOJSID("allowOfferShip"), context,
-                                             args, sizeof args / sizeof *args,
-                                             &result)
+                                             args, std::size(args), &result)
                     : false);
 
           if (OK) allow_purchase = OOJSValueToBOOL(context, result);
@@ -9548,9 +9547,9 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
                   OOJSValueFromPList(JScontext, oo::PList("newShip"))};
 
               OK = (condScript != nullptr
-                        ? condScript->callMethod(
-                              OOJSID("allowAwardEquipment"), JScontext, args,
-                              sizeof args / sizeof *args, &result)
+                        ? condScript->callMethod(OOJSID("allowAwardEquipment"),
+                                                 JScontext, args,
+                                                 std::size(args), &result)
                         : false);
 
               if (OK) allow_addition = OOJSValueToBOOL(JScontext, result);

@@ -1957,7 +1957,7 @@ void HeadUpDisplay::drawAegis(const oo::PList& /*info*/) {
   OOGL(glEnableClientState(GL_VERTEX_ARRAY));
   OOGL(glDisableClientState(GL_COLOR_ARRAY));
 
-  OOGL(glDrawArrays(GL_QUAD_STRIP, 0, sizeof strip / sizeof *strip / 2));
+  OOGL(glDrawArrays(GL_QUAD_STRIP, 0, std::size(strip) / 2));
   OOGL(glDisableClientState(GL_VERTEX_ARRAY));
 
   OOGLPopModelView();
