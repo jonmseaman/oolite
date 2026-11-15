@@ -101,6 +101,7 @@ if get_option('dev_release')
 endif
 
 # dependencies, compiler/linker flags and build
+subdir('third_party')
 subdir('src')
 
 if get_option('quickjs_poc')

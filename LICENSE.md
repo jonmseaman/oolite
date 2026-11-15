@@ -74,7 +74,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ----------------------------------------------------------
-The MiniZip code used is subject to the following license.
+The MiniZip code used (third_party/minizip) is subject to the following license.
 
 License
 
@@ -95,7 +95,7 @@ and redistribute it freely, subject to the following restrictions:
 
 
 ----------------------------------------------------------
-TinyEXR, used in the HDR snapshot code, is subject to the following license:
+TinyEXR (third_party/tinyexr), used in the HDR snapshot code, is subject to the following license:
 
 Copyright (c) 2014 - 2021, Syoyo Fujita and many contributors.
 All rights reserved.

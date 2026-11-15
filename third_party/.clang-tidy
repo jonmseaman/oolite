@@ -1,0 +1,3 @@
+# Third-party code: not tidied. Overrides the checks in the root .clang-tidy (for clangd; mk.sh tidy
+# only runs over src/).
+Checks: '-*'
