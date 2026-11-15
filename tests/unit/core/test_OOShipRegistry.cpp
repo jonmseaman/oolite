@@ -63,14 +63,13 @@ oo::PList OOSanitizeLegacyScriptConditions(const oo::PList&,
                                            const std::optional<std::string>&) {
   std::abort();
 }
-bool ScanVectorFromString(const std::optional<std::string>&, Vector*) {
+std::optional<Vector> ScanVectorFromString(const std::optional<std::string>&) {
   std::abort();
 }
-bool ScanHPVectorFromString(const std::optional<std::string>&, HPVector*) {
+std::optional<HPVector> ScanHPVectorFromString(const std::optional<std::string>&) {
   std::abort();
 }
-bool ScanQuaternionFromString(const std::optional<std::string>&,
-                                  Quaternion*) {
+std::optional<Quaternion> ScanQuaternionFromString(const std::optional<std::string>&) {
   std::abort();
 }
 void OOStandardsDeprecated(const std::string&) { std::abort(); }

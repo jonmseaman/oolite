@@ -52,14 +52,13 @@ uint32_t gDebugFlags = 0;
 
 // Link stubs, never reached here: OOStringParsing.mm's parsers of a vector or
 // quaternion written as a string (OOPListGameTypes.mm links them).
-bool ScanVectorFromString(const std::optional<std::string>&, Vector*) {
+std::optional<Vector> ScanVectorFromString(const std::optional<std::string>&) {
   std::abort();
 }
-bool ScanHPVectorFromString(const std::optional<std::string>&, HPVector*) {
+std::optional<HPVector> ScanHPVectorFromString(const std::optional<std::string>&) {
   std::abort();
 }
-bool ScanQuaternionFromString(const std::optional<std::string>&,
-                                  Quaternion*) {
+std::optional<Quaternion> ScanQuaternionFromString(const std::optional<std::string>&) {
   std::abort();
 }
 
@@ -206,9 +205,8 @@ void OOTexture::forceRebind() {}
 */
 OOTextureLoader::OOTextureLoader() {}
 OOTextureLoader::~OOTextureLoader() {}
-bool OOTextureLoader::getResult(OOPixMap*, OOTextureDataFormat*, uint32_t*,
-                                uint32_t*) {
-  return false;
+std::optional<OOTextureLoader::Result> OOTextureLoader::getResult() {
+  return std::nullopt;
 }
 std::optional<std::string> OOTextureLoader::cacheKey() { return std::nullopt; }
 std::optional<std::string> OOTextureLoader::descriptionComponents() const {

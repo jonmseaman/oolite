@@ -192,9 +192,8 @@ std::optional<std::string> OOStandaloneAtmosphereGenerator::cacheKey() {
       _info.paleCloudColor.b);
 }
 
-bool OOStandaloneAtmosphereGenerator::getResultFormatWidthHeight(
-    OOPixMap* outData, OOTextureDataFormat* outFormat, uint32_t* outWidth,
-    uint32_t* outHeight) {
+std::optional<OOTextureLoader::Result>
+OOStandaloneAtmosphereGenerator::getResultFormatWidthHeight() {
   bool waiting = false;
   if (!isReady()) {
     waiting = true;
@@ -202,16 +201,16 @@ bool OOStandaloneAtmosphereGenerator::getResultFormatWidthHeight(
            description());
   }
 
-  bool result =
-      OOTextureGenerator::getResult(outData, outFormat, outWidth, outHeight);
+  std::optional<Result> result = OOTextureGenerator::getResult();
 
   if (waiting) {
     OO_LOG("texture.planet.generate.dequeue", "{} generator {}",
-           result ? "Dequeued" : "Failed to dequeue", description());
+           result.has_value() ? "Dequeued" : "Failed to dequeue",
+           description());
   } else {
-    OO_LOG("texture.planet.generate.dequeue",
-           "{} generator {} without waiting.",
-           result ? "Dequeued" : "Failed to dequeue", description());
+    OO_LOG(
+        "texture.planet.generate.dequeue", "{} generator {} without waiting.",
+        result.has_value() ? "Dequeued" : "Failed to dequeue", description());
   }
 
   return result;

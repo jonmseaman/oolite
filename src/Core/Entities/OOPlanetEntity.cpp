@@ -497,18 +497,20 @@ void OOPlanetEntity::setUpColorParametersWithSourceInfo(
     // planetinfo.plist overrides
     color =
         OOColor::colorWithDescription(ValueForKey(sourceInfo, "land_color"));
-    if (color != nullptr)
+    if (color != nullptr) {
       landHSB = HSBColorWithColor(color.get());
-    else
-      ScanVectorFromString(OptionalStringForKey(sourceInfo, "land_hsb_color"),
-                           &landHSB);
+    } else if (const std::optional<Vector> scanned = ScanVectorFromString(
+                   OptionalStringForKey(sourceInfo, "land_hsb_color"))) {
+      landHSB = *scanned;
+    }
 
     color = OOColor::colorWithDescription(ValueForKey(sourceInfo, "sea_color"));
-    if (color != nullptr)
+    if (color != nullptr) {
       seaHSB = HSBColorWithColor(color.get());
-    else
-      ScanVectorFromString(OptionalStringForKey(sourceInfo, "sea_hsb_color"),
-                           &seaHSB);
+    } else if (const std::optional<Vector> scanned = ScanVectorFromString(
+                   OptionalStringForKey(sourceInfo, "sea_hsb_color"))) {
+      seaHSB = *scanned;
+    }
 
     color = OOColor::colorWithDescription(
         ValueForKey(sourceInfo, "illumination_color"));
@@ -517,11 +519,14 @@ void OOPlanetEntity::setUpColorParametersWithSourceInfo(
     } else {
       const std::optional<std::string> illumHSBColorString =
           OptionalStringForKey(sourceInfo, "illumination_hsb_color");
-      if (illumHSBColorString.has_value())
-        ScanVectorFromString(illumHSBColorString, &illumHSB);
-      else
+      if (illumHSBColorString.has_value()) {
+        if (const std::optional<Vector> scanned =
+                ScanVectorFromString(illumHSBColorString))
+          illumHSB = *scanned;
+      } else {
         illumHSB = HSBColorWithColor(
             OOColor::colorWithRed(0.8f, 0.8f, 0.4f, 1.0f).get());
+      }
     }
 
     // polar areas are brighter but have less colour (closer to white)

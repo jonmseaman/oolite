@@ -113,8 +113,13 @@ struct Result {
 
 Result GetResult(OOTextureLoader* loader) {
   Result result;
-  result.ok = loader->getResult(&result.pixMap, &result.format,
-                                &result.originalWidth, &result.originalHeight);
+  if (std::optional<OOTextureLoader::Result> loaded = loader->getResult()) {
+    result.ok = true;
+    result.pixMap = loaded->pixMap;
+    result.format = loaded->format;
+    result.originalWidth = loaded->originalWidth;
+    result.originalHeight = loaded->originalHeight;
+  }
   return result;
 }
 
@@ -346,7 +351,14 @@ OO_TEST(cxxApi) {
     OOPixMap pixMap = kOONullPixMap;
     OOTextureDataFormat format = kOOPixMapInvalidFormat;
     uint32_t width = 0, height = 0;
-    OO_CHECK(loader->getResult(&pixMap, &format, &width, &height));
+    const std::optional<OOTextureLoader::Result> loaded = loader->getResult();
+    OO_CHECK(loaded.has_value());
+    if (loaded) {
+      pixMap = loaded->pixMap;
+      format = loaded->format;
+      width = loaded->originalWidth;
+      height = loaded->originalHeight;
+    }
     OO_CHECK(loader->loads == 1 && loader->isReady() &&
              format == kOOPixMapRGBA);
     OO_CHECK(pixMap.width == 8 && pixMap.height == 8 && width == 8 &&

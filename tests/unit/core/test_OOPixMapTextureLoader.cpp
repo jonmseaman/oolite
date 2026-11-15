@@ -98,7 +98,14 @@ OO_TEST(takesThePixMap) {
     OOPixMap result = kOONullPixMap;
     OOTextureDataFormat format = kOOPixMapInvalidFormat;
     uint32_t width = 0, height = 0;
-    OO_CHECK(loader->getResult(&result, &format, &width, &height));
+    const std::optional<OOTextureLoader::Result> loaded = loader->getResult();
+    OO_CHECK(loaded.has_value());
+    if (loaded) {
+      result = loaded->pixMap;
+      format = loaded->format;
+      width = loaded->originalWidth;
+      height = loaded->originalHeight;
+    }
     OO_CHECK(format == kOOPixMapRGBA && result.width == 8 &&
              result.height == 8 && result.rowBytes == 32);
     OO_CHECK(width == 8 && height == 8);
@@ -139,7 +146,12 @@ OO_TEST(loadsWithMipMaps) {
     OO_CHECK(loader->enqueue());
     OOPixMap result = kOONullPixMap;
     OOTextureDataFormat format = kOOPixMapInvalidFormat;
-    OO_CHECK(loader->getResult(&result, &format, NULL, NULL));
+    const std::optional<OOTextureLoader::Result> loaded = loader->getResult();
+    OO_CHECK(loaded.has_value());
+    if (loaded) {
+      result = loaded->pixMap;
+      format = loaded->format;
+    }
     OO_CHECK(result.width == 8 && result.height == 8 &&
              format == kOOPixMapRGBA);
     OO_CHECK(((const uint8_t*)result.pixels)[0] ==

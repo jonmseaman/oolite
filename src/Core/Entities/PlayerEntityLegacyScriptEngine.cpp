@@ -2438,12 +2438,12 @@ void PlayerEntity::addPlanet(const std::string& planetKey) {
 
   Quaternion planetOrientation;
   const oo::PList* orientationValue = dict.find("orientation");
-  if (ScanQuaternionFromString(
+  if (const std::optional<Quaternion> scanned = ScanQuaternionFromString(
           (orientationValue != nullptr && orientationValue->isString())
               ? std::optional<std::string>(
                     *orientationValue->getIf<std::string>())
-              : std::nullopt,
-          &planetOrientation)) {
+              : std::nullopt)) {
+    planetOrientation = *scanned;
     if (planet != nullptr) planet->setOrientation(planetOrientation);
   }
 
@@ -2478,7 +2478,9 @@ void PlayerEntity::addPlanet(const std::string& planetKey) {
            "planet position ({:.2f} {:.2f} {:.2f}) derived from {}", posn.x,
            posn.y, posn.z, positionString);
   } else {
-    ScanHPVectorFromString(positionString, &posn);
+    if (const std::optional<HPVector> scanned =
+            ScanHPVectorFromString(positionString))
+      posn = *scanned;
     OO_LOG(kOOLogDebugAddPlanet,
            "planet position ({:.2f} {:.2f} {:.2f}) derived from {}", posn.x,
            posn.y, posn.z, positionString);
@@ -2532,12 +2534,12 @@ void PlayerEntity::addMoon(const std::string& moonKey) {
 
   Quaternion planetOrientation;
   const oo::PList* orientationValue = dict.find("orientation");
-  if (ScanQuaternionFromString(
+  if (const std::optional<Quaternion> scanned = ScanQuaternionFromString(
           (orientationValue != nullptr && orientationValue->isString())
               ? std::optional<std::string>(
                     *orientationValue->getIf<std::string>())
-              : std::nullopt,
-          &planetOrientation)) {
+              : std::nullopt)) {
+    planetOrientation = *scanned;
     if (planet != nullptr) planet->setOrientation(planetOrientation);
   }
 
@@ -2572,7 +2574,9 @@ void PlayerEntity::addMoon(const std::string& moonKey) {
            "moon position ({:.2f} {:.2f} {:.2f}) derived from {}", posn.x,
            posn.y, posn.z, positionString);
   } else {
-    ScanHPVectorFromString(positionString, &posn);
+    if (const std::optional<HPVector> scanned =
+            ScanHPVectorFromString(positionString))
+      posn = *scanned;
     OO_LOG(kOOLogDebugAddPlanet,
            "moon position ({:.2f} {:.2f} {:.2f}) derived from {}", posn.x,
            posn.y, posn.z, positionString);
@@ -2814,7 +2818,9 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
       return false;          //		   0.... 1.. 2 3 4
     const std::string& scene_key = i_info[1];
     Vector scene_offset = {};
-    ScanVectorFromString(joined(2, 3), &scene_offset);
+    if (const std::optional<Vector> scanned =
+            ScanVectorFromString(joined(2, 3)))
+      scene_offset = *scanned;
     scene_offset.x += off.x;
     scene_offset.y += off.y;
     scene_offset.z += off.z;
@@ -2977,7 +2983,9 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     }
     if (doppelganger == nullptr) return false;
 
-    ScanVectorFromString(joined(1, 3), &model_p0);
+    if (const std::optional<Vector> scanned =
+            ScanVectorFromString(joined(1, 3)))
+      model_p0 = *scanned;
 
     // miniature radii are roughly between 60 and 120. Place miniatures with a
     // radius bigger than 60 a bit futher away.

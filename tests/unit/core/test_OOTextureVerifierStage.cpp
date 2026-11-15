@@ -75,9 +75,8 @@ void OOFreePixMap(OOPixMap* ioPixMap) {
 */
 OOTextureLoader::OOTextureLoader() {}
 OOTextureLoader::~OOTextureLoader() {}
-bool OOTextureLoader::getResult(OOPixMap*, OOTextureDataFormat*, uint32_t*,
-                                uint32_t*) {
-  return false;
+std::optional<OOTextureLoader::Result> OOTextureLoader::getResult() {
+  return std::nullopt;
 }
 std::optional<std::string> OOTextureLoader::cacheKey() { return std::nullopt; }
 std::optional<std::string> OOTextureLoader::descriptionComponents() const {
@@ -96,18 +95,14 @@ class StandInLoader final : public OOTextureLoader {
   explicit StandInLoader(std::string contents)
       : _contents(std::move(contents)) {}
 
-  bool getResult(OOPixMap* result, OOTextureDataFormat* outFormat,
-                 uint32_t* outWidth, uint32_t* outHeight) override {
-    (void)outFormat;
-    (void)outWidth;
-    (void)outHeight;
+  std::optional<Result> getResult() override {
     unsigned width = 0, height = 0;
     if (std::sscanf(_contents.c_str(), "%ux%u", &width, &height) != 2)
-      return false;
-    *result = OOPixMap{};
-    result->width = width;
-    result->height = height;
-    return true;
+      return std::nullopt;
+    Result result{};
+    result.pixMap.width = width;
+    result.pixMap.height = height;
+    return result;
   }
 
  private:

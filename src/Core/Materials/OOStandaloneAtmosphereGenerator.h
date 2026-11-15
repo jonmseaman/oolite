@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -93,9 +94,7 @@ class OOStandaloneAtmosphereGenerator : public OOTextureGenerator {
      it and nothing sends it; kept, under a name that does not override
      getResult() either.
   */
-  bool getResultFormatWidthHeight(OOPixMap* outData,
-                                  OOTextureDataFormat* outFormat,
-                                  uint32_t* outWidth, uint32_t* outHeight);
+  std::optional<Result> getResultFormatWidthHeight();
 
   void loadTexture() override;
 
