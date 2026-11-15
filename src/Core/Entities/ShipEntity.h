@@ -64,51 +64,51 @@ class OOExhaustPlumeEntity;  // Universe.h's, for the members of
                              // ShipEntityAI.cpp's scans.
 using EntityFilterPredicate = bool (*)(Entity* entity, void* parameter);
 
-#define MAX_TARGETS 24
-#define RAIDER_MAX_CARGO 5
-#define MERCHANTMAN_MAX_CARGO 125
+inline constexpr int MAX_TARGETS = 24;
+inline constexpr int RAIDER_MAX_CARGO = 5;
+inline constexpr int MERCHANTMAN_MAX_CARGO = 125;
 
 #define PIRATES_PREFER_PLAYER true
 
-#define TURRET_MINIMUM_COS 0.20f
+inline constexpr float TURRET_MINIMUM_COS = 0.20f;
 
-#define SHIP_THRUST_FACTOR 5.0f
-#define AFTERBURNER_BURNRATE 0.25f
+inline constexpr float SHIP_THRUST_FACTOR = 5.0f;
+inline constexpr float AFTERBURNER_BURNRATE = 0.25f;
 
-#define CLOAKING_DEVICE_ENERGY_RATE 12.8f
-#define CLOAKING_DEVICE_MIN_ENERGY 128
-#define CLOAKING_DEVICE_START_ENERGY 0.75f
+inline constexpr float CLOAKING_DEVICE_ENERGY_RATE = 12.8f;
+inline constexpr int CLOAKING_DEVICE_MIN_ENERGY = 128;
+inline constexpr float CLOAKING_DEVICE_START_ENERGY = 0.75f;
 
-#define MILITARY_JAMMER_ENERGY_RATE 3
-#define MILITARY_JAMMER_MIN_ENERGY 128
+inline constexpr int MILITARY_JAMMER_ENERGY_RATE = 3;
+inline constexpr int MILITARY_JAMMER_MIN_ENERGY = 128;
 
-#define COMBAT_IN_RANGE_FACTOR 0.035f
-#define COMBAT_BROADSIDE_IN_RANGE_FACTOR 0.020f
-#define COMBAT_OUT_RANGE_FACTOR 0.500f
-#define COMBAT_BROADSIDE_RANGE_FACTOR 0.900f
-#define COMBAT_WEAPON_RANGE_FACTOR 1.200f
-#define COMBAT_JINK_OFFSET 500.0f
+inline constexpr float COMBAT_IN_RANGE_FACTOR = 0.035f;
+inline constexpr float COMBAT_BROADSIDE_IN_RANGE_FACTOR = 0.020f;
+inline constexpr float COMBAT_OUT_RANGE_FACTOR = 0.500f;
+inline constexpr float COMBAT_BROADSIDE_RANGE_FACTOR = 0.900f;
+inline constexpr float COMBAT_WEAPON_RANGE_FACTOR = 1.200f;
+inline constexpr float COMBAT_JINK_OFFSET = 500.0f;
 
-#define SHIP_COOLING_FACTOR 0.1f
+inline constexpr float SHIP_COOLING_FACTOR = 0.1f;
 // heat taken from energy damage depends on mass
 // but limit maximum rate since masses vary so much
 // Cobra III ~=215000
 #define SHIP_ENERGY_DAMAGE_TO_HEAT_FACTOR \
   (mass > 400000 ? 200000 / mass : 0.5)  // the ShipEntity member mass
-#define SHIP_INSULATION_FACTOR 0.00175f
-#define SHIP_MAX_CABIN_TEMP 256.0f
-#define SHIP_MIN_CABIN_TEMP 60.0f
-#define EJECTA_TEMP_FACTOR 0.85f
-#define DEFAULT_HYPERSPACE_SPIN_TIME 15.0f
+inline constexpr float SHIP_INSULATION_FACTOR = 0.00175f;
+inline constexpr float SHIP_MAX_CABIN_TEMP = 256.0f;
+inline constexpr float SHIP_MIN_CABIN_TEMP = 60.0f;
+inline constexpr float EJECTA_TEMP_FACTOR = 0.85f;
+inline constexpr float DEFAULT_HYPERSPACE_SPIN_TIME = 15.0f;
 
-#define SUN_TEMPERATURE 1250.0f
+inline constexpr float SUN_TEMPERATURE = 1250.0f;
 
-#define MAX_ESCORTS 16
-#define ESCORT_SPACING_FACTOR 3.0
+inline constexpr int MAX_ESCORTS = 16;
+inline constexpr double ESCORT_SPACING_FACTOR = 3.0;
 
-#define SHIPENTITY_MAX_MISSILES 32
+inline constexpr int SHIPENTITY_MAX_MISSILES = 32;
 
-#define TURRET_TYPICAL_ENERGY 25.0f
+inline constexpr float TURRET_TYPICAL_ENERGY = 25.0f;
 #define TURRET_SHOT_SPEED 2000.0f
 #define TURRET_SHOT_DURATION 3.0
 #define TURRET_SHOT_RANGE (TURRET_SHOT_SPEED * TURRET_SHOT_DURATION)
@@ -122,29 +122,30 @@ using EntityFilterPredicate = bool (*)(Entity* entity, void* parameter);
 #define PLAYER_PLASMA_SPEED 1000.0f
 #define PLAYER_PLASMA_RANGE (MAIN_PLASMA_DURATION * PLAYER_PLASMA_SPEED)
 
-#define TRACTOR_FORCE 2500.0f
+inline constexpr float TRACTOR_FORCE = 2500.0f;
 
 inline constexpr std::string_view AIMS_AGGRESSOR_SWITCHED_TARGET =
     "AGGRESSOR_SWITCHED_TARGET";
 
 // number of vessels considered when scanning around
-#define MAX_SCAN_NUMBER 32
+inline constexpr int MAX_SCAN_NUMBER = 32;
 
-#define BASELINE_SHIELD_LEVEL 128.0f  // Max shield level with no boosters.
-#define INITIAL_SHOT_TIME 100.0
+inline constexpr float BASELINE_SHIELD_LEVEL =
+    128.0f;  // Max shield level with no boosters.
+inline constexpr double INITIAL_SHOT_TIME = 100.0;
 
-#define MIN_FUEL 0  // minimum fuel required for afterburner use
+inline constexpr int MIN_FUEL = 0;  // minimum fuel required for afterburner use
 #ifdef OO_DUMP_PLANETINFO
 // debugging planetinfo needs rapid jumping
-#define MAX_JUMP_RANGE 150.0
+inline constexpr double MAX_JUMP_RANGE = 150.0;
 #else
-#define MAX_JUMP_RANGE 7.0  // the 7 ly limit
+inline constexpr double MAX_JUMP_RANGE = 7.0;  // the 7 ly limit
 #endif
 
-#define ENTITY_PERSONALITY_MAX 0x7FFFU
-#define ENTITY_PERSONALITY_INVALID 0xFFFFU
+inline constexpr unsigned ENTITY_PERSONALITY_MAX = 0x7FFFU;
+inline constexpr unsigned ENTITY_PERSONALITY_INVALID = 0xFFFFU;
 
-#define WEAPON_COOLING_FACTOR 6.0f
+inline constexpr float WEAPON_COOLING_FACTOR = 6.0f;
 #define NPC_MAX_WEAPON_TEMP 256.0f
 #define WEAPON_COOLING_CUTOUT 0.85f
 
@@ -152,21 +153,21 @@ inline constexpr std::string_view AIMS_AGGRESSOR_SWITCHED_TARGET =
 #define COMBAT_AI_WEAPON_TEMP_USABLE WEAPON_COOLING_CUTOUT* NPC_MAX_WEAPON_TEMP
 // factor determining how close to target AI has to be to be confident in aim
 // higher factor makes confident at longer ranges
-#define COMBAT_AI_CONFIDENCE_FACTOR 1250000.0f
-#define COMBAT_AI_ISNT_AWFUL 0.0f
+inline constexpr float COMBAT_AI_CONFIDENCE_FACTOR = 1250000.0f;
+inline constexpr float COMBAT_AI_ISNT_AWFUL = 0.0f;
 // removes OOBehaviour::kAttackFlyToTargetSix/TWELVE (unless thargoid)
-#define COMBAT_AI_IS_SMART 5.0f
+inline constexpr float COMBAT_AI_IS_SMART = 5.0f;
 // adds BEHAVIOUR_(FLEE_)EVASIVE_ACTION
-#define COMBAT_AI_FLEES_BETTER 6.0f
+inline constexpr float COMBAT_AI_FLEES_BETTER = 6.0f;
 // adds OOBehaviour::kAttackBreakOffTarget
-#define COMBAT_AI_DOGFIGHTER 6.5f
+inline constexpr float COMBAT_AI_DOGFIGHTER = 6.5f;
 // adds OOBehaviour::kAttackSlowDogfight
-#define COMBAT_AI_TRACKS_CLOSER 7.5f
-#define COMBAT_AI_USES_SNIPING 8.5f
+inline constexpr float COMBAT_AI_TRACKS_CLOSER = 7.5f;
+inline constexpr float COMBAT_AI_USES_SNIPING = 8.5f;
 // adds OOBehaviour::kAttackSniper
-#define COMBAT_AI_FLEES_BETTER_2 9.0f
+inline constexpr float COMBAT_AI_FLEES_BETTER_2 = 9.0f;
 // AI reacts to changes in target path in about 1.5 seconds.
-#define COMBAT_AI_STANDARD_REACTION_TIME 1.5f
+inline constexpr float COMBAT_AI_STANDARD_REACTION_TIME = 1.5f;
 
 #define MAX_LANDING_SPEED 50.0
 #define MAX_LANDING_SPEED2 (MAX_LANDING_SPEED * MAX_LANDING_SPEED)
