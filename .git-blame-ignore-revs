@@ -1,0 +1,3 @@
+# Formatting-only commits, skipped by git blame (git config blame.ignoreRevsFile .git-blame-ignore-revs).
+# Reformat src/ with clang-format 22 and SeparateDefinitionBlocks: Always
+7d7f098733fa5a5080d0a7abcf9660a9595f0715
