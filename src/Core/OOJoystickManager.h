@@ -323,7 +323,8 @@ inline constexpr std::string_view STICK_NUMBER =
     "stickNum";  // Stick number 0 to 4
 inline constexpr std::string_view STICK_AXBUT =
     "stickAxBt";                    // Axis or button number
-#define STICK_FUNCTION "stickFunc"  // Function of axis/button
+inline constexpr char STICK_FUNCTION[] =
+    "stickFunc";  // Function of axis/button
 inline constexpr std::string_view STICK_ROLL_AXIS_PROFILE_SETTING =
     "RollAxisProfile";  // Joystick Profiles
 inline constexpr std::string_view STICK_PITCH_AXIS_PROFILE_SETTING =
