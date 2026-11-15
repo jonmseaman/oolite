@@ -106,9 +106,29 @@ MA 02110-1301, USA.
 
 #include "OOCache.h"
 
+#include <algorithm>
+#include <chrono>
+#include <condition_variable>
+#include <cstddef>
+#include <cstdint>
 #include <format>
+#include <functional>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <set>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
+#include "OOFoundation.h"
 #include "OOStringParsing.h"  // IWYU pragma: keep: used only with DEBUG_GRAPHVIZ
+#include "oofnd/Object.hpp"
+#include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"  // IWYU pragma: keep: used only by the debug dumps and integrity checks
 #if DEBUG_GRAPHVIZ
 #include "oofnd/FileSystem.hpp"

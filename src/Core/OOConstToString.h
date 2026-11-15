@@ -32,7 +32,6 @@ MA 02110-1301, USA.
 
 #include "MyOpenGLView.h"
 #include "OOFoundation.h"
-#include "OOFunctionAttributes.h"
 #include "OOTypes.h"
 
 // Values used for unknown strings.
@@ -78,25 +77,8 @@ declaration, each with its C++ (cxx_) form beside it, in particular:
 
 */
 
-#include <algorithm>
-#include <chrono>
-#include <condition_variable>
-#include <cstddef>
-#include <cstdint>
-#include <functional>
-#include <map>
-#include <memory>
-#include <mutex>
 #include <optional>
-#include <set>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
-#include <vector>
-
-#include "oofnd/PList.hpp"
 
 // C++ forms: std::string results (never nil)
 // and const std::string & parameters (the old nil arrived as "" and matched
