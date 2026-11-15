@@ -188,7 +188,6 @@ bool OOALSoundVorbisCodec::initWithPath(
       if (!OK) {
         return false;
       }
-
     } else {
       _seekableStream = false;
 

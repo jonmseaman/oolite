@@ -421,7 +421,6 @@ void OOSunEntity::drawOpaqueParts() {
     OOGL(glEnable(GL_BLEND));
 
     if (ignoreDepthBuffer) OOGL(glEnable(GL_DEPTH_TEST));
-
   } else {
     calculateGLArrays(effective_radius, effective_cor16k, sqrt_zero_distance);
     OOGL(glDisable(GL_BLEND));

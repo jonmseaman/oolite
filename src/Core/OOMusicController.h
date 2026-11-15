@@ -44,7 +44,6 @@ enum class OOMusicMode : std::int32_t {
   kOff,
   kOn,
   kITunes,
-
 };
 static_assert(std::to_underlying(OOMusicMode::kOff) == 0);
 static_assert(std::to_underlying(OOMusicMode::kOn) == 1);

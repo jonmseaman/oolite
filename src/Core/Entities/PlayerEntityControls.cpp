@@ -1552,7 +1552,6 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                           {oo::PList(eqKey)});
           }
           prime_equipment_pressed = true;
-
         } else {
           prime_equipment_pressed = false;
         }
@@ -5571,7 +5570,6 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
               startScenario();
             }
           }
-
         } else if (checkKeyPress(n_key_gui_page_down) ||
                    joyButtonState[BUTTON_GUIPAGEDOWN]) {
           // find the Next >>> line, select it and press it
