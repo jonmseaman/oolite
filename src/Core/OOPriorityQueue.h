@@ -63,16 +63,15 @@ class OOPriorityQueueOf {
 
   explicit OOPriorityQueueOf(Comparator comparator) : _comparator(comparator) {}
 
-  void addObject(T* object)  // null is ignored (OOPriorityQueue raised)
-  {
+  void addObject(T* object) {
+    // null is ignored (OOPriorityQueue raised)
     if (object == nullptr) return;
     _heap.emplace_back(oo::share(object));
     bubbleUpFrom(_heap.size() - 1);
   }
 
-  void removeExactObject(
-      T* object)  // pointer comparison; safe from the element's destructor
-  {
+  void removeExactObject(T* object) {
+    // pointer comparison; safe from the element's destructor
     if (object == nullptr) return;
     for (size_t i = 0; i < _heap.size(); ++i) {
       if (object == _heap[i].get()) (void)removeObjectAtIndex(i);

@@ -986,8 +986,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
         while ((player != nullptr ? player->getCompassTargetEntity()
                                   : nullptr) != current &&
                (player != nullptr ? player->getCompassTargetEntity()
-                                  : nullptr) != eValue)  // the C++ entities
-        {
+                                  : nullptr) != eValue) {
+          // the C++ entities
           if (player != nullptr) player->setNextCompassMode();
           if (player != nullptr) player->validateCompassTarget();
         }
@@ -1057,8 +1057,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kPitch:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (!isnan(fValue))  // guard against undefined
-        {
+        if (!isnan(fValue)) {
+          // guard against undefined
           if (player != nullptr)
             player->decrease_flight_pitch(
                 ((player != nullptr ? player->getFlightPitch() : 0.0f) +
@@ -1070,8 +1070,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kRoll:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (!isnan(fValue))  // guard against undefined
-        {
+        if (!isnan(fValue)) {
+          // guard against undefined
           if (player != nullptr)
             player->decrease_flight_roll((
                 (player != nullptr ? player->getFlightRoll() : 0.0f) + fValue));
@@ -1082,8 +1082,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kYaw:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (!isnan(fValue))  // guard against undefined
-        {
+        if (!isnan(fValue)) {
+          // guard against undefined
           if (player != nullptr)
             player->decrease_flight_yaw(
                 ((player != nullptr ? player->getFlightYaw() : 0.0f) + fValue));

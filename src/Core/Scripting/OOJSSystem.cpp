@@ -1365,8 +1365,8 @@ static JSValue SystemStaticSystemNameForID(OOJS_NATIVE_ARGS) {
   int32_t systemID;
 
   if (argc < 1 || !OOJSValueToInt32(context, OOJS_ARGV[0], &systemID) ||
-      systemID < -1 || kOOMaximumSystemID < systemID)  // -1 interstellar space!
-  {
+      systemID < -1 || kOOMaximumSystemID < systemID) {
+    // -1 interstellar space!
     OOJSReportBadArguments(context, "System", "systemNameForID",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "system ID");
@@ -1638,10 +1638,9 @@ static JSValue SystemSetWaypoint(OOJS_NATIVE_ARGS) {
 
     settings = OOJSPListFromJSObject(
         context, OOJS_ARGV[3]);  // a copy, as -mutableCopy was
-    if (oo::PList::Dict* settingsDict =
-            settings.getIf<oo::PList::Dict>())  // messages to a nil copy did
-                                                // nothing
-    {
+    if (oo::PList::Dict* settingsDict = settings.getIf<oo::PList::Dict>()) {
+      // messages to a nil copy did
+      // nothing
       (*settingsDict)["position"] = oo::PList(oo::PList::Array{
           oo::PList(position.x), oo::PList(position.y), oo::PList(position.z)});
       (*settingsDict)["orientation"] = oo::PList(

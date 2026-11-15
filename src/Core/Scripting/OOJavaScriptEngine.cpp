@@ -1684,9 +1684,8 @@ bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void* parameter) {
       return false;  // Demo ship
     return true;
   } else if (OOJavaScriptEngineIsPlanet(entity)) {
-    switch (static_cast<OOPlanetEntity*>(entity)
-                ->planetType())  // a planet: not nil
-    {
+    switch (static_cast<OOPlanetEntity*>(entity)->planetType()) {
+      // a planet: not nil
       case OOStellarBodyType::kMoon:
       case OOStellarBodyType::kNormalPlanet:
       case OOStellarBodyType::kSun:

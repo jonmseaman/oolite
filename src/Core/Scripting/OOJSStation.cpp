@@ -591,11 +591,9 @@ static JSValue StationDockPlayer(OOJS_NATIVE_ARGS) {
     if (gameController != nullptr) gameController->setGamePaused(false);
   }
 
-  if (EXPECT(!(player != nullptr
-                   ? player->PlayerEntity::isDocked()
-                   : false)))  // qualified: the final overrider, so the binding
-                               // test stands in for it
-  {
+  if (EXPECT(!(player != nullptr ? player->PlayerEntity::isDocked() : false))) {
+    // qualified: the final overrider, so the binding
+    // test stands in for it
     StationEntity* stationForDockingPlayer = nullptr;
     JSStationGetStationEntity(context, OOJS_THIS, &stationForDockingPlayer);
     // SpiderMonkey tolerated returning normally with an error pending; QuickJS
@@ -627,10 +625,9 @@ static JSValue StationIncreaseAlertLevel(OOJS_NATIVE_ARGS) {
   OOJS_BEGIN_FULL_NATIVE(context)
   if (oo::ToUnderlying(station != nullptr
                            ? station->ShipEntity::alertCondition()
-                           : OOAlertCondition{}) <
-      3)  // qualified: the final overrider, so the
-          // binding test stands in for it
-  {
+                           : OOAlertCondition{}) < 3) {
+    // qualified: the final overrider, so the
+    // binding test stands in for it
     if (station != nullptr) station->increaseAlertLevel();
   }
   OOJS_END_FULL_NATIVE
@@ -647,10 +644,9 @@ static JSValue StationDecreaseAlertLevel(OOJS_NATIVE_ARGS) {
   OOJS_BEGIN_FULL_NATIVE(context)
   if (oo::ToUnderlying(station != nullptr
                            ? station->ShipEntity::alertCondition()
-                           : OOAlertCondition{}) >
-      1)  // qualified: the final overrider, so the
-          // binding test stands in for it
-  {
+                           : OOAlertCondition{}) > 1) {
+    // qualified: the final overrider, so the
+    // binding test stands in for it
     if (station != nullptr) station->decreaseAlertLevel();
   }
   OOJS_END_FULL_NATIVE
@@ -1033,9 +1029,9 @@ static JSValue StationSetMarketPrice(OOJS_NATIVE_ARGS) {
   if (station == (PLAYER != nullptr ? PLAYER->PlayerEntity::dockedStation()
                                     : static_cast<StationEntity*>(nullptr)) &&
       (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-          OOGUIScreenID::kMarket)  // qualified: the final overrider, so the
-                                   // binding test stands in for it
-  {
+          OOGUIScreenID::kMarket) {
+    // qualified: the final overrider, so the
+    // binding test stands in for it
     if (PLAYER != nullptr) PLAYER->setGuiToMarketScreen();  // refresh screen
   }
 
@@ -1095,9 +1091,9 @@ static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
   if (station == (PLAYER != nullptr ? PLAYER->PlayerEntity::dockedStation()
                                     : static_cast<StationEntity*>(nullptr)) &&
       (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-          OOGUIScreenID::kMarket)  // qualified: the final overrider, so the
-                                   // binding test stands in for it
-  {
+          OOGUIScreenID::kMarket) {
+    // qualified: the final overrider, so the
+    // binding test stands in for it
     if (PLAYER != nullptr) PLAYER->setGuiToMarketScreen();  // refresh screen
   }
 
@@ -1363,9 +1359,9 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
   if (station == (PLAYER != nullptr ? PLAYER->PlayerEntity::dockedStation()
                                     : static_cast<StationEntity*>(nullptr)) &&
       (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-          OOGUIScreenID::kShipyard)  // qualified: the final overrider, so the
-                                     // binding test stands in for it
-  {
+          OOGUIScreenID::kShipyard) {
+    // qualified: the final overrider, so the
+    // binding test stands in for it
     if (PLAYER != nullptr) PLAYER->setGuiToShipyardScreen(0);
   }
 
@@ -1416,9 +1412,9 @@ static JSValue StationRemoveShipFromShipyard(OOJS_NATIVE_ARGS) {
   if (station == (PLAYER != nullptr ? PLAYER->PlayerEntity::dockedStation()
                                     : static_cast<StationEntity*>(nullptr)) &&
       (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-          OOGUIScreenID::kShipyard)  // qualified: the final overrider, so the
-                                     // binding test stands in for it
-  {
+          OOGUIScreenID::kShipyard) {
+    // qualified: the final overrider, so the
+    // binding test stands in for it
     if (PLAYER != nullptr) PLAYER->setGuiToShipyardScreen(0);
   }
 

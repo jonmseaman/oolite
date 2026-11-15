@@ -434,8 +434,8 @@ void WormholeEntity::disgorgeShips() {
           min_d1 *= 3.0;
         }
 
-        if (fabs(d1) < min_d1)  // no closer than 750m to edge of buoy
-        {
+        if (fabs(d1) < min_d1) {
+          // no closer than 750m to edge of buoy
           d1 += ((d1 > 0.0) ? min_d1 : -min_d1);
         }
         position.x += v1.x * d1;  // randomise exit position
@@ -537,10 +537,9 @@ void WormholeEntity::disgorgeShips() {
                              : HPVector{});  // e.g. when the player docks first
                                              // before following, time_passed is
                                              // already > 10 minutes.
-      } else if (time_passed >
-                 1)  // Only update the ship position if it was some time ago,
-                     // otherwise we're in 'real time'.
-      {
+      } else if (time_passed > 1) {
+        // Only update the ship position if it was some time ago,
+        // otherwise we're in 'real time'.
         if (hasShiftedExitPosition) {
           // only update the time delay to the lead ship. Sign is not correct
           // but updating gives a small spacial distribution.

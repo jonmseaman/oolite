@@ -113,10 +113,9 @@ void OOLightParticleEntity::drawSubEntityImmediate(bool immediate,
   Entity* last = nullptr;
   HPVector abspos = position;
 
-  while (father != nullptr &&
-         father != last)  // && father != (Entity *)NO_TARGET, which is nil:
-                          // NO_TARGET is 0
-  {
+  while (father != nullptr && father != last) {
+    // && father != (Entity *)NO_TARGET, which is nil:
+    // NO_TARGET is 0
     OOMatrix rM = father->drawRotationMatrix();
     abspos = HPvector_add(OOHPVectorMultiplyMatrix(abspos, rM),
                           father->getPosition());
@@ -148,15 +147,14 @@ void OOLightParticleEntity::drawImmediate(bool /*immediate*/,
   if ((UNIVERSE != nullptr ? UNIVERSE->breakPatternHide() : false) &&
       !getIsImmuneToBreakPatternHide()) {
     Entity* father = oo::LiveOwner(this);  // -owner's C++ entity
-    while (father != nullptr)  // && father != (Entity *)NO_TARGET, which is
-                               // nil: NO_TARGET is 0
-    {
+    while (father != nullptr) {
+      // && father != (Entity *)NO_TARGET, which is
+      // nil: NO_TARGET is 0
       if (!oo::EntityIsSubEntity(father)) break;
       father = oo::LiveOwner(father);  // [father owner]
     }
-    if (!(father != nullptr &&
-          father->getIsImmuneToBreakPatternHide()))  // nil answered NO
-    {
+    if (!(father != nullptr && father->getIsImmuneToBreakPatternHide())) {
+      // nil answered NO
       return;
     }
   }

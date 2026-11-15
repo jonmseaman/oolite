@@ -309,8 +309,8 @@ void MyOpenGLView::pollControls() {
           double myd =
               static_cast<double>(mydelta) / mouseVirtualStickSensitivityY;
 
-          if (!mouseWarped)  // Standard event, update coordinates
-          {
+          if (!mouseWarped) {
+            // Standard event, update coordinates
             virtualJoystickPosition.x += mxd;
             virtualJoystickPosition.y += myd;
 
@@ -335,8 +335,8 @@ void MyOpenGLView::pollControls() {
           int w = viewSize.width;
           int h = viewSize.height;
 
-          if (!mouseWarped)  // standard event, handle it
-          {
+          if (!mouseWarped) {
+            // standard event, handle it
             // Event coordinates are in points, viewSize in pixels (they differ
             // on high-DPI displays)
             float pixelDensity = SDL_GetWindowPixelDensity(window);
@@ -611,8 +611,8 @@ void MyOpenGLView::pollControls() {
         if (((!special_key && (ctrl || key_id == 0)) ||
              (isCapsLockOn() &&
               (!special_key && allowingStringInput == StringInput::kNo))) &&
-            !modifier_pressed)  //
-        {
+            !modifier_pressed) {
+          //
           // ctrl changes alpha characters to control codes (1-26)
           if (ctrl && key_id >= 1 && key_id <= 26) {
             if (shift)
@@ -945,8 +945,8 @@ void MyOpenGLView::handleStringInput(SDL_KeyboardEvent* kbd_event,
     } else {
       // Uint16 unicode = kbd_event->keysym.unicode;
       //  printable range
-      if (key_id >= 32 && key_id <= 255)  // 126
-      {
+      if (key_id >= 32 && key_id <= 255) {
+        // 126
         if (static_cast<char>(key_id) != '/' ||
             allowingStringInput == StringInput::kAll) {
           isAlphabetKeyDown = true;

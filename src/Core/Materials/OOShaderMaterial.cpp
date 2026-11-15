@@ -211,15 +211,13 @@ bool OOShaderMaterial::initWithName(const std::optional<std::string>& name,
 
 // no reduced complexity mode now
 #if 0
-			if (shaderProgram == nullptr)
-			{
+			if (shaderProgram == nullptr) {
 
 				bool canFallBack = !modifiedMacros.get<bool>("OO_REDUCED_COMPLEXITY");
 #ifdef OO_DEBUG_MONITOR_ENABLED
 				if (OODebugFlagIsOn(OODebugFlags::kNoShaderFallback))  canFallBack = false;
 #endif
-				if (canFallBack)
-				{
+				if (canFallBack) {
 					OO_LOG_WARN("shader.load.fullModeFailed", "Could not build shader {}/{} in full complexity mode, trying simple mode.", vsName.value_or("(null)"), fsName.value_or("(null)"));
 
 					(*modifiedMacros.getIf<oo::PList::Dict>())["OO_REDUCED_COMPLEXITY"] = oo::PList::signedInteger(1);
@@ -230,8 +228,7 @@ bool OOShaderMaterial::initWithName(const std::optional<std::string>& name,
 					shaderProgram = OOShaderProgram::shaderProgramWithVertexShader(vertexShader, fragmentShader, vsName, fsName, macroString, attributeBindings, cacheKey);
 					OOLogOutdent();
 
-					if (shaderProgram != nullptr)
-					{
+					if (shaderProgram != nullptr) {
 						OO_LOG("shader.load.fallbackSuccess", "{}", "Simple mode fallback successful.");
 					}
 				}
@@ -636,10 +633,9 @@ bool OOShaderMaterial::isFinishedLoading() {
 void OOShaderMaterial::unapplyWithNext(OOMaterial* next) {
   uint32_t i, count;
 
-  if (dynamic_cast<OOShaderMaterial*>(next) ==
-      nullptr)  // Avoid redundant state change (-isKindOfClass:; nil is not
-                // one)
-  {
+  if (dynamic_cast<OOShaderMaterial*>(next) == nullptr) {
+    // Avoid redundant state change (-isKindOfClass:; nil is not
+    // one)
     OO_ENTER_OPENGL();
     OOShaderProgram::applyNone();
 

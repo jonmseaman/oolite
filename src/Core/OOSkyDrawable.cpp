@@ -556,18 +556,18 @@ std::unique_ptr<OOSkyQuadSet> OOSkyQuadSet::initWithQuadsWithTexture(
           *pos++ = array[i].corners[j].z;
 
           // Colour is the same for each vertex
-          if (skyColorCorrection == 0)  // no color correction
-          {
+          if (skyColorCorrection == 0) {
+            // no color correction
             *col++ = r;
             *col++ = g;
             *col++ = b;
-          } else if (skyColorCorrection == 1)  // gamma correction only
-          {
+          } else if (skyColorCorrection == 1) {
+            // gamma correction only
             *col++ = pow(r, 1.0 / 2.2);
             *col++ = pow(g, 1.0 / 2.2);
             *col++ = pow(b, 1.0 / 2.2);
-          } else  // gamma correctioin + filmic tone mapping
-          {
+          } else {
+            // gamma correctioin + filmic tone mapping
             SKYCOLOR_TONEMAP_COMPONENT(r);
             SKYCOLOR_TONEMAP_COMPONENT(g);
             SKYCOLOR_TONEMAP_COMPONENT(b);

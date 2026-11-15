@@ -436,8 +436,8 @@ std::optional<std::string> PlayerEntity::commanderSelector() {
     }
   }
 
-  if ((gameView != nullptr ? gameView->isDown(27) : false))  // escape key
-  {
+  if ((gameView != nullptr ? gameView->isDown(27) : false)) {
+    // escape key
     setGuiToStatusScreen();
   }
   return std::nullopt;
@@ -527,9 +527,8 @@ void PlayerEntity::saveCommanderInputHandler() {
               ? cdrDetailArray[idx]
               : oo::PList();  // (-objectAtIndex: raised)
 
-      if (!cdr.isNull() &&
-          !cdr.get<bool>("isSavedGame"))  // don't open saved games
-      {
+      if (!cdr.isNull() && !cdr.get<bool>("isSavedGame")) {
+        // don't open saved games
         // change directory to the selected path
         const std::string newDir = cdr.get<std::string>("saved_game_path");
         if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
@@ -553,8 +552,8 @@ void PlayerEntity::saveCommanderInputHandler() {
     }
   }
 
-  if ((gameView != nullptr ? gameView->isDown(27) : false))  // escape key
-  {
+  if ((gameView != nullptr ? gameView->isDown(27) : false)) {
+    // escape key
     // get out of here
     pollControls = true;
     if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
@@ -627,9 +626,8 @@ bool PlayerEntity::loadPlayerFromFile(const std::string& fileToOpen,
   oo::PList fileDic;
   std::optional<std::string> fail_reason;
 
-  if (fileToOpen
-          .empty())  // (was a nil test: every caller passes a non-nil path)
-  {
+  if (fileToOpen.empty()) {
+    // (was a nil test: every caller passes a non-nil path)
     fail_reason = OO_DESC("loadfailed-no-file-specified");
     loadedOK = false;
   }
@@ -1291,8 +1289,8 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
     shipName = OptionalStringValue(cdr.find("ship_name")).value_or("unknown");
     if ((UNIVERSE != nullptr ? UNIVERSE->getUseAddOns()
                              : std::optional<std::string>()) !=
-        std::string(SCENARIO_OXP_DEFINITION_ALL))  // nil was not equal either
-    {
+        std::string(SCENARIO_OXP_DEFINITION_ALL)) {
+      // nil was not equal either
       *shipName += " - OXPs disabled or not installed";
     } else {
       *shipName += " - OXP not installed";
@@ -1362,9 +1360,8 @@ int PlayerEntity::findIndexOfCommander(const std::string& cdrName) {
   for (i = 0; i < cdrDetailArray.size(); i++) {
     const std::optional<std::string> currentName =
         CommanderSaveName(cdrDetailArray[i]);
-    if (currentName &&
-        cdrName == *currentName)  // -compare: == OOComparisonResult::kSame
-    {
+    if (currentName && cdrName == *currentName) {
+      // -compare: == OOComparisonResult::kSame
       return i;
     }
   }
@@ -1423,9 +1420,8 @@ OOCreditsQuantity OODeciCreditsFromDouble(double doubleDeciCredits) {
 }
 
 OOCreditsQuantity OODeciCreditsFromPList(const oo::PList* value) {
-  if (value != nullptr &&
-      value->isReal())  // a real (was a float/double NSNumber, objCType f or d)
-  {
+  if (value != nullptr && value->isReal()) {
+    // a real (was a float/double NSNumber, objCType f or d)
     double d = value->doubleValue();
     if (value->isSinglePrecision())
       d = static_cast<double>(

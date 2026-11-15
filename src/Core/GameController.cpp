@@ -403,9 +403,9 @@ void GameController::doPerformGameTick() {
     if (!gameIsPaused) {
       OOJSFrameCallbacksInvoke(delta_t);
     }
-  } catch (const oo::Exception& exception)  // was @catch (id): the game throws
-                                            // only oo::Exception
-  {
+  } catch (const oo::Exception& exception) {
+    // was @catch (id): the game throws
+    // only oo::Exception
     // -callStackSymbols is Foundation's; an OOException did not answer it
     // (sending it raised out of this handler), so name the exception instead.
     OO_LOG("exception.backtrace", "{} : {}", exception.name(),

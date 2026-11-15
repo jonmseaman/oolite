@@ -611,8 +611,7 @@ static bool GenerateMipMaps2(void* textureBytes, OOPixMapDimension width,
   // TODO: multiple pixel two-plane scalers.
 #if 0
 #if OOLITE_NATIVE_64_BIT
-	while (4 < w && 1 < h)
-	{
+	while (4 < w && 1 < h) {
 		DUMP_MIP_MAP_DUMP(curr, w, h);
 		
 		next = curr + w * h;
@@ -623,8 +622,7 @@ static bool GenerateMipMaps2(void* textureBytes, OOPixMapDimension width,
 		curr = next;
 	}
 #else
-	while (2 < w && 1 < h)
-	{
+	while (2 < w && 1 < h) {
 		DUMP_MIP_MAP_DUMP(curr, w, h);
 		
 		next = curr + w * h;

@@ -173,8 +173,8 @@ void Octree::drawOctreeFromLocation(uint32_t loc, GLfloat scale,
 
   OO_ENTER_OPENGL();
 
-  if (_octree[loc] == -1)  // full
-  {
+  if (_octree[loc] == -1) {
+    // full
     // draw a cube
     glVertex3f(-scale + offset.x, -scale + offset.y, -scale + offset.z);
     glVertex3f(-scale + offset.x, scale + offset.y, -scale + offset.z);
@@ -268,8 +268,8 @@ void Octree::drawOctreeCollisionFromLocation(uint32_t loc, GLfloat scale,
   }
 
   if ((_octree[loc] != 0) &&
-      (_collisionOctree[loc] != static_cast<unsigned char>(0)))  // full - draw
-  {
+      (_collisionOctree[loc] != static_cast<unsigned char>(0))) {
+    // full - draw
     OO_ENTER_OPENGL();
 
     GLfloat red = static_cast<GLfloat>(_collisionOctree[loc]) / 255.0;
@@ -521,8 +521,8 @@ static bool isHitByOctree(Octree_details axialDetails,
   GLfloat axialRadius = axialDetails.radius;
   GLfloat otherRadius = otherDetails.radius;
 
-  if (otherRadius < axialRadius)  // test axial cube against other sphere
-  {
+  if (otherRadius < axialRadius) {
+    // test axial cube against other sphere
     // 'crude and simple' - test sphere against cube...
     if ((otherPosition.x + otherRadius < -axialRadius) ||
         (otherPosition.x - otherRadius > axialRadius) ||
@@ -533,8 +533,8 @@ static bool isHitByOctree(Octree_details axialDetails,
       OctreeDebugLog("{}", "----> Other sphere does not intersect axial cube");
       return false;
     }
-  } else  // test axial sphere against other cube
-  {
+  } else {
+    // test axial sphere against other cube
     Vector d2 = vector_flip(otherPosition);
     Vector axialPosition = resolveVectorInIJK(d2, other_ijk);
     if ((axialPosition.x + axialRadius < -otherRadius) ||
@@ -584,8 +584,8 @@ static bool isHitByOctree(Octree_details axialDetails,
     nextDetails.radius = 0.5f * otherRadius;
     for (i = 0; i < 8; i++) {
       oct = nearest_oct ^ change_oct[i];  // work from nearest to furthest
-      if (nextBuffer[oct])                // don't test empty octants
-      {
+      if (nextBuffer[oct]) {
+        // don't test empty octants
         nextDetails.octree = &nextBuffer[oct];
         nextDetails.octree_collision = &nextCollisionBuffer[oct];
 
@@ -622,8 +622,8 @@ static bool isHitByOctree(Octree_details axialDetails,
   nextDetails.radius = 0.5f * axialRadius;
   for (i = 0; i < 8; i++) {
     oct = nearest_oct ^ change_oct[i];  // work from nearest to furthest
-    if (nextBuffer[oct])                // don't test empty octants
-    {
+    if (nextBuffer[oct]) {
+      // don't test empty octants
       nextDetails.octree = &nextBuffer[oct];
       nextDetails.octree_collision = &nextCollisionBuffer[oct];
 
@@ -702,8 +702,8 @@ static GLfloat volumeOfOctree(Octree_details octree_details,
   nextDetails.octree_collision = nullptr;  // Placate static analyzer
 
   for (i = 0; i < 8; i++) {
-    if (nextBuffer[i])  // don't test empty octants
-    {
+    if (nextBuffer[i]) {
+      // don't test empty octants
       nextDetails.octree = &nextBuffer[i];
       sumVolume += volumeOfOctree(nextDetails, depthLimit);
     }
@@ -744,8 +744,8 @@ static Vector randomFullNodeFrom(Octree_details details, Vector offset) {
 
   for (i = 0; i < 8; i++) {
     int octant = oct ^ i;
-    if (nextBuffer[octant])  // don't test empty octants
-    {
+    if (nextBuffer[octant]) {
+      // don't test empty octants
       nextDetails.octree = &nextBuffer[octant];
       Vector voff = vector_add(offset, offsetForOctant(octant, octRadius));
       return randomFullNodeFrom(nextDetails, voff);

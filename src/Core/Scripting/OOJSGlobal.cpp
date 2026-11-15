@@ -867,8 +867,8 @@ static JSValue GlobalTakeSnapShot(OOJS_NATIVE_ARGS) {
 
   if (freeBytes.has_value()) {
     double freeSpace = static_cast<double>(*freeBytes);
-    if (freeSpace < 1073741824)  // less than 1 GB free on disk?
-    {
+    if (freeSpace < 1073741824) {
+      // less than 1 GB free on disk?
       OOJSReportWarning(context,
                         "takeSnapShot: function disabled when free disk "
                         "space is less than 1GB.");

@@ -322,8 +322,8 @@ bool JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj,
   if (EXPECT_NOT(!JS_IsObject(vectorObj))) return false;
 
   priv = static_cast<HPVector*>(JS_GetOpaque(vectorObj, sVectorClassID));
-  if (priv != nullptr)  // If this is a (JS) Vector...
-  {
+  if (priv != nullptr) {
+    // If this is a (JS) Vector...
     *priv = vector;
     return true;
   }
@@ -807,8 +807,8 @@ static JSValue VectorRotationTo(OOJS_NATIVE_ARGS) {
 
   argc -= consumed;
   argv += consumed;
-  if (argc != 0)  // limit parameter is optional.
-  {
+  if (argc != 0) {
+    // limit parameter is optional.
     if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, "Vector3D", "rotationTo",
                                               argc, argv, &limit, nullptr)))
       return JS_EXCEPTION;

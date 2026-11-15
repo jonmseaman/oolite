@@ -488,8 +488,8 @@ static JSValue TimerConstruct(OOJS_NATIVE_ARGS) {
   JS_FreeValue(context, callbackThis);
   if (EXPECT_NOT(!timer)) return OOJSNativeFailure(context);
 
-  if (delay >= 0)  // Leave in stopped state if delay is negative
-  {
+  if (delay >= 0) {
+    // Leave in stopped state if delay is negative
     timer->scheduleTimer();
   }
   // The Timer object's private slot keeps the timer alive once `timer` goes.

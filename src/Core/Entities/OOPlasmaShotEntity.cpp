@@ -97,9 +97,8 @@ void OOPlasmaShotEntity::update(double delta_t) {
   std::size_t i, count = colliding.size();
   for (i = 0; i < count; i++) {
     Entity* e = colliding[i].get();
-    if ((e != nullptr ? e->rootShipEntity() : nullptr) !=
-        ownerEntity())  // what [e rootShipEntity] != -owner compared
-    {
+    if ((e != nullptr ? e->rootShipEntity() : nullptr) != ownerEntity()) {
+      // what [e rootShipEntity] != -owner compared
       // we're going to force the weapon id to be a phantom equipment key so
       // there is something for the PlayerEntitySound to reference. it allow
       // allows for the sound effects to be overridden by OXP.

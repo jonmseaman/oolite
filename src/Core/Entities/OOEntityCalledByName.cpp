@@ -387,8 +387,8 @@ void Facade_orientationChanged(Entity* entity) {
   if (entity == nullptr) return;
   entity->orientationChanged();
 }
-Entity* Facade_owner(Entity* entity)  // the owner's C++ entity
-{
+Entity* Facade_owner(Entity* entity) {
+  // the owner's C++ entity
   if (entity == nullptr) return {};
   return entity->owner();
 }
@@ -436,9 +436,8 @@ OOEntityStatus Facade_status(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->status();
 }
-Entity* Facade_superShaderBindingTarget(
-    Entity* entity)  // the parent's C++ entity
-{
+Entity* Facade_superShaderBindingTarget(Entity* entity) {
+  // the parent's C++ entity
   if (entity == nullptr) return {};
   return entity->superShaderBindingTarget();
 }

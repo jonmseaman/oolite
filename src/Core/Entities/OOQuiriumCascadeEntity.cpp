@@ -82,8 +82,8 @@ void OOQuiriumCascadeEntity::update(OOTimeDelta delta_t) {
   GLfloat tf = _timePassed / kQuiriumCascadeDuration;
   GLfloat stf = tf * tf;
   GLfloat expansionSpeed = 0.0;
-  if (_timePassed > 0)  // Avoid divide by 0
-  {
+  if (_timePassed > 0) {
+    // Avoid divide by 0
     expansionSpeed = fmin(240.0f + 10.0f / (tf * tf), 1000.0f);
   }
 

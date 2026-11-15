@@ -911,9 +911,8 @@ std::optional<std::string> PlayerEntity::replaceVariablesInString(
 
 /*-----------------------------------------------------*/
 
-void PlayerEntity::setMissionDescription(
-    const std::string& textKey)  // called by name
-{
+void PlayerEntity::setMissionDescription(const std::string& textKey) {
+  // called by name
   setMissionDescription(textKey, sCurrentMissionKey);
 }
 
@@ -983,9 +982,8 @@ void PlayerEntity::clearMissionDescription() {
   clearMissionDescriptionForMission(*sCurrentMissionKey);
 }
 
-void PlayerEntity::clearMissionDescriptionForMission(
-    const std::string& key)  // called by name
-{
+void PlayerEntity::clearMissionDescriptionForMission(const std::string& key) {
+  // called by name
   setMissionVariable(oo::PList(),
                      key);  // (removing an absent key does nothing)
 }
@@ -995,141 +993,140 @@ oo::PList PlayerEntity::mission_string() {
   return StringOrNull(sMissionStringValue);
 }
 
-oo::PList PlayerEntity::status_string()  // called by name
-{
+oo::PList PlayerEntity::status_string() {
+  // called by name
   return oo::PList(OOStringFromEntityStatus(status()));
 }
 
-oo::PList PlayerEntity::gui_screen_string()  // called by name
-{
+oo::PList PlayerEntity::gui_screen_string() {
+  // called by name
   return oo::PList(OOStringFromGUIScreenID(gui_screen));
 }
 
-oo::PList PlayerEntity::getGalaxy_number()  // called by name
-{
+oo::PList PlayerEntity::getGalaxy_number() {
+  // called by name
   return oo::PList::signedInteger(currentGalaxyID());
 }
 
-oo::PList PlayerEntity::planet_number()  // called by name
-{
+oo::PList PlayerEntity::planet_number() {
+  // called by name
   return oo::PList::signedInteger(currentSystemID());
 }
 
-oo::PList PlayerEntity::score_number()  // called by name
-{
+oo::PList PlayerEntity::score_number() {
+  // called by name
   return oo::PList::unsignedInteger(score());
 }
 
-oo::PList PlayerEntity::credits_number()  // called by name
-{
+oo::PList PlayerEntity::credits_number() {
+  // called by name
   return oo::PList(creditBalance());
 }
 
-oo::PList PlayerEntity::scriptTimer_number()  // called by name
-{
+oo::PList PlayerEntity::scriptTimer_number() {
+  // called by name
   return oo::PList(static_cast<double>(scriptTimer()));
 }
 
 static int shipsFound;
-oo::PList PlayerEntity::shipsFound_number()  // called by name
-{
+oo::PList PlayerEntity::shipsFound_number() {
+  // called by name
   return oo::PList::signedInteger(shipsFound);
 }
 
-oo::PList PlayerEntity::commanderLegalStatus_number()  // called by name
-{
+oo::PList PlayerEntity::commanderLegalStatus_number() {
+  // called by name
   return oo::PList::signedInteger(getLegalStatus());
 }
 
-void PlayerEntity::setLegalStatus(
-    const std::string& valueString)  // called by name
-{
+void PlayerEntity::setLegalStatus(const std::string& valueString) {
+  // called by name
   legalStatusValue = oo::str::intValue(valueString);
 }
 
-oo::PList PlayerEntity::commanderLegalStatus_string()  // called by name
-{
+oo::PList PlayerEntity::commanderLegalStatus_string() {
+  // called by name
   return StringOrNull(OODisplayStringFromLegalStatus(legalStatusValue));
 }
 
-oo::PList PlayerEntity::d100_number()  // called by name
-{
+oo::PList PlayerEntity::d100_number() {
+  // called by name
   int d100 = ranrot_rand() % 100;
   return oo::PList::signedInteger(d100);
 }
 
-oo::PList PlayerEntity::pseudoFixedD100_number()  // called by name
-{
+oo::PList PlayerEntity::pseudoFixedD100_number() {
+  // called by name
   return oo::PList::signedInteger(systemPseudoRandom100());
 }
 
-oo::PList PlayerEntity::d256_number()  // called by name
-{
+oo::PList PlayerEntity::d256_number() {
+  // called by name
   int d256 = ranrot_rand() % 256;
   return oo::PList::signedInteger(d256);
 }
 
-oo::PList PlayerEntity::pseudoFixedD256_number()  // called by name
-{
+oo::PList PlayerEntity::pseudoFixedD256_number() {
+  // called by name
   return oo::PList::signedInteger(systemPseudoRandom256());
 }
 
-oo::PList PlayerEntity::clock_number()  // called by name; returns the game time
-                                        // in seconds
-{
+oo::PList PlayerEntity::clock_number() {
+  // called by name; returns the game time
+  // in seconds
   return oo::PList(ship_clock);
 }
 
-oo::PList PlayerEntity::clock_secs_number()  // called by name; returns the game
-                                             // time in seconds
-{
+oo::PList PlayerEntity::clock_secs_number() {
+  // called by name; returns the game
+  // time in seconds
   return oo::PList::unsignedInteger(
       static_cast<unsigned long long>(ship_clock));
 }
 
-oo::PList PlayerEntity::clock_mins_number()  // called by name; returns the game
-                                             // time in minutes
-{
+oo::PList PlayerEntity::clock_mins_number() {
+  // called by name; returns the game
+  // time in minutes
   return oo::PList::unsignedInteger(
       static_cast<unsigned long long>(ship_clock / 60.0));
 }
 
-oo::PList PlayerEntity::clock_hours_number()  // called by name; returns the
-                                              // game time in hours
-{
+oo::PList PlayerEntity::clock_hours_number() {
+  // called by name; returns the
+  // game time in hours
   return oo::PList::unsignedInteger(
       static_cast<unsigned long long>(ship_clock / 3600.0));
 }
 
-oo::PList PlayerEntity::clock_days_number()  // called by name; returns the game
-                                             // time in days
-{
+oo::PList PlayerEntity::clock_days_number() {
+  // called by name; returns the game
+  // time in days
   return oo::PList::unsignedInteger(
       static_cast<unsigned long long>(ship_clock / 86400.0));
 }
 
-oo::PList PlayerEntity::fuelLevel_number()  // called by name; returns the fuel
-                                            // level in LY
-{
+oo::PList PlayerEntity::fuelLevel_number() {
+  // called by name; returns the fuel
+  // level in LY
   return oo::PList::singleReal(static_cast<float>(floor(0.1 * fuel)));
 }
 
-oo::PList PlayerEntity::dockedAtMainStation_bool()  // called by name
-{
+oo::PList PlayerEntity::dockedAtMainStation_bool() {
+  // called by name
   if (dockedAtMainStation())
     return oo::PList("YES");
   else
     return oo::PList("NO");
 }
 
-oo::PList PlayerEntity::foundEquipment_bool()  // called by name
-{
+oo::PList PlayerEntity::foundEquipment_bool() {
+  // called by name
   return oo::PList((found_equipment) ? "YES" : "NO");
 }
 
-oo::PList PlayerEntity::sunWillGoNova_bool()  // called by name; returns whether
-                                              // the sun is going to go nova
-{
+oo::PList PlayerEntity::sunWillGoNova_bool() {
+  // called by name; returns whether
+  // the sun is going to go nova
   return oo::PList(
       (((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr
             ? UNIVERSE->sun()->willGoNova()
@@ -1138,9 +1135,9 @@ oo::PList PlayerEntity::sunWillGoNova_bool()  // called by name; returns whether
           : "NO");
 }
 
-oo::PList PlayerEntity::sunGoneNova_bool()  // called by name; returns whether
-                                            // the sun has gone nova
-{
+oo::PList PlayerEntity::sunGoneNova_bool() {
+  // called by name; returns whether
+  // the sun has gone nova
   return oo::PList(
       (((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr
             ? UNIVERSE->sun()->goneNova()
@@ -1149,20 +1146,19 @@ oo::PList PlayerEntity::sunGoneNova_bool()  // called by name; returns whether
           : "NO");
 }
 
-oo::PList
-PlayerEntity::missionChoice_string()  // called by name; returns nil or the key
-                                      // for the chosen option
-{
+oo::PList PlayerEntity::missionChoice_string() {
+  // called by name; returns nil or the key
+  // for the chosen option
   return StringOrNull(missionChoice);
 }
 
-oo::PList PlayerEntity::missionKeyPress_string()  // called by name
-{
+oo::PList PlayerEntity::missionKeyPress_string() {
+  // called by name
   return StringOrNull(missionKeyPress);
 }
 
-oo::PList PlayerEntity::dockedTechLevel_number()  // called by name
-{
+oo::PList PlayerEntity::dockedTechLevel_number() {
+  // called by name
   ::StationEntity* dockedStation = this->dockedStation();
   if (!dockedStation) {
     return systemTechLevel_number();
@@ -1171,75 +1167,74 @@ oo::PList PlayerEntity::dockedTechLevel_number()  // called by name
       (dockedStation != nullptr ? dockedStation->getEquivalentTechLevel() : 0));
 }
 
-oo::PList
-PlayerEntity::dockedStationName_string()  // called by name; returns 'NONE' if
-                                          // the player isn't docked, [station
-                                          // name] if it is, 'UNKNOWN' otherwise
-                                          // (?)
-{
+oo::PList PlayerEntity::dockedStationName_string() {
+  // called by name; returns 'NONE' if
+  // the player isn't docked, [station
+  // name] if it is, 'UNKNOWN' otherwise
+  // (?)
   if (status() != OOEntityStatus::kDocked) return oo::PList("NONE");
 
   return oo::PList(dockedStationName().value_or("UNKNOWN"));
 }
 
-oo::PList PlayerEntity::systemGovernment_string()  // called by name
-{
+oo::PList PlayerEntity::systemGovernment_string() {
+  // called by name
   int government = IntValueOf(
       systemGovernment_number());  // 0 .. 7 (0 anarchic .. 7 most stable)
   return oo::PList(
       OODisplayStringFromGovernmentID(government).value_or("UNKNOWN"));
 }
 
-oo::PList PlayerEntity::systemGovernment_number()  // called by name
-{
+oo::PList PlayerEntity::systemGovernment_number() {
+  // called by name
   return CurrentSystemDataValue(KEY_GOVERNMENT);
 }
 
-oo::PList PlayerEntity::systemEconomy_string()  // called by name
-{
+oo::PList PlayerEntity::systemEconomy_string() {
+  // called by name
   int economy =
       IntValueOf(systemEconomy_number());  // 0 .. 7 (0 rich industrial .. 7
                                            // poor agricultural)
   return oo::PList(OODisplayStringFromEconomyID(economy).value_or("UNKNOWN"));
 }
 
-oo::PList PlayerEntity::systemEconomy_number()  // called by name
-{
+oo::PList PlayerEntity::systemEconomy_number() {
+  // called by name
   return CurrentSystemDataValue(KEY_ECONOMY);
 }
 
-oo::PList PlayerEntity::systemTechLevel_number()  // called by name
-{
+oo::PList PlayerEntity::systemTechLevel_number() {
+  // called by name
   return CurrentSystemDataValue(KEY_TECHLEVEL);
 }
 
-oo::PList PlayerEntity::systemPopulation_number()  // called by name
-{
+oo::PList PlayerEntity::systemPopulation_number() {
+  // called by name
   return CurrentSystemDataValue(KEY_POPULATION);
 }
 
-oo::PList PlayerEntity::systemProductivity_number()  // called by name
-{
+oo::PList PlayerEntity::systemProductivity_number() {
+  // called by name
   return CurrentSystemDataValue(KEY_PRODUCTIVITY);
 }
 
-oo::PList PlayerEntity::commanderName_string()  // called by name
-{
+oo::PList PlayerEntity::commanderName_string() {
+  // called by name
   return StringOrNull(commanderName());
 }
 
-oo::PList PlayerEntity::commanderRank_string()  // called by name
-{
+oo::PList PlayerEntity::commanderRank_string() {
+  // called by name
   return StringOrNull(OODisplayRatingStringFromKillCount(score()));
 }
 
-oo::PList PlayerEntity::commanderShip_string()  // called by name
-{
+oo::PList PlayerEntity::commanderShip_string() {
+  // called by name
   return StringOrNull(getName());
 }
 
-oo::PList PlayerEntity::commanderShipDisplayName_string()  // called by name
-{
+oo::PList PlayerEntity::commanderShipDisplayName_string() {
+  // called by name
   return StringOrNull(getDisplayName());
 }
 
@@ -1259,9 +1254,8 @@ std::optional<std::string> PlayerEntity::expandMessage(
       OOExpand(valueString).value_or(std::string()));
 }
 
-void PlayerEntity::commsMessage(
-    const std::string& valueString)  // called by name; shared selector
-{
+void PlayerEntity::commsMessage(const std::string& valueString) {
+  // called by name; shared selector
   if (UNIVERSE != nullptr)
     UNIVERSE->addCommsMessage(expandMessage(valueString), 4.5);
 }
@@ -1270,27 +1264,23 @@ void PlayerEntity::commsMessage(
 // This method does the same as -commsMessage, (which in fact calls), the
 // difference being that scripts can use this method to have unpiloted ship
 // entities sending comms messages.
-void PlayerEntity::commsMessageByUnpiloted(
-    const std::string& valueString)  // called by name; shared selector
-{
+void PlayerEntity::commsMessageByUnpiloted(const std::string& valueString) {
+  // called by name; shared selector
   commsMessage(valueString);
 }
 
-void PlayerEntity::consoleMessage3s(
-    const std::string& valueString)  // called by name
-{
+void PlayerEntity::consoleMessage3s(const std::string& valueString) {
+  // called by name
   if (UNIVERSE != nullptr) UNIVERSE->addMessage(expandMessage(valueString), 3);
 }
 
-void PlayerEntity::consoleMessage6s(
-    const std::string& valueString)  // called by name
-{
+void PlayerEntity::consoleMessage6s(const std::string& valueString) {
+  // called by name
   if (UNIVERSE != nullptr) UNIVERSE->addMessage(expandMessage(valueString), 6);
 }
 
-void PlayerEntity::awardCredits(
-    const std::string& valueString)  // called by name
-{
+void PlayerEntity::awardCredits(const std::string& valueString) {
+  // called by name
   if (::scriptTarget != this) return;
 
   /*	We can't use -longLongValue here for Mac OS X 10.4 compatibility, but
@@ -1305,18 +1295,16 @@ void PlayerEntity::awardCredits(
     credits += award;
 }
 
-void PlayerEntity::awardShipKills(
-    const std::string& valueString)  // called by name
-{
+void PlayerEntity::awardShipKills(const std::string& valueString) {
+  // called by name
   if (::scriptTarget != this) return;
 
   int value = oo::str::intValue(valueString);
   if (0 < value) ship_kills += value;
 }
 
-void PlayerEntity::awardEquipment(
-    const std::string& equipString)  // called by name; eg. EQ_NAVAL_ENERGY_UNIT
-{
+void PlayerEntity::awardEquipment(const std::string& equipString) {
+  // called by name; eg. EQ_NAVAL_ENERGY_UNIT
   if (::scriptTarget != this) return;
 
   const std::string& equipKey = equipString;
@@ -1350,9 +1338,8 @@ void PlayerEntity::awardEquipment(
   }
 }
 
-void PlayerEntity::removeEquipment(
-    const std::string& equipString)  // called by name; eg. EQ_NAVAL_ENERGY_UNIT
-{
+void PlayerEntity::removeEquipment(const std::string& equipString) {
+  // called by name; eg. EQ_NAVAL_ENERGY_UNIT
   if (::scriptTarget != this) return;
 
   const std::string& equipKey = equipString;
@@ -1375,10 +1362,8 @@ void PlayerEntity::removeEquipment(
   }
 }
 
-void PlayerEntity::setPlanetinfo(
-    const std::string&
-        key_valueString)  // called by name; uses key=value format
-{
+void PlayerEntity::setPlanetinfo(const std::string& key_valueString) {
+  // called by name; uses key=value format
   const std::string& argument = key_valueString;
   const std::vector<std::string> tokens = oo::str::split(argument, "=");
 
@@ -1401,10 +1386,8 @@ void PlayerEntity::setPlanetinfo(
                                std::string());
 }
 
-void PlayerEntity::setSpecificPlanetInfo(
-    const std::string&
-        key_valueString)  // called by name; uses galaxy#=planet#=key=value
-{
+void PlayerEntity::setSpecificPlanetInfo(const std::string& key_valueString) {
+  // called by name; uses galaxy#=planet#=key=value
   const std::string& argument = key_valueString;
   const std::vector<std::string> tokens = oo::str::split(argument, "=");
   int gnum, pnum;
@@ -1429,9 +1412,8 @@ void PlayerEntity::setSpecificPlanetInfo(
                                      OOSystemLayer::kOXPDynamic);
 }
 
-void PlayerEntity::awardCargo(
-    const std::string& amount_typeString)  // called by name
-{
+void PlayerEntity::awardCargo(const std::string& amount_typeString) {
+  // called by name
   if (::scriptTarget != this) return;
 
   const std::string& argument = amount_typeString;
@@ -1523,9 +1505,8 @@ void PlayerEntity::removeAllCargo(bool forceRemoval) {
   calculateCurrentCargo();
 }
 
-void PlayerEntity::useSpecialCargo(
-    const std::string& descriptionString)  // called by name
-{
+void PlayerEntity::useSpecialCargo(const std::string& descriptionString) {
+  // called by name
   if (::scriptTarget != this) return;
 
   const std::string& description = descriptionString;
@@ -1535,15 +1516,13 @@ void PlayerEntity::useSpecialCargo(
   specialCargo = OOExpand(description);
 }
 
-void PlayerEntity::testForEquipment(
-    const std::string& equipString)  // called by name; eg. EQ_NAVAL_ENERGY_UNIT
-{
+void PlayerEntity::testForEquipment(const std::string& equipString) {
+  // called by name; eg. EQ_NAVAL_ENERGY_UNIT
   found_equipment = hasEquipmentItem(oo::PList(equipString));
 }
 
-void PlayerEntity::awardFuel(
-    const std::string& valueString)  // called by name; add to fuel up to 7.0 LY
-{
+void PlayerEntity::awardFuel(const std::string& valueString) {
+  // called by name; add to fuel up to 7.0 LY
   int delta = 10 * static_cast<float>(oo::str::doubleValue(valueString));
   OOFuelQuantity scriptTargetFuelBeforeAward =
       (::scriptTarget != nullptr ? ::scriptTarget->getFuel()
@@ -1558,9 +1537,8 @@ void PlayerEntity::awardFuel(
   }
 }
 
-void PlayerEntity::messageShipAIs(
-    const std::string& roles_message)  // called by name
-{
+void PlayerEntity::messageShipAIs(const std::string& roles_message) {
+  // called by name
   const std::string& argument = roles_message;
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
@@ -1588,14 +1566,14 @@ void PlayerEntity::messageShipAIs(
   }
 }
 
-void PlayerEntity::ejectItem(const std::string& itemKey)  // called by name
-{
+void PlayerEntity::ejectItem(const std::string& itemKey) {
+  // called by name
   if (::scriptTarget == nullptr) ::scriptTarget = oo::ToShip(this);
   if (::scriptTarget != nullptr) ::scriptTarget->ejectShipOfType(itemKey);
 }
 
-void PlayerEntity::addShips(const std::string& roles_number)  // called by name
-{
+void PlayerEntity::addShips(const std::string& roles_number) {
+  // called by name
   const std::string& argument = roles_number;
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
@@ -1626,9 +1604,8 @@ void PlayerEntity::addShips(const std::string& roles_number)  // called by name
       UNIVERSE->witchspaceShipWithPrimaryRole(roleString);
 }
 
-void PlayerEntity::addSystemShips(
-    const std::string& roles_number_position)  // called by name
-{
+void PlayerEntity::addSystemShips(const std::string& roles_number_position) {
+  // called by name
   const std::string& argument = roles_number_position;
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
@@ -1661,9 +1638,8 @@ void PlayerEntity::addSystemShips(
     if (UNIVERSE != nullptr) UNIVERSE->addShipWithRole(roleString, posn);
 }
 
-void PlayerEntity::addShipsAt(
-    const std::string& roles_number_system_x_y_z)  // called by name
-{
+void PlayerEntity::addShipsAt(const std::string& roles_number_system_x_y_z) {
+  // called by name
   const std::string& argument = roles_number_system_x_y_z;
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
@@ -1707,8 +1683,8 @@ void PlayerEntity::addShipsAt(
 }
 
 void PlayerEntity::addShipsAtPrecisely(
-    const std::string& roles_number_system_x_y_z)  // called by name
-{
+    const std::string& roles_number_system_x_y_z) {
+  // called by name
   const std::string& argument = roles_number_system_x_y_z;
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
@@ -1752,8 +1728,8 @@ void PlayerEntity::addShipsAtPrecisely(
 }
 
 void PlayerEntity::addShipsWithinRadius(
-    const std::string& roles_number_system_x_y_z_r)  // called by name
-{
+    const std::string& roles_number_system_x_y_z_r) {
+  // called by name
   const std::string& argument = roles_number_system_x_y_z_r;
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
@@ -1798,8 +1774,8 @@ void PlayerEntity::addShipsWithinRadius(
   }
 }
 
-void PlayerEntity::spawnShip(const std::string& ship_key)  // called by name
-{
+void PlayerEntity::spawnShip(const std::string& ship_key) {
+  // called by name
   if ((UNIVERSE != nullptr ? UNIVERSE->spawnShip(ship_key) : false)) {
     OO_LOG(kOOLogNoteAddShips, "DEBUG: Spawned ship with shipdata key '{}'.",
            ship_key);
@@ -1811,9 +1787,8 @@ void PlayerEntity::spawnShip(const std::string& ship_key)  // called by name
   }
 }
 
-void PlayerEntity::set(
-    const std::string& missionvariable_value)  // called by name
-{
+void PlayerEntity::set(const std::string& missionvariable_value) {
+  // called by name
   const std::string& argument = missionvariable_value;
   std::vector<std::string> tokens = oo::str::tokens(argument);
   std::string missionVariableString;
@@ -1852,8 +1827,8 @@ void PlayerEntity::set(
   }
 }
 
-void PlayerEntity::reset(const std::string& missionvariable)  // called by name
-{
+void PlayerEntity::reset(const std::string& missionvariable) {
+  // called by name
   const std::string missionVariableString = TrimWhitespace(missionvariable);
   bool hasMissionPrefix, hasLocalPrefix;
 
@@ -1872,9 +1847,8 @@ void PlayerEntity::reset(const std::string& missionvariable)  // called by name
   }
 }
 
-void PlayerEntity::increment(
-    const std::string& missionVariableObject)  // called by name
-{
+void PlayerEntity::increment(const std::string& missionVariableObject) {
+  // called by name
   const std::string& missionVariableString = missionVariableObject;
   bool hasMissionPrefix, hasLocalPrefix;
   int value = 0;
@@ -1904,9 +1878,8 @@ void PlayerEntity::increment(
   }
 }
 
-void PlayerEntity::decrement(
-    const std::string& missionVariableObject)  // called by name
-{
+void PlayerEntity::decrement(const std::string& missionVariableObject) {
+  // called by name
   const std::string& missionVariableString = missionVariableObject;
   bool hasMissionPrefix, hasLocalPrefix;
   int value = 0;
@@ -1936,9 +1909,8 @@ void PlayerEntity::decrement(
   }
 }
 
-void PlayerEntity::add(
-    const std::string& missionVariableString_value)  // called by name
-{
+void PlayerEntity::add(const std::string& missionVariableString_value) {
+  // called by name
   const std::string& argument = missionVariableString_value;
   std::string missionVariableString;
   std::string valueString;
@@ -1980,9 +1952,8 @@ void PlayerEntity::add(
   }
 }
 
-void PlayerEntity::subtract(
-    const std::string& missionVariableString_value)  // called by name
-{
+void PlayerEntity::subtract(const std::string& missionVariableString_value) {
+  // called by name
   const std::string& argument = missionVariableString_value;
   std::string missionVariableString;
   std::string valueString;
@@ -2025,9 +1996,8 @@ void PlayerEntity::subtract(
   }
 }
 
-void PlayerEntity::checkForShips(
-    const std::string& roleString)  // called by name
-{
+void PlayerEntity::checkForShips(const std::string& roleString) {
+  // called by name
   shipsFound =
       (UNIVERSE != nullptr ? UNIVERSE->countShipsWithPrimaryRole(roleString)
                            : 0u);
@@ -2039,8 +2009,8 @@ void PlayerEntity::resetScriptTimer() {
   script_time_interval = SCRIPT_TIMER_INTERVAL;
 }
 
-void PlayerEntity::addMissionText(const std::string& textKey)  // called by name
-{
+void PlayerEntity::addMissionText(const std::string& textKey) {
+  // called by name
   const std::optional<std::string> key = textKey;
 
   if (key.has_value() && key == lastTextKey)
@@ -2060,9 +2030,8 @@ void PlayerEntity::addMissionText(const std::string& textKey)  // called by name
   if (literal.has_value()) addLiteralMissionText(*literal);
 }
 
-void PlayerEntity::addLiteralMissionText(
-    const std::string& text)  // called by name
-{
+void PlayerEntity::addLiteralMissionText(const std::string& text) {
+  // called by name
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
 
   for (const std::string& para : oo::str::split(text, "\n")) {
@@ -2078,11 +2047,10 @@ void PlayerEntity::setMissionChoiceByTextEntry(bool enable) {
   if (gameView != nullptr) gameView->resetTypedString();
 }
 
-void PlayerEntity::setMissionChoices(
-    const std::string& choicesKey)  // called by name; choicesKey is a key for a
-                                    // dictionary of // choices/choice phrases
-                                    // in missiontext.plist and also..
-{
+void PlayerEntity::setMissionChoices(const std::string& choicesKey) {
+  // called by name; choicesKey is a key for a
+  // dictionary of // choices/choice phrases
+  // in missiontext.plist and also..
   const oo::PList missionText =
       (UNIVERSE != nullptr ? UNIVERSE->getMissiontext() : oo::PList());
   const oo::PList* choicesEntry = missionText.find(choicesKey);
@@ -2181,8 +2149,8 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
       }
       if (colorDesc != nullptr) {
         rowColor = OOColor::colorWithDescription(*colorDesc);
-      } else if (!selectable)  // different default
-      {
+      } else if (!selectable) {
+        // different default
         rowColor = OOColor::darkGrayColor();
       }
     } else {
@@ -2235,9 +2203,8 @@ void PlayerEntity::clearMissionScreen() {
   showShipModel(std::string());
 }
 
-void PlayerEntity::addMissionDestination(
-    const std::string& destinations)  // called by name
-{
+void PlayerEntity::addMissionDestination(const std::string& destinations) {
+  // called by name
   for (const std::string& token : oo::str::tokens(destinations)) {
     const int dest = oo::str::intValue(token);  // -oo_intAtIndex: of the token
     if (dest < 0 || dest > 255) continue;
@@ -2246,9 +2213,8 @@ void PlayerEntity::addMissionDestination(
   }
 }
 
-void PlayerEntity::removeMissionDestination(
-    const std::string& destinations)  // called by name
-{
+void PlayerEntity::removeMissionDestination(const std::string& destinations) {
+  // called by name
   for (const std::string& token : oo::str::tokens(destinations)) {
     const int dest = oo::str::intValue(token);
     if (dest < 0 || dest > 255) continue;
@@ -2257,8 +2223,8 @@ void PlayerEntity::removeMissionDestination(
   }
 }
 
-void PlayerEntity::showShipModel(const std::string& role)  // called by name
-{
+void PlayerEntity::showShipModel(const std::string& role) {
+  // called by name
   const std::string& roleString = role;
   if (roleString == "none" || roleString.empty()) {
     if (UNIVERSE != nullptr) UNIVERSE->removeDemoShips();
@@ -2274,8 +2240,8 @@ void PlayerEntity::showShipModel(const std::string& role)  // called by name
              .value_or("(null)"));
 }
 
-void PlayerEntity::setMissionMusic(const std::string& value)  // called by name
-{
+void PlayerEntity::setMissionMusic(const std::string& value) {
+  // called by name
   // "" (was nil) and "none" clear it
   OOMusicController::sharedController()->setMissionMusic(
       IsNoneValue(value) ? std::nullopt : std::optional<std::string>(value));
@@ -2313,8 +2279,8 @@ void PlayerEntity::setMissionBackground(const std::string& value) {
   }
 }
 
-void PlayerEntity::setFuelLeak(const std::string& value)  // called by name
-{
+void PlayerEntity::setFuelLeak(const std::string& value) {
+  // called by name
   if (::scriptTarget != this) {
     if (::scriptTarget != nullptr) ::scriptTarget->setFuel(0);
     return;
@@ -2329,14 +2295,13 @@ void PlayerEntity::setFuelLeak(const std::string& value)  // called by name
   }
 }
 
-oo::PList PlayerEntity::fuelLeakRate_number()  // called by name
-{
+oo::PList PlayerEntity::fuelLeakRate_number() {
+  // called by name
   return oo::PList::singleReal(fuelLeakRate());
 }
 
-void PlayerEntity::setSunNovaIn(
-    const std::string& time_value)  // called by name
-{
+void PlayerEntity::setSunNovaIn(const std::string& time_value) {
+  // called by name
   double time_until_nova = oo::str::doubleValue(time_value);
   if ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr)
     UNIVERSE->sun()->setGoingNova(true, time_until_nova);
@@ -2389,10 +2354,9 @@ void PlayerEntity::sendAllShipsAway() {
           !((se1 != nullptr ? se1->getIsStation() : false) &&
             (se1 != nullptr ? se1->getMaxFlightSpeed() : 0.0f) ==
                 0) &&  // exclude only stations, not carriers.
-          (se1 != nullptr ? se1->hasHyperspaceMotor()
-                          : false))  // exclude non jumping ships. Escorts will
-                                     // still be able to follow a mother.
-      {
+          (se1 != nullptr ? se1->hasHyperspaceMotor() : false)) {
+        // exclude non jumping ships. Escorts will
+        // still be able to follow a mother.
         ::AI* se1AI =
             (se1 != nullptr ? se1->getAI() : static_cast<::AI*>(nullptr));
         if (se1 != nullptr)
@@ -2421,8 +2385,8 @@ void PlayerEntity::sendAllShipsAway() {
   my_holds.clear();
 }
 
-void PlayerEntity::addPlanet(const std::string& planetKey)  // called by name
-{
+void PlayerEntity::addPlanet(const std::string& planetKey) {
+  // called by name
   addPlanetEntity(planetKey);
 }
 
@@ -2514,8 +2478,8 @@ void PlayerEntity::addPlanet(const std::string& planetKey)  // called by name
   return planet;
 }
 
-void PlayerEntity::addMoon(const std::string& moonKey)  // called by name
-{
+void PlayerEntity::addMoon(const std::string& moonKey) {
+  // called by name
   addMoonEntity(moonKey);
 }
 
@@ -2617,13 +2581,13 @@ void PlayerEntity::debugOff() {
   oo::log::logger().setDisplay(kOOLogDebugOnMetaClass, false);
 }
 
-void PlayerEntity::debugMessage(const std::string& args)  // called by name
-{
+void PlayerEntity::debugMessage(const std::string& args) {
+  // called by name
   OO_LOG(kOOLogDebugMessage, "SCRIPT debugMessage: {}", args);
 }
 
-void PlayerEntity::playSound(const std::string& soundName)  // called by name
-{
+void PlayerEntity::playSound(const std::string& soundName) {
+  // called by name
   playLegacyScriptSound(soundName);
 }
 
@@ -2857,8 +2821,8 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
   // Add ship models:
   //
   if (i_key == "ship" || i_key == "model" || i_key == "role") {
-    if (i_info.size() != 10)  // must be item_name_x_y_z_W_X_Y_Z_align
-    {
+    if (i_info.size() != 10) {
+      // must be item_name_x_y_z_W_X_Y_Z_align
       return false;  //		   0... 1... 2 3 4 5 6 7 8 9....
     }
 
@@ -3125,8 +3089,8 @@ void PlayerEntity::targetNearestIncomingMissile() {
 }
 
 void PlayerEntity::setGalacticHyperspaceBehaviourTo(
-    const std::string& galacticHyperspaceBehaviourString)  // called by name
-{
+    const std::string& galacticHyperspaceBehaviourString) {
+  // called by name
   OOGalacticHyperspaceBehaviour ghBehaviour =
       OOGalacticHyperspaceBehaviourFromString(
           galacticHyperspaceBehaviourString);
@@ -3140,12 +3104,12 @@ void PlayerEntity::setGalacticHyperspaceBehaviourTo(
 }
 
 void PlayerEntity::setGalacticHyperspaceFixedCoordsTo(
-    const std::string& galacticHyperspaceFixedCoordsString)  // called by name
-{
+    const std::string& galacticHyperspaceFixedCoordsString) {
+  // called by name
   const oo::PList coord_vals =
       TokenArray(oo::str::tokens(galacticHyperspaceFixedCoordsString));
-  if (coord_vals.count() < 2)  // Will be 0 if string is empty
-  {
+  if (coord_vals.count() < 2) {
+    // Will be 0 if string is empty
     OO_LOG("player.setGalacticHyperspaceFixedCoords.invalidInput", "{}",
            "setGalacticHyperspaceFixedCoords: called with bad specifier. "
            "Defaulting to Oolite standard.");

@@ -82,10 +82,9 @@ void SetReputationValue(oo::PList::Dict& reputation, const std::string& key,
 
 }  // namespace
 
-std::optional<std::string>
-PlayerEntity::processEscapePods()  // removes pods from cargo bay and treats
-                                   // categories of characters carried
-{
+std::optional<std::string> PlayerEntity::processEscapePods() {
+  // removes pods from cargo bay and treats
+  // categories of characters carried
   unsigned i;
   bool added_entry =
       false;  // to prevent empty lines for slaves and the rare empty report.
@@ -213,10 +212,9 @@ PlayerEntity::processEscapePods()  // removes pods from cargo bay and treats
                   // nothing was reported)
 }
 
-std::optional<std::string>
-PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
-                                         // whose status have changed
-{
+std::optional<std::string> PlayerEntity::checkPassengerContracts() {
+  // returns messages from any passengers
+  // whose status have changed
   if (dockedStation() != (UNIVERSE != nullptr
                               ? UNIVERSE->station()
                               : nullptr))  // only drop off passengers or fulfil
@@ -250,10 +248,9 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
       if (dest_eta > 0) {
         // and in good time
         long long fee = passenger_info.get<long long>(CONTRACT_KEY_FEE);
-        while ((randf() < 0.75) &&
-               (dest_eta > 3600))  // delivered with more than an hour to spare
-                                   // and a decent customer?
-        {
+        while ((randf() < 0.75) && (dest_eta > 3600)) {
+          // delivered with more than an hour to spare
+          // and a decent customer?
           fee *= 110;  // tip + 10%
           fee /= 100;
           dest_eta *= 0.5;
@@ -334,10 +331,9 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
       if (dest_eta > 0) {
         // and in good time
         long long fee = parcel_info.get<long long>(CONTRACT_KEY_FEE);
-        while ((randf() < 0.75) &&
-               (dest_eta > 86400))  // delivered with more than a day to spare
-                                    // and a decent customer?
-        {
+        while ((randf() < 0.75) && (dest_eta > 86400)) {
+          // delivered with more than a day to spare
+          // and a decent customer?
           // lower tips than passengers
           fee *= 110;  // tip + 10%
           fee /= 100;
@@ -938,10 +934,9 @@ bool PlayerEntity::addPassenger(const std::string& Name, unsigned start,
   return true;
 }
 
-bool PlayerEntity::removePassenger(
-    const std::string& Name)  // removes the first passenger that answers to
-                              // Name, returns NO if none found
-{
+bool PlayerEntity::removePassenger(const std::string& Name) {
+  // removes the first passenger that answers to
+  // Name, returns NO if none found
   // extra check, just in case.
   if (passengers.empty()) return false;
 
@@ -999,10 +994,9 @@ bool PlayerEntity::addParcel(const std::string& Name, unsigned start,
   return true;
 }
 
-bool PlayerEntity::removeParcel(
-    const std::string& Name)  // removes the first parcel that answers to Name,
-                              // returns NO if none found
-{
+bool PlayerEntity::removeParcel(const std::string& Name) {
+  // removes the first parcel that answers to Name,
+  // returns NO if none found
   // extra check, just in case.
   if (parcels.empty()) return false;
 
@@ -1102,10 +1096,8 @@ bool PlayerEntity::awardContract(unsigned qty, const std::string& type,
   return true;
 }
 
-bool PlayerEntity::removeContract(
-    const std::string& type,
-    unsigned dest)  // removes the first match found, returns NO if none found
-{
+bool PlayerEntity::removeContract(const std::string& type, unsigned dest) {
+  // removes the first match found, returns NO if none found
   if (contracts.empty() || dest > 255) return false;
 
   if (!((UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr) != nullptr

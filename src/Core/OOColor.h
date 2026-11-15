@@ -171,15 +171,14 @@ class OOColor : public oo::PListForeign {
 /*	A colour carried through plist data as a PList::Object node: the colour
    is the node's foreign object (oo::PListObject() and oo::ObjectIn()).
 */
-inline oo::PList OOColorObjectNode(OOColor* color)  // null colour -> null PList
-{
+inline oo::PList OOColorObjectNode(OOColor* color) {
+  // null colour -> null PList
   if (color == nullptr) return oo::PList();
   return oo::PList(oo::PList::Object(oo::share(color)));
 }
 
-inline OOColor* OOColorInObjectNode(
-    const oo::PList& plist)  // null for any other node
-{
+inline OOColor* OOColorInObjectNode(const oo::PList& plist) {
+  // null for any other node
   const oo::PList::Object* node = plist.getIf<oo::PList::Object>();
   return (node != nullptr) ? dynamic_cast<OOColor*>(node->get()) : nullptr;
 }

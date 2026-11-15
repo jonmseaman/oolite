@@ -734,8 +734,8 @@ static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q,
   // (q > mix_polarCap + mix_polarCap - nearPole) ==  ((nearPole + q) / 2 >
   // mix_polarCap)
   float phi = info->mix_polarCap + info->mix_polarCap - nearPole;
-  if (q > phi)  // (nearPole + q) / 2 > pole
-  {
+  if (q > phi) {
+    // (nearPole + q) / 2 > pole
     // thinner to thicker ice.
     specular =
         q > phi + 0.02f

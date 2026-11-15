@@ -281,8 +281,8 @@ bool JSQuaternionSetQuaternion(JSContext* context, JSValueConst quaternionObj,
 
   priv =
       static_cast<Quaternion*>(JS_GetOpaque(quaternionObj, sQuaternionClassID));
-  if (priv != nullptr)  // If this is a (JS) Quaternion...
-  {
+  if (priv != nullptr) {
+    // If this is a (JS) Quaternion...
     *priv = quaternion;
     return true;
   }

@@ -660,9 +660,10 @@ void MyOpenGLView::initialiseGLWithSize(NSSize v_size) {
     SDL_SetWindowBordered(window, true);
   }
 #if OOLITE_WINDOWS
-  else  // Hack for Windows SDL3 pause issue:
-        // https://github.com/libsdl-org/SDL/issues/12791
-  {  // Occurs on some systems eg. when going fullscreen -> window or vice versa
+  else {  // Occurs on some systems eg. when going fullscreen -> window or vice
+          // versa
+    // Hack for Windows SDL3 pause issue:
+    // https://github.com/libsdl-org/SDL/issues/12791
     LONG currentWindowStyle = GetWindowLong(windowHandle, GWL_STYLE);
     currentWindowStyle &= ~WS_POPUP;
     SetWindowLong(windowHandle, GWL_STYLE, currentWindowStyle);
@@ -765,14 +766,14 @@ void MyOpenGLView::initSplashScreen() {
   const SDL_PixelFormatDetails* pixelFormat =
       SDL_GetPixelFormatDetails(image->format);
   nOfColors = pixelFormat->bytes_per_pixel;
-  if (nOfColors == 4)  // contains an alpha channel
-  {
+  if (nOfColors == 4) {
+    // contains an alpha channel
     if (pixelFormat->Rmask == 0x000000ff)
       texture_format = GL_RGBA;
     else
       texture_format = GL_BGRA;
-  } else if (nOfColors == 3)  // no alpha channel
-  {
+  } else if (nOfColors == 3) {
+    // no alpha channel
     if (pixelFormat->Rmask == 0x000000ff)
       texture_format = GL_RGB;
     else

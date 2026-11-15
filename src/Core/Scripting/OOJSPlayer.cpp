@@ -720,8 +720,8 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
       if (player != nullptr) player->setDockTarget(nullptr);
       OK = true;
     } else if ((oo::ToShip(destEntity) != nullptr) &&
-               destEntity->getIsStation())  // what -isStation forwarded to
-    {
+               destEntity->getIsStation()) {
+      // what -isStation forwarded to
       if (player != nullptr) player->setDockTarget(oo::ToShip(destEntity));
       OK = true;
     } else if (const std::string* destString = destValue.getIf<std::string>()) {
@@ -753,8 +753,8 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
 
         // i is back to 0, nDests could have changed...
         nDests = sDests.size();
-        if (nDests > 0)  // we have a system with a main station!
-        {
+        if (nDests > 0) {
+          // we have a system with a main station!
           if (nDests > 1)
             i = ranrot_rand() % nDests;  // any nearby system will do.
           const oo::PList& dest = sDests[i];

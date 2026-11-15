@@ -262,17 +262,17 @@ Quaternion quaternion_rotation_betweenHP(HPVector v0, HPVector v1) {
   return q;
 }
 
-Quaternion quaternion_limited_rotation_between(
-    Vector v0, Vector v1, float maxArc)  // vectors both normalised
-{
+Quaternion quaternion_limited_rotation_between(Vector v0, Vector v1,
+                                               float maxArc) {
+  // vectors both normalised
   Quaternion q;
   OOScalar min_s = 2.0f * cosf(0.5f * maxArc);
   OOScalar s = sqrtf((1.0f + v0.x * v1.x + v0.y * v1.y + v0.z * v1.z) * 2.0f);
   // for some antiparallel vectors, s returns a NaN instead of 0. Testing s > 0
   // catches both.
   if (EXPECT(s > 0.0f)) {
-    if (s < min_s)  // larger angle => smaller cos
-    {
+    if (s < min_s) {
+      // larger angle => smaller cos
       OOScalar a = maxArc * 0.5f;
       OOScalar w = cosf(a);
       OOScalar scale = sinf(a);

@@ -63,8 +63,8 @@ void OOSoundChannel::update() {
     OOAL(alGetSourcei(_source, AL_SOURCE_STATE, &check));
     if (check == AL_STOPPED) {
       hasStopped();
-    } else if (_sound->soundIncomplete())  // streaming and not finished loading
-    {
+    } else if (_sound->soundIncomplete()) {
+      // streaming and not finished loading
       OO_LOG("sound.buffer", "Incomplete, trying next for {}",
              _sound->name().value_or("(null)"));
       getNextSoundBuffer();
@@ -89,8 +89,8 @@ void OOSoundChannel::getNextSoundBuffer() {
     // another one if we've finished with that
     ALint processed = 0;
     OOAL(alGetSourcei(_source, AL_BUFFERS_PROCESSED, &processed));
-    if (processed > 0)  // slot free
-    {
+    if (processed > 0) {
+      // slot free
       // dequeue and delete lastBuffer
       ALuint buffer;
       OOAL(alSourceUnqueueBuffers(_source, 1, &buffer));
