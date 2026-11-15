@@ -25,6 +25,8 @@ SOFTWARE.
 
 */
 
+#include "OODefaultShaderSynthesizer.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -38,7 +40,6 @@ SOFTWARE.
 #include <vector>
 
 #include "OOColor.h"
-#include "OODefaultShaderSynthesizer.h"
 #include "OOMaterialSpecifier.h"
 #include "OOTexture.h"
 #include "ResourceManager.h"

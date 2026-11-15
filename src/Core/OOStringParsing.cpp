@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOStringParsing.h"
+
 #include <array>  // IWYU pragma: keep: used only with DEBUG_GRAPHVIZ
 #include <cstdint>
 #include <format>
@@ -33,7 +35,6 @@ MA 02110-1301, USA.
 #include "OOFunctionAttributes.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJavaScriptEngine.h"
-#include "OOStringParsing.h"
 #include "Universe.h"
 #include "legacy_random.h"
 #include "oofnd/Scanner.hpp"

@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "PlayerEntityScriptMethods.h"
+
 #include <cstdint>
 #include <format>
 #include <memory>
@@ -33,7 +35,6 @@ MA 02110-1301, USA.
 #include "OOStringParsing.h"
 #include "OOSystemDescriptionManager.h"
 #include "PlayerEntityLoadSave.h"
-#include "PlayerEntityScriptMethods.h"
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
@@ -593,10 +594,10 @@ std::optional<std::string> PlayerEntity::keyCodeDescriptionShort(
 
 Vector OOGalacticCoordinatesFromInternal(NSPoint internalCoordinates) {
   return Vector{static_cast<float>(internalCoordinates.x) * 0.4f,
-                  static_cast<float>(internalCoordinates.y) * 0.2f, 0.0f};
+                static_cast<float>(internalCoordinates.y) * 0.2f, 0.0f};
 }
 
 NSPoint OOInternalCoordinatesFromGalactic(Vector galacticCoordinates) {
   return NSPoint{static_cast<float>(galacticCoordinates.x) * 2.5f,
-                   static_cast<float>(galacticCoordinates.y) * 5.0f};
+                 static_cast<float>(galacticCoordinates.y) * 5.0f};
 }

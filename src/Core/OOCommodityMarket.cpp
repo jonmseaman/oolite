@@ -22,13 +22,14 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOCommodityMarket.h"
+
 #include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "OOCommodities.h"
-#include "OOCommodityMarket.h"
 #include "OOStringExpander.h"
 
 namespace {

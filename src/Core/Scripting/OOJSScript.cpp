@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 #define OO_CACHE_JS_SCRIPTS 1
 #endif
 
+#include "OOJSScript.h"
+
 #include <cstdint>
 #include <format>
 #include <memory>
@@ -35,7 +37,6 @@ MA 02110-1301, USA.
 
 #include "Entity.h"
 #include "OOJSEngineTimeManagement.h"
-#include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
 #include "oofnd/Notification.hpp"
 #if OO_CACHE_JS_SCRIPTS

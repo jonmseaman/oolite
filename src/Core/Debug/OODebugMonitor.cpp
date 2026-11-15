@@ -28,6 +28,8 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
+#include "OODebugMonitor.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -42,7 +44,6 @@ SOFTWARE.
 #include <vector>
 
 #include "OOConcreteTexture.h"
-#include "OODebugMonitor.h"
 #include "OODrawable.h"
 #include "OOJSConsole.h"
 #include "OOJSEngineTimeManagement.h"

@@ -23,11 +23,11 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOCheckEquipmentPListVerifierStage.h"
+
 #include <cstdint>
 #include <format>
 #include <string>
-
-#include "OOCheckEquipmentPListVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 

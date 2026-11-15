@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOSunEntity.h"
+
 #include <cstdint>
 #include <cstring>
 #include <format>
@@ -37,7 +39,6 @@ MA 02110-1301, USA.
 #include "OOMacroOpenGL.h"
 #include "OOPlanetEntity.h"
 #include "OOStringExpander.h"
-#include "OOSunEntity.h"
 #include "PlayerEntity.h"
 #include "ShipEntityAI.h"
 #include "Universe.h"

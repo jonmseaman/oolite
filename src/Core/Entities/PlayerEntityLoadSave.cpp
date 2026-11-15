@@ -22,6 +22,8 @@
 
  */
 
+#include "PlayerEntityLoadSave.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <format>
@@ -39,7 +41,6 @@
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "OOXMLExtensions.h"
-#include "PlayerEntityLoadSave.h"
 #include "ResourceManager.h"
 #include "ShipEntityAI.h"
 #include "StationEntity.h"
