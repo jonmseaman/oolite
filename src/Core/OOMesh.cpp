@@ -1489,8 +1489,10 @@ bool OOMesh::setUpVertexArrays() {
           if (IsPerVertexNormalMode(
                   static_cast<OOMeshNormalMode>(_normalMode))) {
             if (is_edge_vertex[static_cast<unsigned long long>(v)]) {
-              getNormal(&normal, &tangent, static_cast<OOMeshVertexCount>(v),
-                        _faces[fi].smoothGroup);
+              const NormalAndTangent smoothed = getNormal(
+                  static_cast<OOMeshVertexCount>(v), _faces[fi].smoothGroup);
+              normal = smoothed.normal;
+              tangent = smoothed.tangent;
             } else {
               OOCAssert(_normals != nullptr && _tangents != nullptr,
                         "Normal/tangent buffers not allocated in %s",
@@ -1852,12 +1854,9 @@ void OOMesh::calculateVertexTangentsWithFaceRefs(VertexFaceRef* faceRefs) {
 
 /* profiling suggests this function takes a lot of time - almost all
  * the overhead of setting up a new ship is here. - CIM */
-void OOMesh::getNormal(Vector* outNormal, Vector* outTangent,
-                       OOMeshVertexCount v_index,
-                       OOMeshSmoothGroup smoothGroup) {
+OOMesh::NormalAndTangent OOMesh::getNormal(OOMeshVertexCount v_index,
+                                           OOMeshSmoothGroup smoothGroup) {
   OOJS_PROFILE_SCOPE();
-
-  assert(outNormal != nullptr && outTangent != nullptr);
 
   std::size_t j;
   Vector normal_sum = kZeroVector;
@@ -1876,8 +1875,8 @@ void OOMesh::getNormal(Vector* outNormal, Vector* outTangent,
     }
   }
 
-  *outNormal = vector_normal_or_fallback(normal_sum, kBasisZVector);
-  *outTangent = vector_normal_or_fallback(tangent_sum, kBasisXVector);
+  return {vector_normal_or_fallback(normal_sum, kBasisZVector),
+          vector_normal_or_fallback(tangent_sum, kBasisXVector)};
 }
 
 void OOMesh::calculateBoundingVolumes() {

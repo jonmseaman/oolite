@@ -232,8 +232,14 @@ class OOMesh : public OODrawable, public OOGraphicsResetClient {
   void generateFaceTangents();
   void calculateVertexNormalsAndTangentsWithFaceRefs(VertexFaceRef* faceRefs);
   void calculateVertexTangentsWithFaceRefs(VertexFaceRef* faceRefs);
-  void getNormal(Vector* outNormal, Vector* outTangent,
-                 OOMeshVertexCount v_index, OOMeshSmoothGroup smoothGroup);
+
+  struct NormalAndTangent {
+    Vector normal;
+    Vector tangent;
+  };
+
+  NormalAndTangent getNormal(OOMeshVertexCount v_index,
+                             OOMeshSmoothGroup smoothGroup);
   void calculateBoundingVolumes();
   void rescaleByFactor(GLfloat factor);
 
