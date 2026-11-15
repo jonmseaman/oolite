@@ -1083,7 +1083,7 @@ bool OOShipRegistry::sanitizeConditions(oo::PList& ioData) {
 
 bool OOShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData) {
   oo::PList::Dict& ships = Entries(ioData);
-  bool remove, fatal;
+  bool remove;
 
   // Convert all subentity declarations to dictionaries and add
   // _oo_is_subentity=YES to all entries used as subentities.
@@ -1105,11 +1105,12 @@ bool OOShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData) {
       okSubentities.reserve(subentityDeclarations.count());
       for (const oo::PList& subentityDecl :
            *subentityDeclarations.getIf<oo::PList::Array>()) {
-        oo::PList subentityDict = canonicalizeSubentityDeclaration(
-            subentityDecl, shipKey, ioData, &fatal);
+        const SubentityResult canonical =
+            canonicalizeSubentityDeclaration(subentityDecl, shipKey, ioData);
+        oo::PList subentityDict = canonical.declaration;
 
         // If entry is broken, we need to kill this ship.
-        if (fatal) {
+        if (canonical.fatal) {
           OOStandardsError("Bad subentity definition found");
           remove = true;
         } else if (!subentityDict.isNull()) {
@@ -1207,13 +1208,11 @@ void OOShipRegistry::mergeShipRoles(
   }
 }
 
-oo::PList OOShipRegistry::canonicalizeSubentityDeclaration(
-    const oo::PList& declaration, const std::string& shipKey,
-    const oo::PList& shipData, bool* outFatalError) {
-  oo::PList result;
-
-  assert(outFatalError != nullptr);
-  *outFatalError = false;
+OOShipRegistry::SubentityResult
+OOShipRegistry::canonicalizeSubentityDeclaration(const oo::PList& declaration,
+                                                 const std::string& shipKey,
+                                                 const oo::PList& shipData) {
+  SubentityResult result;
 
   if (declaration.isString()) {
     // Update old-style string-based declaration.
@@ -1221,17 +1220,18 @@ oo::PList OOShipRegistry::canonicalizeSubentityDeclaration(
         "Old style sub-entity declarations are deprecated in {}", shipKey));
     if (!OOEnforceStandards()) {
       result = translateOldStyleSubentityDeclaration(
-          *declaration.getIf<std::string>(), shipKey, shipData, outFatalError);
+          *declaration.getIf<std::string>(), shipKey, shipData);
     }
-    if (!result.isNull()) {
+    if (!result.declaration.isNull()) {
       // Ensure internal translation made sense, and clean up a bit.
-      result =
-          validateNewStyleSubentityDeclaration(result, shipKey, outFatalError);
+      const SubentityResult validated =
+          validateNewStyleSubentityDeclaration(result.declaration, shipKey);
+      result.declaration = validated.declaration;
+      result.fatal = result.fatal || validated.fatal;
     }
   } else if (declaration.isDict()) {
     // Validate dictionary-based declaration.
-    result = validateNewStyleSubentityDeclaration(declaration, shipKey,
-                                                  outFatalError);
+    result = validateNewStyleSubentityDeclaration(declaration, shipKey);
   } else {
     // The declaration's property-list type ("array", "integer", ...; was the
     // class name of the Foundation object it converted to).
@@ -1239,21 +1239,21 @@ oo::PList OOShipRegistry::canonicalizeSubentityDeclaration(
                "subentity declaration for ship {} should be string or "
                "dictionary, found {}.",
                shipKey, oo::typeName(declaration.type()));
-    *outFatalError = true;
+    result.fatal = true;
   }
 
   // For frangible ships, bad subentities are non-fatal.
   const oo::PList* shipEntry = shipData.get<oo::PList::Dict>(shipKey);
-  if (*outFatalError && shipEntry != nullptr &&
-      shipEntry->get<bool>("frangible"))
-    *outFatalError = false;
+  if (result.fatal && shipEntry != nullptr && shipEntry->get<bool>("frangible"))
+    result.fatal = false;
 
   return result;
 }
 
-oo::PList OOShipRegistry::translateOldStyleSubentityDeclaration(
+OOShipRegistry::SubentityResult
+OOShipRegistry::translateOldStyleSubentityDeclaration(
     const std::string& declaration, const std::string& shipKey,
-    const oo::PList& shipData, bool* outFatalError) {
+    const oo::PList& shipData) {
   const std::vector<std::string> tokenStrings = oo::str::tokens(declaration);
   std::string subentityKey;
   bool isFlasher;
@@ -1268,7 +1268,7 @@ oo::PList OOShipRegistry::translateOldStyleSubentityDeclaration(
                  "the shipdata.plist entry \"{}\" has a broken subentity "
                  "definition \"{}\" (should have 8 tokens, has {}).",
                  shipKey, subentityKey, tokenStrings.size());
-      *outFatalError = true;
+      return {oo::PList(), true};
     } else {
       OO_LOG_WARN(
           "shipData.load.warning.badFlasher",
@@ -1276,7 +1276,7 @@ oo::PList OOShipRegistry::translateOldStyleSubentityDeclaration(
           "(should have 8 tokens, has {}). This flasher will be ignored.",
           shipKey, tokenStrings.size());
     }
-    return oo::PList();
+    return {oo::PList()};
   }
 
   // The tokens as an array of strings, read with at<float> as the string tokens
@@ -1287,16 +1287,16 @@ oo::PList OOShipRegistry::translateOldStyleSubentityDeclaration(
   const oo::PList tokens(std::move(tokenArray));
 
   if (isFlasher) {
-    return translateOldStyleFlasherDeclaration(tokens, shipKey, outFatalError);
+    return translateOldStyleFlasherDeclaration(tokens, shipKey);
   } else {
-    return translateOldStandardBasicSubentityDeclaration(
-        tokens, shipKey, shipData, outFatalError);
+    return translateOldStandardBasicSubentityDeclaration(tokens, shipKey,
+                                                         shipData);
   }
 }
 
-oo::PList OOShipRegistry::translateOldStyleFlasherDeclaration(
-    const oo::PList& tokens, const std::string& /*shipKey*/,
-    bool* /*outFatalError*/) {
+OOShipRegistry::SubentityResult
+OOShipRegistry::translateOldStyleFlasherDeclaration(
+    const oo::PList& tokens, const std::string& /*shipKey*/) {
   Vector position;
   float size, frequency, phase, hue;
 
@@ -1329,12 +1329,13 @@ oo::PList OOShipRegistry::translateOldStyleFlasherDeclaration(
          "Translated flasher declaration \"{}\" to {}",
          JoinTokens(tokenStrings), oo::DescriptionOf(resultPList));
 
-  return resultPList;
+  return {resultPList};
 }
 
-oo::PList OOShipRegistry::translateOldStandardBasicSubentityDeclaration(
+OOShipRegistry::SubentityResult
+OOShipRegistry::translateOldStandardBasicSubentityDeclaration(
     const oo::PList& tokens, const std::string& shipKey,
-    const oo::PList& shipData, bool* /*outFatalError*/) {
+    const oo::PList& shipData) {
   std::string subentityKey;
   Vector position;
   Quaternion orientation;
@@ -1383,34 +1384,31 @@ oo::PList OOShipRegistry::translateOldStandardBasicSubentityDeclaration(
          "Translated subentity declaration \"{}\" to {}",
          JoinTokens(tokenStrings), oo::DescriptionOf(resultPList));
 
-  return resultPList;
+  return {resultPList};
 }
 
-oo::PList OOShipRegistry::validateNewStyleSubentityDeclaration(
-    const oo::PList& declaration, const std::string& shipKey,
-    bool* outFatalError) {
+OOShipRegistry::SubentityResult
+OOShipRegistry::validateNewStyleSubentityDeclaration(
+    const oo::PList& declaration, const std::string& shipKey) {
   const std::string type =
       StringForKey(&declaration, "type").value_or("standard");
 
   if (type == "flasher") {
-    return validateNewStyleFlasherDeclaration(declaration, shipKey,
-                                              outFatalError);
+    return validateNewStyleFlasherDeclaration(declaration, shipKey);
   } else if (type == "standard" || type == "ball_turret") {
-    return validateNewStyleStandardSubentityDeclaration(declaration, shipKey,
-                                                        outFatalError);
+    return validateNewStyleStandardSubentityDeclaration(declaration, shipKey);
   } else {
     OO_LOG_ERR("shipData.load.error.badSubentity",
                "subentity declaration for ship {} does not declare a valid "
                "type (must be standard, flasher or ball_turret).",
                shipKey);
-    *outFatalError = true;
-    return oo::PList();
+    return {oo::PList(), true};
   }
 }
 
-oo::PList OOShipRegistry::validateNewStyleFlasherDeclaration(
-    const oo::PList& declaration, const std::string& shipKey,
-    bool* /*outFatalError*/) {
+OOShipRegistry::SubentityResult
+OOShipRegistry::validateNewStyleFlasherDeclaration(const oo::PList& declaration,
+                                                   const std::string& shipKey) {
   Vector position = kZeroVector;
   float size, frequency, phase, brightfraction;
   bool initiallyOn;
@@ -1465,7 +1463,7 @@ oo::PList OOShipRegistry::validateNewStyleFlasherDeclaration(
     OO_LOG_WARN("shipData.load.warning.flasher.badSize",
                 "skipping flasher of invalid size {:g} for ship {}.", size,
                 shipKey);
-    return oo::PList();
+    return {oo::PList()};
   }
 
   brightfraction = declaration.get<float>("bright_fraction", 0.5);
@@ -1473,7 +1471,7 @@ oo::PList OOShipRegistry::validateNewStyleFlasherDeclaration(
     OO_LOG_WARN("shipData.load.warning.flasher.badFraction",
                 "skipping flasher of invalid bright fraction {:g} for ship {}.",
                 brightfraction, shipKey);
-    return oo::PList();
+    return {oo::PList()};
   }
 
   frequency = declaration.get<float>("frequency", 2.0);
@@ -1490,12 +1488,12 @@ oo::PList OOShipRegistry::validateNewStyleFlasherDeclaration(
   result.emplace("bright_fraction", oo::PList::singleReal(brightfraction));
   result.emplace("initially_on", initiallyOn ? true : false);
 
-  return oo::PList(std::move(result));
+  return {oo::PList(std::move(result))};
 }
 
-oo::PList OOShipRegistry::validateNewStyleStandardSubentityDeclaration(
-    const oo::PList& declaration, const std::string& shipKey,
-    bool* outFatalError) {
+OOShipRegistry::SubentityResult
+OOShipRegistry::validateNewStyleStandardSubentityDeclaration(
+    const oo::PList& declaration, const std::string& shipKey) {
   Vector position = kZeroVector;
   Quaternion orientation = kIdentityQuaternion;
   bool isTurret;
@@ -1509,8 +1507,7 @@ oo::PList OOShipRegistry::validateNewStyleStandardSubentityDeclaration(
     OO_LOG_ERR("shipData.load.error.badSubentity",
                "subentity declaration for ship {} specifies no subentity_key.",
                shipKey);
-    *outFatalError = true;
-    return oo::PList();
+    return {oo::PList(), true};
   }
 
   isTurret = StringForKey(&declaration, "type") == "ball_turret";
@@ -1589,7 +1586,7 @@ oo::PList OOShipRegistry::validateNewStyleStandardSubentityDeclaration(
     result["script_info"] = *scriptInfo;
   }
 
-  return oo::PList(std::move(result));
+  return {oo::PList(std::move(result))};
 }
 
 bool OOShipRegistry::shipIsBallTurretForKey(const std::string& shipKey,
