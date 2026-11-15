@@ -624,7 +624,6 @@ void ResourceManager::preloadFileListFromOXZ(
           preloadFilePathFor(file, folder, fullPath);
         }
       }
-
     } while (unzGoToNextFile(uf) == UNZ_OK);
   }
   unzClose(uf);

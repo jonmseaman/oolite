@@ -136,7 +136,6 @@ void OOPrintLogHeader() {
 #if OO_FOV_INFLIGHT_CONTROL_ENABLED
       "FOV in-flight control",
 #endif
-
   };
 
 // systemString: UTF-8 string with system type and possibly version.

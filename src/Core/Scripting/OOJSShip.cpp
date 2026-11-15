@@ -4407,7 +4407,6 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
     if (ship->hasFuelInjection()) {
       assessment += 0.5;
     }
-
   } else {
     // consider thargoids dangerous
     if (ship->isThargoid()) {

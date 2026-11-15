@@ -364,7 +364,6 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
       }
 #endif
       OOGL(glEnable(GL_TEXTURE_2D));
-
     } else {
       if (hasPointSprites) {
 #if OO_SHADERS
