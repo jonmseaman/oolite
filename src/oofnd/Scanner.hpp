@@ -212,7 +212,7 @@ constexpr bool inRanges(const UnitRange (&ranges)[N], char16_t c) noexcept {
 // by GNUstep's table, so U+0130 matches 'i' and U+212A KELVIN SIGN matches 'k'
 // (probed: no other non-ASCII unit matches an ASCII character). GNUstep folds
 // those two only for the first unit of the target.
-constexpr bool unitsMatchIgnoringCase(char16_t text, char16_t target,
+inline bool unitsMatchIgnoringCase(char16_t text, char16_t target,
                                       bool first) noexcept {
   if (text == target) return true;
   if (!first && (text == 0x0130 || text == 0x212A)) return false;
