@@ -102,7 +102,7 @@ MA 02110-1301, USA.
 #define OOJS_COUNT(array) (sizeof(array) / sizeof *(array))
 
 // There is only one context, created on the main thread.
-OOINLINE JSContext* OOJSAcquireContext(void) {
+inline JSContext* OOJSAcquireContext(void) {
   extern JSContext* gOOJSMainThreadContext;
   OOCAssert(gOOJSMainThreadContext != NULL,
             "Attempt to use JavaScript context before JavaScript engine is "
@@ -110,7 +110,7 @@ OOINLINE JSContext* OOJSAcquireContext(void) {
   return gOOJSMainThreadContext;
 }
 
-OOINLINE void OOJSRelinquishContext(JSContext* context) { (void)context; }
+inline void OOJSRelinquishContext(JSContext* context) { (void)context; }
 
 /*	Engine-neutral names, also defined by the SpiderMonkey header, so code
         outside src/Core/Scripting can be built against either engine.
@@ -118,10 +118,10 @@ OOINLINE void OOJSRelinquishContext(JSContext* context) { (void)context; }
 #define OOJSFreeValue(context, value) JS_FreeValue((context), (value))
 #define OOJSUndefinedValue() JS_UNDEFINED
 #define OOJSNullValue() JS_NULL
-OOINLINE bool OOJSValueIsUndefined(JSValueConst value) {
+inline bool OOJSValueIsUndefined(JSValueConst value) {
   return JS_IsUndefined(value);
 }
-OOINLINE JSValue OOJSValueFromDouble(JSContext* context, double value) {
+inline JSValue OOJSValueFromDouble(JSContext* context, double value) {
   return JS_NewNumber(context, value);
 }
 // JavaScript truthiness (like JS_ValueToBoolean()); NO if conversion throws.
@@ -254,7 +254,7 @@ bool OOJSArgumentListGetNumberNoError(JSContext* context, int argc,
                                       JSValueConst* argv, double* outNumber,
                                       int* outConsumed);
 
-OOINLINE JSValue OOJSValueFromBOOL(int b) { return JS_NewBool(NULL, b != 0); }
+inline JSValue OOJSValueFromBOOL(int b) { return JS_NewBool(NULL, b != 0); }
 
 /*	OOJSValueFromPList()
         Return the owned JavaScript value representation of a property list,
@@ -352,11 +352,11 @@ extern JSClassID gOOJSObjectClassID, gOOJSStringClassID, gOOJSArrayClassID,
 oo::PList OOJSPListFromJSValue(JSContext* context, JSValueConst value);
 oo::PList OOJSPListFromJSObject(JSContext* context, JSValueConst object);
 
-OOINLINE bool OOJSValueIsFunction(JSContext* context, JSValueConst value) {
+inline bool OOJSValueIsFunction(JSContext* context, JSValueConst value) {
   return JS_IsFunction(context, value);
 }
 
-OOINLINE bool OOJSValueIsArray(JSContext* context, JSValueConst value) {
+inline bool OOJSValueIsArray(JSContext* context, JSValueConst value) {
   return JS_IsArray(value);
 }
 
@@ -411,8 +411,8 @@ const char* OOJSClassName(JSClassID classID);
 
 void OOJSRegisterSubclass(JSClassID subclass, JSClassID superclass);
 bool OOJSIsSubclass(JSClassID putativeSubclass, JSClassID superclass);
-OOINLINE bool OOJSIsMemberOfSubclass(JSContext* context, JSValueConst object,
-                                     JSClassID superclass) {
+inline bool OOJSIsMemberOfSubclass(JSContext* context, JSValueConst object,
+                                   JSClassID superclass) {
   return JS_IsObject(object) &&
          OOJSIsSubclass(JS_GetClassID(object), superclass);
 }

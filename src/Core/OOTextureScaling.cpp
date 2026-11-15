@@ -87,14 +87,14 @@ static void ScaleToHalf_1_x4(void* srcBytes, void* dstBytes,
 // OOPixMapDimension srcWidth, OOPixMapDimension srcHeight) NONNULL_FUNC;
 #endif
 
-OOINLINE void StretchVertically(OOPixMap srcPx,
+inline void StretchVertically(OOPixMap srcPx,
+                              OOPixMap dstPx) ALWAYS_INLINE_FUNC;
+inline void SqueezeVertically(OOPixMap pixMap,
+                              OOPixMapDimension dstHeight) ALWAYS_INLINE_FUNC;
+inline void StretchHorizontally(OOPixMap srcPx,
                                 OOPixMap dstPx) ALWAYS_INLINE_FUNC;
-OOINLINE void SqueezeVertically(OOPixMap pixMap,
+inline void SqueezeHorizontally(OOPixMap pixMap,
                                 OOPixMapDimension dstHeight) ALWAYS_INLINE_FUNC;
-OOINLINE void StretchHorizontally(OOPixMap srcPx,
-                                  OOPixMap dstPx) ALWAYS_INLINE_FUNC;
-OOINLINE void SqueezeHorizontally(OOPixMap pixMap, OOPixMapDimension dstHeight)
-    ALWAYS_INLINE_FUNC;
 
 static void StretchVerticallyN_x1(OOPixMap srcPx, OOPixMap dstPx);
 
@@ -115,7 +115,7 @@ static bool EnsureCorrectDataSize(OOPixMap* pixMap,
 
 static void StretchVerticallyN_x4(OOPixMap srcPx, OOPixMap dstPx);
 
-OOINLINE void StretchVertically(OOPixMap srcPx, OOPixMap dstPx) {
+inline void StretchVertically(OOPixMap srcPx, OOPixMap dstPx) {
   if (!((srcPx.rowBytes) & 3)) {
     StretchVerticallyN_x4(srcPx, dstPx);
   } else {
@@ -127,7 +127,7 @@ OOINLINE void StretchVertically(OOPixMap srcPx, OOPixMap dstPx) {
 
 static void StretchVerticallyN_x8(OOPixMap srcPx, OOPixMap dstPx);
 
-OOINLINE void StretchVertically(OOPixMap srcPx, OOPixMap dstPx) {
+inline void StretchVertically(OOPixMap srcPx, OOPixMap dstPx) {
   if (!((srcPx.rowBytes) & 7)) {
     StretchVerticallyN_x8(srcPx, dstPx);
   } else {
@@ -137,7 +137,7 @@ OOINLINE void StretchVertically(OOPixMap srcPx, OOPixMap dstPx) {
 
 #endif
 
-OOINLINE void SqueezeVertically(OOPixMap pixMap, OOPixMapDimension dstHeight) {
+inline void SqueezeVertically(OOPixMap pixMap, OOPixMapDimension dstHeight) {
   switch (pixMap.format) {
     case kOOPixMapRGBA:
       SqueezeVertically4(pixMap, dstHeight);
@@ -164,7 +164,7 @@ OOINLINE void SqueezeVertically(OOPixMap pixMap, OOPixMapDimension dstHeight) {
 #endif
 }
 
-OOINLINE void StretchHorizontally(OOPixMap srcPx, OOPixMap dstPx) {
+inline void StretchHorizontally(OOPixMap srcPx, OOPixMap dstPx) {
   OOCParameterAssert(srcPx.format == dstPx.format);
 
   switch (srcPx.format) {
@@ -193,8 +193,7 @@ OOINLINE void StretchHorizontally(OOPixMap srcPx, OOPixMap dstPx) {
 #endif
 }
 
-OOINLINE void SqueezeHorizontally(OOPixMap pixMap,
-                                  OOPixMapDimension dstHeight) {
+inline void SqueezeHorizontally(OOPixMap pixMap, OOPixMapDimension dstHeight) {
   switch (pixMap.format) {
     case kOOPixMapRGBA:
       SqueezeHorizontally4(pixMap, dstHeight);

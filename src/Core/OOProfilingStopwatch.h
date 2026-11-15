@@ -121,7 +121,7 @@ OOINLINE OOHighResTimeValue OOGetHighResTime(void) {
 
 using OOHighResTimeValue = timeval;
 
-OOINLINE OOHighResTimeValue OOGetHighResTime(void) {
+inline OOHighResTimeValue OOGetHighResTime(void) {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return tv;

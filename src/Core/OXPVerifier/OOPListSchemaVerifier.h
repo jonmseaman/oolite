@@ -334,7 +334,7 @@ static_assert(static_cast<std::int32_t>(
 static_assert(static_cast<std::int32_t>(
                   OOPListSchemaVerifierErrorCode::kLastErrorCode) == 108);
 
-OOINLINE bool OOPlistErrorIsSchemaError(OOPListSchemaVerifierErrorCode error) {
+inline bool OOPlistErrorIsSchemaError(OOPListSchemaVerifierErrorCode error) {
   return OOPListSchemaVerifierErrorCode::kStartOfSchemaErrors < error &&
          error < OOPListSchemaVerifierErrorCode::kLastErrorCode;
 }

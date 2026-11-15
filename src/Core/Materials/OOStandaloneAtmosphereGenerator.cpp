@@ -319,7 +319,7 @@ void OOStandaloneAtmosphereGenerator::dumpNoiseBuffer(float* noise) {
 
 #endif
 
-OOINLINE float Lerp(float v0, float v1, float fraction) {
+inline float Lerp(float v0, float v1, float fraction) {
   // Linear interpolation - equivalent to v0 * (1.0f - fraction) + v1 *
   // fraction.
   return v0 + fraction * (v1 - v0);
@@ -406,7 +406,7 @@ FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary,
 
 }  // namespace
 
-OOINLINE float Hermite(float q) { return 3.0f * q * q - 2.0f * q * q * q; }
+inline float Hermite(float q) { return 3.0f * q * q - 2.0f * q * q * q; }
 
 #if __BIG_ENDIAN__
 #define iman_ 1
@@ -416,7 +416,7 @@ OOINLINE float Hermite(float q) { return 3.0f * q * q - 2.0f * q * q * q; }
 
 // (same behaviour as, but faster than, FLOAT->INT)
 // Works OK for -32728 to 32727.99999236688
-OOINLINE int32_t fast_floor(double val) {
+inline int32_t fast_floor(double val) {
   val += 68719476736.0 * 1.5;
   // the double's two 32-bit halves
   const auto words = std::bit_cast<std::array<int32_t, 2>>(val);
@@ -469,7 +469,7 @@ static const uint8_t kGradients[kGradientCount][3] = {
         This turns out to be slightly slower than using multiplication, even if
         the negations are precalculated.
 */
-OOINLINE float TDot3(const uint8_t grad[3], float x, float y, float z) {
+inline float TDot3(const uint8_t grad[3], float x, float y, float z) {
   float xt[3] = {-x, 0.0f, x};
   float yt[3] = {-y, 0.0f, y};
   float zt[3] = {-z, 0.0f, z};

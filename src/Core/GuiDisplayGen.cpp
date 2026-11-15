@@ -50,7 +50,7 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
 
-OOINLINE bool RowInRange(OOGUIRow row, NSRange range) {
+inline bool RowInRange(OOGUIRow row, NSRange range) {
   return (static_cast<int>(range.location) <= row &&
           row < static_cast<int>(range.location + range.length));
 }

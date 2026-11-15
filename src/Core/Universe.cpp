@@ -157,7 +157,7 @@ Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
 
 static bool MaintainLinkedLists(Universe* uni);
 namespace {
-OOINLINE bool EntityInRange(HPVector p1, Entity* e2, float range);
+bool EntityInRange(HPVector p1, Entity* e2, float range);
 }  // namespace
 
 /* TODO: route calculation is really slow - find a way to safely enable this */
@@ -803,7 +803,7 @@ static bool MaintainLinkedLists(Universe* uni) {
 }
 
 namespace {
-OOINLINE bool EntityInRange(HPVector p1, Entity* e2, float range) {
+bool EntityInRange(HPVector p1, Entity* e2, float range) {
   if (range < 0) return true;
   float cr = range + e2->collision_radius;
   return HPdistance2(e2->position, p1) < cr * cr;

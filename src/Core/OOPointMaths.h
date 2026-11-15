@@ -6,32 +6,32 @@
 #include "oofnd/objc/OOFoundationTypes.h"  // NSPoint
 
 // Utilities for working with NSPoints as 2D vectors.
-OOINLINE NSPoint PtAdd(NSPoint a, NSPoint b) {
+inline NSPoint PtAdd(NSPoint a, NSPoint b) {
   return NSMakePoint(a.x + b.x, a.y + b.y);
 }
 
-OOINLINE NSPoint PtSub(NSPoint a, NSPoint b) {
+inline NSPoint PtSub(NSPoint a, NSPoint b) {
   return NSMakePoint(a.x - b.x, a.y - b.y);
 }
 
-OOINLINE NSPoint PtScale(NSPoint p, double scale) {
+inline NSPoint PtScale(NSPoint p, double scale) {
   return NSMakePoint(p.x * scale, p.y * scale);
 }
 
-OOINLINE double PtDot(NSPoint a, NSPoint b) { return a.x * b.x + a.y * b.y; }
+inline double PtDot(NSPoint a, NSPoint b) { return a.x * b.x + a.y * b.y; }
 
-OOINLINE double PtCross(NSPoint a, NSPoint b) { return a.x * b.y - b.x * a.y; }
+inline double PtCross(NSPoint a, NSPoint b) { return a.x * b.y - b.x * a.y; }
 
-OOINLINE NSPoint PtRotCW(NSPoint p) {
+inline NSPoint PtRotCW(NSPoint p) {
   // Rotate 90 degrees clockwise.
   return NSMakePoint(p.y, -p.x);
 }
 
-OOINLINE NSPoint PtRotACW(NSPoint p) {
+inline NSPoint PtRotACW(NSPoint p) {
   // Rotate 90 degrees anticlockwise.
   return NSMakePoint(-p.y, p.x);
 }
 
-OOINLINE NSPoint PtNormal(NSPoint p) {
+inline NSPoint PtNormal(NSPoint p) {
   return PtScale(p, 1.0 / sqrt(PtDot(p, p)));
 }
