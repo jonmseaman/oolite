@@ -128,9 +128,8 @@ class OODebugTCPConsoleClient : public OODebuggerInterface {
 
   // The decoder's callbacks; its string and dictionary handles are
   // OOALObjectRef.
-  static void DecoderPacket(void* cbInfo, OOALObjectRef packetType,
-                            OOALObjectRef packet);
-  static void DecoderError(void* cbInfo, OOALObjectRef errorDesc);
+  void DecoderPacket(OOALObjectRef packetType, OOALObjectRef packet);
+  void DecoderError(OOALObjectRef errorDesc);
 
   void closeConnection();
 

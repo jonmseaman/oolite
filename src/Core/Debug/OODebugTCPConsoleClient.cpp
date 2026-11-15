@@ -289,8 +289,12 @@ bool OODebugTCPConsoleClient::initWithAddress(
         OODebugTCPConsoleServiceInput(-1.0);
       }
 
-      _decoder =
-          OOTCPStreamDecoderCreate(DecoderPacket, DecoderError, nullptr, this);
+      _decoder = OOTCPStreamDecoderCreate(
+          [this](OOALObjectRef packetType, OOALObjectRef packet) {
+            DecoderPacket(packetType, packet);
+          },
+          [this](OOALObjectRef errorDesc) { DecoderError(errorDesc); },
+          nullptr);
     }
 
     if (_decoder != nullptr) {
@@ -1025,26 +1029,23 @@ void OODebugTCPConsoleServiceInput(double timeout) {
   }
 }
 
-void OODebugTCPConsoleClient::DecoderPacket(void* cbInfo,
-                                            OOALObjectRef packetType,
+void OODebugTCPConsoleClient::DecoderPacket(OOALObjectRef packetType,
                                             OOALObjectRef packet) {
   // The decoder's handles hold property lists
   // (OOTCPStreamDecoderAbstractionLayer). A type that is not a string was
   // nil, and no packet was dispatched.
   const std::string* type = OOALObjectPList(packetType).getIf<std::string>();
   if (type == nullptr) return;
-  static_cast<OODebugTCPConsoleClient*>(cbInfo)->dispatchPacket(
-      OOALObjectPList(packet), *type);
+  dispatchPacket(OOALObjectPList(packet), *type);
 }
 
-void OODebugTCPConsoleClient::DecoderError(void* cbInfo,
-                                           OOALObjectRef errorDesc) {
+void OODebugTCPConsoleClient::DecoderError(OOALObjectRef errorDesc) {
   // A description that is not a string was nil: no message ("Debug console not
   // connected.").
   const std::string* description =
       OOALObjectPList(errorDesc).getIf<std::string>();
-  static_cast<OODebugTCPConsoleClient*>(cbInfo)->breakConnectionWithMessage(
-      (description != nullptr) ? *description : std::string());
+  breakConnectionWithMessage((description != nullptr) ? *description
+                                                      : std::string());
 }
 
 #ifdef OO_LOG_DEBUG_PROTOCOL_PACKETS
