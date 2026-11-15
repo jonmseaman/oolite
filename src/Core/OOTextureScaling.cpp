@@ -229,7 +229,8 @@ static std::atomic<int32_t> sPreviousDumpID{0};
 #endif
 
 #if DUMP_MIP_MAPS
-#define DUMP_CHANNELS -1  // Bitmap of channel counts - -1 for all dumps
+constexpr int DUMP_CHANNELS =
+    -1;  // Bitmap of channel counts - -1 for all dumps
 
 #define DUMP_MIP_MAP_PREPARE(pl)                     \
   uint32_t dumpPlanes = pl;                          \
