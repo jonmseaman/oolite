@@ -41,7 +41,7 @@ MA 02110-1301, USA.
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
-#define MAIN_SYSTEM_MARKET_LIMIT 127
+inline constexpr int MAIN_SYSTEM_MARKET_LIMIT = 127;
 
 // A trade-goods.plist quantity_unit as an OOMassUnit: 0-2 are the units,
 // anything else is OOMassUnit::kUnknown (a bare cast would be undefined for
