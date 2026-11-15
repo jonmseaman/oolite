@@ -45,8 +45,8 @@
 #include "OODebugGLDrawing.h"
 #endif
 
-#define LOD_GRANULARITY (static_cast<float>(kOOPlanetDataLevels - 1))
-#define LOD_FACTOR (1.0 / 4.0)
+constexpr auto LOD_GRANULARITY = (static_cast<float>(kOOPlanetDataLevels - 1));
+constexpr auto LOD_FACTOR = (1.0 / 4.0);
 
 std::shared_ptr<OOPlanetDrawable> OOPlanetDrawable::planetWithTextureName(
     const std::string& textureName, float radius) {
