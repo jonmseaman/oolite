@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 
 #include <format>
 #include <memory>
+#include <numbers>
 #include <string>
 
 #include "OOMacroOpenGL.h"
@@ -60,8 +61,8 @@ void OORingEffectEntity::initialize() {
 
   unsigned i;
   for (i = 0; i < kCircleSegments; i++) {
-    sCircleVerts[i].x = sinf(i * 2 * M_PI / (kCircleSegments - 1));
-    sCircleVerts[i].y = cosf(i * 2 * M_PI / (kCircleSegments - 1));
+    sCircleVerts[i].x = sinf(i * 2 * std::numbers::pi / (kCircleSegments - 1));
+    sCircleVerts[i].y = cosf(i * 2 * std::numbers::pi / (kCircleSegments - 1));
   }
 }
 

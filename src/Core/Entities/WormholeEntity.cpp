@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #include <format>
 #include <functional>
 #include <map>
+#include <numbers>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -213,7 +214,7 @@ void WormholeEntity::initWormholeTo(OOSystemID s, ::ShipEntity* ship) {
     else
       shrink_factor = 1;
 
-    collision_radius = 0.5 * M_PI * pow(witch_mass, 1.0 / 3.0);
+    collision_radius = 0.5 * std::numbers::pi * pow(witch_mass, 1.0 / 3.0);
     expiry_time = now + (witch_mass / WORMHOLE_SHRINK_RATE / shrink_factor);
     travel_time = (distance * distance * 3600);  // Taken from PlayerEntity.h
     arrival_time = now + travel_time;
@@ -366,7 +367,7 @@ bool WormholeEntity::suckInShip(::ShipEntity* ship) {
     expiry_time = arrival_time - 1.0;
   }
 
-  collision_radius = 0.5 * M_PI * pow(witch_mass, 1.0 / 3.0);
+  collision_radius = 0.5 * std::numbers::pi * pow(witch_mass, 1.0 / 3.0);
 
   if (UNIVERSE != nullptr) UNIVERSE->addWitchspaceJumpEffectForShip(ship);
 
@@ -700,7 +701,7 @@ void WormholeEntity::update(OOTimeDelta delta_t) {
   if (witch_mass > 0.0) {
     witch_mass -= WORMHOLE_SHRINK_RATE * delta_t * shrink_factor;
     witch_mass = fmax(witch_mass, 0.0);
-    collision_radius = 0.5 * M_PI * pow(witch_mass, 1.0 / 3.0);
+    collision_radius = 0.5 * std::numbers::pi * pow(witch_mass, 1.0 / 3.0);
     no_draw_distance = collision_radius * collision_radius *
                        NO_DRAW_DISTANCE_FACTOR * NO_DRAW_DISTANCE_FACTOR;
   }
@@ -781,7 +782,7 @@ static void DrawWormholeCorona(GLfloat inner_radius, GLfloat outer_radius,
   r1 = inner_radius * z_distance /
        sqrt(z_distance * z_distance - inner_radius * inner_radius);
 
-  delta = step * M_PI / 180.0f;
+  delta = step * std::numbers::pi / 180.0f;
   halfStep = 0.5f * delta;
   theta = 0.0f;
 

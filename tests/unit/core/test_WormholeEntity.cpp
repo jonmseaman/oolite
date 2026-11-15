@@ -25,6 +25,7 @@
 */
 
 #include <cmath>
+#include <numbers>
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
@@ -205,7 +206,7 @@ OO_TEST(madeByShip) {
     OO_CHECK(HPvector_equal(wh->getPosition(), make_HPvector(1, 2, 3)));
     // No player mass (not the player): 200000 tonnes.
     OO_CHECK(Near(wh->collisionRadius(),
-                  0.5 * M_PI * std::pow(200000.0, 1.0 / 3.0)));
+                  0.5 * std::numbers::pi * std::pow(200000.0, 1.0 / 3.0)));
     const double distance = distanceBetweenPlanetPositions(10, 20, 13, 24);
     OO_CHECK(Near(wh->travelTime(), distance * distance * 3600));
     OO_CHECK(Near(wh->arrivalTime(), 1000.0 + distance * distance * 3600));
@@ -326,7 +327,7 @@ OO_TEST(update) {
     OO_CHECK(wh->getScanClass() == OOScanClass::kWormhole);
     OO_CHECK(Near(
         wh->collisionRadius(),
-        0.5 * M_PI * std::pow(200000.0 - WORMHOLE_SHRINK_RATE, 1.0 / 3.0)));
+        0.5 * std::numbers::pi * std::pow(200000.0 - WORMHOLE_SHRINK_RATE, 1.0 / 3.0)));
   }
 }
 

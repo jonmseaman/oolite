@@ -21,6 +21,7 @@
 */
 
 #include <cmath>
+#include <numbers>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOColor.h"
@@ -210,7 +211,7 @@ OO_TEST(updateCyclesColours) {
 
     flasher->update(0.125);  // t 0.125: wave sin(pi/4), rising half: brightness
                              // above the fraction
-    double wave = std::sin(M_PI / 4);
+    double wave = std::sin(std::numbers::pi / 4);
     OO_CHECK(RGBIs(flasher, 1, 1, 1));
     OO_CHECK(Near(ColorComponents(flasher)[3], 0.5 + (0.5 / 1.0) * wave));
 

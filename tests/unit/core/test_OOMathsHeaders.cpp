@@ -21,6 +21,7 @@ constexpr bool kUmbrellaMacros = false;
 #endif
 
 #include <algorithm>
+#include <numbers>
 #include <type_traits>
 
 #include "oo_test.hpp"
@@ -35,7 +36,7 @@ OO_TEST(mathsHeadersStandAlone) {
   Quaternion q = make_quaternion(1, 0, 0, 0);
   OO_CHECK(quaternion_dot_product(q, q) == 1);
   OO_CHECK(OOClamp_0_1_f(2.0f) == 1.0f);
-  OO_CHECK(std::min(3, 4) == 3 && std::max(3, 4) == 4 && M_PI > 3.14);
+  OO_CHECK(std::min(3, 4) == 3 && std::max(3, 4) == 4 && std::numbers::pi > 3.14);
 }
 
 OO_TEST_MAIN()
