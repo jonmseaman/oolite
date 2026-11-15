@@ -317,8 +317,8 @@ static const GLfloat darkgreen_color[4] = {0.0, 0.75, 0.0, 1.0};
 static const GLfloat blue_color[4] = {0.0, 0.0, 1.0, 1.0};
 static const GLfloat black_color[4] = {0.0, 0.0, 0.0, 1.0};
 static const GLfloat lightgray_color[4] = {0.25, 0.25, 0.25, 1.0};
+static std::array<float, 256> sGlyphWidths = {};
 
-static float sGlyphWidths[256];
 static float sF6KernGovt;
 static float sF6KernTL;
 static bool _compassUpdated;
@@ -1612,7 +1612,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
                nonlinearScannerFunc(act_dist, zoom, siz.width) -
                        nonlinearScannerFunc(lim_dist, zoom, siz.width) >
                    4.5)) {
-            Vector bounds[6];
+            std::array<Vector, 6> bounds;
             BoundingBox bb = ship->totalBoundingBox;
             bounds[0] = ship->v_forward;
             scale_vector(&bounds[0], bb.max.z);
