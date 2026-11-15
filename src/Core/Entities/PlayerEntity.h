@@ -97,13 +97,14 @@ static_assert(oo::ToUnderlying(OOSpeechSettings::kAll) == 2);
 #define CHART_WIDTH_AT_MAX_ZOOM 64.0
 inline constexpr double CHART_HEIGHT_AT_MAX_ZOOM = 64.0;
 // Galaxy width / width of chart area at max zoom
-#define CHART_MAX_ZOOM (256.0 / CHART_WIDTH_AT_MAX_ZOOM)
+inline constexpr auto CHART_MAX_ZOOM = (256.0 / CHART_WIDTH_AT_MAX_ZOOM);
 // start scrolling when cursor is this number of units away from centre
 inline constexpr double CHART_SCROLL_AT_X = 25.0;
 inline constexpr double CHART_SCROLL_AT_Y = 31.0;
 inline constexpr double CHART_CLIP_BORDER = 10.0;
-#define CHART_SCREEN_VERTICAL_CENTRE (10 * MAIN_GUI_ROW_HEIGHT)
-#define CHART_SCREEN_VERTICAL_CENTRE_COMPACT (7 * MAIN_GUI_ROW_HEIGHT)
+inline constexpr auto CHART_SCREEN_VERTICAL_CENTRE = (10 * MAIN_GUI_ROW_HEIGHT);
+inline constexpr auto CHART_SCREEN_VERTICAL_CENTRE_COMPACT =
+    (7 * MAIN_GUI_ROW_HEIGHT);
 inline constexpr double CHART_ZOOM_SPEED_FACTOR = 1.05;
 
 inline constexpr double CHART_ZOOM_SHOW_LABELS = 2.0;
@@ -395,7 +396,7 @@ inline constexpr double ESCAPE_SEQUENCE_TIME = 10.0;
 
 inline constexpr double KEY_REPEAT_INTERVAL = 0.20;
 
-#define PLAYER_SHIP_CLOCK_START (2084004 * 86400.0)
+inline constexpr auto PLAYER_SHIP_CLOCK_START = (2084004 * 86400.0);
 // adding or removing a player ship subentity increases or decreases the ship's
 // trade-in factor respectively by this amount
 inline constexpr int PLAYER_SHIP_SUBENTITY_TRADE_IN_VALUE = 3;
@@ -2098,9 +2099,9 @@ inline PlayerEntity* OOGetPlayer() {
 #define PLAYER OOGetPlayer()
 
 #define KILOGRAMS_PER_POD 1000
-#define MAX_KILOGRAMS_IN_SAFE ((KILOGRAMS_PER_POD / 2) - 1)
+inline constexpr auto MAX_KILOGRAMS_IN_SAFE = ((KILOGRAMS_PER_POD / 2) - 1);
 #define GRAMS_PER_POD (KILOGRAMS_PER_POD * 1000)
-#define MAX_GRAMS_IN_SAFE ((GRAMS_PER_POD / 2) - 1)
+inline constexpr auto MAX_GRAMS_IN_SAFE = ((GRAMS_PER_POD / 2) - 1);
 
 // C++ forms, defined in OOConstToString.cpp: std::string results
 // (never nil), const std::string & parameters (nil arrived as "" and matched
