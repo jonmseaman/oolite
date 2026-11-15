@@ -44,7 +44,7 @@ SOFTWARE.
 #include "oofnd/Defaults.hpp"
 #include "oofnd/objc/OOException.h"
 
-#define SKY_ELEMENT_SCALE_FACTOR (BILLBOARD_DEPTH / 500.0f)
+constexpr auto SKY_ELEMENT_SCALE_FACTOR = (BILLBOARD_DEPTH / 500.0f);
 constexpr float NEBULA_SHUFFLE_FACTOR = 0.005f;
 #define DEBUG_COLORS 0  // If set, rgb = xyz (offset to range from 0.1 to 1.0).
 
