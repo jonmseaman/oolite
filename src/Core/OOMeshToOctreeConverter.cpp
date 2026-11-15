@@ -126,7 +126,7 @@ using GeometryData = struct OOMeshToOctreeConverterInternalData;
         The data has to be by reference rather than a return value so that the
         triangles pointer can be pointed into the struct.
 */
-OOINLINE void InitGeometryData(GeometryData* data, uint32_t capacity);
+inline void InitGeometryData(GeometryData* data, uint32_t capacity);
 
 /*
         DestroyGeometryData(data)
@@ -134,7 +134,7 @@ OOINLINE void InitGeometryData(GeometryData* data, uint32_t capacity);
         Deallocates dynamic storage if necessary. Leaves the GeometryData in an
         invalid state.
 */
-OOINLINE void DestroyGeometryData(GeometryData* data);
+inline void DestroyGeometryData(GeometryData* data);
 
 /*
         AddTriangle(data, tri)
@@ -151,7 +151,7 @@ OOINLINE void DestroyGeometryData(GeometryData* data);
         be called directly. Invariant: may only be called when count ==
    capacity.
 */
-OOINLINE void AddTriangle(GeometryData* data, Triangle tri);
+inline void AddTriangle(GeometryData* data, Triangle tri);
 static NO_INLINE_FUNC void AddTriangle_slow(GeometryData* data, Triangle tri);
 
 /*
@@ -203,7 +203,7 @@ void InitGeometryData(GeometryData* data, uint32_t capacity) {
   data->triangles = data->smallData;
 }
 
-OOINLINE void DestroyGeometryData(GeometryData* data) {
+inline void DestroyGeometryData(GeometryData* data) {
   OOCParameterAssert(data != nullptr &&
                      data->capacity >=
                          kOOMeshToOctreeConverterSmallDataCapacity);
@@ -223,7 +223,7 @@ OOINLINE void DestroyGeometryData(GeometryData* data) {
 #endif
 }
 
-OOINLINE void AddTriangle(GeometryData* data, Triangle tri) {
+inline void AddTriangle(GeometryData* data, Triangle tri) {
   OOCParameterAssert(data != nullptr);
 
   if (data->count < data->capacity) {

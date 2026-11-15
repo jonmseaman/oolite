@@ -35,7 +35,7 @@ SOFTWARE.
 
 #ifndef OODEBUGLDRAWING_DISABLE
 
-OOINLINE void ApplyColor(OOColor* color) {
+inline void ApplyColor(OOColor* color) {
   GLfloat r, g, b, a;
 
   OO_ENTER_OPENGL();

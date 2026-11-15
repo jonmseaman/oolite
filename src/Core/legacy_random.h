@@ -82,10 +82,10 @@ RANROTSeed RanrotSeedFromRandomSeed(Random_Seed seed);
 unsigned RanrotWithSeed(RANROTSeed* ioSeed);
 float randfWithSeed(RANROTSeed* ioSeed);
 
-OOINLINE double distanceBetweenPlanetPositions(int x1, int y1, int x2,
-                                               int y2) INLINE_CONST_FUNC;
-OOINLINE double accurateDistanceBetweenPlanetPositions(
-    int x1, int y1, int x2, int y2) INLINE_CONST_FUNC;
+inline double distanceBetweenPlanetPositions(int x1, int y1, int x2,
+                                             int y2) INLINE_CONST_FUNC;
+inline double accurateDistanceBetweenPlanetPositions(int x1, int y1, int x2,
+                                                     int y2) INLINE_CONST_FUNC;
 
 void seed_for_planet_description(Random_Seed s_seed);
 void seed_RNG_only_for_planet_description(Random_Seed s_seed);
@@ -97,13 +97,12 @@ int gen_rnd_number(void);
 
 void make_pseudo_random_seed(Random_Seed* seed_ptr);
 
-OOINLINE int is_nil_seed(Random_Seed a_seed) INLINE_CONST_FUNC;
+inline int is_nil_seed(Random_Seed a_seed) INLINE_CONST_FUNC;
 
 void rotate_seed(Random_Seed* seed_ptr);
-OOINLINE int rotate_byte_left(int x) INLINE_CONST_FUNC;
+inline int rotate_byte_left(int x) INLINE_CONST_FUNC;
 
-OOINLINE int equal_seeds(Random_Seed seed1,
-                         Random_Seed seed2) INLINE_CONST_FUNC;
+inline int equal_seeds(Random_Seed seed1, Random_Seed seed2) INLINE_CONST_FUNC;
 
 /*
         The "really really random" PRNG. This is a separate RANROT seed that is
@@ -137,22 +136,22 @@ void OORestoreRandomState(OORandomState state);
 
 /*** Only inline definitions beyond this point ***/
 
-OOINLINE int equal_seeds(Random_Seed seed1, Random_Seed seed2) {
+inline int equal_seeds(Random_Seed seed1, Random_Seed seed2) {
   return ((seed1.a == seed2.a) && (seed1.b == seed2.b) &&
           (seed1.c == seed2.c) && (seed1.d == seed2.d) &&
           (seed1.e == seed2.e) && (seed1.f == seed2.f));
 }
 
-OOINLINE int is_nil_seed(Random_Seed a_seed) {
+inline int is_nil_seed(Random_Seed a_seed) {
   return equal_seeds(a_seed, kNilRandomSeed);
 }
 
-OOINLINE int rotate_byte_left(int x) { return ((x << 1) | (x >> 7)) & 255; }
+inline int rotate_byte_left(int x) { return ((x << 1) | (x >> 7)) & 255; }
 
 // a method used to determine interplanetary distances,
 // if accurate, it has to scale distance down by a factor of 7.15:7.0
 // to allow routes navigable in the original!
-OOINLINE double distanceBetweenPlanetPositions(int x1, int y1, int x2, int y2) {
+inline double distanceBetweenPlanetPositions(int x1, int y1, int x2, int y2) {
   int dx = x1 - x2;
   int dy = (y1 - y2) / 2;
   int dist = sqrt(
@@ -160,16 +159,15 @@ OOINLINE double distanceBetweenPlanetPositions(int x1, int y1, int x2, int y2) {
   return 0.4 * dist;
 }
 
-OOINLINE double accurateDistanceBetweenPlanetPositions(int x1, int y1, int x2,
-                                                       int y2) {
+inline double accurateDistanceBetweenPlanetPositions(int x1, int y1, int x2,
+                                                     int y2) {
   double dx = x1 - x2;
   double dy = (y1 - y2) / 2.0;
   double dist = hypot(dx, dy);
   return 0.4 * dist;
 }
 
-OOINLINE double travelTimeBetweenPlanetPositions(int x1, int y1, int x2,
-                                                 int y2) {
+inline double travelTimeBetweenPlanetPositions(int x1, int y1, int x2, int y2) {
   double distance = distanceBetweenPlanetPositions(x1, y1, x2, y2);
   return distance * distance;
 }

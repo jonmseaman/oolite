@@ -81,15 +81,15 @@ std::string StringFromRandomSeed(Random_Seed seed);
 std::string OOStringFromDeciCredits(OOCreditsQuantity tenthsOfCredits,
                                     bool includeDecimal, bool includeSymbol);
 
-OOINLINE std::string OOStringFromIntCredits(OOCreditsQuantity integerCredits,
-                                            bool includeSymbol) {
+inline std::string OOStringFromIntCredits(OOCreditsQuantity integerCredits,
+                                          bool includeSymbol) {
   return OOStringFromDeciCredits(integerCredits * 10, false, includeSymbol);
 }
 
-OOINLINE std::string OOCredits(OOCreditsQuantity tenthsOfCredits) {
+inline std::string OOCredits(OOCreditsQuantity tenthsOfCredits) {
   return OOStringFromDeciCredits(tenthsOfCredits, true, true);
 }
-OOINLINE std::string OOIntCredits(OOCreditsQuantity integerCredits) {
+inline std::string OOIntCredits(OOCreditsQuantity integerCredits) {
   return OOStringFromIntCredits(integerCredits, true);
 }
 

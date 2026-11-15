@@ -83,9 +83,9 @@ struct OOPixMap {
 
 extern const OOPixMap kOONullPixMap;
 
-OOINLINE bool OOIsNullPixMap(OOPixMap pixMap) { return pixMap.pixels == NULL; }
+inline bool OOIsNullPixMap(OOPixMap pixMap) { return pixMap.pixels == NULL; }
 bool OOIsValidPixMap(OOPixMap pixMap);
-OOINLINE size_t OOMinimumPixMapBufferSize(OOPixMap pixMap) {
+inline size_t OOMinimumPixMapBufferSize(OOPixMap pixMap) {
   return pixMap.rowBytes * pixMap.height;
 }
 
@@ -144,7 +144,7 @@ bool OOResizePixMap(OOPixMap* ioPixMap, size_t desiredSize);
 /*	OOCompactPixMap()
         Remove any trailing space in a pixmap's buffer, if possible.
 */
-OOINLINE void OOCompactPixMap(OOPixMap* ioPixMap) {
+inline void OOCompactPixMap(OOPixMap* ioPixMap) {
   OOResizePixMap(ioPixMap, OOMinimumPixMapBufferSize(*ioPixMap));
 }
 
@@ -166,13 +166,13 @@ bool OOIsValidPixMapFormat(OOPixMapFormat format);
 #ifndef NDEBUG
 unsigned short OOPixMapBytesPerPixelForFormat(OOPixMapFormat format) PURE_FUNC;
 #else
-OOINLINE unsigned short OOPixMapBytesPerPixelForFormat(OOPixMapFormat format) {
+inline unsigned short OOPixMapBytesPerPixelForFormat(OOPixMapFormat format) {
   // Currently, format values are component counts. This is subject to change.
   return format;
 }
 #endif
 
-OOINLINE unsigned short OOPixMapBytesPerPixel(OOPixMap pixMap) {
+inline unsigned short OOPixMapBytesPerPixel(OOPixMap pixMap) {
   return OOPixMapBytesPerPixelForFormat(pixMap.format);
 }
 

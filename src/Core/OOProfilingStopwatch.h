@@ -98,7 +98,7 @@ using OOHighResTimeValue = DWORD;  // Rolls over once every 50 days, but we can
 
 using OOHighResTimeValue = timeval;
 
-OOINLINE OOHighResTimeValue OOGetHighResTime(void) {
+inline OOHighResTimeValue OOGetHighResTime(void) {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return tv;

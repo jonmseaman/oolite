@@ -59,13 +59,13 @@ extern const HPVector2D kZeroHPVector2D, /* 0, 0 */
     kBasisYHPVector2D;                   /* 0, 1 */
 
 /* Construct vector */
-OOINLINE HPVector make_HPvector(OOHPScalar vx, OOHPScalar vy,
-                                OOHPScalar vz) INLINE_CONST_FUNC;
-OOINLINE HPVector2D MakeHPVector2D(OOHPScalar vx,
-                                   OOHPScalar vy) INLINE_CONST_FUNC;
+inline HPVector make_HPvector(OOHPScalar vx, OOHPScalar vy,
+                              OOHPScalar vz) INLINE_CONST_FUNC;
+inline HPVector2D MakeHPVector2D(OOHPScalar vx,
+                                 OOHPScalar vy) INLINE_CONST_FUNC;
 
-OOINLINE HPVector vectorToHPVector(Vector v) INLINE_CONST_FUNC;
-OOINLINE Vector HPVectorToVector(HPVector v) INLINE_CONST_FUNC;
+inline HPVector vectorToHPVector(Vector v) INLINE_CONST_FUNC;
+inline Vector HPVectorToVector(HPVector v) INLINE_CONST_FUNC;
 
 /* Generate random vectors. */
 HPVector OORandomUnitHPVector(void);
@@ -88,69 +88,69 @@ HPVector OOProjectHPVectorToPlane(HPVector point, HPVector plane,
                                   HPVector normal);
 
 /* Multiply vector by scalar (in place) */
-OOINLINE void HPscale_vector(HPVector* outHPVector,
-                             OOHPScalar factor) ALWAYS_INLINE_FUNC NONNULL_FUNC;
+inline void HPscale_vector(HPVector* outHPVector,
+                           OOHPScalar factor) ALWAYS_INLINE_FUNC NONNULL_FUNC;
 
 /* Multiply vector by scalar */
-OOINLINE HPVector HPvector_multiply_scalar(HPVector v,
-                                           OOHPScalar s) INLINE_CONST_FUNC;
+inline HPVector HPvector_multiply_scalar(HPVector v,
+                                         OOHPScalar s) INLINE_CONST_FUNC;
 
 /* Addition and subtraction of vectors */
-OOINLINE HPVector HPvector_add(HPVector a, HPVector b) INLINE_CONST_FUNC;
-OOINLINE HPVector HPvector_subtract(HPVector a, HPVector b) INLINE_CONST_FUNC;
+inline HPVector HPvector_add(HPVector a, HPVector b) INLINE_CONST_FUNC;
+inline HPVector HPvector_subtract(HPVector a, HPVector b) INLINE_CONST_FUNC;
 #define HPvector_between(a, b) HPvector_subtract(b, a)
-OOINLINE HPVector HPvector_flip(HPVector v) INLINE_CONST_FUNC;
+inline HPVector HPvector_flip(HPVector v) INLINE_CONST_FUNC;
 
 /* HPVector linear interpolation */
-OOINLINE HPVector OOHPVectorInterpolate(HPVector a, HPVector b,
-                                        OOHPScalar where) INLINE_CONST_FUNC;
-OOINLINE HPVector OOHPVectorTowards(HPVector a, HPVector b,
-                                    OOHPScalar where) INLINE_CONST_FUNC;
+inline HPVector OOHPVectorInterpolate(HPVector a, HPVector b,
+                                      OOHPScalar where) INLINE_CONST_FUNC;
+inline HPVector OOHPVectorTowards(HPVector a, HPVector b,
+                                  OOHPScalar where) INLINE_CONST_FUNC;
 
 /* Comparison of vectors */
-OOINLINE bool HPvector_equal(HPVector a, HPVector b) INLINE_CONST_FUNC;
+inline bool HPvector_equal(HPVector a, HPVector b) INLINE_CONST_FUNC;
 
 /* Square of magnitude of vector */
-OOINLINE OOHPScalar HPmagnitude2(HPVector vec) INLINE_CONST_FUNC;
+inline OOHPScalar HPmagnitude2(HPVector vec) INLINE_CONST_FUNC;
 
 /* Magnitude of vector */
-OOINLINE OOHPScalar HPmagnitude(HPVector vec) INLINE_CONST_FUNC;
+inline OOHPScalar HPmagnitude(HPVector vec) INLINE_CONST_FUNC;
 
 /* Normalize vector */
-OOINLINE HPVector HPvector_normal(HPVector vec) INLINE_CONST_FUNC;
+inline HPVector HPvector_normal(HPVector vec) INLINE_CONST_FUNC;
 
 /* Normalize vector, returning fallback if zero vector. */
-OOINLINE HPVector HPvector_normal_or_fallback(HPVector vec, HPVector fallback)
+inline HPVector HPvector_normal_or_fallback(HPVector vec, HPVector fallback)
     INLINE_CONST_FUNC;
-OOINLINE HPVector HPvector_normal_or_xbasis(HPVector vec) INLINE_CONST_FUNC;
-OOINLINE HPVector HPvector_normal_or_ybasis(HPVector vec) INLINE_CONST_FUNC;
-OOINLINE HPVector HPvector_normal_or_zbasis(HPVector vec) INLINE_CONST_FUNC;
+inline HPVector HPvector_normal_or_xbasis(HPVector vec) INLINE_CONST_FUNC;
+inline HPVector HPvector_normal_or_ybasis(HPVector vec) INLINE_CONST_FUNC;
+inline HPVector HPvector_normal_or_zbasis(HPVector vec) INLINE_CONST_FUNC;
 
 /* Square of distance between vectors */
-OOINLINE OOHPScalar HPdistance2(HPVector v1, HPVector v2) INLINE_CONST_FUNC;
+inline OOHPScalar HPdistance2(HPVector v1, HPVector v2) INLINE_CONST_FUNC;
 
 /* Distance between vectors */
-OOINLINE OOHPScalar HPdistance(HPVector v1, HPVector v2) INLINE_CONST_FUNC;
+inline OOHPScalar HPdistance(HPVector v1, HPVector v2) INLINE_CONST_FUNC;
 
 /* Dot product */
-OOINLINE OOHPScalar HPdot_product(HPVector first,
-                                  HPVector second) INLINE_CONST_FUNC;
+inline OOHPScalar HPdot_product(HPVector first,
+                                HPVector second) INLINE_CONST_FUNC;
 
 /* NORMALIZED cross product */
-OOINLINE HPVector HPcross_product(HPVector first,
-                                  HPVector second) INLINE_CONST_FUNC;
+inline HPVector HPcross_product(HPVector first,
+                                HPVector second) INLINE_CONST_FUNC;
 
 /* General cross product */
-OOINLINE HPVector HPtrue_cross_product(HPVector first,
-                                       HPVector second) CONST_FUNC;
+inline HPVector HPtrue_cross_product(HPVector first,
+                                     HPVector second) CONST_FUNC;
 
 /* Triple product */
-OOINLINE OOHPScalar HPtriple_product(HPVector first, HPVector second,
-                                     HPVector third) INLINE_CONST_FUNC;
+inline OOHPScalar HPtriple_product(HPVector first, HPVector second,
+                                   HPVector third) INLINE_CONST_FUNC;
 
 /* Given three points on a surface, returns the normal to the surface. */
-OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2,
-                                      HPVector v3) CONST_FUNC;
+inline HPVector HPnormal_to_surface(HPVector v1, HPVector v2,
+                                    HPVector v3) CONST_FUNC;
 
 #ifndef OO_PLAIN_CPP_UNIT
 #include <algorithm>
@@ -189,7 +189,7 @@ std::vector<double> ArrayFromHPVector(HPVector vector);  // { x, y, z }
 
 /*** Only inline definitions beyond this point ***/
 
-OOINLINE HPVector make_HPvector(OOHPScalar vx, OOHPScalar vy, OOHPScalar vz) {
+inline HPVector make_HPvector(OOHPScalar vx, OOHPScalar vy, OOHPScalar vz) {
   HPVector result;
   result.x = vx;
   result.y = vy;
@@ -197,14 +197,14 @@ OOINLINE HPVector make_HPvector(OOHPScalar vx, OOHPScalar vy, OOHPScalar vz) {
   return result;
 }
 
-OOINLINE HPVector2D MakeHPVector2D(OOHPScalar vx, OOHPScalar vy) {
+inline HPVector2D MakeHPVector2D(OOHPScalar vx, OOHPScalar vy) {
   HPVector2D result;
   result.x = vx;
   result.y = vy;
   return result;
 }
 
-OOINLINE HPVector vectorToHPVector(Vector v) {
+inline HPVector vectorToHPVector(Vector v) {
   HPVector result;
   result.x = static_cast<OOHPScalar>(v.x);
   result.y = static_cast<OOHPScalar>(v.y);
@@ -212,7 +212,7 @@ OOINLINE HPVector vectorToHPVector(Vector v) {
   return result;
 }
 
-OOINLINE Vector HPVectorToVector(HPVector v) {
+inline Vector HPVectorToVector(HPVector v) {
   Vector result;
   result.x = static_cast<OOScalar>(v.x);
   result.y = static_cast<OOScalar>(v.y);
@@ -220,7 +220,7 @@ OOINLINE Vector HPVectorToVector(HPVector v) {
   return result;
 }
 
-OOINLINE void HPscale_vector(HPVector* vec, OOHPScalar factor) {
+inline void HPscale_vector(HPVector* vec, OOHPScalar factor) {
   /*
           Clang static analyzer: reports an unintialized value here when called
           from the HUD's rescaling. This is blatantly wrong, as
@@ -233,7 +233,7 @@ OOINLINE void HPscale_vector(HPVector* vec, OOHPScalar factor) {
   vec->z *= factor;
 }
 
-OOINLINE HPVector HPvector_multiply_scalar(HPVector v, OOHPScalar s) {
+inline HPVector HPvector_multiply_scalar(HPVector v, OOHPScalar s) {
   /*
           Clang static analyzer: reports a garbage value here when called from
           OOMesh::rescaleByFactor(), apparently on baseless assumption that
@@ -247,7 +247,7 @@ OOINLINE HPVector HPvector_multiply_scalar(HPVector v, OOHPScalar s) {
   return r;
 }
 
-OOINLINE HPVector HPvector_add(HPVector a, HPVector b) {
+inline HPVector HPvector_add(HPVector a, HPVector b) {
   HPVector r;
   r.x = a.x + b.x;
   r.y = a.y + b.y;
@@ -255,17 +255,17 @@ OOINLINE HPVector HPvector_add(HPVector a, HPVector b) {
   return r;
 }
 
-OOINLINE HPVector OOHPVectorInterpolate(HPVector a, HPVector b,
-                                        OOHPScalar where) {
+inline HPVector OOHPVectorInterpolate(HPVector a, HPVector b,
+                                      OOHPScalar where) {
   return make_HPvector(OOLerpd(a.x, b.x, where), OOLerpd(a.y, b.y, where),
                        OOLerpd(a.z, b.z, where));
 }
 
-OOINLINE HPVector OOHPVectorTowards(HPVector a, HPVector b, OOHPScalar where) {
+inline HPVector OOHPVectorTowards(HPVector a, HPVector b, OOHPScalar where) {
   return make_HPvector(a.x + b.x * where, a.y + b.y * where, a.z + b.z * where);
 }
 
-OOINLINE HPVector HPvector_subtract(HPVector a, HPVector b) {
+inline HPVector HPvector_subtract(HPVector a, HPVector b) {
   HPVector r;
   r.x = a.x - b.x;
   r.y = a.y - b.y;
@@ -273,53 +273,51 @@ OOINLINE HPVector HPvector_subtract(HPVector a, HPVector b) {
   return r;
 }
 
-OOINLINE HPVector HPvector_flip(HPVector v) {
+inline HPVector HPvector_flip(HPVector v) {
   return HPvector_subtract(kZeroHPVector, v);
 }
 
-OOINLINE bool HPvector_equal(HPVector a, HPVector b) {
+inline bool HPvector_equal(HPVector a, HPVector b) {
   return a.x == b.x && a.y == b.y && a.z == b.z;
 }
 
-OOINLINE OOHPScalar HPmagnitude2(HPVector vec) {
+inline OOHPScalar HPmagnitude2(HPVector vec) {
   return vec.x * vec.x + vec.y * vec.y + vec.z * vec.z;
 }
 
-OOINLINE OOHPScalar HPmagnitude(HPVector vec) {
-  return sqrt(HPmagnitude2(vec));
-}
+inline OOHPScalar HPmagnitude(HPVector vec) { return sqrt(HPmagnitude2(vec)); }
 
-OOINLINE HPVector HPvector_normal_or_fallback(HPVector vec, HPVector fallback) {
+inline HPVector HPvector_normal_or_fallback(HPVector vec, HPVector fallback) {
   OOHPScalar mag2 = HPmagnitude2(vec);
   if (EXPECT_NOT(mag2 == 0.0)) return fallback;
   return HPvector_multiply_scalar(vec, 1.0 / sqrt(mag2));
 }
 
-OOINLINE HPVector HPvector_normal_or_xbasis(HPVector vec) {
+inline HPVector HPvector_normal_or_xbasis(HPVector vec) {
   return HPvector_normal_or_fallback(vec, kBasisXHPVector);
 }
 
-OOINLINE HPVector HPvector_normal_or_ybasis(HPVector vec) {
+inline HPVector HPvector_normal_or_ybasis(HPVector vec) {
   return HPvector_normal_or_fallback(vec, kBasisYHPVector);
 }
 
-OOINLINE HPVector HPvector_normal_or_zbasis(HPVector vec) {
+inline HPVector HPvector_normal_or_zbasis(HPVector vec) {
   return HPvector_normal_or_fallback(vec, kBasisZHPVector);
 }
 
-OOINLINE HPVector HPvector_normal(HPVector vec) {
+inline HPVector HPvector_normal(HPVector vec) {
   return HPvector_normal_or_fallback(vec, kZeroHPVector);
 }
 
-OOINLINE OOHPScalar HPdistance2(HPVector v1, HPVector v2) {
+inline OOHPScalar HPdistance2(HPVector v1, HPVector v2) {
   return HPmagnitude2(HPvector_subtract(v1, v2));
 }
 
-OOINLINE OOHPScalar HPdistance(HPVector v1, HPVector v2) {
+inline OOHPScalar HPdistance(HPVector v1, HPVector v2) {
   return HPmagnitude(HPvector_subtract(v1, v2));
 }
 
-OOINLINE HPVector HPtrue_cross_product(HPVector first, HPVector second) {
+inline HPVector HPtrue_cross_product(HPVector first, HPVector second) {
   HPVector result;
   result.x = (first.y * second.z) - (first.z * second.y);
   result.y = (first.z * second.x) - (first.x * second.z);
@@ -327,20 +325,20 @@ OOINLINE HPVector HPtrue_cross_product(HPVector first, HPVector second) {
   return result;
 }
 
-OOINLINE HPVector HPcross_product(HPVector first, HPVector second) {
+inline HPVector HPcross_product(HPVector first, HPVector second) {
   return HPvector_normal(HPtrue_cross_product(first, second));
 }
 
-OOINLINE OOHPScalar HPdot_product(HPVector a, HPVector b) {
+inline OOHPScalar HPdot_product(HPVector a, HPVector b) {
   return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
-OOINLINE OOHPScalar HPtriple_product(HPVector first, HPVector second,
-                                     HPVector third) {
+inline OOHPScalar HPtriple_product(HPVector first, HPVector second,
+                                   HPVector third) {
   return HPdot_product(first, HPtrue_cross_product(second, third));
 }
 
-OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2, HPVector v3) {
+inline HPVector HPnormal_to_surface(HPVector v1, HPVector v2, HPVector v3) {
   HPVector d0, d1;
   d0 = HPvector_subtract(v2, v1);
   d1 = HPvector_subtract(v3, v2);
