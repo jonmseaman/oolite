@@ -149,10 +149,12 @@ JSValue JSQuaternionWithQuaternion(JSContext* context, Quaternion quaternion) {
 
   // The object's private data, deleted by the class finaliser.
   std::unique_ptr<Quaternion> priv(new (std::nothrow) Quaternion(quaternion));
-  if (EXPECT_NOT(priv == nullptr)) return JS_ThrowOutOfMemory(context);
+  if (priv == nullptr) [[unlikely]]
+    return JS_ThrowOutOfMemory(context);
 
   JSValue result = JS_NewObjectClass(context, sQuaternionClassID);
-  if (EXPECT_NOT(JS_IsException(result))) return result;
+  if (JS_IsException(result)) [[unlikely]]
+    return result;
   JS_SetOpaque(result, priv.release());
 
   return result;
@@ -164,7 +166,7 @@ bool QuaternionToJSValue(JSContext* context, Quaternion quaternion,
   OOJS_PROFILE_SCOPE();
 
   JSValue object = JSQuaternionWithQuaternion(context, quaternion);
-  if (EXPECT_NOT(JS_IsException(object))) {
+  if (JS_IsException(object)) [[unlikely]] {
     *outValue = JS_UNDEFINED;
     return false;
   }
@@ -176,7 +178,8 @@ bool QuaternionToJSValue(JSContext* context, Quaternion quaternion,
 
 bool JSValueToQuaternion(JSContext* context, JSValueConst value,
                          Quaternion* outQuaternion) {
-  if (EXPECT_NOT(!JS_IsObject(value))) return false;
+  if (!JS_IsObject(value)) [[unlikely]]
+    return false;
 
   return JSObjectGetQuaternion(context, value, outQuaternion);
 }
@@ -199,20 +202,20 @@ bool JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj,
   double dVal;
 
   // quaternionObj can legitimately be null or a primitive.
-  if (EXPECT_NOT(!JS_IsObject(quaternionObj))) {
+  if (!JS_IsObject(quaternionObj)) [[unlikely]] {
     return false;
   }
 
   // If this is a (JS) Quaternion...
   priv =
       static_cast<Quaternion*>(JS_GetOpaque(quaternionObj, sQuaternionClassID));
-  if (EXPECT(priv != nullptr)) {
+  if (priv != nullptr) [[likely]] {
     *outQuaternion = *priv;
     return true;
   }
 
   // If it's an array...
-  if (EXPECT(JS_IsArray(quaternionObj))) {
+  if (JS_IsArray(quaternionObj)) [[likely]] {
     // ...and it has exactly four elements...
     if (JS_GetLength(context, quaternionObj, &arrayLength) == 0 &&
         arrayLength == 4) {
@@ -263,7 +266,7 @@ bool JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj,
 static bool GetThisQuaternion(JSContext* context, JSValueConst quaternionObj,
                               Quaternion* outQuaternion,
                               const std::string& method) {
-  if (EXPECT(JSObjectGetQuaternion(context, quaternionObj, outQuaternion)))
+  if (JSObjectGetQuaternion(context, quaternionObj, outQuaternion)) [[likely]]
     return true;
 
   OOJSReportBadArguments(context, "Quaternion", method, 1, &quaternionObj,
@@ -301,7 +304,8 @@ static bool QuaternionFromArgumentListNoErrorInternal(
 
   double w, x, y, z;
 
-  if (EXPECT_NOT(argc == 0)) return false;
+  if (argc == 0) [[unlikely]]
+    return false;
   assert(argv != nullptr && outQuaternion != nullptr);
 
   if (outConsumed != nullptr) *outConsumed = 0;
@@ -317,16 +321,17 @@ static bool QuaternionFromArgumentListNoErrorInternal(
   if (!permitNumberList) return false;
 
   // As a special case for QuaternionConstruct(), look for four numbers.
-  if (EXPECT_NOT(argc < 4)) return false;
+  if (argc < 4) [[unlikely]]
+    return false;
 
   // Given a string, JS_ToFloat64() succeeds but provides a NaN number.
-  if (EXPECT_NOT(JS_ToFloat64(context, &w, argv[0]) < 0 || isnan(w)))
+  if (JS_ToFloat64(context, &w, argv[0]) < 0 || isnan(w)) [[unlikely]]
     return false;
-  if (EXPECT_NOT(JS_ToFloat64(context, &x, argv[1]) < 0 || isnan(x)))
+  if (JS_ToFloat64(context, &x, argv[1]) < 0 || isnan(x)) [[unlikely]]
     return false;
-  if (EXPECT_NOT(JS_ToFloat64(context, &y, argv[2]) < 0 || isnan(y)))
+  if (JS_ToFloat64(context, &y, argv[2]) < 0 || isnan(y)) [[unlikely]]
     return false;
-  if (EXPECT_NOT(JS_ToFloat64(context, &z, argv[3]) < 0 || isnan(z)))
+  if (JS_ToFloat64(context, &z, argv[3]) < 0 || isnan(z)) [[unlikely]]
     return false;
 
   // We got our four numbers.
@@ -373,7 +378,7 @@ static JSValue QuaternionGetProperty(JSContext* context, JSValueConst thisObj,
   Quaternion quaternion;
   GLfloat fValue;  // Single precision, as in the SpiderMonkey version.
 
-  if (EXPECT_NOT(!JSObjectGetQuaternion(context, thisObj, &quaternion)))
+  if (!JSObjectGetQuaternion(context, thisObj, &quaternion)) [[unlikely]]
     return JS_UNDEFINED;
 
   switch (static_cast<QuaternionProperty>(magic)) {
@@ -412,9 +417,9 @@ static JSValue QuaternionSetProperty(JSContext* context, JSValueConst thisObj,
   Quaternion quaternion;
   double dval;
 
-  if (EXPECT_NOT(!JSObjectGetQuaternion(context, thisObj, &quaternion)))
+  if (!JSObjectGetQuaternion(context, thisObj, &quaternion)) [[unlikely]]
     return JS_UNDEFINED;
-  if (EXPECT_NOT(JS_ToFloat64(context, &dval, value) < 0)) {
+  if (JS_ToFloat64(context, &dval, value) < 0) [[unlikely]] {
     JS_FreeValue(context, JS_GetException(context));
     OOJSReportBadPropertyValue(context, thisObj, magic, sQuaternionProperties,
                                OOJS_COUNT(sQuaternionProperties), value);
@@ -465,8 +470,8 @@ static JSValue QuaternionConstruct(JSContext* context, JSValueConst newTarget,
   Quaternion quaternion = kIdentityQuaternion;
 
   if (argc != 0) {
-    if (EXPECT_NOT(!QuaternionFromArgumentListNoErrorInternal(
-            context, argc, argv, &quaternion, nullptr, true))) {
+    if (!QuaternionFromArgumentListNoErrorInternal(
+            context, argc, argv, &quaternion, nullptr, true)) [[unlikely]] {
       OOJSReportBadArguments(context, std::nullopt, std::nullopt, argc, argv,
                              "Could not construct quaternion from parameters",
                              "Quaternion, Entity or array of four numbers");
@@ -486,7 +491,7 @@ static JSValue QuaternionToString(OOJS_NATIVE_ARGS) {
 
   Quaternion thisq;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "toString")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &thisq, "toString")) [[unlikely]]
     return JS_EXCEPTION;
 
   OOJS_RETURN_PLIST(oo::PList(QuaternionDescription(thisq)));
@@ -500,7 +505,7 @@ static JSValue QuaternionToSource(OOJS_NATIVE_ARGS) {
 
   Quaternion thisq;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "toSource")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &thisq, "toSource")) [[unlikely]]
     return JS_EXCEPTION;
 
   OOJS_RETURN_PLIST(oo::PList(std::format("Quaternion({:g}, {:g}, {:g}, {:g})",
@@ -515,10 +520,10 @@ static JSValue QuaternionMultiply(OOJS_NATIVE_ARGS) {
 
   Quaternion thisq, thatq, result;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "multiply")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &thisq, "multiply")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!QuaternionFromArgumentList(context, "Quaternion", "multiply",
-                                             argc, OOJS_ARGV, &thatq, nullptr)))
+  if (!QuaternionFromArgumentList(context, "Quaternion", "multiply", argc,
+                                  OOJS_ARGV, &thatq, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = quaternion_multiply(thisq, thatq);
@@ -534,10 +539,10 @@ static JSValue QuaternionDot(OOJS_NATIVE_ARGS) {
   Quaternion thisq, thatq;
   OOScalar result;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "dot")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &thisq, "dot")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!QuaternionFromArgumentList(context, "Quaternion", "dot", argc,
-                                             OOJS_ARGV, &thatq, nullptr)))
+  if (!QuaternionFromArgumentList(context, "Quaternion", "dot", argc, OOJS_ARGV,
+                                  &thatq, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = quaternion_dot_product(thisq, thatq);
@@ -556,17 +561,17 @@ static JSValue QuaternionRotate(OOJS_NATIVE_ARGS) {
   int consumed;
   JSValueConst* argv = OOJS_ARGV;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "rotate")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &thisq, "rotate")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Quaternion", "rotate", argc,
-                                         argv, &axis, &consumed)))
+  if (!VectorFromArgumentList(context, "Quaternion", "rotate", argc, argv,
+                              &axis, &consumed)) [[unlikely]]
     return JS_EXCEPTION;
 
   argv += consumed;
   argc -= consumed;
   if (argc > 0) {
-    if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, "Quaternion", "rotate",
-                                              argc, argv, &angle, nullptr)))
+    if (!OOJSArgumentListGetNumber(context, "Quaternion", "rotate", argc, argv,
+                                   &angle, nullptr)) [[unlikely]]
       return JS_EXCEPTION;
     quaternion_rotate_about_axis(&thisq, HPVectorToVector(axis), angle);
   }
@@ -583,10 +588,10 @@ static JSValue QuaternionRotateX(OOJS_NATIVE_ARGS) {
   Quaternion quat;
   double angle;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateX")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateX")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, "Quaternion", "rotateX",
-                                            argc, OOJS_ARGV, &angle, nullptr)))
+  if (!OOJSArgumentListGetNumber(context, "Quaternion", "rotateX", argc,
+                                 OOJS_ARGV, &angle, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   quaternion_rotate_about_x(&quat, angle);
@@ -602,10 +607,10 @@ static JSValue QuaternionRotateY(OOJS_NATIVE_ARGS) {
   Quaternion quat;
   double angle;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateY")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateY")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, "Quaternion", "rotateY",
-                                            argc, OOJS_ARGV, &angle, nullptr)))
+  if (!OOJSArgumentListGetNumber(context, "Quaternion", "rotateY", argc,
+                                 OOJS_ARGV, &angle, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   quaternion_rotate_about_y(&quat, angle);
@@ -621,10 +626,10 @@ static JSValue QuaternionRotateZ(OOJS_NATIVE_ARGS) {
   Quaternion quat;
   double angle;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateZ")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateZ")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, "Quaternion", "rotateZ",
-                                            argc, OOJS_ARGV, &angle, nullptr)))
+  if (!OOJSArgumentListGetNumber(context, "Quaternion", "rotateZ", argc,
+                                 OOJS_ARGV, &angle, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   quaternion_rotate_about_z(&quat, angle);
@@ -639,7 +644,7 @@ static JSValue QuaternionNormalize(OOJS_NATIVE_ARGS) {
 
   Quaternion quat;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "normalize")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &quat, "normalize")) [[unlikely]]
     return JS_EXCEPTION;
 
   quaternion_normalize(&quat);
@@ -654,7 +659,7 @@ static JSValue QuaternionConjugate(OOJS_NATIVE_ARGS) {
 
   Quaternion quat, result;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "conjugate")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &quat, "conjugate")) [[unlikely]]
     return JS_EXCEPTION;
 
   result = quaternion_conjugate(quat);
@@ -670,8 +675,8 @@ static JSValue QuaternionVectorForward(OOJS_NATIVE_ARGS) {
   Quaternion thisq;
   Vector result;
 
-  if (EXPECT_NOT(
-          !GetThisQuaternion(context, OOJS_THIS, &thisq, "vectorForward")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &thisq, "vectorForward"))
+      [[unlikely]]
     return JS_EXCEPTION;
 
   result = vector_forward_from_quaternion(thisq);
@@ -687,7 +692,7 @@ static JSValue QuaternionVectorUp(OOJS_NATIVE_ARGS) {
   Quaternion thisq;
   Vector result;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "vectorUp")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &thisq, "vectorUp")) [[unlikely]]
     return JS_EXCEPTION;
 
   result = vector_up_from_quaternion(thisq);
@@ -703,7 +708,8 @@ static JSValue QuaternionVectorRight(OOJS_NATIVE_ARGS) {
   Quaternion thisq;
   Vector result;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "vectorRight")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &thisq, "vectorRight"))
+      [[unlikely]]
     return JS_EXCEPTION;
 
   result = vector_right_from_quaternion(thisq);
@@ -718,11 +724,12 @@ static JSValue QuaternionToArray(OOJS_NATIVE_ARGS) {
 
   Quaternion thisq;
 
-  if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "toArray")))
+  if (!GetThisQuaternion(context, OOJS_THIS, &thisq, "toArray")) [[unlikely]]
     return JS_EXCEPTION;
 
   JSValue result = JS_NewArray(context);
-  if (EXPECT_NOT(JS_IsException(result))) return result;
+  if (JS_IsException(result)) [[unlikely]]
+    return result;
 
   // JS_SetPropertyUint32() takes ownership of the element values.
   if (JS_SetPropertyUint32(context, result, 0,

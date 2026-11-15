@@ -363,12 +363,12 @@ bool OOJSScript::callMethod(JSAtom methodID, JSContext* context,
   bool OK = false;
 
   JSValue method = JS_GetProperty(context, _jsSelf, methodID);
-  if (EXPECT_NOT(JS_IsException(method))) {
+  if (JS_IsException(method)) [[unlikely]] {
     OOJSReportPendingException(context);
     return false;
   }
 
-  if (EXPECT(!JS_IsUndefined(method))) {
+  if (!JS_IsUndefined(method)) [[likely]] {
 #ifndef NDEBUG
     if (JS_HasException(context)) {
       OO_LOG("script.internalBug",

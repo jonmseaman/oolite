@@ -2219,7 +2219,7 @@ void Universe::populateSystemFromDictionariesWithSun(::OOSunEntity* sun,
   OOJSPopulatorDefinition* pdef = nullptr;
   for (const oo::PList& populator : sortedBlocks) {
     deterministic_population = populator.get<bool>("deterministic", false);
-    if (EXPECT_NOT(sun == nullptr || planet == nullptr)) {
+    if (sun == nullptr || planet == nullptr) [[unlikely]] {
       // needs to be a non-nova system, and not interstellar space
       deterministic_population = false;
     }
@@ -5387,8 +5387,8 @@ void Universe::drawUniverse() {
 
         OOGLLookAt(view_dir, kZeroVector, view_up);
 
-        if (EXPECT(!displayGUI || demoShipMode)) {
-          if (EXPECT(!demoShipMode)) {
+        if (!displayGUI || demoShipMode) [[likely]] {
+          if (!demoShipMode) [[likely]] {
             // we're in flight
             // rotate the view
             OOGLMultModelView(
@@ -5462,7 +5462,7 @@ void Universe::drawUniverse() {
               OOGL(glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_no));
 
               OOGLPushModelView();
-              if (EXPECT(drawthing != player)) {
+              if (drawthing != player) [[likely]] {
                 // translate the object
                 //  HPVect: camera relative
                 drawthing->updateCameraRelativePosition();
@@ -5517,7 +5517,7 @@ void Universe::drawUniverse() {
                   demoShipMode)) {
               // either in flight or in demo ship mode
               OOGLPushModelView();
-              if (EXPECT(drawthing != player)) {
+              if (drawthing != player) [[likely]] {
                 // translate the object
                 //  HPVect: camera relative positions
                 drawthing->updateCameraRelativePosition();
@@ -5576,7 +5576,7 @@ void Universe::drawUniverse() {
       OOGLFrustum(-0.5, 0.5, -aspect * 0.5, aspect * 0.5, 1.0, MAX_CLEAR_DEPTH);
       OOSetOpenGLState(
           OOOpenGLStateID::kOverlay);  // FIXME: should be redundant.
-      if (EXPECT(!displayGUI)) {
+      if (!displayGUI) [[likely]] {
         if (!bpHide && cachedSun) {
           if (cachedSun != nullptr) cachedSun->drawDirectVisionSunGlare();
           if (cachedSun != nullptr) cachedSun->drawStarGlare();
@@ -6018,7 +6018,7 @@ void Universe::removeAllEntitiesExceptPlayer() {
     Entity* ent = entities[1].get();
     if (ent->isStation)  // clear out queues
       if (oo::ToStation(ent) != nullptr) oo::ToStation(ent)->clear();
-    if (EXPECT(!ent->getIsVisualEffect())) {
+    if (!ent->getIsVisualEffect()) [[likely]] {
       removeEntity(ent);
     } else {
       // this will ensure the effectRemoved script event will run
@@ -7011,9 +7011,9 @@ void Universe::setViewDirection(OOViewID vd) {
     bool gamePaused = false;
 #endif
     // view notifications for when the player switches to/from gui!
-    // if (EXPECT(viewDirection == OOViewID::kGUIDisplay || vd ==
-    // OOViewID::kGUIDisplay )) [PLAYER noteViewDidChangeFrom:viewDirection
-    // toView:vd];
+    // if (viewDirection == OOViewID::kGUIDisplay || vd ==
+    // OOViewID::kGUIDisplay ) [[likely]] [PLAYER
+    // noteViewDidChangeFrom:viewDirection toView:vd];
     viewDirection = vd;
     if (ms.has_value() && !gamePaused) {
       addMessage(ms, 3);
@@ -7362,8 +7362,8 @@ void Universe::showGUIMessage(const std::optional<std::string>& text,
 }
 
 void Universe::repopulateSystem() {
-  if (EXPECT_NOT((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
-                 OOEntityStatus::kStartGame)) {
+  if ((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
+      OOEntityStatus::kStartGame) [[unlikely]] {
     return;  // no need to be adding ships as this is not a "real" game
   }
   JSContext* context = OOJSAcquireContext();
@@ -7382,7 +7382,7 @@ void Universe::update(OOTimeDelta inDeltaT) {
   volatile OOTimeDelta delta_t = inDeltaT * getTimeAccelerationFactor();
   std::size_t sessionID = _sessionID;
   OO_LOG("universe.profile.update", "{}", "Begin update");
-  if (EXPECT(!no_update)) {
+  if (!no_update) [[likely]] {
     next_repopulation -= delta_t;
     if (next_repopulation < 0) {
       repopulateSystem();
@@ -7416,10 +7416,9 @@ void Universe::update(OOTimeDelta inDeltaT) {
       time_delta = delta_t;
       universal_time += delta_t;
 
-      if (EXPECT_NOT(
-              (player != nullptr ? player->getShowDemoShips() : false) &&
-              (player != nullptr ? player->guiScreen() : OOGUIScreenID{}) ==
-                  OOGUIScreenID::kShipLibrary)) {
+      if ((player != nullptr ? player->getShowDemoShips() : false) &&
+          (player != nullptr ? player->guiScreen() : OOGUIScreenID{}) ==
+              OOGUIScreenID::kShipLibrary) [[unlikely]] {
         update_stage = "demo management";
 
         if (universal_time >= demo_stage_time) {
@@ -7543,16 +7542,16 @@ void Universe::update(OOTimeDelta inDeltaT) {
 #endif
         // Game Over code depends on regular delta_t updates to the dead player
         // entity. Ignore the player entity, even when dead.
-        if (EXPECT_NOT(oo::EntityStatus(thing) == OOEntityStatus::kDead &&
-                       oo::FindHold(entitiesDeadThisUpdate, thing) ==
-                           entitiesDeadThisUpdate.end() &&
-                       !oo::EntityIsPlayer(thing))) {
+        if (oo::EntityStatus(thing) == OOEntityStatus::kDead &&
+            oo::FindHold(entitiesDeadThisUpdate, thing) ==
+                entitiesDeadThisUpdate.end() &&
+            !oo::EntityIsPlayer(thing)) [[unlikely]] {
           AddIfAbsent(zombies, thing);
           continue;
         }
 
         thing->update(delta_t);
-        if (EXPECT_NOT(sessionID != _sessionID)) {
+        if (sessionID != _sessionID) [[unlikely]] {
           // Game was reset (in player update); end this update: cycle.
           break;
         }

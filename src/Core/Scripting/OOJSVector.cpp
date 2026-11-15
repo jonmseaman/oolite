@@ -181,10 +181,12 @@ JSValue JSVectorWithHPVector(JSContext* context, HPVector vector) {
 
   // The object's private data, deleted by the class finaliser.
   std::unique_ptr<HPVector> priv(new (std::nothrow) HPVector(vector));
-  if (EXPECT_NOT(priv == nullptr)) return JS_ThrowOutOfMemory(context);
+  if (priv == nullptr) [[unlikely]]
+    return JS_ThrowOutOfMemory(context);
 
   JSValue result = JS_NewObjectClass(context, sVectorClassID);
-  if (EXPECT_NOT(JS_IsException(result))) return result;
+  if (JS_IsException(result)) [[unlikely]]
+    return result;
   JS_SetOpaque(result, priv.release());
 
   return result;
@@ -195,7 +197,7 @@ bool HPVectorToJSValue(JSContext* context, HPVector vector, JSValue* outValue) {
   OOJS_PROFILE_SCOPE();
 
   JSValue object = JSVectorWithHPVector(context, vector);
-  if (EXPECT_NOT(JS_IsException(object))) {
+  if (JS_IsException(object)) [[unlikely]] {
     *outValue = JS_UNDEFINED;
     return false;
   }
@@ -212,14 +214,16 @@ bool NSPointToVectorJSValue(JSContext* context, NSPoint point,
 
 bool JSValueToHPVector(JSContext* context, JSValueConst value,
                        HPVector* outVector) {
-  if (EXPECT_NOT(!JS_IsObject(value))) return false;
+  if (!JS_IsObject(value)) [[unlikely]]
+    return false;
 
   return JSObjectGetVector(context, value, outVector);
 }
 
 bool JSValueToVector(JSContext* context, JSValueConst value,
                      Vector* outVector) {
-  if (EXPECT_NOT(!JS_IsObject(value))) return false;
+  if (!JS_IsObject(value)) [[unlikely]]
+    return false;
   HPVector tmp = kZeroHPVector;
   bool result = JSObjectGetVector(context, value, &tmp);
   *outVector = HPVectorToVector(tmp);
@@ -246,19 +250,19 @@ bool JSObjectGetVector(JSContext* context, JSValueConst vectorObj,
   double x, y, z;
 
   // vectorObj can legitimately be null or a primitive.
-  if (EXPECT_NOT(!JS_IsObject(vectorObj))) {
+  if (!JS_IsObject(vectorObj)) [[unlikely]] {
     return false;
   }
 
   // If this is a (JS) Vector...
   priv = static_cast<HPVector*>(JS_GetOpaque(vectorObj, sVectorClassID));
-  if (EXPECT(priv != nullptr)) {
+  if (priv != nullptr) [[likely]] {
     *outVector = *priv;
     return true;
   }
 
   // If it's an array...
-  if (EXPECT(JS_IsArray(vectorObj))) {
+  if (JS_IsArray(vectorObj)) [[likely]] {
     // ...and it has exactly three elements...
     if (JS_GetLength(context, vectorObj, &arrayLength) == 0 &&
         arrayLength == 3) {
@@ -300,7 +304,8 @@ bool JSObjectGetVector(JSContext* context, JSValueConst vectorObj,
 
 static bool GetThisVector(JSContext* context, JSValueConst vectorObj,
                           HPVector* outVector, const std::string& method) {
-  if (EXPECT(JSObjectGetVector(context, vectorObj, outVector))) return true;
+  if (JSObjectGetVector(context, vectorObj, outVector)) [[likely]]
+    return true;
 
   OOJSReportBadArguments(context, "Vector3D", method, 1, &vectorObj,
                          "Invalid target object", "Vector3D");
@@ -318,7 +323,8 @@ bool JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj,
 
   HPVector* priv = nullptr;
 
-  if (EXPECT_NOT(!JS_IsObject(vectorObj))) return false;
+  if (!JS_IsObject(vectorObj)) [[unlikely]]
+    return false;
 
   priv = static_cast<HPVector*>(JS_GetOpaque(vectorObj, sVectorClassID));
   if (priv != nullptr) {
@@ -345,7 +351,8 @@ static bool VectorFromArgumentListNoErrorInternal(JSContext* context, int argc,
 
   double x, y, z;
 
-  if (EXPECT_NOT(argc == 0)) return false;
+  if (argc == 0) [[unlikely]]
+    return false;
   assert(argv != nullptr && outVector != nullptr);
 
   if (outConsumed != nullptr) *outConsumed = 0;
@@ -364,11 +371,11 @@ static bool VectorFromArgumentListNoErrorInternal(JSContext* context, int argc,
   if (argc < 3) return false;
 
   // Given a string, JS_ToFloat64() succeeds but provides a NaN number.
-  if (EXPECT_NOT(JS_ToFloat64(context, &x, argv[0]) < 0 || isnan(x)))
+  if (JS_ToFloat64(context, &x, argv[0]) < 0 || isnan(x)) [[unlikely]]
     return false;
-  if (EXPECT_NOT(JS_ToFloat64(context, &y, argv[1]) < 0 || isnan(y)))
+  if (JS_ToFloat64(context, &y, argv[1]) < 0 || isnan(y)) [[unlikely]]
     return false;
-  if (EXPECT_NOT(JS_ToFloat64(context, &z, argv[2]) < 0 || isnan(z)))
+  if (JS_ToFloat64(context, &z, argv[2]) < 0 || isnan(z)) [[unlikely]]
     return false;
 
   // We got our three numbers.
@@ -413,7 +420,7 @@ static JSValue VectorGetProperty(JSContext* context, JSValueConst thisObj,
   HPVector vector;
   OOHPScalar fValue;
 
-  if (EXPECT_NOT(!JSObjectGetVector(context, thisObj, &vector)))
+  if (!JSObjectGetVector(context, thisObj, &vector)) [[unlikely]]
     return JS_UNDEFINED;
 
   switch (static_cast<VectorProperty>(magic)) {
@@ -447,9 +454,9 @@ static JSValue VectorSetProperty(JSContext* context, JSValueConst thisObj,
   HPVector vector;
   double dval;
 
-  if (EXPECT_NOT(!JSObjectGetVector(context, thisObj, &vector)))
+  if (!JSObjectGetVector(context, thisObj, &vector)) [[unlikely]]
     return JS_UNDEFINED;
-  if (EXPECT_NOT(JS_ToFloat64(context, &dval, value) < 0)) {
+  if (JS_ToFloat64(context, &dval, value) < 0) [[unlikely]] {
     JS_FreeValue(context, JS_GetException(context));
     OOJSReportBadPropertyValue(context, thisObj, magic, sVectorProperties,
                                OOJS_COUNT(sVectorProperties), value);
@@ -495,8 +502,8 @@ static JSValue VectorConstruct(JSContext* context, JSValueConst newTarget,
   HPVector vector = kZeroHPVector;
 
   if (argc != 0) {
-    if (EXPECT_NOT(!VectorFromArgumentListNoErrorInternal(
-            context, argc, argv, &vector, nullptr, true))) {
+    if (!VectorFromArgumentListNoErrorInternal(context, argc, argv, &vector,
+                                               nullptr, true)) [[unlikely]] {
       OOJSReportBadArguments(context, std::nullopt, std::nullopt, argc, argv,
                              "Could not construct vector from parameters",
                              "Vector, Entity or array of three numbers");
@@ -516,7 +523,7 @@ static JSValue VectorToString(OOJS_NATIVE_ARGS) {
 
   HPVector thisv;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "toString")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "toString")) [[unlikely]]
     return JS_EXCEPTION;
 
   OOJS_RETURN_PLIST(oo::PList(HPVectorDescription(thisv)));
@@ -530,7 +537,7 @@ static JSValue VectorToSource(OOJS_NATIVE_ARGS) {
 
   HPVector thisv;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "toSource")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "toSource")) [[unlikely]]
     return JS_EXCEPTION;
 
   OOJS_RETURN_PLIST(oo::PList(
@@ -545,10 +552,10 @@ static JSValue VectorAdd(OOJS_NATIVE_ARGS) {
 
   HPVector thisv, thatv, result;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "add")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "add")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "add", argc,
-                                         OOJS_ARGV, &thatv, nullptr)))
+  if (!VectorFromArgumentList(context, "Vector3D", "add", argc, OOJS_ARGV,
+                              &thatv, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPvector_add(thisv, thatv);
@@ -563,10 +570,10 @@ static JSValue VectorSubtract(OOJS_NATIVE_ARGS) {
 
   HPVector thisv, thatv, result;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "subtract")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "subtract")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "subtract", argc,
-                                         OOJS_ARGV, &thatv, nullptr)))
+  if (!VectorFromArgumentList(context, "Vector3D", "subtract", argc, OOJS_ARGV,
+                              &thatv, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPvector_subtract(thisv, thatv);
@@ -582,10 +589,10 @@ static JSValue VectorDistanceTo(OOJS_NATIVE_ARGS) {
   HPVector thisv, thatv;
   double result;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "distanceTo")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "distanceTo")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "distanceTo",
-                                         argc, OOJS_ARGV, &thatv, nullptr)))
+  if (!VectorFromArgumentList(context, "Vector3D", "distanceTo", argc,
+                              OOJS_ARGV, &thatv, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPdistance(thisv, thatv);
@@ -601,12 +608,11 @@ static JSValue VectorSquaredDistanceTo(OOJS_NATIVE_ARGS) {
   HPVector thisv, thatv;
   double result;
 
-  if (EXPECT_NOT(
-          !GetThisVector(context, OOJS_THIS, &thisv, "squaredDistanceTo")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "squaredDistanceTo"))
+      [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D",
-                                         "squaredDistanceTo", argc, OOJS_ARGV,
-                                         &thatv, nullptr)))
+  if (!VectorFromArgumentList(context, "Vector3D", "squaredDistanceTo", argc,
+                              OOJS_ARGV, &thatv, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPdistance2(thisv, thatv);
@@ -622,10 +628,10 @@ static JSValue VectorMultiply(OOJS_NATIVE_ARGS) {
   HPVector thisv, result;
   double scalar;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "multiply")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "multiply")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, "Vector3D", "multiply",
-                                            argc, OOJS_ARGV, &scalar, nullptr)))
+  if (!OOJSArgumentListGetNumber(context, "Vector3D", "multiply", argc,
+                                 OOJS_ARGV, &scalar, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPvector_multiply_scalar(thisv, scalar);
@@ -641,10 +647,10 @@ static JSValue VectorDot(OOJS_NATIVE_ARGS) {
   HPVector thisv, thatv;
   double result;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "dot")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "dot")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "dot", argc,
-                                         OOJS_ARGV, &thatv, nullptr)))
+  if (!VectorFromArgumentList(context, "Vector3D", "dot", argc, OOJS_ARGV,
+                              &thatv, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPdot_product(thisv, thatv);
@@ -660,10 +666,10 @@ static JSValue VectorAngleTo(OOJS_NATIVE_ARGS) {
   HPVector thisv, thatv;
   double result;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "angleTo")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "angleTo")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "angleTo", argc,
-                                         OOJS_ARGV, &thatv, nullptr)))
+  if (!VectorFromArgumentList(context, "Vector3D", "angleTo", argc, OOJS_ARGV,
+                              &thatv, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPdot_product(HPvector_normal(thisv), HPvector_normal(thatv));
@@ -683,10 +689,10 @@ static JSValue VectorCross(OOJS_NATIVE_ARGS) {
 
   HPVector thisv, thatv, result;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "cross")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "cross")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "cross", argc,
-                                         OOJS_ARGV, &thatv, nullptr)))
+  if (!VectorFromArgumentList(context, "Vector3D", "cross", argc, OOJS_ARGV,
+                              &thatv, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPtrue_cross_product(thisv, thatv);
@@ -704,15 +710,15 @@ static JSValue VectorTripleProduct(OOJS_NATIVE_ARGS) {
   int consumed;
   JSValueConst* argv = OOJS_ARGV;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "tripleProduct")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "tripleProduct")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "tripleProduct",
-                                         argc, argv, &thatv, &consumed)))
+  if (!VectorFromArgumentList(context, "Vector3D", "tripleProduct", argc, argv,
+                              &thatv, &consumed)) [[unlikely]]
     return JS_EXCEPTION;
   argc -= consumed;
   argv += consumed;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "tripleProduct",
-                                         argc, argv, &theotherv, nullptr)))
+  if (!VectorFromArgumentList(context, "Vector3D", "tripleProduct", argc, argv,
+                              &theotherv, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPtriple_product(thisv, thatv, theotherv);
@@ -727,7 +733,7 @@ static JSValue VectorDirection(OOJS_NATIVE_ARGS) {
 
   HPVector thisv, result;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "direction")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "direction")) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPvector_normal(thisv);
@@ -743,7 +749,7 @@ static JSValue VectorMagnitude(OOJS_NATIVE_ARGS) {
   HPVector thisv;
   double result;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "magnitude")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "magnitude")) [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPmagnitude(thisv);
@@ -759,8 +765,8 @@ static JSValue VectorSquaredMagnitude(OOJS_NATIVE_ARGS) {
   HPVector thisv;
   double result;
 
-  if (EXPECT_NOT(
-          !GetThisVector(context, OOJS_THIS, &thisv, "squaredMagnitude")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "squaredMagnitude"))
+      [[unlikely]]
     return JS_EXCEPTION;
 
   result = HPmagnitude2(thisv);
@@ -780,18 +786,18 @@ static JSValue VectorRotationTo(OOJS_NATIVE_ARGS) {
   int consumed;
   JSValueConst* argv = OOJS_ARGV;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "rotationTo")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "rotationTo")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "rotationTo",
-                                         argc, OOJS_ARGV, &thatv, &consumed)))
+  if (!VectorFromArgumentList(context, "Vector3D", "rotationTo", argc,
+                              OOJS_ARGV, &thatv, &consumed)) [[unlikely]]
     return JS_EXCEPTION;
 
   argc -= consumed;
   argv += consumed;
   if (argc != 0) {
     // limit parameter is optional.
-    if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, "Vector3D", "rotationTo",
-                                              argc, argv, &limit, nullptr)))
+    if (!OOJSArgumentListGetNumber(context, "Vector3D", "rotationTo", argc,
+                                   argv, &limit, nullptr)) [[unlikely]]
       return JS_EXCEPTION;
     gotLimit = true;
   } else {
@@ -816,10 +822,10 @@ static JSValue VectorRotateBy(OOJS_NATIVE_ARGS) {
   HPVector thisv, result;
   Quaternion q;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "rotateBy")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "rotateBy")) [[unlikely]]
     return JS_EXCEPTION;
-  if (EXPECT_NOT(!QuaternionFromArgumentList(context, "Vector3D", "rotateBy",
-                                             argc, OOJS_ARGV, &q, nullptr)))
+  if (!QuaternionFromArgumentList(context, "Vector3D", "rotateBy", argc,
+                                  OOJS_ARGV, &q, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = quaternion_rotate_HPvector(q, thisv);
@@ -834,11 +840,12 @@ static JSValue VectorToArray(OOJS_NATIVE_ARGS) {
 
   HPVector thisv;
 
-  if (EXPECT_NOT(!GetThisVector(context, OOJS_THIS, &thisv, "toArray")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "toArray")) [[unlikely]]
     return JS_EXCEPTION;
 
   JSValue result = JS_NewArray(context);
-  if (EXPECT_NOT(JS_IsException(result))) return result;
+  if (JS_IsException(result)) [[unlikely]]
+    return result;
 
   // JS_SetPropertyUint32() takes ownership of the element values.
   if (JS_SetPropertyUint32(context, result, 0,
@@ -869,21 +876,24 @@ static JSValue VectorStaticInterpolate(OOJS_NATIVE_ARGS) {
   JSValueConst* argv = OOJS_ARGV;
   JSValueConst* inArgv = argv;
 
-  if (EXPECT_NOT(argc < 3)) goto INSUFFICIENT_ARGUMENTS;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "interpolate",
-                                         argc, argv, &av, &consumed)))
+  if (argc < 3) [[unlikely]]
+    goto INSUFFICIENT_ARGUMENTS;
+  if (!VectorFromArgumentList(context, "Vector3D", "interpolate", argc, argv,
+                              &av, &consumed)) [[unlikely]]
     return JS_EXCEPTION;
   argc -= consumed;
   argv += consumed;
-  if (EXPECT_NOT(argc < 2)) goto INSUFFICIENT_ARGUMENTS;
-  if (EXPECT_NOT(!VectorFromArgumentList(context, "Vector3D", "interpolate",
-                                         argc, argv, &bv, &consumed)))
+  if (argc < 2) [[unlikely]]
+    goto INSUFFICIENT_ARGUMENTS;
+  if (!VectorFromArgumentList(context, "Vector3D", "interpolate", argc, argv,
+                              &bv, &consumed)) [[unlikely]]
     return JS_EXCEPTION;
   argc -= consumed;
   argv += consumed;
-  if (EXPECT_NOT(argc < 1)) goto INSUFFICIENT_ARGUMENTS;
-  if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, "Vector3D", "interpolate",
-                                            argc, argv, &interp, nullptr)))
+  if (argc < 1) [[unlikely]]
+    goto INSUFFICIENT_ARGUMENTS;
+  if (!OOJSArgumentListGetNumber(context, "Vector3D", "interpolate", argc, argv,
+                                 &interp, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
   result = OOHPVectorInterpolate(av, bv, interp);
@@ -949,12 +959,12 @@ static JSValue VectorToCoordinateSystem(OOJS_NATIVE_ARGS) {
   std::optional<std::string> coordScheme;
   HPVector result;
 
-  if (EXPECT_NOT(
-          !GetThisVector(context, OOJS_THIS, &thisv, "toCoordinateSystem")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "toCoordinateSystem"))
+      [[unlikely]]
     return JS_EXCEPTION;
 
   if (argc > 0) coordScheme = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!coordScheme.has_value())) {
+  if (!coordScheme.has_value()) [[unlikely]] {
     OOJSReportBadArguments(context, "Vector3D", "toCoordinateSystem",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "coordinate system");
@@ -980,12 +990,12 @@ static JSValue VectorFromCoordinateSystem(OOJS_NATIVE_ARGS) {
   std::optional<std::string> coordScheme;
   HPVector result;
 
-  if (EXPECT_NOT(
-          !GetThisVector(context, OOJS_THIS, &thisv, "fromCoordinateSystem")))
+  if (!GetThisVector(context, OOJS_THIS, &thisv, "fromCoordinateSystem"))
+      [[unlikely]]
     return JS_EXCEPTION;
 
   if (argc > 0) coordScheme = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!coordScheme.has_value())) {
+  if (!coordScheme.has_value()) [[unlikely]] {
     OOJSReportBadArguments(context, "Vector3D", "fromCoordinateSystem",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "coordinate system");

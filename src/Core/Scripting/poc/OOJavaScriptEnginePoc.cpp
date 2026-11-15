@@ -262,7 +262,7 @@ static JSValue GlobalLog(OOJS_NATIVE_ARGS) {
   std::string message;
   std::string messageClass;
 
-  if (EXPECT_NOT(argc < 1)) {
+  if (argc < 1) [[unlikely]] {
     OOJS_RETURN_VOID;
   }
   if (argc < 2) {
@@ -342,7 +342,8 @@ void OOJSResumeTimeLimiter(void) {
         non-zero throws an uncatchable error, which unwinds all JS frames.
 */
 static int InterruptHandler(JSRuntime* /*runtime*/, void* /*opaque*/) {
-  if (EXPECT(sLimiterStartDepth == 0 || sLimiterPauseDepth > 0)) return 0;
+  if (sLimiterStartDepth == 0 || sLimiterPauseDepth > 0) [[likely]]
+    return 0;
 
   double elapsed = MonotonicTime() - sLimiterStart;
   if (elapsed <= sLimiterTimeLimit) return 0;
@@ -624,8 +625,8 @@ bool OOJSArgumentListGetNumberNoError(JSContext* context, int argc,
                      outNumber != NULL);
 
   // Get value, if possible.
-  if (EXPECT_NOT(argc < 1 || JS_ToFloat64(context, &value, argv[0]) < 0 ||
-                 std::isnan(value))) {
+  if (argc < 1 || JS_ToFloat64(context, &value, argv[0]) < 0 ||
+      std::isnan(value)) [[unlikely]] {
     // ToNumber can throw (e.g. for a Symbol); this variant must not leave an
     // exception pending.
     if (JS_HasException(context))
@@ -661,7 +662,7 @@ std::optional<std::string> OOStringFromJSValueEvenIfNull(JSContext* context,
 
 std::optional<std::string> OOStringFromJSValue(JSContext* context,
                                                JSValueConst value) {
-  if (EXPECT(!JS_IsNull(value) && !JS_IsUndefined(value))) {
+  if (!JS_IsNull(value) && !JS_IsUndefined(value)) [[likely]] {
     return OOStringFromJSValueEvenIfNull(context, value);
   }
   return std::nullopt;
@@ -693,9 +694,9 @@ static JSValue JSArrayValueFromPList(JSContext* context,
   for (const oo::PList& element : array) {
     if (element.isNull()) continue;
     // JS_SetPropertyUint32() takes ownership of the value.
-    if (EXPECT_NOT(JS_SetPropertyUint32(context, result, i,
-                                        OOJSValueFromPList(context, element)) <
-                   0)) {
+    if (JS_SetPropertyUint32(context, result, i,
+                             OOJSValueFromPList(context, element)) < 0)
+        [[unlikely]] {
       JS_FreeValue(context, JS_GetException(context));
       JS_FreeValue(context, result);
       return JS_UNDEFINED;
@@ -721,8 +722,8 @@ static JSValue JSObjectValueFromPList(JSContext* context,
     JSValue elementValue = OOJSValueFromPList(context, element);
     if (JS_IsUndefined(elementValue)) continue;
     // JS_SetProperty() takes ownership of the value.
-    if (EXPECT_NOT(JS_SetProperty(context, result, OOJSIDFromString(key),
-                                  elementValue) < 0)) {
+    if (JS_SetProperty(context, result, OOJSIDFromString(key), elementValue) <
+        0) [[unlikely]] {
       JS_FreeValue(context, JS_GetException(context));
       JS_FreeValue(context, result);
       return JS_UNDEFINED;

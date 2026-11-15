@@ -124,10 +124,10 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
   // witchspace/docked at a station!
   ::ShipEntity* ship = oo::ToShip(owner());
   // also don't draw if the ship isn't visible
-  if (EXPECT_NOT(
-          ship == nullptr || !(ship != nullptr ? ship->isVisible() : false) ||
-          ((ship != nullptr ? ship->getIsPlayer() : false) &&
-           (ship != nullptr ? ship->suppressFlightNotifications() : false))))
+  if (ship == nullptr || !(ship != nullptr ? ship->isVisible() : false) ||
+      ((ship != nullptr ? ship->getIsPlayer() : false) &&
+       (ship != nullptr ? ship->suppressFlightNotifications() : false)))
+      [[unlikely]]
     return;
 
   OOTimeAbsolute now = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
@@ -163,7 +163,8 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
 
   GLfloat speed = (ship != nullptr ? ship->speedFactor() : 0.0f);
   // don't draw if not moving.
-  if (EXPECT_NOT(speed <= 0.001f)) return;
+  if (speed <= 0.001f) [[unlikely]]
+    return;
 
   GLfloat hyper_fade = 8.0f / (8.0f + speed * speed * speed);
 

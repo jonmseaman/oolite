@@ -677,14 +677,14 @@ std::shared_ptr<OOPlanetEntity> OOPlanetEntity::miniatureVersion() {
 void OOPlanetEntity::update(OOTimeDelta delta_t) {
   Entity::update(delta_t);
 
-  if (EXPECT(!_miniature)) {
+  if (!_miniature) [[likely]] {
     bool canDrawShaderAtmosphere =
         _atmosphereShaderDrawable != nullptr &&
         (UNIVERSE != nullptr
              ? UNIVERSE->getDetailLevel()
              : OOGraphicsDetail{}) >= OOGraphicsDetail::kShaders;
-    if (EXPECT_NOT(_atmosphereDrawable != nullptr &&
-                   cam_zero_distance < _mesopause2)) {
+    if (_atmosphereDrawable != nullptr && cam_zero_distance < _mesopause2)
+        [[unlikely]] {
       OOCAssert(_airColor != nullptr,
                 "Expected a non-nil air colour for normal planet. Exiting.");
       double alt = (sqrt(cam_zero_distance) - collision_radius) /
@@ -697,7 +697,7 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
       // altitude is kept to a minimum positive value to avoid sudden black
       // skies
       if (alt <= 0.0) alt = 1e-4;
-      if (EXPECT_NOT(alt > 0 && alt <= 1.0)) {
+      if (alt > 0 && alt <= 1.0) [[unlikely]] {
         // ensure aleph is clamped between 0 and 1
         double aleph = 1.0 - alt;
         double aleph2 = aleph * aleph;
@@ -705,7 +705,7 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
         // night sky, reddish flash on entering the atmosphere, low light
         // pollution otherwhise
         std::shared_ptr<OOColor> mixColor = OOColor::colorWithRed(
-            (EXPECT_NOT(alt > 0.98) ? 30.0f : 0.1f), 0.1f, 0.1f, aleph);
+            ((alt > 0.98) ? 30.0f : 0.1f), 0.1f, 0.1f, aleph);
 
         // occlusion rate: .9 is 18 degrees after the terminus, where twilight
         // ends. 1 is the terminus, 1.033 is 6 degrees before the terminus,
@@ -714,7 +714,7 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
             ((PLAYER != nullptr ? PLAYER->occlusionLevel() : 0.0f) - 0.97) /
             0.06;  // from 0.97 to 1.03
 
-        if (EXPECT(rate <= 1.0 && rate > 0.0)) {
+        if (rate <= 1.0 && rate > 0.0) [[likely]] {
           mixColor = mixColor->blendedColorWithFraction(rate, _airColor.get());
           // TODO: properly calculated pink sky - needs to depend on sun's
           // angular size, and its angular height on the horizon.
@@ -752,9 +752,8 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
       }
     } else {
       // No atmosphere: [nil radius] was 0, and the messages to nil did nothing.
-      if (EXPECT_NOT(
-              (_atmosphereDrawable ? _atmosphereDrawable->radius() : 0.0f) <
-              collision_radius + ATMOSPHERE_DEPTH)) {
+      if ((_atmosphereDrawable ? _atmosphereDrawable->radius() : 0.0f) <
+          collision_radius + ATMOSPHERE_DEPTH) [[unlikely]] {
         if (_atmosphereDrawable)
           _atmosphereDrawable->setRadius(collision_radius + ATMOSPHERE_DEPTH);
         if (_cloudsShaderDrawable)

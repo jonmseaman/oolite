@@ -227,7 +227,7 @@ static JSValue GlobalLog(OOJS_NATIVE_ARGS) {
   std::optional<std::string> message;
   std::string messageClass;
 
-  if (EXPECT_NOT(argc < 1)) {
+  if (argc < 1) [[unlikely]] {
     OOJS_RETURN_VOID;
   }
   if (argc < 2) {
@@ -425,14 +425,14 @@ static JSValue GlobalClearExtraGuiScreenKeys(OOJS_NATIVE_ARGS) {
   bool result = false;
   PlayerEntity* player = OOPlayerForScripting();
 
-  if (EXPECT_NOT(argc < 2)) {
+  if (argc < 2) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "setExtraGuiScreenKeys", 0,
                            OOJS_ARGV, std::nullopt, "missing arguments");
     return JS_EXCEPTION;
   }
 
   std::optional<std::string> key = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!key.has_value() || key->empty())) {
+  if (!key.has_value() || key->empty()) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "clearExtraGuiScreenKeys", 1,
                            OOJS_ARGV, std::nullopt, "key");
     return JS_EXCEPTION;
@@ -484,7 +484,7 @@ static JSValue GlobalSetExtraGuiScreenKeys(OOJS_NATIVE_ARGS) {
   // don't read past argv.
   int defArgc = std::min(argc - 1, 2);
 
-  if (EXPECT_NOT(argc < 1)) {
+  if (argc < 1) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "setExtraGuiScreenKeys", 0,
                            OOJS_ARGV, std::nullopt, "key, definition");
     return JS_EXCEPTION;
@@ -622,13 +622,13 @@ static JSValue GlobalSetScreenBackground(OOJS_NATIVE_ARGS) {
   bool result = false;
   JSValueConst value = (argc > 0) ? OOJS_ARGV[0] : JS_NULL;
 
-  if (EXPECT_NOT(argc == 0)) {
+  if (argc == 0) [[unlikely]] {
     OOJSReportWarning(
         context,
         "Usage error: %s() called with no arguments. Treating as %s(null). "
         "This call may fail in a future version of Oolite.",
         "setScreenBackground", "setScreenBackground");
-  } else if (EXPECT_NOT(JS_IsUndefined(value))) {
+  } else if (JS_IsUndefined(value)) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "setScreenBackground", 1,
                            &value, std::nullopt, "GUI texture descriptor");
     return JS_EXCEPTION;
@@ -658,13 +658,13 @@ static JSValue GlobalSetScreenBackground(OOJS_NATIVE_ARGS) {
 static JSValue GlobalGetScreenBackgroundForKey(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(argc == 0)) {
+  if (argc == 0) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "getScreenBackgroundDefault",
                            0, OOJS_ARGV, std::nullopt, "missing arguments");
     return JS_EXCEPTION;
   }
   std::optional<std::string> key = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!key.has_value() || key->empty())) {
+  if (!key.has_value() || key->empty()) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "getScreenBackgroundDefault",
                            0, OOJS_ARGV, std::nullopt, "key");
     return JS_EXCEPTION;
@@ -683,7 +683,7 @@ static JSValue GlobalSetScreenBackgroundForKey(OOJS_NATIVE_ARGS) {
 
   bool result = false;
 
-  if (EXPECT_NOT(argc < 2)) {
+  if (argc < 2) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "setScreenBackgroundDefault",
                            0, OOJS_ARGV, std::nullopt, "missing arguments");
     return JS_EXCEPTION;
@@ -691,7 +691,7 @@ static JSValue GlobalSetScreenBackgroundForKey(OOJS_NATIVE_ARGS) {
 
   std::optional<std::string> key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   JSValueConst value = OOJS_ARGV[1];
-  if (EXPECT_NOT(!key.has_value() || key->empty())) {
+  if (!key.has_value() || key->empty()) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "setScreenBackgroundDefault",
                            0, OOJS_ARGV, std::nullopt, "key");
     return JS_EXCEPTION;
@@ -719,13 +719,13 @@ static JSValue GlobalSetScreenOverlay(OOJS_NATIVE_ARGS) {
   bool result = false;
   JSValueConst value = (argc > 0) ? OOJS_ARGV[0] : JS_NULL;
 
-  if (EXPECT_NOT(argc == 0)) {
+  if (argc == 0) [[unlikely]] {
     OOJSReportWarning(
         context,
         "Usage error: %s() called with no arguments. Treating as %s(null). "
         "This call may fail in a future version of Oolite.",
         "setScreenOverlay", "setScreenOverlay");
-  } else if (EXPECT_NOT(JS_IsUndefined(value))) {
+  } else if (JS_IsUndefined(value)) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "setScreenOverlay", 1, &value,
                            std::nullopt, "GUI texture descriptor");
     return JS_EXCEPTION;
@@ -748,13 +748,13 @@ static JSValue GlobalSetScreenOverlay(OOJS_NATIVE_ARGS) {
 static JSValue GlobalGetGuiColorSettingForKey(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(argc == 0)) {
+  if (argc == 0) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "getGuiColorForKey", 0,
                            OOJS_ARGV, std::nullopt, "missing arguments");
     return JS_EXCEPTION;
   }
   std::optional<std::string> key = OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(!key.has_value() || key->empty())) {
+  if (!key.has_value() || key->empty()) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "getGuiColorForKey", 0,
                            OOJS_ARGV, std::nullopt, "key");
     return JS_EXCEPTION;
@@ -786,7 +786,7 @@ static JSValue GlobalSetGuiColorSettingForKey(OOJS_NATIVE_ARGS) {
   bool result = false;
   std::shared_ptr<OOColor> col;
 
-  if (EXPECT_NOT(argc != 2)) {
+  if (argc != 2) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "setGuiColorForKey", 0,
                            OOJS_ARGV, std::nullopt, "missing arguments");
     return JS_EXCEPTION;
@@ -794,7 +794,7 @@ static JSValue GlobalSetGuiColorSettingForKey(OOJS_NATIVE_ARGS) {
 
   std::optional<std::string> key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   JSValueConst value = OOJS_ARGV[1];
-  if (EXPECT_NOT(!key.has_value() || key->empty())) {
+  if (!key.has_value() || key->empty()) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "setGuiColorForKey", 0,
                            OOJS_ARGV, std::nullopt, "key");
     return JS_EXCEPTION;
@@ -845,7 +845,7 @@ static JSValue GlobalTakeSnapShot(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) {
     value = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(!value.has_value() || !isAllowed(*value))) {
+    if (!value.has_value() || !isAllowed(*value)) [[unlikely]] {
       OOJSReportBadArguments(context, std::nullopt, "takeSnapShot", argc,
                              OOJS_ARGV, std::nullopt, "alphanumeric string");
       return JS_EXCEPTION;

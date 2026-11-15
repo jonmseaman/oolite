@@ -156,7 +156,8 @@ void DustEntity::update(OOTimeDelta /*delta_t*/) {
   zero_distance = 0.0;
 
 #if OO_SHADERS
-  if (EXPECT_NOT(shaderMode == kShaderModeUnknown)) checkShaderMode();
+  if (shaderMode == kShaderModeUnknown) [[unlikely]]
+    checkShaderMode();
 
   // Shader takes care of repositioning.
   if (shaderMode == kShaderModeOn) return;
@@ -261,7 +262,8 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
 #endif
 
 #if OO_SHADERS
-  if (EXPECT_NOT(shaderMode == kShaderModeUnknown)) checkShaderMode();
+  if (shaderMode == kShaderModeUnknown) [[unlikely]]
+    checkShaderMode();
   bool useShader = (shaderMode == kShaderModeOn);
 #endif
 

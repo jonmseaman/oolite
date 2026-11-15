@@ -2152,7 +2152,7 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter,
 
   double dd = escorter->collision_radius;
 
-  if (EXPECT(currentEscortCount < static_cast<uint8_t>(MAX_ESCORTS))) {
+  if (currentEscortCount < static_cast<uint8_t>(MAX_ESCORTS)) [[likely]] {
     // spread them around a little randomly
     ex_pos.x += dd * 6.0 * (randf() - 0.5);
     ex_pos.y += dd * 6.0 * (randf() - 0.5);
@@ -6249,10 +6249,9 @@ void ShipEntity::updateTrackingCurve() {
   trackingCurvePositions[3] = trackingCurvePositions[2];
   trackingCurvePositions[2] = trackingCurvePositions[1];
   trackingCurvePositions[1] = trackingCurvePositions[0];
-  if (EXPECT_NOT(oo::EntityIsShip(target) &&
-                 (oo::ToShip(target) != nullptr
-                      ? oo::ToShip(target)->isCloaked()
-                      : false))) {
+  if (oo::EntityIsShip(target) &&
+      (oo::ToShip(target) != nullptr ? oo::ToShip(target)->isCloaked() : false))
+      [[unlikely]] {
     // if target is cloaked, introduce some more inaccuracy
     // 0.02 seems to be enough to give them slight difficulty on
     // a straight-line target and real trouble on anything better
@@ -7375,8 +7374,8 @@ OOAegisStatus ShipEntity::checkForAegis() {
       (250000.0f + 1000.0f * cr);  // less than 500m from the surface:
                                    // (a+b)*(a+b) = a*a+b*b +2*a*b
 
-  if (EXPECT_NOT((wasNearPlanetSurface != isNearPlanetSurface) &&
-                 !suppressAegisMessages)) {
+  if ((wasNearPlanetSurface != isNearPlanetSurface) && !suppressAegisMessages)
+      [[unlikely]] {
     if (isNearPlanetSurface) {
       doScriptEvent(OOJSID("shipApproachingPlanetSurface"), nearest);
       if (shipAI != nullptr)
@@ -7400,12 +7399,12 @@ OOAegisStatus ShipEntity::checkForAegis() {
   if (sd2 < SCANNER_MAX_RANGE2 * 4.0f) {
     // double scanner range
     result = OOAegisStatus::kInDockingRange;
-  } else if (EXPECT_NOT(isNearPlanetSurface || d2 < cr2 * 9.0f)) {
+  } else if (isNearPlanetSurface || d2 < cr2 * 9.0f) [[unlikely]] {
     // to 3x radius of any planet/moon -
     // or 500m of tiny ones,
     result = OOAegisStatus::kCloseToAnyPlanet;
-    if (EXPECT(nearest ==
-               (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr))) {
+    if (nearest == (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr))
+        [[likely]] {
       result = OOAegisStatus::kCloseToMainPlanet;
     }
   }
@@ -7438,16 +7437,16 @@ OOAegisStatus ShipEntity::checkForAegis() {
      properly when moving from one secondary planet/moon vicinity to another
      one.  -- Kaks 20120917
   */
-  if (EXPECT(!suppressAegisMessages)) {
+  if (!suppressAegisMessages) [[likely]] {
     // script/AI messages on change in status
-    if (EXPECT_NOT(aegis_status == OOAegisStatus::kInDockingRange &&
-                   result != aegis_status)) {
+    if (aegis_status == OOAegisStatus::kInDockingRange &&
+        result != aegis_status) [[unlikely]] {
       doScriptEvent(OOJSID("shipExitedStationAegis"), the_station);
       if (shipAI != nullptr) shipAI->message("AEGIS_LEAVING_DOCKING_RANGE");
     }
 
-    if (EXPECT_NOT(result == OOAegisStatus::kInDockingRange &&
-                   aegis_status != result)) {
+    if (result == OOAegisStatus::kInDockingRange && aegis_status != result)
+        [[unlikely]] {
       doScriptEvent(OOJSID("shipEnteredStationAegis"), the_station);
       if (shipAI != nullptr) shipAI->message("AEGIS_IN_DOCKING_RANGE");
 
@@ -7458,8 +7457,8 @@ OOAegisStatus ShipEntity::checkForAegis() {
                       (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr));
         setLastAegisLock((UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr));
       }
-    } else if (EXPECT_NOT(result == OOAegisStatus::kNone &&
-                          aegis_status != result)) {
+    } else if (result == OOAegisStatus::kNone && aegis_status != result)
+        [[unlikely]] {
       if (lastAegisLock() == nullptr && !sunGoneNova) {
         setLastAegisLock((UNIVERSE != nullptr
                               ? UNIVERSE->planet()
@@ -7467,9 +7466,9 @@ OOAegisStatus ShipEntity::checkForAegis() {
                                             // near-planet station.
       }
       transitionToAegisNone();
-    } else if (EXPECT_NOT((result == OOAegisStatus::kCloseToAnyPlanet ||
-                           result == OOAegisStatus::kCloseToMainPlanet) &&
-                          lastAegisLock() != nearest)) {
+    } else if ((result == OOAegisStatus::kCloseToAnyPlanet ||
+                result == OOAegisStatus::kCloseToMainPlanet) &&
+               lastAegisLock() != nearest) [[unlikely]] {
       // approaching..
       if (aegis_status != OOAegisStatus::kNone && lastAegisLock() != nullptr) {
         // we were close to another stellar body
@@ -7481,13 +7480,13 @@ OOAegisStatus ShipEntity::checkForAegis() {
       doScriptEvent(OOJSID("shipEnteredPlanetaryVicinity"), nearest);
       setLastAegisLock(nearest);
 
-      if (EXPECT_NOT(nearest != nullptr && nearest->isSun())) {
+      if (nearest != nullptr && nearest->isSun()) [[unlikely]] {
         // [nil isSun] was NO
         if (shipAI != nullptr) shipAI->message("CLOSE_TO_SUN");
       } else {
         if (shipAI != nullptr) shipAI->message("CLOSE_TO_PLANET");
 
-        if (EXPECT(result == OOAegisStatus::kCloseToMainPlanet)) {
+        if (result == OOAegisStatus::kCloseToMainPlanet) [[likely]] {
           // It's been years since 1.71 - it should be safe enough to comment
           // out the line below for 1.77/1.78 -- Kaks 20120917
           //[shipAI message:@"AEGIS_CLOSE_TO_PLANET"];	    // fires only for
@@ -7495,8 +7494,8 @@ OOAegisStatus ShipEntity::checkForAegis() {
           if (shipAI != nullptr)
             shipAI->message(
                 "AEGIS_CLOSE_TO_MAIN_PLANET");  // fires only for main planet.
-        } else if (EXPECT_NOT(OOStellarBodyPlanetType(nearest) ==
-                              OOStellarBodyType::kMoon)) {
+        } else if (OOStellarBodyPlanetType(nearest) == OOStellarBodyType::kMoon)
+            [[unlikely]] {
           if (shipAI != nullptr) shipAI->message("CLOSE_TO_MOON");
         } else {
           if (shipAI != nullptr) shipAI->message("CLOSE_TO_SECONDARY_PLANET");
@@ -7695,8 +7694,8 @@ GLfloat ShipEntity::fuelChargeRate() {
 
 #if MASS_DEPENDENT_FUEL_PRICES
 
-  if (EXPECT(PLAYER != nullptr && mass > 0 &&
-             mass != (PLAYER != nullptr ? PLAYER->baseMass() : 0.0f))) {
+  if (PLAYER != nullptr && mass > 0 &&
+      mass != (PLAYER != nullptr ? PLAYER->baseMass() : 0.0f)) [[likely]] {
     rate = calcFuelChargeRate(mass);
   }
 
@@ -7889,7 +7888,7 @@ void ShipEntity::setMaxAvailableCargoSpace(OOCargoQuantity newValue) {
 
 OOCargoQuantity ShipEntity::availableCargoSpace() {
   // OOCargoQuantity is unsigned, we need to check for underflows.
-  if (EXPECT_NOT(cargoQuantityOnBoard() + equipment_weight >= max_cargo))
+  if (cargoQuantityOnBoard() + equipment_weight >= max_cargo) [[unlikely]]
     return 0;
   return maxAvailableCargoSpace() - cargoQuantityOnBoard();
 }
@@ -8502,7 +8501,7 @@ void ShipEntity::releaseCargoPodsDebris() {
       //  surviving decompression
       // a higher chance of getting at least a couple of bits of cargo out
       if (cargo_chance > 10) {
-        if (EXPECT_NOT(getIsPlayer())) {
+        if (getIsPlayer()) [[unlikely]] {
           cargo_chance -= 20;
         } else {
           cargo_chance -= 30;
@@ -9463,7 +9462,7 @@ Entity* ShipEntity::primaryTarget() {
       !isValidTarget(result)) {
     _primaryTarget.reset();
     return nullptr;
-  } else if (EXPECT_NOT(result == this)) {
+  } else if (result == this) [[unlikely]] {
     /*	Added in response to a crash report showing recursion in
             [PlayerEntity hasHostileTarget].
             -- Ahruman 2009-12-17
@@ -9477,7 +9476,7 @@ Entity* ShipEntity::primaryTarget() {
 // noteTargetLost - without invalidating the target first
 Entity* ShipEntity::primaryTargetWithoutValidityCheck() {
   Entity* result = oo::LiveEntity(_primaryTarget);
-  if (EXPECT_NOT(result == this)) {
+  if (result == this) [[unlikely]] {
     // just in case
     _primaryTarget.reset();
     return nullptr;
@@ -10581,7 +10580,8 @@ GLfloat ShipEntity::lookingAtSunWithThresholdAngleCos(
   GLfloat sunBrightness = 0.0f;
   Vector relativePosition, unitRelativePosition;
 
-  if (EXPECT_NOT(!sun)) return 0.0f;
+  if (!sun) [[unlikely]]
+    return 0.0f;
 
   relativePosition = HPVectorToVector(HPvector_subtract(
       getPosition(), (sun != nullptr ? sun->getPosition() : HPVector{})));
@@ -11379,7 +11379,7 @@ Vector ShipEntity::missileLaunchPosition() {
 
   // custom launching position
   start = VectorForKey(shipinfoDictionary, "missile_launch_position", start);
-  if (EXPECT_NOT(_scaleFactor != 1.0)) {
+  if (_scaleFactor != 1.0) [[unlikely]] {
     start = vector_multiply_scalar(start, _scaleFactor);
   }
 
@@ -11452,7 +11452,7 @@ Vector ShipEntity::missileLaunchPosition() {
     missile = (UNIVERSE != nullptr
                    ? UNIVERSE->newShipWithRole(identifier.value_or(""))
                    : nullptr);
-    if (EXPECT_NOT(missile == nullptr)) {
+    if (missile == nullptr) [[unlikely]] {
       // invalid missile role.
       // remove that invalid missile role from the missiles list.
       while (++i < missiles) missile_list[i - 1] = missile_list[i];
@@ -11463,7 +11463,8 @@ Vector ShipEntity::missileLaunchPosition() {
                                    : nullptr);
   }
 
-  if (EXPECT_NOT(missile == nullptr)) return nullptr;
+  if (missile == nullptr) [[unlikely]]
+    return nullptr;
 
   // By definition, the player will always have the specified missile.
   // What if the NPC didn't actually have the specified missile to begin with?
@@ -11800,12 +11801,11 @@ OOCargoType ShipEntity::dumpItem(::ShipEntity* cargoObj) {
   // players get to see their old ship sailing forth, while NPCs run away more
   // efficiently! cargo is ejected at higher speed from any ship
   double eject_speed =
-      EXPECT_NOT(
-          (jetto != nullptr
-               ? jetto->getCrew()
-               : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
-              .has_value() &&
-          (jetto != nullptr ? jetto->getIsPlayer() : false))
+      ((jetto != nullptr
+            ? jetto->getCrew()
+            : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+           .has_value() &&
+       (jetto != nullptr ? jetto->getIsPlayer() : false))
           ? 20.0
           : 100.0;
   double eject_reaction =
@@ -12604,7 +12604,7 @@ bool ShipEntity::abandonShip() {
     return OK;
   }
 
-  if (EXPECT(launchEscapeCapsule() != nullptr)) {
+  if (launchEscapeCapsule() != nullptr) [[likely]] {
     // oo::ToShip(NO_TARGET)	// -launchEscapeCapsule
     // takes care of everything for the player
     if (!getIsPlayer()) {
@@ -12646,7 +12646,7 @@ bool ShipEntity::abandonShip() {
         _escortGroup = nullptr;
       }
     }
-  } else if (EXPECT(getIsSubEntity())) {
+  } else if (getIsSubEntity()) [[likely]] {
     // may still have launched passenger pods even if no crew
     // if multiple items providing escape pod, remove all of them (NPC process)
     while (hasEquipmentItemProviding("EQ_ESCAPE_POD")) {

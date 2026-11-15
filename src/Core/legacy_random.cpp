@@ -130,7 +130,7 @@ float bellf(int n) {
   int i = n;
   float total = 0;
 
-  if (EXPECT_NOT(i <= 0)) {
+  if (i <= 0) [[unlikely]] {
     std::fputs(
         std::format("***** ERROR - attempt to generate bellf({})\n", n).c_str(),
         stdout);

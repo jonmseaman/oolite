@@ -702,7 +702,8 @@ void OOJSExcludeTimeFromLimiter(OOTimeDelta time) {
         non-zero throws an uncatchable error, which unwinds all JS frames.
 */
 static int InterruptHandler(JSRuntime* runtime, void* opaque) {
-  if (EXPECT(sLimiterStartDepth == 0 || sLimiterPauseDepth > 0)) return 0;
+  if (sLimiterStartDepth == 0 || sLimiterPauseDepth > 0) [[likely]]
+    return 0;
 
   double elapsed = MonotonicTime() - sLimiterStart;
   if (elapsed <= sLimiterTimeLimit) return 0;
@@ -1061,8 +1062,8 @@ bool OOJSArgumentListGetNumberNoError(JSContext* context, int argc,
                      outNumber != nullptr);
 
   // Get value, if possible.
-  if (EXPECT_NOT(argc < 1 || JS_ToFloat64(context, &value, argv[0]) < 0 ||
-                 isnan(value))) {
+  if (argc < 1 || JS_ToFloat64(context, &value, argv[0]) < 0 || isnan(value))
+      [[unlikely]] {
     // ToNumber can throw (e.g. for a Symbol); this variant must not leave an
     // exception pending.
     if (JS_HasException(context))
@@ -1085,7 +1086,7 @@ JSAtom OOJSInternAtomPRIVATE(const char* name) {
   OOCParameterAssert(name != nullptr && name[0] != '\0');
 
   JSAtom atom = JS_NewAtom(OOJSAcquireContext(), name);
-  if (EXPECT_NOT(atom == JS_ATOM_NULL)) {
+  if (atom == JS_ATOM_NULL) [[unlikely]] {
     OORaiseException(OOGenericException,
                      "Failed to initialize JS ID cache for \"%s\".", name);
   }
@@ -1104,7 +1105,7 @@ JSAtom OOJSIDFromString(const std::string& string) {
 
   JSAtom atom =
       JS_NewAtomLen(OOJSAcquireContext(), string.data(), string.size());
-  if (EXPECT(atom != JS_ATOM_NULL)) {
+  if (atom != JS_ATOM_NULL) [[likely]] {
     if (sAtomCache == nullptr)
       sAtomCache = new std::unordered_map<std::string, JSAtom>;
     sAtomCache->emplace(string, atom);
@@ -1140,8 +1141,8 @@ static JSValue JSArrayValueFromPList(JSContext* context,
     if (element.isNull()) continue;
     // JS_SetPropertyUint32() takes ownership of the value.
     JSValue elementValue = OOJSValueFromPList(context, element);
-    if (EXPECT_NOT(JS_SetPropertyUint32(context, result, i, elementValue) <
-                   0)) {
+    if (JS_SetPropertyUint32(context, result, i, elementValue) < 0)
+        [[unlikely]] {
       JS_FreeValue(context, JS_GetException(context));
       JS_FreeValue(context, result);
       return JS_UNDEFINED;
@@ -1168,8 +1169,8 @@ static JSValue JSObjectValueFromPList(JSContext* context,
     JSValue elementValue = OOJSValueFromPList(context, element);
     if (JS_IsUndefined(elementValue)) continue;
     // JS_SetProperty() takes ownership of the value.
-    if (EXPECT_NOT(JS_SetProperty(context, result, OOJSIDFromString(key),
-                                  elementValue) < 0)) {
+    if (JS_SetProperty(context, result, OOJSIDFromString(key), elementValue) <
+        0) [[unlikely]] {
       JS_FreeValue(context, JS_GetException(context));
       JS_FreeValue(context, result);
       return JS_UNDEFINED;
@@ -1330,7 +1331,7 @@ std::optional<std::string> OOStringFromJSValueEvenIfNull(JSContext* context,
 
 std::optional<std::string> OOStringFromJSValue(JSContext* context,
                                                JSValueConst value) {
-  if (EXPECT(!JS_IsNull(value) && !JS_IsUndefined(value))) {
+  if (!JS_IsNull(value) && !JS_IsUndefined(value)) [[likely]] {
     return OOStringFromJSValueEvenIfNull(context, value);
   }
   return std::nullopt;
@@ -1622,7 +1623,8 @@ bool JSFunctionPredicate(Entity* entity, void* parameter) {
   OOCParameterAssert(param->context != nullptr);
   OOCParameterAssert(OOJSValueIsFunction(param->context, param->function));
 
-  if (EXPECT_NOT(param->errorFlag)) return false;
+  if (param->errorFlag) [[unlikely]]
+    return false;
 
   JSValue arg = OOJSEntityJSValue(
       entity, param->context);  // the C++ entity's glue; entity is required to
@@ -1719,7 +1721,7 @@ bool JSEntityIsDemoShipPredicate(Entity* entity, void* parameter) {
 //===========================================================================
 
 oo::PList OOJSDictionaryFromJSValue(JSContext* context, JSValueConst value) {
-  if (EXPECT_NOT(!JS_IsObject(value))) {
+  if (!JS_IsObject(value)) [[unlikely]] {
     return oo::PList();
   }
   return OOJSDictionaryFromJSObject(context, value);
@@ -1764,7 +1766,7 @@ oo::PList OOJSDictionaryFromStringTable(JSContext* context,
   uint32_t i, count;
   oo::PList::Dict result;
 
-  if (EXPECT_NOT(JS_IsNull(tableValue) || JS_IsUndefined(tableValue))) {
+  if (JS_IsNull(tableValue) || JS_IsUndefined(tableValue)) [[unlikely]] {
     return oo::PList();
   }
 

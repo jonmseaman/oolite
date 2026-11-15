@@ -171,7 +171,8 @@ void OOCacheManager::setPList(const oo::PList& inValue,
                               const std::string& inCacheKey) {
   OOCParameterAssert(!inValue.isNull());
 
-  if (EXPECT_NOT(!_caches.has_value())) return;
+  if (!_caches.has_value()) [[unlikely]]
+    return;
 
   // A missing cache is created, empty, as before.
   (*_caches)[inCacheKey][inKey] = inValue;

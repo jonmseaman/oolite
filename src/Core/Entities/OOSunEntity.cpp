@@ -347,7 +347,7 @@ void OOSunEntity::updateCameraRelativePosition() {
   /* Special calculation as suns viewed over ~1E9 - and the bigger
    * ones are still just about visible at this range - get floating
    * point errors messing up the display */
-  if (EXPECT_NOT(HPmagnitude2(cr_temp) > 1E18)) {
+  if (HPmagnitude2(cr_temp) > 1E18) [[unlikely]] {
     cr_temp = HPvector_multiply_scalar(cr_temp, 1E9 / HPmagnitude(cr_temp));
   }
   cameraRelativePosition = HPVectorToVector(cr_temp);
@@ -458,7 +458,7 @@ void OOSunEntity::drawTranslucentParts() {
 
 void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
                                     GLfloat z_distance) {
-  //	if (EXPECT_NOT(inner_radius >= z_distance))  return;	// inside the
+  //	if (inner_radius >= z_distance) [[unlikely]]  return;	// inside the
   // sphere
 
   GLfloat activity[8] = {0.84, 0.74, 0.64, 0.54, 0.3, 0.4, 0.7, 0.8};
@@ -634,7 +634,7 @@ void OOSunEntity::drawStarGlare() {
 
   float sqrt_zero_distance = sqrtf(cam_zero_distance);
   float alt = sqrt_zero_distance - collision_radius;
-  if (EXPECT_NOT(alt < 0)) {
+  if (alt < 0) [[unlikely]] {
     return;
   }
   float corona = cor16k / SUN_GLARE_CORONA_FACTOR;

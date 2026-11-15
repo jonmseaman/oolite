@@ -274,7 +274,8 @@ inline OOHPScalar HPmagnitude(HPVector vec) { return sqrt(HPmagnitude2(vec)); }
 
 inline HPVector HPvector_normal_or_fallback(HPVector vec, HPVector fallback) {
   OOHPScalar mag2 = HPmagnitude2(vec);
-  if (EXPECT_NOT(mag2 == 0.0)) return fallback;
+  if (mag2 == 0.0) [[unlikely]]
+    return fallback;
   return HPvector_multiply_scalar(vec, 1.0 / sqrt(mag2));
 }
 

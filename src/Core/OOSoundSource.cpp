@@ -143,7 +143,7 @@ void OOSoundSource::play() {
     _playingHold = oo::share(this);
   }
 
-  if (EXPECT_NOT(sPlayingSoundSources == nullptr)) {
+  if (sPlayingSoundSources == nullptr) [[unlikely]] {
     sPlayingSoundSources = new std::vector<std::shared_ptr<OOSoundSource>>();
   }
   if (std::ranges::find(*sPlayingSoundSources, this, [](const auto& owner) {

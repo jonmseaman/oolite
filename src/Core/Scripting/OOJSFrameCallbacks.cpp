@@ -210,7 +210,7 @@ void OOJSFrameCallbacksInvoke(OOTimeDelta inDeltaT) {
     JS_FreeValue(context, global);
     JS_FreeValue(context, deltaVal);
 
-    if (EXPECT_NOT(sDeferredOps != nullptr)) {
+    if (sDeferredOps != nullptr) [[unlikely]] {
       RunDeferredOperations(context);
       delete sDeferredOps;
       sDeferredOps = nullptr;
@@ -239,7 +239,7 @@ static JSValue GlobalAddFrameCallback(OOJS_NATIVE_ARGS) {
 
   // Get callback argument and verify that it's a function.
   JSValueConst callback = OOJS_ARGV[0];
-  if (EXPECT_NOT(argc < 1 || !OOJSValueIsFunction(context, callback))) {
+  if (argc < 1 || !OOJSValueIsFunction(context, callback)) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "addFrameCallback",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "function");
@@ -250,10 +250,11 @@ static JSValue GlobalAddFrameCallback(OOJS_NATIVE_ARGS) {
   uint32_t trackingID = sNextID ^ kIDScrambleMask;
   sNextID += kIDIncrement;
 
-  if (EXPECT(!sRunning)) {
+  if (!sRunning) [[likely]] {
     // Add to list immediately.
     std::optional<std::string> errorString;
-    if (EXPECT_NOT(!AddCallback(context, callback, trackingID, &errorString))) {
+    if (!AddCallback(context, callback, trackingID, &errorString))
+        [[unlikely]] {
       OOJSReportError(context, "%s",
                       (errorString ? errorString->c_str() : "(null)"));
       return JS_EXCEPTION;
@@ -279,8 +280,8 @@ static JSValue GlobalRemoveFrameCallback(OOJS_NATIVE_ARGS) {
 
   // Get tracking ID argument.
   uint32_t trackingID;
-  if (EXPECT_NOT(argc < 1 ||
-                 JS_ToUint32(context, &trackingID, OOJS_ARGV[0]) < 0)) {
+  if (argc < 1 || JS_ToUint32(context, &trackingID, OOJS_ARGV[0]) < 0)
+      [[unlikely]] {
     if (JS_HasException(context))
       JS_FreeValue(context, JS_GetException(context));
     OOJSReportBadArguments(context, std::nullopt, "removeFrameCallback",
@@ -289,9 +290,9 @@ static JSValue GlobalRemoveFrameCallback(OOJS_NATIVE_ARGS) {
     return JS_EXCEPTION;
   }
 
-  if (EXPECT(!sRunning)) {
+  if (!sRunning) [[likely]] {
     // Remove it.
-    if (EXPECT_NOT(!RemoveCallbackWithTrackingID(context, trackingID))) {
+    if (!RemoveCallbackWithTrackingID(context, trackingID)) [[unlikely]] {
       OOJSReportWarning(context, "removeFrameCallback(): invalid tracking ID.");
     }
   } else {
@@ -311,7 +312,7 @@ static JSValue GlobalRemoveFrameCallback(OOJS_NATIVE_ARGS) {
 static JSValue GlobalIsValidFrameCallback(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(argc < 1)) {
+  if (argc < 1) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "isValidFrameCallback", 0,
                            OOJS_ARGV, std::nullopt,
                            "frame callback tracking ID");
@@ -320,7 +321,7 @@ static JSValue GlobalIsValidFrameCallback(OOJS_NATIVE_ARGS) {
 
   // Get tracking ID argument.
   uint32_t trackingID;
-  if (EXPECT_NOT(JS_ToUint32(context, &trackingID, OOJS_ARGV[0]) < 0)) {
+  if (JS_ToUint32(context, &trackingID, OOJS_ARGV[0]) < 0) [[unlikely]] {
     JS_FreeValue(context, JS_GetException(context));
     OOJS_RETURN_BOOL(false);
   }
@@ -342,7 +343,7 @@ static bool AddCallback(JSContext* context, JSValueConst callback,
   OOCAssert(!sRunning, "%s cannot be called while frame callbacks are running.",
             __PRETTY_FUNCTION__);
 
-  if (EXPECT_NOT(sCallbacks.size() == sCallbacks.capacity())) {
+  if (sCallbacks.size() == sCallbacks.capacity()) [[unlikely]] {
     if (!GrowCallbackList(context, errorString)) return false;
   }
 

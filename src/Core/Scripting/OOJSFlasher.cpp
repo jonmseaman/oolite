@@ -273,8 +273,8 @@ static JSValue FlasherSetProperty(OOJS_SETTER_ARGS) {
 
 #define GET_THIS_FLASHER(THISENT)                                           \
   do {                                                                      \
-    if (EXPECT_NOT(                                                         \
-            !JSFlasherGetFlasherEntity(context, OOJS_THIS, &(THISENT))))    \
+    if (!JSFlasherGetFlasherEntity(context, OOJS_THIS, &(THISENT)))         \
+        [[unlikely]]                                                        \
       return OOJSNativeFailure(context);            /* Exception */         \
     if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID; /* the C++ flasher's */ \
   } while (0)

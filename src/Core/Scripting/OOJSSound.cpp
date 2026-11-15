@@ -167,7 +167,7 @@ static JSValue SoundGetProperty(OOJS_GETTER_ARGS) {
 
   OOSound* sound = nullptr;  // null for Sound.prototype
 
-  if (EXPECT_NOT(!JSSoundGetSound(context, thisObj, &sound)))
+  if (!JSSoundGetSound(context, thisObj, &sound)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   switch (static_cast<SoundProperty>(magic)) {
@@ -294,7 +294,7 @@ static JSValue SoundStaticStopMusic(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) {
     name = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(!name.has_value())) {
+    if (!name.has_value()) [[unlikely]] {
       OOJSReportBadArguments(context, "Sound", "stopMusic", argc, OOJS_ARGV,
                              std::nullopt, "string or no argument");
       return OOJSNativeFailure(context);

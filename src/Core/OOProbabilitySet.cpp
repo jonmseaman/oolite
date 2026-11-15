@@ -447,7 +447,8 @@ oo::PList OOConcreteProbabilitySet::privObjectForWeight(float target) {
     idx = (low + high) / 2;
     weight = _cumulativeWeights[idx];
     if (weight > target) {
-      if (EXPECT_NOT(idx == 0)) break;
+      if (idx == 0) [[unlikely]]
+        break;
       high = idx - 1;
     } else if (weight < target) {
       low = idx + 1;
@@ -707,7 +708,8 @@ std::shared_ptr<OOProbabilitySet> OOConcreteMutableProbabilitySet::copy() {
   std::size_t count = 0;
 
   count = _objects.size();
-  if (EXPECT_NOT(count == 0)) return OOProbabilitySet::probabilitySet();
+  if (count == 0) [[unlikely]]
+    return OOProbabilitySet::probabilitySet();
 
   return OOProbabilitySet::probabilitySetWithObjects(_objects.data(),
                                                      _weights.data(), count);

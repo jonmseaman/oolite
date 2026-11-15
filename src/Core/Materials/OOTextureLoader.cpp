@@ -77,8 +77,10 @@ std::shared_ptr<OOTextureLoader> OOTextureLoader::loaderWithPath(
   std::string extension;
   std::shared_ptr<OOTextureLoader> result;
 
-  if (EXPECT_NOT(!inPath.has_value())) return nullptr;
-  if (EXPECT_NOT(!sHaveSetUp)) setUp();
+  if (!inPath.has_value()) [[unlikely]]
+    return nullptr;
+  if (!sHaveSetUp) [[unlikely]]
+    setUp();
 
   // Get reduced detail setting (every time, in case it changes; we don't want
   // to call through to Universe on the loading thread in case the
@@ -140,7 +142,7 @@ OOTextureLoader::OOTextureLoader() {}
 */
 bool OOTextureLoader::initWithPath(const std::optional<std::string>& inPath,
                                    OOTextureFlags options) {
-  if (EXPECT_NOT(!inPath.has_value())) {
+  if (!inPath.has_value()) [[unlikely]] {
     return false;
   }
   _path = *inPath;
@@ -456,7 +458,8 @@ void OOTextureLoader::applySettings() {
 
     pixMap = OOScalePixMap(pixMap, desiredWidth, desiredHeight,
                            leaveSpaceForMipMaps);
-    if (EXPECT_NOT(!OOIsValidPixMap(pixMap))) return;
+    if (!OOIsValidPixMap(pixMap)) [[unlikely]]
+      return;
 
     _data = OOPixMapOwnedBuffer(pixMap);
     pixMap.buffer = _data;

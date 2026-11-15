@@ -27,12 +27,3 @@
 
 #define INLINE_PURE_FUNC ALWAYS_INLINE_FUNC PURE_FUNC
 #define INLINE_CONST_FUNC ALWAYS_INLINE_FUNC CONST_FUNC
-
-#ifdef __GNUC__
-#define EXPECT(x) __builtin_expect((x), 1)
-#define EXPECT_NOT(x) __builtin_expect((x), 0)
-#else
-#define EXPECT(x) (x)
-#define EXPECT_NOT(x) (x)
-#endif
-

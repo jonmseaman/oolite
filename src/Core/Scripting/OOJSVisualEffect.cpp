@@ -574,12 +574,12 @@ oo::PList MeshShaders(OOVisualEffectEntity* effect) {
 }
 }  // namespace
 
-#define GET_THIS_EFFECT(THISENT)                                            \
-  do {                                                                      \
-    if (EXPECT_NOT(!JSVisualEffectGetVisualEffectEntity(context, OOJS_THIS, \
-                                                        &(THISENT))))       \
-      return OOJSNativeFailure(context); /* Exception */                    \
-    if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID;                         \
+#define GET_THIS_EFFECT(THISENT)                                              \
+  do {                                                                        \
+    if (!JSVisualEffectGetVisualEffectEntity(context, OOJS_THIS, &(THISENT))) \
+        [[unlikely]]                                                          \
+      return OOJSNativeFailure(context); /* Exception */                      \
+    if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID;                           \
   } while (0)
 
 static JSValue VisualEffectRemove(OOJS_NATIVE_ARGS) {
@@ -789,7 +789,7 @@ static JSValue VisualEffectScale(OOJS_NATIVE_ARGS) {
   }
 
   gotScale = JS_ToFloat64(context, &scale, OOJS_ARGV[0]) == 0;
-  if (EXPECT_NOT(scale <= 0.0 || !gotScale)) {
+  if (scale <= 0.0 || !gotScale) [[unlikely]] {
     OOJSReportBadArguments(context, "VisualEffect", "scale", argc, OOJS_ARGV,
                            std::nullopt, "scale factor must be positive");
     return OOJSNativeFailure(context);

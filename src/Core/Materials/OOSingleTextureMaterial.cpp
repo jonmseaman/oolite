@@ -91,7 +91,8 @@ std::optional<std::string> OOSingleTextureMaterial::descriptionComponents()
 }
 
 bool OOSingleTextureMaterial::doApply() {
-  if (EXPECT_NOT(!OOBasicMaterial::doApply())) return false;
+  if (!OOBasicMaterial::doApply()) [[unlikely]]
+    return false;
 
   if (_texture != nullptr) _texture->apply();  // a message to nil did nothing
   return true;

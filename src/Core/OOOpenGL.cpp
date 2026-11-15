@@ -132,8 +132,10 @@ void OOGLWireframeModeOff() {
 }
 
 void GLDrawBallBillboard(GLfloat radius, GLfloat step, GLfloat z_distance) {
-  if (EXPECT_NOT((radius <= 0) || (step < 1))) return;
-  if (EXPECT_NOT(radius >= z_distance)) return;  // inside the sphere
+  if ((radius <= 0) || (step < 1)) [[unlikely]]
+    return;
+  if (radius >= z_distance) [[unlikely]]
+    return;  // inside the sphere
 
   GLfloat i, delta;
   GLfloat s, c;

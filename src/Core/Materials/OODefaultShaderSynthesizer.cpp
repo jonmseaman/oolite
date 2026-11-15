@@ -666,7 +666,7 @@ void OODefaultShaderSynthesizer::writeDiffuseColorTermIfNeeded() {
   if (!diffuseMap.isNull()) {
     std::optional<std::string> readInstr =
         readRGBForTextureSpec(diffuseMap, "diffuse");
-    if (EXPECT_NOT(!readInstr.has_value())) {
+    if (!readInstr.has_value()) [[unlikely]] {
       _fragmentBody += "\t// INVALID EXTRACTION KEY\n\t\n";
     } else {
       _fragmentBody += std::format("\tvec3 diffuseColor = {};\n", *readInstr);
@@ -838,7 +838,7 @@ void OODefaultShaderSynthesizer::writeSpecularLighting() {
   if (!specularColorMap.isNull()) {
     std::optional<std::string> readInstr =
         readRGBForTextureSpec(specularColorMap, "specular colour");
-    if (EXPECT_NOT(!readInstr.has_value())) {
+    if (!readInstr.has_value()) [[unlikely]] {
       _fragmentBody += "\t// INVALID EXTRACTION KEY\n\t\n";
       return;
     }
@@ -893,7 +893,7 @@ void OODefaultShaderSynthesizer::writeSpecularLighting() {
   if (!specularExponentMap.isNull()) {
     std::optional<std::string> readInstr =
         readOneChannelForTextureSpec(specularExponentMap, "specular exponent");
-    if (EXPECT_NOT(!readInstr.has_value())) {
+    if (!readInstr.has_value()) [[unlikely]] {
       _fragmentBody += "\t// INVALID EXTRACTION KEY\n\t\n";
       return;
     }
@@ -960,7 +960,7 @@ void OODefaultShaderSynthesizer::writeLightMaps() {
     bool isIllumination =
         lightMapSpec.get<bool>(kOOTextureSpecifierIlluminationModeKey);
 
-    if (EXPECT_NOT(color == nullptr && textureSpec.isNull())) {
+    if (color == nullptr && textureSpec.isNull()) [[unlikely]] {
       _fragmentBody +=
           "\t// Light map with neither colour nor texture has no effect.\n\t\n";
       continue;
@@ -977,8 +977,8 @@ void OODefaultShaderSynthesizer::writeLightMaps() {
       rgba[2] *= rgba[3];
     }
 
-    if (EXPECT_NOT((rgba[0] == 0.0f && rgba[1] == 0.0f && rgba[2] == 0.0f) ||
-                   (!_usesDiffuseTerm && isIllumination))) {
+    if ((rgba[0] == 0.0f && rgba[1] == 0.0f && rgba[2] == 0.0f) ||
+        (!_usesDiffuseTerm && isIllumination)) [[unlikely]] {
       _fragmentBody += "\t// Light map tinted black has no effect.\n\t\n";
       continue;
     }
@@ -986,7 +986,7 @@ void OODefaultShaderSynthesizer::writeLightMaps() {
     if (!textureSpec.isNull()) {
       std::optional<std::string> readInstr =
           readRGBForTextureSpec(textureSpec, "light");
-      if (EXPECT_NOT(!readInstr.has_value())) {
+      if (!readInstr.has_value()) [[unlikely]] {
         _fragmentBody += "\t// INVALID EXTRACTION KEY\n\n";
         continue;
       }

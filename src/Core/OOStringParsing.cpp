@@ -273,7 +273,7 @@ std::string OOStringFromDeciCredits(OOCreditsQuantity tenthsOfCredits,
 
   OOJSRelinquishContext(context);
 
-  if (EXPECT_NOT(!result.has_value()))
+  if (!result.has_value()) [[unlikely]]
     result = std::format("{}", static_cast<std::int64_t>(tenthsOfCredits) / 10);
 
   reentrancyLock = false;

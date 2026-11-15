@@ -391,7 +391,7 @@ namespace {
 // an outValue of 1 means it's just being occluded.
 bool entityByEntityOcclusionToValue(Entity* e1, Entity* e2,
                                     OOSunEntity* the_sun, float* outValue) {
-  if (EXPECT_NOT(e1 == e2)) {
+  if (e1 == e2) [[unlikely]] {
     // you can't shade self
     return false;
   }

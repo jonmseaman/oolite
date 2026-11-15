@@ -69,7 +69,7 @@ JSValue JSSpecialFunctionsObjectWrapper(JSContext* context) {
 static JSValue SpecialJSWarning(OOJS_NATIVE_ARGS) {
   OOJS_PROFILE_SCOPE();  // These functions are exception-safe
 
-  if (EXPECT_NOT(argc < 1)) {
+  if (argc < 1) [[unlikely]] {
     OOJSReportBadArguments(context, "special", "jsWarning", argc, OOJS_ARGV,
                            std::nullopt, "string");
     return JS_EXCEPTION;

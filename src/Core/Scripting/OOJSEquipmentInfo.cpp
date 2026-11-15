@@ -330,7 +330,7 @@ static JSValue EquipmentInfoGetProperty(OOJS_GETTER_ARGS) {
   std::size_t inst_time;
 
   OOEquipmentType* type = nullptr;  // null for the prototype: see Ask()
-  if (EXPECT_NOT(!JSEquipmentInfoGetEquipmentType(context, thisObj, &type)))
+  if (!JSEquipmentInfoGetEquipmentType(context, thisObj, &type)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   switch (static_cast<EquipmentInfoProperty>(magic)) {
@@ -538,7 +538,7 @@ static JSValue EquipmentInfoSetProperty(OOJS_SETTER_ARGS) {
   std::shared_ptr<OOColor> colorForScript;
 
   OOEquipmentType* type = nullptr;  // null for the prototype: see Ask()
-  if (EXPECT_NOT(!JSEquipmentInfoGetEquipmentType(context, thisObj, &type)))
+  if (!JSEquipmentInfoGetEquipmentType(context, thisObj, &type)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   switch (static_cast<EquipmentInfoProperty>(magic)) {

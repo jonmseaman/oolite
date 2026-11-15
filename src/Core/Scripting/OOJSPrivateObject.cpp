@@ -71,7 +71,7 @@ bool OOJSGetCxxPrivateImpl(JSContext* context, JSValueConst object,
      Ship.setAI.call(new Vector3D, "") is valid JavaScript.
   */
   JSClassID actualClassID = JS_GetClassID(object);
-  if (EXPECT_NOT(!OOJSIsSubclass(actualClassID, requiredClassID))) {
+  if (!OOJSIsSubclass(actualClassID, requiredClassID)) [[unlikely]] {
     const char* className = OOJSClassName(requiredClassID);
     std::optional<std::string> got = OOStringFromJSValue(context, object);
     OOJSReportError(context, "Native method expected %s, got %s.",
