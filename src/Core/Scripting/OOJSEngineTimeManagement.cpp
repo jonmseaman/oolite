@@ -451,8 +451,7 @@ oo::PList OOTimeProfileEntry::propertyListRepresentation() {
     result.emplace("selfTimeAverage", oo::PList(selfTimeAverage()));
     result.emplace("totalTimeMax", oo::PList(totalTimeMax()));
     result.emplace("selfTimeMax", oo::PList(selfTimeMax()));
-    result.emplace("isJavaScriptFrame",
-                   oo::PList(static_cast<bool>(isJavaScriptFrame())));
+    result.emplace("isJavaScriptFrame", oo::PList(isJavaScriptFrame()));
   }
   return oo::PList(std::move(result));
 }

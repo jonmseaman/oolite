@@ -87,7 +87,7 @@ oo::PList OOMakeDockingInstructions(
   acc["range"] = oo::PList(static_cast<double>(range));
   acc["station"] = oo::EntityWeakNode(
       station);  // weakly, as its object's weak reference was
-  acc["match_rotation"] = oo::PList(static_cast<bool>(match_rotation));
+  acc["match_rotation"] = oo::PList(match_rotation);
   acc["docking_stage"] = oo::PList::signedInteger(docking_stage);
   if (ai_message) {
     acc["ai_message"] = oo::PList(*ai_message);

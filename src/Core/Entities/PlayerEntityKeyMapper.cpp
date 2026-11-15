@@ -854,7 +854,7 @@ void PlayerEntity::updateShiftKeyDefinition(const std::string& key,
   bool current = key_def.get<bool>(key);
   bool keycode_changed = false;
   current = !current;
-  key_fields[key] = oo::PList(static_cast<bool>(current));
+  key_fields[key] = oo::PList(current);
   if (key == "shift") {
     // force the key into upper or lower case, to limit invalid key combos as
     // much as possible

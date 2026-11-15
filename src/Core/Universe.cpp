@@ -4942,10 +4942,10 @@ oo::PList Universe::gameSettings() {
 
   result["speechOn"] = oo::PList::signedInteger(oo::ToUnderlying(
       PLAYER != nullptr ? PLAYER->getIsSpeechOn() : OOSpeechSettings{}));
-  result["autosave"] = oo::PList(static_cast<bool>(autoSave));
-  result["wireframeGraphics"] = oo::PList(static_cast<bool>(wireframeGraphics));
+  result["autosave"] = oo::PList(autoSave);
+  result["wireframeGraphics"] = oo::PList(wireframeGraphics);
   result["procedurallyTexturedPlanets"] =
-      oo::PList(static_cast<bool>(doProcedurallyTexturedPlanets));
+      oo::PList(doProcedurallyTexturedPlanets);
 
   result["fovValue"] = oo::PList::singleReal(
       (gameView != nullptr ? gameView->fov(false) : 0.0f));
@@ -4990,10 +4990,9 @@ oo::PList Universe::gameSettings() {
        oo::PList::singleReal(
            (gameView != nullptr ? gameView->backingViewSize() : NSSize{})
                .height)},
-      {"fullScreen",
-       oo::PList(static_cast<bool>((gameController() != nullptr
-                                        ? gameController()->inFullScreenMode()
-                                        : false)))},
+      {"fullScreen", oo::PList((gameController() != nullptr
+                                    ? gameController()->inFullScreenMode()
+                                    : false))},
   });
 
   result["keyConfig"] = (PLAYER != nullptr ? PLAYER->keyConfig() : oo::PList());

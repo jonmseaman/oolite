@@ -152,7 +152,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
         oo::PList::unsignedInteger(GroupIDForGroup(_group.get(), *context));
     if ((_group != nullptr ? _group->leader()
                            : static_cast<::ShipEntity*>(nullptr)) == this)
-      result[KEY_IS_GROUP_LEADER] = oo::PList(static_cast<bool>(true));
+      result[KEY_IS_GROUP_LEADER] = oo::PList(true);
     const std::optional<std::string> groupName =
         (_group != nullptr ? _group->name() : std::optional<std::string>());
     if (groupName.has_value()) {
@@ -225,7 +225,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
       for (const auto& [key, value] : *overrides->getIf<oo::PList::Dict>())
         mergedData.insert_or_assign(key, value);
     }
-    mergedData["auto_ai"] = oo::PList(static_cast<bool>(false));
+    mergedData["auto_ai"] = oo::PList(false);
     mergedData["escorts"] = oo::PList::unsignedInteger(0);
 
     const oo::PList mergedPlist(std::move(mergedData));
