@@ -2086,8 +2086,8 @@ class PlayerEntity : public ShipEntity {
 /*	Use PLAYER to refer to the shared player object in cases where it is
         assumed to exist (i.e., except during early initialization).
 */
-OOINLINE PlayerEntity* OOGetPlayer(void) INLINE_CONST_FUNC;
-OOINLINE PlayerEntity* OOGetPlayer(void) {
+inline PlayerEntity* OOGetPlayer(void) INLINE_CONST_FUNC;
+inline PlayerEntity* OOGetPlayer(void) {
   extern PlayerEntity* gOOPlayer;
 #if OO_DEBUG
   OOCAssert(

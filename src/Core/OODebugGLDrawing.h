@@ -52,80 +52,79 @@ OODebugWFState OODebugBeginWireframe(
     bool ignoreZ);  // bool, not bool: the .cpp's bool is windows.h's int
 void OODebugEndWireframe(OODebugWFState state);
 
-OOINLINE void OODebugDrawBoundingBox(BoundingBox box);
-OOINLINE void OODebugDrawBoundingBoxBetween(Vector min, Vector max);
-OOINLINE void OODebugDrawColoredBoundingBox(BoundingBox box, OOColor* color);
+inline void OODebugDrawBoundingBox(BoundingBox box);
+inline void OODebugDrawBoundingBoxBetween(Vector min, Vector max);
+inline void OODebugDrawColoredBoundingBox(BoundingBox box, OOColor* color);
 void OODebugDrawColoredBoundingBoxBetween(Vector min, Vector max,
                                           OOColor* color);
 
 // Normals are drawn as cyan lines
-OOINLINE void OODebugDrawNormal(Vector position, Vector normal, GLfloat scale);
-OOINLINE void OODebugDrawNormalAtOrigin(Vector normal, GLfloat scale);
+inline void OODebugDrawNormal(Vector position, Vector normal, GLfloat scale);
+inline void OODebugDrawNormalAtOrigin(Vector normal, GLfloat scale);
 
 // Other vectors are drawn as magenta lines by default
-OOINLINE void OODebugDrawVector(Vector position, Vector v);
-OOINLINE void OODebugDrawColoredVector(Vector position, Vector v,
-                                       OOColor* color);
-OOINLINE void OODebugDrawVectorAtOrigin(Vector v);
-OOINLINE void OODebugDrawColoredVectorAtOrigin(Vector v, OOColor* color);
+inline void OODebugDrawVector(Vector position, Vector v);
+inline void OODebugDrawColoredVector(Vector position, Vector v, OOColor* color);
+inline void OODebugDrawVectorAtOrigin(Vector v);
+inline void OODebugDrawColoredVectorAtOrigin(Vector v, OOColor* color);
 
 // Lines are drawn white by default
-OOINLINE void OODebugDrawLine(Vector start, Vector end);
+inline void OODebugDrawLine(Vector start, Vector end);
 void OODebugDrawColoredLine(Vector start, Vector end, OOColor* color);
 
 // Bases are drawn as one red, one green and one blue vector, representing x, y
 // and z axes in the current coordinate frame.
 void OODebugDrawBasis(Vector position, GLfloat scale);
-OOINLINE void OODebugDrawBasisAtOrigin(GLfloat scale);
+inline void OODebugDrawBasisAtOrigin(GLfloat scale);
 
 void OODebugDrawPoint(Vector position, OOColor* color);
 
 /*** Only inline definitions beyond this point ***/
 
-OOINLINE void OODebugDrawBoundingBoxBetween(Vector min, Vector max) {
+inline void OODebugDrawBoundingBoxBetween(Vector min, Vector max) {
   OODebugDrawColoredBoundingBoxBetween(min, max, OOColor::blueColor().get());
 }
 
-OOINLINE void OODebugDrawBoundingBox(BoundingBox box) {
+inline void OODebugDrawBoundingBox(BoundingBox box) {
   OODebugDrawBoundingBoxBetween(box.min, box.max);
 }
 
-OOINLINE void OODebugDrawColoredBoundingBox(BoundingBox box, OOColor* color) {
+inline void OODebugDrawColoredBoundingBox(BoundingBox box, OOColor* color) {
   OODebugDrawColoredBoundingBoxBetween(box.min, box.max, color);
 }
 
-OOINLINE void OODebugDrawNormal(Vector position, Vector normal, GLfloat scale) {
+inline void OODebugDrawNormal(Vector position, Vector normal, GLfloat scale) {
   OODebugDrawColoredVector(
       position, vector_add(position, vector_multiply_scalar(normal, scale)),
       OOColor::cyanColor().get());
 }
 
-OOINLINE void OODebugDrawNormalAtOrigin(Vector normal, GLfloat scale) {
+inline void OODebugDrawNormalAtOrigin(Vector normal, GLfloat scale) {
   OODebugDrawNormal(kZeroVector, normal, scale);
 }
 
-OOINLINE void OODebugDrawColoredVector(Vector position, Vector v,
-                                       OOColor* color) {
+inline void OODebugDrawColoredVector(Vector position, Vector v,
+                                     OOColor* color) {
   OODebugDrawColoredLine(position, vector_add(position, v), color);
 }
 
-OOINLINE void OODebugDrawVector(Vector position, Vector v) {
+inline void OODebugDrawVector(Vector position, Vector v) {
   OODebugDrawColoredVector(position, v, OOColor::magentaColor().get());
 }
 
-OOINLINE void OODebugDrawVectorAtOrigin(Vector v) {
+inline void OODebugDrawVectorAtOrigin(Vector v) {
   OODebugDrawVector(kZeroVector, v);
 }
 
-OOINLINE void OODebugDrawColoredVectorAtOrigin(Vector v, OOColor* color) {
+inline void OODebugDrawColoredVectorAtOrigin(Vector v, OOColor* color) {
   OODebugDrawColoredVector(kZeroVector, v, color);
 }
 
-OOINLINE void OODebugDrawLine(Vector start, Vector end) {
+inline void OODebugDrawLine(Vector start, Vector end) {
   OODebugDrawColoredLine(start, end, OOColor::whiteColor().get());
 }
 
-OOINLINE void OODebugDrawBasisAtOrigin(GLfloat scale) {
+inline void OODebugDrawBasisAtOrigin(GLfloat scale) {
   OODebugDrawBasis(kZeroVector, scale);
 }
 

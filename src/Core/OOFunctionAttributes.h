@@ -21,8 +21,6 @@
 #define __has_extension(x) (0)
 #endif
 
-#define OOINLINE inline
-
 #if !OO_DEBUG
 #define ALWAYS_INLINE_FUNC \
   GCC_ATTR((always_inline))  // Force inlining of function

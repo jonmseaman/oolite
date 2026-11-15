@@ -379,7 +379,7 @@ void PlayerEntity::setScriptTargetToSelf() { setScriptTarget(this); }
 
 ::ShipEntity* PlayerEntity::scriptTarget() { return ::scriptTarget; }
 
-OOINLINE OOEntityStatus RecursiveRemapStatus(OOEntityStatus status) {
+inline OOEntityStatus RecursiveRemapStatus(OOEntityStatus status) {
   // Some player stutuses should only be seen once per "event".
   // This remaps them to something innocuous in case of recursion.
   if (status == OOEntityStatus::kDocking ||

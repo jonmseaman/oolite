@@ -44,62 +44,60 @@ extern const OOMatrix
     kZeroMatrix; /* {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0} */
 
 /* Matrix construction and standard primitive matrices */
-OOINLINE OOMatrix OOMatrixConstruct(OOScalar aa, OOScalar ab, OOScalar ac,
-                                    OOScalar ad, OOScalar ba, OOScalar bb,
-                                    OOScalar bc, OOScalar bd, OOScalar ca,
-                                    OOScalar cb, OOScalar cc, OOScalar cd,
-                                    OOScalar da, OOScalar db, OOScalar dc,
-                                    OOScalar dd) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixConstruct(OOScalar aa, OOScalar ab, OOScalar ac,
+                                  OOScalar ad, OOScalar ba, OOScalar bb,
+                                  OOScalar bc, OOScalar bd, OOScalar ca,
+                                  OOScalar cb, OOScalar cc, OOScalar cd,
+                                  OOScalar da, OOScalar db, OOScalar dc,
+                                  OOScalar dd) INLINE_CONST_FUNC;
 
-OOINLINE OOMatrix OOMatrixFromOrientationAndPosition(
+inline OOMatrix OOMatrixFromOrientationAndPosition(
     Quaternion orientation, Vector position) INLINE_CONST_FUNC;
 
-OOINLINE OOMatrix OOMatrixFromBasisVectorsAndPosition(
+inline OOMatrix OOMatrixFromBasisVectorsAndPosition(
     Vector i, Vector j, Vector k, Vector position) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixFromBasisVectors(Vector i, Vector j,
-                                           Vector k) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixFromBasisVectors(Vector i, Vector j,
+                                         Vector k) INLINE_CONST_FUNC;
 
-OOINLINE OOMatrix OOMatrixForScale(OOScalar sx, OOScalar sy,
-                                   OOScalar sz) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixForScaleUniform(OOScalar s) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixForScale(OOScalar sx, OOScalar sy,
+                                 OOScalar sz) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixForScaleUniform(OOScalar s) INLINE_CONST_FUNC;
 
-OOINLINE OOMatrix OOMatrixForRotationX(OOScalar angle) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixForRotationY(OOScalar angle) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixForRotationZ(OOScalar angle) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixForRotationX(OOScalar angle) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixForRotationY(OOScalar angle) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixForRotationZ(OOScalar angle) INLINE_CONST_FUNC;
 OOMatrix OOMatrixForRotation(Vector axis, OOScalar angle) CONST_FUNC;
 OOMatrix OOMatrixForQuaternionRotation(Quaternion orientation);
 
-OOINLINE OOMatrix OOMatrixForTranslation(Vector v) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixForTranslationComponents(
-    OOScalar dx, OOScalar dy, OOScalar dz) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixForTranslation(Vector v) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixForTranslationComponents(OOScalar dx, OOScalar dy,
+                                                 OOScalar dz) INLINE_CONST_FUNC;
 
 OOMatrix OOMatrixForBillboard(HPVector bbPos, HPVector eyePos) CONST_FUNC;
 
 /* Matrix transformations */
-OOINLINE OOMatrix OOMatrixTranslate(OOMatrix m,
-                                    Vector offset) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixHPTranslate(OOMatrix m,
-                                      HPVector offset) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixTranslateComponents(OOMatrix m, OOScalar dx,
-                                              OOScalar dy,
-                                              OOScalar dz) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixTranslate(OOMatrix m, Vector offset) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixHPTranslate(OOMatrix m,
+                                    HPVector offset) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixTranslateComponents(OOMatrix m, OOScalar dx,
+                                            OOScalar dy,
+                                            OOScalar dz) INLINE_CONST_FUNC;
 
-OOINLINE OOMatrix OOMatrixScale(OOMatrix m, OOScalar sx, OOScalar sy,
-                                OOScalar sz) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixScaleUniform(OOMatrix m,
-                                       OOScalar s) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixScale(OOMatrix m, OOScalar sx, OOScalar sy,
+                              OOScalar sz) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixScaleUniform(OOMatrix m, OOScalar s) INLINE_CONST_FUNC;
 
-OOINLINE OOMatrix OOMatrixRotateX(OOMatrix m, OOScalar angle) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixRotateY(OOMatrix m, OOScalar angle) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixRotateZ(OOMatrix m, OOScalar angle) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixRotate(OOMatrix m, Vector axis,
-                                 OOScalar angle) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixRotateQuaternion(OOMatrix m,
-                                           Quaternion quat) INLINE_CONST_FUNC;
-OOINLINE OOMatrix OOMatrixTranspose(OOMatrix m) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixRotateX(OOMatrix m, OOScalar angle) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixRotateY(OOMatrix m, OOScalar angle) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixRotateZ(OOMatrix m, OOScalar angle) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixRotate(OOMatrix m, Vector axis,
+                               OOScalar angle) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixRotateQuaternion(OOMatrix m,
+                                         Quaternion quat) INLINE_CONST_FUNC;
+inline OOMatrix OOMatrixTranspose(OOMatrix m) INLINE_CONST_FUNC;
 
 bool OOMatrixEqual(OOMatrix a, OOMatrix b) CONST_FUNC;
-OOINLINE bool OOMatrixIsIdentity(OOMatrix m) INLINE_CONST_FUNC;
+inline bool OOMatrixIsIdentity(OOMatrix m) INLINE_CONST_FUNC;
 
 /* Matrix multiplication */
 OOMatrix OOMatrixMultiply(OOMatrix a, OOMatrix b) CONST_FUNC;
@@ -107,8 +105,8 @@ Vector OOVectorMultiplyMatrix(Vector v, OOMatrix m) CONST_FUNC;
 HPVector OOHPVectorMultiplyMatrix(HPVector v, OOMatrix m) CONST_FUNC;
 
 /* Extraction */
-OOINLINE void OOMatrixGetBasisVectors(OOMatrix m, Vector* outRight,
-                                      Vector* outUp, Vector* outForward)
+inline void OOMatrixGetBasisVectors(OOMatrix m, Vector* outRight, Vector* outUp,
+                                    Vector* outForward)
     NONNULL_FUNC ALWAYS_INLINE_FUNC;
 
 /* Orthogonalizion - avoidance of distortions due to numerical inaccuracy. */
@@ -143,7 +141,7 @@ OOMatrix OOMatrixOrthogonalize(OOMatrix m) CONST_FUNC;
   } while (0)
 void GLUniformMatrix3(GLint location, OOMatrix M);
 
-OOINLINE OOMatrix OOMatrixLoadGLMatrix(GLenum matrixID) ALWAYS_INLINE_FUNC;
+inline OOMatrix OOMatrixLoadGLMatrix(GLenum matrixID) ALWAYS_INLINE_FUNC;
 
 #include <algorithm>
 #include <chrono>
@@ -201,30 +199,30 @@ OOMatrix OOMatrixInverseWithDeterminant(OOMatrix M, OOScalar* determinant);
 
 /*** Only inline definitions beyond this point ***/
 
-OOINLINE OOMatrix OOMatrixConstruct(OOScalar aa, OOScalar ab, OOScalar ac,
-                                    OOScalar ad, OOScalar ba, OOScalar bb,
-                                    OOScalar bc, OOScalar bd, OOScalar ca,
-                                    OOScalar cb, OOScalar cc, OOScalar cd,
-                                    OOScalar da, OOScalar db, OOScalar dc,
-                                    OOScalar dd) {
+inline OOMatrix OOMatrixConstruct(OOScalar aa, OOScalar ab, OOScalar ac,
+                                  OOScalar ad, OOScalar ba, OOScalar bb,
+                                  OOScalar bc, OOScalar bd, OOScalar ca,
+                                  OOScalar cb, OOScalar cc, OOScalar cd,
+                                  OOScalar da, OOScalar db, OOScalar dc,
+                                  OOScalar dd) {
   OOMatrix r = {
       {{aa, ab, ac, ad}, {ba, bb, bc, bd}, {ca, cb, cc, cd}, {da, db, dc, dd}}};
   return r;
 }
 
-OOINLINE OOMatrix OOMatrixFromOrientationAndPosition(Quaternion orientation,
-                                                     Vector position) {
+inline OOMatrix OOMatrixFromOrientationAndPosition(Quaternion orientation,
+                                                   Vector position) {
   OOMatrix m = OOMatrixForQuaternionRotation(orientation);
   return OOMatrixTranslate(m, position);
 }
 
-OOINLINE OOMatrix OOMatrixFromBasisVectorsAndPosition(Vector i, Vector j,
-                                                      Vector k, Vector p) {
+inline OOMatrix OOMatrixFromBasisVectorsAndPosition(Vector i, Vector j,
+                                                    Vector k, Vector p) {
   return OOMatrixConstruct(i.x, i.y, i.z, 0.0f, j.x, j.y, j.z, 0.0f, k.x, k.y,
                            k.z, 0.0f, p.x, p.y, p.z, 1.0f);
 }
 
-OOINLINE OOMatrix OOMatrixFromBasisVectors(Vector i, Vector j, Vector k) {
+inline OOMatrix OOMatrixFromBasisVectors(Vector i, Vector j, Vector k) {
   return OOMatrixFromBasisVectorsAndPosition(i, j, k, kZeroVector);
 }
 
@@ -255,76 +253,76 @@ OOMatrix OOMatrixForRotationZ(OOScalar angle) {
 
   return OOMatrixConstruct(c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 }
-OOINLINE OOMatrix OOMatrixForTranslationComponents(OOScalar dx, OOScalar dy,
-                                                   OOScalar dz) {
+inline OOMatrix OOMatrixForTranslationComponents(OOScalar dx, OOScalar dy,
+                                                 OOScalar dz) {
   return OOMatrixConstruct(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, dx, dy, dz, 1);
 }
 
-OOINLINE OOMatrix OOMatrixForTranslation(Vector v) {
+inline OOMatrix OOMatrixForTranslation(Vector v) {
   return OOMatrixForTranslationComponents(v.x, v.y, v.z);
 }
 
-OOINLINE OOMatrix OOMatrixTranslateComponents(OOMatrix m, OOScalar dx,
-                                              OOScalar dy, OOScalar dz) {
+inline OOMatrix OOMatrixTranslateComponents(OOMatrix m, OOScalar dx,
+                                            OOScalar dy, OOScalar dz) {
   m.m[3][0] += dx;
   m.m[3][1] += dy;
   m.m[3][2] += dz;
   return m;
 }
 
-OOINLINE OOMatrix OOMatrixTranslate(OOMatrix m, Vector offset) {
+inline OOMatrix OOMatrixTranslate(OOMatrix m, Vector offset) {
   return OOMatrixTranslateComponents(m, offset.x, offset.y, offset.z);
 }
 
-OOINLINE OOMatrix OOMatrixHPTranslate(OOMatrix m, HPVector offset) {
+inline OOMatrix OOMatrixHPTranslate(OOMatrix m, HPVector offset) {
   return OOMatrixTranslateComponents(m, static_cast<OOScalar>(offset.x),
                                      static_cast<OOScalar>(offset.y),
                                      static_cast<OOScalar>(offset.z));
 }
 
-OOINLINE OOMatrix OOMatrixForScale(OOScalar sx, OOScalar sy, OOScalar sz) {
+inline OOMatrix OOMatrixForScale(OOScalar sx, OOScalar sy, OOScalar sz) {
   return OOMatrixConstruct(sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1);
 }
 
-OOINLINE OOMatrix OOMatrixForScaleUniform(OOScalar s) {
+inline OOMatrix OOMatrixForScaleUniform(OOScalar s) {
   return OOMatrixForScale(s, s, s);
 }
 
-OOINLINE OOMatrix OOMatrixScale(OOMatrix m, OOScalar sx, OOScalar sy,
-                                OOScalar sz) {
+inline OOMatrix OOMatrixScale(OOMatrix m, OOScalar sx, OOScalar sy,
+                              OOScalar sz) {
   return OOMatrixMultiply(m, OOMatrixForScale(sx, sy, sz));
 }
 
-OOINLINE OOMatrix OOMatrixScaleUniform(OOMatrix m, OOScalar s) {
+inline OOMatrix OOMatrixScaleUniform(OOMatrix m, OOScalar s) {
   return OOMatrixScale(m, s, s, s);
 }
 
-OOINLINE OOMatrix OOMatrixRotateX(OOMatrix m, OOScalar angle) {
+inline OOMatrix OOMatrixRotateX(OOMatrix m, OOScalar angle) {
   return OOMatrixMultiply(m, OOMatrixForRotationX(angle));
 }
 
-OOINLINE OOMatrix OOMatrixRotateY(OOMatrix m, OOScalar angle) {
+inline OOMatrix OOMatrixRotateY(OOMatrix m, OOScalar angle) {
   return OOMatrixMultiply(m, OOMatrixForRotationY(angle));
 }
 
-OOINLINE OOMatrix OOMatrixRotateZ(OOMatrix m, OOScalar angle) {
+inline OOMatrix OOMatrixRotateZ(OOMatrix m, OOScalar angle) {
   return OOMatrixMultiply(m, OOMatrixForRotationZ(angle));
 }
 
-OOINLINE OOMatrix OOMatrixRotate(OOMatrix m, Vector axis, OOScalar angle) {
+inline OOMatrix OOMatrixRotate(OOMatrix m, Vector axis, OOScalar angle) {
   return OOMatrixMultiply(m, OOMatrixForRotation(axis, angle));
 }
 
-OOINLINE OOMatrix OOMatrixRotateQuaternion(OOMatrix m, Quaternion quat) {
+inline OOMatrix OOMatrixRotateQuaternion(OOMatrix m, Quaternion quat) {
   return OOMatrixMultiply(m, OOMatrixForQuaternionRotation(quat));
 }
 
-OOINLINE bool OOMatrixIsIdentity(OOMatrix m) {
+inline bool OOMatrixIsIdentity(OOMatrix m) {
   return OOMatrixEqual(m, kIdentityMatrix);
 }
 
-OOINLINE void OOMatrixGetBasisVectors(OOMatrix m, Vector* outRight,
-                                      Vector* outUp, Vector* outForward) {
+inline void OOMatrixGetBasisVectors(OOMatrix m, Vector* outRight, Vector* outUp,
+                                    Vector* outForward) {
   assert(outRight != NULL && outUp != NULL && outForward != NULL);
 
   *outRight = make_vector(m.m[0][0], m.m[1][0], m.m[2][0]);
@@ -332,14 +330,14 @@ OOINLINE void OOMatrixGetBasisVectors(OOMatrix m, Vector* outRight,
   *outForward = make_vector(m.m[0][2], m.m[1][2], m.m[2][2]);
 }
 
-OOINLINE OOMatrix OOMatrixTranspose(OOMatrix m) {
+inline OOMatrix OOMatrixTranspose(OOMatrix m) {
   return OOMatrixConstruct(m.m[0][0], m.m[1][0], m.m[2][0], m.m[3][0],
                            m.m[0][1], m.m[1][1], m.m[2][1], m.m[3][1],
                            m.m[0][2], m.m[1][2], m.m[2][2], m.m[3][2],
                            m.m[0][3], m.m[1][3], m.m[2][3], m.m[3][3]);
 }
 
-OOINLINE OOMatrix OOMatrixLoadGLMatrix(GLenum matrixID) {
+inline OOMatrix OOMatrixLoadGLMatrix(GLenum matrixID) {
   OOMatrix m;
   glGetFloatv(matrixID, OOMatrixValuesForOpenGL(m));
   return m;

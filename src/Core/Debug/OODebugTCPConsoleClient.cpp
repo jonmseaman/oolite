@@ -48,7 +48,6 @@ SOFTWARE.
 
 #include "OODebugMonitor.h"
 #include "OODebugTCPConsoleProtocol.h"
-#include "OOFunctionAttributes.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListParsing.hpp"
@@ -83,7 +82,7 @@ static void LogSendPacket(const oo::PList& packet);
 
 namespace {
 
-OOINLINE bool StatusIsSendable(OOTCPClientConnectionStatus status) {
+bool StatusIsSendable(OOTCPClientConnectionStatus status) {
   return status == OOTCPClientConnectionStatus::kStartedConnectionStage1 ||
          status == OOTCPClientConnectionStatus::kStartedConnectionStage2 ||
          status == OOTCPClientConnectionStatus::kConnected;

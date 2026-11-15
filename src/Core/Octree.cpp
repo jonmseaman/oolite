@@ -776,14 +776,14 @@ size_t Octree::totalSize() {
 constexpr int kMinimumBuilderCapacity = 16 << 10;
 
 // Extract top of state stack.
-OOINLINE OOOctreeBuilder::OOOctreeBuildState* OOOctreeBuilder::State(
+inline OOOctreeBuilder::OOOctreeBuildState* OOOctreeBuilder::State(
     OOOctreeBuilder* self) {
   return &self->_stateStack[self->_level];
 }
 
 // SetNode(): set the value of an entry in _octree, making space if needed.
-OOINLINE void OOOctreeBuilder::SetNode(OOOctreeBuilder* self, uint32_t index,
-                                       int value) {
+inline void OOOctreeBuilder::SetNode(OOOctreeBuilder* self, uint32_t index,
+                                     int value) {
   if (index < self->_octree.size()) {
     self->_octree[index] = value;
   } else {
@@ -793,7 +793,7 @@ OOINLINE void OOOctreeBuilder::SetNode(OOOctreeBuilder* self, uint32_t index,
 
 // InsertNode(): set the node at the current insertion point, and increment
 // insertion point.
-OOINLINE void OOOctreeBuilder::InsertNode(OOOctreeBuilder* self, int value) {
+inline void OOOctreeBuilder::InsertNode(OOOctreeBuilder* self, int value) {
   OOCAssert(State(self)->remaining > 0,
             "Attempt to add node to a full parent in octree builder.");
   State(self)->remaining--;

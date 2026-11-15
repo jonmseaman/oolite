@@ -65,18 +65,18 @@ JSClassID JSEntityClassID(void);
    the slot holds. A binding's own class (Ship, Planet, Sun) passes its JS
    class.
 */
-OOINLINE bool OOJSEntityGetEntityOfClass(JSContext* context,
-                                         JSValueConst inObject,
-                                         JSClassID jsClassID,
-                                         Entity** outEntity) {
+inline bool OOJSEntityGetEntityOfClass(JSContext* context,
+                                       JSValueConst inObject,
+                                       JSClassID jsClassID,
+                                       Entity** outEntity) {
   OOJSEntityHolder* holder = nullptr;
   if (!OOJSGetCxxPrivate(context, inObject, jsClassID, &holder)) return false;
   *outEntity = (holder != nullptr) ? holder->entity() : nullptr;
   return true;
 }
 
-OOINLINE bool OOJSEntityGetEntity(JSContext* context, JSValueConst inObject,
-                                  Entity** outEntity) {
+inline bool OOJSEntityGetEntity(JSContext* context, JSValueConst inObject,
+                                Entity** outEntity) {
   return OOJSEntityGetEntityOfClass(context, inObject, JSEntityClassID(),
                                     outEntity);
 }
@@ -131,13 +131,13 @@ bool EntityFromArgumentList(JSContext* context,
 */
 // The global holds the player's C++ entity while the flag is in effect, else
 // null.
-OOINLINE bool OOIsPlayerStale(void) {
+inline bool OOIsPlayerStale(void) {
   extern Entity* gOOJSPlayerIfStale;
   return gOOJSPlayerIfStale != nullptr;
 }
 
 // Of the C++ entity a getter answers.
-OOINLINE bool OOIsStaleEntity(Entity* entity) {
+inline bool OOIsStaleEntity(Entity* entity) {
   extern Entity* gOOJSPlayerIfStale;
   return entity == nullptr ||
          (gOOJSPlayerIfStale != nullptr && entity == gOOJSPlayerIfStale);

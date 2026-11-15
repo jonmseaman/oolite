@@ -166,17 +166,17 @@ struct BackLinkChain {
 
 namespace {
 
-OOINLINE BackLinkChain BackLink(BackLinkChain* link, const std::string* key) {
+BackLinkChain BackLink(BackLinkChain* link, const std::string* key) {
   BackLinkChain result = {link, key, 0, false};
   return result;
 }
 
-OOINLINE BackLinkChain BackLinkIndex(BackLinkChain* link, std::size_t index) {
+BackLinkChain BackLinkIndex(BackLinkChain* link, std::size_t index) {
   BackLinkChain result = {link, nullptr, index, true};
   return result;
 }
 
-OOINLINE BackLinkChain BackLinkRoot() {
+BackLinkChain BackLinkRoot() {
   BackLinkChain result = {nullptr, nullptr, 0, false};
   return result;
 }

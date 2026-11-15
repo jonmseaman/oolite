@@ -32,7 +32,6 @@ MA 02110-1301, USA.
 #include "OOCallByName.h"
 #include "OOColor.h"               // a colour result (kMethodTypeColorVoid)
 #include "OOEntityCalledByName.h"  // the entities' by-name methods
-#include "OOFunctionAttributes.h"
 #include "OOJSCallEntityMethods.h"  // callObjC()'s names for an entity (generated)
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
@@ -74,7 +73,7 @@ constexpr MethodType kMethodTypeVoidObject = kMethodTypeVoidVoid + 1;
 constexpr MethodType kMethodTypePListVoid = kMethodTypeVoidObject + 1;
 
 namespace {
-OOINLINE bool MethodExpectsParameter(MethodType type) {
+bool MethodExpectsParameter(MethodType type) {
   return type == kMethodTypeVoidObject || type == kMethodTypeObjectObject;
 }
 }  // namespace

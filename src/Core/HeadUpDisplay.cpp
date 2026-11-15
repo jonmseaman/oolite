@@ -237,7 +237,7 @@ OOColor* ReticleColorAt(const std::vector<std::shared_ptr<OOColor>>& colors,
 
 }  // namespace
 
-OOINLINE float useDefined(float val, float validVal) {
+inline float useDefined(float val, float validVal) {
   return (val == NOT_DEFINED) ? validVal : val;
 }
 
@@ -324,7 +324,7 @@ namespace {
 void prefetchData(const oo::PList& info, struct CachedInfo* data);
 }  // namespace
 
-OOINLINE void GLColorWithOverallAlpha(const GLfloat* color, GLfloat alpha) {
+inline void GLColorWithOverallAlpha(const GLfloat* color, GLfloat alpha) {
   // NO OOGL(), this is called within immediate mode blocks.
   glColor4f(color[0], color[1], color[2], color[3] * alpha);
 }
@@ -3610,7 +3610,7 @@ void prefetchData(const oo::PList& info, struct CachedInfo* data) {
 
 }  // namespace
 
-OOINLINE void SetCompassBlipColor(GLfloat relativeZ, GLfloat alpha) {
+inline void SetCompassBlipColor(GLfloat relativeZ, GLfloat alpha) {
   if (relativeZ >= 0.0f) {
     OOGL(glColor4f(0.0f, 1.0f, 0.0f, alpha));
   } else {
