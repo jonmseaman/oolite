@@ -150,8 +150,10 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
             OO_DESC("capture-reward-for-@@-@-credits-@-alt"),
             {rescuee->name().value_or("(null)"),
              rescuee->shortDescription().value_or("(null)"),
-             OOStringFromDeciCredits(reward, true, false),
-             OOStringFromDeciCredits(insurance, true, false)});
+             OOStringFromDeciCredits(static_cast<OOCreditsQuantity>(reward),
+                                     true, false),
+             OOStringFromDeciCredits(static_cast<OOCreditsQuantity>(insurance),
+                                     true, false)});
         doScriptEvent(
             OOJSID("playerRescuedEscapePod"),
             {oo::PList::unsignedInteger(static_cast<std::size_t>(reward)),
@@ -162,15 +164,18 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
             OO_DESC("rescue-reward-for-@@-@-credits-@-alt"),
             {rescuee->name().value_or("(null)"),
              rescuee->shortDescription().value_or("(null)"),
-             OOStringFromDeciCredits(insurance - reward, true, false),
-             OOStringFromDeciCredits(reward, true, false)});
+             OOStringFromDeciCredits(
+                 static_cast<OOCreditsQuantity>(insurance - reward), true,
+                 false),
+             OOStringFromDeciCredits(static_cast<OOCreditsQuantity>(reward),
+                                     true, false)});
         reward = insurance - reward;
         doScriptEvent(
             OOJSID("playerRescuedEscapePod"),
             {oo::PList::unsignedInteger(static_cast<std::size_t>(reward)),
              oo::PList("insurance"), rescuee->infoForScripting()});
       }
-      credits += reward;
+      credits = static_cast<OOCreditsQuantity>(credits + (reward));
       added_entry = true;
     } else if (rescuee->insuranceCredits()) {
       // claim insurance reward
@@ -194,8 +199,9 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
           OO_DESC("capture-reward-for-@@-@-credits"),
           {rescuee->name().value_or("(null)"),
            rescuee->shortDescription().value_or("(null)"),
-           OOStringFromDeciCredits(reward, true, false)});
-      credits += reward;
+           OOStringFromDeciCredits(static_cast<OOCreditsQuantity>(reward), true,
+                                   false)});
+      credits = static_cast<OOCreditsQuantity>(credits + (reward));
       doScriptEvent(
           OOJSID("playerRescuedEscapePod"),
           {oo::PList::unsignedInteger(static_cast<std::size_t>(reward)),
@@ -248,8 +254,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
         (UNIVERSE != nullptr
              ? UNIVERSE->getSystemName(static_cast<OOSystemID>(dest))
              : std::optional<std::string>());
-    int dest_eta =
-        passenger_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
+    int dest_eta = static_cast<int>(
+        passenger_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock);
 
     if (system_id == dest) {
       // we've arrived in system!
@@ -261,7 +267,7 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
           // and a decent customer?
           fee *= 110;  // tip + 10%
           fee /= 100;
-          dest_eta *= 0.5;
+          dest_eta = static_cast<int>(dest_eta * (0.5));
         }
         credits += 10 * fee;
 
@@ -331,8 +337,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
     const std::optional<std::string> parcel_name =
         OptionalStringForKey(parcel_info, PASSENGER_KEY_NAME);
     int dest = parcel_info.get<int>(CONTRACT_KEY_DESTINATION);
-    int dest_eta =
-        parcel_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
+    int dest_eta = static_cast<int>(
+        parcel_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock);
 
     if (system_id == dest) {
       // we've arrived in system!
@@ -345,7 +351,7 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
           // lower tips than passengers
           fee *= 110;  // tip + 10%
           fee /= 100;
-          dest_eta *= 0.5;
+          dest_eta = static_cast<int>(dest_eta * (0.5));
         }
         credits += 10 * fee;
 
@@ -415,14 +421,15 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
     const std::optional<std::string> contract_cargo_desc =
         OptionalStringForKey(contract_info, CARGO_KEY_DESCRIPTION);
     int dest = contract_info.get<int>(CONTRACT_KEY_DESTINATION);
-    int dest_eta =
-        contract_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
+    int dest_eta = static_cast<int>(
+        contract_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock);
 
     if (system_id == dest) {
       // no longer needed
       // int premium = 10 *
       // oo::PListView(contract_info).get<float>(CONTRACT_KEY_PREMIUM);
-      int fee = 10 * contract_info.get<float>(CONTRACT_KEY_FEE);
+      int fee =
+          static_cast<int>(10 * contract_info.get<float>(CONTRACT_KEY_FEE));
 
       const std::string contract_cargo_type = contract_info.get<std::string>(
           CARGO_KEY_TYPE);  // a missing type was nil, which the
@@ -490,8 +497,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
               shipCommodityData->setQuantity(0, contract_cargo_type);
 
             // pay the fee
-            int shortfall = 100 - percent_delivered;
-            int payment = percent_delivered * (fee) / 100.0;
+            int shortfall = static_cast<int>(100 - percent_delivered);
+            int payment = static_cast<int>(percent_delivered * (fee) / 100.0);
             credits += payment;
 
             if ((shipCommodityData != nullptr
@@ -1165,8 +1172,8 @@ std::vector<std::string> PlayerEntity::contractsListFromEntries(
              ? UNIVERSE->getSystemName(static_cast<OOSystemID>(
                    contract_info.get<int>(CONTRACT_KEY_DESTINATION)))
              : std::optional<std::string>());
-    int dest_eta =
-        contract_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
+    int dest_eta = static_cast<int>(
+        contract_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock);
     const std::optional<std::string> deadline =
         (UNIVERSE != nullptr ? UNIVERSE->shortTimeDescription(dest_eta)
                              : std::optional<std::string>());
@@ -1887,14 +1894,14 @@ OOCreditsQuantity PlayerEntity::tradeInValue() {
       (UNIVERSE != nullptr ? UNIVERSE->tradeInValueForCommanderDictionary(
                                  commanderDataDictionary())
                            : 0);
-  value -=
-      value * 0.006 *
-      missingSubEntitiesAdjustment();  // TODO: 0.006 might need rethinking.
+  // TODO: 0.006 might need rethinking.
+  value = static_cast<std::uint64_t>(
+      value - value * 0.006 * missingSubEntitiesAdjustment());
   const std::uint64_t rounded =
       ((value * 75 * ship_trade_in_factor) + 5000) /
       10000;  // Multiply by two percentages, divide by 100*100. The +5000 is to
               // get normal rounding.
-  value = cunningFee(rounded, 0.005);
+  value = static_cast<std::uint64_t>(cunningFee(rounded, 0.005));
   return value * 10;
 }
 

@@ -120,9 +120,11 @@ void OOSystemDescriptionManager::buildRouteCache() {
       for (k = j + 1; k < OO_SYSTEMS_PER_GALAXY; k++) {
         kIndex = k + (i * OO_SYSTEMS_PER_GALAXY);
         if (distanceBetweenPlanetPositions(
-                coordinatesCache[jIndex].x, coordinatesCache[jIndex].y,
-                coordinatesCache[kIndex].x,
-                coordinatesCache[kIndex].y) <= MAX_JUMP_RANGE) {
+                static_cast<int>(coordinatesCache[jIndex].x),
+                static_cast<int>(coordinatesCache[jIndex].y),
+                static_cast<int>(coordinatesCache[kIndex].x),
+                static_cast<int>(coordinatesCache[kIndex].y)) <=
+            MAX_JUMP_RANGE) {
           // arrays are of system number only
           neighbourCache[jIndex].push_back(static_cast<OOSystemID>(k));
           neighbourCache[kIndex].push_back(static_cast<OOSystemID>(j));

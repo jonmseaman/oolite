@@ -1679,7 +1679,7 @@ GLfloat ShipEntity::doesHitLine(HPVector v0, HPVector v1,
   Vector w1 = make_vector(dot_product(u1, v_right), dot_product(u1, v_up),
                           dot_product(u1, v_forward));
   GLfloat hit_distance = octree ? octree->isHitByLine(w0, w1) : 0.0f;
-  if (hit_distance) {
+  if (static_cast<bool>(hit_distance)) {
     if (hitEntity) hitEntity[0] = this;
   }
 
@@ -1695,7 +1695,8 @@ GLfloat ShipEntity::doesHitLine(HPVector v0, HPVector v1,
     w1 = resolveVectorInIJK(u1, ijk);
 
     GLfloat hitSub = (se->octree ? se->octree->isHitByLine(w0, w1) : 0.0f);
-    if (hitSub && (hit_distance == 0 || hit_distance > hitSub)) {
+    if (static_cast<bool>(hitSub) &&
+        (hit_distance == 0 || hit_distance > hitSub)) {
       hit_distance = hitSub;
       if (hitEntity) {
         *hitEntity = se;
@@ -6627,10 +6628,10 @@ void ShipEntity::applyThrust(double delta_t) {
   float max_available_speed = maxFlightSpeed;
   if (canBurn) max_available_speed *= afterburnerFactor();
 
-  if (thrust) {
+  if (static_cast<bool>(thrust)) {
     // If we have Newtonian (non-thrust) velocity, brake it.
     GLfloat velmag = magnitude(velocity);
-    if (velmag) {
+    if (static_cast<bool>(velmag)) {
       GLfloat vscale = fmaxf((velmag - dt_thrust) / velmag, 0.0f);
       scale_vector(&velocity, vscale);
     }
@@ -6676,10 +6677,11 @@ void ShipEntity::orientationChanged() {
 void ShipEntity::applyRoll(GLfloat roll1, GLfloat climb1) {
   Quaternion q1 = kIdentityQuaternion;
 
-  if (!roll1 && !climb1 && !hasRotated) return;
+  if (!static_cast<bool>(roll1) && !static_cast<bool>(climb1) && !hasRotated)
+    return;
 
-  if (roll1) quaternion_rotate_about_z(&q1, -roll1);
-  if (climb1) quaternion_rotate_about_x(&q1, -climb1);
+  if (static_cast<bool>(roll1)) quaternion_rotate_about_z(&q1, -roll1);
+  if (static_cast<bool>(climb1)) quaternion_rotate_about_x(&q1, -climb1);
 
   orientation = quaternion_multiply(q1, orientation);
   orientationChanged();
@@ -6691,9 +6693,9 @@ void ShipEntity::applyRoll(GLfloat roll1, GLfloat climb1, GLfloat yaw1) {
 
   Quaternion q1 = kIdentityQuaternion;
 
-  if (roll1) quaternion_rotate_about_z(&q1, -roll1);
-  if (climb1) quaternion_rotate_about_x(&q1, -climb1);
-  if (yaw1) quaternion_rotate_about_y(&q1, -yaw1);
+  if (static_cast<bool>(roll1)) quaternion_rotate_about_z(&q1, -roll1);
+  if (static_cast<bool>(climb1)) quaternion_rotate_about_x(&q1, -climb1);
+  if (static_cast<bool>(yaw1)) quaternion_rotate_about_y(&q1, -yaw1);
 
   orientation = quaternion_multiply(q1, orientation);
   orientationChanged();
@@ -7832,7 +7834,8 @@ OOCreditsQuantity ShipEntity::getBounty() {
 }
 
 int ShipEntity::legalStatus() {
-  if (scanClass == OOScanClass::kThargoid) return 5 * collision_radius;
+  if (scanClass == OOScanClass::kThargoid)
+    return static_cast<int>(5 * collision_radius);
   if (scanClass == OOScanClass::kRock) return 0;
   return static_cast<int>(getBounty());
 }
@@ -8006,7 +8009,7 @@ void ShipEntity::setCargoFlag(OOCargoFlag flag) {
     std::vector<oo::EntityHold> newCargo;  // the universe's pods
     unsigned num = 0;
     if (likely_cargo > 0) {
-      num = likely_cargo * (0.5 + randf());
+      num = static_cast<unsigned int>(likely_cargo * (0.5 + randf()));
       if (num > maxAvailableCargoSpace()) {
         num = maxAvailableCargoSpace();
       }
@@ -8783,7 +8786,8 @@ void ShipEntity::becomeExplosion() {
 
         // throw out burning chunks of wreckage
         //
-        if ((n_alloys && canFragment) || canReleaseSubWreckage) {
+        if ((static_cast<bool>(n_alloys) && canFragment) ||
+            canReleaseSubWreckage) {
           std::size_t n_wreckage = 0;
 
           if (UNIVERSE->n_entities <
@@ -8796,7 +8800,8 @@ void ShipEntity::becomeExplosion() {
               n_wreckage = (mass > 600.0 && randf() < 0.2) ? 2 : 0;
             } else {
               n_wreckage = (n_alloys < maxWrecks)
-                               ? floorf(randf() * (n_alloys + 2))
+                               ? static_cast<std::size_t>(
+                                     floorf(randf() * (n_alloys + 2)))
                                : maxWrecks;
             }
           }
@@ -8833,7 +8838,7 @@ void ShipEntity::becomeExplosion() {
       }
 
       // now convert to uint
-      numAlloys = floorf(n_alloys);
+      numAlloys = static_cast<std::size_t>(floorf(n_alloys));
 
       // Throw out scrap metal
       //
@@ -9613,7 +9618,9 @@ void ShipEntity::trackOntoTarget(double /* delta_t */, GLfloat dp) {
 
   if (dp > max_cos) return;  // ON TARGET!
 
-  if (vector_to_target.x || vector_to_target.y || vector_to_target.z)
+  if (static_cast<bool>(vector_to_target.x) ||
+      static_cast<bool>(vector_to_target.y) ||
+      static_cast<bool>(vector_to_target.z))
     vector_to_target = vector_normal(vector_to_target);
   else
     vector_to_target.z = 1.0;
@@ -9866,7 +9873,7 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat) {
     if (accuracy >= COMBAT_AI_TRACKS_CLOSER) {
       // much greater precision in combat
       if (max_flight_pitch > 1.0) {
-        max_factor = floor(max_flight_pitch / 0.125);
+        max_factor = static_cast<int>(floor(max_flight_pitch / 0.125));
         r_max_factor = 1.0 / max_factor;
       }
       min_d = 0.0004;  // 10 times more precision ~= 4m at 10km
@@ -9919,7 +9926,7 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat) {
     }
 
     if (d_up > min_d) {
-      int factor = sqrt(fabs(d_right) / fabs(min_d));
+      int factor = static_cast<int>(sqrt(fabs(d_right) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_right > min_d)
         stick_roll = -max_flight_roll * r_max_factor * factor;  // note#
@@ -9927,7 +9934,7 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat) {
         stick_roll = +max_flight_roll * r_max_factor * factor;  // note#
     }
     if (d_up < -min_d) {
-      int factor = sqrt(fabs(d_right) / fabs(min_d));
+      int factor = static_cast<int>(sqrt(fabs(d_right) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_right > min_d)
         stick_roll = +max_flight_roll * r_max_factor * factor;  // note#
@@ -9936,7 +9943,7 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat) {
     }
 
     if (stick_roll == 0.0) {
-      int factor = sqrt(fabs(d_up) / fabs(min_d));
+      int factor = static_cast<int>(sqrt(fabs(d_up) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_up > min_d)
         stick_pitch = -max_flight_pitch * reverse * r_max_factor * factor;
@@ -9981,7 +9988,8 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat) {
 
   if (d_forward < 0.0) return 0.0;
 
-  if ((!flightRoll) && (!flightPitch))  // no correction
+  if ((!static_cast<bool>(flightRoll)) &&
+      (!static_cast<bool>(flightPitch)))  // no correction
     return 1.0;
 
   return d_forward;
@@ -10058,7 +10066,7 @@ double ShipEntity::trackSideTarget(double delta_t, bool leftside) {
     }
 
     if (d_forward > min_d) {
-      int factor = sqrt(fabs(d_up) / fabs(min_d));
+      int factor = static_cast<int>(sqrt(fabs(d_up) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_up > min_d)
         stick_pitch = +max_flight_pitch * r_max_factor * factor;  // note#
@@ -10066,7 +10074,7 @@ double ShipEntity::trackSideTarget(double delta_t, bool leftside) {
         stick_pitch = -max_flight_pitch * r_max_factor * factor;  // note#
     }
     if (d_forward < -min_d) {
-      int factor = sqrt(fabs(d_up) / fabs(min_d));
+      int factor = static_cast<int>(sqrt(fabs(d_up) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_up > min_d)
         stick_pitch = +max_flight_pitch * r_max_factor * factor;  // note#
@@ -10076,13 +10084,13 @@ double ShipEntity::trackSideTarget(double delta_t, bool leftside) {
 
     if (fabs(stick_pitch) == 0.0 || fabs(d_forward) > 0.5) {
       stick_pitch = 0.0;
-      int factor = sqrt(fabs(d_forward) / fabs(min_d));
+      int factor = static_cast<int>(sqrt(fabs(d_forward) / fabs(min_d)));
       if (factor > max_factor) factor = max_factor;
       if (d_forward > min_d)
         stick_yaw = -max_flight_yaw * reverse * r_max_factor * factor;
       if (d_forward < -min_d) {
         if (factor < max_factor / 2.0)  // compensate for forward thrust
-          factor *= 2.0;
+          factor = static_cast<int>(factor * (2.0));
         stick_yaw = +max_flight_yaw * reverse * r_max_factor * factor;
       }
     }
@@ -10092,7 +10100,8 @@ double ShipEntity::trackSideTarget(double delta_t, bool leftside) {
 
   applySticks(delta_t);
 
-  if ((!flightPitch) && (!flightYaw))  // no correction
+  if ((!static_cast<bool>(flightPitch)) &&
+      (!static_cast<bool>(flightYaw)))  // no correction
     return 1.0;
 
   return d_right * reverse;
@@ -10285,7 +10294,7 @@ double ShipEntity::trackDestination(double delta_t, bool retreat) {
     }
 
     if (d_up > min_d) {
-      int factor = sqrt(fabs(d_right) / fabs(min_d));
+      int factor = static_cast<int>(sqrt(fabs(d_right) / fabs(min_d)));
       if (factor > 8) factor = 8;
       if (d_right > min_d)
         stick_roll = -max_flight_roll * reversePlayer * 0.125 *
@@ -10298,7 +10307,7 @@ double ShipEntity::trackDestination(double delta_t, bool retreat) {
     }
 
     if (d_up < -min_d) {
-      int factor = sqrt(fabs(d_right) / fabs(min_d));
+      int factor = static_cast<int>(sqrt(fabs(d_right) / fabs(min_d)));
       if (factor > 8) factor = 8;
       if (d_right > min_d)
         stick_roll = +max_flight_roll * reversePlayer * 0.125 *
@@ -10311,7 +10320,7 @@ double ShipEntity::trackDestination(double delta_t, bool retreat) {
     }
 
     if (stick_roll == 0.0) {
-      int factor = sqrt(fabs(d_up) / fabs(min_d));
+      int factor = static_cast<int>(sqrt(fabs(d_up) / fabs(min_d)));
       if (factor > 8) factor = 8;
       if (d_up > min_d)
         stick_pitch = -max_flight_pitch * reverse * 0.125 *
@@ -10354,7 +10363,8 @@ double ShipEntity::trackDestination(double delta_t, bool retreat) {
 
   if (d_forward < 0.0) return 0.0;
 
-  if ((!flightRoll) && (!flightPitch))  // no correction
+  if ((!static_cast<bool>(flightRoll)) &&
+      (!static_cast<bool>(flightPitch)))  // no correction
     return 1.0;
 
   return d_forward;
@@ -11360,7 +11370,7 @@ void ShipEntity::throwSparks() {
 
 void ShipEntity::considerFiringMissile(double delta_t) {
   int missile_chance = 0;
-  int rhs = 3.2 / delta_t;
+  int rhs = static_cast<int>(3.2 / delta_t);
   if (rhs) missile_chance = 1 + (ranrot_rand() % rhs);
 
   double hurt_factor = 16 * pow(energy / maxEnergy, 4.0);
@@ -11445,7 +11455,8 @@ Vector ShipEntity::missileLaunchPosition() {
   unsigned i;
   if (!identifier.has_value()) {
     // use a random missile from the list
-    i = floor(randf() * static_cast<double>(missiles));
+    i = static_cast<unsigned int>(
+        floor(randf() * static_cast<double>(missiles)));
     identifier = (missile_list[i] != nullptr ? missile_list[i]->identifier()
                                              : std::optional<std::string>());
     missile = (UNIVERSE != nullptr
@@ -13532,7 +13543,8 @@ void ShipEntity::interpretAIMessage(const std::string& ms) {
         sendExpandedMessage("[police-thanks-for-assist]", rescueShip);
         if (rescueShip != nullptr)
           rescueShip->setBounty(
-              (rescueShip != nullptr ? rescueShip->getBounty() : 0) * 0.80,
+              static_cast<OOCreditsQuantity>(
+                  (rescueShip != nullptr ? rescueShip->getBounty() : 0) * 0.80),
               OOLegalStatusReason::kAssistingPolice);  // lower bounty by 20%
       } else {
         sendExpandedMessage("[thanks-for-assist]", rescueShip);

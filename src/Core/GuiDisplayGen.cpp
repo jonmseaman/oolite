@@ -179,7 +179,7 @@ GuiDisplayGen::GuiDisplayGen() {
   size_in_pixels = NSMakeSize(MAIN_GUI_PIXEL_WIDTH, MAIN_GUI_PIXEL_HEIGHT);
   n_columns = GUI_DEFAULT_COLUMNS;
   n_rows = GUI_DEFAULT_ROWS;
-  pixel_row_center = size_in_pixels.width / 2;
+  pixel_row_center = static_cast<int>(size_in_pixels.width / 2);
   pixel_row_height = MAIN_GUI_ROW_HEIGHT;
   pixel_row_start =
       MAIN_GUI_PIXEL_ROW_START;  // first position down the page...
@@ -233,7 +233,7 @@ GuiDisplayGen::GuiDisplayGen(NSSize gui_size, int gui_cols, int gui_rows,
   size_in_pixels = gui_size;
   n_columns = gui_cols;
   n_rows = gui_rows;
-  pixel_row_center = size_in_pixels.width / 2;
+  pixel_row_center = static_cast<int>(size_in_pixels.width / 2);
   pixel_row_height = gui_row_height;
   pixel_row_start = gui_row_start;  // first position down the page...
   max_alpha = 1.0;
@@ -275,7 +275,7 @@ void GuiDisplayGen::resizeWithPixelSize(
   size_in_pixels = gui_size;
   n_columns = gui_cols;
   n_rows = gui_rows;
-  pixel_row_center = size_in_pixels.width / 2;
+  pixel_row_center = static_cast<int>(size_in_pixels.width / 2);
   pixel_row_height = gui_row_height;
   pixel_row_start = gui_row_start;  // first position down the page...
 
@@ -294,19 +294,21 @@ void GuiDisplayGen::resizeTo(NSSize gui_size, int csize,
   clear();
   //
   size_in_pixels = gui_size;
-  n_columns = gui_size.width / csize;
+  n_columns = static_cast<unsigned int>(gui_size.width / csize);
   n_rows = static_cast<int>(gui_size.height) / csize;
 
   title = TitleFrom(gui_title);
 
-  pixel_row_center = gui_size.width / 2;
+  pixel_row_center = static_cast<int>(gui_size.width / 2);
   pixel_row_height = csize;
   currentRow = n_rows - 1;  // first position down the page...
 
   if (title.has_value())
-    pixel_row_start = 2.75f * csize + 0.5f * (gui_size.height - n_rows * csize);
+    pixel_row_start = static_cast<int>(
+        2.75f * csize + 0.5f * (gui_size.height - n_rows * csize));
   else
-    pixel_row_start = csize + 0.5f * (gui_size.height - n_rows * csize);
+    pixel_row_start =
+        static_cast<int>(csize + 0.5f * (gui_size.height - n_rows * csize));
 
   rowText.clear();
   rowKey.clear();
@@ -657,9 +659,10 @@ int GuiDisplayGen::rowAtVirtualJoystickPosition(NSPoint vjpos) {
   if (cursor_y > size_in_pixels.height * 0.5)
     cursor_y = size_in_pixels.height * 0.5f;
 
-  return 1 + static_cast<float>(floor(
-                 (0.5f * size_in_pixels.height - pixel_row_start - cursor_y) /
-                 pixel_row_height));
+  return static_cast<int>(
+      1 + static_cast<float>(floor(
+              (0.5f * size_in_pixels.height - pixel_row_start - cursor_y) /
+              pixel_row_height)));
 }
 
 OOGUIRow GuiDisplayGen::addLongText(const std::optional<std::string>& str,
@@ -704,7 +707,7 @@ std::optional<std::string> GuiDisplayGen::reflowTextForMFD(
     const std::optional<std::string>& input) {
   std::string output;
   NSSize chSize = pixel_text_size;
-  std::size_t limit = chSize.width * 15;
+  std::size_t limit = static_cast<std::size_t>(chSize.width * 15);
   // nil split into no lines: the result was an empty string, not nil.
   if (!input.has_value()) return output;
   for (const std::string& line : oo::str::split(*input, "\n")) {
@@ -1165,8 +1168,8 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
       }
     } else {
       // three or more
-      pageCount =
-          ceil(static_cast<float>(eqptCount - i) / (itemsPerColumn * 2)) + 2;
+      pageCount = static_cast<std::size_t>(
+          ceil(static_cast<float>(eqptCount - i) / (itemsPerColumn * 2)) + 2);
       statusPage = static_cast<std::ptrdiff_t>(
           std::clamp<std::int64_t>(statusPage, 1, pageCount));
       start = (statusPage == 1) ? 0 : (statusPage - 1) * itemsPerColumn * 2 + 2;
@@ -1330,7 +1333,7 @@ int GuiDisplayGen::drawGUI(GLfloat alpha, bool drawCursor) {
       }
     }
 
-    if (fade_sign) {
+    if (static_cast<bool>(fade_sign)) {
       fade_alpha += static_cast<float>(
           fade_sign * (UNIVERSE != nullptr ? UNIVERSE->getTimeDelta() : 0.0));
       if (fade_alpha < 0.05f) {
@@ -1903,8 +1906,9 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
       }
 
       star2abs = systemManager->getCoordinatesForSystem(j, g);
-      double d = distanceBetweenPlanetPositions(starabs.x, starabs.y,
-                                                star2abs.x, star2abs.y);
+      double d = distanceBetweenPlanetPositions(
+          static_cast<int>(starabs.x), static_cast<int>(starabs.y),
+          static_cast<int>(star2abs.x), static_cast<int>(star2abs.y));
 
       if (d <= jumpRange) {
         // another_commander - Default to 7.0 LY.
@@ -2140,8 +2144,10 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
 
   // enable draw clipping; limit drawing area within the chart area
   OOGL(glEnable(GL_SCISSOR_TEST));
-  OOGL(glScissor(clipRect.origin.x, clipRect.origin.y, clipRect.size.width,
-                 clipRect.size.height));
+  OOGL(glScissor(static_cast<GLint>(clipRect.origin.x),
+                 static_cast<GLint>(clipRect.origin.y),
+                 static_cast<GLsizei>(clipRect.size.width),
+                 static_cast<GLsizei>(clipRect.size.height)));
 
   // Cache nearby systems so that [UNIVERSE generateSystemData:] does not get
   // called on every frame Caching code submitted by Y A J, 20091022
@@ -2256,9 +2262,11 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
     NSPoint targetCoordinates =
         systemManager->getCoordinatesForSystem(target, galaxy_id);
 
-    distance = distanceBetweenPlanetPositions(
-        targetCoordinates.x, targetCoordinates.y, galaxy_coordinates.x,
-        galaxy_coordinates.y);
+    distance =
+        distanceBetweenPlanetPositions(static_cast<int>(targetCoordinates.x),
+                                       static_cast<int>(targetCoordinates.y),
+                                       static_cast<int>(galaxy_coordinates.x),
+                                       static_cast<int>(galaxy_coordinates.y));
     if (distance == 0.0) {
       if (target != (PLAYER != nullptr ? PLAYER->systemID() : 0)) {
         // looking at the other half of a zero-distance double
@@ -2533,8 +2541,10 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
       if (!(player != nullptr ? player->showInfoFlag() : false)) {
         // System's name
         d = distanceBetweenPlanetPositions(
-            galaxy_coordinates.x, galaxy_coordinates.y, sys_coordinates.x,
-            sys_coordinates.y);
+            static_cast<int>(galaxy_coordinates.x),
+            static_cast<int>(galaxy_coordinates.y),
+            static_cast<int>(sys_coordinates.x),
+            static_cast<int>(sys_coordinates.y));
         if (d <= jumpRange) {
           setGLColorFromSetting(kGuiChartLabelReachableColor,
                                 OOColor::yellowColor().get(), alpha);
@@ -2571,8 +2581,10 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
 
       if (!(player != nullptr ? player->showInfoFlag() : false)) {
         d = distanceBetweenPlanetPositions(
-            galaxy_coordinates.x, galaxy_coordinates.y, sys_coordinates.x,
-            sys_coordinates.y);
+            static_cast<int>(galaxy_coordinates.x),
+            static_cast<int>(galaxy_coordinates.y),
+            static_cast<int>(sys_coordinates.x),
+            static_cast<int>(sys_coordinates.y));
         if (d <= jumpRange) {
           setGLColorFromSetting(kGuiChartLabelReachableColor,
                                 OOColor::yellowColor().get(), alpha);

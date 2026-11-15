@@ -672,7 +672,7 @@ void OOTrumble::updateBlink(double delta_t) {
 }
 
 void OOTrumble::updateSnarl(double delta_t) {
-  int pc = 100 * animationTime / animationDuration;
+  int pc = static_cast<int>(100 * animationTime / animationDuration);
   if (pc < 25) {
     eyeFrame = trumble_eyes::kShut;
     mouthFrame = trumble_mouth::kGrowl;
@@ -706,10 +706,10 @@ void OOTrumble::updateSnarl(double delta_t) {
 }
 
 void OOTrumble::updateProot(double delta_t) {
-  if (!animationTime) {
+  if (!static_cast<bool>(animationTime)) {
     animationStage = 0;
   }
-  int pc = 100 * animationTime / animationDuration;
+  int pc = static_cast<int>(100 * animationTime / animationDuration);
   if (pc < 10) {
     eyeFrame = trumble_eyes::kShut;
     mouthFrame = trumble_mouth::kPout;
@@ -737,12 +737,12 @@ void OOTrumble::updateProot(double delta_t) {
 }
 
 void OOTrumble::updateShudder(double delta_t) {
-  if (!animationTime) {
+  if (!static_cast<bool>(animationTime)) {
     eyeFrame = trumble_eyes::kWide;
     mouthFrame = trumble_mouth::kGrowl;
     PlayTrumbleSqueal();
   }
-  int pc = 100 * animationTime / animationDuration;
+  int pc = static_cast<int>(100 * animationTime / animationDuration);
   if (pc < 10) {
     eyeFrame = trumble_eyes::kWide;
     mouthFrame = trumble_mouth::kGrowl;
@@ -770,7 +770,7 @@ void OOTrumble::updateShudder(double delta_t) {
 void OOTrumble::updateStoned(double /*delta_t*/) {}
 
 void OOTrumble::updatePop(double delta_t) {
-  if (!animationTime) {
+  if (!static_cast<bool>(animationTime)) {
     eyeFrame = trumble_eyes::kShut;
     mouthFrame = trumble_mouth::kGrowl;
     movement.y = (ranrot_rand() & 7);
@@ -807,12 +807,12 @@ void OOTrumble::updatePop(double delta_t) {
 }
 
 void OOTrumble::updateSleep(double delta_t) {
-  if (!animationTime) {
+  if (!static_cast<bool>(animationTime)) {
     saved_float1 = eye_position.y;
     saved_float2 = mouth_position.y;
   }
   eyeFrame = trumble_eyes::kShut;
-  int pc = 512 * animationTime / animationDuration;
+  int pc = static_cast<int>(512 * animationTime / animationDuration);
   if (pc & 16) {
     double vibr = (pc & 2) ? -0.0025 : 0.0025;
     eye_position.y += size * vibr;
@@ -841,7 +841,7 @@ void OOTrumble::updateSpawn(double delta_t) {
   rotational_velocity *= (1.0 - delta_t);
   eyeFrame = trumble_eyes::kWide;
   mouthFrame = trumble_mouth::kPout;
-  int pc = 256 * animationTime / animationDuration;
+  int pc = static_cast<int>(256 * animationTime / animationDuration);
   double vibr = (pc & 2) ? -0.002 * pc : 0.002 * pc;
   position.x += size * vibr;
   animationTime += delta_t;

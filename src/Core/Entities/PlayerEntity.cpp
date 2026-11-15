@@ -1520,8 +1520,8 @@ oo::PList PlayerEntity::commanderDataDictionary() {
   //	munge_checksum(galaxy_seed.a);	munge_checksum(galaxy_seed.b);
   // munge_checksum(galaxy_seed.c); 	munge_checksum(galaxy_seed.d);
   // munge_checksum(galaxy_seed.e);	munge_checksum(galaxy_seed.f);
-  munge_checksum(galaxy_coordinates.x);
-  munge_checksum(galaxy_coordinates.y);
+  munge_checksum(static_cast<std::int64_t>(galaxy_coordinates.x));
+  munge_checksum(static_cast<std::int64_t>(galaxy_coordinates.y));
   munge_checksum(credits);
   munge_checksum(fuel);
   munge_checksum(max_cargo);
@@ -3500,7 +3500,7 @@ void PlayerEntity::doBookkeeping(double delta_t) {
 
   // smart_zoom
   UPDATE_STAGE("updating scanner zoom");
-  if (scanner_zoom_rate) {
+  if (static_cast<bool>(scanner_zoom_rate)) {
     double z =
         (hud != nullptr) ? hud->scannerZoom() : 0.0f;  // a nil HUD answered 0
     double z1 = z + scanner_zoom_rate * delta_t;
@@ -3834,7 +3834,7 @@ void PlayerEntity::updateClocks(OOTimeDelta delta_t) {
   // shot time updates are still needed here for OOEntityStatus::kDead!
   shot_time += delta_t;
   script_time += delta_t;
-  unsigned prev_day = floor(ship_clock / 86400);
+  unsigned prev_day = static_cast<unsigned int>(floor(ship_clock / 86400));
   ship_clock += delta_t;
   if (ship_clock_adjust > 0.0) {
     // adjust for coming out of warp (add LY * LY hrs)
@@ -3854,7 +3854,7 @@ void PlayerEntity::updateClocks(OOTimeDelta delta_t) {
     ship_clock_adjust = 0.0;
   }
 
-  unsigned now_day = floor(ship_clock / 86400.0);
+  unsigned now_day = static_cast<unsigned int>(floor(ship_clock / 86400.0));
   while (prev_day < now_day) {
     prev_day++;
     doScriptEvent(OOJSID("dayChanged"), {oo::PList::unsignedInteger(prev_day)});
@@ -4161,7 +4161,7 @@ void PlayerEntity::performWitchspaceCountdownUpdates(OOTimeDelta delta_t) {
     return;
   }
 
-  int seconds = round(witchspaceCountdown);
+  int seconds = static_cast<int>(round(witchspaceCountdown));
   if (galactic_witchjump) {
     if (UNIVERSE != nullptr)
       UNIVERSE->displayCountdownMessage(
@@ -4658,8 +4658,9 @@ void PlayerEntity::applyAttitudeChanges(double delta_t) {
 void PlayerEntity::applyRoll(GLfloat roll1, GLfloat climb1) {
   if (roll1 == 0.0 && climb1 == 0.0 && hasRotated == false) return;
 
-  if (roll1) quaternion_rotate_about_z(&orientation, -roll1);
-  if (climb1) quaternion_rotate_about_x(&orientation, -climb1);
+  if (static_cast<bool>(roll1)) quaternion_rotate_about_z(&orientation, -roll1);
+  if (static_cast<bool>(climb1))
+    quaternion_rotate_about_x(&orientation, -climb1);
 
   /*	Bugginess may put us in a state where the orientation quat is all
           zeros, at which point it’s impossible to move.
@@ -6345,7 +6346,7 @@ GLfloat PlayerEntity::doesHitLine(HPVector v0, HPVector v1,
   Vector w1 = make_vector(dot_product(u1, v_right), dot_product(u1, v_up),
                           dot_product(u1, v_forward));
   GLfloat hit_distance = octree ? octree->isHitByLine(w0, w1) : 0.0f;
-  if (hit_distance) {
+  if (static_cast<bool>(hit_distance)) {
     if (hitEntity) hitEntity[0] = oo::ToShip(this);
   }
 
@@ -6367,7 +6368,8 @@ GLfloat PlayerEntity::doesHitLine(HPVector v0, HPVector v1,
     w1 = resolveVectorInIJK(u1, ijk);
 
     GLfloat hitSub = (se->octree ? se->octree->isHitByLine(w0, w1) : 0.0f);
-    if (hitSub && (hit_distance == 0 || hit_distance > hitSub)) {
+    if (static_cast<bool>(hitSub) &&
+        (hit_distance == 0 || hit_distance > hitSub)) {
       hit_distance = hitSub;
       if (hitEntity && !shields) {
         *hitEntity = se;
@@ -6946,7 +6948,7 @@ void PlayerEntity::collectBountyFor(::ShipEntity* other) {
 
 bool PlayerEntity::takeInternalDamage() {
   unsigned n_cargo = maxAvailableCargoSpace();
-  unsigned n_mass = getMass() / 10000;
+  unsigned n_mass = static_cast<unsigned int>(getMass() / 10000);
   unsigned n_considered =
       (n_cargo + n_mass) * ship_trade_in_factor /
       100;  // a lower value of n_considered means more vulnerable to damage.
@@ -7565,13 +7567,15 @@ double PlayerEntity::hyperspaceJumpDistance() {
            ? UNIVERSE->getSystemManager()->getProperty(
                  "coordinates", nextHopTargetSystemID(), galaxy_number)
            : oo::PList()));
-  return distanceBetweenPlanetPositions(
-      targetCoordinates.x, targetCoordinates.y, galaxy_coordinates.x,
-      galaxy_coordinates.y);
+  return distanceBetweenPlanetPositions(static_cast<int>(targetCoordinates.x),
+                                        static_cast<int>(targetCoordinates.y),
+                                        static_cast<int>(galaxy_coordinates.x),
+                                        static_cast<int>(galaxy_coordinates.y));
 }
 
 OOFuelQuantity PlayerEntity::fuelRequiredForJump() {
-  return 10.0 * std::max(0.1, hyperspaceJumpDistance());
+  return static_cast<OOFuelQuantity>(10.0 *
+                                     std::max(0.1, hyperspaceJumpDistance()));
 }
 
 bool PlayerEntity::hasSufficientFuelForJump() {
@@ -7872,7 +7876,9 @@ void PlayerEntity::witchJumpTo(OOSystemID sTo, bool misjump) {
                                                        galaxy_number)
            : oo::PList()));
   double distance = distanceBetweenPlanetPositions(
-      destCoords.x, destCoords.y, galaxy_coordinates.x, galaxy_coordinates.y);
+      static_cast<int>(destCoords.x), static_cast<int>(destCoords.y),
+      static_cast<int>(galaxy_coordinates.x),
+      static_cast<int>(galaxy_coordinates.y));
 
   // if we just escaped a system gone nova, make sure all nova parameters are
   // reset
@@ -8724,7 +8730,8 @@ oo::PList::Array PlayerEntity::contractsListForScriptingFromArray(
         oo::PList::unsignedInteger(static_cast<unsigned int>(planet));
     setString(contract, "startName", planetName);
 
-    int dest_eta = dict.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
+    int dest_eta = static_cast<int>(
+        dict.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock);
     contract["eta"] = oo::PList::signedInteger(dest_eta);
     setString(contract, "etaDescription",
               (UNIVERSE != nullptr ? UNIVERSE->shortTimeDescription(dest_eta)
@@ -8875,8 +8882,10 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
                      info_system_id, galaxy_number)
                : NSMakePoint(0, 0));
       double distance = distanceBetweenPlanetPositions(
-          infoSystemCoordinates.x, infoSystemCoordinates.y,
-          galaxy_coordinates.x, galaxy_coordinates.y);
+          static_cast<int>(infoSystemCoordinates.x),
+          static_cast<int>(infoSystemCoordinates.y),
+          static_cast<int>(galaxy_coordinates.x),
+          static_cast<int>(galaxy_coordinates.y));
       if (distance == 0.0 && info_system_id != system_id) {
         distance = 0.1;
       }
@@ -9279,7 +9288,8 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
       // (+respondsToSelector:@selector(masterVolume)
       // was always YES)
       double volume = 100.0 * ::OOSound::masterVolume();
-      int vol = (volume / 5.0 + 0.5);  // avoid rounding errors
+      int vol =
+          (static_cast<int>(volume / 5.0 + 0.5));  // avoid rounding errors
       const std::string soundVolumeWordDesc =
           OO_DESC("gameoptions-sound-volume");
       if (vol > 0)
@@ -9980,14 +9990,15 @@ void PlayerEntity::setGuiToEquipShipScreen(
           price = pricePerUnit;
         }
 
-        price = adjustPriceByScriptForEqKey(eqKey, price);
+        price = adjustPriceByScriptForEqKey(
+            eqKey, static_cast<OOCreditsQuantity>(price));
 
         price *= priceFactor;  // increased prices at some stations
 
         std::size_t installTime =
             (eqInfo != nullptr ? eqInfo->installTime() : 0);
         if (installTime == 0) {
-          installTime = 600 + price;
+          installTime = static_cast<std::size_t>(600 + price);
         }
         // is this item damaged?
         if (hasEquipmentItem(OptionalKeyPList(
@@ -9997,7 +10008,7 @@ void PlayerEntity::setGuiToEquipShipScreen(
           price /= 2.0;
           installTime = (eqInfo != nullptr ? eqInfo->repairTime() : 0);
           if (installTime == 0) {
-            installTime = 600 + price;
+            installTime = static_cast<std::size_t>(600 + price);
           }
           gui->setColor(gui->colorFromSetting(kGuiEquipmentRepairColor,
                                               OOColor::orangeColor().get())
@@ -10009,7 +10020,8 @@ void PlayerEntity::setGuiToEquipShipScreen(
             (UNIVERSE != nullptr ? UNIVERSE->shortTimeDescription(installTime)
                                  : std::optional<std::string>())
                 .value_or("(null)");
-        std::string priceString = std::format(" {} ", OOCredits(price));
+        std::string priceString = std::format(
+            " {} ", OOCredits(static_cast<OOCreditsQuantity>(price)));
 
         if (eqKeyForSelectFacing == eqKey) {
           // Weapons purchase subscreen.
@@ -10077,7 +10089,9 @@ void PlayerEntity::setGuiToEquipShipScreen(
               // Always true for the first pass. The first pass
               // is used to display the name of the weapon being
               // purchased.
-              priceString = std::format(" {} ", OOCredits(price * multiplier));
+              priceString =
+                  std::format(" {} ", OOCredits(static_cast<OOCreditsQuantity>(
+                                          price * multiplier)));
 
               gui->setKey(eqKey, row);
               gui->setArray(
@@ -10898,7 +10912,8 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
     price = renovationCosts();
   }
 
-  price = adjustPriceByScriptForEqKey(eqKey, price);
+  price =
+      adjustPriceByScriptForEqKey(eqKey, static_cast<OOCreditsQuantity>(price));
 
   ::StationEntity* dockedStation = this->dockedStation();
   if (dockedStation) {
@@ -10986,7 +11001,7 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
       }
       return false;
     }
-    credits -= price;
+    credits = static_cast<OOCreditsQuantity>(credits - (price));
 
     // Refund current_weapon
     if (current_weapon != nullptr) {
@@ -11027,8 +11042,8 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
 
   if ((eqKey == "EQ_FUEL")) {
 #if MASS_DEPENDENT_FUEL_PRICES
-    OOCreditsQuantity creditsForRefuel =
-        (fuelCapacity() - getFuel()) * pricePerUnit * fuelChargeRate();
+    OOCreditsQuantity creditsForRefuel = static_cast<OOCreditsQuantity>(
+        (fuelCapacity() - getFuel()) * pricePerUnit * fuelChargeRate());
 #else
     OOCreditsQuantity creditsForRefuel =
         (fuelCapacity() - getFuel()) * pricePerUnit;
@@ -11096,7 +11111,7 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
           (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
               .get<unsigned int>(KEY_TECHLEVEL);
 
-    credits -= price;
+    credits = static_cast<OOCreditsQuantity>(credits - (price));
     ship_trade_in_factor +=
         5 + techLevel;  // you get better value at high-tech repair bases
     if (ship_trade_in_factor > 100) ship_trade_in_factor = 100;
@@ -11119,7 +11134,7 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
 
     bool mounted_okay = mountMissile(weapon);
     if (mounted_okay) {
-      credits -= price;
+      credits = static_cast<OOCreditsQuantity>(credits - (price));
       safeAllMissiles();
       tidyMissilePylons();
       setActiveMissile(0);
@@ -11129,25 +11144,25 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
 
   if ((eqKey == "EQ_PASSENGER_BERTH")) {
     changePassengerBerths(+1);
-    credits -= price;
+    credits = static_cast<OOCreditsQuantity>(credits - (price));
     return true;
   }
 
   if ((eqKey == "EQ_PASSENGER_BERTH_REMOVAL")) {
     changePassengerBerths(-1);
-    credits -= price;
+    credits = static_cast<OOCreditsQuantity>(credits - (price));
     return true;
   }
 
   if ((eqKey == "EQ_MISSILE_REMOVAL")) {
-    credits -= price;
+    credits = static_cast<OOCreditsQuantity>(credits - (price));
     tradeIn += removeMissiles();
     doTradeIn(tradeIn, priceFactor);
     return true;
   }
 
   if (canAddEquipment(eqKey, "purchase")) {
-    credits -= price;
+    credits = static_cast<OOCreditsQuantity>(credits - (price));
     addEquipmentItem(eqKey, false, "purchase");  // no need to validate twice.
     if (isRepair) {
       doScriptEvent(OOJSID("equipmentRepaired"), {oo::PList(eqKey)});
@@ -11255,7 +11270,9 @@ OOCreditsQuantity PlayerEntity::removeMissiles() {
 void PlayerEntity::doTradeIn(OOCreditsQuantity tradeInValue,
                              double priceFactor) {
   if (tradeInValue != 0) {
-    if (priceFactor < 1.0) tradeInValue *= priceFactor;
+    if (priceFactor < 1.0)
+      tradeInValue =
+          static_cast<OOCreditsQuantity>(tradeInValue * (priceFactor));
     credits += tradeInValue;
   }
 }
@@ -12060,7 +12077,8 @@ bool PlayerEntity::tryBuyingCommodity(const std::string& index, bool all) {
     purchase = market_quantity;  // limit to what's available
   }
   if (purchase * pricePerUnit > credits) {
-    purchase = floor(credits / pricePerUnit);  // limit to what's affordable
+    purchase = static_cast<int>(
+        floor(credits / pricePerUnit));  // limit to what's affordable
   }
   // TODO - fix brokenness here...
   if (unit == OOMassUnit::kTons &&
@@ -13527,8 +13545,8 @@ OOGalacticHyperspaceBehaviour PlayerEntity::getGalacticHyperspaceBehaviour() {
 
 void PlayerEntity::setGalacticHyperspaceFixedCoords(NSPoint point) {
   return setGalacticHyperspaceFixedCoordsX(
-      OOClamp_0_max_f(round(point.x), 255.0f),
-      OOClamp_0_max_f(round(point.y), 255.0f));
+      static_cast<unsigned char>(OOClamp_0_max_f(round(point.x), 255.0f)),
+      static_cast<unsigned char>(OOClamp_0_max_f(round(point.y), 255.0f)));
 }
 
 void PlayerEntity::setGalacticHyperspaceFixedCoordsX(unsigned char x,
@@ -13717,7 +13735,8 @@ OODockingClearanceStatus PlayerEntity::getDockingClearanceStatus() {
 
 void PlayerEntity::penaltyForUnauthorizedDocking() {
   OOCreditsQuantity amountToPay = 0;
-  OOCreditsQuantity calculatedFine = credits * 0.05;
+  OOCreditsQuantity calculatedFine =
+      static_cast<OOCreditsQuantity>(credits * 0.05);
   OOCreditsQuantity maximumFine = 50000ULL;
 
   if (clearedToDock()) return;
@@ -14071,8 +14090,9 @@ bool PlayerEntity::suppressClangStuff() const {
          n_key_dump_target_state && n_key_dump_entity_list &&
          n_key_debug_full && n_key_debug_collision &&
          n_key_debug_console_connect && n_key_debug_bounding_boxes &&
-         n_key_debug_shaders && n_key_debug_off && _sysInfoLight.x &&
-         selFunctionIdx && !stickFunctions.empty() && !keyFunctions.empty() &&
+         n_key_debug_shaders && n_key_debug_off &&
+         static_cast<bool>(_sysInfoLight.x) && selFunctionIdx &&
+         !stickFunctions.empty() && !keyFunctions.empty() &&
          !customEquipActivation.empty() && !customActivatePressed.empty() &&
          !customModePressed.empty() && !kbdLayouts.empty() &&
          showingLongRangeChart && _missionAllowInterrupt &&

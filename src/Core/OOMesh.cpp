@@ -757,7 +757,8 @@ size_t OOMesh::totalSize() {
    building this into the app, but I can't find it in docs.
 */
 bool OOMesh::suppressClangStuff() {
-  return _normals && _tangents && _faces && _boundingBox.min.x;
+  return _normals && _tangents && _faces &&
+         static_cast<bool>(_boundingBox.min.x);
 }
 
 bool OOMesh::initWithName(const std::string& name,

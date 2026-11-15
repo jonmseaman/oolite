@@ -81,7 +81,8 @@ Vector vector_forward_from_quaternion(Quaternion quat) {
   res.y = yz + wx;
   res.z = 1.0f - xx - yy;
 
-  if (res.x || res.y || res.z)
+  if (static_cast<bool>(res.x) || static_cast<bool>(res.y) ||
+      static_cast<bool>(res.z))
     return vector_normal(res);
   else
     return make_vector(0.0f, 0.0f, 1.0f);
@@ -118,7 +119,8 @@ Vector vector_up_from_quaternion(Quaternion quat) {
   res.y = 1.0f - xx - zz;
   res.z = yz - wx;
 
-  if (res.x || res.y || res.z)
+  if (static_cast<bool>(res.x) || static_cast<bool>(res.y) ||
+      static_cast<bool>(res.z))
     return vector_normal(res);
   else
     return make_vector(0.0f, 1.0f, 0.0f);
@@ -149,7 +151,8 @@ Vector vector_right_from_quaternion(Quaternion quat) {
   res.y = xy - wz;
   res.z = xz + wy;
 
-  if (res.x || res.y || res.z)
+  if (static_cast<bool>(res.x) || static_cast<bool>(res.y) ||
+      static_cast<bool>(res.z))
     return vector_normal(res);
   else
     return make_vector(1.0f, 0.0f, 0.0f);
@@ -185,7 +188,8 @@ void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight,
     outRight->y = xy - wz;
     outRight->z = xz + wy;
 
-    if (outRight->x || outRight->y || outRight->z)
+    if (static_cast<bool>(outRight->x) || static_cast<bool>(outRight->y) ||
+        static_cast<bool>(outRight->z))
       *outRight = vector_normal(*outRight);
     else
       *outRight = make_vector(1.0f, 0.0f, 0.0f);
@@ -196,7 +200,8 @@ void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight,
     outUp->y = 1.0f - xx - zz;
     outUp->z = yz - wx;
 
-    if (outUp->x || outUp->y || outUp->z)
+    if (static_cast<bool>(outUp->x) || static_cast<bool>(outUp->y) ||
+        static_cast<bool>(outUp->z))
       *outUp = vector_normal(*outUp);
     else
       *outUp = make_vector(0.0f, 1.0f, 0.0f);
@@ -207,7 +212,8 @@ void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight,
     outForward->y = yz + wx;
     outForward->z = 1.0f - xx - yy;
 
-    if (outForward->x || outForward->y || outForward->z)
+    if (static_cast<bool>(outForward->x) || static_cast<bool>(outForward->y) ||
+        static_cast<bool>(outForward->z))
       *outForward = vector_normal(*outForward);
     else
       *outForward = make_vector(0.0f, 0.0f, 1.0f);

@@ -943,7 +943,7 @@ void PlayerEntity::beginWitchspaceCountdown(int spin_time) {
     playStandardHyperspace();
     // say it!
     if (UNIVERSE != nullptr) UNIVERSE->clearPreviousMessage();
-    int seconds = round(witchspaceCountdown);
+    int seconds = static_cast<int>(round(witchspaceCountdown));
     const std::string destination =
         (UNIVERSE != nullptr ? UNIVERSE->getSystemName(nextHopTargetSystemID())
                              : std::optional<std::string>())
@@ -966,7 +966,7 @@ void PlayerEntity::beginWitchspaceCountdown(int spin_time) {
 
 void PlayerEntity::beginWitchspaceCountdown() {
   if (hasHyperspaceMotor()) {
-    beginWitchspaceCountdown(hyperspaceMotorSpinTime);
+    beginWitchspaceCountdown(static_cast<int>(hyperspaceMotorSpinTime));
   }
 }
 
@@ -1840,7 +1840,8 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                   UNIVERSE->addMessage(OO_DESC("witch-user-abort"), 3.0);
               }
             } else if (witchJumpChecklist(false)) {
-              beginWitchspaceCountdown(hyperspaceMotorSpinTime);
+              beginWitchspaceCountdown(
+                  static_cast<int>(hyperspaceMotorSpinTime));
             }
           }
           hyperspace_pressed = true;
@@ -3726,11 +3727,11 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
         // if user has manually modified the hdr_maxBrightness_array in
         // descriptions.plist
         if (brightnessValue < MIN_HDR_MAXBRIGHTNESS)
-          brightnessValue =
-              direction == -1 ? MAX_HDR_MAXBRIGHTNESS : MIN_HDR_MAXBRIGHTNESS;
+          brightnessValue = static_cast<int>(
+              direction == -1 ? MAX_HDR_MAXBRIGHTNESS : MIN_HDR_MAXBRIGHTNESS);
         if (brightnessValue > MAX_HDR_MAXBRIGHTNESS)
-          brightnessValue =
-              direction == 1 ? MIN_HDR_MAXBRIGHTNESS : MAX_HDR_MAXBRIGHTNESS;
+          brightnessValue = static_cast<int>(
+              direction == 1 ? MIN_HDR_MAXBRIGHTNESS : MAX_HDR_MAXBRIGHTNESS);
 
         if (gameView != nullptr)
           gameView->setHDRMaxBrightness(static_cast<float>(brightnessValue));
@@ -4019,7 +4020,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       bool leftKeyDown =
           checkKeyPress(n_key_gui_arrow_left) || joyButtonState[BUTTON_GUILEFT];
       double volume = 100.0 * ::OOSound::masterVolume();
-      int vol = (volume / 5.0 + 0.5);
+      int vol = (static_cast<int>(volume / 5.0 + 0.5));
       if (rightKeyDown) vol++;
       if (leftKeyDown) vol--;
       vol = std::clamp(vol, 0, 20);
@@ -4699,7 +4700,7 @@ void PlayerEntity::pollViewControls() {
                              : StringInput{}) == StringInput::kNo)) ||
       joyButtonState[BUTTON_SCANNERZOOM]) {
     // look for the 'z' key
-    if (!scanner_zoom_rate) {
+    if (!static_cast<bool>(scanner_zoom_rate)) {
       if (((hud != nullptr) ? hud->scannerZoom() : 0.0f) < 5.0) {
         // a nil HUD answered 0
         if ((((hud != nullptr) ? hud->scannerZoom() : 0.0f) > 1.0) ||
@@ -4722,7 +4723,8 @@ void PlayerEntity::pollViewControls() {
                              : StringInput{}) == StringInput::kNo)) ||
       joyButtonState[BUTTON_SCANNERUNZOOM]) {
     // look for the 'Z' key
-    if ((!scanner_zoom_rate) && (hud != nullptr && hud->scannerZoom() > 1.0))
+    if ((!static_cast<bool>(scanner_zoom_rate)) &&
+        (hud != nullptr && hud->scannerZoom() > 1.0))
       scanner_zoom_rate = SCANNER_ZOOM_RATE_DOWN;
   }
 

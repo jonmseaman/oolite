@@ -134,8 +134,10 @@ OOPixMap OOConvertCubeMapToLatLong(OOPixMap sourcePixMap,
 
       // Scale coordinates.
       r = 1.0f / r;
-      OOPixMapDimension ix = (faceX * r + 1.0f) * halfSize;
-      OOPixMapDimension iy = (faceY * r + 1.0f) * halfSize;
+      OOPixMapDimension ix =
+          static_cast<OOPixMapDimension>((faceX * r + 1.0f) * halfSize);
+      OOPixMapDimension iy =
+          static_cast<OOPixMapDimension>((faceY * r + 1.0f) * halfSize);
 
 #ifndef NDEBUG
       assert(ix < sourcePixMap.width && iy < sourcePixMap.width);

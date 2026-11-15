@@ -303,7 +303,8 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView,
     ranrot_srand(*options.seed);
     OOInitReallyRandom(*options.seed);
   } else {
-    OOInitReallyRandom(oo::date::timeIntervalSinceReferenceDate() * 1e9);
+    OOInitReallyRandom(static_cast<uint64_t>(
+        oo::date::timeIntervalSinceReferenceDate() * 1e9));
   }
 
   oo::Defaults& prefs = oo::Defaults::standard();
@@ -382,7 +383,8 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView,
 
   // Set up speech synthesizer.
 #if OOLITE_SPEECH_SYNTH
-  oo::SpeechSynthesizer::shared().loadVoices(::OOSound::masterVolume() * 100);
+  oo::SpeechSynthesizer::shared().loadVoices(
+      static_cast<int>(::OOSound::masterVolume() * 100));
 #endif
 
   ::GameController::sharedController()->logProgress(OO_DESC("loading-ships"));
@@ -4456,7 +4458,8 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithRole(
           // them.
           if (role == "pirate") {
             if (ship != nullptr)
-              ship->setBounty(20 + randf() * 50, OOLegalStatusReason::kSetup);
+              ship->setBounty(static_cast<OOCreditsQuantity>(20 + randf() * 50),
+                              OOLegalStatusReason::kSetup);
           }
           if (role == "trader") {
             if (ship != nullptr)
@@ -6151,7 +6154,8 @@ bool Universe::isVectorClearFromEntity(Entity* e1, double dist, HPVector p2) {
   for (i = 0; i < ent_count; i++)
     my_entities[i] = oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
 
-  if (v1.x || v1.y || v1.z)
+  if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
+      static_cast<bool>(v1.z))
     f1 = HPvector_normal(v1);  // unit vector in direction of p2 from p1
   else
     f1 = make_HPvector(0, 0, 1);
@@ -6218,7 +6222,8 @@ Entity* Universe::hazardOnRouteFromEntity(Entity* e1, double dist,
   for (i = 0; i < ent_count; i++)
     my_entities[i] = oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
 
-  if (v1.x || v1.y || v1.z)
+  if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
+      static_cast<bool>(v1.z))
     f1 = HPvector_normal(v1);  // unit vector in direction of p2 from p1
   else
     f1 = make_HPvector(0, 0, 1);
@@ -6286,7 +6291,8 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
   double nearest =
       sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z) - dist;  // length of vector
 
-  if (v1.x || v1.y || v1.z)
+  if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
+      static_cast<bool>(v1.z))
     f1 = HPvector_normal(v1);  // unit vector in direction of p2 from p1
   else
     f1 = make_HPvector(0, 0, 1);
@@ -6343,7 +6349,8 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
           outward.x -= result.x;
           outward.y -= result.y;
           outward.z -= result.z;
-          if (outward.x || outward.y || outward.z)
+          if (static_cast<bool>(outward.x) || static_cast<bool>(outward.y) ||
+              static_cast<bool>(outward.z))
             outward = HPvector_normal(outward);
           else
             outward.y = 1.0;
@@ -6354,7 +6361,8 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
           backward.x -= result.x;
           backward.y -= result.y;
           backward.z -= result.z;
-          if (backward.x || backward.y || backward.z)
+          if (static_cast<bool>(backward.x) || static_cast<bool>(backward.y) ||
+              static_cast<bool>(backward.z))
             backward = HPvector_normal(backward);
           else
             backward.z = -1.0;
@@ -8747,8 +8755,9 @@ oo::PList Universe::nearbyDestinationsWithinRange(double range) {
 
   for (std::uint16_t i = 0; i < 256; i++) {
     NSPoint there = coordinatesForSystem(i);
-    double dist =
-        distanceBetweenPlanetPositions(here.x, here.y, there.x, there.y);
+    double dist = distanceBetweenPlanetPositions(
+        static_cast<int>(here.x), static_cast<int>(here.y),
+        static_cast<int>(there.x), static_cast<int>(there.y));
     if (dist <= range && (i != systemID || inInterstellarSpace())) {
       // if we are in interstellar space, it's OK to
       // include the system we (mis)jumped from
@@ -8788,8 +8797,9 @@ OOSystemID Universe::findNeighbouringSystemToCoords(NSPoint coords,
             (systemManager != nullptr ? systemManager->getCoordinatesForSystem(
                                             static_cast<OOSystemID>(j), g)
                                       : NSMakePoint(0, 0));
-        double dist =
-            distanceBetweenPlanetPositions(ipos.x, ipos.y, jpos.x, jpos.y);
+        double dist = distanceBetweenPlanetPositions(
+            static_cast<int>(ipos.x), static_cast<int>(ipos.y),
+            static_cast<int>(jpos.x), static_cast<int>(jpos.y));
         if (dist <= MAX_JUMP_RANGE) {
           connected[j] |= connected[i];
           connected[i] |= connected[j];
@@ -8804,7 +8814,8 @@ OOSystemID Universe::findNeighbouringSystemToCoords(NSPoint coords,
                                         static_cast<OOSystemID>(i), g)
                                   : NSMakePoint(0, 0));
     distance = distanceBetweenPlanetPositions(
-        static_cast<int>(coords.x), static_cast<int>(coords.y), ipos.x, ipos.y);
+        static_cast<int>(coords.x), static_cast<int>(coords.y),
+        static_cast<int>(ipos.x), static_cast<int>(ipos.y));
     if ((connected[i]) && (distance < min_dist) && (distance != 0.0)) {
       min_dist = distance;
       system = static_cast<OOSystemID>(i);
@@ -8839,8 +8850,9 @@ OOSystemID Universe::findConnectedSystemAtCoords(NSPoint coords, OOGalaxyID g) {
             (systemManager != nullptr ? systemManager->getCoordinatesForSystem(
                                             static_cast<OOSystemID>(j), g)
                                       : NSMakePoint(0, 0));
-        double dist =
-            distanceBetweenPlanetPositions(ipos.x, ipos.y, jpos.x, jpos.y);
+        double dist = distanceBetweenPlanetPositions(
+            static_cast<int>(ipos.x), static_cast<int>(ipos.y),
+            static_cast<int>(jpos.x), static_cast<int>(jpos.y));
         if (dist <= MAX_JUMP_RANGE) {
           connected[j] |= connected[i];
           connected[i] |= connected[j];
@@ -8855,7 +8867,8 @@ OOSystemID Universe::findConnectedSystemAtCoords(NSPoint coords, OOGalaxyID g) {
                                         static_cast<OOSystemID>(i), g)
                                   : NSMakePoint(0, 0));
     distance = distanceBetweenPlanetPositions(
-        static_cast<int>(coords.x), static_cast<int>(coords.y), ipos.x, ipos.y);
+        static_cast<int>(coords.x), static_cast<int>(coords.y),
+        static_cast<int>(ipos.x), static_cast<int>(ipos.y));
     if ((connected[i]) && (distance < min_dist)) {
       min_dist = distance;
       system = static_cast<OOSystemID>(i);
@@ -8894,8 +8907,8 @@ OOSystemID Universe::findSystemNumberAtCoords(NSPoint coords, OOGalaxyID g,
     NSPoint ipos =
         (systemManager != nullptr ? systemManager->getCoordinatesForSystem(i, g)
                                   : NSMakePoint(0, 0));
-    dx = std::abs(coords.x - ipos.x);
-    dy = std::abs(coords.y - ipos.y);
+    dx = static_cast<unsigned int>(std::abs(coords.x - ipos.x));
+    dy = static_cast<unsigned int>(std::abs(coords.y - ipos.y));
 
     if (dx > dy)
       distance = (dx + dx + dy) / 2;
@@ -9052,8 +9065,9 @@ oo::PList Universe::routeFromSystem(OOSystemID start, OOSystemID goal,
                  ? systemManager->getCoordinatesForSystem(n, galaxyID)
                  : NSMakePoint(0, 0));
 
-        double lastDistance =
-            distanceBetweenPlanetPositions(npos.x, npos.y, cpos.x, cpos.y);
+        double lastDistance = distanceBetweenPlanetPositions(
+            static_cast<int>(npos.x), static_cast<int>(npos.y),
+            static_cast<int>(cpos.x), static_cast<int>(cpos.y));
         double lastTime = lastDistance * lastDistance;
 
         double distance = ce->distance() + lastDistance;
@@ -9174,22 +9188,22 @@ std::optional<std::string> Universe::timeDescription(double interval) {
   std::string result;
 
   if (r_time > 86400) {
-    int days = floor(r_time / 86400);
+    int days = static_cast<int>(floor(r_time / 86400));
     r_time -= 86400 * days;
     result = std::format("{} {} day{}", result, days, (days > 1) ? "s" : "");
   }
   if (r_time > 3600) {
-    int hours = floor(r_time / 3600);
+    int hours = static_cast<int>(floor(r_time / 3600));
     r_time -= 3600 * hours;
     result = std::format("{} {} hour{}", result, hours, (hours > 1) ? "s" : "");
   }
   if (r_time > 60) {
-    int mins = floor(r_time / 60);
+    int mins = static_cast<int>(floor(r_time / 60));
     r_time -= 60 * mins;
     result = std::format("{} {} minute{}", result, mins, (mins > 1) ? "s" : "");
   }
   if (r_time > 0) {
-    int secs = floor(r_time);
+    int secs = static_cast<int>(floor(r_time));
     result = std::format("{} {} second{}", result, secs, (secs > 1) ? "s" : "");
   }
   return oo::str::trim(result, oo::str::CharacterSet::whitespace());
@@ -9205,7 +9219,7 @@ std::optional<std::string> Universe::shortTimeDescription(double interval) {
   if (interval <= 0.0) return OOLookUpDescriptionPRIV("contracts-no-time");
 
   if (r_time > 86400) {
-    int days = floor(r_time / 86400);
+    int days = static_cast<int>(floor(r_time / 86400));
     r_time -= 86400 * days;
     result =
         std::format("{} {} {}", result, days,
@@ -9213,7 +9227,7 @@ std::optional<std::string> Universe::shortTimeDescription(double interval) {
     parts++;
   }
   if (r_time > 3600) {
-    int hours = floor(r_time / 3600);
+    int hours = static_cast<int>(floor(r_time / 3600));
     r_time -= 3600 * hours;
     result = std::format(
         "{} {} {}", result, hours,
@@ -9221,7 +9235,7 @@ std::optional<std::string> Universe::shortTimeDescription(double interval) {
     parts++;
   }
   if (parts < 2 && r_time > 60) {
-    int mins = floor(r_time / 60);
+    int mins = static_cast<int>(floor(r_time / 60));
     r_time -= 60 * mins;
     result = std::format(
         "{} {} {}", result, mins,
@@ -9229,7 +9243,7 @@ std::optional<std::string> Universe::shortTimeDescription(double interval) {
     parts++;
   }
   if (parts < 2 && r_time > 0) {
-    int secs = floor(r_time);
+    int secs = static_cast<int>(floor(r_time));
     result = std::format(
         "{} {} {}", result, secs,
         OOLookUpPluralDescriptionPRIV("contracts-second-word", secs));
@@ -9346,7 +9360,8 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
   RANROTSeed personalitySeed = RanrotSeedFromRandomSeed(ship_seed);
 
   for (i = 0; i < 256; i++) {
-    std::int64_t reference_time = 0x1000000 * floor(current_time / 0x1000000);
+    std::int64_t reference_time =
+        static_cast<std::int64_t>(0x1000000 * floor(current_time / 0x1000000));
 
     std::int64_t c_time =
         ship_seed.a * 0x10000 + ship_seed.b * 0x100 + ship_seed.c;
@@ -9535,8 +9550,9 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
             // Higher tech items are rarer!
             if (randf() * (eqTechLevel - techlevel) < 1.0) {
               // All included equip has a 10% discount.
-              eqPrice *=
-                  (tech_price_boost + eqTechLevel - techlevel) * 90 / 100;
+              eqPrice = static_cast<OOCreditsQuantity>(
+                  eqPrice *
+                  ((tech_price_boost + eqTechLevel - techlevel) * 90 / 100));
             } else {
               break;  // Bar this upgrade.
             }
@@ -9753,7 +9769,8 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
                           weapon ? oo::PList(*weapon) : oo::PList());
       }
       if (price > base_price) {
-        price = base_price + cunningFee(price - base_price, 0.05);
+        price = static_cast<OOCreditsQuantity>(
+            base_price + cunningFee(price - base_price, 0.05));
       }
 
       shortShipDescription +=
@@ -10033,7 +10050,8 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
 
   // 10% discount for second hand value, steeper reduction if worse than
   // standard.
-  extra_equipment_value *= extra_equipment_value < 0 ? 1.4 : 0.9;
+  extra_equipment_value = static_cast<std::int64_t>(
+      extra_equipment_value * (extra_equipment_value < 0 ? 1.4 : 0.9));
 
   // we'll return at least the scrap value
   // TODO: calculate scrap value based on the size of the ship.
@@ -10193,7 +10211,8 @@ HPVector Universe::getSunSkimStartPositionForShip(::ShipEntity* ship) {
   v1.x -= v0.x;
   v1.y -= v0.y;
   v1.z -= v0.z;  // vector from sun to ship
-  if (v1.x || v1.y || v1.z)
+  if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
+      static_cast<bool>(v1.z))
     v1 = HPvector_normal(v1);
   else
     v1.z = 1.0;
@@ -10228,7 +10247,8 @@ HPVector Universe::getSunSkimEndPositionForShip(::ShipEntity* ship) {
   v1.x -= v0.x;
   v1.y -= v0.y;
   v1.z -= v0.z;
-  if (v1.x || v1.y || v1.z)
+  if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
+      static_cast<bool>(v1.z))
     v1 = HPvector_normal(v1);
   else
     v1.z = 1.0;
@@ -10237,13 +10257,15 @@ HPVector Universe::getSunSkimEndPositionForShip(::ShipEntity* ship) {
   double ry = randf() - 0.5;
   double rz = randf() - 0.5;
   HPVector v2 = make_HPvector(rx, ry, rz);  // random vector
-  if (v2.x || v2.y || v2.z)
+  if (static_cast<bool>(v2.x) || static_cast<bool>(v2.y) ||
+      static_cast<bool>(v2.z))
     v2 = HPvector_normal(v2);
   else
     v2.x = 1.0;
   HPVector v3 = HPcross_product(
       v1, v2);  // random vector at 90 degrees to v1 and v2 (random Vector)
-  if (v3.x || v3.y || v3.z)
+  if (static_cast<bool>(v3.x) || static_cast<bool>(v3.y) ||
+      static_cast<bool>(v3.z))
     v3 = HPvector_normal(v3);
   else
     v3.y = 1.0;
@@ -10261,7 +10283,8 @@ HPVector Universe::getSunSkimEndPositionForShip(::ShipEntity* ship) {
   v1.x -= v0.x;
   v1.y -= v0.y;
   v1.z -= v0.z;
-  if (v1.x || v1.y || v1.z)
+  if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
+      static_cast<bool>(v1.z))
     v1 = HPvector_normal(v1);
   else
     v1.z = 1.0;

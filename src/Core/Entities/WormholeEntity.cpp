@@ -190,9 +190,10 @@ void WormholeEntity::initWormholeTo(OOSystemID s, ::ShipEntity* ship) {
     destinationCoords = SystemCoordinates(
         destination,
         (PLAYER != nullptr ? PLAYER->galaxyNumber() : OOGalaxyID{}));
-    distance = distanceBetweenPlanetPositions(originCoords.x, originCoords.y,
-                                              destinationCoords.x,
-                                              destinationCoords.y);
+    distance = distanceBetweenPlanetPositions(
+        static_cast<int>(originCoords.x), static_cast<int>(originCoords.y),
+        static_cast<int>(destinationCoords.x),
+        static_cast<int>(destinationCoords.y));
     distance = fmax(distance, 0.1);
     witch_mass = 200000.0;  // MKW 2010.11.21 - originally the ship's mass was
                             // added twice - once here and once in suckInShip.
@@ -239,8 +240,9 @@ void WormholeEntity::setMisjump() {
   // has already been marked for misjumping when another ship enters it.
   if (!_misjump) {
     double distance = distanceBetweenPlanetPositions(
-        originCoords.x, originCoords.y, destinationCoords.x,
-        destinationCoords.y);
+        static_cast<int>(originCoords.x), static_cast<int>(originCoords.y),
+        static_cast<int>(destinationCoords.x),
+        static_cast<int>(destinationCoords.y));
     double time_adjust =
         distance * distance *
         (3600 -
@@ -263,8 +265,9 @@ void WormholeEntity::setMisjumpWithRange(GLfloat range) {
   // has already been marked for misjumping when another ship enters it.
   if (!_misjump) {
     double distance = distanceBetweenPlanetPositions(
-        originCoords.x, originCoords.y, destinationCoords.x,
-        destinationCoords.y);
+        static_cast<int>(originCoords.x), static_cast<int>(originCoords.y),
+        static_cast<int>(destinationCoords.x),
+        static_cast<int>(destinationCoords.y));
     double time_adjust = (distance * (1 - _misjumpRange)) *
                          (distance * (1 - _misjumpRange)) * 3600.0;
     // time adjustment ensures that misjumps not faster than normal jumps

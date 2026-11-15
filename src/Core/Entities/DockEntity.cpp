@@ -381,7 +381,7 @@ void DockEntity::abortAllDockings() {
     } else {
       playerExtraTime = 10;  // when very close to the port, give the player a
                              // few seconds to react on the abort message.
-      int seconds = round(playerExtraTime);
+      int seconds = static_cast<int>(round(playerExtraTime));
       const std::optional<std::string> message = OOExpandKey(
           "station-docking-clearance-abort-cancelled-in-time", seconds);
       if (message.has_value()) {
@@ -1330,7 +1330,8 @@ bool DockEntity::dockingCorridorIsEmpty() {
         HPVector r_pos =
             make_HPvector(ship->position.x - ppos.x, ship->position.y - ppos.y,
                           ship->position.z - ppos.z);
-        if (r_pos.x || r_pos.y || r_pos.z)
+        if (static_cast<bool>(r_pos.x) || static_cast<bool>(r_pos.y) ||
+            static_cast<bool>(r_pos.z))
           r_pos = HPvector_normal(r_pos);
         else
           r_pos.z = 1.0;
@@ -1396,7 +1397,8 @@ void DockEntity::clearDockingCorridor() {
           Vector r_pos =
               make_vector(ship->position.x - ppos.x, ship->position.y - ppos.y,
                           ship->position.z - ppos.z);
-          if (r_pos.x || r_pos.y || r_pos.z)
+          if (static_cast<bool>(r_pos.x) || static_cast<bool>(r_pos.y) ||
+              static_cast<bool>(r_pos.z))
             r_pos = vector_normal(r_pos);
           else
             r_pos.z = 1.0;

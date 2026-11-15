@@ -370,8 +370,8 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
 
   // rotate planet based on current time, needs to be done here - backported
   // from PlanetEntity.
-  int deltaT = floor(
-      fmod((PLAYER != nullptr ? PLAYER->clockTimeAdjusted() : 0.0), 86400));
+  int deltaT = static_cast<int>(floor(
+      fmod((PLAYER != nullptr ? PLAYER->clockTimeAdjusted() : 0.0), 86400)));
   quaternion_rotate_about_axis(&orientation, _rotationAxis,
                                _rotationalVelocity * deltaT);
   quaternion_rotate_about_axis(&_atmosphereOrientation, kBasisYVector,

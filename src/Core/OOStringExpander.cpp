@@ -581,7 +581,8 @@ OOMaybeUnits UnitsFromUTF8(const std::string& string) {
 
 OOMaybeUnits Operator_cr(const OOMaybeUnits& string,
                          const OOMaybeUnits& /* param */) {
-  return oo::utf8ToUtf16(OOCredits(DoubleValue(string) * 10));
+  return oo::utf8ToUtf16(
+      OOCredits(static_cast<OOCreditsQuantity>(DoubleValue(string) * 10)));
 }
 
 OOMaybeUnits Operator_dcr(const OOMaybeUnits& string,
@@ -596,7 +597,8 @@ OOMaybeUnits Operator_icr(const OOMaybeUnits& string,
 
 OOMaybeUnits Operator_idcr(const OOMaybeUnits& string,
                            const OOMaybeUnits& /* param */) {
-  return oo::utf8ToUtf16(OOIntCredits(round(DoubleValue(string) / 10.0)));
+  return oo::utf8ToUtf16(OOIntCredits(
+      static_cast<OOCreditsQuantity>(round(DoubleValue(string) / 10.0))));
 }
 
 OOMaybeUnits Operator_precision(const OOMaybeUnits& string,

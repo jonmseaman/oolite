@@ -296,11 +296,11 @@ std::string ClockToString(double clock, bool adjusting) {
   int days, hrs, mins, secs;
   std::string format;
 
-  days = floor(clock / 86400.0);
-  secs = floor(clock - days * 86400.0);
-  hrs = floor(secs / 3600.0);
+  days = static_cast<int>(floor(clock / 86400.0));
+  secs = static_cast<int>(floor(clock - days * 86400.0));
+  hrs = static_cast<int>(floor(secs / 3600.0));
   secs %= 3600;
-  mins = floor(secs / 60.0);
+  mins = static_cast<int>(floor(secs / 60.0));
   secs %= 60;
 
   // DESC() (Universe) is unmigrated: convert at the call. The format is read at
