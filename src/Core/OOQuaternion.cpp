@@ -217,7 +217,7 @@ void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight,
 Quaternion quaternion_rotation_between(Vector v0, Vector v1) {
   Quaternion q;
   OOScalar s = sqrt((1.0f + v0.x * v1.x + v0.y * v1.y + v0.z * v1.z) * 2.0f);
-  if (EXPECT(s > 0.0f)) {
+  if (s > 0.0f) [[likely]] {
     OOScalar is = 1.0f / s;
     q.x = (v0.y * v1.z - v0.z * v1.y) * is;
     q.y = (v0.z * v1.x - v0.x * v1.z) * is;
@@ -241,7 +241,7 @@ Quaternion quaternion_rotation_between(Vector v0, Vector v1) {
 Quaternion quaternion_rotation_betweenHP(HPVector v0, HPVector v1) {
   Quaternion q;
   OOHPScalar s = sqrt((1.0 + v0.x * v1.x + v0.y * v1.y + v0.z * v1.z) * 2.0);
-  if (EXPECT(s > 0.0)) {
+  if (s > 0.0) [[likely]] {
     OOHPScalar is = 1.0 / s;
     q.x = (v0.y * v1.z - v0.z * v1.y) * is;
     q.y = (v0.z * v1.x - v0.x * v1.z) * is;
@@ -271,7 +271,7 @@ Quaternion quaternion_limited_rotation_between(Vector v0, Vector v1,
   OOScalar s = sqrtf((1.0f + v0.x * v1.x + v0.y * v1.y + v0.z * v1.z) * 2.0f);
   // for some antiparallel vectors, s returns a NaN instead of 0. Testing s > 0
   // catches both.
-  if (EXPECT(s > 0.0f)) {
+  if (s > 0.0f) [[likely]] {
     if (s < min_s) {
       // larger angle => smaller cos
       OOScalar a = maxArc * 0.5f;

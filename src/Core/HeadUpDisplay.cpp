@@ -119,7 +119,7 @@ const OOHUDWidget* sCurrentDrawItem;
    Universe's render loop); keep that.
 */
 void GetCurrentCachedInfo(struct CachedInfo* cached) {
-  if (EXPECT_NOT(!sCurrentDrawItem->hasCache)) {
+  if (!sCurrentDrawItem->hasCache) [[unlikely]] {
     OORaiseException(OORangeException,
                      "Index 1 is out of range 0 (in 'objectAtIndex:')");
   }
@@ -228,7 +228,7 @@ std::optional<std::string> OptionalStringAt(const oo::PList& array,
 */
 OOColor* ReticleColorAt(const std::vector<std::shared_ptr<OOColor>>& colors,
                         std::size_t index) {
-  if (EXPECT_NOT(index >= colors.size())) {
+  if (index >= colors.size()) [[unlikely]] {
     OORaiseException(OORangeException,
                      "Index %zu is out of range %zu (in 'objectAtIndex:')",
                      static_cast<std::size_t>(index),
@@ -991,8 +991,8 @@ void HeadUpDisplay::drawDials() {
     drawHUDItem(sCurrentDrawItem->info);
   }
 
-  if (EXPECT_NOT(!_compassUpdated && _compassActive &&
-                 checkPlayerInSystemFlight())) {
+  if (!_compassUpdated && _compassActive && checkPlayerInSystemFlight())
+      [[unlikely]] {
     // compass gone / broken / disabled ?
     // trigger the targetChanged event with whom == null
     _compassActive = false;
@@ -1219,7 +1219,7 @@ void HeadUpDisplay::drawHUDItem(const oo::PList& info) {
     return;
   }
 
-  if (EXPECT_NOT(hasHidden(sCurrentDrawItem->selectorString))) {
+  if (hasHidden(sCurrentDrawItem->selectorString)) [[unlikely]] {
     return;
   }
 
@@ -1481,11 +1481,11 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
       drawClass = scannedEntity->getScanClass();
 
       // cloaked ships - and your own one - don't show up on the scanner.
-      if (EXPECT_NOT(drawClass == OOScanClass::kPlayer ||
-                     (oo::EntityIsShip(scannedEntity) &&
-                      (oo::ToShip(scannedEntity) != nullptr
-                           ? oo::ToShip(scannedEntity)->isCloaked()
-                           : false)))) {
+      if (drawClass == OOScanClass::kPlayer ||
+          (oo::EntityIsShip(scannedEntity) &&
+           (oo::ToShip(scannedEntity) != nullptr
+                ? oo::ToShip(scannedEntity)->isCloaked()
+                : false))) [[unlikely]] {
         drawClass = OOScanClass::kNoDraw;
       }
 
@@ -4346,7 +4346,7 @@ void OODrawStringQuadsAligned(const std::string& text, GLfloat x, GLfloat y,
   length = data.length();
   bytes = static_cast<const uint8_t*>(data.bytes());
 
-  if (EXPECT_NOT(rightAlign)) {
+  if (rightAlign) [[unlikely]] {
     cx -= OORectFromString(text, 0.0f, 0.0f, siz).size.width;
   }
 

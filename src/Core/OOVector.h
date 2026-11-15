@@ -254,7 +254,8 @@ inline OOScalar magnitude(Vector vec) { return sqrt(magnitude2(vec)); }
 
 inline Vector vector_normal_or_fallback(Vector vec, Vector fallback) {
   OOScalar mag2 = magnitude2(vec);
-  if (EXPECT_NOT(mag2 == 0.0f)) return fallback;
+  if (mag2 == 0.0f) [[unlikely]]
+    return fallback;
   return vector_multiply_scalar(vec, 1.0f / sqrt(mag2));
 }
 

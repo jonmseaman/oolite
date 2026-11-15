@@ -178,7 +178,7 @@ JSValueConst OOJSFunction::function() {
 }
 
 JSValue OOJSFunction::functionValue() {
-  if (EXPECT(isValid())) {
+  if (isValid()) [[likely]] {
     return JS_DupValue(OOJSAcquireContext(), _function);
   } else {
     return JS_NULL;
@@ -190,7 +190,7 @@ bool OOJSFunction::evaluateWithContext(JSContext* context, JSValueConst jsThis,
                                        JSValue* result) {
   OOCParameterAssert(result != nullptr);
 
-  if (EXPECT_NOT(!isValid())) {
+  if (!isValid()) [[unlikely]] {
     *result = JS_UNDEFINED;
     return false;
   }

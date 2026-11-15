@@ -666,7 +666,7 @@ void ResourceManager::preloadFilePathFor(const std::string& fileName,
 }
 
 std::vector<std::string> ResourceManager::paths() {
-  if (EXPECT_NOT(!sSearchPaths.has_value())) {
+  if (!sSearchPaths.has_value()) [[unlikely]] {
     sSearchPaths.emplace();
   }
   return pathsWithAddOns();
@@ -1379,7 +1379,7 @@ bool ResourceManager::checkCacheUpToDateForPaths(
   OOCacheManager* cacheMgr = OOCacheManager::sharedCache();
   bool upToDate = true;
 
-  if (EXPECT_NOT(oo::Defaults::standard().boolForKey("always-flush-cache"))) {
+  if (oo::Defaults::standard().boolForKey("always-flush-cache")) [[unlikely]] {
     OO_LOG("dataCache.rebuild.explicitFlush", "{}",
            "Cache explicitly flushed with always-flush-cache preference. "
            "Rebuilding from scratch.");

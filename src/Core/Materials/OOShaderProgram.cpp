@@ -217,7 +217,8 @@ OOShaderProgram::~OOShaderProgram() {
 #ifndef NDEBUG
   // Cannot happen while being in use retains the program; kept as the old
   // imbalance check.
-  if (EXPECT_NOT(ActiveProgram() != nullptr && ActiveProgram().get() == this)) {
+  if (ActiveProgram() != nullptr && ActiveProgram().get() == this)
+      [[unlikely]] {
     OO_LOG("shader.dealloc.imbalance", "{}",
            "***** OOShaderProgram deallocated while active, indicating a "
            "retain/release imbalance. Expect imminent crash.");
@@ -569,7 +570,7 @@ std::string GetGLSLInfoLog(GLhandleARB shaderObject) {
 
   OO_ENTER_OPENGL();
 
-  if (EXPECT_NOT(shaderObject == NULL_SHADER))
+  if (shaderObject == NULL_SHADER) [[unlikely]]
     return "(null)";  // what "%@" printed for the nil result
 
   OOGL(glGetObjectParameterivARB(shaderObject, GL_OBJECT_INFO_LOG_LENGTH_ARB,

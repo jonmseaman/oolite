@@ -96,7 +96,7 @@ std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithName(
 std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithName(
     const std::string& uniformName, OOShaderProgram* shaderProgram,
     OOColor* constValue) {
-  if (EXPECT_NOT(constValue == nullptr)) {
+  if (constValue == nullptr) [[unlikely]] {
     return nullptr;
   }
 
@@ -159,9 +159,10 @@ std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithName(
      type is the method's return type it replaced. A target that is itself a
      C++ object has no super target.
   */
-  if (EXPECT_NOT(shaderProgram == nullptr || get == nullptr)) return nullptr;
-  if (EXPECT_NOT(boundType == kOOShaderUniformTypeInvalid ||
-                 boundType >= kOOShaderUniformTypeCount))
+  if (shaderProgram == nullptr || get == nullptr) [[unlikely]]
+    return nullptr;
+  if (boundType == kOOShaderUniformTypeInvalid ||
+      boundType >= kOOShaderUniformTypeCount) [[unlikely]]
     return nullptr;
 
   std::shared_ptr<OOShaderUniform> result =
@@ -199,7 +200,7 @@ std::shared_ptr<OOShaderUniform> OOShaderUniform::initWithEntityTarget(
   // same checks and log line, which names the class of the entity's object as
   // -[{} {}] did. The property is kept by name, where its selector was looked
   // up (a NULL name gave a NULL selector).
-  if (EXPECT_NOT(shaderProgram == nullptr || property == nullptr))
+  if (shaderProgram == nullptr || property == nullptr) [[unlikely]]
     return nullptr;
 
   std::shared_ptr<OOShaderUniform> result =
@@ -398,7 +399,8 @@ bool OOShaderUniform::initWithName(const std::string& uniformName,
                                    OOShaderProgram* shaderProgram) {
   bool OK = true;
 
-  if (EXPECT_NOT(shaderProgram == nullptr)) OK = false;
+  if (shaderProgram == nullptr) [[unlikely]]
+    OK = false;
 
   // ([super init] could not fail: the object is already constructed.)
 

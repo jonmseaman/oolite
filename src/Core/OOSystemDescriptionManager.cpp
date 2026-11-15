@@ -407,7 +407,7 @@ oo::PList OOSystemDescriptionManager::getProperty(const std::string& property,
                                                   const std::string& key,
                                                   bool universal) {
   OOSystemDescriptionEntry* desc = nullptr;
-  if (EXPECT_NOT(key == "interstellar")) {
+  if (key == "interstellar") [[unlikely]] {
     desc = interstellarSpace.get();
   } else {
     auto entry = systemDescriptions.find(key);

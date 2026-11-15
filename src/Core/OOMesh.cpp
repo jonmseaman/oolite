@@ -589,7 +589,7 @@ std::shared_ptr<Octree> OOMesh::getOctree() {
         }
 
         octree = converter->findOctreeToDepth(octreeDepth());
-        if (EXPECT(_cacheWriteable) && baseFileOctreeCacheRef) {
+        if ((_cacheWriteable) && baseFileOctreeCacheRef) {
           OOCacheManagerSetOctree(octree.get(), *baseFileOctreeCacheRef);
         }
       }
@@ -617,7 +617,7 @@ BoundingBox OOMesh::findBoundingBoxRelativeToPosition(Vector opv, Vector ri,
   rv.y = dot_product(rj, rpos);
   rv.z = dot_product(rk, rpos);  // model origin rel to opv in ijk
 
-  if (EXPECT_NOT(vertexCount < 1)) {
+  if (vertexCount < 1) [[unlikely]] {
     bounding_box_reset_to_vector(&result, rv);
   } else {
     pv.x = rpos.x + si.x * _vertices[0].x + sj.x * _vertices[0].y +
@@ -805,7 +805,7 @@ bool OOMesh::initWithName(const std::string& name,
     _stopwatch = nullptr;
 #endif
 #if OO_MULTITEXTURE
-    if (EXPECT(loaded)) {
+    if (loaded) [[likely]] {
       _textureUnitCount = oo::kNotFound;
     }
 #endif
@@ -1385,7 +1385,7 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
     }
 
     // save the resulting data for possible reuse
-    if (EXPECT(_cacheWriteable)) {
+    if (_cacheWriteable) [[likely]] {
       OOCacheManagerSetMeshData(modelData(), cacheKey);
       PROFILE("saved to cache");
     }

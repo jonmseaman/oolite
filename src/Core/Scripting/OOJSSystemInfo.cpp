@@ -474,7 +474,7 @@ JSValue GetJSSystemInfoForSystem(JSContext* context, OOGalaxyID galaxy,
       galaxy, system);  // null for a galaxy or system out of range
   OOJS_END_FULL_NATIVE
 
-  if (EXPECT_NOT(info == nullptr)) {
+  if (info == nullptr) [[unlikely]] {
     OOJSReportWarning(
         context,
         "Could not create system info object for galaxy %u, system %i.", galaxy,
@@ -1064,8 +1064,8 @@ static JSValue SystemInfoSamplePrice(OOJS_NATIVE_ARGS) {
            : nullptr);  // null: no good is defined, as a message to nil
   std::optional<std::string> commodity =
       OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (EXPECT_NOT(commodities == nullptr ||
-                 !commodities->goodDefined(commodity.value_or("")))) {
+  if (commodities == nullptr ||
+      !commodities->goodDefined(commodity.value_or(""))) [[unlikely]] {
     OOJSReportBadArguments(context, "SystemInfo", "samplePrice",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "Unrecognised commodity type");

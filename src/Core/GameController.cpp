@@ -312,9 +312,10 @@ void GameController::setEcoQoS(bool efficiencyModeRequested) {
     bool setEfficiencyMode = !!efficiencyModeRequested;  // yes or no, not 42
     HANDLE currentProcess = GetCurrentProcess();
 
-    if (EXPECT_NOT(!SetPriorityClass(
-            currentProcess,
-            setEfficiencyMode ? IDLE_PRIORITY_CLASS : NORMAL_PRIORITY_CLASS))) {
+    if (!SetPriorityClass(currentProcess, setEfficiencyMode
+                                              ? IDLE_PRIORITY_CLASS
+                                              : NORMAL_PRIORITY_CLASS))
+        [[unlikely]] {
       OO_LOG("gameController.setEcoQos",
              "SetPriorityClass failed with error {}",
              static_cast<std::uint32_t>(GetLastError()));
@@ -326,9 +327,9 @@ void GameController::setEcoQoS(bool efficiencyModeRequested) {
     powerThrottling.ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED;
     powerThrottling.StateMask =
         setEfficiencyMode ? PROCESS_POWER_THROTTLING_EXECUTION_SPEED : 0;
-    if (EXPECT_NOT(!SetProcessInformation(
-            currentProcess, ProcessPowerThrottling, &powerThrottling,
-            sizeof(powerThrottling)))) {
+    if (!SetProcessInformation(currentProcess, ProcessPowerThrottling,
+                               &powerThrottling, sizeof(powerThrottling)))
+        [[unlikely]] {
       OO_LOG("gameController.setEcoQos",
              "SetProcessInformation failed with error {}",
              static_cast<std::uint32_t>(GetLastError()));
@@ -402,8 +403,8 @@ void GameController::tick(double dt) {
   // Headless, a step is a frame the game would have drawn.
   if (_options.headless) ++_presentation.framesRequested;
   if (UNIVERSE != nullptr) UNIVERSE->update(dt);
-  if (EXPECT_NOT((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
-                 OOEntityStatus::kRestartGame)) {
+  if ((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
+      OOEntityStatus::kRestartGame) [[unlikely]] {
     if (UNIVERSE != nullptr) UNIVERSE->reinitAndShowDemo(true);
   }
   ::OOSound::update();

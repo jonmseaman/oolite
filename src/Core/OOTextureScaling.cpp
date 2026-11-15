@@ -278,7 +278,7 @@ OOPixMap OOScalePixMap(OOPixMap srcPx, OOPixMapDimension dstWidth,
   bool OK = true;
 
   //	Sanity check.
-  if (EXPECT_NOT(!OOIsValidPixMap(srcPx))) {
+  if (!OOIsValidPixMap(srcPx)) [[unlikely]] {
     OOLogGenericParameterError();
     return kOONullPixMap;  // srcPx's buffer goes with it
   }
@@ -293,7 +293,7 @@ OOPixMap OOScalePixMap(OOPixMap srcPx, OOPixMapDimension dstWidth,
       dstSize = dstSize * 4 / 3;
 
     dstPx = OOAllocatePixMap(srcPx.width, dstHeight, srcPx.format, 0, dstSize);
-    if (EXPECT_NOT(!OOIsValidPixMap(dstPx))) {
+    if (!OOIsValidPixMap(dstPx)) [[unlikely]] {
       OK = false;
       goto FAIL;
     }
@@ -324,7 +324,7 @@ OOPixMap OOScalePixMap(OOPixMap srcPx, OOPixMapDimension dstWidth,
       dstPx =
           OOAllocatePixMap(dstWidth, srcPx.height, srcPx.format, 0, dstSize);
     }
-    if (EXPECT_NOT(!OOIsValidPixMap(dstPx))) {
+    if (!OOIsValidPixMap(dstPx)) [[unlikely]] {
       OK = false;
       goto FAIL;
     }
@@ -355,8 +355,8 @@ FAIL:
 // FIXME: should take an OOPixMap.
 bool OOGenerateMipMaps(void* textureBytes, OOPixMapDimension width,
                        OOPixMapDimension height, OOPixMapFormat format) {
-  if (EXPECT_NOT(width != OORoundUpToPowerOf2_PixMap(width) ||
-                 height != OORoundUpToPowerOf2_PixMap(height))) {
+  if (width != OORoundUpToPowerOf2_PixMap(width) ||
+      height != OORoundUpToPowerOf2_PixMap(height)) [[unlikely]] {
     OO_LOG(kOOLogParameterError,
            "Non-power-of-two dimensions ({}x{}) passed to {}() - ignoring, "
            "data will be junk.",
@@ -364,7 +364,7 @@ bool OOGenerateMipMaps(void* textureBytes, OOPixMapDimension width,
            __PRETTY_FUNCTION__);
     return false;
   }
-  if (EXPECT_NOT(textureBytes == nullptr)) {
+  if (textureBytes == nullptr) [[unlikely]] {
     OO_LOG(kOOLogParameterError, "{}",
            "NULL texture pointer passed to GenerateMipMaps().");
     return false;
@@ -713,7 +713,7 @@ static bool GenerateMipMaps4(void* textureBytes, OOPixMapDimension width,
     h >>= 1;
     curr = next;
   }
-  if (EXPECT(1 < w && 1 < h)) {
+  if (1 < w && 1 < h) [[likely]] {
     DUMP_MIP_MAP_DUMP(curr, w, h);
 
     next = curr + w * h;
@@ -1098,7 +1098,7 @@ static void StretchHorizontally1(OOPixMap srcPx, OOPixMap dstPx) {
     // The last pixel's look-ahead lands one past the row exactly when its
     // weight is 0; clamp it so the last row does not read past the buffer
     // as StretchHorizontally4 does.
-    if (EXPECT_NOT((fractX >> 12) >= srcPx.width))
+    if ((fractX >> 12) >= srcPx.width) [[unlikely]]
       src = srcStart + (srcPx.width - 1);
     px1 = *src;
 
@@ -1165,7 +1165,7 @@ static void StretchHorizontally2(OOPixMap srcPx, OOPixMap dstPx) {
     // The last pixel's look-ahead lands one past the row exactly when its
     // weight is 0; clamp it so the last row does not read past the buffer
     // as StretchHorizontally4 does.
-    if (EXPECT_NOT((fractX >> 12) >= srcPx.width))
+    if ((fractX >> 12) >= srcPx.width) [[unlikely]]
       src = srcStart + (srcPx.width - 1);
     px1 = *src;
 
@@ -1233,7 +1233,8 @@ static void StretchHorizontally4(OOPixMap srcPx, OOPixMap dstPx) {
 
     px0 = px1;
     src = srcStart + (fractX >> 12);
-    if (EXPECT(x < xCount - 1)) px1 = *src;
+    if (x < xCount - 1) [[likely]]
+      px1 = *src;
 
     ag = ((px0 & 0xFF00FF00) >> 8) * weight0 +
          ((px1 & 0xFF00FF00) >> 8) * weight1;
@@ -1283,8 +1284,9 @@ static void SqueezeHorizontally1(OOPixMap srcPx, OOPixMapDimension dstWidth) {
 
       for (;;) {
         ++x;
-        if (EXPECT(x == endX)) {
-          if (EXPECT(xCount)) borderPx = *++src;
+        if (x == endX) [[likely]] {
+          if (xCount) [[likely]]
+            borderPx = *++src;
           accum += borderPx * borderWeight;
           break;
         } else {
@@ -1346,14 +1348,15 @@ static void SqueezeVertically1(OOPixMap srcPx, OOPixMapDimension dstHeight) {
         ++y;
         src = reinterpret_cast<uint8_t*>(reinterpret_cast<char*>(src) +
                                          srcRowBytes);
-        if (EXPECT_NOT(y == endY)) {
+        if (y == endY) [[unlikely]] {
           /*	<= as in SqueezeVertically2/4: with < the last
                   source row's endWeight was counted in weight but not in accum,
              so a non-integer squeeze darkened the last output row (90 -> 33 for
              8 -> 5). endY == srcPx.height (one past the last row) only happens
              with endWeight 0, and is still skipped.
           */
-          if (EXPECT(endY <= lastRow)) accum += *src * endWeight;
+          if (endY <= lastRow) [[likely]]
+            accum += *src * endWeight;
           break;
         } else {
           accum += *src * 0xFF;
@@ -1430,8 +1433,9 @@ static void SqueezeHorizontally2(OOPixMap srcPx, OOPixMapDimension dstWidth) {
 
       for (;;) {
         ++x;
-        if (EXPECT(x == endX)) {
-          if (EXPECT(xCount)) borderPx = *++src;
+        if (x == endX) [[likely]] {
+          if (xCount) [[likely]]
+            borderPx = *++src;
           ACCUM2(borderPx, borderWeight);
           break;
         } else {
@@ -1493,8 +1497,9 @@ static void SqueezeVertically2(OOPixMap srcPx, OOPixMapDimension dstHeight) {
         ++y;
         src = reinterpret_cast<uint16_t*>(reinterpret_cast<char*>(src) +
                                           srcRowBytes);
-        if (EXPECT_NOT(y == endY)) {
-          if (EXPECT(endY <= lastRow)) ACCUM2(*src, endWeight);
+        if (y == endY) [[unlikely]] {
+          if (endY <= lastRow) [[likely]]
+            ACCUM2(*src, endWeight);
           break;
         } else {
           ACCUM2(*src, 0xFF);
@@ -1583,8 +1588,9 @@ static void SqueezeHorizontally4(OOPixMap srcPx, OOPixMapDimension dstWidth) {
 
       for (;;) {
         ++x;
-        if (EXPECT(x == endX)) {
-          if (EXPECT(xCount)) borderPx = *++src;
+        if (x == endX) [[likely]] {
+          if (xCount) [[likely]]
+            borderPx = *++src;
           ACCUM4(borderPx, borderWeight);
           break;
         } else {
@@ -1647,8 +1653,9 @@ static void SqueezeVertically4(OOPixMap srcPx, OOPixMapDimension dstHeight) {
         ++y;
         src = reinterpret_cast<uint32_t*>(reinterpret_cast<char*>(src) +
                                           srcRowBytes);
-        if (EXPECT_NOT(y == endY)) {
-          if (EXPECT(endY <= lastRow)) ACCUM4(*src, endWeight);
+        if (y == endY) [[unlikely]] {
+          if (endY <= lastRow) [[likely]]
+            ACCUM4(*src, endWeight);
           break;
         } else {
           ACCUM4(*src, 0xFF);
@@ -1673,7 +1680,7 @@ static bool EnsureCorrectDataSize(OOPixMap* pixMap, bool leaveSpaceForMipMaps) {
           adding the mip-map space, as the texture may have been shrunk in place
           without being grown for mip-maps.
   */
-  if (EXPECT_NOT(pixMap->bufferSize < correctSize)) {
+  if (pixMap->bufferSize < correctSize) [[unlikely]] {
     OOLogGenericParameterError();
     return false;
   }

@@ -313,8 +313,9 @@ static void FunctionCallHook(JSContext* context, JSValueConst function,
 }  // namespace
 
 void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function) {
-  if (EXPECT(!sProfiling)) return;
-  if (EXPECT_NOT(sTracing)) {
+  if (!sProfiling) [[likely]]
+    return;
+  if (sTracing) [[unlikely]] {
     // We use EXPECT_NOT here because profiles are time-critical and traces are
     // not.
     OO_LOG("script.javaScript.trace.ON", ">> {} [ON]", function);
@@ -332,7 +333,8 @@ void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function) {
 }
 
 void OOJSProfileExit(OOJSProfileStackFrame* frame) {
-  if (EXPECT(!sProfiling)) return;
+  if (!sProfiling) [[likely]]
+    return;
 
   /*	A frame entered before profiling started (such as the console's
           profile() itself) is not on the profile stack.
@@ -351,7 +353,8 @@ void OOJSProfileExit(OOJSProfileStackFrame* frame) {
 
       done = (sProfileStack == frame);
       UpdateProfileForFrame(now, sProfileStack);
-      if (EXPECT(done)) break;
+      if (done) [[likely]]
+        break;
     }
   }
 
@@ -388,7 +391,8 @@ static void UpdateProfileForFrame(OOHighResTimeValue now,
 
   if (frame->cleanup != nullptr) frame->cleanup(frame);
 
-  if (EXPECT_NOT(sTracing)) oo::log::outdent();
+  if (sTracing) [[unlikely]]
+    oo::log::outdent();
 }
 }  // namespace
 

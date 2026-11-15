@@ -446,7 +446,7 @@ static JSValue MissionAddMessageText(OOJS_NATIVE_ARGS) {
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> text;
 
-  if (EXPECT_NOT(argc == 0)) {
+  if (argc == 0) [[unlikely]] {
     OOJS_RETURN_VOID;
   }
 
@@ -482,14 +482,14 @@ static JSValue MissionSetInstructionsInternal(JSContext* context, int argc,
   oo::PList texts;
   std::optional<std::string> missionKey;
 
-  if (EXPECT_NOT(argc == 0)) {
+  if (argc == 0) [[unlikely]] {
     OOJSReportWarning(
         context,
         "Usage error: mission.%s() called with no arguments. Treating as "
         "Mission.%s(null). This call may fail in a future version of Oolite.",
         (isKey ? "setInstructionsKey" : "setInstructions"),
         (isKey ? "setInstructionsKey" : "setInstructions"));
-  } else if (EXPECT_NOT(JS_IsUndefined(argv[0]))) {
+  } else if (JS_IsUndefined(argv[0])) [[unlikely]] {
     OOJSReportBadArguments(
         context, "Mission",
         std::string(isKey ? "setInstructionsKey" : "setInstructions"), 1, argv,

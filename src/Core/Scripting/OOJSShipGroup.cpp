@@ -122,8 +122,8 @@ static JSValue ShipGroupGetProperty(OOJS_GETTER_ARGS) {
   oo::PList result;  // null: nil
   OOShipGroup* cxxGroup = nullptr;
 
-  if (EXPECT_NOT(
-          !OOJSGetCxxPrivate(context, thisObj, sShipGroupClassID, &cxxGroup)))
+  if (!OOJSGetCxxPrivate(context, thisObj, sShipGroupClassID, &cxxGroup))
+      [[unlikely]]
     return OOJSNativeFailure(context);
   // (null for the prototype: each use answers what a message to nil did
 
@@ -171,8 +171,8 @@ static JSValue ShipGroupSetProperty(OOJS_SETTER_ARGS) {
   ShipEntity* shipValue = nullptr;
   OOShipGroup* cxxGroup = nullptr;
 
-  if (EXPECT_NOT(
-          !OOJSGetCxxPrivate(context, thisObj, sShipGroupClassID, &cxxGroup)))
+  if (!OOJSGetCxxPrivate(context, thisObj, sShipGroupClassID, &cxxGroup))
+      [[unlikely]]
     return OOJSNativeFailure(context);
   // (null for the prototype: the setters do nothing, as messages to nil
 
@@ -216,7 +216,7 @@ static JSValue ShipGroupConstruct(OOJS_NATIVE_ARGS) {
           called with new, this is new.target (a constructor); when it is
           called as a function, this is the caller's this.
   */
-  if (EXPECT_NOT(!OOJS_IS_CONSTRUCTING)) {
+  if (!OOJS_IS_CONSTRUCTING) [[unlikely]] {
     OOJSReportError(context,
                     "ShipGroup() cannot be called as a function, it must "
                     "be used as a constructor (as in new ShipGroup(...)).");
@@ -309,8 +309,8 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
   ShipEntity* ship = nullptr;
   bool OK = true;
 
-  if (EXPECT_NOT(
-          !OOJSGetCxxPrivate(context, OOJS_THIS, sShipGroupClassID, &cxxGroup)))
+  if (!OOJSGetCxxPrivate(context, OOJS_THIS, sShipGroupClassID, &cxxGroup))
+      [[unlikely]]
     return OOJSNativeFailure(context);
 
   if (argc > 0) ship = oo::ToShip(OOJSEntityFromJSValue(context, OOJS_ARGV[0]));
@@ -407,8 +407,8 @@ static JSValue ShipGroupRemoveShip(OOJS_NATIVE_ARGS) {
   OOShipGroup* cxxGroup = nullptr;
   ShipEntity* ship = nullptr;
 
-  if (EXPECT_NOT(
-          !OOJSGetCxxPrivate(context, OOJS_THIS, sShipGroupClassID, &cxxGroup)))
+  if (!OOJSGetCxxPrivate(context, OOJS_THIS, sShipGroupClassID, &cxxGroup))
+      [[unlikely]]
     return OOJSNativeFailure(context);
 
   if (argc > 0) ship = oo::ToShip(OOJSEntityFromJSValue(context, OOJS_ARGV[0]));
@@ -434,8 +434,8 @@ static JSValue ShipGroupContainsShip(OOJS_NATIVE_ARGS) {
   OOShipGroup* cxxGroup = nullptr;
   ShipEntity* ship = nullptr;
 
-  if (EXPECT_NOT(
-          !OOJSGetCxxPrivate(context, OOJS_THIS, sShipGroupClassID, &cxxGroup)))
+  if (!OOJSGetCxxPrivate(context, OOJS_THIS, sShipGroupClassID, &cxxGroup))
+      [[unlikely]]
     return OOJSNativeFailure(context);
 
   if (argc > 0) ship = oo::ToShip(OOJSEntityFromJSValue(context, OOJS_ARGV[0]));

@@ -233,12 +233,13 @@ std::size_t OOConstantFromJSValuePRIVATE(JSContext* context, JSValueConst value,
             __PRETTY_FUNCTION__);
   OOCParameterAssert(context != nullptr && table != nullptr);
 
-  if (EXPECT_NOT(!JS_IsString(value))) return defaultValue;
+  if (!JS_IsString(value)) [[unlikely]]
+    return defaultValue;
 
   // Interning a string yields the same atom as the table entry with the same
   // contents.
   JSAtom atom = JS_ValueToAtom(context, value);
-  if (EXPECT_NOT(atom == JS_ATOM_NULL)) {
+  if (atom == JS_ATOM_NULL) [[unlikely]] {
     JS_FreeValue(context, JS_GetException(context));
     return defaultValue;
   }

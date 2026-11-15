@@ -150,7 +150,7 @@ void InitOOJSSoundSource(JSContext* context, JSValueConst global) {
 static JSValue SoundSourceConstruct(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(!OOJS_IS_CONSTRUCTING)) {
+  if (!OOJS_IS_CONSTRUCTING) [[unlikely]] {
     OOJSReportError(context,
                     "SoundSource() cannot be called as a function, it must "
                     "be used as a constructor (as in new SoundSource()).");
@@ -303,7 +303,7 @@ static JSValue SoundSourcePlay(OOJS_NATIVE_ARGS) {
   OOSoundSource* thisv = nullptr;  // null for SoundSource.prototype
   int32_t count = 0;
 
-  if (EXPECT_NOT(!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)))
+  if (!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)) [[unlikely]]
     return OOJSNativeFailure(context);
   if (argc > 0 && !JS_IsUndefined(OOJS_ARGV[0]) &&
       !OOJSValueToInt32(context, OOJS_ARGV[0], &count)) {
@@ -332,7 +332,7 @@ static JSValue SoundSourceStop(OOJS_NATIVE_ARGS) {
 
   OOSoundSource* thisv = nullptr;  // null for SoundSource.prototype
 
-  if (EXPECT_NOT(!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)))
+  if (!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -350,7 +350,7 @@ static JSValue SoundSourcePlayOrRepeat(OOJS_NATIVE_ARGS) {
 
   OOSoundSource* thisv = nullptr;  // null for SoundSource.prototype
 
-  if (EXPECT_NOT(!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)))
+  if (!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   OOJS_BEGIN_FULL_NATIVE(context)

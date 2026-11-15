@@ -162,11 +162,13 @@ void HandleOneCommand(std::string& graphViz, const std::string& stateKey,
                       bool* haveSetOrSwichAI) {
   const std::optional<std::string> command =
       CommandAt(handlerCommands, commandIter);
-  if (EXPECT_NOT(!command.has_value())) return;
+  if (!command.has_value()) [[unlikely]]
+    return;
 
   const std::vector<std::string> components = oo::str::tokens(*command);
   // (an empty command has no method: -objectAtIndex:0 raised there)
-  if (EXPECT_NOT(components.empty())) return;
+  if (components.empty()) [[unlikely]]
+    return;
   const std::string& method = components[0];
   std::string handlerToken =
       HandlerToken(stateKey, handlerKey, handlerKeys, uniqueSet);

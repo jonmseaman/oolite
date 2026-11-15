@@ -37,10 +37,10 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOAssert.h"
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-#define OctreeDebugLog(format, ...)                                \
-  do {                                                             \
-    if (EXPECT_NOT(OODebugFlagIsOn(OODebugFlags::kOctreeLogging))) \
-      OO_LOG("octree.debug", format, ##__VA_ARGS__);               \
+#define OctreeDebugLog(format, ...)                                 \
+  do {                                                              \
+    if (OODebugFlagIsOn(OODebugFlags::kOctreeLogging)) [[unlikely]] \
+      OO_LOG("octree.debug", format, ##__VA_ARGS__);                \
   } while (0)
 #else
 #define OctreeDebugLog(...) \

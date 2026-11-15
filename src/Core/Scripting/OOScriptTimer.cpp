@@ -147,8 +147,8 @@ bool OOScriptTimer::scheduleTimer() {
   if (_isScheduled) return true;
   if (!isValidForScheduling()) return false;
 
-  if (EXPECT(!sUpdating)) {
-    if (EXPECT_NOT(sTimers == nullptr))
+  if (!sUpdating) [[likely]] {
+    if (sTimers == nullptr) [[unlikely]]
       sTimers = new OOPriorityQueueOf<OOScriptTimer>(CompareByNextFireTime);
     sTimers->addObject(this);  // the queue holds the timer
   } else {

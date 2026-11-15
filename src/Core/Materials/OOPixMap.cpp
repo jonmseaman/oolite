@@ -105,7 +105,8 @@ OOPixMap OOAllocatePixMap(OOPixMapDimension width, OOPixMapDimension height,
   // Create pixmap struct with dummy pixel pointer to test validity.
   OOPixMap pixMap = OOMakePixMap(reinterpret_cast<void*>(-1), width, height,
                                  format, rowBytes, bufferSize);
-  if (EXPECT_NOT(!OOIsValidPixMap(pixMap))) return kOONullPixMap;
+  if (!OOIsValidPixMap(pixMap)) [[unlikely]]
+    return kOONullPixMap;
 
   pixMap.buffer = OOMakePixelBuffer(pixMap.bufferSize);
   pixMap.pixels = pixMap.buffer->data();
@@ -114,13 +115,15 @@ OOPixMap OOAllocatePixMap(OOPixMapDimension width, OOPixMapDimension height,
 }
 
 void OOFreePixMap(OOPixMap* ioPixMap) {
-  if (EXPECT_NOT(ioPixMap == nullptr)) return;
+  if (ioPixMap == nullptr) [[unlikely]]
+    return;
 
   *ioPixMap = kOONullPixMap;
 }
 
 OOPixMap OODuplicatePixMap(OOPixMap srcPixMap, size_t desiredSize) {
-  if (EXPECT_NOT(!OOIsValidPixMap(srcPixMap))) return kOONullPixMap;
+  if (!OOIsValidPixMap(srcPixMap)) [[unlikely]]
+    return kOONullPixMap;
 
   size_t minSize = OOMinimumPixMapBufferSize(srcPixMap);
   if (desiredSize < minSize) desiredSize = minSize;
@@ -128,14 +131,15 @@ OOPixMap OODuplicatePixMap(OOPixMap srcPixMap, size_t desiredSize) {
   OOPixMap result =
       OOAllocatePixMap(srcPixMap.width, srcPixMap.width, srcPixMap.format,
                        srcPixMap.rowBytes, desiredSize);
-  if (EXPECT_NOT(!OOIsValidPixMap(result))) return kOONullPixMap;
+  if (!OOIsValidPixMap(result)) [[unlikely]]
+    return kOONullPixMap;
 
   memcpy(result.pixels, srcPixMap.pixels, minSize);
   return result;
 }
 
 bool OOResizePixMap(OOPixMap* ioPixMap, size_t desiredSize) {
-  if (EXPECT_NOT(ioPixMap == nullptr || !OOIsValidPixMap(*ioPixMap)))
+  if (ioPixMap == nullptr || !OOIsValidPixMap(*ioPixMap)) [[unlikely]]
     return false;
   if (desiredSize == ioPixMap->bufferSize) return true;
   if (desiredSize < OOMinimumPixMapBufferSize(*ioPixMap)) return false;
@@ -156,7 +160,7 @@ bool OOResizePixMap(OOPixMap* ioPixMap, size_t desiredSize) {
 }
 
 bool OOExpandPixMap(OOPixMap* ioPixMap, size_t desiredSize) {
-  if (EXPECT_NOT(ioPixMap == nullptr || !OOIsValidPixMap(*ioPixMap)))
+  if (ioPixMap == nullptr || !OOIsValidPixMap(*ioPixMap)) [[unlikely]]
     return false;
   if (desiredSize <= ioPixMap->bufferSize) return true;
 

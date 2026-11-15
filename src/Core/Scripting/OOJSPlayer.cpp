@@ -656,8 +656,8 @@ static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  if (EXPECT_NOT(!((player != nullptr ? player->status() : OOEntityStatus{}) ==
-                   OOEntityStatus::kDocked))) {
+  if (!((player != nullptr ? player->status() : OOEntityStatus{}) ==
+        OOEntityStatus::kDocked)) [[unlikely]] {
     OOJSReportError(
         context, "Player.replaceShip() only works while the player is docked.");
     return OOJSNativeFailure(context);
@@ -702,7 +702,7 @@ static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS) {
 static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(!OOIsPlayerStale())) {
+  if (!OOIsPlayerStale()) [[unlikely]] {
     OOJSReportError(context,
                     "Player.setEscapePodDestination() only works while the "
                     "escape pod is in flight.");

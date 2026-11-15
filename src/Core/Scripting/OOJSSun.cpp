@@ -111,7 +111,7 @@ static JSValue SunGetProperty(OOJS_GETTER_ARGS) {
 
   OOSunEntity* sun = nullptr;
 
-  if (EXPECT_NOT(!JSSunGetSunEntity(context, thisObj, &sun)))
+  if (!JSSunGetSunEntity(context, thisObj, &sun)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   switch (static_cast<SunProperty>(magic)) {
@@ -153,9 +153,9 @@ static JSValue SunGoNova(OOJS_NATIVE_ARGS) {
   OOSunEntity* sun = nullptr;
   double delay = 0;
 
-  if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun)))
+  if (!JSSunGetSunEntity(context, OOJS_THIS, &sun)) [[unlikely]]
     return OOJSNativeFailure(context);
-  if (argc > 0 && EXPECT_NOT(JS_ToFloat64(context, &delay, OOJS_ARGV[0]) != 0))
+  if (argc > 0 && (JS_ToFloat64(context, &delay, OOJS_ARGV[0]) != 0))
     return OOJSNativeFailure(context);
 
   if (sun != nullptr) sun->setGoingNova(true, delay);
@@ -172,7 +172,7 @@ static JSValue SunCancelNova(OOJS_NATIVE_ARGS) {
 
   OOSunEntity* sun = nullptr;
 
-  if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun)))
+  if (!JSSunGetSunEntity(context, OOJS_THIS, &sun)) [[unlikely]]
     return OOJSNativeFailure(context);
 
   if ((sun != nullptr ? sun->willGoNova() : false) &&
