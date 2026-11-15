@@ -33,8 +33,8 @@ MA 02110-1301, USA.
 
 class OOTexture;
 
-#define OPEN_GL_SPRITE_MIN_WIDTH 64.0
-#define OPEN_GL_SPRITE_MIN_HEIGHT 64.0
+inline constexpr double OPEN_GL_SPRITE_MIN_WIDTH = 64.0;
+inline constexpr double OPEN_GL_SPRITE_MIN_HEIGHT = 64.0;
 
 class OOTextureSprite : public oo::Object {
  public:
