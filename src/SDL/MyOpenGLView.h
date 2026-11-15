@@ -78,7 +78,7 @@ inline constexpr int OOMOUSEWHEEL_DELTA = 120;  // Same as Windows WHEEL_DELTA
 #define SNAPSHOTS_PNG_FORMAT 1
 inline constexpr std::string_view SNAPSHOTHDR_EXTENSION_EXR = ".exr";
 inline constexpr std::string_view SNAPSHOTHDR_EXTENSION_HDR = ".hdr";
-#define SNAPSHOTHDR_EXTENSION_DEFAULT SNAPSHOTHDR_EXTENSION_EXR
+inline constexpr auto SNAPSHOTHDR_EXTENSION_DEFAULT = SNAPSHOTHDR_EXTENSION_EXR;
 
 class Entity;
 class GameController;
