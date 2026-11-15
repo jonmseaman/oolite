@@ -591,7 +591,7 @@ bool OOOXZManager::applyFilterByDays(const oo::PList& manifest,
     std::size_t updated = manifest.get<std::uint64_t>(kOOManifestUploadDate);
     std::size_t now =
         static_cast<std::size_t>(oo::date::timeIntervalSince1970());
-    return (updated + (86400 * i) > now);
+    return (updated + (static_cast<std::size_t>(86400 * i)) > now);
   }
 }
 
@@ -1657,8 +1657,9 @@ void OOOXZManager::gui() {
   }
   if (gui != nullptr) {
     gui->setKey("_EXIT", OXZ_GUI_ROW_EXIT);
-    gui->setSelectableRange(
-        NSMakeRange(startRow, 2 + (OXZ_GUI_ROW_EXIT - startRow)));
+    gui->setSelectableRange(NSMakeRange(
+        static_cast<std::size_t>(startRow),
+        static_cast<std::size_t>(2 + (OXZ_GUI_ROW_EXIT - startRow))));
   }
   if (startRow < OXZ_GUI_ROW_INSTALL) {
     if (gui != nullptr) gui->setSelectedRow(OXZ_GUI_ROW_INSTALL);
@@ -1745,7 +1746,8 @@ void OOOXZManager::processSelection() {
     processOptionsNext();
     return;
   } else {
-    std::size_t item = _offset + selection - OXZ_GUI_ROW_LISTSTART;
+    std::size_t item =
+        _offset + static_cast<std::size_t>(selection) - OXZ_GUI_ROW_LISTSTART;
     if (_interfaceState == OXZInterfaceState::kPickRemove) {
       removeOXZ(item);
     } else if (_interfaceState == OXZInterfaceState::kPickInstall) {
@@ -1819,7 +1821,8 @@ void OOOXZManager::processShowInfoKey() {
       this->gui();  // restore screen
       // reset list selection position
       if (gui != nullptr)
-        gui->setSelectedRow((_item - _offset + OXZ_GUI_ROW_LISTSTART));
+        gui->setSelectedRow(
+            (static_cast<OOGUIRow>(_item - _offset + OXZ_GUI_ROW_LISTSTART)));
       // and do the GUI again with the correct positions
       showOptionsUpdate();  // restore screen
     } else {
@@ -1831,7 +1834,8 @@ void OOOXZManager::processShowInfoKey() {
         return;
       }
 
-      _item = _offset + selection - OXZ_GUI_ROW_LISTSTART;
+      _item =
+          _offset + static_cast<std::size_t>(selection) - OXZ_GUI_ROW_LISTSTART;
 
       const oo::PList manifest = ElementAt(_filteredList, _item);
       _interfaceShowingOXZDetail = true;
@@ -1918,7 +1922,8 @@ void OOOXZManager::processCopyUrlKey() {
         // not on an OXZ
         return;
       }
-      _item = _offset + selection - OXZ_GUI_ROW_LISTSTART;
+      _item =
+          _offset + static_cast<std::size_t>(selection) - OXZ_GUI_ROW_LISTSTART;
 
       const oo::PList manifest = ElementAt(_filteredList, _item);
       // infoURL
@@ -1948,7 +1953,8 @@ void OOOXZManager::processExtractKey() {
       return;
     }
 
-    _item = _offset + selection - OXZ_GUI_ROW_LISTSTART;
+    _item =
+        _offset + static_cast<std::size_t>(selection) - OXZ_GUI_ROW_LISTSTART;
     _interfaceState = OXZInterfaceState::kExtract;
     this->gui();
   }
@@ -1965,7 +1971,8 @@ std::vector<oo::PList> OOOXZManager::installOptions() {
     end = _filteredList.count();
   }
   const oo::PList::Array& all = Elements(_filteredList);
-  return std::vector<oo::PList>(all.begin() + start, all.begin() + end);
+  return std::vector<oo::PList>(all.begin() + static_cast<long long>(start),
+                                all.begin() + static_cast<long long>(end));
 }
 
 OOGUIRow OOOXZManager::showInstallOptions() {
@@ -2026,15 +2033,15 @@ OOGUIRow OOOXZManager::showInstallOptions() {
   for (std::size_t i = OXZ_GUI_ROW_LISTSTATUS; i < OXZ_GUI_ROW_INSTALL - 1;
        i++) {
     if (gui != nullptr) {
-      gui->setText("", i, OOGUIAlignment::kLeft);
-      gui->setKey(std::string(GUI_KEY_SKIP), i);
+      gui->setText("", static_cast<OOGUIRow>(i), OOGUIAlignment::kLeft);
+      gui->setKey(std::string(GUI_KEY_SKIP), static_cast<OOGUIRow>(i));
     }
   }
   // and any previous listed entries
   for (std::size_t i = OXZ_GUI_ROW_LISTSTART; i < OXZ_GUI_ROW_LISTNEXT; i++) {
     if (gui != nullptr) {
-      gui->setText("", i, OOGUIAlignment::kLeft);
-      gui->setKey(std::string(GUI_KEY_SKIP), i);
+      gui->setText("", static_cast<OOGUIRow>(i), OOGUIAlignment::kLeft);
+      gui->setKey(std::string(GUI_KEY_SKIP), static_cast<OOGUIRow>(i));
     }
   }
 
@@ -2191,7 +2198,8 @@ std::vector<oo::PList> OOOXZManager::removeOptions() {
     end = _filteredList.count();
   }
   const oo::PList::Array& all = Elements(_filteredList);
-  return std::vector<oo::PList>(all.begin() + start, all.begin() + end);
+  return std::vector<oo::PList>(all.begin() + static_cast<long long>(start),
+                                all.begin() + static_cast<long long>(end));
 }
 
 OOGUIRow OOOXZManager::showRemoveOptions() {
@@ -2254,15 +2262,15 @@ OOGUIRow OOOXZManager::showRemoveOptions() {
   // clear any previous longtext
   for (std::size_t i = OXZ_GUI_ROW_LISTDESC; i < OXZ_GUI_ROW_INSTALL - 1; i++) {
     if (gui != nullptr) {
-      gui->setText("", i, OOGUIAlignment::kLeft);
-      gui->setKey(std::string(GUI_KEY_SKIP), i);
+      gui->setText("", static_cast<OOGUIRow>(i), OOGUIAlignment::kLeft);
+      gui->setKey(std::string(GUI_KEY_SKIP), static_cast<OOGUIRow>(i));
     }
   }
   // and any previous listed entries
   for (std::size_t i = OXZ_GUI_ROW_LISTSTART; i < OXZ_GUI_ROW_LISTNEXT; i++) {
     if (gui != nullptr) {
-      gui->setText("", i, OOGUIAlignment::kLeft);
-      gui->setKey(std::string(GUI_KEY_SKIP), i);
+      gui->setText("", static_cast<OOGUIRow>(i), OOGUIAlignment::kLeft);
+      gui->setKey(std::string(GUI_KEY_SKIP), static_cast<OOGUIRow>(i));
     }
   }
 
@@ -2489,7 +2497,7 @@ void OOOXZManager::downloadDidReceiveResponse(
     std::int64_t expectedContentLength) {
   _downloadStatus = OXZDownloadStatus::kReceiving;
   OO_LOG("oxz.manager.debug", "{}", "Download receiving");
-  _downloadExpected = expectedContentLength;
+  _downloadExpected = static_cast<std::size_t>(expectedContentLength);
   _downloadProgress = 0;
   if (_fileWriter != nullptr) {
     fclose(_fileWriter);

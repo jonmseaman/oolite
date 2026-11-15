@@ -252,7 +252,8 @@ bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
           break;
 
         case kMethodTypeUnsignedLongVoid:
-          result = oo::PList::unsignedInteger(typed.integer);
+          result = oo::PList::unsignedInteger(
+              static_cast<std::uint64_t>(typed.integer));
           break;
 
         case kMethodTypeFloatVoid:

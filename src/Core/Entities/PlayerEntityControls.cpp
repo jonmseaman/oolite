@@ -624,8 +624,8 @@ oo::PList PlayerEntity::processKeyCode(const oo::PList& key_def) {
         if (checkVal > 0) {
           iValue = checkVal;
 
-          defNew["key"] = oo::PList::unsignedInteger(
-              iValue);  // was +numberWithUnsignedShort:
+          defNew["key"] = oo::PList::unsignedInteger(static_cast<std::uint64_t>(
+              iValue));  // was +numberWithUnsignedShort:
           newList.push_back(oo::PList(std::move(defNew)));
           continue;
         }
@@ -3037,7 +3037,8 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
         if (!queryPressed) {
           queryPressed = true;
           if (checkKeyPress(n_key_market_filter_cycle)) {
-            if (oo::ToUnderlying(marketFilterMode) + 1u >=
+            if (static_cast<unsigned int>(oo::ToUnderlying(marketFilterMode)) +
+                    1u >=
                 kOOMarketFilterModeCount) {
               marketFilterMode = OOMarketFilterMode::kOff;
             } else {
@@ -3045,7 +3046,8 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
                   oo::ToUnderlying(marketFilterMode) + 1);
             }
           } else {
-            if (oo::ToUnderlying(marketSorterMode) + 1u >=
+            if (static_cast<unsigned int>(oo::ToUnderlying(marketSorterMode)) +
+                    1u >=
                 kOOMarketSorterModeCount) {
               marketSorterMode = OOMarketSorterMode::kOff;
             } else {
@@ -3111,9 +3113,11 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
                   ? STATUS_EQUIPMENT_MAX_ROWS +
                         STATUS_EQUIPMENT_BIGGUI_EXTRA_ROWS
                   : STATUS_EQUIPMENT_MAX_ROWS;
-          if ((gui->keyForRow(STATUS_EQUIPMENT_FIRST_ROW + maxRows) ==
+          if ((gui->keyForRow(static_cast<OOGUIRow>(STATUS_EQUIPMENT_FIRST_ROW +
+                                                    maxRows)) ==
                std::string(GUI_KEY_OK))) {
-            gui->setSelectedRow(STATUS_EQUIPMENT_FIRST_ROW + maxRows);
+            gui->setSelectedRow(
+                static_cast<OOGUIRow>(STATUS_EQUIPMENT_FIRST_ROW + maxRows));
             playMenuPageNext();
             gui->setStatusPage(+1);
             setGuiToStatusScreen();
@@ -3468,7 +3472,8 @@ void PlayerEntity::pollMarketScreenControls() {
           marketSelectedCommodity =
               (goodsIndex >= 0 &&
                goodsIndex < static_cast<std::ptrdiff_t>(goods.size()))
-                  ? std::optional<std::string>(goods[goodsIndex])
+                  ? std::optional<std::string>(
+                        goods[static_cast<unsigned long long>(goodsIndex)])
                   : std::nullopt;
           setGuiToMarketScreen();
         }
@@ -3510,7 +3515,8 @@ void PlayerEntity::pollMarketScreenControls() {
           marketSelectedCommodity =
               (goodsIndex >= 0 &&
                goodsIndex < static_cast<std::ptrdiff_t>(goods.size()))
-                  ? std::optional<std::string>(goods[goodsIndex])
+                  ? std::optional<std::string>(
+                        goods[static_cast<unsigned long long>(goodsIndex)])
                   : std::nullopt;
           setGuiToMarketInfoScreen();
         }
@@ -3772,7 +3778,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
                         ? 1
                         : -1;
     std::ptrdiff_t displayModeIndex =
-        (controller != nullptr ? controller->indexOfCurrentDisplayMode() : 0);
+        (controller != nullptr ? static_cast<std::ptrdiff_t>(
+                                     controller->indexOfCurrentDisplayMode())
+                               : 0);
     const oo::PList modes =
         (controller != nullptr ? controller->getDisplayModes() : oo::PList());
 
@@ -3795,10 +3803,13 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
     int modeHeight = mode.get<int>(kOODisplayHeight);
     int modeRefresh = mode.get<int>(kOODisplayRefreshRate);
     if (controller != nullptr)
-      controller->setDisplayWidth(modeWidth, modeHeight, modeRefresh);
+      controller->setDisplayWidth(static_cast<unsigned int>(modeWidth),
+                                  static_cast<unsigned int>(modeHeight),
+                                  static_cast<unsigned int>(modeRefresh));
 
     const std::string displayModeString =
-        screenModeStringForWidth(modeWidth, modeHeight,
+        screenModeStringForWidth(static_cast<unsigned int>(modeWidth),
+                                 static_cast<unsigned int>(modeHeight),
                                  static_cast<float>(modeRefresh))
             .value_or("");
 
@@ -3976,8 +3987,8 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
             (UNIVERSE != nullptr
                  ? UNIVERSE->descriptionForArrayKey(
                        "music-mode",
-                       oo::ToUnderlying(
-                           OOMusicController::sharedController()->mode()))
+                       static_cast<unsigned int>(oo::ToUnderlying(
+                           OOMusicController::sharedController()->mode())))
                  : std::optional<std::string>())
                 .value_or("");
         const std::string message = ExpandKeyWithArguments(
@@ -4363,7 +4374,7 @@ void PlayerEntity::handleKeyMapperScreenKeys() {
       from_function = oo::str::intValue(keyComponents[1]);
       if (from_function < 0) from_function = 0;
 
-      setGuiToKeyMapperScreen(from_function, true);
+      setGuiToKeyMapperScreen(static_cast<unsigned int>(from_function), true);
       if (UNIVERSE->getGui()->getSelectedRow() < GUI_ROW_KC_FUNCSTART) {
         UNIVERSE->getGui()->setSelectedRow(GUI_ROW_KC_FUNCSTART);
       }
@@ -4408,7 +4419,8 @@ void PlayerEntity::handleKeyboardLayoutKeys() {
       from_function = oo::str::intValue(keyComponents[1]);
       if (from_function < 0) from_function = 0;
 
-      setGuiToKeyboardLayoutScreen(from_function, true);
+      setGuiToKeyboardLayoutScreen(static_cast<unsigned int>(from_function),
+                                   true);
       if (UNIVERSE->getGui()->getSelectedRow() < GUI_ROW_KC_FUNCSTART) {
         UNIVERSE->getGui()->setSelectedRow(GUI_ROW_KC_FUNCSTART);
       }
@@ -4455,7 +4467,7 @@ void PlayerEntity::handleStickMapperScreenKeys() {
       from_function = oo::str::intValue(keyComponents[1]);
       if (from_function < 0) from_function = 0;
 
-      setGuiToStickMapperScreen(from_function, true);
+      setGuiToStickMapperScreen(static_cast<unsigned int>(from_function), true);
       if (UNIVERSE->getGui()->getSelectedRow() < GUI_ROW_FUNCSTART) {
         UNIVERSE->getGui()->setSelectedRow(GUI_ROW_FUNCSTART);
       }
@@ -5718,7 +5730,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
           selectPressed = false;
           pollMissionInterruptControls();
         }
-      } else if (gui->keyForRow(end_row) == "spacebar") {
+      } else if (gui->keyForRow(static_cast<OOGUIRow>(end_row)) == "spacebar") {
         if ((gameView != nullptr ? gameView->isDown(32) : false)) {
           //  '<space>'
           if (!spacePressed) {

@@ -136,7 +136,9 @@ void PlayerEntity::awardCommodityType(const std::string& type,
           int amount_per_container =
               (unit == OOMassUnit::kKilograms) ? 1000 : 1000000;
           while (amount > 0) {
-            int smaller_quantity = 1 + ((amount - 1) % amount_per_container);
+            int smaller_quantity = static_cast<int>(
+                1 + ((amount - 1) %
+                     static_cast<OOCargoQuantity>(amount_per_container)));
             if (cargo.size() < maxAvailableCargoSpace()) {
               std::shared_ptr<::ShipEntity> container =
                   (UNIVERSE != nullptr
@@ -151,12 +153,13 @@ void PlayerEntity::awardCommodityType(const std::string& type,
                 if (container != nullptr)
                   container->setStatus(OOEntityStatus::kInHold);
                 if (container != nullptr)
-                  container->setCommodity(type, smaller_quantity);
+                  container->setCommodity(
+                      type, static_cast<OOCargoQuantity>(smaller_quantity));
                 cargo.emplace_back(container);
                 container.reset();
               }
             }
-            amount -= smaller_quantity;
+            amount -= static_cast<OOCargoQuantity>(smaller_quantity);
           }
         }
       } else if (!specialCargo) {
@@ -187,15 +190,17 @@ void PlayerEntity::awardCommodityType(const std::string& type,
   } else {  // docked
     // like purchasing a commodity
     int manifest_quantity =
-        (shipCommodityData != nullptr ? shipCommodityData->quantityForGood(type)
-                                      : 0);
+        (shipCommodityData != nullptr
+             ? static_cast<int>(shipCommodityData->quantityForGood(type))
+             : 0);
     while ((amount) && (current_cargo < maxAvailableCargoSpace())) {
       manifest_quantity++;
       amount--;
       if (unit == OOMassUnit::kTons) current_cargo++;
     }
     if (shipCommodityData != nullptr)
-      shipCommodityData->setQuantity(manifest_quantity, type);
+      shipCommodityData->setQuantity(
+          static_cast<OOCargoQuantity>(manifest_quantity), type);
   }
   calculateCurrentCargo();
 }
@@ -262,7 +267,8 @@ unsigned PlayerEntity::systemPseudoRandom100() {
       ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) != nullptr
            ? UNIVERSE->getSystemManager()->getRandomSeedForCurrentSystem()
            : Random_Seed()));
-  return (gen_rnd_number() * 256 + gen_rnd_number()) % 100;
+  return static_cast<unsigned int>((gen_rnd_number() * 256 + gen_rnd_number()) %
+                                   100);
 }
 
 unsigned PlayerEntity::systemPseudoRandom256() {
@@ -270,7 +276,7 @@ unsigned PlayerEntity::systemPseudoRandom256() {
       ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) != nullptr
            ? UNIVERSE->getSystemManager()->getRandomSeedForCurrentSystem()
            : Random_Seed()));
-  return gen_rnd_number();
+  return static_cast<unsigned int>(gen_rnd_number());
 }
 
 double PlayerEntity::systemPseudoRandomFloat() {
@@ -278,9 +284,9 @@ double PlayerEntity::systemPseudoRandomFloat() {
       ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) != nullptr
            ? UNIVERSE->getSystemManager()->getRandomSeedForCurrentSystem()
            : Random_Seed()));
-  unsigned a = gen_rnd_number();
-  unsigned b = gen_rnd_number();
-  unsigned c = gen_rnd_number();
+  unsigned a = static_cast<unsigned int>(gen_rnd_number());
+  unsigned b = static_cast<unsigned int>(gen_rnd_number());
+  unsigned c = static_cast<unsigned int>(gen_rnd_number());
 
   a = (a << 16) | (b << 8) | c;
   return static_cast<double>(a) / static_cast<double>(0x01000000);

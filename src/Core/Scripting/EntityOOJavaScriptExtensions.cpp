@@ -82,7 +82,8 @@ JSValue EntityJSValueInContext(Entity* entity, JSContext* context) {
     // Create JS object. The entity keeps a reference to it for as long as the
     // entity exists.
     JSValue jsSelf = JS_NewObjectClass(
-        context, static_cast<int>(OOJSEntityJSClassID(entity)));
+        context,
+        static_cast<JSClassID>(static_cast<int>(OOJSEntityJSClassID(entity))));
     if (JS_IsException(jsSelf)) {
       JS_FreeValue(context, JS_GetException(context));
     } else {

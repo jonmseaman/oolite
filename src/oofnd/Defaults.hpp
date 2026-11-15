@@ -99,7 +99,8 @@ inline bool isAsciiSpace(unsigned char c) noexcept {
 // -[NSString boolValue]: the first character that is not a space, '0', '+' or
 // '-' decides.
 inline bool stringBoolValue(std::string_view s) noexcept {
-  for (unsigned char c : s) {
+  for (const char ch : s) {
+    const auto c = static_cast<unsigned char>(ch);
     if (c > 'y') break;
     if ((c >= '1' && c <= '9') || c == 'y' || c == 'Y' || c == 't' || c == 'T')
       return true;
@@ -217,7 +218,8 @@ inline std::int64_t realIntegerValue(double d) noexcept {
 
 inline void appendOpenStepString(std::string& out, std::string_view utf8) {
   bool bare = !utf8.empty();
-  for (unsigned char c : utf8) {
+  for (const char cChar : utf8) {
+    const auto c = static_cast<unsigned char>(cChar);
     if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
           (c >= '0' && c <= '9')))
       bare = false;

@@ -234,14 +234,14 @@ std::size_t OOConstantFromJSValuePRIVATE(JSContext* context, JSValueConst value,
   OOCParameterAssert(context != nullptr && table != nullptr);
 
   if (!JS_IsString(value)) [[unlikely]]
-    return defaultValue;
+    return static_cast<std::size_t>(defaultValue);
 
   // Interning a string yields the same atom as the table entry with the same
   // contents.
   JSAtom atom = JS_ValueToAtom(context, value);
   if (atom == JS_ATOM_NULL) [[unlikely]] {
     JS_FreeValue(context, JS_GetException(context));
-    return defaultValue;
+    return static_cast<std::size_t>(defaultValue);
   }
 
   std::ptrdiff_t result = defaultValue;
@@ -254,5 +254,5 @@ std::size_t OOConstantFromJSValuePRIVATE(JSContext* context, JSValueConst value,
   }
 
   JS_FreeAtom(context, atom);
-  return result;
+  return static_cast<std::size_t>(result);
 }

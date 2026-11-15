@@ -338,7 +338,7 @@ static void SetState_DEPTH_WRITEMASK(bool value) {
 static void SetState_SHADE_MODEL(GLint value) {
   OO_ENTER_OPENGL();
 
-  OOGL(glShadeModel(value));
+  OOGL(glShadeModel(static_cast<GLenum>(value)));
 }
 
 static GLenum GetState_TEXTURE_ENV_MODE() {
@@ -346,13 +346,14 @@ static GLenum GetState_TEXTURE_ENV_MODE() {
 
   GLint value;
   OOGL(glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &value));
-  return value;
+  return static_cast<GLenum>(value);
 }
 
 static void SetState_TEXTURE_ENV_MODE(GLenum value) {
   OO_ENTER_OPENGL();
 
-  OOGL(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, value));
+  OOGL(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,
+                 static_cast<GLint>(value)));
 }
 
 #if OO_MULTITEXTURE
@@ -361,7 +362,7 @@ static GLenum GetState_ACTIVE_TEXTURE() {
 
   GLint value;
   OOGL(glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &value));
-  return value;
+  return static_cast<GLenum>(value);
 }
 
 static void SetState_ACTIVE_TEXTURE(GLenum value) {
@@ -375,7 +376,7 @@ static GLenum GetState_CLIENT_ACTIVE_TEXTURE() {
 
   GLint value;
   OOGL(glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE_ARB, &value));
-  return value;
+  return static_cast<GLenum>(value);
 }
 
 static void SetState_CLIENT_ACTIVE_TEXTURE(GLenum value) {
@@ -397,13 +398,13 @@ static void SetState_CLIENT_ACTIVE_TEXTURE(GLenum value) {}
 static void SetState_CULL_FACE_MODE(GLint value) {
   OO_ENTER_OPENGL();
 
-  OOGL(glCullFace(value));
+  OOGL(glCullFace(static_cast<GLenum>(value)));
 }
 
 static void SetState_FRONT_FACE(GLint value) {
   OO_ENTER_OPENGL();
 
-  OOGL(glFrontFace(value));
+  OOGL(glFrontFace(static_cast<GLenum>(value)));
 }
 
 /*	The state items
@@ -842,10 +843,10 @@ static void VerifyOpenGLStateInternal(const char* caller,
           currentState.BLEND_DST != expectedState->BLEND_DST) {
         OO_LOG(kOOLogOpenGLVerifyDump,
                "GL blend mode should be {}, {} but is {}, {}.",
-               OOGLEnumToString(expectedState->BLEND_SRC),
-               OOGLEnumToString(expectedState->BLEND_DST),
-               OOGLEnumToString(currentState.BLEND_SRC),
-               OOGLEnumToString(currentState.BLEND_DST));
+               OOGLEnumToString(static_cast<GLenum>(expectedState->BLEND_SRC)),
+               OOGLEnumToString(static_cast<GLenum>(expectedState->BLEND_DST)),
+               OOGLEnumToString(static_cast<GLenum>(currentState.BLEND_SRC)),
+               OOGLEnumToString(static_cast<GLenum>(currentState.BLEND_DST)));
       }
     }
 
@@ -893,7 +894,8 @@ static void SwitchOpenGLStateInternal(const OOOpenGLState* sourceState,
   if (sourceState->BLEND_SRC != targetState->BLEND_SRC ||
       sourceState->BLEND_DST != targetState->BLEND_DST ||
       sourceState->BLEND == StateFlag::kFalse) {
-    OOGL(glBlendFunc(targetState->BLEND_SRC, targetState->BLEND_DST));
+    OOGL(glBlendFunc(static_cast<GLenum>(targetState->BLEND_SRC),
+                     static_cast<GLenum>(targetState->BLEND_DST)));
   }
 }
 }  // namespace

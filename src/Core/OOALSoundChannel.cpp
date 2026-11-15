@@ -39,7 +39,7 @@ bool OOSoundChannel::init() {
   {
     ALuint error;
     OOAL(alGenSources(1, &_source));
-    if ((error = alGetError()) != AL_NO_ERROR) {
+    if ((error = static_cast<ALuint>(alGetError())) != AL_NO_ERROR) {
       OO_LOG(kOOLogSoundInitError, "{}", "Could not create OpenAL source");
       return false;
     } else {
@@ -176,7 +176,7 @@ bool OOSoundChannel::enqueueBuffer(OOSound* sound) {
   // bind sound data to buffer
   OOAL(alSourceQueueBuffers(_source, 1, &_buffer));
   ALuint error;
-  if ((error = alGetError()) != AL_NO_ERROR) {
+  if ((error = static_cast<ALuint>(alGetError())) != AL_NO_ERROR) {
     OO_LOG("ov.debug",
            "Error {} queueing buffers (_source: {} ({}), _buffer: {} ({}))",
            error, _source, oo::str::pointerDescription(&_source), _buffer,
@@ -187,7 +187,7 @@ bool OOSoundChannel::enqueueBuffer(OOSound* sound) {
   OOAL(alGetSourcei(_source, AL_SOURCE_STATE, &playing));
   if (playing != AL_PLAYING) {
     OOAL(alSourcePlay(_source));
-    if ((error = alGetError()) != AL_NO_ERROR) {
+    if ((error = static_cast<ALuint>(alGetError())) != AL_NO_ERROR) {
       OO_LOG("ov.debug", "Error {} playing source",
              static_cast<int>(error));  // %d of the ALuint
       return false;

@@ -305,7 +305,7 @@ void OOTextureLoader::setUp() {
   // Load two maximum sizes - graphics hardware limit and user-specified limit.
   GLint maxSize;
   OOGL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize));
-  sGLMaxSize = std::max(maxSize, 64);
+  sGLMaxSize = static_cast<unsigned int>(std::max(maxSize, 64));
   OO_LOG("texture.load.rescale.maxSize", "GL maximum texture size: {}",
          static_cast<unsigned>(sGLMaxSize));
 
@@ -368,7 +368,8 @@ void OOTextureLoader::generateMipMapsForCubeMap() {
       _width * _width * components;  // Space for one side without mip-maps.
   size_t newSideSize =
       srcSideSize * 4 / 3;                 // Space for one side with mip-maps.
-  newSideSize = (newSideSize + 15) & ~15;  // Round up to multiple of 16 bytes.
+  newSideSize = (newSideSize + 15) &
+                static_cast<size_t>(~15);  // Round up to multiple of 16 bytes.
   size_t newSize = newSideSize * 6;        // Space for all six sides.
 
   OOPixelBuffer newData = OOMakePixelBuffer(newSize);

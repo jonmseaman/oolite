@@ -253,7 +253,9 @@ void PlayerEntity::setGuiToScenarioScreen(int page) {
 
     gui_screen = OOGUIScreenID::kNewGame;
 
-    gui->setSelectableRange(NSMakeRange(start_row - 2, 3 + row - start_row));
+    gui->setSelectableRange(
+        NSMakeRange(static_cast<std::size_t>(start_row - 2),
+                    static_cast<std::size_t>(3 + row - start_row)));
     gui->setSelectedRow(start_row);
     showScenarioDetails();
 
@@ -281,10 +283,10 @@ void PlayerEntity::showScenarioDetails() {
     int item = SecondFieldIntValue(key);
     const oo::PList scenarios =
         (UNIVERSE != nullptr ? UNIVERSE->scenarios() : oo::PList());
-    const oo::PList* scenario = scenarios.at(item);
+    const oo::PList* scenario = scenarios.at(static_cast<std::size_t>(item));
     setShowDemoShips(false);
     for (std::size_t i = GUI_ROW_SCENARIOS_DETAIL; i <= 27; i++) {
-      gui->setText("", i);
+      gui->setText("", static_cast<OOGUIRow>(i));
     }
     if (scenario) {
       const std::optional<std::string> scenarioDescription =
@@ -321,7 +323,7 @@ bool PlayerEntity::startScenario() {
 
   const oo::PList scenarios =
       (UNIVERSE != nullptr ? UNIVERSE->scenarios() : oo::PList());
-  const oo::PList* scenario = scenarios.at(selection);
+  const oo::PList* scenario = scenarios.at(static_cast<std::size_t>(selection));
   const std::optional<std::string> file =
       scenario != nullptr ? OptionalStringValue(scenario->find("file"))
                           : std::nullopt;
@@ -421,7 +423,8 @@ std::optional<std::string> PlayerEntity::commanderSelector() {
       default: {
         if (idx < 0 || static_cast<std::size_t>(idx) >= cdrDetailArray.size())
           break;  // (-objectAtIndex: raised)
-        const oo::PList cdr = cdrDetailArray[idx];
+        const oo::PList cdr =
+            cdrDetailArray[static_cast<unsigned long long>(idx)];
         if (cdr.get<bool>("isSavedGame")) {
           return OptionalStringValue(cdr.find("saved_game_path"));
         } else {
@@ -467,10 +470,12 @@ void PlayerEntity::saveCommanderInputHandler() {
     if (guiSelectedRow != MOREROW && guiSelectedRow != BACKROW) {
       showCommanderShip(idx);
       if (idx >= 0 && static_cast<std::size_t>(idx) < cdrDetailArray.size() &&
-          cdrDetailArray[idx].get<bool>(
+          cdrDetailArray[static_cast<unsigned long long>(idx)].get<bool>(
               "isSavedGame"))  // don't show things that aren't saved games
         commanderNameString =
-            CommanderSaveName(cdrDetailArray[idx]).value_or("");
+            CommanderSaveName(
+                cdrDetailArray[static_cast<unsigned long long>(idx)])
+                .value_or("");
       else
         commanderNameString =
             (gameView != nullptr ? gameView->getTypedString()
@@ -530,7 +535,7 @@ void PlayerEntity::saveCommanderInputHandler() {
       int idx = (guiSelectedRow - STARTROW) + (currentPage * NUMROWS);
       const oo::PList cdr =
           (idx >= 0 && static_cast<std::size_t>(idx) < cdrDetailArray.size())
-              ? cdrDetailArray[idx]
+              ? cdrDetailArray[static_cast<unsigned long long>(idx)]
               : oo::PList();  // (-objectAtIndex: raised)
 
       if (!cdr.isNull() && !cdr.get<bool>("isSavedGame")) {
@@ -1124,7 +1129,7 @@ void PlayerEntity::lsCommanders(
 
   // We now know for certain what page we're on -
   // set the first index of the first commander on this page.
-  unsigned firstIndex = page * NUMROWS;
+  unsigned firstIndex = static_cast<unsigned int>(page * NUMROWS);
 
   // Set up the GUI.
   OOGUITabSettings tabStop;
@@ -1161,13 +1166,16 @@ void PlayerEntity::lsCommanders(
 
   if (firstIndex + NUMROWS >= cdrDetailArray.size()) {
     lastIndex = static_cast<unsigned int>(cdrDetailArray.size());
-    gui->setSelectableRange(NSMakeRange(rangeStart, rangeStart + NUMROWS + 2));
+    gui->setSelectableRange(
+        NSMakeRange(static_cast<std::size_t>(rangeStart),
+                    static_cast<std::size_t>(rangeStart + NUMROWS + 2)));
   } else {
-    lastIndex = (page * NUMROWS) + NUMROWS;
+    lastIndex = static_cast<unsigned int>((page * NUMROWS) + NUMROWS);
     gui->setColor(OOColor::greenColor().get(), ENDROW);
     gui->setArray({OO_DESC("gui-more"), " --> "}, ENDROW);
     gui->setKey(std::string(GUI_KEY_OK), ENDROW);
-    gui->setSelectableRange(NSMakeRange(rangeStart, MOREROW));
+    gui->setSelectableRange(
+        NSMakeRange(static_cast<std::size_t>(rangeStart), MOREROW));
   }
 
   const std::optional<std::string> lastsaveName = this->lastsaveName();
@@ -1237,7 +1245,8 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
   if (cdrArrayIndex < 0 ||
       static_cast<std::size_t>(cdrArrayIndex) >= cdrDetailArray.size())
     return;  // (-objectAtIndex: raised)
-  const oo::PList cdr = cdrDetailArray[cdrArrayIndex];
+  const oo::PList cdr =
+      cdrDetailArray[static_cast<unsigned long long>(cdrArrayIndex)];
 
   gui->setText("", CDRDESCROW, OOGUIAlignment::kLeft);
   gui->setText("", CDRDESCROW + 1, OOGUIAlignment::kLeft);
@@ -1368,7 +1377,7 @@ int PlayerEntity::findIndexOfCommander(const std::string& cdrName) {
         CommanderSaveName(cdrDetailArray[i]);
     if (currentName && cdrName == *currentName) {
       // -compare: == OOComparisonResult::kSame
-      return i;
+      return static_cast<int>(i);
     }
   }
 

@@ -587,12 +587,14 @@ OOMaybeUnits Operator_cr(const OOMaybeUnits& string,
 
 OOMaybeUnits Operator_dcr(const OOMaybeUnits& string,
                           const OOMaybeUnits& /* param */) {
-  return oo::utf8ToUtf16(OOCredits(LongLongValue(string)));
+  return oo::utf8ToUtf16(
+      OOCredits(static_cast<OOCreditsQuantity>(LongLongValue(string))));
 }
 
 OOMaybeUnits Operator_icr(const OOMaybeUnits& string,
                           const OOMaybeUnits& /* param */) {
-  return oo::utf8ToUtf16(OOIntCredits(LongLongValue(string)));
+  return oo::utf8ToUtf16(
+      OOIntCredits(static_cast<OOCreditsQuantity>(LongLongValue(string))));
 }
 
 OOMaybeUnits Operator_idcr(const OOMaybeUnits& string,
@@ -705,7 +707,7 @@ OOMaybeUnits ExpandDigitKey(OOStringExpansionContext* context,
 
   // Select a random sub-entry.
   std::size_t selection, count = entry->count();
-  std::size_t rnd = OO_EXPANDER_RANDOM;
+  std::size_t rnd = static_cast<std::size_t>(OO_EXPANDER_RANDOM);
   if (count == 5 && !context->useGoodRNG) {
     // Time-honoured Elite-compatible way for five items.
     if (rnd >= 0xCC)
@@ -919,7 +921,8 @@ OOMaybeUnits ExpandStringKeyFromDescriptions(OOStringExpansionContext* context,
   oo::PList value = (found != nullptr) ? *found : oo::PList();
   if (!value.isNull()) {
     if (value.isArray() && value.count() > 0) {
-      std::size_t rnd = OO_EXPANDER_RANDOM % value.count();
+      std::size_t rnd =
+          static_cast<std::size_t>(OO_EXPANDER_RANDOM % value.count());
       const oo::PList chosen = *value.at(rnd);
       value = chosen;
     }
@@ -1310,8 +1313,8 @@ OOMaybeUnits ExpandSystemNameForGalaxyEscape(OOStringExpansionContext* context,
     return std::nullopt;
   }
 
-  OOGalaxyID galID =
-      (galHundreds - '0') * 100 + (galTens - '0') * 10 + (galUnits - '0');
+  OOGalaxyID galID = static_cast<OOGalaxyID>(
+      (galHundreds - '0') * 100 + (galTens - '0') * 10 + (galUnits - '0'));
   if (galID > kOOMaximumGalaxyID) {
     SyntaxError(context, "strings.expand.invalidJEscape.range",
                 "String escape code %%G%3u for galaxy is out of range (must be "
@@ -1507,8 +1510,9 @@ OOUnits OldRandomDigrams() {
 /*	Generates pseudo-random digram string. Used for "%N" description string.
  */
 OOUnits NewRandomDigrams(OOStringExpansionContext* context) {
-  unsigned length = (OO_EXPANDER_RANDOM % 4) + 1;
-  if ((OO_EXPANDER_RANDOM % 5) < ((length == 1) ? 3 : 1))
+  unsigned length = (static_cast<unsigned int>(OO_EXPANDER_RANDOM % 4)) + 1;
+  if ((static_cast<unsigned int>(OO_EXPANDER_RANDOM % 5)) <
+      ((length == 1) ? 3 : 1))
     ++length;  // Make two-letter names rarer and 10-letter names happen
                // sometimes
   const oo::PList* digramsEntry = UNIVERSE->descriptions()->find("digrams");
@@ -1522,7 +1526,8 @@ OOUnits NewRandomDigrams(OOStringExpansionContext* context) {
   OOUnits name;
 
   for (unsigned i = 0; i != length; ++i) {
-    name += Digram(digrams, digramUnits, (OO_EXPANDER_RANDOM % count) * 2);
+    name += Digram(digrams, digramUnits,
+                   (static_cast<std::size_t>(OO_EXPANDER_RANDOM % count)) * 2);
   }
 
   return Capitalized(name);

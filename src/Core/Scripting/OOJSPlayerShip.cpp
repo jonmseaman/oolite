@@ -468,8 +468,8 @@ void InitOOJSPlayerShip(JSContext* context, JSValueConst global) {
   OOCAssert(JS_IsObject(playerObject),
             "Player must be initialized before PlayerShip.");
 
-  JSValue shipObject =
-      JS_NewObjectClass(context, static_cast<int>(sPlayerShipClassID));
+  JSValue shipObject = JS_NewObjectClass(
+      context, static_cast<JSClassID>(static_cast<int>(sPlayerShipClassID)));
   // The slot holds a weak reference to the C++ player, as every entity's JS
   // object's does.
   OOJSSetCxxPrivate(shipObject, oo::makeShared<OOJSEntityHolder>(player));
@@ -1610,7 +1610,9 @@ static JSValue PlayerShipAddPassenger(JSContext* context,
     OOJS_RETURN_BOOL(false);
 
   bool OK = (player != nullptr
-                 ? player->addPassenger(name.value_or(""), start, destination,
+                 ? player->addPassenger(name.value_or(""),
+                                        static_cast<unsigned int>(start),
+                                        static_cast<unsigned int>(destination),
                                         eta, fee, advance, risk)
                  : false);
   OOJS_RETURN_BOOL(OK);
@@ -1680,8 +1682,10 @@ static JSValue PlayerShipAddParcel(JSContext* context,
   // Ensure there's space.
 
   bool OK = (player != nullptr
-                 ? player->addParcel(name.value_or(""), start, destination, eta,
-                                     fee, premium, risk)
+                 ? player->addParcel(name.value_or(""),
+                                     static_cast<unsigned int>(start),
+                                     static_cast<unsigned int>(destination),
+                                     eta, fee, premium, risk)
                  : false);
   OOJS_RETURN_BOOL(OK);
 
@@ -1756,9 +1760,12 @@ static JSValue PlayerShipAwardContract(JSContext* context,
         context);  // always go through validate contracts (cargo)
 
   bool OK =
-      (player != nullptr ? player->awardContract(qty, key.value_or(""), start,
-                                                 destination, eta, fee, premium)
-                         : false);
+      (player != nullptr
+           ? player->awardContract(
+                 static_cast<unsigned int>(qty), key.value_or(""),
+                 static_cast<unsigned int>(start),
+                 static_cast<unsigned int>(destination), eta, fee, premium)
+           : false);
   OOJS_RETURN_BOOL(OK);
 
   OOJS_NATIVE_EXIT

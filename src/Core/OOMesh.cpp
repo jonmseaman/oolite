@@ -1061,7 +1061,7 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
     if (scanner->scanString("NVERTS")) {
       int n_v;
       if (scanner->scanInt(&n_v)) {
-        vertexCount = n_v;
+        vertexCount = static_cast<OOMeshVertexCount>(n_v);
       } else {
         failFlag = true;
         failString += "Failed to read value of NVERTS\n";
@@ -1083,7 +1083,7 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
     if (scanner->scanString("NFACES")) {
       int n_f;
       if (scanner->scanInt(&n_f)) {
-        faceCount = n_f;
+        faceCount = static_cast<OOMeshFaceCount>(n_f);
       } else {
         failFlag = true;
         failString += "Failed to read value of NFACES\n";
@@ -1188,7 +1188,7 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
             int vi;
             for (i = 0; static_cast<int>(i) < n_v; i++) {
               if (scanner->scanInt(&vi)) {
-                _faces[j].vertex[i] = vi;
+                _faces[j].vertex[i] = static_cast<GLuint>(vi);
                 if (faceRefs != nullptr) VFRAddFace(&faceRefs[vi], j);
               } else {
                 failFlag = true;
@@ -1478,18 +1478,19 @@ bool OOMesh::setUpVertexArrays() {
 
   // Iterate over material names
   for (mi = 0; mi != materialCount; ++mi) {
-    triangle_range[mi].location = tri_index;
+    triangle_range[mi].location = static_cast<std::size_t>(tri_index);
 
     for (fi = 0; fi < faceCount; fi++) {
       Vector normal, tangent;
 
       if (_faces[fi].materialIndex == mi) {
         for (vi = 0; vi < 3; vi++) {
-          int v = _faces[fi].vertex[vi];
+          int v = static_cast<int>(_faces[fi].vertex[vi]);
           if (IsPerVertexNormalMode(
                   static_cast<OOMeshNormalMode>(_normalMode))) {
-            if (is_edge_vertex[v]) {
-              getNormal(&normal, &tangent, v, _faces[fi].smoothGroup);
+            if (is_edge_vertex[static_cast<unsigned long long>(v)]) {
+              getNormal(&normal, &tangent, static_cast<OOMeshVertexCount>(v),
+                        _faces[fi].smoothGroup);
             } else {
               OOCAssert(_normals != nullptr && _tangents != nullptr,
                         "Normal/tangent buffers not allocated in %s",
@@ -1513,10 +1514,12 @@ bool OOMesh::setUpVertexArrays() {
         }
       }
     }
-    triangle_range[mi].length = tri_index - triangle_range[mi].location;
+    triangle_range[mi].length =
+        static_cast<std::size_t>(tri_index) - triangle_range[mi].location;
   }
 
-  _displayLists.count = tri_index;  // total number of triangle vertices
+  _displayLists.count =
+      static_cast<GLuint>(tri_index);  // total number of triangle vertices
   return true;
 }
 
@@ -1703,9 +1706,9 @@ void OOMesh::checkNormalsAndAdjustWinding() {
         norm.z * calculatedNormal.z < 0) {
       // normal lies in the WRONG direction!
       // reverse the winding
-      int firstVertex = _faces[i].vertex[0];
+      int firstVertex = static_cast<int>(_faces[i].vertex[0]);
       _faces[i].vertex[0] = _faces[i].vertex[2];
-      _faces[i].vertex[2] = firstVertex;
+      _faces[i].vertex[2] = static_cast<GLuint>(firstVertex);
 
       GLfloat f0 = _faces[i].s[0];
       _faces[i].s[0] = _faces[i].s[2];

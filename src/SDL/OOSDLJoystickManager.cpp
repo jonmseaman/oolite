@@ -76,7 +76,9 @@ std::ptrdiff_t OOSDLJoystickManager::getJoystickIndexFromId(
   return -1;
 }
 
-std::size_t OOSDLJoystickManager::joystickCount() { return stickCount; }
+std::size_t OOSDLJoystickManager::joystickCount() {
+  return static_cast<std::size_t>(stickCount);
+}
 
 std::optional<std::string> OOSDLJoystickManager::nameOfJoystick(
     std::size_t stickNumber) {
@@ -222,7 +224,7 @@ void OOSDLJoystickManager::decodeAxisEvent(SDL_JoyAxisEvent* evt) {
       break;
     case AXIS_THRUST:
       // Normalize the thrust setting.
-      axstate[function] =
+      axstate[static_cast<unsigned long long>(function)] =
           static_cast<float>(65536 - (axisvalue + 32768)) / 65536;
       break;
     case AXIS_ROLL:
@@ -230,15 +232,17 @@ void OOSDLJoystickManager::decodeAxisEvent(SDL_JoyAxisEvent* evt) {
     case AXIS_YAW:
     case AXIS_VIEWX:
     case AXIS_VIEWY:
-      axstate[function] = axisvalue / STICK_NORMALDIV;
+      axstate[static_cast<unsigned long long>(function)] =
+          axisvalue / STICK_NORMALDIV;
       break;
     // TODO AXIS_FIELD_OF_VIEW
     default:
       // set the state with no modification.
-      axstate[function] = axisvalue / 32768;
+      axstate[static_cast<unsigned long long>(function)] = axisvalue / 32768;
   }
   if ((function == AXIS_PITCH) && invertPitch)
-    axstate[function] = -1.0 * axstate[function];
+    axstate[static_cast<unsigned long long>(function)] =
+        -1.0 * axstate[static_cast<unsigned long long>(function)];
 }
 
 void OOSDLJoystickManager::decodeButtonEvent(SDL_JoyButtonEvent* evt) {
@@ -277,10 +281,10 @@ void OOSDLJoystickManager::decodeButtonEvent(SDL_JoyButtonEvent* evt) {
   }
   true_butstate[evt->which][evt->button] = bs;
   if (function >= 0) {
-    butstate[function] = bs;
+    butstate[static_cast<unsigned long long>(function)] = bs;
   }
   if (guifunction >= 0) {
-    butstate[guifunction] = bs;
+    butstate[static_cast<unsigned long long>(guifunction)] = bs;
   }
 }
 
@@ -295,7 +299,8 @@ void OOSDLJoystickManager::decodeHatEvent(SDL_JoyHatEvent* evt) {
     if ((evt->value ^ hatstate[evt->which][evt->hat]) & (1 << i)) {
       btn.type = (evt->value & (1 << i)) ? SDL_EVENT_JOYSTICK_BUTTON_DOWN
                                          : SDL_EVENT_JOYSTICK_BUTTON_UP;
-      btn.button = static_cast<Uint8>(MAX_REAL_BUTTONS + i + evt->which * 4);
+      btn.button = static_cast<Uint8>(
+          static_cast<SDL_JoystickID>(MAX_REAL_BUTTONS + i) + evt->which * 4);
       btn.down = (evt->value & (1 << i));
       decodeButtonEvent(&btn);
     }

@@ -234,8 +234,8 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
   int radius_km = dict.get<int>(KEY_RADIUS, planetInfo.get<int>(KEY_RADIUS));
   collision_radius =
       static_cast<GLfloat>(radius_km * 10.0);  // Scale down by a factor of 100
-  OOTechLevelID techLevel =
-      dict.get<int>(KEY_TECHLEVEL, planetInfo.get<int>(KEY_TECHLEVEL));
+  OOTechLevelID techLevel = static_cast<OOTechLevelID>(
+      dict.get<int>(KEY_TECHLEVEL, planetInfo.get<int>(KEY_TECHLEVEL)));
 
   if (techLevel > 14) techLevel = 14;
   _shuttlesOnGround = static_cast<unsigned int>(1 + techLevel / 2);

@@ -212,35 +212,35 @@ void Octree::drawOctreeFromLocation(uint32_t loc, GLfloat scale,
     GLfloat sc = 0.5f * scale;
     OCTREE_COLOR(0.4f, 0.4f, 0.4f, 0.5f);
     drawOctreeFromLocation(
-        loc + _octree[loc] + 0, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 0, sc,
         make_vector(offset.x - sc, offset.y - sc, offset.z - sc));
     OCTREE_COLOR(0.0f, 0.0f, 1.0f, 0.5f);
     drawOctreeFromLocation(
-        loc + _octree[loc] + 1, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 1, sc,
         make_vector(offset.x - sc, offset.y - sc, offset.z + sc));
     OCTREE_COLOR(0.0f, 1.0f, 0.0f, 0.5f);
     drawOctreeFromLocation(
-        loc + _octree[loc] + 2, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 2, sc,
         make_vector(offset.x - sc, offset.y + sc, offset.z - sc));
     OCTREE_COLOR(0.0f, 1.0f, 1.0f, 0.5f);
     drawOctreeFromLocation(
-        loc + _octree[loc] + 3, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 3, sc,
         make_vector(offset.x - sc, offset.y + sc, offset.z + sc));
     OCTREE_COLOR(1.0f, 0.0f, 0.0f, 0.5f);
     drawOctreeFromLocation(
-        loc + _octree[loc] + 4, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 4, sc,
         make_vector(offset.x + sc, offset.y - sc, offset.z - sc));
     OCTREE_COLOR(1.0f, 0.0f, 1.0f, 0.5f);
     drawOctreeFromLocation(
-        loc + _octree[loc] + 5, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 5, sc,
         make_vector(offset.x + sc, offset.y - sc, offset.z + sc));
     OCTREE_COLOR(1.0f, 1.0f, 0.0f, 0.5f);
     drawOctreeFromLocation(
-        loc + _octree[loc] + 6, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 6, sc,
         make_vector(offset.x + sc, offset.y + sc, offset.z - sc));
     OCTREE_COLOR(1.0f, 1.0f, 1.0f, 0.5f);
     drawOctreeFromLocation(
-        loc + _octree[loc] + 7, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 7, sc,
         make_vector(offset.x + sc, offset.y + sc, offset.z + sc));
   }
 }
@@ -322,28 +322,28 @@ void Octree::drawOctreeCollisionFromLocation(uint32_t loc, GLfloat scale,
   if (_octree[loc] > 0) {
     GLfloat sc = 0.5f * scale;
     drawOctreeCollisionFromLocation(
-        loc + _octree[loc] + 0, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 0, sc,
         make_vector(offset.x - sc, offset.y - sc, offset.z - sc));
     drawOctreeCollisionFromLocation(
-        loc + _octree[loc] + 1, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 1, sc,
         make_vector(offset.x - sc, offset.y - sc, offset.z + sc));
     drawOctreeCollisionFromLocation(
-        loc + _octree[loc] + 2, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 2, sc,
         make_vector(offset.x - sc, offset.y + sc, offset.z - sc));
     drawOctreeCollisionFromLocation(
-        loc + _octree[loc] + 3, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 3, sc,
         make_vector(offset.x - sc, offset.y + sc, offset.z + sc));
     drawOctreeCollisionFromLocation(
-        loc + _octree[loc] + 4, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 4, sc,
         make_vector(offset.x + sc, offset.y - sc, offset.z - sc));
     drawOctreeCollisionFromLocation(
-        loc + _octree[loc] + 5, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 5, sc,
         make_vector(offset.x + sc, offset.y - sc, offset.z + sc));
     drawOctreeCollisionFromLocation(
-        loc + _octree[loc] + 6, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 6, sc,
         make_vector(offset.x + sc, offset.y + sc, offset.z - sc));
     drawOctreeCollisionFromLocation(
-        loc + _octree[loc] + 7, sc,
+        loc + static_cast<uint32_t>(_octree[loc]) + 7, sc,
         make_vector(offset.x + sc, offset.y + sc, offset.z + sc));
   }
 }
@@ -589,13 +589,15 @@ static bool isHitByOctree(Octree_details axialDetails,
 
     nextDetails.radius = 0.5f * otherRadius;
     for (i = 0; i < 8; i++) {
-      oct = nearest_oct ^ change_oct[i];  // work from nearest to furthest
+      oct = static_cast<unsigned int>(
+          nearest_oct ^ change_oct[i]);  // work from nearest to furthest
       if (nextBuffer[oct]) {
         // don't test empty octants
         nextDetails.octree = &nextBuffer[oct];
         nextDetails.octree_collision = &nextCollisionBuffer[oct];
 
-        voff = resolveVectorInIJK(offsetForOctant(oct, otherRadius), other_ijk);
+        voff = resolveVectorInIJK(
+            offsetForOctant(static_cast<int>(oct), otherRadius), other_ijk);
         nextPosition = vector_subtract(otherPosition, voff);
         if (isHitByOctree(axialDetails, nextDetails, nextPosition,
                           other_ijk))  // test octant
@@ -627,14 +629,15 @@ static bool isHitByOctree(Octree_details axialDetails,
 
   nextDetails.radius = 0.5f * axialRadius;
   for (i = 0; i < 8; i++) {
-    oct = nearest_oct ^ change_oct[i];  // work from nearest to furthest
+    oct = static_cast<unsigned int>(
+        nearest_oct ^ change_oct[i]);  // work from nearest to furthest
     if (nextBuffer[oct]) {
       // don't test empty octants
       nextDetails.octree = &nextBuffer[oct];
       nextDetails.octree_collision = &nextCollisionBuffer[oct];
 
-      nextPosition =
-          vector_add(otherPosition, offsetForOctant(oct, axialRadius));
+      nextPosition = vector_add(
+          otherPosition, offsetForOctant(static_cast<int>(oct), axialRadius));
       if (isHitByOctree(nextDetails, otherDetails, nextPosition, other_ijk)) {
         return true;  // test octant
       }
@@ -749,7 +752,7 @@ static Vector randomFullNodeFrom(Octree_details details, Vector offset) {
   oct = Ranrot() & 7;
 
   for (i = 0; i < 8; i++) {
-    int octant = oct ^ i;
+    int octant = static_cast<int>(oct ^ i);
     if (nextBuffer[octant]) {
       // don't test empty octants
       nextDetails.octree = &nextBuffer[octant];
@@ -846,7 +849,9 @@ void OOOctreeBuilder::beginInnerNode() {
 
   // Insert relative offset to next free space.
   uint32_t newInsertionPoint = _nodeCount;
-  InsertNode(this, static_cast<int>(_nodeCount) - State(this)->insertionPoint);
+  InsertNode(this, static_cast<int>(
+                       static_cast<uint32_t>(static_cast<int>(_nodeCount)) -
+                       State(this)->insertionPoint));
 
   /*
           Leave space for eight nodes.

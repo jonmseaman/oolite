@@ -143,7 +143,7 @@ void CloseSocket(OOSocket s) { closesocket(s); }
 
 bool SetNonBlocking(OOSocket s) {
   u_long on = 1;
-  return ioctlsocket(s, FIONBIO, &on) == 0;
+  return ioctlsocket(s, static_cast<long>(FIONBIO), &on) == 0;
 }
 
 constexpr int kSendFlags = 0;
@@ -660,7 +660,7 @@ bool OODebugTCPConsoleClient::sendBytes(const void* bytes, size_t count) {
     }
     if (written < 1) return false;
 
-    count -= written;
+    count -= static_cast<size_t>(written);
     bytes = static_cast<const uint8_t*>(bytes) + written;
   } while (count > 0);
 

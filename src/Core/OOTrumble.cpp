@@ -99,7 +99,7 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
 
   // seed the random number generator
   //
-  ranrot_srand(r0 + r1 * 256);
+  ranrot_srand(static_cast<uint32_t>(r0 + r1 * 256));
 
   // set random colors
   int col1 = r0 & 7;
@@ -155,14 +155,16 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
   //
   int i;
   for (i = 0; i < 4; i++) {
-    colorPoint1[i] = c1[i];
-    colorPoint2[i] = c2[i];
+    colorPoint1[i] = c1[static_cast<unsigned long long>(i)];
+    colorPoint2[i] = c2[static_cast<unsigned long long>(i)];
   }
   //
   for (i = 0; i < 6; i++) {
     pointColor[i] = colorPoint1;
-    if (pointscheme[i] == 0) pointColor[i] = colorPoint1;
-    if (pointscheme[i] == 1) pointColor[i] = colorPoint2;
+    if (pointscheme[static_cast<unsigned long long>(i)] == 0)
+      pointColor[i] = colorPoint1;
+    if (pointscheme[static_cast<unsigned long long>(i)] == 1)
+      pointColor[i] = colorPoint2;
   }
   //
   for (i = 0; i < 4; i++) {
