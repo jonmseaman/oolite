@@ -327,11 +327,11 @@ void BuildSubOctree(GeometryData* data, OOOctreeBuilder* builder,
           Heuristic                   PER         MEM
           n_triangles                 3-4         71856
           n_triangles * 2             100         111384
-          MAX(n_triangles * 2, 16)    300         111384
-          MAX(n_triangles * 2, 21)    500         148512
+          std::max(n_triangles * 2, 16)    300         111384
+          std::max(n_triangles * 2, 21)    500         148512
           n_triangles * 3             500         165744
-          MAX(n_triangles * 3, 16)    12000       165744
-          MAX(n_triangles * 3, 21)    20000       165744
+          std::max(n_triangles * 3, 16)    12000       165744
+          std::max(n_triangles * 3, 21)    20000       165744
 
           The value 21 was chosen for reasons which, on reflection, were
      entirely wrong. Performance profiling shows no discernible difference
@@ -818,7 +818,7 @@ static NO_INLINE_FUNC void AddTriangle_slow(GeometryData* data, Triangle tri) {
   OOCParameterAssert(data->count == data->capacity);
 
   if (data->capacity == kOOMeshToOctreeConverterSmallDataCapacity) {
-    data->capacity = MAX(
+    data->capacity = std::max(
         data->pendingCapacity,
         static_cast<uint32_t>(kOOMeshToOctreeConverterSmallDataCapacity * 2));
     try {

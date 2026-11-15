@@ -252,8 +252,8 @@ static JSValue DockIsQueued(OOJS_NATIVE_ARGS) {
   // does not.
   if (JS_HasException(context)) return JS_EXCEPTION;
   if (argc == 0) {
-    OOJSReportBadArguments(context, "Dock", "isQueued", MIN(argc, 1), OOJS_ARGV,
-                           std::nullopt, "ship");
+    OOJSReportBadArguments(context, "Dock", "isQueued", std::min(argc, 1),
+                           OOJS_ARGV, std::nullopt, "ship");
     return OOJSNativeFailure(context);
   }
   ShipEntity* ship = nullptr;

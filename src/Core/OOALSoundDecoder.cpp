@@ -307,7 +307,7 @@ bool OOALSoundVorbisCodec::readCreatingBuffer(std::vector<char>& out) {
 
   if (sizeInFrames) {
     remaining = static_cast<int>(
-        MIN(frameSize * sizeInFrames, static_cast<size_t>(INT_MAX)));
+        std::min(frameSize * sizeInFrames, static_cast<size_t>(INT_MAX)));
     dst = buffer.data();
 
     std::array<char, 4096> pcmout{};

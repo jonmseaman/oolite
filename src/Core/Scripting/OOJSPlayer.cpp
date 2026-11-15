@@ -413,7 +413,7 @@ static JSValue PlayerSetProperty(OOJS_SETTER_ARGS) {
 
     case kScore:
       if (OOJSValueToInt32(context, value, &iValue)) {
-        iValue = MAX(iValue, 0);
+        iValue = std::max(iValue, 0);
         if (player != nullptr) player->setScore(iValue);
         return JS_UNDEFINED;
       }
@@ -606,7 +606,7 @@ static JSValue PlayerAddMessageToArrivalReport(OOJS_NATIVE_ARGS) {
   if (argc > 0) report = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!report.has_value()) {
     OOJSReportBadArguments(context, "Player", "addMessageToArrivalReport",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (arrival message)");
     return OOJSNativeFailure(context);
   }
@@ -650,7 +650,7 @@ static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) shipKey = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!shipKey.has_value()) {
-    OOJSReportBadArguments(context, "Player", "replaceShip", MIN(argc, 1),
+    OOJSReportBadArguments(context, "Player", "replaceShip", std::min(argc, 1),
                            OOJS_ARGV, std::nullopt, "string (shipyard key)");
     return OOJSNativeFailure(context);
   }
@@ -805,8 +805,8 @@ static JSValue PlayerSetPlayerRole(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) role = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!role.has_value()) {
-    OOJSReportBadArguments(context, "Player", "setPlayerRole", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt,
+    OOJSReportBadArguments(context, "Player", "setPlayerRole",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (role) [, number (index)]");
     return OOJSNativeFailure(context);
   }

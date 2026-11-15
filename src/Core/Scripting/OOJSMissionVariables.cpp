@@ -199,7 +199,7 @@ static int MissionVariablesGetOwnPropertyNames(JSContext* context,
     assert(count <= INT32_MAX);
 
     JSPropertyEnum* table = static_cast<JSPropertyEnum*>(js_malloc(
-        context, sizeof *table * MAX(count, static_cast<std::size_t>(1))));
+        context, sizeof *table * std::max(count, static_cast<std::size_t>(1))));
     if (table == nullptr) return -1;
 
     uint32_t used = 0;

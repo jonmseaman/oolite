@@ -1401,7 +1401,7 @@ static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS) {
   if (argc > 0) name = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!name.has_value())) {
     OOJSReportBadArguments(context, "PlayerShip", "useSpecialCargo",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (special cargo description)");
     return OOJSNativeFailure(context);
   }
@@ -1428,7 +1428,8 @@ static JSValue PlayerShipEngageAutopilotToStation(OOJS_NATIVE_ARGS) {
         context, OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nullptr) {
     OOJSReportBadArguments(context, "PlayerShip", "engageAutopilot",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt, "station");
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "station");
     return OOJSNativeFailure(context);
   }
 
@@ -1465,7 +1466,8 @@ static JSValue PlayerShipRequestDockingClearance(OOJS_NATIVE_ARGS) {
         context, OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nullptr) {
     OOJSReportBadArguments(context, "PlayerShip", "requestDockingClearance",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt, "station");
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "station");
     return OOJSNativeFailure(context);
   }
 
@@ -1488,7 +1490,8 @@ static JSValue PlayerShipCancelDockingRequest(OOJS_NATIVE_ARGS) {
         context, OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nullptr) {
     OOJSReportBadArguments(context, "PlayerShip", "cancelDockingRequest",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt, "station");
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "station");
     return OOJSNativeFailure(context);
   }
 
@@ -1513,9 +1516,10 @@ static JSValue PlayerShipAwardEquipmentToCurrentPylon(OOJS_NATIVE_ARGS) {
   if (key.has_value())
     eqType = OOEquipmentType::equipmentTypeWithIdentifier(*key);
   if (EXPECT_NOT(!(eqType != nullptr && eqType->isMissileOrMine()))) {
-    OOJSReportBadArguments(
-        context, "PlayerShip", "awardEquipmentToCurrentPylon", MIN(argc, 1),
-        OOJS_ARGV, std::nullopt, "equipment type (external store)");
+    OOJSReportBadArguments(context, "PlayerShip",
+                           "awardEquipmentToCurrentPylon", std::min(argc, 1),
+                           OOJS_ARGV, std::nullopt,
+                           "equipment type (external store)");
     return OOJSNativeFailure(context);
   }
 
@@ -1581,7 +1585,8 @@ static JSValue PlayerShipRemovePassenger(OOJS_NATIVE_ARGS) {
   if (argc > 0) name = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!name.has_value())) {
     OOJSReportBadArguments(context, "PlayerShip", "removePassenger",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt, "string");
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string");
     return OOJSNativeFailure(context);
   }
 
@@ -1645,8 +1650,9 @@ static JSValue PlayerShipRemoveParcel(OOJS_NATIVE_ARGS) {
 
   if (argc > 0) name = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!name.has_value())) {
-    OOJSReportBadArguments(context, "PlayerShip", "removeParcel", MIN(argc, 1),
-                           OOJS_ARGV, std::nullopt, "string");
+    OOJSReportBadArguments(context, "PlayerShip", "removeParcel",
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
+                           "string");
     return OOJSNativeFailure(context);
   }
 
@@ -1977,7 +1983,7 @@ static JSValue PlayerShipSetMultiFunctionDisplay(OOJS_NATIVE_ARGS) {
   if (argc > 0) {
     if (JS_ToUint32(context, &index, OOJS_ARGV[0]) != 0) {
       OOJSReportBadArguments(context, "PlayerShip", "setMultiFunctionDisplay",
-                             MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                             std::min(argc, 1), OOJS_ARGV, std::nullopt,
                              "number (index) [, string (key)]");
       return OOJSNativeFailure(context);
     }
@@ -2009,7 +2015,7 @@ static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS) {
   }
   if (!key.has_value()) {
     OOJSReportBadArguments(context, "PlayerShip", "setMultiFunctionText",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (key) [, string (text)]");
     return OOJSNativeFailure(context);
   }
@@ -2048,14 +2054,15 @@ static JSValue PlayerShipSetPrimedEquipment(OOJS_NATIVE_ARGS) {
   }
   if (!key.has_value()) {
     OOJSReportBadArguments(context, "PlayerShip", "setPrimedEquipment",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (key)");
     return OOJSNativeFailure(context);
   }
   if (argc > 1 &&
       EXPECT_NOT((showMsg = JS_ToBool(context, OOJS_ARGV[1])) < 0)) {
     OOJSReportBadArguments(context, "PlayerShip", "setPrimedEquipment",
-                           MIN(argc, 2), OOJS_ARGV, std::nullopt, "boolean");
+                           std::min(argc, 2), OOJS_ARGV, std::nullopt,
+                           "boolean");
     return OOJSNativeFailure(context);
   }
 
@@ -2081,7 +2088,7 @@ static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS) {
   }
   if (!key.has_value()) {
     OOJSReportBadArguments(context, "PlayerShip", "setCustomHUDDial",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (key), value]");
     return OOJSNativeFailure(context);
   }
@@ -2109,7 +2116,7 @@ static JSValue PlayerShipHideHUDSelector(OOJS_NATIVE_ARGS) {
   }
   if (!key.has_value()) {
     OOJSReportBadArguments(context, "PlayerShip", "hideHUDSelector",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (selector)");
     return OOJSNativeFailure(context);
   }
@@ -2132,7 +2139,7 @@ static JSValue PlayerShipShowHUDSelector(OOJS_NATIVE_ARGS) {
   }
   if (!key.has_value()) {
     OOJSReportBadArguments(context, "PlayerShip", "hideHUDSelector",
-                           MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                           std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (selector)");
     return OOJSNativeFailure(context);
   }

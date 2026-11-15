@@ -1278,8 +1278,8 @@ void PlayerEntity::setGuiToManifestScreen() {
     std::ptrdiff_t page_offset = 0;
     bool multi_page = false;
     //		std::size_t total_rows = cargoRowCount +
-    // MAX(1U,[passengerManifest count]) + MAX(1U,[contractManifest count]) +
-    // mmRows + MAX(1U,[parcelManifest count]) + 5;
+    // std::max(1U,[passengerManifest count]) + std::max(1U,[contractManifest
+    // count]) + mmRows + std::max(1U,[parcelManifest count]) + 5;
     std::size_t total_rows = cargoRowCount + mmRows + 5;
     if (total_rows > max_rows) {
       max_rows -= 2;

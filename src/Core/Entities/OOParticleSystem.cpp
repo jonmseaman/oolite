@@ -255,7 +255,8 @@ void OOSmallFragmentBurstEntity::initFragmentBurstFrom(HPVector fragPosition,
   constexpr int kMaxSpeed = 400;
 
   unsigned count = 0.4f * size;
-  count = MIN(count | 12, static_cast<unsigned>(kFragmentBurstMaxParticles));
+  count =
+      std::min(count | 12, static_cast<unsigned>(kFragmentBurstMaxParticles));
 
   // Select base colour
   // yellow/orange (0.12) through yellow (0.1667) to yellow/slightly green
@@ -313,7 +314,8 @@ void OOBigFragmentBurstEntity::initFragmentBurstFrom(HPVector fragPosition,
   float maxSpeed = minSpeed * 4.0f;
 
   unsigned count = 0.2f * size;
-  count = MIN(count | 3, static_cast<unsigned>(kBigFragmentBurstMaxParticles));
+  count =
+      std::min(count | 3, static_cast<unsigned>(kBigFragmentBurstMaxParticles));
 
   GLfloat baseColor[4] = {1.0f, 1.0f, 0.5f, 1.0f};
 

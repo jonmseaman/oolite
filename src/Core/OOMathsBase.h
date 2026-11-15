@@ -2,7 +2,7 @@
 
 OOMathsBase.h
 
-The scalar types, constants and MIN/MAX/ABS the maths headers share. Each
+The scalar types, constants and ABS the maths headers share. Each
 maths header includes it, so every one of them compiles on its own; OOMaths.h
 includes them all.
 
@@ -81,22 +81,6 @@ typedef double OOHPScalar;
 #endif
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#ifndef MIN
-#define MIN(A, B)            \
-  ({                         \
-    __typeof__(A) __a = (A); \
-    __typeof__(B) __b = (B); \
-    __a < __b ? __a : __b;   \
-  })
-#endif
-#if !defined(MAX)
-#define MAX(A, B)            \
-  ({                         \
-    __typeof__(A) __a = (A); \
-    __typeof__(B) __b = (B); \
-    __a < __b ? __b : __a;   \
-  })
-#endif
 #if !defined(ABS)
 #define ABS(A)               \
   ({                         \
@@ -107,12 +91,6 @@ typedef double OOHPScalar;
 #else
 /* These definitions are unsafe in that the "winning" expression is evaluated
  * twice. */
-#if !defined(MIN)
-#define MIN(A, B) ((A) < (B) ? (A) : (B))
-#endif
-#if !defined(MAX)
-#define MAX(A, B) ((A) > (B) ? (A) : (B))
-#endif
 #if !defined(ABS)
 #define ABS(A) ((A) < 0 ? (-(A)) : (A))
 #endif

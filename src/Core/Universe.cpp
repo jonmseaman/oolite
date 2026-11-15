@@ -9425,9 +9425,9 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
         ship_info.get<int>(std::string(KEY_TECHLEVEL));
 
     double chance =
-        1.0 -
-        pow(1.0 - ship_info.get<double>(std::string(KEY_CHANCE)),
-            MAX(static_cast<OOTechLevelID>(1), techlevel - ship_techlevel));
+        1.0 - pow(1.0 - ship_info.get<double>(std::string(KEY_CHANCE)),
+                  std::max(static_cast<OOTechLevelID>(1),
+                           techlevel - ship_techlevel));
 
     // seed random number generator
     int superRand1 = ship_seed.a * 0x10000 + ship_seed.c * 0x100 + ship_seed.e;
@@ -9542,7 +9542,7 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
 
           if ((item != nullptr ? item->techLevel() : 0) > techlevel) {
             // Cap maximum tech level.
-            eqTechLevel = MIN(eqTechLevel, 15U);
+            eqTechLevel = std::min(eqTechLevel, static_cast<OOTechLevelID>(15));
 
             // Higher tech items are rarer!
             if (randf() * (eqTechLevel - techlevel) < 1.0) {
