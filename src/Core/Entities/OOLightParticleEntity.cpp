@@ -36,8 +36,8 @@ MA 02110-1301, USA.
 #include "PlayerEntity.h"
 #include "Universe.h"
 
-#define PARTICLE_DISTANCE_SCALE_LOW 12.0
-#define PARTICLE_DISTANCE_SCALE_HIGH 36.0
+constexpr double PARTICLE_DISTANCE_SCALE_LOW = 12.0;
+constexpr double PARTICLE_DISTANCE_SCALE_HIGH = 36.0;
 
 // The texture, made on first use and given up by a graphics reset. The holder
 // is never deleted, so exit(0) frees no texture after the GL context has gone.
