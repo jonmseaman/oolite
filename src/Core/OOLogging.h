@@ -48,14 +48,6 @@ SOFTWARE.
 #endif
 #endif
 
-#ifndef OOLOG_FILE_NAME
-#ifdef OOLOG_NO_FILE_NAME
-#define OOLOG_FILE_NAME NULL
-#else
-#define OOLOG_FILE_NAME __FILE__
-#endif
-#endif
-
 /*	OOLOG_SHORT_CIRCUIT:
         If nonzero, the test of whether to display a message before evaluating
    the other parameters of the call. This saves time, but could cause weird bugs

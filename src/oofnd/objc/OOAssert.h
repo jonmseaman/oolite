@@ -32,21 +32,22 @@
 #ifndef OO_PLAIN_CPP_UNIT
 #include "oofnd/objc/OOException.h"
 #endif
-#include <cstdint>
+#include <source_location>
 
 #include "oofnd/PrintfFormat.h"
 
 // Log and raise; never return. Called by the macros below, not directly.
-void OOAssertFailedInFunction(const char* function, const char* file,
-                              std::int32_t line, const char* format, ...)
-    OO_PRINTF_FORMAT(4, 5) __attribute__((noreturn));
+// <where> is the failing assertion's call site.
+void OOAssertFailedInFunction(const std::source_location& where,
+                              const char* format, ...) OO_PRINTF_FORMAT(2, 3)
+    __attribute__((noreturn));
 
 // Not conditional on NDEBUG: see the head of this file.
-#define OOCAssert(condition, ...)                                       \
-  do {                                                                  \
-    if (!(condition))                                                   \
-      OOAssertFailedInFunction(__PRETTY_FUNCTION__, __FILE__, __LINE__, \
-                               __VA_ARGS__);                            \
+#define OOCAssert(condition, ...)                                 \
+  do {                                                            \
+    if (!(condition))                                             \
+      OOAssertFailedInFunction(::std::source_location::current(), \
+                               __VA_ARGS__);                      \
   } while (0)
 
 #define OOCParameterAssert(condition) \

@@ -14,7 +14,7 @@
                                                            popIndent
         OOLogIndentIf(@"cls") / OOLogOutdentIf           oo::log::indentIf("cls") / outdentIf
         OOLogGetParentMessageClass(@"a.b")               oo::log::parentClass("a.b")
-        OOLogAbbreviatedFileName(__FILE__)               oo::log::abbreviatedFileName(__FILE__)
+        OOLogAbbreviatedFileName(path)                   oo::log::abbreviatedFileName(path)
         OOLogInsertMarker()                              oo::log::logger().insertMarker()
 
         The game's OOLogging.cpp is a thin shell over this: it loads
@@ -47,6 +47,7 @@
 #include <functional>
 #include <mutex>
 #include <optional>
+#include <source_location>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -139,8 +140,8 @@ inline std::optional<std::string> parentClass(std::string_view messageClass) {
   return std::string(messageClass.substr(0, dot));
 }
 
-// OOLogAbbreviatedFileName(): the last path component of __FILE__ ('/' or '\'),
-// trailing separators ignored; "unspecified file" for NULL.
+// OOLogAbbreviatedFileName(): the last path component of a source path ('/' or
+// '\'), trailing separators ignored; "unspecified file" for NULL.
 inline std::string abbreviatedFileName(const char* file) {
   if (file == nullptr) return "unspecified file";
   std::string_view f(file);
@@ -516,17 +517,17 @@ inline void outdentIf(std::string_view messageClass) {
   if (willDisplay(messageClass)) outdent();
 }
 
-// The std::format front end. <function>/<file>/<line> are what OOLog passes:
-// __FUNCTION__,
-// __FILE__, __LINE__ (the macros below supply them).
+// The std::format front end. <where> is the call site, which the macros below
+// take with std::source_location::current(): its function, file and line.
 template <class... Args>
-void message(std::string_view messageClass, const char* function,
-             const char* file, std::uint32_t line,
+void message(std::string_view messageClass, const std::source_location& where,
              std::format_string<Args...> format, Args&&... args) {
-  logger().write(messageClass, function, file, line,
+  logger().write(messageClass, where.function_name(), where.file_name(),
+                 where.line(),
                  std::format(format, std::forward<Args>(args)...));
 }
 
+// The prefixed form, with the function, file and line given separately.
 template <class... Args>
 void messageWithPrefix(std::string_view messageClass, const char* function,
                        const char* file, std::uint32_t line,
@@ -538,6 +539,15 @@ void messageWithPrefix(std::string_view messageClass, const char* function,
   logger().write(messageClass, function, file, line, text);
 }
 
+template <class... Args>
+void messageWithPrefix(std::string_view messageClass,
+                       const std::source_location& where,
+                       std::string_view prefix,
+                       std::format_string<Args...> format, Args&&... args) {
+  messageWithPrefix(messageClass, where.function_name(), where.file_name(),
+                    where.line(), prefix, format, std::forward<Args>(args)...);
+}
+
 inline constexpr std::string_view kErrorPrefix = "***** ERROR: ";
 inline constexpr std::string_view kWarningPrefix = "----- WARNING: ";
 
@@ -546,16 +556,17 @@ inline constexpr std::string_view kWarningPrefix = "----- WARNING: ";
 // OOLog / OOLogERR / OOLogWARN with std::format formats. The class is a string
 // (a literal, or oo::StdString of an NSString constant); the arguments are only
 // evaluated if the class shows.
-#define OO_LOG(messageClass, ...)                                          \
-  do {                                                                     \
-    if (::oo::log::willDisplay(messageClass))                              \
-      ::oo::log::message((messageClass), __FUNCTION__, __FILE__, __LINE__, \
-                         __VA_ARGS__);                                     \
+#define OO_LOG(messageClass, ...)                                           \
+  do {                                                                      \
+    if (::oo::log::willDisplay(messageClass))                               \
+      ::oo::log::message((messageClass), ::std::source_location::current(), \
+                         __VA_ARGS__);                                      \
   } while (0)
-#define OO_LOG_ERR(messageClass, ...)                                  \
-  ::oo::log::messageWithPrefix((messageClass), __FUNCTION__, __FILE__, \
-                               __LINE__, ::oo::log::kErrorPrefix, __VA_ARGS__)
-#define OO_LOG_WARN(messageClass, ...)                                 \
-  ::oo::log::messageWithPrefix((messageClass), __FUNCTION__, __FILE__, \
-                               __LINE__, ::oo::log::kWarningPrefix,    \
-                               __VA_ARGS__)
+#define OO_LOG_ERR(messageClass, ...)                             \
+  ::oo::log::messageWithPrefix((messageClass),                    \
+                               ::std::source_location::current(), \
+                               ::oo::log::kErrorPrefix, __VA_ARGS__)
+#define OO_LOG_WARN(messageClass, ...)                            \
+  ::oo::log::messageWithPrefix((messageClass),                    \
+                               ::std::source_location::current(), \
+                               ::oo::log::kWarningPrefix, __VA_ARGS__)
