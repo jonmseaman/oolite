@@ -650,8 +650,8 @@ JSValue OOJSObjectWrapperToString(JSContext* context, JSValueConst thisObj,
 // without a setter.
 #define OOJS_PROP_READWRITE_CB JS_PROP_ENUMERABLE
 #define OOJS_PROP_READONLY_CB JS_PROP_ENUMERABLE
-#define OOJS_PROP_HIDDEN_READWRITE_CB 0
-#define OOJS_PROP_HIDDEN_READONLY_CB 0
+inline constexpr int OOJS_PROP_HIDDEN_READWRITE_CB = 0;
+inline constexpr int OOJS_PROP_HIDDEN_READONLY_CB = 0;
 
 // Slot-based (JS_DefinePropertyValue*).
 #define OOJS_PROP_READWRITE (JS_PROP_ENUMERABLE | JS_PROP_WRITABLE)
