@@ -289,17 +289,18 @@ inline constexpr int MAX_STICKS = 4;
 inline constexpr int MAX_AXES = 16;
 #define MAX_REAL_BUTTONS 64
 #define MAX_HATS 4
-#define MAX_BUTTONS (MAX_REAL_BUTTONS + 4 * MAX_HATS)
+inline constexpr auto MAX_BUTTONS = (MAX_REAL_BUTTONS + 4 * MAX_HATS);
 inline constexpr int STICK_NOFUNCTION = -1;
 inline constexpr double STICK_AXISUNASSIGNED = -10.0;
 
 #define STICK_PRECISIONFAC 3
 #define STICK_NORMALDIV 32768
-#define STICK_PRECISIONDIV (STICK_PRECISIONFAC * STICK_NORMALDIV)
+inline constexpr auto STICK_PRECISIONDIV =
+    (STICK_PRECISIONFAC * STICK_NORMALDIV);
 
 #define STICK_DEADZONE 0.05
 
-#define STICK_MAX_DEADZONE (STICK_DEADZONE * 2)
+inline constexpr auto STICK_MAX_DEADZONE = (STICK_DEADZONE * 2);
 
 // Kind of stick device (these are bits - if any more are added,
 // the next one is 4 and so on).
