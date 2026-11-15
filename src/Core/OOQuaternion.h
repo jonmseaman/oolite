@@ -77,8 +77,7 @@ Vector vector_right_from_quaternion(Quaternion quat) CONST_FUNC;
 
 HPVector HPvector_forward_from_quaternion(Quaternion quat) CONST_FUNC;
 
-void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight,
-                                   Vector* outUp, Vector* outForward);
+oo::BasisVectors basis_vectors_from_quaternion(Quaternion quat);
 
 /* produce a quaternion representing an angle between two vectors. Assumes the
  * vectors are normalized. */

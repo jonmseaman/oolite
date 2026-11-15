@@ -158,8 +158,8 @@ Vector vector_right_from_quaternion(Quaternion quat) {
     return make_vector(1.0f, 0.0f, 0.0f);
 }
 
-void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight,
-                                   Vector* outUp, Vector* outForward) {
+oo::BasisVectors basis_vectors_from_quaternion(Quaternion quat) {
+  oo::BasisVectors basis = {};
   OOScalar w, wz, wy, wx;
   OOScalar x, xz, xy, xx;
   OOScalar y, yz, yy;
@@ -183,41 +183,43 @@ void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight,
   yz = y * zz;
   zz = z * zz;
 
-  if (outRight != nullptr) {
-    outRight->x = 1.0f - yy - zz;
-    outRight->y = xy - wz;
-    outRight->z = xz + wy;
+  {
+    basis.right.x = 1.0f - yy - zz;
+    basis.right.y = xy - wz;
+    basis.right.z = xz + wy;
 
-    if (static_cast<bool>(outRight->x) || static_cast<bool>(outRight->y) ||
-        static_cast<bool>(outRight->z))
-      *outRight = vector_normal(*outRight);
+    if (static_cast<bool>(basis.right.x) || static_cast<bool>(basis.right.y) ||
+        static_cast<bool>(basis.right.z))
+      basis.right = vector_normal(basis.right);
     else
-      *outRight = make_vector(1.0f, 0.0f, 0.0f);
+      basis.right = make_vector(1.0f, 0.0f, 0.0f);
   }
 
-  if (outUp != nullptr) {
-    outUp->x = xy + wz;
-    outUp->y = 1.0f - xx - zz;
-    outUp->z = yz - wx;
+  {
+    basis.up.x = xy + wz;
+    basis.up.y = 1.0f - xx - zz;
+    basis.up.z = yz - wx;
 
-    if (static_cast<bool>(outUp->x) || static_cast<bool>(outUp->y) ||
-        static_cast<bool>(outUp->z))
-      *outUp = vector_normal(*outUp);
+    if (static_cast<bool>(basis.up.x) || static_cast<bool>(basis.up.y) ||
+        static_cast<bool>(basis.up.z))
+      basis.up = vector_normal(basis.up);
     else
-      *outUp = make_vector(0.0f, 1.0f, 0.0f);
+      basis.up = make_vector(0.0f, 1.0f, 0.0f);
   }
 
-  if (outForward != nullptr) {
-    outForward->x = xz - wy;
-    outForward->y = yz + wx;
-    outForward->z = 1.0f - xx - yy;
+  {
+    basis.forward.x = xz - wy;
+    basis.forward.y = yz + wx;
+    basis.forward.z = 1.0f - xx - yy;
 
-    if (static_cast<bool>(outForward->x) || static_cast<bool>(outForward->y) ||
-        static_cast<bool>(outForward->z))
-      *outForward = vector_normal(*outForward);
+    if (static_cast<bool>(basis.forward.x) ||
+        static_cast<bool>(basis.forward.y) ||
+        static_cast<bool>(basis.forward.z))
+      basis.forward = vector_normal(basis.forward);
     else
-      *outForward = make_vector(0.0f, 0.0f, 1.0f);
+      basis.forward = make_vector(0.0f, 0.0f, 1.0f);
   }
+  return basis;
 }
 
 Quaternion quaternion_rotation_between(Vector v0, Vector v1) {

@@ -273,7 +273,12 @@ void OOSkyDrawable::setUpStars(OOColor* color1, OOColor* color2) {
   for (i = 0; i != _starCount; ++i) {
     // Select a direction and rotation.
     q = OORandomQuaternion();
-    basis_vectors_from_quaternion(q, &vi, &vj, &vk);
+    {
+      const oo::BasisVectors basis = basis_vectors_from_quaternion(q);
+      vi = basis.right;
+      vj = basis.up;
+      vk = basis.forward;
+    }
 
     // Select colour and texture.
 #if DEBUG_COLORS
@@ -343,7 +348,12 @@ void OOSkyDrawable::setUpNebulae(OOColor* color1, OOColor* color2,
       size = nebulaScale * static_cast<float>(r1) * SKY_ELEMENT_SCALE_FACTOR;
 
       // Calculate centre position and offset to first corner.
-      basis_vectors_from_quaternion(q, &vi, &vj, &vk);
+      {
+        const oo::BasisVectors basis = basis_vectors_from_quaternion(q);
+        vi = basis.right;
+        vj = basis.up;
+        vk = basis.forward;
+      }
 
       // Select colour and texture. Smaller nebula quads are dimmer.
 #if DEBUG_COLORS
