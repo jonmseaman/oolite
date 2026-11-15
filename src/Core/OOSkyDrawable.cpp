@@ -637,7 +637,7 @@ void OOSkyQuadSet::render() {
   OOGL(glColorPointer(kSkyQuadSetColorEntriesPerVertex, GL_FLOAT, 0,
                       _colors.data()));
 
-  OOGL(glDrawArrays(GL_QUADS, 0, 4 * _count));
+  OOGL(glDrawArrays(GL_QUADS, 0, static_cast<GLsizei>(4 * _count)));
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED

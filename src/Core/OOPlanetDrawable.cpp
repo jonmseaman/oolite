@@ -245,8 +245,8 @@ void OOPlanetDrawable::renderCommonParts() {
   OOGL(glEnable(GL_RESCALE_NORMAL));
   OOGL(glNormalPointer(GL_FLOAT, 0, kOOPlanetVertices));
 
-  OOGL(glDrawElements(GL_TRIANGLES, data->faceCount * 3, data->type,
-                      data->indices));
+  OOGL(glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(data->faceCount * 3),
+                      data->type, data->indices));
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   if ((UNIVERSE != nullptr ? UNIVERSE->getWireframeGraphics() : false)) {

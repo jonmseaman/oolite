@@ -130,7 +130,7 @@ const oo::PList& KeyFunctionAt(const std::vector<oo::PList>& functions,
                                std::ptrdiff_t index) {
   static const oo::PList none;
   return (index >= 0 && static_cast<std::size_t>(index) < functions.size())
-             ? functions[index]
+             ? functions[static_cast<unsigned long long>(index)]
              : none;
 }
 
@@ -337,7 +337,7 @@ void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui,
       current_row = GUI_ROW_KC_FUNCSTART;
       if (from_function == 0)
         current_row = GUI_ROW_KC_FUNCSTART + MAX_ROWS_KC_FUNCTIONS - 1;
-      setGuiToKeyMapperScreen(from_function);
+      setGuiToKeyMapperScreen(static_cast<unsigned int>(from_function));
       if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                : false)) {
         if (gameView != nullptr) gameView->clearMouse();
@@ -416,7 +416,8 @@ void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui,
                  : nullptr);
 
         // the customEquipActivation entry is edited in place, as before
-        oo::PList::Dict* fields = CustomEquipFields(customEquipActivation, idx);
+        oo::PList::Dict* fields = CustomEquipFields(
+            customEquipActivation, static_cast<std::size_t>(idx));
         if ((item != nullptr ? item->defaultActivateKey() : oo::PList()) &&
             lookupKey == std::string(CUSTOMEQUIP_KEYACTIVATE) &&
             fields != nullptr) {
@@ -452,7 +453,8 @@ void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui,
 
 bool PlayerEntity::entryIsIndexCustomEquip(std::size_t idx) {
   return entryIsCustomEquip(
-      KeyFunctionAt(keyFunctions, idx).get<std::string>(KEY_KC_DEFINITION));
+      KeyFunctionAt(keyFunctions, static_cast<std::ptrdiff_t>(idx))
+          .get<std::string>(KEY_KC_DEFINITION));
 }
 
 bool PlayerEntity::entryIsDictCustomEquip(const oo::PList& dict) {
@@ -500,14 +502,14 @@ std::size_t PlayerEntity::getCustomEquipIndex(const std::string& key_def) {
   if (oo::str::hasPrefix(key_def, "mode_")) {
     eq = oo::str::replaceOccurrences(key_def, "mode_", "");
   }
-  if (!eq) return -1;
+  if (!eq) return static_cast<std::size_t>(-1);
   for (i = 0; i < customEquipActivation.size(); i++) {
     if (OptionalStringForKey(customEquipActivation[i], CUSTOMEQUIP_EQUIPKEY) ==
         eq) {
       return i;
     }
   }
-  return -1;
+  return static_cast<std::size_t>(-1);
 }
 
 std::optional<std::string> PlayerEntity::getCustomEquipKeyDefType(
@@ -645,29 +647,33 @@ void PlayerEntity::outputKeyDefinition(const std::string& key,
                skiprows == 0 ? OO_DESC("oolite-keyconfig-update-key")
                              : OO_DESC("oolite-keyconfig-update-alternate")),
            key}),
-      GUI_ROW_KC_KEY + skiprows);
-  gui->setKey(std::string(GUI_KEY_OK), GUI_ROW_KC_KEY + skiprows);
+      static_cast<OOGUIRow>(GUI_ROW_KC_KEY + skiprows));
+  gui->setKey(std::string(GUI_KEY_OK),
+              static_cast<OOGUIRow>(GUI_ROW_KC_KEY + skiprows));
 
   if (!Contains(nav_keys, definition)) {
     if (!(OO_DESC("oolite-keycode-unset") == key)) {
       gui->setArray(Columns({OO_DESC("oolite-keyconfig-update-shift"), shift}),
-                    GUI_ROW_KC_SHIFT + skiprows);
-      gui->setKey(std::string(GUI_KEY_OK), GUI_ROW_KC_SHIFT + skiprows);
+                    static_cast<OOGUIRow>(GUI_ROW_KC_SHIFT + skiprows));
+      gui->setKey(std::string(GUI_KEY_OK),
+                  static_cast<OOGUIRow>(GUI_ROW_KC_SHIFT + skiprows));
 
       // camera movement keys can't use ctrl
       if (!Contains(camera_keys, definition)) {
         gui->setArray(Columns({OO_DESC("oolite-keyconfig-update-mod1"), mod1}),
-                      GUI_ROW_KC_MOD1 + skiprows);
-        gui->setKey(std::string(GUI_KEY_OK), GUI_ROW_KC_MOD1 + skiprows);
+                      static_cast<OOGUIRow>(GUI_ROW_KC_MOD1 + skiprows));
+        gui->setKey(std::string(GUI_KEY_OK),
+                    static_cast<OOGUIRow>(GUI_ROW_KC_MOD1 + skiprows));
       } else {
         gui->setArray(Columns({OO_DESC("oolite-keyconfig-update-mod1"),
                                OO_DESC("not-applicable")}),
-                      GUI_ROW_KC_MOD1 + skiprows);
+                      static_cast<OOGUIRow>(GUI_ROW_KC_MOD1 + skiprows));
       }
 
       gui->setArray(Columns({OO_DESC("oolite-keyconfig-update-mod2-pc"), mod2}),
-                    GUI_ROW_KC_MOD2 + skiprows);
-      gui->setKey(std::string(GUI_KEY_OK), GUI_ROW_KC_MOD2 + skiprows);
+                    static_cast<OOGUIRow>(GUI_ROW_KC_MOD2 + skiprows));
+      gui->setKey(std::string(GUI_KEY_OK),
+                  static_cast<OOGUIRow>(GUI_ROW_KC_MOD2 + skiprows));
     }
   }
 }
@@ -766,12 +772,12 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen() {
                   DescriptionOfString((gameView != nullptr
                                            ? gameView->getTypedString()
                                            : std::optional<std::string>()))),
-      end_row, OOGUIAlignment::kLeft);
-  gui->setColor(OOColor::cyanColor().get(), end_row);
+      static_cast<OOGUIRow>(end_row), OOGUIAlignment::kLeft);
+  gui->setColor(OOColor::cyanColor().get(), static_cast<OOGUIRow>(end_row));
   gui->setSelectableRange(NSMakeRange(0, 0));
 
   gui->setShowTextCursor(true);
-  gui->setCurrentRow(end_row);
+  gui->setCurrentRow(static_cast<OOGUIRow>(end_row));
 
   gui->setForegroundTextureKey(std::string(status() == OOEntityStatus::kDocked
                                                ? "docked_overlay"
@@ -801,8 +807,8 @@ void PlayerEntity::handleKeyConfigEntryKeys(::GuiDisplayGen* gui,
                   DescriptionOfString((gameView != nullptr
                                            ? gameView->getTypedString()
                                            : std::optional<std::string>()))),
-      end_row);
-  gui->setColor(OOColor::cyanColor().get(), end_row);
+      static_cast<OOGUIRow>(end_row));
+  gui->setColor(OOColor::cyanColor().get(), static_cast<OOGUIRow>(end_row));
 
   if (checkKeyPress(n_key_gui_select)) {
     if (gameView != nullptr) gameView->suppressKeysUntilKeyUp();
@@ -1005,7 +1011,8 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
       n_rows -= 1;
       start_row += 1;
       if (skip > MAX_ROWS_KC_FUNCTIONS)
-        previous = skip - (MAX_ROWS_KC_FUNCTIONS - 2);
+        previous =
+            static_cast<std::ptrdiff_t>(skip - (MAX_ROWS_KC_FUNCTIONS - 2));
       else
         previous = 0;
     }
@@ -1024,8 +1031,10 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
       if (entry.find(KEY_KC_HEADER) != nullptr) {
         const std::optional<std::string> header =
             OptionalStringForKey(entry, KEY_KC_HEADER);
-        gui->setArray(Columns({header, "", ""}), i + start_row);
-        gui->setColor(OOColor::cyanColor().get(), i + start_row);
+        gui->setArray(Columns({header, "", ""}),
+                      static_cast<OOGUIRow>(i) + start_row);
+        gui->setColor(OOColor::cyanColor().get(),
+                      static_cast<OOGUIRow>(i) + start_row);
       } else {
         const std::optional<std::string> definition =
             OptionalStringForKey(entry, KEY_KC_DEFINITION);
@@ -1078,8 +1087,9 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
           }
           for (j = 0; static_cast<std::size_t>(j) < defArray.count(); j++) {
             for (k = 0; static_cast<std::size_t>(k) < compArray.count(); k++) {
-              if (!compareKeyEntries(ElementAt(defArray, j),
-                                     ElementAt(compArray, k))) {
+              if (!compareKeyEntries(
+                      ElementAt(defArray, static_cast<std::size_t>(j)),
+                      ElementAt(compArray, static_cast<std::size_t>(k)))) {
                 result = false;
                 break;
               }
@@ -1098,24 +1108,30 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
 
         gui->setArray(Columns({OptionalStringForKey(entry, KEY_KC_GUIDESC),
                                assignment, override}),
-                      i + start_row);
-        gui->setKey(std::format("Index:{}", i + skip), i + start_row);
+                      static_cast<OOGUIRow>(i) + start_row);
+        gui->setKey(std::format("Index:{}", i + skip),
+                    static_cast<OOGUIRow>(i) + start_row);
         if (validate) {
-          gui->setColor(OOColor::orangeColor().get(), i + start_row);
+          gui->setColor(OOColor::orangeColor().get(),
+                        static_cast<OOGUIRow>(i) + start_row);
         }
       }
     }
     if (i < n_functions - skip) {
-      gui->setColor(OOColor::greenColor().get(), start_row + i);
-      gui->setArray(Columns({OO_DESC("gui-more"), " --> "}), start_row + i);
-      gui->setKey(std::format("More:{}", n_rows + skip), start_row + i);
+      gui->setColor(OOColor::greenColor().get(),
+                    start_row + static_cast<OOGUIRow>(i));
+      gui->setArray(Columns({OO_DESC("gui-more"), " --> "}),
+                    start_row + static_cast<OOGUIRow>(i));
+      gui->setKey(
+          std::format("More:{}", static_cast<std::size_t>(n_rows) + skip),
+          start_row + static_cast<OOGUIRow>(i));
       i++;
     }
 
-    gui->setSelectableRange(
-        NSMakeRange(GUI_ROW_KC_SELECTKBD,
-                    (i + start_row - GUI_ROW_KC_FUNCSTART) +
-                        (GUI_ROW_KC_FUNCSTART - GUI_ROW_KC_SELECTKBD)));
+    gui->setSelectableRange(NSMakeRange(
+        GUI_ROW_KC_SELECTKBD,
+        (i + static_cast<std::size_t>(start_row) - GUI_ROW_KC_FUNCSTART) +
+            (GUI_ROW_KC_FUNCSTART - GUI_ROW_KC_SELECTKBD)));
   }
 }
 
@@ -1457,7 +1473,8 @@ std::vector<oo::PList> PlayerEntity::keyFunctionList() {
     int i;
     for (i = 0; static_cast<std::size_t>(i) < customEquipActivation.size();
          i++) {
-      const oo::PList equip = customEquipActivation[i];
+      const oo::PList equip =
+          customEquipActivation[static_cast<unsigned long long>(i)];
       const std::string equipName = DescriptionOfString(OptionalStringForKey(
           equip, CUSTOMEQUIP_EQUIPNAME));  // %@: "(null)" for nil
       const std::string equipKey = DescriptionOfString(
@@ -1563,7 +1580,7 @@ void PlayerEntity::handleKeyboardLayoutEntryKeys(::GuiDisplayGen* gui,
       current_row = GUI_ROW_KC_FUNCSTART;
       if (from_function == 0)
         current_row = GUI_ROW_KC_FUNCSTART + MAX_ROWS_KC_FUNCTIONS - 1;
-      setGuiToKeyboardLayoutScreen(from_function);
+      setGuiToKeyboardLayoutScreen(static_cast<unsigned int>(from_function));
       if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                : false)) {
         if (gameView != nullptr) gameView->clearMouse();
@@ -1572,7 +1589,7 @@ void PlayerEntity::handleKeyboardLayoutEntryKeys(::GuiDisplayGen* gui,
     }
 
     // update the keyboard code
-    std::size_t idx = SecondFieldIntValue(key);
+    std::size_t idx = static_cast<std::size_t>(SecondFieldIntValue(key));
     const std::optional<std::string> kbd =
         idx < kbdLayouts.size() ? OptionalStringForKey(kbdLayouts[idx], "key")
                                 : std::nullopt;
@@ -1672,7 +1689,8 @@ void PlayerEntity::displayKeyboardLayoutList(::GuiDisplayGen* gui,
       n_rows -= 1;
       start_row += 1;
       if (skip > MAX_ROWS_KC_FUNCTIONS)
-        previous = skip - (MAX_ROWS_KC_FUNCTIONS - 2);
+        previous =
+            static_cast<std::ptrdiff_t>(skip - (MAX_ROWS_KC_FUNCTIONS - 2));
       else
         previous = 0;
     }
@@ -1695,18 +1713,25 @@ void PlayerEntity::displayKeyboardLayoutList(::GuiDisplayGen* gui,
       std::string selected;
       if (OptionalStringForKey(entry, "key") == kbd)
         selected = OO_DESC("oolite-keyconfig-kbd-current");
-      gui->setArray(Columns({desc, selected}), i + start_row);
-      gui->setKey(std::format("Index:{}", i + skip), i + start_row);
+      gui->setArray(Columns({desc, selected}),
+                    static_cast<OOGUIRow>(i) + start_row);
+      gui->setKey(std::format("Index:{}", i + skip),
+                  static_cast<OOGUIRow>(i) + start_row);
     }
     if (i < n_functions - skip) {
-      gui->setColor(OOColor::greenColor().get(), start_row + i);
-      gui->setArray(Columns({OO_DESC("gui-more"), " --> "}), start_row + i);
-      gui->setKey(std::format("More:{}", n_rows + skip), start_row + i);
+      gui->setColor(OOColor::greenColor().get(),
+                    start_row + static_cast<OOGUIRow>(i));
+      gui->setArray(Columns({OO_DESC("gui-more"), " --> "}),
+                    start_row + static_cast<OOGUIRow>(i));
+      gui->setKey(
+          std::format("More:{}", static_cast<std::size_t>(n_rows) + skip),
+          start_row + static_cast<OOGUIRow>(i));
       i++;
     }
 
-    gui->setSelectableRange(NSMakeRange(GUI_ROW_KC_FUNCSTART,
-                                        i + start_row - GUI_ROW_KC_FUNCSTART));
+    gui->setSelectableRange(NSMakeRange(
+        GUI_ROW_KC_FUNCSTART,
+        i + static_cast<std::size_t>(start_row) - GUI_ROW_KC_FUNCSTART));
   }
 }
 
@@ -2165,9 +2190,10 @@ void PlayerEntity::reloadPage() {
   if (selFunctionIdx < MAX_ROWS_KC_FUNCTIONS - 1) {
     skip = 0;
   } else {
-    skip = ((selFunctionIdx - 1) / (MAX_ROWS_KC_FUNCTIONS - 2)) *
-               (MAX_ROWS_KC_FUNCTIONS - 2) +
-           1;
+    skip = static_cast<unsigned int>(
+        ((selFunctionIdx - 1) / (MAX_ROWS_KC_FUNCTIONS - 2)) *
+            (MAX_ROWS_KC_FUNCTIONS - 2) +
+        1);
   }
 
   setGuiToKeyMapperScreen(skip);

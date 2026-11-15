@@ -157,7 +157,8 @@ void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In,
   }
 
   skyDrawable = oo::makeShared<OOSkyDrawable>(
-      col1.get(), col2.get(), col3.get(), col4.get(), starCount, nebulaCount,
+      col1.get(), col2.get(), col3.get(), col4.get(),
+      static_cast<unsigned>(starCount), static_cast<unsigned>(nebulaCount),
       nebulaColorSet, clusterChance, alpha, scale);
   setDrawable(skyDrawable.get());
 
