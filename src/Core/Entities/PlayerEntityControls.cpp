@@ -2279,6 +2279,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
                                                  : std::optional<std::string>())
                                 .value_or(""));
       }
+      [[fallthrough]];
 
     case OOGUIScreenID::kShortRangeChart:
 

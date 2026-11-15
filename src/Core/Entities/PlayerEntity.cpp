@@ -5443,6 +5443,7 @@ void PlayerEntity::setPrevCompassMode() {
         break;
       }
       // else fall through to switch to target mode.
+      [[fallthrough]];
 
     case OOCompassMode::kBeacons:
       beacon = nextBeacon();
@@ -5509,6 +5510,7 @@ void PlayerEntity::setNextCompassMode() {
         break;
       }
       // else fall through to switch to beacon mode.
+      [[fallthrough]];
 
     case OOCompassMode::kTarget:
       beacon = (UNIVERSE != nullptr ? UNIVERSE->firstBeacon() : nullptr);

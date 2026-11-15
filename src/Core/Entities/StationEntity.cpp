@@ -2377,6 +2377,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
           break;
         }
         // else, continue with canceling.
+        [[fallthrough]];
       case OODockingClearanceStatus::kRequested:
       case OODockingClearanceStatus::kGranted:
         last_launch_time = timeNow;
