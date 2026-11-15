@@ -30,8 +30,6 @@ MA 02110-1301, USA.
 #include <cstdint>
 #include <type_traits>
 
-#include "OOEnumFlags.h"
-
 // Texture options: single bits, and the multi-bit min-filter, mag-filter and
 // channel-extraction fields (read them through their k...Mask).
 enum class OOTextureFlags : std::uint32_t {
