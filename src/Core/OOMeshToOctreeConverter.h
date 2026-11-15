@@ -38,7 +38,6 @@ MA 02110-1301, USA.
 #include "OOMaths.h"
 #include "Octree.h"
 #include "oofnd/Object.hpp"
-#include "oofnd/objc/OOObject.h"
 
 class ShipEntity;
 

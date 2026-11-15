@@ -40,9 +40,7 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOFoundation.h"
 #include "OOScript.h"
-#include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
 class Entity;

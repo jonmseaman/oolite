@@ -37,7 +37,6 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "OOEnumFlags.h"
 #include "OOFoundation.h"
 #include "OOTypes.h"
 #include "legacy_random.h"

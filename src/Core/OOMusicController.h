@@ -36,11 +36,9 @@ MA 02110-1301, USA.
 #include <utility>
 
 #include "OOALMusic.h"
-#include "OOEnumFlags.h"
 #include "OOFoundation.h"
 #include "OOSoundSource.h"
 #include "oofnd/Object.hpp"
-#include "oofnd/objc/OOObject.h"
 
 enum class OOMusicMode : std::int32_t {
   kOff,

@@ -37,7 +37,6 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "OOPListSchemaVerifier.h"  // the delegate interface
-#include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
 class OOAIStateMachineVerifierStage;

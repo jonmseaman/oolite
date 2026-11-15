@@ -59,7 +59,6 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOObject.h"
 
 // Plain numbers are used here rather than a more complex object because
 // these are required very frequently (once per frame) so must be light
@@ -338,7 +337,6 @@ inline constexpr std::string_view STICK_YAW_AXIS_PROFILE_SETTING =
 #include <format>
 
 #include "OOJoystickProfile.h"
-#include "oofnd/String.hpp"
 
 class OOJoystickManager : public oo::Object {
  public:

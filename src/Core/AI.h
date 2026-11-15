@@ -38,7 +38,6 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
-#include "OOFoundation.h"
 #include "OOTypes.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
