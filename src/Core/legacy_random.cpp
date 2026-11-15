@@ -33,7 +33,6 @@ MA 02110-1301, USA.
 #include <format>
 #include <random>
 
-const Random_Seed kNilRandomSeed = {0};
 
 static RNG_Seed rnd_seed;
 

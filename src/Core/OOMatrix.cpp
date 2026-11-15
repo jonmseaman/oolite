@@ -34,10 +34,6 @@ MA 02110-1301, USA.
 // platforms get the prototype from the GL headers.
 #include "OOOpenGLExtensionPointers.h"  // IWYU pragma: keep
 
-const OOMatrix kIdentityMatrix = {.m = {{1.0f, 0.0f, 0.0f, 0.0f},
-                                        {0.0f, 1.0f, 0.0f, 0.0f},
-                                        {0.0f, 0.0f, 1.0f, 0.0f},
-                                        {0.0f, 0.0f, 0.0f, 1.0f}}};
 const OOMatrix kZeroMatrix = {.m = {
                                   {0.0f, 0.0f, 0.0f, 0.0f},
                                   {0.0f, 0.0f, 0.0f, 0.0f},

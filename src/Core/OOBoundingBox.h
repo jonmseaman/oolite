@@ -38,7 +38,8 @@ struct BoundingBox {
   Vector max;
 };
 
-extern const BoundingBox kZeroBoundingBox; /* (0, 0, 0), (0, 0, 0) */
+inline constexpr BoundingBox kZeroBoundingBox = {{0.0f, 0.0f, 0.0f},
+                                                 {0.0f, 0.0f, 0.0f}};
 
 /* Extend bounding box to contain specified point. */
 inline void bounding_box_add_vector(BoundingBox* box,

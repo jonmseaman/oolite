@@ -52,7 +52,7 @@ struct RANROTSeed {
   uint32_t high, low;
 };
 
-extern const Random_Seed kNilRandomSeed;
+inline constexpr Random_Seed kNilRandomSeed = {};
 
 // checksum stuff
 void clear_checksum();
