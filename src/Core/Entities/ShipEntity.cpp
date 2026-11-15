@@ -8668,10 +8668,11 @@ void ShipEntity::becomeExplosion() {
               UNIVERSE->addEntity(oo::MadeEntity(
                   ::OOFlashEffectEntity::explosionFlashFromEntity(this)));
           }
-          for (std::size_t i = 0; i < explosionType.count(); i++) {
-            // The string reader at index i: a string, or a number's text, else
-            // none.
-            const oo::PList* entry = explosionType.at(i);
+          for (std::size_t entryIndex = 0; entryIndex < explosionType.count();
+               entryIndex++) {
+            // The string reader at index entryIndex: a string, or a number's
+            // text, else none.
+            const oo::PList* entry = explosionType.at(entryIndex);
             if (entry != nullptr && (entry->isString() || entry->isNumber())) {
               const std::string explosionKey =
                   oo::PListGet<std::string>::from(entry, std::string());
@@ -11774,11 +11775,11 @@ void ShipEntity::dumpCargo() { dumpCargoItem(std::nullopt); }
       cargo.erase(cargo.begin() + i);
       broadcastAIMessage("CARGO_DUMPED");  // goes only to 16 nearby ships in
                                            // range, but that should be enough.
-      unsigned i;
+      unsigned shipIndex;
       // only send script event to powered entities
       checkScannerIgnoringUnpowered();
-      for (i = 0; i < n_scanned_ships; i++) {
-        ::ShipEntity* other = scanned_ships[i];
+      for (shipIndex = 0; shipIndex < n_scanned_ships; shipIndex++) {
+        ::ShipEntity* other = scanned_ships[shipIndex];
         if (other != nullptr)
           other->doScriptEvent(OOJSID("cargoDumpedNearby"), jetto, this);
       }
