@@ -62,9 +62,9 @@ enum class OOResourceMergeMode : std::int32_t {
   kSmart,  // Merge files by merging the top-level elements of each file
            // (second-order merge, but not recursive)
 };
-static_assert(static_cast<std::int32_t>(OOResourceMergeMode::kNone) == 0);
-static_assert(static_cast<std::int32_t>(OOResourceMergeMode::kBasic) == 1);
-static_assert(static_cast<std::int32_t>(OOResourceMergeMode::kSmart) == 2);
+static_assert(std::to_underlying(OOResourceMergeMode::kNone) == 0);
+static_assert(std::to_underlying(OOResourceMergeMode::kBasic) == 1);
+static_assert(std::to_underlying(OOResourceMergeMode::kSmart) == 2);
 
 /* 'All' doesn't quite mean 'all' - OXPs with the tag
  * "oolite-scenario-only" will only be loaded if required by a

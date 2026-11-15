@@ -149,9 +149,9 @@ enum class MouseWheelStatus : int {
   kNeutral,
   kUp,
 };
-static_assert(static_cast<int>(MouseWheelStatus::kDown) == -1);
-static_assert(static_cast<int>(MouseWheelStatus::kNeutral) == 0);
-static_assert(static_cast<int>(MouseWheelStatus::kUp) == 1);
+static_assert(std::to_underlying(MouseWheelStatus::kDown) == -1);
+static_assert(std::to_underlying(MouseWheelStatus::kNeutral) == 0);
+static_assert(std::to_underlying(MouseWheelStatus::kUp) == 1);
 
 enum class StringInput : int {
   kNo = 0,
@@ -159,19 +159,19 @@ enum class StringInput : int {
   kLoadSave = 2,
   kAll = 3,
 };
-static_assert(static_cast<int>(StringInput::kNo) == 0);
-static_assert(static_cast<int>(StringInput::kAlpha) == 1);
-static_assert(static_cast<int>(StringInput::kLoadSave) == 2);
-static_assert(static_cast<int>(StringInput::kAll) == 3);
+static_assert(std::to_underlying(StringInput::kNo) == 0);
+static_assert(std::to_underlying(StringInput::kAlpha) == 1);
+static_assert(std::to_underlying(StringInput::kLoadSave) == 2);
+static_assert(std::to_underlying(StringInput::kAll) == 3);
 
 enum class KeyboardType : int {
   kAuto,
   kUS,
   kUK,
 };
-static_assert(static_cast<int>(KeyboardType::kAuto) == 0);
-static_assert(static_cast<int>(KeyboardType::kUS) == 1);
-static_assert(static_cast<int>(KeyboardType::kUK) == 2);
+static_assert(std::to_underlying(KeyboardType::kAuto) == 0);
+static_assert(std::to_underlying(KeyboardType::kUS) == 1);
+static_assert(std::to_underlying(KeyboardType::kUK) == 2);
 
 enum class OOHDRToneMapper : std::int32_t {
   kNone = -1,

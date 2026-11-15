@@ -32,6 +32,7 @@ MA 02110-1301, USA.
 #include <cstdio>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "GuiDisplayGen.h"
@@ -55,11 +56,11 @@ enum class OXZDownloadStatus : std::int32_t {
   kComplete = 10,
   kError = 99,
 };
-static_assert(static_cast<std::int32_t>(OXZDownloadStatus::kNone) == 0);
-static_assert(static_cast<std::int32_t>(OXZDownloadStatus::kStarted) == 1);
-static_assert(static_cast<std::int32_t>(OXZDownloadStatus::kReceiving) == 2);
-static_assert(static_cast<std::int32_t>(OXZDownloadStatus::kComplete) == 10);
-static_assert(static_cast<std::int32_t>(OXZDownloadStatus::kError) == 99);
+static_assert(std::to_underlying(OXZDownloadStatus::kNone) == 0);
+static_assert(std::to_underlying(OXZDownloadStatus::kStarted) == 1);
+static_assert(std::to_underlying(OXZDownloadStatus::kReceiving) == 2);
+static_assert(std::to_underlying(OXZDownloadStatus::kComplete) == 10);
+static_assert(std::to_underlying(OXZDownloadStatus::kError) == 99);
 
 enum class OXZInterfaceState : std::int32_t {
   kNoData,
@@ -77,21 +78,20 @@ enum class OXZInterfaceState : std::int32_t {
   kExtract,
   kExtractdone,
 };
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kNoData) == 0);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kMain) == 1);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kUpdating) == 2);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kPickInstall) == 3);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kPickInstalled) ==
-              4);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kPickRemove) == 5);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kInstalling) == 6);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kDependencies) == 7);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kRemoving) == 8);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kTaskdone) == 9);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kRestarting) == 10);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kSetfilter) == 11);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kExtract) == 12);
-static_assert(static_cast<std::int32_t>(OXZInterfaceState::kExtractdone) == 13);
+static_assert(std::to_underlying(OXZInterfaceState::kNoData) == 0);
+static_assert(std::to_underlying(OXZInterfaceState::kMain) == 1);
+static_assert(std::to_underlying(OXZInterfaceState::kUpdating) == 2);
+static_assert(std::to_underlying(OXZInterfaceState::kPickInstall) == 3);
+static_assert(std::to_underlying(OXZInterfaceState::kPickInstalled) == 4);
+static_assert(std::to_underlying(OXZInterfaceState::kPickRemove) == 5);
+static_assert(std::to_underlying(OXZInterfaceState::kInstalling) == 6);
+static_assert(std::to_underlying(OXZInterfaceState::kDependencies) == 7);
+static_assert(std::to_underlying(OXZInterfaceState::kRemoving) == 8);
+static_assert(std::to_underlying(OXZInterfaceState::kTaskdone) == 9);
+static_assert(std::to_underlying(OXZInterfaceState::kRestarting) == 10);
+static_assert(std::to_underlying(OXZInterfaceState::kSetfilter) == 11);
+static_assert(std::to_underlying(OXZInterfaceState::kExtract) == 12);
+static_assert(std::to_underlying(OXZInterfaceState::kExtractdone) == 13);
 
 // What a manifest's OXZ can do here (installableState()). (a member's result).
 enum class OXZInstallableState : std::int32_t {
@@ -106,22 +106,20 @@ enum class OXZInstallableState : std::int32_t {
   kUninstallableVersion,
   kUninstallableManual,
 };
+static_assert(std::to_underlying(OXZInstallableState::kInstallableOkay) == 0);
+static_assert(std::to_underlying(OXZInstallableState::kInstallableUpdate) == 1);
 static_assert(
-    static_cast<std::int32_t>(OXZInstallableState::kInstallableOkay) == 0);
-static_assert(
-    static_cast<std::int32_t>(OXZInstallableState::kInstallableUpdate) == 1);
-static_assert(static_cast<std::int32_t>(
-                  OXZInstallableState::kInstallableDependencies) == 2);
-static_assert(
-    static_cast<std::int32_t>(OXZInstallableState::kInstallableConflicts) == 3);
-static_assert(
-    static_cast<std::int32_t>(OXZInstallableState::kUninstallableAlready) == 4);
-static_assert(static_cast<std::int32_t>(
-                  OXZInstallableState::kUninstallableNoremote) == 5);
-static_assert(
-    static_cast<std::int32_t>(OXZInstallableState::kUninstallableVersion) == 6);
-static_assert(
-    static_cast<std::int32_t>(OXZInstallableState::kUninstallableManual) == 7);
+    std::to_underlying(OXZInstallableState::kInstallableDependencies) == 2);
+static_assert(std::to_underlying(OXZInstallableState::kInstallableConflicts) ==
+              3);
+static_assert(std::to_underlying(OXZInstallableState::kUninstallableAlready) ==
+              4);
+static_assert(std::to_underlying(OXZInstallableState::kUninstallableNoremote) ==
+              5);
+static_assert(std::to_underlying(OXZInstallableState::kUninstallableVersion) ==
+              6);
+static_assert(std::to_underlying(OXZInstallableState::kUninstallableManual) ==
+              7);
 
 class OOOXZManager : public oo::Object {
  public:

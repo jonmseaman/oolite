@@ -278,61 +278,60 @@ enum class OOPListSchemaVerifierErrorCode : std::int32_t {
 
   kLastErrorCode,
 };
+static_assert(std::to_underlying(OOPListSchemaVerifierErrorCode::kNone) == 0);
+static_assert(std::to_underlying(OOPListSchemaVerifierErrorCode::kInternal) ==
+              1);
 static_assert(
-    static_cast<std::int32_t>(OOPListSchemaVerifierErrorCode::kNone) == 0);
-static_assert(
-    static_cast<std::int32_t>(OOPListSchemaVerifierErrorCode::kInternal) == 1);
-static_assert(static_cast<std::int32_t>(
-                  OOPListSchemaVerifierErrorCode::kTypeMismatch) == 2);
-static_assert(static_cast<std::int32_t>(
+    std::to_underlying(OOPListSchemaVerifierErrorCode::kTypeMismatch) == 2);
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kMinimumConstraintNotMet) ==
               3);
-static_assert(static_cast<std::int32_t>(
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kMaximumConstraintNotMet) ==
               4);
-static_assert(static_cast<std::int32_t>(
-                  OOPListSchemaVerifierErrorCode::kNumberIsNegative) == 5);
-static_assert(static_cast<std::int32_t>(
+static_assert(
+    std::to_underlying(OOPListSchemaVerifierErrorCode::kNumberIsNegative) == 5);
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kStringPrefixMissing) == 6);
-static_assert(static_cast<std::int32_t>(
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kStringSuffixMissing) == 7);
-static_assert(static_cast<std::int32_t>(
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kStringSubstringMissing) ==
               8);
-static_assert(static_cast<std::int32_t>(
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kDictionaryUnknownKey) == 9);
 static_assert(
-    static_cast<std::int32_t>(
+    std::to_underlying(
         OOPListSchemaVerifierErrorCode::kDictionaryMissingRequiredKeys) == 10);
-static_assert(static_cast<std::int32_t>(
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kEnumerationBadValue) == 11);
-static_assert(static_cast<std::int32_t>(
-                  OOPListSchemaVerifierErrorCode::kOneOfNoMatch) == 12);
-static_assert(static_cast<std::int32_t>(
+static_assert(
+    std::to_underlying(OOPListSchemaVerifierErrorCode::kOneOfNoMatch) == 12);
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kDelegatedTypeError) == 13);
-static_assert(static_cast<std::int32_t>(
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kStartOfSchemaErrors) == 100);
-static_assert(static_cast<std::int32_t>(
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kSchemaBadTypeSpecifier) ==
               101);
 static_assert(
-    static_cast<std::int32_t>(
+    std::to_underlying(
         OOPListSchemaVerifierErrorCode::kSchemaUndefiniedMacroReference) ==
     102);
-static_assert(static_cast<std::int32_t>(
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kSchemaUnknownType) == 103);
-static_assert(static_cast<std::int32_t>(
-                  OOPListSchemaVerifierErrorCode::kSchemaNoOneOfOptions) ==
-              104);
-static_assert(static_cast<std::int32_t>(
+static_assert(
+    std::to_underlying(OOPListSchemaVerifierErrorCode::kSchemaNoOneOfOptions) ==
+    104);
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kSchemaNoEnumerationValues) ==
               105);
-static_assert(static_cast<std::int32_t>(
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kSchemaUnknownFilter) == 106);
-static_assert(static_cast<std::int32_t>(
+static_assert(std::to_underlying(
                   OOPListSchemaVerifierErrorCode::kSchemaBadComparator) == 107);
-static_assert(static_cast<std::int32_t>(
-                  OOPListSchemaVerifierErrorCode::kLastErrorCode) == 108);
+static_assert(
+    std::to_underlying(OOPListSchemaVerifierErrorCode::kLastErrorCode) == 108);
 
 inline bool OOPlistErrorIsSchemaError(OOPListSchemaVerifierErrorCode error) {
   return OOPListSchemaVerifierErrorCode::kStartOfSchemaErrors < error &&

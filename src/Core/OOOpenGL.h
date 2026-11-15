@@ -32,6 +32,7 @@ MA 02110-1301, USA.
 #include <cstdint>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 
 #ifndef OO_PLAIN_CPP_UNIT
 #include "OOFoundation.h"
@@ -147,11 +148,11 @@ enum class OOOpenGLStateID : int {
 
   kInternalUseOnly,
 };
-static_assert(static_cast<int>(OOOpenGLStateID::kOpaque) == 0);
-static_assert(static_cast<int>(OOOpenGLStateID::kTranslucentPass) == 1);
-static_assert(static_cast<int>(OOOpenGLStateID::kAdditiveBlending) == 2);
-static_assert(static_cast<int>(OOOpenGLStateID::kOverlay) == 3);
-static_assert(static_cast<int>(OOOpenGLStateID::kInternalUseOnly) == 4);
+static_assert(std::to_underlying(OOOpenGLStateID::kOpaque) == 0);
+static_assert(std::to_underlying(OOOpenGLStateID::kTranslucentPass) == 1);
+static_assert(std::to_underlying(OOOpenGLStateID::kAdditiveBlending) == 2);
+static_assert(std::to_underlying(OOOpenGLStateID::kOverlay) == 3);
+static_assert(std::to_underlying(OOOpenGLStateID::kInternalUseOnly) == 4);
 
 #if OO_GL_STATE_VERIFICATION
 void OOSetOpenGLState_(OOOpenGLStateID state, const char* function,
