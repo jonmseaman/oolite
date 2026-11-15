@@ -5,7 +5,7 @@ primitive_property.js
 Creating a property on a primitive value in strict code. SpiderMonkey 1.8.5
 silently ignored it, and OXPs rely on that (Route Planner did); ES5+ requires
 a TypeError. The bundled QuickJS-ng carries upstream #768's patch
-(subprojects/packagefiles/quickjs-ng/0001-oolite-primitive-property-assignment.patch)
+(third_party/packagefiles/quickjs-ng/0001-oolite-primitive-property-assignment.patch)
 to keep SpiderMonkey's behaviour.
 
 */

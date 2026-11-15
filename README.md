@@ -115,7 +115,7 @@ meson setup, compile, configure and install flags. Type the following for help:
 ```
 
 Oolite's JavaScript engine, [QuickJS-ng](https://github.com/quickjs-ng/quickjs), is downloaded, patched and built as a
-Meson subproject (`subprojects/quickjs-ng.wrap`) the first time the build is set up, so that needs network access.
+Meson subproject (`third_party/quickjs-ng.wrap`) the first time the build is set up, so that needs network access.
 
 Oolite has various build types:
 

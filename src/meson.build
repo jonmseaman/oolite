@@ -1,5 +1,17 @@
 oolite_sources = []
-# The game's sources include the third-party headers (third_party/meson.build).
+# Third-party code copied into the tree. third_party/ is meson's subproject_dir, so each library is
+# a local subproject that only names its sources and headers; they build below as one library,
+# with the game's project arguments (WIN32, NDEBUG, ...) but not its warning flags. miniz and
+# tinyexr are for the Windows-only HDR snapshot.
+oolite_third_party_sources = []
+oolite_third_party_includes = []
+foreach lib : ['minizip', 'miniz', 'tinyexr', 'stb']
+    lib_project = subproject(lib)
+    if host_machine.system() == 'windows' or lib not in ['miniz', 'tinyexr']
+        oolite_third_party_sources += lib_project.get_variable('sources')
+    endif
+    oolite_third_party_includes += lib_project.get_variable('includes')
+endforeach
 oolite_includes = [oolite_third_party_includes]
 oolite_override_options = []
 oolite_link_args = []
