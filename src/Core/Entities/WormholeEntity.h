@@ -39,9 +39,9 @@ MA 02110-1301, USA.
 #include "OOEnumFlags.h"
 #include "oofnd/PList.hpp"
 
-#define WORMHOLE_EXPIRES_TIMEINTERVAL 900.0
-#define WORMHOLE_SHRINK_RATE 4000.0
-#define WORMHOLE_LEADER_SPEED_FACTOR 0.25
+inline constexpr double WORMHOLE_EXPIRES_TIMEINTERVAL = 900.0;
+inline constexpr double WORMHOLE_SHRINK_RATE = 4000.0;
+inline constexpr double WORMHOLE_LEADER_SPEED_FACTOR = 0.25;
 
 class Universe;
 class ShipEntity;
