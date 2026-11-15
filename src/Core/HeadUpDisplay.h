@@ -54,143 +54,143 @@ struct OOHUDWidget;  // HeadUpDisplay.cpp
 class OOColor;
 class OOCrosshairs;
 
-#define SCANNER_CENTRE_X 0
-#define SCANNER_CENTRE_Y -180
-#define SCANNER_SCALE 256
-#define SCANNER_WIDTH 288
-#define SCANNER_HEIGHT 72
+inline constexpr int SCANNER_CENTRE_X = 0;
+inline constexpr int SCANNER_CENTRE_Y = -180;
+inline constexpr int SCANNER_SCALE = 256;
+inline constexpr int SCANNER_WIDTH = 288;
+inline constexpr int SCANNER_HEIGHT = 72;
 
-#define SCANNER_MAX_ZOOM 5.0
-#define SCANNER_ZOOM_LEVELS 5
-#define ZOOM_INDICATOR_CENTRE_X 108
-#define ZOOM_INDICATOR_CENTRE_Y -216
-#define ZOOM_INDICATOR_WIDTH 11.0f
-#define ZOOM_INDICATOR_HEIGHT 14.0f
+inline constexpr double SCANNER_MAX_ZOOM = 5.0;
+inline constexpr int SCANNER_ZOOM_LEVELS = 5;
+inline constexpr int ZOOM_INDICATOR_CENTRE_X = 108;
+inline constexpr int ZOOM_INDICATOR_CENTRE_Y = -216;
+inline constexpr float ZOOM_INDICATOR_WIDTH = 11.0f;
+inline constexpr float ZOOM_INDICATOR_HEIGHT = 14.0f;
 #define ZOOM_LEVELS_IMAGE "zoom.png"
 
 #define COMPASS_IMAGE "compass.png"
-#define COMPASS_CENTRE_X 132
-#define COMPASS_CENTRE_Y -216
-#define COMPASS_SIZE 56
-#define COMPASS_HALF_SIZE 28
+inline constexpr int COMPASS_CENTRE_X = 132;
+inline constexpr int COMPASS_CENTRE_Y = -216;
+inline constexpr int COMPASS_SIZE = 56;
+inline constexpr int COMPASS_HALF_SIZE = 28;
 #define COMPASS_REDDOT_IMAGE "reddot.png"
 #define COMPASS_GREENDOT_IMAGE "greendot.png"
-#define COMPASS_DOT_SIZE 16
-#define COMPASS_HALF_DOT_SIZE 8
+inline constexpr int COMPASS_DOT_SIZE = 16;
+inline constexpr int COMPASS_HALF_DOT_SIZE = 8;
 
 #define AEGIS_IMAGE "aegis.png"
-#define AEGIS_CENTRE_X -132
-#define AEGIS_CENTRE_Y -216
-#define AEGIS_WIDTH 24
-#define AEGIS_HEIGHT 24
+inline constexpr int AEGIS_CENTRE_X = -132;
+inline constexpr int AEGIS_CENTRE_Y = -216;
+inline constexpr int AEGIS_WIDTH = 24;
+inline constexpr int AEGIS_HEIGHT = 24;
 
-#define SPEED_BAR_CENTRE_X 200
-#define SPEED_BAR_CENTRE_Y -145
-#define SPEED_BAR_WIDTH 80
-#define SPEED_BAR_HEIGHT 8
+inline constexpr int SPEED_BAR_CENTRE_X = 200;
+inline constexpr int SPEED_BAR_CENTRE_Y = -145;
+inline constexpr int SPEED_BAR_WIDTH = 80;
+inline constexpr int SPEED_BAR_HEIGHT = 8;
 #define SPEED_BAR_DRAW_SURROUND true
 
-#define ROLL_BAR_CENTRE_X 200
-#define ROLL_BAR_CENTRE_Y -160
-#define ROLL_BAR_WIDTH 80
-#define ROLL_BAR_HEIGHT 8
+inline constexpr int ROLL_BAR_CENTRE_X = 200;
+inline constexpr int ROLL_BAR_CENTRE_Y = -160;
+inline constexpr int ROLL_BAR_WIDTH = 80;
+inline constexpr int ROLL_BAR_HEIGHT = 8;
 #define ROLL_BAR_DRAW_SURROUND true
 
-#define PITCH_BAR_CENTRE_X 200
-#define PITCH_BAR_CENTRE_Y -170
-#define PITCH_BAR_WIDTH 80
-#define PITCH_BAR_HEIGHT 8
+inline constexpr int PITCH_BAR_CENTRE_X = 200;
+inline constexpr int PITCH_BAR_CENTRE_Y = -170;
+inline constexpr int PITCH_BAR_WIDTH = 80;
+inline constexpr int PITCH_BAR_HEIGHT = 8;
 #define PITCH_BAR_DRAW_SURROUND true
 
-#define ENERGY_GAUGE_CENTRE_X 200
-#define ENERGY_GAUGE_CENTRE_Y -205
-#define ENERGY_GAUGE_WIDTH 80
-#define ENERGY_GAUGE_HEIGHT 48
+inline constexpr int ENERGY_GAUGE_CENTRE_X = 200;
+inline constexpr int ENERGY_GAUGE_CENTRE_Y = -205;
+inline constexpr int ENERGY_GAUGE_WIDTH = 80;
+inline constexpr int ENERGY_GAUGE_HEIGHT = 48;
 #define ENERGY_GAUGE_DRAW_SURROUND true
 
-#define FORWARD_SHIELD_BAR_CENTRE_X -200
-#define FORWARD_SHIELD_BAR_CENTRE_Y -146
-#define FORWARD_SHIELD_BAR_WIDTH 80
-#define FORWARD_SHIELD_BAR_HEIGHT 8
+inline constexpr int FORWARD_SHIELD_BAR_CENTRE_X = -200;
+inline constexpr int FORWARD_SHIELD_BAR_CENTRE_Y = -146;
+inline constexpr int FORWARD_SHIELD_BAR_WIDTH = 80;
+inline constexpr int FORWARD_SHIELD_BAR_HEIGHT = 8;
 #define FORWARD_SHIELD_BAR_DRAW_SURROUND true
 
-#define AFT_SHIELD_BAR_CENTRE_X -200
-#define AFT_SHIELD_BAR_CENTRE_Y -162
-#define AFT_SHIELD_BAR_WIDTH 80
-#define AFT_SHIELD_BAR_HEIGHT 8
+inline constexpr int AFT_SHIELD_BAR_CENTRE_X = -200;
+inline constexpr int AFT_SHIELD_BAR_CENTRE_Y = -162;
+inline constexpr int AFT_SHIELD_BAR_WIDTH = 80;
+inline constexpr int AFT_SHIELD_BAR_HEIGHT = 8;
 #define AFT_SHIELD_BAR_DRAW_SURROUND true
 
-#define FUEL_BAR_CENTRE_X -200
-#define FUEL_BAR_CENTRE_Y -179
-#define FUEL_BAR_WIDTH 80
-#define FUEL_BAR_HEIGHT 8
+inline constexpr int FUEL_BAR_CENTRE_X = -200;
+inline constexpr int FUEL_BAR_CENTRE_Y = -179;
+inline constexpr int FUEL_BAR_WIDTH = 80;
+inline constexpr int FUEL_BAR_HEIGHT = 8;
 
-#define WITCHDEST_CENTRE_X -200
-#define WITCHDEST_CENTRE_Y -179
-#define WITCHDEST_WIDTH 80
-#define WITCHDEST_HEIGHT 8
+inline constexpr int WITCHDEST_CENTRE_X = -200;
+inline constexpr int WITCHDEST_CENTRE_Y = -179;
+inline constexpr int WITCHDEST_WIDTH = 80;
+inline constexpr int WITCHDEST_HEIGHT = 8;
 
-#define CABIN_TEMP_BAR_CENTRE_X -200
-#define CABIN_TEMP_BAR_CENTRE_Y -189
-#define CABIN_TEMP_BAR_WIDTH 80
-#define CABIN_TEMP_BAR_HEIGHT 8
+inline constexpr int CABIN_TEMP_BAR_CENTRE_X = -200;
+inline constexpr int CABIN_TEMP_BAR_CENTRE_Y = -189;
+inline constexpr int CABIN_TEMP_BAR_WIDTH = 80;
+inline constexpr int CABIN_TEMP_BAR_HEIGHT = 8;
 
-#define WEAPON_TEMP_BAR_CENTRE_X -200
-#define WEAPON_TEMP_BAR_CENTRE_Y -199
-#define WEAPON_TEMP_BAR_WIDTH 80
-#define WEAPON_TEMP_BAR_HEIGHT 8
+inline constexpr int WEAPON_TEMP_BAR_CENTRE_X = -200;
+inline constexpr int WEAPON_TEMP_BAR_CENTRE_Y = -199;
+inline constexpr int WEAPON_TEMP_BAR_WIDTH = 80;
+inline constexpr int WEAPON_TEMP_BAR_HEIGHT = 8;
 
-#define ALTITUDE_BAR_CENTRE_X -200
-#define ALTITUDE_BAR_CENTRE_Y -209
-#define ALTITUDE_BAR_WIDTH 80
-#define ALTITUDE_BAR_HEIGHT 8
+inline constexpr int ALTITUDE_BAR_CENTRE_X = -200;
+inline constexpr int ALTITUDE_BAR_CENTRE_Y = -209;
+inline constexpr int ALTITUDE_BAR_WIDTH = 80;
+inline constexpr int ALTITUDE_BAR_HEIGHT = 8;
 
-#define MISSILES_DISPLAY_X -228
-#define MISSILES_DISPLAY_Y -224
-#define MISSILES_DISPLAY_SPACING 16
+inline constexpr int MISSILES_DISPLAY_X = -228;
+inline constexpr int MISSILES_DISPLAY_Y = -224;
+inline constexpr int MISSILES_DISPLAY_SPACING = 16;
 #define MISSILE_ICON_WIDTH 12
 #define MISSILE_ICON_HEIGHT MISSILE_ICON_WIDTH
 
-#define PRIMED_DISPLAY_X -144
-#define PRIMED_DISPLAY_Y -256
-#define PRIMED_DISPLAY_WIDTH 12
-#define PRIMED_DISPLAY_HEIGHT 12
+inline constexpr int PRIMED_DISPLAY_X = -144;
+inline constexpr int PRIMED_DISPLAY_Y = -256;
+inline constexpr int PRIMED_DISPLAY_WIDTH = 12;
+inline constexpr int PRIMED_DISPLAY_HEIGHT = 12;
 
-#define ASCTARGET_DISPLAY_X 64
-#define ASCTARGET_DISPLAY_Y -234
-#define ASCTARGET_DISPLAY_WIDTH 10
-#define ASCTARGET_DISPLAY_HEIGHT 10
+inline constexpr int ASCTARGET_DISPLAY_X = 64;
+inline constexpr int ASCTARGET_DISPLAY_Y = -234;
+inline constexpr int ASCTARGET_DISPLAY_WIDTH = 10;
+inline constexpr int ASCTARGET_DISPLAY_HEIGHT = 10;
 
-#define CLOCK_DISPLAY_X -44
-#define CLOCK_DISPLAY_Y -234
-#define CLOCK_DISPLAY_WIDTH 12
-#define CLOCK_DISPLAY_HEIGHT 12
+inline constexpr int CLOCK_DISPLAY_X = -44;
+inline constexpr int CLOCK_DISPLAY_Y = -234;
+inline constexpr int CLOCK_DISPLAY_WIDTH = 12;
+inline constexpr int CLOCK_DISPLAY_HEIGHT = 12;
 
-#define WEAPONSOFFLINETEXT_DISPLAY_X -175
-#define WEAPONSOFFLINETEXT_DISPLAY_Y 2
-#define WEAPONSOFFLINETEXT_WIDTH 8
-#define WEAPONSOFFLINETEXT_HEIGHT 8
+inline constexpr int WEAPONSOFFLINETEXT_DISPLAY_X = -175;
+inline constexpr int WEAPONSOFFLINETEXT_DISPLAY_Y = 2;
+inline constexpr int WEAPONSOFFLINETEXT_WIDTH = 8;
+inline constexpr int WEAPONSOFFLINETEXT_HEIGHT = 8;
 
-#define FPSINFO_DISPLAY_X -300
-#define FPSINFO_DISPLAY_Y 220
-#define FPSINFO_DISPLAY_WIDTH 12
-#define FPSINFO_DISPLAY_HEIGHT 12
+inline constexpr int FPSINFO_DISPLAY_X = -300;
+inline constexpr int FPSINFO_DISPLAY_Y = 220;
+inline constexpr int FPSINFO_DISPLAY_WIDTH = 12;
+inline constexpr int FPSINFO_DISPLAY_HEIGHT = 12;
 
-#define STATUS_LIGHT_CENTRE_X -108
-#define STATUS_LIGHT_CENTRE_Y -216
-#define STATUS_LIGHT_WIDTH 8
-#define STATUS_LIGHT_HEIGHT 8
+inline constexpr int STATUS_LIGHT_CENTRE_X = -108;
+inline constexpr int STATUS_LIGHT_CENTRE_Y = -216;
+inline constexpr int STATUS_LIGHT_WIDTH = 8;
+inline constexpr int STATUS_LIGHT_HEIGHT = 8;
 
-#define HIT_INDICATOR_CENTRE_X 200
-#define HIT_INDICATOR_CENTRE_Y 0
+inline constexpr int HIT_INDICATOR_CENTRE_X = 200;
+inline constexpr int HIT_INDICATOR_CENTRE_Y = 0;
 
-#define SCOOPSTATUS_CENTRE_X -132
-#define SCOOPSTATUS_CENTRE_Y -152
-#define SCOOPSTATUS_WIDTH 16.0
-#define SCOOPSTATUS_HEIGHT 16.0
+inline constexpr int SCOOPSTATUS_CENTRE_X = -132;
+inline constexpr int SCOOPSTATUS_CENTRE_Y = -152;
+inline constexpr double SCOOPSTATUS_WIDTH = 16.0;
+inline constexpr double SCOOPSTATUS_HEIGHT = 16.0;
 
-#define MFD_TEXT_WIDTH 10
-#define MFD_TEXT_HEIGHT 10
+inline constexpr int MFD_TEXT_WIDTH = 10;
+inline constexpr int MFD_TEXT_HEIGHT = 10;
 
 #define DIALS_KEY "dials"
 #define LEGENDS_KEY "legends"
@@ -237,9 +237,9 @@ class OOCrosshairs;
        ? UNIVERSE->getGameView()->getDisplay_z()             \
        : 0.0f)
 
-#define ONE_EIGHTH 0.125
+inline constexpr double ONE_EIGHTH = 0.125;
 
-#define MAX_ACCURACY_RANGE 7000  // 7.000km
+inline constexpr int MAX_ACCURACY_RANGE = 7000;  // 7.000km
 #define ACCURACY_PROBABILITY_DECREASE_FACTOR \
   0.000035f  // for every 1000km decrease by 3.5% the chance of high accuracy
 #define MIN_PROBABILITY_ACCURACY \
