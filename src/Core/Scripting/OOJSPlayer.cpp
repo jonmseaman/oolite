@@ -34,7 +34,6 @@ MA 02110-1301, USA.
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToString.h"
-#include "OOFunctionAttributes.h"
 #include "OOJSEntity.h"
 #include "OOJSShip.h"
 #include "OOJavaScriptEngine.h"

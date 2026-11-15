@@ -27,7 +27,7 @@ SOFTWARE.
 
 #include "OOAsyncWorkManager.h"
 
-#include "OOCPUInfo.h"
+#include "OOCPUInfo.h"  // IWYU pragma: keep: used only without OO_DEBUG
 #include "oofnd/Thread.hpp"
 #include "oofnd/objc/OOException.h"
 

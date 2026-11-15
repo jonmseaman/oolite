@@ -37,7 +37,6 @@
 #include "OOCPUInfoEndian.h"
 #include "OOEnumFlags.h"
 #include "OOFastArithmetic.h"
-#include "OOFunctionAttributes.h"
 #include "OOLogging.h"
 #include "OOMacroOpenGL.h"
 #include "OOOpenGLCheck.h"

@@ -35,7 +35,6 @@ SOFTWARE.
 #include <typeinfo>
 #include <vector>
 
-#include "OOFunctionAttributes.h"
 #include "OOMaterialSpecifier.h"
 #include "OOTexture.h"
 #include "Universe.h"

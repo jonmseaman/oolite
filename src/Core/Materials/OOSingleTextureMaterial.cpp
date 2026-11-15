@@ -31,7 +31,6 @@ SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "OOFunctionAttributes.h"
 #include "OOTexture.h"
 
 std::shared_ptr<OOSingleTextureMaterial>

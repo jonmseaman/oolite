@@ -35,7 +35,6 @@ SOFTWARE.
 #include <vector>
 
 #include "OODemangle.h"
-#include "OOFunctionAttributes.h"
 #include "OOLogging.h"
 #include "OOMaterialState.h"
 #include "oofnd/AutoreleaseScope.hpp"

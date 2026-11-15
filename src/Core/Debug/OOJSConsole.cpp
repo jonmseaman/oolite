@@ -1296,7 +1296,7 @@ static JSValue ConsoleDumpHeap(JSContext* context, JSValueConst /*oojsThis*/,
                                      *diagnosticDirectory, "js-heaps.txt")
                                : std::string();
   FILE* file = fopen(path.c_str(), "w");
-  if (file != NULL) {
+  if (file != nullptr) {
     JSRuntime* runtime = JS_GetRuntime(context);
     JSMemoryUsage usage;
     JS_ComputeMemoryUsage(runtime, &usage);

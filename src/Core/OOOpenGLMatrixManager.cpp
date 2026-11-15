@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 #include "OOOpenGLMatrixManager.h"
 
 #include <numbers>
+#include <string>
 #include <utility>
 
 #include "MyOpenGLView.h"
@@ -321,8 +322,8 @@ oo::PList OOOpenGLMatrixManager::standardMatrixUniformLocations(
   OO_ENTER_OPENGL();
 
   for (i = 0; i < OOLITE_GL_MATRIX_END; i++) {
-    location = glGetUniformLocationARB(program,
-                                       ooliteStandardMatrixUniforms[i].data());
+    const std::string name(ooliteStandardMatrixUniforms[i]);  // NUL-terminated
+    location = glGetUniformLocationARB(program, name.c_str());
     if (location >= 0) {
       if (i == OOLITE_GL_MATRIX_NORMAL) {
         locationSet.push_back(oo::PList(oo::PList::Array{

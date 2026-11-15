@@ -49,7 +49,6 @@ OOJSSystem.m (QuickJS-ng)
 #include "OOEntityFilterPredicate.h"
 #include "OOEntityHold.h"
 #include "OOFoundation.h"
-#include "OOFunctionAttributes.h"
 #include "OOHPVector.h"
 #include "OOJSEngineNativeWrappers.h"
 #include "OOJSEntity.h"
