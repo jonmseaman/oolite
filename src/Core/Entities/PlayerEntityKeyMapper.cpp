@@ -396,7 +396,7 @@ void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui,
       deleteKeySetting(delkey.value_or(""));
       // special case - when default activate/mode key set in custom equipment
       if (entryIsCustomEquip(delkey.value_or(""))) {
-        int idx = getCustomEquipIndex(delkey.value_or(""));
+        int idx = static_cast<int>(getCustomEquipIndex(delkey.value_or("")));
         std::optional<std::string> eq;
         std::optional<std::string> lookupKey;
         bool update = false;

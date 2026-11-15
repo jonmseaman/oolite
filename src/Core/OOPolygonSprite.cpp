@@ -236,7 +236,7 @@ void OOPolygonSprite::drawWithData(GLfloat* data, size_t count, GLuint* vbo) {
 
   OOGL(glEnableClientState(GL_VERTEX_ARRAY));
   OOGL(glVertexPointer(2, GL_FLOAT, 0, data));
-  OOGL(glDrawArrays(GL_TRIANGLES, 0, count));
+  OOGL(glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(count)));
   OOGL(glDisableClientState(GL_VERTEX_ARRAY));
 
 #if OO_USE_VBO

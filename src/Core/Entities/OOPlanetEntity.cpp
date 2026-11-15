@@ -235,7 +235,7 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
       dict.get<int>(KEY_TECHLEVEL, planetInfo.get<int>(KEY_TECHLEVEL));
 
   if (techLevel > 14) techLevel = 14;
-  _shuttlesOnGround = 1 + techLevel / 2;
+  _shuttlesOnGround = static_cast<unsigned int>(1 + techLevel / 2);
   _shuttleLaunchInterval =
       3600.0 /
       static_cast<double>(_shuttlesOnGround);  // All are launched in one hour.

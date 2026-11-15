@@ -63,7 +63,7 @@ void OOCrosshairs::render() {
     OOGL(glEnableClientState(GL_VERTEX_ARRAY));
     OOGL(glEnableClientState(GL_COLOR_ARRAY));
 
-    OOGL(glDrawArrays(GL_LINES, 0, _count * 2));
+    OOGL(glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(_count * 2)));
 
     OOGL(glDisableClientState(GL_VERTEX_ARRAY));
     OOGL(glDisableClientState(GL_COLOR_ARRAY));

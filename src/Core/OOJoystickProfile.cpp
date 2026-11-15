@@ -344,12 +344,12 @@ int OOJoystickSplineAxisProfile::addControl(NSPoint point) {
       }
       controlPoints_[i - 1] = point;
       makeSegments();
-      return i - 1;
+      return static_cast<int>(i - 1);
     }
     if ((right.x - point.x) >= SPLINE_POINT_MIN_SPACING) {
       controlPoints_.insert(controlPoints_.begin() + i, point);
       makeSegments();
-      return i;
+      return static_cast<int>(i);
     }
     left = right;
   }
@@ -370,7 +370,9 @@ NSPoint OOJoystickSplineAxisProfile::pointAtIndex(std::ptrdiff_t index) {
   return point;
 }
 
-int OOJoystickSplineAxisProfile::countPoints() { return controlPoints_.size(); }
+int OOJoystickSplineAxisProfile::countPoints() {
+  return static_cast<int>(controlPoints_.size());
+}
 
 std::vector<NSPoint> OOJoystickSplineAxisProfile::controlPoints() {
   return controlPoints_;

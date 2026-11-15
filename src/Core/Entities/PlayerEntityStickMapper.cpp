@@ -144,7 +144,7 @@ void PlayerEntity::setGuiToStickMapperScreen(unsigned skip,
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
   const std::vector<std::string> stickList = stickHandler->listSticks();
-  unsigned stickCount = stickList.size();
+  unsigned stickCount = static_cast<unsigned int>(stickList.size());
   unsigned i;
 
   OOGUITabStop tabStop[GUI_MAX_COLUMNS];

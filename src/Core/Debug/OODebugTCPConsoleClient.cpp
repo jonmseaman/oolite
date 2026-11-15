@@ -695,7 +695,7 @@ void OODebugTCPConsoleClient::sendDictionary(const oo::PList& dictionary) {
 
   count = data->length();
   if (count == 0) return;
-  header = htonl(count);
+  header = htonl(static_cast<u_long>(count));
 
   bytes = data->bytes();
 
