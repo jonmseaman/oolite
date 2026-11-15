@@ -32,8 +32,8 @@ SOFTWARE.
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
-#include <cstdio>
 #include <format>
+#include <fstream>
 #include <functional>
 #include <map>
 #include <memory>
@@ -1637,9 +1637,9 @@ void GatherStringAddrs(const oo::PList& object,
 
 void DumpStringAddrs(const oo::PList& dict, const std::string& context) {
   return;
-  static FILE* dump = nullptr;
-  if (dump == nullptr) dump = fopen("strings.txt", "w");
-  if (dump == nullptr) return;
+  // Never destroyed (Google style: no non-trivial static destructors).
+  static std::ofstream& dump = *new std::ofstream("strings.txt");
+  if (!dump) return;
 
   std::vector<StringAddr> strings;
   GatherStringAddrs(dict, strings, context);
@@ -1649,11 +1649,11 @@ void DumpStringAddrs(const oo::PList& dict, const std::string& context) {
         "{}\t{}:  \"{}\"", oo::str::pointerDescription(entry.address),
         entry.context, entry.string);
 
-    fprintf(dump, "%s\n", string.c_str());
+    dump << string << "\n";
   }
 
-  fprintf(dump, "\n");
-  fflush(dump);
+  dump << "\n";
+  dump.flush();
 }
 
 void GatherStringAddr(const std::string& string,
