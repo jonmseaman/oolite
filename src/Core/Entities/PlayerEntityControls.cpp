@@ -5946,17 +5946,21 @@ void PlayerEntity::switchToThisView(OOViewID viewDirection,
 
 // Called on c or Shift-C
 void PlayerEntity::handleAutopilotOn(bool fastDocking) {
-  // both declared before the first goto (C++ does not jump over their
-  // initialisation)
   std::optional<std::string> message;
   std::string stationName;
+  // Shows the message, if any, on every return.
+  auto showMessage = [&] {
+    if (message.has_value()) {
+      if (UNIVERSE != nullptr) UNIVERSE->addMessage(message, 4.5);
+    }
+  };
 
   // Check alert condition - on red alert, abort
   // -- but only for fast docking
   if (fastDocking && (getAlertCondition() == OOAlertCondition::kRed)) {
     playAutopilotCannotDockWithTarget();
     message = OOExpandKey("autopilot-red-alert");
-    goto abort;
+    return showMessage();
   }
 
   Entity* target;
@@ -5989,7 +5993,7 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking) {
         playAutopilotCannotDockWithTarget();
         message = OOExpandKey("autopilot-multiple-targets");
       }
-      goto abort;
+      return showMessage();
     }
   }
 
@@ -6037,7 +6041,7 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking) {
                 ? "autopilot-denied"
                 : "autopilot-target-docking-instructions-denied",
             {{"stationName", oo::PList(stationName)}});
-        goto abort;
+        return showMessage();
       }
     }
 
@@ -6072,12 +6076,7 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking) {
     message = OOExpandKey("autopilot-on");
   }
 
-abort:
-  // Clean-up code
-  if (message.has_value()) {
-    if (UNIVERSE != nullptr) UNIVERSE->addMessage(message, 4.5);
-  }
-  return;
+  showMessage();
 }
 
 void PlayerEntity::handleButtonIdent() {

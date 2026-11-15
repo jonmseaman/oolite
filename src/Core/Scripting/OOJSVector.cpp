@@ -885,23 +885,29 @@ static JSValue VectorStaticInterpolate(JSContext* context,
   int inArgc = argc;
   JSValueConst* argv = OOJS_ARGV;
   JSValueConst* inArgv = argv;
+  auto insufficientArguments = [&] {
+    OOJSReportBadArguments(context, "Vector3D", "interpolate", inArgc, inArgv,
+                           "Insufficient parameters",
+                           "vector expression, vector expression and number");
+    return JS_EXCEPTION;
+  };
 
   if (argc < 3) [[unlikely]]
-    goto INSUFFICIENT_ARGUMENTS;
+    return insufficientArguments();
   if (!VectorFromArgumentList(context, "Vector3D", "interpolate", argc, argv,
                               &av, &consumed)) [[unlikely]]
     return JS_EXCEPTION;
   argc -= consumed;
   argv += consumed;
   if (argc < 2) [[unlikely]]
-    goto INSUFFICIENT_ARGUMENTS;
+    return insufficientArguments();
   if (!VectorFromArgumentList(context, "Vector3D", "interpolate", argc, argv,
                               &bv, &consumed)) [[unlikely]]
     return JS_EXCEPTION;
   argc -= consumed;
   argv += consumed;
   if (argc < 1) [[unlikely]]
-    goto INSUFFICIENT_ARGUMENTS;
+    return insufficientArguments();
   if (!OOJSArgumentListGetNumber(context, "Vector3D", "interpolate", argc, argv,
                                  &interp, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
@@ -909,12 +915,6 @@ static JSValue VectorStaticInterpolate(JSContext* context,
   result = OOHPVectorInterpolate(av, bv, interp);
 
   OOJS_RETURN_HPVECTOR(result);
-
-INSUFFICIENT_ARGUMENTS:
-  OOJSReportBadArguments(context, "Vector3D", "interpolate", inArgc, inArgv,
-                         "Insufficient parameters",
-                         "vector expression, vector expression and number");
-  return JS_EXCEPTION;
 }
 
 // random([maxLength : Number]) : Vector3D
