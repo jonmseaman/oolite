@@ -477,10 +477,11 @@ oo::PList StationEntity::launchPolice() {
 
   std::shared_ptr<::ShipEntity> miner_ship;
 
-  int n_miners = (UNIVERSE != nullptr ? UNIVERSE->countShipsWithPrimaryRole(
-                                            "miner", SCANNER_MAX_RANGE, self)
-                                      : 0u) +
-                 countOfShipsInLaunchQueueWithPrimaryRole("miner");
+  int n_miners = static_cast<int>(
+      (UNIVERSE != nullptr ? UNIVERSE->countShipsWithPrimaryRole(
+                                 "miner", SCANNER_MAX_RANGE, self)
+                           : 0u) +
+      countOfShipsInLaunchQueueWithPrimaryRole("miner"));
 
   if (n_miners >= 1)  // just the one
     return nullptr;
@@ -813,8 +814,9 @@ std::optional<std::string> StationEntity::jsClassName() {
 
 OOTechLevelID StationEntity::getEquivalentTechLevel() {
   if (equivalentTechLevel == oo::kNotFound) {
-    return (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
-        .get<int>(KEY_TECHLEVEL);
+    return static_cast<OOTechLevelID>(
+        (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
+            .get<int>(KEY_TECHLEVEL));
   } else {
     return equivalentTechLevel;
   }
@@ -2152,7 +2154,7 @@ void StationEntity::takeEnergyDamage(double amount, Entity* entPart,
       }
       if (oo::ToShip(other) != nullptr)
         oo::ToShip(other)->markAsOffender(
-            b, OOLegalStatusReason::kAttackedMainStation);
+            static_cast<int>(b), OOLegalStatusReason::kAttackedMainStation);
       setPrimaryAggressor(other);
       setFoundTarget(other);
       launchPolice();

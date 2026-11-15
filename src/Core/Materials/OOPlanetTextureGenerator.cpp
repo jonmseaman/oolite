@@ -479,8 +479,10 @@ void OOPlanetTextureGenerator::loadTexture() {
       nearPole *= nearPole;
 
       for (x = static_cast<int>(_width) - 1; x >= 0; x--) {
-        _info.qBuffer[y * _width + x] = QFactor(
-            _info.fbmBuffer.data(), x, y, _width, poleValue, seaBias, nearPole);
+        _info.qBuffer[static_cast<uint32_t>(y) * _width +
+                      static_cast<uint32_t>(x)] =
+            QFactor(_info.fbmBuffer.data(), x, y, _width, poleValue, seaBias,
+                    nearPole);
       }
     }
 
@@ -495,8 +497,10 @@ void OOPlanetTextureGenerator::loadTexture() {
       nearPole *= nearPole;
 
       for (x = static_cast<int>(_width) - 1; x >= 0; x--) {
-        q = _info.qBuffer[y * _width + x];  // no need to use GetQ, x and y are
-                                            // always within bounds.
+        q = _info.qBuffer[static_cast<uint32_t>(y) * _width +
+                          static_cast<uint32_t>(
+                              x)];  // no need to use GetQ, x and y are
+                                    // always within bounds.
         yN = GetQ(_info.qBuffer.data(), x, y - 1, _width, _height, widthMask,
                   heightMask);  // recalculates x & y if they go out of bounds.
         yS = GetQ(_info.qBuffer.data(), x, y + 1, _width, _height, widthMask,
@@ -862,17 +866,17 @@ static float SampleNoise3D(OOPlanetTextureGeneratorInfo* info, Vector p) {
   unsigned PZ0 = PERM(Z);
   unsigned PZ1 = PERM(Z + 1);
 
-  unsigned PY0Z0 = PERM(Y + PZ0);
+  unsigned PY0Z0 = PERM(static_cast<unsigned int>(Y + PZ0));
   unsigned PY1Z0 = PERM(Y + 1 + PZ0);
-  unsigned PY0Z1 = PERM(Y + PZ1);
+  unsigned PY0Z1 = PERM(static_cast<unsigned int>(Y + PZ1));
   unsigned PY1Z1 = PERM(Y + 1 + PZ1);
 
-  unsigned gi000 = PERM(X + PY0Z0);
-  unsigned gi010 = PERM(X + PY1Z0);
+  unsigned gi000 = PERM(static_cast<unsigned int>(X + PY0Z0));
+  unsigned gi010 = PERM(static_cast<unsigned int>(X + PY1Z0));
   unsigned gi100 = PERM(X + 1 + PY0Z0);
   unsigned gi110 = PERM(X + 1 + PY1Z0);
-  unsigned gi001 = PERM(X + PY0Z1);
-  unsigned gi011 = PERM(X + PY1Z1);
+  unsigned gi001 = PERM(static_cast<unsigned int>(X + PY0Z1));
+  unsigned gi011 = PERM(static_cast<unsigned int>(X + PY1Z1));
   unsigned gi101 = PERM(X + 1 + PY0Z1);
   unsigned gi111 = PERM(X + 1 + PY1Z1);
 
@@ -1011,7 +1015,7 @@ static void AddNoise(OOPlanetTextureGeneratorInfo* info, float* randomBuffer,
   for (fy = 0, y = 0; y < height; fy++, y++) {
     qy = fy * rr;
     iy = fast_floor(qy);
-    jy = (iy + 1) & octaveMask;
+    jy = static_cast<int>((iy + 1) & octaveMask);
     qy = Hermite(qy - static_cast<float>(iy));
     iy &= (kRandomBufferSize - 1);
     jy &= (kRandomBufferSize - 1);
@@ -1031,7 +1035,7 @@ static void AddNoise(OOPlanetTextureGeneratorInfo* info, float* randomBuffer,
         qx = qxBuffer[x];
       }
 
-      jx = (ix + 1) & octaveMask;
+      jx = static_cast<int>((ix + 1) & octaveMask);
       jx &= (kRandomBufferSize - 1);
 
       rix = Lerp(randomBuffer[iy * kRandomBufferSize + ix],
@@ -1082,7 +1086,8 @@ static bool GenerateFBMNoise(OOPlanetTextureGeneratorInfo* info) {
 
 static float QFactor(float* accbuffer, int x, int y, unsigned width,
                      float polar_y_value, float bias, float polar_y) {
-  float q = accbuffer[y * width + x];  // 0.0 -> 1.0
+  float q = accbuffer[static_cast<unsigned int>(y) * width +
+                      static_cast<unsigned int>(x)];  // 0.0 -> 1.0
   q += bias;
 
   // Polar Y smooth.
@@ -1102,13 +1107,15 @@ static float GetQ(float* qbuffer, int x, int y, unsigned width, unsigned height,
   // Correct Y wrapping mode, faster method. In the following lines of code,
   // both width and height are assumed to be powers of 2: 512, 1024, 2048,
   // etc...
-  if (y & height) {
-    y = (y ^ heightMask) & heightMask;
+  if (static_cast<unsigned int>(y) & height) {
+    y = static_cast<int>((static_cast<unsigned int>(y ^ heightMask)) &
+                         heightMask);
     x += width >> 1;
   }
   // x wrapping.
   x &= widthMask;
-  return qbuffer[y * width + x];
+  return qbuffer[static_cast<unsigned int>(y) * width +
+                 static_cast<unsigned int>(x)];
 }
 
 static void SetMixConstants(OOPlanetTextureGeneratorInfo* info,

@@ -76,8 +76,9 @@ bool OOOpenALController::init() {
            "Failed to create default sound context");
     return false;
   }
-  error = alGetError();  // out of the condition (clang-tidy
-                         // bugprone-assignment-in-if-condition)
+  error = static_cast<ALuint>(
+      alGetError());  // out of the condition (clang-tidy
+                      // bugprone-assignment-in-if-condition)
   if (error != AL_NO_ERROR) {
     OO_LOG(kOOLogSoundInitError, "Error {} creating sound context", error);
   }

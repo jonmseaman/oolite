@@ -158,7 +158,8 @@ OOSkyDrawable::~OOSkyDrawable() {
   OO_ENTER_OPENGL();
 
   OOGraphicsResetManager::sharedManager()->unregisterCxxClient(this);
-  if (_displayListName != 0) glDeleteLists(_displayListName, 1);
+  if (_displayListName != 0)
+    glDeleteLists(static_cast<GLuint>(_displayListName), 1);
 }
 
 void OOSkyDrawable::renderOpaqueParts() {
@@ -178,13 +179,13 @@ void OOSkyDrawable::renderOpaqueParts() {
   OOGL(glFogfv(GL_FOG_COLOR, fogColor));
 
   if (_displayListName != 0) {
-    OOGL(glCallList(_displayListName));
+    OOGL(glCallList(static_cast<GLuint>(_displayListName)));
   } else {
     // Set up display list
     ensureTexturesLoaded();
-    _displayListName = glGenLists(1);
+    _displayListName = static_cast<GLint>(glGenLists(1));
 
-    OOGL(glNewList(_displayListName, GL_COMPILE));
+    OOGL(glNewList(static_cast<GLuint>(_displayListName), GL_COMPILE));
 
     OOGL(glEnableClientState(GL_TEXTURE_COORD_ARRAY));
     OOGL(glEnableClientState(GL_COLOR_ARRAY));
@@ -466,7 +467,7 @@ void OOSkyDrawable::resetGraphicsState() {
   OO_ENTER_OPENGL();
 
   if (_displayListName != 0) {
-    glDeleteLists(_displayListName, 1);
+    glDeleteLists(static_cast<GLuint>(_displayListName), 1);
     _displayListName = 0;
   }
 }

@@ -275,7 +275,7 @@ static JSValue GlobalAddFrameCallback(JSContext* context,
         OOJSValue::valueWithJSValue(callback, context).get());
   }
 
-  OOJS_RETURN_INT(trackingID);
+  OOJS_RETURN_INT(static_cast<int32_t>(trackingID));
 
   OOJS_NATIVE_EXIT
 }

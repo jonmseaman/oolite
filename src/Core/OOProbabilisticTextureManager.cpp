@@ -137,10 +137,12 @@ bool OOProbabilisticTextureManager::initWithPListName(
         if (texture != nullptr) {
           _textures[_count] = texture;
           _prob[_count] =
-              probability + (galID >= 0 ? _probMaxGal[galID] : _probMax);
+              probability +
+              (galID >= 0 ? _probMaxGal[static_cast<unsigned long long>(galID)]
+                          : _probMax);
           _galaxy[_count] = (galID >= 0 ? galID : -1);
           if (galID >= 0) {
-            _probMaxGal[galID] += probability;
+            _probMaxGal[static_cast<unsigned long long>(galID)] += probability;
           } else {
             for (j = 0; j <= kOOMaximumGalaxyID; j++)
               _probMaxGal[j] += probability;
@@ -179,13 +181,14 @@ OOTexture* OOProbabilisticTextureManager::selectTexture() {
 
   selection = randfWithSeed(&_seed);
 
-  selection *= _probMaxGal[galID];
+  selection *= _probMaxGal[static_cast<unsigned long long>(galID)];
 
   for (i = 0; i != _count; ++i) {
     if (_galaxy[i] == -1 || _galaxy[i] == galID) {
       // make a note of the index of the first texture that meets the galaxy
       // list criteria (but only if _galaxy is set)
-      if (hold == -1 && _prob[i] > 0 && _galaxy[i] == galID) hold = i;
+      if (hold == -1 && _prob[i] > 0 && _galaxy[i] == galID)
+        hold = static_cast<int>(i);
       if (selection <= _prob[i]) return _textures[i].get();
     }
   }
@@ -198,7 +201,7 @@ OOTexture* OOProbabilisticTextureManager::selectTexture() {
            "{}: overrun! Galaxy List requirements not met. Choosing first "
            "texture available for galaxy.",
            __PRETTY_FUNCTION__);
-    return _textures[hold].get();
+    return _textures[static_cast<unsigned long long>(hold)].get();
   }
 
   OO_LOG("probabilisticTextureManager.internalFailure",

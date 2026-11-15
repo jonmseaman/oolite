@@ -301,7 +301,8 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   }
 
   // Groups.
-  std::size_t groupID = dict.get<std::ptrdiff_t>(KEY_GROUP_ID, oo::kNotFound);
+  std::size_t groupID = static_cast<std::size_t>(
+      dict.get<std::ptrdiff_t>(KEY_GROUP_ID, oo::kNotFound));
   if (groupID != oo::kNotFound) {
     ::OOShipGroup* group = GroupForGroupID(groupID, *context);
     if (ship != nullptr) ship->setGroup(group);  // Handles adding to group
@@ -323,7 +324,8 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
     }
   }
 
-  groupID = dict.get<std::ptrdiff_t>(KEY_ESCORT_GROUP_ID, oo::kNotFound);
+  groupID = static_cast<std::size_t>(
+      dict.get<std::ptrdiff_t>(KEY_ESCORT_GROUP_ID, oo::kNotFound));
   if (groupID != oo::kNotFound) {
     ::OOShipGroup* group = GroupForGroupID(groupID, *context);
     if (group != nullptr) group->setLeader(ship);

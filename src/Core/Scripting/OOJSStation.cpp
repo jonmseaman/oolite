@@ -326,19 +326,22 @@ static JSValue StationGetProperty(OOJS_GETTER_ARGS) {
           (entity != nullptr ? entity->getAllowsAutoDocking() : false));
 
     case kDockedContractors:
-      return JS_NewInt32(context,
-                         (entity != nullptr ? entity->countOfDockedContractors()
-                                            : unsigned{}));
+      return JS_NewInt32(
+          context, (entity != nullptr ? static_cast<int32_t>(
+                                            entity->countOfDockedContractors())
+                                      : unsigned{}));
 
     case kDockedPolice:
       return JS_NewInt32(
-          context,
-          (entity != nullptr ? entity->countOfDockedPolice() : unsigned{}));
+          context, (entity != nullptr
+                        ? static_cast<int32_t>(entity->countOfDockedPolice())
+                        : unsigned{}));
 
     case kDockedDefenders:
       return JS_NewInt32(
-          context,
-          (entity != nullptr ? entity->countOfDockedDefenders() : unsigned{}));
+          context, (entity != nullptr
+                        ? static_cast<int32_t>(entity->countOfDockedDefenders())
+                        : unsigned{}));
 
     case kEquivalentTechLevel:
       return JS_NewInt32(

@@ -364,7 +364,7 @@ NSSize OOConcreteTexture::texCoordsScale() {
 GLint OOConcreteTexture::glTextureName() {
   ensureFinishedLoading();
 
-  return _textureName;
+  return static_cast<GLint>(_textureName);
 }
 
 // Private (was the (Private) category).
@@ -512,8 +512,10 @@ void OOConcreteTexture::uploadTextureDataWithMipMap(
     return;
 
   while (0 < w && 0 < h) {
-    OOGL(glTexImage2D(GL_TEXTURE_2D, level++, internalFormat, w, h, 0, glFormat,
-                      type, bytes));
+    OOGL(glTexImage2D(GL_TEXTURE_2D, level++,
+                      static_cast<GLint>(internalFormat),
+                      static_cast<GLsizei>(w), static_cast<GLsizei>(h), 0,
+                      glFormat, type, bytes));
     if (!mipMap) return;
     bytes += w * components * h;
     w >>= 1;
@@ -539,7 +541,7 @@ void OOConcreteTexture::uploadTextureCubeMapDataWithMipMap(
   size_t sideSize = _width * _width * components;
   if (mipMap) {
     sideSize = sideSize * 4 / 3;
-    sideSize = (sideSize + 15) & ~15;
+    sideSize = (sideSize + 15) & static_cast<size_t>(~15);
   }
 
   unsigned side;
@@ -552,7 +554,9 @@ void OOConcreteTexture::uploadTextureCubeMapDataWithMipMap(
 
     while (0 < w) {
       OOGL(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + side, level++,
-                        internalFormat, w, w, 0, glFormat, type, bytes));
+                        static_cast<GLint>(internalFormat),
+                        static_cast<GLsizei>(w), static_cast<GLsizei>(w), 0,
+                        glFormat, type, bytes));
       if (!mipMap) break;
       bytes += w * w * components;
       w >>= 1;

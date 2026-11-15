@@ -363,7 +363,7 @@ static void GLDumpMaterialState() {
 
   OOGL(glGetIntegerv(GL_SHADE_MODEL, &shadeModel));
   OO_LOG(kOOLogOpenGLStateDump, "Shade model: {}",
-         OOGLEnumToString(shadeModel));
+         OOGLEnumToString(static_cast<GLenum>(shadeModel)));
 
   OOGL(blending = glIsEnabled(GL_BLEND));
   OO_LOG(kOOLogOpenGLStateDump, "Blending: {}", OOGLFlagToString(blending));
@@ -371,23 +371,24 @@ static void GLDumpMaterialState() {
     OOGL(glGetIntegerv(GL_BLEND_SRC, &blendSrc));
     OOGL(glGetIntegerv(GL_BLEND_DST, &blendDst));
     OO_LOG(kOOLogOpenGLStateDump, "Blend function: {}, {}",
-           OOGLEnumToString(blendSrc), OOGLEnumToString(blendDst));
+           OOGLEnumToString(static_cast<GLenum>(blendSrc)),
+           OOGLEnumToString(static_cast<GLenum>(blendDst)));
   }
 
   OOGL(glGetTexEnviv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texMode));
   OO_LOG(kOOLogOpenGLStateDump, "Texture env mode: {}",
-         OOGLEnumToString(texMode));
+         OOGLEnumToString(static_cast<GLenum>(texMode)));
 
 #if OO_MULTITEXTURE
   if (OOOpenGLExtensionManager::sharedManager()->textureUnitCount() > 1) {
     GLint textureUnit;
     OOGL(glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &textureUnit));
     OO_LOG(kOOLogOpenGLStateDump, "Active texture unit: {}",
-           OOGLEnumToString(textureUnit));
+           OOGLEnumToString(static_cast<GLenum>(textureUnit)));
 
     OOGL(glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE_ARB, &textureUnit));
     OO_LOG(kOOLogOpenGLStateDump, "Active client texture unit: {}",
-           OOGLEnumToString(textureUnit));
+           OOGLEnumToString(static_cast<GLenum>(textureUnit)));
   }
 #endif
 }
@@ -405,11 +406,11 @@ static void GLDumpCullingState() {
 
     OOGL(glGetIntegerv(GL_CULL_FACE_MODE, &value));
     OO_LOG(kOOLogOpenGLStateDump, "Cull face mode: {}",
-           OOGLEnumToString(value));
+           OOGLEnumToString(static_cast<GLenum>(value)));
 
     OOGL(glGetIntegerv(GL_FRONT_FACE, &value));
     OO_LOG(kOOLogOpenGLStateDump, "Front face direction: {}",
-           OOGLEnumToString(value));
+           OOGLEnumToString(static_cast<GLenum>(value)));
   }
 }
 
@@ -427,7 +428,8 @@ static void GLDumpFogState() {
     const oo::LogIndentScope indent;
 
     OOGL(glGetIntegerv(GL_FOG_MODE, &value));
-    OO_LOG(kOOLogOpenGLStateDump, "Fog mode: {}", OOGLEnumToString(value));
+    OO_LOG(kOOLogOpenGLStateDump, "Fog mode: {}",
+           OOGLEnumToString(static_cast<GLenum>(value)));
 
     OOGL(glGetFloatv(GL_FOG_COLOR, color));
     OO_LOG(kOOLogOpenGLStateDump, "Fog colour: {}", OOGLColorToString(color));

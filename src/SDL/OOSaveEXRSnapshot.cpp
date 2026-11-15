@@ -32,14 +32,14 @@ int SaveEXRSnapshot(const char* outfilename, int width, int height,
   image.num_channels = 3;
 
   std::vector<float> images[3];
-  images[0].resize(width * height);
-  images[1].resize(width * height);
-  images[2].resize(width * height);
+  images[0].resize(static_cast<unsigned long long>(width * height));
+  images[1].resize(static_cast<unsigned long long>(width * height));
+  images[2].resize(static_cast<unsigned long long>(width * height));
 
   for (int i = 0; i < width * height; i++) {
-    images[0][i] = rgb[3 * i + 0];
-    images[1][i] = rgb[3 * i + 1];
-    images[2][i] = rgb[3 * i + 2];
+    images[0][static_cast<unsigned long long>(i)] = rgb[3 * i + 0];
+    images[1][static_cast<unsigned long long>(i)] = rgb[3 * i + 1];
+    images[2][static_cast<unsigned long long>(i)] = rgb[3 * i + 2];
   }
 
   float* image_ptr[3];

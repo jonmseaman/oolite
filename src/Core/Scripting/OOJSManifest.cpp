@@ -199,7 +199,9 @@ static int ManifestGetOwnProperty(JSContext* context,
         desc->flags = JS_PROP_C_W_E;
         desc->value = JS_NewInt32(
             context,
-            (entity != nullptr ? entity->cargoQuantityForType(*key) : 0));
+            (entity != nullptr
+                 ? static_cast<int32_t>(entity->cargoQuantityForType(*key))
+                 : 0));
         desc->getter = JS_UNDEFINED;
         desc->setter = JS_UNDEFINED;
       }
@@ -242,7 +244,9 @@ static bool ManifestSetProperty(JSContext* context, JSValueConst thisObj,
 
   if (OOJSValueToInt32(context, value, &iValue)) {
     if (iValue < 0) iValue = 0;
-    if (entity != nullptr) entity->setCargoQuantityForType(key, iValue);
+    if (entity != nullptr)
+      entity->setCargoQuantityForType(key,
+                                      static_cast<OOCargoQuantity>(iValue));
   } else {
     // OOJSReportBadPropertyValue() takes a tinyid; this is the same message for
     // a named property.

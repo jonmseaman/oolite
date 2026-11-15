@@ -268,12 +268,13 @@ bool OOShaderMaterial::initWithName(const std::optional<std::string>& name,
       }
     } else if (const oo::PList* textureSpecs =
                    configuration.get<oo::PList::Array>(kOOTexturesKey)) {
-      textureObjects = loadTexturesFromArray(*textureSpecs, textureUnits);
+      textureObjects = loadTexturesFromArray(*textureSpecs,
+                                             static_cast<GLuint>(textureUnits));
     }
 
     addUniformsFromDictionary(
         uniformDefs != nullptr ? *uniformDefs : oo::PList(), target);
-    addTexturesFromArray(textureObjects, textureUnits);
+    addTexturesFromArray(textureObjects, static_cast<GLuint>(textureUnits));
   }
 
   if (OK) {

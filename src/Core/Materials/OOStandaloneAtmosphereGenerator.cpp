@@ -497,17 +497,17 @@ static float SampleNoise3D(OOStandaloneAtmosphereGeneratorInfo* info,
   unsigned PZ0 = PERM(Z);
   unsigned PZ1 = PERM(Z + 1);
 
-  unsigned PY0Z0 = PERM(Y + PZ0);
+  unsigned PY0Z0 = PERM(static_cast<unsigned int>(Y + PZ0));
   unsigned PY1Z0 = PERM(Y + 1 + PZ0);
-  unsigned PY0Z1 = PERM(Y + PZ1);
+  unsigned PY0Z1 = PERM(static_cast<unsigned int>(Y + PZ1));
   unsigned PY1Z1 = PERM(Y + 1 + PZ1);
 
-  unsigned gi000 = PERM(X + PY0Z0);
-  unsigned gi010 = PERM(X + PY1Z0);
+  unsigned gi000 = PERM(static_cast<unsigned int>(X + PY0Z0));
+  unsigned gi010 = PERM(static_cast<unsigned int>(X + PY1Z0));
   unsigned gi100 = PERM(X + 1 + PY0Z0);
   unsigned gi110 = PERM(X + 1 + PY1Z0);
-  unsigned gi001 = PERM(X + PY0Z1);
-  unsigned gi011 = PERM(X + PY1Z1);
+  unsigned gi001 = PERM(static_cast<unsigned int>(X + PY0Z1));
+  unsigned gi011 = PERM(static_cast<unsigned int>(X + PY1Z1));
   unsigned gi101 = PERM(X + 1 + PY0Z1);
   unsigned gi111 = PERM(X + 1 + PY1Z1);
 
@@ -661,7 +661,7 @@ static void AddNoise(OOStandaloneAtmosphereGeneratorInfo* info,
   for (fy = 0, y = 0; y < height; fy++, y++) {
     qy = fy * rr;
     iy = fast_floor(qy);
-    jy = (iy + 1) & octaveMask;
+    jy = static_cast<int>((static_cast<unsigned int>(iy + 1)) & octaveMask);
     qy = Hermite(qy - static_cast<float>(iy));
     iy &= (kRandomBufferSize - 1);
     jy &= (kRandomBufferSize - 1);
@@ -681,7 +681,7 @@ static void AddNoise(OOStandaloneAtmosphereGeneratorInfo* info,
         qx = qxBuffer[x];
       }
 
-      jx = (ix + 1) & octaveMask;
+      jx = static_cast<int>((static_cast<unsigned int>(ix + 1)) & octaveMask);
       jx &= (kRandomBufferSize - 1);
 
       rix = Lerp(randomBuffer[iy * kRandomBufferSize + ix],
@@ -732,7 +732,8 @@ static bool GenerateFBMNoise(OOStandaloneAtmosphereGeneratorInfo* info) {
 
 static float QFactor(float* accbuffer, int x, int y, unsigned width,
                      float polar_y_value, float bias, float polar_y) {
-  float q = accbuffer[y * width + x];  // 0.0 -> 1.0
+  float q = accbuffer[static_cast<unsigned int>(y) * width +
+                      static_cast<unsigned int>(x)];  // 0.0 -> 1.0
   q += bias;
 
   // Polar Y smooth.

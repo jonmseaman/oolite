@@ -315,7 +315,7 @@ bool Entity::checkLinkedLists() {
     //
     last = nullptr;
     //
-    n = UNIVERSE->n_entities;
+    n = static_cast<int>(UNIVERSE->n_entities);
     check = UNIVERSE->x_list_start;
     while ((n--) && (check)) {
       last = check;
@@ -327,7 +327,7 @@ bool Entity::checkLinkedLists() {
       return false;
     }
     //
-    n = UNIVERSE->n_entities;
+    n = static_cast<int>(UNIVERSE->n_entities);
     check = last;
     while ((n--) && (check)) check = check->x_previous;
     if ((check) || (n > 0)) {
@@ -337,7 +337,7 @@ bool Entity::checkLinkedLists() {
       return false;
     }
     //
-    n = UNIVERSE->n_entities;
+    n = static_cast<int>(UNIVERSE->n_entities);
     check = UNIVERSE->y_list_start;
     while ((n--) && (check)) {
       last = check;
@@ -349,7 +349,7 @@ bool Entity::checkLinkedLists() {
       return false;
     }
     //
-    n = UNIVERSE->n_entities;
+    n = static_cast<int>(UNIVERSE->n_entities);
     check = last;
     while ((n--) && (check)) check = check->y_previous;
     if ((check) || (n > 0)) {
@@ -359,7 +359,7 @@ bool Entity::checkLinkedLists() {
       return false;
     }
     //
-    n = UNIVERSE->n_entities;
+    n = static_cast<int>(UNIVERSE->n_entities);
     check = UNIVERSE->z_list_start;
     while ((n--) && (check)) {
       last = check;
@@ -371,7 +371,7 @@ bool Entity::checkLinkedLists() {
       return false;
     }
     //
-    n = UNIVERSE->n_entities;
+    n = static_cast<int>(UNIVERSE->n_entities);
     check = last;
     while ((n--) && (check)) check = check->z_previous;
     if ((check) || (n > 0)) {

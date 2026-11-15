@@ -1292,7 +1292,7 @@ void PlayerEntity::awardCredits(const std::string& valueString) {
   if (award < 0 && credits < static_cast<OOCreditsQuantity>(-award))
     credits = 0;
   else
-    credits += award;
+    credits += static_cast<OOCreditsQuantity>(award);
 }
 
 void PlayerEntity::awardShipKills(const std::string& valueString) {
@@ -1300,7 +1300,7 @@ void PlayerEntity::awardShipKills(const std::string& valueString) {
   if (::scriptTarget != this) return;
 
   int value = oo::str::intValue(valueString);
-  if (0 < value) ship_kills += value;
+  if (0 < value) ship_kills += static_cast<unsigned int>(value);
 }
 
 void PlayerEntity::awardEquipment(const std::string& equipString) {
@@ -1457,7 +1457,7 @@ void PlayerEntity::awardCargo(const std::string& amount_typeString) {
     return;
   }
 
-  awardCommodityType(type, amount);
+  awardCommodityType(type, static_cast<OOCargoQuantity>(amount));
 }
 
 void PlayerEntity::removeAllCargo() { removeAllCargo(false); }
@@ -1489,8 +1489,9 @@ void PlayerEntity::removeAllCargo(bool forceRemoval) {
 
   if (forceRemoval && status() != OOEntityStatus::kDocked) {
     std::ptrdiff_t i;
-    for (i = cargo.size() - 1; i >= 0; i--) {
-      ::ShipEntity* canister = oo::ToShip(cargo[i].get());
+    for (i = static_cast<std::ptrdiff_t>(cargo.size() - 1); i >= 0; i--) {
+      ::ShipEntity* canister =
+          oo::ToShip(cargo[static_cast<unsigned long long>(i)].get());
       if (!canister) break;
       // Since we are forcing cargo removal, we don't really care about the unit
       // of measurement. Any commodity at more than 1000kg or 1000000gr will be
@@ -2000,8 +2001,9 @@ void PlayerEntity::subtract(const std::string& missionVariableString_value) {
 void PlayerEntity::checkForShips(const std::string& roleString) {
   // called by name
   shipsFound =
-      (UNIVERSE != nullptr ? UNIVERSE->countShipsWithPrimaryRole(roleString)
-                           : 0u);
+      (UNIVERSE != nullptr
+           ? static_cast<int>(UNIVERSE->countShipsWithPrimaryRole(roleString))
+           : 0u);
 }
 
 void PlayerEntity::resetScriptTimer() {
@@ -2094,27 +2096,30 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
                      return oo::str::caseInsensitiveCompare(a, b) < 0;
                    });
 
-  std::ptrdiff_t keysCount = choiceKeys.size();
+  std::ptrdiff_t keysCount = static_cast<std::ptrdiff_t>(choiceKeys.size());
   if ((end_row + 1) < choiceKeys.size()) {
     OO_LOG_ERR(kOOLogException,
                "in mission.runScreen choices: number of choices defined ({}) "
                "is greater than available lines ({}). Check HUD settings for "
                "allowBigGui.",
                choiceKeys.size(), (end_row + 1));
-    keysCount = end_row + 1;
+    keysCount = static_cast<std::ptrdiff_t>(end_row + 1);
   }
 
   gui->setText(std::string(),
-               end_row);  // clears out the 'Press spacebar' message
+               static_cast<OOGUIRow>(
+                   end_row));  // clears out the 'Press spacebar' message
   gui->setKey(std::string(),
-              end_row);  // clears the key to enable pollDemoControls to check
-                         // for a selection
+              static_cast<OOGUIRow>(
+                  end_row));  // clears the key to enable pollDemoControls to
+                              // check for a selection
   gui->setSelectableRange(NSMakeRange(0, 0));  // clears the selectable range
   if (UNIVERSE != nullptr)
     UNIVERSE->enterGUIViewModeWithMouseInteraction(
         true);  // enables mouse selection of the choices list items
 
-  OOGUIRow choicesRow = (end_row + 1) - keysCount;
+  OOGUIRow choicesRow = static_cast<OOGUIRow>(
+      (end_row + 1) - static_cast<std::size_t>(keysCount));
   std::string choiceText;
 
   bool selectableRowExists = false;
@@ -2170,7 +2175,7 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
       gui->setColor(rowColor.get(), choicesRow);
       if (selectable && !selectableRowExists) {
         selectableRowExists = true;
-        firstSelectableRow = choicesRow;
+        firstSelectableRow = static_cast<std::size_t>(choicesRow);
       }
     } else {
       gui->setKey(std::string(GUI_KEY_SKIP), choicesRow);
@@ -2181,14 +2186,16 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
 
   if (!selectableRowExists) {
     // just in case choices are set but they're all blank.
-    gui->setText(std::optional<std::string>(" "), end_row,
-                 OOGUIAlignment::kCenter);
-    gui->setKey(std::string(), end_row);
-    gui->setColor(OOColor::yellowColor().get(), end_row);
+    gui->setText(std::optional<std::string>(" "),
+                 static_cast<OOGUIRow>(end_row), OOGUIAlignment::kCenter);
+    gui->setKey(std::string(), static_cast<OOGUIRow>(end_row));
+    gui->setColor(OOColor::yellowColor().get(), static_cast<OOGUIRow>(end_row));
   }
 
-  gui->setSelectableRange(NSMakeRange((end_row + 1) - keysCount, keysCount));
-  gui->setSelectedRow(firstSelectableRow);
+  gui->setSelectableRange(
+      NSMakeRange((end_row + 1) - static_cast<std::size_t>(keysCount),
+                  static_cast<std::size_t>(keysCount)));
+  gui->setSelectedRow(static_cast<OOGUIRow>(firstSelectableRow));
 
   resetMissionChoice();
 }
@@ -2335,17 +2342,18 @@ void PlayerEntity::blowUpStation() {
 
 void PlayerEntity::sendAllShipsAway() {
   if (!UNIVERSE) return;
-  int ent_count = UNIVERSE->n_entities;
+  int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(ent_count);
+  std::vector<Entity*> my_entities(static_cast<unsigned long long>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   int i;
   for (i = 0; i < ent_count; i++)
-    my_entities[i] = oo::HoldIn(my_holds, uni_entities[i]);  //	retained
+    my_entities[static_cast<unsigned long long>(i)] =
+        oo::HoldIn(my_holds, uni_entities[i]);  //	retained
 
   for (i = 1; i < ent_count; i++) {
-    Entity* e1 = my_entities[i];
+    Entity* e1 = my_entities[static_cast<unsigned long long>(i)];
     if (oo::EntityIsShip(e1)) {
       ::ShipEntity* se1 = oo::ToShip(e1);
       OOScanClass e_class = e1->getScanClass();  // virtual
@@ -2652,11 +2660,11 @@ void PlayerEntity::refreshMissionScreenTextEntry() {
       oo::str::formatRuntime(OO_DESC("mission-screen-text-prompt-@"),
                              {typed.has_value() ? oo::str::FormatArg(*typed)
                                                 : oo::str::FormatArg::null()}),
-      end_row, OOGUIAlignment::kLeft);
-  gui->setColor(OOColor::cyanColor().get(), end_row);
+      static_cast<OOGUIRow>(end_row), OOGUIAlignment::kLeft);
+  gui->setColor(OOColor::cyanColor().get(), static_cast<OOGUIRow>(end_row));
 
   gui->setShowTextCursor(true);
-  gui->setCurrentRow(end_row);
+  gui->setCurrentRow(static_cast<OOGUIRow>(end_row));
 }
 
 void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
@@ -2673,10 +2681,11 @@ void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
     gui->setTitle(missionTitle().value_or(OO_DESC("mission-information")));
 
     if (!_missionTextEntry) {
-      gui->setText(OO_DESC("press-space-commander"), end_row,
-                   OOGUIAlignment::kCenter);
-      gui->setColor(OOColor::yellowColor().get(), end_row);
-      gui->setKey("spacebar", end_row);
+      gui->setText(OO_DESC("press-space-commander"),
+                   static_cast<OOGUIRow>(end_row), OOGUIAlignment::kCenter);
+      gui->setColor(OOColor::yellowColor().get(),
+                    static_cast<OOGUIRow>(end_row));
+      gui->setKey("spacebar", static_cast<OOGUIRow>(end_row));
       gui->setShowTextCursor(false);
     } else {
       refreshMissionScreenTextEntry();
