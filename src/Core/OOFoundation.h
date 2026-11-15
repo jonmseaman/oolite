@@ -81,6 +81,7 @@ MA 02110-1301, USA.
 #include <stdint.h>  // IWYU pragma: export
 
 #include <algorithm>  // IWYU pragma: export
+#include <utility>
 
 #define OOLITE_SDL 1
 
@@ -148,11 +149,9 @@ enum class OOComparisonResult : std::ptrdiff_t {
   kSame = 0,
   kDescending = 1,
 };
-static_assert(static_cast<std::ptrdiff_t>(OOComparisonResult::kAscending) ==
-              -1);
-static_assert(static_cast<std::ptrdiff_t>(OOComparisonResult::kSame) == 0);
-static_assert(static_cast<std::ptrdiff_t>(OOComparisonResult::kDescending) ==
-              1);
+static_assert(std::to_underlying(OOComparisonResult::kAscending) == -1);
+static_assert(std::to_underlying(OOComparisonResult::kSame) == 0);
+static_assert(std::to_underlying(OOComparisonResult::kDescending) == 1);
 
 // OO_DEBUG is defined at the top of this file, where the enumeration macros can
 // test it.

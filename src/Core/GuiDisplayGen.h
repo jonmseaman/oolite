@@ -72,9 +72,9 @@ enum class OOGUIAlignment : std::int32_t {
   kRight,
   kCenter,
 };
-static_assert(static_cast<std::int32_t>(OOGUIAlignment::kLeft) == 0);
-static_assert(static_cast<std::int32_t>(OOGUIAlignment::kRight) == 1);
-static_assert(static_cast<std::int32_t>(OOGUIAlignment::kCenter) == 2);
+static_assert(std::to_underlying(OOGUIAlignment::kLeft) == 0);
+static_assert(std::to_underlying(OOGUIAlignment::kRight) == 1);
+static_assert(std::to_underlying(OOGUIAlignment::kCenter) == 2);
 
 enum class OOGUIBackgroundSpecial : std::int32_t {
   kNone,
@@ -88,22 +88,22 @@ enum class OOGUIBackgroundSpecial : std::int32_t {
   kLongAnaShortest,
   kLongAnaQuickest,
 };
-static_assert(static_cast<std::int32_t>(OOGUIBackgroundSpecial::kNone) == 0);
-static_assert(static_cast<std::int32_t>(OOGUIBackgroundSpecial::kCustom) == 1);
-static_assert(
-    static_cast<std::int32_t>(OOGUIBackgroundSpecial::kCustomAnaShortest) == 2);
-static_assert(
-    static_cast<std::int32_t>(OOGUIBackgroundSpecial::kCustomAnaQuickest) == 3);
-static_assert(static_cast<std::int32_t>(OOGUIBackgroundSpecial::kShort) == 4);
-static_assert(
-    static_cast<std::int32_t>(OOGUIBackgroundSpecial::kShortAnaShortest) == 5);
-static_assert(
-    static_cast<std::int32_t>(OOGUIBackgroundSpecial::kShortAnaQuickest) == 6);
-static_assert(static_cast<std::int32_t>(OOGUIBackgroundSpecial::kLong) == 7);
-static_assert(
-    static_cast<std::int32_t>(OOGUIBackgroundSpecial::kLongAnaShortest) == 8);
-static_assert(
-    static_cast<std::int32_t>(OOGUIBackgroundSpecial::kLongAnaQuickest) == 9);
+static_assert(std::to_underlying(OOGUIBackgroundSpecial::kNone) == 0);
+static_assert(std::to_underlying(OOGUIBackgroundSpecial::kCustom) == 1);
+static_assert(std::to_underlying(OOGUIBackgroundSpecial::kCustomAnaShortest) ==
+              2);
+static_assert(std::to_underlying(OOGUIBackgroundSpecial::kCustomAnaQuickest) ==
+              3);
+static_assert(std::to_underlying(OOGUIBackgroundSpecial::kShort) == 4);
+static_assert(std::to_underlying(OOGUIBackgroundSpecial::kShortAnaShortest) ==
+              5);
+static_assert(std::to_underlying(OOGUIBackgroundSpecial::kShortAnaQuickest) ==
+              6);
+static_assert(std::to_underlying(OOGUIBackgroundSpecial::kLong) == 7);
+static_assert(std::to_underlying(OOGUIBackgroundSpecial::kLongAnaShortest) ==
+              8);
+static_assert(std::to_underlying(OOGUIBackgroundSpecial::kLongAnaQuickest) ==
+              9);
 
 inline constexpr std::string_view GUI_KEY_OK = "OK";
 inline constexpr std::string_view GUI_KEY_SKIP = "SKIP-ROW";
