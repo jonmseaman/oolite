@@ -108,9 +108,7 @@ Vector OOVectorMultiplyMatrix(Vector v, OOMatrix m) CONST_FUNC;
 HPVector OOHPVectorMultiplyMatrix(HPVector v, OOMatrix m) CONST_FUNC;
 
 /* Extraction */
-inline void OOMatrixGetBasisVectors(OOMatrix m, Vector* outRight, Vector* outUp,
-                                    Vector* outForward)
-    NONNULL_FUNC ALWAYS_INLINE_FUNC;
+inline oo::BasisVectors OOMatrixGetBasisVectors(OOMatrix m) ALWAYS_INLINE_FUNC;
 
 /* Orthogonalizion - avoidance of distortions due to numerical inaccuracy. */
 OOMatrix OOMatrixOrthogonalize(OOMatrix m) CONST_FUNC;
@@ -310,11 +308,10 @@ inline bool OOMatrixIsIdentity(OOMatrix m) {
   return OOMatrixEqual(m, kIdentityMatrix);
 }
 
-inline void OOMatrixGetBasisVectors(OOMatrix m, Vector* outRight, Vector* outUp,
-                                    Vector* outForward) {
-  *outRight = make_vector(m.m[0][0], m.m[1][0], m.m[2][0]);
-  *outUp = make_vector(m.m[0][1], m.m[1][1], m.m[2][1]);
-  *outForward = make_vector(m.m[0][2], m.m[1][2], m.m[2][2]);
+inline oo::BasisVectors OOMatrixGetBasisVectors(OOMatrix m) {
+  return {make_vector(m.m[0][0], m.m[1][0], m.m[2][0]),
+          make_vector(m.m[0][1], m.m[1][1], m.m[2][1]),
+          make_vector(m.m[0][2], m.m[1][2], m.m[2][2])};
 }
 
 inline OOMatrix OOMatrixTranspose(OOMatrix m) {

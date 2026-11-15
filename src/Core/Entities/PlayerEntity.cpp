@@ -4666,7 +4666,12 @@ void PlayerEntity::updateTargeting() {
 void PlayerEntity::orientationChanged() {
   quaternion_normalize(&orientation);
   rotMatrix = OOMatrixForQuaternionRotation(orientation);
-  OOMatrixGetBasisVectors(rotMatrix, &v_right, &v_up, &v_forward);
+  {
+    const oo::BasisVectors basis = OOMatrixGetBasisVectors(rotMatrix);
+    v_right = basis.right;
+    v_up = basis.up;
+    v_forward = basis.forward;
+  }
 
   orientation.w = -orientation.w;
   playerRotMatrix = OOMatrixForQuaternionRotation(
