@@ -70,25 +70,15 @@ MA 02110-1301, USA.
 
 #include <quickjs.h>
 
-#include <algorithm>
-#include <chrono>
-#include <condition_variable>
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
-#include <map>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <set>
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
-#include <vector>
 
 #include "OOFunctionAttributes.h"
 #include "OOJSPropID.h"

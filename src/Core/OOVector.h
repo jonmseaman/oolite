@@ -134,22 +134,7 @@ inline OOScalar triple_product(Vector first, Vector second,
 inline Vector normal_to_surface(Vector v1, Vector v2, Vector v3) CONST_FUNC;
 
 #ifndef OO_PLAIN_CPP_UNIT
-#include <algorithm>
-#include <chrono>
-#include <condition_variable>
-#include <cstddef>
-#include <cstdint>
-#include <functional>
-#include <map>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <set>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
 #include <vector>
 
 #include "oofnd/PList.hpp"
