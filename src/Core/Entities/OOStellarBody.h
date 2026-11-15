@@ -39,9 +39,9 @@ enum class OOStellarBodyType : int {
   kMiniature      // Display proxy for a "normal" planet
 };
 
-#define ATMOSPHERE_DEPTH 500.0
-#define PLANET_MINIATURE_FACTOR 0.00185
-#define MAX_SUBDIVIDE 6
+inline constexpr double ATMOSPHERE_DEPTH = 500.0;
+inline constexpr double PLANET_MINIATURE_FACTOR = 0.00185;
+inline constexpr int MAX_SUBDIVIDE = 6;
 
 /*	The radius and planet type of a stellar body: the sun and the
         planet are asked directly; any other body by
