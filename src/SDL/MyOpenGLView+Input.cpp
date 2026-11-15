@@ -61,6 +61,7 @@ void MyOpenGLView::initKeyMappingData() {
   keyMappings_normal = (normal != nullptr) ? *normal : oo::PList();
   keyMappings_shifted = (shifted != nullptr) ? *shifted : oo::PList();
 }
+
 void MyOpenGLView::autoShowMouse() {
   // don't touch the 'please wait...' cursor.
   if (fullScreen) {
@@ -69,34 +70,43 @@ void MyOpenGLView::autoShowMouse() {
     if (!SDL_CursorVisible()) SDL_ShowCursor();
   }
 }
+
 void MyOpenGLView::setStringInput(enum StringInput value) {
   allowingStringInput = value;
 }
+
 void MyOpenGLView::allowStringInput(bool value) {
   if (value)
     allowingStringInput = StringInput::kAlpha;
   else
     allowingStringInput = StringInput::kNo;
 }
+
 StringInput MyOpenGLView::getAllowingStringInput() {
   return allowingStringInput;
 }
+
 std::optional<std::string> MyOpenGLView::getTypedString() {
   return typedString;
 }
+
 void MyOpenGLView::resetTypedString() { typedString.clear(); }
+
 void MyOpenGLView::setTypedString(const std::string& value) {
   typedString = value;
 }
+
 void MyOpenGLView::noteMouseInteractionModeChangedFrom(
     OOMouseInteractionMode /*oldMode*/, OOMouseInteractionMode newMode) {
   autoShowMouse();
   setMouseInDeltaMode(OOMouseInteractionModeIsFlightMode(newMode));
 }
+
 void MyOpenGLView::setVirtualJoystick(double vmx, double vmy) {
   virtualJoystickPosition.x = vmx;
   virtualJoystickPosition.y = vmy;
 }
+
 NSPoint MyOpenGLView::getVirtualJoystickPosition() {
   return virtualJoystickPosition;
 }
@@ -107,16 +117,19 @@ void MyOpenGLView::clearKeys() {
   lastKeyShifted = false;
   for (i = 0; i < numKeys(); i++) keys[i] = false;
 }
+
 void MyOpenGLView::clearMouse() {
   keys[gvMouseDoubleClick] = false;
   keys[gvMouseLeftButton] = false;
   doubleClick = false;
 }
+
 void MyOpenGLView::clearKey(int theKey) {
   if (theKey >= 0 && theKey < numKeys()) {
     keys[theKey] = false;
   }
 }
+
 void MyOpenGLView::resetMouse() {
   setVirtualJoystick(0.0, 0.0);
   if (::PlayerEntity::sharedPlayer()->isMouseControlOn()) {
@@ -129,6 +142,7 @@ void MyOpenGLView::resetMouse() {
     mouseWarped = true;
   }
 }
+
 bool MyOpenGLView::getIsAlphabetKeyDown() {
   return isAlphabetKeyDown = false;
   ;
@@ -146,16 +160,22 @@ void MyOpenGLView::suppressKeysUntilKeyUp() {
     clearMouse();
   }
 }
+
 bool MyOpenGLView::isDown(int key) {
   if (suppressKeys) return false;
   if (key < 0) return false;
   if (key >= numKeys()) return false;
   return keys[key];
 }
+
 bool MyOpenGLView::isOptDown() { return opt; }
+
 bool MyOpenGLView::isCtrlDown() { return ctrl; }
+
 bool MyOpenGLView::isCommandDown() { return command; }
+
 bool MyOpenGLView::isShiftDown() { return shift; }
+
 bool MyOpenGLView::isCapsLockOn() {
   /* Caps Lock state check - This effectively gives us
      an alternate keyboard state to play with and, in
@@ -165,8 +185,11 @@ bool MyOpenGLView::isCapsLockOn() {
   */
   return (SDL_GetModState() & SDL_KMOD_CAPS) == SDL_KMOD_CAPS;
 }
+
 bool MyOpenGLView::lastKeyWasShifted() { return lastKeyShifted; }
+
 int MyOpenGLView::numKeys() { return NUM_KEYS; }
+
 MouseWheelStatus MyOpenGLView::mouseWheelState() {
   if (_mouseWheelDelta > 0.0f)
     return MouseWheelStatus::kUp;
@@ -175,17 +198,23 @@ MouseWheelStatus MyOpenGLView::mouseWheelState() {
   else
     return MouseWheelStatus::kNeutral;
 }
+
 float MyOpenGLView::mouseWheelDelta() {
   return _mouseWheelDelta / OOMOUSEWHEEL_DELTA;
 }
+
 void MyOpenGLView::setMouseWheelDelta(float newWheelDelta) {
   _mouseWheelDelta = newWheelDelta * OOMOUSEWHEEL_DELTA;
 }
+
 bool MyOpenGLView::isCommandQDown() { return false; }
+
 bool MyOpenGLView::isCommandFDown() { return false; }
+
 void MyOpenGLView::clearCommandF() {
   // SDL stub for the mac function.
 }
+
 void MyOpenGLView::pollControls() {
   SDL_Event event;
   SDL_KeyboardEvent* kbd_event;
@@ -918,6 +947,7 @@ void MyOpenGLView::pollControls() {
     resize_pending = false;
   }
 }
+
 // DJS: String input handler. Since for SDL versions we're also handling
 // freeform typing this has necessarily got more complex than the non-SDL
 // versions.
@@ -959,6 +989,7 @@ void MyOpenGLView::handleStringInput(SDL_KeyboardEvent* kbd_event,
     }
   }
 }
+
 void MyOpenGLView::setMouseInDeltaMode(bool inDelta) {
   mouseInDeltaMode = inDelta;
 }

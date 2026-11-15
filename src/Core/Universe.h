@@ -59,6 +59,7 @@ MA 02110-1301, USA.
 class OOMaterial;
 
 class Entity;
+
 namespace oo {
 class Exception;
 }  // namespace oo
@@ -237,6 +238,7 @@ class Universe : public oo::Object {
   // The options the universe was made with: which add-ons it reads, whether
   // it populates, its seed.
   const OOHeadlessOptions& headlessOptions() const { return _options; }
+
   // The teardown body, run by the destructor.
   void dealloc();
 
@@ -991,10 +993,12 @@ class Universe : public oo::Object {
         global with zero overhead.
 */
 inline Universe* OOGetUniverse() INLINE_CONST_FUNC;
+
 inline Universe* OOGetUniverse() {
   extern Universe* gSharedUniverse;
   return gSharedUniverse;
 }
+
 #define UNIVERSE OOGetUniverse()
 
 // Only for use with string literals, and only for looking up strings: the
@@ -1035,9 +1039,11 @@ inline std::optional<std::string> OOUniverseDescriptionForKey(
     const std::string& key) {
   return UNIVERSE != nullptr ? UNIVERSE->descriptionForKey(key) : std::nullopt;
 }
+
 inline const oo::PList* OOUniverseDescriptions() {
   return UNIVERSE != nullptr ? UNIVERSE->descriptions() : nullptr;
 }
+
 inline std::optional<std::string> OOUniverseSoundNameForCustomSoundKey(
     const std::string& key) {
   return UNIVERSE != nullptr ? UNIVERSE->soundNameForCustomSoundKey(key)

@@ -276,6 +276,7 @@ oo::PList PListFromError(const OOPListSchemaVerifierError& error) {
       const oo::PList& params, const oo::PList& rootPList,            \
       const std::string& name, BackLinkChain keyPath, bool tentative, \
       bool* outStop)
+
 namespace {
 VERIFY_PROTO(String);
 VERIFY_PROTO(Array);

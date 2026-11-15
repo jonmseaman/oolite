@@ -39,6 +39,7 @@ struct OOSoundSourcePoolElement {
   OOTimeAbsolute expiryTime = 0;
   float priority = 0;
 };
+
 using PoolElement = OOSoundSourcePoolElement;
 
 std::shared_ptr<OOSoundSourcePool> OOSoundSourcePool::poolWithCount(

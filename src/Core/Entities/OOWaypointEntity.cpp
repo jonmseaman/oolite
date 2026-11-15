@@ -268,9 +268,11 @@ bool OOWaypointEntity::isJammingScanning() { return false; }
 
 // The binding's bodies.
 JSClassID OOWaypointEntity::jsClassID() { return ::JSWaypointClassID(); }
+
 std::optional<std::string> OOWaypointEntity::jsClassName() {
   return ::OOJSWaypointJSClassName();
 }
+
 bool OOWaypointEntity::isVisibleToScripts() {
   return ::OOJSWaypointIsVisibleToScripts();
 }

@@ -143,6 +143,7 @@ class OOMesh : public OODrawable, public OOGraphicsResetClient {
   void dumpSelfState() override;
   std::vector<std::shared_ptr<OOTexture>> allTextures() override;
   size_t totalSize() override;
+
   size_t objectSize() const override { return sizeof *this; }
 #endif
 

@@ -84,6 +84,7 @@ inline constexpr unsigned char kWhitespace[32] = {
 constexpr bool isQuotable(unsigned char c) noexcept {
   return (kQuotables[c / 8] & (1u << (c % 8))) != 0;
 }
+
 constexpr bool isPListSpace(unsigned char c) noexcept {
   return (kWhitespace[c / 8] & (1u << (c % 8))) != 0;
 }
@@ -93,6 +94,7 @@ constexpr bool isHexDigit(std::uint32_t c) noexcept {
   return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
          (c >= 'A' && c <= 'F');
 }
+
 constexpr unsigned hexValue(std::uint32_t c) noexcept {
   return c <= '9' ? c - '0' : (c >= 'a' ? c - 'a' + 10 : c - 'A' + 10);
 }
@@ -263,6 +265,7 @@ class OldStyleScanner {
   }
 
   const char* error() const noexcept { return err_; }
+
   bool usedGNUstepExtensions() const noexcept { return !old_; }
 
   std::string errorMessage() const {

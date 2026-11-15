@@ -137,7 +137,6 @@ static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
 
   *outEntity = flasher;
   return true;
-
 }
 
 // The bodies of OOFlasherEntity (OOJavaScriptExtensions), which the C++ class's

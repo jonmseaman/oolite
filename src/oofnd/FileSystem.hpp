@@ -152,6 +152,7 @@ inline FileType fileType(const Path& path) noexcept {
 inline bool fileExists(const Path& path) noexcept {
   return fileType(path) != FileType::kNone;
 }
+
 inline bool isDirectory(const Path& path) noexcept {
   return fileType(path) == FileType::kDirectory;
 }
@@ -227,6 +228,7 @@ class RecursiveDirectoryEnumerator {
   }
 
   FileType entryType() const noexcept { return type_; }
+
   const Path& entryPath() const noexcept { return entryPath_; }
 
  private:

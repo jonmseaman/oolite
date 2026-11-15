@@ -68,10 +68,13 @@ class Data {
   const std::uint8_t* bytes() const noexcept {
     return bytes_.empty() ? &kEmpty : bytes_.data();
   }
+
   std::uint8_t* mutableBytes() noexcept {
     return bytes_.data();
   }  // null when empty, as NSMutableData's
+
   std::size_t length() const noexcept { return bytes_.size(); }
+
   bool empty() const noexcept { return bytes_.empty(); }
 
   std::span<const std::uint8_t> span() const noexcept {
@@ -87,6 +90,7 @@ class Data {
   std::string toString() const { return std::string(stringView()); }
 
   const std::vector<std::uint8_t>& vector() const& noexcept { return bytes_; }
+
   std::vector<std::uint8_t> vector() && noexcept { return std::move(bytes_); }
 
   void append(const void* bytes, std::size_t length) {

@@ -196,9 +196,11 @@ class ResourcePaths {
   fs::Path userLibraryDirectory() const {
     return homeDirectory() / "GNUstep" / "Library";
   }
+
   fs::Path applicationSupportDirectory() const {
     return userLibraryDirectory() / "ApplicationSupport";
   }
+
   fs::Path cachesDirectory() const { return userLibraryDirectory() / "Caches"; }
 
   fs::Path managedAddOnsDirectory() const {

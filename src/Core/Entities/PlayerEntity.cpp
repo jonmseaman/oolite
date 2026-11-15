@@ -532,11 +532,14 @@ void PlayerEntity::willDealloc() {
    suppressTargetLost): the ship's virtual members answer with the getters.
 */
 OOAlertCondition PlayerEntity::alertCondition() { return getAlertCondition(); }
+
 int PlayerEntity::legalStatus() { return getLegalStatus(); }
+
 void PlayerEntity::suppressTargetLost() { getSuppressTargetLost(); }
 
 // The player's JS class name.
 JSClassID PlayerEntity::jsClassID() { return JSPlayerShipClassID(); }
+
 std::optional<std::string> PlayerEntity::jsClassName() {
   return OOJSPlayerShipJSClassName();
 }

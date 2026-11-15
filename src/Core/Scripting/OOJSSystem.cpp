@@ -1900,7 +1900,6 @@ static bool GetRelativeToAndRange(JSContext* context,
   }
 
   return true;
-
 }
 
 static std::vector<oo::EntityHold> FindJSVisibleEntities(
@@ -1927,7 +1926,6 @@ static std::vector<oo::EntityHold> FindJSVisibleEntities(
         });
   }
   return result;  // empty for no matches, as the empty array was
-
 }
 
 static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate,
@@ -1938,7 +1936,6 @@ static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate,
   BinaryOperationPredicateParameter param = {IsShipPredicate, nullptr,
                                              predicate, parameter};
   return FindJSVisibleEntities(ANDPredicate, &param, relativeTo, range);
-
 }
 
 static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
@@ -1959,5 +1956,4 @@ static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
     return OOComparisonResult::kDescending;
   else
     return OOComparisonResult::kSame;
-
 }

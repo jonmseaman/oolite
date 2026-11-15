@@ -1104,7 +1104,6 @@ oo::PList GuiDisplayGen::textureDescriptorFromJSValue(
   }
 
   return result;
-
 }
 
 void GuiDisplayGen::setStatusPage(std::ptrdiff_t pageNum) {
@@ -2146,12 +2145,14 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
   // called on every frame Caching code submitted by Y A J, 20091022
 
   static OOGalaxyID saved_galaxy_id;
+
   static struct saved_system {
     OOSystemID sysid;
     int tec, eco, gov;
     std::string p_name;
     bool nova;
   } nearby_systems[256];
+
   static int num_nearby_systems = 0;
 
   if (_refreshStarChart || galaxy_id != saved_galaxy_id) {

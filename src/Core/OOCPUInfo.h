@@ -57,6 +57,7 @@ struct OOMemoryStatus {
   std::uint64_t ooPhysicalMemory;
   std::uint64_t ooAvailableMemory;
 };
+
 OOMemoryStatus OOSystemMemoryStatus();
 #endif
 

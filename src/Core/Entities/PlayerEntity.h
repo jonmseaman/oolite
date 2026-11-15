@@ -174,13 +174,16 @@ inline constexpr int GUI_ROW_PLANET_FINDER = 20;
 constexpr int OOGUIFirstRow(int endOfList) {
   return (GUI_DEFAULT_ROWS - endOfList) / 2;
 }
+
 // The row an item of such a list goes on (the menu is moved up four rows).
 constexpr int OOGUIListRow(int endOfList, int item) {
   return OOGUIFirstRow(endOfList) - 4 + item;
 }
+
 constexpr int OOGUIOptionsRow(int item) {
   return OOGUIListRow(GUI_ROW_OPTIONS_END_OF_LIST, item);
 }
+
 static_assert(OOGUIFirstRow(GUI_ROW_OPTIONS_END_OF_LIST) >= 0,
               "Too many items in OPTIONS list!");
 
@@ -2081,6 +2084,7 @@ class PlayerEntity : public ShipEntity {
         assumed to exist (i.e., except during early initialization).
 */
 inline PlayerEntity* OOGetPlayer() INLINE_CONST_FUNC;
+
 inline PlayerEntity* OOGetPlayer() {
   extern PlayerEntity* gOOPlayer;
 #if OO_DEBUG
@@ -2090,6 +2094,7 @@ inline PlayerEntity* OOGetPlayer() {
 #endif
   return gOOPlayer;
 }
+
 #define PLAYER OOGetPlayer()
 
 #define KILOGRAMS_PER_POD 1000

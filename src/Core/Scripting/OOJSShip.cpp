@@ -3531,7 +3531,6 @@ JSValue ShipSetMaterialsInternal(OOJS_NATIVE_ARGS, ShipEntity* thisEnt,
   OOJS_END_FULL_NATIVE
 
   OOJS_RETURN_BOOL(success);
-
 }
 }  // namespace
 
@@ -3665,7 +3664,6 @@ static JSValue ShipAddDefenseTarget(OOJS_NATIVE_ARGS) {
   ship->addDefenseTarget(target);  // the C++ ship (the member takes it)
 
   OOJS_RETURN_VOID;
-
 }
 
 static JSValue ShipRemoveDefenseTarget(OOJS_NATIVE_ARGS) {
@@ -3688,7 +3686,6 @@ static JSValue ShipRemoveDefenseTarget(OOJS_NATIVE_ARGS) {
   ship->removeDefenseTarget(target);  // the C++ ship (the member takes it)
 
   OOJS_RETURN_VOID;
-
 }
 
 static JSValue ShipAddCollisionException(OOJS_NATIVE_ARGS) {
@@ -3717,7 +3714,6 @@ static JSValue ShipAddCollisionException(OOJS_NATIVE_ARGS) {
         thisEnt);  // none: nothing, as a message to nil
 
   OOJS_RETURN_VOID;
-
 }
 
 static JSValue ShipRemoveCollisionException(OOJS_NATIVE_ARGS) {
@@ -3744,7 +3740,6 @@ static JSValue ShipRemoveCollisionException(OOJS_NATIVE_ARGS) {
         thisEnt);  // none: nothing, as a message to nil
 
   OOJS_RETURN_VOID;
-
 }
 
 // getMaterials()
@@ -3825,7 +3820,6 @@ static JSValue ShipOfferToEscort(OOJS_NATIVE_ARGS) {
   bool result = ship->suggestEscortTo(mother);
 
   OOJS_RETURN_BOOL(result);
-
 }
 
 static JSValue ShipRequestHelpFromGroup(JSContext* context,
@@ -3865,7 +3859,6 @@ static JSValue ShipPatrolReportIn(OOJS_NATIVE_ARGS) {
   }
 
   OOJS_RETURN_VOID;
-
 }
 
 static JSValue ShipMarkTargetForFines(JSContext* context, JSValueConst oojsThis,
@@ -3921,7 +3914,6 @@ static JSValue ShipEnterWormhole(OOJS_NATIVE_ARGS) {
   }
 
   OOJS_RETURN_VOID;
-
 }
 
 static JSValue ShipNotifyGroupOfWormhole(JSContext* context,
@@ -4241,7 +4233,6 @@ static JSValue ShipCheckScanner(OOJS_NATIVE_ARGS) {
           scannedShips[i]));  // nil skipped, as a Foundation array skipped it
   }
   OOJS_RETURN_PLIST(oo::PList(std::move(scanResult)));
-
 }
 
 static JSValue ShipAdjustCargo(OOJS_NATIVE_ARGS) {
@@ -4287,7 +4278,6 @@ static JSValue ShipAdjustCargo(OOJS_NATIVE_ARGS) {
   }
 
   OOJS_RETURN_BOOL(ok);
-
 }
 
 /* 0 = no significant damage or consumable loss, higher numbers mean some */
@@ -4441,7 +4431,6 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
   }
 
   OOJS_RETURN_DOUBLE(assessment);
-
 }
 
 static double ShipThreatAssessmentWeapon(OOWeaponType wt) {

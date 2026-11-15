@@ -67,6 +67,7 @@ class OOScriptTimer : public oo::PListForeign {
   // "OOJSTimer" for a JS timer, and that description, "<name
   // 0x...>{components}".
   std::string className() const override { return "OOScriptTimer"; }
+
   std::string description() const override;
 
   // The description with the given components (none: "<name 0x...>"), for a

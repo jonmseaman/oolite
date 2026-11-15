@@ -43,10 +43,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFoundation.h"
-
 #include "OOALMusic.h"
 #include "OOALSound.h"
 #include "OOBasicSoundReferencePoint.h"
-
+#include "OOFoundation.h"
 #include "OOSoundSource.h"

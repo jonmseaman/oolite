@@ -76,6 +76,7 @@ inline std::string OOStringFromIntCredits(OOCreditsQuantity integerCredits,
 inline std::string OOCredits(OOCreditsQuantity tenthsOfCredits) {
   return OOStringFromDeciCredits(tenthsOfCredits, true, true);
 }
+
 inline std::string OOIntCredits(OOCreditsQuantity integerCredits) {
   return OOStringFromIntCredits(integerCredits, true);
 }

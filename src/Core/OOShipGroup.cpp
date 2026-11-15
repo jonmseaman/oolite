@@ -78,12 +78,14 @@ class OOShipGroupMembers {
     ::ShipEntity* operator*() const {
       return oo::ToShip(_buffer[_position].get());
     }  // the member's ship
+
     Iterator& operator++() {
       OOCAssert(_group->updateCount() == _updateCount,
                 "OOShipGroup was mutated while being enumerated.");
       if (++_position == _batchCount) Fill();
       return *this;
     }
+
     bool operator!=(End) const { return _batchCount != 0; }
 
    private:
@@ -100,6 +102,7 @@ class OOShipGroupMembers {
   };
 
   Iterator begin() const { return Iterator(_group); }
+
   End end() const { return End(); }
 
  private:

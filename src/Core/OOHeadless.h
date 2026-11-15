@@ -122,6 +122,7 @@ struct OOPresentationRecord {
 class OOSeededRandom {
  public:
   explicit OOSeededRandom(std::uint32_t seed) : _state(seed) {}
+
   double nextDouble();
 
  private:

@@ -83,6 +83,7 @@ bool IsPlaying(const std::shared_ptr<::OOSoundSource>& source) {
 
 // Weapon identifier -> sound key (empty: no sound key, as @"" was).
 using OOWeaponSoundMap = std::map<std::string, std::string, std::less<>>;
+
 namespace {
 OOWeaponSoundMap weaponShotMiss;
 OOWeaponSoundMap weaponShotHit;

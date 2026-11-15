@@ -328,7 +328,6 @@ bool ShipEntity::initShipSetUp(const std::string& key, const oo::PList& dict) {
     maxFlightSpeed = 300;
   }
   return true;
-
 }
 
 // The -dealloc body after the subclasses' parts and the weak reference's drop,
@@ -894,7 +893,6 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
   isDemoShip = false;
 
   return true;
-
 }
 
 // setUpShipFromDictionary:, subentity serialisation and set-up.
@@ -1162,7 +1160,6 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict) {
       shipDict.get<float>("reaction_time", COMBAT_AI_STANDARD_REACTION_TIME);
 
   return true;
-
 }
 
 void ShipEntity::setSubIdx(std::size_t value) { _subIdx = value; }
@@ -1247,7 +1244,6 @@ bool ShipEntity::setUpSubEntities() {
                      NO_DRAW_DISTANCE_FACTOR * 2.0;
 
   return true;
-
 }
 
 GLfloat ShipEntity::frustumRadius() {
@@ -1273,7 +1269,6 @@ bool ShipEntity::setUpOneSubentity(const oo::PList& subentDict) {
   } else {
     return setUpOneStandardSubentity(subentDict, type == "ball_turret");
   }
-
 }
 
 bool ShipEntity::setUpOneFlasher(const oo::PList& subentDict) {

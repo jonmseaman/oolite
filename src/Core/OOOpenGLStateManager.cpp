@@ -386,8 +386,11 @@ static void SetState_CLIENT_ACTIVE_TEXTURE(GLenum value) {
 
 #else
 static GLenum GetState_ACTIVE_TEXTURE(void) {}
+
 static void SetState_ACTIVE_TEXTURE(GLenum value) {}
+
 static GLenum GetState_CLIENT_ACTIVE_TEXTURE(void) {}
+
 static void SetState_CLIENT_ACTIVE_TEXTURE(GLenum value) {}
 #endif
 
@@ -737,6 +740,7 @@ static void SetFunctionTracking(bool value) { sGLFunctionTracking = value; }
 
 namespace {
 void OOGLNoteCurrentFunction(const char* /*function*/, unsigned /*line*/) {}
+
 void SetFunctionTracking(bool /*value*/) {}
 }  // namespace
 

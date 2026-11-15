@@ -47,6 +47,7 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
+
 namespace {
 
 // get<std::string> where the Foundation code read nil: std::nullopt when the

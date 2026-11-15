@@ -44,26 +44,32 @@ template <oo::FlagEnum E>
 constexpr E operator|(E a, E b) noexcept {
   return static_cast<E>(oo::ToUnderlying(a) | oo::ToUnderlying(b));
 }
+
 template <oo::FlagEnum E>
 constexpr E operator&(E a, E b) noexcept {
   return static_cast<E>(oo::ToUnderlying(a) & oo::ToUnderlying(b));
 }
+
 template <oo::FlagEnum E>
 constexpr E operator^(E a, E b) noexcept {
   return static_cast<E>(oo::ToUnderlying(a) ^ oo::ToUnderlying(b));
 }
+
 template <oo::FlagEnum E>
 constexpr E operator~(E a) noexcept {
   return static_cast<E>(~oo::ToUnderlying(a));
 }
+
 template <oo::FlagEnum E>
 constexpr E& operator|=(E& a, E b) noexcept {
   return a = a | b;
 }
+
 template <oo::FlagEnum E>
 constexpr E& operator&=(E& a, E b) noexcept {
   return a = a & b;
 }
+
 template <oo::FlagEnum E>
 constexpr E& operator^=(E& a, E b) noexcept {
   return a = a ^ b;

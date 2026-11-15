@@ -87,6 +87,7 @@ inline double OOClamp_0_max_d(double value, double max) {
 
 inline std::int64_t OOClampInteger(std::int64_t value, std::int64_t minValue,
                                    std::int64_t maxValue) ALWAYS_INLINE_FUNC;
+
 inline std::int64_t OOClampInteger(std::int64_t value, std::int64_t minValue,
                                    std::int64_t maxValue) {
   return (minValue < value) ? ((value < maxValue) ? value : maxValue)

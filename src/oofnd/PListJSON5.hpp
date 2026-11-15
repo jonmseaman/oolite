@@ -232,12 +232,15 @@ class JSON5Scanner {
   std::string err_;
 
   bool atEnd() const noexcept { return pos_ >= s_.size(); }
+
   bool failed() const noexcept { return errPos_.has_value(); }
+
   char peek(std::size_t k = 0) const noexcept {
     return pos_ + k < s_.size() ? s_[pos_ + k] : '\0';
   }
 
   void fail(const char* reason) { failAt(pos_, reason); }
+
   void failAt(std::size_t at, const char* reason) {
     if (errPos_) return;  // keep the first error
     errPos_ = at;

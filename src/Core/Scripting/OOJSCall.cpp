@@ -312,7 +312,6 @@ bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
   }
 
   return !error;
-
 }
 }  // namespace
 

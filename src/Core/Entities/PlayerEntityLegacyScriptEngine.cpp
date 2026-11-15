@@ -125,6 +125,7 @@ constexpr std::string_view kOOLogRemoveAllCargoNotDocked =
     "script.error.removeAllCargo.notDocked";
 
 #define ACTIONS_TEMP_PREFIX "__oolite_actions_temp"
+
 namespace {
 constexpr const char* kActionTempPrefix = ACTIONS_TEMP_PREFIX;
 }  // namespace
@@ -134,10 +135,12 @@ std::optional<std::string>
     sMissionStringValue;  // the variable a mission/local condition reads
                           // (nullopt: unset)
 }  // namespace
+
 namespace {
 std::optional<std::string>
     sCurrentMissionKey;  // nullopt: no current mission (was nil)
 }  // namespace
+
 static ShipEntity* scriptTarget = nullptr;
 
 namespace {
@@ -1030,6 +1033,7 @@ oo::PList PlayerEntity::scriptTimer_number() {
 }
 
 static int shipsFound;
+
 oo::PList PlayerEntity::shipsFound_number() {
   // called by name
   return oo::PList::signedInteger(shipsFound);

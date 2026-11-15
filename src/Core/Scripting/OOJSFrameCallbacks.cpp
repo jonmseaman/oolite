@@ -99,6 +99,7 @@ struct CallbackEntry {
    observer is needed.
 */
 static std::vector<CallbackEntry> sCallbacks;
+
 // A deferred add or remove.
 struct DeferredOperation {
   std::string operation;  // "add" or "remove"
@@ -110,8 +111,10 @@ namespace {
 static std::unique_ptr<std::vector<DeferredOperation>>
     sDeferredOps;  // Deferred adds/removes while running.
 }  // namespace
+
 static uint32_t sNextID;
 static std::optional<uint32_t> sIDSeed;  // set by a headless game
+
 namespace {
 static bool sRunning;
 }  // namespace
@@ -138,12 +141,14 @@ namespace {
 static bool RemoveCallbackWithTrackingID(JSContext* context,
                                          uint32_t trackingID);
 }  // namespace
+
 static void RemoveCallbackAtIndex(JSContext* context, std::size_t index);
 
 namespace {
 static void QueueDeferredOperation(const std::string& opType,
                                    uint32_t trackingID, OOJSValue* value);
 }  // namespace
+
 static void RunDeferredOperations(JSContext* context);
 
 static const JSCFunctionListEntry sFrameCallbackMethods[] = {

@@ -74,7 +74,9 @@ namespace {
 static bool sProfiling = false;
 static bool sTracing = false;
 }  // namespace
+
 static OOJSProfileStackFrame* sProfileStack = nullptr;
+
 // Profile key (native name or JS function, by pointer) -> entry, retained.
 namespace {
 static std::unique_ptr<
@@ -86,6 +88,7 @@ static OOTimeProfileEntry* ProfileEntryForKey(const void* key) {
   return (found != sProfileInfo->end()) ? found->second.get() : nullptr;
 }
 }  // namespace
+
 static double sProfilerOverhead;
 static double sProfilerTotalNativeTime;
 static double sProfilerEntryTimeLimit;

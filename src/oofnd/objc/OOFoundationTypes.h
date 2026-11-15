@@ -68,18 +68,21 @@ struct CGPoint {
   double x;
   double y;
 };
+
 using NSPoint = CGPoint;
 
 struct CGSize {
   double width;
   double height;
 };
+
 using NSSize = CGSize;
 
 struct CGRect {
   CGPoint origin;
   CGSize size;
 };
+
 using NSRect = CGRect;
 
 static const NSPoint NSZeroPoint = {0.0, 0.0};
@@ -88,6 +91,7 @@ static const NSRect NSZeroRect = {{0.0, 0.0}, {0.0, 0.0}};
 
 struct _NSRange;
 using NSRange = _NSRange;
+
 struct _NSRange {
   std::size_t location;
   std::size_t length;

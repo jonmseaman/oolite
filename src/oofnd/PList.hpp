@@ -135,6 +135,7 @@ class PList {
     std::uint64_t unsignedValue() const noexcept {
       return static_cast<std::uint64_t>(value);
     }
+
     friend bool operator==(const Integer&, const Integer&) = default;
   };
 
@@ -153,6 +154,7 @@ class PList {
   // ---------------------------------------------------------------------
 
   PList() noexcept = default;
+
   PList(std::nullptr_t) noexcept {}
 
   template <class B>
@@ -170,22 +172,32 @@ class PList {
       : v_(std::in_place_type<double>, static_cast<double>(d)) {}
 
   PList(const char* s) : v_(std::in_place_type<std::string>, s) {}
+
   PList(std::string s) noexcept
       : v_(std::in_place_type<std::string>, std::move(s)) {}
+
   PList(std::string_view s) : v_(std::in_place_type<std::string>, s) {}
+
   PList(Integer i) noexcept : v_(std::in_place_type<Integer>, i) {}
+
   PList(Data d) noexcept : v_(std::in_place_type<Data>, std::move(d)) {}
+
   PList(Date d) noexcept : v_(std::in_place_type<Date>, d) {}
+
   PList(Array a) noexcept : v_(std::in_place_type<Array>, std::move(a)) {}
+
   PList(Dict d) noexcept : v_(std::in_place_type<Dict>, std::move(d)) {}
+
   PList(Object o) noexcept : v_(std::in_place_type<Object>, std::move(o)) {}
 
   static PList signedInteger(std::int64_t i) noexcept {
     return PList(Integer{i, false});
   }
+
   static PList unsignedInteger(std::uint64_t u) noexcept {
     return PList(Integer{static_cast<std::int64_t>(u), true});
   }
+
   // A real that was a single-precision NSNumber (+numberWithFloat:): it prints
   // as %0.7g where a double prints as %0.16g, and compares unequal to the same
   // value as a double (type-strict ==).
@@ -199,20 +211,33 @@ class PList {
   // ---------------------------------------------------------------------
 
   Type type() const noexcept { return static_cast<Type>(v_.index()); }
+
   bool isNull() const noexcept { return type() == Type::kNull; }
+
   bool isBool() const noexcept { return type() == Type::kBool; }
+
   bool isInteger() const noexcept { return type() == Type::kInteger; }
+
   bool isReal() const noexcept { return type() == Type::kReal; }
+
   bool isNumber() const noexcept {
     return isBool() || isInteger() || isReal();
   }  // NSNumber
+
   bool isString() const noexcept { return type() == Type::kString; }
+
   bool isData() const noexcept { return type() == Type::kData; }
+
   bool isDate() const noexcept { return type() == Type::kDate; }
+
   bool isArray() const noexcept { return type() == Type::kArray; }
+
   bool isDict() const noexcept { return type() == Type::kDict; }
+
   bool isObject() const noexcept { return type() == Type::kObject; }
+
   bool isSinglePrecision() const noexcept { return isReal() && single_; }
+
   explicit operator bool() const noexcept { return !isNull(); }  // "!= nil"
 
   // --- payload access
@@ -222,6 +247,7 @@ class PList {
   T* getIf() noexcept {
     return std::get_if<T>(&v_);
   }
+
   template <class T>
   const T* getIf() const noexcept {
     return std::get_if<T>(&v_);
@@ -235,6 +261,7 @@ class PList {
     auto it = d->find(key);
     return it == d->end() ? nullptr : &it->second;
   }
+
   PList* find(std::string_view key) noexcept {
     return const_cast<PList*>(std::as_const(*this).find(key));
   }
@@ -263,12 +290,14 @@ class PList {
     if (const double* d = getIf<double>()) return *d != 0.0;
     return false;
   }
+
   std::int64_t int64Value() const noexcept {
     if (const bool* b = getIf<bool>()) return *b ? 1 : 0;
     if (const Integer* i = getIf<Integer>()) return i->value;
     if (const double* d = getIf<double>()) return saturate<std::int64_t>(*d);
     return 0;
   }
+
   std::uint64_t uint64Value() const noexcept {
     if (const bool* b = getIf<bool>()) return *b ? 1 : 0;
     if (const Integer* i = getIf<Integer>()) return i->unsignedValue();
@@ -278,6 +307,7 @@ class PList {
     }
     return 0;
   }
+
   double doubleValue() const noexcept {
     if (const bool* b = getIf<bool>()) return *b ? 1.0 : 0.0;
     if (const Integer* i = getIf<Integer>()) {
@@ -355,6 +385,7 @@ struct PListError {
     return "Error Domain=NSPropertyListSerialization Code=0 \"" + message +
            "\"";
   }
+
   friend bool operator==(const PListError&, const PListError&) = default;
 };
 

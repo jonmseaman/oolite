@@ -46,6 +46,7 @@ class OOSunEntity;
 class CollisionRegion : public oo::Object {
  public:
   struct AsUniverse {};
+
   explicit CollisionRegion(AsUniverse);  // -initAsUniverse
   CollisionRegion(HPVector locn, GLfloat rad,
                   CollisionRegion*

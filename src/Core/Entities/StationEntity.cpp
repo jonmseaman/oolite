@@ -786,7 +786,6 @@ void StationEntity::initStationDefaults() {
   isStation = true;
   _shipsOnHold.removeAll();  // a new, empty set
   hasBreakPattern = true;
-
 }
 
 void StationEntity::willDealloc() {
@@ -1098,7 +1097,6 @@ bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
     setGroup(stationGroup());
   }
   return true;
-
 }
 
 // used to set up a virtual dock if necessary

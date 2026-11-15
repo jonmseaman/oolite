@@ -145,22 +145,26 @@ class GameController : public oo::Object {
      Call it on sharedController(), the controller the game's code reaches.
   */
   void startHeadless(const OOHeadlessOptions& options);
+
   const OOHeadlessOptions& headlessOptions() const { return _options; }
 
   // Told of each ship and world script event before the scripts run; null,
   // the default, in the windowed game. Not owned.
   OOGameObserver* observer() const { return _observer; }
+
   void setObserver(OOGameObserver* observer) { _observer = observer; }
 
   // What a headless game would have drawn and played.
   OOPresentationRecord& presentation() { return _presentation; }
 
   void exitAppWithContext(const std::string& context);
+
   // Headless, a request to quit is recorded here (with its context) and not
   // obeyed: the test that made the game decides when the process ends.
   const std::optional<std::string>& exitRequested() const {
     return _exitRequested;
   }
+
   void exitAppCommandQ();
 
   // nullopt: no saved game to load (was nil).

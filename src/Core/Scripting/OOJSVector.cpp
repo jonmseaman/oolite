@@ -198,7 +198,6 @@ JSValue JSVectorWithHPVector(JSContext* context, HPVector vector) {
   JS_SetOpaque(result, priv.release());
 
   return result;
-
 }
 
 bool HPVectorToJSValue(JSContext* context, HPVector vector, JSValue* outValue) {
@@ -212,7 +211,6 @@ bool HPVectorToJSValue(JSContext* context, HPVector vector, JSValue* outValue) {
 
   *outValue = object;
   return true;
-
 }
 
 bool NSPointToVectorJSValue(JSContext* context, NSPoint point,
@@ -307,7 +305,6 @@ bool JSObjectGetVector(JSContext* context, JSValueConst vectorObj,
   }
 
   return false;
-
 }
 
 static bool GetThisVector(JSContext* context, JSValueConst vectorObj,
@@ -390,7 +387,6 @@ static bool VectorFromArgumentListNoErrorInternal(JSContext* context, int argc,
   if (outConsumed != nullptr) *outConsumed = 3;
 
   return true;
-
 }
 
 // EMMSTRAN: remove outConsumed, since it can only be 1 except in failure
@@ -451,7 +447,6 @@ static JSValue VectorGetProperty(JSContext* context, JSValueConst thisObj,
   }
 
   return JS_NewFloat64(context, fValue);
-
 }
 
 static JSValue VectorSetProperty(JSContext* context, JSValueConst thisObj,
@@ -492,7 +487,6 @@ static JSValue VectorSetProperty(JSContext* context, JSValueConst thisObj,
 
   JSVectorSetHPVector(context, thisObj, vector);
   return JS_UNDEFINED;
-
 }
 
 static void VectorFinalize(JSRuntime* /*runtime*/, JSValueConst thisObj) {
@@ -568,7 +562,6 @@ static JSValue VectorAdd(OOJS_NATIVE_ARGS) {
   result = HPvector_add(thisv, thatv);
 
   OOJS_RETURN_HPVECTOR(result);
-
 }
 
 // subtract(v : vectorExpression) : Vector3D
@@ -586,7 +579,6 @@ static JSValue VectorSubtract(OOJS_NATIVE_ARGS) {
   result = HPvector_subtract(thisv, thatv);
 
   OOJS_RETURN_HPVECTOR(result);
-
 }
 
 // distanceTo(v : vectorExpression) : Number
@@ -605,7 +597,6 @@ static JSValue VectorDistanceTo(OOJS_NATIVE_ARGS) {
   result = HPdistance(thisv, thatv);
 
   OOJS_RETURN_DOUBLE(result);
-
 }
 
 // squaredDistanceTo(v : vectorExpression) : Number
@@ -625,7 +616,6 @@ static JSValue VectorSquaredDistanceTo(OOJS_NATIVE_ARGS) {
   result = HPdistance2(thisv, thatv);
 
   OOJS_RETURN_DOUBLE(result);
-
 }
 
 // multiply(n : Number) : Vector3D
@@ -644,7 +634,6 @@ static JSValue VectorMultiply(OOJS_NATIVE_ARGS) {
   result = HPvector_multiply_scalar(thisv, scalar);
 
   OOJS_RETURN_HPVECTOR(result);
-
 }
 
 // dot(v : vectorExpression) : Number
@@ -663,7 +652,6 @@ static JSValue VectorDot(OOJS_NATIVE_ARGS) {
   result = HPdot_product(thisv, thatv);
 
   OOJS_RETURN_DOUBLE(result);
-
 }
 
 // angleTo(v : vectorExpression) : Number
@@ -687,7 +675,6 @@ static JSValue VectorAngleTo(OOJS_NATIVE_ARGS) {
   result = acos(result);
 
   OOJS_RETURN_DOUBLE(result);
-
 }
 
 // cross(v : vectorExpression) : Vector3D
@@ -705,7 +692,6 @@ static JSValue VectorCross(OOJS_NATIVE_ARGS) {
   result = HPtrue_cross_product(thisv, thatv);
 
   OOJS_RETURN_HPVECTOR(result);
-
 }
 
 // tripleProduct(v : vectorExpression, u : vectorExpression) : Number
@@ -731,7 +717,6 @@ static JSValue VectorTripleProduct(OOJS_NATIVE_ARGS) {
   result = HPtriple_product(thisv, thatv, theotherv);
 
   OOJS_RETURN_DOUBLE(result);
-
 }
 
 // direction() : Vector3D
@@ -820,7 +805,6 @@ static JSValue VectorRotationTo(OOJS_NATIVE_ARGS) {
                                          HPVectorToVector(thatv));
 
   OOJS_RETURN_QUATERNION(result);
-
 }
 
 // rotateBy(q : quaternionExpression) : Vector3D
@@ -839,7 +823,6 @@ static JSValue VectorRotateBy(OOJS_NATIVE_ARGS) {
   result = quaternion_rotate_HPvector(q, thisv);
 
   OOJS_RETURN_HPVECTOR(result);
-
 }
 
 // toArray() : Array

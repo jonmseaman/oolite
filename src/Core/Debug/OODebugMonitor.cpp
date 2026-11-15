@@ -529,34 +529,34 @@ void OODebugMonitor::dumpMemoryStatistics() {
       size_t dataSize = tex->dataSize();
 
 #if OOTEXTURE_RELOADABLE
-    const char* byteCountSuffix = "";
+      const char* byteCountSuffix = "";
 #else
-    const char* byteCountSuffix = " (* 2)";
+      const char* byteCountSuffix = " (* 2)";
 #endif
 
-    const char* usage = "";
-    if (entityDumpState.visibleEntityTextures.count(texRef) != 0) {
-      visibleTextureDataSize +=
-          dataSize;  // NOT doubled if !OOTEXTURE_RELOADABLE, because we're
-                     // interested in what the GPU sees.
-      usage = ", visible";
-    } else if (entityDumpState.entityTextures.count(texRef) != 0) {
-      usage = ", active";
+      const char* usage = "";
+      if (entityDumpState.visibleEntityTextures.count(texRef) != 0) {
+        visibleTextureDataSize +=
+            dataSize;  // NOT doubled if !OOTEXTURE_RELOADABLE, because we're
+                       // interested in what the GPU sees.
+        usage = ", visible";
+      } else if (entityDumpState.entityTextures.count(texRef) != 0) {
+        usage = ", active";
+      }
+
+      const auto counted = textureRefCounts.find(tex);
+      unsigned refCount = (counted != textureRefCounts.end())
+                              ? static_cast<unsigned>(counted->second)
+                              : 0;
+
+      writeMemStat(std::format(
+          "{}: [{} refs{}] {}{}", tex->name().value_or("(null)"), refCount,
+          usage, SizeString(objSize + dataSize), byteCountSuffix));
+
+      totalTextureDataSize += dataSize;
+      totalTextureObjSize += objSize;
     }
-
-    const auto counted = textureRefCounts.find(tex);
-    unsigned refCount = (counted != textureRefCounts.end())
-                            ? static_cast<unsigned>(counted->second)
-                            : 0;
-
-    writeMemStat(std::format("{}: [{} refs{}] {}{}",
-                             tex->name().value_or("(null)"), refCount, usage,
-                             SizeString(objSize + dataSize), byteCountSuffix));
-
-    totalTextureDataSize += dataSize;
-    totalTextureObjSize += objSize;
-  }
-  totalSize += totalTextureObjSize + totalTextureDataSize;
+    totalSize += totalTextureObjSize + totalTextureDataSize;
   }
 
 #if !OOTEXTURE_RELOADABLE

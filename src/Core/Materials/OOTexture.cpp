@@ -103,6 +103,7 @@ namespace {
 // boxed pointers. They hold the C++ textures.
 std::unordered_map<std::string, OOTexture*>* sLiveTextureCache;
 std::unordered_set<OOTexture*>* sAllLiveTextures;
+
 // The textures, retained, as Object nodes (OOTextureObjectNode()); null until
 // the first texture is cached. The holder is never deleted, so exit(0) frees no
 // texture after the GL context and the logger have gone.

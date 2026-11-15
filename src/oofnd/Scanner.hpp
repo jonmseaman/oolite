@@ -228,18 +228,22 @@ class CharacterSet {
   static CharacterSet whitespace() noexcept {
     return CharacterSet(Kind::kWhitespace);
   }
+
   // +whitespaceAndNewlineCharacterSet: what NSScanner skips (String.hpp's
   // isWhitespaceOrNewline).
   static CharacterSet whitespaceAndNewline() noexcept {
     return CharacterSet(Kind::kWhitespaceAndNewline);
   }
+
   // +newlineCharacterSet: U+000A-U+000D and U+0085.
   static CharacterSet newline() noexcept {
     return CharacterSet(Kind::kNewline);
   }
+
   static CharacterSet decimalDigit() noexcept {
     return CharacterSet(Kind::kDecimalDigit);
   }
+
   static CharacterSet alphanumeric() noexcept {
     return CharacterSet(Kind::kAlphanumeric);
   }
@@ -376,6 +380,7 @@ class Scanner {
   // -scanLocation / -setScanLocation: in UTF-16 units. A location past the end
   // is clamped (GNUstep raised NSRangeException).
   std::size_t scanLocation() const noexcept { return location_; }
+
   void setScanLocation(std::size_t location) noexcept {
     location_ = std::min(location, units_.size());
   }
@@ -514,6 +519,7 @@ class Scanner {
                              std::string* into = nullptr) {
     return scanRun(set, true, true, into);
   }
+
   bool scanUpToCharactersFromSet(const CharacterSet& set,
                                  std::string* into = nullptr) {
     return scanRun(set, false, true, into);
@@ -525,6 +531,7 @@ class Scanner {
                                    std::string* into = nullptr) {
     return scanRun(set, true, false, into);
   }
+
   bool scanUpToCharactersFromSetNoSkip(const CharacterSet& set,
                                        std::string* into = nullptr) {
     return scanRun(set, false, false, into);

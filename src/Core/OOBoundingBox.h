@@ -83,9 +83,7 @@ inline void bounding_box_add_xyz(BoundingBox* box, GLfloat x, GLfloat y,
   box->max.z = fmax(box->max.z, z);
 }
 
-inline void bounding_box_reset(BoundingBox* box) {
-  *box = kZeroBoundingBox;
-}
+inline void bounding_box_reset(BoundingBox* box) { *box = kZeroBoundingBox; }
 
 inline void bounding_box_reset_to_vector(BoundingBox* box, Vector vec) {
   box->min = vec;

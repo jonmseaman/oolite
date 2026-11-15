@@ -151,12 +151,14 @@ class OOShaderUniform : public oo::Object {
         // an entity's member through the table, the entity cxxTarget
       entityMember : 1 = {};
   uint8_t type = {};
+
   // A C++ target's getter, or the entity's member found in the entities'
   // member table, or NULL where nothing is bound. The C++ object is
   // cxxTarget; the property's name is cxxProperty (an entity binding's too).
   struct Binding {
     OOShaderCxxBindingGetter cxxGet = nullptr;
   };
+
   // The constant a simple uniform uploads (the alternative `type` names), or
   // a binding's getter.
   std::variant<std::monostate, GLint, GLfloat, std::array<GLfloat, 4>, OOMatrix,

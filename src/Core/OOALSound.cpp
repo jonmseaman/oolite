@@ -112,7 +112,9 @@ bool sNamedWithoutDevice = false;  // OOSound::setNamedWithoutDevice
 class OONamedSilentSound final : public OOSound {
  public:
   explicit OONamedSilentSound(std::string name) : _name(std::move(name)) {}
+
   std::optional<std::string> name() override { return _name; }
+
   ALuint soundBuffer() override { return 0; }
 
  private:

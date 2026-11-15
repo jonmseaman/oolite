@@ -57,8 +57,11 @@ std::string EntityDescription(Entity* entity);  // EntityHelpers.cpp
 class EntityPListForeign final : public PListForeign {
  public:
   explicit EntityPListForeign(Entity* entity) : _entity(oo::Hold(entity)) {}
+
   Entity* entity() const noexcept { return _entity.get(); }
+
   std::string className() const override { return "Entity"; }
+
   std::string description() const override {
     return EntityDescription(_entity.get());
   }
@@ -73,6 +76,7 @@ inline PList EntityObjectNode(Entity* entity) {
   if (WithObject(entity) == nullptr) return PList();
   return PList(PList::Object(oo::makeShared<EntityPListForeign>(entity)));
 }
+
 inline PList EntityObjectNode(const std::shared_ptr<Entity>& entity) {
   return EntityObjectNode(entity.get());
 }

@@ -238,6 +238,7 @@ OOMatrix OOMatrixForRotationZ(OOScalar angle) {
 
   return OOMatrixConstruct(c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 }
+
 inline OOMatrix OOMatrixForTranslationComponents(OOScalar dx, OOScalar dy,
                                                  OOScalar dz) {
   return OOMatrixConstruct(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, dx, dy, dz, 1);
@@ -308,7 +309,6 @@ inline bool OOMatrixIsIdentity(OOMatrix m) {
 
 inline void OOMatrixGetBasisVectors(OOMatrix m, Vector* outRight, Vector* outUp,
                                     Vector* outForward) {
-
   *outRight = make_vector(m.m[0][0], m.m[1][0], m.m[2][0]);
   *outUp = make_vector(m.m[0][1], m.m[1][1], m.m[2][1]);
   *outForward = make_vector(m.m[0][2], m.m[1][2], m.m[2][2]);
