@@ -167,11 +167,11 @@ inline std::optional<Data> decodeBase64IgnoringUnknown(const unsigned char* src,
   std::size_t i = 0;
   while (i < length) {
     int c = src[i++];
-    if (c >= 'A' && c <= 'Z')
+    if (c >= 'A' && c <= 'Z') {
       c -= 'A';
-    else if (c >= 'a' && c <= 'z')
+    } else if (c >= 'a' && c <= 'z') {
       c = c - 'a' + 26;
-    else if (c >= '0' && c <= '9') {
+    } else if (c >= '0' && c <= '9') {
       c = c - '0' + 52;
     } else if (c == '/') {
       c = 63;

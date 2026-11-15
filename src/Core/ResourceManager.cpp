@@ -1743,10 +1743,10 @@ void ResourceManager::handleEquipmentOverrides(oo::PList& arrayToProcess) {
           for (const auto& [infoKey, infoValue] : *overrideInfo) {
             // special cases for the array items that don't have a direct
             // keyname
-            if (infoKey == "techlevel")
+            if (infoKey == "techlevel") {
               ReplaceArrayElement(equipArray, EQUIPMENT_TECH_LEVEL_INDEX,
                                   infoValue);
-            else if (infoKey == "price") {
+            } else if (infoKey == "price") {
               ReplaceArrayElement(equipArray, EQUIPMENT_PRICE_INDEX, infoValue);
             } else if (infoKey == "short_description" || infoKey == "name") {
               ReplaceArrayElement(equipArray, EQUIPMENT_SHORT_DESC_INDEX,

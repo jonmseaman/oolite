@@ -558,15 +558,13 @@ void CollisionRegion::findShadowedEntities() {
       if (EntityIsPlanet(uni_entities[i])) {
         //	don't bother retaining - nothing will happen to them!
         planets[n_planets++] = uni_entities[i];
-      }
-
-      // and a list of shipentities large enough that they might cast a
-      // noticeable shadow if we can't see it, it can't be shadowing anything
-      // important
-      else if (EntityIsShip(uni_entities[i]) &&
-               EntityIsVisible(uni_entities[i]) &&
-               uni_entities[i]->collision_radius >=
-                   MINIMUM_SHADOWING_ENTITY_RADIUS) {
+      } else if (EntityIsShip(uni_entities[i]) &&
+                 EntityIsVisible(uni_entities[i]) &&
+                 uni_entities[i]->collision_radius >=
+                     MINIMUM_SHADOWING_ENTITY_RADIUS) {
+        // and a list of shipentities large enough that they might cast a
+        // noticeable shadow if we can't see it, it can't be shadowing anything
+        // important
         ships[n_ships++] = uni_entities[i];  //	don't bother retaining - nothing
                                              // will happen to them!
       }

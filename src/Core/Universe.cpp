@@ -8915,10 +8915,9 @@ OOSystemID Universe::findSystemNumberAtCoords(NSPoint coords, OOGalaxyID g,
     // with coincident systems choose only if ABOVE
     if ((distance == min_dist) && (coords.y > ipos.y)) {
       system = i;
-    }
-    // or if EQUAL but already selected
-    else if ((distance == min_dist) && (coords.y == ipos.y) &&
-             (i == (PLAYER != nullptr ? PLAYER->targetSystemID() : 0))) {
+    } else if ((distance == min_dist) && (coords.y == ipos.y) &&
+               (i == (PLAYER != nullptr ? PLAYER->targetSystemID() : 0))) {
+      // or if EQUAL but already selected
       system = i;
     }
   }

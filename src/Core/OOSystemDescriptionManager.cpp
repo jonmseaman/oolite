@@ -214,12 +214,11 @@ void OOSystemDescriptionManager::setProperty(
     } else {
       updateCacheEntry(index, property);
     }
-  }
-  // for interstellar updates, save but don't update cache
-  else if (tokens.count() == 4 &&
-           tokens.at<std::size_t>(1) < OO_GALAXIES_AVAILABLE &&
-           tokens.at<std::size_t>(2) < OO_SYSTEMS_PER_GALAXY &&
-           tokens.at<std::size_t>(3) < OO_SYSTEMS_PER_GALAXY) {
+  } else if (tokens.count() == 4 &&
+             tokens.at<std::size_t>(1) < OO_GALAXIES_AVAILABLE &&
+             tokens.at<std::size_t>(2) < OO_SYSTEMS_PER_GALAXY &&
+             tokens.at<std::size_t>(3) < OO_SYSTEMS_PER_GALAXY) {
+    // for interstellar updates, save but don't update cache
     saveScriptedChangeToProperty(property, key, layer, value, manifest);
   }
 }

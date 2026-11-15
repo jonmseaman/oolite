@@ -8221,9 +8221,8 @@ std::vector<oo::PList> PlayerEntity::equipmentList() {
         count = okcount + countEquipmentItem(damagedIdentifier);
         if (count == 0) {
           // do nothing
-        }
-        // all items okay
-        else if (count == okcount) {
+        } else if (count == okcount) {
+          // all items okay
           // only one installed display normally
           if (count == 1) {
             quip2.push_back(EquipmentRow(
@@ -8248,9 +8247,8 @@ std::vector<oo::PList> PlayerEntity::equipmentList() {
                 (eqType != nullptr ? eqType->displayColor().get()
                                    : static_cast<OOColor*>(nullptr))));
           }
-        }
-        // all broken, only one installed
-        else if (count == 1 && okcount == 0) {
+        } else if (count == 1 && okcount == 0) {
+          // all broken, only one installed
           desc = oo::str::formatRuntime(
               OO_DESC("equipment-@-not-available"),
               {(eqType != nullptr ? eqType->name()
@@ -11276,11 +11274,10 @@ OOCargoQuantity PlayerEntity::setCargoQuantityForType(const std::string& type,
   // check it against the max amount.
   if (unit == OOMassUnit::kTons && (available + oldAmount) < amount) {
     amount = available + oldAmount;
-  }
-  // if we have 1499 kg the ship registers only 1 ton, so it's possible to
-  // exceed the max cargo: eg: with maxAvailableCargoSpace 2 & gold 1499kg, you
-  // can still add 1 ton alloy.
-  else if (unit == OOMassUnit::kKilograms && amount > oldAmount) {
+  } else if (unit == OOMassUnit::kKilograms && amount > oldAmount) {
+    // if we have 1499 kg the ship registers only 1 ton, so it's possible to
+    // exceed the max cargo: eg: with maxAvailableCargoSpace 2 & gold 1499kg,
+    // you can still add 1 ton alloy.
     // Allow up to 0.5 ton of kg (& g) goods above the cargo capacity but
     // respect existing quantities.
     OOCargoQuantity safeAmount =
@@ -12874,10 +12871,9 @@ void PlayerEntity::addTarget(Entity* targetEntity) {
   if (targetEntity != nullptr && targetEntity->getIsWormhole()) {
     assert(hasEquipmentItemProviding("EQ_WORMHOLE_SCANNER"));
     addScannedWormhole(static_cast<WormholeEntity*>(targetEntity));
-  }
-  // wormholes don't go in target memory
-  else if (hasEquipmentItemProviding("EQ_TARGET_MEMORY") &&
-           targetEntity != nullptr) {
+  } else if (hasEquipmentItemProviding("EQ_TARGET_MEMORY") &&
+             targetEntity != nullptr) {
+    // wormholes don't go in target memory
     const std::weak_ptr<Entity> targetRef = std::weak_ptr<Entity>(
         oo::share(targetEntity));  // was [targetEntity weakSelf]
     // -indexOfObject: compared the weak references (proxies) by identity;
