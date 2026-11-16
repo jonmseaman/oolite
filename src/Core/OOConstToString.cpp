@@ -445,39 +445,39 @@ OOGraphicsDetail OOGraphicsDetailFromString(const std::string& string) {
   return OOGraphicsDetail::kMinimum;
 }
 
-std::string OOStringFromHDRToneMapper(OOHDRToneMapper toneMapper) {
+std::string OOStringFromHDRToneMapper(oo::HDRToneMapper toneMapper) {
   const std::string_view name = OOEnumName(toneMapper);
   return name.empty() ? std::string("OOHDR_TONEMAPPER_UNDEFINED")
                       : std::string(name);
 }
 
-OOHDRToneMapper OOHDRToneMapperFromString(const std::string& string) {
+oo::HDRToneMapper OOHDRToneMapperFromString(const std::string& string) {
   static constexpr auto kNames =
-      oo::MakeEnumTable<OOHDRToneMapper, OOHDRToneMapper::kNone,
-                        OOHDRToneMapper::kAcesApprox, OOHDRToneMapper::kDice,
-                        OOHDRToneMapper::kUchimura,
-                        OOHDRToneMapper::kReinhard>();
-  if (const std::optional<OOHDRToneMapper> value = kNames.value(string))
+      oo::MakeEnumTable<oo::HDRToneMapper, oo::HDRToneMapper::kNone,
+                        oo::HDRToneMapper::kAcesApprox,
+                        oo::HDRToneMapper::kDice, oo::HDRToneMapper::kUchimura,
+                        oo::HDRToneMapper::kReinhard>();
+  if (const std::optional<oo::HDRToneMapper> value = kNames.value(string))
     return *value;
 
-  return OOHDRToneMapper::kAcesApprox;
+  return oo::HDRToneMapper::kAcesApprox;
 }
 
-std::string OOStringFromSDRToneMapper(OOSDRToneMapper toneMapper) {
+std::string OOStringFromSDRToneMapper(oo::SDRToneMapper toneMapper) {
   const std::string_view name = OOEnumName(toneMapper);
   return name.empty() ? std::string("OOSDR_TONEMAPPER_UNDEFINED")
                       : std::string(name);
 }
 
-OOSDRToneMapper OOSDRToneMapperFromString(const std::string& string) {
+oo::SDRToneMapper OOSDRToneMapperFromString(const std::string& string) {
   static constexpr auto kNames =
-      oo::MakeEnumTable<OOSDRToneMapper, OOSDRToneMapper::kNone,
-                        OOSDRToneMapper::kAces, OOSDRToneMapper::kAgX,
-                        OOSDRToneMapper::kHejlDawson, OOSDRToneMapper::kUC2,
-                        OOSDRToneMapper::kUchimura,
-                        OOSDRToneMapper::kReinhard>();
-  if (const std::optional<OOSDRToneMapper> value = kNames.value(string))
+      oo::MakeEnumTable<oo::SDRToneMapper, oo::SDRToneMapper::kNone,
+                        oo::SDRToneMapper::kAces, oo::SDRToneMapper::kAgX,
+                        oo::SDRToneMapper::kHejlDawson, oo::SDRToneMapper::kUC2,
+                        oo::SDRToneMapper::kUchimura,
+                        oo::SDRToneMapper::kReinhard>();
+  if (const std::optional<oo::SDRToneMapper> value = kNames.value(string))
     return *value;
 
-  return OOSDRToneMapper::kAces;
+  return oo::SDRToneMapper::kAces;
 }

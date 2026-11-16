@@ -39,10 +39,10 @@ MA 02110-1301, USA.
 #include "GuiDisplayGen.h"
 #include "OOConstToString.h"
 #include "OOFullScreenController.h"
-#include "OOSDLJoystickManager.h"
 #include "OOVersion.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
+#include "SDLJoystickManager.h"
 #include "SpeechSynthesizer.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
@@ -467,7 +467,7 @@ bool MyOpenGLView::init() {
 
   OOJoystickManager::setStickHandlerFactory(
       []() -> std::shared_ptr<OOJoystickManager> {
-        return oo::makeShared<OOSDLJoystickManager>();
+        return oo::makeShared<oo::SDLJoystickManager>();
       });  // was +setStickHandlerClass:
   // end TODO
 
@@ -1002,13 +1002,13 @@ void MyOpenGLView::setHDRPaperWhiteBrightness(float newPaperWhiteBrightness) {
                                     _hdrPaperWhiteBrightness);
 }
 
-OOHDRToneMapper MyOpenGLView::hdrToneMapper() { return _hdrToneMapper; }
+oo::HDRToneMapper MyOpenGLView::hdrToneMapper() { return _hdrToneMapper; }
 
-void MyOpenGLView::setHDRToneMapper(OOHDRToneMapper newToneMapper) {
-  if (newToneMapper > OOHDRToneMapper::kReinhard)
-    newToneMapper = OOHDRToneMapper::kReinhard;
-  if (newToneMapper < OOHDRToneMapper::kNone)
-    newToneMapper = OOHDRToneMapper::kNone;
+void MyOpenGLView::setHDRToneMapper(oo::HDRToneMapper newToneMapper) {
+  if (newToneMapper > oo::HDRToneMapper::kReinhard)
+    newToneMapper = oo::HDRToneMapper::kReinhard;
+  if (newToneMapper < oo::HDRToneMapper::kNone)
+    newToneMapper = oo::HDRToneMapper::kNone;
   _hdrToneMapper = newToneMapper;
 }
 
@@ -1020,13 +1020,13 @@ bool MyOpenGLView::isOutputDisplayHDREnabled() { return false; }
 
 #endif  // OOLITE_WINDOWS
 
-OOSDRToneMapper MyOpenGLView::sdrToneMapper() { return _sdrToneMapper; }
+oo::SDRToneMapper MyOpenGLView::sdrToneMapper() { return _sdrToneMapper; }
 
-void MyOpenGLView::setSDRToneMapper(OOSDRToneMapper newToneMapper) {
-  if (newToneMapper > OOSDRToneMapper::kReinhard)
-    newToneMapper = OOSDRToneMapper::kReinhard;
-  if (newToneMapper < OOSDRToneMapper::kNone)
-    newToneMapper = OOSDRToneMapper::kNone;
+void MyOpenGLView::setSDRToneMapper(oo::SDRToneMapper newToneMapper) {
+  if (newToneMapper > oo::SDRToneMapper::kReinhard)
+    newToneMapper = oo::SDRToneMapper::kReinhard;
+  if (newToneMapper < oo::SDRToneMapper::kNone)
+    newToneMapper = oo::SDRToneMapper::kNone;
   _sdrToneMapper = newToneMapper;
 }
 

@@ -72,8 +72,14 @@ inline constexpr double INTERMEDIATE_CLEAR_DEPTH = 25000.0;
 
 inline constexpr int NUM_KEYS = 327;
 inline constexpr double MOUSE_DOUBLE_CLICK_INTERVAL = 0.40;
-inline constexpr double OOMOUSEWHEEL_EVENTS_DELAY_INTERVAL = 0.05;
-inline constexpr int OOMOUSEWHEEL_DELTA = 120;  // Same as Windows WHEEL_DELTA
+
+namespace oo {
+
+inline constexpr double MOUSEWHEEL_EVENTS_DELAY_INTERVAL = 0.05;
+inline constexpr int MOUSEWHEEL_DELTA = 120;
+
+}  // namespace oo
+   // Same as Windows WHEEL_DELTA
 
 #define SNAPSHOTS_PNG_FORMAT 1
 inline constexpr std::string_view SNAPSHOTHDR_EXTENSION_EXR = ".exr";
@@ -166,38 +172,45 @@ static_assert(std::to_underlying(KeyboardType::kAuto) == 0);
 static_assert(std::to_underlying(KeyboardType::kUS) == 1);
 static_assert(std::to_underlying(KeyboardType::kUK) == 2);
 
-enum class OOHDRToneMapper : std::int32_t {
+namespace oo {
+
+enum class HDRToneMapper : std::int32_t {
   kNone = -1,
   kAcesApprox = 0,
   kDice,
   kUchimura,
   kReinhard
 };
+
+}  // namespace oo
+
 // The numbers the preferences and JS use.
-static_assert(oo::ToUnderlying(OOHDRToneMapper::kNone) == -1);
-static_assert(oo::ToUnderlying(OOHDRToneMapper::kAcesApprox) == 0);
-static_assert(oo::ToUnderlying(OOHDRToneMapper::kDice) == 1);
-static_assert(oo::ToUnderlying(OOHDRToneMapper::kUchimura) == 2);
-static_assert(oo::ToUnderlying(OOHDRToneMapper::kReinhard) == 3);
+static_assert(oo::ToUnderlying(oo::HDRToneMapper::kNone) == -1);
+static_assert(oo::ToUnderlying(oo::HDRToneMapper::kAcesApprox) == 0);
+static_assert(oo::ToUnderlying(oo::HDRToneMapper::kDice) == 1);
+static_assert(oo::ToUnderlying(oo::HDRToneMapper::kUchimura) == 2);
+static_assert(oo::ToUnderlying(oo::HDRToneMapper::kReinhard) == 3);
+
+namespace oo {
 
 // The names the game writes for OOHDRToneMapper (saves, logs and plists).
-constexpr std::string_view OOEnumName(OOHDRToneMapper value) noexcept {
+constexpr std::string_view OOEnumName(HDRToneMapper value) noexcept {
   switch (value) {
-    case OOHDRToneMapper::kNone:
+    case HDRToneMapper::kNone:
       return "OOHDR_TONEMAPPER_NONE";
-    case OOHDRToneMapper::kAcesApprox:
+    case HDRToneMapper::kAcesApprox:
       return "OOHDR_TONEMAPPER_ACES_APPROX";
-    case OOHDRToneMapper::kDice:
+    case HDRToneMapper::kDice:
       return "OOHDR_TONEMAPPER_DICE";
-    case OOHDRToneMapper::kUchimura:
+    case HDRToneMapper::kUchimura:
       return "OOHDR_TONEMAPPER_UCHIMURA";
-    case OOHDRToneMapper::kReinhard:
+    case HDRToneMapper::kReinhard:
       return "OOHDR_TONEMAPPER_REINHARD";
   }
   return {};
 }
 
-enum class OOSDRToneMapper : std::int32_t {
+enum class SDRToneMapper : std::int32_t {
   kNone = -1,
   kAces = 0,
   kAgX,
@@ -206,35 +219,42 @@ enum class OOSDRToneMapper : std::int32_t {
   kUchimura,
   kReinhard
 };
+
+}  // namespace oo
+
 // The numbers the preferences and JS use.
-static_assert(oo::ToUnderlying(OOSDRToneMapper::kNone) == -1);
-static_assert(oo::ToUnderlying(OOSDRToneMapper::kAces) == 0);
-static_assert(oo::ToUnderlying(OOSDRToneMapper::kAgX) == 1);
-static_assert(oo::ToUnderlying(OOSDRToneMapper::kHejlDawson) == 2);
-static_assert(oo::ToUnderlying(OOSDRToneMapper::kUC2) == 3);
-static_assert(oo::ToUnderlying(OOSDRToneMapper::kUchimura) == 4);
-static_assert(oo::ToUnderlying(OOSDRToneMapper::kReinhard) == 5);
+static_assert(oo::ToUnderlying(oo::SDRToneMapper::kNone) == -1);
+static_assert(oo::ToUnderlying(oo::SDRToneMapper::kAces) == 0);
+static_assert(oo::ToUnderlying(oo::SDRToneMapper::kAgX) == 1);
+static_assert(oo::ToUnderlying(oo::SDRToneMapper::kHejlDawson) == 2);
+static_assert(oo::ToUnderlying(oo::SDRToneMapper::kUC2) == 3);
+static_assert(oo::ToUnderlying(oo::SDRToneMapper::kUchimura) == 4);
+static_assert(oo::ToUnderlying(oo::SDRToneMapper::kReinhard) == 5);
+
+namespace oo {
 
 // The names the game writes for OOSDRToneMapper (saves, logs and plists).
-constexpr std::string_view OOEnumName(OOSDRToneMapper value) noexcept {
+constexpr std::string_view OOEnumName(SDRToneMapper value) noexcept {
   switch (value) {
-    case OOSDRToneMapper::kNone:
+    case SDRToneMapper::kNone:
       return "OOSDR_TONEMAPPER_NONE";
-    case OOSDRToneMapper::kAces:
+    case SDRToneMapper::kAces:
       return "OOSDR_TONEMAPPER_ACES";
-    case OOSDRToneMapper::kAgX:
+    case SDRToneMapper::kAgX:
       return "OOSDR_TONEMAPPER_AgX";
-    case OOSDRToneMapper::kHejlDawson:
+    case SDRToneMapper::kHejlDawson:
       return "OOSDR_TONEMAPPER_HEJLDAWSON";
-    case OOSDRToneMapper::kUC2:
+    case SDRToneMapper::kUC2:
       return "OOSDR_TONEMAPPER_UC2";
-    case OOSDRToneMapper::kUchimura:
+    case SDRToneMapper::kUchimura:
       return "OOSDR_TONEMAPPER_UCHIMURA";
-    case OOSDRToneMapper::kReinhard:
+    case SDRToneMapper::kReinhard:
       return "OOSDR_TONEMAPPER_REINHARD";
   }
   return {};
 }
+
+}  // namespace oo
 
 extern int debug;
 
@@ -284,11 +304,11 @@ class MyOpenGLView : public oo::Object {
   void setHDRMaxBrightness(float newMaxBrightness);
   float hdrPaperWhiteBrightness();
   void setHDRPaperWhiteBrightness(float newPaperWhiteBrightness);
-  OOHDRToneMapper hdrToneMapper();
-  void setHDRToneMapper(OOHDRToneMapper newToneMapper);
+  oo::HDRToneMapper hdrToneMapper();
+  void setHDRToneMapper(oo::HDRToneMapper newToneMapper);
 #endif
-  OOSDRToneMapper sdrToneMapper();
-  void setSDRToneMapper(OOSDRToneMapper newToneMapper);
+  oo::SDRToneMapper sdrToneMapper();
+  void setSDRToneMapper(oo::SDRToneMapper newToneMapper);
   float colorSaturation();
   void adjustColorSaturation(float colorSaturationAdjustment);
   bool hdrOutput();
@@ -451,11 +471,11 @@ class MyOpenGLView : public oo::Object {
   RECT lastGoodRect = {};
   float _hdrMaxBrightness = {};
   float _hdrPaperWhiteBrightness = {};
-  OOHDRToneMapper _hdrToneMapper = {};
+  oo::HDRToneMapper _hdrToneMapper = {};
 
 #endif
 
-  OOSDRToneMapper _sdrToneMapper = {};
+  oo::SDRToneMapper _sdrToneMapper = {};
   float _colorSaturation = {};
 
   bool _hdrOutput = {};

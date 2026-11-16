@@ -205,12 +205,12 @@ OO_TEST(slice2AccessorsAndViewSettings) {
     OO_CHECK(!view->msaa());
 
     // SDR tone mapper: clamped to the enum's range.
-    view->setSDRToneMapper((OOSDRToneMapper)99);
-    OO_CHECK(view->sdrToneMapper() == OOSDRToneMapper::kReinhard);
-    view->setSDRToneMapper((OOSDRToneMapper)-7);
-    OO_CHECK(view->sdrToneMapper() == OOSDRToneMapper::kNone);
-    view->setSDRToneMapper(OOSDRToneMapper::kAgX);
-    OO_CHECK(view->sdrToneMapper() == OOSDRToneMapper::kAgX);
+    view->setSDRToneMapper((oo::SDRToneMapper)99);
+    OO_CHECK(view->sdrToneMapper() == oo::SDRToneMapper::kReinhard);
+    view->setSDRToneMapper((oo::SDRToneMapper)-7);
+    OO_CHECK(view->sdrToneMapper() == oo::SDRToneMapper::kNone);
+    view->setSDRToneMapper(oo::SDRToneMapper::kAgX);
+    OO_CHECK(view->sdrToneMapper() == oo::SDRToneMapper::kAgX);
 
     // Colour saturation: adjusted, clamped to [0, MAX_COLOR_SATURATION]. No
     // window: it starts at 0.
@@ -258,12 +258,12 @@ OO_TEST(slice2AccessorsAndViewSettings) {
     OO_CHECK(
         Near(oo::Defaults::standard().floatForKey("hdr-paperwhite-brightness"),
              150.0));
-    view->setHDRToneMapper((OOHDRToneMapper)42);
-    OO_CHECK(view->hdrToneMapper() == OOHDRToneMapper::kReinhard);
-    view->setHDRToneMapper((OOHDRToneMapper)-3);
-    OO_CHECK(view->hdrToneMapper() == OOHDRToneMapper::kNone);
-    view->setHDRToneMapper(OOHDRToneMapper::kDice);
-    OO_CHECK(view->hdrToneMapper() == OOHDRToneMapper::kDice);
+    view->setHDRToneMapper((oo::HDRToneMapper)42);
+    OO_CHECK(view->hdrToneMapper() == oo::HDRToneMapper::kReinhard);
+    view->setHDRToneMapper((oo::HDRToneMapper)-3);
+    OO_CHECK(view->hdrToneMapper() == oo::HDRToneMapper::kNone);
+    view->setHDRToneMapper(oo::HDRToneMapper::kDice);
+    OO_CHECK(view->hdrToneMapper() == oo::HDRToneMapper::kDice);
 #endif
   }
 }
@@ -468,8 +468,8 @@ OO_TEST(cxxSlice2API) {
     cxxView->setMsaa(true);
     OO_CHECK(view->msaa() && cxxView->msaa());
     cxxView->setMsaa(false);
-    cxxView->setSDRToneMapper(OOSDRToneMapper::kUC2);
-    OO_CHECK(view->sdrToneMapper() == OOSDRToneMapper::kUC2);
+    cxxView->setSDRToneMapper(oo::SDRToneMapper::kUC2);
+    OO_CHECK(view->sdrToneMapper() == oo::SDRToneMapper::kUC2);
     OO_CHECK(cxxView->colorSaturation() == view->colorSaturation());
     OO_CHECK(cxxView->hdrOutput() == static_cast<bool>(view->hdrOutput()));
     OO_CHECK(cxxView->inFullScreenMode() ==

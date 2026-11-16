@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-#include "OOSDLJoystickManager.h"
+#include "SDLJoystickManager.h"
 #include "oo_test.hpp"
 
 namespace {
@@ -86,15 +86,15 @@ SDL_Event HatEvent(SDL_JoystickID which, Uint8 hat, Uint8 value) {
 
 // As +alloc then -init made it: the SDL constructor, then the superclass's
 // -init body.
-std::shared_ptr<OOSDLJoystickManager> NewManager() {
-  std::shared_ptr<OOSDLJoystickManager> manager = oo::makeShared<OOSDLJoystickManager>();
+std::shared_ptr<oo::SDLJoystickManager> NewManager() {
+  std::shared_ptr<oo::SDLJoystickManager> manager = oo::makeShared<oo::SDLJoystickManager>();
   manager->init();
   return manager;
 }
 
 // The factory the game registers (MyOpenGLView.mm).
 std::shared_ptr<OOJoystickManager> MakeSDLManager() {
-  return oo::makeShared<OOSDLJoystickManager>();
+  return oo::makeShared<oo::SDLJoystickManager>();
 }
 
 }  // namespace
@@ -104,7 +104,7 @@ OO_TEST(opensAndNamesTheSticks) {
   OO_CHECK(vs.id != 0 && vs.handle != nullptr);
 
   {
-    std::shared_ptr<OOSDLJoystickManager> manager = NewManager();
+    std::shared_ptr<oo::SDLJoystickManager> manager = NewManager();
     OO_CHECK(manager != nullptr);
     OO_CHECK(manager->joystickCount() == 1);
     OO_CHECK(manager->nameOfJoystick(0) ==
@@ -125,7 +125,7 @@ OO_TEST(opensAndNamesTheSticks) {
 OO_TEST(makesEvents) {
   VirtualStick& vs = Stick();
   {
-    std::shared_ptr<OOSDLJoystickManager> manager = NewManager();
+    std::shared_ptr<oo::SDLJoystickManager> manager = NewManager();
 
     SDL_Event axis = AxisEvent(vs.id, 1, -1234);
     SDL_JoyAxisEvent a = manager->makeJoyAxisEvent(&axis.jaxis);
@@ -152,7 +152,7 @@ OO_TEST(makesEvents) {
 OO_TEST(readsAxesFromSDL) {
   VirtualStick& vs = Stick();
   {
-    std::shared_ptr<OOSDLJoystickManager> manager = NewManager();
+    std::shared_ptr<oo::SDLJoystickManager> manager = NewManager();
     SDL_SetJoystickVirtualAxis(vs.handle, 0, 5000);
     SDL_SetJoystickVirtualAxis(vs.handle, 1, -300);
     SDL_UpdateJoysticks();
@@ -167,7 +167,7 @@ OO_TEST(handlesEventsThroughTheSuperclass) {
     // As the game makes it: the SDL class registered with the superclass, which
     // creates it.
     OO_CHECK(OOJoystickManager::setStickHandlerFactory(MakeSDLManager));
-    OOSDLJoystickManager* manager = dynamic_cast<OOSDLJoystickManager*>(
+    oo::SDLJoystickManager* manager = dynamic_cast<oo::SDLJoystickManager*>(
         OOJoystickManager::sharedStickHandler());
     OO_CHECK(manager != nullptr);
     OO_CHECK(manager->joystickCount() == 1);
@@ -208,7 +208,7 @@ OO_TEST(refusesEventsOfAStickItDidNotOpen) {
   VirtualStick& vs = Stick();
   const SDL_JoystickID stray = vs.id + 100;
   {
-    std::shared_ptr<OOSDLJoystickManager> manager = NewManager();
+    std::shared_ptr<oo::SDLJoystickManager> manager = NewManager();
     OO_CHECK(manager->getJoystickIndexFromId(stray) == -1);
 
     SDL_Event down = ButtonEvent(vs.id, 0, true);
@@ -237,7 +237,7 @@ OO_TEST(refusesEventsOfAStickItDidNotOpen) {
 OO_TEST(decodesGuiButtonsFromSDL) {
   VirtualStick& vs = Stick();
   {
-    std::shared_ptr<OOSDLJoystickManager> manager = NewManager();
+    std::shared_ptr<oo::SDLJoystickManager> manager = NewManager();
     auto buttonFn = [](int button) {
       oo::PList::Dict fn;
       fn[std::string(STICK_ISAXIS)] = oo::PList(false);

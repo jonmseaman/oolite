@@ -4955,12 +4955,13 @@ oo::PList Universe::gameSettings() {
     result["hdr-paperwhite-brightness"] = oo::PList::singleReal(
         (gameView != nullptr ? gameView->hdrPaperWhiteBrightness() : 0.0f));
     result["hdr-tone-mapper"] = oo::PList(OOStringFromHDRToneMapper(
-        (gameView != nullptr ? gameView->hdrToneMapper() : OOHDRToneMapper{})));
+        (gameView != nullptr ? gameView->hdrToneMapper()
+                             : oo::HDRToneMapper{})));
   }
 #endif
 
   result["sdr-tone-mapper"] = oo::PList(OOStringFromSDRToneMapper(
-      (gameView != nullptr ? gameView->sdrToneMapper() : OOSDRToneMapper{})));
+      (gameView != nullptr ? gameView->sdrToneMapper() : oo::SDRToneMapper{})));
 
   result["detailLevel"] =
       oo::PList(OOStringFromGraphicsDetail(getDetailLevel()));
@@ -11734,13 +11735,13 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
     OOGL(glUniform1i(
         glGetUniformLocation(final, "uHDRToneMapper"),
         oo::ToUnderlying(gameView != nullptr ? gameView->hdrToneMapper()
-                                             : OOHDRToneMapper{})));
+                                             : oo::HDRToneMapper{})));
   }
 #endif
   OOGL(glUniform1i(
       glGetUniformLocation(final, "uSDRToneMapper"),
       oo::ToUnderlying(gameView != nullptr ? gameView->sdrToneMapper()
-                                           : OOSDRToneMapper{})));
+                                           : oo::SDRToneMapper{})));
 
   OOGL(glActiveTexture(GL_TEXTURE1));
   OOGL(glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]));

@@ -23,7 +23,9 @@
 // MARK: The classes, as far as the binding sees them ----------------------------------------------
 
 // As MyOpenGLView.h declares them (the test imports neither it nor Universe.h).
-enum class OOHDRToneMapper : std::int32_t {
+namespace oo {
+
+enum class HDRToneMapper : std::int32_t {
 	kNone = -1,
 	kAcesApprox = 0,
 	kDice,
@@ -31,7 +33,7 @@ enum class OOHDRToneMapper : std::int32_t {
 	kReinhard
 };
 
-enum class OOSDRToneMapper : std::int32_t {
+enum class SDRToneMapper : std::int32_t {
 	kNone = -1,
 	kAces = 0,
 	kAgX,
@@ -41,6 +43,9 @@ enum class OOSDRToneMapper : std::int32_t {
 	kReinhard
 };
 
+}  // namespace oo
+
+
 
 // The game view: a stand-in for the C++ class, with the header's names and
 // signatures, defined out of line below with the stand-in's answers.
@@ -49,18 +54,18 @@ class MyOpenGLView : public oo::Object
 public:
 	float _colorSaturation = {};
 	bool _hdrOutput = {};
-	OOHDRToneMapper _hdrToneMapper = {};
-	OOSDRToneMapper _sdrToneMapper = {};
+	oo::HDRToneMapper _hdrToneMapper = {};
+	oo::SDRToneMapper _sdrToneMapper = {};
 	int _hdrSets = {};
 	int _sdrSets = {};
 
 	float colorSaturation();
 	void adjustColorSaturation(float colorSaturationAdjustment);
 	bool hdrOutput();
-	OOHDRToneMapper hdrToneMapper();
-	void setHDRToneMapper(OOHDRToneMapper newToneMapper);
-	OOSDRToneMapper sdrToneMapper();
-	void setSDRToneMapper(OOSDRToneMapper newToneMapper);
+	oo::HDRToneMapper hdrToneMapper();
+	void setHDRToneMapper(oo::HDRToneMapper newToneMapper);
+	oo::SDRToneMapper sdrToneMapper();
+	void setSDRToneMapper(oo::SDRToneMapper newToneMapper);
 };
 
 
@@ -133,10 +138,10 @@ oo::PList Dict(std::initializer_list<std::pair<const char *, oo::PList>> entries
 float MyOpenGLView::colorSaturation()  { return _colorSaturation; }
 void MyOpenGLView::adjustColorSaturation(float colorSaturationAdjustment)  { _colorSaturation += colorSaturationAdjustment; }
 bool MyOpenGLView::hdrOutput()  { return _hdrOutput; }
-OOHDRToneMapper MyOpenGLView::hdrToneMapper()  { return _hdrToneMapper; }
-void MyOpenGLView::setHDRToneMapper(OOHDRToneMapper newToneMapper)  { _hdrToneMapper = newToneMapper; _hdrSets++; }
-OOSDRToneMapper MyOpenGLView::sdrToneMapper()  { return _sdrToneMapper; }
-void MyOpenGLView::setSDRToneMapper(OOSDRToneMapper newToneMapper)  { _sdrToneMapper = newToneMapper; _sdrSets++; }
+oo::HDRToneMapper MyOpenGLView::hdrToneMapper()  { return _hdrToneMapper; }
+void MyOpenGLView::setHDRToneMapper(oo::HDRToneMapper newToneMapper)  { _hdrToneMapper = newToneMapper; _hdrSets++; }
+oo::SDRToneMapper MyOpenGLView::sdrToneMapper()  { return _sdrToneMapper; }
+void MyOpenGLView::setSDRToneMapper(oo::SDRToneMapper newToneMapper)  { _sdrToneMapper = newToneMapper; _sdrSets++; }
 
 
 oo::PList Universe::gameSettings()
@@ -173,40 +178,40 @@ std::vector<std::string> ResourceManager::maskUserNameInPathArray(const std::vec
 
 
 // The tone mappers' names, as OOConstToString.mm gives them, for the ones the test uses.
-std::string OOStringFromHDRToneMapper(OOHDRToneMapper toneMapper)
+std::string OOStringFromHDRToneMapper(oo::HDRToneMapper toneMapper)
 {
 	switch (toneMapper)
 	{
-		case OOHDRToneMapper::kAcesApprox:  return "OOHDR_TONEMAPPER_ACES_APPROX";
-		case OOHDRToneMapper::kDice:  return "OOHDR_TONEMAPPER_DICE";
-		case OOHDRToneMapper::kReinhard:  return "OOHDR_TONEMAPPER_REINHARD";
+		case oo::HDRToneMapper::kAcesApprox:  return "OOHDR_TONEMAPPER_ACES_APPROX";
+		case oo::HDRToneMapper::kDice:  return "OOHDR_TONEMAPPER_DICE";
+		case oo::HDRToneMapper::kReinhard:  return "OOHDR_TONEMAPPER_REINHARD";
 		default:  return "OOHDR_TONEMAPPER_UNDEFINED";
 	}
 }
 
-OOHDRToneMapper OOHDRToneMapperFromString(const std::string &string)
+oo::HDRToneMapper OOHDRToneMapperFromString(const std::string &string)
 {
-	if (string == "OOHDR_TONEMAPPER_DICE")  return OOHDRToneMapper::kDice;
-	if (string == "OOHDR_TONEMAPPER_REINHARD")  return OOHDRToneMapper::kReinhard;
-	return OOHDRToneMapper::kAcesApprox;
+	if (string == "OOHDR_TONEMAPPER_DICE")  return oo::HDRToneMapper::kDice;
+	if (string == "OOHDR_TONEMAPPER_REINHARD")  return oo::HDRToneMapper::kReinhard;
+	return oo::HDRToneMapper::kAcesApprox;
 }
 
-std::string OOStringFromSDRToneMapper(OOSDRToneMapper toneMapper)
+std::string OOStringFromSDRToneMapper(oo::SDRToneMapper toneMapper)
 {
 	switch (toneMapper)
 	{
-		case OOSDRToneMapper::kAces:  return "OOSDR_TONEMAPPER_ACES";
-		case OOSDRToneMapper::kAgX:  return "OOSDR_TONEMAPPER_AGX";
-		case OOSDRToneMapper::kReinhard:  return "OOSDR_TONEMAPPER_REINHARD";
+		case oo::SDRToneMapper::kAces:  return "OOSDR_TONEMAPPER_ACES";
+		case oo::SDRToneMapper::kAgX:  return "OOSDR_TONEMAPPER_AGX";
+		case oo::SDRToneMapper::kReinhard:  return "OOSDR_TONEMAPPER_REINHARD";
 		default:  return "OOSDR_TONEMAPPER_UNDEFINED";
 	}
 }
 
-OOSDRToneMapper OOSDRToneMapperFromString(const std::string &string)
+oo::SDRToneMapper OOSDRToneMapperFromString(const std::string &string)
 {
-	if (string == "OOSDR_TONEMAPPER_AGX")  return OOSDRToneMapper::kAgX;
-	if (string == "OOSDR_TONEMAPPER_REINHARD")  return OOSDRToneMapper::kReinhard;
-	return OOSDRToneMapper::kAces;
+	if (string == "OOSDR_TONEMAPPER_AGX")  return oo::SDRToneMapper::kAgX;
+	if (string == "OOSDR_TONEMAPPER_REINHARD")  return oo::SDRToneMapper::kReinhard;
+	return oo::SDRToneMapper::kAces;
 }
 
 
@@ -433,8 +438,8 @@ void SetUpContext()
 
 	sView = new MyOpenGLView();	// kept for the life of the test
 	sView->_colorSaturation = 1.0f;
-	sView->_hdrToneMapper = OOHDRToneMapper::kDice;
-	sView->_sdrToneMapper = OOSDRToneMapper::kAgX;
+	sView->_hdrToneMapper = oo::HDRToneMapper::kDice;
+	sView->_sdrToneMapper = oo::SDRToneMapper::kAgX;
 	sUniverse = new StandInUniverse();
 	sUniverse->_gameView = sView;
 	sUniverse->_currentPostFX = 2;

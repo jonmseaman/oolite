@@ -93,10 +93,10 @@ std::string DockingClearanceStatusToString(
     OODockingClearanceStatus dockingClearanceStatus);
 std::string OOStringFromGraphicsDetail(OOGraphicsDetail detail);
 OOGraphicsDetail OOGraphicsDetailFromString(const std::string& string);
-std::string OOStringFromHDRToneMapper(OOHDRToneMapper toneMapper);
-OOHDRToneMapper OOHDRToneMapperFromString(const std::string& string);
-std::string OOStringFromSDRToneMapper(OOSDRToneMapper toneMapper);
-OOSDRToneMapper OOSDRToneMapperFromString(const std::string& string);
+std::string OOStringFromHDRToneMapper(oo::HDRToneMapper toneMapper);
+oo::HDRToneMapper OOHDRToneMapperFromString(const std::string& string);
+std::string OOStringFromSDRToneMapper(oo::SDRToneMapper toneMapper);
+oo::SDRToneMapper OOSDRToneMapperFromString(const std::string& string);
 
 // The .tbl families whose types come from OOTypes.h; the
 // others are declared beside their enums in Entity.h, ShipEntity.h and
