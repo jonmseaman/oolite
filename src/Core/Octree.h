@@ -156,13 +156,13 @@ class OctreeBuilder : public oo::Object {
   void endInnerNode();
 
  private:
-  struct OOOctreeBuildState {
+  struct OctreeBuildState {
     uint32_t insertionPoint;
     uint32_t remaining;
   };
 
   // The file-static helpers that read the builder's state.
-  static OOOctreeBuildState* State(OctreeBuilder* self);
+  static OctreeBuildState* State(OctreeBuilder* self);
   static void SetNode_slow(OctreeBuilder* self, uint32_t index,
                            int value) NO_INLINE_FUNC;
   static void SetNode(OctreeBuilder* self, uint32_t index, int value);
@@ -170,7 +170,7 @@ class OctreeBuilder : public oo::Object {
 
   std::vector<int> _octree;  // the nodes; its size is the capacity
   uint32_t _nodeCount = {};
-  OOOctreeBuildState _stateStack[kMaxOctreeDepth + 1] = {};
+  OctreeBuildState _stateStack[kMaxOctreeDepth + 1] = {};
   uint8_t _level = {};
 };
 

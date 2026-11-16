@@ -138,8 +138,8 @@ class Mesh : public Drawable, public GraphicsResetClient {
                                 // member, the buffers shared
   ~Mesh() override;
 
-  std::shared_ptr<Mesh> copyWithZone(OOZone* zone);
-  std::shared_ptr<Mesh> mutableCopyWithZone(OOZone* zone);
+  std::shared_ptr<Mesh> copyWithZone(oo::Zone* zone);
+  std::shared_ptr<Mesh> mutableCopyWithZone(oo::Zone* zone);
 
   std::optional<std::string> modelName();
 

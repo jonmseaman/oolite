@@ -41,14 +41,14 @@ Rules that hold for every component:
 | `src/oofnd/String.hpp` | `oo::str`: the `NSString` methods and Oolite `NSString` categories the game uses (`NSStringOOExtensions`, `OOStringParsing`'s `NSString (OOUtilities)`, `ScanTokensFromString`, the version helpers) over UTF-8 `std::string`, GNUstep 1.31.1's answers exactly: case tables, whitespace set, composed-sequence rules, `-pathExtension`, `-replaceOccurrencesOfString:`, `-hasPrefix:`, `-stringWithFormat:` without `%@` |
 | `src/oofnd/Scanner.hpp` | `oo::str::CharacterSet` / `oo::str::Scanner` and `trim` / `findFirstOf` / `findLastOf` / `splitByCharacters`: `NSCharacterSet` (the named sets as GNUstep 1.31.1 tables, custom, inverted), `NSScanner` (skipping, case-insensitive matching, failure locations, `scanInt`/`scanDouble`) and `NSScannerOOExtensions`, exactly |
 | `src/oofnd/Encoding.hpp` | `oo::str::Encoding` / `encodeLossy` / `convertForFont`: `OOEncodingConverter`'s conversion to the five Windows code pages, including libiconv's transliterations as GNUstep runs them; `stringWithContentsOfUnicodeFile` / `decodeUnicodeText`: `+[NSString stringWithContentsOfUnicodeFile:]` (UTF-16 by BOM, else UTF-8, else Latin-1; plain files, captured) |
-| `src/oofnd/Log.hpp` | `oo::log`: OOLogging without Foundation: message-class switches (inheritance, `$metaclasses`, `_default`/`_override`), per-thread indentation, the exact Latest.log line layout, OOLogging's own diagnostics, and the `OO_LOG("cls", "{}", ...)` std::format front end. `src/Core/OOLogging.cpp` is the game-side shell |
+| `src/oofnd/Log.hpp` | `oo::log`: OOLogging without Foundation: message-class switches (inheritance, `$metaclasses`, `_default`/`_override`), per-thread indentation, the exact Latest.log line layout, OOLogging's own diagnostics, and the `OO_LOG("cls", "{}", ...)` std::format front end. `src/Core/Logging.cpp` is the game-side shell |
 | `src/oofnd/LogFile.hpp` | `oo::log::FileWriter`, `logFileBytes`, `consoleBytes`, `rotateToPrevious`: the Latest.log writer (OOLogOutputHandler's OOAsyncLogger) without Foundation, byte for byte: CRLF, lone-surrogate lines dropped, 1 GiB saturation, Previous.log rotation |
 | `src/oofnd/Http.hpp` | `oo::http::Download`, `parseUrl`: the OXZ manager's `NSURLConnection` without Foundation: one GET on its own thread (libcurl), its response/data/finish/failure callbacks taken in order on the main thread; every status delivers its body, Content-Length or -1, no cookies, redirects followed, file: URLs read from disk |
 | `src/oofnd/Defaults.hpp` | `oo::Defaults`: preferences store matching former `NSUserDefaults`+Override/`NSBundle+Override` behaviour: same `GNUstep/Defaults/oolite.plist`, same search list and coercions, `oo::writeOpenStepPList` (GNUstep's OpenStep writer, byte-identical) |
-| `src/oofnd/objc/OOObject.h` | `OOZone`, the opaque zone type (always null) that OOMesh's copy members take |
-| `src/oofnd/objc/OOException.h` | forwards to `oofnd/Exception.hpp` (`oo::Exception`, `OORaiseException`) |
-| `src/oofnd/objc/OOAssert.h` | `OOCAssert` / `OOCParameterAssert`: gnustep-base's assertion semantics, live in every flavour |
-| `src/oofnd/objc/OOFoundationTypes.h` | what is left of Foundation's C types: `NSRange`, `NSPoint`/`NSSize`/`NSRect` with `NSMake*`/`NSEqual*`, and `oo::kNotFound`, with GNUstep's exact definitions; refuses to compile beside a Foundation header. The integer, interval and `CGFloat` aliases became the standard types. Pinned by `tests/unit/oofnd/test_foundation_types.cpp` |
+| `src/oofnd/objc/Object.h` | `OOZone`, the opaque zone type (always null) that OOMesh's copy members take |
+| `src/oofnd/objc/Exception.h` | forwards to `oofnd/Exception.hpp` (`oo::Exception`, `OORaiseException`) |
+| `src/oofnd/objc/Assert.h` | `OOCAssert` / `OOCParameterAssert`: gnustep-base's assertion semantics, live in every flavour |
+| `src/oofnd/objc/FoundationTypes.h` | what is left of Foundation's C types: `NSRange`, `NSPoint`/`NSSize`/`NSRect` with `NSMake*`/`NSEqual*`, and `oo::kNotFound`, with GNUstep's exact definitions; refuses to compile beside a Foundation header. The integer, interval and `CGFloat` aliases became the standard types. Pinned by `tests/unit/oofnd/test_foundation_types.cpp` |
 | `src/oofnd/meson.build` | `oofnd_dep` (include path `src/`, so consumers write `#include "oofnd/X.hpp"`) |
 | `tests/unit/oofnd/test_*.cpp` | one executable per component, plain C++23 |
 | `tests/unit/oofnd/oo_test.hpp` | the whole test harness: `OO_TEST`, `OO_CHECK`, `OO_CHECK_EQ`, `OO_TEST_MAIN` |
@@ -104,11 +104,11 @@ A class describes itself by overriding `virtual std::optional<std::string> descr
 const`; the text is `<ClassName 0xnnnnnnnn>{components}`, or `<ClassName 0xnnnnnnnn>` for nullopt
 (the pointer is `oo::str::pointerDescription`'s, GNUstep's `%p`: the low 32 bits). A subclass extends
 its base's components by calling the base and appending. Exemplar: `OORoleSet::descriptionComponents`
-in `src/Core/OORoleSet.cpp`.
+in `src/Core/RoleSet.cpp`.
 
 ### Describing a property list: `oo::DescriptionOf(const oo::PList &)`
 
-`oo::DescriptionOf(oo::ObjectFromPList(v))` is `oo::DescriptionOf(v)`: the `OODescription.h` overload
+`oo::DescriptionOf(oo::ObjectFromPList(v))` is `oo::DescriptionOf(v)`: the `Description.h` overload
 forwards to `oo::describe` (`oofnd/PListDescription.hpp`), which prints what gnustep-base's
 `-description` printed (`(a, "two words", 1)`, `{key = value; }`, keys by `-compare:`, strings
 quoted and escaped as GNUstep did). The text is pinned by
@@ -116,12 +116,12 @@ quoted and escaped as GNUstep did). The text is pinned by
 from GNUstep base 1.31.1. Dates print in the local time zone, as NSDate did
 (`oo::date::description`); the capture runs with TZ=UTC and the test describes at offset 0.
 
-### Calling a method by name: `Core/OOCallByName.h`
+### Calling a method by name: `Core/CallByName.h`
 
 A dispatcher that runs a method named in data (an AI action, a legacy-script action or query, a
 string-expander `[selector]` key, `ship.call()`, a deferred call) calls
 `oo::CallEntityByName(entity, name [, argument])`, which looks the name up in the generated table
-`Core/Entities/OOEntityCalledByNameTable.h`. The forms it can call, and what it logs for the rest,
+`Core/Entities/EntityCalledByNameTable.h`. The forms it can call, and what it logs for the rest,
 are in the header.
 
 ## Testing

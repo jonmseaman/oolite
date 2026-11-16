@@ -303,7 +303,7 @@ std::optional<std::string> oo::Mesh::descriptionComponents() const {
       NormalModeDescription(static_cast<oo::MeshNormalMode>(_normalMode)));
 }
 
-std::shared_ptr<oo::Mesh> oo::Mesh::copyWithZone(OOZone* zone) {
+std::shared_ptr<oo::Mesh> oo::Mesh::copyWithZone(oo::Zone* zone) {
   // -zone is always nil (OOObject.h), so this is [self zone].
   if (zone == nullptr)
     return oo::share(this);  // OK because we're immutable seen from the outside
@@ -837,7 +837,7 @@ bool oo::Mesh::initWithName(const std::string& name,
   return loaded;
 }
 
-std::shared_ptr<oo::Mesh> oo::Mesh::mutableCopyWithZone(OOZone* /*zone*/) {
+std::shared_ptr<oo::Mesh> oo::Mesh::mutableCopyWithZone(oo::Zone* /*zone*/) {
   // A new mesh whose members are copied one by one (the copy constructor),
   // so the buffers are shared. Zones are unused.
   std::shared_ptr<oo::Mesh> result = oo::makeShared<oo::Mesh>(*this);
