@@ -580,7 +580,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
     case kGalacticHyperspaceBehaviour:
       return OOJSValueFromGalacticHyperspaceBehaviour(
           context, (player != nullptr ? player->getGalacticHyperspaceBehaviour()
-                                      : OOGalacticHyperspaceBehaviour{}));
+                                      : oo::GalacticHyperspaceBehaviour{}));
 
     case kGalacticHyperspaceFixedCoords:
       OOJS_RETURN_WITH_HELPER(
@@ -658,7 +658,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
     case kChartHightlightMode:
       result = oo::PList(OOStringFromLongRangeChartMode(
           player != nullptr ? player->getLongRangeChartMode()
-                            : OOLongRangeChartMode{}));
+                            : oo::LongRangeChartMode{}));
       break;
 
     case kGalaxyCoordinates:
@@ -751,7 +751,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
     case kCompassType:
       result = oo::PList(
           (OOStringFromCompassMode(player != nullptr ? player->getCompassMode()
-                                                     : OOCompassMode{}) ==
+                                                     : oo::CompassMode{}) ==
            "COMPASS_MODE_BASIC")
               ? "OO_COMPASSTYPE_BASIC"
               : "OO_COMPASSTYPE_ADVANCED");
@@ -760,7 +760,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
     case kCompassMode:
       return OOJSValueFromCompassMode(
           context,
-          (player != nullptr ? player->getCompassMode() : OOCompassMode{}));
+          (player != nullptr ? player->getCompassMode() : oo::CompassMode{}));
 
     case kHud:
       result = StringOrNull(AskHud(player, &HeadUpDisplay::getHudName));
@@ -784,7 +784,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
     case kViewDirection:
       return OOJSValueFromViewID(
           context,
-          (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}));
+          (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{}));
 
     case kViewPositionAft:
       OOJS_RETURN_VECTOR(
@@ -881,7 +881,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
   int bValue;
   int32_t iValue;
   std::optional<std::string> sValue;
-  OOGalacticHyperspaceBehaviour ghBehaviour;
+  oo::GalacticHyperspaceBehaviour ghBehaviour;
   Vector vValue;
   std::shared_ptr<OOColor>
       colorForScript;        // the colours are converted (OOColor)
@@ -915,16 +915,16 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
     case kChartHightlightMode:
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
-        OOLongRangeChartMode chartMode =
+        oo::LongRangeChartMode chartMode =
             OOLongRangeChartModeFromString(sValue.value_or(""));
-        if (chartMode > OOLongRangeChartMode::kUnknown) {
+        if (chartMode > oo::LongRangeChartMode::kUnknown) {
           if (player != nullptr) player->setLongRangeChartMode(chartMode);
           if (player != nullptr)
             player->doScriptEvent(
                 OOJSID("chartHighlightModeChanged"),
                 {oo::PList(OOStringFromLongRangeChartMode(
                     player != nullptr ? player->getLongRangeChartMode()
-                                      : OOLongRangeChartMode{}))});
+                                      : oo::LongRangeChartMode{}))});
           return JS_UNDEFINED;
         } else {
           OOJSReportError(
@@ -940,7 +940,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
     case kCompassMode:
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
-        OOCompassMode mode = OOCompassModeFromJSValue(context, value);
+        oo::CompassMode mode = OOCompassModeFromJSValue(context, value);
         if (player != nullptr) player->setCompassMode(mode);
         if (player != nullptr) player->validateCompassTarget();
         return JS_UNDEFINED;
@@ -951,7 +951,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         if (*sValue == "OO_COMPASSTYPE_BASIC") {
-          if (player != nullptr) player->setCompassMode(OOCompassMode::kBasic);
+          if (player != nullptr)
+            player->setCompassMode(oo::CompassMode::kBasic);
         } else if (*sValue == "OO_COMPASSTYPE_ADVANCED") {
           if (!(player != nullptr
                     ? player->hasEquipmentItemProviding("EQ_ADVANCED_COMPASS")
@@ -962,7 +963,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
                 "not carry the EQ_ADVANCED_COMPASS equipment or has it "
                 "damaged.");
           }
-          if (player != nullptr) player->setCompassMode(OOCompassMode::kPlanet);
+          if (player != nullptr)
+            player->setCompassMode(oo::CompassMode::kPlanet);
         } else {
           OOJSReportError(context,
                           "Unknown compass type specified - must be either "
@@ -1012,7 +1014,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kGalacticHyperspaceBehaviour:
       ghBehaviour = OOGalacticHyperspaceBehaviourFromJSValue(context, value);
-      if (ghBehaviour != OOGalacticHyperspaceBehaviour::kUnknown) {
+      if (ghBehaviour != oo::GalacticHyperspaceBehaviour::kUnknown) {
         if (player != nullptr)
           player->setGalacticHyperspaceBehaviour(ghBehaviour);
         return JS_UNDEFINED;
@@ -1252,18 +1254,18 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
     case kTargetSystem:
       /* This first check is essential: if removed, it would be
        * possible to make jumps of arbitrary length - CIM */
-      if ((player != nullptr ? player->status() : OOEntityStatus{}) !=
-          OOEntityStatus::kEnteringWitchspace) {
+      if ((player != nullptr ? player->status() : oo::EntityStatus{}) !=
+          oo::EntityStatus::kEnteringWitchspace) {
         /* These checks though similar are less important. The
          * consequences of allowing jump destination to be set in
          * flight are not as severe and do not allow the 7LY limit to
          * be broken. Nevertheless, it is not allowed. - CIM */
         // (except when compiled in debugging mode)
 #ifndef OO_DUMP_PLANETINFO
-        if ((player != nullptr ? player->status() : OOEntityStatus{}) !=
-                OOEntityStatus::kDocked &&
-            (player != nullptr ? player->status() : OOEntityStatus{}) !=
-                OOEntityStatus::kLaunching) [[unlikely]] {
+        if ((player != nullptr ? player->status() : oo::EntityStatus{}) !=
+                oo::EntityStatus::kDocked &&
+            (player != nullptr ? player->status() : oo::EntityStatus{}) !=
+                oo::EntityStatus::kLaunching) [[unlikely]] {
           OOJSReportError(context,
                           "player.ship.targetSystem is read-only unless "
                           "called when docked.");
@@ -1832,8 +1834,8 @@ static JSValue PlayerShipSetCustomView(JSContext* context,
   }
 
   // must be in custom view
-  if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}) !=
-      OOViewID::kCustom) {
+  if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{}) !=
+      oo::ViewID::kCustom) {
     OOJSReportError(
         context,
         "PlayerShip.setCustomView only works when custom view is active.");
@@ -1884,7 +1886,7 @@ static JSValue PlayerShipSetCustomView(JSContext* context,
     player->setCustomViewDataFromDictionary(oo::PList(std::move(viewData)),
                                             false);
   if (player != nullptr)
-    player->noteSwitchToView(OOViewID::kCustom, OOViewID::kCustom);
+    player->noteSwitchToView(oo::ViewID::kCustom, oo::ViewID::kCustom);
 
   OOJS_RETURN_BOOL(true);
   OOJS_NATIVE_EXIT
@@ -1900,8 +1902,8 @@ static JSValue PlayerShipResetCustomView(JSContext* context,
   PlayerEntity* player = OOPlayerForScripting();
 
   // must be in custom view
-  if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}) !=
-      OOViewID::kCustom) {
+  if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{}) !=
+      oo::ViewID::kCustom) {
     OOJSReportError(
         context,
         "PlayerShip.setCustomView only works when custom view is active.");
@@ -1910,7 +1912,7 @@ static JSValue PlayerShipResetCustomView(JSContext* context,
 
   if (player != nullptr) player->resetCustomView();
   if (player != nullptr)
-    player->noteSwitchToView(OOViewID::kCustom, OOViewID::kCustom);
+    player->noteSwitchToView(oo::ViewID::kCustom, oo::ViewID::kCustom);
 
   OOJS_RETURN_BOOL(true);
   OOJS_NATIVE_EXIT
@@ -1978,8 +1980,8 @@ static JSValue PlayerShipBeginHyperspaceCountdown(JSContext* context,
     }
   }
   if ((player != nullptr ? player->hasHyperspaceMotor() : false) &&
-      (player != nullptr ? player->status() : OOEntityStatus{}) ==
-          OOEntityStatus::kInFlight &&
+      (player != nullptr ? player->status() : oo::EntityStatus{}) ==
+          oo::EntityStatus::kInFlight &&
       (player != nullptr ? player->witchJumpChecklist(false) : false)) {
     if (player != nullptr)
       player->beginWitchspaceCountdown(witchspaceSpinUpTime);
@@ -2000,8 +2002,8 @@ static JSValue PlayerShipCancelHyperspaceCountdown(JSContext* context,
 
   bool cancelled = false;
   if ((player != nullptr ? player->hasHyperspaceMotor() : false) &&
-      (player != nullptr ? player->status() : OOEntityStatus{}) ==
-          OOEntityStatus::kWitchspaceCountdown) {
+      (player != nullptr ? player->status() : oo::EntityStatus{}) ==
+          oo::EntityStatus::kWitchspaceCountdown) {
     if (player != nullptr) player->cancelWitchspaceCountdown();
     if (player != nullptr) player->setJumpType(false);
     cancelled = true;
@@ -2036,13 +2038,13 @@ static JSValue PlayerShipBeginGalacticHyperspaceCountdown(
   }
   if ((player != nullptr ? player->hasEquipmentItemProviding("EQ_GAL_DRIVE")
                          : false) &&
-      (player != nullptr ? player->status() : OOEntityStatus{}) ==
-          OOEntityStatus::kInFlight &&
+      (player != nullptr ? player->status() : oo::EntityStatus{}) ==
+          oo::EntityStatus::kInFlight &&
       (player != nullptr ? player->witchJumpChecklist(true) : false)) {
     if (player != nullptr) player->setJumpType(true);
     if (player != nullptr) player->setWitchspaceCountdown(witchspaceSpinUpTime);
     if (player != nullptr)
-      player->setStatus(OOEntityStatus::kWitchspaceCountdown);
+      player->setStatus(oo::EntityStatus::kWitchspaceCountdown);
     if (player != nullptr) player->playGalacticHyperspace();
     // say it!
     if (UNIVERSE != nullptr)

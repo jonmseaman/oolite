@@ -194,7 +194,7 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
       dictionary.isNull() ? oo::PList(oo::PList::Dict{}) : dictionary;
   RANROTSeed savedRanrotSeed = RANROTGetFullSeed();
 
-  scanClass = OOScanClass::kNoDraw;
+  scanClass = oo::ScanClass::kNoDraw;
 
   oo::PList planetInfo =
       (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(systemID)
@@ -408,7 +408,7 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
   OO_LOG("planetinfo.record", "rotation_speed = {:f}", _rotationalVelocity);
 #endif
 
-  setStatus(OOEntityStatus::kActive);
+  setStatus(oo::EntityStatus::kActive);
 
   OOGraphicsResetManager::sharedManager()->registerCxxClient(this);
 }
@@ -607,8 +607,8 @@ bool OOPlanetEntity::initAsMiniatureVersionOfPlanet(OOPlanetEntity* planet) {
 
   // [self init]: the constructor ran Entity's -init.
 
-  scanClass = OOScanClass::kNoDraw;
-  setStatus(OOEntityStatus::kCockpitDisplay);
+  scanClass = oo::ScanClass::kNoDraw;
+  setStatus(oo::EntityStatus::kCockpitDisplay);
 
   collision_radius =
       static_cast<GLfloat>(planet->collision_radius * PLANET_MINIATURE_FACTOR);
@@ -930,8 +930,8 @@ bool OOPlanetEntity::checkCloseCollisionWith(Entity* other) {
   if (!other) return false;
   if (other->isShip) {
     ::ShipEntity* ship = oo::ToShip(other);
-    if ((ship != nullptr ? ship->getBehaviour() : OOBehaviour{}) ==
-        OOBehaviour::kLandOnPlanet) {
+    if ((ship != nullptr ? ship->getBehaviour() : oo::Behaviour{}) ==
+        oo::Behaviour::kLandOnPlanet) {
       return false;
     }
   }
@@ -960,8 +960,8 @@ void OOPlanetEntity::launchShuttle() {
   if (_shuttlesOnGround == 0) {
     return;
   }
-  if ((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
-      OOEntityStatus::kStartGame) {
+  if ((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) ==
+      oo::EntityStatus::kStartGame) {
     // don't launch if game not started
     return;
   }
@@ -996,7 +996,7 @@ void OOPlanetEntity::launchShuttle() {
     if (shuttle_ship != nullptr) shuttle_ship->setOrientation(q1);
 
     if (shuttle_ship != nullptr)
-      shuttle_ship->setScanClass(OOScanClass::kNeutral);
+      shuttle_ship->setScanClass(oo::ScanClass::kNeutral);
     if (shuttle_ship != nullptr)
       shuttle_ship->setCargoFlag(OOCargoFlag::kFullPlentiful);
     if (shuttle_ship != nullptr)

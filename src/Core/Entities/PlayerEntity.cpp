@@ -473,13 +473,13 @@ void PlayerEntity::deferredInit() {
   fov_delta = 2.0;  // multiply by 2 each second
 #endif
 
-  compassMode = OOCompassMode::kBasic;
+  compassMode = oo::CompassMode::kBasic;
 
   afterburnerSoundLooping = false;
 
   isPlayer = true;
 
-  setStatus(OOEntityStatus::kStartGame);
+  setStatus(oo::EntityStatus::kStartGame);
 
   int i;
   for (i = 0; i < PLAYER_MAX_MISSILES; i++) {
@@ -676,8 +676,8 @@ void PlayerEntity::createCargoPodWithType(const std::string& type,
       (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("1t-cargopod")
                            : nullptr);
   if (container) {
-    if (container != nullptr) container->setScanClass(OOScanClass::kCargo);
-    if (container != nullptr) container->setStatus(OOEntityStatus::kInHold);
+    if (container != nullptr) container->setScanClass(oo::ScanClass::kCargo);
+    if (container != nullptr) container->setStatus(oo::EntityStatus::kInHold);
     if (container != nullptr) container->setCommodity(type, amount);
     cargo.emplace_back(container);
     container.reset();
@@ -774,9 +774,9 @@ void PlayerEntity::loadCargoPodsForType(const std::string& type,
             // the cargopod ship is just being set up. If ejected,  will call
             // UNIVERSE addEntity
             if (container != nullptr)
-              container->setStatus(OOEntityStatus::kInHold);
+              container->setStatus(oo::EntityStatus::kInHold);
             if (container != nullptr)
-              container->setScanClass(OOScanClass::kCargo);
+              container->setScanClass(oo::ScanClass::kCargo);
             if (container != nullptr)
               container->setCommodity(
                   type, static_cast<OOCargoQuantity>(smaller_quantity));
@@ -813,9 +813,9 @@ void PlayerEntity::loadCargoPodsForType(const std::string& type,
             // the cargopod ship is just being set up. If ejected, will call
             // UNIVERSE addEntity
             if (container != nullptr)
-              container->setScanClass(OOScanClass::kCargo);
+              container->setScanClass(oo::ScanClass::kCargo);
             if (container != nullptr)
-              container->setStatus(OOEntityStatus::kInHold);
+              container->setStatus(oo::EntityStatus::kInHold);
             if (container != nullptr) container->setCommodity(type, 1);
             cargo.emplace_back(container);
             container.reset();
@@ -1059,8 +1059,8 @@ void PlayerEntity::setInfoSystemID(OOSystemID sid, bool moveChart) {
     ShipScriptEvent(context, this, "infoSystemWillChange",
                     OOJSValueFromDouble(context, info_system_id),
                     OOJSValueFromDouble(context, old));
-    if (gui_screen == OOGUIScreenID::kLongRangeChart ||
-        gui_screen == OOGUIScreenID::kShortRangeChart) {
+    if (gui_screen == oo::GUIScreenID::kLongRangeChart ||
+        gui_screen == oo::GUIScreenID::kShortRangeChart) {
       if (moveChart) {
         target_chart_focus =
             ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) !=
@@ -1070,7 +1070,7 @@ void PlayerEntity::setInfoSystemID(OOSystemID sid, bool moveChart) {
                  : NSMakePoint(0, 0));
       }
     } else {
-      if (gui_screen == OOGUIScreenID::kSystemData) {
+      if (gui_screen == oo::GUIScreenID::kSystemData) {
         setGuiToSystemDataScreenRefreshBackground(true);
       }
       if (moveChart) {
@@ -1649,11 +1649,11 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
     saved_chart_zoom = chart_zoom;
     ANA_mode = static_cast<OORouteType>(
         dict.get<int>("chart_ana_mode", oo::ToUnderlying(OORouteType::kNone)));
-    longRangeChartMode = static_cast<OOLongRangeChartMode>(
+    longRangeChartMode = static_cast<oo::LongRangeChartMode>(
         dict.get<int>("chart_colour_mode",
-                      oo::ToUnderlying(OOLongRangeChartMode::kSunColor)));
-    if (longRangeChartMode == OOLongRangeChartMode::kUnknown)
-      longRangeChartMode = OOLongRangeChartMode::kSunColor;
+                      oo::ToUnderlying(oo::LongRangeChartMode::kSunColor)));
+    if (longRangeChartMode == oo::LongRangeChartMode::kUnknown)
+      longRangeChartMode = oo::LongRangeChartMode::kSunColor;
 
     target_system_id =
         static_cast<OOSystemID>(dict.get<int>("target_id", system_id));
@@ -1845,9 +1845,9 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
                                          // compatibility.
 
   if (hasEquipmentItemProviding("EQ_ADVANCED_COMPASS"))
-    compassMode = OOCompassMode::kPlanet;
+    compassMode = oo::CompassMode::kPlanet;
   else
-    compassMode = OOCompassMode::kBasic;
+    compassMode = oo::CompassMode::kBasic;
   compassTarget.reset();
 
   // speech
@@ -2407,7 +2407,7 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
 
     // set up OOEntityStatus::kDead
     setDockedStation(nullptr);  // needed for OOEntityStatus::kDead
-    setStatus(OOEntityStatus::kDead);
+    setStatus(oo::EntityStatus::kDead);
     OO_LOG("script.javascript.init.error", "{}",
            "Scheduling new JavaScript reset.");
     shot_time =
@@ -2480,7 +2480,7 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
 
   switchHudTo("hud.plist");
   scanner_zoom_rate = 0.0f;
-  longRangeChartMode = OOLongRangeChartMode::kSunColor;
+  longRangeChartMode = oo::LongRangeChartMode::kSunColor;
 
   mission_variables = oo::PList(oo::PList::Dict{});
 
@@ -2623,7 +2623,7 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
 
   ecm_in_operation = false;
   last_ecm_time = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
-  compassMode = OOCompassMode::kBasic;
+  compassMode = oo::CompassMode::kBasic;
   ident_engaged = false;
 
   max_cargo = 20;  // will be reset later
@@ -2678,7 +2678,7 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
   forward_shield = maxForwardShieldLevel();
   aft_shield = maxAftShieldLevel();
 
-  scanClass = OOScanClass::kPlayer;
+  scanClass = oo::ScanClass::kPlayer;
 
   if (UNIVERSE != nullptr) UNIVERSE->clearGUIs();
 
@@ -2907,11 +2907,11 @@ void PlayerEntity::warnAboutHostiles() { playHostileWarning(); }
 
 bool PlayerEntity::canCollide() {
   switch (status()) {
-    case OOEntityStatus::kStartGame:
-    case OOEntityStatus::kDocking:
-    case OOEntityStatus::kDocked:
-    case OOEntityStatus::kDead:
-    case OOEntityStatus::kEscapeSequence:
+    case oo::EntityStatus::kStartGame:
+    case oo::EntityStatus::kDocking:
+    case oo::EntityStatus::kDocked:
+    case oo::EntityStatus::kDead:
+    case oo::EntityStatus::kEscapeSequence:
       return false;
 
     default:
@@ -2938,8 +2938,8 @@ GLfloat PlayerEntity::lookingAtSunWithThresholdAngleCos(
     return 0.0f;
 
   // check if camera position is shadowed
-  OOViewID vdir =
-      (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{});
+  oo::ViewID vdir =
+      (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{});
   unsigned i;
   unsigned ent_count = UNIVERSE->n_entities;
   Entity** uni_entities =
@@ -2949,8 +2949,8 @@ GLfloat PlayerEntity::lookingAtSunWithThresholdAngleCos(
       if (oo::EntityIsPlanet(uni_entities[i]) ||
           (oo::EntityIsShip(uni_entities[i]) && uni_entities[i]->isVisible())) {
         // the player ship can't shadow internal views
-        if (vdir > OOViewID::kStarboard || !oo::EntityIsPlayer(uni_entities[i]))
-            [[likely]] {
+        if (vdir > oo::ViewID::kStarboard ||
+            !oo::EntityIsPlayer(uni_entities[i])) [[likely]] {
           const float shadow = shadowAtPointOcclusion(viewpointPosition(), 1.0f,
                                                       uni_entities[i], sun)
                                    .value;
@@ -2969,19 +2969,19 @@ GLfloat PlayerEntity::lookingAtSunWithThresholdAngleCos(
       viewpointPosition(), (sun != nullptr ? sun->getPosition() : HPVector{})));
   unitRelativePosition = vector_normal_or_zbasis(relativePosition);
   switch (vdir) {
-    case OOViewID::kForward:
+    case oo::ViewID::kForward:
       measuredCos = -dot_product(unitRelativePosition, v_forward);
       break;
-    case OOViewID::kAft:
+    case oo::ViewID::kAft:
       measuredCos = +dot_product(unitRelativePosition, v_forward);
       break;
-    case OOViewID::kPort:
+    case oo::ViewID::kPort:
       measuredCos = +dot_product(unitRelativePosition, v_right);
       break;
-    case OOViewID::kStarboard:
+    case oo::ViewID::kStarboard:
       measuredCos = -dot_product(unitRelativePosition, v_right);
       break;
-    case OOViewID::kCustom: {
+    case oo::ViewID::kCustom: {
       Vector relativeView = getCustomViewForwardVector();
       Vector absoluteView = quaternion_rotate_vector(
           quaternion_conjugate(getOrientation()), relativeView);
@@ -3056,30 +3056,30 @@ void PlayerEntity::update(OOTimeDelta delta_t) {
   UPDATE_STAGE("updateTrumbles:");
   updateTrumbles(delta_t);
 
-  OOEntityStatus status = this->status();
+  oo::EntityStatus status = this->status();
   /* Validate that if the status is STATUS_START_GAME we're on one
    * of the few GUI screens which that makes sense for */
-  if (status == OOEntityStatus::kStartGame &&
-      gui_screen != OOGUIScreenID::kIntro1 &&
-      gui_screen != OOGUIScreenID::kShipLibrary &&
-      gui_screen != OOGUIScreenID::kGameOptions &&
-      gui_screen != OOGUIScreenID::kStickMapper &&
-      gui_screen != OOGUIScreenID::kStickProfile &&
-      gui_screen != OOGUIScreenID::kNewGame &&
-      gui_screen != OOGUIScreenID::kOXZManager &&
-      gui_screen != OOGUIScreenID::kLoad &&
-      gui_screen != OOGUIScreenID::kKeyboard &&
-      gui_screen != OOGUIScreenID::kKeyboardConfirmClear &&
-      gui_screen != OOGUIScreenID::kKeyboardConfig &&
-      gui_screen != OOGUIScreenID::kKeyboardEntry &&
-      gui_screen != OOGUIScreenID::kKeyboardLayout) [[unlikely]] {
+  if (status == oo::EntityStatus::kStartGame &&
+      gui_screen != oo::GUIScreenID::kIntro1 &&
+      gui_screen != oo::GUIScreenID::kShipLibrary &&
+      gui_screen != oo::GUIScreenID::kGameOptions &&
+      gui_screen != oo::GUIScreenID::kStickMapper &&
+      gui_screen != oo::GUIScreenID::kStickProfile &&
+      gui_screen != oo::GUIScreenID::kNewGame &&
+      gui_screen != oo::GUIScreenID::kOXZManager &&
+      gui_screen != oo::GUIScreenID::kLoad &&
+      gui_screen != oo::GUIScreenID::kKeyboard &&
+      gui_screen != oo::GUIScreenID::kKeyboardConfirmClear &&
+      gui_screen != oo::GUIScreenID::kKeyboardConfig &&
+      gui_screen != oo::GUIScreenID::kKeyboardEntry &&
+      gui_screen != oo::GUIScreenID::kKeyboardLayout) [[unlikely]] {
     // and if not, do a restart of the GUI
     UPDATE_STAGE("setGuiToIntroFirstGo:");
     setGuiToIntroFirstGo(true);  // set up demo mode
   }
 
-  if (status == OOEntityStatus::kAutopilotEngaged ||
-      status == OOEntityStatus::kEscapeSequence) {
+  if (status == oo::EntityStatus::kAutopilotEngaged ||
+      status == oo::EntityStatus::kEscapeSequence) {
     UPDATE_STAGE("performAutopilotUpdates:");
     performAutopilotUpdates(delta_t);
   } else if (!isDocked()) {
@@ -3090,27 +3090,27 @@ void PlayerEntity::update(OOTimeDelta delta_t) {
   /*	NOTE: status-contingent updates are not a switch since they can
           cascade when status changes.
   */
-  if (status == OOEntityStatus::kInFlight) {
+  if (status == oo::EntityStatus::kInFlight) {
     UPDATE_STAGE("doBookkeeping:");
     doBookkeeping(delta_t);
   }
-  if (status == OOEntityStatus::kWitchspaceCountdown) {
+  if (status == oo::EntityStatus::kWitchspaceCountdown) {
     UPDATE_STAGE("performWitchspaceCountdownUpdates:");
     performWitchspaceCountdownUpdates(delta_t);
   }
-  if (status == OOEntityStatus::kExitingWitchspace) {
+  if (status == oo::EntityStatus::kExitingWitchspace) {
     UPDATE_STAGE("performWitchspaceExitUpdates:");
     performWitchspaceExitUpdates(delta_t);
   }
-  if (status == OOEntityStatus::kLaunching) {
+  if (status == oo::EntityStatus::kLaunching) {
     UPDATE_STAGE("performLaunchingUpdates:");
     performLaunchingUpdates(delta_t);
   }
-  if (status == OOEntityStatus::kDocking) {
+  if (status == oo::EntityStatus::kDocking) {
     UPDATE_STAGE("performDockingUpdates:");
     performDockingUpdates(delta_t);
   }
-  if (status == OOEntityStatus::kDead) {
+  if (status == oo::EntityStatus::kDead) {
     UPDATE_STAGE("performDeadUpdates:");
     performDeadUpdates(delta_t);
   }
@@ -3335,9 +3335,9 @@ void PlayerEntity::doBookkeeping(double delta_t) {
   }
 
   // Bug #11692 CmdrJames added Status entering witchspace
-  OOEntityStatus status = this->status();
-  if ((status != OOEntityStatus::kEscapeSequence) &&
-      (status != OOEntityStatus::kEnteringWitchspace)) {
+  oo::EntityStatus status = this->status();
+  if ((status != oo::EntityStatus::kEscapeSequence) &&
+      (status != oo::EntityStatus::kEnteringWitchspace)) {
     UPDATE_STAGE("updating cabin temperature");
 
     // work on the cabin temperature
@@ -3363,13 +3363,13 @@ void PlayerEntity::doBookkeeping(double delta_t) {
       takeHeatDamage(delta_t * ship_temperature);
   }
 
-  if ((status == OOEntityStatus::kEscapeSequence) &&
+  if ((status == oo::EntityStatus::kEscapeSequence) &&
       (shot_time > ESCAPE_SEQUENCE_TIME)) {
     UPDATE_STAGE("resetting after escape");
     ::ShipEntity* doppelganger = oo::ToShip(foundTarget());
     // reset legal status again! Could have changed if a previously launched
     // missile hit a clean NPC while in the escape pod.
-    setBounty(0, OOLegalStatusReason::kEscapePod);
+    setBounty(0, oo::LegalStatusReason::kEscapePod);
     bounty = 0;
     thrust = max_thrust;  // re-enable inertialess drives
     // no access to all player.ship properties while inside the escape pod,
@@ -3429,13 +3429,13 @@ void PlayerEntity::doBookkeeping(double delta_t) {
                                         : static_cast<OOMesh*>(nullptr)));
         player_ship.reset();  // we only wanted it for its polygons!
       }
-      if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(OOViewID::kForward);
+      if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(oo::ViewID::kForward);
       if (UNIVERSE != nullptr)
         UNIVERSE->setBlockJSPlayerShipProps(false);  // re-enable player.ship!
       enterDock(oo::ToStation(dockTargetEntity));
     } else {
       // no dock target? dock target is not a station? game over!
-      setStatus(OOEntityStatus::kDead);
+      setStatus(oo::EntityStatus::kDead);
       //[self playGameOver];	// no death explosion sounds for player pods
       // no shipDied events for player pods, either
       if (UNIVERSE != nullptr)
@@ -3616,7 +3616,7 @@ void PlayerEntity::updateMovementFlags() {
 // the autopilot and docking requests. (Sends to self are member calls.)
 
 void PlayerEntity::updateAlertConditionForNearbyEntities() {
-  if (!isInSpace() || status() == OOEntityStatus::kDocking) {
+  if (!isInSpace() || status() == oo::EntityStatus::kDocking) {
     clearAlertFlags();
     // not needed while docked
     return;
@@ -3667,7 +3667,7 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
 
     if (scannedEntity->zero_distance < SCANNER_MAX_RANGE2 ||
         !scannedEntity->isShip) {
-      OOScanClass theirClass = scannedEntity->getScanClass();
+      oo::ScanClass theirClass = scannedEntity->getScanClass();
       // here we could also force masslock for higher than yellow alert, but
       // if we are going to hand over masslock control to scripting, might as
       // well hand it over fully
@@ -3675,8 +3675,8 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
         massLocked |= checkEntityForMassLock(
             scannedEntity, theirClass);  // we just need one masslocker..
       }
-      if (theirClass != OOScanClass::kNoDraw) {
-        if (theirClass == OOScanClass::kThargoid ||
+      if (theirClass != oo::ScanClass::kNoDraw) {
+        if (theirClass == oo::ScanClass::kThargoid ||
             OOEntityIsCascadeWeapon(scannedEntity)) {
           foundHostiles = true;
         } else if (oo::EntityIsShip(scannedEntity)) {
@@ -3744,7 +3744,8 @@ void PlayerEntity::setMaxFlightYaw(GLfloat newValue) {
   yaw_delta = static_cast<GLfloat>(2.0 * newValue);
 }
 
-bool PlayerEntity::checkEntityForMassLock(Entity* ent, OOScanClass theirClass) {
+bool PlayerEntity::checkEntityForMassLock(Entity* ent,
+                                          oo::ScanClass theirClass) {
   bool massLocked = false;
   bool entIsCloakedShip =
       oo::EntityIsShip(ent) &&
@@ -3765,34 +3766,34 @@ bool PlayerEntity::checkEntityForMassLock(Entity* ent, OOScanClass theirClass) {
         massLocked = true;
       }
     }
-  } else if (theirClass != OOScanClass::kNoDraw) {
+  } else if (theirClass != oo::ScanClass::kNoDraw) {
     if (entIsCloakedShip) [[unlikely]] {
-      theirClass = OOScanClass::kNoDraw;
+      theirClass = oo::ScanClass::kNoDraw;
     }
   }
 
   if (!massLocked && ent->zero_distance <= SCANNER_MAX_RANGE2) {
     switch (theirClass) {
-      case OOScanClass::kNoDraw:
+      case oo::ScanClass::kNoDraw:
         // cloaked ships do mass lock! - Nikos 20200718
         if (entIsCloakedShip && !oo::EntityIsPlayer(ent)) {
           massLocked = true;
         }
         break;
-      case OOScanClass::kPlayer:
-      case OOScanClass::kBuoy:
-      case OOScanClass::kRock:
-      case OOScanClass::kCargo:
-      case OOScanClass::kMine:
-      case OOScanClass::kVisualEffect:
+      case oo::ScanClass::kPlayer:
+      case oo::ScanClass::kBuoy:
+      case oo::ScanClass::kRock:
+      case oo::ScanClass::kCargo:
+      case oo::ScanClass::kMine:
+      case oo::ScanClass::kVisualEffect:
         break;
 
-      case OOScanClass::kThargoid:
-      case OOScanClass::kMissile:
-      case OOScanClass::kStation:
-      case OOScanClass::kPolice:
-      case OOScanClass::kMilitary:
-      case OOScanClass::kWormhole:
+      case oo::ScanClass::kThargoid:
+      case oo::ScanClass::kMissile:
+      case oo::ScanClass::kStation:
+      case oo::ScanClass::kPolice:
+      case oo::ScanClass::kMilitary:
+      case oo::ScanClass::kWormhole:
       default:
         massLocked = true;
         break;
@@ -3915,42 +3916,42 @@ void PlayerEntity::updateClocks(OOTimeDelta delta_t) {
 void PlayerEntity::checkScriptsIfAppropriate() {
   if (script_time <= script_time_check) return;
 
-  if (status() != OOEntityStatus::kInFlight) {
+  if (status() != oo::EntityStatus::kInFlight) {
     switch (gui_screen) {
       // Screens where no world script tickles are performed
-      case OOGUIScreenID::kMain:
-      case OOGUIScreenID::kIntro1:
-      case OOGUIScreenID::kShipLibrary:
-      case OOGUIScreenID::kKeyboard:
-      case OOGUIScreenID::kNewGame:
-      case OOGUIScreenID::kOXZManager:
-      case OOGUIScreenID::kMarket:
-      case OOGUIScreenID::kMarketInfo:
-      case OOGUIScreenID::kOptions:
-      case OOGUIScreenID::kGameOptions:
-      case OOGUIScreenID::kLoad:
-      case OOGUIScreenID::kSave:
-      case OOGUIScreenID::kSaveOverwrite:
-      case OOGUIScreenID::kStickMapper:
-      case OOGUIScreenID::kStickProfile:
-      case OOGUIScreenID::kMission:
-      case OOGUIScreenID::kReport:
-      case OOGUIScreenID::kKeyboardConfirmClear:
-      case OOGUIScreenID::kKeyboardConfig:
-      case OOGUIScreenID::kKeyboardEntry:
-      case OOGUIScreenID::kKeyboardLayout:
+      case oo::GUIScreenID::kMain:
+      case oo::GUIScreenID::kIntro1:
+      case oo::GUIScreenID::kShipLibrary:
+      case oo::GUIScreenID::kKeyboard:
+      case oo::GUIScreenID::kNewGame:
+      case oo::GUIScreenID::kOXZManager:
+      case oo::GUIScreenID::kMarket:
+      case oo::GUIScreenID::kMarketInfo:
+      case oo::GUIScreenID::kOptions:
+      case oo::GUIScreenID::kGameOptions:
+      case oo::GUIScreenID::kLoad:
+      case oo::GUIScreenID::kSave:
+      case oo::GUIScreenID::kSaveOverwrite:
+      case oo::GUIScreenID::kStickMapper:
+      case oo::GUIScreenID::kStickProfile:
+      case oo::GUIScreenID::kMission:
+      case oo::GUIScreenID::kReport:
+      case oo::GUIScreenID::kKeyboardConfirmClear:
+      case oo::GUIScreenID::kKeyboardConfig:
+      case oo::GUIScreenID::kKeyboardEntry:
+      case oo::GUIScreenID::kKeyboardLayout:
         return;
 
         // Screens from which it's safe to jump to the mission screen
         //			case GUI_SCREEN_CONTRACTS:
-      case OOGUIScreenID::kEquipShip:
-      case OOGUIScreenID::kInterfaces:
-      case OOGUIScreenID::kManifest:
-      case OOGUIScreenID::kShipyard:
-      case OOGUIScreenID::kLongRangeChart:
-      case OOGUIScreenID::kShortRangeChart:
-      case OOGUIScreenID::kStatus:
-      case OOGUIScreenID::kSystemData:
+      case oo::GUIScreenID::kEquipShip:
+      case oo::GUIScreenID::kInterfaces:
+      case oo::GUIScreenID::kManifest:
+      case oo::GUIScreenID::kShipyard:
+      case oo::GUIScreenID::kLongRangeChart:
+      case oo::GUIScreenID::kShortRangeChart:
+      case oo::GUIScreenID::kStatus:
+      case oo::GUIScreenID::kSystemData:
         // Test passed, we can run scripts. Nothing to do here.
         break;
     }
@@ -4044,9 +4045,9 @@ bool PlayerEntity::engageAutopilotToStation(
   ident_engaged = false;
   safeAllMissiles();
   velocity = kZeroVector;
-  if (status() == OOEntityStatus::kWitchspaceCountdown)
+  if (status() == oo::EntityStatus::kWitchspaceCountdown)
     cancelWitchspaceCountdown();  // cancel witchspace countdown properly
-  setStatus(OOEntityStatus::kAutopilotEngaged);
+  setStatus(oo::EntityStatus::kAutopilotEngaged);
   resetAutopilotAI();
   if (shipAI != nullptr) shipAI->setState("BEGIN_DOCKING");  // reboot the AI
   playAutopilotOn();
@@ -4064,12 +4065,12 @@ bool PlayerEntity::engageAutopilotToStation(
 void PlayerEntity::disengageAutopilot() {
   if (autopilot_engaged) {
     abortDocking();  // let the station know that you are no longer on approach
-    behaviour = OOBehaviour::kIdle;
+    behaviour = oo::Behaviour::kIdle;
     frustration = 0.0;
     autopilot_engaged = false;
     _primaryTarget.reset();
     setTargetStation(nullptr);
-    setStatus(OOEntityStatus::kInFlight);
+    setStatus(oo::EntityStatus::kInFlight);
     playAutopilotOff();
     setDockingClearanceStatus(OODockingClearanceStatus::kNone);
     OOMusicController::sharedController()->stopDockingMusic();
@@ -4182,7 +4183,7 @@ void PlayerEntity::performWitchspaceCountdownUpdates(OOTimeDelta delta_t) {
   if (galactic_witchjump && !hasEquipmentItem(oo::PList("EQ_GAL_DRIVE")))
       [[unlikely]] {
     galactic_witchjump = false;
-    setStatus(OOEntityStatus::kInFlight);
+    setStatus(oo::EntityStatus::kInFlight);
     playHyperspaceAborted();
     doScriptEvent(OOJSID("playerJumpFailed"), {oo::PList("malfunction")});
     return;
@@ -4254,9 +4255,9 @@ void PlayerEntity::performWitchspaceExitUpdates(OOTimeDelta delta_t) {
             3.0);
       // and reset the compass
       if (hasEquipmentItemProviding("EQ_ADVANCED_COMPASS"))
-        compassMode = OOCompassMode::kPlanet;
+        compassMode = oo::CompassMode::kPlanet;
       else
-        compassMode = OOCompassMode::kBasic;
+        compassMode = oo::CompassMode::kBasic;
     } else {
       if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false)) {
         if (UNIVERSE != nullptr)
@@ -4264,7 +4265,7 @@ void PlayerEntity::performWitchspaceExitUpdates(OOTimeDelta delta_t) {
       }  // if sun gone nova, print nothing
     }
 
-    setStatus(OOEntityStatus::kInFlight);
+    setStatus(oo::EntityStatus::kInFlight);
 
     // If we are exiting witchspace after a scripted misjump. then make sure it
     // gets reset now. Scripted misjump situations should have a lifespan of one
@@ -4297,7 +4298,7 @@ void PlayerEntity::performLaunchingUpdates(OOTimeDelta delta_t) {
     checkScript();
     // next check in 10s
 
-    setStatus(OOEntityStatus::kInFlight);
+    setStatus(oo::EntityStatus::kInFlight);
 
     setDockingClearanceStatus(OODockingClearanceStatus::kNone);
     ::StationEntity* stationLaunchedFrom = oo::ToStation(
@@ -4399,13 +4400,13 @@ bool PlayerEntity::isValidTarget(Entity* target) {
       // checks for activated jammer
       return false;
     }
-    OOEntityStatus tstatus =
-        (targetShip != nullptr ? targetShip->status() : OOEntityStatus{});
-    if (tstatus == OOEntityStatus::kEnteringWitchspace ||
-        tstatus == OOEntityStatus::kInHold ||
+    oo::EntityStatus tstatus =
+        (targetShip != nullptr ? targetShip->status() : oo::EntityStatus{});
+    if (tstatus == oo::EntityStatus::kEnteringWitchspace ||
+        tstatus == oo::EntityStatus::kInHold ||
         tstatus ==
-            OOEntityStatus::kDocked) {  // checks for ships entering wormholes,
-                                        // docking, or been scooped
+            oo::EntityStatus::kDocked) {  // checks for ships entering
+                                          // wormholes, docking, or been scooped
       return false;
     }
     return true;
@@ -4414,7 +4415,7 @@ bool PlayerEntity::isValidTarget(Entity* target) {
   // If target is an unexpired wormhole and the player has bought the Wormhole
   // Scanner and we're in ID mode
   if (target->getIsWormhole() &&
-      target->getScanClass() != OOScanClass::kNoDraw &&
+      target->getScanClass() != oo::ScanClass::kNoDraw &&
       hasEquipmentItemProviding("EQ_WORMHOLE_SCANNER") && ident_engaged) {
     return true;
   }
@@ -4486,7 +4487,7 @@ void PlayerEntity::showShipModelWithKey(
   if (ship != nullptr) ship->setOrientation(q2);
   if (ship != nullptr)
     ship->setPositionX(factorX * cr, factorY * cr, factorZ * cr);
-  if (ship != nullptr) ship->setScanClass(OOScanClass::kNoDraw);
+  if (ship != nullptr) ship->setScanClass(oo::ScanClass::kNoDraw);
   if (ship != nullptr) ship->setDemoShip(static_cast<OOScalar>(0.6));
   if (ship != nullptr)
     ship->setDemoStartTime((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0));
@@ -4505,7 +4506,7 @@ void PlayerEntity::showShipModelWithKey(
   // MKW - save demo ship for its rotation
   demoShip = oo::Hold(ship);
 
-  if (ship != nullptr) ship->setStatus(OOEntityStatus::kCockpitDisplay);
+  if (ship != nullptr) ship->setStatus(oo::EntityStatus::kCockpitDisplay);
 
   shipHold.reset();
 }
@@ -4573,8 +4574,8 @@ void PlayerEntity::updateTargeting() {
   UPDATE_STAGE("looking for new target");
   if (primaryTarget() == nullptr &&
       (ident_engaged || missile_status != OOMissileStatus::kSafe) &&
-      (status() == OOEntityStatus::kInFlight ||
-       status() == OOEntityStatus::kWitchspaceCountdown)) {
+      (status() == oo::EntityStatus::kInFlight ||
+       status() == oo::EntityStatus::kWitchspaceCountdown)) {
     Entity* target =
         (UNIVERSE != nullptr ? UNIVERSE->firstEntityTargetedByPlayer()
                              : nullptr);
@@ -4755,17 +4756,17 @@ Vector PlayerEntity::viewpointOffset() {
   //		return kZeroVector;	// center view for break pattern
   // now done by positioning break pattern correctly
 
-  switch ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{})) {
-    case OOViewID::kForward:
+  switch ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{})) {
+    case oo::ViewID::kForward:
       return forwardViewOffset;
-    case OOViewID::kAft:
+    case oo::ViewID::kAft:
       return aftViewOffset;
-    case OOViewID::kPort:
+    case oo::ViewID::kPort:
       return portViewOffset;
-    case OOViewID::kStarboard:
+    case oo::ViewID::kStarboard:
       return starboardViewOffset;
     /* GILES custom viewpoints */
-    case OOViewID::kCustom:
+    case oo::ViewID::kCustom:
       return customViewOffset;
       /* -- */
 
@@ -4811,10 +4812,10 @@ HPVector PlayerEntity::viewpointPosition() {
 
 void PlayerEntity::drawImmediate(bool immediate, bool translucent) {
   switch (status()) {
-    case OOEntityStatus::kDead:
-    case OOEntityStatus::kCockpitDisplay:
-    case OOEntityStatus::kDocked:
-    case OOEntityStatus::kStartGame:
+    case oo::EntityStatus::kDead:
+    case oo::EntityStatus::kCockpitDisplay:
+    case oo::EntityStatus::kDocked:
+    case oo::EntityStatus::kStartGame:
       return;
 
     default:
@@ -4843,7 +4844,7 @@ void PlayerEntity::setOcclusionLevel(float level) { occlusion_dial = level; }
 
 void PlayerEntity::setDockedAtMainStation() {
   setDockedStation((UNIVERSE != nullptr ? UNIVERSE->station() : nullptr));
-  if (!oo::isUnset(_dockedStation)) setStatus(OOEntityStatus::kDocked);
+  if (!oo::isUnset(_dockedStation)) setStatus(oo::EntityStatus::kDocked);
 }
 
 ::StationEntity* PlayerEntity::dockedStation() {
@@ -5201,7 +5202,7 @@ OOFuelScoopStatus PlayerEntity::dialFuelScoopStatus() {
   // need to account for the different ways of calculating cargo on board when
   // docked/in-flight
   OOCargoQuantity cargoOnBoard =
-      status() == OOEntityStatus::kDocked
+      status() == oo::EntityStatus::kDocked
           ? current_cargo
           : static_cast<OOCargoQuantity>(cargo.size());
   if (hasScoop()) {
@@ -5255,8 +5256,8 @@ void PlayerEntity::addRoleForAggression(::ShipEntity* victim) {
               (UNIVERSE != nullptr
                    ? UNIVERSE->role(*getPrimaryRole(), "oolite-hunter")
                    : false)) ||
-             (victim != nullptr ? victim->getScanClass() : OOScanClass{}) ==
-                 OOScanClass::kPolice) {
+             (victim != nullptr ? victim->getScanClass() : oo::ScanClass{}) ==
+                 oo::ScanClass::kPolice) {
     role = "pirate-interceptor";
   }
   if (!role.has_value()) {
@@ -5384,10 +5385,10 @@ void PlayerEntity::validateCompassTarget() {
     OOAegisStatus aegis = checkForAegis();
 
     switch (getCompassMode()) {
-      case OOCompassMode::kInactive:
+      case oo::CompassMode::kInactive:
         break;
 
-      case OOCompassMode::kBasic:
+      case oo::CompassMode::kBasic:
         if ((aegis == OOAegisStatus::kCloseToMainPlanet ||
              aegis == OOAegisStatus::kInDockingRange) &&
             the_station) {
@@ -5397,31 +5398,31 @@ void PlayerEntity::validateCompassTarget() {
         }
         break;
 
-      case OOCompassMode::kPlanet:
+      case oo::CompassMode::kPlanet:
         new_target = the_planet;
         break;
 
-      case OOCompassMode::kStation:
+      case oo::CompassMode::kStation:
         new_target = the_station;
         break;
 
-      case OOCompassMode::kSun:
+      case oo::CompassMode::kSun:
         new_target = the_sun;  // the sun is C++
         break;
 
-      case OOCompassMode::kTarget:
+      case oo::CompassMode::kTarget:
         new_target = the_target;
         break;
 
-      case OOCompassMode::kBeacons:
+      case oo::CompassMode::kBeacons:
         new_target = beacon;
         break;
     }
 
     if (new_target == nullptr ||
-        oo::EntityStatus(new_target) < OOEntityStatus::kActive ||
-        oo::EntityStatus(new_target) == OOEntityStatus::kInHold) {
-      setCompassMode(OOCompassMode::kPlanet);
+        oo::EntityStatusOf(new_target) < oo::EntityStatus::kActive ||
+        oo::EntityStatusOf(new_target) == oo::EntityStatus::kInHold) {
+      setCompassMode(oo::CompassMode::kPlanet);
       new_target = the_planet;
     }
 
@@ -5439,30 +5440,30 @@ void PlayerEntity::validateCompassTarget() {
 
 std::optional<std::string> PlayerEntity::compassTargetLabel() {
   switch (compassMode) {
-    case OOCompassMode::kInactive:
+    case oo::CompassMode::kInactive:
       return "";
-    case OOCompassMode::kBasic:
+    case oo::CompassMode::kBasic:
       return "";
-    case OOCompassMode::kBeacons: {
+    case oo::CompassMode::kBeacons: {
       Entity* target = getCompassTargetEntity();
       if (target) {
         return oo::BeaconLabel(target);  // the beacon category's answer
       }
       return "";
     }
-    case OOCompassMode::kPlanet:
+    case oo::CompassMode::kPlanet:
       return ((UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr) != nullptr
                   ? UNIVERSE->planet()->name()
                   : std::optional<std::string>());
-    case OOCompassMode::kSun:
+    case oo::CompassMode::kSun:
       return ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr
                   ? UNIVERSE->sun()->name()
                   : std::optional<std::string>());
-    case OOCompassMode::kStation:
+    case oo::CompassMode::kStation:
       return ((UNIVERSE != nullptr ? UNIVERSE->station() : nullptr) != nullptr
                   ? UNIVERSE->station()->getDisplayName()
                   : std::optional<std::string>());
-    case OOCompassMode::kTarget:
+    case oo::CompassMode::kTarget:
       return OO_DESC("oolite-beacon-label-target");
   }
   return "";
@@ -5471,18 +5472,20 @@ std::optional<std::string> PlayerEntity::compassTargetLabel() {
 // Compass mode, missiles and pylons, special cargo, the multi-function
 // displays, alert flags. (Sends to self are member calls.)
 
-OOCompassMode PlayerEntity::getCompassMode() { return compassMode; }
+oo::CompassMode PlayerEntity::getCompassMode() { return compassMode; }
 
-void PlayerEntity::setCompassMode(OOCompassMode value) { compassMode = value; }
+void PlayerEntity::setCompassMode(oo::CompassMode value) {
+  compassMode = value;
+}
 
 void PlayerEntity::setPrevCompassMode() {
   OOAegisStatus aegis = OOAegisStatus::kNone;
   Entity* beacon = nullptr;  // the C++ beacons, linked through their objects
 
   switch (compassMode) {
-    case OOCompassMode::kInactive:
-    case OOCompassMode::kBasic:
-    case OOCompassMode::kPlanet:
+    case oo::CompassMode::kInactive:
+    case oo::CompassMode::kBasic:
+    case oo::CompassMode::kPlanet:
       beacon = (UNIVERSE != nullptr ? UNIVERSE->lastBeacon() : nullptr);
       while (beacon != nullptr && oo::BeaconIsJammingScanning(beacon)) {
         beacon = oo::PrevBeacon(beacon);
@@ -5490,13 +5493,13 @@ void PlayerEntity::setPrevCompassMode() {
       setNextBeacon(beacon);
 
       if (beacon != nullptr) {
-        setCompassMode(OOCompassMode::kBeacons);
+        setCompassMode(oo::CompassMode::kBeacons);
         break;
       }
       // else fall through to switch to target mode.
       [[fallthrough]];
 
-    case OOCompassMode::kBeacons:
+    case oo::CompassMode::kBeacons:
       beacon = nextBeacon();
       do {
         beacon = oo::PrevBeacon(beacon);
@@ -5505,30 +5508,30 @@ void PlayerEntity::setPrevCompassMode() {
 
       if (beacon == nullptr) {
         if (primaryTarget()) {
-          setCompassMode(OOCompassMode::kTarget);
+          setCompassMode(oo::CompassMode::kTarget);
         } else {
-          setCompassMode(OOCompassMode::kSun);
+          setCompassMode(oo::CompassMode::kSun);
         }
         break;
       }
       break;
 
-    case OOCompassMode::kTarget:
-      setCompassMode(OOCompassMode::kSun);
+    case oo::CompassMode::kTarget:
+      setCompassMode(oo::CompassMode::kSun);
       break;
 
-    case OOCompassMode::kSun:
+    case oo::CompassMode::kSun:
       aegis = checkForAegis();
       if (aegis == OOAegisStatus::kCloseToMainPlanet ||
           aegis == OOAegisStatus::kInDockingRange) {
-        setCompassMode(OOCompassMode::kStation);
+        setCompassMode(oo::CompassMode::kStation);
       } else {
-        setCompassMode(OOCompassMode::kPlanet);
+        setCompassMode(oo::CompassMode::kPlanet);
       }
       break;
 
-    case OOCompassMode::kStation:
-      setCompassMode(OOCompassMode::kPlanet);
+    case oo::CompassMode::kStation:
+      setCompassMode(oo::CompassMode::kPlanet);
       break;
   }
 }
@@ -5538,32 +5541,32 @@ void PlayerEntity::setNextCompassMode() {
   Entity* beacon = nullptr;  // the C++ beacons, linked through their objects
 
   switch (compassMode) {
-    case OOCompassMode::kInactive:
-    case OOCompassMode::kBasic:
-    case OOCompassMode::kPlanet:
+    case oo::CompassMode::kInactive:
+    case oo::CompassMode::kBasic:
+    case oo::CompassMode::kPlanet:
       aegis = checkForAegis();
       if ((UNIVERSE != nullptr && UNIVERSE->station() != nullptr) &&
           (aegis == OOAegisStatus::kCloseToMainPlanet ||
            aegis == OOAegisStatus::kInDockingRange)) {
-        setCompassMode(OOCompassMode::kStation);
+        setCompassMode(oo::CompassMode::kStation);
       } else {
-        setCompassMode(OOCompassMode::kSun);
+        setCompassMode(oo::CompassMode::kSun);
       }
       break;
 
-    case OOCompassMode::kStation:
-      setCompassMode(OOCompassMode::kSun);
+    case oo::CompassMode::kStation:
+      setCompassMode(oo::CompassMode::kSun);
       break;
 
-    case OOCompassMode::kSun:
+    case oo::CompassMode::kSun:
       if (primaryTarget()) {
-        setCompassMode(OOCompassMode::kTarget);
+        setCompassMode(oo::CompassMode::kTarget);
         break;
       }
       // else fall through to switch to beacon mode.
       [[fallthrough]];
 
-    case OOCompassMode::kTarget:
+    case oo::CompassMode::kTarget:
       beacon = (UNIVERSE != nullptr ? UNIVERSE->firstBeacon() : nullptr);
       while (beacon != nullptr && oo::BeaconIsJammingScanning(beacon)) {
         beacon = oo::NextBeacon(beacon);
@@ -5571,12 +5574,12 @@ void PlayerEntity::setNextCompassMode() {
       setNextBeacon(beacon);
 
       if (beacon != nullptr)
-        setCompassMode(OOCompassMode::kBeacons);
+        setCompassMode(oo::CompassMode::kBeacons);
       else
-        setCompassMode(OOCompassMode::kPlanet);
+        setCompassMode(oo::CompassMode::kPlanet);
       break;
 
-    case OOCompassMode::kBeacons:
+    case oo::CompassMode::kBeacons:
       beacon = nextBeacon();
       do {
         beacon = oo::NextBeacon(beacon);
@@ -5584,7 +5587,7 @@ void PlayerEntity::setNextCompassMode() {
       setNextBeacon(beacon);
 
       if (beacon == nullptr) {
-        setCompassMode(OOCompassMode::kPlanet);
+        setCompassMode(oo::CompassMode::kPlanet);
       }
       break;
   }
@@ -5931,7 +5934,7 @@ OOAlertCondition PlayerEntity::getAlertCondition() {
   OOAlertCondition old_alert_condition = alertConditionLevel;
   alertConditionLevel = OOAlertCondition::kGreen;
 
-  setAlertFlag(OOAlertFlags::kDocked, status() == OOEntityStatus::kDocked);
+  setAlertFlag(OOAlertFlags::kDocked, status() == oo::EntityStatus::kDocked);
 
   if (OOAlertFlagIsOn(alertFlags, OOAlertFlags::kDocked)) {
     alertConditionLevel = OOAlertCondition::kDocked;
@@ -5978,33 +5981,34 @@ void PlayerEntity::interpretAIMessage(const std::string& message) {
   if ((message == "ECM") && !isDocked()) playHitByECMSound();
 
   if ((message == "DOCKING_REFUSED") &&
-      status() == OOEntityStatus::kAutopilotEngaged) {
+      status() == oo::EntityStatus::kAutopilotEngaged) {
     playDockingDenied();
     if (UNIVERSE != nullptr)
       UNIVERSE->addMessage(OO_DESC("autopilot-denied"), 4.5);
     autopilot_engaged = false;
     resetAutopilotAI();
     _primaryTarget.reset();
-    setStatus(OOEntityStatus::kInFlight);
+    setStatus(oo::EntityStatus::kInFlight);
     OOMusicController::sharedController()->stopDockingMusic();
     doScriptEvent(OOJSID("playerDockingRefused"));
   }
 
   // aegis messages to advanced compass so in planet mode it behaves like the
   // old compass
-  if (compassMode != OOCompassMode::kBasic) {
+  if (compassMode != oo::CompassMode::kBasic) {
     if ((message == "AEGIS_CLOSE_TO_MAIN_PLANET") &&
-        (compassMode == OOCompassMode::kPlanet)) {
+        (compassMode == oo::CompassMode::kPlanet)) {
       playAegisCloseToPlanet();
-      setCompassMode(OOCompassMode::kStation);
+      setCompassMode(oo::CompassMode::kStation);
     }
     if ((message == "AEGIS_IN_DOCKING_RANGE") &&
-        (compassMode == OOCompassMode::kPlanet)) {
+        (compassMode == oo::CompassMode::kPlanet)) {
       playAegisCloseToStation();
-      setCompassMode(OOCompassMode::kStation);
+      setCompassMode(oo::CompassMode::kStation);
     }
-    if ((message == "AEGIS_NONE") && (compassMode == OOCompassMode::kStation)) {
-      setCompassMode(OOCompassMode::kPlanet);
+    if ((message == "AEGIS_NONE") &&
+        (compassMode == oo::CompassMode::kStation)) {
+      setCompassMode(oo::CompassMode::kPlanet);
     }
   }
 }
@@ -6101,11 +6105,11 @@ bool PlayerEntity::mountMissileWithRole(const std::string& role) {
   if (!weaponsOnline()) return nullptr;
 
   if (mine != nullptr) mine->setOwner(this);
-  if (mine != nullptr) mine->setBehaviour(OOBehaviour::kIdle);
+  if (mine != nullptr) mine->setBehaviour(oo::Behaviour::kIdle);
   dumpItem(mine);  // includes UNIVERSE addEntity: OOScanClass::kCargo,
                    // OOEntityStatus::kInFlight, AI state GLOBAL ( the last one
                    // starts the timer !)
-  if (mine != nullptr) mine->setScanClass(OOScanClass::kMine);
+  if (mine != nullptr) mine->setScanClass(oo::ScanClass::kMine);
 
   float mine_speed = 500.0f;
   Vector mvel =
@@ -6431,8 +6435,8 @@ void PlayerEntity::takeEnergyDamage(double amount, Entity* entPart,
   OO_LOG("player.ship.damage", "Player took damage from {} becauseOf {}",
          oo::EntityDescription(ent), oo::EntityDescription(other));
 
-  if (status() == OOEntityStatus::kDead) return;
-  if (status() == OOEntityStatus::kEscapeSequence)
+  if (status() == oo::EntityStatus::kDead) return;
+  if (status() == oo::EntityStatus::kEscapeSequence)
     return;  // if the player has ejected, don't deal more damage
   if (amount == 0.0) return;
 
@@ -6488,8 +6492,9 @@ void PlayerEntity::takeEnergyDamage(double amount, Entity* entPart,
     }
   }
 
-  OOShipDamageType damageType = cascadeWeapon ? OOShipDamageType::kCascadeWeapon
-                                              : OOShipDamageType::kEnergy;
+  oo::ShipDamageType damageType = cascadeWeapon
+                                      ? oo::ShipDamageType::kCascadeWeapon
+                                      : oo::ShipDamageType::kEnergy;
 
   if (amount > 0.0) {
     energy -= static_cast<GLfloat>(amount);
@@ -6536,7 +6541,7 @@ void PlayerEntity::takeScrapeDamage(double amount, Entity* ent) {
   OOScalar d_forward, d_right, d_up;
   bool internal_damage = false;  // base chance
 
-  if (status() == OOEntityStatus::kDead) return;
+  if (status() == oo::EntityStatus::kDead) return;
 
   if (amount < 0) {
     OO_LOG("player.ship.damage",
@@ -6588,7 +6593,7 @@ void PlayerEntity::takeScrapeDamage(double amount, Entity* ent) {
 }
 
 void PlayerEntity::takeHeatDamage(double amount) {
-  if (status() == OOEntityStatus::kDead || amount < 0) return;
+  if (status() == oo::EntityStatus::kDead || amount < 0) return;
 
   // hit the shields first!
   float fwd_amount = static_cast<float>(0.5 * amount);
@@ -6623,13 +6628,13 @@ void PlayerEntity::takeHeatDamage(double amount) {
 
   if (result != nullptr) {
     if (result != nullptr) result->setPosition(getPosition());
-    if (result != nullptr) result->setScanClass(OOScanClass::kNeutral);
+    if (result != nullptr) result->setScanClass(oo::ScanClass::kNeutral);
     if (result != nullptr) result->setOrientation(normalOrientation());
     if (result != nullptr) result->setVelocity(getVelocity());
     if (result != nullptr) result->setSpeed(getFlightSpeed());
     if (result != nullptr) result->setDesiredSpeed(getFlightSpeed());
     if (result != nullptr) result->setRoll(flightRoll);
-    if (result != nullptr) result->setBehaviour(OOBehaviour::kIdle);
+    if (result != nullptr) result->setBehaviour(oo::Behaviour::kIdle);
     if (result != nullptr)
       result->switchAITo("nullAI.plist");  // fly straight on
     if (result != nullptr) result->setTemperature(temperature());
@@ -6648,9 +6653,9 @@ void PlayerEntity::takeHeatDamage(double amount) {
 
   if ((UNIVERSE != nullptr ? UNIVERSE->getDisplayGUI() : false))
     switchToMainView();  // Clear the F7 screen!
-  if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(OOViewID::kForward);
+  if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(oo::ViewID::kForward);
 
-  if (status() == OOEntityStatus::kDead) return nullptr;
+  if (status() == oo::EntityStatus::kDead) return nullptr;
 
   /*
           While inside the escape pod, we need to block access to all
@@ -6687,7 +6692,7 @@ void PlayerEntity::takeHeatDamage(double amount) {
 
   setFoundTarget(doppelganger);  // must do this before setting status
   setStatus(
-      OOEntityStatus::kEscapeSequence);  // now set up the escape sequence.
+      oo::EntityStatus::kEscapeSequence);  // now set up the escape sequence.
 
   // must do this before next step or uses BBox of pod, not old ship!
   float sheight = static_cast<float>(boundingBox.max.y - boundingBox.min.y);
@@ -6746,7 +6751,7 @@ void PlayerEntity::takeHeatDamage(double amount) {
           .get());  // no player.ship properties should be available to script
 
   // reset legal status
-  setBounty(0, OOLegalStatusReason::kEscapePod);
+  setBounty(0, oo::LegalStatusReason::kEscapePod);
   bounty = 0;
 
   // new ship, so lose some memory of player actions
@@ -6867,11 +6872,11 @@ void PlayerEntity::rotateCargo() {
 }
 
 void PlayerEntity::setBounty(OOCreditsQuantity amount) {
-  setBounty(amount, OOLegalStatusReason::kUnknown);
+  setBounty(amount, oo::LegalStatusReason::kUnknown);
 }
 
 void PlayerEntity::setBounty(OOCreditsQuantity amount,
-                             OOLegalStatusReason reason) {
+                             oo::LegalStatusReason reason) {
   setBounty(amount, OOStringFromLegalStatusReason(reason));
 }
 
@@ -6904,11 +6909,11 @@ OOCreditsQuantity PlayerEntity::getBounty() {
 int PlayerEntity::getLegalStatus() { return legalStatusValue; }
 
 void PlayerEntity::markAsOffender(int offence_value) {
-  markAsOffender(offence_value, OOLegalStatusReason::kUnknown);
+  markAsOffender(offence_value, oo::LegalStatusReason::kUnknown);
 }
 
 void PlayerEntity::markAsOffender(int offence_value,
-                                  OOLegalStatusReason reason) {
+                                  oo::LegalStatusReason reason) {
   if (!isCloaked()) {
     JSContext* context = OOJSAcquireContext();
 
@@ -6927,7 +6932,7 @@ void PlayerEntity::markAsOffender(int offence_value,
 }
 
 void PlayerEntity::collectBountyFor(::ShipEntity* other) {
-  if (status() == OOEntityStatus::kDead)
+  if (status() == oo::EntityStatus::kDead)
     return;  // no bounty if we died while trying
 
   if (other == nullptr || (other != nullptr ? other->getIsSubEntity() : false))
@@ -6946,21 +6951,21 @@ void PlayerEntity::collectBountyFor(::ShipEntity* other) {
   }
 
   OOCreditsQuantity score = 10 * (other != nullptr ? other->getBounty() : 0);
-  OOScanClass killClass =
+  oo::ScanClass killClass =
       (other != nullptr ? other->getScanClass()
-                        : OOScanClass{});  // **tgape** change (+line)
+                        : oo::ScanClass{});  // **tgape** change (+line)
   bool killAward = (other != nullptr ? other->countsAsKill() : false);
 
   if ((other != nullptr ? other->isPolice() : false)) {
     // oops, we shot a copper!
-    markAsOffender(64, OOLegalStatusReason::kAttackedPolice);
+    markAsOffender(64, oo::LegalStatusReason::kAttackedPolice);
   }
 
-  bool killIsCargo = ((killClass == OOScanClass::kCargo) &&
+  bool killIsCargo = ((killClass == oo::ScanClass::kCargo) &&
                       ((other != nullptr ? other->commodityAmount() : 0) > 0) &&
                       !(other != nullptr ? other->getIsHulk() : false));
-  if ((killIsCargo) || (killClass == OOScanClass::kBuoy) ||
-      (killClass == OOScanClass::kRock)) {
+  if ((killIsCargo) || (killClass == oo::ScanClass::kBuoy) ||
+      (killClass == oo::ScanClass::kRock)) {
     // EMMSTRAN: no killaward (but full bounty) for tharglets?
     if (!(other != nullptr ? other->hasRole("tharglet") : false)) {
       // okay, we'll count tharglets as proper kills
@@ -7090,7 +7095,7 @@ bool PlayerEntity::takeInternalDamage() {
   return result;
 }
 
-void PlayerEntity::getDestroyedBy(Entity* whom, OOShipDamageType type) {
+void PlayerEntity::getDestroyedBy(Entity* whom, oo::ShipDamageType type) {
   if (isDocked())
     return;  // Can't die while docked. (Doing so would cause breakage
              // elsewhere.)
@@ -7112,7 +7117,7 @@ void PlayerEntity::getDestroyedBy(Entity* whom, OOShipDamageType type) {
   disengageAutopilot();
 
   if (UNIVERSE != nullptr) UNIVERSE->setDisplayText(false);
-  if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(OOViewID::kAft);
+  if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(oo::ViewID::kAft);
 
   // Let scripts know the player died.
   noteKilledBy(whom,
@@ -7163,7 +7168,7 @@ void PlayerEntity::loseTargetStatus() {
 
 bool PlayerEntity::endScenario(const std::string& key) {
   if (scenarioKey.has_value() && key == *scenarioKey) {
-    setStatus(OOEntityStatus::kRestartGame);
+    setStatus(oo::EntityStatus::kRestartGame);
     return true;
   }
   return false;
@@ -7171,9 +7176,9 @@ bool PlayerEntity::endScenario(const std::string& key) {
 
 void PlayerEntity::enterDock(::StationEntity* station) {
   OOCParameterAssert(station != nullptr);
-  if (status() == OOEntityStatus::kDead) return;
+  if (status() == oo::EntityStatus::kDead) return;
 
-  setStatus(OOEntityStatus::kDocking);
+  setStatus(oo::EntityStatus::kDocking);
   setDockedStation(station);
   doScriptEvent(OOJSID("shipWillDockWithStation"), station);
 
@@ -7198,7 +7203,7 @@ void PlayerEntity::enterDock(::StationEntity* station) {
   if (UNIVERSE != nullptr) UNIVERSE->setDisplayText(false);
   if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
     UNIVERSE->gameController()->setMouseInteractionModeForFlight();
-  if (status() == OOEntityStatus::kLaunching)
+  if (status() == oo::EntityStatus::kLaunching)
     return;  // a JS script has aborted the docking.
 
   setOrientation(kIdentityQuaternion);  // reset orientation to dock
@@ -7214,11 +7219,11 @@ void PlayerEntity::enterDock(::StationEntity* station) {
 void PlayerEntity::docked() {
   ::StationEntity* dockedStation = this->dockedStation();
   if (dockedStation == nullptr) {
-    setStatus(OOEntityStatus::kInFlight);
+    setStatus(oo::EntityStatus::kInFlight);
     return;
   }
 
-  setStatus(OOEntityStatus::kDocked);
+  setStatus(oo::EntityStatus::kDocked);
   if (UNIVERSE != nullptr)
     UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
@@ -7264,7 +7269,7 @@ void PlayerEntity::docked() {
                                         ? dockedStation->legalStatusOfManifest(
                                               shipCommodityData.get(), false)
                                         : 0),
-                   OOLegalStatusReason::kIllegalImports);
+                   oo::LegalStatusReason::kIllegalImports);
     if (getBounty() > oldbounty) {
       addRoleToPlayer("trader-smuggler");
     }
@@ -7310,16 +7315,16 @@ void PlayerEntity::docked() {
   }
 
   // it's time to check the script - can trigger legacy missions
-  if (gui_screen != OOGUIScreenID::kMission)
+  if (gui_screen != oo::GUIScreenID::kMission)
     checkScript();  // a scripted pilot could have created a mission screen.
 
   OOJSStartTimeLimiterWithTimeLimit(kOOJSLongTimeLimit);
   doScriptEvent(OOJSID("shipDockedWithStation"), dockedStation);
   OOJSStopTimeLimiter();
-  if (status() == OOEntityStatus::kLaunching) return;
+  if (status() == oo::EntityStatus::kLaunching) return;
 
   // if we've not switched to the mission screen yet then proceed normally..
-  if (gui_screen != OOGUIScreenID::kMission) {
+  if (gui_screen != oo::GUIScreenID::kMission) {
     setGuiToStatusScreen();
   }
   OOCacheManager::sharedCache()->flush();
@@ -7339,7 +7344,7 @@ void PlayerEntity::leaveDock(::StationEntity* station) {
   if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
     UNIVERSE->getGameView()->allowStringInput(false);
 
-  if (gui_screen == OOGUIScreenID::kMission) {
+  if (gui_screen == oo::GUIScreenID::kMission) {
     UNIVERSE->getGui()->clearBackground();
     if (_missionWithCallback) {
       doMissionCallback();
@@ -7355,13 +7360,13 @@ void PlayerEntity::leaveDock(::StationEntity* station) {
         static_cast<int>(station != nullptr ? station->legalStatusOfManifest(
                                                   shipCommodityData.get(), true)
                                             : 0),
-        OOLegalStatusReason::kIllegalExports);
+        oo::LegalStatusReason::kIllegalExports);
     if (getBounty() > oldbounty) {
       addRoleToPlayer("trader-smuggler");
     }
   }
-  OOGUIScreenID oldScreen = gui_screen;
-  gui_screen = OOGUIScreenID::kMain;
+  oo::GUIScreenID oldScreen = gui_screen;
+  gui_screen = oo::GUIScreenID::kMain;
   noteGUIDidChangeFrom(oldScreen, gui_screen);
 
   if (hud != nullptr && !hud->nonlinearScanner()) {
@@ -7449,10 +7454,10 @@ void PlayerEntity::witchStart() {
   }
   safeAllMissiles();
 
-  OOViewID previousViewDirection =
-      (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{});
-  if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(OOViewID::kForward);
-  noteSwitchToView(OOViewID::kForward,
+  oo::ViewID previousViewDirection =
+      (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{});
+  if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(oo::ViewID::kForward);
+  noteSwitchToView(oo::ViewID::kForward,
                    previousViewDirection);  // notifies scripts of the switch
 
   currentWeaponFacing = OOWeaponFacing::kForward;
@@ -7506,7 +7511,7 @@ void PlayerEntity::witchEnd() {
 
 bool PlayerEntity::witchJumpChecklist(bool isGalacticJump) {
   // Perform this check only when doing the actual jump
-  if (status() == OOEntityStatus::kWitchspaceCountdown) {
+  if (status() == oo::EntityStatus::kWitchspaceCountdown) {
     // check nearby masses
     // UPDATE_STAGE("checking for mass blockage");
     ::ShipEntity* blocker = oo::ToShip(
@@ -7527,7 +7532,7 @@ bool PlayerEntity::witchJumpChecklist(bool isGalacticJump) {
                               {{"blockerName", oo::PList(blockerName)}}),
             4.5);
       playWitchjumpBlocked();
-      setStatus(OOEntityStatus::kInFlight);
+      setStatus(oo::EntityStatus::kInFlight);
       doScriptEvent(OOJSID("playerJumpFailed"), {oo::PList("blocked")});
       return false;
     }
@@ -7546,9 +7551,9 @@ bool PlayerEntity::witchJumpChecklist(bool isGalacticJump) {
     if (UNIVERSE != nullptr) UNIVERSE->clearPreviousMessage();
     if (UNIVERSE != nullptr)
       UNIVERSE->addMessage(OOExpandKey("witch-no-target"), 4.5);
-    if (status() == OOEntityStatus::kWitchspaceCountdown) {
+    if (status() == oo::EntityStatus::kWitchspaceCountdown) {
       playWitchjumpInsufficientFuel();
-      setStatus(OOEntityStatus::kInFlight);
+      setStatus(oo::EntityStatus::kInFlight);
       doScriptEvent(OOJSID("playerJumpFailed"), {oo::PList("no target")});
     } else {
       playHyperspaceNoTarget();
@@ -7562,9 +7567,9 @@ bool PlayerEntity::witchJumpChecklist(bool isGalacticJump) {
     if (UNIVERSE != nullptr) UNIVERSE->clearPreviousMessage();
     if (UNIVERSE != nullptr)
       UNIVERSE->addMessage(OO_DESC("witch-too-far"), 4.5);
-    if (status() == OOEntityStatus::kWitchspaceCountdown) {
+    if (status() == oo::EntityStatus::kWitchspaceCountdown) {
       playWitchjumpDistanceTooGreat();
-      setStatus(OOEntityStatus::kInFlight);
+      setStatus(oo::EntityStatus::kInFlight);
       doScriptEvent(OOJSID("playerJumpFailed"), {oo::PList("too far")});
     } else {
       playHyperspaceDistanceTooGreat();
@@ -7578,9 +7583,9 @@ bool PlayerEntity::witchJumpChecklist(bool isGalacticJump) {
     if (UNIVERSE != nullptr) UNIVERSE->clearPreviousMessage();
     if (UNIVERSE != nullptr)
       UNIVERSE->addMessage(OO_DESC("witch-no-fuel"), 4.5);
-    if (status() == OOEntityStatus::kWitchspaceCountdown) {
+    if (status() == oo::EntityStatus::kWitchspaceCountdown) {
       playWitchjumpInsufficientFuel();
-      setStatus(OOEntityStatus::kInFlight);
+      setStatus(oo::EntityStatus::kInFlight);
       doScriptEvent(OOJSID("playerJumpFailed"),
                     {oo::PList("insufficient fuel")});
     } else {
@@ -7645,7 +7650,7 @@ void PlayerEntity::enterGalacticWitchspace() {
     destGalaxy = 0;
   }
 
-  setStatus(OOEntityStatus::kEnteringWitchspace);
+  setStatus(oo::EntityStatus::kEnteringWitchspace);
   JSContext* context = OOJSAcquireContext();
   setJumpCause(std::string("galactic jump"));
   setPreviousSystemID(currentSystemID());
@@ -7713,19 +7718,19 @@ void PlayerEntity::enterGalacticWitchspace() {
   // planetinfo.plist is used in the fixed coordinates case and specifies the
   // exact coordinates for the intergalactic jump.
   switch (galacticHyperspaceBehaviour) {
-    case OOGalacticHyperspaceBehaviour::kFixedCoordinates:
+    case oo::GalacticHyperspaceBehaviour::kFixedCoordinates:
       system_id = (UNIVERSE != nullptr
                        ? UNIVERSE->findSystemNumberAtCoords(
                              galacticHyperspaceFixedCoords, galaxy_number, true)
                        : 0);
       break;
-    case OOGalacticHyperspaceBehaviour::kAllSystemsReachable:
+    case oo::GalacticHyperspaceBehaviour::kAllSystemsReachable:
       system_id =
           (UNIVERSE != nullptr ? UNIVERSE->findSystemNumberAtCoords(
                                      galaxy_coordinates, galaxy_number, true)
                                : 0);
       break;
-    case OOGalacticHyperspaceBehaviour::kStandard:
+    case oo::GalacticHyperspaceBehaviour::kStandard:
     default:
       // instead find a system connected to system 0 near the current
       // coordinates...
@@ -7737,7 +7742,7 @@ void PlayerEntity::enterGalacticWitchspace() {
   target_system_id = system_id;
   info_system_id = system_id;
 
-  setBounty(0, OOLegalStatusReason::kNewGalaxy);  // let's make a fresh start!
+  setBounty(0, oo::LegalStatusReason::kNewGalaxy);  // let's make a fresh start!
   cursor_coordinates = PointFromCoordinates(
       ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) != nullptr
            ? UNIVERSE->getSystemManager()->getProperty("coordinates", system_id,
@@ -7751,8 +7756,8 @@ void PlayerEntity::enterGalacticWitchspace() {
 // If the wormhole generator misjumped, the player's ship misjumps too. Kaks
 // 20110211
 void PlayerEntity::enterWormhole(::WormholeEntity* w_hole) {
-  if (status() == OOEntityStatus::kEnteringWitchspace ||
-      status() == OOEntityStatus::kExitingWitchspace) {
+  if (status() == oo::EntityStatus::kEnteringWitchspace ||
+      status() == oo::EntityStatus::kExitingWitchspace) {
     return;  // has already entered a different wormhole
   }
   bool misjump = scriptedMisjump() ||
@@ -7763,7 +7768,7 @@ void PlayerEntity::enterWormhole(::WormholeEntity* w_hole) {
   wormholeObject = oo::Hold(w_hole);  // held
   wormhole = w_hole;
   addScannedWormhole(wormhole);
-  setStatus(OOEntityStatus::kEnteringWitchspace);
+  setStatus(oo::EntityStatus::kEnteringWitchspace);
   JSContext* context = OOJSAcquireContext();
   setJumpCause("wormhole");
   setPreviousSystemID(currentSystemID());
@@ -7820,7 +7825,7 @@ void PlayerEntity::enterWitchspace() {
       // Depending on ship type and loaded cargo, this
       // will be true for 20 - 50% of the time.
       playWitchjumpFailure();
-      setStatus(OOEntityStatus::kInFlight);
+      setStatus(oo::EntityStatus::kInFlight);
       doScriptEvent(OOJSID("playerJumpFailed"), {oo::PList("malfunction")});
       return;
     } else {
@@ -7850,7 +7855,7 @@ void PlayerEntity::enterWitchspace() {
                     // it. Required for ships following the player.
   addScannedWormhole(wormhole);
 
-  setStatus(OOEntityStatus::kEnteringWitchspace);
+  setStatus(oo::EntityStatus::kEnteringWitchspace);
   JSContext* context = OOJSAcquireContext();
   setJumpCause(std::string("standard jump"));
   setPreviousSystemID(currentSystemID());
@@ -7935,7 +7940,7 @@ void PlayerEntity::witchJumpTo(OOSystemID sTo, bool misjump) {
     setSystemID(sTo);
     setBounty(
         (static_cast<OOCreditsQuantity>(legalStatusValue / 2)),
-        OOLegalStatusReason::kNewSystem);  // 'another day, another system'
+        oo::LegalStatusReason::kNewSystem);  // 'another day, another system'
     witchEnd();
     if (market_rnd < 8)
       erodeReputation();  // every 32 systems or so, drop back towards 'unknown'
@@ -8048,8 +8053,8 @@ void PlayerEntity::leaveWitchspace() {
   flightYaw = 0.0f;
 
   velocity = kZeroVector;
-  setStatus(OOEntityStatus::kExitingWitchspace);
-  gui_screen = OOGUIScreenID::kMain;
+  setStatus(oo::EntityStatus::kExitingWitchspace);
+  gui_screen = oo::GUIScreenID::kMain;
   being_fined = false;  // until you're scanned by a copper!
   clearTargetMemory();
   setShowDemoShips(false);
@@ -8084,12 +8089,12 @@ void PlayerEntity::setGuiToStatusScreen() {
   std::string text;
 
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  OOGUIScreenID oldScreen = gui_screen;
-  if (oldScreen != OOGUIScreenID::kStatus) {
-    noteGUIWillChangeTo(OOGUIScreenID::kStatus);
+  oo::GUIScreenID oldScreen = gui_screen;
+  if (oldScreen != oo::GUIScreenID::kStatus) {
+    noteGUIWillChangeTo(oo::GUIScreenID::kStatus);
   }
 
-  gui_screen = OOGUIScreenID::kStatus;
+  gui_screen = oo::GUIScreenID::kStatus;
   bool guiChanged = (oldScreen != gui_screen);
 
   if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
@@ -8229,7 +8234,7 @@ void PlayerEntity::setGuiToStatusScreen() {
 
   if (guiChanged) {
     oo::PList fgDescriptor, bgDescriptor;
-    if (status() == OOEntityStatus::kDocked) {
+    if (status() == oo::EntityStatus::kDocked) {
       fgDescriptor =
           (UNIVERSE != nullptr
                ? UNIVERSE->screenTextureDescriptorForKey("docked_overlay")
@@ -8820,10 +8825,10 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
               std::string());  // (a nil name raised in the expansions below)
 
   bool sunGoneNova = (infoSystemData.get<bool>("sun_gone_nova"));
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
 
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  gui_screen = OOGUIScreenID::kSystemData;
+  gui_screen = oo::GUIScreenID::kSystemData;
   bool guiChanged = (oldScreen != gui_screen);
 
   Random_Seed infoSystemRandomSeed =
@@ -9049,7 +9054,7 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
 
   if (refreshBackground || guiChanged) {
     gui->setForegroundTextureKey(std::optional<std::string>(
-        status() == OOEntityStatus::kDocked ? "docked_overlay" : "overlay"));
+        status() == oo::EntityStatus::kDocked ? "docked_overlay" : "overlay"));
     gui->setBackgroundTextureKey(std::optional<std::string>(
         sunGoneNova ? "system_data_nova" : "system_data"));
 
@@ -9088,27 +9093,27 @@ PlayerEntity::markedDestinations() {
 }
 
 void PlayerEntity::setGuiToLongRangeChartScreen() {
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   gui->clearAndKeepBackground(false);
   gui->setBackgroundTextureKey("short_range_chart");
   setMissionBackgroundSpecial("");
-  gui_screen = OOGUIScreenID::kLongRangeChart;
+  gui_screen = oo::GUIScreenID::kLongRangeChart;
   target_chart_zoom = CHART_MAX_ZOOM;
   setGuiToChartScreenFrom(oldScreen);
 }
 
 void PlayerEntity::setGuiToShortRangeChartScreen() {
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   gui->clearAndKeepBackground(false);
   gui->setBackgroundTextureKey("short_range_chart");
   setMissionBackgroundSpecial("");
-  gui_screen = OOGUIScreenID::kShortRangeChart;
+  gui_screen = oo::GUIScreenID::kShortRangeChart;
   setGuiToChartScreenFrom(oldScreen);
 }
 
-void PlayerEntity::setGuiToChartScreenFrom(OOGUIScreenID oldScreen) {
+void PlayerEntity::setGuiToChartScreenFrom(oo::GUIScreenID oldScreen) {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
 
   bool guiChanged = (oldScreen != gui_screen);
@@ -9146,7 +9151,7 @@ void PlayerEntity::setGuiToChartScreenFrom(OOGUIScreenID oldScreen) {
     // time);
     //}
     //[gui setText:travelTimeRow forRow:21];
-    if (gui_screen == OOGUIScreenID::kLongRangeChart) {
+    if (gui_screen == oo::GUIScreenID::kLongRangeChart) {
       const std::optional<std::string> searchString = planetSearchString;
       const std::string displaySearchString =
           searchString.has_value() ? oo::str::capitalized(*searchString)
@@ -9169,7 +9174,7 @@ void PlayerEntity::setGuiToChartScreenFrom(OOGUIScreenID oldScreen) {
 
   if (guiChanged) {
     gui->setForegroundTextureKey(std::optional<std::string>(
-        status() == OOEntityStatus::kDocked ? "docked_overlay" : "overlay"));
+        status() == oo::EntityStatus::kDocked ? "docked_overlay" : "overlay"));
 
     gui->setBackgroundTextureKey("short_range_chart");
     if (found_system_id >= 0) {
@@ -9204,11 +9209,11 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
     UNIVERSE->gameController()
         ->setMouseInteractionModeForUIWithMouseInteraction(true);
 
-  gui_screen = OOGUIScreenID::kGameOptions;
+  gui_screen = oo::GUIScreenID::kGameOptions;
 
   // GUI stuff
   {
-    bool startingGame = status() == OOEntityStatus::kStartGame;
+    bool startingGame = status() == oo::EntityStatus::kStartGame;
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     auto setAccessConditionForRow = [&](bool condition, OOGUIRow row) {
       if (condition) {
@@ -9567,8 +9572,8 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
 
     gui->setShowTextCursor(false);
     gui->setForegroundTextureKey(std::optional<std::string>(
-        status() == OOEntityStatus::kDocked ? "docked_overlay"
-                                            : "paused_overlay"));
+        status() == oo::EntityStatus::kDocked ? "docked_overlay"
+                                              : "paused_overlay"));
     gui->setBackgroundTextureKey("settings");
   }
   /* ends */
@@ -9585,15 +9590,15 @@ void PlayerEntity::setGuiToLoadSaveScreen() {
   bool canLoadOrSave = false;
   ::MyOpenGLView* gameView =
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
 
   if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
     UNIVERSE->gameController()
         ->setMouseInteractionModeForUIWithMouseInteraction(true);
 
-  gui_screen = OOGUIScreenID::kOptions;
+  gui_screen = oo::GUIScreenID::kOptions;
 
-  if (status() == OOEntityStatus::kDocked) {
+  if (status() == oo::EntityStatus::kDocked) {
     if (dockedStation() == nullptr) setDockedAtMainStation();
     canLoadOrSave =
         ((dockedStation() ==
@@ -9685,7 +9690,8 @@ void PlayerEntity::setGuiToLoadSaveScreen() {
     gui->setSelectableRange(NSMakeRange(static_cast<std::size_t>(first_sel_row),
                                         GUI_ROW_OPTIONS_END_OF_LIST));
 
-    if (gamePaused || (!canLoadOrSave && status() == OOEntityStatus::kDocked)) {
+    if (gamePaused ||
+        (!canLoadOrSave && status() == oo::EntityStatus::kDocked)) {
       gui->setSelectedRow(OOGUIOptionsRow(GUI_ROW_OPTIONS_GAMEOPTIONS));
     } else {
       gui->setSelectedRow(first_sel_row);
@@ -9694,8 +9700,8 @@ void PlayerEntity::setGuiToLoadSaveScreen() {
     gui->setShowTextCursor(false);
 
     if (gui->setForegroundTextureKey(std::optional<std::string>(
-            status() == OOEntityStatus::kDocked ? "docked_overlay"
-                                                : "paused_overlay")) &&
+            status() == oo::EntityStatus::kDocked ? "docked_overlay"
+                                                  : "paused_overlay")) &&
         (UNIVERSE != nullptr ? UNIVERSE->pauseMessageVisible() : false))
       UNIVERSE->messageGUI()->clear();
     // Graphically, this screen is analogous to the various settings screens
@@ -9791,7 +9797,7 @@ void PlayerEntity::setGuiToEquipShipScreen(
         ->setMouseInteractionModeForUIWithMouseInteraction(true);
 
   missiles = countMissiles();
-  OOEntityStatus
+  oo::EntityStatus
       searchStatus;  // use OOEntityStatus::kTest, OOEntityStatus::kDead &
                      // OOEntityStatus::kActive
   std::optional<std::string> showKey;
@@ -9799,10 +9805,10 @@ void PlayerEntity::setGuiToEquipShipScreen(
 
   if (skipParam < 0) {
     skip = 0;
-    searchStatus = OOEntityStatus::kTest;
+    searchStatus = oo::EntityStatus::kTest;
   } else {
     skip = static_cast<unsigned int>(skipParam);
-    searchStatus = OOEntityStatus::kActive;
+    searchStatus = oo::EntityStatus::kActive;
   }
 
   // don't show a "Back" item if we're only skipping one item - just show the
@@ -9926,19 +9932,20 @@ void PlayerEntity::setGuiToEquipShipScreen(
         if (isOK) equipmentAllowed.push_back(eqKey);
       }
 
-      if (searchStatus == OOEntityStatus::kDead && isOK) {
+      if (searchStatus == oo::EntityStatus::kDead && isOK) {
         showKey = eqKey;
-        searchStatus = OOEntityStatus::kActive;
+        searchStatus = oo::EntityStatus::kActive;
       }
-      if (searchStatus == OOEntityStatus::kTest) {
+      if (searchStatus == oo::EntityStatus::kTest) {
         if (isOK) showKey = eqKey;
         if (eqKey == last_outfitting_key)
-          searchStatus = isOK ? OOEntityStatus::kActive : OOEntityStatus::kDead;
+          searchStatus =
+              isOK ? oo::EntityStatus::kActive : oo::EntityStatus::kDead;
       }
       i++;
     }
   }
-  if (searchStatus != OOEntityStatus::kTest && showKey.has_value()) {
+  if (searchStatus != oo::EntityStatus::kTest && showKey.has_value()) {
     last_outfitting_key = showKey;
   }
 
@@ -9950,9 +9957,9 @@ void PlayerEntity::setGuiToEquipShipScreen(
     unsigned facing_count = 0;
     bool displayRow = true;
     bool weaponMounted = false;
-    bool guiChanged = (gui_screen != OOGUIScreenID::kEquipShip);
+    bool guiChanged = (gui_screen != oo::GUIScreenID::kEquipShip);
 
-    gui_screen = OOGUIScreenID::kEquipShip;
+    gui_screen = oo::GUIScreenID::kEquipShip;
 
     gui->clearAndKeepBackground(!guiChanged);
     gui->setTitle(OO_DESC("equip-title"));
@@ -10300,8 +10307,8 @@ void PlayerEntity::setGuiToInterfacesScreen(int skip) {
   if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
     UNIVERSE->gameController()
         ->setMouseInteractionModeForUIWithMouseInteraction(true);
-  if (gui_screen != OOGUIScreenID::kInterfaces) {
-    noteGUIWillChangeTo(OOGUIScreenID::kInterfaces);
+  if (gui_screen != oo::GUIScreenID::kInterfaces) {
+    noteGUIWillChangeTo(oo::GUIScreenID::kInterfaces);
   }
 
   // build an array of available interfaces
@@ -10325,19 +10332,19 @@ void PlayerEntity::setGuiToInterfacesScreen(int skip) {
   }
   int i;
 
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
 
   // GUI stuff
   {
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     OOGUIRow start_row = GUI_ROW_INTERFACES_START;
     OOGUIRow row = start_row;
-    bool guiChanged = (gui_screen != OOGUIScreenID::kInterfaces);
+    bool guiChanged = (gui_screen != oo::GUIScreenID::kInterfaces);
 
     gui->clearAndKeepBackground(!guiChanged);
     gui->setTitle(OO_DESC("interfaces-title"));
 
-    gui_screen = OOGUIScreenID::kInterfaces;
+    gui_screen = oo::GUIScreenID::kInterfaces;
 
     OOGUITabSettings tab_stops;
     tab_stops[0] = 0;
@@ -10693,9 +10700,9 @@ void PlayerEntity::setGuiToIntroFirstGo(bool justCobra) {
 
   if (gui != nullptr) {
     gui_screen =
-        justCobra ? OOGUIScreenID::kIntro1 : OOGUIScreenID::kShipLibrary;
+        justCobra ? oo::GUIScreenID::kIntro1 : oo::GUIScreenID::kShipLibrary;
   }
-  if (status() == OOEntityStatus::kStartGame) {
+  if (status() == oo::EntityStatus::kStartGame) {
     OOMusicController::sharedController()->playThemeMusic();
   }
 
@@ -10716,7 +10723,7 @@ void PlayerEntity::setGuiToOXZManager() {
     UNIVERSE->getGameView()->clearMouse();
   if (UNIVERSE != nullptr) UNIVERSE->removeDemoShips();
 
-  gui_screen = OOGUIScreenID::kOXZManager;
+  gui_screen = oo::GUIScreenID::kOXZManager;
 
   UNIVERSE->getGui()->clearAndKeepBackground(false);
 
@@ -10727,7 +10734,7 @@ void PlayerEntity::setGuiToOXZManager() {
   if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(true);
 }
 
-void PlayerEntity::noteGUIWillChangeTo(OOGUIScreenID toScreen) {
+void PlayerEntity::noteGUIWillChangeTo(oo::GUIScreenID toScreen) {
   JSContext* context = OOJSAcquireContext();
   ShipScriptEvent(context, this, "guiScreenWillChange",
                   OOJSValueFromGUIScreenID(context, toScreen),
@@ -10735,21 +10742,22 @@ void PlayerEntity::noteGUIWillChangeTo(OOGUIScreenID toScreen) {
   OOJSRelinquishContext(context);
 }
 
-void PlayerEntity::noteGUIDidChangeFrom(OOGUIScreenID fromScreen,
-                                        OOGUIScreenID toScreen) {
+void PlayerEntity::noteGUIDidChangeFrom(oo::GUIScreenID fromScreen,
+                                        oo::GUIScreenID toScreen) {
   noteGUIDidChangeFrom(fromScreen, toScreen, false);
 }
 
-void PlayerEntity::noteGUIDidChangeFrom(OOGUIScreenID fromScreen,
-                                        OOGUIScreenID toScreen, bool refresh) {
+void PlayerEntity::noteGUIDidChangeFrom(oo::GUIScreenID fromScreen,
+                                        oo::GUIScreenID toScreen,
+                                        bool refresh) {
   // No events triggered if we're changing screens while paused, or if screen
   // never actually changed.
   if (fromScreen != toScreen || refresh) {
     // MKW - release GUI Screen ship, if we have one
     switch (fromScreen) {
-      case OOGUIScreenID::kShipyard:
-      case OOGUIScreenID::kLoad:
-      case OOGUIScreenID::kSave:
+      case oo::GUIScreenID::kShipyard:
+      case oo::GUIScreenID::kLoad:
+      case oo::GUIScreenID::kSave:
         demoShip = nullptr;
         break;
       default:
@@ -10757,7 +10765,7 @@ void PlayerEntity::noteGUIDidChangeFrom(OOGUIScreenID fromScreen,
         break;
     }
 
-    if (toScreen == OOGUIScreenID::kSystemData) {
+    if (toScreen == oo::GUIScreenID::kSystemData) {
       // system data screen: ensure correct sun light color is used on miniature
       // planet
       if ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr)
@@ -10794,7 +10802,8 @@ void PlayerEntity::noteGUIDidChangeFrom(OOGUIScreenID fromScreen,
   }
 }
 
-void PlayerEntity::noteViewDidChangeFrom(OOViewID fromView, OOViewID toView) {
+void PlayerEntity::noteViewDidChangeFrom(oo::ViewID fromView,
+                                         oo::ViewID toView) {
   noteSwitchToView(toView, fromView);
 }
 
@@ -10887,7 +10896,7 @@ void PlayerEntity::buySelectedItem() {
                            oo::PList::signedInteger(static_cast<std::int64_t>(
                                old_credits - credits))};
       doScriptEvent(OOJSID("playerBoughtEquipment"), boughtArguments);
-      if (gui_screen == OOGUIScreenID::kEquipShip) {
+      if (gui_screen == oo::GUIScreenID::kEquipShip) {
         // if we haven't changed gui screen inside
         // playerBoughtEquipment
         // show any change due to playerBoughtEquipment
@@ -11352,7 +11361,7 @@ OOCargoQuantity PlayerEntity::cargoQuantityForType(const std::string& type) {
       (shipCommodityData != nullptr ? shipCommodityData->quantityForGood(type)
                                     : 0);
 
-  if (status() != OOEntityStatus::kDocked) {
+  if (status() != oo::EntityStatus::kDocked) {
     std::ptrdiff_t i;
     ::ShipEntity* cargoItem = nullptr;
 
@@ -11379,7 +11388,7 @@ OOCargoQuantity PlayerEntity::setCargoQuantityForType(const std::string& type,
 
   OOCargoQuantity oldAmount = cargoQuantityForType(type);
   OOCargoQuantity available = availableCargoSpace();
-  bool inPods = (status() != OOEntityStatus::kDocked);
+  bool inPods = (status() != oo::EntityStatus::kDocked);
 
   // check it against the max amount.
   if (unit == OOMassUnit::kTons && (available + oldAmount) < amount) {
@@ -11735,9 +11744,9 @@ std::optional<std::string> PlayerEntity::marketScreenTitle() {
 void PlayerEntity::setGuiToMarketScreen() {
   ::OOCommodityMarket* localMarket = this->localMarket();
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
 
-  gui_screen = OOGUIScreenID::kMarket;
+  gui_screen = oo::GUIScreenID::kMarket;
   bool guiChanged = (oldScreen != gui_screen);
 
   if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
@@ -11949,7 +11958,7 @@ void PlayerEntity::setGuiToMarketScreen() {
 
   if (guiChanged) {
     gui->setForegroundTextureKey(std::optional<std::string>(
-        status() == OOEntityStatus::kDocked ? "docked_overlay" : "overlay"));
+        status() == oo::EntityStatus::kDocked ? "docked_overlay" : "overlay"));
     gui->setBackgroundTextureKey("market");
     noteGUIDidChangeFrom(oldScreen, gui_screen);
   }
@@ -11958,9 +11967,9 @@ void PlayerEntity::setGuiToMarketScreen() {
 void PlayerEntity::setGuiToMarketInfoScreen() {
   ::OOCommodityMarket* localMarket = this->localMarket();
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
 
-  gui_screen = OOGUIScreenID::kMarketInfo;
+  gui_screen = oo::GUIScreenID::kMarketInfo;
   bool guiChanged = (oldScreen != gui_screen);
 
   if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
@@ -12088,7 +12097,7 @@ void PlayerEntity::setGuiToMarketInfoScreen() {
 
   if (guiChanged) {
     gui->setForegroundTextureKey(std::optional<std::string>(
-        status() == OOEntityStatus::kDocked ? "docked_overlay" : "overlay"));
+        status() == oo::EntityStatus::kDocked ? "docked_overlay" : "overlay"));
     gui->setBackgroundTextureKey("marketinfo");
     noteGUIDidChangeFrom(oldScreen, gui_screen);
   }
@@ -12108,7 +12117,7 @@ void PlayerEntity::showMarketCashAndLoadLine() {
       GUI_ROW_MARKET_CASH);
 }
 
-OOGUIScreenID PlayerEntity::guiScreen() { return gui_screen; }
+oo::GUIScreenID PlayerEntity::guiScreen() { return gui_screen; }
 
 bool PlayerEntity::tryBuyingCommodity(const std::string& index, bool all) {
   if (index == "<<<" || index == ">>>") {
@@ -12342,8 +12351,8 @@ bool PlayerEntity::addEquipmentItem(const std::string& equipmentKey,
 
   if (OK) {
     if (hasEquipmentItemProviding("EQ_ADVANCED_COMPASS") &&
-        getCompassMode() == OOCompassMode::kBasic) {
-      setCompassMode(OOCompassMode::kPlanet);
+        getCompassMode() == oo::CompassMode::kBasic) {
+      setCompassMode(oo::CompassMode::kPlanet);
     }
 
     if (!equipmentKey.empty())
@@ -12432,8 +12441,8 @@ void PlayerEntity::validateCustomEquipActivationArray() {
 
 void PlayerEntity::removeEquipmentItem(const std::string& equipmentKey) {
   if (!hasEquipmentItemProviding("EQ_ADVANCED_COMPASS") &&
-      getCompassMode() != OOCompassMode::kBasic) {
-    setCompassMode(OOCompassMode::kBasic);
+      getCompassMode() != oo::CompassMode::kBasic) {
+    setCompassMode(oo::CompassMode::kBasic);
   }
   ShipEntity::removeEquipmentItem(equipmentKey);
   if (!hasOneEquipmentItem(equipmentKey, false,
@@ -12639,8 +12648,8 @@ bool PlayerEntity::hasHostileTarget() {
 
 void PlayerEntity::receiveCommsMessage(const std::string& message_text,
                                        ::ShipEntity* other) {
-  if (status() == OOEntityStatus::kDead ||
-      status() == OOEntityStatus::kDocked) {
+  if (status() == oo::EntityStatus::kDead ||
+      status() == oo::EntityStatus::kDocked) {
     // only when in flight
     return;
   }
@@ -12670,10 +12679,10 @@ void PlayerEntity::getFined() {
     int payback = static_cast<int>(
         static_cast<OOCreditsQuantity>(legalStatusValue) * credits / fine);
     setBounty((static_cast<OOCreditsQuantity>(legalStatusValue - payback)),
-              OOLegalStatusReason::kPaidFine);
+              oo::LegalStatusReason::kPaidFine);
     credits = 0;
   } else {
-    setBounty(0, OOLegalStatusReason::kPaidFine);
+    setBounty(0, oo::LegalStatusReason::kPaidFine);
     credits -= fine;
   }
 
@@ -12992,7 +13001,7 @@ void PlayerEntity::setScoopsActive() { scoopsActive = true; }
 void PlayerEntity::setFoundTarget(Entity* targetEntity) {
   /* Rare, but can happen, e.g. if a Q-mine goes off nearby during
    * the sequence */
-  if (status() == OOEntityStatus::kEscapeSequence) {
+  if (status() == oo::EntityStatus::kEscapeSequence) {
     return;
   }
   _foundTarget = std::weak_ptr<Entity>(oo::share(targetEntity));
@@ -13001,8 +13010,8 @@ void PlayerEntity::setFoundTarget(Entity* targetEntity) {
 // override shipentity addTarget to implement target_memory
 void PlayerEntity::addTarget(Entity* targetEntity) {
   // the C++ entity
-  if (status() != OOEntityStatus::kInFlight &&
-      status() != OOEntityStatus::kWitchspaceCountdown)
+  if (status() != oo::EntityStatus::kInFlight &&
+      status() != oo::EntityStatus::kWitchspaceCountdown)
     return;
   if (targetEntity == this) return;
 
@@ -13505,11 +13514,11 @@ void PlayerEntity::setMissionBackgroundSpecial(const std::string& special) {
   }
 }
 
-void PlayerEntity::setMissionExitScreen(OOGUIScreenID screen) {
+void PlayerEntity::setMissionExitScreen(oo::GUIScreenID screen) {
   _missionExitScreen = screen;
 }
 
-OOGUIScreenID PlayerEntity::missionExitScreen() { return _missionExitScreen; }
+oo::GUIScreenID PlayerEntity::missionExitScreen() { return _missionExitScreen; }
 
 oo::PList PlayerEntity::equipScreenBackgroundDescriptor() {
   return _equipScreenBackgroundDescriptor;
@@ -13574,7 +13583,7 @@ bool PlayerEntity::doWorldEventUntilMissionScreen(OOJSPropID message) {
   auto scriptEntry = scripts.begin();
 
   // Check for the presence of report messages first.
-  if (gui_screen != OOGUIScreenID::kMission && !dockingReport.empty() &&
+  if (gui_screen != oo::GUIScreenID::kMission && !dockingReport.empty() &&
       isDocked() &&
       !(dockedStation() != nullptr ? dockedStation()->suppressArrivalReports()
                                    : false)) {
@@ -13585,7 +13594,7 @@ bool PlayerEntity::doWorldEventUntilMissionScreen(OOJSPropID message) {
 
   JSContext* context = OOJSAcquireContext();
   while (scriptEntry != scripts.end() &&
-         gui_screen != OOGUIScreenID::kMission && isDocked()) {
+         gui_screen != oo::GUIScreenID::kMission && isDocked()) {
     if (scriptEntry->second.get() != nullptr)
       scriptEntry->second.get()->callMethod(message, context, nullptr, 0,
                                             nullptr);
@@ -13593,7 +13602,7 @@ bool PlayerEntity::doWorldEventUntilMissionScreen(OOJSPropID message) {
   }
   OOJSRelinquishContext(context);
 
-  if (gui_screen == OOGUIScreenID::kMission) {
+  if (gui_screen == oo::GUIScreenID::kMission) {
     // remove any comms/console messages from the screen!
     UNIVERSE->messageGUI()->clear();
     return true;
@@ -13620,14 +13629,14 @@ void PlayerEntity::doWorldScriptEvent(OOJSPropID message, JSContext* context,
 }
 
 void PlayerEntity::setGalacticHyperspaceBehaviour(
-    OOGalacticHyperspaceBehaviour inBehaviour) {
-  if (OOGalacticHyperspaceBehaviour::kUnknown < inBehaviour &&
-      inBehaviour <= kOOGalacticHyperspaceBehaviourMax) {
+    oo::GalacticHyperspaceBehaviour inBehaviour) {
+  if (oo::GalacticHyperspaceBehaviour::kUnknown < inBehaviour &&
+      inBehaviour <= oo::kGalacticHyperspaceBehaviourMax) {
     galacticHyperspaceBehaviour = inBehaviour;
   }
 }
 
-OOGalacticHyperspaceBehaviour PlayerEntity::getGalacticHyperspaceBehaviour() {
+oo::GalacticHyperspaceBehaviour PlayerEntity::getGalacticHyperspaceBehaviour() {
   return galacticHyperspaceBehaviour;
 }
 
@@ -13653,11 +13662,11 @@ void PlayerEntity::setWitchspaceCountdown(int spin_time) {
   witchspaceCountdown = spin_time;
 }
 
-OOLongRangeChartMode PlayerEntity::getLongRangeChartMode() {
+oo::LongRangeChartMode PlayerEntity::getLongRangeChartMode() {
   return longRangeChartMode;
 }
 
-void PlayerEntity::setLongRangeChartMode(OOLongRangeChartMode mode) {
+void PlayerEntity::setLongRangeChartMode(oo::LongRangeChartMode mode) {
   longRangeChartMode = mode;
 }
 
@@ -13738,30 +13747,30 @@ bool PlayerEntity::isDocked() {
   bool isDockedStatus = false;
 
   switch (status()) {
-    case OOEntityStatus::kDocked:
-    case OOEntityStatus::kDocking:
-    case OOEntityStatus::kStartGame:
+    case oo::EntityStatus::kDocked:
+    case oo::EntityStatus::kDocking:
+    case oo::EntityStatus::kStartGame:
       isDockedStatus = true;
       break;
       // special case - can be either docked or not, so avoid safety check below
-    case OOEntityStatus::kRestartGame:
+    case oo::EntityStatus::kRestartGame:
       return false;
-    case OOEntityStatus::kEffect:
-    case OOEntityStatus::kActive:
-    case OOEntityStatus::kCockpitDisplay:
-    case OOEntityStatus::kTest:
-    case OOEntityStatus::kInactive:
-    case OOEntityStatus::kDead:
-    case OOEntityStatus::kInFlight:
-    case OOEntityStatus::kAutopilotEngaged:
-    case OOEntityStatus::kLaunching:
-    case OOEntityStatus::kWitchspaceCountdown:
-    case OOEntityStatus::kEnteringWitchspace:
-    case OOEntityStatus::kExitingWitchspace:
-    case OOEntityStatus::kEscapeSequence:
-    case OOEntityStatus::kInHold:
-    case OOEntityStatus::kBeingScooped:
-    case OOEntityStatus::kHandlingError:
+    case oo::EntityStatus::kEffect:
+    case oo::EntityStatus::kActive:
+    case oo::EntityStatus::kCockpitDisplay:
+    case oo::EntityStatus::kTest:
+    case oo::EntityStatus::kInactive:
+    case oo::EntityStatus::kDead:
+    case oo::EntityStatus::kInFlight:
+    case oo::EntityStatus::kAutopilotEngaged:
+    case oo::EntityStatus::kLaunching:
+    case oo::EntityStatus::kWitchspaceCountdown:
+    case oo::EntityStatus::kEnteringWitchspace:
+    case oo::EntityStatus::kExitingWitchspace:
+    case oo::EntityStatus::kEscapeSequence:
+    case oo::EntityStatus::kInHold:
+    case oo::EntityStatus::kBeingScooped:
+    case oo::EntityStatus::kHandlingError:
       break;
       // no default, so that we get notified by the compiler if something is
       // missing
@@ -13778,17 +13787,18 @@ bool PlayerEntity::isDocked() {
           "status is {}, but dockedStation is nil; treating as not docked. {}",
           OOStringFromEntityStatus(status()),
           "This is an internal error, please report it.");
-      setStatus(OOEntityStatus::kInFlight);
+      setStatus(oo::EntityStatus::kInFlight);
       isDockedStatus = false;
     }
   } else {
-    if (dockedStation() != nullptr && status() != OOEntityStatus::kLaunching) {
+    if (dockedStation() != nullptr &&
+        status() != oo::EntityStatus::kLaunching) {
       OO_LOG_ERR(
           kOOLogInconsistentState,
           "status is {}, but dockedStation is not nil; treating as docked. {}",
           OOStringFromEntityStatus(status()),
           "This is an internal error, please report it.");
-      setStatus(OOEntityStatus::kDocked);
+      setStatus(oo::EntityStatus::kDocked);
       isDockedStatus = true;
     }
   }
@@ -13963,7 +13973,7 @@ void PlayerEntity::setExtraMissionKeys(const oo::PList& keys) {
   extraMissionKeys = std::move(final);
 }
 
-void PlayerEntity::clearExtraGuiScreenKeys(OOGUIScreenID gui,
+void PlayerEntity::clearExtraGuiScreenKeys(oo::GUIScreenID gui,
                                            const std::string& key) {
   const auto screenKeys = extraGuiScreenKeys.find(gui);
   if (screenKeys == extraGuiScreenKeys.end()) return;
@@ -13986,7 +13996,7 @@ void PlayerEntity::clearExtraGuiScreenKeys(OOGUIScreenID gui,
 }
 
 bool PlayerEntity::setExtraGuiScreenKeys(
-    OOGUIScreenID gui, ::OOJSGuiScreenKeyDefinition* definition) {
+    oo::GUIScreenID gui, ::OOJSGuiScreenKeyDefinition* definition) {
   // process all the keys in the definition
   bool result = true;
   oo::PList::Dict final;

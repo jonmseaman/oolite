@@ -27,7 +27,7 @@
 class PlayerEntity;
 
 // The player's status, as Entity.h defines it.
-#include "OOEntityStatus.h"
+#include "EntityStatus.h"
 
 /*	The sound: a C++ stand-in (the root's members its vtable names;
    OOALSound.mm is not linked). A sound named "raise" raises from name(), one
@@ -93,13 +93,13 @@ struct MusicRecord
 class Entity
 {
 public:
-	OOEntityStatus status();
+	oo::EntityStatus status();
 };
 
 class FakePlayer : public Entity
 {
 public:
-	OOEntityStatus _status = {};
+	oo::EntityStatus _status = {};
 };
 
 
@@ -179,7 +179,7 @@ void OOMusicController::playMusicNamed(const std::string &name, bool loop, float
 }
 
 
-OOEntityStatus Entity::status()  { return static_cast<FakePlayer *>(this)->_status; }
+oo::EntityStatus Entity::status()  { return static_cast<FakePlayer *>(this)->_status; }
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
@@ -336,7 +336,7 @@ void SetUpContext()
 	InitOOJSSound(sContext, sGlobal);
 
 	sPlayer = new FakePlayer;	// kept for the life of the test
-	sPlayer->_status = OOEntityStatus::kInFlight;
+	sPlayer->_status = oo::EntityStatus::kInFlight;
 	gOOPlayer = reinterpret_cast<PlayerEntity *>(sPlayer);	// the root part comes first in PlayerEntity: the binding's PLAYER->status() reaches it
 	sMusic = new MusicRecord();
 }
@@ -453,10 +453,10 @@ OO_TEST(soundFromJSValue)
 	JS_FreeValue(sContext, object);
 	sLimiterPauses = 0;
 	// At the start screen a name is not looked up: a string is not a Sound object.
-	sPlayer->_status = OOEntityStatus::kStartGame;
+	sPlayer->_status = oo::EntityStatus::kStartGame;
 	OO_CHECK(SoundFromJSValue(sContext, name) == nullptr);
 	JS_FreeValue(sContext, name);
-	sPlayer->_status = OOEntityStatus::kInFlight;
+	sPlayer->_status = oo::EntityStatus::kInFlight;
 	sLimiterPauses = 0;
 }
 

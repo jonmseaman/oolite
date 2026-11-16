@@ -434,9 +434,9 @@ static JSValue PlayerSetProperty(OOJS_SETTER_ARGS) {
         if (player != nullptr)
           player->PlayerEntity::setBounty(
               static_cast<OOCreditsQuantity>(iValue),
-              OOLegalStatusReason::kByScript);  // qualified: the final
-                                                // overrider, so the binding
-                                                // test stands in for it
+              oo::LegalStatusReason::kByScript);  // qualified: the final
+                                                  // overrider, so the binding
+                                                  // test stands in for it
         return JS_UNDEFINED;
       }
       break;
@@ -684,8 +684,8 @@ static JSValue PlayerReplaceShip(JSContext* context, JSValueConst /*oojsThis*/,
     return OOJSNativeFailure(context);
   }
 
-  if (!((player != nullptr ? player->status() : OOEntityStatus{}) ==
-        OOEntityStatus::kDocked)) [[unlikely]] {
+  if (!((player != nullptr ? player->status() : oo::EntityStatus{}) ==
+        oo::EntityStatus::kDocked)) [[unlikely]] {
     OOJSReportError(
         context, "Player.replaceShip() only works while the player is docked.");
     return OOJSNativeFailure(context);

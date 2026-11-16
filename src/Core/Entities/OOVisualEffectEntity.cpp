@@ -42,12 +42,12 @@ MA 02110-1301, USA.
 #include "Entity.h"
 #include "EntityHelpers.h"
 #include "EntityPListForeign.h"
+#include "EntityStatus.h"
 #include "HeadUpDisplay.h"
 #include "MyOpenGLView.h"
 #include "OOColor.h"
 #include "OODescription.h"
 #include "OOEntityHold.h"
-#include "OOEntityStatus.h"
 #include "OOEntityWithDrawable.h"
 #include "OOFastArithmetic.h"
 #include "OOFlasherEntity.h"
@@ -62,12 +62,12 @@ MA 02110-1301, USA.
 #include "OOPListGameTypes.h"
 #include "OOPolygonSprite.h"
 #include "OOQuaternion.h"
-#include "OOScanClass.h"
 #include "OOScript.h"
 #include "OOShaderMaterial.h"
 #include "OOStringExpander.h"
 #include "OOTypes.h"
 #include "OOVector.h"
+#include "ScanClass.h"
 #include "ShipEntity.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
@@ -187,9 +187,9 @@ bool OOVisualEffectEntity::setUpVisualEffectFromDictionary(
   setScannerDisplayColor1(nullptr);
   setScannerDisplayColor2(nullptr);
 
-  scanClass = OOScanClass::kVisualEffect;
+  scanClass = oo::ScanClass::kVisualEffect;
 
-  setStatus(OOEntityStatus::kEffect);
+  setStatus(oo::EntityStatus::kEffect);
 
   _hullHeatLevel = 60.0 / 256.0;
   _shaderFloat1 = 0.0;

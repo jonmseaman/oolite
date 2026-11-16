@@ -415,8 +415,8 @@ void ByName_194(Entity *entity)
 { if (ShipEntity *ship = ShipPart(entity))  ship->noteLostTarget(); }
 void ByName_195(Entity *entity)
 { if (ShipEntity *ship = ShipPart(entity))  ship->noteLostTargetAndGoIdle(); }
-OOBehaviour ByName_196(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getBehaviour() : OOBehaviour{}; }
+oo::Behaviour ByName_196(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getBehaviour() : oo::Behaviour{}; }
 HPVector ByName_197(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->destination() : kZeroHPVector; }
 HPVector ByName_198(Entity *entity)
@@ -1071,8 +1071,8 @@ Entity * ByName_496(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getCompassTargetEntity() : nullptr; }
 void ByName_497(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->validateCompassTarget(); }
-OOCompassMode ByName_498(Entity *entity)
-{ if (ProxyPlayerEntity *proxy = ProxyPart(entity))  return proxy->compassMode(); PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getCompassMode() : OOCompassMode{}; }
+oo::CompassMode ByName_498(Entity *entity)
+{ if (ProxyPlayerEntity *proxy = ProxyPart(entity))  return proxy->compassMode(); PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getCompassMode() : oo::CompassMode{}; }
 void ByName_499(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setPrevCompassMode(); }
 void ByName_500(Entity *entity)
@@ -1189,8 +1189,8 @@ void ByName_555(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setGuiToMarketInfoScreen(); }
 void ByName_556(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->showMarketCashAndLoadLine(); }
-OOGUIScreenID ByName_557(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->guiScreen() : OOGUIScreenID{}; }
+oo::GUIScreenID ByName_557(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->guiScreen() : oo::GUIScreenID{}; }
 OOSpeechSettings ByName_558(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getIsSpeechOn() : OOSpeechSettings{}; }
 void ByName_559(Entity *entity, const std::string &equipmentKey)
@@ -1263,20 +1263,20 @@ OOGUIBackgroundSpecial ByName_592(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->missionBackgroundSpecial() : OOGUIBackgroundSpecial{}; }
 void ByName_593(Entity *entity, const std::string &special)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setMissionBackgroundSpecial(special); }
-OOGUIScreenID ByName_594(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->missionExitScreen() : OOGUIScreenID{}; }
+oo::GUIScreenID ByName_594(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->missionExitScreen() : oo::GUIScreenID{}; }
 oo::PList ByName_595(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->equipScreenBackgroundDescriptor() : oo::PList(); }
 void ByName_596(Entity *entity, const oo::PList &descriptor)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setEquipScreenBackgroundDescriptor(descriptor); }
 bool ByName_597(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->scriptsLoaded() : false; }
-OOGalacticHyperspaceBehaviour ByName_598(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getGalacticHyperspaceBehaviour() : OOGalacticHyperspaceBehaviour{}; }
+oo::GalacticHyperspaceBehaviour ByName_598(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getGalacticHyperspaceBehaviour() : oo::GalacticHyperspaceBehaviour{}; }
 NSPoint ByName_599(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getGalacticHyperspaceFixedCoords() : NSMakePoint(0, 0); }
-OOLongRangeChartMode ByName_600(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getLongRangeChartMode() : OOLongRangeChartMode{}; }
+oo::LongRangeChartMode ByName_600(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getLongRangeChartMode() : oo::LongRangeChartMode{}; }
 bool ByName_601(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getScoopOverride() : false; }
 bool ByName_602(Entity *entity)
@@ -2232,7 +2232,7 @@ inline const OOEntityByNameRow kOOEntityByNameRows[] =
 	{ "shipHitByLaser",	OOByName::kShip,	oo::kValueType<oo::ObjectResult>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_193>,	&OOEntityByNameTyped<&ByName_193> },
 	{ "noteLostTarget",	OOByName::kShip,	oo::kValueType<void>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_194>,	&OOEntityByNameTyped<&ByName_194> },
 	{ "noteLostTargetAndGoIdle",	OOByName::kShip,	oo::kValueType<void>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_195>,	&OOEntityByNameTyped<&ByName_195> },
-	{ "behaviour",	OOByName::kShip,	oo::kValueType<OOBehaviour>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_196>,	&OOEntityByNameTyped<&ByName_196> },
+	{ "behaviour",	OOByName::kShip,	oo::kValueType<oo::Behaviour>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_196>,	&OOEntityByNameTyped<&ByName_196> },
 	{ "destination",	OOByName::kShip,	oo::kValueType<HPVector>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_197>,	&OOEntityByNameTyped<&ByName_197> },
 	{ "coordinates",	OOByName::kShip,	oo::kValueType<HPVector>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_198>,	&OOEntityByNameTyped<&ByName_198> },
 	{ "rangeToDestination",	OOByName::kShip,	oo::kValueType<GLfloat>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_199>,	&OOEntityByNameTyped<&ByName_199> },
@@ -2533,7 +2533,7 @@ inline const OOEntityByNameRow kOOEntityByNameRows[] =
 	{ "updateSystemMemory",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_495>,	&OOEntityByNameTyped<&ByName_495> },
 	{ "compassTarget",	OOByName::kPlayer,	oo::kValueType<oo::ObjectResult>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_496>,	&OOEntityByNameTyped<&ByName_496> },
 	{ "validateCompassTarget",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_497>,	&OOEntityByNameTyped<&ByName_497> },
-	{ "compassMode",	OOByName::kPlayer | OOByName::kProxy,	oo::kValueType<OOCompassMode>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_498>,	&OOEntityByNameTyped<&ByName_498> },
+	{ "compassMode",	OOByName::kPlayer | OOByName::kProxy,	oo::kValueType<oo::CompassMode>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_498>,	&OOEntityByNameTyped<&ByName_498> },
 	{ "setPrevCompassMode",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_499>,	&OOEntityByNameTyped<&ByName_499> },
 	{ "setNextCompassMode",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_500>,	&OOEntityByNameTyped<&ByName_500> },
 	{ "activeMissile",	OOByName::kPlayer,	oo::kValueType<std::size_t>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_501>,	&OOEntityByNameTyped<&ByName_501> },
@@ -2592,7 +2592,7 @@ inline const OOEntityByNameRow kOOEntityByNameRows[] =
 	{ "setGuiToMarketScreen",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_554>,	&OOEntityByNameTyped<&ByName_554> },
 	{ "setGuiToMarketInfoScreen",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_555>,	&OOEntityByNameTyped<&ByName_555> },
 	{ "showMarketCashAndLoadLine",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_556>,	&OOEntityByNameTyped<&ByName_556> },
-	{ "guiScreen",	OOByName::kPlayer,	oo::kValueType<OOGUIScreenID>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_557>,	&OOEntityByNameTyped<&ByName_557> },
+	{ "guiScreen",	OOByName::kPlayer,	oo::kValueType<oo::GUIScreenID>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_557>,	&OOEntityByNameTyped<&ByName_557> },
 	{ "isSpeechOn",	OOByName::kPlayer,	oo::kValueType<OOSpeechSettings>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_558>,	&OOEntityByNameTyped<&ByName_558> },
 	{ "addEquipmentWithScriptToCustomKeyArray:",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kString,	&OOEntityByNameAdaptString<&ByName_559>,	nullptr },
 	{ "validateCustomEquipActivationArray",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_560>,	&OOEntityByNameTyped<&ByName_560> },
@@ -2629,13 +2629,13 @@ inline const OOEntityByNameRow kOOEntityByNameRows[] =
 	{ "setMissionBackgroundDescriptor:",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kPList,	&OOEntityByNameAdaptPList<&ByName_591>,	nullptr },
 	{ "missionBackgroundSpecial",	OOByName::kPlayer,	oo::kValueType<OOGUIBackgroundSpecial>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_592>,	&OOEntityByNameTyped<&ByName_592> },
 	{ "setMissionBackgroundSpecial:",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kString,	&OOEntityByNameAdaptString<&ByName_593>,	nullptr },
-	{ "missionExitScreen",	OOByName::kPlayer,	oo::kValueType<OOGUIScreenID>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_594>,	&OOEntityByNameTyped<&ByName_594> },
+	{ "missionExitScreen",	OOByName::kPlayer,	oo::kValueType<oo::GUIScreenID>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_594>,	&OOEntityByNameTyped<&ByName_594> },
 	{ "equipScreenBackgroundDescriptor",	OOByName::kPlayer,	oo::kValueType<oo::PList>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_595>,	&OOEntityByNameTyped<&ByName_595> },
 	{ "setEquipScreenBackgroundDescriptor:",	OOByName::kPlayer,	oo::kValueType<void>,	OOEntityByNameArgument::kPList,	&OOEntityByNameAdaptPList<&ByName_596>,	nullptr },
 	{ "scriptsLoaded",	OOByName::kPlayer,	oo::kValueType<bool>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_597>,	&OOEntityByNameTyped<&ByName_597> },
-	{ "galacticHyperspaceBehaviour",	OOByName::kPlayer,	oo::kValueType<OOGalacticHyperspaceBehaviour>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_598>,	&OOEntityByNameTyped<&ByName_598> },
+	{ "galacticHyperspaceBehaviour",	OOByName::kPlayer,	oo::kValueType<oo::GalacticHyperspaceBehaviour>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_598>,	&OOEntityByNameTyped<&ByName_598> },
 	{ "galacticHyperspaceFixedCoords",	OOByName::kPlayer,	oo::kValueType<NSPoint>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_599>,	&OOEntityByNameTyped<&ByName_599> },
-	{ "longRangeChartMode",	OOByName::kPlayer,	oo::kValueType<OOLongRangeChartMode>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_600>,	&OOEntityByNameTyped<&ByName_600> },
+	{ "longRangeChartMode",	OOByName::kPlayer,	oo::kValueType<oo::LongRangeChartMode>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_600>,	&OOEntityByNameTyped<&ByName_600> },
 	{ "scoopOverride",	OOByName::kPlayer,	oo::kValueType<bool>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_601>,	&OOEntityByNameTyped<&ByName_601> },
 	{ "isDocked",	OOByName::kPlayer,	oo::kValueType<bool>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_602>,	&OOEntityByNameTyped<&ByName_602> },
 	{ "clearedToDock",	OOByName::kPlayer,	oo::kValueType<bool>,	OOEntityByNameArgument::kNone,	&OOEntityByNameAdaptNone<&ByName_603>,	&OOEntityByNameTyped<&ByName_603> },

@@ -90,8 +90,8 @@ class ProxyPlayerEntity : public ShipEntity {
 
   // Default: OOCompassMode::kBasic or OOCompassMode::kPlanet depending on
   // equipment.
-  OOCompassMode compassMode();
-  void setCompassMode(OOCompassMode value);
+  oo::CompassMode compassMode();
+  void setCompassMode(oo::CompassMode value);
 
   // Default: NO
   bool dialIdentEngaged();
@@ -114,7 +114,7 @@ class ProxyPlayerEntity : public ShipEntity {
   GLfloat _dialAftShield = 0;
   OOMissileStatus _missileStatus = {};
   OOFuelScoopStatus _fuelScoopStatus = {};
-  OOCompassMode _compassMode = {};
+  oo::CompassMode _compassMode = {};
   OOAlertCondition _alertCondition = {};
   std::size_t _trumbleCount = 0;
   int _tradeInFactor = 0;

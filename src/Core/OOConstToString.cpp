@@ -38,65 +38,66 @@ MA );-);, USA.
 #include "Universe.h"
 #include "oofnd/String.hpp"
 
-std::string OOStringFromEntityStatus(OOEntityStatus value) {
+std::string OOStringFromEntityStatus(oo::EntityStatus value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromBehaviour(OOBehaviour value) {
+std::string OOStringFromBehaviour(oo::Behaviour value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("** BEHAVIOUR UNKNOWN **")
                       : std::string(name);
 }
 
-std::string OOStringFromCompassMode(OOCompassMode value) {
+std::string OOStringFromCompassMode(oo::CompassMode value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromLongRangeChartMode(OOLongRangeChartMode value) {
+std::string OOStringFromLongRangeChartMode(oo::LongRangeChartMode value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
 std::string OOStringFromGalacticHyperspaceBehaviour(
-    OOGalacticHyperspaceBehaviour value) {
+    oo::GalacticHyperspaceBehaviour value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromGUIScreenID(OOGUIScreenID value) {
+std::string OOStringFromGUIScreenID(oo::GUIScreenID value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromScanClass(OOScanClass value) {
+std::string OOStringFromScanClass(oo::ScanClass value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromShipDamageType(OOShipDamageType value) {
+std::string OOStringFromShipDamageType(oo::ShipDamageType value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromLegalStatusReason(OOLegalStatusReason value) {
+std::string OOStringFromLegalStatusReason(oo::LegalStatusReason value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-OOEntityStatus OOEntityStatusFromString(const std::string& string) {
-  return kOOEntityStatusTable.value(string).value_or(kOOEntityStatusDefault);
+oo::EntityStatus OOEntityStatusFromString(const std::string& string) {
+  return oo::kEntityStatusTable.value(string).value_or(
+      oo::kEntityStatusDefault);
 }
 
-OOCompassMode OOCompassModeFromString(const std::string& string) {
-  return kOOCompassModeTable.value(string).value_or(kOOCompassModeDefault);
+oo::CompassMode OOCompassModeFromString(const std::string& string) {
+  return oo::kCompassModeTable.value(string).value_or(oo::kCompassModeDefault);
 }
 
-OOGalacticHyperspaceBehaviour OOGalacticHyperspaceBehaviourFromString(
+oo::GalacticHyperspaceBehaviour OOGalacticHyperspaceBehaviourFromString(
     const std::string& string) {
-  if (const std::optional<OOGalacticHyperspaceBehaviour> value =
-          kOOGalacticHyperspaceBehaviourTable.value(string))
+  if (const std::optional<oo::GalacticHyperspaceBehaviour> value =
+          oo::kGalacticHyperspaceBehaviourTable.value(string))
     return *value;
 
   // Transparently (but inefficiently) support american spelling. FIXME: remove
@@ -106,20 +107,21 @@ OOGalacticHyperspaceBehaviour OOGalacticHyperspaceBehaviourFromString(
                                                    string.substr(9));
   }
 
-  return kOOGalacticHyperspaceBehaviourDefault;
+  return oo::kGalacticHyperspaceBehaviourDefault;
 }
 
-OOGUIScreenID OOGUIScreenIDFromString(const std::string& string) {
-  return kOOGUIScreenIDTable.value(string).value_or(kOOGUIScreenIDDefault);
+oo::GUIScreenID OOGUIScreenIDFromString(const std::string& string) {
+  return oo::kGUIScreenIDTable.value(string).value_or(oo::kGUIScreenIDDefault);
 }
 
-OOScanClass OOScanClassFromString(const std::string& string) {
-  return kOOScanClassTable.value(string).value_or(kOOScanClassDefault);
+oo::ScanClass OOScanClassFromString(const std::string& string) {
+  return oo::kScanClassTable.value(string).value_or(oo::kScanClassDefault);
 }
 
-OOLongRangeChartMode OOLongRangeChartModeFromString(const std::string& string) {
-  return kOOLongRangeChartModeTable.value(string).value_or(
-      kOOLongRangeChartModeDefault);
+oo::LongRangeChartMode OOLongRangeChartModeFromString(
+    const std::string& string) {
+  return oo::kLongRangeChartModeTable.value(string).value_or(
+      oo::kLongRangeChartModeDefault);
 }
 
 std::string RouteTypeToString(OORouteType routeType) {

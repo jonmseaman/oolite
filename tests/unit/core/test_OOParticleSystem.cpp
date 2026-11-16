@@ -154,8 +154,8 @@ bool VectorNear(Vector a, Vector b) {
 bool IsParticleEffect(Entity* cloud) {
   return cloud != nullptr &&
          HPvector_equal(cloud->getPosition(), make_HPvector(1, 2, 3)) &&
-         cloud->status() == OOEntityStatus::kEffect &&
-         cloud->getScanClass() == OOScanClass::kNoDraw && cloud->isEffect() &&
+         cloud->status() == oo::EntityStatus::kEffect &&
+         cloud->getScanClass() == oo::ScanClass::kNoDraw && cloud->isEffect() &&
          !cloud->canCollide() && cloud->collisionRadius() == 0 &&
          cloud->owner() == nullptr;
 }

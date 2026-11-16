@@ -93,34 +93,35 @@ static JSAtom sUndefinedAtom;
         name table (the headers in Tables).
 */
 
-static std::array<TableEntry, kOOCompassModeTable.entries.size()>
-    sOOCompassModeTableEntries = EntriesFrom(kOOCompassModeTable);
+static std::array<TableEntry, oo::kCompassModeTable.entries.size()>
+    sOOCompassModeTableEntries = EntriesFrom(oo::kCompassModeTable);
 
-static std::array<TableEntry, kOOEntityStatusTable.entries.size()>
-    sOOEntityStatusTableEntries = EntriesFrom(kOOEntityStatusTable);
+static std::array<TableEntry, oo::kEntityStatusTable.entries.size()>
+    sOOEntityStatusTableEntries = EntriesFrom(oo::kEntityStatusTable);
 
 static std::array<TableEntry,
-                  kOOGalacticHyperspaceBehaviourTable.entries.size()>
+                  oo::kGalacticHyperspaceBehaviourTable.entries.size()>
     sOOGalacticHyperspaceBehaviourTableEntries =
-        EntriesFrom(kOOGalacticHyperspaceBehaviourTable);
+        EntriesFrom(oo::kGalacticHyperspaceBehaviourTable);
 
-static std::array<TableEntry, kOOGUIScreenIDTable.entries.size()>
-    sOOGUIScreenIDTableEntries = EntriesFrom(kOOGUIScreenIDTable);
+static std::array<TableEntry, oo::kGUIScreenIDTable.entries.size()>
+    sOOGUIScreenIDTableEntries = EntriesFrom(oo::kGUIScreenIDTable);
 
-static std::array<TableEntry, kOOScanClassTable.entries.size()>
-    sOOScanClassTableEntries = EntriesFrom(kOOScanClassTable);
+static std::array<TableEntry, oo::kScanClassTable.entries.size()>
+    sOOScanClassTableEntries = EntriesFrom(oo::kScanClassTable);
 
-static std::array<TableEntry, kOOViewIDTable.entries.size()>
-    sOOViewIDTableEntries = EntriesFrom(kOOViewIDTable);
+static std::array<TableEntry, oo::kViewIDTable.entries.size()>
+    sOOViewIDTableEntries = EntriesFrom(oo::kViewIDTable);
 
-static std::array<TableEntry, kOOShipDamageTypeTable.entries.size()>
-    sOOShipDamageTypeTableEntries = EntriesFrom(kOOShipDamageTypeTable);
+static std::array<TableEntry, oo::kShipDamageTypeTable.entries.size()>
+    sOOShipDamageTypeTableEntries = EntriesFrom(oo::kShipDamageTypeTable);
 
-static std::array<TableEntry, kOOLegalStatusReasonTable.entries.size()>
-    sOOLegalStatusReasonTableEntries = EntriesFrom(kOOLegalStatusReasonTable);
+static std::array<TableEntry, oo::kLegalStatusReasonTable.entries.size()>
+    sOOLegalStatusReasonTableEntries = EntriesFrom(oo::kLegalStatusReasonTable);
 
-static std::array<TableEntry, kOOLongRangeChartModeTable.entries.size()>
-    sOOLongRangeChartModeTableEntries = EntriesFrom(kOOLongRangeChartModeTable);
+static std::array<TableEntry, oo::kLongRangeChartModeTable.entries.size()>
+    sOOLongRangeChartModeTableEntries =
+        EntriesFrom(oo::kLongRangeChartModeTable);
 
 ConstTable gOOCompassModeConstTable = {sOOCompassModeTableEntries.size(),
                                        sOOCompassModeTableEntries.data()};

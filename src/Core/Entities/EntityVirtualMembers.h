@@ -94,8 +94,8 @@ class Entity;
     virtual void setNormalOrientation(Quaternion /*quat*/) VOID_BODY \
     virtual void orientationChanged() VOID_BODY \
     virtual Vector getVelocity() VALUE_BODY \
-    virtual void setStatus(OOEntityStatus /*stat*/) VOID_BODY \
-    virtual OOScanClass getScanClass() VALUE_BODY \
+    virtual void setStatus(oo::EntityStatus /*stat*/) VOID_BODY \
+    virtual oo::ScanClass getScanClass() VALUE_BODY \
     virtual void applyRoll(GLfloat /*roll*/, GLfloat /*climb*/) VOID_BODY \
     virtual void applyRoll(GLfloat /*roll*/, GLfloat /*climb*/, GLfloat /*yaw*/) VOID_BODY \
     virtual void moveForward(double /*amount*/) VOID_BODY \

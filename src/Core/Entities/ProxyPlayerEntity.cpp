@@ -47,8 +47,8 @@ void ProxyPlayerEntity::initProxyDefaults() {
   setDialFuelScoopStatus(hasScoop() ? OOFuelScoopStatus::kOkay
                                     : OOFuelScoopStatus::kNotInstalled);
   setCompassMode(hasEquipmentItemProviding("EQ_ADVANCED_COMPASS")
-                     ? OOCompassMode::kPlanet
-                     : OOCompassMode::kBasic);
+                     ? oo::CompassMode::kPlanet
+                     : oo::CompassMode::kBasic);
   setTradeInFactor(95);
 }
 
@@ -66,7 +66,7 @@ void ProxyPlayerEntity::copyValuesFromPlayer(::PlayerEntity* player) {
   setDialFuelScoopStatus((player != nullptr ? player->dialFuelScoopStatus()
                                             : OOFuelScoopStatus{}));
   setCompassMode(
-      (player != nullptr ? player->getCompassMode() : OOCompassMode{}));
+      (player != nullptr ? player->getCompassMode() : oo::CompassMode{}));
   setDialIdentEngaged((player != nullptr ? player->dialIdentEngaged() : false));
   setAlertCondition(
       (player != nullptr ? player->getAlertCondition() : OOAlertCondition{}));
@@ -118,9 +118,9 @@ void ProxyPlayerEntity::setDialFuelScoopStatus(OOFuelScoopStatus value) {
   _fuelScoopStatus = value;
 }
 
-OOCompassMode ProxyPlayerEntity::compassMode() { return _compassMode; }
+oo::CompassMode ProxyPlayerEntity::compassMode() { return _compassMode; }
 
-void ProxyPlayerEntity::setCompassMode(OOCompassMode value) {
+void ProxyPlayerEntity::setCompassMode(oo::CompassMode value) {
   _compassMode = value;
 }
 

@@ -64,7 +64,7 @@ class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
   Entity* nextBeacon() override { return sNextBeacon; }
-  void setCompassMode(OOCompassMode value) override {
+  void setCompassMode(oo::CompassMode value) override {
     sLog.push_back(
         oo::str::format("setCompassMode %d", static_cast<int>(value)));
   }
@@ -275,7 +275,7 @@ void SetUp() {
   if (sShip != nullptr) sShip->setReportAIMessages(true);
   if (sShip != nullptr) sShip->setTrackCloseContacts(true);
   if (sShip != nullptr) sShip->setAIScriptWakeTime(12.5);
-  if (sShip != nullptr) sShip->setBounty(25, OOLegalStatusReason::kSetup);
+  if (sShip != nullptr) sShip->setBounty(25, oo::LegalStatusReason::kSetup);
   sOther = static_cast<PlainShip*>(oo::ToShip(oo::RetainedEntity(oo::NewShipObject(
       oo::makeShared<PlainShip>(), "other",
       oo::PList(oo::PList::Dict{{"name", oo::PList(std::string("Other"))}})))));
@@ -598,7 +598,7 @@ OO_TEST(setterBeaconCode) {
   OO_CHECK_EVAL(SET("beaconCode", "''"),
                 "C");  // cleared from the universe's list, code kept
   OO_CHECK_LOG("clearBeacon; setCompassMode " +
-               std::to_string(static_cast<int>(OOCompassMode::kPlanet)));
+               std::to_string(static_cast<int>(oo::CompassMode::kPlanet)));
   sNextBeacon = nullptr;
   OO_CHECK_EVAL(SET("beaconCode", "null"), "C");
   OO_CHECK_LOG("clearBeacon");
@@ -863,15 +863,15 @@ OO_TEST(methodsRemoveAndExplode) {
   PlainShip* queued = static_cast<PlainShip*>(oo::ToShip(oo::RetainedEntity(oo::NewShipObject(
       oo::makeShared<PlainShip>(), "queued",
       oo::PList(oo::PList::Dict{{"name", oo::PList(std::string("Queued"))}})))));
-  if (queued != nullptr) queued->setStatus(OOEntityStatus::kDocked);
+  if (queued != nullptr) queued->setStatus(oo::EntityStatus::kDocked);
   JSContext* context = OOJSAcquireContext();
   JS_SetPropertyStr(context, OOJavaScriptEngine::sharedEngine()->globalObject(),
                     "queued", queued->jsValueInContext(context));
   OOJSRelinquishContext(context);
   Log();
   OO_CHECK_EVAL("queued.remove(true)", "undefined");
-  OO_CHECK((queued != nullptr ? queued->status() : OOEntityStatus{}) ==
-           OOEntityStatus::kDead);
+  OO_CHECK((queued != nullptr ? queued->status() : oo::EntityStatus{}) ==
+           oo::EntityStatus::kDead);
   OO_CHECK((queued != nullptr ? queued->shipScript() : (OOScript*)nullptr) ==
            nullptr);  // suppressing the death event drops the script
   OO_CHECK_LOG("");

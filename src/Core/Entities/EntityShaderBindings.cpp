@@ -634,16 +634,17 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
                                   : OOFuelScoopStatus{};
        }());
      }},
-    {"compassMode", oo::kValueType<OOCompassMode>,
+    {"compassMode", oo::kValueType<oo::CompassMode>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
      [](Entity* part, OOShaderBindingValue& out) {
-       StoreShaderBindingValue(out, [part]() -> OOCompassMode {
+       StoreShaderBindingValue(out, [part]() -> oo::CompassMode {
          if (ProxyPlayerEntity* proxy = ProxyPart(part))
            return proxy->compassMode();
          PlayerEntity* player = PlayerEntityPart(part);
-         return player != nullptr ? player->getCompassMode() : OOCompassMode{};
+         return player != nullptr ? player->getCompassMode()
+                                  : oo::CompassMode{};
        }());
      }},
     {"dialIdentEngaged", oo::kValueType<bool>,

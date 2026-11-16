@@ -243,7 +243,7 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip,
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   ::MyOpenGLView* gameView =
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
   OOGUITabStop tabStop[GUI_MAX_COLUMNS];
   tabStop[0] = 10;
   tabStop[1] = 290;
@@ -252,7 +252,7 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip,
 
   if (!kdic_check) initCheckingDictionary();
 
-  gui_screen = OOGUIScreenID::kKeyboard;
+  gui_screen = oo::GUIScreenID::kKeyboard;
   bool guiChanged = (oldScreen != gui_screen);
   if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
     UNIVERSE->gameController()
@@ -298,7 +298,7 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip,
     gui->setSelectedRow(current_row);
   }
 
-  gui->setForegroundTextureKey(std::string(status() == OOEntityStatus::kDocked
+  gui->setForegroundTextureKey(std::string(status() == oo::EntityStatus::kDocked
                                                ? "docked_overlay"
                                                : "paused_overlay"));
   gui->setBackgroundTextureKey(std::string("keyboardsettings"));
@@ -528,13 +528,13 @@ void PlayerEntity::setGuiToKeyConfigScreen() { setGuiToKeyConfigScreen(false); }
 void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow) {
   std::size_t i = 0;
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
   OOGUITabStop tabStop[GUI_MAX_COLUMNS];
   tabStop[0] = 10;
   tabStop[1] = 290;
   gui->setTabStops(tabStop);
 
-  gui_screen = OOGUIScreenID::kKeyboardConfig;
+  gui_screen = oo::GUIScreenID::kKeyboardConfig;
   bool guiChanged = (oldScreen != gui_screen);
   gui->clear();
   gui->setTitle(OO_DESC("oolite-keyconfig-update-title"));  // @"%@"
@@ -621,7 +621,7 @@ void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow) {
     gui->setSelectedRow(GUI_ROW_KC_KEY);
   }
 
-  gui->setForegroundTextureKey(std::string(status() == OOEntityStatus::kDocked
+  gui->setForegroundTextureKey(std::string(status() == oo::EntityStatus::kDocked
                                                ? "docked_overlay"
                                                : "paused_overlay"));
   gui->setBackgroundTextureKey(std::string("keyboardsettings"));
@@ -732,8 +732,8 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen() {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   ::MyOpenGLView* gameView =
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
-  OOGUIScreenID oldScreen = gui_screen;
-  gui_screen = OOGUIScreenID::kKeyboardEntry;
+  oo::GUIScreenID oldScreen = gui_screen;
+  gui_screen = oo::GUIScreenID::kKeyboardEntry;
   bool guiChanged = (oldScreen != gui_screen);
 
   // make sure the index we're looking for exists
@@ -779,7 +779,7 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen() {
   gui->setShowTextCursor(true);
   gui->setCurrentRow(static_cast<OOGUIRow>(end_row));
 
-  gui->setForegroundTextureKey(std::string(status() == OOEntityStatus::kDocked
+  gui->setForegroundTextureKey(std::string(status() == oo::EntityStatus::kDocked
                                                ? "docked_overlay"
                                                : "paused_overlay"));
   gui->setBackgroundTextureKey(std::string("keyboardsettings"));
@@ -894,9 +894,9 @@ void PlayerEntity::updateShiftKeyDefinition(const std::string& key,
 
 void PlayerEntity::setGuiToConfirmClearScreen() {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
 
-  gui_screen = OOGUIScreenID::kKeyboardConfirmClear;
+  gui_screen = oo::GUIScreenID::kKeyboardConfirmClear;
   bool guiChanged = (oldScreen != gui_screen);
 
   gui->clear();
@@ -916,7 +916,7 @@ void PlayerEntity::setGuiToConfirmClearScreen() {
   gui->setSelectableRange(NSMakeRange(GUI_ROW_KC_CONFIRMCLEAR_YES, 2));
   gui->setSelectedRow(GUI_ROW_KC_CONFIRMCLEAR_NO);
 
-  gui->setForegroundTextureKey(std::string(status() == OOEntityStatus::kDocked
+  gui->setForegroundTextureKey(std::string(status() == oo::EntityStatus::kDocked
                                                ? "docked_overlay"
                                                : "paused_overlay"));
   gui->setBackgroundTextureKey(std::string("keyboardsettings"));
@@ -1523,13 +1523,13 @@ void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip,
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   ::MyOpenGLView* gameView =
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
   OOGUITabStop tabStop[GUI_MAX_COLUMNS];
   tabStop[0] = 10;
   tabStop[1] = 290;
   gui->setTabStops(tabStop);
 
-  gui_screen = OOGUIScreenID::kKeyboardLayout;
+  gui_screen = oo::GUIScreenID::kKeyboardLayout;
   bool guiChanged = (oldScreen != gui_screen);
 
   if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
@@ -1546,7 +1546,7 @@ void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip,
 
   gui->setSelectedRow(kbd_row);
 
-  gui->setForegroundTextureKey(std::string(status() == OOEntityStatus::kDocked
+  gui->setForegroundTextureKey(std::string(status() == oo::EntityStatus::kDocked
                                                ? "docked_overlay"
                                                : "paused_overlay"));
   gui->setBackgroundTextureKey(std::string("keyboardsettings"));

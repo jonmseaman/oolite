@@ -461,18 +461,18 @@ void OOTrumble::updateTrumble(double delta_t) {
                       (player != nullptr ? player->dialPitch() : 0.0f),
                   TRUMBLE_MAX_ROTATIONAL_VELOCITY *
                       (player != nullptr ? player->dialRoll() : 0.0f));
-  switch ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{})) {
+  switch ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{})) {
     GLfloat t;
-    case OOViewID::kAft:
+    case oo::ViewID::kAft:
       p_mov.x = -p_mov.x;
       p_mov.y = -p_mov.y;
       break;
-    case OOViewID::kStarboard:
+    case oo::ViewID::kStarboard:
       t = static_cast<GLfloat>(p_mov.x);
       p_mov.x = -p_mov.y;
       p_mov.y = t;
       break;
-    case OOViewID::kPort:
+    case oo::ViewID::kPort:
       t = static_cast<GLfloat>(p_mov.x);
       p_mov.x = p_mov.y;
       p_mov.y = -t;

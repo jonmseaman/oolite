@@ -212,7 +212,7 @@ class Universe : public oo::Object {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
 
-  OOViewID view;
+  oo::ViewID view;
   std::shared_ptr<OOCommodityMarket> market;
 
   ::OOCommodityMarket* getCommodityMarket();
@@ -221,7 +221,7 @@ class Universe : public oo::Object {
 
 class StandInUniverse : public Universe {
  public:
-  OOViewID getViewDirection() override { return view; }
+  oo::ViewID getViewDirection() override { return view; }
   void addMessage(const std::optional<std::string>& text,
                   OOTimeDelta count) override {
     gLog.push_back("message " + text.value_or("-") + " for " +
@@ -325,7 +325,7 @@ void Reset() {
     gSharedUniverse = new StandInUniverse();
     gSharedUniverse->market = oo::makeShared<OOCommodityMarket>();
   }
-  gSharedUniverse->view = OOViewID::kForward;
+  gSharedUniverse->view = oo::ViewID::kForward;
   PlayerEntity* p = Player();
   p->pitch = p->roll = p->heat = 0.0f;
   p->appetite = 0.0f;
@@ -579,7 +579,7 @@ OO_TEST(living) {
 
   {
     oo::AutoreleaseScope pool;
-    for (OOViewID view : {OOViewID::kForward, OOViewID::kAft, OOViewID::kStarboard, OOViewID::kPort}) {
+    for (oo::ViewID view : {oo::ViewID::kForward, oo::ViewID::kAft, oo::ViewID::kStarboard, oo::ViewID::kPort}) {
       Reset();
       gSharedUniverse->view = view;
       PlayerEntity* p = Player();

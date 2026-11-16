@@ -545,7 +545,7 @@ class PlayerEntity : public ShipEntity {
   void setMaxFlightPitch(GLfloat newValue) override;
   void setMaxFlightRoll(GLfloat newValue) override;
   void setMaxFlightYaw(GLfloat newValue) override;
-  bool checkEntityForMassLock(Entity* ent, OOScanClass theirClass);
+  bool checkEntityForMassLock(Entity* ent, oo::ScanClass theirClass);
   void updateAlertCondition();
   void updateFuelScoops(OOTimeDelta delta_t);
   void updateClocks(OOTimeDelta delta_t);
@@ -692,8 +692,8 @@ class PlayerEntity : public ShipEntity {
 
   // compass mode, missiles and pylons, special cargo, the multi-function
   // displays, alert flags.
-  virtual OOCompassMode getCompassMode();
-  virtual void setCompassMode(OOCompassMode value);
+  virtual oo::CompassMode getCompassMode();
+  virtual void setCompassMode(oo::CompassMode value);
   void setPrevCompassMode();
   virtual void setNextCompassMode();
   virtual std::size_t getActiveMissile();
@@ -765,7 +765,8 @@ class PlayerEntity : public ShipEntity {
   void dumpCargo() override;
   void rotateCargo();
   void setBounty(OOCreditsQuantity amount) override;
-  void setBounty(OOCreditsQuantity amount, OOLegalStatusReason reason) override;
+  void setBounty(OOCreditsQuantity amount,
+                 oo::LegalStatusReason reason) override;
   void setBounty(OOCreditsQuantity amount, const std::string& reason) override;
 
   // legal status, offences, bounties collected, internal damage, destruction,
@@ -773,10 +774,10 @@ class PlayerEntity : public ShipEntity {
   OOCreditsQuantity getBounty() override;
   int getLegalStatus();
   void markAsOffender(int offence_value) override;
-  void markAsOffender(int offence_value, OOLegalStatusReason reason) override;
+  void markAsOffender(int offence_value, oo::LegalStatusReason reason) override;
   void collectBountyFor(::ShipEntity* other) override;
   virtual bool takeInternalDamage();
-  void getDestroyedBy(Entity* whom, OOShipDamageType type) override;
+  void getDestroyedBy(Entity* whom, oo::ShipDamageType type) override;
   void loseTargetStatus();
   bool endScenario(const std::string& key);
   void enterDock(::StationEntity* station) override;
@@ -834,7 +835,7 @@ class PlayerEntity : public ShipEntity {
   std::optional<std::map<int, std::vector<oo::PList>>> markedDestinations();
   void setGuiToLongRangeChartScreen();
   void setGuiToShortRangeChartScreen();
-  void setGuiToChartScreenFrom(OOGUIScreenID oldScreen);
+  void setGuiToChartScreenFrom(oo::GUIScreenID oldScreen);
 
   // the game options and load / save screens, equip-screen key highlight,
   // available facings.
@@ -859,11 +860,12 @@ class PlayerEntity : public ShipEntity {
   void setupStartScreenGui();
   void setGuiToIntroFirstGo(bool justCobra);
   void setGuiToOXZManager();
-  void noteGUIWillChangeTo(OOGUIScreenID toScreen);
-  void noteGUIDidChangeFrom(OOGUIScreenID fromScreen, OOGUIScreenID toScreen);
-  virtual void noteGUIDidChangeFrom(OOGUIScreenID fromScreen,
-                                    OOGUIScreenID toScreen, bool refresh);
-  void noteViewDidChangeFrom(OOViewID fromView, OOViewID toView);
+  void noteGUIWillChangeTo(oo::GUIScreenID toScreen);
+  void noteGUIDidChangeFrom(oo::GUIScreenID fromScreen,
+                            oo::GUIScreenID toScreen);
+  virtual void noteGUIDidChangeFrom(oo::GUIScreenID fromScreen,
+                                    oo::GUIScreenID toScreen, bool refresh);
+  void noteViewDidChangeFrom(oo::ViewID fromView, oo::ViewID toView);
 
   // buying equipment, script price adjustment, weapon mounts, passenger berths,
   // removing missiles, trade-in.
@@ -901,7 +903,7 @@ class PlayerEntity : public ShipEntity {
   void setGuiToMarketScreen();
   void setGuiToMarketInfoScreen();
   void showMarketCashAndLoadLine();
-  OOGUIScreenID guiScreen();
+  oo::GUIScreenID guiScreen();
   bool tryBuyingCommodity(const std::string& index, bool all);
   bool trySellingCommodity(const std::string& index, bool all);
   bool isMining() override;
@@ -1006,8 +1008,8 @@ class PlayerEntity : public ShipEntity {
   void setMissionBackgroundDescriptor(const oo::PList& descriptor);
   OOGUIBackgroundSpecial missionBackgroundSpecial();
   void setMissionBackgroundSpecial(const std::string& special);
-  void setMissionExitScreen(OOGUIScreenID screen);
-  OOGUIScreenID missionExitScreen();
+  void setMissionExitScreen(oo::GUIScreenID screen);
+  oo::GUIScreenID missionExitScreen();
   oo::PList equipScreenBackgroundDescriptor();
   void setEquipScreenBackgroundDescriptor(const oo::PList& descriptor);
   bool scriptsLoaded();
@@ -1025,14 +1027,14 @@ class PlayerEntity : public ShipEntity {
   void doWorldScriptEvent(OOJSPropID message, JSContext* context, JSValue* argv,
                           int argc, OOTimeDelta limit);
   virtual void setGalacticHyperspaceBehaviour(
-      OOGalacticHyperspaceBehaviour inBehaviour);
-  virtual OOGalacticHyperspaceBehaviour getGalacticHyperspaceBehaviour();
+      oo::GalacticHyperspaceBehaviour inBehaviour);
+  virtual oo::GalacticHyperspaceBehaviour getGalacticHyperspaceBehaviour();
   virtual void setGalacticHyperspaceFixedCoords(NSPoint point);
   void setGalacticHyperspaceFixedCoordsX(unsigned char x, unsigned char y);
   virtual NSPoint getGalacticHyperspaceFixedCoords();
   virtual void setWitchspaceCountdown(int spin_time);
-  virtual OOLongRangeChartMode getLongRangeChartMode();
-  virtual void setLongRangeChartMode(OOLongRangeChartMode mode);
+  virtual oo::LongRangeChartMode getLongRangeChartMode();
+  virtual void setLongRangeChartMode(oo::LongRangeChartMode mode);
   virtual bool getScoopOverride();
   virtual void setScoopOverride(bool newValue);
   GLfloat fuelChargeRate()
@@ -1067,8 +1069,8 @@ class PlayerEntity : public ShipEntity {
   void setLastShot(const std::vector<std::shared_ptr<OOLaserShotEntity>>& shot);
   void clearExtraMissionKeys();
   void setExtraMissionKeys(const oo::PList& keys);
-  void clearExtraGuiScreenKeys(OOGUIScreenID gui, const std::string& key);
-  bool setExtraGuiScreenKeys(OOGUIScreenID gui,
+  void clearExtraGuiScreenKeys(oo::GUIScreenID gui, const std::string& key);
+  bool setExtraGuiScreenKeys(oo::GUIScreenID gui,
                              ::OOJSGuiScreenKeyDefinition* definition);
 #ifdef OO_DEBUG_MONITOR_ENABLED
   void dumpSelfState() override;
@@ -1247,7 +1249,7 @@ class PlayerEntity : public ShipEntity {
   void clearPlanetSearchString();
   void targetNewSystem(int direction);
   void switchToMainView();
-  virtual void noteSwitchToView(OOViewID toView, OOViewID fromView);
+  virtual void noteSwitchToView(oo::ViewID toView, oo::ViewID fromView);
   virtual void beginWitchspaceCountdown(int spin_time);
   void beginWitchspaceCountdown();
   virtual void cancelWitchspaceCountdown();
@@ -1272,9 +1274,9 @@ class PlayerEntity : public ShipEntity {
   void pollMissionInterruptControls();
   void handleMissionCallback();
   void setGuiToMissionEndScreen();
-  void switchToThisView(OOViewID viewDirection);
-  void switchToThisView(OOViewID viewDirection, bool processWeaponFacing);
-  void switchToThisView(OOViewID viewDirection, OOViewID oldViewDirection,
+  void switchToThisView(oo::ViewID viewDirection);
+  void switchToThisView(oo::ViewID viewDirection, bool processWeaponFacing);
+  void switchToThisView(oo::ViewID viewDirection, oo::ViewID oldViewDirection,
                         bool processWeaponFacing, bool justNotify);
   void handleAutopilotOn(bool fastDocking);
   void handleButtonIdent();
@@ -1620,7 +1622,7 @@ class PlayerEntity : public ShipEntity {
   bool _missionWithCallback = {};
   bool _missionAllowInterrupt = {};
   bool _missionTextEntry = {};
-  OOGUIScreenID _missionExitScreen = {};
+  oo::GUIScreenID _missionExitScreen = {};
 
   std::optional<std::string> specialCargo;
 
@@ -1729,7 +1731,7 @@ class PlayerEntity : public ShipEntity {
   double ecm_start_time = {};
   double last_ecm_time = {};
 
-  OOGUIScreenID gui_screen = {};
+  oo::GUIScreenID gui_screen = {};
   std::uint16_t alertFlags = {};              // OOAlertFlags bits
   OOAlertCondition alertConditionLevel = {};  // the ivar alertCondition
   OOAlertCondition lastScriptAlertCondition = {};
@@ -1781,7 +1783,7 @@ class PlayerEntity : public ShipEntity {
   int market_rnd = {};
   unsigned ship_kills = {};
 
-  OOCompassMode compassMode = {};
+  oo::CompassMode compassMode = {};
   std::weak_ptr<Entity>
       compassTarget;  // a weak reference to the target's C++ part
 
@@ -1958,7 +1960,7 @@ class PlayerEntity : public ShipEntity {
   std::map<std::string, oo::PList, std::less<>>
       extraMissionKeys;  // key name -> processed key definitions
 
-  std::map<OOGUIScreenID,
+  std::map<oo::GUIScreenID,
            std::vector<std::shared_ptr<::OOJSGuiScreenKeyDefinition>>>
       extraGuiScreenKeys;  // by GUI screen ID
 
@@ -2052,10 +2054,10 @@ class PlayerEntity : public ShipEntity {
   std::string keyMod1Text;
   std::string keyMod2Text;
 
-  OOGalacticHyperspaceBehaviour galacticHyperspaceBehaviour = {};
+  oo::GalacticHyperspaceBehaviour galacticHyperspaceBehaviour = {};
   NSPoint galacticHyperspaceFixedCoords = {};
 
-  OOLongRangeChartMode longRangeChartMode = {};
+  oo::LongRangeChartMode longRangeChartMode = {};
 
   std::vector<oo::PList> _customViews;  // the ship's custom view Dicts
   std::size_t _customViewIndex = {};
@@ -2106,13 +2108,13 @@ inline constexpr auto MAX_GRAMS_IN_SAFE = ((GRAMS_PER_POD / 2) - 1);
 // C++ forms, defined in OOConstToString.cpp: std::string results
 // (never nil), const std::string & parameters (nil arrived as "" and matched
 // nothing: the defaults).
-std::string OOStringFromGUIScreenID(OOGUIScreenID screen);
-OOGUIScreenID OOGUIScreenIDFromString(const std::string& string);
+std::string OOStringFromGUIScreenID(oo::GUIScreenID screen);
+oo::GUIScreenID OOGUIScreenIDFromString(const std::string& string);
 
-OOGalacticHyperspaceBehaviour OOGalacticHyperspaceBehaviourFromString(
+oo::GalacticHyperspaceBehaviour OOGalacticHyperspaceBehaviourFromString(
     const std::string& string);
 std::string OOStringFromGalacticHyperspaceBehaviour(
-    OOGalacticHyperspaceBehaviour behaviour);
+    oo::GalacticHyperspaceBehaviour behaviour);
 
 // Rating and legal-status names from descriptions.plist; nullopt: missing (was
 // nil).

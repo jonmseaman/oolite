@@ -146,8 +146,8 @@ OOSound* SoundFromJSValue(JSContext* context, JSValueConst value) {
           leaving it paused; the pause is balanced here.
   */
   OOJSPauseTimeLimiter();
-  if ((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) !=
-          OOEntityStatus::kStartGame &&
+  if ((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) !=
+          oo::EntityStatus::kStartGame &&
       JS_IsString(value)) {
     result = GetNamedSound(
         OOStringFromJSValue(context, value).value_or(std::string()));

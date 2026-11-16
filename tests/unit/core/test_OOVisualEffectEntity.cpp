@@ -166,8 +166,8 @@ OO_TEST(defaults)
 		OO_CHECK(!effect->canCollide());
 		OO_CHECK(effect->effectKey() == std::optional<std::string>("test-effect"));
 		OO_CHECK(effect->mesh() == nullptr);
-		OO_CHECK(effect->getScanClass() == OOScanClass::kVisualEffect);
-		OO_CHECK(effect->status() == OOEntityStatus::kEffect);
+		OO_CHECK(effect->getScanClass() == oo::ScanClass::kVisualEffect);
+		OO_CHECK(effect->status() == oo::EntityStatus::kEffect);
 		OO_CHECK(!effect->isBreakPattern());
 		OO_CHECK(effect->effectInfoDictionary() == Dict({}));
 

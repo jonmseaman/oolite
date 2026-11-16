@@ -162,7 +162,7 @@ void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In,
       nebulaColorSet, clusterChance, alpha, scale);
   setDrawable(skyDrawable.get());
 
-  setStatus(OOEntityStatus::kEffect);
+  setStatus(oo::EntityStatus::kEffect);
 }
 
 OOColor* SkyEntity::getSkyColor() { return skyColor.get(); }

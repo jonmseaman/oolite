@@ -112,7 +112,7 @@ OO_TEST(savedChartAndSpeechNumbers)
 		for (const auto &c : kCases)
 		{
 			PlayerEntityTestAccess::ANA_mode(player) = static_cast<OORouteType>(c.route);
-			PlayerEntityTestAccess::longRangeChartMode(player) = static_cast<OOLongRangeChartMode>(c.chart);
+			PlayerEntityTestAccess::longRangeChartMode(player) = static_cast<oo::LongRangeChartMode>(c.chart);
 			PlayerEntityTestAccess::isSpeechOn(player) = static_cast<OOSpeechSettings>(c.speech);
 			const oo::PList save = player->commanderDataDictionary();
 			// The save also records the trumbles' hash in the defaults: removed again.
@@ -122,7 +122,7 @@ OO_TEST(savedChartAndSpeechNumbers)
 			OO_CHECK(Saved(save, "speech_on") == c.speech);
 			// Read back as setCommanderDataFromDictionary() converts them.
 			OO_CHECK(static_cast<OORouteType>(Saved(save, "chart_ana_mode")) == PlayerEntityTestAccess::ANA_mode(player));
-			OO_CHECK(static_cast<OOLongRangeChartMode>(Saved(save, "chart_colour_mode")) == PlayerEntityTestAccess::longRangeChartMode(player));
+			OO_CHECK(static_cast<oo::LongRangeChartMode>(Saved(save, "chart_colour_mode")) == PlayerEntityTestAccess::longRangeChartMode(player));
 			OO_CHECK(static_cast<OOSpeechSettings>(Saved(save, "speech_on")) == PlayerEntityTestAccess::isSpeechOn(player));
 		}
 		// The route and speech numbers name what they did.
@@ -140,7 +140,7 @@ OO_TEST(longRangeChartModeOrdinals)
 	for (int i = 0; i < 5; i++)
 	{
 		OO_CHECK(static_cast<int>(OOLongRangeChartModeFromString(kModes[i])) == i);
-		OO_CHECK(OOStringFromLongRangeChartMode(static_cast<OOLongRangeChartMode>(i)) == kModes[i]);
+		OO_CHECK(OOStringFromLongRangeChartMode(static_cast<oo::LongRangeChartMode>(i)) == kModes[i]);
 	}
 }
 
@@ -171,10 +171,10 @@ OO_TEST(shipBehaviourNumbersByName)
 			{201, "BEHAVIOUR_FLY_TO_DESTINATION"}, {811, "BEHAVIOUR_SCRIPTED_ATTACK_AI"} };
 		for (const auto &b : kBehaviours)
 		{
-			ship->setBehaviour(static_cast<OOBehaviour>(b.number));
+			ship->setBehaviour(static_cast<oo::Behaviour>(b.number));
 			OOEntityByNameValue value;
 			OO_CHECK(oo::CallEntityByNameTyped(ship, "behaviour", value) && value.integer == b.number);
-			OO_CHECK(OOStringFromBehaviour(static_cast<OOBehaviour>(b.number)) == b.name);
+			OO_CHECK(OOStringFromBehaviour(static_cast<oo::Behaviour>(b.number)) == b.name);
 		}
 		oo::ReleaseEntity(ship);
 	}

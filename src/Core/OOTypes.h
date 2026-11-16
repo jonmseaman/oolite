@@ -63,9 +63,9 @@ constexpr std::string_view OOEnumName(OORouteType value) noexcept {
   return {};
 }
 
-#include "OOCompassMode.h"
-#include "OOLongRangeChartMode.h"
-#include "OOViewID.h"
+#include "CompassMode.h"
+#include "LongRangeChartMode.h"
+#include "ViewID.h"
 
 // An int to a by-name call (ValueType.h): it answers it as a number.
 enum class OOAegisStatus : std::int32_t {
@@ -206,7 +206,7 @@ constexpr std::string_view OOEnumName(OOEnergyUnitType value) noexcept {
   return {};
 }
 
-#include "OOLegalStatusReason.h"
+#include "LegalStatusReason.h"
 
 enum class OODockingClearanceStatus : std::int32_t {
   kNone,

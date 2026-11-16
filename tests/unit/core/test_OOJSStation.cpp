@@ -214,7 +214,7 @@ class PlayerEntity
 {
 public:
 	::StationEntity * dockedStation();
-	OOGUIScreenID guiScreen();
+	oo::GUIScreenID guiScreen();
 	void setGuiToMarketScreen();
 	void setGuiToShipyardScreen(std::size_t skip);
 	bool isDocked();
@@ -228,7 +228,7 @@ public:
 	oo::PList missionVariableForKey(const std::string &key);
 
 	StationEntity *_dockedStation = {};
-	OOGUIScreenID _screen = {};
+	oo::GUIScreenID _screen = {};
 	bool _docked = {};
 	int _marketRefreshes = {};
 	int _shipyardRefreshes = {};
@@ -260,11 +260,11 @@ public:
 	StationEntity *_station;
 	std::shared_ptr<OOCommodities> _commodities;
 	GameController *_controller;
-	OOViewID _view;
+	oo::ViewID _view;
 
 	::OOCommodities *getCommodities();
 	::GameController *gameController();
-	void setViewDirection(OOViewID);
+	void setViewDirection(oo::ViewID);
 	Random_Seed marketSeed();
 	OOSystemID currentSystemID();
 	::OOCommodityMarket *getCommodityMarket();	// link stub
@@ -489,7 +489,7 @@ bool StationEntity::getMarketMonitored()  { std::abort(); }
 
 
 ::StationEntity * PlayerEntity::dockedStation()  { return _dockedStation; }
-OOGUIScreenID PlayerEntity::guiScreen()  { return _screen; }
+oo::GUIScreenID PlayerEntity::guiScreen()  { return _screen; }
 void PlayerEntity::setGuiToMarketScreen()  { _marketRefreshes++; }
 void PlayerEntity::setGuiToShipyardScreen(std::size_t skip)  { (void)skip; _shipyardRefreshes++; }
 bool PlayerEntity::isDocked()  { return _docked; }
@@ -514,7 +514,7 @@ void GameController::setGamePaused(bool value)  { _paused = value; }
 
 ::OOCommodities *Universe::getCommodities()	{ return _commodities.get(); }
 ::GameController *Universe::gameController()	{ return _controller; }
-void Universe::setViewDirection(OOViewID vd)	{ _view = vd; }
+void Universe::setViewDirection(oo::ViewID vd)	{ _view = vd; }
 Random_Seed Universe::marketSeed()	{ return Random_Seed{}; }
 OOSystemID Universe::currentSystemID()	{ return 7; }
 
@@ -893,7 +893,7 @@ void SetUpContext()
 	sUniverse->_commodities = oo::makeShared<OOCommodities>();
 	sPlayer = new PlayerEntity;
 	sPlayer->_name = "player";
-	sPlayer->_screen = OOGUIScreenID::kStatus;
+	sPlayer->_screen = oo::GUIScreenID::kStatus;
 	gOOPlayer = sPlayer;
 	sStationObject = NewShipObject("Coriolis", oo::makeShared<StationEntity>());	// kept for the life of the
                                                     // test; a station's object
@@ -1048,7 +1048,7 @@ OO_TEST(docking)
 	OO_CHECK_EVAL("station.dockPlayer()", "undefined");
 	OO_CHECK(!sUniverse->_controller->_paused);
 	OO_CHECK_EQ(sPlayer->_dockLog, "clearance " + std::to_string(static_cast<int>(OODockingClearanceStatus::kGranted)) + "; safe; dock Coriolis");
-	OO_CHECK_EQ(static_cast<int>(sUniverse->_view), static_cast<int>(OOViewID::kForward));
+	OO_CHECK_EQ(static_cast<int>(sUniverse->_view), static_cast<int>(oo::ViewID::kForward));
 	sPlayer->_dockLog.clear();
 	OO_CHECK_EVAL("other.dockPlayer()", "undefined");
 	OO_CHECK_EQ(sPlayer->_dockLog, std::string());
@@ -1147,12 +1147,12 @@ OO_TEST(market)
 	OO_CHECK_EVAL("station.setMarketQuantity('food')", "threw: bad arguments: Station.setMarketQuantity(1) - / commodity, units");
 	// The market screen is refreshed when the player is docked here and looking at it.
 	sPlayer->_dockedStation = sStation;
-	sPlayer->_screen = OOGUIScreenID::kMarket;
+	sPlayer->_screen = oo::GUIScreenID::kMarket;
 	sPlayer->_marketRefreshes = 0;
 	OO_CHECK_EVAL("station.setMarketPrice('food', 100) && station.setMarketQuantity('food', 0)", "true");
 	OO_CHECK_EQ(sPlayer->_marketRefreshes, 2);
 	sPlayer->_dockedStation = nullptr;
-	sPlayer->_screen = OOGUIScreenID::kStatus;
+	sPlayer->_screen = oo::GUIScreenID::kStatus;
 }
 
 
@@ -1174,11 +1174,11 @@ OO_TEST(shipyard)
 	OO_CHECK_EVAL("station.addShipToShipyard({short_description: 'x'})", "threw: bad arguments: Station.addShipToShipyard(1) - / 'shipdata_key' in dictionary");
 	OO_CHECK_EVAL("station.removeShipFromShipyard(3)", "threw: bad arguments: Station.removeShipFromShipyard(1) - / valid ship index");
 	sPlayer->_dockedStation = sStation;
-	sPlayer->_screen = OOGUIScreenID::kShipyard;
+	sPlayer->_screen = oo::GUIScreenID::kShipyard;
 	OO_CHECK_EVAL("station.removeShipFromShipyard(0) + ' ' + station.shipyard.length", "true 0");
 	OO_CHECK_EQ(sPlayer->_shipyardRefreshes, 1);
 	sPlayer->_dockedStation = nullptr;
-	sPlayer->_screen = OOGUIScreenID::kStatus;
+	sPlayer->_screen = oo::GUIScreenID::kStatus;
 	sStation->_hasShipyard = false;
 }
 

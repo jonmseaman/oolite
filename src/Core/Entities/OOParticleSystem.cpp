@@ -85,8 +85,8 @@ void OOParticleSystem::initWithPosition(HPVector pos, Vector vel,
       _particleSize[i] = speed;
     }
 
-    setStatus(OOEntityStatus::kEffect);
-    scanClass = OOScanClass::kNoDraw;
+    setStatus(oo::EntityStatus::kEffect);
+    scanClass = oo::ScanClass::kNoDraw;
   }
 }
 

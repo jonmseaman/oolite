@@ -52,14 +52,14 @@ public:
                                 // reaches it
   // The non-virtual members the property blocks call; each answers what the
   // entity's object (the Objective-C stand-in below) answered.
-	OOEntityStatus status();
+	oo::EntityStatus status();
 	GLfloat getMass();
 	Entity *ownerEntity();
 	GLfloat getEnergy();
 	void setEnergy(GLfloat amount);
 	GLfloat getMaxEnergy();
 	void setMaxEnergy(GLfloat amount);
-	void setScanClass(OOScanClass sClass);
+	void setScanClass(oo::ScanClass sClass);
 	GLfloat getDistanceTravelled();
 	GLfloat getSpawnTime();
 	bool getIsShip();
@@ -80,7 +80,7 @@ public:
 	void setPosition(HPVector posn) override;
 	Quaternion normalOrientation() override;
 	void setNormalOrientation(Quaternion quat) override;
-	OOScanClass getScanClass() override;
+	oo::ScanClass getScanClass() override;
 	bool isDock() override;
 	bool isPlanet() override;
 	bool isSun() override;
@@ -98,9 +98,9 @@ public:
 	void setPosition(HPVector posn);
 	Quaternion normalOrientation();
 	void setNormalOrientation(Quaternion quat);
-	OOEntityStatus status();
-	OOScanClass scanClass();
-	void setScanClass(OOScanClass sClass);
+	oo::EntityStatus status();
+	oo::ScanClass scanClass();
+	void setScanClass(oo::ScanClass sClass);
 	float mass();
 	::TestEntityObject *owner();
 	float energy();
@@ -126,8 +126,8 @@ public:
 	float _collisionRadius = {};
 	HPVector _position = {};
 	Quaternion _orientation = {};
-	OOEntityStatus _status = {};
-	OOScanClass _scanClass = {};
+	oo::EntityStatus _status = {};
+	oo::ScanClass _scanClass = {};
 	float _mass = {};
 	::TestEntityObject *_owner = nullptr;
 	float _energy = {};
@@ -182,9 +182,9 @@ HPVector TestEntityObject::position()  { return _position; }
 void TestEntityObject::setPosition(HPVector posn)  { _position = posn; _positionSets++; }
 Quaternion TestEntityObject::normalOrientation()  { return _orientation; }
 void TestEntityObject::setNormalOrientation(Quaternion quat)  { _orientation = quat; }
-OOEntityStatus TestEntityObject::status()  { return _status; }
-OOScanClass TestEntityObject::scanClass()  { return _scanClass; }
-void TestEntityObject::setScanClass(OOScanClass sClass)  { _scanClass = sClass; }
+oo::EntityStatus TestEntityObject::status()  { return _status; }
+oo::ScanClass TestEntityObject::scanClass()  { return _scanClass; }
+void TestEntityObject::setScanClass(oo::ScanClass sClass)  { _scanClass = sClass; }
 
 float TestEntityObject::mass()
 {
@@ -401,13 +401,13 @@ Quaternion Entity::getOrientation()  { return TestObjectOf(this)->_orientation; 
 // What the object's selectors answered, which the property blocks call the C++
 // members for: each asks the object, so the stand-in's state, its counters and
 // -mass's raise and throw are what they were.
-OOEntityStatus Entity::status()  { return Send(TestObjectOf(this), &TestEntityObject::status); }
+oo::EntityStatus Entity::status()  { return Send(TestObjectOf(this), &TestEntityObject::status); }
 GLfloat Entity::getMass()  { return Send(TestObjectOf(this), &TestEntityObject::mass); }
 GLfloat Entity::getEnergy()  { return Send(TestObjectOf(this), &TestEntityObject::energy); }
 void Entity::setEnergy(GLfloat amount)  { Send(TestObjectOf(this), &TestEntityObject::setEnergy, amount); }
 GLfloat Entity::getMaxEnergy()  { return Send(TestObjectOf(this), &TestEntityObject::maxEnergy); }
 void Entity::setMaxEnergy(GLfloat amount)  { Send(TestObjectOf(this), &TestEntityObject::setMaxEnergy, amount); }
-void Entity::setScanClass(OOScanClass sClass)  { Send(TestObjectOf(this), &TestEntityObject::setScanClass, sClass); }
+void Entity::setScanClass(oo::ScanClass sClass)  { Send(TestObjectOf(this), &TestEntityObject::setScanClass, sClass); }
 GLfloat Entity::getDistanceTravelled()  { return Send(TestObjectOf(this), &TestEntityObject::distanceTravelled); }
 GLfloat Entity::getSpawnTime()  { return Send(TestObjectOf(this), &TestEntityObject::spawnTime); }
 bool Entity::getIsShip()  { return Send(TestObjectOf(this), &TestEntityObject::isShip); }
@@ -429,7 +429,7 @@ GLfloat TestEntityPart::collisionRadius()  { return Send(TestObjectOf(this), &Te
 void TestEntityPart::setPosition(HPVector posn)  { Send(TestObjectOf(this), &TestEntityObject::setPosition, posn); }
 Quaternion TestEntityPart::normalOrientation()  { return Send(TestObjectOf(this), &TestEntityObject::normalOrientation); }
 void TestEntityPart::setNormalOrientation(Quaternion quat)  { Send(TestObjectOf(this), &TestEntityObject::setNormalOrientation, quat); }
-OOScanClass TestEntityPart::getScanClass()  { return Send(TestObjectOf(this), &TestEntityObject::scanClass); }
+oo::ScanClass TestEntityPart::getScanClass()  { return Send(TestObjectOf(this), &TestEntityObject::scanClass); }
 bool TestEntityPart::isDock()  { return Send(TestObjectOf(this), &TestEntityObject::isDock); }
 bool TestEntityPart::isPlanet()  { return Send(TestObjectOf(this), &TestEntityObject::isPlanet); }
 bool TestEntityPart::isSun()  { return Send(TestObjectOf(this), &TestEntityObject::isSun); }
@@ -600,8 +600,8 @@ void SetUpContext()
 	sMother->_cxxEntity = oo::makeShared<ShipEntity>();
 	sMother->_isShip = true;
 	sMother->_isStation = true;
-	sMother->_status = OOEntityStatus::kActive;
-	sMother->_scanClass = OOScanClass::kStation;
+	sMother->_status = oo::EntityStatus::kActive;
+	sMother->_scanClass = oo::ScanClass::kStation;
 
 	sShip = oo::test::NewRetained<TestEntityObject>();
 	sShip->_cxxEntity = oo::makeShared<ShipEntity>();
@@ -609,8 +609,8 @@ void SetUpContext()
 	sShip->_collisionRadius = 40.5f;
 	sShip->_position = make_HPvector(1000, -2000, 3000.5);
 	sShip->_orientation = kIdentityQuaternion;
-	sShip->_status = OOEntityStatus::kInFlight;
-	sShip->_scanClass = OOScanClass::kNeutral;
+	sShip->_status = oo::EntityStatus::kInFlight;
+	sShip->_scanClass = oo::ScanClass::kNeutral;
 	sShip->_mass = 75000;
 	sShip->_owner = sMother;
 	sShip->_energy = 200;
@@ -623,8 +623,8 @@ void SetUpContext()
 	sShip->_isInSpace = true;
 
 	sRock = oo::test::NewRetained<TestEntityObject>();
-	sRock->_status = OOEntityStatus::kActive;
-	sRock->_scanClass = OOScanClass::kRock;
+	sRock->_status = oo::EntityStatus::kActive;
+	sRock->_scanClass = oo::ScanClass::kRock;
 	sRock->_maxEnergy = 10;
 	sRock->_owner = sRock;	// its own owner: answered as null
 
@@ -701,9 +701,9 @@ OO_TEST(readProperties)
 				  "true,true,false,false,true,true");
 	OO_CHECK_EVAL("[mother.isShip, mother.isStation, rock.isShip, rock.isInSpace].join()", "true,true,false,false");
 	// A dead entity is not valid, and says so.
-	sRock->_status = OOEntityStatus::kDead;
+	sRock->_status = oo::EntityStatus::kDead;
 	OO_CHECK_EVAL("rock.isValid + ':' + rock.status", "false:STATUS_DEAD");
-	sRock->_status = OOEntityStatus::kActive;
+	sRock->_status = oo::EntityStatus::kActive;
 }
 
 
@@ -741,7 +741,7 @@ OO_TEST(writeProperties)
 	OO_CHECK_EVAL("(function () { ship.scanClass = 'CLASS_CARGO'; return 'set'; })()", "threw: entity.scanClass is read-only except on NPC ships.");
 	sShip->_isPlayer = false;
 	OO_CHECK_EVAL("ship.scanClass", "CLASS_POLICE");
-	sShip->_scanClass = OOScanClass::kNeutral;
+	sShip->_scanClass = oo::ScanClass::kNeutral;
 
 	// Read-only properties.
 	OO_CHECK_EVAL("(function () { ship.mass = 1; return ship.mass; })()", "75000");

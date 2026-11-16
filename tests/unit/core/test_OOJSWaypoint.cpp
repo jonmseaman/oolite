@@ -111,7 +111,7 @@ public:
 	void setNextBeacon(Entity *beacon) override  { _added++; (void)beacon; }
 	void clearBeacon(Entity *beacon) override  { _cleared++; TestObjectOf(beacon)->_beaconCode = std::nullopt; }
 	TestEntityObject *nextBeacon()  { return _nextBeacon; }
-	void setCompassMode(OOCompassMode mode)  { _compassMode = static_cast<int>(mode); }
+	void setCompassMode(oo::CompassMode mode)  { _compassMode = static_cast<int>(mode); }
 };
 
 // PLAYER: the compass members the binding calls (declared as the game headers
@@ -127,7 +127,7 @@ public:
 class PlayerEntity : public ShipEntity
 {
 public:
-	void setCompassMode(OOCompassMode value);
+	void setCompassMode(oo::CompassMode value);
 
 	FakeGame *_game = nullptr;
 };
@@ -179,7 +179,7 @@ OOScalar OOWaypointEntity::size()
 
 ::TestEntityObject *ShipEntity::nextBeacon()  { return static_cast<PlayerEntity *>(this)->_game->nextBeacon(); }
 Entity *ShipEntity::nextBeaconEntity()  { ::TestEntityObject *object = nextBeacon(); return object != nullptr ? object->_cxxEntity.get() : nullptr; }	// as the game's (oo::ToCxx of it)
-void PlayerEntity::setCompassMode(OOCompassMode value)  { static_cast<PlayerEntity *>(this)->_game->setCompassMode(value); }
+void PlayerEntity::setCompassMode(oo::CompassMode value)  { static_cast<PlayerEntity *>(this)->_game->setCompassMode(value); }
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
@@ -558,7 +558,7 @@ OO_TEST(beaconCode)
 	int cleared = sGame->_cleared;
 	OO_CHECK_EVAL("(function () { waypoint.beaconCode = ''; return waypoint.beaconCode; })()", "null");
 	OO_CHECK_EQ(sGame->_cleared, cleared + 1);
-	OO_CHECK_EQ(sGame->_compassMode, static_cast<int>(OOCompassMode::kPlanet));
+	OO_CHECK_EQ(sGame->_compassMode, static_cast<int>(oo::CompassMode::kPlanet));
 	// Clearing a waypoint that is not a beacon does nothing.
 	OO_CHECK_EVAL("(function () { waypoint.beaconCode = null; return waypoint.beaconCode; })()", "null");
 	OO_CHECK_EQ(sGame->_cleared, cleared + 1);

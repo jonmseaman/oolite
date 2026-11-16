@@ -87,12 +87,12 @@ class FakeGui : public GuiDisplayGen {
 
 class FakeUniverse : public Universe {
  public:
-  OOViewID _viewDirection = {};
+  oo::ViewID _viewDirection = {};
   std::shared_ptr<FakeGui> _gui = {};
   std::string _lastCommander = {};
   std::vector<std::string> _messages = {};
 
-  OOViewID getViewDirection() override { return _viewDirection; }
+  oo::ViewID getViewDirection() override { return _viewDirection; }
   ::GuiDisplayGen* messageGUI() override { return _gui.get(); }
   OOCreditsQuantity tradeInValueForCommanderDictionary(
       const oo::PList& cmdrDict) override {
@@ -142,8 +142,8 @@ class FakePlayer : public PlayerEntity {
     return _specialCargo;
   }
   ::HeadUpDisplay* getHud() override { return _hud.get(); }
-  OOGalacticHyperspaceBehaviour getGalacticHyperspaceBehaviour() override {
-    return OOGalacticHyperspaceBehaviour::kFixedCoordinates;
+  oo::GalacticHyperspaceBehaviour getGalacticHyperspaceBehaviour() override {
+    return oo::GalacticHyperspaceBehaviour::kFixedCoordinates;
   }
   NSPoint getGalacticHyperspaceFixedCoords() override {
     return NSMakePoint(64, 128);
@@ -161,8 +161,8 @@ class FakePlayer : public PlayerEntity {
     return _mfds;
   }
   bool dialIdentEngaged() override { return true; }
-  OOLongRangeChartMode getLongRangeChartMode() override {
-    return OOLongRangeChartMode::kEconomy;
+  oo::LongRangeChartMode getLongRangeChartMode() override {
+    return oo::LongRangeChartMode::kEconomy;
   }
   NSPoint getGalaxy_coordinates() override { return NSMakePoint(20, 40); }
   NSPoint getCursor_coordinates() override { return NSMakePoint(30, 60); }
@@ -176,7 +176,7 @@ class FakePlayer : public PlayerEntity {
   bool getMassLockable() override { return true; }
   bool hyperspeedEngaged() override { return false; }
   Entity* getCompassTargetEntity() override { return _compassTarget; }
-  OOCompassMode getCompassMode() override { return OOCompassMode::kPlanet; }
+  oo::CompassMode getCompassMode() override { return oo::CompassMode::kPlanet; }
   bool weaponsOnline() override { return true; }
   Vector viewpointOffsetAft() override { return make_vector(0, 0, -1); }
   Vector viewpointOffsetForward() override { return make_vector(0, 0, 1); }
@@ -210,7 +210,7 @@ class FakePlayer : public PlayerEntity {
   void setMassLockable(bool newValue) override {
     _log.push_back(oo::str::format("setMassLockable %d", newValue ? 1 : 0));
   }
-  void setLongRangeChartMode(OOLongRangeChartMode mode) override {
+  void setLongRangeChartMode(oo::LongRangeChartMode mode) override {
     _log.push_back(
         oo::str::format("setLongRangeChartMode %d", static_cast<int>(mode)));
   }
@@ -222,7 +222,7 @@ class FakePlayer : public PlayerEntity {
       event += (i != 0 ? ", " : "") + oo::DescriptionOf(arguments[i]);
     _log.push_back(event + ")");
   }
-  void setCompassMode(OOCompassMode value) override {
+  void setCompassMode(oo::CompassMode value) override {
     _log.push_back(
         oo::str::format("setCompassMode %d", static_cast<int>(value)));
   }
@@ -240,7 +240,7 @@ class FakePlayer : public PlayerEntity {
     return _equipment.count(equipmentType) != 0;
   }
   void setGalacticHyperspaceBehaviour(
-      OOGalacticHyperspaceBehaviour behaviour) override {
+      oo::GalacticHyperspaceBehaviour behaviour) override {
     _log.push_back(oo::str::format("setGalacticHyperspaceBehaviour %d",
                                    static_cast<int>(behaviour)));
   }
@@ -305,7 +305,7 @@ class FakePlayer : public PlayerEntity {
                                    context.value_or("(nil)").c_str()));
     return true;
   }
-  void setStatus(OOEntityStatus stat) override {
+  void setStatus(oo::EntityStatus stat) override {
     _log.push_back(oo::str::format("setStatus %d", static_cast<int>(stat)));
     Entity::setStatus(stat);
   }  // the root's status, which status() answers
@@ -344,7 +344,7 @@ class FakePlayer : public PlayerEntity {
                                    oo::DescriptionOf(viewDict).c_str(),
                                    withScaling ? 1 : 0));
   }
-  void noteSwitchToView(OOViewID toView, OOViewID fromView) override {
+  void noteSwitchToView(oo::ViewID toView, oo::ViewID fromView) override {
     _log.push_back(oo::str::format("noteSwitchToView %d %d",
                                    static_cast<int>(toView),
                                    static_cast<int>(fromView)));
@@ -478,7 +478,7 @@ void SetUp() {
       gOOPlayer;  // the one InitOOJSPlayerShip() made, which player.ship holds
 
   sUniverse = new FakeUniverse();
-  sUniverse->_viewDirection = OOViewID::kAft;
+  sUniverse->_viewDirection = oo::ViewID::kAft;
   sUniverse->_gui = oo::makeShared<FakeGui>();
   sUniverse->_gui->_textColor = OOColor::colorWithRed(1.0f, 0.5f, 0.25f, 1.0f);
   sUniverse->_gui->_textCommsColor =
@@ -504,7 +504,7 @@ void SetUp() {
   sPlayer->_capacity = 2;
   sPlayer->_clockTime = 1000;
   sPlayer->_contractsAccept = true;
-  sPlayer->Entity::setStatus(OOEntityStatus::kDocked);
+  sPlayer->Entity::setStatus(oo::EntityStatus::kDocked);
   gOOPlayer = sPlayer;
 }
 
@@ -806,7 +806,7 @@ OO_TEST(setterPlayerState) {
           "setGalacticHyperspaceBehaviour %d; setGalacticHyperspaceFixedCoords "
           "10 20; setGalacticHyperspaceFixedCoords 10 20",
           static_cast<int>(
-              OOGalacticHyperspaceBehaviour::kAllSystemsReachable)));
+              oo::GalacticHyperspaceBehaviour::kAllSystemsReachable)));
   OO_CHECK_EVAL("(function () { player.ship.serviceLevel = 90; })()",
                 "undefined");
   OO_CHECK_LOG(sPlayer->_log, "adjustTradeInFactorBy -5");
@@ -835,7 +835,7 @@ OO_TEST(setterChartAndCompass) {
   OO_CHECK_LOG(
       sPlayer->_log,
       oo::str::format("setLongRangeChartMode %d; event(OOLRC_MODE_ECONOMY)",
-                      static_cast<int>(OOLongRangeChartMode::kTechLevel)));
+                      static_cast<int>(oo::LongRangeChartMode::kTechLevel)));
   OO_CHECK(Eval("(function () { player.ship.chartHighlightMode = "
                 "'OOLRC_MODE_NONSENSE'; })()")
                .rfind("threw: ", 0) == 0);
@@ -844,7 +844,7 @@ OO_TEST(setterChartAndCompass) {
       "undefined");
   OO_CHECK_LOG(sPlayer->_log,
                oo::str::format("setCompassMode %d; validateCompassTarget",
-                               static_cast<int>(OOCompassMode::kSun)));
+                               static_cast<int>(oo::CompassMode::kSun)));
   // The compass target: only with an advanced compass; the modes are cycled
   // until it is found.
   OO_CHECK_EVAL(
@@ -862,8 +862,8 @@ OO_TEST(setterChartAndCompass) {
       "undefined");
   OO_CHECK_LOG(sPlayer->_log,
                oo::str::format("setCompassMode %d; setCompassMode %d",
-                               static_cast<int>(OOCompassMode::kBasic),
-                               static_cast<int>(OOCompassMode::kPlanet)));
+                               static_cast<int>(oo::CompassMode::kBasic),
+                               static_cast<int>(oo::CompassMode::kPlanet)));
   OO_CHECK(Eval("(function () { player.ship.compassType = "
                 "'OO_COMPASSTYPE_FANCY'; })()")
                .rfind("threw: ", 0) == 0);
@@ -963,18 +963,18 @@ OO_TEST(setterHUD) {
 OO_TEST(setterTargetSystem) {
   SetUp();
   Log(sPlayer->_log);
-  sPlayer->Entity::setStatus(OOEntityStatus::kDocked);
+  sPlayer->Entity::setStatus(oo::EntityStatus::kDocked);
   OO_CHECK_EVAL("(function () { player.ship.targetSystem = 33; })()",
                 "undefined");
   OO_CHECK_LOG(sPlayer->_log, "setTargetSystemID 33");
-  sPlayer->Entity::setStatus(OOEntityStatus::kInFlight);
+  sPlayer->Entity::setStatus(oo::EntityStatus::kInFlight);
   OO_CHECK(Eval("(function () { player.ship.targetSystem = 33; })()")
                .rfind("threw: ", 0) == 0);
-  sPlayer->Entity::setStatus(OOEntityStatus::kEnteringWitchspace);
+  sPlayer->Entity::setStatus(oo::EntityStatus::kEnteringWitchspace);
   OO_CHECK(Eval("(function () { player.ship.targetSystem = 33; })()")
                .rfind("threw: ", 0) == 0);
   OO_CHECK_LOG(sPlayer->_log, "");
-  sPlayer->Entity::setStatus(OOEntityStatus::kDocked);
+  sPlayer->Entity::setStatus(oo::EntityStatus::kDocked);
 }
 
 OO_TEST(slice2Methods) {
@@ -1016,7 +1016,7 @@ OO_TEST(customViews) {
   OO_CHECK_EVAL(
       "player.ship.resetCustomView()",
       "threw: PlayerShip.setCustomView only works when custom view is active.");
-  sUniverse->_viewDirection = OOViewID::kCustom;
+  sUniverse->_viewDirection = oo::ViewID::kCustom;
   OO_CHECK_EVAL("player.ship.setCustomView([1, 2, 3], [1, 0, 0, 0])", "true");
   OO_CHECK_EVAL(
       "player.ship.setCustomView([1, 2, 3], [1, 0, 0, 0], 'WEAPON_FACING_AFT')",
@@ -1033,9 +1033,9 @@ OO_TEST(customViews) {
           "3.000000\"; \"weapon_facing\" = \"WEAPON_FACING_AFT\"; } 0; "
           "noteSwitchToView %d %d; "
           "resetCustomView; noteSwitchToView %d %d",
-          static_cast<int>(OOViewID::kCustom), static_cast<int>(OOViewID::kCustom),
-          static_cast<int>(OOViewID::kCustom), static_cast<int>(OOViewID::kCustom),
-          static_cast<int>(OOViewID::kCustom), static_cast<int>(OOViewID::kCustom)));
+          static_cast<int>(oo::ViewID::kCustom), static_cast<int>(oo::ViewID::kCustom),
+          static_cast<int>(oo::ViewID::kCustom), static_cast<int>(oo::ViewID::kCustom),
+          static_cast<int>(oo::ViewID::kCustom), static_cast<int>(oo::ViewID::kCustom)));
   OO_CHECK(Eval("player.ship.setCustomView([1, 2, 3])").rfind("threw: ", 0) ==
            0);
   OO_CHECK(Eval("player.ship.setCustomView('here', [1, 0, 0, 0])")
@@ -1047,7 +1047,7 @@ OO_TEST(customViews) {
                 "threw: Native exception: Tried to add nil value for key "
                 "'weapon_facing' to dictionary");
   OO_CHECK_LOG(sPlayer->_log, "");
-  sUniverse->_viewDirection = OOViewID::kAft;
+  sUniverse->_viewDirection = oo::ViewID::kAft;
 
   OO_CHECK_EVAL("player.ship.resetScannerZoom()", "undefined");
   OO_CHECK_EVAL("player.ship.takeInternalDamage()", "true");
@@ -1061,7 +1061,7 @@ OO_TEST(hyperspaceCountdowns) {
   OO_CHECK_EVAL("player.ship.beginHyperspaceCountdown()", "false");
   OO_CHECK_EVAL("player.ship.cancelHyperspaceCountdown()", "false");
   sPlayer->_hyperspaceMotor = true;
-  sPlayer->Entity::setStatus(OOEntityStatus::kInFlight);
+  sPlayer->Entity::setStatus(oo::EntityStatus::kInFlight);
   OO_CHECK_EVAL("player.ship.beginHyperspaceCountdown(10)", "true");
   OO_CHECK_EVAL("player.ship.beginHyperspaceCountdown()", "true");
   OO_CHECK_LOG(sPlayer->_log,
@@ -1074,12 +1074,12 @@ OO_TEST(hyperspaceCountdowns) {
       0);
   OO_CHECK_EVAL("player.ship.cancelHyperspaceCountdown()",
                 "false");  // not counting down
-  sPlayer->Entity::setStatus(OOEntityStatus::kWitchspaceCountdown);
+  sPlayer->Entity::setStatus(oo::EntityStatus::kWitchspaceCountdown);
   OO_CHECK_EVAL("player.ship.cancelHyperspaceCountdown()", "true");
   OO_CHECK_LOG(sPlayer->_log, "cancelWitchspaceCountdown; setJumpType 0");
 
   // Galactic: needs the drive, in flight.
-  sPlayer->Entity::setStatus(OOEntityStatus::kInFlight);
+  sPlayer->Entity::setStatus(oo::EntityStatus::kInFlight);
   OO_CHECK_EVAL("player.ship.beginGalacticHyperspaceCountdown()", "false");
   sPlayer->_equipment.insert("EQ_GAL_DRIVE");
   Log(sUniverse->_messages);
@@ -1089,12 +1089,12 @@ OO_TEST(hyperspaceCountdowns) {
       oo::str::format(
           "witchJumpChecklist 1; setJumpType 1; setWitchspaceCountdown 20; "
           "setStatus %d; playGalacticHyperspace",
-          static_cast<int>(OOEntityStatus::kWitchspaceCountdown)));
+          static_cast<int>(oo::EntityStatus::kWitchspaceCountdown)));
   OO_CHECK_LOG(sUniverse->_messages, "witch-galactic-in-f-seconds 1");
   OO_CHECK(Eval("player.ship.beginGalacticHyperspaceCountdown(3)")
                .rfind("threw: ", 0) == 0);
   sPlayer->_equipment.clear();
-  sPlayer->Entity::setStatus(OOEntityStatus::kDocked);
+  sPlayer->Entity::setStatus(oo::EntityStatus::kDocked);
 }
 
 OO_TEST(mfdsAndDials) {

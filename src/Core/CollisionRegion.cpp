@@ -583,7 +583,7 @@ void CollisionRegion::findShadowedEntities() {
       continue;  // don't check shading of objects we can't see
     }
     bool occluder_moved = false;
-    if (EntityStatus(e1) == OOEntityStatus::kCockpitDisplay) {
+    if (EntityStatusOf(e1) == oo::EntityStatus::kCockpitDisplay) {
       e1->isSunlit = true;
       e1->shadingEntityID = NO_TARGET;
       continue;  // don't check shading in demo mode

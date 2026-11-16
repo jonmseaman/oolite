@@ -69,7 +69,7 @@ OO_TEST(defaults) {
     OO_CHECK(u->entityCount() == 0);
     OO_CHECK(u->getTime() == 0.0 && u->getTimeDelta() == 0.0);
     OO_CHECK(u->currentSystemID() == 0);
-    OO_CHECK(u->getViewDirection() == OOViewID::kForward);
+    OO_CHECK(u->getViewDirection() == oo::ViewID::kForward);
     OO_CHECK(u->getAmbientLightLevel() == 0.0f);
     OO_CHECK(u->getAirResistanceFactor() == 0.0f);
     GLfloat* sky = u->getSkyClearColor();
@@ -747,9 +747,9 @@ OO_TEST(slice15CountAndFind) {
     OO_CHECK(u->entitiesWithinRange(2000, nullptr).empty());
 
     // The scan class.
-    c->setScanClass(OOScanClass::kRock);
-    OO_CHECK(u->countShipsWithScanClass(OOScanClass::kRock, -1, nullptr) == 1);
-    OO_CHECK(u->countShipsWithScanClass(OOScanClass::kNeutral, -1, nullptr) == 0);
+    c->setScanClass(oo::ScanClass::kRock);
+    OO_CHECK(u->countShipsWithScanClass(oo::ScanClass::kRock, -1, nullptr) == 1);
+    OO_CHECK(u->countShipsWithScanClass(oo::ScanClass::kNeutral, -1, nullptr) == 0);
 
     u->n_entities = 0;
   }
@@ -797,8 +797,8 @@ OO_TEST(slice15TimeAndCollisions) {
     u->dumpCollisions();
     OO_CHECK(u->dumpCollisionInfo);
 
-    u->viewDirection = OOViewID::kAft;
-    OO_CHECK(u->getViewDirection() == OOViewID::kAft);
+    u->viewDirection = oo::ViewID::kAft;
+    OO_CHECK(u->getViewDirection() == oo::ViewID::kAft);
   }
 }
 
@@ -860,9 +860,9 @@ OO_TEST(slice16ViewDirection) {
     // The view it already has, with no GUI shown: nothing changes and nothing
     // is said. (A change speaks through the player's script events, which need
     // the whole game.)
-    u->viewDirection = OOViewID::kAft;
-    u->setViewDirection(OOViewID::kAft);
-    OO_CHECK(u->getViewDirection() == OOViewID::kAft &&
+    u->viewDirection = oo::ViewID::kAft;
+    u->setViewDirection(oo::ViewID::kAft);
+    OO_CHECK(u->getViewDirection() == oo::ViewID::kAft &&
              !CurrentMessage(u).has_value() && !u->getDisplayGUI());
   }
 }
