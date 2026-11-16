@@ -15,7 +15,7 @@
 	tools/check-core-tests.sh test_OOVisualEffectEntity
 */
 
-#include "OOVisualEffectEntity.h"
+#include "VisualEffectEntity.h"
 #include "PlayerEntity.h"	// PLAYER is C++
 #include "OOJavaScriptEngine.h"
 #include "Universe.h"
@@ -144,7 +144,7 @@ oo::PList Flasher(double x)
 // An effect, as the universe makes it (oo::RetainedEntity(oo::NewVisualEffect()),
 // An effect, as the universe makes it (oo::RetainedEntity(oo::NewVisualEffect())): the C++ effect,
 // autoreleased.
-OOVisualEffectEntity *Effect(const std::string &key, const oo::PList &definition)
+oo::VisualEffectEntity *Effect(const std::string &key, const oo::PList &definition)
 {
 	return oo::ToEffect(oo::autorelease(oo::NewVisualEffect(key, definition)));
 }
@@ -159,7 +159,7 @@ OO_TEST(defaults)
 {
 	SetUp();
 	{
-		OOVisualEffectEntity *effect = Effect("test-effect", Dict({}));
+		oo::VisualEffectEntity *effect = Effect("test-effect", Dict({}));
 		OO_CHECK(effect != nullptr);
 		OO_CHECK(effect->isEffect());
 		OO_CHECK(effect->getIsVisualEffect());
@@ -185,7 +185,7 @@ OO_TEST(defaults)
 		OO_CHECK(effect->flasherEnumerator().empty());
 
 		// A null definition is an empty one; -init has the empty key.
-		OOVisualEffectEntity *plain = Effect(std::string{}, oo::PList());	// what -init made
+		oo::VisualEffectEntity *plain = Effect(std::string{}, oo::PList());	// what -init made
 		OO_CHECK(plain != nullptr);
 		OO_CHECK(plain->effectKey() == std::optional<std::string>(""));
 		OO_CHECK(plain->effectInfoDictionary() == Dict({}));
@@ -197,7 +197,7 @@ OO_TEST(breakPatternFlag)
 {
 	SetUp();
 	{
-		OOVisualEffectEntity *effect = Effect("bp", Dict({ { "is_break_pattern", oo::PList(true) } }));
+		oo::VisualEffectEntity *effect = Effect("bp", Dict({ { "is_break_pattern", oo::PList(true) } }));
 		OO_CHECK(effect->isBreakPattern());
 		effect->setIsBreakPattern(false);
 		OO_CHECK(!effect->isBreakPattern());
@@ -211,7 +211,7 @@ OO_TEST(flasherSubentities)
 {
 	SetUp();
 	{
-		OOVisualEffectEntity *effect = Effect("lights", Dict({ { "subentities", oo::PList(oo::PList::Array{ Flasher(10), oo::PList(std::string("not a dictionary")) }) } }));
+		oo::VisualEffectEntity *effect = Effect("lights", Dict({ { "subentities", oo::PList(oo::PList::Array{ Flasher(10), oo::PList(std::string("not a dictionary")) }) } }));
 		OO_CHECK_EQ(effect->subEntityCount(), 1u);	// the string made no subentity
 		std::vector<oo::EntityHold> flashers = effect->flasherEnumerator();	// the flashers (held C++ entities)
 		OO_CHECK_EQ(flashers.size(), 1u);
@@ -263,7 +263,7 @@ OO_TEST(standardSubentities)
 		subs.push_back(Flasher(-3));
 		// Made, and the snapshot taken, in a pool of their own: what is left after it drains is what
 		// owns the child (pending autoreleases are not ownership).
-		OOVisualEffectEntity *effect = nullptr;
+		oo::VisualEffectEntity *effect = nullptr;
 		std::vector<oo::EntityHold> effects;	// the subentities (held C++ entities)
 		Entity *effectObject = nullptr;
 		{
@@ -280,7 +280,7 @@ OO_TEST(standardSubentities)
 		if (effects.size() != 1)  return;
 
 		Entity *childObject = effects[0].get();	// the child, +0 and not autoreleased
-		OOVisualEffectEntity *child = oo::ToEffect(childObject);
+		oo::VisualEffectEntity *child = oo::ToEffect(childObject);
 		OO_CHECK(child->effectKey() == std::optional<std::string>("child"));
 		OO_CHECK(Near(child->getPosition().y, 5.0));
 		OO_CHECK(child->owner() == effect);
@@ -313,7 +313,7 @@ OO_TEST(orientationVectors)
 {
 	SetUp();
 	{
-		OOVisualEffectEntity *effect = Effect("turned", Dict({}));
+		oo::VisualEffectEntity *effect = Effect("turned", Dict({}));
 		Quaternion q = kIdentityQuaternion;
 		quaternion_rotate_about_y(&q, 0.5);
 		quaternion_rotate_about_x(&q, 0.25);
@@ -333,12 +333,12 @@ OO_TEST(scannerColours)
 {
 	SetUp();
 	{
-		OOVisualEffectEntity *plain = Effect("plain", Dict({}));
+		oo::VisualEffectEntity *plain = Effect("plain", Dict({}));
 		OO_CHECK(plain->scannerDisplayColor1() == nullptr);
 		OO_CHECK(plain->scannerDisplayColor2() == nullptr);
 		OO_CHECK(plain->scannerDisplayColorForShip(true, nullptr, nullptr)[3] == 0.0f);	// transparent black
 
-		OOVisualEffectEntity *effect = Effect("coloured", Dict({ { "scanner_display_color1", oo::PList(std::string("redColor")) }, { "scanner_display_color2", oo::PList(std::string("blueColor")) } }));
+		oo::VisualEffectEntity *effect = Effect("coloured", Dict({ { "scanner_display_color1", oo::PList(std::string("redColor")) }, { "scanner_display_color2", oo::PList(std::string("blueColor")) } }));
 		OOColor *c1 = effect->scannerDisplayColor1();
 		OOColor *c2 = effect->scannerDisplayColor2();
 		OO_CHECK(c1 != nullptr && c2 != nullptr);
@@ -369,7 +369,7 @@ OO_TEST(scriptAndScriptInfo)
 	SetUp();
 	{
 		// No scripts in the scratch folder: neither the named script nor the default one is found.
-		OOVisualEffectEntity *effect = Effect("scripted", Dict({ { "script", oo::PList(std::string("no-such-script.js")) }, { "script_info", Dict({ { "k", oo::PList(std::string("v")) } }) } }));
+		oo::VisualEffectEntity *effect = Effect("scripted", Dict({ { "script", oo::PList(std::string("no-such-script.js")) }, { "script_info", Dict({ { "k", oo::PList(std::string("v")) } }) } }));
 		OO_CHECK(effect->script() == nullptr);
 		OO_CHECK(effect->scriptInfo() == Dict({ { "k", oo::PList(std::string("v")) } }));
 		OO_CHECK(Effect("bare", Dict({}))->scriptInfo() == Dict({}));
@@ -382,14 +382,14 @@ OO_TEST(beacons)
 {
 	SetUp();
 	{
-		OOVisualEffectEntity *effect = Effect("unlit", Dict({}));
+		oo::VisualEffectEntity *effect = Effect("unlit", Dict({}));
 		OO_CHECK(!effect->isBeacon());
 		OO_CHECK(!effect->beaconCode().has_value());
 		OO_CHECK(!effect->beaconLabel().has_value());
 		OO_CHECK(!effect->isJammingScanning());
 		OO_CHECK(effect->prevBeacon() == nullptr && effect->nextBeacon() == nullptr);
 
-		OOVisualEffectEntity *other = Effect("other", Dict({}));
+		oo::VisualEffectEntity *other = Effect("other", Dict({}));
 		effect->setPrevBeacon(other);
 		effect->setNextBeacon(other);
 		OO_CHECK(effect->prevBeacon() == other && effect->nextBeacon() == other);
@@ -409,7 +409,7 @@ OO_TEST(shaderUniforms)
 {
 	SetUp();
 	{
-		OOVisualEffectEntity *effect = Effect("shaded", Dict({}));
+		oo::VisualEffectEntity *effect = Effect("shaded", Dict({}));
 		OO_CHECK(Near(effect->hullHeatLevel(), 60.0 / 256.0));
 		effect->setHullHeatLevel(2.0f);
 		OO_CHECK(effect->hullHeatLevel() == 1.0f);	// clamped
@@ -436,12 +436,12 @@ OO_TEST(facadeContract)
 {
 	SetUp();
 	{
-		OOVisualEffectEntity *effect = Effect("facade", Dict({ { "subentities", oo::PList(oo::PList::Array{ Flasher(1) }) } }));
-		OOVisualEffectEntity *cxxEffect = effect;
+		oo::VisualEffectEntity *effect = Effect("facade", Dict({ { "subentities", oo::PList(oo::PList::Array{ Flasher(1) }) } }));
+		oo::VisualEffectEntity *cxxEffect = effect;
 		OO_CHECK(cxxEffect != nullptr);
 		OO_CHECK(oo::ToEffect(cxxEffect) == effect);
 		OO_CHECK(oo::ToEffect(static_cast<Entity *>(nullptr)) == nullptr);
-		OO_CHECK(static_cast<OOVisualEffectEntity *>(nullptr) == nullptr);
+		OO_CHECK(static_cast<oo::VisualEffectEntity *>(nullptr) == nullptr);
 
 		OO_CHECK(cxxEffect->effectKey() == effect->effectKey());
 		OO_CHECK(cxxEffect->subEntityCount() == effect->subEntityCount());
@@ -469,8 +469,8 @@ OO_TEST(slice2Members)
 {
 	SetUp();
 	{
-		OOVisualEffectEntity *effect = Effect("members", Dict({ { "scanner_display_color1", oo::PList(std::string("redColor")) } }));
-		OOVisualEffectEntity *cxxEffect = effect;
+		oo::VisualEffectEntity *effect = Effect("members", Dict({ { "scanner_display_color1", oo::PList(std::string("redColor")) } }));
+		oo::VisualEffectEntity *cxxEffect = effect;
 		OO_CHECK(cxxEffect->scannerDisplayColor1() == effect->scannerDisplayColor1());
 		OO_CHECK(cxxEffect->scannerDisplayColor2() == nullptr);
 		cxxEffect->setShaderInt2(7);
@@ -505,7 +505,7 @@ OO_TEST(jsExtensions)
 {
 	SetUp();
 	{
-		OOVisualEffectEntity *effect = Effect("js-effect", Dict({}));
+		oo::VisualEffectEntity *effect = Effect("js-effect", Dict({}));
 		RegisterJSClasses(InitOOJSVisualEffect);
 		Entity *object = effect;	// the engine asks the object
 		const JSClassID jsClass = OOJSEntityJSClassID(object);

@@ -24,8 +24,8 @@
 #include <optional>
 #include <string>
 
-#include "OOExplosionCloudEntity.h"
-#include "OOParticleSystem.h"
+#include "ExplosionCloudEntity.h"
+#include "ParticleSystem.h"
 #include "OOTexture.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
@@ -119,19 +119,19 @@ void SetUp() {
 
 Entity* SmallBurst(Entity* source) {
   return oo::MadeEntity(
-      OOSmallFragmentBurstEntity::fragmentBurstFromEntity(source));
+      oo::SmallFragmentBurstEntity::fragmentBurstFromEntity(source));
 }  // the source's C++ entity
 Entity* BigBurst(Entity* source) {
   return oo::MadeEntity(
-      OOBigFragmentBurstEntity::fragmentBurstFromEntity(source));
+      oo::BigFragmentBurstEntity::fragmentBurstFromEntity(source));
 }
 Entity* Cloud(Entity* source, const oo::PList& settings) {
   return oo::MadeEntity(
-      OOExplosionCloudEntity::explosionCloudFromEntity(source, settings));
+      oo::ExplosionCloudEntity::explosionCloudFromEntity(source, settings));
 }  // the source's C++ entity
 Entity* SizedCloud(Entity* source, float size, const oo::PList& settings) {
   return oo::MadeEntity(
-      OOExplosionCloudEntity::explosionCloudFromEntity(source, size, settings));
+      oo::ExplosionCloudEntity::explosionCloudFromEntity(source, size, settings));
 }
 
 // --------------------------------------------------------------------------------------------------

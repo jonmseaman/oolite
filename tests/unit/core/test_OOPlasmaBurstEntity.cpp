@@ -15,7 +15,7 @@
 */
 
 
-#include "OOPlasmaBurstEntity.h"
+#include "PlasmaBurstEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -72,12 +72,12 @@ namespace {
 // -------------------
 
 Entity* MakeBurst(HPVector position) {
-  return oo::MadeEntity(OOPlasmaBurstEntity::burstWithPosition(position));
+  return oo::MadeEntity(oo::PlasmaBurstEntity::burstWithPosition(position));
 }
 
 // The entity is the particle.
-OOLightParticleEntity* Particle(Entity* e) {
-  return static_cast<OOLightParticleEntity*>(e);
+oo::LightParticleEntity* Particle(Entity* e) {
+  return static_cast<oo::LightParticleEntity*>(e);
 }
 const GLfloat* ColorComponents(Entity* e) {
   return Particle(e)->_colorComponents;

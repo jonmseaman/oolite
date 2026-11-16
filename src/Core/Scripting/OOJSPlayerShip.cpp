@@ -589,7 +589,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
                              : NSPoint{}));
 
     case kGalacticHyperspaceFixedCoordsInLY:
-      OOJS_RETURN_VECTOR(OOGalacticCoordinatesFromInternal(
+      OOJS_RETURN_VECTOR(oo::GalacticCoordinatesFromInternal(
           player != nullptr ? player->getGalacticHyperspaceFixedCoords()
                             : NSPoint{}));
 
@@ -667,7 +667,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
           (player != nullptr ? player->getGalaxy_coordinates() : NSPoint{}));
 
     case kGalaxyCoordinatesInLY:
-      OOJS_RETURN_VECTOR(OOGalacticCoordinatesFromInternal(
+      OOJS_RETURN_VECTOR(oo::GalacticCoordinatesFromInternal(
           player != nullptr ? player->getGalaxy_coordinates() : NSPoint{}));
 
     case kCursorCoordinates:
@@ -676,7 +676,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
           (player != nullptr ? player->getCursor_coordinates() : NSPoint{}));
 
     case kCursorCoordinatesInLY:
-      OOJS_RETURN_VECTOR(OOGalacticCoordinatesFromInternal(
+      OOJS_RETURN_VECTOR(oo::GalacticCoordinatesFromInternal(
           player != nullptr ? player->getCursor_coordinates() : NSPoint{}));
 
     case kTargetSystem:
@@ -1035,7 +1035,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
       if (const std::optional<Vector> converted =
               JSValueToVector(context, value)) {
         vValue = *converted;
-        NSPoint coords = OOInternalCoordinatesFromGalactic(vValue);
+        NSPoint coords = oo::InternalCoordinatesFromGalactic(vValue);
         if (player != nullptr) player->setGalacticHyperspaceFixedCoords(coords);
         return JS_UNDEFINED;
       }

@@ -40,8 +40,8 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
+#include "EntityHold.h"     // owning entity references
 #include "OOEntityEnums.h"  // OOScanClass
-#include "OOEntityHold.h"   // owning entity references
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include "OOSystemDescriptionManager.h"  // OOSystemLayer
@@ -51,8 +51,14 @@ MA 02110-1301, USA.
 class Entity;
 class MyOpenGLView;
 class StationEntity;
-class OOPlanetEntity;
-class OOSunEntity;
+
+namespace oo {
+
+class PlanetEntity;
+class SunEntity;
+
+}  // namespace oo
+
 class GuiDisplayGen;
 class Entity;
 using EntityFilterPredicate = bool (*)(Entity* entity,
@@ -125,8 +131,8 @@ using EntityFilterPredicate = bool (*)(Entity* entity,
     test_OOOXZManager) */                                                      \
   virtual bool inInterstellarSpace() VALUE_BODY                                \
   virtual ::StationEntity* station() VALUE_BODY                                \
-  virtual ::OOPlanetEntity* planet() VALUE_BODY                                \
-  virtual ::OOSunEntity* sun() VALUE_BODY                                      \
+  virtual ::oo::PlanetEntity* planet() VALUE_BODY                                \
+  virtual ::oo::SunEntity* sun() VALUE_BODY                                      \
   virtual std::vector<oo::EntityHold> planets() VALUE_BODY                     \
   virtual std::vector<oo::EntityHold> stations() VALUE_BODY                    \
   virtual std::vector<oo::EntityHold> wormholes() VALUE_BODY                   \
@@ -172,8 +178,8 @@ using EntityFilterPredicate = bool (*)(Entity* entity,
       Entity* /*entity*/) VALUE_BODY                                           \
   virtual HPVector locationByCode(                                             \
       const std::string& /*code*/,                                             \
-      ::OOSunEntity* /*sun*/,                                                  \
-      ::OOPlanetEntity* /*planet*/) VALUE_BODY                                 \
+      ::oo::SunEntity* /*sun*/,                                                  \
+      ::oo::PlanetEntity* /*planet*/) VALUE_BODY                                 \
   virtual void witchspaceShipWithPrimaryRole(                                  \
       const std::string& /*role*/) VOID_BODY                                   \
   virtual void addShipWithRole(                                                \

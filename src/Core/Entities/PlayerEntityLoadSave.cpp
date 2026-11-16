@@ -1186,7 +1186,7 @@ void PlayerEntity::lsCommanders(
   for (i = firstIndex; i < lastIndex; i++) {
     const oo::PList& cdr = cdrDetailArray[i];
     if (cdr.get<bool>("isSavedGame")) {
-      const std::string ratingDesc = OODisplayRatingStringFromKillCount(
+      const std::string ratingDesc = oo::DisplayRatingStringFromKillCount(
                                          cdr.get<unsigned int>("ship_kills"))
                                          .value_or("(null)");
       const std::optional<std::string> saveName = CommanderSaveName(cdr);
@@ -1317,12 +1317,12 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
 
   // Make a short description of the commander
   const std::string legalDesc =
-      OODisplayStringFromLegalStatus(cdr.get<int>("legal_status"))
+      oo::DisplayStringFromLegalStatus(cdr.get<int>("legal_status"))
           .value_or("(null)");
 
   rating = KillCountToRatingAndKillString(cdr.get<unsigned int>("ship_kills"));
   const oo::PList* creditsNode = cdr.find("credits");
-  OOCreditsQuantity money = OODeciCreditsFromPList(creditsNode);
+  OOCreditsQuantity money = oo::DeciCreditsFromPList(creditsNode);
 
   // Nikos - Add some more information in the load game screen (current
   // location, galaxy number and timestamp).
@@ -1411,7 +1411,9 @@ uint16_t PersonalityForCommanderDict(const oo::PList& dict) {
 
 }  // namespace
 
-OOCreditsQuantity OODeciCreditsFromDouble(double doubleDeciCredits) {
+namespace oo {
+
+OOCreditsQuantity DeciCreditsFromDouble(double doubleDeciCredits) {
   /*	Clamp value to 0..kOOMaxCredits.
           The important bit here is that kOOMaxCredits can't be represented
           exactly as a double, and casting it rounds it up; casting this value
@@ -1438,16 +1440,18 @@ OOCreditsQuantity OODeciCreditsFromDouble(double doubleDeciCredits) {
   }
 }
 
-OOCreditsQuantity OODeciCreditsFromPList(const oo::PList* value) {
+OOCreditsQuantity DeciCreditsFromPList(const oo::PList* value) {
   if (value != nullptr && value->isReal()) {
     // a real (was a float/double NSNumber, objCType f or d)
     double d = value->doubleValue();
     if (value->isSinglePrecision())
       d = static_cast<double>(
           static_cast<float>(d));  // +numberWithFloat: -doubleValue
-    return OODeciCreditsFromDouble(d);
+    return DeciCreditsFromDouble(d);
   } else {
     return oo::plist_get::unsignedLongLongFrom(
         value, 0);  // the reader OOUnsignedLongLongFromObject forwards to
   }
 }
+
+}  // namespace oo

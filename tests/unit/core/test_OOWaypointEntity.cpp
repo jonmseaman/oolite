@@ -27,7 +27,7 @@
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJSWaypoint.h"
-#include "OOWaypointEntity.h"
+#include "WaypointEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -99,11 +99,11 @@ bool QuatIs(Quaternion q, float w, float x, float y, float z) {
 // The waypoint's object, as the universe makes it.
 Entity* WaypointObject(const oo::PList& info) {
   return (Entity*)oo::MadeEntity(
-      OOWaypointEntity::waypointWithDictionary(info));
+      oo::WaypointEntity::waypointWithDictionary(info));
 }
 
-OOWaypointEntity* Part(Entity* object) {
-  return dynamic_cast<OOWaypointEntity*>(object);
+oo::WaypointEntity* Part(Entity* object) {
+  return dynamic_cast<oo::WaypointEntity*>(object);
 }
 
 Entity* Waypoint(const std::string& code) {
@@ -212,7 +212,7 @@ OO_TEST(beaconStrings) {
     OO_CHECK(!oo::BeaconCode(wp).has_value() && !oo::EntityIsBeacon(wp));
     OO_CHECK(oo::BeaconLabel(wp) == std::optional<std::string>("Label"));
 
-    static_cast<OOWaypointEntity*>(wp)->setBeaconLabel(
+    static_cast<oo::WaypointEntity*>(wp)->setBeaconLabel(
         std::string(""));  // the waypoint's, which its object's
                            // -setBeaconLabel: forwarded to
     OO_CHECK(!oo::BeaconLabel(wp).has_value());
@@ -279,7 +279,7 @@ OO_TEST(facade) {
     Entity* wp = Waypoint("W");  // the root entity (the protocol type would
                                  // pick a subclass's crossing)
     // A C++ entity.
-    OO_CHECK(dynamic_cast<OOWaypointEntity*>(wp) != nullptr);
+    OO_CHECK(dynamic_cast<oo::WaypointEntity*>(wp) != nullptr);
     OO_CHECK(wp == wp);
   }
 }

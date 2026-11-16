@@ -43,7 +43,9 @@ public:
 
 
 // Global, as the game's.
-class OOLightParticleEntity : public Entity
+namespace oo {
+
+class LightParticleEntity : public Entity
 {
 public:
 	float diameter();
@@ -58,7 +60,7 @@ public:
 /*	A flasher whose frequency is 99 raises from frequency(), one whose frequency is 98 throws a C++
 	exception, so the test sees what an exception under a native becomes.
 */
-class OOFlasherEntity : public OOLightParticleEntity
+class FlasherEntity : public LightParticleEntity
 {
 public:
 	bool isActive();
@@ -80,6 +82,9 @@ public:
 	float _fraction = 0;
 	float _phase = 0;
 };
+
+}  // namespace oo
+
 
 
 // What an entity's JS object holds: a weak reference to the C++ entity.
@@ -107,16 +112,18 @@ public:
 class ShipEntity : public Entity
 {
 public:
-	void removeFlasher(OOFlasherEntity *flasher);
+	void removeFlasher(oo::FlasherEntity *flasher);
 
-	OOFlasherEntity *_removedFlasher = nullptr;
+	oo::FlasherEntity *_removedFlasher = nullptr;
 };
 
 // A visual effect: the C++ part of its object, with the one member the
 // binding calls (declared as OOVisualEffectEntity.h declares it).
 typedef TestEntityObject OOVisualEffectSubEntity;	// as OOVisualEffectEntity.h names it
 
-class OOVisualEffectEntity : public Entity
+namespace oo {
+
+class VisualEffectEntity : public Entity
 {
 public:
 	void removeSubEntity(OOVisualEffectSubEntity *sub);
@@ -124,6 +131,9 @@ public:
 
 	::TestEntityObject *_removed = nullptr;
 };
+
+}  // namespace oo
+
 
 void InitOOJSFlasher(JSContext* context, JSValueConst global);
 // The category's bodies, which the stand-in's overrides call as the C++ class's do (declared in OOJSFlasher.h).
@@ -146,14 +156,14 @@ bool OOJSFlasherIsVisibleToScripts(void);
 bool TestEntityObject::isShip()  { return _isShip; }
 
 
-void ShipEntity::removeFlasher(OOFlasherEntity *flasher)  { _removedFlasher = flasher; }
+void ShipEntity::removeFlasher(oo::FlasherEntity *flasher)  { _removedFlasher = flasher; }
 
 
-void OOVisualEffectEntity::removeSubEntity(OOVisualEffectSubEntity *sub)  { _removed = sub; }
+void oo::VisualEffectEntity::removeSubEntity(OOVisualEffectSubEntity *sub)  { _removed = sub; }
 ::TestEntityObject *TestObjectOf(Entity *entity);	// defined below
 #define OO_ENTITY_HELPERS_STAND_IN_CXX
 #include "EntityHelpersStandIn.h"	// EntityHelpers.mm's, on the test's objects
-void OOVisualEffectEntity::removeSubEntity(Entity *sub)  { _removed = TestObjectOf(sub); }	// its object, as the binding passed it
+void oo::VisualEffectEntity::removeSubEntity(Entity *sub)  { _removed = TestObjectOf(sub); }	// its object, as the binding passed it
 
 // The root's JS category, as the game's asks the C++ part: the engine sends these
 // selectors to the wrapped object.
@@ -167,20 +177,20 @@ JSClassID Entity::jsClassID()  { return 0; }
 std::optional<std::string> Entity::jsClassName()  { return std::string("Entity"); }
 bool Entity::isVisibleToScripts()  { return false; }
 
-float OOLightParticleEntity::diameter()  { return _diameter; }
-void OOLightParticleEntity::setDiameter(float diameter)  { _diameter = diameter; }
-void OOLightParticleEntity::setColor(OOColor *color)  { _color = oo::share(color); }
+float oo::LightParticleEntity::diameter()  { return _diameter; }
+void oo::LightParticleEntity::setDiameter(float diameter)  { _diameter = diameter; }
+void oo::LightParticleEntity::setColor(OOColor *color)  { _color = oo::share(color); }
 
-bool OOFlasherEntity::isActive()  { return _active; }
-void OOFlasherEntity::setActive(bool active)  { _active = active; }
-std::shared_ptr<OOColor> OOFlasherEntity::color()  { return _color; }
-void OOFlasherEntity::setFrequency(float frequency)  { _frequency = frequency; }
-float OOFlasherEntity::fraction()  { return _fraction; }
-void OOFlasherEntity::setFraction(float fraction)  { _fraction = fraction; }
-float OOFlasherEntity::phase()  { return _phase; }
-void OOFlasherEntity::setPhase(float phase)  { _phase = phase; }
+bool oo::FlasherEntity::isActive()  { return _active; }
+void oo::FlasherEntity::setActive(bool active)  { _active = active; }
+std::shared_ptr<OOColor> oo::FlasherEntity::color()  { return _color; }
+void oo::FlasherEntity::setFrequency(float frequency)  { _frequency = frequency; }
+float oo::FlasherEntity::fraction()  { return _fraction; }
+void oo::FlasherEntity::setFraction(float fraction)  { _fraction = fraction; }
+float oo::FlasherEntity::phase()  { return _phase; }
+void oo::FlasherEntity::setPhase(float phase)  { _phase = phase; }
 
-float OOFlasherEntity::frequency()
+float oo::FlasherEntity::frequency()
 {
 	if (_frequency == 99)  oo::RaiseException(oo::InvalidArgumentException, "frequency %s", "boom");
 	if (_frequency == 98)  throw std::runtime_error("cxx boom");
@@ -189,9 +199,9 @@ float OOFlasherEntity::frequency()
 
 
 // The binding's category, as the C++ class's overrides answer it.
-JSClassID OOFlasherEntity::jsClassID()  { return ::JSFlasherClassID(); }
-std::optional<std::string> OOFlasherEntity::jsClassName()  { return ::OOJSFlasherJSClassName(); }
-bool OOFlasherEntity::isVisibleToScripts()  { return ::OOJSFlasherIsVisibleToScripts(); }
+JSClassID oo::FlasherEntity::jsClassID()  { return ::JSFlasherClassID(); }
+std::optional<std::string> oo::FlasherEntity::jsClassName()  { return ::OOJSFlasherJSClassName(); }
+bool oo::FlasherEntity::isVisibleToScripts()  { return ::OOJSFlasherIsVisibleToScripts(); }
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
@@ -407,11 +417,11 @@ JSRuntime *sRuntime = nullptr;
 JSContext *sContext = nullptr;
 JSValue sGlobal = JS_UNDEFINED;	// held for the life of the test
 TestEntityObject *sFlasher = nullptr;					// the flasher's object
-OOFlasherEntity *sFlasherPart = nullptr;	// its C++ part
+oo::FlasherEntity *sFlasherPart = nullptr;	// its C++ part
 TestEntityObject *sShip = nullptr;	// a ship's object and its C++ part
 ShipEntity *sShipPart = nullptr;
 TestEntityObject *sEffect = nullptr;	// an effect's object and its C++ part
-OOVisualEffectEntity *sEffectPart = nullptr;
+oo::VisualEffectEntity *sEffectPart = nullptr;
 
 
 // A JS object of the class, with the class's prototype and a holder of the entity's C++ part in
@@ -461,10 +471,10 @@ void SetUpContext()
 	sShipPart = static_cast<ShipEntity *>(sShip->_cxxEntity.get());
 	sShip->_isShip = true;
 	sEffect = oo::test::NewRetained<TestEntityObject>();
-	sEffect->_cxxEntity = oo::makeShared<OOVisualEffectEntity>();
-	sEffectPart = static_cast<OOVisualEffectEntity *>(sEffect->_cxxEntity.get());
+	sEffect->_cxxEntity = oo::makeShared<oo::VisualEffectEntity>();
+	sEffectPart = static_cast<oo::VisualEffectEntity *>(sEffect->_cxxEntity.get());
 	sFlasher = oo::test::NewRetained<TestEntityObject>();
-	const std::shared_ptr<OOFlasherEntity> part = oo::makeShared<OOFlasherEntity>();
+	const std::shared_ptr<oo::FlasherEntity> part = oo::makeShared<oo::FlasherEntity>();
 	sFlasher->_cxxEntity = part;
 	sFlasherPart = part.get();
 	sFlasherPart->_active = true;

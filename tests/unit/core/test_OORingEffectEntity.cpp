@@ -15,7 +15,7 @@
 
 #include <string>
 
-#include "OORingEffectEntity.h"
+#include "RingEffectEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -79,10 +79,10 @@ void SetUp() {
 // ----------------------
 
 Entity* Ring(Entity* source) {
-  return oo::MadeEntity(OORingEffectEntity::ringFromEntity(source));
+  return oo::MadeEntity(oo::RingEffectEntity::ringFromEntity(source));
 }  // the source's C++ entity
 Entity* ShrinkingRing(Entity* source) {
-  return oo::MadeEntity(OORingEffectEntity::shrinkingRingFromEntity(source));
+  return oo::MadeEntity(oo::RingEffectEntity::shrinkingRingFromEntity(source));
 }
 
 // --------------------------------------------------------------------------------------------------

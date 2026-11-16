@@ -27,7 +27,7 @@
 #include <set>
 #include <string>
 
-#include "OOEntityCalledByName.h"
+#include "EntityCalledByName.h"
 #include "OOJSCallEntityMethods.h"
 #include "OOShaderUniformMethodType.h"
 #include "oo_test.hpp"
@@ -54,11 +54,11 @@ struct OracleRow {
 
 // The matcher's classification of a by-name row's method (its declared result
 // and argument).
-std::optional<OracleRow> Oracle(const OOEntityByNameRow& row) {
+std::optional<OracleRow> Oracle(const oo::EntityByNameRow& row) {
   const bool voidResult = row.result == oo::ValueType::kVoid;
   const bool plistResult = row.result == oo::ValueType::kPList;
   switch (row.argument) {
-    case OOEntityByNameArgument::kNone:
+    case oo::EntityByNameArgument::kNone:
       if (voidResult)
         return OracleRow{OOJSCallEntityMethodForm::kVoidVoid,
                          kOOShaderUniformTypeInvalid};
@@ -67,7 +67,7 @@ std::optional<OracleRow> Oracle(const OOEntityByNameRow& row) {
                          kOOShaderUniformTypeInvalid};
       return OracleRow{OOJSCallEntityMethodForm::kTyped,
                        oo::ShaderUniformTypeOf(row.result)};
-    case OOEntityByNameArgument::kString:
+    case oo::EntityByNameArgument::kString:
       if (voidResult)
         return OracleRow{OOJSCallEntityMethodForm::kVoidString,
                          kOOShaderUniformTypeInvalid};
@@ -75,7 +75,7 @@ std::optional<OracleRow> Oracle(const OOEntityByNameRow& row) {
         return OracleRow{OOJSCallEntityMethodForm::kPListString,
                          kOOShaderUniformTypeInvalid};
       return std::nullopt;  // called with its argument missing
-    case OOEntityByNameArgument::kPList:
+    case oo::EntityByNameArgument::kPList:
       return std::nullopt;  // an argument the templates do not take
   }
   return std::nullopt;
@@ -84,7 +84,7 @@ std::optional<OracleRow> Oracle(const OOEntityByNameRow& row) {
 // The safe set's by-name rows.
 std::map<std::string, OracleRow> OracleSafeSet() {
   std::map<std::string, OracleRow> result;
-  for (const OOEntityByNameRow& row : oo::EntityByNameRows()) {
+  for (const oo::EntityByNameRow& row : oo::EntityByNameRows()) {
     std::string bare = row.name;
     if (!bare.empty() && bare.back() == ':') bare.pop_back();
     if (kExcluded.contains(bare)) continue;
@@ -163,7 +163,7 @@ OO_TEST(everyNameIsAnsweredByTheCxxEntity) {
     std::string uncovered, twice, notInTable, typedMismatch;
     for (const OOJSCallEntityMethodRow& row : kOOJSCallEntityMethods) {
       const bool byName = (oo::EntityByNameRowNamed(row.name) != nullptr);
-      const OOEntityFacadeRow* facade = oo::EntityFacadeRowNamed(row.name);
+      const oo::EntityFacadeRow* facade = oo::EntityFacadeRowNamed(row.name);
       if (!byName && facade == nullptr)
         uncovered += std::string(" ") + row.name;
       if (byName && facade != nullptr) twice += std::string(" ") + row.name;
@@ -184,7 +184,7 @@ OO_TEST(everyNameIsAnsweredByTheCxxEntity) {
             typedMismatch += std::string(" ") + row.name;
       }
     }
-    for (const OOEntityFacadeRow& facade : oo::EntityFacadeRows()) {
+    for (const oo::EntityFacadeRow& facade : oo::EntityFacadeRows()) {
       if (!names.contains(facade.name))
         notInTable += std::string(" ") + facade.name;
     }

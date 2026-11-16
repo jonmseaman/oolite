@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 
 #include "OOJSEntity.h"
 #include "OOJavaScriptEngine.h"
-#include "OOSunEntity.h"
+#include "SunEntity.h"
 
 static JSClassID sSunClassID;
 
@@ -74,11 +74,11 @@ namespace {
 // C++ entity, read by OOJSEntityGetEntityOfClass for the Sun class); null for a
 // stale entity.
 bool JSSunGetSunEntity(JSContext* context, JSValueConst inObject,
-                       OOSunEntity** outObject) {
+                       oo::SunEntity** outObject) {
   Entity* entity = nullptr;
   if (!OOJSEntityGetEntityOfClass(context, inObject, sSunClassID, &entity))
     return false;
-  *outObject = dynamic_cast<OOSunEntity*>(entity);
+  *outObject = dynamic_cast<oo::SunEntity*>(entity);
   return true;
 }
 }  // namespace
@@ -109,7 +109,7 @@ std::optional<std::string> OOJSSunJSClassName() { return std::string("Sun"); }
 static JSValue SunGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOSunEntity* sun = nullptr;
+  oo::SunEntity* sun = nullptr;
 
   if (!JSSunGetSunEntity(context, thisObj, &sun)) [[unlikely]]
     return OOJSNativeFailure(context);
@@ -150,7 +150,7 @@ static JSValue SunGetProperty(OOJS_GETTER_ARGS) {
 static JSValue SunGoNova(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOSunEntity* sun = nullptr;
+  oo::SunEntity* sun = nullptr;
   double delay = 0;
 
   if (!JSSunGetSunEntity(context, OOJS_THIS, &sun)) [[unlikely]]
@@ -171,7 +171,7 @@ static JSValue SunCancelNova(JSContext* context, JSValueConst oojsThis,
                              int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
-  OOSunEntity* sun = nullptr;
+  oo::SunEntity* sun = nullptr;
 
   if (!JSSunGetSunEntity(context, OOJS_THIS, &sun)) [[unlikely]]
     return OOJSNativeFailure(context);

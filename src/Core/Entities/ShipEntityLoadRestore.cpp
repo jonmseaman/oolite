@@ -73,8 +73,8 @@ constexpr std::string_view kKeyEscortGroupId = "escort_group";
 namespace {
 
 void StripIgnoredKeys(oo::PList::Dict& dict);
-std::size_t GroupIDForGroup(OOShipGroup* group, OOShipSaveContext& context);
-OOShipGroup* GroupForGroupID(std::size_t groupID, OOShipSaveContext& context);
+std::size_t GroupIDForGroup(OOShipGroup* group, oo::ShipSaveContext& context);
+OOShipGroup* GroupForGroupID(std::size_t groupID, oo::ShipSaveContext& context);
 oo::PList::Dict DictFrom(const oo::PList& plist);
 oo::PList ArrayFromStrings(const std::vector<std::string>& strings);
 std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
@@ -88,9 +88,9 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
  */
 
 oo::PList ShipEntity::savedShipDictionaryWithContext(
-    OOShipSaveContext* context) {
+    oo::ShipSaveContext* context) {
   oo::PList::Dict result;
-  OOShipSaveContext localContext;
+  oo::ShipSaveContext localContext;
   if (context == nullptr) context = &localContext;
 
   result[std::string(kKeyShipKey)] =
@@ -107,11 +107,11 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   updatedShipInfo[std::string(kKeyFuel)] = oo::PList::unsignedInteger(fuel);
   updatedShipInfo[std::string(kKeyBounty)] = oo::PList::unsignedInteger(bounty);
   updatedShipInfo[std::string(kKeyForwardWeapon)] =
-      OOStringFromWeaponType(forward_weapon_type).value_or("");
+      oo::StringFromWeaponType(forward_weapon_type).value_or("");
   updatedShipInfo[std::string(kKeyAftWeapon)] =
-      OOStringFromWeaponType(aft_weapon_type).value_or("");
+      oo::StringFromWeaponType(aft_weapon_type).value_or("");
   updatedShipInfo[std::string(kKeyScanClass)] =
-      OOStringFromScanClass(scanClass);
+      oo::StringFromScanClass(scanClass);
 
   std::vector<std::string> deletes;
   simplifyShipdata(updatedShipInfo, &deletes);
@@ -205,9 +205,9 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
 }
 
 ::ShipEntity* ShipEntity::shipRestoredFromDictionary(
-    const oo::PList& dict, bool fallback, OOShipSaveContext* context) {
+    const oo::PList& dict, bool fallback, oo::ShipSaveContext* context) {
   if (dict.isNull()) return nullptr;
-  OOShipSaveContext localContext;
+  oo::ShipSaveContext localContext;
   if (context == nullptr) context = &localContext;
 
   ::ShipEntity* ship = nullptr;
@@ -378,7 +378,7 @@ void StripIgnoredKeys(oo::PList::Dict& dict) {
   }
 }
 
-std::size_t GroupIDForGroup(OOShipGroup* group, OOShipSaveContext& context) {
+std::size_t GroupIDForGroup(OOShipGroup* group, oo::ShipSaveContext& context) {
   const auto found = context.groupIDs.find(group);
   unsigned groupID;
   if (found == context.groupIDs.end()) {
@@ -400,7 +400,8 @@ std::size_t GroupIDForGroup(OOShipGroup* group, OOShipSaveContext& context) {
   return groupID;
 }
 
-OOShipGroup* GroupForGroupID(std::size_t groupID, OOShipSaveContext& context) {
+OOShipGroup* GroupForGroupID(std::size_t groupID,
+                             oo::ShipSaveContext& context) {
   std::shared_ptr<OOShipGroup>& group = context.groupsByID[groupID];
   if (group == nullptr) {
     group = OOShipGroup::groupWithName(std::nullopt);  // -init

@@ -49,18 +49,23 @@
 class TestEntityObject;
 
 // As ShipEntity.h and PlayerEntity.h declare them (the test imports neither).
-enum class OOAlertCondition : std::int32_t {
+namespace oo {
+
+enum class AlertCondition : std::int32_t {
 	kDocked	= 0,
 	kGreen	= 1,
 	kYellow	= 2,
 	kRed		= 3
 };
 
-enum class OOSpeechSettings : std::int32_t {
+enum class SpeechSettings : std::int32_t {
 	kOff = 0,
 	kComms = 1,
 	kAll = 2
 };
+
+}  // namespace oo
+
 
 enum
 {
@@ -126,7 +131,7 @@ public:
 	void setCreditBalance(double value);
 	int getLegalStatus();
 	void setBounty(OOCreditsQuantity amount, oo::LegalStatusReason reason);
-	OOAlertCondition getAlertCondition();
+	oo::AlertCondition getAlertCondition();
 	int getAlertFlags();
 	double escapePodRescueTime();
 	void setEscapePodRescueTime(double seconds);
@@ -144,7 +149,7 @@ public:
 	std::vector<std::string> getRoleWeights();
 	bool endScenario(const std::string &key);
 	void addMessageToReport(const std::string &report);
-	OOSpeechSettings getIsSpeechOn();
+	oo::SpeechSettings getIsSpeechOn();
 	bool replaceShipWithNamedShip(const std::string &shipKey);
 	void setDockTarget(::ShipEntity *entity);
 	void addToAdjustTime(double seconds);
@@ -157,7 +162,7 @@ public:
 	double _credits = {};
 	int _legalStatus = {};
 	oo::LegalStatusReason _bountyReason = {};
-	OOAlertCondition _alertCondition = {};
+	oo::AlertCondition _alertCondition = {};
 	int _alertFlags = {};
 	double _escapePodRescueTime = {};
 	std::size_t _trumbleCount = {};
@@ -167,7 +172,7 @@ public:
 	std::vector<std::string> _events;
 	std::vector<std::string> _report;
 	std::string _endedScenario;
-	OOSpeechSettings _speech = {};
+	oo::SpeechSettings _speech = {};
 	std::string _replacedWith;
 	uint16_t _personality = {};
 	oo::EntityStatus _status = {};
@@ -324,7 +329,7 @@ void PlayerEntity::setBounty(OOCreditsQuantity amount, oo::LegalStatusReason rea
 {
 	_legalStatus = static_cast<int>(amount); _bountyReason = reason;
 }
-OOAlertCondition PlayerEntity::getAlertCondition()  { return _alertCondition; }
+oo::AlertCondition PlayerEntity::getAlertCondition()  { return _alertCondition; }
 int PlayerEntity::getAlertFlags()  { return _alertFlags; }
 double PlayerEntity::escapePodRescueTime()  { return _escapePodRescueTime; }
 void PlayerEntity::setEscapePodRescueTime(double seconds)  { _escapePodRescueTime = seconds; }
@@ -352,7 +357,7 @@ bool PlayerEntity::endScenario(const std::string &key)
 	return key == "oolite-tutorial";
 }
 void PlayerEntity::addMessageToReport(const std::string &report)  { _report.push_back(report); }
-OOSpeechSettings PlayerEntity::getIsSpeechOn()  { return _speech; }
+oo::SpeechSettings PlayerEntity::getIsSpeechOn()  { return _speech; }
 bool PlayerEntity::replaceShipWithNamedShip(const std::string &shipName)
 {
 	_replacedWith = shipName;
@@ -374,16 +379,21 @@ oo::PList Universe::nearbyDestinationsWithinRange(double range)	{ _range = range
 
 
 // The display strings, as PlayerEntity.m and OOConstToString.mm make them, for what the test uses.
-std::optional<std::string> OODisplayRatingStringFromKillCount(unsigned kills)
+namespace oo {
+
+std::optional<std::string> DisplayRatingStringFromKillCount(unsigned kills)
 {
 	return kills >= 8 ? std::optional<std::string>("Poor") : std::optional<std::string>("Harmless");
 }
 
-std::optional<std::string> OODisplayStringFromLegalStatus(int legalStatus)
+std::optional<std::string> DisplayStringFromLegalStatus(int legalStatus)
 {
 	if (legalStatus < 0)  return std::nullopt;
 	return legalStatus == 0 ? "Clean" : (legalStatus <= 50 ? "Offender" : "Fugitive");
 }
+
+}  // namespace oo
+
 
 std::string DockingClearanceStatusToString(OODockingClearanceStatus dockingClearanceStatus)
 {
@@ -629,7 +639,7 @@ void SetUpContext()
 	sPlayer->_score = 5;
 	sPlayer->_credits = 100.5;
 	sPlayer->_legalStatus = 30;
-	sPlayer->_alertCondition = OOAlertCondition::kYellow;
+	sPlayer->_alertCondition = oo::AlertCondition::kYellow;
 	sPlayer->_alertFlags = ALERT_FLAG_MASS_LOCK | ALERT_FLAG_ENERGY;
 	sPlayer->_escapePodRescueTime = 3600;
 	sPlayer->_trumbleCount = 12;
@@ -806,11 +816,11 @@ OO_TEST(messages)
 	OO_CHECK_EVAL("player.addMessageToArrivalReport()", "threw: bad arguments: Player.addMessageToArrivalReport(0) - / string (arrival message)");
 
 	// Speech: spoken only when speech is on for comms; stopped only while speaking.
-	sPlayer->_speech = OOSpeechSettings::kOff;
+	sPlayer->_speech = oo::SpeechSettings::kOff;
 	OO_CHECK_EVAL("player.audioMessage('quiet')", "undefined");
-	sPlayer->_speech = OOSpeechSettings::kComms;
+	sPlayer->_speech = oo::SpeechSettings::kComms;
 	OO_CHECK_EVAL("player.audioMessage('loud')", "undefined");
-	sPlayer->_speech = OOSpeechSettings::kAll;
+	sPlayer->_speech = oo::SpeechSettings::kAll;
 	OO_CHECK_EVAL("player.audioMessage('louder')", "undefined");
 	OO_CHECK(sUniverse->_spoken == (std::vector<std::string>{ "loud", "louder" }));
 	OO_CHECK_EVAL("player.audioMessage()", "threw: bad arguments: Player.audioMessage(0) - / audiomessage (string)");

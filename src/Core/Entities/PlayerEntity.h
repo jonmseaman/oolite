@@ -45,10 +45,10 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "GuiDisplayGen.h"
+#include "LaserShotEntity.h"
 #include "OOCommodityMarket.h"
 #include "OOFoundation.h"
 #include "OOJSPropID.h"
-#include "OOLaserShotEntity.h"
 #include "OOTrumble.h"
 #include "OOTypes.h"
 #include "ShipEntity.h"
@@ -85,13 +85,18 @@ inline constexpr int CUSTOM_VIEW_MAX_ZOOM_OUT = 25;
 #include "OOEntityEnums.h"
 #include "OOEnumFlags.h"
 
-enum class OOPrimedEquipmentMode : int { kActivated, kMode };
+namespace oo {
 
-enum class OOSpeechSettings : std::int32_t { kOff = 0, kComms = 1, kAll = 2 };
+enum class PrimedEquipmentMode : int { kActivated, kMode };
+
+enum class SpeechSettings : std::int32_t { kOff = 0, kComms = 1, kAll = 2 };
+
+}  // namespace oo
+
 // The numbers the saved game's speech_on sees.
-static_assert(oo::ToUnderlying(OOSpeechSettings::kOff) == 0);
-static_assert(oo::ToUnderlying(OOSpeechSettings::kComms) == 1);
-static_assert(oo::ToUnderlying(OOSpeechSettings::kAll) == 2);
+static_assert(oo::ToUnderlying(oo::SpeechSettings::kOff) == 0);
+static_assert(oo::ToUnderlying(oo::SpeechSettings::kComms) == 1);
+static_assert(oo::ToUnderlying(oo::SpeechSettings::kAll) == 2);
 
 // When fully zoomed in, chart shows area of galaxy that's 64x64 galaxy units.
 #define CHART_WIDTH_AT_MAX_ZOOM 64.0
@@ -172,20 +177,24 @@ inline constexpr int GUI_ROW_PLANET_FINDER = 20;
 
 // The row the first item of a list of endOfList rows goes on: the list
 // centred in the GUI's rows.
-constexpr int OOGUIFirstRow(int endOfList) {
+namespace oo {
+
+constexpr int GUIFirstRow(int endOfList) {
   return (GUI_DEFAULT_ROWS - endOfList) / 2;
 }
 
 // The row an item of such a list goes on (the menu is moved up four rows).
-constexpr int OOGUIListRow(int endOfList, int item) {
-  return OOGUIFirstRow(endOfList) - 4 + item;
+constexpr int GUIListRow(int endOfList, int item) {
+  return GUIFirstRow(endOfList) - 4 + item;
 }
 
-constexpr int OOGUIOptionsRow(int item) {
-  return OOGUIListRow(GUI_ROW_OPTIONS_END_OF_LIST, item);
+constexpr int GUIOptionsRow(int item) {
+  return GUIListRow(GUI_ROW_OPTIONS_END_OF_LIST, item);
 }
 
-static_assert(OOGUIFirstRow(GUI_ROW_OPTIONS_END_OF_LIST) >= 0,
+}  // namespace oo
+
+static_assert(oo::GUIFirstRow(GUI_ROW_OPTIONS_END_OF_LIST) >= 0,
               "Too many items in OPTIONS list!");
 
 inline constexpr int GUI_ROW_GAMEOPTIONS_AUTOSAVE = 0;
@@ -240,35 +249,46 @@ inline constexpr int GUI_ROW_GAMEOPTIONS_SPACER3 =
 inline constexpr int GUI_ROW_GAMEOPTIONS_BACK = GUI_ROW_GAMEOPTIONS_SPACER3 + 1;
 inline constexpr int GUI_ROW_GAMEOPTIONS_END_OF_LIST =
     GUI_ROW_GAMEOPTIONS_BACK + 1;
-static_assert(OOGUIFirstRow(GUI_ROW_GAMEOPTIONS_END_OF_LIST) >= 0,
+static_assert(oo::GUIFirstRow(GUI_ROW_GAMEOPTIONS_END_OF_LIST) >= 0,
               "Too many items in GAMEOPTIONS list!");
 
-constexpr int OOGUIGameOptionsRow(int item) {
-  return OOGUIListRow(GUI_ROW_GAMEOPTIONS_END_OF_LIST, item);
+namespace oo {
+
+constexpr int GUIGameOptionsRow(int item) {
+  return GUIListRow(GUI_ROW_GAMEOPTIONS_END_OF_LIST, item);
 }
+
+}  // namespace oo
 
 inline constexpr int GUI_ROW_GAMEOPTIONS_HDRPAPERWHITE =
     GUI_ROW_GAMEOPTIONS_WIREFRAMEGRAPHICS;
 inline constexpr int GUI_ROW_GAMEOPTIONS_HDRMAXBRIGHTNESS =
     GUI_ROW_GAMEOPTIONS_DETAIL;
 
-enum class OOFuelScoopStatus : std::int32_t {
+namespace oo {
+
+enum class FuelScoopStatus : std::int32_t {
   // Exposed to shaders.
   kNotInstalled = 0,
   kFullHold,
   kOkay,
   kActive
 };
+
+}  // namespace oo
+
 // The numbers the shader binding sees.
-static_assert(oo::ToUnderlying(OOFuelScoopStatus::kNotInstalled) == 0);
-static_assert(oo::ToUnderlying(OOFuelScoopStatus::kFullHold) == 1);
-static_assert(oo::ToUnderlying(OOFuelScoopStatus::kOkay) == 2);
-static_assert(oo::ToUnderlying(OOFuelScoopStatus::kActive) == 3);
+static_assert(oo::ToUnderlying(oo::FuelScoopStatus::kNotInstalled) == 0);
+static_assert(oo::ToUnderlying(oo::FuelScoopStatus::kFullHold) == 1);
+static_assert(oo::ToUnderlying(oo::FuelScoopStatus::kOkay) == 2);
+static_assert(oo::ToUnderlying(oo::FuelScoopStatus::kActive) == 3);
 
 // The bits of PlayerEntity's alert flags, which the player keeps as a number
 // (getAlertFlags(), the by-name "alertFlags"). kYellowLimit is not a bit: flags
 // above it are condition red.
-enum class OOAlertFlags : std::uint16_t {
+namespace oo {
+
+enum class AlertFlags : std::uint16_t {
   kNone = 0,
   kDocked = 0x010,
   kMassLock = 0x020,
@@ -278,47 +298,62 @@ enum class OOAlertFlags : std::uint16_t {
   kEnergy = 0x100,
   kHostiles = 0x200
 };
-constexpr std::true_type OOEnableFlagOperators(OOAlertFlags);
+
+constexpr std::true_type OOEnableFlagOperators(AlertFlags);
+
+}  // namespace oo
 
 // The numbers a by-name "alertFlags" call answers.
-static_assert(oo::ToUnderlying(OOAlertFlags::kDocked) == 0x010);
-static_assert(oo::ToUnderlying(OOAlertFlags::kMassLock) == 0x020);
-static_assert(oo::ToUnderlying(OOAlertFlags::kYellowLimit) == 0x03f);
-static_assert(oo::ToUnderlying(OOAlertFlags::kTemp) == 0x040);
-static_assert(oo::ToUnderlying(OOAlertFlags::kAlt) == 0x080);
-static_assert(oo::ToUnderlying(OOAlertFlags::kEnergy) == 0x100);
-static_assert(oo::ToUnderlying(OOAlertFlags::kHostiles) == 0x200);
+static_assert(oo::ToUnderlying(oo::AlertFlags::kDocked) == 0x010);
+static_assert(oo::ToUnderlying(oo::AlertFlags::kMassLock) == 0x020);
+static_assert(oo::ToUnderlying(oo::AlertFlags::kYellowLimit) == 0x03f);
+static_assert(oo::ToUnderlying(oo::AlertFlags::kTemp) == 0x040);
+static_assert(oo::ToUnderlying(oo::AlertFlags::kAlt) == 0x080);
+static_assert(oo::ToUnderlying(oo::AlertFlags::kEnergy) == 0x100);
+static_assert(oo::ToUnderlying(oo::AlertFlags::kHostiles) == 0x200);
 
-inline bool OOAlertFlagIsOn(int flags, OOAlertFlags flag) noexcept {
+namespace oo {
+
+inline bool AlertFlagIsOn(int flags, AlertFlags flag) noexcept {
   return (flags & oo::ToUnderlying(flag)) != 0;
 }
 
-enum class OOMissileStatus : std::int32_t {
+enum class MissileStatus : std::int32_t {
   // Exposed to shaders.
   kSafe,
   kArmed,
   kTargetLocked
 };
-// The numbers the shader binding sees.
-static_assert(oo::ToUnderlying(OOMissileStatus::kSafe) == 0);
-static_assert(oo::ToUnderlying(OOMissileStatus::kArmed) == 1);
-static_assert(oo::ToUnderlying(OOMissileStatus::kTargetLocked) == 2);
 
-enum class OOPlayerFleeingStatus : std::int32_t {
+}  // namespace oo
+
+// The numbers the shader binding sees.
+static_assert(oo::ToUnderlying(oo::MissileStatus::kSafe) == 0);
+static_assert(oo::ToUnderlying(oo::MissileStatus::kArmed) == 1);
+static_assert(oo::ToUnderlying(oo::MissileStatus::kTargetLocked) == 2);
+
+namespace oo {
+
+enum class PlayerFleeingStatus : std::int32_t {
   kUnlikely = -1,
   kNone = 0,
   kMaybe = 1,
   kCargo = 2,
   kLikely = 3
 };
-// The numbers JS sees.
-static_assert(oo::ToUnderlying(OOPlayerFleeingStatus::kUnlikely) == -1);
-static_assert(oo::ToUnderlying(OOPlayerFleeingStatus::kNone) == 0);
-static_assert(oo::ToUnderlying(OOPlayerFleeingStatus::kMaybe) == 1);
-static_assert(oo::ToUnderlying(OOPlayerFleeingStatus::kCargo) == 2);
-static_assert(oo::ToUnderlying(OOPlayerFleeingStatus::kLikely) == 3);
 
-enum class OOMarketFilterMode : std::int32_t {
+}  // namespace oo
+
+// The numbers JS sees.
+static_assert(oo::ToUnderlying(oo::PlayerFleeingStatus::kUnlikely) == -1);
+static_assert(oo::ToUnderlying(oo::PlayerFleeingStatus::kNone) == 0);
+static_assert(oo::ToUnderlying(oo::PlayerFleeingStatus::kMaybe) == 1);
+static_assert(oo::ToUnderlying(oo::PlayerFleeingStatus::kCargo) == 2);
+static_assert(oo::ToUnderlying(oo::PlayerFleeingStatus::kLikely) == 3);
+
+namespace oo {
+
+enum class MarketFilterMode : std::int32_t {
   kOff = 0,
   kTrade = 1,
   kHold = 2,
@@ -327,15 +362,20 @@ enum class OOMarketFilterMode : std::int32_t {
   kRestricted = 5  // import or export
 };
 // The number of modes (the description keys oolite-market-filter-0 to -5).
-inline constexpr std::size_t kOOMarketFilterModeCount = 6;
-static_assert(oo::ToUnderlying(OOMarketFilterMode::kOff) == 0);
-static_assert(oo::ToUnderlying(OOMarketFilterMode::kTrade) == 1);
-static_assert(oo::ToUnderlying(OOMarketFilterMode::kHold) == 2);
-static_assert(oo::ToUnderlying(OOMarketFilterMode::kStock) == 3);
-static_assert(oo::ToUnderlying(OOMarketFilterMode::kLegal) == 4);
-static_assert(oo::ToUnderlying(OOMarketFilterMode::kRestricted) == 5);
+inline constexpr std::size_t kMarketFilterModeCount = 6;
 
-enum class OOMarketSorterMode : std::int32_t {
+}  // namespace oo
+
+static_assert(oo::ToUnderlying(oo::MarketFilterMode::kOff) == 0);
+static_assert(oo::ToUnderlying(oo::MarketFilterMode::kTrade) == 1);
+static_assert(oo::ToUnderlying(oo::MarketFilterMode::kHold) == 2);
+static_assert(oo::ToUnderlying(oo::MarketFilterMode::kStock) == 3);
+static_assert(oo::ToUnderlying(oo::MarketFilterMode::kLegal) == 4);
+static_assert(oo::ToUnderlying(oo::MarketFilterMode::kRestricted) == 5);
+
+namespace oo {
+
+enum class MarketSorterMode : std::int32_t {
   kOff = 0,
   kAlpha = 1,
   kPrice = 2,
@@ -344,13 +384,16 @@ enum class OOMarketSorterMode : std::int32_t {
   kUnit = 5
 };
 // The number of modes (the description keys oolite-market-sorter-0 to -5).
-inline constexpr std::size_t kOOMarketSorterModeCount = 6;
-static_assert(oo::ToUnderlying(OOMarketSorterMode::kOff) == 0);
-static_assert(oo::ToUnderlying(OOMarketSorterMode::kAlpha) == 1);
-static_assert(oo::ToUnderlying(OOMarketSorterMode::kPrice) == 2);
-static_assert(oo::ToUnderlying(OOMarketSorterMode::kStock) == 3);
-static_assert(oo::ToUnderlying(OOMarketSorterMode::kHold) == 4);
-static_assert(oo::ToUnderlying(OOMarketSorterMode::kUnit) == 5);
+inline constexpr std::size_t kMarketSorterModeCount = 6;
+
+}  // namespace oo
+
+static_assert(oo::ToUnderlying(oo::MarketSorterMode::kOff) == 0);
+static_assert(oo::ToUnderlying(oo::MarketSorterMode::kAlpha) == 1);
+static_assert(oo::ToUnderlying(oo::MarketSorterMode::kPrice) == 2);
+static_assert(oo::ToUnderlying(oo::MarketSorterMode::kStock) == 3);
+static_assert(oo::ToUnderlying(oo::MarketSorterMode::kHold) == 4);
+static_assert(oo::ToUnderlying(oo::MarketSorterMode::kUnit) == 5);
 
 inline constexpr float ECM_ENERGY_DRAIN_FACTOR = 20.0f;
 inline constexpr float ECM_DURATION = 2.5f;
@@ -456,7 +499,7 @@ class PlayerEntity : public ShipEntity {
   void willDealloc();
 
   // Members named for a data member the player keeps.
-  OOAlertCondition alertCondition() override;
+  oo::AlertCondition alertCondition() override;
   int legalStatus() override;
   void suppressTargetLost() override;
   JSClassID jsClassID() override;
@@ -668,9 +711,9 @@ class PlayerEntity : public ShipEntity {
   std::string dial_fpsinfo();
   std::string dial_objinfo();
   unsigned countMissiles();
-  virtual OOMissileStatus dialMissileStatus();
+  virtual oo::MissileStatus dialMissileStatus();
   bool canScoop(::ShipEntity* other) override;
-  virtual OOFuelScoopStatus dialFuelScoopStatus();
+  virtual oo::FuelScoopStatus dialFuelScoopStatus();
   virtual float fuelLeakRate();
   virtual void setFuelLeakRate(float value);
   std::vector<std::string>* getCommLog();
@@ -720,13 +763,13 @@ class PlayerEntity : public ShipEntity {
   void selectNextMissile();
   void clearAlertFlags();
   int getAlertFlags();
-  void setAlertFlag(OOAlertFlags flag, bool value);
-  OOAlertCondition realAlertCondition() override;
+  void setAlertFlag(oo::AlertFlags flag, bool value);
+  oo::AlertCondition realAlertCondition() override;
 
   // alert condition, AI messages, mounting and firing missiles and mines, the
   // cloak, ECM, energy units, the main weapons.
-  virtual OOAlertCondition getAlertCondition();
-  virtual OOPlayerFleeingStatus fleeingStatus();
+  virtual oo::AlertCondition getAlertCondition();
+  virtual oo::PlayerFleeingStatus fleeingStatus();
   void interpretAIMessage(const std::string& message) override;
   bool mountMissile(::ShipEntity* missile);
   bool mountMissileWithRole(const std::string& role);
@@ -747,8 +790,8 @@ class PlayerEntity : public ShipEntity {
   using ShipEntity::fireMainWeapon;  // the ship's fireMainWeapon(range),
                                      // another selector
   bool fireMainWeapon();
-  OOWeaponType weaponForFacing(OOWeaponFacing facing);
-  OOWeaponType currentWeapon();
+  oo::WeaponType weaponForFacing(OOWeaponFacing facing);
+  oo::WeaponType currentWeapon();
 
   // hit testing, damage, the doppelganger, the escape capsule, dumping cargo,
   // bounty.
@@ -810,7 +853,8 @@ class PlayerEntity : public ShipEntity {
   std::optional<std::string> primedEquipmentName(std::ptrdiff_t offset);
   virtual std::string currentPrimedEquipment();
   virtual bool setPrimedEquipment(const std::string& eqKey, bool showMsg);
-  void activatePrimableEquipment(std::size_t index, OOPrimedEquipmentMode mode);
+  void activatePrimableEquipment(std::size_t index,
+                                 oo::PrimedEquipmentMode mode);
   virtual std::optional<std::string> fastEquipmentA();
   virtual std::optional<std::string> fastEquipmentB();
   virtual void setFastEquipmentA(const std::optional<std::string>& eqKey);
@@ -907,7 +951,7 @@ class PlayerEntity : public ShipEntity {
   bool tryBuyingCommodity(const std::string& index, bool all);
   bool trySellingCommodity(const std::string& index, bool all);
   bool isMining() override;
-  OOSpeechSettings getIsSpeechOn();
+  oo::SpeechSettings getIsSpeechOn();
   bool canAddEquipment(const std::string& equipmentKey,
                        const std::string& context) override;
   bool addEquipmentItem(const std::string& equipmentKey,
@@ -927,7 +971,7 @@ class PlayerEntity : public ShipEntity {
                                           // includeWeapons, loading), another
                                           // selector
   bool hasOneEquipmentItem(const std::string& itemKey, bool includeMissiles);
-  bool hasPrimaryWeapon(OOWeaponType weaponType) override;
+  bool hasPrimaryWeapon(oo::WeaponType weaponType) override;
   bool removeExternalStore(::OOEquipmentType* eqType) override;
   bool removeFromPylon(std::size_t pylon);
   std::size_t parcelCount() override;
@@ -1066,7 +1110,8 @@ class PlayerEntity : public ShipEntity {
   bool removeMissionDestinationMarker(const oo::PList& marker);
   oo::PList getMissionDestinations();
   oo::PList::Dict* shipyardRecord();
-  void setLastShot(const std::vector<std::shared_ptr<OOLaserShotEntity>>& shot);
+  void setLastShot(
+      const std::vector<std::shared_ptr<oo::LaserShotEntity>>& shot);
   void clearExtraMissionKeys();
   void setExtraMissionKeys(const oo::PList& keys);
   void clearExtraGuiScreenKeys(oo::GUIScreenID gui, const std::string& key);
@@ -1476,9 +1521,9 @@ class PlayerEntity : public ShipEntity {
   void blowUpStation();
   virtual void sendAllShipsAway();
   void addPlanet(const std::string& planetKey);
-  virtual ::OOPlanetEntity* addPlanetEntity(const std::string& planetKey);
+  virtual ::oo::PlanetEntity* addPlanetEntity(const std::string& planetKey);
   void addMoon(const std::string& moonKey);
-  virtual ::OOPlanetEntity* addMoonEntity(const std::string& moonKey);
+  virtual ::oo::PlanetEntity* addMoonEntity(const std::string& moonKey);
   void debugOn();
   void debugOff();
   void debugMessage(const std::string& args);
@@ -1696,8 +1741,8 @@ class PlayerEntity : public ShipEntity {
 
   std::ptrdiff_t marketOffset = {};
   std::optional<std::string> marketSelectedCommodity;
-  OOMarketFilterMode marketFilterMode = {};
-  OOMarketSorterMode marketSorterMode = {};
+  oo::MarketFilterMode marketFilterMode = {};
+  oo::MarketSorterMode marketSorterMode = {};
 
   std::weak_ptr<Entity>
       _dockedStation;  // a weak reference to the station's C++ part
@@ -1733,10 +1778,10 @@ class PlayerEntity : public ShipEntity {
 
   oo::GUIScreenID gui_screen = {};
   std::uint16_t alertFlags = {};              // OOAlertFlags bits
-  OOAlertCondition alertConditionLevel = {};  // the ivar alertCondition
-  OOAlertCondition lastScriptAlertCondition = {};
-  OOPlayerFleeingStatus fleeing_status = {};
-  OOMissileStatus missile_status = {};
+  oo::AlertCondition alertConditionLevel = {};  // the ivar alertCondition
+  oo::AlertCondition lastScriptAlertCondition = {};
+  oo::PlayerFleeingStatus fleeing_status = {};
+  oo::MissileStatus missile_status = {};
   std::size_t activeMissile = {};
   std::size_t primedEquipment = {};
   std::optional<std::string> _fastEquipmentA;  // nullopt = never set (was nil)
@@ -2040,7 +2085,7 @@ class PlayerEntity : public ShipEntity {
   unsigned int voice_no = {};
   bool voice_gender_m = {};
 #endif
-  OOSpeechSettings isSpeechOn = {};
+  oo::SpeechSettings isSpeechOn = {};
 
   // For PlayerEntity (StickMapper)
   int selFunctionIdx = {};
@@ -2070,7 +2115,7 @@ class PlayerEntity : public ShipEntity {
 
   oo::EntityHold
       demoShip;  // Used while docked to maintain demo ship rotation. (held)
-  std::vector<std::shared_ptr<OOLaserShotEntity>>
+  std::vector<std::shared_ptr<oo::LaserShotEntity>>
       lastShot;  // used to correctly position laser shots on first frame of
                  // firing
 
@@ -2086,19 +2131,25 @@ class PlayerEntity : public ShipEntity {
 /*	Use PLAYER to refer to the shared player object in cases where it is
         assumed to exist (i.e., except during early initialization).
 */
-inline PlayerEntity* OOGetPlayer() INLINE_CONST_FUNC;
+// The shared player, defined in PlayerEntity.cpp; read through oo::GetPlayer().
+extern PlayerEntity* gOOPlayer;
 
-inline PlayerEntity* OOGetPlayer() {
-  extern PlayerEntity* gOOPlayer;
+namespace oo {
+
+inline PlayerEntity* GetPlayer() INLINE_CONST_FUNC;
+
+inline PlayerEntity* GetPlayer() {
 #if OO_DEBUG
   OOCAssert(
-      gOOPlayer != nullptr,
+      ::gOOPlayer != nullptr,
       "PLAYER used when PlayerEntity::sharedPlayer() has not been called.");
 #endif
-  return gOOPlayer;
+  return ::gOOPlayer;
 }
 
-#define PLAYER OOGetPlayer()
+}  // namespace oo
+
+#define PLAYER oo::GetPlayer()
 
 #define KILOGRAMS_PER_POD 1000
 inline constexpr auto MAX_KILOGRAMS_IN_SAFE = ((KILOGRAMS_PER_POD / 2) - 1);
@@ -2108,16 +2159,26 @@ inline constexpr auto MAX_GRAMS_IN_SAFE = ((GRAMS_PER_POD / 2) - 1);
 // C++ forms, defined in OOConstToString.cpp: std::string results
 // (never nil), const std::string & parameters (nil arrived as "" and matched
 // nothing: the defaults).
-std::string OOStringFromGUIScreenID(oo::GUIScreenID screen);
-oo::GUIScreenID OOGUIScreenIDFromString(const std::string& string);
+namespace oo {
 
-oo::GalacticHyperspaceBehaviour OOGalacticHyperspaceBehaviourFromString(
+std::string StringFromGUIScreenID(oo::GUIScreenID screen);
+oo::GUIScreenID GUIScreenIDFromString(const std::string& string);
+
+oo::GalacticHyperspaceBehaviour GalacticHyperspaceBehaviourFromString(
     const std::string& string);
-std::string OOStringFromGalacticHyperspaceBehaviour(
+std::string StringFromGalacticHyperspaceBehaviour(
     oo::GalacticHyperspaceBehaviour behaviour);
 
 // Rating and legal-status names from descriptions.plist; nullopt: missing (was
 // nil).
-std::optional<std::string> OODisplayRatingStringFromKillCount(unsigned kills);
+std::optional<std::string> DisplayRatingStringFromKillCount(unsigned kills);
+
+}  // namespace oo
+
 std::string KillCountToRatingAndKillString(unsigned kills);
-std::optional<std::string> OODisplayStringFromLegalStatus(int legalStatus);
+
+namespace oo {
+
+std::optional<std::string> DisplayStringFromLegalStatus(int legalStatus);
+
+}  // namespace oo

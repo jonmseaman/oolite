@@ -15,7 +15,7 @@
 
 #include "CollisionRegion.h"
 #include "Entity.h"
-#include "OOSunEntity.h"
+#include "SunEntity.h"
 #include "PlayerEntity.h"  // the stand-in PLAYER
 extern PlayerEntity* gOOPlayer;
 #include <string>
@@ -169,10 +169,10 @@ OO_TEST(shadowGeometry) {
   {
     // The function reads only Entity members of the sun, which is C++: a C++
     // sun with the same position and radius.
-    std::shared_ptr<OOSunEntity> sunRef = oo::makeShared<OOSunEntity>();
+    std::shared_ptr<oo::SunEntity> sunRef = oo::makeShared<oo::SunEntity>();
     sunRef->position = make_HPvector(0, 0, 10000);
     sunRef->collision_radius = 10;
-    OOSunEntity* sun = sunRef.get();
+    oo::SunEntity* sun = sunRef.get();
     Entity* between = MakeEntity(make_HPvector(0, 0, 100), 50);
     Entity* behind = MakeEntity(make_HPvector(0, 0, -100), 50);
     Entity* small = MakeEntity(make_HPvector(0, 0, 100), 0.5f);

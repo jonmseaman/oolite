@@ -43,7 +43,9 @@ public:
 /*	A plume whose scale has x = -1 raises from scale(), one with x = -2 throws a C++ exception, so the
 	test sees what an exception under a native becomes.
 */
-class OOExhaustPlumeEntity : public Entity
+namespace oo {
+
+class ExhaustPlumeEntity : public Entity
 {
 public:
 	Vector scale();
@@ -55,6 +57,9 @@ public:
 
 	Vector _scale = {};
 };
+
+}  // namespace oo
+
 
 
 // What an entity's JS object holds: a weak reference to the C++ entity.
@@ -78,9 +83,9 @@ public:
 class ShipEntity : public Entity
 {
 public:
-	void removeExhaust(OOExhaustPlumeEntity *exhaust);
+	void removeExhaust(oo::ExhaustPlumeEntity *exhaust);
 
-	OOExhaustPlumeEntity *_removed = nullptr;
+	oo::ExhaustPlumeEntity *_removed = nullptr;
 };
 
 void InitOOJSExhaustPlume(JSContext* context, JSValueConst global);
@@ -99,7 +104,7 @@ bool OOJSExhaustPlumeIsVisibleToScripts(void);
 #include <string>
 
 
-void ShipEntity::removeExhaust(OOExhaustPlumeEntity *exhaust)  { _removed = exhaust; }
+void ShipEntity::removeExhaust(oo::ExhaustPlumeEntity *exhaust)  { _removed = exhaust; }
 
 
 // The root's JS category, as the game's asks the C++ part:
@@ -114,20 +119,20 @@ JSClassID Entity::jsClassID()  { return 0; }
 std::optional<std::string> Entity::jsClassName()  { return std::string("Entity"); }
 bool Entity::isVisibleToScripts()  { return false; }
 
-Vector OOExhaustPlumeEntity::scale()
+Vector oo::ExhaustPlumeEntity::scale()
 {
 	if (_scale.x == -1)  oo::RaiseException(oo::InvalidArgumentException, "scale %s", "boom");
 	if (_scale.x == -2)  throw std::runtime_error("cxx boom");
 	return _scale;
 }
 
-void OOExhaustPlumeEntity::setScale(Vector scale)  { _scale = scale; }
+void oo::ExhaustPlumeEntity::setScale(Vector scale)  { _scale = scale; }
 
 
 // The binding's category, as the C++ class's overrides answer it.
-JSClassID OOExhaustPlumeEntity::jsClassID()  { return ::JSExhaustPlumeClassID(); }
-std::optional<std::string> OOExhaustPlumeEntity::jsClassName()  { return ::OOJSExhaustPlumeJSClassName(); }
-bool OOExhaustPlumeEntity::isVisibleToScripts()  { return ::OOJSExhaustPlumeIsVisibleToScripts(); }
+JSClassID oo::ExhaustPlumeEntity::jsClassID()  { return ::JSExhaustPlumeClassID(); }
+std::optional<std::string> oo::ExhaustPlumeEntity::jsClassName()  { return ::OOJSExhaustPlumeJSClassName(); }
+bool oo::ExhaustPlumeEntity::isVisibleToScripts()  { return ::OOJSExhaustPlumeIsVisibleToScripts(); }
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
@@ -331,7 +336,7 @@ JSRuntime *sRuntime = nullptr;
 JSContext *sContext = nullptr;
 JSValue sGlobal = JS_UNDEFINED;	// held for the life of the test
 TestEntityObject *sPlume = nullptr;						// the plume's object
-OOExhaustPlumeEntity *sPlumePart = nullptr;	// its C++ part
+oo::ExhaustPlumeEntity *sPlumePart = nullptr;	// its C++ part
 TestEntityObject *sShip = nullptr;	// a ship's object and its C++ part
 ShipEntity *sShipPart = nullptr;
 
@@ -382,7 +387,7 @@ void SetUpContext()
 	sShip->_cxxEntity = oo::makeShared<ShipEntity>();
 	sShipPart = static_cast<ShipEntity *>(sShip->_cxxEntity.get());
 	sPlume = oo::test::NewRetained<TestEntityObject>();
-	const std::shared_ptr<OOExhaustPlumeEntity> part = oo::makeShared<OOExhaustPlumeEntity>();
+	const std::shared_ptr<oo::ExhaustPlumeEntity> part = oo::makeShared<oo::ExhaustPlumeEntity>();
 	sPlume->_cxxEntity = part;
 	sPlumePart = part.get();
 	sPlumePart->_scale = make_vector(1, 2, 3.5);

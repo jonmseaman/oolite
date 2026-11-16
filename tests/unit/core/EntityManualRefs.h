@@ -22,7 +22,7 @@ instantiated where the entity's class is complete.
 #include <utility>
 #include <vector>
 
-#include "OOEntityHold.h"
+#include "EntityHold.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Object.hpp"
 

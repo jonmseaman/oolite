@@ -43,6 +43,7 @@
 #include "Behaviour.h"
 #include "Entity.h"
 #include "EntityHelpers.h"
+#include "EntityHold.h"
 #include "EntityOOJavaScriptExtensions.h"  // OOJSEntityJSValue
 #include "EntityPListForeign.h"
 #include "EntityStatus.h"
@@ -51,22 +52,19 @@
 #include "OOCallByName.h"  // oo::ScheduleEntityCall
 #include "OOCharacter.h"
 #include "OOEntityFilterPredicate.h"
-#include "OOEntityHold.h"
 #include "OOFastArithmetic.h"
 #include "OOJSFunction.h"
 #include "OOJSPropID.h"
 #include "OOJavaScriptEngine.h"
 #include "OOMaths.h"
 #include "OOPListGameTypes.h"
-#include "OOPlanetEntity.h"
 #include "OOQuaternion.h"
 #include "OOScript.h"
 #include "OOShipGroup.h"
-#include "OOStellarBody.h"
 #include "OOStringExpander.h"
-#include "OOSunEntity.h"  // IWYU pragma: keep: converting OOSunEntity* to Entity* needs the complete type
 #include "OOTypes.h"
 #include "OOVector.h"
+#include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "ResourceManager.h"
@@ -74,6 +72,8 @@
 #include "ShipDamageType.h"
 #include "ShipEntity.h"
 #include "StationEntity.h"
+#include "StellarBody.h"
+#include "SunEntity.h"  // IWYU pragma: keep: converting OOSunEntity* to Entity* needs the complete type
 #include "Universe.h"
 #include "WormholeEntity.h"
 #include "oofnd/Log.hpp"
@@ -311,7 +311,7 @@ void ShipEntity::performIntercept() {
 }
 
 void ShipEntity::performLandOnPlanet() {
-  ::OOPlanetEntity* nearest = findNearestPlanet();
+  ::oo::PlanetEntity* nearest = findNearestPlanet();
   if (isNearPlanetSurface) {
     _destination = (nearest != nullptr ? nearest->getPosition() : HPVector{});
     behaviour = oo::Behaviour::kLandOnPlanet;
@@ -1355,7 +1355,7 @@ void ShipEntity::fightOrFleeMissile() {
 
 void ShipEntity::setCourseToPlanet() {
   /*- selects the nearest planet it can find -*/
-  ::OOPlanetEntity* the_planet = findNearestPlanetExcludingMoons();
+  ::oo::PlanetEntity* the_planet = findNearestPlanetExcludingMoons();
   if (the_planet) {
     double variation =
         (aegis_status == OOAegisStatus::kNone
@@ -1380,7 +1380,7 @@ void ShipEntity::setCourseToPlanet() {
 
 void ShipEntity::setTakeOffFromPlanet() {
   /*- selects the nearest planet it can find -*/
-  ::OOPlanetEntity* the_planet = findNearestPlanet();
+  ::oo::PlanetEntity* the_planet = findNearestPlanet();
   if (the_planet) {
     _destination = HPvector_add(
         (the_planet != nullptr ? the_planet->getPosition() : HPVector{}),
@@ -1521,7 +1521,7 @@ void ShipEntity::checkAegis() {
         if (shipAI != nullptr) shipAI->message("CLOSE_TO_SUN");
       } else {
         if (shipAI != nullptr) shipAI->message("CLOSE_TO_PLANET");
-        if (OOStellarBodyPlanetType(nearest) == OOStellarBodyType::kMoon) {
+        if (oo::StellarBodyPlanetType(nearest) == oo::StellarBodyType::kMoon) {
           if (shipAI != nullptr) shipAI->message("CLOSE_TO_MOON");
         } else {
           if (shipAI != nullptr) shipAI->message("CLOSE_TO_SECONDARY_PLANET");
@@ -2348,7 +2348,7 @@ void ShipEntity::scanForNearestShipHavingAnyRole(const std::string& scanRoles) {
 void ShipEntity::scanForNearestShipWithScanClass(
     const std::string& scanScanClass) {
   // called by name
-  oo::ScanClass wantedClass = OOScanClassFromString(
+  oo::ScanClass wantedClass = oo::ScanClassFromString(
       scanScanClass);  // the predicate reads an OOScanClass
   scanForNearestShipWithPredicate(HasScanClassPredicate, &wantedClass);
 }
@@ -2388,7 +2388,7 @@ void ShipEntity::scanForNearestShipNotHavingAnyRole(
 void ShipEntity::scanForNearestShipWithoutScanClass(
     const std::string& scanScanClass) {
   // called by name
-  oo::ScanClass wantedClass = OOScanClassFromString(
+  oo::ScanClass wantedClass = oo::ScanClassFromString(
       scanScanClass);  // the predicate reads an OOScanClass
   scanForNearestShipWithNegatedPredicate(HasScanClassPredicate, &wantedClass);
 }

@@ -17,7 +17,7 @@
 */
 
 #include "OOJSCall.h"
-#include "OOEntityCalledByName.h"	// oo::CallEntityByNameTyped, stood in below
+#include "EntityCalledByName.h"	// oo::CallEntityByNameTyped, stood in below
 #include "OOCallByName.h"
 #include "OOMaths.h"
 #include <quickjs.h>
@@ -244,7 +244,7 @@ oo::PList oo::CallEntityByName(Entity *entity, const std::string &name, const st
 
 // The typed call on the C++ table, which callObjC() takes for every typed name of an entity's
 // table: the values the object's methods answered.
-bool oo::CallEntityByNameTyped(Entity *entity, const std::string &name, OOEntityByNameValue &value)
+bool oo::CallEntityByNameTyped(Entity *entity, const std::string &name, oo::EntityByNameValue &value)
 {
 	if (!oo::EntityRespondsToName(entity, name))  return false;
 	if (name == "isPlayer")  value.integer = 1;

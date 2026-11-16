@@ -145,7 +145,7 @@ OO_TEST(made) {
     SetUp();
     Entity* sky = Sky(Dict({{"sky_n_stars", oo::PList(7)}}));
     OO_CHECK(sky != nullptr && SkyPart(sky) != nullptr &&
-             dynamic_cast<OOEntityWithDrawable*>(sky) != nullptr);
+             dynamic_cast<oo::EntityWithDrawable*>(sky) != nullptr);
     OO_CHECK(dynamic_cast<OOSkyDrawable*>(SkyPart(sky)->getDrawable()) !=
              nullptr);
     OO_CHECK(sky->status() == oo::EntityStatus::kEffect);

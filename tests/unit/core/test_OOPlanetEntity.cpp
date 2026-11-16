@@ -17,7 +17,7 @@
 	planet only. Run: bash tools/check-core-tests.sh
 */
 
-#include "OOPlanetEntity.h"
+#include "PlanetEntity.h"
 #include "PlayerEntity.h"	// PLAYER is C++
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
@@ -49,11 +49,11 @@ class TestPlayer : public PlayerEntity
 {
 public:
 	double	_clock = {};
-	OOPlanetEntity	*_nearestPlanet = {};	// the C++ planet
+	oo::PlanetEntity	*_nearestPlanet = {};	// the C++ planet
 
 	HPVector viewpointPosition() override	{ return kZeroHPVector; }
 	double clockTimeAdjusted() override	{ return _clock; }
-	::OOPlanetEntity * findNearestPlanet() override	{ return _nearestPlanet; }
+	::oo::PlanetEntity * findNearestPlanet() override	{ return _nearestPlanet; }
 	OOSystemID systemID() override	{ return 7; }
 };
 
@@ -156,10 +156,10 @@ oo::PList PlanetDict(int radiusKm)
 
 
 // A new C++ planet.
-OOPlanetEntity *Planet(bool atmosphere, int radiusKm = 5000)
+oo::PlanetEntity *Planet(bool atmosphere, int radiusKm = 5000)
 {
 	Random_Seed seed = { 1, 2, 3, 4, 5, 6 };
-	std::shared_ptr<OOPlanetEntity> planet = oo::makeShared<OOPlanetEntity>();
+	std::shared_ptr<oo::PlanetEntity> planet = oo::makeShared<oo::PlanetEntity>();
 	(void)oo::MadeEntity(planet);
 	planet->initFromDictionary(PlanetDict(radiusKm), atmosphere, seed, 7);
 	return planet.get();
@@ -167,9 +167,9 @@ OOPlanetEntity *Planet(bool atmosphere, int radiusKm = 5000)
 
 
 // The miniature version: a new C++ planet.
-OOPlanetEntity *Miniature(OOPlanetEntity *planet)
+oo::PlanetEntity *Miniature(oo::PlanetEntity *planet)
 {
-	std::shared_ptr<OOPlanetEntity> mini = planet->miniatureVersion();
+	std::shared_ptr<oo::PlanetEntity> mini = planet->miniatureVersion();
 	(void)oo::MadeEntity(mini);
 	return mini.get();
 }
@@ -181,15 +181,15 @@ OO_TEST(moon)
 {
 	{
 		SetUp();
-		OOPlanetEntity *moon = Planet(false);
-		OO_CHECK(moon != nullptr && dynamic_cast<OOPlanetEntity *>(static_cast<Entity *>(moon)) != nullptr);
+		oo::PlanetEntity *moon = Planet(false);
+		OO_CHECK(moon != nullptr && dynamic_cast<oo::PlanetEntity *>(static_cast<Entity *>(moon)) != nullptr);
 		OO_CHECK(moon->radius() == 50000.0);
 		OO_CHECK(moon->collisionRadius() == 50000.0f);
 		OO_CHECK(moon->getEnergy() == 50000.0f * 1000.0f);
 		OO_CHECK(moon->status() == oo::EntityStatus::kActive);
 		OO_CHECK(moon->getScanClass() == oo::ScanClass::kNoDraw);
 		OO_CHECK(moon->isPlanet() && moon->isVisible());
-		OO_CHECK(moon->planetType() == OOStellarBodyType::kMoon);
+		OO_CHECK(moon->planetType() == oo::StellarBodyType::kMoon);
 		OO_CHECK(!moon->hasAtmosphere());
 		OO_CHECK(moon->rotationalVelocity() == (double)0.02f);
 		OO_CHECK(QuaternionNear(moon->getOrientation(), (Quaternion){ (float)M_SQRT1_2, (float)M_SQRT1_2, 0, 0 }));
@@ -214,8 +214,8 @@ OO_TEST(planetWithAtmosphere)
 {
 	{
 		SetUp();
-		OOPlanetEntity *planet = Planet(true);
-		OO_CHECK(planet->planetType() == OOStellarBodyType::kNormalPlanet);
+		oo::PlanetEntity *planet = Planet(true);
+		OO_CHECK(planet->planetType() == oo::StellarBodyType::kNormalPlanet);
 		OO_CHECK(planet->hasAtmosphere());
 		// The dictionary's air colour, through its hue, saturation and brightness.
 		OOColor *air = planet->airColor();
@@ -237,7 +237,7 @@ OO_TEST(clockTurnsThePlanet)
 	{
 		SetUp();
 		sPlayer->_clock = 86400.0 * 3 + 100.0;	// 100 s into the day
-		OOPlanetEntity *planet = Planet(false);
+		oo::PlanetEntity *planet = Planet(false);
 		Quaternion expected = (Quaternion){ (float)M_SQRT1_2, (float)M_SQRT1_2, 0, 0 };
 		quaternion_rotate_about_axis(&expected, vector_up_from_quaternion(expected), 0.02f * 100);
 		OO_CHECK(QuaternionNear(planet->getOrientation(), expected));
@@ -249,7 +249,7 @@ OO_TEST(shaderValues)
 {
 	{
 		SetUp();
-		OOPlanetEntity *planet = Planet(false);
+		oo::PlanetEntity *planet = Planet(false);
 
 		std::shared_ptr<OOColor>	red = OOColor::colorWithRed(1.0f, 0.0f, 0.0f, 1.0f);
 		planet->setAirColor(red.get());
@@ -293,10 +293,10 @@ OO_TEST(miniature)
 {
 	{
 		SetUp();
-		OOPlanetEntity *planet = Planet(true);
-		OOPlanetEntity *mini = Miniature(planet);
-		OO_CHECK(mini != nullptr && mini != planet && dynamic_cast<OOPlanetEntity *>(static_cast<Entity *>(mini)) != nullptr);
-		OO_CHECK(mini->planetType() == OOStellarBodyType::kMiniature);
+		oo::PlanetEntity *planet = Planet(true);
+		oo::PlanetEntity *mini = Miniature(planet);
+		OO_CHECK(mini != nullptr && mini != planet && dynamic_cast<oo::PlanetEntity *>(static_cast<Entity *>(mini)) != nullptr);
+		OO_CHECK(mini->planetType() == oo::StellarBodyType::kMiniature);
 		OO_CHECK(mini->status() == oo::EntityStatus::kCockpitDisplay);
 		OO_CHECK(mini->getScanClass() == oo::ScanClass::kNoDraw);
 		OO_CHECK(Near(mini->radius(), 50000.0 * PLANET_MINIATURE_FACTOR));
@@ -306,7 +306,7 @@ OO_TEST(miniature)
 		Vector t = mini->terminatorThresholdVector();
 		OO_CHECK(Near(t.x, 0.105) && Near(t.y, 0.18) && Near(t.z, 0.28));
 		// The original is unchanged.
-		OO_CHECK(planet->radius() == 50000.0 && planet->planetType() == OOStellarBodyType::kNormalPlanet);
+		OO_CHECK(planet->radius() == 50000.0 && planet->planetType() == oo::StellarBodyType::kNormalPlanet);
 	}
 }
 
@@ -315,7 +315,7 @@ OO_TEST(updateTurnsThePlanet)
 {
 	{
 		SetUp();
-		OOPlanetEntity *moon = Planet(false);
+		oo::PlanetEntity *moon = Planet(false);
 		Quaternion before = moon->getOrientation();
 		moon->update(10.0);
 		Quaternion expected = before;
@@ -329,7 +329,7 @@ OO_TEST(updateTurnsThePlanet)
 		sPlayer->_nearestPlanet = nullptr;
 
 		// A miniature turns at its own rate.
-		OOPlanetEntity *mini = Miniature(moon);
+		oo::PlanetEntity *mini = Miniature(moon);
 		before = mini->getOrientation();
 		mini->update(2.0);
 		expected = before;
@@ -343,7 +343,7 @@ OO_TEST(orientationSetsTheAxis)
 {
 	{
 		SetUp();
-		OOPlanetEntity *moon = Planet(false);
+		oo::PlanetEntity *moon = Planet(false);
 		Quaternion q = kIdentityQuaternion;
 		moon->setOrientation(q);
 		moon->update(5.0);
@@ -359,7 +359,7 @@ OO_TEST(closeCollision)
 {
 	{
 		SetUp();
-		OOPlanetEntity *moon = Planet(false);
+		oo::PlanetEntity *moon = Planet(false);
 		OO_CHECK(!moon->checkCloseCollisionWith(nullptr));
 		Entity *rock = oo::MadeEntity(oo::makeShared<Entity>());
 		OO_CHECK(moon->checkCloseCollisionWith(rock));
@@ -371,7 +371,7 @@ OO_TEST(description)
 {
 	{
 		SetUp();
-		OOPlanetEntity *moon = Planet(false, 3000);
+		oo::PlanetEntity *moon = Planet(false, 3000);
 		std::string description = oo::EntityDescription(moon);
 		OO_CHECK(description.find("OOPlanetEntity") != std::string::npos);
 		OO_CHECK(description.find("radius: 30000 m") != std::string::npos);
@@ -385,11 +385,11 @@ OO_TEST(facade)
 {
 	{
 		SetUp();
-		OOPlanetEntity *moon = Planet(false);
+		oo::PlanetEntity *moon = Planet(false);
 		Entity *object = moon;
 		OO_CHECK(object != nullptr);	// A C++ entity.
 		OO_CHECK(object == moon);
-		OOPlanetEntity *mini = Miniature(moon);
+		oo::PlanetEntity *mini = Miniature(moon);
 		OO_CHECK(mini == mini);	// The shader bindings: the planet's values, which its object's selectors
     // forward to.
 		moon->setAirDensity(0.5f);
@@ -421,7 +421,7 @@ OO_TEST(jsExtensions)
 {
 	{
 		SetUp();
-		OOPlanetEntity *moon = Planet(false);
+		oo::PlanetEntity *moon = Planet(false);
 		RegisterJSClasses(InitOOJSPlanet);
 		Entity *object = moon;
 		const JSClassID jsClass = OOJSEntityJSClassID(object);

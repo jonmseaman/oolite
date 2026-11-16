@@ -2161,35 +2161,35 @@ void PlayerEntity::newShipCommonSetup(const std::string& shipKey,
   // OOEquipmentType's cache
   if (OOWeaponFacingIsIn(static_cast<unsigned int>(available_facings),
                          OOWeaponFacing::kAft))
-    aft_weapon_type = OOWeaponTypeFromEquipmentIdentifierSloppy(
+    aft_weapon_type = oo::WeaponTypeFromEquipmentIdentifierSloppy(
         OptionalStringForKey(shipDict, "aft_weapon_type").value_or(""));
   else
     aft_weapon_type =
-        OOWeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_NONE");
+        oo::WeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_NONE");
 
   if (OOWeaponFacingIsIn(static_cast<unsigned int>(available_facings),
                          OOWeaponFacing::kPort))
-    port_weapon_type = OOWeaponTypeFromEquipmentIdentifierSloppy(
+    port_weapon_type = oo::WeaponTypeFromEquipmentIdentifierSloppy(
         OptionalStringForKey(shipDict, "port_weapon_type").value_or(""));
   else
     port_weapon_type =
-        OOWeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_NONE");
+        oo::WeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_NONE");
 
   if (OOWeaponFacingIsIn(static_cast<unsigned int>(available_facings),
                          OOWeaponFacing::kStarboard))
-    starboard_weapon_type = OOWeaponTypeFromEquipmentIdentifierSloppy(
+    starboard_weapon_type = oo::WeaponTypeFromEquipmentIdentifierSloppy(
         OptionalStringForKey(shipDict, "starboard_weapon_type").value_or(""));
   else
     starboard_weapon_type =
-        OOWeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_NONE");
+        oo::WeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_NONE");
 
   if (OOWeaponFacingIsIn(static_cast<unsigned int>(available_facings),
                          OOWeaponFacing::kForward))
-    forward_weapon_type = OOWeaponTypeFromEquipmentIdentifierSloppy(
+    forward_weapon_type = oo::WeaponTypeFromEquipmentIdentifierSloppy(
         OptionalStringForKey(shipDict, "forward_weapon_type").value_or(""));
   else
     forward_weapon_type =
-        OOWeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_NONE");
+        oo::WeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_NONE");
 
   // new ships start with weapons online
   weapons_online = 1;

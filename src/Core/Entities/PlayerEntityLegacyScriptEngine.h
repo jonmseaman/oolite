@@ -41,7 +41,9 @@ class OOScript;
 
 // A sanitized legacy condition stores both as plist unsigned integers
 // (OOLegacyScriptWhitelist.h), so their numbers are pinned.
-enum class OOComparisonType : unsigned {
+namespace oo {
+
+enum class ComparisonType : unsigned {
   kEqual,
   kNotEqual,
   kLessThan,
@@ -49,14 +51,19 @@ enum class OOComparisonType : unsigned {
   kOneOf,
   kUndefined
 };
-static_assert(oo::ToUnderlying(OOComparisonType::kEqual) == 0);
-static_assert(oo::ToUnderlying(OOComparisonType::kNotEqual) == 1);
-static_assert(oo::ToUnderlying(OOComparisonType::kLessThan) == 2);
-static_assert(oo::ToUnderlying(OOComparisonType::kGreaterThan) == 3);
-static_assert(oo::ToUnderlying(OOComparisonType::kOneOf) == 4);
-static_assert(oo::ToUnderlying(OOComparisonType::kUndefined) == 5);
 
-enum class OOOperationType : unsigned {
+}  // namespace oo
+
+static_assert(oo::ToUnderlying(oo::ComparisonType::kEqual) == 0);
+static_assert(oo::ToUnderlying(oo::ComparisonType::kNotEqual) == 1);
+static_assert(oo::ToUnderlying(oo::ComparisonType::kLessThan) == 2);
+static_assert(oo::ToUnderlying(oo::ComparisonType::kGreaterThan) == 3);
+static_assert(oo::ToUnderlying(oo::ComparisonType::kOneOf) == 4);
+static_assert(oo::ToUnderlying(oo::ComparisonType::kUndefined) == 5);
+
+namespace oo {
+
+enum class OperationType : unsigned {
   kString,
   kNumber,
   kBool,
@@ -66,12 +73,19 @@ enum class OOOperationType : unsigned {
 
   kInvalid  // Must be last.
 };
-static_assert(oo::ToUnderlying(OOOperationType::kString) == 0);
-static_assert(oo::ToUnderlying(OOOperationType::kNumber) == 1);
-static_assert(oo::ToUnderlying(OOOperationType::kBool) == 2);
-static_assert(oo::ToUnderlying(OOOperationType::kMissionVar) == 3);
-static_assert(oo::ToUnderlying(OOOperationType::kLocalVar) == 4);
-static_assert(oo::ToUnderlying(OOOperationType::kFalse) == 5);
-static_assert(oo::ToUnderlying(OOOperationType::kInvalid) == 6);
 
-std::string OOComparisonTypeToString(OOComparisonType type);
+}  // namespace oo
+
+static_assert(oo::ToUnderlying(oo::OperationType::kString) == 0);
+static_assert(oo::ToUnderlying(oo::OperationType::kNumber) == 1);
+static_assert(oo::ToUnderlying(oo::OperationType::kBool) == 2);
+static_assert(oo::ToUnderlying(oo::OperationType::kMissionVar) == 3);
+static_assert(oo::ToUnderlying(oo::OperationType::kLocalVar) == 4);
+static_assert(oo::ToUnderlying(oo::OperationType::kFalse) == 5);
+static_assert(oo::ToUnderlying(oo::OperationType::kInvalid) == 6);
+
+namespace oo {
+
+std::string ComparisonTypeToString(ComparisonType type);
+
+}  // namespace oo

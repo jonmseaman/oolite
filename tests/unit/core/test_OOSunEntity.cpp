@@ -27,7 +27,7 @@
 #include "OOColor.h"
 #include "OOJSEntity.h"
 #include "OOJSSun.h"
-#include "OOSunEntity.h"
+#include "SunEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -118,8 +118,8 @@ oo::PList Dict(oo::PList::Dict entries) {
 bool Near(double a, double b) { return std::fabs(a - b) < 1e-4; }
 
 // A new C++ sun.
-OOSunEntity* Sun(OOColor* color, double radius) {
-  std::shared_ptr<OOSunEntity> sun = oo::makeShared<OOSunEntity>();
+oo::SunEntity* Sun(OOColor* color, double radius) {
+  std::shared_ptr<oo::SunEntity> sun = oo::makeShared<oo::SunEntity>();
   (void)oo::MadeEntity(sun);
   sun->initSunWithColor(color, Dict({
                                    {"sun_name", oo::PList("Sol")},
@@ -130,7 +130,7 @@ OOSunEntity* Sun(OOColor* color, double radius) {
   return sun.get();
 }
 
-OOSunEntity* RedSun() {
+oo::SunEntity* RedSun() {
   return Sun(OOColor::colorWithRed(1.0f, 0.0f, 0.0f, 1.0f).get(), 1000.0);
 }
 
@@ -139,12 +139,12 @@ OOSunEntity* RedSun() {
 OO_TEST(made) {
   {
     SetUp();
-    OOSunEntity* sun = RedSun();
+    oo::SunEntity* sun = RedSun();
     OO_CHECK(sun != nullptr &&
-             dynamic_cast<OOSunEntity*>(static_cast<Entity*>(sun)) != nullptr);
+             dynamic_cast<oo::SunEntity*>(static_cast<Entity*>(sun)) != nullptr);
     OO_CHECK(sun->radius() == 1000.0 && sun->collisionRadius() == 1000.0f);
     OO_CHECK(sun->name() == std::optional<std::string>("Sol"));
-    OO_CHECK(sun->planetType() == OOStellarBodyType::kSun);
+    OO_CHECK(sun->planetType() == oo::StellarBodyType::kSun);
     OO_CHECK(sun->getScanClass() == oo::ScanClass::kNoDraw);
     OO_CHECK(sun->isSun() && sun->isVisible() && sun->canCollide());
     OO_CHECK(!sun->willGoNova() && !sun->goneNova());
@@ -154,7 +154,7 @@ OO_TEST(made) {
 OO_TEST(lightColours) {
   {
     SetUp();
-    OOSunEntity* sun = RedSun();
+    oo::SunEntity* sun = RedSun();
     // Red blended 30% with white: (1, 0.3, 0.3).
     GLfloat diffuse[4] = {-1, -1, -1, -1};
     GLfloat specular[4] = {-1, -1, -1, -1};
@@ -178,7 +178,7 @@ OO_TEST(lightColours) {
 OO_TEST(changeSunProperty) {
   {
     SetUp();
-    OOSunEntity* sun = RedSun();
+    oo::SunEntity* sun = RedSun();
     OO_CHECK(sun->changeSunProperty("sun_radius",
                                     Dict({{"sun_radius", oo::PList(2500.0)}})));
     OO_CHECK(sun->radius() == 2500.0);
@@ -212,7 +212,7 @@ OO_TEST(changeSunProperty) {
 OO_TEST(radiusAndPosition) {
   {
     SetUp();
-    OOSunEntity* sun = RedSun();
+    oo::SunEntity* sun = RedSun();
     sun->setRadius(300.0f, 0.0f);
     OO_CHECK(sun->radius() == 300.0);
     sun->setPosition(make_HPvector(10, 20, 30));
@@ -225,7 +225,7 @@ OO_TEST(radiusAndPosition) {
 OO_TEST(goingNova) {
   {
     SetUp();
-    OOSunEntity* sun = RedSun();
+    oo::SunEntity* sun = RedSun();
     sun->setGoingNova(true, 1.0);
     OO_CHECK(sun->willGoNova() && !sun->goneNova());
     sun->update(0.5);
@@ -269,7 +269,7 @@ OO_TEST(goingNova) {
 OO_TEST(description) {
   {
     SetUp();
-    OOSunEntity* sun = RedSun();
+    oo::SunEntity* sun = RedSun();
     sun->setGoingNova(true, 10.0);
     const std::string description = oo::EntityDescription(sun);
     OO_CHECK(description.find("radius: 1.000km") != std::string::npos);
@@ -280,7 +280,7 @@ OO_TEST(description) {
 OO_TEST(cameraRelativePosition) {
   {
     SetUp();
-    OOSunEntity* sun = RedSun();
+    oo::SunEntity* sun = RedSun();
     sun->setPosition(make_HPvector(100, 0, 0));
     sPlayer->_viewpoint = make_HPvector(40, 0, 0);
     sun->updateCameraRelativePosition();
@@ -298,10 +298,10 @@ OO_TEST(cameraRelativePosition) {
 OO_TEST(facade) {
   {
     SetUp();
-    OOSunEntity* sun = RedSun();
+    oo::SunEntity* sun = RedSun();
     Entity* object = sun;
     OO_CHECK(object != nullptr);  // A C++ entity.
-    OO_CHECK(dynamic_cast<OOSunEntity*>(object) == sun);
+    OO_CHECK(dynamic_cast<oo::SunEntity*>(object) == sun);
   }
 }
 
@@ -324,7 +324,7 @@ static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
 OO_TEST(jsExtensions) {
   {
     SetUp();
-    OOSunEntity* sun = RedSun();
+    oo::SunEntity* sun = RedSun();
     RegisterJSClasses(InitOOJSSun);
     Entity* object = sun;  // what the engine asks
     const JSClassID jsClass = OOJSEntityJSClassID(object);

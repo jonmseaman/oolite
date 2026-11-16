@@ -685,10 +685,15 @@ JSValue OOJSValueFromPList(JSContext *context, const oo::PList &plist)
 
 
 // The internal chart coordinates of a galactic position: (x * 4, y * 2) here.
-NSPoint OOInternalCoordinatesFromGalactic(
+namespace oo {
+
+NSPoint InternalCoordinatesFromGalactic(
     Vector galacticCoordinates) {
   return NSMakePoint(galacticCoordinates.x * 4, galacticCoordinates.y * 2);
 }
+
+}  // namespace oo
+
 
 
 namespace {

@@ -38,16 +38,20 @@ MA );-);, USA.
 #include "Universe.h"
 #include "oofnd/String.hpp"
 
-std::string OOStringFromEntityStatus(oo::EntityStatus value) {
+namespace oo {
+
+std::string StringFromEntityStatus(oo::EntityStatus value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromBehaviour(oo::Behaviour value) {
+std::string StringFromBehaviour(oo::Behaviour value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("** BEHAVIOUR UNKNOWN **")
                       : std::string(name);
 }
+
+}  // namespace oo
 
 std::string OOStringFromCompassMode(oo::CompassMode value) {
   const std::string_view name = OOEnumName(value);
@@ -59,42 +63,52 @@ std::string OOStringFromLongRangeChartMode(oo::LongRangeChartMode value) {
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromGalacticHyperspaceBehaviour(
+namespace oo {
+
+std::string StringFromGalacticHyperspaceBehaviour(
     oo::GalacticHyperspaceBehaviour value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromGUIScreenID(oo::GUIScreenID value) {
+std::string StringFromGUIScreenID(oo::GUIScreenID value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromScanClass(oo::ScanClass value) {
+std::string StringFromScanClass(oo::ScanClass value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-std::string OOStringFromShipDamageType(oo::ShipDamageType value) {
+std::string StringFromShipDamageType(oo::ShipDamageType value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
+
+}  // namespace oo
 
 std::string OOStringFromLegalStatusReason(oo::LegalStatusReason value) {
   const std::string_view name = OOEnumName(value);
   return name.empty() ? std::string("UNDEFINED") : std::string(name);
 }
 
-oo::EntityStatus OOEntityStatusFromString(const std::string& string) {
+namespace oo {
+
+oo::EntityStatus EntityStatusFromString(const std::string& string) {
   return oo::kEntityStatusTable.value(string).value_or(
       oo::kEntityStatusDefault);
 }
+
+}  // namespace oo
 
 oo::CompassMode OOCompassModeFromString(const std::string& string) {
   return oo::kCompassModeTable.value(string).value_or(oo::kCompassModeDefault);
 }
 
-oo::GalacticHyperspaceBehaviour OOGalacticHyperspaceBehaviourFromString(
+namespace oo {
+
+oo::GalacticHyperspaceBehaviour GalacticHyperspaceBehaviourFromString(
     const std::string& string) {
   if (const std::optional<oo::GalacticHyperspaceBehaviour> value =
           oo::kGalacticHyperspaceBehaviourTable.value(string))
@@ -103,20 +117,22 @@ oo::GalacticHyperspaceBehaviour OOGalacticHyperspaceBehaviourFromString(
   // Transparently (but inefficiently) support american spelling. FIXME: remove
   // in EMMSTRAN.
   if (oo::str::hasPrefix(string, "BEHAVIOR_")) {
-    return OOGalacticHyperspaceBehaviourFromString("BEHAVIOUR_" +
-                                                   string.substr(9));
+    return GalacticHyperspaceBehaviourFromString("BEHAVIOUR_" +
+                                                 string.substr(9));
   }
 
   return oo::kGalacticHyperspaceBehaviourDefault;
 }
 
-oo::GUIScreenID OOGUIScreenIDFromString(const std::string& string) {
+oo::GUIScreenID GUIScreenIDFromString(const std::string& string) {
   return oo::kGUIScreenIDTable.value(string).value_or(oo::kGUIScreenIDDefault);
 }
 
-oo::ScanClass OOScanClassFromString(const std::string& string) {
+oo::ScanClass ScanClassFromString(const std::string& string) {
   return oo::kScanClassTable.value(string).value_or(oo::kScanClassDefault);
 }
+
+}  // namespace oo
 
 oo::LongRangeChartMode OOLongRangeChartModeFromString(
     const std::string& string) {
@@ -170,7 +186,9 @@ std::optional<std::string> OODisplayStringFromEconomyID(OOEconomyID economy) {
   return std::nullopt;
 }
 
-std::optional<std::string> OOStringFromWeaponType(OOWeaponType weapon) {
+namespace oo {
+
+std::optional<std::string> StringFromWeaponType(WeaponType weapon) {
   if (weapon == nullptr) {
     return "EQ_WEAPON_NONE";
   } else {
@@ -178,19 +196,18 @@ std::optional<std::string> OOStringFromWeaponType(OOWeaponType weapon) {
   }
 }
 
-OOWeaponType OOWeaponTypeFromString(const std::string& string) {
-  return OOWeaponTypeFromEquipmentIdentifierSloppy(string);
+WeaponType WeaponTypeFromString(const std::string& string) {
+  return WeaponTypeFromEquipmentIdentifierSloppy(string);
 }
 
-std::optional<std::string> OOEquipmentIdentifierFromWeaponType(
-    OOWeaponType weapon) {
+std::optional<std::string> EquipmentIdentifierFromWeaponType(
+    WeaponType weapon) {
   // No weapon: a message to nil answered a zeroed std::optional, no identifier.
   OOEquipmentType* type = weapon;
   return (type != nullptr) ? type->identifier() : std::nullopt;
 }
 
-OOWeaponType OOWeaponTypeFromEquipmentIdentifierSloppy(
-    const std::string& string) {
+WeaponType WeaponTypeFromEquipmentIdentifierSloppy(const std::string& string) {
   // The weapon type is borrowed: the registry holds it.
   std::shared_ptr<OOEquipmentType> w =
       OOEquipmentType::equipmentTypeWithIdentifier(string);
@@ -208,37 +225,35 @@ OOWeaponType OOWeaponTypeFromEquipmentIdentifierSloppy(
 
 /* Previous save games will have weapon types stored as ints to the
  * various weapon types */
-OOWeaponType OOWeaponTypeFromEquipmentIdentifierLegacy(
-    const std::string& string) {
+WeaponType WeaponTypeFromEquipmentIdentifierLegacy(const std::string& string) {
   if (oo::str::intValue(string) > 0) {
     switch (oo::str::intValue(string)) {
       case 2:
-        return OOWeaponTypeFromEquipmentIdentifierSloppy(
-            "EQ_WEAPON_PULSE_LASER");
+        return WeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_PULSE_LASER");
       case 3:
-        return OOWeaponTypeFromEquipmentIdentifierSloppy(
-            "EQ_WEAPON_BEAM_LASER");
+        return WeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_BEAM_LASER");
       case 4:
-        return OOWeaponTypeFromEquipmentIdentifierSloppy(
+        return WeaponTypeFromEquipmentIdentifierSloppy(
             "EQ_WEAPON_MINING_LASER");
       case 5:
-        return OOWeaponTypeFromEquipmentIdentifierSloppy(
+        return WeaponTypeFromEquipmentIdentifierSloppy(
             "EQ_WEAPON_MILITARY_LASER");
       case 10:
-        return OOWeaponTypeFromEquipmentIdentifierSloppy(
+        return WeaponTypeFromEquipmentIdentifierSloppy(
             "EQ_WEAPON_THARGOID_LASER");
       default:
-        return OOWeaponTypeFromEquipmentIdentifierSloppy(string);
+        return WeaponTypeFromEquipmentIdentifierSloppy(string);
     }
   }
-  return OOWeaponTypeFromEquipmentIdentifierSloppy(string);
+  return WeaponTypeFromEquipmentIdentifierSloppy(string);
 }
 
-OOWeaponType OOWeaponTypeFromEquipmentIdentifierStrict(
-    const std::string& string) {
+WeaponType WeaponTypeFromEquipmentIdentifierStrict(const std::string& string) {
   // there is no difference between the two any more
-  return OOWeaponTypeFromEquipmentIdentifierSloppy(string);
+  return WeaponTypeFromEquipmentIdentifierSloppy(string);
 }
+
+}  // namespace oo
 
 std::string CargoTypeToString(OOCargoType cargo) {
   const std::string_view name = OOEnumName(cargo);
@@ -279,7 +294,9 @@ OOEnergyUnitType StringToEnergyUnitType(const std::string& string) {
   return kOOEnergyUnitTypeDefault;
 }
 
-std::optional<std::string> OODisplayRatingStringFromKillCount(unsigned kills) {
+namespace oo {
+
+std::optional<std::string> DisplayRatingStringFromKillCount(unsigned kills) {
   constexpr unsigned kRatingCount = 9;
 
   const unsigned killThresholds[kRatingCount - 1] = {
@@ -296,15 +313,19 @@ std::optional<std::string> OODisplayRatingStringFromKillCount(unsigned kills) {
   return DescriptionStringAt(ratingNames, kRatingCount - 1);
 }
 
+}  // namespace oo
+
 std::string KillCountToRatingAndKillString(unsigned kills) {
   // %@ of a nil rating printed "(null)".
   const std::optional<std::string> rating =
-      OODisplayRatingStringFromKillCount(kills);
+      oo::DisplayRatingStringFromKillCount(kills);
   return std::format("{}   ({})",
                      rating.has_value() ? rating->c_str() : "(null)", kills);
 }
 
-std::optional<std::string> OODisplayStringFromLegalStatus(int legalStatus) {
+namespace oo {
+
+std::optional<std::string> DisplayStringFromLegalStatus(int legalStatus) {
   constexpr unsigned kStatusCount = 3;
 
   const std::array<int, kStatusCount - 1> statusThresholds = {1, 51};
@@ -322,8 +343,8 @@ std::optional<std::string> OODisplayStringFromLegalStatus(int legalStatus) {
   return DescriptionStringAt(statusNames, kStatusCount - 1);
 }
 
-std::optional<std::string> OODisplayStringFromAlertCondition(
-    OOAlertCondition alertCondition) {
+std::optional<std::string> DisplayStringFromAlertCondition(
+    AlertCondition alertCondition) {
   const oo::PList* conditionNamesEntry =
       UNIVERSE->descriptions()->find("condition");
   const oo::PList conditionNames =
@@ -332,6 +353,8 @@ std::optional<std::string> OODisplayStringFromAlertCondition(
       conditionNames,
       static_cast<std::size_t>(oo::ToUnderlying(alertCondition)));
 }
+
+}  // namespace oo
 
 std::optional<std::string> OODisplayStringFromShaderSetting(
     OOShaderSetting setting) {

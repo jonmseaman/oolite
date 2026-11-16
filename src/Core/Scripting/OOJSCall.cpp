@@ -30,10 +30,10 @@ MA 02110-1301, USA.
 
 #include <string>
 
+#include "EntityCalledByName.h"  // the entities' by-name methods
 #include "EntityPListForeign.h"  // oo::EntityObjectNode, oo::EntityShortDescription
 #include "OOCallByName.h"
-#include "OOColor.h"               // a colour result (kMethodTypeColorVoid)
-#include "OOEntityCalledByName.h"  // the entities' by-name methods
+#include "OOColor.h"                // a colour result (kMethodTypeColorVoid)
 #include "OOJSCallEntityMethods.h"  // callObjC()'s names for an entity (generated)
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
@@ -175,7 +175,7 @@ bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
     } else {
       // An entity's method with a numeric, vector, quaternion, colour or object
       // result is called on its C++ part, its result read as the method's was.
-      OOEntityByNameValue typed;
+      oo::EntityByNameValue typed;
       switch (type) {
         case kMethodTypeCharVoid:
         case kMethodTypeUnsignedCharVoid:

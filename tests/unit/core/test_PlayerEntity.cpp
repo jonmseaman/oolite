@@ -711,7 +711,7 @@ OO_TEST(slice10OrientationFlagsAndShields)
 		OO_CHECK(player->getShowDemoShips());
 		PlayerEntityTestAccess::travelling_at_hyperspeed(part) = true;
 		OO_CHECK(player->atHyperspeed());
-		PlayerEntityTestAccess::alertFlags(part) = oo::ToUnderlying(OOAlertFlags::kMassLock);
+		PlayerEntityTestAccess::alertFlags(part) = oo::ToUnderlying(oo::AlertFlags::kMassLock);
 		OO_CHECK(player->massLocked());
 		PlayerEntityTestAccess::alertFlags(part) = 0;
 		OO_CHECK(!player->massLocked());
@@ -817,10 +817,10 @@ OO_TEST(slice12CompassIdentAndAlertFlags)
 		OO_CHECK(player->dialIdentEngaged());
 		player->max_missiles = 5;
 		OO_CHECK(player->dialMaxMissiles() == 5);
-		player->setAlertFlag(OOAlertFlags::kMassLock, true);
-		OO_CHECK((player->getAlertFlags() & oo::ToUnderlying(OOAlertFlags::kMassLock)) != 0);
-		player->setAlertFlag(OOAlertFlags::kMassLock, false);
-		OO_CHECK((player->getAlertFlags() & oo::ToUnderlying(OOAlertFlags::kMassLock)) == 0);
+		player->setAlertFlag(oo::AlertFlags::kMassLock, true);
+		OO_CHECK((player->getAlertFlags() & oo::ToUnderlying(oo::AlertFlags::kMassLock)) != 0);
+		player->setAlertFlag(oo::AlertFlags::kMassLock, false);
+		OO_CHECK((player->getAlertFlags() & oo::ToUnderlying(oo::AlertFlags::kMassLock)) == 0);
 		PlayerEntityTestAccess::alertFlags(player) = 0x7;
 		player->clearAlertFlags();
 		OO_CHECK(player->getAlertFlags() == 0);
@@ -840,8 +840,8 @@ OO_TEST(slice13FleeingAndWeaponsOnline)
 		SetUp();
 		TestPlayer *player = MakePlayer();
 		PlayerEntity *part = player;
-		PlayerEntityTestAccess::fleeing_status(part) = OOPlayerFleeingStatus::kCargo;
-		OO_CHECK(player->fleeingStatus() == OOPlayerFleeingStatus::kCargo);
+		PlayerEntityTestAccess::fleeing_status(part) = oo::PlayerFleeingStatus::kCargo;
+		OO_CHECK(player->fleeingStatus() == oo::PlayerFleeingStatus::kCargo);
 		player->setWeaponsOnline(true);
 		OO_CHECK(player->weaponsOnline());
 		player->setWeaponsOnline(false);
@@ -1192,8 +1192,8 @@ OO_TEST(slice24FlagsAndAddEquipment)
 		OO_CHECK(player->isMining());
 		PlayerEntityTestAccess::using_mining_laser(part) = false;
 		OO_CHECK(!player->isMining());
-		PlayerEntityTestAccess::isSpeechOn(part) = OOSpeechSettings::kAll;
-		OO_CHECK(player->getIsSpeechOn() == OOSpeechSettings::kAll);
+		PlayerEntityTestAccess::isSpeechOn(part) = oo::SpeechSettings::kAll;
+		OO_CHECK(player->getIsSpeechOn() == oo::SpeechSettings::kAll);
 		OO_CHECK(player->addEquipmentItem("EQ_ECM", "purchase"));
 		OO_CHECK(sSent.count == 1 && sSent.text == "EQ_ECM/purchase" && sSent.flag);
 	}

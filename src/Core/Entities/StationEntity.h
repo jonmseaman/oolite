@@ -44,15 +44,20 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "oofnd/PList.hpp"
 
-enum class OOStationAlertLevel : std::int32_t {
-  kGreen = oo::ToUnderlying(OOAlertCondition::kGreen),
-  kYellow = oo::ToUnderlying(OOAlertCondition::kYellow),
-  kRed = oo::ToUnderlying(OOAlertCondition::kRed)
+namespace oo {
+
+enum class StationAlertLevel : std::int32_t {
+  kGreen = oo::ToUnderlying(AlertCondition::kGreen),
+  kYellow = oo::ToUnderlying(AlertCondition::kYellow),
+  kRed = oo::ToUnderlying(AlertCondition::kRed)
 };
+
+}  // namespace oo
+
 // The numbers JS's alertLevel sees.
-static_assert(oo::ToUnderlying(OOStationAlertLevel::kGreen) == 1);
-static_assert(oo::ToUnderlying(OOStationAlertLevel::kYellow) == 2);
-static_assert(oo::ToUnderlying(OOStationAlertLevel::kRed) == 3);
+static_assert(oo::ToUnderlying(oo::StationAlertLevel::kGreen) == 1);
+static_assert(oo::ToUnderlying(oo::StationAlertLevel::kYellow) == 2);
+static_assert(oo::ToUnderlying(oo::StationAlertLevel::kRed) == 3);
 
 inline constexpr int STATION_MAX_POLICE = 8;
 
@@ -117,8 +122,8 @@ class StationEntity : public ShipEntity {
   void setInterfaceDefinition(::OOJSInterfaceDefinition* definition,
                               const std::string& key);
   ::OOCommodityMarket* initialiseLocalMarket();
-  void setPlanet(::OOPlanetEntity* planet_entity);
-  ::OOPlanetEntity* getPlanet();
+  void setPlanet(::oo::PlanetEntity* planet_entity);
+  ::oo::PlanetEntity* getPlanet();
   unsigned countOfDockedContractors();
   unsigned countOfDockedPolice();
   unsigned countOfDockedDefenders();
@@ -189,8 +194,8 @@ class StationEntity : public ShipEntity {
   void takeHeatDamage(double amount) override;
   std::optional<std::string> getAllegiance();
   void setAllegiance(const std::optional<std::string>& newAllegiance);
-  OOStationAlertLevel getAlertLevel();
-  void setAlertLevel(OOStationAlertLevel level, bool signallingScript);
+  oo::StationAlertLevel getAlertLevel();
+  void setAlertLevel(oo::StationAlertLevel level, bool signallingScript);
   void increaseAlertLevel();
   void decreaseAlertLevel();
   void becomeExplosion() override;
@@ -223,7 +228,7 @@ class StationEntity : public ShipEntity {
   ::DockEntity* player_reserved_dock = {};
   double last_launch_time = {};
   double approach_spacing = {};
-  OOStationAlertLevel alertLevel = {};
+  oo::StationAlertLevel alertLevel = {};
 
   unsigned max_police = {};         // max no. of police ships allowed
   unsigned max_defense_ships = {};  // max no. of defense ships allowed
@@ -291,8 +296,12 @@ inline ::StationEntity* ToStation(Entity* entity) {
 // A mixed configuration: "station" is an Object
 // node holding the station's weak reference; ai_message / comms_message absent
 // when nullopt.
-oo::PList OOMakeDockingInstructions(
+namespace oo {
+
+oo::PList MakeDockingInstructions(
     StationEntity* station, HPVector coords, float speed, float range,
     const std::optional<std::string>& ai_message,
     const std::optional<std::string>& comms_message, bool match_rotation,
     int docking_stage);
+
+}  // namespace oo

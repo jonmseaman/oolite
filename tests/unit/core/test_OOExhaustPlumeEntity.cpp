@@ -30,7 +30,7 @@
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOColor.h"
-#include "OOExhaustPlumeEntity.h"
+#include "ExhaustPlumeEntity.h"
 #include "OOJSEntity.h"
 #include "OOJSExhaustPlume.h"
 #include "OOTexture.h"
@@ -166,10 +166,10 @@ TestShip* Part(Entity* ship) {
 
 // A plume, made as the ship makes one: its Objective-C object is autoreleased
 // in the test's pool and holds it; null for no tokens.
-OOExhaustPlumeEntity* Plume(Entity* ship, std::vector<std::string> tokens,
+oo::ExhaustPlumeEntity* Plume(Entity* ship, std::vector<std::string> tokens,
                             float scale) {
-  return static_cast<OOExhaustPlumeEntity*>(oo::MadeEntity(
-      OOExhaustPlumeEntity::exhaustForShip(oo::ToShip(ship), tokens, scale)));
+  return static_cast<oo::ExhaustPlumeEntity*>(oo::MadeEntity(
+      oo::ExhaustPlumeEntity::exhaustForShip(oo::ToShip(ship), tokens, scale)));
 }
 
 }  // namespace
@@ -178,7 +178,7 @@ OO_TEST(made) {
   {
     SetUp(0.0);
     Entity* ship = Ship();
-    OOExhaustPlumeEntity* plume =
+    oo::ExhaustPlumeEntity* plume =
         Plume(ship, {"1", "2", "3", "4", "5", "1.5"}, 2.0f);
     OO_CHECK(plume != nullptr);
     OO_CHECK(plume->owner() == ship);
@@ -186,7 +186,7 @@ OO_TEST(made) {
     OO_CHECK(VectorIs(plume->scale(), 8, 10, 1.5f));  // z is not scaled
     // Callers ask the C++ part.
     OO_CHECK(plume->isExhaust() &&
-             dynamic_cast<OOExhaustPlumeEntity*>(ship) == nullptr);
+             dynamic_cast<oo::ExhaustPlumeEntity*>(ship) == nullptr);
     OO_CHECK(plume->findCollisionRadius() == 0.0);
 
     OO_CHECK(Plume(ship, {}, 1.0f) == nullptr);
@@ -201,7 +201,7 @@ OO_TEST(scaleZ) {
         Plume(ship, {"0", "0", "0", "1", "1", "0.4"}, 1.0f)->scale(), 1, 1, 1));
     OO_CHECK(VectorIs(
         Plume(ship, {"0", "0", "0", "1", "1", "2.5"}, 1.0f)->scale(), 1, 1, 1));
-    OOExhaustPlumeEntity* plume =
+    oo::ExhaustPlumeEntity* plume =
         Plume(ship, {"0", "0", "0", "1", "1", "2"}, 1.0f);
     OO_CHECK(VectorIs(plume->scale(), 1, 1, 2));
     plume->setScale(make_vector(3, 4, 0.5f));
@@ -214,7 +214,7 @@ OO_TEST(scaleZ) {
 OO_TEST(rescale) {
   {
     SetUp(0.0);
-    OOExhaustPlumeEntity* plume =
+    oo::ExhaustPlumeEntity* plume =
         Plume(Ship(), {"0", "0", "0", "1", "2", "1.5"}, 1.0f);
     plume->rescaleBy(2.0f);
     OO_CHECK(VectorIs(plume->scale(), 2, 4, 3));  // z too: no clamp here
@@ -227,7 +227,7 @@ OO_TEST(updateWithoutVisibleShip) {
   {
     SetUp(1.0);
     Entity* ship = Ship();
-    OOExhaustPlumeEntity* plume =
+    oo::ExhaustPlumeEntity* plume =
         Plume(ship, {"0", "0", "-10", "2", "2", "1"}, 1.0f);
     SetCollisionRadius(plume, 42.0f);
     Part(ship)->_visible = false;
@@ -244,7 +244,7 @@ OO_TEST(updateBelowMinimalSpeed) {
   {
     SetUp(1.0);
     Entity* ship = Ship();
-    OOExhaustPlumeEntity* plume =
+    oo::ExhaustPlumeEntity* plume =
         Plume(ship, {"0", "0", "-10", "2", "2", "1"}, 1.0f);
     SetCollisionRadius(plume, 42.0f);
     Part(ship)->setSpeedFactor(0.0005f);
@@ -257,7 +257,7 @@ OO_TEST(updateMeasures) {
   {
     SetUp(1.0);
     Entity* ship = Ship();
-    OOExhaustPlumeEntity* plume =
+    oo::ExhaustPlumeEntity* plume =
         Plume(ship, {"0", "0", "-10", "2", "2", "1"}, 1.0f);
     plume->resetPlume();
     plume->update(0.1);
@@ -269,7 +269,7 @@ OO_TEST(updateMeasures) {
 OO_TEST(texture) {
   {
     SetUp(0.0);
-    OOExhaustPlumeEntity* plume =
+    oo::ExhaustPlumeEntity* plume =
         Plume(Ship(), {"0", "0", "0", "1", "1", "1"}, 1.0f);
     sTextureName.reset();
     OO_CHECK(plume->texture() == sTexture);
@@ -277,7 +277,7 @@ OO_TEST(texture) {
              std::optional<std::string>("oolite-exhaust-blur.png"));
     sTextureName.reset();
     OO_CHECK(plume->texture() == sTexture &&
-             OOExhaustPlumeEntity::plumeTexture() == sTexture);
+             oo::ExhaustPlumeEntity::plumeTexture() == sTexture);
     OO_CHECK(!sTextureName.has_value());  // loaded once
   }
 }
@@ -287,9 +287,9 @@ OO_TEST(facade) {
     SetUp(0.0);
     // The object is the root's facade, whose C++ part is the plume: a C++
     // entity.
-    Entity* object = oo::MadeEntity(OOExhaustPlumeEntity::exhaustForShip(
+    Entity* object = oo::MadeEntity(oo::ExhaustPlumeEntity::exhaustForShip(
         oo::ToShip(Ship()), {"0", "0", "0", "1", "1", "1"}, 1.0f));
-    OO_CHECK(dynamic_cast<OOExhaustPlumeEntity*>(object) != nullptr);
+    OO_CHECK(dynamic_cast<oo::ExhaustPlumeEntity*>(object) != nullptr);
     OO_CHECK(object == object);
   }
 }

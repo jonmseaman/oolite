@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "EntityManualRefs.h"  // the tests' manual entity references
-#include "OOECMBlastEntity.h"
+#include "ECMBlastEntity.h"
 #include "PlayerEntity.h"  // the stand-in PLAYER
 #include "ShipEntity.h"
 #include "Universe.h"
@@ -114,12 +114,12 @@ Entity* Ship() {
 // ---------------------
 
 Entity* Blast(Entity* ship) {
-  return oo::MadeEntity(OOECMBlastEntity::initFromShip(oo::ToShip(ship)));
+  return oo::MadeEntity(oo::ECMBlastEntity::initFromShip(oo::ToShip(ship)));
 }
 
 // Whether the entity is an ECM blast, from the C++ member.
 bool IsECMBlast(Entity* entity) {
-  OOECMBlastEntity* blast = dynamic_cast<OOECMBlastEntity*>(entity);
+  oo::ECMBlastEntity* blast = dynamic_cast<oo::ECMBlastEntity*>(entity);
   return blast != nullptr && blast->isECMBlast();
 }
 

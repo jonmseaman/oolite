@@ -42,10 +42,10 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "CollisionRegion.h"
+#include "EntityHold.h"            // the owning entity lists
 #include "EntityVirtualMembers.h"  // the virtual members
 #include "OOCacheManager.h"
 #include "OOColor.h"
-#include "OOEntityHold.h"  // the owning entity lists
 #include "OOFoundation.h"
 #include "OOJSPrivateObject.h"
 #include "OOMaths.h"
@@ -55,7 +55,13 @@ MA 02110-1301, USA.
 class Entity;
 class Universe;
 #include "OOTexture.h"  // allTextures() answers std::shared_ptr<OOTexture>, which needs the class
-class OOVisualEffectEntity;
+
+namespace oo {
+
+class VisualEffectEntity;
+
+}  // namespace oo
+
 class ShipEntity;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -429,11 +435,15 @@ class OOSubEntityInterface {
 // C++ forms, defined in OOConstToString.cpp: std::string results (never nil),
 // const std::string & parameters (nil arrived as "" and matched nothing: the
 // defaults).
-std::string OOStringFromEntityStatus(oo::EntityStatus status);
-oo::EntityStatus OOEntityStatusFromString(const std::string& string);
+namespace oo {
 
-std::string OOStringFromScanClass(oo::ScanClass scanClass);
-oo::ScanClass OOScanClassFromString(const std::string& string);
+std::string StringFromEntityStatus(oo::EntityStatus status);
+oo::EntityStatus EntityStatusFromString(const std::string& string);
+
+std::string StringFromScanClass(oo::ScanClass scanClass);
+oo::ScanClass ScanClassFromString(const std::string& string);
+
+}  // namespace oo
 
 /*	The entities' shader binding member table (EntityShaderBindings.cpp):
    the binding a uniform bound to the property name on this entity makes,

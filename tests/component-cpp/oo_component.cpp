@@ -317,7 +317,7 @@ void PrintState(const char* file, int line) {
               UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
               static_cast<unsigned long long>(state.steps),
               player != nullptr
-                  ? OOStringFromGUIScreenID(player->guiScreen()).c_str()
+                  ? oo::StringFromGUIScreenID(player->guiScreen()).c_str()
                   : "(no player)");
   const std::vector<Event>& entries = state.events.entries();
   const std::size_t from = entries.size() > kFailureContextEntries
@@ -706,7 +706,7 @@ Game Game::atStartScreen(std::uint32_t seed) {
 
 std::string Game::screen() const {
   PlayerEntity* player = PlayerEntity::sharedPlayer();
-  return player != nullptr ? OOStringFromGUIScreenID(player->guiScreen())
+  return player != nullptr ? oo::StringFromGUIScreenID(player->guiScreen())
                            : "(no player)";
 }
 

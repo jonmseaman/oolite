@@ -39,15 +39,15 @@ MA 02110-1301, USA.
 #include "OOJSWormhole.h"
 #include "OOLogging.h"
 #include "OOPListGameTypes.h"
-#include "OOPlanetEntity.h"
 #include "OOShipGroup.h"
 #include "OOStringParsing.h"
-#include "OOSunEntity.h"
 #include "OOSystemDescriptionManager.h"
+#include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
 #include "ShipEntityLoadRestore.h"
 #include "StationEntity.h"
+#include "SunEntity.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Log.hpp"
@@ -141,7 +141,7 @@ void WormholeEntity::initWithDict(const oo::PList& dict) {
       // Setup shipsInTransit
       const oo::PList* shipDictsArray = dict.get<oo::PList::Array>("ships");
       shipsInTransit.clear();
-      OOShipSaveContext restoreContext;
+      oo::ShipSaveContext restoreContext;
 
       for (std::size_t i = 0;
            shipDictsArray != nullptr && i < shipDictsArray->count(); i++) {
@@ -154,7 +154,7 @@ void WormholeEntity::initWithDict(const oo::PList& dict) {
           if (ship != nullptr) {
             // time_delta as stored; it was only ever read with
             // -oo_doubleForKey: (0 when absent)
-            shipsInTransit.push_back(OOWormholeTransit{
+            shipsInTransit.push_back(oo::WormholeTransit{
                 oo::Hold(ship), currShipDict.get<double>("time_delta"),
                 std::nullopt});
           } else {
@@ -181,7 +181,7 @@ void WormholeEntity::initWormholeTo(OOSystemID s, ::ShipEntity* ship) {
   {
     double now = (PLAYER != nullptr ? PLAYER->clockTimeAdjusted() : 0.0);
     double distance;
-    ::OOSunEntity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
+    ::oo::SunEntity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
 
     _misjump = false;
     origin = (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0);
@@ -359,7 +359,7 @@ bool WormholeEntity::suckInShip(::ShipEntity* ship) {
     }
   }
 
-  shipsInTransit.push_back(OOWormholeTransit{
+  shipsInTransit.push_back(oo::WormholeTransit{
       oo::Hold(ship), now + travel_time - arrival_time,
       (ship != nullptr
            ? ship->beaconCode()
@@ -403,14 +403,14 @@ bool WormholeEntity::suckInShip(::ShipEntity* ship) {
 
 void WormholeEntity::disgorgeShips() {
   double now = (PLAYER != nullptr ? PLAYER->clockTimeAdjusted() : 0.0);
-  std::vector<OOWormholeTransit> shipsStillInTransit;
+  std::vector<oo::WormholeTransit> shipsStillInTransit;
   shipsStillInTransit.reserve(shipsInTransit.size());
   bool hasShiftedExitPosition = false;
   bool useExitXYScatter = false;
 
-  const std::vector<OOWormholeTransit> transits =
+  const std::vector<oo::WormholeTransit> transits =
       shipsInTransit;  // (the array was enumerated as it stood)
-  for (const OOWormholeTransit& shipInfo : transits) {
+  for (const oo::WormholeTransit& shipInfo : transits) {
     ::ShipEntity* ship = oo::ToShip(shipInfo.ship.get());
     const std::optional<std::string>& shipBeacon = shipInfo.beacon;
     double ship_arrival_time = arrival_time + shipInfo.time;
@@ -625,7 +625,7 @@ void WormholeEntity::setScanInfo(WORMHOLE_SCANINFO p_scanInfo) {
 oo::PList WormholeEntity::getShipsInTransit() {
   oo::PList::Array result;
   result.reserve(shipsInTransit.size());
-  for (const OOWormholeTransit& transit : shipsInTransit) {
+  for (const oo::WormholeTransit& transit : shipsInTransit) {
     oo::PList::Dict entry{{"ship", oo::EntityObjectNode(transit.ship.get())},
                           {"time", oo::PList(transit.time)}};
     if (transit.beacon) entry["shipBeacon"] = oo::PList(*transit.beacon);
@@ -856,8 +856,8 @@ oo::PList WormholeEntity::getDict() {
 
   oo::PList::Array shipArray;
   shipArray.reserve(shipsInTransit.size());
-  OOShipSaveContext context;
-  for (const OOWormholeTransit& transit : shipsInTransit) {
+  oo::ShipSaveContext context;
+  for (const oo::WormholeTransit& transit : shipsInTransit) {
     // +dictionaryWithObjectsAndKeys: stopped at a nil ship_info
     oo::PList::Dict shipDict{{"time_delta", oo::PList(transit.time)}};
     oo::PList shipInfo = (oo::ToShip(transit.ship.get()) != nullptr

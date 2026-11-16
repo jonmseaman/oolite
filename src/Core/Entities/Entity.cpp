@@ -35,7 +35,7 @@ MA 02110-1301, USA.
 #include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
 #include "OOMaths.h"
-#include "OOPlanetEntity.h"
+#include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "StationEntity.h"  // willDispose(): the station's and the dock's parts
 #include "Universe.h"
@@ -50,17 +50,24 @@ size_t gTotalEntityMemory = 0;
 
 // Message-class constants for OO_LOG (string literals).
 #ifdef OO_DEBUG_MONITOR_ENABLED
-constexpr const char* kOOLogEntityAddToList = "entity.linkedList.add";
-constexpr const char* kOOLogEntityAddToListError =
-    "entity.linkedList.add.error";
-constexpr const char* kOOLogEntityRemoveFromList = "entity.linkedList.remove";
-constexpr const char* kOOLogEntityRemoveFromListError =
+namespace oo {
+
+constexpr const char* kLogEntityAddToList = "entity.linkedList.add";
+constexpr const char* kLogEntityAddToListError = "entity.linkedList.add.error";
+constexpr const char* kLogEntityRemoveFromList = "entity.linkedList.remove";
+constexpr const char* kLogEntityRemoveFromListError =
     "entity.linkedList.remove.error";
-constexpr const char* kOOLogEntityUpdateError =
-    "entity.linkedList.update.error";
+constexpr const char* kLogEntityUpdateError = "entity.linkedList.update.error";
+
+}  // namespace oo
+
 #endif
-constexpr const char* kOOLogEntityVerificationError =
+namespace oo {
+
+constexpr const char* kLogEntityVerificationError =
     "entity.linkedList.verify.error";
+
+}  // namespace oo
 
 // The constructor runs init().
 Entity::Entity() { init(); }
@@ -141,8 +148,8 @@ std::optional<std::string> Entity::descriptionComponents() const {
   // The getters read these ivars.
   return std::format(
       "position: {} scanClass: {} status: {}", HPVectorDescription(position),
-      OOStringFromScanClass(const_cast<Entity*>(this)->getScanClass()),
-      OOStringFromEntityStatus(_status));
+      oo::StringFromScanClass(const_cast<Entity*>(this)->getScanClass()),
+      oo::StringFromEntityStatus(_status));
 }
 
 std::size_t Entity::sessionID() { return _sessionID; }
@@ -195,7 +202,7 @@ bool Entity::validForAddToUniverse() {
 void Entity::addToLinkedLists() {
 #ifdef OO_DEBUG_MONITOR_ENABLED
   if (oo::DebugFlagIsOn(oo::DebugFlags::kLinkedLists))
-    OO_LOG(kOOLogEntityAddToList, "DEBUG adding entity {} to linked lists",
+    OO_LOG(oo::kLogEntityAddToList, "DEBUG adding entity {} to linked lists",
            oo::EntityDescription(this));
 #endif
   //
@@ -247,7 +254,7 @@ void Entity::addToLinkedLists() {
 #ifdef OO_DEBUG_MONITOR_ENABLED
   if (oo::DebugFlagIsOn(oo::DebugFlags::kLinkedLists)) {
     if (!checkLinkedLists()) {
-      OO_LOG(kOOLogEntityAddToListError,
+      OO_LOG(oo::kLogEntityAddToListError,
              "DEBUG LINKED LISTS - problem encountered while adding {} to "
              "linked lists",
              oo::EntityDescription(this));
@@ -260,7 +267,7 @@ void Entity::addToLinkedLists() {
 void Entity::removeFromLinkedLists() {
 #ifdef OO_DEBUG_MONITOR_ENABLED
   if (oo::DebugFlagIsOn(oo::DebugFlags::kLinkedLists))
-    OO_LOG(kOOLogEntityRemoveFromList,
+    OO_LOG(oo::kLogEntityRemoveFromList,
            "DEBUG removing entity {} from linked lists",
            oo::EntityDescription(this));
 #endif
@@ -297,7 +304,7 @@ void Entity::removeFromLinkedLists() {
 #ifdef OO_DEBUG_MONITOR_ENABLED
   if (oo::DebugFlagIsOn(oo::DebugFlags::kLinkedLists)) {
     if (!checkLinkedLists()) {
-      OO_LOG(kOOLogEntityRemoveFromListError,
+      OO_LOG(oo::kLogEntityRemoveFromListError,
              "DEBUG LINKED LISTS - problem encountered while removing {} from "
              "linked lists",
              oo::EntityDescription(this));
@@ -322,7 +329,7 @@ bool Entity::checkLinkedLists() {
       check = check->x_next;
     }
     if ((check) || (n > 0)) {
-      OO_LOG(kOOLogEntityVerificationError, "Broken x_next {} list ({}) ***",
+      OO_LOG(oo::kLogEntityVerificationError, "Broken x_next {} list ({}) ***",
              oo::EntityDescription(UNIVERSE->x_list_start), n);
       return false;
     }
@@ -331,7 +338,7 @@ bool Entity::checkLinkedLists() {
     check = last;
     while ((n--) && (check)) check = check->x_previous;
     if ((check) || (n > 0)) {
-      OO_LOG(kOOLogEntityVerificationError,
+      OO_LOG(oo::kLogEntityVerificationError,
              "Broken x_previous {} list ({}) ***",
              oo::EntityDescription(UNIVERSE->x_list_start), n);
       return false;
@@ -344,7 +351,7 @@ bool Entity::checkLinkedLists() {
       check = check->y_next;
     }
     if ((check) || (n > 0)) {
-      OO_LOG(kOOLogEntityVerificationError, "Broken y_next {} list ({}) ***",
+      OO_LOG(oo::kLogEntityVerificationError, "Broken y_next {} list ({}) ***",
              oo::EntityDescription(UNIVERSE->y_list_start), n);
       return false;
     }
@@ -353,7 +360,7 @@ bool Entity::checkLinkedLists() {
     check = last;
     while ((n--) && (check)) check = check->y_previous;
     if ((check) || (n > 0)) {
-      OO_LOG(kOOLogEntityVerificationError,
+      OO_LOG(oo::kLogEntityVerificationError,
              "Broken y_previous {} list ({}) ***",
              oo::EntityDescription(UNIVERSE->y_list_start), n);
       return false;
@@ -366,7 +373,7 @@ bool Entity::checkLinkedLists() {
       check = check->z_next;
     }
     if ((check) || (n > 0)) {
-      OO_LOG(kOOLogEntityVerificationError, "Broken z_next {} list ({}) ***",
+      OO_LOG(oo::kLogEntityVerificationError, "Broken z_next {} list ({}) ***",
              oo::EntityDescription(UNIVERSE->z_list_start), n);
       return false;
     }
@@ -375,7 +382,7 @@ bool Entity::checkLinkedLists() {
     check = last;
     while ((n--) && (check)) check = check->z_previous;
     if ((check) || (n > 0)) {
-      OO_LOG(kOOLogEntityVerificationError,
+      OO_LOG(oo::kLogEntityVerificationError,
              "Broken z_previous {} list ({}) ***",
              oo::EntityDescription(UNIVERSE->z_list_start), n);
       return false;
@@ -392,7 +399,7 @@ void Entity::updateLinkedLists() {
 #ifdef OO_DEBUG_MONITOR_ENABLED
   if (oo::DebugFlagIsOn(oo::DebugFlags::kLinkedLists)) {
     if (!checkLinkedLists()) {
-      OO_LOG(kOOLogEntityVerificationError,
+      OO_LOG(oo::kLogEntityVerificationError,
              "DEBUG LINKED LISTS problem encountered before updating linked "
              "lists for {}",
              oo::EntityDescription(this));
@@ -480,7 +487,7 @@ void Entity::updateLinkedLists() {
 #ifdef OO_DEBUG_MONITOR_ENABLED
   if (oo::DebugFlagIsOn(oo::DebugFlags::kLinkedLists)) {
     if (!checkLinkedLists()) {
-      OO_LOG(kOOLogEntityUpdateError,
+      OO_LOG(oo::kLogEntityUpdateError,
              "DEBUG LINKED LISTS problem encountered after updating linked "
              "lists for {}",
              oo::EntityDescription(this));
@@ -821,8 +828,9 @@ void Entity::dumpSelfState() {
   OO_LOG("dumpState.entity", "Universal ID: {}",
          static_cast<unsigned>(universalID));
   OO_LOG("dumpState.entity", "Scan class: {}",
-         OOStringFromScanClass(scanClass));
-  OO_LOG("dumpState.entity", "Status: {}", OOStringFromEntityStatus(status()));
+         oo::StringFromScanClass(scanClass));
+  OO_LOG("dumpState.entity", "Status: {}",
+         oo::StringFromEntityStatus(status()));
   OO_LOG("dumpState.entity", "Position: {}", HPVectorDescription(position));
   OO_LOG("dumpState.entity", "Orientation: {}",
          QuaternionDescription(orientation));

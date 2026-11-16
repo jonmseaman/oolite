@@ -44,8 +44,8 @@ std::shared_ptr<::ShipEntity> ProxyPlayerEntity::newProxyObject(
 void ProxyPlayerEntity::initProxyDefaults() {
   setDialForwardShield(1.0f);
   setDialAftShield(1.0f);
-  setDialFuelScoopStatus(hasScoop() ? OOFuelScoopStatus::kOkay
-                                    : OOFuelScoopStatus::kNotInstalled);
+  setDialFuelScoopStatus(hasScoop() ? oo::FuelScoopStatus::kOkay
+                                    : oo::FuelScoopStatus::kNotInstalled);
   setCompassMode(hasEquipmentItemProviding("EQ_ADVANCED_COMPASS")
                      ? oo::CompassMode::kPlanet
                      : oo::CompassMode::kBasic);
@@ -62,14 +62,14 @@ void ProxyPlayerEntity::copyValuesFromPlayer(::PlayerEntity* player) {
       (player != nullptr ? player->dialForwardShield() : 0.0f));
   setDialAftShield((player != nullptr ? player->dialAftShield() : 0.0f));
   setDialMissileStatus(
-      (player != nullptr ? player->dialMissileStatus() : OOMissileStatus{}));
+      (player != nullptr ? player->dialMissileStatus() : oo::MissileStatus{}));
   setDialFuelScoopStatus((player != nullptr ? player->dialFuelScoopStatus()
-                                            : OOFuelScoopStatus{}));
+                                            : oo::FuelScoopStatus{}));
   setCompassMode(
       (player != nullptr ? player->getCompassMode() : oo::CompassMode{}));
   setDialIdentEngaged((player != nullptr ? player->dialIdentEngaged() : false));
   setAlertCondition(
-      (player != nullptr ? player->getAlertCondition() : OOAlertCondition{}));
+      (player != nullptr ? player->getAlertCondition() : oo::AlertCondition{}));
   setTrumbleCount((player != nullptr ? player->getTrumbleCount() : 0));
   setTradeInFactor((player != nullptr ? player->tradeInFactor() : int{}));
 }
@@ -102,19 +102,19 @@ void ProxyPlayerEntity::setDialAftShield(GLfloat value) {
   _dialAftShield = value;
 }
 
-OOMissileStatus ProxyPlayerEntity::dialMissileStatus() {
+oo::MissileStatus ProxyPlayerEntity::dialMissileStatus() {
   return _missileStatus;
 }
 
-void ProxyPlayerEntity::setDialMissileStatus(OOMissileStatus value) {
+void ProxyPlayerEntity::setDialMissileStatus(oo::MissileStatus value) {
   _missileStatus = value;
 }
 
-OOFuelScoopStatus ProxyPlayerEntity::dialFuelScoopStatus() {
+oo::FuelScoopStatus ProxyPlayerEntity::dialFuelScoopStatus() {
   return _fuelScoopStatus;
 }
 
-void ProxyPlayerEntity::setDialFuelScoopStatus(OOFuelScoopStatus value) {
+void ProxyPlayerEntity::setDialFuelScoopStatus(oo::FuelScoopStatus value) {
   _fuelScoopStatus = value;
 }
 
@@ -130,9 +130,11 @@ void ProxyPlayerEntity::setDialIdentEngaged(bool value) {
   _dialIdentEngaged = !!value;
 }
 
-OOAlertCondition ProxyPlayerEntity::alertCondition() { return _alertCondition; }
+oo::AlertCondition ProxyPlayerEntity::alertCondition() {
+  return _alertCondition;
+}
 
-void ProxyPlayerEntity::setAlertCondition(OOAlertCondition value) {
+void ProxyPlayerEntity::setAlertCondition(oo::AlertCondition value) {
   _alertCondition = value;
 }
 

@@ -1,0 +1,62 @@
+/*
+
+OORingEffectEntity.h
+
+Entity subclass for expanding-ring effect, used for hyperspace entry and for
+some large explosions.
+A global class over Entity. Its callers (ShipEntity, Universe) make it
+with a factory.
+
+
+Oolite
+Copyright (C) 2004-2013 Giles C Williams and contributors
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301, USA.
+
+*/
+
+#pragma once
+
+#include <memory>
+#include <string>
+
+#include "Entity.h"
+
+namespace oo {
+
+class RingEffectEntity : public Entity {
+ public:
+  // Null for a null source.
+  static std::shared_ptr<RingEffectEntity> ringFromEntity(Entity* sourceEntity);
+  static std::shared_ptr<RingEffectEntity> shrinkingRingFromEntity(
+      Entity* sourceEntity);
+
+  std::optional<std::string> descriptionComponents() const override;
+  void update(OOTimeDelta delta_t) override;
+  void drawImmediate(bool immediate, bool translucent) override;
+  bool isEffect() override;
+  bool canCollide() override;
+
+ private:
+  static void initialize();
+  bool initRingFromEntity(Entity* sourceEntity);
+
+  GLfloat _timePassed = {};
+  GLfloat _innerRadius = {}, _outerRadius = {}, _innerGrowthRate = {},
+          _outerGrowthRate = {};
+};
+
+}  // namespace oo

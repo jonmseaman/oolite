@@ -32,11 +32,11 @@ MA 02110-1301, USA.
 #include "DebugFlags.h"
 #include "Entity.h"
 #include "OOMaths.h"
-#include "OOPlanetEntity.h"
-#include "OOSunEntity.h"
+#include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
 #include "StationEntity.h"
+#include "SunEntity.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
@@ -391,7 +391,7 @@ namespace {
 
 // A value of 1 means it's just being occluded.
 Occlusion entityByEntityOcclusion(Entity* e1, Entity* e2,
-                                  OOSunEntity* the_sun) {
+                                  oo::SunEntity* the_sun) {
   if (e1 == e2) [[unlikely]] {
     // you can't shade self
     return {false, 1.5f};
@@ -404,7 +404,7 @@ Occlusion entityByEntityOcclusion(Entity* e1, Entity* e2,
 
 // A value of 1 means it's just being occluded.
 Occlusion shadowAtPointOcclusion(HPVector e1pos, GLfloat e1rad, Entity* e2,
-                                 OOSunEntity* the_sun) {
+                                 oo::SunEntity* the_sun) {
   float value = 1.5f;  // initial 'fully lit' value
 
   GLfloat cr_e2;
@@ -521,7 +521,8 @@ Occlusion shadowAtPointOcclusion(HPVector e1pos, GLfloat e1rad, Entity* e2,
 
 namespace {
 
-bool testEntityOccludedByEntity(Entity* e1, Entity* e2, OOSunEntity* the_sun) {
+bool testEntityOccludedByEntity(Entity* e1, Entity* e2,
+                                oo::SunEntity* the_sun) {
   // we're not interested in the amount of occlusion just now.
   return entityByEntityOcclusion(e1, e2, the_sun).occluded;
 }
@@ -540,7 +541,7 @@ void CollisionRegion::findShadowedEntities() {
   if ((UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false))
     return;  // don't do this in reduced detail mode
 
-  ::OOSunEntity* the_sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
+  ::oo::SunEntity* the_sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
 
   if (the_sun == nullptr) {
     return;  // sun is required

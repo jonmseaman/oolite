@@ -49,15 +49,15 @@ MA 02110-1301, USA.
 #include "OOLegacyScriptWhitelist.h"
 #include "OOLoggingExtended.h"
 #include "OOMusicController.h"
-#include "OOPlanetEntity.h"
 #include "OOScript.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
-#include "OOSunEntity.h"
 #include "OOSystemDescriptionManager.h"
+#include "PlanetEntity.h"
 #include "ResourceManager.h"
 #include "ShipEntityAI.h"
 #include "StationEntity.h"
+#include "SunEntity.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Log.hpp"
@@ -66,63 +66,70 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Exception.h"
 
-constexpr std::string_view kOOLogScriptAddShipsFailed =
-    "script.addShips.failed";
-constexpr std::string_view kOOLogScriptMissionDescNoText =
+namespace oo {
+
+constexpr std::string_view kLogScriptAddShipsFailed = "script.addShips.failed";
+constexpr std::string_view kLogScriptMissionDescNoText =
     "script.missionDescription.noMissionText";
-constexpr std::string_view kOOLogScriptMissionDescNoKey =
+constexpr std::string_view kLogScriptMissionDescNoKey =
     "script.missionDescription.noMissionKey";
 
-constexpr std::string_view kOOLogDebugOnMetaClass = "$scriptDebugOn";
+constexpr std::string_view kLogDebugOnMetaClass = "$scriptDebugOn";
+
+}  // namespace oo
+
 constexpr std::string_view kOOLogDebugMessage = "script.debug.message";
-constexpr std::string_view kOOLogDebugOnOff = "script.debug.onOff";
-constexpr std::string_view kOOLogDebugAddPlanet = "script.debug.addPlanet";
-constexpr std::string_view kOOLogDebugReplaceVariablesInString =
+
+namespace oo {
+
+constexpr std::string_view kLogDebugOnOff = "script.debug.onOff";
+constexpr std::string_view kLogDebugAddPlanet = "script.debug.addPlanet";
+constexpr std::string_view kLogDebugReplaceVariablesInString =
     "script.debug.replaceVariablesInString";
-constexpr std::string_view kOOLogDebugProcessSceneStringAddScene =
+constexpr std::string_view kLogDebugProcessSceneStringAddScene =
     "script.debug.processSceneString.addScene";
-constexpr std::string_view kOOLogDebugProcessSceneStringAddModel =
+constexpr std::string_view kLogDebugProcessSceneStringAddModel =
     "script.debug.processSceneString.addModel";
-constexpr std::string_view kOOLogDebugProcessSceneStringAddMiniPlanet =
+constexpr std::string_view kLogDebugProcessSceneStringAddMiniPlanet =
     "script.debug.processSceneString.addMiniPlanet";
 
-constexpr std::string_view kOOLogNoteRemoveAllCargo =
+constexpr std::string_view kLogNoteRemoveAllCargo =
     "script.debug.note.removeAllCargo";
-constexpr std::string_view kOOLogNoteUseSpecialCargo =
+constexpr std::string_view kLogNoteUseSpecialCargo =
     "script.debug.note.useSpecialCargo";
-constexpr std::string_view kOOLogNoteAddShips = "script.debug.note.addShips";
-constexpr std::string_view kOOLogNoteSet = "script.debug.note.set";
-constexpr std::string_view kOOLogNoteShowShipModel =
+constexpr std::string_view kLogNoteAddShips = "script.debug.note.addShips";
+constexpr std::string_view kLogNoteSet = "script.debug.note.set";
+constexpr std::string_view kLogNoteShowShipModel =
     "script.debug.note.showShipModel";
-constexpr std::string_view kOOLogNoteFuelLeak = "script.debug.note.setFuelLeak";
-constexpr std::string_view kOOLogNoteAddPlanet = "script.debug.note.addPlanet";
-constexpr std::string_view kOOLogNoteProcessSceneString =
+constexpr std::string_view kLogNoteFuelLeak = "script.debug.note.setFuelLeak";
+constexpr std::string_view kLogNoteAddPlanet = "script.debug.note.addPlanet";
+constexpr std::string_view kLogNoteProcessSceneString =
     "script.debug.note.processSceneString";
 
-constexpr std::string_view kOOLogSyntaxSetPlanetInfo =
+constexpr std::string_view kLogSyntaxSetPlanetInfo =
     "script.debug.syntax.setPlanetInfo";
-constexpr std::string_view kOOLogSyntaxAwardCargo =
+constexpr std::string_view kLogSyntaxAwardCargo =
     "script.debug.syntax.awardCargo";
-constexpr std::string_view kOOLogSyntaxAwardEquipment =
+constexpr std::string_view kLogSyntaxAwardEquipment =
     "script.debug.syntax.awardEquipment";
-constexpr std::string_view kOOLogSyntaxRemoveEquipment =
+constexpr std::string_view kLogSyntaxRemoveEquipment =
     "script.debug.syntax.removeEquipment";
-constexpr std::string_view kOOLogSyntaxMessageShipAIs =
+constexpr std::string_view kLogSyntaxMessageShipAIs =
     "script.debug.syntax.messageShipAIs";
-constexpr std::string_view kOOLogSyntaxAddShips =
-    "script.debug.syntax.addShips";
-constexpr std::string_view kOOLogSyntaxSet = "script.debug.syntax.set";
-constexpr std::string_view kOOLogSyntaxReset = "script.debug.syntax.reset";
-constexpr std::string_view kOOLogSyntaxIncrement =
+constexpr std::string_view kLogSyntaxAddShips = "script.debug.syntax.addShips";
+constexpr std::string_view kLogSyntaxSet = "script.debug.syntax.set";
+constexpr std::string_view kLogSyntaxReset = "script.debug.syntax.reset";
+constexpr std::string_view kLogSyntaxIncrement =
     "script.debug.syntax.increment";
-constexpr std::string_view kOOLogSyntaxDecrement =
+constexpr std::string_view kLogSyntaxDecrement =
     "script.debug.syntax.decrement";
-constexpr std::string_view kOOLogSyntaxAdd = "script.debug.syntax.add";
-constexpr std::string_view kOOLogSyntaxSubtract =
-    "script.debug.syntax.subtract";
+constexpr std::string_view kLogSyntaxAdd = "script.debug.syntax.add";
+constexpr std::string_view kLogSyntaxSubtract = "script.debug.syntax.subtract";
 
-constexpr std::string_view kOOLogRemoveAllCargoNotDocked =
+constexpr std::string_view kLogRemoveAllCargoNotDocked =
     "script.error.removeAllCargo.notDocked";
+
+}  // namespace oo
 
 constexpr std::string_view kActionsTempPrefix = "__oolite_actions_temp";
 
@@ -560,65 +567,65 @@ bool PlayerEntity::scriptTestCondition(const oo::PList& scriptCondition) {
           perform extensive validity checks.
   */
 
-  OOOperationType opType;
+  oo::OperationType opType;
   std::string selectorString;
   std::string selector;  // the query's name (called on the player's C++ part)
-  OOComparisonType comparator;
+  oo::ComparisonType comparator;
   std::optional<std::string> lhsString;
   std::string expandedRHS;
   double lhsValue, rhsValue;
   bool lhsFlag, rhsFlag;
 
-  opType = static_cast<OOOperationType>(scriptCondition.at<unsigned int>(0));
-  if (opType == OOOperationType::kFalse) return false;
+  opType = static_cast<oo::OperationType>(scriptCondition.at<unsigned int>(0));
+  if (opType == oo::OperationType::kFalse) return false;
 
   selectorString = scriptCondition.at<std::string>(2);
   comparator =
-      static_cast<OOComparisonType>(scriptCondition.at<unsigned int>(3));
+      static_cast<oo::ComparisonType>(scriptCondition.at<unsigned int>(3));
   const oo::PList& operandArray = ElementAt(scriptCondition, 4);
 
   // Transform mission/local var ops into string ops.
-  if (opType == OOOperationType::kMissionVar) {
+  if (opType == oo::OperationType::kMissionVar) {
     sMissionStringValue =
         ConditionString(missionVariableForKey(selectorString));
     selector = "mission_string";
-    opType = OOOperationType::kString;
-  } else if (opType == OOOperationType::kLocalVar) {
+    opType = oo::OperationType::kString;
+  } else if (opType == oo::OperationType::kLocalVar) {
     const oo::PList locals = localVariablesForMission(sCurrentMissionKey);
     const oo::PList* local = locals.find(selectorString);
     sMissionStringValue =
         ConditionString(local != nullptr ? *local : oo::PList());
     selector = "mission_string";
-    opType = OOOperationType::kString;
+    opType = oo::OperationType::kString;
   } else {
     selector = selectorString;
   }
 
   expandedRHS = expandScriptRightHandSide(operandArray).value_or(std::string());
 
-  if (opType == OOOperationType::kString) {
+  if (opType == oo::OperationType::kString) {
     // The query is called by name and answers a PList.
     lhsString = ConditionString(oo::CallEntityByName(this, selector));
 
 #define DOUBLEVAL(x) ((x).has_value() ? oo::str::doubleValue(*(x)) : 0.0)
 
     switch (comparator) {
-      case OOComparisonType::kUndefined:
+      case oo::ComparisonType::kUndefined:
         return !lhsString.has_value();
 
-      case OOComparisonType::kEqual:
+      case oo::ComparisonType::kEqual:
         return lhsString.has_value() && *lhsString == expandedRHS;
 
-      case OOComparisonType::kNotEqual:
+      case oo::ComparisonType::kNotEqual:
         return !(lhsString.has_value() && *lhsString == expandedRHS);
 
-      case OOComparisonType::kLessThan:
+      case oo::ComparisonType::kLessThan:
         return DOUBLEVAL(lhsString) < oo::str::doubleValue(expandedRHS);
 
-      case OOComparisonType::kGreaterThan:
+      case oo::ComparisonType::kGreaterThan:
         return DOUBLEVAL(lhsString) > oo::str::doubleValue(expandedRHS);
 
-      case OOComparisonType::kOneOf: {
+      case oo::ComparisonType::kOneOf: {
         if (!lhsString.has_value()) return false;  // nil matched nothing
         const std::string trimmedLHS = TrimWhitespace(*lhsString);
 
@@ -630,10 +637,10 @@ bool PlayerEntity::scriptTestCondition(const oo::PList& scriptCondition) {
       }
         return false;
     }
-  } else if (opType == OOOperationType::kNumber) {
+  } else if (opType == oo::OperationType::kNumber) {
     lhsValue = QueryDoubleValue(oo::CallEntityByName(this, selector));
 
-    if (comparator == OOComparisonType::kOneOf) {
+    if (comparator == oo::ComparisonType::kOneOf) {
       for (const std::string& rhsItem : oo::str::split(expandedRHS, ",")) {
         rhsValue = oo::str::doubleValue(rhsItem);
 
@@ -647,52 +654,52 @@ bool PlayerEntity::scriptTestCondition(const oo::PList& scriptCondition) {
       rhsValue = oo::str::doubleValue(expandedRHS);
 
       switch (comparator) {
-        case OOComparisonType::kEqual:
+        case oo::ComparisonType::kEqual:
           return lhsValue == rhsValue;
 
-        case OOComparisonType::kNotEqual:
+        case oo::ComparisonType::kNotEqual:
           return lhsValue != rhsValue;
 
-        case OOComparisonType::kLessThan:
+        case oo::ComparisonType::kLessThan:
           return lhsValue < rhsValue;
 
-        case OOComparisonType::kGreaterThan:
+        case oo::ComparisonType::kGreaterThan:
           return lhsValue > rhsValue;
 
-        case OOComparisonType::kUndefined:
-        case OOComparisonType::kOneOf:
+        case oo::ComparisonType::kUndefined:
+        case oo::ComparisonType::kOneOf:
           // "Can't happen" - undefined should have been caught by the
           // sanitizer, oneof is handled above.
           OO_LOG("script.error.unexpectedOperator",
                  "***** SCRIPT ERROR: in {}, operator {} is not valid for "
                  "numbers, evaluating to false.",
                  CurrentScriptDescription(),
-                 OOComparisonTypeToString(comparator));
+                 oo::ComparisonTypeToString(comparator));
           return false;
       }
     }
-  } else if (opType == OOOperationType::kBool) {
+  } else if (opType == oo::OperationType::kBool) {
     lhsFlag = ConditionString(oo::CallEntityByName(this, selector)) ==
               std::optional<std::string>("YES");
     rhsFlag = expandedRHS == "YES";
 
     switch (comparator) {
-      case OOComparisonType::kEqual:
+      case oo::ComparisonType::kEqual:
         return lhsFlag == rhsFlag;
 
-      case OOComparisonType::kNotEqual:
+      case oo::ComparisonType::kNotEqual:
         return lhsFlag != rhsFlag;
 
-      case OOComparisonType::kLessThan:
-      case OOComparisonType::kGreaterThan:
-      case OOComparisonType::kUndefined:
-      case OOComparisonType::kOneOf:
+      case oo::ComparisonType::kLessThan:
+      case oo::ComparisonType::kGreaterThan:
+      case oo::ComparisonType::kUndefined:
+      case oo::ComparisonType::kOneOf:
         // "Can't happen" - should have been caught by the sanitizer.
         OO_LOG("script.error.unexpectedOperator",
                "***** SCRIPT ERROR: in {}, operator {} is not valid for "
                "booleans, evaluating to false.",
                CurrentScriptDescription(),
-               OOComparisonTypeToString(comparator));
+               oo::ComparisonTypeToString(comparator));
         return false;
     }
   }
@@ -907,7 +914,7 @@ std::optional<std::string> PlayerEntity::replaceVariablesInString(
     }
   }
 
-  OO_LOG(kOOLogDebugReplaceVariablesInString,
+  OO_LOG(oo::kLogDebugReplaceVariablesInString,
          "EXPANSION: \"{}\" becomes \"{}\"", args, resultString);
 
   return resultString;
@@ -926,7 +933,7 @@ void PlayerEntity::setMissionDescription(
 
   if (!text.has_value()) {
     OO_LOG_ERR(
-        kOOLogScriptMissionDescNoText,
+        oo::kLogScriptMissionDescNoText,
         "in {}, no mission text set for key '{}' [UNIVERSE missiontext] "
         "is:\n{} ",
         CurrentScriptDescription(), textKey,
@@ -943,7 +950,7 @@ void PlayerEntity::setMissionDescription(
 void PlayerEntity::setMissionInstructions(
     const std::string& text, const std::optional<std::string>& key) {
   if (!key.has_value()) {
-    OO_LOG_ERR(kOOLogScriptMissionDescNoKey, "in {}, mission key not set",
+    OO_LOG_ERR(oo::kLogScriptMissionDescNoKey, "in {}, mission key not set",
                CurrentScriptDescription());
     return;
   }
@@ -957,7 +964,7 @@ void PlayerEntity::setMissionInstructions(
 void PlayerEntity::setMissionInstructionsList(
     const oo::PList& list, const std::optional<std::string>& key) {
   if (!key.has_value()) {
-    OO_LOG_ERR(kOOLogScriptMissionDescNoKey, "in {}, mission key not set",
+    OO_LOG_ERR(oo::kLogScriptMissionDescNoKey, "in {}, mission key not set",
                CurrentScriptDescription());
     return;
   }
@@ -978,7 +985,7 @@ void PlayerEntity::setMissionInstructionsList(
 
 void PlayerEntity::clearMissionDescription() {
   if (!sCurrentMissionKey.has_value()) {
-    OO_LOG_ERR(kOOLogScriptMissionDescNoKey, "in {}, mission key not set",
+    OO_LOG_ERR(oo::kLogScriptMissionDescNoKey, "in {}, mission key not set",
                CurrentScriptDescription());
     return;
   }
@@ -999,12 +1006,12 @@ oo::PList PlayerEntity::mission_string() {
 
 oo::PList PlayerEntity::status_string() {
   // called by name
-  return oo::PList(OOStringFromEntityStatus(status()));
+  return oo::PList(oo::StringFromEntityStatus(status()));
 }
 
 oo::PList PlayerEntity::gui_screen_string() {
   // called by name
-  return oo::PList(OOStringFromGUIScreenID(gui_screen));
+  return oo::PList(oo::StringFromGUIScreenID(gui_screen));
 }
 
 oo::PList PlayerEntity::getGalaxy_number() {
@@ -1051,7 +1058,7 @@ void PlayerEntity::setLegalStatus(const std::string& valueString) {
 
 oo::PList PlayerEntity::commanderLegalStatus_string() {
   // called by name
-  return StringOrNull(OODisplayStringFromLegalStatus(legalStatusValue));
+  return StringOrNull(oo::DisplayStringFromLegalStatus(legalStatusValue));
 }
 
 oo::PList PlayerEntity::d100_number() {
@@ -1232,7 +1239,7 @@ oo::PList PlayerEntity::commanderName_string() {
 
 oo::PList PlayerEntity::commanderRank_string() {
   // called by name
-  return StringOrNull(OODisplayRatingStringFromKillCount(score()));
+  return StringOrNull(oo::DisplayRatingStringFromKillCount(score()));
 }
 
 oo::PList PlayerEntity::commanderShip_string() {
@@ -1319,7 +1326,7 @@ void PlayerEntity::awardEquipment(const std::string& equipString) {
     mountMissileWithRole(equipKey);
   } else if (oo::str::hasPrefix(equipKey, "EQ_WEAPON") &&
              !oo::str::hasSuffix(equipKey, "_DAMAGED")) {
-    OO_LOG(kOOLogSyntaxAwardEquipment,
+    OO_LOG(oo::kLogSyntaxAwardEquipment,
            "***** SCRIPT ERROR: in {}, CANNOT award undamaged weapon:'{}'. "
            "Damaged weapons can be awarded instead.",
            CurrentScriptDescription(), equipKey);
@@ -1327,7 +1334,7 @@ void PlayerEntity::awardEquipment(const std::string& equipString) {
              hasEquipmentItem(
                  oo::PList(equipKey.substr(0, equipKey.size() - 8)))) {
     // (the "_DAMAGED" suffix is ASCII, so its bytes are its characters)
-    OO_LOG(kOOLogSyntaxAwardEquipment,
+    OO_LOG(oo::kLogSyntaxAwardEquipment,
            "***** SCRIPT ERROR: in {}, CANNOT award damaged equipment:'{}'. "
            "Undamaged version already equipped.",
            CurrentScriptDescription(), equipKey);
@@ -1350,7 +1357,7 @@ void PlayerEntity::removeEquipment(const std::string& equipString) {
   if (equipKey == "EQ_CARGO_BAY" && hasEquipmentItem(oo::PList(equipKey)) &&
       (extraCargo() > availableCargoSpace())) {
     OO_LOG(
-        kOOLogSyntaxRemoveEquipment,
+        oo::kLogSyntaxRemoveEquipment,
         "***** SCRIPT ERROR: in {}, CANNOT remove cargo bay. Too much cargo.",
         CurrentScriptDescription());
     return;
@@ -1367,7 +1374,7 @@ void PlayerEntity::setPlanetinfo(const std::string& key_valueString) {
   const std::vector<std::string> tokens = oo::str::split(argument, "=");
 
   if (tokens.size() != 2) {
-    OO_LOG(kOOLogSyntaxSetPlanetInfo,
+    OO_LOG(oo::kLogSyntaxSetPlanetInfo,
            "***** SCRIPT ERROR: in {}, CANNOT setPlanetinfo: '{}' (bad "
            "parameter count)",
            CurrentScriptDescription(), argument);
@@ -1392,7 +1399,7 @@ void PlayerEntity::setSpecificPlanetInfo(const std::string& key_valueString) {
   int gnum, pnum;
 
   if (tokens.size() != 4) {
-    OO_LOG(kOOLogSyntaxSetPlanetInfo,
+    OO_LOG(oo::kLogSyntaxSetPlanetInfo,
            "***** SCRIPT ERROR: in {}, CANNOT setSpecificPlanetInfo: '{}' (bad "
            "parameter count)",
            CurrentScriptDescription(), argument);
@@ -1421,7 +1428,7 @@ void PlayerEntity::awardCargo(const std::string& amount_typeString) {
   OOMassUnit unit;
 
   if (tokens.size() != 2) {
-    OO_LOG(kOOLogSyntaxAwardCargo,
+    OO_LOG(oo::kLogSyntaxAwardCargo,
            "***** SCRIPT ERROR: in {}, CANNOT awardCargo: '{}' ({})",
            CurrentScriptDescription(), argument, "bad parameter count");
     return;
@@ -1432,7 +1439,7 @@ void PlayerEntity::awardCargo(const std::string& amount_typeString) {
   if (!((UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr) != nullptr
             ? UNIVERSE->getCommodities()->goodDefined(type)
             : false)) {
-    OO_LOG(kOOLogSyntaxAwardCargo,
+    OO_LOG(oo::kLogSyntaxAwardCargo,
            "***** SCRIPT ERROR: in {}, CANNOT awardCargo: '{}' ({})",
            CurrentScriptDescription(), argument, "unknown type");
     return;
@@ -1440,7 +1447,7 @@ void PlayerEntity::awardCargo(const std::string& amount_typeString) {
 
   amount = tokenArray.at<int>(0);
   if (amount < 0) {
-    OO_LOG(kOOLogSyntaxAwardCargo,
+    OO_LOG(oo::kLogSyntaxAwardCargo,
            "***** SCRIPT ERROR: in {}, CANNOT awardCargo: '{}' ({})",
            CurrentScriptDescription(), argument, "negative quantity");
     return;
@@ -1450,7 +1457,7 @@ void PlayerEntity::awardCargo(const std::string& amount_typeString) {
       (shipCommodityData != nullptr ? shipCommodityData->massUnitForGood(type)
                                     : OOMassUnit::kTons);
   if (specialCargo && unit == OOMassUnit::kTons) {
-    OO_LOG(kOOLogSyntaxAwardCargo,
+    OO_LOG(oo::kLogSyntaxAwardCargo,
            "***** SCRIPT ERROR: in {}, CANNOT awardCargo: '{}' ({})",
            CurrentScriptDescription(), argument,
            "cargo hold full with special cargo");
@@ -1468,13 +1475,13 @@ void PlayerEntity::removeAllCargo(bool forceRemoval) {
   if (::scriptTarget != this) return;
 
   if (status() != oo::EntityStatus::kDocked && !forceRemoval) {
-    OO_LOG_WARN(kOOLogRemoveAllCargoNotDocked,
+    OO_LOG_WARN(oo::kLogRemoveAllCargoNotDocked,
                 "{}removeAllCargo only works when docked.",
                 " in " + CurrentScriptDescription() + ", ");
     return;
   }
 
-  OO_LOG(kOOLogNoteRemoveAllCargo, "{} removeAllCargo",
+  OO_LOG(oo::kLogNoteRemoveAllCargo, "{} removeAllCargo",
          forceRemoval ? "Forcing" : "Going to");
 
   for (const std::string& type :
@@ -1511,7 +1518,7 @@ void PlayerEntity::useSpecialCargo(const std::string& descriptionString) {
 
   const std::string& description = descriptionString;
   removeAllCargo(true);
-  OO_LOG(kOOLogNoteUseSpecialCargo, "Going to useSpecialCargo:'{}'",
+  OO_LOG(oo::kLogNoteUseSpecialCargo, "Going to useSpecialCargo:'{}'",
          description);
   specialCargo = OOExpand(description);
 }
@@ -1545,7 +1552,7 @@ void PlayerEntity::messageShipAIs(const std::string& roles_message) {
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
   if (tokens.size() < 2) {
-    OO_LOG(kOOLogSyntaxMessageShipAIs,
+    OO_LOG(oo::kLogSyntaxMessageShipAIs,
            "***** SCRIPT ERROR: in {}, CANNOT messageShipAIs: '{}' (bad "
            "parameter count)",
            CurrentScriptDescription(), argument);
@@ -1580,7 +1587,7 @@ void PlayerEntity::addShips(const std::string& roles_number) {
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
   if (tokens.size() != 2) {
-    OO_LOG(kOOLogSyntaxAddShips,
+    OO_LOG(oo::kLogSyntaxAddShips,
            "***** SCRIPT ERROR: in {}, CANNOT addShips: '{}' (expected <role> "
            "<count>)",
            CurrentScriptDescription(), argument);
@@ -1591,14 +1598,14 @@ void PlayerEntity::addShips(const std::string& roles_number) {
 
   int number = oo::str::intValue(tokens[1]);
   if (number < 0) {
-    OO_LOG(kOOLogSyntaxAddShips,
+    OO_LOG(oo::kLogSyntaxAddShips,
            "***** SCRIPT ERROR: in {}, can't add {} ships -- that's less than "
            "zero, y'know..",
            CurrentScriptDescription(), number);
     return;
   }
 
-  OO_LOG(kOOLogNoteAddShips, "DEBUG: Going to add {} ships with role '{}'",
+  OO_LOG(oo::kLogNoteAddShips, "DEBUG: Going to add {} ships with role '{}'",
          number, roleString);
 
   while (number--)
@@ -1612,7 +1619,7 @@ void PlayerEntity::addSystemShips(const std::string& roles_number_position) {
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
   if (tokens.size() != 3) {
-    OO_LOG(kOOLogSyntaxAddShips,
+    OO_LOG(oo::kLogSyntaxAddShips,
            "***** SCRIPT ERROR: in {}, CANNOT addSystemShips: '{}' (expected "
            "<role> <count> <position>)",
            CurrentScriptDescription(), argument);
@@ -1624,14 +1631,14 @@ void PlayerEntity::addSystemShips(const std::string& roles_number_position) {
   int number = oo::str::intValue(tokens[1]);
   double posn = oo::str::doubleValue(tokens[2]);
   if (number < 0) {
-    OO_LOG(kOOLogSyntaxAddShips,
+    OO_LOG(oo::kLogSyntaxAddShips,
            "***** SCRIPT ERROR: in {}, can't add {} ships -- that's less than "
            "zero, y'know..",
            CurrentScriptDescription(), number);
     return;
   }
 
-  OO_LOG(kOOLogNoteAddShips,
+  OO_LOG(oo::kLogNoteAddShips,
          "DEBUG: Going to add {} ships with role '{}' at a point {:.3f} along "
          "route1",
          number, roleString, posn);
@@ -1646,7 +1653,7 @@ void PlayerEntity::addShipsAt(const std::string& roles_number_system_x_y_z) {
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
   if (tokens.size() != 6) {
-    OO_LOG(kOOLogSyntaxAddShips,
+    OO_LOG(oo::kLogSyntaxAddShips,
            "***** SCRIPT ERROR: in {}, CANNOT addShipsAt: '{}' (expected "
            "<role> <count> <coordinate-system> <x> <y> <z>)",
            CurrentScriptDescription(), argument);
@@ -1662,13 +1669,13 @@ void PlayerEntity::addShipsAt(const std::string& roles_number_system_x_y_z) {
 
   int number = oo::str::intValue(tokens[1]);
   if (number < 1) {
-    OO_LOG(kOOLogSyntaxAddShips,
+    OO_LOG(oo::kLogSyntaxAddShips,
            "----- WARNING in {}  Tried to add {} ships -- no ship added.",
            CurrentScriptDescription(), number);
     return;
   }
 
-  OO_LOG(kOOLogNoteAddShips,
+  OO_LOG(oo::kLogNoteAddShips,
          "DEBUG: Going to add {} ship(s) with role '{}' at point ({:.3f}, "
          "{:.3f}, {:.3f}) using system {}",
          number, roleString, posn.x, posn.y, posn.z, systemString);
@@ -1677,7 +1684,7 @@ void PlayerEntity::addShipsAt(const std::string& roles_number_system_x_y_z) {
                                                              posn, systemString)
                             : false)) {
     OO_LOG(
-        kOOLogScriptAddShipsFailed,
+        oo::kLogScriptAddShipsFailed,
         "***** SCRIPT ERROR: in {}, {} could not add {} ships with role \"{}\"",
         CurrentScriptDescription(),
         "addShipsAt:", static_cast<unsigned>(number), roleString);
@@ -1691,7 +1698,7 @@ void PlayerEntity::addShipsAtPrecisely(
   const std::vector<std::string> tokens = oo::str::tokens(argument);
 
   if (tokens.size() != 6) {
-    OO_LOG(kOOLogSyntaxAddShips,
+    OO_LOG(oo::kLogSyntaxAddShips,
            "***** SCRIPT ERROR: in {},* CANNOT addShipsAtPrecisely: '{}' "
            "(expected <role> <count> <coordinate-system> <x> <y> <z>)",
            CurrentScriptDescription(), argument);
@@ -1707,13 +1714,13 @@ void PlayerEntity::addShipsAtPrecisely(
 
   int number = oo::str::intValue(tokens[1]);
   if (number < 1) {
-    OO_LOG(kOOLogSyntaxAddShips,
+    OO_LOG(oo::kLogSyntaxAddShips,
            "----- WARNING: in {}, Can't add {} ships -- no ship added.",
            CurrentScriptDescription(), number);
     return;
   }
 
-  OO_LOG(kOOLogNoteAddShips,
+  OO_LOG(oo::kLogNoteAddShips,
          "DEBUG: Going to add {} ship(s) with role '{}' precisely at point "
          "({:.3f}, {:.3f}, {:.3f}) using system {}",
          number, roleString, posn.x, posn.y, posn.z, systemString);
@@ -1722,7 +1729,7 @@ void PlayerEntity::addShipsAtPrecisely(
                                                            posn, systemString)
                             : false)) {
     OO_LOG(
-        kOOLogScriptAddShipsFailed,
+        oo::kLogScriptAddShipsFailed,
         "***** SCRIPT ERROR: in {}, {} could not add {} ships with role '{}'",
         CurrentScriptDescription(),
         "addShipsAtPrecisely:", static_cast<unsigned>(number), roleString);
@@ -1737,7 +1744,7 @@ void PlayerEntity::addShipsWithinRadius(
 
   if (tokens.size() != 7) {
     OO_LOG(
-        kOOLogSyntaxAddShips,
+        oo::kLogSyntaxAddShips,
         "***** SCRIPT ERROR: in {}, CANNOT 'addShipsWithinRadius: {}' "
         "(expected <role> <count> <coordinate-system> <x> <y> <z> <radius>))",
         CurrentScriptDescription(), argument);
@@ -1754,13 +1761,13 @@ void PlayerEntity::addShipsWithinRadius(
   HPVector posn = make_HPvector(x, y, z);
 
   if (number < 1) {
-    OO_LOG(kOOLogSyntaxAddShips,
+    OO_LOG(oo::kLogSyntaxAddShips,
            "----- WARNING: in {}, can't add {} ships -- no ship added.",
            CurrentScriptDescription(), number);
     return;
   }
 
-  OO_LOG(kOOLogNoteAddShips,
+  OO_LOG(oo::kLogNoteAddShips,
          "DEBUG: Going to add {} ship(s) with role '{}' within {:.2f} radius "
          "about point ({:.3f}, {:.3f}, {:.3f}) using system {}",
          number, roleString, static_cast<double>(r), x, y, z, systemString);
@@ -1769,7 +1776,7 @@ void PlayerEntity::addShipsWithinRadius(
                                   number, roleString, posn, systemString, r)
                             : false)) {
     OO_LOG(
-        kOOLogScriptAddShipsFailed,
+        oo::kLogScriptAddShipsFailed,
         "***** SCRIPT ERROR :in {}, {} could not add {} ships with role \"{}\"",
         CurrentScriptDescription(),
         "addShipsWithinRadius:", static_cast<unsigned>(number), roleString);
@@ -1779,10 +1786,10 @@ void PlayerEntity::addShipsWithinRadius(
 void PlayerEntity::spawnShip(const std::string& ship_key) {
   // called by name
   if ((UNIVERSE != nullptr ? UNIVERSE->spawnShip(ship_key) : false)) {
-    OO_LOG(kOOLogNoteAddShips, "DEBUG: Spawned ship with shipdata key '{}'.",
+    OO_LOG(oo::kLogNoteAddShips, "DEBUG: Spawned ship with shipdata key '{}'.",
            ship_key);
   } else {
-    OO_LOG(kOOLogScriptAddShipsFailed,
+    OO_LOG(oo::kLogScriptAddShipsFailed,
            "***** SCRIPT ERROR: in {}, could not spawn ship with shipdata key "
            "'{}'.",
            CurrentScriptDescription(), ship_key);
@@ -1798,7 +1805,7 @@ void PlayerEntity::set(const std::string& missionvariable_value) {
   bool hasMissionPrefix, hasLocalPrefix;
 
   if (tokens.size() < 2) {
-    OO_LOG(kOOLogSyntaxSet,
+    OO_LOG(oo::kLogSyntaxSet,
            "***** SCRIPT ERROR: in {}, CANNOT SET '{}' (expected "
            "mission_variable or local_variable followed by value expression)",
            CurrentScriptDescription(), argument);
@@ -1812,15 +1819,15 @@ void PlayerEntity::set(const std::string& missionvariable_value) {
   hasLocalPrefix = oo::str::hasPrefix(missionVariableString, "local_");
 
   if (!hasMissionPrefix && !hasLocalPrefix) {
-    OO_LOG(kOOLogSyntaxSet,
+    OO_LOG(oo::kLogSyntaxSet,
            "***** SCRIPT ERROR: in {}, IDENTIFIER '{}' DOES NOT BEGIN WITH "
            "'mission_' or 'local_'",
            CurrentScriptDescription(), missionVariableString);
     return;
   }
 
-  OO_LOG(kOOLogNoteSet, "DEBUG: script {} is set to {}", missionVariableString,
-         valueString);
+  OO_LOG(oo::kLogNoteSet, "DEBUG: script {} is set to {}",
+         missionVariableString, valueString);
 
   if (hasMissionPrefix) {
     setMissionVariable(oo::PList(valueString), missionVariableString);
@@ -1842,7 +1849,7 @@ void PlayerEntity::reset(const std::string& missionvariable) {
   } else if (hasLocalPrefix) {
     setLocalVariable(std::nullopt, missionVariableString, sCurrentMissionKey);
   } else {
-    OO_LOG(kOOLogSyntaxReset,
+    OO_LOG(oo::kLogSyntaxReset,
            "***** SCRIPT ERROR: in {}, IDENTIFIER '{}' DOES NOT BEGIN WITH "
            "'mission_' or 'local_'",
            CurrentScriptDescription(), missionVariableString);
@@ -1873,7 +1880,7 @@ void PlayerEntity::increment(const std::string& missionVariableObject) {
     setLocalVariable(std::format("{}", value), missionVariableString,
                      sCurrentMissionKey);
   } else {
-    OO_LOG(kOOLogSyntaxIncrement,
+    OO_LOG(oo::kLogSyntaxIncrement,
            "***** SCRIPT ERROR: in {}, IDENTIFIER '{}' DOES NOT BEGIN WITH "
            "'mission_' or 'local_'",
            CurrentScriptDescription(), missionVariableString);
@@ -1904,7 +1911,7 @@ void PlayerEntity::decrement(const std::string& missionVariableObject) {
     setLocalVariable(std::format("{}", value), missionVariableString,
                      sCurrentMissionKey);
   } else {
-    OO_LOG(kOOLogSyntaxDecrement,
+    OO_LOG(oo::kLogSyntaxDecrement,
            "***** SCRIPT ERROR: in {}, IDENTIFIER '{}' DOES NOT BEGIN WITH "
            "'mission_' or 'local_'",
            CurrentScriptDescription(), missionVariableString);
@@ -1921,7 +1928,7 @@ void PlayerEntity::add(const std::string& missionVariableString_value) {
   bool hasMissionPrefix, hasLocalPrefix;
 
   if (tokens.size() < 2) {
-    OO_LOG(kOOLogSyntaxAdd, "***** SCRIPT ERROR: in {}, CANNOT ADD: '{}'",
+    OO_LOG(oo::kLogSyntaxAdd, "***** SCRIPT ERROR: in {}, CANNOT ADD: '{}'",
            CurrentScriptDescription(), argument);
     return;
   }
@@ -1947,7 +1954,7 @@ void PlayerEntity::add(const std::string& missionVariableString_value) {
     setLocalVariable(std::format("{:f}", value), missionVariableString,
                      sCurrentMissionKey);
   } else {
-    OO_LOG(kOOLogSyntaxAdd,
+    OO_LOG(oo::kLogSyntaxAdd,
            "***** SCRIPT ERROR: in {}, CANNOT ADD: '{}' -- IDENTIFIER '{}' "
            "DOES NOT BEGIN WITH 'mission_' or 'local_'",
            CurrentScriptDescription(), argument, argument);
@@ -1964,7 +1971,7 @@ void PlayerEntity::subtract(const std::string& missionVariableString_value) {
   bool hasMissionPrefix, hasLocalPrefix;
 
   if (tokens.size() < 2) {
-    OO_LOG(kOOLogSyntaxSubtract,
+    OO_LOG(oo::kLogSyntaxSubtract,
            "***** SCRIPT ERROR: in {}, CANNOT SUBTRACT: '{}'",
            CurrentScriptDescription(), argument);
     return;
@@ -1991,7 +1998,7 @@ void PlayerEntity::subtract(const std::string& missionVariableString_value) {
     setLocalVariable(std::format("{:f}", value), missionVariableString,
                      sCurrentMissionKey);
   } else {
-    OO_LOG(kOOLogSyntaxSubtract,
+    OO_LOG(oo::kLogSyntaxSubtract,
            "***** SCRIPT ERROR: in {}, CANNOT SUBTRACT: '{}' -- IDENTIFIER "
            "'{}' DOES NOT BEGIN WITH 'mission_' or 'local_'",
            CurrentScriptDescription(), argument, argument);
@@ -2243,7 +2250,7 @@ void PlayerEntity::showShipModel(const std::string& role) {
   ::ShipEntity* ship =
       (UNIVERSE != nullptr ? UNIVERSE->makeDemoShipWithRole(roleString, true)
                            : static_cast<::ShipEntity*>(nullptr));
-  OO_LOG(kOOLogNoteShowShipModel, "::::: showShipModel:'{}' ({}) ({})",
+  OO_LOG(oo::kLogNoteShowShipModel, "::::: showShipModel:'{}' ({}) ({})",
          roleString, oo::EntityDescription(ship),
          (ship != nullptr ? ship->getName() : std::optional<std::string>())
              .value_or("(null)"));
@@ -2300,7 +2307,7 @@ void PlayerEntity::setFuelLeak(const std::string& value) {
     playFuelLeak();
     if (UNIVERSE != nullptr)
       UNIVERSE->addMessage(OO_DESC("danger-fuel-leak"), 6);
-    OO_LOG(kOOLogNoteFuelLeak, "{}", "FUEL LEAK activated!");
+    OO_LOG(oo::kLogNoteFuelLeak, "{}", "FUEL LEAK activated!");
   }
 }
 
@@ -2401,8 +2408,9 @@ void PlayerEntity::addPlanet(const std::string& planetKey) {
   addPlanetEntity(planetKey);
 }
 
-::OOPlanetEntity* PlayerEntity::addPlanetEntity(const std::string& planetKey) {
-  OO_LOG(kOOLogNoteAddPlanet, "addPlanet: {}", planetKey);
+::oo::PlanetEntity* PlayerEntity::addPlanetEntity(
+    const std::string& planetKey) {
+  OO_LOG(oo::kLogNoteAddPlanet, "addPlanet: {}", planetKey);
 
   if (!UNIVERSE) return nullptr;
   // The system properties, once, as an oo::PList (null when there are none).
@@ -2419,13 +2427,13 @@ void PlayerEntity::addPlanet(const std::string& planetKey) {
 
   /*- add planet -*/
   // ("%@" of the dictionary: the round trip prints the same description)
-  OO_LOG(kOOLogDebugAddPlanet, "DEBUG: initPlanetFromDictionary: {}",
+  OO_LOG(oo::kLogDebugAddPlanet, "DEBUG: initPlanetFromDictionary: {}",
          oo::DescriptionOf(dict));
-  ::OOPlanetEntity* planet = nullptr;
+  ::oo::PlanetEntity* planet = nullptr;
   {
     // A new C++ planet.
-    std::shared_ptr<::OOPlanetEntity> planetRef =
-        oo::makeShared<::OOPlanetEntity>();
+    std::shared_ptr<::oo::PlanetEntity> planetRef =
+        oo::makeShared<::oo::PlanetEntity>();
     oo::MadeEntity(planetRef);
     planetRef->initFromDictionary(
         dict, true,
@@ -2475,14 +2483,14 @@ void PlayerEntity::addPlanet(const std::string& planetKey) {
            : HPVector{});
   if (static_cast<bool>(posn.x) || static_cast<bool>(posn.y) ||
       static_cast<bool>(posn.z)) {
-    OO_LOG(kOOLogDebugAddPlanet,
+    OO_LOG(oo::kLogDebugAddPlanet,
            "planet position ({:.2f} {:.2f} {:.2f}) derived from {}", posn.x,
            posn.y, posn.z, positionString);
   } else {
     if (const std::optional<HPVector> scanned =
             ScanHPVectorFromString(positionString))
       posn = *scanned;
-    OO_LOG(kOOLogDebugAddPlanet,
+    OO_LOG(oo::kLogDebugAddPlanet,
            "planet position ({:.2f} {:.2f} {:.2f}) derived from {}", posn.x,
            posn.y, posn.z, positionString);
   }
@@ -2497,8 +2505,8 @@ void PlayerEntity::addMoon(const std::string& moonKey) {
   addMoonEntity(moonKey);
 }
 
-::OOPlanetEntity* PlayerEntity::addMoonEntity(const std::string& moonKey) {
-  OO_LOG(kOOLogNoteAddPlanet, "DEBUG: addMoon '{}'", moonKey);
+::oo::PlanetEntity* PlayerEntity::addMoonEntity(const std::string& moonKey) {
+  OO_LOG(oo::kLogNoteAddPlanet, "DEBUG: addMoon '{}'", moonKey);
 
   if (!UNIVERSE) return nullptr;
   // The system properties, once, as an oo::PList (null when there are none).
@@ -2515,13 +2523,13 @@ void PlayerEntity::addMoon(const std::string& moonKey) {
 
   /*- add planet -*/
   // ("%@" of the dictionary: the round trip prints the same description)
-  OO_LOG(kOOLogDebugAddPlanet, "DEBUG: initMoonFromDictionary: {}",
+  OO_LOG(oo::kLogDebugAddPlanet, "DEBUG: initMoonFromDictionary: {}",
          oo::DescriptionOf(dict));
-  ::OOPlanetEntity* planet = nullptr;
+  ::oo::PlanetEntity* planet = nullptr;
   {
     // A new C++ planet.
-    std::shared_ptr<::OOPlanetEntity> planetRef =
-        oo::makeShared<::OOPlanetEntity>();
+    std::shared_ptr<::oo::PlanetEntity> planetRef =
+        oo::makeShared<::oo::PlanetEntity>();
     oo::MadeEntity(planetRef);
     planetRef->initFromDictionary(
         dict, false,
@@ -2571,14 +2579,14 @@ void PlayerEntity::addMoon(const std::string& moonKey) {
            : HPVector{});
   if (static_cast<bool>(posn.x) || static_cast<bool>(posn.y) ||
       static_cast<bool>(posn.z)) {
-    OO_LOG(kOOLogDebugAddPlanet,
+    OO_LOG(oo::kLogDebugAddPlanet,
            "moon position ({:.2f} {:.2f} {:.2f}) derived from {}", posn.x,
            posn.y, posn.z, positionString);
   } else {
     if (const std::optional<HPVector> scanned =
             ScanHPVectorFromString(positionString))
       posn = *scanned;
-    OO_LOG(kOOLogDebugAddPlanet,
+    OO_LOG(oo::kLogDebugAddPlanet,
            "moon position ({:.2f} {:.2f} {:.2f}) derived from {}", posn.x,
            posn.y, posn.z, positionString);
   }
@@ -2589,13 +2597,13 @@ void PlayerEntity::addMoon(const std::string& moonKey) {
 }
 
 void PlayerEntity::debugOn() {
-  oo::log::logger().setDisplay(kOOLogDebugOnMetaClass, true);
-  OO_LOG(kOOLogDebugOnOff, "{}", "SCRIPT debug messages ON");
+  oo::log::logger().setDisplay(oo::kLogDebugOnMetaClass, true);
+  OO_LOG(oo::kLogDebugOnOff, "{}", "SCRIPT debug messages ON");
 }
 
 void PlayerEntity::debugOff() {
-  OO_LOG(kOOLogDebugOnOff, "{}", "SCRIPT debug messages OFF");
-  oo::log::logger().setDisplay(kOOLogDebugOnMetaClass, false);
+  OO_LOG(oo::kLogDebugOnOff, "{}", "SCRIPT debug messages OFF");
+  oo::log::logger().setDisplay(oo::kLogDebugOnMetaClass, false);
 }
 
 void PlayerEntity::debugMessage(const std::string& args) {
@@ -2797,7 +2805,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
   const std::string i_key = oo::str::lowercase(i_info[0]);
 
   // ("%@" of the token array: the same description)
-  OO_LOG(kOOLogNoteProcessSceneString, "..... processing {} ({})",
+  OO_LOG(oo::kLogNoteProcessSceneString, "..... processing {} ({})",
          oo::DescriptionOf(TokenArray(i_info)), i_key);
 
   // tokens [from, from + count) joined by " ", as -subarrayWithRange: then
@@ -2828,7 +2836,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     const oo::PList* sceneEntry = UNIVERSE->descriptions()->find(scene_key);
     const oo::PList scene_items =
         (sceneEntry != nullptr) ? *sceneEntry : oo::PList();
-    OO_LOG(kOOLogDebugProcessSceneStringAddScene, "::::: adding scene: '{}'",
+    OO_LOG(oo::kLogDebugProcessSceneStringAddScene, "::::: adding scene: '{}'",
            scene_key);
     //
     if (!scene_items.isNull()) {
@@ -2869,7 +2877,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
         ship.get(), model_q, i_info[9]);
     model_p0 = vector_add(model_p0, vector_subtract(off, model_offset));
 
-    OO_LOG(kOOLogDebugProcessSceneStringAddModel,
+    OO_LOG(oo::kLogDebugProcessSceneStringAddModel,
            "::::: adding model to scene:'{}'",
            oo::EntityDescription(ship.get()));
     if (ship != nullptr) ship->setOrientation(model_q);
@@ -2917,7 +2925,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     model_p0.y += off.y - model_offset.y;
     model_p0.z += off.z - model_offset.z;
 
-    OO_LOG(kOOLogDebugProcessSceneStringAddModel,
+    OO_LOG(oo::kLogDebugProcessSceneStringAddModel,
            "::::: adding model to scene:'{}'",
            oo::EntityDescription(doppelganger.get()));
     if (doppelganger != nullptr) doppelganger->setOrientation(model_q);
@@ -2962,22 +2970,22 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     if (UNIVERSE != nullptr)
       UNIVERSE->setMainLightPosition(_sysInfoLight);  // set light origin
 
-    ::OOPlanetEntity* originalPlanet = nullptr;
+    ::oo::PlanetEntity* originalPlanet = nullptr;
     if (i_key == "local-planet" &&
         (UNIVERSE != nullptr && UNIVERSE->sun() != nullptr)) {
       originalPlanet = (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr);
     } else {
       // A new C++ planet.
-      std::shared_ptr<::OOPlanetEntity> planetRef =
-          oo::makeShared<::OOPlanetEntity>();
+      std::shared_ptr<::oo::PlanetEntity> planetRef =
+          oo::makeShared<::oo::PlanetEntity>();
       oo::MadeEntity(planetRef);
       planetRef->initAsMainPlanetForSystem(info_system_id);
       originalPlanet = planetRef.get();
     }
     // miniatureVersion(): a new C++ planet; null for null.
-    ::OOPlanetEntity* doppelganger = nullptr;
+    ::oo::PlanetEntity* doppelganger = nullptr;
     if (originalPlanet != nullptr) {
-      std::shared_ptr<::OOPlanetEntity> miniature =
+      std::shared_ptr<::oo::PlanetEntity> miniature =
           originalPlanet->miniatureVersion();
       oo::MadeEntity(miniature);
       doppelganger = miniature.get();
@@ -3007,7 +3015,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
         static_cast<OOScalar>(0.83), static_cast<OOScalar>(0.12),
         static_cast<OOScalar>(0.44),
         0.0};  // new planets - default orientation.
-    OO_LOG(kOOLogDebugProcessSceneStringAddMiniPlanet,
+    OO_LOG(oo::kLogDebugProcessSceneStringAddMiniPlanet,
            "::::: adding {} to scene:'{}'", i_key,
            oo::EntityDescription(doppelganger));
     if (doppelganger != nullptr)
@@ -3110,7 +3118,7 @@ void PlayerEntity::targetNearestHostile() {
   Entity* ent = foundTarget();
   if (ent != nullptr) {
     ident_engaged = true;
-    missile_status = OOMissileStatus::kTargetLocked;
+    missile_status = oo::MissileStatus::kTargetLocked;
     addTarget(ent);
   }
 }
@@ -3120,7 +3128,7 @@ void PlayerEntity::targetNearestIncomingMissile() {
   Entity* ent = foundTarget();
   if (ent != nullptr) {
     ident_engaged = true;
-    missile_status = OOMissileStatus::kTargetLocked;
+    missile_status = oo::MissileStatus::kTargetLocked;
     addTarget(ent);
   }
 }
@@ -3129,7 +3137,7 @@ void PlayerEntity::setGalacticHyperspaceBehaviourTo(
     const std::string& galacticHyperspaceBehaviourString) {
   // called by name
   oo::GalacticHyperspaceBehaviour ghBehaviour =
-      OOGalacticHyperspaceBehaviourFromString(
+      oo::GalacticHyperspaceBehaviourFromString(
           galacticHyperspaceBehaviourString);
   if (ghBehaviour == oo::GalacticHyperspaceBehaviour::kUnknown) {
     OO_LOG(
@@ -3157,20 +3165,24 @@ void PlayerEntity::setGalacticHyperspaceFixedCoordsTo(
                                     coord_vals.at<unsigned char>(1));
 }
 
-std::string OOComparisonTypeToString(OOComparisonType type) {
+namespace oo {
+
+std::string ComparisonTypeToString(ComparisonType type) {
   switch (type) {
-    case OOComparisonType::kEqual:
+    case ComparisonType::kEqual:
       return "equal";
-    case OOComparisonType::kNotEqual:
+    case ComparisonType::kNotEqual:
       return "notequal";
-    case OOComparisonType::kLessThan:
+    case ComparisonType::kLessThan:
       return "lessthan";
-    case OOComparisonType::kGreaterThan:
+    case ComparisonType::kGreaterThan:
       return "greaterthan";
-    case OOComparisonType::kOneOf:
+    case ComparisonType::kOneOf:
       return "oneof";
-    case OOComparisonType::kUndefined:
+    case ComparisonType::kUndefined:
       return "undefined";
   }
   return "<error: invalid comparison type>";
 }
+
+}  // namespace oo

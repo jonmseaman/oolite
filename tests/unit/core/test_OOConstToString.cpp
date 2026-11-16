@@ -26,17 +26,22 @@
 #include "oo_test.hpp"
 
 // ShipEntity.h's declarations (it imports the whole game).
-typedef OOEquipmentType* OOWeaponType;
-std::optional<std::string> OOEquipmentIdentifierFromWeaponType(
-    OOWeaponType weapon);
-OOWeaponType OOWeaponTypeFromEquipmentIdentifierSloppy(
+namespace oo {
+
+typedef OOEquipmentType* WeaponType;
+std::optional<std::string> EquipmentIdentifierFromWeaponType(
+    WeaponType weapon);
+WeaponType WeaponTypeFromEquipmentIdentifierSloppy(
     const std::string& string);
-OOWeaponType OOWeaponTypeFromEquipmentIdentifierStrict(
+WeaponType WeaponTypeFromEquipmentIdentifierStrict(
     const std::string& string);
-OOWeaponType OOWeaponTypeFromEquipmentIdentifierLegacy(
+WeaponType WeaponTypeFromEquipmentIdentifierLegacy(
     const std::string& string);
-std::optional<std::string> OOStringFromWeaponType(OOWeaponType weapon);
-OOWeaponType OOWeaponTypeFromString(const std::string& string);
+std::optional<std::string> StringFromWeaponType(WeaponType weapon);
+WeaponType WeaponTypeFromString(const std::string& string);
+
+}  // namespace oo
+
 
 // --- The game around the functions
 // -----------------------------------------------------------
@@ -212,7 +217,7 @@ void LoadEquipment() {
   OOEquipmentType::loadEquipment();
 }
 
-std::string IdentifierOf(OOWeaponType weapon) {
+std::string IdentifierOf(oo::WeaponType weapon) {
   return weapon != nullptr ? weapon->identifier().value_or("-") : "nil";
 }
 
@@ -224,65 +229,65 @@ std::string IdentifierOf(OOWeaponType weapon) {
 OO_TEST(weaponTypeIdentifiers) {
   {
     LoadEquipment();
-    OOWeaponType pulse =
+    oo::WeaponType pulse =
         OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
             .get();
     OO_CHECK(pulse != nullptr);
 
-    OO_CHECK(OOStringFromWeaponType(pulse) ==
+    OO_CHECK(oo::StringFromWeaponType(pulse) ==
              std::optional<std::string>("EQ_WEAPON_PULSE_LASER"));
-    OO_CHECK(OOStringFromWeaponType(nullptr) ==
+    OO_CHECK(oo::StringFromWeaponType(nullptr) ==
              std::optional<std::string>("EQ_WEAPON_NONE"));
 
-    OO_CHECK(OOEquipmentIdentifierFromWeaponType(pulse) ==
+    OO_CHECK(oo::EquipmentIdentifierFromWeaponType(pulse) ==
              std::optional<std::string>("EQ_WEAPON_PULSE_LASER"));
     // A message to nil answered a zeroed std::optional: no identifier.
-    OO_CHECK(OOEquipmentIdentifierFromWeaponType(nullptr) == std::nullopt);
+    OO_CHECK(oo::EquipmentIdentifierFromWeaponType(nullptr) == std::nullopt);
   }
 }
 
 OO_TEST(sloppyLookUp) {
   {
     LoadEquipment();
-    OOWeaponType pulse =
+    oo::WeaponType pulse =
         OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
             .get();
-    OOWeaponType none =
+    oo::WeaponType none =
         OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_NONE").get();
     OO_CHECK(pulse != nullptr && none != nullptr && pulse != none);
 
     // The identifier itself, then with "EQ_" put in front, then EQ_WEAPON_NONE.
-    OO_CHECK(OOWeaponTypeFromEquipmentIdentifierSloppy(
+    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy(
                  "EQ_WEAPON_PULSE_LASER") == pulse);
-    OO_CHECK(OOWeaponTypeFromEquipmentIdentifierSloppy(
+    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy(
                  "WEAPON_PULSE_LASER") == pulse);
     OO_CHECK(
-        OOWeaponTypeFromEquipmentIdentifierSloppy("LASER_WITHOUT_PREFIX") ==
+        oo::WeaponTypeFromEquipmentIdentifierSloppy("LASER_WITHOUT_PREFIX") ==
         OOEquipmentType::equipmentTypeWithIdentifier("LASER_WITHOUT_PREFIX")
             .get());
-    OO_CHECK(OOWeaponTypeFromEquipmentIdentifierSloppy("EQ_FUEL") ==
+    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy("EQ_FUEL") ==
              OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get());
-    OO_CHECK(OOWeaponTypeFromEquipmentIdentifierSloppy("PULSE_LASER") ==
+    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy("PULSE_LASER") ==
              none);
-    OO_CHECK(OOWeaponTypeFromEquipmentIdentifierSloppy(
+    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy(
                  "EQ_NO_SUCH_THING") == none);
-    OO_CHECK(OOWeaponTypeFromEquipmentIdentifierSloppy("") == none);
+    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy("") == none);
 
     // The other spellings are the same look-up.
     OO_CHECK(
-        OOWeaponTypeFromEquipmentIdentifierStrict("WEAPON_BEAM_LASER") ==
+        oo::WeaponTypeFromEquipmentIdentifierStrict("WEAPON_BEAM_LASER") ==
         OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_BEAM_LASER")
             .get());
-    OO_CHECK(OOWeaponTypeFromString("WEAPON_PULSE_LASER") == pulse);
-    OO_CHECK(OOWeaponTypeFromString("nonsense") == none);
+    OO_CHECK(oo::WeaponTypeFromString("WEAPON_PULSE_LASER") == pulse);
+    OO_CHECK(oo::WeaponTypeFromString("nonsense") == none);
 
     // Save games stored weapons as numbers.
-    OO_CHECK(OOWeaponTypeFromEquipmentIdentifierLegacy("2") == pulse);
-    OO_CHECK(IdentifierOf(OOWeaponTypeFromEquipmentIdentifierLegacy("3")) ==
+    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierLegacy("2") == pulse);
+    OO_CHECK(IdentifierOf(oo::WeaponTypeFromEquipmentIdentifierLegacy("3")) ==
              "EQ_WEAPON_BEAM_LASER");
-    OO_CHECK(OOWeaponTypeFromEquipmentIdentifierLegacy("4") ==
+    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierLegacy("4") ==
              none);  // no mining laser here
-    OO_CHECK(OOWeaponTypeFromEquipmentIdentifierLegacy("EQ_FUEL") ==
+    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierLegacy("EQ_FUEL") ==
              OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get());
   }
 }

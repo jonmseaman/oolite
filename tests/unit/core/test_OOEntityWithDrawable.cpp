@@ -21,7 +21,7 @@
 
 
 #include "OODrawable.h"
-#include "OOEntityWithDrawable.h"
+#include "EntityWithDrawable.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -72,7 +72,7 @@ class TestDrawable : public OODrawable {
 };
 
 // A converted subclass.
-class TestCxxEntityWithDrawable : public OOEntityWithDrawable {};
+class TestCxxEntityWithDrawable : public oo::EntityWithDrawable {};
 
 namespace {
 
@@ -88,7 +88,7 @@ void SetCamZeroDistance(Entity* e, GLfloat value) {
 
 // An entity with a drawable and its object, as the game makes a C++ one: the
 // root's facade, autoreleased.
-template <class T = OOEntityWithDrawable>
+template <class T = oo::EntityWithDrawable>
 T* NewWithDrawable(Entity** outObject) {
   const std::shared_ptr<T> part = oo::makeShared<T>();
   *outObject = oo::MadeEntity(part);
@@ -114,7 +114,7 @@ OO_TEST(setDrawable) {
   {
     SetUp();
     Entity* entity = nullptr;
-    OOEntityWithDrawable* part = NewWithDrawable(&entity);
+    oo::EntityWithDrawable* part = NewWithDrawable(&entity);
     OO_CHECK(part->getDrawable() == nullptr);
     OO_CHECK(entity->findCollisionRadius() == 0);
 #ifndef NDEBUG

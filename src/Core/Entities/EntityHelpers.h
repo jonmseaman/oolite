@@ -37,8 +37,8 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "Entity.h"  // also includes this file at its end; the guard above makes either order work
+#include "EntityHold.h"
 #include "EntityPListForeign.h"  // the entity's node, and whether it has its object
-#include "OOEntityHold.h"
 #include "oofnd/PList.hpp"
 
 class OOHUDBeaconIcon;  // OOPolygonSprite.h

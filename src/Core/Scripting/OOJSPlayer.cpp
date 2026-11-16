@@ -254,7 +254,7 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
 
     case kRank: {
       const std::optional<std::string> text =
-          OODisplayRatingStringFromKillCount(
+          oo::DisplayRatingStringFromKillCount(
               (player != nullptr
                    ? player->PlayerEntity::score()
                    : unsigned{}));  // qualified: the final overrider, so the
@@ -264,7 +264,7 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
     }
 
     case kLegalStatus: {
-      const std::optional<std::string> text = OODisplayStringFromLegalStatus(
+      const std::optional<std::string> text = oo::DisplayStringFromLegalStatus(
           (player != nullptr ? player->getLegalStatus() : int{}));
       return OOJSValueFromPList(
           context, text.has_value() ? oo::PList(*text) : oo::PList());
@@ -276,33 +276,34 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
           oo::ToUnderlying(
               player != nullptr
                   ? player->PlayerEntity::getAlertCondition()
-                  : OOAlertCondition{}));  // qualified: the final overrider, so
-                                           // the binding test stands in for it
+                  : oo::AlertCondition{}));  // qualified: the final overrider,
+                                             // so the binding test stands in
+                                             // for it
 
     case kAlertTemperature:
-      return OOJSValueFromBOOL(
-          OOAlertFlagIsOn((player != nullptr ? player->getAlertFlags() : int{}),
-                          OOAlertFlags::kTemp));
+      return OOJSValueFromBOOL(oo::AlertFlagIsOn(
+          (player != nullptr ? player->getAlertFlags() : int{}),
+          oo::AlertFlags::kTemp));
 
     case kAlertMassLocked:
-      return OOJSValueFromBOOL(
-          OOAlertFlagIsOn((player != nullptr ? player->getAlertFlags() : int{}),
-                          OOAlertFlags::kMassLock));
+      return OOJSValueFromBOOL(oo::AlertFlagIsOn(
+          (player != nullptr ? player->getAlertFlags() : int{}),
+          oo::AlertFlags::kMassLock));
 
     case kAlertAltitude:
-      return OOJSValueFromBOOL(
-          OOAlertFlagIsOn((player != nullptr ? player->getAlertFlags() : int{}),
-                          OOAlertFlags::kAlt));
+      return OOJSValueFromBOOL(oo::AlertFlagIsOn(
+          (player != nullptr ? player->getAlertFlags() : int{}),
+          oo::AlertFlags::kAlt));
 
     case kAlertEnergy:
-      return OOJSValueFromBOOL(
-          OOAlertFlagIsOn((player != nullptr ? player->getAlertFlags() : int{}),
-                          OOAlertFlags::kEnergy));
+      return OOJSValueFromBOOL(oo::AlertFlagIsOn(
+          (player != nullptr ? player->getAlertFlags() : int{}),
+          oo::AlertFlags::kEnergy));
 
     case kAlertHostiles:
-      return OOJSValueFromBOOL(
-          OOAlertFlagIsOn((player != nullptr ? player->getAlertFlags() : int{}),
-                          OOAlertFlags::kHostiles));
+      return OOJSValueFromBOOL(oo::AlertFlagIsOn(
+          (player != nullptr ? player->getAlertFlags() : int{}),
+          oo::AlertFlags::kHostiles));
 
     case kEscapePodRescueTime:
       return JS_NewNumber(
@@ -658,8 +659,8 @@ static JSValue PlayerAudioMessage(JSContext* context, JSValueConst /*oojsThis*/,
     return OOJSNativeFailure(context);
   }
 
-  if ((player != nullptr ? player->getIsSpeechOn() : OOSpeechSettings{}) >=
-      OOSpeechSettings::kComms) {
+  if ((player != nullptr ? player->getIsSpeechOn() : oo::SpeechSettings{}) >=
+      oo::SpeechSettings::kComms) {
     if (UNIVERSE != nullptr) UNIVERSE->startSpeakingString(*audioMessage);
   }
   OOJS_RETURN_VOID;

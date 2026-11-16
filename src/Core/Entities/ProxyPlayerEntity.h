@@ -80,13 +80,13 @@ class ProxyPlayerEntity : public ShipEntity {
   void setDialAftShield(GLfloat value);
 
   // Default: OOMissileStatus::kSafe
-  OOMissileStatus dialMissileStatus();
-  void setDialMissileStatus(OOMissileStatus value);
+  oo::MissileStatus dialMissileStatus();
+  void setDialMissileStatus(oo::MissileStatus value);
 
   // Default: OOFuelScoopStatus::kNotInstalled or OOFuelScoopStatus::kOkay
   // depending on equipment.
-  OOFuelScoopStatus dialFuelScoopStatus();
-  void setDialFuelScoopStatus(OOFuelScoopStatus value);
+  oo::FuelScoopStatus dialFuelScoopStatus();
+  void setDialFuelScoopStatus(oo::FuelScoopStatus value);
 
   // Default: OOCompassMode::kBasic or OOCompassMode::kPlanet depending on
   // equipment.
@@ -98,8 +98,8 @@ class ProxyPlayerEntity : public ShipEntity {
   void setDialIdentEngaged(bool value);
 
   // Default: OOAlertCondition::kDocked
-  OOAlertCondition alertCondition() override;
-  void setAlertCondition(OOAlertCondition value);
+  oo::AlertCondition alertCondition() override;
+  void setAlertCondition(oo::AlertCondition value);
 
   // Default: 0
   std::size_t trumbleCount();
@@ -112,10 +112,10 @@ class ProxyPlayerEntity : public ShipEntity {
   float _fuelLeakRate = 0;
   GLfloat _dialForwardShield = 0;
   GLfloat _dialAftShield = 0;
-  OOMissileStatus _missileStatus = {};
-  OOFuelScoopStatus _fuelScoopStatus = {};
+  oo::MissileStatus _missileStatus = {};
+  oo::FuelScoopStatus _fuelScoopStatus = {};
   oo::CompassMode _compassMode = {};
-  OOAlertCondition _alertCondition = {};
+  oo::AlertCondition _alertCondition = {};
   std::size_t _trumbleCount = 0;
   int _tradeInFactor = 0;
   unsigned _massLocked : 1 = 0, _atHyperspeed : 1 = 0,

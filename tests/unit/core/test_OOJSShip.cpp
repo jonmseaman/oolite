@@ -139,7 +139,7 @@ class PlainShip : public ShipEntity {};
 namespace {
 
 OOWeaponFacingSet sAvailableFacings = 0;
-OOPlayerFleeingStatus sFleeingStatus = OOPlayerFleeingStatus::kNone;
+oo::PlayerFleeingStatus sFleeingStatus = oo::PlayerFleeingStatus::kNone;
 
 }  // namespace
 
@@ -148,7 +148,7 @@ OOPlayerFleeingStatus sFleeingStatus = OOPlayerFleeingStatus::kNone;
 class TestPlayerShip : public PlayerEntity {
  public:
   OOWeaponFacingSet availableFacings() override { return sAvailableFacings; }
-  OOPlayerFleeingStatus fleeingStatus() override { return sFleeingStatus; }
+  oo::PlayerFleeingStatus fleeingStatus() override { return sFleeingStatus; }
   bool isDocked() override { return sPlayerDocked; }
   bool setWeaponMount(OOWeaponFacing facing, const std::string& eqKey,
                       const std::optional<std::string>& context) override {
@@ -560,11 +560,11 @@ OO_TEST(getterPlayerBranches) {
   SetUp();
   sAvailableFacings = oo::ToUnderlying(OOWeaponFacing::kForward | OOWeaponFacing::kAft);
   OO_CHECK_EVAL("player.ship.weaponFacings", "3");
-  sFleeingStatus = OOPlayerFleeingStatus::kCargo;
+  sFleeingStatus = oo::PlayerFleeingStatus::kCargo;
   OO_CHECK_EVAL("player.ship.isFleeing", "true");
-  sFleeingStatus = OOPlayerFleeingStatus::kMaybe;
+  sFleeingStatus = oo::PlayerFleeingStatus::kMaybe;
   OO_CHECK_EVAL("player.ship.isFleeing", "false");
-  sFleeingStatus = OOPlayerFleeingStatus::kNone;
+  sFleeingStatus = oo::PlayerFleeingStatus::kNone;
   OO_CHECK_EVAL("player.ship.isPiloted", "true");
 }
 
@@ -1049,9 +1049,9 @@ OO_TEST(methodsAssessments) {
   OO_CHECK_EVAL("ship.threatAssessment()", "3.850000012665987");
   OO_CHECK_EVAL("ship.threatAssessment(true)", "1.650000024586916");
   OO_CHECK_EVAL("player.ship.threatAssessment(true)", "0.1");
-  sFleeingStatus = OOPlayerFleeingStatus::kCargo;
+  sFleeingStatus = oo::PlayerFleeingStatus::kCargo;
   OO_CHECK_EVAL("player.ship.threatAssessment()", "0.4199999958276749");
-  sFleeingStatus = OOPlayerFleeingStatus::kNone;
+  sFleeingStatus = oo::PlayerFleeingStatus::kNone;
 }
 
 OO_TEST(staticMethods) {

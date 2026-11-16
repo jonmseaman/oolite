@@ -41,11 +41,11 @@
 #include <string_view>
 #include <vector>
 
-#include "OOEntityWithDrawable.h"
+#include "EntityWithDrawable.h"
 #include "OOJSPropID.h"
-#include "OOPlanetEntity.h"
 #include "OORoleSet.h"
 #include "Octree.h"
+#include "PlanetEntity.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/WeakSet.hpp"
 
@@ -58,10 +58,16 @@ class WormholeEntity;
 #include "OOColor.h"          // the colours are std::shared_ptr members
 #include "OOEquipmentType.h"  // OOWeaponType is a C++ pointer
 #include "OOPolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is std::shared_ptr
-#include "OOShipGroup.h"  // the groups are std::shared_ptr
-class OOFlasherEntity;
-class OOExhaustPlumeEntity;  // Universe.h's, for the members of
-                             // ShipEntityAI.cpp's scans.
+#include "OOShipGroup.h"      // the groups are std::shared_ptr
+
+namespace oo {
+
+class FlasherEntity;
+class ExhaustPlumeEntity;
+
+}  // namespace oo
+   // Universe.h's, for the members of
+   // ShipEntityAI.cpp's scans.
 using EntityFilterPredicate = bool (*)(Entity* entity, void* parameter);
 
 inline constexpr int MAX_TARGETS = 24;
@@ -193,9 +199,11 @@ inline constexpr auto MAX_COS2 = (MAX_COS * MAX_COS);
         WEAPON_THARGOID_LASER			= 10,
         WEAPON_UNDEFINED
         } OOWeaponType; */
-using OOWeaponType = OOEquipmentType*;
+namespace oo {
 
-enum class OOAlertCondition : std::int32_t {
+using WeaponType = OOEquipmentType*;
+
+enum class AlertCondition : std::int32_t {
   // Alert conditions are used by player and station entities.
   // NOTE: numerical values are available to scripts and shaders.
   kDocked = 0,
@@ -203,22 +211,30 @@ enum class OOAlertCondition : std::int32_t {
   kYellow = 2,
   kRed = 3
 };
-static_assert(oo::ToUnderlying(OOAlertCondition::kDocked) == 0);
-static_assert(oo::ToUnderlying(OOAlertCondition::kGreen) == 1);
-static_assert(oo::ToUnderlying(OOAlertCondition::kYellow) == 2);
-static_assert(oo::ToUnderlying(OOAlertCondition::kRed) == 3);
+
+}  // namespace oo
+
+static_assert(oo::ToUnderlying(oo::AlertCondition::kDocked) == 0);
+static_assert(oo::ToUnderlying(oo::AlertCondition::kGreen) == 1);
+static_assert(oo::ToUnderlying(oo::AlertCondition::kYellow) == 2);
+static_assert(oo::ToUnderlying(oo::AlertCondition::kRed) == 3);
 
 // OOShipDamageType (plain header).
 #include "OOEntityEnums.h"
 
-struct OOShipSaveContext;     // ShipEntityLoadRestore.h
+namespace oo {
+
+struct ShipSaveContext;
+
+}  // namespace oo
+   // ShipEntityLoadRestore.h
 struct ShipEntityTestAccess;  // the unit tests' reader of the private members
 
 /*	The ship's state and members.
 
         Every data member is zero-initialised.
 */
-class ShipEntity : public OOEntityWithDrawable,
+class ShipEntity : public oo::EntityWithDrawable,
                    public cxx::OOSubEntityInterface {
   // <OOSubEntity>
  public:
@@ -375,7 +391,7 @@ class ShipEntity : public OOEntityWithDrawable,
                            bool loading);
   bool hasOneEquipmentItemIncludingMissiles(const std::string& itemKey,
                                             bool includeMissiles, bool loading);
-  virtual bool hasPrimaryWeapon(OOWeaponType weaponType);
+  virtual bool hasPrimaryWeapon(oo::WeaponType weaponType);
   std::size_t countEquipmentItem(const std::string& eqkey);
   bool hasEquipmentItem(const oo::PList& equipmentKeys, bool includeWeapons,
                         bool loading);
@@ -394,7 +410,7 @@ class ShipEntity : public OOEntityWithDrawable,
   virtual bool canAddEquipment(const std::string& equipmentKeyIn,
                                const std::string& context);
   OOWeaponFacingSet weaponFacings();
-  OOWeaponType weaponTypeIDForFacing(OOWeaponFacing facing, bool strict);
+  oo::WeaponType weaponTypeIDForFacing(OOWeaponFacing facing, bool strict);
   virtual ::OOEquipmentType* weaponTypeForFacing(OOWeaponFacing facing,
                                                  bool strict);
   virtual std::vector<std::shared_ptr<::OOEquipmentType>> missilesList();
@@ -619,7 +635,7 @@ class ShipEntity : public OOEntityWithDrawable,
   bool isHostileTo(Entity* entity);
   GLfloat getWeaponRange();
   void setWeaponRange(GLfloat value);
-  void setWeaponDataFromType(OOWeaponType weapon_type);
+  void setWeaponDataFromType(oo::WeaponType weapon_type);
   float energyRechargeRate();
   void setEnergyRechargeRate(GLfloat newValue);
   float weaponRechargeRate();
@@ -633,9 +649,9 @@ class ShipEntity : public OOEntityWithDrawable,
   bool getReportAIMessages();
   void setReportAIMessages(bool yn);
   void transitionToAegisNone();
-  virtual ::OOPlanetEntity* findNearestPlanet();
+  virtual ::oo::PlanetEntity* findNearestPlanet();
   Entity* findNearestStellarBody();  // an OOStellarBody
-  ::OOPlanetEntity* findNearestPlanetExcludingMoons();
+  ::oo::PlanetEntity* findNearestPlanetExcludingMoons();
 
   // aegis, home and destination systems, status, crew, AI and ship script,
   // fuel.
@@ -758,11 +774,11 @@ class ShipEntity : public OOEntityWithDrawable,
   virtual void becomeExplosion();
   virtual void becomeEnergyBlast();
   void broadcastEnergyBlastImminent();
-  void removeExhaust(OOExhaustPlumeEntity* exhaust);
+  void removeExhaust(oo::ExhaustPlumeEntity* exhaust);
 
   // subentity death, alignment offsets, large explosion, laser heat,
   // personality, scanner, remembered ships.
-  void removeFlasher(OOFlasherEntity* flasher);
+  void removeFlasher(oo::FlasherEntity* flasher);
   void subEntityDied(::ShipEntity* sub);
   void subEntityReallyDied(::ShipEntity* sub) override;
   Vector positionOffsetForAlignment(const std::string& align);
@@ -857,8 +873,8 @@ class ShipEntity : public OOEntityWithDrawable,
   // aim tolerance, sun glare, main weapons and turret fire, laser colours.
   GLfloat currentAimTolerance();
   virtual GLfloat lookingAtSunWithThresholdAngleCos(GLfloat thresholdAngleCos);
-  bool onTarget(OOWeaponFacing direction, OOWeaponType weapon_type);
-  bool fireWeapon(OOWeaponType weapon_type, OOWeaponFacing direction,
+  bool onTarget(OOWeaponFacing direction, oo::WeaponType weapon_type);
+  bool fireWeapon(oo::WeaponType weapon_type, OOWeaponFacing direction,
                   double range);
   bool fireMainWeapon(double range);
   bool fireAftWeapon(double range);
@@ -958,7 +974,7 @@ class ShipEntity : public OOEntityWithDrawable,
 
   // landing, docking abort, broadcasts and comms, fines, AI messages, spawning,
   // close contacts, salvage.
-  void landOnPlanet(::OOPlanetEntity* planet);
+  void landOnPlanet(::oo::PlanetEntity* planet);
   void abortDocking();
   oo::PList getDockingInstructions();
   void broadcastThargoidDestroyed();
@@ -1015,8 +1031,8 @@ class ShipEntity : public OOEntityWithDrawable,
   void doScriptEvent(OOJSPropID scriptEvent, const std::string& aiMessage);
   void doScriptEvent(OOJSPropID scriptEvent, Entity* argument,
                      const std::string& aiMessage);
-  virtual OOAlertCondition alertCondition();
-  virtual OOAlertCondition realAlertCondition();
+  virtual oo::AlertCondition alertCondition();
+  virtual oo::AlertCondition realAlertCondition();
   void doNothing();
 #ifdef OO_DEBUG_MONITOR_ENABLED
   std::optional<std::string> descriptionForObjDump() override;
@@ -1033,10 +1049,10 @@ class ShipEntity : public OOEntityWithDrawable,
   // Category LoadRestore (ShipEntityLoadRestore.cpp): saving and restoring
   // individual non-player ships. The context (nullptr for none) synchronises
   // the groups of ships saved together.
-  oo::PList savedShipDictionaryWithContext(OOShipSaveContext* context);
+  oo::PList savedShipDictionaryWithContext(oo::ShipSaveContext* context);
   static ::ShipEntity* shipRestoredFromDictionary(
       const oo::PList& dictionary, bool fallback,
-      OOShipSaveContext* context);  // autoreleased; nil if it can't
+      oo::ShipSaveContext* context);  // autoreleased; nil if it can't
   void simplifyShipdata(
       oo::PList::Dict& data,
       std::vector<std::string>*
@@ -1338,12 +1354,12 @@ class ShipEntity : public OOEntityWithDrawable,
   GLfloat energy_recharge_rate = {};  // recharge rate for energy banks
 
   OOWeaponFacingSet weapon_facings = {};  // weapon mounts available (bitmask)
-  OOWeaponType forward_weapon_type =
+  oo::WeaponType forward_weapon_type =
       {};  // type of forward weapon (allows lasers, plasma cannon, others)
-  OOWeaponType aft_weapon_type =
+  oo::WeaponType aft_weapon_type =
       {};  // type of aft weapon (allows lasers, plasma cannon, others)
-  OOWeaponType port_weapon_type = {};       // type of port weapon
-  OOWeaponType starboard_weapon_type = {};  // type of starboard weapon
+  oo::WeaponType port_weapon_type = {};       // type of port weapon
+  oo::WeaponType starboard_weapon_type = {};  // type of starboard weapon
   GLfloat weapon_damage = {};               // energy damage dealt by weapon
   GLfloat weapon_damage_override =
       {};  // custom energy damage dealt by front laser, if applicable
@@ -1629,28 +1645,34 @@ inline ShipEntity* ToShip(Entity* entity) {
 
 }  // namespace oo
 
-oo::PList OODefaultShipShaderMacros();
+namespace oo {
 
-GLfloat getWeaponRangeFromType(OOWeaponType weapon_type);
+oo::PList DefaultShipShaderMacros();
 
-bool isWeaponNone(OOWeaponType weapon);
+}  // namespace oo
+
+GLfloat getWeaponRangeFromType(oo::WeaponType weapon_type);
+
+bool isWeaponNone(oo::WeaponType weapon);
 
 // C++ forms, defined in OOConstToString.cpp.
-std::string OOStringFromBehaviour(oo::Behaviour behaviour);
-std::string OOStringFromShipDamageType(oo::ShipDamageType type);
+namespace oo {
+
+std::string StringFromBehaviour(oo::Behaviour behaviour);
+std::string StringFromShipDamageType(oo::ShipDamageType type);
 
 // Weapon identifiers and alert-condition names; nullopt where the old form gave
 // nil.
-std::optional<std::string> OOEquipmentIdentifierFromWeaponType(
-    OOWeaponType weapon);  // nullopt: no weapon
-OOWeaponType OOWeaponTypeFromEquipmentIdentifierSloppy(
+std::optional<std::string> EquipmentIdentifierFromWeaponType(
+    WeaponType weapon);  // nullopt: no weapon
+WeaponType WeaponTypeFromEquipmentIdentifierSloppy(
     const std::string&
         string);  // Uses suffix match for backwards compatibility.
-OOWeaponType OOWeaponTypeFromEquipmentIdentifierStrict(
-    const std::string& string);
-OOWeaponType OOWeaponTypeFromEquipmentIdentifierLegacy(
-    const std::string& string);
-std::optional<std::string> OOStringFromWeaponType(OOWeaponType weapon);
-OOWeaponType OOWeaponTypeFromString(const std::string& string);
-std::optional<std::string> OODisplayStringFromAlertCondition(
-    OOAlertCondition alertCondition);
+WeaponType WeaponTypeFromEquipmentIdentifierStrict(const std::string& string);
+WeaponType WeaponTypeFromEquipmentIdentifierLegacy(const std::string& string);
+std::optional<std::string> StringFromWeaponType(WeaponType weapon);
+WeaponType WeaponTypeFromString(const std::string& string);
+std::optional<std::string> DisplayStringFromAlertCondition(
+    AlertCondition alertCondition);
+
+}  // namespace oo

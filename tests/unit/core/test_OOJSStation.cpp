@@ -58,20 +58,25 @@ class StationEntity;
 class GameController;
 
 // As ShipEntity.h and StationEntity.h declare them (the test imports neither).
-enum class OOAlertCondition : std::int32_t {
+namespace oo {
+
+enum class AlertCondition : std::int32_t {
 	kDocked	= 0,
 	kGreen	= 1,
 	kYellow	= 2,
 	kRed		= 3
 };
 
-enum class OOStationAlertLevel : std::int32_t {
-	kGreen	= static_cast<std::int32_t>(OOAlertCondition::kGreen),
-	kYellow	= static_cast<std::int32_t>(OOAlertCondition::kYellow),
-	kRed		= static_cast<std::int32_t>(OOAlertCondition::kRed)
+enum class StationAlertLevel : std::int32_t {
+	kGreen	= static_cast<std::int32_t>(AlertCondition::kGreen),
+	kYellow	= static_cast<std::int32_t>(AlertCondition::kYellow),
+	kRed		= static_cast<std::int32_t>(AlertCondition::kRed)
 };
 
-typedef OOEquipmentType* OOWeaponType;
+typedef OOEquipmentType* WeaponType;
+
+}  // namespace oo
+
 
 #include "OOJSPrivateObject.h"
 
@@ -95,7 +100,7 @@ class ShipEntity : public Entity
 public:
 	GLfloat getFlightRoll();
 	void setRawRoll(double amount);
-	OOAlertCondition alertCondition();
+	oo::AlertCondition alertCondition();
 };
 
 // What an entity's JS object holds: a weak reference to the C++ entity.
@@ -135,8 +140,8 @@ public:
 	bool getHasNPCTraffic();
 	void setHasNPCTraffic(bool flag);
 	bool hasShipyard();
-	OOStationAlertLevel getAlertLevel();
-	void setAlertLevel(OOStationAlertLevel level, bool signallingScript);
+	oo::StationAlertLevel getAlertLevel();
+	void setAlertLevel(oo::StationAlertLevel level, bool signallingScript);
 	void increaseAlertLevel();
 	void decreaseAlertLevel();
 	std::optional<std::string> getAllegiance();
@@ -185,7 +190,7 @@ public:
 	std::string _name;
 	bool _npcTraffic = false;
 	bool _hasShipyard = false;
-	OOStationAlertLevel _alertLevel = {};
+	oo::StationAlertLevel _alertLevel = {};
 	std::optional<std::string> _allegiance;
 	bool _requiresClearance = false;
 	float _roll = 0;
@@ -385,7 +390,7 @@ JSValue Entity::jsValueInContext(JSContext *context)
 void Entity::clearJSSelf(JSValueConst)  {}
 GLfloat ShipEntity::getFlightRoll()  { return static_cast<StationEntity *>(this)->_roll; }	// the cases ask stations only
 void ShipEntity::setRawRoll(double amount)  { static_cast<StationEntity *>(this)->_roll = static_cast<float>(amount); }
-OOAlertCondition ShipEntity::alertCondition()  { return static_cast<OOAlertCondition>(static_cast<StationEntity *>(this)->_alertLevel); }
+oo::AlertCondition ShipEntity::alertCondition()  { return static_cast<oo::AlertCondition>(static_cast<StationEntity *>(this)->_alertLevel); }
 
 // As StationEntity::jsClassID and ::jsClassName answer for the engine.
 JSClassID StationEntity::jsClassID()  { return JSStationClassID(); }
@@ -393,9 +398,9 @@ std::optional<std::string> StationEntity::jsClassName()  { return OOJSStationJSC
 bool StationEntity::getHasNPCTraffic()  { return _npcTraffic; }
 void StationEntity::setHasNPCTraffic(bool flag)  { _npcTraffic = flag; }
 bool StationEntity::hasShipyard()  { return _hasShipyard; }
-OOStationAlertLevel StationEntity::getAlertLevel()  { return _alertLevel; }
-void StationEntity::increaseAlertLevel()  { _alertLevel = static_cast<OOStationAlertLevel>(static_cast<std::int32_t>(_alertLevel) + 1); }
-void StationEntity::decreaseAlertLevel()  { _alertLevel = static_cast<OOStationAlertLevel>(static_cast<std::int32_t>(_alertLevel) - 1); }
+oo::StationAlertLevel StationEntity::getAlertLevel()  { return _alertLevel; }
+void StationEntity::increaseAlertLevel()  { _alertLevel = static_cast<oo::StationAlertLevel>(static_cast<std::int32_t>(_alertLevel) + 1); }
+void StationEntity::decreaseAlertLevel()  { _alertLevel = static_cast<oo::StationAlertLevel>(static_cast<std::int32_t>(_alertLevel) - 1); }
 std::optional<std::string> StationEntity::getAllegiance()  { return _allegiance; }
 void StationEntity::setAllegiance(const std::optional<std::string> &newAllegiance)  { _allegiance = newAllegiance; }
 bool StationEntity::getRequiresDockingClearance()  { return _requiresClearance; }
@@ -421,11 +426,11 @@ void StationEntity::abortAllDockings()  { _abortAll++; }
 void StationEntity::abortDockingForShip(::ShipEntity *ship)  { _abortedShip = ship; }
 bool StationEntity::fitsInDock(::ShipEntity *ship, bool logNoFit)  { (void)ship; (void)logNoFit; return _fits; }
 
-void StationEntity::setAlertLevel(OOStationAlertLevel level, bool signallingScript)
+void StationEntity::setAlertLevel(oo::StationAlertLevel level, bool signallingScript)
 {
 	(void)signallingScript;
-	if (level < OOStationAlertLevel::kGreen)  level = OOStationAlertLevel::kGreen;
-	if (level > OOStationAlertLevel::kRed)  level = OOStationAlertLevel::kRed;
+	if (level < oo::StationAlertLevel::kGreen)  level = oo::StationAlertLevel::kGreen;
+	if (level > oo::StationAlertLevel::kRed)  level = oo::StationAlertLevel::kRed;
 	_alertLevel = level;
 }
 
@@ -609,10 +614,15 @@ oo::PList OOSanitizeLegacyScriptConditions(const oo::PList&,
                                            const std::optional<std::string>&) {
   std::abort();
 }
-OOWeaponType OOWeaponTypeFromEquipmentIdentifierSloppy(const std::string&) {
+namespace oo {
+
+WeaponType WeaponTypeFromEquipmentIdentifierSloppy(const std::string&) {
   std::abort();
 }
-bool isWeaponNone(OOWeaponType) { std::abort(); }
+
+}  // namespace oo
+
+bool isWeaponNone(oo::WeaponType) { std::abort(); }
 
 extern const char * const kOOJavaScriptEngineWillResetNotificationName;
 const char * const kOOJavaScriptEngineWillResetNotificationName = "org.aegidian.oolite OOJavaScriptEngine will reset";
@@ -905,7 +915,7 @@ void SetUpContext()
 	sStation = static_cast<StationEntity *>(sStationObject->_cxxEntity.get());
 	sStation->_name = "Coriolis";
 	sStation->_npcTraffic = true;
-	sStation->_alertLevel = OOStationAlertLevel::kGreen;
+	sStation->_alertLevel = oo::StationAlertLevel::kGreen;
 	sStation->_allegiance = "galcop";
 	sStation->_roll = 0.25f;
 	sStation->_autoDocking = true;
@@ -1064,7 +1074,7 @@ OO_TEST(docking)
 OO_TEST(alertLevel)
 {
 	SetUpContext();
-	sStation->_alertLevel = OOStationAlertLevel::kGreen;
+	sStation->_alertLevel = oo::StationAlertLevel::kGreen;
 	OO_CHECK_EVAL("(function () { station.increaseAlertLevel(); station.increaseAlertLevel(); station.increaseAlertLevel(); return station.alertCondition; })()", "3");
 	OO_CHECK_EVAL("(function () { station.decreaseAlertLevel(); station.decreaseAlertLevel(); station.decreaseAlertLevel(); return station.alertCondition; })()", "1");
 }

@@ -83,12 +83,16 @@ constexpr std::string_view OOEnumName(WORMHOLE_SCANINFO value) noexcept {
 
 // A ship in transit (the old entry dictionary's "ship", "time" and
 // "shipBeacon").
-struct OOWormholeTransit {
+namespace oo {
+
+struct WormholeTransit {
   oo::EntityHold ship;  // the ship, its object held
   double time;          // arrival relative to the wormhole's arrival_time
   std::optional<std::string>
       beacon;  // the ship's beacon code when it entered, if any
 };
+
+}  // namespace oo
 
 /*	The player and the ships make it with oo::makeShared<WormholeEntity>()
    and an initialiser, and find it again with dynamic_cast. The universe's and
@@ -176,7 +180,7 @@ class WormholeEntity : public Entity {
   NSPoint destinationCoords =
       {};  // May not equal the destination system if the wormhole misjumps
 
-  std::vector<OOWormholeTransit> shipsInTransit;
+  std::vector<oo::WormholeTransit> shipsInTransit;
 
   double witch_mass = {};
   double shrink_factor = {};  // used during nova mission

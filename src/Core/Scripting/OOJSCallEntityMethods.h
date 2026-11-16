@@ -19,8 +19,8 @@ Included by OOJSCall.cpp and its test only.
 #include "ShipEntity.h"
 #include "PlayerEntity.h"
 #include "StationEntity.h"
-#include "OOVisualEffectEntity.h"
-#include "OOPlanetEntity.h"
+#include "VisualEffectEntity.h"
+#include "PlanetEntity.h"
 #include "oofnd/PList.hpp"
 #include "ValueType.h"
 #include <string>
@@ -377,8 +377,8 @@ inline const OOJSCallEntityMethodRow kOOJSCallEntityMethods[] =
 	{ "isDemoShip",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<bool> },
 	{ "getDemoStartTime",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<OOTimeAbsolute> },
 	{ "sendAIMessage:",	OOJSCallEntityMethodForm::kVoidString,	oo::ValueType::kVoid },
-	{ "alertCondition",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<OOAlertCondition> },
-	{ "realAlertCondition",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<OOAlertCondition> },
+	{ "alertCondition",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<oo::AlertCondition> },
+	{ "realAlertCondition",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<oo::AlertCondition> },
 	{ "doNothing",	OOJSCallEntityMethodForm::kVoidVoid,	oo::ValueType::kVoid },
 	{ "setAITo:",	OOJSCallEntityMethodForm::kVoidString,	oo::ValueType::kVoid },
 	{ "setAIScript:",	OOJSCallEntityMethodForm::kVoidString,	oo::ValueType::kVoid },
@@ -606,8 +606,8 @@ inline const OOJSCallEntityMethodRow kOOJSCallEntityMethods[] =
 	{ "clockAdjusting",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<bool> },
 	{ "escapePodRescueTime",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<double> },
 	{ "countMissiles",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<unsigned> },
-	{ "dialMissileStatus",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<OOMissileStatus> },
-	{ "dialFuelScoopStatus",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<OOFuelScoopStatus> },
+	{ "dialMissileStatus",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<oo::MissileStatus> },
+	{ "dialFuelScoopStatus",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<oo::FuelScoopStatus> },
 	{ "fuelLeakRate",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<float> },
 	{ "addRoleForMining",	OOJSCallEntityMethodForm::kVoidVoid,	oo::ValueType::kVoid },
 	{ "addRoleToPlayer:",	OOJSCallEntityMethodForm::kVoidString,	oo::ValueType::kVoid },
@@ -629,7 +629,7 @@ inline const OOJSCallEntityMethodRow kOOJSCallEntityMethods[] =
 	{ "selectNextMissile",	OOJSCallEntityMethodForm::kVoidVoid,	oo::ValueType::kVoid },
 	{ "clearAlertFlags",	OOJSCallEntityMethodForm::kVoidVoid,	oo::ValueType::kVoid },
 	{ "alertFlags",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<int> },
-	{ "fleeingStatus",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<OOPlayerFleeingStatus> },
+	{ "fleeingStatus",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<oo::PlayerFleeingStatus> },
 	{ "scannerFuzziness",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<double> },
 	{ "installedEnergyUnitType",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<OOEnergyUnitType> },
 	{ "energyUnitType",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<OOEnergyUnitType> },
@@ -670,7 +670,7 @@ inline const OOJSCallEntityMethodRow kOOJSCallEntityMethods[] =
 	{ "setGuiToMarketInfoScreen",	OOJSCallEntityMethodForm::kVoidVoid,	oo::ValueType::kVoid },
 	{ "showMarketCashAndLoadLine",	OOJSCallEntityMethodForm::kVoidVoid,	oo::ValueType::kVoid },
 	{ "guiScreen",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<oo::GUIScreenID> },
-	{ "isSpeechOn",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<OOSpeechSettings> },
+	{ "isSpeechOn",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<oo::SpeechSettings> },
 	{ "addEquipmentWithScriptToCustomKeyArray:",	OOJSCallEntityMethodForm::kVoidString,	oo::ValueType::kVoid },
 	{ "validateCustomEquipActivationArray",	OOJSCallEntityMethodForm::kVoidVoid,	oo::ValueType::kVoid },
 	{ "getFined",	OOJSCallEntityMethodForm::kVoidVoid,	oo::ValueType::kVoid },
@@ -1019,7 +1019,7 @@ inline const OOJSCallEntityMethodRow kOOJSCallEntityMethods[] =
 	{ "hasEligibleDock",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<bool> },
 	{ "hasLaunchDock",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<bool> },
 	{ "selectDockForDocking",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<oo::ObjectResult> },
-	{ "alertLevel",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<OOStationAlertLevel> },
+	{ "alertLevel",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<oo::StationAlertLevel> },
 	{ "currentlyInDockingQueues",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<unsigned> },
 	{ "currentlyInLaunchingQueues",	OOJSCallEntityMethodForm::kTyped,	oo::kValueType<unsigned> },
 	{ "launchIndependentShip:",	OOJSCallEntityMethodForm::kPListString,	oo::ValueType::kVoid },

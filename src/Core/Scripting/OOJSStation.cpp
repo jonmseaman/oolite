@@ -420,7 +420,7 @@ static JSValue StationSetProperty(OOJS_SETTER_ARGS) {
     case kAlertCondition:
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (entity != nullptr)
-          entity->setAlertLevel(static_cast<OOStationAlertLevel>(iValue),
+          entity->setAlertLevel(static_cast<oo::StationAlertLevel>(iValue),
                                 false);  // Performs range checking
         return JS_UNDEFINED;
       }
@@ -633,7 +633,7 @@ static JSValue StationIncreaseAlertLevel(JSContext* context,
   OOJS_BEGIN_FULL_NATIVE(context)
   if (oo::ToUnderlying(station != nullptr
                            ? station->ShipEntity::alertCondition()
-                           : OOAlertCondition{}) < 3) {
+                           : oo::AlertCondition{}) < 3) {
     // qualified: the final overrider, so the
     // binding test stands in for it
     if (station != nullptr) station->increaseAlertLevel();
@@ -654,7 +654,7 @@ static JSValue StationDecreaseAlertLevel(JSContext* context,
   OOJS_BEGIN_FULL_NATIVE(context)
   if (oo::ToUnderlying(station != nullptr
                            ? station->ShipEntity::alertCondition()
-                           : OOAlertCondition{}) > 1) {
+                           : oo::AlertCondition{}) > 1) {
     // qualified: the final overrider, so the
     // binding test stands in for it
     if (station != nullptr) station->decreaseAlertLevel();
@@ -1153,7 +1153,7 @@ static std::string ValueForKey(const std::optional<std::string>& value,
 }
 
 // OOEquipmentType::weaponThreatAssessment() of a weapon: 0 for no weapon.
-static GLfloat WeaponThreatAssessment(OOWeaponType weapon) {
+static GLfloat WeaponThreatAssessment(oo::WeaponType weapon) {
   OOEquipmentType* type = weapon;
   return (type != nullptr) ? type->weaponThreatAssessment() : 0;
 }
@@ -1325,10 +1325,10 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
                                        kOOValidWeaponFacings) &
         kOOValidWeaponFacings;
 
-    OOWeaponType fwdWeapon =
-        OOWeaponTypeFromEquipmentIdentifierSloppy(fwdWeaponString.value_or(""));
-    OOWeaponType aftWeapon =
-        OOWeaponTypeFromEquipmentIdentifierSloppy(aftWeaponString.value_or(""));
+    oo::WeaponType fwdWeapon = oo::WeaponTypeFromEquipmentIdentifierSloppy(
+        fwdWeaponString.value_or(""));
+    oo::WeaponType aftWeapon = oo::WeaponTypeFromEquipmentIdentifierSloppy(
+        aftWeaponString.value_or(""));
 
     unsigned int i;
     std::optional<std::string> equipmentKey;
@@ -1336,7 +1336,7 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
       equipmentKey = StringAtIndex(extras, i);
       if (equipmentKey.has_value() &&
           oo::str::hasPrefix(*equipmentKey, "EQ_WEAPON")) {
-        OOWeaponType new_weapon = OOWeaponTypeFromEquipmentIdentifierSloppy(
+        oo::WeaponType new_weapon = oo::WeaponTypeFromEquipmentIdentifierSloppy(
             equipmentKey.value_or(""));
         // fit best weapon forward
         if (OOWeaponFacingIsIn(availableFacings, OOWeaponFacing::kForward) &&

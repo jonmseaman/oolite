@@ -76,7 +76,7 @@ MA 02110-1301, USA.
 #include "OOJSWaypoint.h"
 #include "OOJSWorldScripts.h"
 #include "OOJSWormhole.h"
-#include "OOPlanetEntity.h"
+#include "PlanetEntity.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
@@ -1761,14 +1761,14 @@ bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
       return false;  // Demo ship
     return true;
   } else if (OOJavaScriptEngineIsPlanet(entity)) {
-    switch (static_cast<OOPlanetEntity*>(entity)->planetType()) {
+    switch (static_cast<oo::PlanetEntity*>(entity)->planetType()) {
       // a planet: not nil
-      case OOStellarBodyType::kMoon:
-      case OOStellarBodyType::kNormalPlanet:
-      case OOStellarBodyType::kSun:
+      case oo::StellarBodyType::kMoon:
+      case oo::StellarBodyType::kNormalPlanet:
+      case oo::StellarBodyType::kSun:
         return true;
 
-      case OOStellarBodyType::kMiniature:
+      case oo::StellarBodyType::kMiniature:
         return false;
     }
   }

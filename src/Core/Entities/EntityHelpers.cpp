@@ -32,9 +32,9 @@ MA 02110-1301, USA.
 
 #include "Entity.h"
 #include "OODemangle.h"
-#include "OOVisualEffectEntity.h"
-#include "OOWaypointEntity.h"
 #include "ShipEntity.h"
+#include "VisualEffectEntity.h"
+#include "WaypointEntity.h"
 #include "oofnd/AutoreleaseScope.hpp"  // oo::autorelease
 #include "oofnd/String.hpp"
 
@@ -51,12 +51,12 @@ ShipEntity* ShipPart(Entity* entity) {
   return dynamic_cast<ShipEntity*>(entity);
 }
 
-OOVisualEffectEntity* EffectPart(Entity* entity) {
-  return dynamic_cast<OOVisualEffectEntity*>(entity);
+oo::VisualEffectEntity* EffectPart(Entity* entity) {
+  return dynamic_cast<oo::VisualEffectEntity*>(entity);
 }
 
-OOWaypointEntity* WaypointPart(Entity* entity) {
-  return dynamic_cast<OOWaypointEntity*>(entity);
+oo::WaypointEntity* WaypointPart(Entity* entity) {
+  return dynamic_cast<oo::WaypointEntity*>(entity);
 }
 
 }  // namespace
@@ -139,15 +139,15 @@ void oo::InspectEntity(Entity* entity) {
 bool oo::EntityIsShipWithSubEntityShip(Entity* entity, Entity* other) {
   if (ShipEntity* ship = ShipPart(entity))
     return ship->isShipWithSubEntityShip(other);
-  OOVisualEffectEntity* effect = EffectPart(entity);
+  oo::VisualEffectEntity* effect = EffectPart(entity);
   return effect != nullptr ? effect->isShipWithSubEntityShip(other) : false;
 }
 
 bool oo::EntityIsBeacon(Entity* entity) {
   if (ShipEntity* ship = ShipPart(entity)) return ship->isBeacon();
-  if (OOVisualEffectEntity* effect = EffectPart(entity))
+  if (oo::VisualEffectEntity* effect = EffectPart(entity))
     return effect->isBeacon();
-  OOWaypointEntity* waypoint = WaypointPart(entity);
+  oo::WaypointEntity* waypoint = WaypointPart(entity);
   return waypoint != nullptr ? waypoint->isBeacon() : false;
 }
 
@@ -161,9 +161,9 @@ Entity* oo::PrevBeacon(Entity* beacon) {
   beacon = WithObject(beacon);
   if (ShipEntity* ship = ShipPart(beacon))
     return WithObject(ship->prevBeacon());
-  if (OOVisualEffectEntity* effect = EffectPart(beacon))
+  if (oo::VisualEffectEntity* effect = EffectPart(beacon))
     return WithObject(effect->prevBeacon());
-  if (OOWaypointEntity* waypoint = WaypointPart(beacon))
+  if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     return WithObject(waypoint->prevBeacon());
   return nullptr;
 }
@@ -172,9 +172,9 @@ Entity* oo::NextBeacon(Entity* beacon) {
   beacon = WithObject(beacon);
   if (ShipEntity* ship = ShipPart(beacon))
     return WithObject(ship->nextBeacon());
-  if (OOVisualEffectEntity* effect = EffectPart(beacon))
+  if (oo::VisualEffectEntity* effect = EffectPart(beacon))
     return WithObject(effect->nextBeacon());
-  if (OOWaypointEntity* waypoint = WaypointPart(beacon))
+  if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     return WithObject(waypoint->nextBeacon());
   return nullptr;
 }
@@ -184,9 +184,9 @@ void oo::SetPrevBeacon(Entity* beacon, Entity* other) {
   other = WithObject(other);
   if (ShipEntity* ship = ShipPart(beacon))
     ship->setPrevBeacon(other);
-  else if (OOVisualEffectEntity* effect = EffectPart(beacon))
+  else if (oo::VisualEffectEntity* effect = EffectPart(beacon))
     effect->setPrevBeacon(other);
-  else if (OOWaypointEntity* waypoint = WaypointPart(beacon))
+  else if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     waypoint->setPrevBeacon(other);
 }
 
@@ -195,18 +195,18 @@ void oo::SetNextBeacon(Entity* beacon, Entity* other) {
   other = WithObject(other);
   if (ShipEntity* ship = ShipPart(beacon))
     ship->setNextBeacon(other);
-  else if (OOVisualEffectEntity* effect = EffectPart(beacon))
+  else if (oo::VisualEffectEntity* effect = EffectPart(beacon))
     effect->setNextBeacon(other);
-  else if (OOWaypointEntity* waypoint = WaypointPart(beacon))
+  else if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     waypoint->setNextBeacon(other);
 }
 
 std::optional<std::string> oo::BeaconCode(Entity* beacon) {
   beacon = WithObject(beacon);
   if (ShipEntity* ship = ShipPart(beacon)) return ship->beaconCode();
-  if (OOVisualEffectEntity* effect = EffectPart(beacon))
+  if (oo::VisualEffectEntity* effect = EffectPart(beacon))
     return effect->beaconCode();
-  if (OOWaypointEntity* waypoint = WaypointPart(beacon))
+  if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     return waypoint->beaconCode();
   return std::nullopt;
 }
@@ -215,9 +215,9 @@ void oo::SetBeaconCode(Entity* beacon, const std::optional<std::string>& code) {
   beacon = WithObject(beacon);
   if (ShipEntity* ship = ShipPart(beacon))
     ship->setBeaconCode(code);
-  else if (OOVisualEffectEntity* effect = EffectPart(beacon))
+  else if (oo::VisualEffectEntity* effect = EffectPart(beacon))
     effect->setBeaconCode(code);
-  else if (OOWaypointEntity* waypoint = WaypointPart(beacon))
+  else if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     waypoint->setBeaconCode(code);
 }
 
@@ -226,9 +226,9 @@ OOComparisonResult oo::CompareBeaconCodes(Entity* beacon, Entity* other) {
   other = WithObject(other);
   if (ShipEntity* ship = ShipPart(beacon))
     return ship->compareBeaconCodeWith(other);
-  if (OOVisualEffectEntity* effect = EffectPart(beacon))
+  if (oo::VisualEffectEntity* effect = EffectPart(beacon))
     return effect->compareBeaconCodeWith(other);
-  if (OOWaypointEntity* waypoint = WaypointPart(beacon))
+  if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     return waypoint->compareBeaconCodeWith(other);
   return static_cast<OOComparisonResult>(0);
 }
@@ -236,9 +236,9 @@ OOComparisonResult oo::CompareBeaconCodes(Entity* beacon, Entity* other) {
 bool oo::BeaconIsJammingScanning(Entity* beacon) {
   beacon = WithObject(beacon);
   if (ShipEntity* ship = ShipPart(beacon)) return ship->isJammingScanning();
-  if (OOVisualEffectEntity* effect = EffectPart(beacon))
+  if (oo::VisualEffectEntity* effect = EffectPart(beacon))
     return effect->isJammingScanning();
-  if (OOWaypointEntity* waypoint = WaypointPart(beacon))
+  if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     return waypoint->isJammingScanning();
   return false;
 }
@@ -246,9 +246,9 @@ bool oo::BeaconIsJammingScanning(Entity* beacon) {
 OOHUDBeaconIcon* oo::BeaconDrawable(Entity* beacon) {
   beacon = WithObject(beacon);
   if (ShipEntity* ship = ShipPart(beacon)) return ship->beaconDrawable();
-  if (OOVisualEffectEntity* effect = EffectPart(beacon))
+  if (oo::VisualEffectEntity* effect = EffectPart(beacon))
     return effect->beaconDrawable();
-  if (OOWaypointEntity* waypoint = WaypointPart(beacon))
+  if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     return waypoint->beaconDrawable();
   return nullptr;
 }
@@ -256,9 +256,9 @@ OOHUDBeaconIcon* oo::BeaconDrawable(Entity* beacon) {
 std::optional<std::string> oo::BeaconLabel(Entity* beacon) {
   beacon = WithObject(beacon);
   if (ShipEntity* ship = ShipPart(beacon)) return ship->beaconLabel();
-  if (OOVisualEffectEntity* effect = EffectPart(beacon))
+  if (oo::VisualEffectEntity* effect = EffectPart(beacon))
     return effect->beaconLabel();
-  if (OOWaypointEntity* waypoint = WaypointPart(beacon))
+  if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     return waypoint->beaconLabel();
   return std::nullopt;
 }

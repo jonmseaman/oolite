@@ -40,7 +40,7 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOEntityHold.h"  // memberArray()
+#include "EntityHold.h"  // memberArray()
 #include "OOFoundation.h"
 #include "OOJSPrivateObject.h"
 #include "oofnd/Object.hpp"

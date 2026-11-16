@@ -25,68 +25,68 @@ uint32_t gDebugFlags = 0;
 #endif
 
 OO_TEST(OOStringFromEntityStatus) {
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kStartGame) == "STATUS_START_GAME");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kRestartGame) == "STATUS_RESTART_GAME");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kDead) == "STATUS_DEAD");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kInactive) == "STATUS_INACTIVE");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kTest) == "STATUS_TEST");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kCockpitDisplay) == "STATUS_COCKPIT_DISPLAY");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kActive) == "STATUS_ACTIVE");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kEffect) == "STATUS_EFFECT");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kInFlight) == "STATUS_IN_FLIGHT");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kDocked) == "STATUS_DOCKED");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kAutopilotEngaged) == "STATUS_AUTOPILOT_ENGAGED");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kDocking) == "STATUS_DOCKING");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kLaunching) == "STATUS_LAUNCHING");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kWitchspaceCountdown) == "STATUS_WITCHSPACE_COUNTDOWN");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kEnteringWitchspace) == "STATUS_ENTERING_WITCHSPACE");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kExitingWitchspace) == "STATUS_EXITING_WITCHSPACE");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kEscapeSequence) == "STATUS_ESCAPE_SEQUENCE");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kInHold) == "STATUS_IN_HOLD");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kBeingScooped) == "STATUS_BEING_SCOOPED");
-  OO_CHECK(OOStringFromEntityStatus(oo::EntityStatus::kHandlingError) == "STATUS_HANDLING_ERROR");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kStartGame) == "STATUS_START_GAME");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kRestartGame) == "STATUS_RESTART_GAME");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kDead) == "STATUS_DEAD");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kInactive) == "STATUS_INACTIVE");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kTest) == "STATUS_TEST");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kCockpitDisplay) == "STATUS_COCKPIT_DISPLAY");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kActive) == "STATUS_ACTIVE");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kEffect) == "STATUS_EFFECT");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kInFlight) == "STATUS_IN_FLIGHT");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kDocked) == "STATUS_DOCKED");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kAutopilotEngaged) == "STATUS_AUTOPILOT_ENGAGED");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kDocking) == "STATUS_DOCKING");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kLaunching) == "STATUS_LAUNCHING");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kWitchspaceCountdown) == "STATUS_WITCHSPACE_COUNTDOWN");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kEnteringWitchspace) == "STATUS_ENTERING_WITCHSPACE");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kExitingWitchspace) == "STATUS_EXITING_WITCHSPACE");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kEscapeSequence) == "STATUS_ESCAPE_SEQUENCE");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kInHold) == "STATUS_IN_HOLD");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kBeingScooped) == "STATUS_BEING_SCOOPED");
+  OO_CHECK(oo::StringFromEntityStatus(oo::EntityStatus::kHandlingError) == "STATUS_HANDLING_ERROR");
 }
 
 OO_TEST(OOStringFromBehaviour) {
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kIdle) == "BEHAVIOUR_IDLE");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kTrackTarget) == "BEHAVIOUR_TRACK_TARGET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kTumble) == "BEHAVIOUR_TUMBLE");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kStopStill) == "BEHAVIOUR_STOP_STILL");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kStationKeeping) == "BEHAVIOUR_STATION_KEEPING");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackTarget) == "BEHAVIOUR_ATTACK_TARGET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackFlyToTarget) == "BEHAVIOUR_ATTACK_FLY_TO_TARGET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackFlyFromTarget) == "BEHAVIOUR_ATTACK_FLY_FROM_TARGET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kRunningDefense) == "BEHAVIOUR_RUNNING_DEFENSE");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kFleeTarget) == "BEHAVIOUR_FLEE_TARGET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackFlyToTargetSix) == "BEHAVIOUR_ATTACK_FLY_TO_TARGET_SIX");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackMiningTarget) == "BEHAVIOUR_ATTACK_MINING_TARGET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kEvasiveAction) == "BEHAVIOUR_EVASIVE_ACTION");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kFleeEvasiveAction) == "BEHAVIOUR_FLEE_EVASIVE_ACTION");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackBreakOffTarget) == "BEHAVIOUR_ATTACK_BREAK_OFF_TARGET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackSlowDogfight) == "BEHAVIOUR_ATTACK_SLOW_DOGFIGHT");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackFlyToTargetTwelve) == "BEHAVIOUR_ATTACK_FLY_TO_TARGET_TWELVE");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackSniper) == "BEHAVIOUR_ATTACK_SNIPER");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackBroadside) == "BEHAVIOUR_ATTACK_BROADSIDE");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackBroadsideLeft) == "BEHAVIOUR_ATTACK_BROADSIDE_LEFT");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAttackBroadsideRight) == "BEHAVIOUR_ATTACK_BROADSIDE_RIGHT");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kCloseToBroadsideRange) == "BEHAVIOUR_CLOSE_TO_BROADSIDE_RANGE");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kCloseWithTarget) == "BEHAVIOUR_CLOSE_WITH_TARGET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kAvoidCollision) == "BEHAVIOUR_AVOID_COLLISION");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kTrackAsTurret) == "BEHAVIOUR_TRACK_AS_TURRET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kFlyRangeFromDestination) == "BEHAVIOUR_FLY_RANGE_FROM_DESTINATION");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kFlyToDestination) == "BEHAVIOUR_FLY_TO_DESTINATION");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kFlyFromDestination) == "BEHAVIOUR_FLY_FROM_DESTINATION");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kFaceDestination) == "BEHAVIOUR_FACE_DESTINATION");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kFlyThruNavpoints) == "BEHAVIOUR_FLY_THRU_NAVPOINTS");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kLandOnPlanet) == "BEHAVIOUR_LAND_ON_PLANET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kCollectTarget) == "BEHAVIOUR_COLLECT_TARGET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kInterceptTarget) == "BEHAVIOUR_INTERCEPT_TARGET");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kFormationFormUp) == "BEHAVIOUR_FORMATION_FORM_UP");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kFormationBreak) == "BEHAVIOUR_FORMATION_BREAK");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kEnergyBombCountdown) == "BEHAVIOUR_ENERGY_BOMB_COUNTDOWN");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kTractored) == "BEHAVIOUR_TRACTORED");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kScriptedAi) == "BEHAVIOUR_SCRIPTED_AI");
-  OO_CHECK(OOStringFromBehaviour(oo::Behaviour::kScriptedAttackAi) == "BEHAVIOUR_SCRIPTED_ATTACK_AI");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kIdle) == "BEHAVIOUR_IDLE");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kTrackTarget) == "BEHAVIOUR_TRACK_TARGET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kTumble) == "BEHAVIOUR_TUMBLE");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kStopStill) == "BEHAVIOUR_STOP_STILL");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kStationKeeping) == "BEHAVIOUR_STATION_KEEPING");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackTarget) == "BEHAVIOUR_ATTACK_TARGET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackFlyToTarget) == "BEHAVIOUR_ATTACK_FLY_TO_TARGET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackFlyFromTarget) == "BEHAVIOUR_ATTACK_FLY_FROM_TARGET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kRunningDefense) == "BEHAVIOUR_RUNNING_DEFENSE");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kFleeTarget) == "BEHAVIOUR_FLEE_TARGET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackFlyToTargetSix) == "BEHAVIOUR_ATTACK_FLY_TO_TARGET_SIX");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackMiningTarget) == "BEHAVIOUR_ATTACK_MINING_TARGET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kEvasiveAction) == "BEHAVIOUR_EVASIVE_ACTION");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kFleeEvasiveAction) == "BEHAVIOUR_FLEE_EVASIVE_ACTION");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackBreakOffTarget) == "BEHAVIOUR_ATTACK_BREAK_OFF_TARGET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackSlowDogfight) == "BEHAVIOUR_ATTACK_SLOW_DOGFIGHT");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackFlyToTargetTwelve) == "BEHAVIOUR_ATTACK_FLY_TO_TARGET_TWELVE");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackSniper) == "BEHAVIOUR_ATTACK_SNIPER");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackBroadside) == "BEHAVIOUR_ATTACK_BROADSIDE");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackBroadsideLeft) == "BEHAVIOUR_ATTACK_BROADSIDE_LEFT");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAttackBroadsideRight) == "BEHAVIOUR_ATTACK_BROADSIDE_RIGHT");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kCloseToBroadsideRange) == "BEHAVIOUR_CLOSE_TO_BROADSIDE_RANGE");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kCloseWithTarget) == "BEHAVIOUR_CLOSE_WITH_TARGET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kAvoidCollision) == "BEHAVIOUR_AVOID_COLLISION");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kTrackAsTurret) == "BEHAVIOUR_TRACK_AS_TURRET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kFlyRangeFromDestination) == "BEHAVIOUR_FLY_RANGE_FROM_DESTINATION");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kFlyToDestination) == "BEHAVIOUR_FLY_TO_DESTINATION");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kFlyFromDestination) == "BEHAVIOUR_FLY_FROM_DESTINATION");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kFaceDestination) == "BEHAVIOUR_FACE_DESTINATION");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kFlyThruNavpoints) == "BEHAVIOUR_FLY_THRU_NAVPOINTS");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kLandOnPlanet) == "BEHAVIOUR_LAND_ON_PLANET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kCollectTarget) == "BEHAVIOUR_COLLECT_TARGET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kInterceptTarget) == "BEHAVIOUR_INTERCEPT_TARGET");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kFormationFormUp) == "BEHAVIOUR_FORMATION_FORM_UP");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kFormationBreak) == "BEHAVIOUR_FORMATION_BREAK");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kEnergyBombCountdown) == "BEHAVIOUR_ENERGY_BOMB_COUNTDOWN");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kTractored) == "BEHAVIOUR_TRACTORED");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kScriptedAi) == "BEHAVIOUR_SCRIPTED_AI");
+  OO_CHECK(oo::StringFromBehaviour(oo::Behaviour::kScriptedAttackAi) == "BEHAVIOUR_SCRIPTED_ATTACK_AI");
 }
 
 OO_TEST(OOStringFromCompassMode) {
@@ -108,71 +108,71 @@ OO_TEST(OOStringFromLongRangeChartMode) {
 }
 
 OO_TEST(OOStringFromGalacticHyperspaceBehaviour) {
-  OO_CHECK(OOStringFromGalacticHyperspaceBehaviour(oo::GalacticHyperspaceBehaviour::kStandard) == "BEHAVIOUR_STANDARD");
-  OO_CHECK(OOStringFromGalacticHyperspaceBehaviour(oo::GalacticHyperspaceBehaviour::kAllSystemsReachable) == "BEHAVIOUR_ALL_SYSTEMS_REACHABLE");
-  OO_CHECK(OOStringFromGalacticHyperspaceBehaviour(oo::GalacticHyperspaceBehaviour::kFixedCoordinates) == "BEHAVIOUR_FIXED_COORDINATES");
-  OO_CHECK(OOStringFromGalacticHyperspaceBehaviour(oo::GalacticHyperspaceBehaviour::kUnknown) == "BEHAVIOUR_UNKNOWN");
+  OO_CHECK(oo::StringFromGalacticHyperspaceBehaviour(oo::GalacticHyperspaceBehaviour::kStandard) == "BEHAVIOUR_STANDARD");
+  OO_CHECK(oo::StringFromGalacticHyperspaceBehaviour(oo::GalacticHyperspaceBehaviour::kAllSystemsReachable) == "BEHAVIOUR_ALL_SYSTEMS_REACHABLE");
+  OO_CHECK(oo::StringFromGalacticHyperspaceBehaviour(oo::GalacticHyperspaceBehaviour::kFixedCoordinates) == "BEHAVIOUR_FIXED_COORDINATES");
+  OO_CHECK(oo::StringFromGalacticHyperspaceBehaviour(oo::GalacticHyperspaceBehaviour::kUnknown) == "BEHAVIOUR_UNKNOWN");
 }
 
 OO_TEST(OOStringFromGUIScreenID) {
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kMain) == "GUI_SCREEN_MAIN");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kIntro1) == "GUI_SCREEN_INTRO1");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kShipLibrary) == "GUI_SCREEN_SHIPLIBRARY");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kKeyboard) == "GUI_SCREEN_KEYBOARD");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kNewGame) == "GUI_SCREEN_NEWGAME");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kOXZManager) == "GUI_SCREEN_OXZMANAGER");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kStatus) == "GUI_SCREEN_STATUS");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kManifest) == "GUI_SCREEN_MANIFEST");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kEquipShip) == "GUI_SCREEN_EQUIP_SHIP");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kShipyard) == "GUI_SCREEN_SHIPYARD");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kLongRangeChart) == "GUI_SCREEN_LONG_RANGE_CHART");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kShortRangeChart) == "GUI_SCREEN_SHORT_RANGE_CHART");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kSystemData) == "GUI_SCREEN_SYSTEM_DATA");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kMarket) == "GUI_SCREEN_MARKET");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kMarketInfo) == "GUI_SCREEN_MARKETINFO");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kOptions) == "GUI_SCREEN_OPTIONS");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kGameOptions) == "GUI_SCREEN_GAMEOPTIONS");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kLoad) == "GUI_SCREEN_LOAD");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kSave) == "GUI_SCREEN_SAVE");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kSaveOverwrite) == "GUI_SCREEN_SAVE_OVERWRITE");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kStickMapper) == "GUI_SCREEN_STICKMAPPER");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kStickProfile) == "GUI_SCREEN_STICKPROFILE");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kMission) == "GUI_SCREEN_MISSION");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kReport) == "GUI_SCREEN_REPORT");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kInterfaces) == "GUI_SCREEN_INTERFACES");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kKeyboardConfirmClear) == "GUI_SCREEN_KEYBOARD_CONFIRMCLEAR");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kKeyboardConfig) == "GUI_SCREEN_KEYBOARD_CONFIG");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kKeyboardEntry) == "GUI_SCREEN_KEYBOARD_ENTRY");
-  OO_CHECK(OOStringFromGUIScreenID(oo::GUIScreenID::kKeyboardLayout) == "GUI_SCREEN_KEYBOARD_LAYOUT");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kMain) == "GUI_SCREEN_MAIN");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kIntro1) == "GUI_SCREEN_INTRO1");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kShipLibrary) == "GUI_SCREEN_SHIPLIBRARY");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kKeyboard) == "GUI_SCREEN_KEYBOARD");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kNewGame) == "GUI_SCREEN_NEWGAME");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kOXZManager) == "GUI_SCREEN_OXZMANAGER");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kStatus) == "GUI_SCREEN_STATUS");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kManifest) == "GUI_SCREEN_MANIFEST");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kEquipShip) == "GUI_SCREEN_EQUIP_SHIP");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kShipyard) == "GUI_SCREEN_SHIPYARD");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kLongRangeChart) == "GUI_SCREEN_LONG_RANGE_CHART");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kShortRangeChart) == "GUI_SCREEN_SHORT_RANGE_CHART");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kSystemData) == "GUI_SCREEN_SYSTEM_DATA");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kMarket) == "GUI_SCREEN_MARKET");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kMarketInfo) == "GUI_SCREEN_MARKETINFO");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kOptions) == "GUI_SCREEN_OPTIONS");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kGameOptions) == "GUI_SCREEN_GAMEOPTIONS");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kLoad) == "GUI_SCREEN_LOAD");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kSave) == "GUI_SCREEN_SAVE");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kSaveOverwrite) == "GUI_SCREEN_SAVE_OVERWRITE");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kStickMapper) == "GUI_SCREEN_STICKMAPPER");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kStickProfile) == "GUI_SCREEN_STICKPROFILE");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kMission) == "GUI_SCREEN_MISSION");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kReport) == "GUI_SCREEN_REPORT");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kInterfaces) == "GUI_SCREEN_INTERFACES");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kKeyboardConfirmClear) == "GUI_SCREEN_KEYBOARD_CONFIRMCLEAR");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kKeyboardConfig) == "GUI_SCREEN_KEYBOARD_CONFIG");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kKeyboardEntry) == "GUI_SCREEN_KEYBOARD_ENTRY");
+  OO_CHECK(oo::StringFromGUIScreenID(oo::GUIScreenID::kKeyboardLayout) == "GUI_SCREEN_KEYBOARD_LAYOUT");
 }
 
 OO_TEST(OOStringFromScanClass) {
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kNotSet) == "CLASS_NOT_SET");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kNoDraw) == "CLASS_NO_DRAW");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kNeutral) == "CLASS_NEUTRAL");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kStation) == "CLASS_STATION");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kTarget) == "CLASS_TARGET");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kCargo) == "CLASS_CARGO");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kMissile) == "CLASS_MISSILE");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kRock) == "CLASS_ROCK");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kMine) == "CLASS_MINE");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kThargoid) == "CLASS_THARGOID");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kBuoy) == "CLASS_BUOY");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kVisualEffect) == "CLASS_VISUAL_EFFECT");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kWormhole) == "CLASS_WORMHOLE");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kPlayer) == "CLASS_PLAYER");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kPolice) == "CLASS_POLICE");
-  OO_CHECK(OOStringFromScanClass(oo::ScanClass::kMilitary) == "CLASS_MILITARY");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kNotSet) == "CLASS_NOT_SET");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kNoDraw) == "CLASS_NO_DRAW");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kNeutral) == "CLASS_NEUTRAL");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kStation) == "CLASS_STATION");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kTarget) == "CLASS_TARGET");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kCargo) == "CLASS_CARGO");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kMissile) == "CLASS_MISSILE");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kRock) == "CLASS_ROCK");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kMine) == "CLASS_MINE");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kThargoid) == "CLASS_THARGOID");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kBuoy) == "CLASS_BUOY");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kVisualEffect) == "CLASS_VISUAL_EFFECT");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kWormhole) == "CLASS_WORMHOLE");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kPlayer) == "CLASS_PLAYER");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kPolice) == "CLASS_POLICE");
+  OO_CHECK(oo::StringFromScanClass(oo::ScanClass::kMilitary) == "CLASS_MILITARY");
 }
 
 OO_TEST(OOStringFromShipDamageType) {
-  OO_CHECK(OOStringFromShipDamageType(oo::ShipDamageType::kScrape) == "scrape damage");
-  OO_CHECK(OOStringFromShipDamageType(oo::ShipDamageType::kHeat) == "heat damage");
-  OO_CHECK(OOStringFromShipDamageType(oo::ShipDamageType::kEnergy) == "energy damage");
-  OO_CHECK(OOStringFromShipDamageType(oo::ShipDamageType::kCascadeWeapon) == "cascade weapon");
-  OO_CHECK(OOStringFromShipDamageType(oo::ShipDamageType::kHitAPlanet) == "hit a planet");
-  OO_CHECK(OOStringFromShipDamageType(oo::ShipDamageType::kHitASun) == "hit a sun");
-  OO_CHECK(OOStringFromShipDamageType(oo::ShipDamageType::kRemoved) == "removed");
+  OO_CHECK(oo::StringFromShipDamageType(oo::ShipDamageType::kScrape) == "scrape damage");
+  OO_CHECK(oo::StringFromShipDamageType(oo::ShipDamageType::kHeat) == "heat damage");
+  OO_CHECK(oo::StringFromShipDamageType(oo::ShipDamageType::kEnergy) == "energy damage");
+  OO_CHECK(oo::StringFromShipDamageType(oo::ShipDamageType::kCascadeWeapon) == "cascade weapon");
+  OO_CHECK(oo::StringFromShipDamageType(oo::ShipDamageType::kHitAPlanet) == "hit a planet");
+  OO_CHECK(oo::StringFromShipDamageType(oo::ShipDamageType::kHitASun) == "hit a sun");
+  OO_CHECK(oo::StringFromShipDamageType(oo::ShipDamageType::kRemoved) == "removed");
 }
 
 OO_TEST(OOStringFromLegalStatusReason) {
@@ -196,28 +196,28 @@ OO_TEST(OOStringFromLegalStatusReason) {
 }
 
 OO_TEST(OOEntityStatusFromString) {
-  OO_CHECK(OOEntityStatusFromString("STATUS_START_GAME") == oo::EntityStatus::kStartGame);
-  OO_CHECK(OOEntityStatusFromString("STATUS_RESTART_GAME") == oo::EntityStatus::kRestartGame);
-  OO_CHECK(OOEntityStatusFromString("STATUS_DEAD") == oo::EntityStatus::kDead);
-  OO_CHECK(OOEntityStatusFromString("STATUS_INACTIVE") == oo::EntityStatus::kInactive);
-  OO_CHECK(OOEntityStatusFromString("STATUS_TEST") == oo::EntityStatus::kTest);
-  OO_CHECK(OOEntityStatusFromString("STATUS_COCKPIT_DISPLAY") == oo::EntityStatus::kCockpitDisplay);
-  OO_CHECK(OOEntityStatusFromString("STATUS_ACTIVE") == oo::EntityStatus::kActive);
-  OO_CHECK(OOEntityStatusFromString("STATUS_EFFECT") == oo::EntityStatus::kEffect);
-  OO_CHECK(OOEntityStatusFromString("STATUS_IN_FLIGHT") == oo::EntityStatus::kInFlight);
-  OO_CHECK(OOEntityStatusFromString("STATUS_DOCKED") == oo::EntityStatus::kDocked);
-  OO_CHECK(OOEntityStatusFromString("STATUS_AUTOPILOT_ENGAGED") == oo::EntityStatus::kAutopilotEngaged);
-  OO_CHECK(OOEntityStatusFromString("STATUS_DOCKING") == oo::EntityStatus::kDocking);
-  OO_CHECK(OOEntityStatusFromString("STATUS_LAUNCHING") == oo::EntityStatus::kLaunching);
-  OO_CHECK(OOEntityStatusFromString("STATUS_WITCHSPACE_COUNTDOWN") == oo::EntityStatus::kWitchspaceCountdown);
-  OO_CHECK(OOEntityStatusFromString("STATUS_ENTERING_WITCHSPACE") == oo::EntityStatus::kEnteringWitchspace);
-  OO_CHECK(OOEntityStatusFromString("STATUS_EXITING_WITCHSPACE") == oo::EntityStatus::kExitingWitchspace);
-  OO_CHECK(OOEntityStatusFromString("STATUS_ESCAPE_SEQUENCE") == oo::EntityStatus::kEscapeSequence);
-  OO_CHECK(OOEntityStatusFromString("STATUS_IN_HOLD") == oo::EntityStatus::kInHold);
-  OO_CHECK(OOEntityStatusFromString("STATUS_BEING_SCOOPED") == oo::EntityStatus::kBeingScooped);
-  OO_CHECK(OOEntityStatusFromString("STATUS_HANDLING_ERROR") == oo::EntityStatus::kHandlingError);
-  OO_CHECK(OOEntityStatusFromString("NOT_A_NAME") == oo::EntityStatus::kInactive);  // the fallback
-  OO_CHECK(OOEntityStatusFromString("") == oo::EntityStatus::kInactive);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_START_GAME") == oo::EntityStatus::kStartGame);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_RESTART_GAME") == oo::EntityStatus::kRestartGame);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_DEAD") == oo::EntityStatus::kDead);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_INACTIVE") == oo::EntityStatus::kInactive);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_TEST") == oo::EntityStatus::kTest);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_COCKPIT_DISPLAY") == oo::EntityStatus::kCockpitDisplay);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_ACTIVE") == oo::EntityStatus::kActive);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_EFFECT") == oo::EntityStatus::kEffect);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_IN_FLIGHT") == oo::EntityStatus::kInFlight);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_DOCKED") == oo::EntityStatus::kDocked);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_AUTOPILOT_ENGAGED") == oo::EntityStatus::kAutopilotEngaged);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_DOCKING") == oo::EntityStatus::kDocking);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_LAUNCHING") == oo::EntityStatus::kLaunching);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_WITCHSPACE_COUNTDOWN") == oo::EntityStatus::kWitchspaceCountdown);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_ENTERING_WITCHSPACE") == oo::EntityStatus::kEnteringWitchspace);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_EXITING_WITCHSPACE") == oo::EntityStatus::kExitingWitchspace);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_ESCAPE_SEQUENCE") == oo::EntityStatus::kEscapeSequence);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_IN_HOLD") == oo::EntityStatus::kInHold);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_BEING_SCOOPED") == oo::EntityStatus::kBeingScooped);
+  OO_CHECK(oo::EntityStatusFromString("STATUS_HANDLING_ERROR") == oo::EntityStatus::kHandlingError);
+  OO_CHECK(oo::EntityStatusFromString("NOT_A_NAME") == oo::EntityStatus::kInactive);  // the fallback
+  OO_CHECK(oo::EntityStatusFromString("") == oo::EntityStatus::kInactive);
 }
 
 OO_TEST(OOCompassModeFromString) {
@@ -233,67 +233,67 @@ OO_TEST(OOCompassModeFromString) {
 }
 
 OO_TEST(OOGalacticHyperspaceBehaviourFromString) {
-  OO_CHECK(OOGalacticHyperspaceBehaviourFromString("BEHAVIOUR_STANDARD") == oo::GalacticHyperspaceBehaviour::kStandard);
-  OO_CHECK(OOGalacticHyperspaceBehaviourFromString("BEHAVIOUR_ALL_SYSTEMS_REACHABLE") == oo::GalacticHyperspaceBehaviour::kAllSystemsReachable);
-  OO_CHECK(OOGalacticHyperspaceBehaviourFromString("BEHAVIOUR_FIXED_COORDINATES") == oo::GalacticHyperspaceBehaviour::kFixedCoordinates);
-  OO_CHECK(OOGalacticHyperspaceBehaviourFromString("BEHAVIOUR_UNKNOWN") == oo::GalacticHyperspaceBehaviour::kUnknown);
-  OO_CHECK(OOGalacticHyperspaceBehaviourFromString("NOT_A_NAME") == oo::GalacticHyperspaceBehaviour::kUnknown);  // the fallback
-  OO_CHECK(OOGalacticHyperspaceBehaviourFromString("") == oo::GalacticHyperspaceBehaviour::kUnknown);
+  OO_CHECK(oo::GalacticHyperspaceBehaviourFromString("BEHAVIOUR_STANDARD") == oo::GalacticHyperspaceBehaviour::kStandard);
+  OO_CHECK(oo::GalacticHyperspaceBehaviourFromString("BEHAVIOUR_ALL_SYSTEMS_REACHABLE") == oo::GalacticHyperspaceBehaviour::kAllSystemsReachable);
+  OO_CHECK(oo::GalacticHyperspaceBehaviourFromString("BEHAVIOUR_FIXED_COORDINATES") == oo::GalacticHyperspaceBehaviour::kFixedCoordinates);
+  OO_CHECK(oo::GalacticHyperspaceBehaviourFromString("BEHAVIOUR_UNKNOWN") == oo::GalacticHyperspaceBehaviour::kUnknown);
+  OO_CHECK(oo::GalacticHyperspaceBehaviourFromString("NOT_A_NAME") == oo::GalacticHyperspaceBehaviour::kUnknown);  // the fallback
+  OO_CHECK(oo::GalacticHyperspaceBehaviourFromString("") == oo::GalacticHyperspaceBehaviour::kUnknown);
 }
 
 OO_TEST(OOGUIScreenIDFromString) {
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_MAIN") == oo::GUIScreenID::kMain);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_INTRO1") == oo::GUIScreenID::kIntro1);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_SHIPLIBRARY") == oo::GUIScreenID::kShipLibrary);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_KEYBOARD") == oo::GUIScreenID::kKeyboard);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_NEWGAME") == oo::GUIScreenID::kNewGame);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_OXZMANAGER") == oo::GUIScreenID::kOXZManager);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_STATUS") == oo::GUIScreenID::kStatus);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_MANIFEST") == oo::GUIScreenID::kManifest);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_EQUIP_SHIP") == oo::GUIScreenID::kEquipShip);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_SHIPYARD") == oo::GUIScreenID::kShipyard);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_LONG_RANGE_CHART") == oo::GUIScreenID::kLongRangeChart);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_SHORT_RANGE_CHART") == oo::GUIScreenID::kShortRangeChart);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_SYSTEM_DATA") == oo::GUIScreenID::kSystemData);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_MARKET") == oo::GUIScreenID::kMarket);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_MARKETINFO") == oo::GUIScreenID::kMarketInfo);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_OPTIONS") == oo::GUIScreenID::kOptions);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_GAMEOPTIONS") == oo::GUIScreenID::kGameOptions);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_LOAD") == oo::GUIScreenID::kLoad);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_SAVE") == oo::GUIScreenID::kSave);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_SAVE_OVERWRITE") == oo::GUIScreenID::kSaveOverwrite);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_STICKMAPPER") == oo::GUIScreenID::kStickMapper);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_STICKPROFILE") == oo::GUIScreenID::kStickProfile);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_MISSION") == oo::GUIScreenID::kMission);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_REPORT") == oo::GUIScreenID::kReport);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_INTERFACES") == oo::GUIScreenID::kInterfaces);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_KEYBOARD_CONFIRMCLEAR") == oo::GUIScreenID::kKeyboardConfirmClear);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_KEYBOARD_CONFIG") == oo::GUIScreenID::kKeyboardConfig);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_KEYBOARD_ENTRY") == oo::GUIScreenID::kKeyboardEntry);
-  OO_CHECK(OOGUIScreenIDFromString("GUI_SCREEN_KEYBOARD_LAYOUT") == oo::GUIScreenID::kKeyboardLayout);
-  OO_CHECK(OOGUIScreenIDFromString("NOT_A_NAME") == oo::GUIScreenID::kMain);  // the fallback
-  OO_CHECK(OOGUIScreenIDFromString("") == oo::GUIScreenID::kMain);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_MAIN") == oo::GUIScreenID::kMain);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_INTRO1") == oo::GUIScreenID::kIntro1);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_SHIPLIBRARY") == oo::GUIScreenID::kShipLibrary);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_KEYBOARD") == oo::GUIScreenID::kKeyboard);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_NEWGAME") == oo::GUIScreenID::kNewGame);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_OXZMANAGER") == oo::GUIScreenID::kOXZManager);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_STATUS") == oo::GUIScreenID::kStatus);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_MANIFEST") == oo::GUIScreenID::kManifest);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_EQUIP_SHIP") == oo::GUIScreenID::kEquipShip);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_SHIPYARD") == oo::GUIScreenID::kShipyard);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_LONG_RANGE_CHART") == oo::GUIScreenID::kLongRangeChart);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_SHORT_RANGE_CHART") == oo::GUIScreenID::kShortRangeChart);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_SYSTEM_DATA") == oo::GUIScreenID::kSystemData);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_MARKET") == oo::GUIScreenID::kMarket);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_MARKETINFO") == oo::GUIScreenID::kMarketInfo);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_OPTIONS") == oo::GUIScreenID::kOptions);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_GAMEOPTIONS") == oo::GUIScreenID::kGameOptions);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_LOAD") == oo::GUIScreenID::kLoad);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_SAVE") == oo::GUIScreenID::kSave);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_SAVE_OVERWRITE") == oo::GUIScreenID::kSaveOverwrite);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_STICKMAPPER") == oo::GUIScreenID::kStickMapper);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_STICKPROFILE") == oo::GUIScreenID::kStickProfile);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_MISSION") == oo::GUIScreenID::kMission);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_REPORT") == oo::GUIScreenID::kReport);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_INTERFACES") == oo::GUIScreenID::kInterfaces);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_KEYBOARD_CONFIRMCLEAR") == oo::GUIScreenID::kKeyboardConfirmClear);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_KEYBOARD_CONFIG") == oo::GUIScreenID::kKeyboardConfig);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_KEYBOARD_ENTRY") == oo::GUIScreenID::kKeyboardEntry);
+  OO_CHECK(oo::GUIScreenIDFromString("GUI_SCREEN_KEYBOARD_LAYOUT") == oo::GUIScreenID::kKeyboardLayout);
+  OO_CHECK(oo::GUIScreenIDFromString("NOT_A_NAME") == oo::GUIScreenID::kMain);  // the fallback
+  OO_CHECK(oo::GUIScreenIDFromString("") == oo::GUIScreenID::kMain);
 }
 
 OO_TEST(OOScanClassFromString) {
-  OO_CHECK(OOScanClassFromString("CLASS_NOT_SET") == oo::ScanClass::kNotSet);
-  OO_CHECK(OOScanClassFromString("CLASS_NO_DRAW") == oo::ScanClass::kNoDraw);
-  OO_CHECK(OOScanClassFromString("CLASS_NEUTRAL") == oo::ScanClass::kNeutral);
-  OO_CHECK(OOScanClassFromString("CLASS_STATION") == oo::ScanClass::kStation);
-  OO_CHECK(OOScanClassFromString("CLASS_TARGET") == oo::ScanClass::kTarget);
-  OO_CHECK(OOScanClassFromString("CLASS_CARGO") == oo::ScanClass::kCargo);
-  OO_CHECK(OOScanClassFromString("CLASS_MISSILE") == oo::ScanClass::kMissile);
-  OO_CHECK(OOScanClassFromString("CLASS_ROCK") == oo::ScanClass::kRock);
-  OO_CHECK(OOScanClassFromString("CLASS_MINE") == oo::ScanClass::kMine);
-  OO_CHECK(OOScanClassFromString("CLASS_THARGOID") == oo::ScanClass::kThargoid);
-  OO_CHECK(OOScanClassFromString("CLASS_BUOY") == oo::ScanClass::kBuoy);
-  OO_CHECK(OOScanClassFromString("CLASS_VISUAL_EFFECT") == oo::ScanClass::kVisualEffect);
-  OO_CHECK(OOScanClassFromString("CLASS_WORMHOLE") == oo::ScanClass::kWormhole);
-  OO_CHECK(OOScanClassFromString("CLASS_PLAYER") == oo::ScanClass::kPlayer);
-  OO_CHECK(OOScanClassFromString("CLASS_POLICE") == oo::ScanClass::kPolice);
-  OO_CHECK(OOScanClassFromString("CLASS_MILITARY") == oo::ScanClass::kMilitary);
-  OO_CHECK(OOScanClassFromString("NOT_A_NAME") == oo::ScanClass::kNotSet);  // the fallback
-  OO_CHECK(OOScanClassFromString("") == oo::ScanClass::kNotSet);
+  OO_CHECK(oo::ScanClassFromString("CLASS_NOT_SET") == oo::ScanClass::kNotSet);
+  OO_CHECK(oo::ScanClassFromString("CLASS_NO_DRAW") == oo::ScanClass::kNoDraw);
+  OO_CHECK(oo::ScanClassFromString("CLASS_NEUTRAL") == oo::ScanClass::kNeutral);
+  OO_CHECK(oo::ScanClassFromString("CLASS_STATION") == oo::ScanClass::kStation);
+  OO_CHECK(oo::ScanClassFromString("CLASS_TARGET") == oo::ScanClass::kTarget);
+  OO_CHECK(oo::ScanClassFromString("CLASS_CARGO") == oo::ScanClass::kCargo);
+  OO_CHECK(oo::ScanClassFromString("CLASS_MISSILE") == oo::ScanClass::kMissile);
+  OO_CHECK(oo::ScanClassFromString("CLASS_ROCK") == oo::ScanClass::kRock);
+  OO_CHECK(oo::ScanClassFromString("CLASS_MINE") == oo::ScanClass::kMine);
+  OO_CHECK(oo::ScanClassFromString("CLASS_THARGOID") == oo::ScanClass::kThargoid);
+  OO_CHECK(oo::ScanClassFromString("CLASS_BUOY") == oo::ScanClass::kBuoy);
+  OO_CHECK(oo::ScanClassFromString("CLASS_VISUAL_EFFECT") == oo::ScanClass::kVisualEffect);
+  OO_CHECK(oo::ScanClassFromString("CLASS_WORMHOLE") == oo::ScanClass::kWormhole);
+  OO_CHECK(oo::ScanClassFromString("CLASS_PLAYER") == oo::ScanClass::kPlayer);
+  OO_CHECK(oo::ScanClassFromString("CLASS_POLICE") == oo::ScanClass::kPolice);
+  OO_CHECK(oo::ScanClassFromString("CLASS_MILITARY") == oo::ScanClass::kMilitary);
+  OO_CHECK(oo::ScanClassFromString("NOT_A_NAME") == oo::ScanClass::kNotSet);  // the fallback
+  OO_CHECK(oo::ScanClassFromString("") == oo::ScanClass::kNotSet);
 }
 
 OO_TEST(OOLongRangeChartModeFromString) {

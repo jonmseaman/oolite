@@ -74,13 +74,12 @@ MA 02110-1301, USA.
 #include "OOMouseInteractionMode.h"
 #include "OOMusicController.h"
 #include "OOOXZManager.h"
-#include "OOPlanetEntity.h"
 #include "OOQuaternion.h"
 #include "OOStringExpander.h"
-#include "OOSunEntity.h"
 #include "OOSystemDescriptionManager.h"
 #include "OOTypes.h"
 #include "OOVector.h"
+#include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityContracts.h"
 #include "PlayerEntityKeyMapper.h"
@@ -91,6 +90,7 @@ MA 02110-1301, USA.
 #include "ShipEntityAI.h"
 #include "SpeechSynthesizer.h"
 #include "StationEntity.h"
+#include "SunEntity.h"
 #include "Universe.h"
 #include "ViewID.h"
 #include "legacy_random.h"
@@ -1564,7 +1564,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             joyButtonState[BUTTON_ACTIVATEEQUIPMENT]) {
           if (!activate_equipment_pressed) {
             activatePrimableEquipment(primedEquipment,
-                                      OOPrimedEquipmentMode::kActivated);
+                                      oo::PrimedEquipmentMode::kActivated);
           }
           activate_equipment_pressed = true;
         } else {
@@ -1578,7 +1578,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             joyButtonState[BUTTON_MODEEQUIPMENT]) {
           if (!mode_equipment_pressed) {
             activatePrimableEquipment(primedEquipment,
-                                      OOPrimedEquipmentMode::kMode);
+                                      oo::PrimedEquipmentMode::kMode);
           }
           mode_equipment_pressed = true;
         } else {
@@ -1591,7 +1591,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           if (!fastactivate_a_pressed) {
             activatePrimableEquipment(
                 eqScriptIndexForKey(fastEquipmentA().value_or("")),
-                OOPrimedEquipmentMode::kActivated);
+                oo::PrimedEquipmentMode::kActivated);
           }
           fastactivate_a_pressed = true;
         } else {
@@ -1604,7 +1604,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           if (!fastactivate_b_pressed) {
             activatePrimableEquipment(
                 eqScriptIndexForKey(fastEquipmentB().value_or("")),
-                OOPrimedEquipmentMode::kActivated);
+                oo::PrimedEquipmentMode::kActivated);
           }
           fastactivate_b_pressed = true;
         } else {
@@ -1637,7 +1637,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
               if (!customActivatePressed[i]) {
                 // initate the activate JS code
                 activatePrimableEquipment(eqScriptIndexForKey(equipKey),
-                                          OOPrimedEquipmentMode::kActivated);
+                                          oo::PrimedEquipmentMode::kActivated);
               }
               customActivatePressed[i] = true;
             } else {
@@ -1653,7 +1653,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
               if (!customModePressed[i]) {
                 // initiate the activate JS code
                 activatePrimableEquipment(eqScriptIndexForKey(equipKey),
-                                          OOPrimedEquipmentMode::kMode);
+                                          oo::PrimedEquipmentMode::kMode);
               }
               customModePressed[i] = true;
             } else {
@@ -2780,7 +2780,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
 
       if (selectKeyPress) {
         // 'enter'
-        if ((guiSelectedRow == OOGUIOptionsRow(GUI_ROW_OPTIONS_QUICKSAVE)) &&
+        if ((guiSelectedRow == oo::GUIOptionsRow(GUI_ROW_OPTIONS_QUICKSAVE)) &&
             (!disc_operation_in_progress)) {
           try {
             disc_operation_in_progress = true;
@@ -2810,12 +2810,12 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             }
           }
         }
-        if ((guiSelectedRow == OOGUIOptionsRow(GUI_ROW_OPTIONS_SAVE)) &&
+        if ((guiSelectedRow == oo::GUIOptionsRow(GUI_ROW_OPTIONS_SAVE)) &&
             (!disc_operation_in_progress)) {
           disc_operation_in_progress = true;
           savePlayer();
         }
-        if ((guiSelectedRow == OOGUIOptionsRow(GUI_ROW_OPTIONS_LOAD)) &&
+        if ((guiSelectedRow == oo::GUIOptionsRow(GUI_ROW_OPTIONS_LOAD)) &&
             (!disc_operation_in_progress)) {
           disc_operation_in_progress = true;
           if (!loadPlayer()) {
@@ -2824,7 +2824,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
           }
         }
 
-        if ((guiSelectedRow == OOGUIOptionsRow(GUI_ROW_OPTIONS_BEGIN_NEW)) &&
+        if ((guiSelectedRow == oo::GUIOptionsRow(GUI_ROW_OPTIONS_BEGIN_NEW)) &&
             (!disc_operation_in_progress)) {
           disc_operation_in_progress = true;
           if (UNIVERSE != nullptr)
@@ -2843,7 +2843,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       // quit only appears in GNUstep as users aren't
       // used to Cmd-Q equivs. Same goes for window
       // vs fullscreen.
-      if ((guiSelectedRow == OOGUIOptionsRow(GUI_ROW_OPTIONS_QUIT)) &&
+      if ((guiSelectedRow == oo::GUIOptionsRow(GUI_ROW_OPTIONS_QUIT)) &&
           selectKeyPress) {
         if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
           UNIVERSE->gameController()->exitAppWithContext(
@@ -2851,7 +2851,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       }
 #endif
 
-      if ((guiSelectedRow == OOGUIOptionsRow(GUI_ROW_OPTIONS_GAMEOPTIONS)) &&
+      if ((guiSelectedRow == oo::GUIOptionsRow(GUI_ROW_OPTIONS_GAMEOPTIONS)) &&
           selectKeyPress) {
         if (gameView != nullptr) gameView->clearKeys();
         setGuiToGameOptionsScreen();
@@ -2864,7 +2864,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
         std::optional<std::string> itemText =
             gui->selectedRowText();  // nil compares unequal, as -isEqual: on
                                      // nil
-        OOWeaponType weaponType = nullptr;
+        oo::WeaponType weaponType = nullptr;
 
         if (itemText == FORWARD_FACING_STRING) weaponType = forward_weapon_type;
         if (itemText == AFT_FACING_STRING) weaponType = aft_weapon_type;
@@ -2873,7 +2873,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
           weaponType = starboard_weapon_type;
 
         if (weaponType != nullptr) {
-          bool sameAs = OOWeaponTypeFromEquipmentIdentifierSloppy(
+          bool sameAs = oo::WeaponTypeFromEquipmentIdentifierSloppy(
                             gui->selectedRowKey().value_or("")) == weaponType;
           // override showInformation _completely_ with itemText
           if ((weaponType != nullptr
@@ -2883,11 +2883,11 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
           } else {
             const std::string weaponName =
                 (OOEquipmentType::equipmentTypeWithIdentifier(
-                     OOEquipmentIdentifierFromWeaponType(weaponType)
+                     oo::EquipmentIdentifierFromWeaponType(weaponType)
                          .value_or(""))
                              .get() != nullptr
                      ? OOEquipmentType::equipmentTypeWithIdentifier(
-                           OOEquipmentIdentifierFromWeaponType(weaponType)
+                           oo::EquipmentIdentifierFromWeaponType(weaponType)
                                .value_or(""))
                            .get()
                            ->name()
@@ -3043,19 +3043,19 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
           if (checkKeyPress(n_key_market_filter_cycle)) {
             if (static_cast<unsigned int>(oo::ToUnderlying(marketFilterMode)) +
                     1u >=
-                kOOMarketFilterModeCount) {
-              marketFilterMode = OOMarketFilterMode::kOff;
+                oo::kMarketFilterModeCount) {
+              marketFilterMode = oo::MarketFilterMode::kOff;
             } else {
-              marketFilterMode = static_cast<OOMarketFilterMode>(
+              marketFilterMode = static_cast<oo::MarketFilterMode>(
                   oo::ToUnderlying(marketFilterMode) + 1);
             }
           } else {
             if (static_cast<unsigned int>(oo::ToUnderlying(marketSorterMode)) +
                     1u >=
-                kOOMarketSorterModeCount) {
-              marketSorterMode = OOMarketSorterMode::kOff;
+                oo::kMarketSorterModeCount) {
+              marketSorterMode = oo::MarketSorterMode::kOff;
             } else {
-              marketSorterMode = static_cast<OOMarketSorterMode>(
+              marketSorterMode = static_cast<oo::MarketSorterMode>(
                   oo::ToUnderlying(marketSorterMode) + 1);
             }
           }
@@ -3676,7 +3676,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
   }
 
   if ((guiSelectedRow ==
-       OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_STICKMAPPER)) &&
+       oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_STICKMAPPER)) &&
       selectKeyPress) {
     selFunctionIdx = 0;
     resetStickFunctions();  // reset the list of stick functions, so changes in
@@ -3684,7 +3684,8 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
     OOJoystickManager::sharedStickHandler()->clearStickStates();
     setGuiToStickMapperScreen(0, true);
   }
-  if ((guiSelectedRow == OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_KEYMAPPER)) &&
+  if ((guiSelectedRow ==
+       oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_KEYMAPPER)) &&
       selectKeyPress) {
     selFunctionIdx = 0;
     resetKeyFunctions();  // reset the list of key functions, so changes in oxp
@@ -3696,7 +3697,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 #if OOLITE_WINDOWS
   if ((gameView != nullptr ? gameView->hdrOutput() : false)) {
     if ((guiSelectedRow ==
-         OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_HDRMAXBRIGHTNESS)) &&
+         oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_HDRMAXBRIGHTNESS)) &&
         ((checkKeyPress(n_key_gui_arrow_right) ||
           joyButtonState[BUTTON_GUIRIGHT]) ||
          (checkKeyPress(n_key_gui_arrow_left) ||
@@ -3757,9 +3758,10 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
             OOExpandKey("gameoptions-hdr-maxbrightness", brightnessValue)
                 .value_or(std::string());
 
-        gui->setText(maxBrightnessString,
-                     OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_HDRMAXBRIGHTNESS),
-                     OOGUIAlignment::kCenter);
+        gui->setText(
+            maxBrightnessString,
+            oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_HDRMAXBRIGHTNESS),
+            OOGUIAlignment::kCenter);
 
         hdrMaxBrightnessControlPressed = true;
       }
@@ -3771,7 +3773,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 
 #if OO_RESOLUTION_OPTION
   if (!switching_resolution &&
-      guiSelectedRow == OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DISPLAY) &&
+      guiSelectedRow == oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DISPLAY) &&
       (checkKeyPress(n_key_gui_arrow_right) ||
        checkKeyPress(n_key_gui_arrow_left) || joyButtonState[BUTTON_GUIRIGHT] ||
        joyButtonState[BUTTON_GUILEFT])) {
@@ -3819,7 +3821,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 
     playChangedOption();
     gui->setText(displayModeString,
-                 OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DISPLAY),
+                 oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DISPLAY),
                  OOGUIAlignment::kCenter);
     switching_resolution = true;
 
@@ -3841,7 +3843,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 
 #if OOLITE_SPEECH_SYNTH
 
-  if ((guiSelectedRow == OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH)) &&
+  if ((guiSelectedRow == oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH)) &&
       ((checkKeyPress(n_key_gui_arrow_right) ||
         joyButtonState[BUTTON_GUIRIGHT]) ||
        (checkKeyPress(n_key_gui_arrow_left) ||
@@ -3849,36 +3851,36 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
     if (!speech_settings_pressed) {
       if ((checkKeyPress(n_key_gui_arrow_right) ||
            joyButtonState[BUTTON_GUIRIGHT]) &&
-          isSpeechOn < OOSpeechSettings::kAll) {
+          isSpeechOn < oo::SpeechSettings::kAll) {
         isSpeechOn =
-            static_cast<OOSpeechSettings>(oo::ToUnderlying(isSpeechOn) + 1);
+            static_cast<oo::SpeechSettings>(oo::ToUnderlying(isSpeechOn) + 1);
         playChangedOption();
         speech_settings_pressed = true;
       } else if ((checkKeyPress(n_key_gui_arrow_left) ||
                   joyButtonState[BUTTON_GUILEFT]) &&
-                 isSpeechOn > OOSpeechSettings::kOff) {
+                 isSpeechOn > oo::SpeechSettings::kOff) {
         speech_settings_pressed = true;
         isSpeechOn =
-            static_cast<OOSpeechSettings>(oo::ToUnderlying(isSpeechOn) - 1);
+            static_cast<oo::SpeechSettings>(oo::ToUnderlying(isSpeechOn) - 1);
         playChangedOption();
       }
       if (speech_settings_pressed) {
         std::optional<std::string> message;  // nullopt = no change (was nil)
         switch (isSpeechOn) {
-          case OOSpeechSettings::kOff:
+          case oo::SpeechSettings::kOff:
             message = OO_DESC("gameoptions-spoken-messages-no");
             break;
-          case OOSpeechSettings::kComms:
+          case oo::SpeechSettings::kComms:
             message = OO_DESC("gameoptions-spoken-messages-comms");
             break;
-          case OOSpeechSettings::kAll:
+          case oo::SpeechSettings::kAll:
             message = OO_DESC("gameoptions-spoken-messages-yes");
             break;
         }
-        gui->setText(message, OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH),
+        gui->setText(message, oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH),
                      OOGUIAlignment::kCenter);
 
-        if (isSpeechOn == OOSpeechSettings::kAll) {
+        if (isSpeechOn == oo::SpeechSettings::kAll) {
           if (UNIVERSE != nullptr) UNIVERSE->stopSpeaking();
           if (message.has_value()) {
             if (UNIVERSE != nullptr) UNIVERSE->startSpeakingString(*message);
@@ -3891,7 +3893,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
   }
 #if OOLITE_ESPEAK
   if (guiSelectedRow ==
-      OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_LANGUAGE)) {
+      oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_LANGUAGE)) {
     if (checkKeyPress(n_key_gui_arrow_right) ||
         checkKeyPress(n_key_gui_arrow_left) ||
         joyButtonState[BUTTON_GUIRIGHT] || joyButtonState[BUTTON_GUILEFT]) {
@@ -3911,9 +3913,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
         const std::string message = ExpandKeyWithArguments(
             "gameoptions-voice-name", {{"voiceName", oo::PList(voiceName)}});
         gui->setText(message,
-                     OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_LANGUAGE),
+                     oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_LANGUAGE),
                      OOGUIAlignment::kCenter);
-        if (isSpeechOn == OOSpeechSettings::kAll) {
+        if (isSpeechOn == oo::SpeechSettings::kAll) {
           if (UNIVERSE != nullptr) UNIVERSE->stopSpeaking();
           if (const std::optional<std::string> spokenVoiceName =
                   (UNIVERSE != nullptr ? UNIVERSE->voiceName(voice_no)
@@ -3931,7 +3933,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
   }
 
   if (guiSelectedRow ==
-      OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_GENDER)) {
+      oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_GENDER)) {
     if (checkKeyPress(n_key_gui_arrow_right) ||
         checkKeyPress(n_key_gui_arrow_left) ||
         joyButtonState[BUTTON_GUIRIGHT] || joyButtonState[BUTTON_GUILEFT]) {
@@ -3945,9 +3947,9 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
           const std::string message = OO_DESC(
               voice_gender_m ? "gameoptions-voice-M" : "gameoptions-voice-F");
           gui->setText(message,
-                       OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_GENDER),
+                       oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SPEECH_GENDER),
                        OOGUIAlignment::kCenter);
-          if (isSpeechOn == OOSpeechSettings::kAll) {
+          if (isSpeechOn == oo::SpeechSettings::kAll) {
             if (UNIVERSE != nullptr) UNIVERSE->stopSpeaking();
             if (const std::optional<std::string> spokenVoiceName =
                     (UNIVERSE != nullptr ? UNIVERSE->voiceName(voice_no)
@@ -3966,7 +3968,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 #endif
 #endif
 
-  if ((guiSelectedRow == OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_MUSIC)) &&
+  if ((guiSelectedRow == oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_MUSIC)) &&
       ((checkKeyPress(n_key_gui_arrow_right) ||
         joyButtonState[BUTTON_GUIRIGHT]) ||
        (checkKeyPress(n_key_gui_arrow_left) ||
@@ -3997,7 +3999,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
                 .value_or("");
         const std::string message = ExpandKeyWithArguments(
             "gameoptions-music-mode", {{"musicMode", oo::PList(musicMode)}});
-        gui->setText(message, OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_MUSIC),
+        gui->setText(message, oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_MUSIC),
                      OOGUIAlignment::kCenter);
       }
     }
@@ -4006,7 +4008,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
     musicModeKeyPressed = false;
   }
 
-  if ((guiSelectedRow == OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_AUTOSAVE)) &&
+  if ((guiSelectedRow == oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_AUTOSAVE)) &&
       ((checkKeyPress(n_key_gui_arrow_right) ||
         joyButtonState[BUTTON_GUIRIGHT]) ||
        (checkKeyPress(n_key_gui_arrow_left) ||
@@ -4022,17 +4024,17 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       // if just enabled, we want to autosave immediately
       if (UNIVERSE != nullptr) UNIVERSE->setAutoSaveNow(true);
       gui->setText(OO_DESC("gameoptions-autosave-yes"),
-                   OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_AUTOSAVE),
+                   oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_AUTOSAVE),
                    OOGUIAlignment::kCenter);
     } else {
       if (UNIVERSE != nullptr) UNIVERSE->setAutoSaveNow(false);
       gui->setText(OO_DESC("gameoptions-autosave-no"),
-                   OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_AUTOSAVE),
+                   oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_AUTOSAVE),
                    OOGUIAlignment::kCenter);
     }
   }
 
-  if ((guiSelectedRow == OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_VOLUME)) &&
+  if ((guiSelectedRow == oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_VOLUME)) &&
       ((checkKeyPress(n_key_gui_arrow_right) ||
         joyButtonState[BUTTON_GUIRIGHT]) ||
        (checkKeyPress(n_key_gui_arrow_left) ||
@@ -4060,11 +4062,11 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
         v0_string = v0_string.substr(0, static_cast<std::size_t>(20 - vol));
         gui->setText(
             std::format("{}{}{} ", soundVolumeWordDesc, v1_string, v0_string),
-            OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_VOLUME),
+            oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_VOLUME),
             OOGUIAlignment::kCenter);
       } else {
         gui->setText(OO_DESC("gameoptions-sound-volume-mute"),
-                     OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_VOLUME),
+                     oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_VOLUME),
                      OOGUIAlignment::kCenter);
       }
       timeLastKeyPress = script_time;
@@ -4074,7 +4076,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
     volumeControlPressed = false;
   }
 
-  if ((guiSelectedRow == OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_FOV)) &&
+  if ((guiSelectedRow == oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_FOV)) &&
       ((checkKeyPress(n_key_gui_arrow_right) ||
         joyButtonState[BUTTON_GUIRIGHT]) ||
        (checkKeyPress(n_key_gui_arrow_left) ||
@@ -4104,7 +4106,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       gui->setText(
           std::format("{}{}{} ({}{}) ", fovWordDesc, v1_string, v0_string,
                       static_cast<int>(fov), "\xC2\xB0" /*the degrees symbol*/),
-          OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_FOV),
+          oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_FOV),
           OOGUIAlignment::kCenter);
       oo::Defaults::standard().setFloat(
           "fov-value", (gameView != nullptr ? gameView->fov(false) : 0.0f));
@@ -4117,7 +4119,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 
   // color blind mode
   if ((guiSelectedRow ==
-       OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_COLORBLINDMODE)) &&
+       oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_COLORBLINDMODE)) &&
       ((checkKeyPress(n_key_gui_arrow_right) ||
         joyButtonState[BUTTON_GUIRIGHT]) ||
        (checkKeyPress(n_key_gui_arrow_left) ||
@@ -4152,7 +4154,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
           "gameoptions-colorblind-mode",
           {{"colorblindModeDesc", oo::PList(colorblindModeDesc)}});
       gui->setText(colorblindModeMsg,
-                   OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_COLORBLINDMODE),
+                   oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_COLORBLINDMODE),
                    OOGUIAlignment::kCenter);
     }
     colorblindModeControlPressed = true;
@@ -4162,7 +4164,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 
   if (!(gameView != nullptr ? gameView->hdrOutput() : false)) {
     if ((guiSelectedRow ==
-         OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_WIREFRAMEGRAPHICS)) &&
+         oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_WIREFRAMEGRAPHICS)) &&
         ((checkKeyPress(n_key_gui_arrow_right) ||
           joyButtonState[BUTTON_GUIRIGHT]) ||
          (checkKeyPress(n_key_gui_arrow_left) ||
@@ -4175,19 +4177,21 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
         UNIVERSE->setWireframeGraphics(checkKeyPress(n_key_gui_arrow_right) ||
                                        joyButtonState[BUTTON_GUIRIGHT]);
       if ((UNIVERSE != nullptr ? UNIVERSE->getWireframeGraphics() : false))
-        gui->setText(OO_DESC("gameoptions-wireframe-graphics-yes"),
-                     OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_WIREFRAMEGRAPHICS),
-                     OOGUIAlignment::kCenter);
+        gui->setText(
+            OO_DESC("gameoptions-wireframe-graphics-yes"),
+            oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_WIREFRAMEGRAPHICS),
+            OOGUIAlignment::kCenter);
       else
-        gui->setText(OO_DESC("gameoptions-wireframe-graphics-no"),
-                     OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_WIREFRAMEGRAPHICS),
-                     OOGUIAlignment::kCenter);
+        gui->setText(
+            OO_DESC("gameoptions-wireframe-graphics-no"),
+            oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_WIREFRAMEGRAPHICS),
+            OOGUIAlignment::kCenter);
     }
   }
 #if OOLITE_WINDOWS
   else {
     if ((guiSelectedRow ==
-         OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_HDRPAPERWHITE)) &&
+         oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_HDRPAPERWHITE)) &&
         ((checkKeyPress(n_key_gui_arrow_right) ||
           joyButtonState[BUTTON_GUIRIGHT]) ||
          (checkKeyPress(n_key_gui_arrow_left) ||
@@ -4221,7 +4225,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
             v0_string.substr(0, static_cast<std::size_t>(20 - paperWhiteNorm));
         gui->setText(std::format("{}{}{} ({}) ", paperWhiteWordDesc, v1_string,
                                  v0_string, static_cast<int>(paperWhite)),
-                     OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_HDRPAPERWHITE),
+                     oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_HDRPAPERWHITE),
                      OOGUIAlignment::kCenter);
       }
       hdrPaperWhiteControlPressed = true;
@@ -4232,7 +4236,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 #endif
 
   if (guiSelectedRow ==
-          OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SHADEREFFECTS) &&
+          oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SHADEREFFECTS) &&
       (checkKeyPress(n_key_gui_arrow_right) ||
        checkKeyPress(n_key_gui_arrow_left) || joyButtonState[BUTTON_GUIRIGHT] ||
        joyButtonState[BUTTON_GUILEFT])) {
@@ -4283,10 +4287,10 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
               .value_or(std::string());
       gui->setText(
           ExpandKeyWithArguments(shaderEffectsOptionsString.c_str(), {}),
-          OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SHADEREFFECTS),
+          oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SHADEREFFECTS),
           OOGUIAlignment::kCenter);
       gui->setKey(std::string(GUI_KEY_OK),
-                  OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SHADEREFFECTS));
+                  oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SHADEREFFECTS));
 
       timeLastKeyPress = script_time;
 
@@ -4294,7 +4298,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       // (e.g. colorblind mode status), so refresh the page
       setGuiToGameOptionsScreen();
       gui->setSelectedRow(
-          OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SHADEREFFECTS));
+          oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_SHADEREFFECTS));
     }
     shaderSelectKeyPressed = true;
   } else {
@@ -4303,7 +4307,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 
 #if OOLITE_SDL
   if ((guiSelectedRow ==
-       OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DISPLAYSTYLE)) &&
+       oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DISPLAYSTYLE)) &&
       selectKeyPress) {
     if (gameView != nullptr) gameView->toggleScreenMode();
     // redraw GUI
@@ -4312,7 +4316,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 #endif
 
   if ((guiSelectedRow ==
-       OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DOCKINGCLEARANCE)) &&
+       oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DOCKINGCLEARANCE)) &&
       ((checkKeyPress(n_key_gui_arrow_right) ||
         joyButtonState[BUTTON_GUIRIGHT]) ||
        (checkKeyPress(n_key_gui_arrow_left) ||
@@ -4329,15 +4333,15 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
     if ((UNIVERSE != nullptr ? UNIVERSE->dockingClearanceProtocolActive()
                              : false))
       gui->setText(OO_DESC("gameoptions-docking-clearance-yes"),
-                   OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DOCKINGCLEARANCE),
+                   oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DOCKINGCLEARANCE),
                    OOGUIAlignment::kCenter);
     else
       gui->setText(OO_DESC("gameoptions-docking-clearance-no"),
-                   OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DOCKINGCLEARANCE),
+                   oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_DOCKINGCLEARANCE),
                    OOGUIAlignment::kCenter);
   }
 
-  if ((guiSelectedRow == OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_BACK)) &&
+  if ((guiSelectedRow == oo::GUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_BACK)) &&
       selectKeyPress) {
     if (gameView != nullptr) gameView->clearKeys();
     setGuiToLoadSaveScreen();
@@ -5995,7 +5999,7 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking) {
 
   // Check alert condition - on red alert, abort
   // -- but only for fast docking
-  if (fastDocking && (getAlertCondition() == OOAlertCondition::kRed)) {
+  if (fastDocking && (getAlertCondition() == oo::AlertCondition::kRed)) {
     playAutopilotCannotDockWithTarget();
     message = OOExpandKey("autopilot-red-alert");
     return showMessage();
@@ -6139,17 +6143,17 @@ void PlayerEntity::handleButtonTargetMissile() {
   }
 
   // Clear current target if we're already in Missile Targeting mode
-  if (missile_status != OOMissileStatus::kSafe) {
+  if (missile_status != oo::MissileStatus::kSafe) {
     noteLostTarget();
   }
 
   // Arm missile and check for missile lock
-  missile_status = OOMissileStatus::kArmed;
+  missile_status = oo::MissileStatus::kArmed;
   if ((oo::ToShip(missile_entity[activeMissile].get()) != nullptr
            ? oo::ToShip(missile_entity[activeMissile].get())->getIsMissile()
            : false)) {
     if (oo::EntityIsShip(primaryTarget())) {
-      missile_status = OOMissileStatus::kTargetLocked;
+      missile_status = oo::MissileStatus::kTargetLocked;
       if (oo::ToShip(missile_entity[activeMissile].get()) != nullptr)
         oo::ToShip(missile_entity[activeMissile].get())
             ->addTarget(primaryTarget());

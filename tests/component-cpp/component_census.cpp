@@ -312,7 +312,7 @@ Row TryEquipment(Game& game, const Definition& d, std::uint32_t baseSeed) {
       PlayerEntity* player = game.player();
       const std::size_t index = player->eqScriptIndexForKey(d.key);
       if (index < player->primedEquipmentCount()) {
-        player->activatePrimableEquipment(index, OOPrimedEquipmentMode::kActivated);
+        player->activatePrimableEquipment(index, oo::PrimedEquipmentMode::kActivated);
       }
     }
     game.simulate(GameTime{kEquipmentSpanSeconds});
@@ -469,7 +469,7 @@ Row Try(Game& game, const Definition& d, std::uint32_t seed, bool* clean) {
     *clean = false;  // the next try would not start where this one did
     r.outcome = "failed";
     r.evidence = std::format("the player was {} after it",
-                             OOStringFromEntityStatus(player->status()));
+                             oo::StringFromEntityStatus(player->status()));
   }
   return r;
 }

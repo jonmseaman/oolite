@@ -37,7 +37,7 @@ MA 02110-1301, USA.
 #include "OOJSPrivateObject.h"
 #include "OOJSShip.h"
 #include "OOJSVisualEffect.h"
-#include "OOPlanetEntity.h"
+#include "PlanetEntity.h"
 #include "WormholeEntity.h"
 #include "oofnd/Notification.hpp"
 
