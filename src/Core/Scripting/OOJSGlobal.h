@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 
 #include <quickjs.h>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 
 /*	QuickJS's global object is an ordinary object created with the context,
         so there is no CreateOOJSGlobal(). SetUpOOJSGlobal() defines Oolite's

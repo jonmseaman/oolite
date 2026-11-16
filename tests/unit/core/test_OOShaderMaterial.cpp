@@ -28,7 +28,7 @@
 #include <vector>
 #include "EntityManualRefs.h"  // the tests' manual references
 
-#include "OODescription.h"
+#include "Description.h"
 #include "oofnd/PList.hpp"
 #include <cstdint>
 #include <map>
@@ -37,8 +37,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "OOOpenGLExtensionManager.h"
-#include "OORegExpMatcher.h"
+#include "OpenGLExtensionManager.h"
+#include "RegExpMatcher.h"
 #include "ShaderMaterial.h"
 #include "ShaderUniform.h"
 #include "ShaderUniformMethodType.h"  // the binding target's hooks
@@ -52,15 +52,20 @@
 // --------------------------------------------------------------------------------------
 
 // OOLogging.mm's (it would bring the resource manager into the link).
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
-void OOLogGenericParameterErrorForFunction(const char* inFunction) {
+void LogGenericParameterErrorForFunction(const char* inFunction) {
   (void)inFunction;
 }
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
-const char* const kOOLogFileNotFound = "files.notFound";
+void LogIndent(void) {}
+void LogOutdent(void) {}
+const char* const kLogFileNotFound = "files.notFound";
+
+}  // namespace oo
+
 
 namespace {
 
@@ -101,17 +106,22 @@ std::optional<std::string> ResourceManager::stringFromFilesNamed(
 }
 
 // OORegExpMatcher stub: answers no match.
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
-  return oo::makeShared<OORegExpMatcher>();
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher() {
+  return oo::makeShared<oo::RegExpMatcher>();
 }
-bool OORegExpMatcher::string(const std::string&, const std::string&) {
+bool oo::RegExpMatcher::string(const std::string&, const std::string&) {
   return false;
 }
-OORegExpMatcher::~OORegExpMatcher() {}
+namespace oo {
 
-OOShaderSetting OOShaderSettingFromString(const std::string& string) {
-  return string == "SHADERS_FULL" ? OOShaderSetting::kFull : OOShaderSetting::kNotSupported;
+RegExpMatcher::~RegExpMatcher() {}
+
+ShaderSetting ShaderSettingFromString(const std::string& string) {
+  return string == "SHADERS_FULL" ? ShaderSetting::kFull : ShaderSetting::kNotSupported;
 }
+
+}  // namespace oo
+
 
 // Link stubs, never reached here: OOTexture.mm's
 // specifier of a map value (OOMaterialSpecifier.mm links it), and
@@ -376,7 +386,7 @@ Universe* gSharedUniverse = nullptr;
 namespace {
 
 GLint TextureUnits() {
-  return OOOpenGLExtensionManager::sharedManager()->textureImageUnitCount();
+  return oo::OpenGLExtensionManager::sharedManager()->textureImageUnitCount();
 }
 
 oo::PList Config(oo::PList::Dict dict) { return oo::PList(std::move(dict)); }

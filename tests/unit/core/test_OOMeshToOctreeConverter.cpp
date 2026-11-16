@@ -12,7 +12,7 @@
 
 #include <cmath>
 
-#include "OOMeshToOctreeConverter.h"
+#include "MeshToOctreeConverter.h"
 #include "Octree.h"
 #include "oo_test.hpp"
 
@@ -32,7 +32,7 @@ Triangle Tri(Vector a, Vector b, Vector c) {
 }
 
 // The twelve triangles of a cube centred on the origin.
-void AddCube(OOMeshToOctreeConverter& converter, float h) {
+void AddCube(oo::MeshToOctreeConverter& converter, float h) {
   Vector p[8];
   for (int i = 0; i < 8; i++)
     p[i] = make_vector((i & 4) ? h : -h, (i & 2) ? h : -h, (i & 1) ? h : -h);
@@ -56,13 +56,13 @@ float Radius(const std::shared_ptr<Octree>& octree) {
 }
 
 // The octree at a depth (Nodes and Radius read its representation).
-std::shared_ptr<Octree> At(const std::shared_ptr<OOMeshToOctreeConverter>& converter,
+std::shared_ptr<Octree> At(const std::shared_ptr<oo::MeshToOctreeConverter>& converter,
                    std::size_t depth) {
   return converter->findOctreeToDepth(depth);
 }
 
 std::optional<std::string> Description(
-    const std::shared_ptr<OOMeshToOctreeConverter>& converter) {
+    const std::shared_ptr<oo::MeshToOctreeConverter>& converter) {
   return converter->descriptionComponents();
 }
 
@@ -70,9 +70,9 @@ bool Near(float a, float b) {
   return std::fabs(a - b) < 1e-3f * std::fmax(1.0f, std::fabs(b));
 }
 
-std::shared_ptr<OOMeshToOctreeConverter> OneTriangle() {
-  std::shared_ptr<OOMeshToOctreeConverter> one =
-      OOMeshToOctreeConverter::converterWithCapacity(1);
+std::shared_ptr<oo::MeshToOctreeConverter> OneTriangle() {
+  std::shared_ptr<oo::MeshToOctreeConverter> one =
+      oo::MeshToOctreeConverter::converterWithCapacity(1);
   one->addTriangle(
       Tri(make_vector(0, 0, 0), make_vector(4, 0, 0), make_vector(0, 4, 0)));
   one->addTriangle(Tri(make_vector(1, 1, 1), make_vector(1, 1, 1),
@@ -84,8 +84,8 @@ std::shared_ptr<OOMeshToOctreeConverter> OneTriangle() {
 
 OO_TEST(emptyGivesAnEmptyOctree) {
   {
-    std::shared_ptr<OOMeshToOctreeConverter> empty =
-        OOMeshToOctreeConverter::converterWithCapacity(0);
+    std::shared_ptr<oo::MeshToOctreeConverter> empty =
+        oo::MeshToOctreeConverter::converterWithCapacity(0);
     std::shared_ptr<Octree> octree = At(empty, 3);
     OO_CHECK(Nodes(octree) == std::vector<int>({0}));
     OO_CHECK(Radius(octree) == 0.5f);  // the half-metre pad
@@ -96,7 +96,7 @@ OO_TEST(emptyGivesAnEmptyOctree) {
 
 OO_TEST(oneTriangle) {
   {
-    std::shared_ptr<OOMeshToOctreeConverter> one = OneTriangle();
+    std::shared_ptr<oo::MeshToOctreeConverter> one = OneTriangle();
     OO_CHECK(Description(one) == std::optional<std::string>("1 triangles"));
 
     std::shared_ptr<Octree> d0 = At(one, 0);
@@ -121,8 +121,8 @@ OO_TEST(oneTriangle) {
 
 OO_TEST(cubeGrowsPastInlineStorage) {
   {
-    std::shared_ptr<OOMeshToOctreeConverter> cube =
-        oo::makeShared<OOMeshToOctreeConverter>(12);
+    std::shared_ptr<oo::MeshToOctreeConverter> cube =
+        oo::makeShared<oo::MeshToOctreeConverter>(12);
     AddCube(*cube, 10);
     AddCube(*cube, 5);  // 24 triangles: past the sixteen inline slots
     OO_CHECK(Description(cube) == std::optional<std::string>("24 triangles"));
@@ -144,8 +144,8 @@ OO_TEST(cubeGrowsPastInlineStorage) {
 }
 
 OO_TEST(cxxConverter) {
-  std::shared_ptr<OOMeshToOctreeConverter> one =
-      OOMeshToOctreeConverter::converterWithCapacity(1);
+  std::shared_ptr<oo::MeshToOctreeConverter> one =
+      oo::MeshToOctreeConverter::converterWithCapacity(1);
   one->addTriangle(
       Tri(make_vector(0, 0, 0), make_vector(4, 0, 0), make_vector(0, 4, 0)));
   one->addTriangle(Tri(make_vector(1, 1, 1), make_vector(1, 1, 1),
@@ -156,8 +156,8 @@ OO_TEST(cxxConverter) {
   OO_CHECK(octree.get() != nullptr && Near(octree->volume(), 11.3906f));
   OO_CHECK(Nodes(octree) == std::vector<int>({1, 0, 0, 0, 0, 0, 0, 0, -1}));
 
-  std::shared_ptr<OOMeshToOctreeConverter> empty =
-      oo::makeShared<OOMeshToOctreeConverter>(0);
+  std::shared_ptr<oo::MeshToOctreeConverter> empty =
+      oo::makeShared<oo::MeshToOctreeConverter>(0);
   OO_CHECK(empty->findOctreeToDepth(2)->volume() == 0.0f);
 }
 

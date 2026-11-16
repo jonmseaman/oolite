@@ -22,7 +22,7 @@
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJSPlanet.h"
-#include "OOColor.h"
+#include "Color.h"
 #include "Texture.h"
 #include "Universe.h"
 
@@ -54,7 +54,7 @@ public:
 	HPVector viewpointPosition() override	{ return kZeroHPVector; }
 	double clockTimeAdjusted() override	{ return _clock; }
 	::oo::PlanetEntity * findNearestPlanet() override	{ return _nearestPlanet; }
-	OOSystemID systemID() override	{ return 7; }
+	oo::SystemID systemID() override	{ return 7; }
 };
 
 // A C++ player, as PlayerEntity::sharedPlayer() makes
@@ -77,10 +77,10 @@ class TestUniverse : public Universe
 {
 public:
 	oo::PList _systemData = {};
-	OOTimeAbsolute &_time = universal_time;	// the universe's own state, which its getter answers
+	oo::TimeAbsolute &_time = universal_time;	// the universe's own state, which its getter answers
 	GLfloat &_airResistance = airResistanceFactor;	// the universe's own state, which setAirResistanceFactor() sets
 
-	oo::PList generateSystemData(OOSystemID /*s*/, bool /*useCache*/) override	{ return _systemData; }
+	oo::PList generateSystemData(oo::SystemID /*s*/, bool /*useCache*/) override	{ return _systemData; }
 	bool reducedDetail() override	{ return true; }
 };
 
@@ -218,7 +218,7 @@ OO_TEST(planetWithAtmosphere)
 		OO_CHECK(planet->planetType() == oo::StellarBodyType::kNormalPlanet);
 		OO_CHECK(planet->hasAtmosphere());
 		// The dictionary's air colour, through its hue, saturation and brightness.
-		OOColor *air = planet->airColor();
+		oo::Color *air = planet->airColor();
 		OO_CHECK(air != nullptr);
 		OO_CHECK(air != nullptr && Near(air->redComponent(), 0.2, 1e-3) && Near(air->greenComponent(), 0.4, 1e-3) && Near(air->blueComponent(), 0.6, 1e-3));
 		Vector airVector = planet->airColorAsVector();
@@ -251,7 +251,7 @@ OO_TEST(shaderValues)
 		SetUp();
 		oo::PlanetEntity *planet = Planet(false);
 
-		std::shared_ptr<OOColor>	red = OOColor::colorWithRed(1.0f, 0.0f, 0.0f, 1.0f);
+		std::shared_ptr<oo::Color>	red = oo::Color::colorWithRed(1.0f, 0.0f, 0.0f, 1.0f);
 		planet->setAirColor(red.get());
 		OO_CHECK(planet->airColor() == red.get());
 		planet->setAirColor(nullptr);		// ignored
@@ -259,7 +259,7 @@ OO_TEST(shaderValues)
 		Vector v = planet->airColorAsVector();
 		OO_CHECK(v.x == 1.0f && v.y == 0.0f && v.z == 0.0f);
 
-		std::shared_ptr<OOColor>	blue = OOColor::colorWithRed(0.0f, 0.0f, 1.0f, 1.0f);
+		std::shared_ptr<oo::Color>	blue = oo::Color::colorWithRed(0.0f, 0.0f, 1.0f, 1.0f);
 		planet->setIlluminationColor(blue.get());
 		OO_CHECK(planet->illuminationColor() == blue.get());
 		planet->setIlluminationColor(nullptr);	// ignored

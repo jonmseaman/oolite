@@ -33,7 +33,7 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "HeadUpDisplay.h"
-#include "OOJoystickManager.h"
+#include "JoystickManager.h"
 #include "PlayerEntityStickProfile.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/String.hpp"
@@ -145,12 +145,12 @@ void PlayerEntity::setGuiToStickMapperScreen(unsigned skip) {
 void PlayerEntity::setGuiToStickMapperScreen(unsigned skip,
                                              bool resetCurrentRow) {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
+  oo::JoystickManager* stickHandler = oo::JoystickManager::sharedStickHandler();
   const std::vector<std::string> stickList = stickHandler->listSticks();
   unsigned stickCount = static_cast<unsigned int>(stickList.size());
   unsigned i;
 
-  OOGUITabStop tabStop[GUI_MAX_COLUMNS];
+  oo::GUITabStop tabStop[GUI_MAX_COLUMNS];
   tabStop[0] = 10;
   tabStop[1] = 290;
   tabStop[2] = 400;
@@ -167,22 +167,22 @@ void PlayerEntity::setGuiToStickMapperScreen(unsigned skip,
     // for more than 2 sticks, the stick name rows are populated by more than
     // one name if needed
     std::optional<std::string> stickNameAdditional;
-    if (stickCount > 2 && OOStringWidthInEm(stickNameForThisRow) > 18.0) {
+    if (stickCount > 2 && oo::StringWidthInEm(stickNameForThisRow) > 18.0) {
       // string is too long, truncate it until its length gets below threshold
       do {
         stickNameForThisRow = TruncatedByFive(stickNameForThisRow);
-      } while (OOStringWidthInEm(stickNameForThisRow) > 18.0);
+      } while (oo::StringWidthInEm(stickNameForThisRow) > 18.0);
     }
     unsigned j = i + 2;
     if (j < stickCount) {
       stickNameAdditional =
           std::format("{} {} {}", OO_DESC("stickmapper-stick").c_str(),
                       static_cast<int>(j + 1), stickList[j]);
-      if (OOStringWidthInEm(*stickNameAdditional) > 11.0) {
+      if (oo::StringWidthInEm(*stickNameAdditional) > 11.0) {
         // string is too long, truncate it until its length gets below threshold
         do {
           stickNameAdditional = TruncatedByFive(*stickNameAdditional);
-        } while (OOStringWidthInEm(*stickNameAdditional) > 11.0);
+        } while (oo::StringWidthInEm(*stickNameAdditional) > 11.0);
       }
     }
     gui->setArray(ColumnsUpToNil({stickNameForThisRow,
@@ -200,7 +200,7 @@ void PlayerEntity::setGuiToStickMapperScreen(unsigned skip,
                 GUI_ROW_INSTRUCT);
 
   gui->setText(OO_DESC("stickmapper-help-text-2"), GUI_ROW_INSTRUCT + 1,
-               OOGUIAlignment::kCenter);
+               oo::GUIAlignment::kCenter);
 
   if (resetCurrentRow) {
     gui->setSelectedRow(GUI_ROW_STICKPROFILE);
@@ -215,7 +215,7 @@ void PlayerEntity::setGuiToStickMapperScreen(unsigned skip,
 
 void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
                                            ::MyOpenGLView* gameView) {
-  OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
+  oo::JoystickManager* stickHandler = oo::JoystickManager::sharedStickHandler();
   // Don't do anything if the user is supposed to be selecting
   // a function - other than look for Escape.
   if (waitingForStickCallback) {
@@ -294,7 +294,7 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
 // is set. The dictionary contains the thing that was pressed/moved.
 void PlayerEntity::updateFunction(const oo::PList& hwDict) {
   // called by name (joystick callback)
-  OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
+  oo::JoystickManager* stickHandler = oo::JoystickManager::sharedStickHandler();
   waitingForStickCallback = false;
 
   // Right time and the right place?
@@ -418,7 +418,7 @@ void PlayerEntity::checkCustomEquipButtons(const oo::PList& stickFn, int idx) {
 }
 
 void PlayerEntity::removeFunction(int idx) {
-  OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
+  oo::JoystickManager* stickHandler = oo::JoystickManager::sharedStickHandler();
   const oo::PList& entry =
       StickFunctionAt(stickFunctions, static_cast<std::size_t>(idx));
   const oo::PList* butfunc = entry.find(KEY_BUTTONFN);  // -intValue as before
@@ -469,9 +469,9 @@ void PlayerEntity::removeFunction(int idx) {
 }
 
 void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, std::size_t skip) {
-  OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
+  oo::JoystickManager* stickHandler = oo::JoystickManager::sharedStickHandler();
 
-  gui->setColor(OOColor::greenColor().get(), GUI_ROW_HEADING);
+  gui->setColor(oo::Color::greenColor().get(), GUI_ROW_HEADING);
   gui->setArray(
       std::vector<std::string>{OO_DESC("stickmapper-column-function"),
                                OO_DESC("stickmapper-column-assigned-to"),
@@ -511,7 +511,7 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, std::size_t skip) {
 
   if (n_functions > 0) {
     if (skip > 0) {
-      gui->setColor(OOColor::greenColor().get(), GUI_ROW_FUNCSTART);
+      gui->setColor(oo::Color::greenColor().get(), GUI_ROW_FUNCSTART);
       gui->setArray(ColumnsUpToNil({OO_DESC("gui-back"), std::string(" <-- ")}),
                     GUI_ROW_FUNCSTART);
       gui->setKey(std::format("More:{}", previous), GUI_ROW_FUNCSTART);
@@ -523,9 +523,9 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, std::size_t skip) {
         const std::optional<std::string> header =
             OptionalStringForKey(entry, KEY_HEADER);
         gui->setArray(ColumnsUpToNil({header, std::string(), std::string()}),
-                      static_cast<OOGUIRow>(i) + start_row);
-        gui->setColor(OOColor::cyanColor().get(),
-                      static_cast<OOGUIRow>(i) + start_row);
+                      static_cast<oo::GUIRow>(i) + start_row);
+        gui->setColor(oo::Color::cyanColor().get(),
+                      static_cast<oo::GUIRow>(i) + start_row);
       } else {
         std::string allowedThings;
         std::optional<std::string> assignment;
@@ -595,20 +595,20 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, std::size_t skip) {
 
         gui->setArray(ColumnsUpToNil({OptionalStringForKey(entry, KEY_GUIDESC),
                                       assignment, allowedThings}),
-                      static_cast<OOGUIRow>(i) + start_row);
+                      static_cast<oo::GUIRow>(i) + start_row);
         //[gui setKey: GUI_KEY_OK forRow: i + start_row];
         gui->setKey(std::format("Index:{}", i + skip),
-                    static_cast<OOGUIRow>(i) + start_row);
+                    static_cast<oo::GUIRow>(i) + start_row);
       }
     }
     if (i < n_functions - skip) {
-      gui->setColor(OOColor::greenColor().get(),
-                    start_row + static_cast<OOGUIRow>(i));
+      gui->setColor(oo::Color::greenColor().get(),
+                    start_row + static_cast<oo::GUIRow>(i));
       gui->setArray(ColumnsUpToNil({OO_DESC("gui-more"), std::string(" --> ")}),
-                    start_row + static_cast<OOGUIRow>(i));
+                    start_row + static_cast<oo::GUIRow>(i));
       gui->setKey(
           std::format("More:{}", static_cast<std::size_t>(n_rows) + skip),
-          start_row + static_cast<OOGUIRow>(i));
+          start_row + static_cast<oo::GUIRow>(i));
       i++;
     }
 

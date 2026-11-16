@@ -37,7 +37,7 @@
 #include <functional>
 #include <map>
 
-#include "OOConvertSystemDescriptions.h"
+#include "ConvertSystemDescriptions.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -104,7 +104,12 @@ bool ResourceManager::writeDiagnosticData(const oo::Data& data,
 // The C++ universe's member.
 const oo::PList* Universe::descriptions() { return &sDescriptions; }
 static Universe* sUniverse;
-Universe* OOGetUniverse(void) { return sUniverse; }
+namespace oo {
+
+Universe* GetUniverse(void) { return sUniverse; }
+
+}  // namespace oo
+
 
 // --- the scenarios
 // -----------------------------------------------------------------------------
@@ -145,7 +150,7 @@ int sFailures = 0;
 void CheckLine(const char* line, const oo::PList& keys, bool useFallback,
                const char* expected, bool print) {
   const std::string result =
-      OOStringifySystemDescriptionLine(line, keys, useFallback);
+      oo::StringifySystemDescriptionLine(line, keys, useFallback);
   if (print)
     printf("line \"%s\" (%s) -> \"%s\"\n", line,
            useFallback ? "fallback" : "no fallback", result.c_str());

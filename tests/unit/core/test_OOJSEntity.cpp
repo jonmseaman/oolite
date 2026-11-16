@@ -21,8 +21,8 @@
 	stood in for as the Objective-C glue was (the same class check and error, the same toString()).
 */
 
-#include "OOFoundation.h"
-#include "OOMaths.h"
+#include "Foundation.h"
+#include "Maths.h"
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
@@ -301,11 +301,16 @@ std::string OOJSDescribeValue(JSContext *context, JSValueConst value, bool abbre
 }
 
 
-void OOLogGenericParameterErrorForFunction(const char *inFunction)
+namespace oo {
+
+void LogGenericParameterErrorForFunction(const char *inFunction)
 {
 	(void)inFunction;
 	sParameterErrors++;
 }
+
+}  // namespace oo
+
 
 
 namespace {

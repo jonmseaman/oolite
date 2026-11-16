@@ -20,7 +20,7 @@
 */
 
 
-#include "OODrawable.h"
+#include "Drawable.h"
 #include "EntityWithDrawable.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
@@ -53,7 +53,7 @@ T* NewTestPlayer() {
 }
 
 // The drawable: a C++ subclass of OODrawable.
-class TestDrawable : public OODrawable {
+class TestDrawable : public oo::Drawable {
  public:
   void renderOpaqueParts() override { _opaqueRenders++; }
   void renderTranslucentParts() override { _translucentRenders++; }

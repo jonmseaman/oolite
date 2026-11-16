@@ -33,6 +33,6 @@ SOFTWARE.
 
 void InitOOJSFrameCallbacks(JSContext* context, JSValueConst global);
 
-void OOJSFrameCallbacksInvoke(OOTimeDelta delta);
+void OOJSFrameCallbacksInvoke(oo::TimeDelta delta);
 
 void OOJSFrameCallbacksRemoveAll();

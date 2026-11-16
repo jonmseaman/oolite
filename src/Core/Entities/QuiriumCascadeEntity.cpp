@@ -30,7 +30,7 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOMacroOpenGL.h"
+#include "MacroOpenGL.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 
@@ -75,11 +75,11 @@ std::optional<std::string> oo::QuiriumCascadeEntity::descriptionComponents()
                      kQuiriumCascadeDuration);
 }
 
-void oo::QuiriumCascadeEntity::update(OOTimeDelta delta_t) {
+void oo::QuiriumCascadeEntity::update(oo::TimeDelta delta_t) {
   Entity::update(delta_t);
   _timePassed += delta_t;
 
-  rotMatrix = OOMatrixForBillboard(
+  rotMatrix = oo::MatrixForBillboard(
       position, (PLAYER != nullptr ? PLAYER->getPosition() : HPVector{}));
 
   GLfloat tf = static_cast<GLfloat>(_timePassed / kQuiriumCascadeDuration);
@@ -95,7 +95,7 @@ void oo::QuiriumCascadeEntity::update(OOTimeDelta delta_t) {
       delta_t *
       (100000 - 90000 * tf));  // adjusted to take into account delta_t
 
-  _color[3] = OOClamp_0_1_f(0.5f * ((0.025f / tf) + 1.0f - stf));
+  _color[3] = oo::Clamp_0_1_f(0.5f * ((0.025f / tf) + 1.0f - stf));
 
   _color[0] = _color[1] = fmin(1.0f - 5.0f * tf, 1.0f);
   if (_color[0] < 0.0f) {
@@ -129,7 +129,7 @@ void oo::QuiriumCascadeEntity::drawImmediate(bool /*immediate*/,
     return;
 
   OO_ENTER_OPENGL();
-  OOSetOpenGLState(OOOpenGLStateID::kAdditiveBlending);
+  OOSetOpenGLState(oo::OpenGLStateID::kAdditiveBlending);
 
   OOGL(glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT));
 
@@ -146,7 +146,7 @@ void oo::QuiriumCascadeEntity::drawImmediate(bool /*immediate*/,
   OOGL(glPopAttrib());
 
   OOVerifyOpenGLState();
-  OOCheckOpenGLErrors([&]() -> std::string {
+  oo::CheckOpenGLErrors([&]() -> std::string {
     return "OOQuiriumCascadeEntity after drawing " +
            oo::EntityDescription(this);
   });

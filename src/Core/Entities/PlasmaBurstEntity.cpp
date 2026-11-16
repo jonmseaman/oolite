@@ -48,16 +48,16 @@ void oo::PlasmaBurstEntity::initWithPosition(HPVector inPosition) {
     setPosition(inPosition);
     setCollisionRadius(2.0);
 
-    setColor(OOColor::redColor().get());
+    setColor(oo::Color::redColor().get());
   }
 }
 
-void oo::PlasmaBurstEntity::update(OOTimeDelta delta_t) {
+void oo::PlasmaBurstEntity::update(oo::TimeDelta delta_t) {
   oo::LightParticleEntity::update(delta_t);
 
-  OOTimeDelta lifeTime = timeElapsedSinceSpawn();
-  float attenuation =
-      OOClamp_0_1_f(static_cast<float>(1.0f - lifeTime / kPlasmaBurstDuration));
+  oo::TimeDelta lifeTime = timeElapsedSinceSpawn();
+  float attenuation = oo::Clamp_0_1_f(
+      static_cast<float>(1.0f - lifeTime / kPlasmaBurstDuration));
 
   _diameter = static_cast<float>(kPlasmaBurstInitialSize +
                                  lifeTime * kPlasmaBurstGrowthRate);

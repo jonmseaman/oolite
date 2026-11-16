@@ -33,8 +33,8 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOFoundation.h"
-#include "OOTypes.h"
+#include "Foundation.h"
+#include "Types.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Assert.h"
@@ -148,8 +148,13 @@ class OOJavaScriptEngine : public oo::Object {
 // A vector box's JS value (OOJSValueFromPList, for an Object node that holds
 // one), owned by the
 // caller.
-class OONativeVector;
-JSValue OONativeVectorJSValueInContext(OONativeVector* vector,
+namespace oo {
+
+class NativeVector;
+
+}  // namespace oo
+
+JSValue OONativeVectorJSValueInContext(oo::NativeVector* vector,
                                        JSContext* context);
 
 /*	OONull: the placeholder for null inside native collections, which cannot
@@ -219,4 +224,4 @@ bool JSEntityIsDemoShipPredicate(Entity* entity, void* parameter);
 /*	OOJSGetCxxPrivate() (OOJSPrivateObject.h) reads the C++ object every JS
    object's private slot holds.
 */
-#include "OOFoundation.h"
+#include "Foundation.h"

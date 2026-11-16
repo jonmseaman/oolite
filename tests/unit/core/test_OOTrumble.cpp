@@ -27,14 +27,14 @@
 #include <string>
 #include <vector>
 
-#include "OOALSound.h"
-#include "OOCommodityMarket.h"
+#include "ALSound.h"
+#include "CommodityMarket.h"
 #include "EntityHold.h"  // the cargo list
-#include "OOMaths.h"
-#include "OOSoundSource.h"
+#include "Maths.h"
+#include "SoundSource.h"
 #include "Texture.h"
-#include "OOTrumble.h"
-#include "OOTypes.h"
+#include "Trumble.h"
+#include "Types.h"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/String.hpp"
@@ -97,43 +97,53 @@ void oo::Texture::forceRebind() {}
 // A sound is its key: the root's members its vtable names (OOALSound.mm is not
 // linked), and the custom-sound look-up the trumbles call (Universe.h), which
 // keeps each sound as the resource manager's cache does.
-OOSound::OOSound() {}
-std::optional<std::string> OOSound::name() { return std::nullopt; }
-ALuint OOSound::soundBuffer() { return 0; }
-bool OOSound::soundIncomplete() { return false; }
-void OOSound::rewind() {}
-std::optional<std::string> OOSound::descriptionComponents() const {
+oo::Sound::Sound() {}
+std::optional<std::string> oo::Sound::name() { return std::nullopt; }
+ALuint oo::Sound::soundBuffer() { return 0; }
+bool oo::Sound::soundIncomplete() { return false; }
+void oo::Sound::rewind() {}
+std::optional<std::string> oo::Sound::descriptionComponents() const {
   return std::nullopt;
 }
 
-class TestSound final : public OOSound {
+class TestSound final : public oo::Sound {
  public:
   explicit TestSound(const std::string& aKey) : key(aKey) {}
 
   std::string key;
 };
 
-::OOSound* OOSoundWithCustomSoundKey(const std::string& key);
+namespace oo {
 
-::OOSound* OOSoundWithCustomSoundKey(const std::string& aKey) {
-  static std::vector<std::shared_ptr<OOSound>> sKept;
+::oo::Sound* SoundWithCustomSoundKey(const std::string& key);
+
+::oo::Sound* SoundWithCustomSoundKey(const std::string& aKey) {
+  static std::vector<std::shared_ptr<Sound>> sKept;
   gLog.push_back("sound " + aKey);
   sKept.push_back(oo::makeShared<TestSound>(aKey));
   return sKept.back().get();
 }
 
+}  // namespace oo
+
+
 // The one sound source the trumbles make: the members they call (and the ones
 // its vtable names).
 static bool gSoundSourcePlaying = false;
-static OOSound* gSourceSound = nullptr;
+static oo::Sound* gSourceSound = nullptr;
 
-OOSoundSource::OOSoundSource() {}
-OOSoundSource::~OOSoundSource() {}
-void OOSoundSource::channel(OOSoundChannel*, OOSound*) {}
-bool OOSoundSource::isPlaying() { return gSoundSourcePlaying; }
-OOSound* OOSoundSource::sound() { return gSourceSound; }
-void OOSoundSource::setPosition(Vector v) { (void)v; }
-void OOSoundSource::playOOSound(OOSound* s) {
+oo::SoundSource::SoundSource() {}
+namespace oo {
+
+SoundSource::~SoundSource() {}
+
+}  // namespace oo
+
+void oo::SoundSource::channel(oo::SoundChannel*, oo::Sound*) {}
+bool oo::SoundSource::isPlaying() { return gSoundSourcePlaying; }
+oo::Sound* oo::SoundSource::sound() { return gSourceSound; }
+void oo::SoundSource::setPosition(Vector v) { (void)v; }
+void oo::SoundSource::playOOSound(oo::Sound* s) {
   gSourceSound = s;
   gLog.push_back("play " + static_cast<TestSound*>(s)->key);
 }
@@ -160,7 +170,7 @@ Entity::~Entity() = default;
 
 // The market: food is loved (1), furs liked (0.5), anything else refused. The
 // C++ market's one member OOTrumble.mm calls.
-float OOCommodityMarket::trumbleOpinionForGood(const std::string& good) {
+float oo::CommodityMarket::trumbleOpinionForGood(const std::string& good) {
   return (good == "food") ? 1.0f : (good == "furs") ? 0.5f : 0.0f;
 }
 
@@ -182,13 +192,13 @@ class PlayerEntity : public ShipEntity {
   GLfloat dialPitch();
   float trumbleAppetiteAccumulator();
   void setTrumbleAppetiteAccumulator(float value);
-  void addTrumble(OOTrumble* papaTrumble);
-  void removeTrumble(OOTrumble* deadTrumble);
+  void addTrumble(oo::Trumble* papaTrumble);
+  void removeTrumble(oo::Trumble* deadTrumble);
 
   GLfloat pitch = {}, roll = {}, heat = {};
   float appetite = {};
   std::vector<oo::EntityHold> cargo;
-  std::vector<OOTrumble*> added, removed;
+  std::vector<oo::Trumble*> added, removed;
 };
 
 GLfloat PlayerEntity::dialRoll() { return roll; }
@@ -204,8 +214,8 @@ float PlayerEntity::trumbleAppetiteAccumulator() { return appetite; }
 void PlayerEntity::setTrumbleAppetiteAccumulator(float value) {
   appetite = value;
 }
-void PlayerEntity::addTrumble(OOTrumble* t) { added.push_back(t); }
-void PlayerEntity::removeTrumble(OOTrumble* t) { removed.push_back(t); }
+void PlayerEntity::addTrumble(oo::Trumble* t) { added.push_back(t); }
+void PlayerEntity::removeTrumble(oo::Trumble* t) { removed.push_back(t); }
 
 #include "UniverseStandIn.h"
 
@@ -218,9 +228,9 @@ class Universe : public oo::Object {
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
 
   oo::ViewID view;
-  std::shared_ptr<OOCommodityMarket> market;
+  std::shared_ptr<oo::CommodityMarket> market;
 
-  ::OOCommodityMarket* getCommodityMarket();
+  ::oo::CommodityMarket* getCommodityMarket();
   std::optional<std::string> displayNameForCommodity(const std::string&);
 };
 
@@ -228,13 +238,13 @@ class StandInUniverse : public Universe {
  public:
   oo::ViewID getViewDirection() override { return view; }
   void addMessage(const std::optional<std::string>& text,
-                  OOTimeDelta count) override {
+                  oo::TimeDelta count) override {
     gLog.push_back("message " + text.value_or("-") + " for " +
                    std::to_string(count));
   }
 };
 
-::OOCommodityMarket* Universe::getCommodityMarket() { return market.get(); }
+::oo::CommodityMarket* Universe::getCommodityMarket() { return market.get(); }
 std::optional<std::string> Universe::displayNameForCommodity(
     const std::string& co_type) {
   return "Display " + co_type;
@@ -257,18 +267,28 @@ NSPoint PointFromString(const std::string& xyString) {
   return result;
 }
 
-std::string OOLookUpDescriptionPRIV(const std::string& key) {
+namespace oo {
+
+std::string LookUpDescriptionPRIV(const std::string& key) {
   return (key == "trumbles-eat-@") ? "trumbles ate the %@" : "desc:" + key;
 }
 
 // Link stubs: drawTrumble:. The test never draws; a call is a test bug.
-void OOGLPushModelView(void) { std::abort(); }
-OOMatrix OOGLPopModelView(void) { std::abort(); }
-void OOGLTranslateModelView(Vector) { std::abort(); }
-void OOGLMultModelView(OOMatrix) { std::abort(); }
+void GLPushModelView(void) { std::abort(); }
+Matrix GLPopModelView(void) { std::abort(); }
+void GLTranslateModelView(Vector) { std::abort(); }
+void GLMultModelView(Matrix) { std::abort(); }
+
+}  // namespace oo
+
 #if OO_CHECK_GL_HEAVY
 // OOGL()/OOGLBEGIN() in the debug flavour (OOOpenGLCheck.h).
-bool OOCheckOpenGLErrors(const char*, ...) { std::abort(); }
+namespace oo {
+
+bool CheckOpenGLErrors(const char*, ...) { std::abort(); }
+
+}  // namespace oo
+
 #if OO_GL_STATE_VERIFICATION
 void OOGLNoteCurrentFunction(const char*, unsigned) { std::abort(); }
 #endif
@@ -284,8 +304,8 @@ static std::string Colour(const GLfloat* c) {
 // The private state, through the class's test friend (the unconverted test read
 // the same ivars through the runtime).
 struct OOTrumbleTestAccess {
-  static std::string State(OOTrumble* t) {
-    const OOTrumble& c = *t;
+  static std::string State(oo::Trumble* t) {
+    const oo::Trumble& c = *t;
     char buffer[1024];
     uint16_t* digram = t->getDigram();
     std::snprintf(
@@ -328,7 +348,7 @@ PlayerEntity* Player() {
 void Reset() {
   if (gSharedUniverse == nullptr) {
     gSharedUniverse = new StandInUniverse();
-    gSharedUniverse->market = oo::makeShared<OOCommodityMarket>();
+    gSharedUniverse->market = oo::makeShared<oo::CommodityMarket>();
   }
   gSharedUniverse->view = oo::ViewID::kForward;
   PlayerEntity* p = Player();
@@ -343,7 +363,7 @@ void Reset() {
 }
 
 // Everything a trumble is, in one line.
-std::string State(const std::shared_ptr<OOTrumble>& t) {
+std::string State(const std::shared_ptr<oo::Trumble>& t) {
   return OOTrumbleTestAccess::State(t.get());
 }
 
@@ -362,11 +382,11 @@ std::string Dictionary(const oo::PList& dict) {
   return result;
 }
 
-std::shared_ptr<OOTrumble> Trumble(const char* digram) {
-  return oo::makeShared<OOTrumble>(Player(), digram);
+std::shared_ptr<oo::Trumble> Trumble(const char* digram) {
+  return oo::makeShared<oo::Trumble>(Player(), digram);
 }
 
-void Run(const std::shared_ptr<OOTrumble>& t, int ticks, double dt = 0.1) {
+void Run(const std::shared_ptr<oo::Trumble>& t, int ticks, double dt = 0.1) {
   for (int i = 0; i < ticks; i++) t->updateTrumble(dt);
 }
 
@@ -445,15 +465,15 @@ OO_TEST(setUp) {
   {
     oo::AutoreleaseScope pool;
     Reset();
-    std::shared_ptr<OOTrumble> t = oo::makeShared<OOTrumble>(Player());
+    std::shared_ptr<oo::Trumble> t = oo::makeShared<oo::Trumble>(Player());
     OO_CHECK(expect(State(t)));
     OO_CHECK(expect(Log()));
     for (const char* digram : {"Zq", "@G", "8", ""}) {
       Reset();
-      OO_CHECK(expect(State(oo::makeShared<OOTrumble>(Player(), digram))));
+      OO_CHECK(expect(State(oo::makeShared<oo::Trumble>(Player(), digram))));
       OO_CHECK(expect(Log()));
     }
-    OO_CHECK(expect(State(oo::makeShared<OOTrumble>())));
+    OO_CHECK(expect(State(oo::makeShared<oo::Trumble>())));
   }
 }
 
@@ -493,16 +513,16 @@ OO_TEST(spawningAndActions) {
   {
     oo::AutoreleaseScope pool;
     Reset();
-    std::shared_ptr<OOTrumble> parent = Trumble("Zq");
-    std::shared_ptr<OOTrumble> child = Trumble("a1");
+    std::shared_ptr<oo::Trumble> parent = Trumble("Zq");
+    std::shared_ptr<oo::Trumble> child = Trumble("a1");
     child->spawnFrom(parent.get());
     OO_CHECK(expect(State(child)));
-    std::shared_ptr<OOTrumble> orphan = Trumble("a1");
+    std::shared_ptr<oo::Trumble> orphan = Trumble("a1");
     orphan->spawnFrom(nullptr);
     OO_CHECK(expect(State(orphan)));
 
     Reset();
-    std::shared_ptr<OOTrumble> t = Trumble("a1");
+    std::shared_ptr<oo::Trumble> t = Trumble("a1");
     std::string actions;
     t->actionIdle();
     actions += State(t).substr(State(t).find("next")) + " / ";
@@ -591,7 +611,7 @@ OO_TEST(living) {
       p->pitch = 0.5f;
       p->roll = -0.25f;
       p->heat = 0.5f;
-      std::shared_ptr<OOTrumble> t = Trumble("Zq");
+      std::shared_ptr<oo::Trumble> t = Trumble("Zq");
       Run(t, 50);
       OO_CHECK(expect(State(t)));
       Run(t, 400);
@@ -619,11 +639,11 @@ OO_TEST(savegame) {
   {
     oo::AutoreleaseScope pool;
     Reset();
-    std::shared_ptr<OOTrumble> t = Trumble("Zq");
+    std::shared_ptr<oo::Trumble> t = Trumble("Zq");
     Run(t, 30);
     oo::PList dict = t->dictionary();
     OO_CHECK(expect(Dictionary(dict)));
-    std::shared_ptr<OOTrumble> copy = Trumble("a1");
+    std::shared_ptr<oo::Trumble> copy = Trumble("a1");
     copy->setFromDictionary(dict);
     OO_CHECK(expect(State(copy)));
     OO_CHECK(expect(Dictionary(copy->dictionary())));
@@ -666,7 +686,7 @@ OO_TEST(feedingPopAndSpawn) {
     }
     Entity* food = p->cargo[2].get();
     p->appetite = 9.5f;
-    std::shared_ptr<OOTrumble> t = Trumble("Zq");
+    std::shared_ptr<oo::Trumble> t = Trumble("Zq");
     oo::PList::Dict state = *t->dictionary().getIf<oo::PList::Dict>();
     state["hunger"] = oo::PList(0.9);
     state["size"] = oo::PList(1.1);
@@ -708,7 +728,7 @@ OO_TEST(feedingPopAndSpawn) {
 OO_TEST(cxxClass) {
   // The C++ API: a trumble and its growth.
   Reset();
-  std::shared_ptr<OOTrumble> t = oo::makeShared<OOTrumble>(Player(), "Zq");
+  std::shared_ptr<oo::Trumble> t = oo::makeShared<oo::Trumble>(Player(), "Zq");
   OO_CHECK(t->getDigram()[0] == 'Z' && t->getDigram()[1] == 'q');
   OO_CHECK(std::fabs(t->getSize() - 0.91782f) < 1e-5f &&
            t->getHunger() == 0.0f && t->getDiscomfort() == 0.0f);
@@ -718,13 +738,13 @@ OO_TEST(cxxClass) {
   Reset();
   OO_CHECK(State(Trumble("Zq")) == State(t));
 
-  std::shared_ptr<OOTrumble> child = oo::makeShared<OOTrumble>(Player());
+  std::shared_ptr<oo::Trumble> child = oo::makeShared<oo::Trumble>(Player());
   child->spawnFrom(t.get());
   OO_CHECK(child->getSize() == 0.5f && child->getHunger() == 0.25f);
   child->spawnFrom(nullptr);
   OO_CHECK(child->getSize() == 0.5f);
 
-  std::shared_ptr<OOTrumble> blank = oo::makeShared<OOTrumble>();
+  std::shared_ptr<oo::Trumble> blank = oo::makeShared<oo::Trumble>();
   OO_CHECK(blank->getSize() == 0.0f && blank->getDigram()[0] == 0);
   OO_CHECK(blank->dictionary().count() == 9);
 }

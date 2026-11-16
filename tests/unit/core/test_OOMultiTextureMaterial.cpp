@@ -24,8 +24,8 @@
 
 #include "CombinedEmissionMapGenerator.h"
 #include "MultiTextureMaterial.h"
-#include "OOOpenGLExtensionManager.h"
-#include "OORegExpMatcher.h"
+#include "OpenGLExtensionManager.h"
+#include "RegExpMatcher.h"
 #include "Texture.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
@@ -35,14 +35,19 @@
 // --------------------------------------------------------------------------------------
 
 // OOLogging.mm's (it would bring the resource manager into the link).
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
-void OOLogGenericParameterErrorForFunction(const char* inFunction) {
+void LogGenericParameterErrorForFunction(const char* inFunction) {
   (void)inFunction;
 }
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
+void LogIndent(void) {}
+void LogOutdent(void) {}
+
+}  // namespace oo
+
 
 // The extension manager's collaborators, as test_OOOpenGLExtensionManager stubs
 // them.
@@ -58,17 +63,22 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
 }
 
 // OORegExpMatcher: the stub answers no match.
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
-  return oo::makeShared<OORegExpMatcher>();
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher() {
+  return oo::makeShared<oo::RegExpMatcher>();
 }
-bool OORegExpMatcher::string(const std::string&, const std::string&) {
+bool oo::RegExpMatcher::string(const std::string&, const std::string&) {
   return false;
 }
-OORegExpMatcher::~OORegExpMatcher() {}
+namespace oo {
 
-OOShaderSetting OOShaderSettingFromString(const std::string& string) {
-  return string == "SHADERS_FULL" ? OOShaderSetting::kFull : OOShaderSetting::kNotSupported;
+RegExpMatcher::~RegExpMatcher() {}
+
+ShaderSetting ShaderSettingFromString(const std::string& string) {
+  return string == "SHADERS_FULL" ? ShaderSetting::kFull : ShaderSetting::kNotSupported;
 }
+
+}  // namespace oo
+
 
 // A specifier as text: its string, or "-".
 static std::string Str(const oo::PList& plist) {
@@ -209,9 +219,9 @@ bool oo::TextureGenerator::enqueue() { return false; }
 
 std::shared_ptr<oo::CombinedEmissionMapGenerator>
 oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
-    const oo::PList& emissionMapSpec, OOColor* emissionColor,
-    oo::Texture* diffuseMap, OOColor* diffuseColor,
-    const oo::PList& illuminationMapSpec, OOColor* illuminationColor,
+    const oo::PList& emissionMapSpec, oo::Color* emissionColor,
+    oo::Texture* diffuseMap, oo::Color* diffuseColor,
+    const oo::PList& illuminationMapSpec, oo::Color* illuminationColor,
     const oo::PList& spec) {
   gGenerators.push_back(
       "emission:" + Str(emissionMapSpec) +
@@ -227,7 +237,7 @@ oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
 std::shared_ptr<oo::CombinedEmissionMapGenerator>
 oo::CombinedEmissionMapGenerator::generatorWithEmissionAndIlluminationMapSpec(
     const oo::PList& emissionAndIlluminationMapSpec, oo::Texture* diffuseMap,
-    OOColor*, OOColor*, OOColor*, const oo::PList& spec) {
+    oo::Color*, oo::Color*, oo::Color*, const oo::PList& spec) {
   gGenerators.push_back(
       "emissionAndIllumination:" + Str(emissionAndIlluminationMapSpec) +
       " diffuseMap:" + (diffuseMap != nullptr ? "yes" : "no") +
@@ -283,7 +293,7 @@ namespace {
 
 bool CombinersSupported() {
   return OOTestGLContext() &&
-         OOOpenGLExtensionManager::sharedManager()->textureCombinersSupported();
+         oo::OpenGLExtensionManager::sharedManager()->textureCombinersSupported();
 }
 
 std::shared_ptr<oo::MultiTextureMaterial> Make(const char* name, oo::PList::Dict config) {

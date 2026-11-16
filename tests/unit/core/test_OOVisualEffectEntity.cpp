@@ -19,7 +19,7 @@
 #include "PlayerEntity.h"	// PLAYER is C++
 #include "OOJavaScriptEngine.h"
 #include "Universe.h"
-#include "OOColor.h"
+#include "Color.h"
 #include "OOJSPropID.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
@@ -339,8 +339,8 @@ OO_TEST(scannerColours)
 		OO_CHECK(plain->scannerDisplayColorForShip(true, nullptr, nullptr)[3] == 0.0f);	// transparent black
 
 		oo::VisualEffectEntity *effect = Effect("coloured", Dict({ { "scanner_display_color1", oo::PList(std::string("redColor")) }, { "scanner_display_color2", oo::PList(std::string("blueColor")) } }));
-		OOColor *c1 = effect->scannerDisplayColor1();
-		OOColor *c2 = effect->scannerDisplayColor2();
+		oo::Color *c1 = effect->scannerDisplayColor1();
+		oo::Color *c2 = effect->scannerDisplayColor2();
 		OO_CHECK(c1 != nullptr && c2 != nullptr);
 		float r, g, b, a;
 		c1->getRed(&r, &g, &b, &a);
@@ -354,7 +354,7 @@ OO_TEST(scannerColours)
 		OO_CHECK(effect->scannerDisplayColorForShip(true, nullptr, c2)[2] == 1.0f);
 
 		// A new colour replaces it; nil takes the definition's again.
-		effect->setScannerDisplayColor1(OOColor::greenColor().get());
+		effect->setScannerDisplayColor1(oo::Color::greenColor().get());
 		effect->scannerDisplayColor1()->getRed(&r, &g, &b, &a);
 		OO_CHECK(r == 0.0f && g == 1.0f && b == 0.0f);
 		effect->setScannerDisplayColor1(nullptr);
@@ -400,7 +400,7 @@ OO_TEST(beacons)
 		// An empty code is none.
 		effect->setBeaconCode(std::optional<std::string>(""));
 		OO_CHECK(!effect->beaconCode().has_value());
-		OO_CHECK(effect->compareBeaconCodeWith(other) == OOComparisonResult::kSame);
+		OO_CHECK(effect->compareBeaconCodeWith(other) == oo::ComparisonResult::kSame);
 	}
 }
 

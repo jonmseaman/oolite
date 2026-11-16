@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "OOCacheManager.h"
+#include "CacheManager.h"
 #include "oo_test.hpp"
 #include "oofnd/FileSystem.hpp"
 
@@ -34,26 +34,31 @@
 */
 static int gTasksAdded = 0;
 static int gTasksPerformed = 0;
-static std::vector<std::shared_ptr<OOAsyncWorkTask>> gPendingTasks;
+static std::vector<std::shared_ptr<oo::AsyncWorkTask>> gPendingTasks;
 
 namespace {
 
-class StubAsyncWorkManager : public OOAsyncWorkManager {
+class StubAsyncWorkManager : public oo::AsyncWorkManager {
  public:
   StubAsyncWorkManager() = default;
 };
 
 }  // namespace
 
-OOAsyncWorkManager* OOAsyncWorkManager::sharedAsyncWorkManager() {
-  static OOAsyncWorkManager* manager = new StubAsyncWorkManager;
+oo::AsyncWorkManager* oo::AsyncWorkManager::sharedAsyncWorkManager() {
+  static oo::AsyncWorkManager* manager = new StubAsyncWorkManager;
   return manager;
 }
 
-OOAsyncWorkManager::~OOAsyncWorkManager() {}
+namespace oo {
 
-bool OOAsyncWorkManager::addTask(OOAsyncWorkTask* task,
-                                 OOAsyncWorkPriority priority) {
+AsyncWorkManager::~AsyncWorkManager() {}
+
+}  // namespace oo
+
+
+bool oo::AsyncWorkManager::addTask(oo::AsyncWorkTask* task,
+                                 oo::AsyncWorkPriority priority) {
   (void)priority;
   if (task == nullptr) return false;
   gPendingTasks.emplace_back(oo::share(task));
@@ -61,12 +66,12 @@ bool OOAsyncWorkManager::addTask(OOAsyncWorkTask* task,
   return true;
 }
 
-void OOAsyncWorkManager::completePendingTasks() {}
+void oo::AsyncWorkManager::completePendingTasks() {}
 
-void OOAsyncWorkManager::waitForTaskToComplete(OOAsyncWorkTask* task) {
+void oo::AsyncWorkManager::waitForTaskToComplete(oo::AsyncWorkTask* task) {
   for (auto it = gPendingTasks.begin(); it != gPendingTasks.end(); ++it) {
     if (it->get() == task) {
-      const std::shared_ptr<OOAsyncWorkTask> pending = *it;
+      const std::shared_ptr<oo::AsyncWorkTask> pending = *it;
       gPendingTasks.erase(it);
       pending->performAsyncTask();
       pending->completeAsyncTask();
@@ -127,9 +132,9 @@ OO_TEST(sharedInstanceStartsEmpty) {
   SetUp();
   {
     OO_CHECK(!stdfs::exists(CacheFile()));
-    OOCacheManager* cache = OOCacheManager::sharedCache();
+    oo::CacheManager* cache = oo::CacheManager::sharedCache();
     OO_CHECK(cache != nullptr);
-    OO_CHECK(OOCacheManager::sharedCache() == cache);
+    OO_CHECK(oo::CacheManager::sharedCache() == cache);
     OO_CHECK(cache->pListForKey("key", "cache").isNull());
     OO_CHECK(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=no"));
@@ -144,7 +149,7 @@ OO_TEST(sharedInstanceStartsEmpty) {
 OO_TEST(entriesAndCaches) {
   SetUp();
   {
-    OOCacheManager* cache = OOCacheManager::sharedCache();
+    oo::CacheManager* cache = oo::CacheManager::sharedCache();
     cache->setPList(Str("one"), "a", "first");
     cache->setPList(oo::PList(2), "b", "first");
     cache->setPList(Str("three"), "a", "second");
@@ -181,7 +186,7 @@ OO_TEST(entriesAndCaches) {
 OO_TEST(flushWritesAndReloadReads) {
   SetUp();
   {
-    OOCacheManager* cache = OOCacheManager::sharedCache();
+    oo::CacheManager* cache = oo::CacheManager::sharedCache();
     cache->setPList(Str("kept"), "k", "flushed");
     oo::PList::Dict dict;
     dict.emplace("x", oo::PList(1.5));
@@ -233,7 +238,7 @@ OO_TEST(flushWritesAndReloadReads) {
 OO_TEST(writesDisallowed) {
   SetUp();
   {
-    OOCacheManager* cache = OOCacheManager::sharedCache();
+    oo::CacheManager* cache = oo::CacheManager::sharedCache();
     cache->setAllowCacheWrites(false);
     cache->setPList(Str("never written"), "n", "flushed");
     gTasksAdded = 0;
@@ -253,7 +258,7 @@ OO_TEST(writesDisallowed) {
 OO_TEST(staleOrBadCacheDiscarded) {
   SetUp();
   {
-    OOCacheManager* cache = OOCacheManager::sharedCache();
+    oo::CacheManager* cache = oo::CacheManager::sharedCache();
     OO_CHECK(cache->pListForKey("k", "flushed") == Str("kept"));
 
     // Another game version: the cache is dropped on reload, and the manager is
@@ -280,9 +285,9 @@ OO_TEST(staleOrBadCacheDiscarded) {
 OO_TEST(cxxApi) {
   SetUp();
   {
-    OOCacheManager* cache = OOCacheManager::sharedCache();
+    oo::CacheManager* cache = oo::CacheManager::sharedCache();
     OO_CHECK(cache != nullptr);
-    OO_CHECK(OOCacheManager::sharedCache() == cache);
+    OO_CHECK(oo::CacheManager::sharedCache() == cache);
     cache->setPList(Str("c"), "k", "cxx");
     OO_CHECK(cache->pListForKey("k", "cxx") == Str("c"));
     OO_CHECK(cache->descriptionComponents() ==
@@ -307,7 +312,7 @@ OO_TEST(cxxApi) {
 OO_TEST(clearAllCaches) {
   SetUp();
   {
-    OOCacheManager* cache = OOCacheManager::sharedCache();
+    oo::CacheManager* cache = oo::CacheManager::sharedCache();
     cache->setPList(Str("v"), "k", "c1");
     cache->flush();
     cache->finishOngoingFlush();

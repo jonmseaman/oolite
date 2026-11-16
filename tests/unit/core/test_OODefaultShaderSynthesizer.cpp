@@ -28,7 +28,7 @@
 #include <vector>
 
 #include "DefaultShaderSynthesizer.h"
-#include "OODescription.h"
+#include "Description.h"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 

@@ -19,9 +19,9 @@
 #include <sstream>
 
 #include "AIStateMachineVerifierStage.h"
-#include "OOLogging.h"
+#include "Logging.h"
 #include "OXPVerifierStage.h"
-#include "OOPListParsing.h"
+#include "PListParsing.h"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListParsing.hpp"
@@ -29,13 +29,15 @@
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked; the base calls this one function of it (a subclass responsibility).
 */
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
 
 // OOPListParsing.mm reaches the universe; the stage reads each AI with this one
 // function of it.
-oo::PList OOPropertyListFromFile(const std::string& path) {
+oo::PList PropertyListFromFile(const std::string& path) {
   std::ifstream file(path, std::ios::binary);
   if (!file) return oo::PList();
   std::stringstream bytes;
@@ -43,6 +45,9 @@ oo::PList OOPropertyListFromFile(const std::string& path) {
   auto parsed = oo::parsePropertyListData(bytes.str());
   return parsed ? *parsed : oo::PList();
 }
+
+}  // namespace oo
+
 
 /*	The verifier and the resource manager are not linked either (they reach
    the whole game). The stages talk to the verifier through its interface only,

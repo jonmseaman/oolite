@@ -31,11 +31,15 @@ MA 02110-1301, USA.
 #include <optional>
 #include <string>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "OOJSPrivateObject.h"
 #include "oofnd/Object.hpp"
 
-class OOSound;
+namespace oo {
+
+class Sound;
+
+}  // namespace oo
 
 void InitOOJSSound(JSContext* context, JSValueConst global);
 
@@ -44,14 +48,14 @@ void InitOOJSSound(JSContext* context, JSValueConst global);
         Convert a JS value to a sound. The value may be either a Sound object or
    a string specifying a sound name.
  */
-OOSound* SoundFromJSValue(JSContext* context, JSValueConst value);
+oo::Sound* SoundFromJSValue(JSContext* context, JSValueConst value);
 
 /*	The bodies of OOSound (OOJavaScriptExtentions): a new Sound object for
    the sound (owned by the caller; JS null for none), its toString() text and
    its JS class name. The binding and the SoundSource binding call them.
 */
-JSValue OOJSSoundJSValueInContext(OOSound* sound, JSContext* context);
-std::optional<std::string> OOJSSoundJSDescription(OOSound* sound);
+JSValue OOJSSoundJSValueInContext(oo::Sound* sound, JSContext* context);
+std::optional<std::string> OOJSSoundJSDescription(oo::Sound* sound);
 std::optional<std::string> OOJSSoundJSClassName();
 
 /*	What a Sound object's private slot holds. Each Sound object has its own
@@ -62,15 +66,15 @@ std::optional<std::string> OOJSSoundJSClassName();
 */
 class OOJSSoundHolder final : public oo::Object, public OOJSPrivateObject {
  public:
-  explicit OOJSSoundHolder(OOSound* inSound);
+  explicit OOJSSoundHolder(oo::Sound* inSound);
   ~OOJSSoundHolder() override;
 
-  OOSound* sound() const;
+  oo::Sound* sound() const;
 
   JSValue jsValueInContext(JSContext* context) override;  // owned
   void clearJSSelf(JSValueConst selfVal) override;
   std::optional<std::string> jsDescription() override;
 
  private:
-  std::shared_ptr<OOSound> _sound;
+  std::shared_ptr<oo::Sound> _sound;
 };

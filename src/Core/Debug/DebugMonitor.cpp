@@ -44,9 +44,9 @@ SOFTWARE.
 #include <vector>
 
 #include "ConcreteTexture.h"
+#include "Drawable.h"
 #include "JSConsole.h"
 #include "LogIndentScope.h"
-#include "OODrawable.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
 #include "OOJSSpecialFunctions.h"
@@ -399,7 +399,7 @@ void oo::DebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
   oo::EntityWithDrawable* withDrawable =
       dynamic_cast<oo::EntityWithDrawable*>(entity);
   if (withDrawable != nullptr) {
-    OODrawable* drawable = withDrawable->getDrawable();
+    oo::Drawable* drawable = withDrawable->getDrawable();
     drawableSize = (drawable != nullptr) ? drawable->totalSize() : 0;
   }
 
@@ -779,7 +779,7 @@ oo::PList oo::DebugMonitor::normalizeConfigDictionary(
 
 oo::PList oo::DebugMonitor::normalizeConfigValue(const oo::PList& value,
                                                  const std::string& key) {
-  std::shared_ptr<OOColor> color;
+  std::shared_ptr<oo::Color> color;
   bool boolValue;
 
   if (value) {
@@ -787,7 +787,7 @@ oo::PList oo::DebugMonitor::normalizeConfigValue(const oo::PList& value,
         oo::str::hasSuffix(key, "-colour")) {
       // OOColor reads the same object; the normalized array holds
       // +numberWithFloat: values.
-      color = OOColor::colorWithDescription(value);
+      color = oo::Color::colorWithDescription(value);
       if (color == nullptr) return oo::PList();
       oo::PList::Array components;
       for (float component : color->normalizedArray())

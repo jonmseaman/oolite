@@ -22,7 +22,7 @@
 
 #include "OOJSEngineCore.h"  // OOJSValue
 #include "OOJSFunction.h"
-#include "OORegExpMatcher.h"
+#include "RegExpMatcher.h"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PList.hpp"
@@ -153,8 +153,8 @@ void OOJSReportPendingException(JSContext* context) {
 namespace {
 
 bool Matches(const std::string& string, const std::string& regExp,
-             OORegExpFlags flags = {}) {
-  std::shared_ptr<OORegExpMatcher> matcher = OORegExpMatcher::regExpMatcher();
+             oo::RegExpFlags flags = {}) {
+  std::shared_ptr<oo::RegExpMatcher> matcher = oo::RegExpMatcher::regExpMatcher();
   return matcher != nullptr && matcher->string(string, regExp, flags);
 }
 
@@ -167,13 +167,13 @@ OO_TEST(matches) {
     OO_CHECK(Matches("GeForce GTX 1080", "^GeForce GTX [0-9]+$"));
     OO_CHECK(!Matches("GeForce GTX 1080", "^GTX"));
     OO_CHECK(!Matches("geforce", "GeForce"));
-    OO_CHECK(Matches("geforce", "GeForce", OORegExpFlags::kCaseInsensitive));
+    OO_CHECK(Matches("geforce", "GeForce", oo::RegExpFlags::kCaseInsensitive));
     OO_CHECK(!Matches("one\ntwo", "^two"));
-    OO_CHECK(Matches("one\ntwo", "^two", OORegExpFlags::kMultiLine));
+    OO_CHECK(Matches("one\ntwo", "^two", oo::RegExpFlags::kMultiLine));
     OO_CHECK(Matches("", "^$"));
     OO_CHECK(Matches("caf\xC3\xA9",
                      "\xC3\xA9$"));  // UTF-8 in, and UTF-8 to the engine
-    OO_CHECK(OORegExpMatcher::regExpMatcher()->string("abc", "b"));  // flags 0
+    OO_CHECK(oo::RegExpMatcher::regExpMatcher()->string("abc", "b"));  // flags 0
   }
 }
 
@@ -185,17 +185,17 @@ OO_TEST(emptyPatternMatchesNothing) {
 }
 
 OO_TEST(regExpIsCachedByPatternAndFlags) {
-  std::shared_ptr<OORegExpMatcher> matcher = OORegExpMatcher::regExpMatcher();
+  std::shared_ptr<oo::RegExpMatcher> matcher = oo::RegExpMatcher::regExpMatcher();
   unsigned made = sRegExpsMade;
-  OO_CHECK(matcher->string("abc", "c$", OORegExpFlags::kNone));
+  OO_CHECK(matcher->string("abc", "c$", oo::RegExpFlags::kNone));
   OO_CHECK(sRegExpsMade == made + 1);
-  OO_CHECK(!matcher->string("abd", "c$", OORegExpFlags::kNone));
+  OO_CHECK(!matcher->string("abd", "c$", oo::RegExpFlags::kNone));
   OO_CHECK(sRegExpsMade == made + 1);  // same pattern and flags: cached
-  OO_CHECK(matcher->string("ABC", "c$", OORegExpFlags::kCaseInsensitive));
+  OO_CHECK(matcher->string("ABC", "c$", oo::RegExpFlags::kCaseInsensitive));
   OO_CHECK(sRegExpsMade == made + 2);  // new flags
-  OO_CHECK(matcher->string("ABD", "d$", OORegExpFlags::kCaseInsensitive));
+  OO_CHECK(matcher->string("ABD", "d$", oo::RegExpFlags::kCaseInsensitive));
   OO_CHECK(sRegExpsMade == made + 3);  // new pattern
-  OO_CHECK(matcher->string("abd", "d$", OORegExpFlags::kNone));
+  OO_CHECK(matcher->string("abd", "d$", oo::RegExpFlags::kNone));
   OO_CHECK(sRegExpsMade == made + 4);
 }
 
@@ -203,9 +203,9 @@ OO_TEST(matchersHeldAcrossMatches) {
   unsigned made = sFunctionsMade;
   unsigned engineCalls = sEngineCalls;
   {
-    std::shared_ptr<OORegExpMatcher> first = OORegExpMatcher::regExpMatcher();
+    std::shared_ptr<oo::RegExpMatcher> first = oo::RegExpMatcher::regExpMatcher();
     OO_CHECK(first != nullptr);
-    OO_CHECK(OORegExpMatcher::regExpMatcher() == first);
+    OO_CHECK(oo::RegExpMatcher::regExpMatcher() == first);
     OO_CHECK(Matches("x", "x"));
     OO_CHECK(sFunctionsMade ==
              made + 1);  // one tester compiled for the held matcher
@@ -213,7 +213,7 @@ OO_TEST(matchersHeldAcrossMatches) {
              engineCalls + 1);  // the engine summoned once, by init()
   }
   {
-    OO_CHECK(OORegExpMatcher::regExpMatcher() != nullptr);
+    OO_CHECK(oo::RegExpMatcher::regExpMatcher() != nullptr);
     OO_CHECK(sFunctionsMade ==
              made + 2);  // the first matcher went with its last Ref
   }
@@ -221,36 +221,36 @@ OO_TEST(matchersHeldAcrossMatches) {
 
 OO_TEST(failedInitGivesNilAndRetries) {
   sFailCompile = true;
-  OO_CHECK(OORegExpMatcher::regExpMatcher() == nullptr);
+  OO_CHECK(oo::RegExpMatcher::regExpMatcher() == nullptr);
   sFailCompile = false;
-  OO_CHECK(OORegExpMatcher::regExpMatcher() !=
+  OO_CHECK(oo::RegExpMatcher::regExpMatcher() !=
            nullptr);  // nothing was kept: asked again
   OO_CHECK(Matches("abc", "b"));
 }
 
 OO_TEST(cxxMatches) {
-  std::shared_ptr<OORegExpMatcher> matcher = OORegExpMatcher::regExpMatcher();
+  std::shared_ptr<oo::RegExpMatcher> matcher = oo::RegExpMatcher::regExpMatcher();
   OO_CHECK(matcher != nullptr);
   OO_CHECK(matcher->string("GeForce GTX 1080", "^GeForce GTX [0-9]+$"));
   OO_CHECK(!matcher->string("geforce", "GeForce"));
-  OO_CHECK(matcher->string("geforce", "GeForce", OORegExpFlags::kCaseInsensitive));
-  OO_CHECK(matcher->string("one\ntwo", "^two", OORegExpFlags::kMultiLine));
+  OO_CHECK(matcher->string("geforce", "GeForce", oo::RegExpFlags::kCaseInsensitive));
+  OO_CHECK(matcher->string("one\ntwo", "^two", oo::RegExpFlags::kMultiLine));
   OO_CHECK(!matcher->string("abc", ""));
 }
 
 OO_TEST(cxxOneMatcherWhileHeld) {
   unsigned made = sFunctionsMade;
   {
-    std::shared_ptr<OORegExpMatcher> first = OORegExpMatcher::regExpMatcher();
-    OO_CHECK(OORegExpMatcher::regExpMatcher() == first);
+    std::shared_ptr<oo::RegExpMatcher> first = oo::RegExpMatcher::regExpMatcher();
+    OO_CHECK(oo::RegExpMatcher::regExpMatcher() == first);
     OO_CHECK(sFunctionsMade == made + 1);
   }
-  OO_CHECK(OORegExpMatcher::regExpMatcher() !=
+  OO_CHECK(oo::RegExpMatcher::regExpMatcher() !=
            nullptr);  // the first was freed with its last Ref
   OO_CHECK(sFunctionsMade == made + 2);
 
   sFailCompile = true;
-  OO_CHECK(OORegExpMatcher::regExpMatcher() == nullptr);
+  OO_CHECK(oo::RegExpMatcher::regExpMatcher() == nullptr);
   sFailCompile = false;
 }
 

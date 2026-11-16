@@ -46,7 +46,7 @@ namespace {
 
 // A colour's components as its -normalizedArray gave them to JavaScript:
 // floats, null for no colour.
-oo::PList NormalizedColorComponents(OOColor* color) {
+oo::PList NormalizedColorComponents(oo::Color* color) {
   if (color == nullptr) return oo::PList();
   oo::PList::Array components;
   for (float component : color->normalizedArray())
@@ -176,7 +176,7 @@ static JSValue PlanetGetProperty(OOJS_GETTER_ARGS) {
       return OOJSValueFromPList(
           context, NormalizedColorComponents(
                        (planet != nullptr ? planet->airColor()
-                                          : static_cast<OOColor*>(nullptr))));
+                                          : static_cast<oo::Color*>(nullptr))));
 
     case kAirColorMixRatio:
       return JS_NewNumber(
@@ -190,7 +190,7 @@ static JSValue PlanetGetProperty(OOJS_GETTER_ARGS) {
       return OOJSValueFromPList(
           context, NormalizedColorComponents(
                        (planet != nullptr ? planet->illuminationColor()
-                                          : static_cast<OOColor*>(nullptr))));
+                                          : static_cast<oo::Color*>(nullptr))));
 
     case kIsMainPlanet:
       return OOJSValueFromBOOL(
@@ -253,7 +253,7 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
   Quaternion qValue;
   Vector vValue;
   double dValue;
-  std::shared_ptr<OOColor> colorForScript;
+  std::shared_ptr<oo::Color> colorForScript;
 
   if (!JSPlanetGetPlanetEntity(context, thisObj, &planet))
     return OOJSNativeFailure(context);
@@ -262,7 +262,7 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
     using enum PlanetProperty;
     case kAirColor:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         if (planet != nullptr) planet->setAirColor(colorForScript.get());
         return JS_UNDEFINED;
@@ -287,7 +287,7 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
 
     case kIlluminationColor:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         if (planet != nullptr)
           planet->setIlluminationColor(colorForScript.get());

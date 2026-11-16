@@ -15,11 +15,11 @@
 #include <chrono>
 #include <thread>
 
-#include "OOAsyncWorkManager.h"
+#include "AsyncWorkManager.h"
 #include "oo_test.hpp"
 #include "oofnd/objc/Exception.h"  // oo::Exception
 
-class TestTask : public OOAsyncWorkTask {
+class TestTask : public oo::AsyncWorkTask {
  public:
   TestTask() { callingThread = std::this_thread::get_id(); }
 
@@ -49,7 +49,7 @@ class TestTask : public OOAsyncWorkTask {
 };
 
 // A task with no completion (the method was optional).
-class TestFireAndForgetTask : public OOAsyncWorkTask {
+class TestFireAndForgetTask : public oo::AsyncWorkTask {
  public:
   void performAsyncTask() override { performed = true; }
 
@@ -59,7 +59,12 @@ class TestFireAndForgetTask : public OOAsyncWorkTask {
 // OOLogging.mm would link the game's log file and resource manager in; the
 // abstract base class's subclass-responsibility message it defines is never
 // reached by these tests.
-void OOLogGenericSubclassResponsibilityForFunction(const char*) {}
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char*) {}
+
+}  // namespace oo
+
 
 namespace {
 
@@ -74,25 +79,25 @@ bool WaitFor(const std::atomic<bool>& flag) {
 
 OO_TEST(oneSharedManager) {
   {
-    OOAsyncWorkManager* manager = OOAsyncWorkManager::sharedAsyncWorkManager();
+    oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     OO_CHECK(manager != nullptr);
-    OO_CHECK(OOAsyncWorkManager::sharedAsyncWorkManager() == manager);
+    OO_CHECK(oo::AsyncWorkManager::sharedAsyncWorkManager() == manager);
   }
 }
 
 OO_TEST(nilIsRefused) {
   {
-    OOAsyncWorkManager* manager = OOAsyncWorkManager::sharedAsyncWorkManager();
-    OO_CHECK(!manager->addTask(nullptr, OOAsyncWorkPriority::kMedium));
+    oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
+    OO_CHECK(!manager->addTask(nullptr, oo::AsyncWorkPriority::kMedium));
     manager->waitForTaskToComplete(nullptr);  // returns at once
   }
 }
 
 OO_TEST(waitPerformsThenCompletesOnTheWaitingThread) {
   {
-    OOAsyncWorkManager* manager = OOAsyncWorkManager::sharedAsyncWorkManager();
+    oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     const std::shared_ptr<TestTask> task = oo::makeShared<TestTask>();
-    OO_CHECK(manager->addTask(task.get(), OOAsyncWorkPriority::kMedium));
+    OO_CHECK(manager->addTask(task.get(), oo::AsyncWorkPriority::kMedium));
     manager->waitForTaskToComplete(task.get());
     OO_CHECK(task->performed);
     OO_CHECK(!task->performedOnCallingThread);  // on a work thread
@@ -106,10 +111,10 @@ OO_TEST(waitPerformsThenCompletesOnTheWaitingThread) {
 
 OO_TEST(completePendingTasksCollectsReadyTasks) {
   {
-    OOAsyncWorkManager* manager = OOAsyncWorkManager::sharedAsyncWorkManager();
+    oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     const std::shared_ptr<TestTask> task = oo::makeShared<TestTask>();
     OO_CHECK_EQ(task.use_count(), 1);
-    OO_CHECK(manager->addTask(task.get(), OOAsyncWorkPriority::kHigh));
+    OO_CHECK(manager->addTask(task.get(), oo::AsyncWorkPriority::kHigh));
     OO_CHECK(WaitFor(task->performed));
     // Performed, but completed only when collected: poll until it is ready.
     for (int i = 0; i < 500 && task->completions == 0; i++) {
@@ -128,7 +133,7 @@ OO_TEST(completePendingTasksCollectsReadyTasks) {
 OO_TEST(waitForATaskNeverAddedReturns) {
   {
     const std::shared_ptr<TestTask> task = oo::makeShared<TestTask>();
-    OOAsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(
+    oo::AsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(
         task.get());
     OO_CHECK(!task->performed);
     OO_CHECK_EQ(task->completions.load(), 0);
@@ -137,10 +142,10 @@ OO_TEST(waitForATaskNeverAddedReturns) {
 
 OO_TEST(taskWithoutCompletionIsPerformed) {
   {
-    OOAsyncWorkManager* manager = OOAsyncWorkManager::sharedAsyncWorkManager();
+    oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     const std::shared_ptr<TestFireAndForgetTask> task =
         oo::makeShared<TestFireAndForgetTask>();
-    OO_CHECK(manager->addTask(task.get(), OOAsyncWorkPriority::kLow));
+    OO_CHECK(manager->addTask(task.get(), oo::AsyncWorkPriority::kLow));
     OO_CHECK(WaitFor(task->performed));
     manager
         ->completePendingTasks();  // nothing to collect for it; must not hang
@@ -149,10 +154,10 @@ OO_TEST(taskWithoutCompletionIsPerformed) {
 
 OO_TEST(exceptionInPerformIsSwallowed) {
   {
-    OOAsyncWorkManager* manager = OOAsyncWorkManager::sharedAsyncWorkManager();
+    oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     const std::shared_ptr<TestTask> task = oo::makeShared<TestTask>();
     task->shouldThrow = true;
-    OO_CHECK(manager->addTask(task.get(), OOAsyncWorkPriority::kMedium));
+    OO_CHECK(manager->addTask(task.get(), oo::AsyncWorkPriority::kMedium));
     manager->waitForTaskToComplete(task.get());
     OO_CHECK(task->performed);
     OO_CHECK_EQ(task->completions.load(), 1);
@@ -161,13 +166,13 @@ OO_TEST(exceptionInPerformIsSwallowed) {
 
 OO_TEST(everyPriorityIsPerformed) {
   {
-    OOAsyncWorkManager* manager = OOAsyncWorkManager::sharedAsyncWorkManager();
+    oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     const std::shared_ptr<TestTask> low = oo::makeShared<TestTask>();
     const std::shared_ptr<TestTask> medium = oo::makeShared<TestTask>();
     const std::shared_ptr<TestTask> high = oo::makeShared<TestTask>();
-    OO_CHECK(manager->addTask(low.get(), OOAsyncWorkPriority::kLow));
-    OO_CHECK(manager->addTask(medium.get(), OOAsyncWorkPriority::kMedium));
-    OO_CHECK(manager->addTask(high.get(), OOAsyncWorkPriority::kHigh));
+    OO_CHECK(manager->addTask(low.get(), oo::AsyncWorkPriority::kLow));
+    OO_CHECK(manager->addTask(medium.get(), oo::AsyncWorkPriority::kMedium));
+    OO_CHECK(manager->addTask(high.get(), oo::AsyncWorkPriority::kHigh));
     manager->waitForTaskToComplete(low.get());
     manager->waitForTaskToComplete(medium.get());
     manager->waitForTaskToComplete(high.get());

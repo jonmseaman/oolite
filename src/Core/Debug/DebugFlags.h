@@ -5,7 +5,7 @@
 #include <string_view>
 #include <type_traits>
 
-#include "OOEnumFlags.h"
+#include "EnumFlags.h"
 
 // The debug console's flags. Their names and values are console.DEBUG_* in
 // JavaScript.

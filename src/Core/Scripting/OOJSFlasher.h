@@ -30,7 +30,7 @@ MA 02110-1301, USA.
 
 #include <string>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 
 void InitOOJSFlasher(JSContext* context, JSValueConst global);
 

@@ -43,9 +43,9 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
-#include "OOEnumFlags.h"
-#include "OOFoundation.h"
-#include "OOFunctionAttributes.h"
+#include "EnumFlags.h"
+#include "Foundation.h"
+#include "FunctionAttributes.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Object.h"

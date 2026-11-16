@@ -51,11 +51,11 @@ class BreakPatternEntity : public Entity {
   static std::shared_ptr<BreakPatternEntity> breakPatternWithPolygonSides(
       std::size_t sides, float startAngleDegrees, float aspectRatio);
 
-  void setInnerColor(OOColor* color1, OOColor* color2);
+  void setInnerColor(oo::Color* color1, oo::Color* color2);
 
   void setLifetime(double lifetime);
 
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void drawImmediate(bool immediate, bool translucent) override;
   bool canCollide() override;
 

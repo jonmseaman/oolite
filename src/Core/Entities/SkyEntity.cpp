@@ -31,12 +31,12 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <utility>
 
+#include "Color.h"
+#include "Description.h"
+#include "Maths.h"
 #include "MyOpenGLView.h"
-#include "OOColor.h"
-#include "OODescription.h"
-#include "OOMaths.h"
-#include "OOSkyDrawable.h"
 #include "PlayerEntity.h"
+#include "SkyDrawable.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
@@ -69,18 +69,18 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
 
 // [[OOColor colorWithDescription:description] premultipliedColor]: null
 // where the colour was nil.
-std::shared_ptr<OOColor> PremultipliedColorWithDescription(
+std::shared_ptr<oo::Color> PremultipliedColorWithDescription(
     const oo::PList& description) {
-  const std::shared_ptr<OOColor> color =
-      OOColor::colorWithDescription(description);
+  const std::shared_ptr<oo::Color> color =
+      oo::Color::colorWithDescription(description);
   return color != nullptr ? color->premultipliedColor() : nullptr;
 }
 
 }  // namespace
 
-void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In,
+void SkyEntity::initWithColors(oo::Color* col1In, oo::Color* col2In,
                                const oo::PList& systemInfo) {
-  std::shared_ptr<OOSkyDrawable> skyDrawable;
+  std::shared_ptr<oo::SkyDrawable> skyDrawable;
   float clusterChance, alpha, scale, starCountMultiplier, nebulaCountMultiplier;
   signed starCount,  // Need to be able to hold -1...
       nebulaCount;
@@ -88,19 +88,19 @@ void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In,
   // self = [super init]: the constructor ran Entity's -init body.
 
   // The colours the body replaces are owned here (they were autoreleased).
-  std::shared_ptr<OOColor> col1 = oo::share(col1In);
-  std::shared_ptr<OOColor> col2 = oo::share(col2In);
-  std::shared_ptr<OOColor> col3 =
-      OOColor::colorWithDescription(OOColorObjectNode(
+  std::shared_ptr<oo::Color> col1 = oo::share(col1In);
+  std::shared_ptr<oo::Color> col2 = oo::share(col2In);
+  std::shared_ptr<oo::Color> col3 =
+      oo::Color::colorWithDescription(oo::ColorObjectNode(
           col1.get()));  // a copy, as the id form made of a colour
-  std::shared_ptr<OOColor> col4 =
-      OOColor::colorWithDescription(OOColorObjectNode(col2.get()));
+  std::shared_ptr<oo::Color> col4 =
+      oo::Color::colorWithDescription(oo::ColorObjectNode(col2.get()));
 
   // Load colours
   bool nebulaColorSet = readColor1(&col1, &col2, &col3, &col4, systemInfo);
 
   skyColor =
-      OOColor::colorWithDescription(ValueForKey(systemInfo, "sun_color"));
+      oo::Color::colorWithDescription(ValueForKey(systemInfo, "sun_color"));
   if (skyColor == nullptr) {
     // A message to a nil colour answered nil.
     skyColor = (col2 != nullptr)
@@ -156,7 +156,7 @@ void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In,
     }
   }
 
-  skyDrawable = oo::makeShared<OOSkyDrawable>(
+  skyDrawable = oo::makeShared<oo::SkyDrawable>(
       col1.get(), col2.get(), col3.get(), col4.get(),
       static_cast<unsigned>(starCount), static_cast<unsigned>(nebulaCount),
       nebulaColorSet, clusterChance, alpha, scale);
@@ -165,13 +165,13 @@ void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In,
   setStatus(oo::EntityStatus::kEffect);
 }
 
-OOColor* SkyEntity::getSkyColor() { return skyColor.get(); }
+oo::Color* SkyEntity::getSkyColor() { return skyColor.get(); }
 
 bool SkyEntity::changeProperty(const std::string& key, const oo::PList& dict) {
   // TODO: properties requiring reInit?
   if (key == "sun_color") {
-    std::shared_ptr<OOColor> col =
-        OOColor::colorWithDescription(ValueForKey(dict, key));
+    std::shared_ptr<oo::Color> col =
+        oo::Color::colorWithDescription(ValueForKey(dict, key));
     if (col != nullptr) {
       skyColor = col;  // [col copy]: a copy of an immutable colour is the
                        // colour itself
@@ -187,7 +187,7 @@ bool SkyEntity::changeProperty(const std::string& key, const oo::PList& dict) {
   return true;
 }
 
-void SkyEntity::update(OOTimeDelta /*delta_t*/) {
+void SkyEntity::update(oo::TimeDelta /*delta_t*/) {
   ::PlayerEntity* player = PLAYER;
   zero_distance = static_cast<GLfloat>(MAX_CLEAR_DEPTH * MAX_CLEAR_DEPTH);
   cam_zero_distance = zero_distance;
@@ -213,7 +213,7 @@ void SkyEntity::drawImmediate(bool immediate, bool translucent) {
 
   oo::EntityWithDrawable::drawImmediate(immediate, translucent);
 
-  OOCheckOpenGLErrors([&]() -> std::string {
+  oo::CheckOpenGLErrors([&]() -> std::string {
     return "SkyEntity after drawing " + oo::EntityDescription(this);
   });
 }
@@ -225,13 +225,13 @@ std::optional<std::string> SkyEntity::descriptionForObjDump() {
 }
 #endif
 
-bool SkyEntity::readColor1(std::shared_ptr<OOColor>* ioColor1,
-                           std::shared_ptr<OOColor>* ioColor2,
-                           std::shared_ptr<OOColor>* ioColor3,
-                           std::shared_ptr<OOColor>* ioColor4,
+bool SkyEntity::readColor1(std::shared_ptr<oo::Color>* ioColor1,
+                           std::shared_ptr<oo::Color>* ioColor2,
+                           std::shared_ptr<oo::Color>* ioColor3,
+                           std::shared_ptr<oo::Color>* ioColor4,
                            const oo::PList& dictionary) {
   oo::PList colorDesc;
-  std::shared_ptr<OOColor> color;
+  std::shared_ptr<oo::Color> color;
   bool nebulaSet = false;
 
   assert(ioColor1 != nullptr && ioColor2 != nullptr);
@@ -245,14 +245,14 @@ bool SkyEntity::readColor1(std::shared_ptr<OOColor>* ioColor1,
     const oo::PList tokens(std::move(tokenList));
 
     if (tokens.count() == 6) {
-      float r1 = OOClamp_0_1_f(tokens.at<float>(0));
-      float g1 = OOClamp_0_1_f(tokens.at<float>(1));
-      float b1 = OOClamp_0_1_f(tokens.at<float>(2));
-      float r2 = OOClamp_0_1_f(tokens.at<float>(3));
-      float g2 = OOClamp_0_1_f(tokens.at<float>(4));
-      float b2 = OOClamp_0_1_f(tokens.at<float>(5));
-      *ioColor1 = OOColor::colorWithRed(r1, g1, b1, 1.0);
-      *ioColor2 = OOColor::colorWithRed(r2, g2, b2, 1.0);
+      float r1 = oo::Clamp_0_1_f(tokens.at<float>(0));
+      float g1 = oo::Clamp_0_1_f(tokens.at<float>(1));
+      float b1 = oo::Clamp_0_1_f(tokens.at<float>(2));
+      float r2 = oo::Clamp_0_1_f(tokens.at<float>(3));
+      float g2 = oo::Clamp_0_1_f(tokens.at<float>(4));
+      float b2 = oo::Clamp_0_1_f(tokens.at<float>(5));
+      *ioColor1 = oo::Color::colorWithRed(r1, g1, b1, 1.0);
+      *ioColor2 = oo::Color::colorWithRed(r2, g2, b2, 1.0);
     } else {
       OO_LOG_WARN("sky.fromDict",
                   "could not interpret \"{}\" as two RGB colours (must be six "

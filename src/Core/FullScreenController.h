@@ -1,0 +1,93 @@
+/*
+
+OOFullScreenController.h
+
+Abstract base class for full screen mode controllers. Concrete implementations
+exist for different target platforms.
+
+
+Oolite
+Copyright (C) 2004-2013 Giles C Williams and contributors
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301, USA.
+
+*/
+
+#pragma once
+
+#include <memory>
+#include <string_view>
+
+#include "Foundation.h"
+#include "MouseInteractionMode.h"
+#include "MyOpenGLView.h"  // std::shared_ptr<MyOpenGLView>
+#include "oofnd/Object.hpp"
+#include "oofnd/PList.hpp"
+
+/*	Display-mode dictionary keys. On Mac OS X they were CoreGraphics'
+   kCGDisplay* constants, whose values are these same strings (CFSTR("Width")
+   and so on), so a mode dictionary answers to either.
+*/
+namespace oo {
+
+inline constexpr std::string_view kDisplayWidth = "Width";
+inline constexpr std::string_view kDisplayHeight = "Height";
+inline constexpr std::string_view kDisplayRefreshRate = "RefreshRate";
+
+}  // namespace oo
+
+inline constexpr int DISPLAY_MIN_COLOURS = 32;
+inline constexpr int DISPLAY_MIN_WIDTH = 640;
+inline constexpr int DISPLAY_MIN_HEIGHT = 480;
+inline constexpr int DISPLAY_MAX_WIDTH = 7680;  // 8K gaming, yay!!
+inline constexpr int DISPLAY_MAX_HEIGHT = 4320;
+
+/*	The abstract base of the Mac
+        full-screen controllers, which are Mac-only and not in this tree. Its
+   callers are never compiled here. The "subclass responsibility"
+   methods are virtual, so a C++ subclass overrides them; the base's bodies
+   still log and answer the default.
+*/
+namespace oo {
+
+class FullScreenController : public oo::Object {
+ public:
+  explicit FullScreenController(MyOpenGLView* view);  // -initWithGameView:
+
+  MyOpenGLView* gameView();
+
+  virtual bool inFullScreenMode();
+  virtual void setFullScreenMode(bool value);
+
+  virtual oo::PList
+  displayModes();  // array of mode dictionaries (flipped with its family)
+  oo::PList currentDisplayMode();  // a mode dictionary
+  virtual std::size_t indexOfCurrentDisplayMode();
+
+  virtual bool setDisplayWidth(std::size_t width, std::size_t height,
+                               std::size_t refresh);
+  virtual oo::PList findDisplayModeForWidth(
+      std::size_t width, std::size_t height,
+      std::size_t d_refresh);  // a mode dictionary; null: none
+
+  virtual void noteMouseInteractionModeChangedFrom(
+      MouseInteractionMode oldMode, MouseInteractionMode newMode);
+
+ private:
+  std::shared_ptr<MyOpenGLView> _gameView;  // retained
+};
+
+}  // namespace oo

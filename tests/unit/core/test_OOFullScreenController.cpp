@@ -15,8 +15,8 @@
 #include <cstdlib>
 #include "EntityManualRefs.h"  // the tests' manual references
 
-#include "OOFullScreenController.h"
-#include "OOLogging.h"
+#include "FullScreenController.h"
+#include "Logging.h"
 #include "oo_test.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
@@ -25,10 +25,15 @@
 */
 static int gSubclassResponsibilities = 0;
 
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
   gSubclassResponsibilities++;
 }
+
+}  // namespace oo
+
 
 /*	The view the controller keeps is a C++ view. SDL/MyOpenGLView.mm is not
    linked: its destructor (a view made here has no window or context to
@@ -42,8 +47,8 @@ bool MyOpenGLView::inFullScreenMode() { std::abort(); }
 std::vector<oo::PList> MyOpenGLView::getScreenSizeArray() { std::abort(); }
 NSSize MyOpenGLView::currentScreenSize() { std::abort(); }
 oo::PList MyOpenGLView::currentScreenMode() { std::abort(); }
-void MyOpenGLView::noteMouseInteractionModeChangedFrom(OOMouseInteractionMode,
-                                                       OOMouseInteractionMode) {
+void MyOpenGLView::noteMouseInteractionModeChangedFrom(oo::MouseInteractionMode,
+                                                       oo::MouseInteractionMode) {
   std::abort();
 }
 void MyOpenGLView::resetTypedString() { std::abort(); }
@@ -54,9 +59,9 @@ namespace {
 
 oo::PList Mode(unsigned width, unsigned height, unsigned refresh) {
   oo::PList::Dict mode;
-  mode.emplace(std::string(kOODisplayWidth), oo::PList(width));
-  mode.emplace(std::string(kOODisplayHeight), oo::PList(height));
-  mode.emplace(std::string(kOODisplayRefreshRate), oo::PList(refresh));
+  mode.emplace(std::string(oo::kDisplayWidth), oo::PList(width));
+  mode.emplace(std::string(oo::kDisplayHeight), oo::PList(height));
+  mode.emplace(std::string(oo::kDisplayRefreshRate), oo::PList(refresh));
   return oo::PList(std::move(mode));
 }
 
@@ -68,9 +73,9 @@ oo::PList Modes() {
 }  // namespace
 
 // A subclass that answers the two methods currentDisplayMode() asks.
-class TestFullScreenController final : public OOFullScreenController {
+class TestFullScreenController final : public oo::FullScreenController {
  public:
-  using OOFullScreenController::OOFullScreenController;
+  using oo::FullScreenController::FullScreenController;
 
   oo::PList displayModes() override { return modes; }
 
@@ -84,8 +89,8 @@ OO_TEST(baseDefaults) {
   {
     MyOpenGLView* view = oo::test::NewRetained<MyOpenGLView>();
     const std::size_t viewRetains = view->weak_from_this().use_count();
-    std::shared_ptr<OOFullScreenController> controller =
-        oo::makeShared<OOFullScreenController>(view);
+    std::shared_ptr<oo::FullScreenController> controller =
+        oo::makeShared<oo::FullScreenController>(view);
     OO_CHECK(controller != nullptr);
     OO_CHECK(controller->gameView() == view);
     OO_CHECK(view->weak_from_this().use_count() == viewRetains + 1);
@@ -110,8 +115,8 @@ OO_TEST(baseDefaults) {
 
     // The one method with an empty body.
     controller->noteMouseInteractionModeChangedFrom(
-        OOMouseInteractionMode::kUiScreenNoInteraction,
-        OOMouseInteractionMode::kFlightWithMouseControl);
+        oo::MouseInteractionMode::kUiScreenNoInteraction,
+        oo::MouseInteractionMode::kFlightWithMouseControl);
     OO_CHECK(gSubclassResponsibilities == 7);
 
     controller = nullptr;
@@ -122,8 +127,8 @@ OO_TEST(baseDefaults) {
 
 OO_TEST(nilGameView) {
   {
-    std::shared_ptr<OOFullScreenController> controller =
-        oo::makeShared<OOFullScreenController>(nullptr);
+    std::shared_ptr<oo::FullScreenController> controller =
+        oo::makeShared<oo::FullScreenController>(nullptr);
     OO_CHECK(controller != nullptr);
     OO_CHECK(controller->gameView() == nullptr);
   }
@@ -143,7 +148,7 @@ OO_TEST(currentDisplayMode) {
     controller->index = 2;
     OO_CHECK(controller->currentDisplayMode() == Mode(1920, 1080, 60));
     OO_CHECK(controller->currentDisplayMode().get<std::size_t>(
-                 std::string(kOODisplayWidth)) == 1920);
+                 std::string(oo::kDisplayWidth)) == 1920);
 
     // An index past the end, and oo::kNotFound: null.
     controller->index = 3;

@@ -35,10 +35,10 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "EquipmentType.h"
 #include "GameController.h"
 #include "HeadUpDisplay.h"
-#include "OOEquipmentType.h"
-#include "OOJoystickManager.h"
+#include "JoystickManager.h"
 #include "ResourceManager.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/PList.hpp"
@@ -46,8 +46,8 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 
 static std::size_t key_index;
-static OOGUIRow current_row;
-static OOGUIRow kbd_row = GUI_ROW_KC_FUNCSTART;
+static oo::GUIRow current_row;
+static oo::GUIRow kbd_row = GUI_ROW_KC_FUNCSTART;
 static bool has_error = false;
 static bool last_shift = false;
 
@@ -202,7 +202,7 @@ oo::PList KeyConfigEntry(const oo::PList::Dict& settings,
 void PlayerEntity::initCheckingDictionary() {
   const oo::PList kdicmaster = ResourceManager::dictionaryFromFilesNamed(
       "keyconfig2.plist", std::optional<std::string>("Config"),
-      OOResourceMergeMode::kBasic, false);
+      oo::ResourceMergeMode::kBasic, false);
   const std::string kbd = KeyboardCode();
   const oo::PList* kdicValue = kdicmaster.get<oo::PList::Dict>(kbd);
   oo::PList::Dict kdic = (kdicValue != nullptr)
@@ -244,7 +244,7 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip,
   ::MyOpenGLView* gameView =
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
   oo::GUIScreenID oldScreen = gui_screen;
-  OOGUITabStop tabStop[GUI_MAX_COLUMNS];
+  oo::GUITabStop tabStop[GUI_MAX_COLUMNS];
   tabStop[0] = 10;
   tabStop[1] = 290;
   tabStop[2] = 400;
@@ -266,7 +266,7 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip,
       Columns({OO_DESC("oolite-keyconfig-keyboard"), keyboardDescription(kbd)}),
       GUI_ROW_KC_SELECTKBD);
   gui->setKey(std::format("kbd:{}", kbd), GUI_ROW_KC_SELECTKBD);
-  gui->setColor(OOColor::yellowColor().get(), GUI_ROW_KC_SELECTKBD);
+  gui->setColor(oo::Color::yellowColor().get(), GUI_ROW_KC_SELECTKBD);
 
   displayKeyFunctionList(gui, skip);
 
@@ -274,19 +274,19 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip,
   if (!validateAllKeys().empty()) {
     has_error = true;
     gui->setText(OO_DESC("oolite-keyconfig-validation-error"), GUI_ROW_KC_ERROR,
-                 OOGUIAlignment::kCenter);
-    gui->setColor(OOColor::redColor().get(), GUI_ROW_KC_ERROR);
+                 oo::GUIAlignment::kCenter);
+    gui->setColor(oo::Color::redColor().get(), GUI_ROW_KC_ERROR);
   }
   gui->setArray(Columns({OO_DESC("oolite-keyconfig-initial-info-1")}),
                 GUI_ROW_KC_INSTRUCT);
   gui->setText(OO_DESC("oolite-keyconfig-initial-info-2"),
-               GUI_ROW_KC_INSTRUCT + 1, OOGUIAlignment::kCenter);
+               GUI_ROW_KC_INSTRUCT + 1, oo::GUIAlignment::kCenter);
   if (has_error) {
     gui->setText(OO_DESC("oolite-keyconfig-initial-error"),
-                 GUI_ROW_KC_INSTRUCT + 2, OOGUIAlignment::kCenter);
+                 GUI_ROW_KC_INSTRUCT + 2, oo::GUIAlignment::kCenter);
   } else {
     gui->setText(OO_DESC("oolite-keyconfig-initial-info-3"),
-                 GUI_ROW_KC_INSTRUCT + 2, OOGUIAlignment::kCenter);
+                 GUI_ROW_KC_INSTRUCT + 2, oo::GUIAlignment::kCenter);
   }
 
   if (resetCurrentRow) {
@@ -313,7 +313,7 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip,
 void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui,
                                          ::MyOpenGLView* gameView) {
   const bool* joyButtonState =
-      OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+      oo::JoystickManager::sharedStickHandler()->getAllButtonStates();
   handleGUIUpDownArrowKeys();
   bool selectKeyPress =
       (checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT] ||
@@ -410,9 +410,9 @@ void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui,
           lookupKey = std::string(CUSTOMEQUIP_KEYMODE);
         }
 
-        ::OOEquipmentType* item =
+        ::oo::EquipmentType* item =
             (eq.has_value()
-                 ? OOEquipmentType::equipmentTypeWithIdentifier(*eq).get()
+                 ? oo::EquipmentType::equipmentTypeWithIdentifier(*eq).get()
                  : nullptr);
 
         // the customEquipActivation entry is edited in place, as before
@@ -529,7 +529,7 @@ void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow) {
   std::size_t i = 0;
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   oo::GUIScreenID oldScreen = gui_screen;
-  OOGUITabStop tabStop[GUI_MAX_COLUMNS];
+  oo::GUITabStop tabStop[GUI_MAX_COLUMNS];
   tabStop[0] = 10;
   tabStop[1] = 290;
   gui->setTabStops(tabStop);
@@ -542,14 +542,14 @@ void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow) {
   gui->setArray(Columns({OO_DESC("oolite-keyconfig-update-function"),
                          OptionalStringForKey(selected_entry, KEY_KC_GUIDESC)}),
                 GUI_ROW_KC_UPDATE_FUNCNAME);
-  gui->setColor(OOColor::greenColor().get(), GUI_ROW_KC_UPDATE_FUNCNAME);
+  gui->setColor(oo::Color::greenColor().get(), GUI_ROW_KC_UPDATE_FUNCNAME);
 
   std::optional<std::string> keystring;
   std::optional<std::string> keyshift;
   std::optional<std::string> keymod1;
   std::optional<std::string> keymod2;
 
-  OOKeyCode k_int;
+  oo::KeyCode k_int;
 
   // get each key for the first two item in the selected entry
   for (i = 0; i <= 1; i++) {
@@ -560,7 +560,7 @@ void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow) {
 
     if (key_list.count() > i) {
       const oo::PList& def = *key_list.at(i);
-      k_int = static_cast<OOKeyCode>(
+      k_int = static_cast<oo::KeyCode>(
           def.get<std::int64_t>("key"));  // -integerValue
       if (k_int > 0) {
         keystring = keyCodeDescription(k_int);
@@ -586,16 +586,16 @@ void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow) {
   if (Contains(camera_keys, definition))
     helper = std::format("{} {}", DescriptionOfString(helper),
                          OO_DESC("oolite-keyconfig-update-camkeys").c_str());
-  gui->addLongText(helper, GUI_ROW_KC_UPDATE_INFO, OOGUIAlignment::kLeft);
+  gui->addLongText(helper, GUI_ROW_KC_UPDATE_INFO, oo::GUIAlignment::kLeft);
 
   gui->setText("", GUI_ROW_KC_VALIDATION);
 
   gui->setText(OO_DESC("oolite-keyconfig-update-save"), GUI_ROW_KC_SAVE,
-               OOGUIAlignment::kCenter);
+               oo::GUIAlignment::kCenter);
   gui->setKey(std::string(GUI_KEY_OK), GUI_ROW_KC_SAVE);
 
   gui->setText(OO_DESC("oolite-keyconfig-update-cancel"), GUI_ROW_KC_CANCEL,
-               OOGUIAlignment::kCenter);
+               oo::GUIAlignment::kCenter);
   gui->setKey(std::string(GUI_KEY_OK), GUI_ROW_KC_CANCEL);
 
   gui->setSelectableRange(
@@ -610,8 +610,8 @@ void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow) {
                          OO_DESC("oolite-keyconfig-update-validation-@"),
                          {TextArg(OptionalStringForKey(keyFunctions[i],
                                                        KEY_KC_GUIDESC))}),
-                     GUI_ROW_KC_VALIDATION, OOGUIAlignment::kCenter);
-        gui->setColor(OOColor::orangeColor().get(), GUI_ROW_KC_VALIDATION);
+                     GUI_ROW_KC_VALIDATION, oo::GUIAlignment::kCenter);
+        gui->setColor(oo::Color::orangeColor().get(), GUI_ROW_KC_VALIDATION);
         break;
       }
     }
@@ -647,33 +647,33 @@ void PlayerEntity::outputKeyDefinition(const std::string& key,
                skiprows == 0 ? OO_DESC("oolite-keyconfig-update-key")
                              : OO_DESC("oolite-keyconfig-update-alternate")),
            key}),
-      static_cast<OOGUIRow>(GUI_ROW_KC_KEY + skiprows));
+      static_cast<oo::GUIRow>(GUI_ROW_KC_KEY + skiprows));
   gui->setKey(std::string(GUI_KEY_OK),
-              static_cast<OOGUIRow>(GUI_ROW_KC_KEY + skiprows));
+              static_cast<oo::GUIRow>(GUI_ROW_KC_KEY + skiprows));
 
   if (!Contains(nav_keys, definition)) {
     if (!(OO_DESC("oolite-keycode-unset") == key)) {
       gui->setArray(Columns({OO_DESC("oolite-keyconfig-update-shift"), shift}),
-                    static_cast<OOGUIRow>(GUI_ROW_KC_SHIFT + skiprows));
+                    static_cast<oo::GUIRow>(GUI_ROW_KC_SHIFT + skiprows));
       gui->setKey(std::string(GUI_KEY_OK),
-                  static_cast<OOGUIRow>(GUI_ROW_KC_SHIFT + skiprows));
+                  static_cast<oo::GUIRow>(GUI_ROW_KC_SHIFT + skiprows));
 
       // camera movement keys can't use ctrl
       if (!Contains(camera_keys, definition)) {
         gui->setArray(Columns({OO_DESC("oolite-keyconfig-update-mod1"), mod1}),
-                      static_cast<OOGUIRow>(GUI_ROW_KC_MOD1 + skiprows));
+                      static_cast<oo::GUIRow>(GUI_ROW_KC_MOD1 + skiprows));
         gui->setKey(std::string(GUI_KEY_OK),
-                    static_cast<OOGUIRow>(GUI_ROW_KC_MOD1 + skiprows));
+                    static_cast<oo::GUIRow>(GUI_ROW_KC_MOD1 + skiprows));
       } else {
         gui->setArray(Columns({OO_DESC("oolite-keyconfig-update-mod1"),
                                OO_DESC("not-applicable")}),
-                      static_cast<OOGUIRow>(GUI_ROW_KC_MOD1 + skiprows));
+                      static_cast<oo::GUIRow>(GUI_ROW_KC_MOD1 + skiprows));
       }
 
       gui->setArray(Columns({OO_DESC("oolite-keyconfig-update-mod2-pc"), mod2}),
-                    static_cast<OOGUIRow>(GUI_ROW_KC_MOD2 + skiprows));
+                    static_cast<oo::GUIRow>(GUI_ROW_KC_MOD2 + skiprows));
       gui->setKey(std::string(GUI_KEY_OK),
-                  static_cast<OOGUIRow>(GUI_ROW_KC_MOD2 + skiprows));
+                  static_cast<oo::GUIRow>(GUI_ROW_KC_MOD2 + skiprows));
     }
   }
 }
@@ -681,7 +681,7 @@ void PlayerEntity::outputKeyDefinition(const std::string& key,
 void PlayerEntity::handleKeyConfigKeys(::GuiDisplayGen* gui,
                                        ::MyOpenGLView* gameView) {
   const bool* joyButtonState =
-      OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+      oo::JoystickManager::sharedStickHandler()->getAllButtonStates();
   handleGUIUpDownArrowKeys();
   bool selectKeyPress =
       (checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT] ||
@@ -747,7 +747,7 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen() {
   }
   const oo::PList* def = key_list.at(key_index);
   // if ([key isEqualToString:@"(not set)"]) key = @"";
-  OOKeyCode k_int = static_cast<OOKeyCode>(
+  oo::KeyCode k_int = static_cast<oo::KeyCode>(
       def != nullptr ? def->get<std::int64_t>("key") : 0);  // -integerValue
   if (gameView != nullptr) gameView->resetTypedString();
   if (gameView != nullptr)
@@ -765,19 +765,19 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen() {
   }
 
   gui->addLongText(OO_DESC("oolite-keyconfig-update-entry-info"),
-                   GUI_ROW_KC_ENTRY_INFO, OOGUIAlignment::kLeft);
+                   GUI_ROW_KC_ENTRY_INFO, oo::GUIAlignment::kLeft);
 
   gui->setText(
       std::format("{}: {}", OO_DESC("oolite-keyconfig-update-key").c_str(),
                   DescriptionOfString((gameView != nullptr
                                            ? gameView->getTypedString()
                                            : std::optional<std::string>()))),
-      static_cast<OOGUIRow>(end_row), OOGUIAlignment::kLeft);
-  gui->setColor(OOColor::cyanColor().get(), static_cast<OOGUIRow>(end_row));
+      static_cast<oo::GUIRow>(end_row), oo::GUIAlignment::kLeft);
+  gui->setColor(oo::Color::cyanColor().get(), static_cast<oo::GUIRow>(end_row));
   gui->setSelectableRange(NSMakeRange(0, 0));
 
   gui->setShowTextCursor(true);
-  gui->setCurrentRow(static_cast<OOGUIRow>(end_row));
+  gui->setCurrentRow(static_cast<oo::GUIRow>(end_row));
 
   gui->setForegroundTextureKey(std::string(status() == oo::EntityStatus::kDocked
                                                ? "docked_overlay"
@@ -807,8 +807,8 @@ void PlayerEntity::handleKeyConfigEntryKeys(::GuiDisplayGen* gui,
                   DescriptionOfString((gameView != nullptr
                                            ? gameView->getTypedString()
                                            : std::optional<std::string>()))),
-      static_cast<OOGUIRow>(end_row));
-  gui->setColor(OOColor::cyanColor().get(), static_cast<OOGUIRow>(end_row));
+      static_cast<oo::GUIRow>(end_row));
+  gui->setColor(oo::Color::cyanColor().get(), static_cast<oo::GUIRow>(end_row));
 
   if (checkKeyPress(n_key_gui_select)) {
     if (gameView != nullptr) gameView->suppressKeysUntilKeyUp();
@@ -865,11 +865,11 @@ void PlayerEntity::updateShiftKeyDefinition(const std::string& key,
   if (key == "shift") {
     // force the key into upper or lower case, to limit invalid key combos as
     // much as possible
-    std::ptrdiff_t k_int = static_cast<OOKeyCode>(
+    std::ptrdiff_t k_int = static_cast<oo::KeyCode>(
         key_def.get<std::int64_t>("key"));  // -integerValue
     if (k_int > 0) {
       const std::optional<std::string> keystring =
-          keyCodeDescription(static_cast<OOKeyCode>(k_int));
+          keyCodeDescription(static_cast<oo::KeyCode>(k_int));
       std::optional<std::string> newstring;
       if (keystring && oo::str::length(*keystring) == 1) {
         // try switching the case. for characters that can't be switched (eg
@@ -903,14 +903,14 @@ void PlayerEntity::setGuiToConfirmClearScreen() {
   gui->setTitle(OO_DESC("oolite-keyconfig-clear-overrides-title"));  // @"%@"
 
   gui->addLongText(OO_DESC("oolite-keyconfig-clear-overrides"),  // @"%@"
-                   GUI_ROW_KC_CONFIRMCLEAR, OOGUIAlignment::kLeft);
+                   GUI_ROW_KC_CONFIRMCLEAR, oo::GUIAlignment::kLeft);
 
   gui->setText(OO_DESC("oolite-keyconfig-clear-yes"),
-               GUI_ROW_KC_CONFIRMCLEAR_YES, OOGUIAlignment::kCenter);
+               GUI_ROW_KC_CONFIRMCLEAR_YES, oo::GUIAlignment::kCenter);
   gui->setKey(std::string(GUI_KEY_OK), GUI_ROW_KC_CONFIRMCLEAR_YES);
 
   gui->setText(OO_DESC("oolite-keyconfig-clear-no"), GUI_ROW_KC_CONFIRMCLEAR_NO,
-               OOGUIAlignment::kCenter);
+               oo::GUIAlignment::kCenter);
   gui->setKey(std::string(GUI_KEY_OK), GUI_ROW_KC_CONFIRMCLEAR_NO);
 
   gui->setSelectableRange(NSMakeRange(GUI_ROW_KC_CONFIRMCLEAR_YES, 2));
@@ -931,7 +931,7 @@ void PlayerEntity::setGuiToConfirmClearScreen() {
 void PlayerEntity::handleKeyMapperConfirmClearKeys(::GuiDisplayGen* gui,
                                                    ::MyOpenGLView* gameView) {
   const bool* joyButtonState =
-      OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+      oo::JoystickManager::sharedStickHandler()->getAllButtonStates();
   handleGUIUpDownArrowKeys();
 
   bool selectKeyPress =
@@ -980,7 +980,7 @@ void PlayerEntity::handleKeyMapperConfirmClearKeys(::GuiDisplayGen* gui,
 
 void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
                                           std::size_t skip) {
-  gui->setColor(OOColor::greenColor().get(), GUI_ROW_KC_HEADING);
+  gui->setColor(oo::Color::greenColor().get(), GUI_ROW_KC_HEADING);
   gui->setArray({OO_DESC("oolite-keyconfig-column-function"),
                  OO_DESC("oolite-keyconfig-column-assigned-to"),
                  OO_DESC("oolite-keyconfig-column-overrides")},
@@ -1020,7 +1020,7 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
 
   if (n_functions > 0) {
     if (skip > 0) {
-      gui->setColor(OOColor::greenColor().get(), GUI_ROW_KC_FUNCSTART);
+      gui->setColor(oo::Color::greenColor().get(), GUI_ROW_KC_FUNCSTART);
       gui->setArray(Columns({OO_DESC("gui-back"), " <-- "}),
                     GUI_ROW_KC_FUNCSTART);
       gui->setKey(std::format("More:{}", previous), GUI_ROW_KC_FUNCSTART);
@@ -1032,9 +1032,9 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
         const std::optional<std::string> header =
             OptionalStringForKey(entry, KEY_KC_HEADER);
         gui->setArray(Columns({header, "", ""}),
-                      static_cast<OOGUIRow>(i) + start_row);
-        gui->setColor(OOColor::cyanColor().get(),
-                      static_cast<OOGUIRow>(i) + start_row);
+                      static_cast<oo::GUIRow>(i) + start_row);
+        gui->setColor(oo::Color::cyanColor().get(),
+                      static_cast<oo::GUIRow>(i) + start_row);
       } else {
         const std::optional<std::string> definition =
             OptionalStringForKey(entry, KEY_KC_DEFINITION);
@@ -1067,9 +1067,10 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
                    : std::optional<std::string>());
           const std::optional<std::string> itemKey =
               OptionalStringForKey(equip, CUSTOMEQUIP_EQUIPKEY);
-          ::OOEquipmentType* item =
+          ::oo::EquipmentType* item =
               itemKey.has_value()
-                  ? OOEquipmentType::equipmentTypeWithIdentifier(*itemKey).get()
+                  ? oo::EquipmentType::equipmentTypeWithIdentifier(*itemKey)
+                        .get()
                   : nullptr;
           bool result = true;
           int j, k;
@@ -1108,23 +1109,23 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
 
         gui->setArray(Columns({OptionalStringForKey(entry, KEY_KC_GUIDESC),
                                assignment, override}),
-                      static_cast<OOGUIRow>(i) + start_row);
+                      static_cast<oo::GUIRow>(i) + start_row);
         gui->setKey(std::format("Index:{}", i + skip),
-                    static_cast<OOGUIRow>(i) + start_row);
+                    static_cast<oo::GUIRow>(i) + start_row);
         if (validate) {
-          gui->setColor(OOColor::orangeColor().get(),
-                        static_cast<OOGUIRow>(i) + start_row);
+          gui->setColor(oo::Color::orangeColor().get(),
+                        static_cast<oo::GUIRow>(i) + start_row);
         }
       }
     }
     if (i < n_functions - skip) {
-      gui->setColor(OOColor::greenColor().get(),
-                    start_row + static_cast<OOGUIRow>(i));
+      gui->setColor(oo::Color::greenColor().get(),
+                    start_row + static_cast<oo::GUIRow>(i));
       gui->setArray(Columns({OO_DESC("gui-more"), " --> "}),
-                    start_row + static_cast<OOGUIRow>(i));
+                    start_row + static_cast<oo::GUIRow>(i));
       gui->setKey(
           std::format("More:{}", static_cast<std::size_t>(n_rows) + skip),
-          start_row + static_cast<OOGUIRow>(i));
+          start_row + static_cast<oo::GUIRow>(i));
       i++;
     }
 
@@ -1524,7 +1525,7 @@ void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip,
   ::MyOpenGLView* gameView =
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
   oo::GUIScreenID oldScreen = gui_screen;
-  OOGUITabStop tabStop[GUI_MAX_COLUMNS];
+  oo::GUITabStop tabStop[GUI_MAX_COLUMNS];
   tabStop[0] = 10;
   tabStop[1] = 290;
   gui->setTabStops(tabStop);
@@ -1561,7 +1562,7 @@ void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip,
 void PlayerEntity::handleKeyboardLayoutEntryKeys(::GuiDisplayGen* gui,
                                                  ::MyOpenGLView* gameView) {
   const bool* joyButtonState =
-      OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+      oo::JoystickManager::sharedStickHandler()->getAllButtonStates();
   handleGUIUpDownArrowKeys();
   bool selectKeyPress =
       (checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT] ||
@@ -1612,7 +1613,7 @@ std::optional<std::string> PlayerEntity::keyboardDescription(
     const std::string& kbd) {
   const oo::PList kmap = ResourceManager::dictionaryFromFilesNamed(
       KeyMappingsFileName(), std::optional<std::string>("Config"),
-      OOResourceMergeMode::kBasic, false);
+      oo::ResourceMergeMode::kBasic, false);
   const oo::PList* sect = kmap.find(kbd);
   return sect != nullptr ? OptionalStringForKey(*sect, "description")
                          : std::nullopt;
@@ -1621,7 +1622,7 @@ std::optional<std::string> PlayerEntity::keyboardDescription(
 std::vector<oo::PList> PlayerEntity::keyboardLayoutList() {
   const oo::PList kmap = ResourceManager::dictionaryFromFilesNamed(
       KeyMappingsFileName(), std::optional<std::string>("Config"),
-      OOResourceMergeMode::kBasic, false);
+      oo::ResourceMergeMode::kBasic, false);
   std::vector<oo::PList> kbdList;
   oo::PList def;
 
@@ -1665,7 +1666,7 @@ std::vector<oo::PList> PlayerEntity::keyboardLayoutList() {
 
 void PlayerEntity::displayKeyboardLayoutList(::GuiDisplayGen* gui,
                                              std::size_t skip) {
-  gui->setColor(OOColor::greenColor().get(), GUI_ROW_KC_HEADING);
+  gui->setColor(oo::Color::greenColor().get(), GUI_ROW_KC_HEADING);
   gui->setArray({OO_DESC("oolite-keyconfig-kbd-layout")}, GUI_ROW_KC_HEADING);
 
   if (kbdLayouts.empty())
@@ -1698,7 +1699,7 @@ void PlayerEntity::displayKeyboardLayoutList(::GuiDisplayGen* gui,
 
   if (n_functions > 0) {
     if (skip > 0) {
-      gui->setColor(OOColor::greenColor().get(), GUI_ROW_KC_FUNCSTART);
+      gui->setColor(oo::Color::greenColor().get(), GUI_ROW_KC_FUNCSTART);
       gui->setArray(Columns({OO_DESC("gui-back"), " <-- "}),
                     GUI_ROW_KC_FUNCSTART);
       gui->setKey(std::format("More:{}", previous), GUI_ROW_KC_FUNCSTART);
@@ -1714,18 +1715,18 @@ void PlayerEntity::displayKeyboardLayoutList(::GuiDisplayGen* gui,
       if (OptionalStringForKey(entry, "key") == kbd)
         selected = OO_DESC("oolite-keyconfig-kbd-current");
       gui->setArray(Columns({desc, selected}),
-                    static_cast<OOGUIRow>(i) + start_row);
+                    static_cast<oo::GUIRow>(i) + start_row);
       gui->setKey(std::format("Index:{}", i + skip),
-                  static_cast<OOGUIRow>(i) + start_row);
+                  static_cast<oo::GUIRow>(i) + start_row);
     }
     if (i < n_functions - skip) {
-      gui->setColor(OOColor::greenColor().get(),
-                    start_row + static_cast<OOGUIRow>(i));
+      gui->setColor(oo::Color::greenColor().get(),
+                    start_row + static_cast<oo::GUIRow>(i));
       gui->setArray(Columns({OO_DESC("gui-more"), " --> "}),
-                    start_row + static_cast<OOGUIRow>(i));
+                    start_row + static_cast<oo::GUIRow>(i));
       gui->setKey(
           std::format("More:{}", static_cast<std::size_t>(n_rows) + skip),
-          start_row + static_cast<OOGUIRow>(i));
+          start_row + static_cast<oo::GUIRow>(i));
       i++;
     }
 
@@ -2151,9 +2152,9 @@ void PlayerEntity::deleteAllKeySettings() {
     for (i = 0; i < customEquipActivation.size(); i++) {
       const std::optional<std::string> eq =
           OptionalStringForKey(customEquipActivation[i], CUSTOMEQUIP_EQUIPKEY);
-      ::OOEquipmentType* item =
+      ::oo::EquipmentType* item =
           (eq.has_value()
-               ? OOEquipmentType::equipmentTypeWithIdentifier(*eq).get()
+               ? oo::EquipmentType::equipmentTypeWithIdentifier(*eq).get()
                : nullptr);
       oo::PList::Dict* fields =
           CustomEquipFields(customEquipActivation, i);  // edited in place

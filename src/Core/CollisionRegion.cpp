@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 
 #include "DebugFlags.h"
 #include "Entity.h"
-#include "OOMaths.h"
+#include "Maths.h"
 #include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
@@ -54,8 +54,8 @@ bool EntityIsVisible(Entity* entity) {
   return entity != nullptr && entity->isVisible();  // nil's answer for none
 }
 
-OOUniversalID EntityUniversalID(Entity* entity) {
-  return entity != nullptr ? entity->getUniversalID() : OOUniversalID{};
+oo::UniversalID EntityUniversalID(Entity* entity) {
+  return entity != nullptr ? entity->getUniversalID() : oo::UniversalID{};
 }
 
 bool EntityChecksCloseCollisionWith(Entity* entity, Entity* other) {

@@ -174,12 +174,12 @@ void InitOOJSFrameCallbacks(JSContext* context, JSValueConst global) {
 #endif
 }
 
-void OOJSFrameCallbacksInvoke(OOTimeDelta inDeltaT) {
+void OOJSFrameCallbacksInvoke(oo::TimeDelta inDeltaT) {
   OOCAssert(!sRunning, "%s cannot be called while frame callbacks are running.",
             __PRETTY_FUNCTION__);
 
   if (!sCallbacks.empty()) {
-    const OOTimeDelta delta =
+    const oo::TimeDelta delta =
         inDeltaT *
         (UNIVERSE != nullptr ? UNIVERSE->getTimeAccelerationFactor() : 0.0);
     JSContext* context = OOJSAcquireContext();

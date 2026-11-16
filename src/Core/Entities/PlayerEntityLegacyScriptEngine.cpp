@@ -37,27 +37,27 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "AI.h"
+#include "CallByName.h"
+#include "Color.h"
+#include "Description.h"
+#include "EntityFilterPredicate.h"
+#include "EquipmentType.h"
 #include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
+#include "LoggingExtended.h"
+#include "MusicController.h"
 #include "MyOpenGLView.h"
-#include "OOCallByName.h"
-#include "OOColor.h"
-#include "OODescription.h"
-#include "OOEntityFilterPredicate.h"
-#include "OOEquipmentType.h"
 #include "OOJavaScriptEngine.h"
 #include "OOLegacyScriptWhitelist.h"
-#include "OOLoggingExtended.h"
-#include "OOMusicController.h"
 #include "OOScript.h"
-#include "OOStringExpander.h"
-#include "OOStringParsing.h"
-#include "OOSystemDescriptionManager.h"
 #include "PlanetEntity.h"
 #include "ResourceManager.h"
 #include "ShipEntityAI.h"
 #include "StationEntity.h"
+#include "StringExpander.h"
+#include "StringParsing.h"
 #include "SunEntity.h"
+#include "SystemDescriptionManager.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Log.hpp"
@@ -353,9 +353,9 @@ void PerformActionStatment(const oo::PList& statement, Entity* target) {
         (cxxPlayer != nullptr)
             ? cxxPlayer->localVariablesForMission(sCurrentMissionKey)
             : oo::PList();
-    const std::optional<std::string> expanded = OOExpandDescriptionString(
-        OOStringExpanderDefaultRandomSeed(), *argumentString, oo::PList(),
-        locals, std::nullopt, OOExpandOptions::kNone);
+    const std::optional<std::string> expanded = oo::ExpandDescriptionString(
+        oo::StringExpanderDefaultRandomSeed(), *argumentString, oo::PList(),
+        locals, std::nullopt, oo::ExpandOptions::kNone);
     if (expanded.has_value())
       oo::CallEntityByName(cxxTarget, selectorString, *expanded);
     else
@@ -475,7 +475,7 @@ void PlayerEntity::checkScript() {
   } catch (...) {
     const auto exception = oo::CurrentOOException();
     if (!exception) throw;  // not an OOException: it goes on up, as before
-    OO_LOG(kOOLogException, "***** Exception running world scripts: {} : {}",
+    OO_LOG(oo::kLogException, "***** Exception running world scripts: {} : {}",
            exception->name(), exception->reason());
   }
 
@@ -1192,9 +1192,9 @@ oo::PList PlayerEntity::systemGovernment_string() {
   // called by name
   int government = IntValueOf(
       systemGovernment_number());  // 0 .. 7 (0 anarchic .. 7 most stable)
-  return oo::PList(
-      OODisplayStringFromGovernmentID(static_cast<OOGovernmentID>(government))
-          .value_or("UNKNOWN"));
+  return oo::PList(oo::DisplayStringFromGovernmentID(
+                       static_cast<oo::GovernmentID>(government))
+                       .value_or("UNKNOWN"));
 }
 
 oo::PList PlayerEntity::systemGovernment_number() {
@@ -1208,7 +1208,7 @@ oo::PList PlayerEntity::systemEconomy_string() {
       IntValueOf(systemEconomy_number());  // 0 .. 7 (0 rich industrial .. 7
                                            // poor agricultural)
   return oo::PList(
-      OODisplayStringFromEconomyID(static_cast<OOEconomyID>(economy))
+      oo::DisplayStringFromEconomyID(static_cast<oo::EconomyID>(economy))
           .value_or("UNKNOWN"));
 }
 
@@ -1296,10 +1296,10 @@ void PlayerEntity::awardCredits(const std::string& valueString) {
   */
   int64_t award = oo::str::intValue(valueString);
   award *= 10;
-  if (award < 0 && credits < static_cast<OOCreditsQuantity>(-award))
+  if (award < 0 && credits < static_cast<oo::CreditsQuantity>(-award))
     credits = 0;
   else
-    credits += static_cast<OOCreditsQuantity>(award);
+    credits += static_cast<oo::CreditsQuantity>(award);
 }
 
 void PlayerEntity::awardShipKills(const std::string& valueString) {
@@ -1319,8 +1319,8 @@ void PlayerEntity::awardEquipment(const std::string& equipString) {
     setFuel(fuelCapacity());
   }
 
-  ::OOEquipmentType* eqType =
-      OOEquipmentType::equipmentTypeWithIdentifier(equipKey).get();
+  ::oo::EquipmentType* eqType =
+      oo::EquipmentType::equipmentTypeWithIdentifier(equipKey).get();
 
   if ((eqType != nullptr ? eqType->isMissileOrMine() : false)) {
     mountMissileWithRole(equipKey);
@@ -1413,9 +1413,10 @@ void PlayerEntity::setSpecificPlanetInfo(const std::string& key_valueString) {
   const std::string valueString = TrimWhitespace(tokens[3]);
 
   if (UNIVERSE != nullptr)
-    UNIVERSE->setSystemDataForGalaxy(
-        static_cast<OOGalaxyID>(gnum), static_cast<OOSystemID>(pnum), keyString,
-        oo::PList(valueString), std::string(), OOSystemLayer::kOXPDynamic);
+    UNIVERSE->setSystemDataForGalaxy(static_cast<oo::GalaxyID>(gnum),
+                                     static_cast<oo::SystemID>(pnum), keyString,
+                                     oo::PList(valueString), std::string(),
+                                     oo::SystemLayer::kOXPDynamic);
 }
 
 void PlayerEntity::awardCargo(const std::string& amount_typeString) {
@@ -1424,8 +1425,8 @@ void PlayerEntity::awardCargo(const std::string& amount_typeString) {
 
   const std::string& argument = amount_typeString;
   const std::vector<std::string> tokens = oo::str::tokens(argument);
-  OOCargoQuantityDelta amount;
-  OOMassUnit unit;
+  oo::CargoQuantityDelta amount;
+  oo::MassUnit unit;
 
   if (tokens.size() != 2) {
     OO_LOG(oo::kLogSyntaxAwardCargo,
@@ -1455,8 +1456,8 @@ void PlayerEntity::awardCargo(const std::string& amount_typeString) {
 
   unit =
       (shipCommodityData != nullptr ? shipCommodityData->massUnitForGood(type)
-                                    : OOMassUnit::kTons);
-  if (specialCargo && unit == OOMassUnit::kTons) {
+                                    : oo::MassUnit::kTons);
+  if (specialCargo && unit == oo::MassUnit::kTons) {
     OO_LOG(oo::kLogSyntaxAwardCargo,
            "***** SCRIPT ERROR: in {}, CANNOT awardCargo: '{}' ({})",
            CurrentScriptDescription(), argument,
@@ -1464,7 +1465,7 @@ void PlayerEntity::awardCargo(const std::string& amount_typeString) {
     return;
   }
 
-  awardCommodityType(type, static_cast<OOCargoQuantity>(amount));
+  awardCommodityType(type, static_cast<oo::CargoQuantity>(amount));
 }
 
 void PlayerEntity::removeAllCargo() { removeAllCargo(false); }
@@ -1489,7 +1490,7 @@ void PlayerEntity::removeAllCargo(bool forceRemoval) {
                                      : std::vector<std::string>())) {
     if ((shipCommodityData != nullptr
              ? shipCommodityData->massUnitForGood(type)
-             : OOMassUnit::kTons) == OOMassUnit::kTons) {
+             : oo::MassUnit::kTons) == oo::MassUnit::kTons) {
       if (shipCommodityData != nullptr) shipCommodityData->setQuantity(0, type);
     }
   }
@@ -1532,9 +1533,9 @@ void PlayerEntity::awardFuel(const std::string& valueString) {
   // called by name; add to fuel up to 7.0 LY
   int delta = static_cast<int>(
       10 * static_cast<float>(oo::str::doubleValue(valueString)));
-  OOFuelQuantity scriptTargetFuelBeforeAward =
+  oo::FuelQuantity scriptTargetFuelBeforeAward =
       (::scriptTarget != nullptr ? ::scriptTarget->getFuel()
-                                 : OOFuelQuantity{});
+                                 : oo::FuelQuantity{});
 
   if (delta < 0 &&
       scriptTargetFuelBeforeAward < static_cast<unsigned>(-delta)) {
@@ -1542,7 +1543,7 @@ void PlayerEntity::awardFuel(const std::string& valueString) {
   } else {
     if (::scriptTarget != nullptr)
       ::scriptTarget->setFuel(
-          (static_cast<OOFuelQuantity>(scriptTargetFuelBeforeAward + delta)));
+          (static_cast<oo::FuelQuantity>(scriptTargetFuelBeforeAward + delta)));
   }
 }
 
@@ -2032,8 +2033,8 @@ void PlayerEntity::addMissionText(const std::string& textKey) {
       MissionTextForKey(key.value_or(std::string()));
   if (!key.has_value() || !text.has_value()) return;
   const std::string expanded =
-      OOExpandWithOptions(OOStringExpanderDefaultRandomSeed(),
-                          OOExpandOptions::kBackslashN, *text)
+      OOExpandWithOptions(oo::StringExpanderDefaultRandomSeed(),
+                          oo::ExpandOptions::kBackslashN, *text)
           .value_or(std::string());
 
   const std::optional<std::string> literal = replaceVariablesInString(expanded);
@@ -2046,7 +2047,7 @@ void PlayerEntity::addLiteralMissionText(const std::string& text) {
 
   for (const std::string& para : oo::str::split(text, "\n")) {
     missionTextRow =
-        gui->addLongText(para, missionTextRow, OOGUIAlignment::kLeft);
+        gui->addLongText(para, missionTextRow, oo::GUIAlignment::kLeft);
   }
 }
 
@@ -2105,7 +2106,7 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
 
   std::ptrdiff_t keysCount = static_cast<std::ptrdiff_t>(choiceKeys.size());
   if ((end_row + 1) < choiceKeys.size()) {
-    OO_LOG_ERR(kOOLogException,
+    OO_LOG_ERR(oo::kLogException,
                "in mission.runScreen choices: number of choices defined ({}) "
                "is greater than available lines ({}). Check HUD settings for "
                "allowBigGui.",
@@ -2114,10 +2115,10 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
   }
 
   gui->setText(std::string(),
-               static_cast<OOGUIRow>(
+               static_cast<oo::GUIRow>(
                    end_row));  // clears out the 'Press spacebar' message
   gui->setKey(std::string(),
-              static_cast<OOGUIRow>(
+              static_cast<oo::GUIRow>(
                   end_row));  // clears the key to enable pollDemoControls to
                               // check for a selection
   gui->setSelectableRange(NSMakeRange(0, 0));  // clears the selectable range
@@ -2125,7 +2126,7 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
     UNIVERSE->enterGUIViewModeWithMouseInteraction(
         true);  // enables mouse selection of the choices list items
 
-  OOGUIRow choicesRow = static_cast<OOGUIRow>(
+  oo::GUIRow choicesRow = static_cast<oo::GUIRow>(
       (end_row + 1) - static_cast<std::size_t>(keysCount));
   std::string choiceText;
 
@@ -2134,8 +2135,8 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
 
   for (const std::string& choiceKey : choiceKeys) {
     const oo::PList& choiceValue = *choicesDict.find(choiceKey);
-    OOGUIAlignment alignment = OOGUIAlignment::kCenter;
-    std::shared_ptr<OOColor> rowColor = OOColor::yellowColor();
+    oo::GUIAlignment alignment = oo::GUIAlignment::kCenter;
+    std::shared_ptr<oo::Color> rowColor = oo::Color::yellowColor();
     bool selectable = true;
     if (const std::string* text = choiceValue.getIf<std::string>()) {
       choiceText = " " + *text + " ";
@@ -2152,19 +2153,19 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
       const std::string alignmentChoice =
           choiceValue.get<std::string>("alignment", "CENTER");
       if (alignmentChoice == "LEFT") {
-        alignment = OOGUIAlignment::kLeft;
+        alignment = oo::GUIAlignment::kLeft;
       } else if (alignmentChoice == "RIGHT") {
-        alignment = OOGUIAlignment::kRight;
+        alignment = oo::GUIAlignment::kRight;
       }
       const oo::PList* colorDesc = choiceValue.find("color");
       if (choiceValue.get<bool>("unselectable")) {
         selectable = false;
       }
       if (colorDesc != nullptr) {
-        rowColor = OOColor::colorWithDescription(*colorDesc);
+        rowColor = oo::Color::colorWithDescription(*colorDesc);
       } else if (!selectable) {
         // different default
-        rowColor = OOColor::darkGrayColor();
+        rowColor = oo::Color::darkGrayColor();
       }
     } else {
       continue;  // invalid type
@@ -2194,15 +2195,16 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
   if (!selectableRowExists) {
     // just in case choices are set but they're all blank.
     gui->setText(std::optional<std::string>(" "),
-                 static_cast<OOGUIRow>(end_row), OOGUIAlignment::kCenter);
-    gui->setKey(std::string(), static_cast<OOGUIRow>(end_row));
-    gui->setColor(OOColor::yellowColor().get(), static_cast<OOGUIRow>(end_row));
+                 static_cast<oo::GUIRow>(end_row), oo::GUIAlignment::kCenter);
+    gui->setKey(std::string(), static_cast<oo::GUIRow>(end_row));
+    gui->setColor(oo::Color::yellowColor().get(),
+                  static_cast<oo::GUIRow>(end_row));
   }
 
   gui->setSelectableRange(
       NSMakeRange((end_row + 1) - static_cast<std::size_t>(keysCount),
                   static_cast<std::size_t>(keysCount)));
-  gui->setSelectedRow(static_cast<OOGUIRow>(firstSelectableRow));
+  gui->setSelectedRow(static_cast<oo::GUIRow>(firstSelectableRow));
 
   resetMissionChoice();
 }
@@ -2224,7 +2226,7 @@ void PlayerEntity::addMissionDestination(const std::string& destinations) {
     const int dest = oo::str::intValue(token);  // -oo_intAtIndex: of the token
     if (dest < 0 || dest > 255) continue;
 
-    addMissionDestinationMarker(defaultMarker(static_cast<OOSystemID>(dest)));
+    addMissionDestinationMarker(defaultMarker(static_cast<oo::SystemID>(dest)));
   }
 }
 
@@ -2235,7 +2237,7 @@ void PlayerEntity::removeMissionDestination(const std::string& destinations) {
     if (dest < 0 || dest > 255) continue;
 
     removeMissionDestinationMarker(
-        defaultMarker(static_cast<OOSystemID>(dest)));
+        defaultMarker(static_cast<oo::SystemID>(dest)));
   }
 }
 
@@ -2259,7 +2261,7 @@ void PlayerEntity::showShipModel(const std::string& role) {
 void PlayerEntity::setMissionMusic(const std::string& value) {
   // called by name
   // "" (was nil) and "none" clear it
-  OOMusicController::sharedController()->setMissionMusic(
+  oo::MusicController::sharedController()->setMissionMusic(
       IsNoneValue(value) ? std::nullopt : std::optional<std::string>(value));
 }
 
@@ -2379,8 +2381,8 @@ void PlayerEntity::sendAllShipsAway() {
             (se1 != nullptr ? se1->getAI() : static_cast<::AI*>(nullptr));
         if (se1 != nullptr)
           se1->setFuel(std::max(
-              static_cast<OOFuelQuantity>(PLAYER_MAX_FUEL),
-              (se1 != nullptr ? se1->fuelCapacity() : OOFuelQuantity{})));
+              static_cast<oo::FuelQuantity>(PLAYER_MAX_FUEL),
+              (se1 != nullptr ? se1->fuelCapacity() : oo::FuelQuantity{})));
         if (se1 != nullptr)
           se1->setAITo(
               "exitingTraderAI.plist");  // lets them return to their previous
@@ -2673,11 +2675,11 @@ void PlayerEntity::refreshMissionScreenTextEntry() {
       oo::str::formatRuntime(OO_DESC("mission-screen-text-prompt-@"),
                              {typed.has_value() ? oo::str::FormatArg(*typed)
                                                 : oo::str::FormatArg::null()}),
-      static_cast<OOGUIRow>(end_row), OOGUIAlignment::kLeft);
-  gui->setColor(OOColor::cyanColor().get(), static_cast<OOGUIRow>(end_row));
+      static_cast<oo::GUIRow>(end_row), oo::GUIAlignment::kLeft);
+  gui->setColor(oo::Color::cyanColor().get(), static_cast<oo::GUIRow>(end_row));
 
   gui->setShowTextCursor(true);
-  gui->setCurrentRow(static_cast<OOGUIRow>(end_row));
+  gui->setCurrentRow(static_cast<oo::GUIRow>(end_row));
 }
 
 void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
@@ -2695,10 +2697,10 @@ void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
 
     if (!_missionTextEntry) {
       gui->setText(OO_DESC("press-space-commander"),
-                   static_cast<OOGUIRow>(end_row), OOGUIAlignment::kCenter);
-      gui->setColor(OOColor::yellowColor().get(),
-                    static_cast<OOGUIRow>(end_row));
-      gui->setKey("spacebar", static_cast<OOGUIRow>(end_row));
+                   static_cast<oo::GUIRow>(end_row), oo::GUIAlignment::kCenter);
+      gui->setColor(oo::Color::yellowColor().get(),
+                    static_cast<oo::GUIRow>(end_row));
+      gui->setKey("spacebar", static_cast<oo::GUIRow>(end_row));
       gui->setShowTextCursor(false);
     } else {
       refreshMissionScreenTextEntry();
@@ -2719,7 +2721,7 @@ void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
 
   lastTextKey.reset();
 
-  OOMusicController::sharedController()->playMissionMusic();
+  oo::MusicController::sharedController()->playMissionMusic();
 
   // the following are necessary...
   if (UNIVERSE != nullptr)
@@ -3000,7 +3002,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     // radius bigger than 60 a bit futher away.
     model_p0 = vector_multiply_scalar(
         model_p0,
-        static_cast<OOScalar>(
+        static_cast<oo::Scalar>(
             1 - 0.5 * ((60 - (doppelganger != nullptr ? doppelganger->radius()
                                                       : 0.0)) /
                        60)));
@@ -3012,8 +3014,8 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     // planets' north pole. Quaternion model_q = { 0.83, -0.365148, 0.182574,
     // 0.0 }; // shows new planets' south pole.
     Quaternion defaultOrientation = {
-        static_cast<OOScalar>(0.83), static_cast<OOScalar>(0.12),
-        static_cast<OOScalar>(0.44),
+        static_cast<oo::Scalar>(0.83), static_cast<oo::Scalar>(0.12),
+        static_cast<oo::Scalar>(0.44),
         0.0};  // new planets - default orientation.
     OO_LOG(oo::kLogDebugProcessSceneStringAddMiniPlanet,
            "::::: adding {} to scene:'{}'", i_key,
@@ -3039,8 +3041,8 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
 
 bool PlayerEntity::addEqScriptForKey(const std::string& eq_key) {
   const std::optional<std::string> scriptName =
-      (OOEquipmentType::equipmentTypeWithIdentifier(eq_key).get() != nullptr
-           ? OOEquipmentType::equipmentTypeWithIdentifier(eq_key)
+      (oo::EquipmentType::equipmentTypeWithIdentifier(eq_key).get() != nullptr
+           ? oo::EquipmentType::equipmentTypeWithIdentifier(eq_key)
                  .get()
                  ->scriptName()
            : std::optional<std::string>());
@@ -3089,16 +3091,16 @@ void PlayerEntity::removeEqScriptForKey(const std::string& eq_key) {
       if (count == primedEquipment)
         primedEquipment--;  // the array has shrunk by one!
 
-      OO_LOG(
-          "player.equipmentScript",
-          "Removed equipment {}, with the following script property: '{}'.",
-          eq_key,
-          (OOEquipmentType::equipmentTypeWithIdentifier(eq_key).get() != nullptr
-               ? OOEquipmentType::equipmentTypeWithIdentifier(eq_key)
-                     .get()
-                     ->scriptName()
-               : std::optional<std::string>())
-              .value_or("(null)"));
+      OO_LOG("player.equipmentScript",
+             "Removed equipment {}, with the following script property: '{}'.",
+             eq_key,
+             (oo::EquipmentType::equipmentTypeWithIdentifier(eq_key).get() !=
+                      nullptr
+                  ? oo::EquipmentType::equipmentTypeWithIdentifier(eq_key)
+                        .get()
+                        ->scriptName()
+                  : std::optional<std::string>())
+                 .value_or("(null)"));
     }
   }
 }

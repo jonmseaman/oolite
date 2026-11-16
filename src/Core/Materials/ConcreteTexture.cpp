@@ -34,13 +34,13 @@
 #include <string>
 #include <string_view>
 
-#include "OOCPUInfoEndian.h"
-#include "OOEnumFlags.h"
-#include "OOFastArithmetic.h"
-#include "OOLogging.h"
-#include "OOMacroOpenGL.h"
-#include "OOOpenGLCheck.h"
-#include "OOOpenGLExtensionPointers.h"
+#include "CPUInfoEndian.h"
+#include "EnumFlags.h"
+#include "FastArithmetic.h"
+#include "Logging.h"
+#include "MacroOpenGL.h"
+#include "OpenGLCheck.h"
+#include "OpenGLExtensionPointers.h"
 #include "PixMap.h"
 #include "Texture.h"
 #include "TextureFlags.h"
@@ -77,7 +77,7 @@ oo::ConcreteTexture::ConcreteTexture(oo::TextureLoader* loader,
   _options = options;
 
 #if GL_EXT_texture_filter_anisotropic
-  _anisotropy = OOClamp_0_1_f(anisotropy) * gOOTextureInfo.anisotropyScale;
+  _anisotropy = oo::Clamp_0_1_f(anisotropy) * gOOTextureInfo.anisotropyScale;
 #endif
 #if GL_EXT_texture_lod_bias
   _lodBias = lodBias;
@@ -648,7 +648,7 @@ static bool DecodeFormat(oo::TextureDataFormat format, oo::TextureFlags options,
       return true;
 
     default:
-      OO_LOG(kOOLogParameterError, "Unexpected texture format {}.",
+      OO_LOG(oo::kLogParameterError, "Unexpected texture format {}.",
              static_cast<unsigned>(format));
       return false;
   }

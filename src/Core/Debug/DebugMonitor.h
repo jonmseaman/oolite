@@ -52,14 +52,14 @@ SOFTWARE.
 #include <vector>
 
 #include "DebuggerInterface.h"
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "OOJSPrivateObject.h"          // the console's JS glue
 #include "OOJavaScriptEngineMonitor.h"  // the engine's monitor, a C++ interface
 #include "oofnd/Notification.hpp"
 #include "oofnd/PList.hpp"
 
 class OOJavaScriptEngine;
-#include "OOColor.h"   // the colour maps hold std::shared_ptr<OOColor>
+#include "Color.h"     // the colour maps hold std::shared_ptr<OOColor>
 #include "OOScript.h"  // the console script, std::shared_ptr<OOScript>
 
 /*	The one debug monitor (sharedDebugMonitor(), made on first use and never
@@ -186,7 +186,7 @@ class DebugMonitor : public oo::PListForeign,
                                // JS (a Dict; values may be Object nodes).
 
   // Caches
-  std::map<std::string, std::shared_ptr<OOColor>, std::less<>> _fgColors,
+  std::map<std::string, std::shared_ptr<oo::Color>, std::less<>> _fgColors,
       _bgColors;
   std::map<std::string, std::vector<std::string>, std::less<>>
       _sourceFiles;  // lines of each source file shown so far

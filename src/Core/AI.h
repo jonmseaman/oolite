@@ -38,7 +38,7 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
-#include "OOTypes.h"
+#include "Types.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
@@ -46,7 +46,13 @@ MA 02110-1301, USA.
 
 class ShipEntity;
 class Entity;
-class OOPreservedAIStateMachine;  // private to AI.cpp; global
+
+namespace oo {
+
+class PreservedAIStateMachine;
+
+}  // namespace oo
+   // private to AI.cpp; global
 
 /*	A ship's AI. Held as std::shared_ptr<AI>; a ship's shipAI owns it.
  */
@@ -120,11 +126,11 @@ class AI : public oo::Object {
   getPendingMessages();  // -pendingMessages, in byte order
   void debugDumpPendingMessages();
 
-  void setNextThinkTime(OOTimeAbsolute ntt);
-  OOTimeAbsolute getNextThinkTime();  // -nextThinkTime
+  void setNextThinkTime(oo::TimeAbsolute ntt);
+  oo::TimeAbsolute getNextThinkTime();  // -nextThinkTime
 
-  void setThinkTimeInterval(OOTimeDelta tti);
-  OOTimeDelta getThinkTimeInterval();  // -thinkTimeInterval
+  void setThinkTimeInterval(oo::TimeDelta tti);
+  oo::TimeDelta getThinkTimeInterval();  // -thinkTimeInterval
 
   void clearStack();
 
@@ -176,12 +182,12 @@ class AI : public oo::Object {
   std::set<std::string> pendingMessages =
       {};  // in byte order (a Foundation set before)
 
-  std::vector<std::shared_ptr<OOPreservedAIStateMachine>>
+  std::vector<std::shared_ptr<oo::PreservedAIStateMachine>>
       aiStack;  // no `= {}`: GCC instantiates ~Ref<T> at a default member
                 // initializer, and T is incomplete here
 
-  OOTimeAbsolute nextThinkTime = {};
-  OOTimeDelta thinkTimeInterval = {};
+  oo::TimeAbsolute nextThinkTime = {};
+  oo::TimeDelta thinkTimeInterval = {};
 
   std::optional<std::string> jsScript = {};
 };
@@ -191,4 +197,8 @@ class AI : public oo::Object {
    it may still be running lives exactly as long as its autoreleased object did.
    Nothing for null.
 */
-void OOAIAutorelease(std::shared_ptr<AI> ai);
+namespace oo {
+
+void AIAutorelease(std::shared_ptr<AI> ai);
+
+}  // namespace oo

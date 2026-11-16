@@ -22,9 +22,9 @@ poc_sources = files(
     'OOJavaScriptEnginePoc.cpp',
     'OOLogStub.cpp',
     'main.cpp',
-    '../../OOHPVector.cpp',
-    '../../OOQuaternion.cpp',
-    '../../OOVector.cpp',
+    '../../HPVector.cpp',
+    '../../Quaternion.cpp',
+    '../../Vector.cpp',
     '../../legacy_random.cpp',
 )
 

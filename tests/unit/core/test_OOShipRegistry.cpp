@@ -19,16 +19,16 @@
 #include <string>
 #include <vector>
 
-#include "OOCacheManager.h"
+#include "CacheManager.h"
 #include "DebugStandards.h"
-#include "OODescription.h"
+#include "Description.h"
 #include "OOJSEngineCore.h"
 #include "OOJSPropID.h"
 #include "OOLegacyScriptWhitelist.h"
-#include "OOMaths.h"
-#include "OOProbabilitySet.h"
-#include "OOShipRegistry.h"
-#include "OOStringParsing.h"
+#include "Maths.h"
+#include "ProbabilitySet.h"
+#include "ShipRegistry.h"
+#include "StringParsing.h"
 #include "oo_test.hpp"
 #include "oofnd/PListParsing.hpp"
 
@@ -39,7 +39,7 @@
 class Universe;
 class PlayerEntity;
 PlayerEntity* gOOPlayer = nullptr;
-#include "OOEntityEnums.h"  // IWYU pragma: keep
+#include "EntityEnums.h"  // IWYU pragma: keep
 class Entity {
  public:
   oo::EntityStatus status();
@@ -84,15 +84,20 @@ bool EnforceStandards(void) { return false; }
 
 }  // namespace oo
 
-std::string OOShipLibraryCategoryPlural(const std::string& category) {
+namespace oo {
+
+std::string ShipLibraryCategoryPlural(const std::string& category) {
   if (category == "ship") return "Ships";
   if (category == "station") return "Stations";
   return "";
 }
 
+}  // namespace oo
+
+
 // OOCacheManager.mm calls the asynchronous work manager for its flush, which
 // the test never does (a C++ stand-in).
-OOAsyncWorkManager* OOAsyncWorkManager::sharedAsyncWorkManager() {
+oo::AsyncWorkManager* oo::AsyncWorkManager::sharedAsyncWorkManager() {
   std::abort();
 }
 
@@ -179,7 +184,7 @@ oo::PList FileNamed(const std::string& name) {
 // with the stand-in's answers.
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& fileName, const std::optional<std::string>& folderName,
-    OOResourceMergeMode mergeMode, bool useCache) {
+    oo::ResourceMergeMode mergeMode, bool useCache) {
   (void)folderName;
   (void)mergeMode;
   (void)useCache;
@@ -223,9 +228,9 @@ bool Pinned(const char* what, const std::string& actual,
 }  // namespace
 
 OO_TEST(sharedRegistryLoadsOnce) {
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
   OO_CHECK(registry != nullptr);
-  OO_CHECK(OOShipRegistry::sharedRegistry() == registry);
+  OO_CHECK(oo::ShipRegistry::sharedRegistry() == registry);
   Pinned("files", Join(sFilesRead),
          "shipdata.plist shipdata-overrides.plist shipyard.plist "
          "shipyard-overrides.plist effectdata.plist shiplibrary.plist "
@@ -233,7 +238,7 @@ OO_TEST(sharedRegistryLoadsOnce) {
 }
 
 OO_TEST(looksUpShipsEffectsAndShipyards) {
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
   Pinned("ship keys", Join(registry->shipKeys()),
          "adder cobra3-player coriolis-station");
   Pinned("adder", Text(registry->shipInfoForKey("adder")),
@@ -263,7 +268,7 @@ OO_TEST(looksUpShipsEffectsAndShipyards) {
 }
 
 OO_TEST(answersRoles) {
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
   Pinned("roles", Join(registry->shipRoles()),
          "[adder] [cobra3-player] [coriolis-station] coriolis hunter player "
          "station trader");
@@ -272,7 +277,7 @@ OO_TEST(answersRoles) {
   Pinned("hunters", Join(registry->shipKeysWithRole("hunter")), "adder");
   Pinned("none", Join(registry->shipKeysWithRole("pirate")), "");
   OO_CHECK(registry->probabilitySetForRole("pirate") == nullptr);
-  OOProbabilitySet* traders = registry->probabilitySetForRole("trader");
+  oo::ProbabilitySet* traders = registry->probabilitySetForRole("trader");
   OO_CHECK(traders != nullptr);
   if (traders != nullptr) {
     OO_CHECK_EQ(traders->count(), 2u);
@@ -291,7 +296,7 @@ OO_TEST(answersRoles) {
 }
 
 OO_TEST(replacesAnEntry) {
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
   registry->setShipInfoForKey("viper", Parse("{ name = Viper; }"));
   Pinned("viper", Text(registry->shipInfoForKey("viper")), "{name = Viper; }");
   Pinned("ship keys", Join(registry->shipKeys()),
@@ -299,10 +304,10 @@ OO_TEST(replacesAnEntry) {
 }
 
 OO_TEST(reloadMakesANewRegistryFromTheCache) {
-  OOShipRegistry* before = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* before = oo::ShipRegistry::sharedRegistry();
   sFilesRead.clear();
-  OOShipRegistry::reload();
-  OOShipRegistry* after = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry::reload();
+  oo::ShipRegistry* after = oo::ShipRegistry::sharedRegistry();
   OO_CHECK(after != nullptr);
   OO_CHECK(after != before);
   Pinned("files", Join(sFilesRead), "shiplibrary.plist shiplibrary.plist");
@@ -323,9 +328,9 @@ OO_TEST(reloadMakesANewRegistryFromTheCache) {
 // that +reload reads the files again.
 OO_TEST(canonicalizesSubentityDeclarations) {
   sSubentityData = true;
-  OOCacheManager::sharedCache()->clearCache("ship registry");
-  OOShipRegistry::reload();
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::CacheManager::sharedCache()->clearCache("ship registry");
+  oo::ShipRegistry::reload();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
   Pinned("ship keys", Join(registry->shipKeys()),
          "cobra3-player dock mothership turret wreck");
   Pinned(

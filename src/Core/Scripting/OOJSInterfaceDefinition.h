@@ -34,7 +34,7 @@ MA 02110-1301, USA.
 #include <set>
 #include <string>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
@@ -63,7 +63,7 @@ class OOJSInterfaceDefinition : public oo::Object {
 
   void runCallback(const std::string& key);
 
-  OOComparisonResult interfaceCompare(OOJSInterfaceDefinition* other);
+  oo::ComparisonResult interfaceCompare(OOJSInterfaceDefinition* other);
 
  private:
   void deleteJSPointers();

@@ -34,7 +34,7 @@ MA 02110-1301, USA.
 
 #include <string>
 
-#include "OOEnumFlags.h"
+#include "EnumFlags.h"
 #include "oofnd/PList.hpp"
 
 class OOScript;

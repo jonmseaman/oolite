@@ -33,8 +33,8 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
-#include "OOStringParsing.h"
 #include "ResourceManager.h"
+#include "StringParsing.h"
 #include "oofnd/String.hpp"
 
 /*	The state machine is an oo::PList and the dump is built as a

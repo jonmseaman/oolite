@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-#include "OODescription.h"
+#include "Description.h"
 #include "OOJSPropID.h"
 #include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"

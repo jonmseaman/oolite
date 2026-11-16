@@ -41,7 +41,7 @@ MA 02110-1301, USA.
 */
 #include <quickjs.h>
 
-#include "OOFunctionAttributes.h"
+#include "FunctionAttributes.h"
 
 #ifndef OOLITE_DEBUG
 // As OOFoundation.h defines it (an identical redefinition there is harmless).
@@ -68,7 +68,7 @@ MA 02110-1301, USA.
 */
 #if OOJS_PROFILE
 
-#include "OOProfilingStopwatch.h"
+#include "ProfilingStopwatch.h"
 
 /*
         Profiler implementation details. This should be internal to
@@ -81,9 +81,9 @@ struct OOJSProfileStackFrame {
   OOJSProfileStackFrame* back;  // Stack link
   const void* key;       // Key to look up profile entries: the function name.
   const char* function;  // Name of function.
-  OOHighResTimeValue startTime;  // Time frame was entered.
-  OOTimeDelta subTime;           // Time spent in subroutine calls.
-  OOTimeDelta* total;  // Pointer to accumulator for this type of frame.
+  oo::HighResTimeValue startTime;  // Time frame was entered.
+  oo::TimeDelta subTime;           // Time spent in subroutine calls.
+  oo::TimeDelta* total;  // Pointer to accumulator for this type of frame.
 };
 
 void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function);

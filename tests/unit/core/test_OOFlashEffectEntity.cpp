@@ -25,7 +25,7 @@
 #include <optional>
 #include <string>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "FlashEffectEntity.h"
 #include "Texture.h"
 #include "PlayerEntity.h"
@@ -63,7 +63,7 @@ T* NewTestPlayer() {
 // removed.
 class TestUniverse : public Universe {
  public:
-  OOTimeAbsolute& _time = universal_time;  // the universe's own state, which
+  oo::TimeAbsolute& _time = universal_time;  // the universe's own state, which
                                            // its getter answers
   Entity* _removed = {};
 
@@ -89,7 +89,7 @@ std::shared_ptr<oo::Texture> LoadTexture(const std::optional<std::string>& name,
   return oo::share(sTexture);
 }
 
-void SetUp(OOTimeAbsolute time) {
+void SetUp(oo::TimeAbsolute time) {
   if (sUniverse == nullptr) {
     sUniverse = new TestUniverse();                 // never released
     sTexture = oo::test::NewRetained<oo::Texture>();  // never released
@@ -191,7 +191,7 @@ OO_TEST(laserFlash) {
     SetUp(1.0);
     Entity* flash = FlashObject(oo::FlashEffectEntity::laserFlashWithPosition(
         make_HPvector(-1, -2, -3), make_vector(4, 5, 6),
-        OOColor::colorWithRed(1.0f, 0.5f, 0.25f, 0.125f).get()));
+        oo::Color::colorWithRed(1.0f, 0.5f, 0.25f, 0.125f).get()));
     OO_CHECK(flash != nullptr && Part(flash) != nullptr);
     OO_CHECK(HPvector_equal(flash->getPosition(), make_HPvector(-1, -2, -3)));
     Vector v = flash->getVelocity();

@@ -29,10 +29,10 @@ MA 02110-1301, USA.
 #include <string>
 #include <utility>
 
+#include "Maths.h"
 #include "OOJSScript.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOMaths.h"
 #include "oofnd/Notification.hpp"
 
 // namespace

@@ -31,10 +31,10 @@
 
 // The player's system ids are private: the test sets them through this friend.
 struct PlayerEntityTestAccess {
-  static OOSystemID& system_id(PlayerEntity* player) {
+  static oo::SystemID& system_id(PlayerEntity* player) {
     return player->system_id;
   }
-  static OOSystemID& target_system_id(PlayerEntity* player) {
+  static oo::SystemID& target_system_id(PlayerEntity* player) {
     return player->target_system_id;
   }
   static NSPoint& galaxy_coordinates(PlayerEntity* player) {
@@ -123,7 +123,7 @@ class EventPlayer : public PlayerEntity {
     sEvents.push_back({message, arguments});
   }
 
-  OOFuelQuantity fuelRequiredForJump() override { return 5; }
+  oo::FuelQuantity fuelRequiredForJump() override { return 5; }
   oo::PList commanderDataDictionary() override { return oo::PList(); }
 };
 

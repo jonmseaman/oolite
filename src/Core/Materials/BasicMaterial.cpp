@@ -76,7 +76,7 @@ void oo::BasicMaterial::initWithName(const std::optional<std::string>& name) {
 
 void oo::BasicMaterial::initWithName(const std::optional<std::string>& name,
                                      const oo::PList& configuration) {
-  std::shared_ptr<OOColor> colorDesc;
+  std::shared_ptr<oo::Color> colorDesc;
   int specularExponent;
 
   initWithName(name);
@@ -140,51 +140,53 @@ void oo::BasicMaterial::unapplyWithNext(oo::Material* next) {
   }
 }
 
-std::shared_ptr<OOColor> oo::BasicMaterial::diffuseColor() {
-  return OOColor::colorWithRed(diffuse[0], diffuse[1], diffuse[2], diffuse[3]);
+std::shared_ptr<oo::Color> oo::BasicMaterial::diffuseColor() {
+  return oo::Color::colorWithRed(diffuse[0], diffuse[1], diffuse[2],
+                                 diffuse[3]);
 }
 
-void oo::BasicMaterial::setDiffuseColor(OOColor* color) {
+void oo::BasicMaterial::setDiffuseColor(oo::Color* color) {
   if (color != nullptr) {
     setDiffuseRed(color->redComponent(), color->greenComponent(),
                   color->blueComponent(), color->alphaComponent());
   }
 }
 
-void oo::BasicMaterial::setAmbientAndDiffuseColor(OOColor* color) {
+void oo::BasicMaterial::setAmbientAndDiffuseColor(oo::Color* color) {
   setAmbientColor(color);
   setDiffuseColor(color);
 }
 
-std::shared_ptr<OOColor> oo::BasicMaterial::specularColor() {
-  return OOColor::colorWithRed(specular[0], specular[1], specular[2],
-                               specular[3]);
+std::shared_ptr<oo::Color> oo::BasicMaterial::specularColor() {
+  return oo::Color::colorWithRed(specular[0], specular[1], specular[2],
+                                 specular[3]);
 }
 
-void oo::BasicMaterial::setSpecularColor(OOColor* color) {
+void oo::BasicMaterial::setSpecularColor(oo::Color* color) {
   if (color != nullptr) {
     setSpecularRed(color->redComponent(), color->greenComponent(),
                    color->blueComponent(), color->alphaComponent());
   }
 }
 
-std::shared_ptr<OOColor> oo::BasicMaterial::ambientColor() {
-  return OOColor::colorWithRed(ambient[0], ambient[1], ambient[2], ambient[3]);
+std::shared_ptr<oo::Color> oo::BasicMaterial::ambientColor() {
+  return oo::Color::colorWithRed(ambient[0], ambient[1], ambient[2],
+                                 ambient[3]);
 }
 
-void oo::BasicMaterial::setAmbientColor(OOColor* color) {
+void oo::BasicMaterial::setAmbientColor(oo::Color* color) {
   if (color != nullptr) {
     setAmbientRed(color->redComponent(), color->greenComponent(),
                   color->blueComponent(), color->alphaComponent());
   }
 }
 
-std::shared_ptr<OOColor> oo::BasicMaterial::emmisionColor() {
-  return OOColor::colorWithRed(emission[0], emission[1], emission[2],
-                               emission[3]);
+std::shared_ptr<oo::Color> oo::BasicMaterial::emmisionColor() {
+  return oo::Color::colorWithRed(emission[0], emission[1], emission[2],
+                                 emission[3]);
 }
 
-void oo::BasicMaterial::setEmissionColor(OOColor* color) {
+void oo::BasicMaterial::setEmissionColor(oo::Color* color) {
   if (color != nullptr) {
     setEmissionRed(color->redComponent(), color->greenComponent(),
                    color->blueComponent(), color->alphaComponent());

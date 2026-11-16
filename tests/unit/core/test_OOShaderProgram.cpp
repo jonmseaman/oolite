@@ -14,7 +14,7 @@
 */
 
 #include "ShaderProgram.h"
-#include "OORegExpMatcher.h"
+#include "RegExpMatcher.h"
 #include "MyOpenGLView.h"
 
 #include "oo_gl_test_context.hpp"
@@ -33,9 +33,14 @@
 // --- Stubs --------------------------------------------------------------------------------------
 
 // OOLogging.mm's (it would bring the resource manager into the link).
-void OOLogIndent(void)  {}
-void OOLogOutdent(void)  {}
-const char *const kOOLogFileNotFound = "files.notFound";
+namespace oo {
+
+void LogIndent(void)  {}
+void LogOutdent(void)  {}
+const char *const kLogFileNotFound = "files.notFound";
+
+}  // namespace oo
+
 
 
 // The resource manager: the extension manager's two class methods, and shader files from a table.
@@ -59,15 +64,20 @@ std::optional<std::string> ResourceManager::stringFromFilesNamed(const std::stri
 
 
 // OORegExpMatcher stub: answers no match.
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher()  { return oo::makeShared<OORegExpMatcher>(); }
-bool OORegExpMatcher::string(const std::string &, const std::string &)  { return false; }
-OORegExpMatcher::~OORegExpMatcher()  {}
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher()  { return oo::makeShared<oo::RegExpMatcher>(); }
+bool oo::RegExpMatcher::string(const std::string &, const std::string &)  { return false; }
+namespace oo {
+
+RegExpMatcher::~RegExpMatcher()  {}
 
 
-OOShaderSetting OOShaderSettingFromString(const std::string &string)
+ShaderSetting ShaderSettingFromString(const std::string &string)
 {
-	return string == "SHADERS_FULL" ? OOShaderSetting::kFull : OOShaderSetting::kNotSupported;
+	return string == "SHADERS_FULL" ? ShaderSetting::kFull : ShaderSetting::kNotSupported;
 }
+
+}  // namespace oo
+
 
 
 // UNIVERSE is gSharedUniverse: nil, so there is no game view and no matrix
@@ -76,7 +86,7 @@ OOShaderSetting OOShaderSettingFromString(const std::string &string)
 class Universe;
 Universe *gSharedUniverse = nullptr;
 
-OOOpenGLMatrixManager *MyOpenGLView::getOpenGLMatrixManager()  { return matrixManager.get(); }
+oo::OpenGLMatrixManager *MyOpenGLView::getOpenGLMatrixManager()  { return matrixManager.get(); }
 
 
 namespace {
@@ -101,7 +111,7 @@ IsProgramProc gIsProgram = nullptr;
 bool SetUp()
 {
 	if (!OOTestGLContext())  return false;
-	OOOpenGLExtensionManager::sharedManager();	// loads the ARB shader entry points
+	oo::OpenGLExtensionManager::sharedManager();	// loads the ARB shader entry points
 	gGetAttribLocation = (GetAttribLocationProc)SDL_GL_GetProcAddress("glGetAttribLocationARB");
 	gIsProgram = (IsProgramProc)SDL_GL_GetProcAddress("glIsProgram");
 	return gGetAttribLocation != nullptr && gIsProgram != nullptr;
@@ -387,7 +397,7 @@ OO_TEST(translateGameShadersGLSL330To120)
 	};
 	const std::regex texture330(R"(\btexture\s*\()");
 	const std::regex inOut330(R"(^\s*(in|out)\s)", std::regex::ECMAScript | std::regex::multiline);
-	const bool canCompile = SetUp() && OOOpenGLExtensionManager::sharedManager()->haveExtension("GL_EXT_gpu_shader4");
+	const bool canCompile = SetUp() && oo::OpenGLExtensionManager::sharedManager()->haveExtension("GL_EXT_gpu_shader4");
 	if (!canCompile)  std::printf("note: no GL_EXT_gpu_shader4, so the translated game shaders are not compiled\n");
 
 	for (const Program &program : programs)

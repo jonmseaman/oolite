@@ -27,9 +27,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFoundation.h"
-#include "OOMaths.h"
-#include "OOTypes.h"
+#include "Foundation.h"
+#include "Maths.h"
+#include "Types.h"
 #include "oofnd/objc/Object.h"
 
 namespace oo {

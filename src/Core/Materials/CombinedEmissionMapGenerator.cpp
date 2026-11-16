@@ -33,11 +33,11 @@ SOFTWARE.
 #include <optional>
 #include <string>
 
-#include "OOColor.h"
-#include "OOTextureScaling.h"
+#include "Color.h"
 #include "PixMapChannelOperations.h"
 #include "TextureInternal.h"
 #include "TextureLoader.h"
+#include "TextureScaling.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/objc/Assert.h"
 
@@ -54,11 +54,11 @@ oo::PList SpecWithExtraShrink(const oo::PList& spec) {
   return copy;
 }
 
-std::shared_ptr<OOColor> ModulateColor(OOColor* a, OOColor* b) {
+std::shared_ptr<oo::Color> ModulateColor(oo::Color* a, oo::Color* b) {
   if (a == nullptr) return oo::share(b);
   if (b == nullptr) return oo::share(a);
 
-  OORGBAComponents ac, bc;
+  oo::RGBAComponents ac, bc;
   ac = a->rgbaComponents();
   bc = b->rgbaComponents();
 
@@ -67,7 +67,7 @@ std::shared_ptr<OOColor> ModulateColor(OOColor* a, OOColor* b) {
   ac.b *= bc.b;
   ac.a *= bc.a;
 
-  return OOColor::colorWithRGBAComponents(ac);
+  return oo::Color::colorWithRGBAComponents(ac);
 }
 
 void ScaleToMatch(oo::PixMap* pmA, oo::PixMap* pmB) {
@@ -78,10 +78,10 @@ void ScaleToMatch(oo::PixMap* pmA, oo::PixMap* pmB) {
   oo::PixMapDimension minHeight = std::min(pmA->height, pmB->height);
 
   if (pmA->width != minWidth || pmA->height != minHeight) {
-    *pmA = OOScalePixMap(*pmA, minWidth, minHeight, false);
+    *pmA = oo::ScalePixMap(*pmA, minWidth, minHeight, false);
   }
   if (pmB->width != minWidth || pmB->height != minHeight) {
-    *pmB = OOScalePixMap(*pmB, minWidth, minHeight, false);
+    *pmB = oo::ScalePixMap(*pmB, minWidth, minHeight, false);
   }
 }
 
@@ -89,9 +89,9 @@ void ScaleToMatch(oo::PixMap* pmA, oo::PixMap* pmB) {
 
 std::shared_ptr<oo::CombinedEmissionMapGenerator>
 oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
-    const oo::PList& emissionMapSpec, OOColor* emissionColor,
-    oo::Texture* diffuseMap, OOColor* diffuseColor,
-    const oo::PList& illuminationMapSpec, OOColor* illuminationColor,
+    const oo::PList& emissionMapSpec, oo::Color* emissionColor,
+    oo::Texture* diffuseMap, oo::Color* diffuseColor,
+    const oo::PList& illuminationMapSpec, oo::Color* illuminationColor,
     const oo::PList& spec) {
   std::shared_ptr<oo::CombinedEmissionMapGenerator> result =
       oo::makeShared<oo::CombinedEmissionMapGenerator>();
@@ -105,8 +105,8 @@ oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
 std::shared_ptr<oo::CombinedEmissionMapGenerator>
 oo::CombinedEmissionMapGenerator::generatorWithEmissionAndIlluminationMapSpec(
     const oo::PList& emissionAndIlluminationMapSpec, oo::Texture* diffuseMap,
-    OOColor* diffuseColor, OOColor* emissionColor, OOColor* illuminationColor,
-    const oo::PList& spec) {
+    oo::Color* diffuseColor, oo::Color* emissionColor,
+    oo::Color* illuminationColor, const oo::PList& spec) {
   std::shared_ptr<oo::CombinedEmissionMapGenerator> result =
       oo::makeShared<oo::CombinedEmissionMapGenerator>();
   if (!result->initWithEmissionMapSpec(
@@ -118,9 +118,9 @@ oo::CombinedEmissionMapGenerator::generatorWithEmissionAndIlluminationMapSpec(
 
 // Was the private designated initialiser; false where it answered nil.
 bool oo::CombinedEmissionMapGenerator::initWithEmissionMapSpec(
-    const oo::PList& emissionMapSpec, OOColor* emissionColor,
-    oo::Texture* diffuseMap, OOColor* diffuseColor,
-    const oo::PList& illuminationMapSpec, OOColor* illuminationColor,
+    const oo::PList& emissionMapSpec, oo::Color* emissionColor,
+    oo::Texture* diffuseMap, oo::Color* diffuseColor,
+    const oo::PList& illuminationMapSpec, oo::Color* illuminationColor,
     bool isCombinedMap, const oo::PList& spec) {
   if (emissionMapSpec.isNull() && illuminationMapSpec.isNull()) {
     return false;
@@ -145,7 +145,7 @@ bool oo::CombinedEmissionMapGenerator::initWithEmissionMapSpec(
             Since illuminationColor and diffuseColor aren't used otherwise,
             we may as well combine them up front.
     */
-    const std::shared_ptr<OOColor> modulatedIlluminationColor =
+    const std::shared_ptr<oo::Color> modulatedIlluminationColor =
         ModulateColor(diffuseColor, illuminationColor);
     illuminationColor = modulatedIlluminationColor.get();
 

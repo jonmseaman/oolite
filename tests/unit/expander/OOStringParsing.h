@@ -3,15 +3,20 @@
 #pragma once
 // The C++ forms the expander calls, over the harness's credits formatter
 // (test_string_expander.cpp; Foundation-free, the same text).
-#include "OOFoundation.h"
-#include "OOTypes.h"
+#include "Foundation.h"
+#include "Types.h"
 #ifdef __cplusplus
 #include <string>
-std::string OOHarnessCredits(OOCreditsQuantity tenths, bool decimal);
-static inline std::string OOCredits(OOCreditsQuantity tenthsOfCredits) {
+std::string OOHarnessCredits(oo::CreditsQuantity tenths, bool decimal);
+namespace oo {
+
+static inline std::string Credits(CreditsQuantity tenthsOfCredits) {
   return OOHarnessCredits(tenthsOfCredits, true);
 }
-static inline std::string OOIntCredits(OOCreditsQuantity integerCredits) {
+static inline std::string IntCredits(CreditsQuantity integerCredits) {
   return OOHarnessCredits(integerCredits * 10, false);
 }
+
+}  // namespace oo
+
 #endif

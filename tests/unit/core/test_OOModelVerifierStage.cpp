@@ -26,9 +26,14 @@
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked; the base calls this one function of it (a subclass responsibility).
 */
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
+
+}  // namespace oo
+
 
 /*	The verifier and the resource manager are not linked either (they reach
    the whole game). The stages talk to the verifier through its interface only,

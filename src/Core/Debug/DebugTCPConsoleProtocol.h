@@ -36,7 +36,7 @@ SOFTWARE.
 // OODebugTCPConsoleClient defines OOALSTR as a plain literal before including
 // this; the C decoder gets it from OOTCPStreamDecoderAbstractionLayer.h.
 #if !defined(OOALSTR) && !defined(OO_PLAIN_CPP_UNIT)
-#include "OOFoundation.h"
+#include "Foundation.h"
 #endif
 
 namespace oo {

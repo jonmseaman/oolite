@@ -1,0 +1,113 @@
+/*
+
+OOJoystickProfile.h
+
+JoystickProfile maintains settings such as deadzone and the mapping
+from joystick movement to response.
+
+JoystickSpline manages the mapping of the physical joystick movements
+to the joystick response.  It holds a series of control points, with
+the points (0,0) and (1,1) being assumed. It then interpolates
+splines between the set of control points - the segment between (0,0)
+and the first control point is linear, the remaining segments
+quadratic with the gradients matching at the control point.
+
+The three profile classes are C++ classes, the curve (rawValue) virtual; the
+spline's segments are the private OOJoystickSplineSegment.
+
+Oolite
+Copyright (C) 2004-2013 Giles C Williams and contributors
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301, USA.
+
+*/
+
+#pragma once
+
+#include <cstddef>
+#include <memory>
+#include <set>
+#include <vector>
+
+#include "Foundation.h"
+#include "oofnd/Object.hpp"
+
+inline constexpr int STICKPROFILE_TYPE_STANDARD = 1;
+inline constexpr int STICKPROFILE_TYPE_SPLINE = 2;
+inline constexpr double STICKPROFILE_MAX_POWER = 10.0;
+
+namespace oo {
+
+class JoystickSplineSegment;  // private to OOJoystickProfile.cpp
+
+class JoystickAxisProfile : public oo::Object {
+ public:
+  JoystickAxisProfile();                                // -init
+  virtual std::shared_ptr<JoystickAxisProfile> copy();  // -copyWithZone:
+  virtual double rawValue(double x);
+  double value(double x);
+  double deadzone();
+  void setDeadzone(double newValue);
+
+ private:
+  double deadzone_ = {};  // the ivar deadzone (it clashes with deadzone())
+};
+
+class JoystickStandardAxisProfile : public JoystickAxisProfile {
+ public:
+  JoystickStandardAxisProfile();  // -init
+  std::shared_ptr<JoystickAxisProfile> copy() override;
+  void setPower(double newValue);
+  double power();
+  void setParameter(double newValue);
+  double parameter();
+  double rawValue(double x) override;
+
+ private:
+  double power_ =
+      {};  // the ivars power and parameter (clash with power(), parameter())
+  double parameter_ = {};
+};
+
+class JoystickSplineAxisProfile : public JoystickAxisProfile {
+ public:
+  JoystickSplineAxisProfile();            // -init
+  ~JoystickSplineAxisProfile() override;  // -dealloc
+  std::shared_ptr<JoystickAxisProfile> copy() override;
+  int addControl(NSPoint point);
+  NSPoint pointAtIndex(std::ptrdiff_t index);
+  int countPoints();
+  void removeControl(std::ptrdiff_t index);
+  void clearControlPoints();
+  void moveControl(std::ptrdiff_t index, NSPoint point);
+  double rawValue(double x) override;
+  double gradient(double x);
+  std::vector<NSPoint> controlPoints();
+
+ private:
+  // Create the segments from the control points.  If there's a problem, e.g.
+  // control points not in order or overlapping, leave segments as they are and
+  // return NO.  Otherwise return YES.
+  bool makeSegments();
+
+  // The ivar controlPoints (clashes with controlPoints()).
+  std::vector<NSPoint> controlPoints_ = {};
+  std::vector<std::shared_ptr<JoystickSplineSegment>>
+      segments;  // no `= {}`: GCC instantiates ~Ref<T> at a default member
+                 // initializer, and T is incomplete here
+};
+
+}  // namespace oo

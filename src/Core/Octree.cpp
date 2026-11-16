@@ -31,9 +31,9 @@ MA 02110-1301, USA.
 #include <utility>
 
 #include "DebugFlags.h"
-#include "OODebugGLDrawing.h"
-#include "OOMacroOpenGL.h"
-#include "OOMaths.h"
+#include "DebugGLDrawing.h"
+#include "MacroOpenGL.h"
+#include "Maths.h"
 #include "oofnd/objc/Assert.h"
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -141,7 +141,7 @@ static Vector offsetForOctant(int oct, GLfloat r) {
 #ifndef OODEBUGLDRAWING_DISABLE
 
 void Octree::drawOctree() {
-  OODebugWFState state = OODebugBeginWireframe(false);
+  oo::DebugWFState state = oo::DebugBeginWireframe(false);
 
   OO_ENTER_OPENGL();
   OOGL(glEnable(GL_BLEND));
@@ -153,8 +153,8 @@ void Octree::drawOctree() {
 
   OOGLEND();
 
-  OODebugEndWireframe(state);
-  OOCheckOpenGLErrors([&]() -> std::string {
+  oo::DebugEndWireframe(state);
+  oo::CheckOpenGLErrors([&]() -> std::string {
     return "Octree after drawing " +
            std::format("<Octree {}>", static_cast<const void*>(this));
   });
@@ -248,7 +248,7 @@ void Octree::drawOctreeFromLocation(uint32_t loc, GLfloat scale,
 static bool drawTestForCollisions;
 
 void Octree::drawOctreeCollisions() {
-  OODebugWFState state = OODebugBeginWireframe(false);
+  oo::DebugWFState state = oo::DebugBeginWireframe(false);
 
   // it's a series of cubes
   drawTestForCollisions = false;
@@ -257,8 +257,8 @@ void Octree::drawOctreeCollisions() {
   }
   _hasCollision = drawTestForCollisions;
 
-  OODebugEndWireframe(state);
-  OOCheckOpenGLErrors([&]() -> std::string {
+  oo::DebugEndWireframe(state);
+  oo::CheckOpenGLErrors([&]() -> std::string {
     return "Octree after drawing collisions for " +
            std::format("<Octree {}>", static_cast<const void*>(this));
   });
@@ -785,14 +785,14 @@ size_t Octree::totalSize() {
 constexpr int kMinimumBuilderCapacity = 16 << 10;
 
 // Extract top of state stack.
-inline OOOctreeBuilder::OOOctreeBuildState* OOOctreeBuilder::State(
-    OOOctreeBuilder* self) {
+inline oo::OctreeBuilder::OOOctreeBuildState* oo::OctreeBuilder::State(
+    oo::OctreeBuilder* self) {
   return &self->_stateStack[self->_level];
 }
 
 // SetNode(): set the value of an entry in _octree, making space if needed.
-inline void OOOctreeBuilder::SetNode(OOOctreeBuilder* self, uint32_t index,
-                                     int value) {
+inline void oo::OctreeBuilder::SetNode(oo::OctreeBuilder* self, uint32_t index,
+                                       int value) {
   if (index < self->_octree.size()) {
     self->_octree[index] = value;
   } else {
@@ -802,7 +802,7 @@ inline void OOOctreeBuilder::SetNode(OOOctreeBuilder* self, uint32_t index,
 
 // InsertNode(): set the node at the current insertion point, and increment
 // insertion point.
-inline void OOOctreeBuilder::InsertNode(OOOctreeBuilder* self, int value) {
+inline void oo::OctreeBuilder::InsertNode(oo::OctreeBuilder* self, int value) {
   OOCAssert(State(self)->remaining > 0,
             "Attempt to add node to a full parent in octree builder.");
   State(self)->remaining--;
@@ -810,7 +810,7 @@ inline void OOOctreeBuilder::InsertNode(OOOctreeBuilder* self, int value) {
   SetNode(self, State(self)->insertionPoint++, value);
 }
 
-OOOctreeBuilder::OOOctreeBuilder() {
+oo::OctreeBuilder::OctreeBuilder() {
   {
     _octree.resize(kMinimumBuilderCapacity);
 
@@ -823,9 +823,14 @@ OOOctreeBuilder::OOOctreeBuilder() {
   }
 }
 
-OOOctreeBuilder::~OOOctreeBuilder() = default;
+namespace oo {
 
-std::shared_ptr<Octree> OOOctreeBuilder::buildOctreeWithRadius(GLfloat radius) {
+OctreeBuilder::~OctreeBuilder() = default;
+
+}  // namespace oo
+
+std::shared_ptr<Octree> oo::OctreeBuilder::buildOctreeWithRadius(
+    GLfloat radius) {
   OOCAssert(State(this)->remaining == 0 && _level == 0,
             "Attempt to produce octree from an octree builder in an incomplete "
             "state.");
@@ -839,11 +844,11 @@ std::shared_ptr<Octree> OOOctreeBuilder::buildOctreeWithRadius(GLfloat radius) {
   return Octree::initWithData(data, radius);
 }
 
-void OOOctreeBuilder::writeSolid() { InsertNode(this, -1); }
+void oo::OctreeBuilder::writeSolid() { InsertNode(this, -1); }
 
-void OOOctreeBuilder::writeEmpty() { InsertNode(this, 0); }
+void oo::OctreeBuilder::writeEmpty() { InsertNode(this, 0); }
 
-void OOOctreeBuilder::beginInnerNode() {
+void oo::OctreeBuilder::beginInnerNode() {
   OOCAssert(_level < kMaxOctreeDepth,
             "Attempt to build octree exceeding maximum depth.");
 
@@ -868,7 +873,7 @@ void OOOctreeBuilder::beginInnerNode() {
   State(this)->remaining = 8;
 }
 
-void OOOctreeBuilder::endInnerNode() {
+void oo::OctreeBuilder::endInnerNode() {
   OOCAssert(
       State(this)->remaining == 0,
       "Attempt to end an inner octree node with fewer than eight children.");
@@ -901,8 +906,8 @@ void OOOctreeBuilder::endInnerNode() {
 
 // Slow path for SetNode() when writing beyond the capacity: expand, then
 // perform set.
-void OOOctreeBuilder::SetNode_slow(OOOctreeBuilder* self, uint32_t index,
-                                   int value) {
+void oo::OctreeBuilder::SetNode_slow(oo::OctreeBuilder* self, uint32_t index,
+                                     int value) {
   std::size_t newCapacity =
       std::max(self->_octree.size() * 2, std::size_t{kMinimumBuilderCapacity});
   newCapacity = std::max(newCapacity, std::size_t{index} + 1);

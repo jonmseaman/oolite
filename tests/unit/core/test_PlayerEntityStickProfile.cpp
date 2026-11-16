@@ -32,7 +32,7 @@
 #include <vector>
 
 #include "GuiDisplayGen.h"
-#include "OOJoystickManager.h"
+#include "JoystickManager.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "PlayerEntityStickProfile.h"
 #include "oo_test.hpp"
@@ -92,12 +92,12 @@ void SetUp() {
   gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
 }
 
-OOJoystickManager* Handler() { return OOJoystickManager::sharedStickHandler(); }
+oo::JoystickManager* Handler() { return oo::JoystickManager::sharedStickHandler(); }
 
 // A fresh standard profile on each axis, as a first run has.
 void ResetProfiles() {
   for (int axis : {AXIS_ROLL, AXIS_PITCH, AXIS_YAW}) {
-    Handler()->setProfile(oo::makeShared<OOJoystickStandardAxisProfile>().get(),
+    Handler()->setProfile(oo::makeShared<oo::JoystickStandardAxisProfile>().get(),
                           axis);
   }
 }
@@ -197,9 +197,9 @@ OO_TEST(theAxisStepsBetweenRollPitchAndYaw) {
 OO_TEST(theDeadZoneStepsByATwentiethOfItsMaximumOnTheCurrentAxis) {
   {
     Started s = Start();
-    std::shared_ptr<OOJoystickAxisProfile> roll(oo::share(
+    std::shared_ptr<oo::JoystickAxisProfile> roll(oo::share(
         Handler()->getProfileForAxis(AXIS_ROLL)));
-    std::shared_ptr<OOJoystickAxisProfile> pitch(oo::share(
+    std::shared_ptr<oo::JoystickAxisProfile> pitch(oo::share(
         Handler()->getProfileForAxis(AXIS_PITCH)));
 
     s.screen->increaseDeadzone();
@@ -228,8 +228,8 @@ OO_TEST(theDeadZoneStepsByATwentiethOfItsMaximumOnTheCurrentAxis) {
 OO_TEST(powerAndParameterStepTheStandardProfile) {
   {
     Started s = Start();
-    std::shared_ptr<OOJoystickStandardAxisProfile> roll(oo::share(
-        static_cast<OOJoystickStandardAxisProfile*>(
+    std::shared_ptr<oo::JoystickStandardAxisProfile> roll(oo::share(
+        static_cast<oo::JoystickStandardAxisProfile*>(
             Handler()->getProfileForAxis(AXIS_ROLL))));
 
     s.screen->IncreasePower();
@@ -257,7 +257,7 @@ OO_TEST(powerAndParameterStepTheStandardProfile) {
 OO_TEST(theProfileTypeSwitchesAndKeepsTheOtherForTheSwitchBack) {
   {
     Started s = Start();
-    std::shared_ptr<OOJoystickAxisProfile> standard(oo::share(
+    std::shared_ptr<oo::JoystickAxisProfile> standard(oo::share(
         Handler()->getProfileForAxis(AXIS_ROLL)));
     s.screen->increaseDeadzone();
     const double deadzone = standard->deadzone();
@@ -267,9 +267,9 @@ OO_TEST(theProfileTypeSwitchesAndKeepsTheOtherForTheSwitchBack) {
     OO_CHECK(Handler()->getProfileForAxis(AXIS_ROLL) == standard.get());
 
     s.screen->nextProfileType();
-    std::shared_ptr<OOJoystickAxisProfile> spline(oo::share(
+    std::shared_ptr<oo::JoystickAxisProfile> spline(oo::share(
         Handler()->getProfileForAxis(AXIS_ROLL)));
-    OO_CHECK(dynamic_cast<OOJoystickSplineAxisProfile*>(spline.get()) !=
+    OO_CHECK(dynamic_cast<oo::JoystickSplineAxisProfile*>(spline.get()) !=
              nullptr);
     OO_CHECK(s.screen->currentProfileIsSpline());
     OO_CHECK(Near(spline->deadzone(), deadzone));  // the dead zone carries over
@@ -305,7 +305,7 @@ OO_TEST(theProfileTypeSwitchesAndKeepsTheOtherForTheSwitchBack) {
     s.screen->startGui(s.gui.get());
     s.screen->previousProfileType();
     OO_CHECK(Handler()->getProfileForAxis(AXIS_ROLL) != standard.get());
-    OO_CHECK(dynamic_cast<OOJoystickStandardAxisProfile*>(
+    OO_CHECK(dynamic_cast<oo::JoystickStandardAxisProfile*>(
                  Handler()->getProfileForAxis(AXIS_ROLL)) != nullptr);
   }
 }
@@ -321,8 +321,8 @@ OO_TEST(theMouseAddsMovesAndDeletesSplinePoints) {
     OO_CHECK(!s.screen->currentProfileIsSpline());
 
     s.screen->nextProfileType();
-    std::shared_ptr<OOJoystickSplineAxisProfile> spline(oo::share(
-        static_cast<OOJoystickSplineAxisProfile*>(
+    std::shared_ptr<oo::JoystickSplineAxisProfile> spline(oo::share(
+        static_cast<oo::JoystickSplineAxisProfile*>(
             Handler()->getProfileForAxis(AXIS_ROLL))));
     const int points = spline->countPoints();
 

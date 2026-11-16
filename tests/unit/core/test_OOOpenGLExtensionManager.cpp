@@ -18,8 +18,8 @@
 #include <sstream>
 #include <string>
 
-#include "OOOpenGLExtensionManager.h"
-#include "OORegExpMatcher.h"
+#include "OpenGLExtensionManager.h"
+#include "RegExpMatcher.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/PList.hpp"
@@ -52,29 +52,34 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
 // pass takes one and holds it across its matches.
 static unsigned sMatchersMade = 0;
 
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher() {
   sMatchersMade++;
-  return oo::makeShared<OORegExpMatcher>();
+  return oo::makeShared<oo::RegExpMatcher>();
 }
 
-bool OORegExpMatcher::string(const std::string& string,
+bool oo::RegExpMatcher::string(const std::string& string,
                              const std::string& regExp) {
   return std::regex_search(string, std::regex(regExp));
 }
 
 // OOLogging.mm's (it would bring the resource manager into the link); in the
 // debug flavour OOOpenGL.mm's OOGL error check and state dump call them.
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
+namespace oo {
 
-OORegExpMatcher::~OORegExpMatcher() {}
+void LogIndent(void) {}
+void LogOutdent(void) {}
 
-OOShaderSetting OOShaderSettingFromString(const std::string& string) {
-  if (string == "SHADERS_OFF") return OOShaderSetting::kOff;
-  if (string == "SHADERS_SIMPLE") return OOShaderSetting::kSimple;
-  if (string == "SHADERS_FULL") return OOShaderSetting::kFull;
-  return OOShaderSetting::kNotSupported;
+RegExpMatcher::~RegExpMatcher() {}
+
+ShaderSetting ShaderSettingFromString(const std::string& string) {
+  if (string == "SHADERS_OFF") return ShaderSetting::kOff;
+  if (string == "SHADERS_SIMPLE") return ShaderSetting::kSimple;
+  if (string == "SHADERS_FULL") return ShaderSetting::kFull;
+  return ShaderSetting::kNotSupported;
 }
+
+}  // namespace oo
+
 
 // --- What OpenGL itself says
 // --------------------------------------------------------------------
@@ -135,10 +140,10 @@ OO_TEST(readsTheDriver) {
   SetArguments({"test_OOOpenGLExtensionManager"});
 
   {
-    OOOpenGLExtensionManager* manager =
-        OOOpenGLExtensionManager::sharedManager();
+    oo::OpenGLExtensionManager* manager =
+        oo::OpenGLExtensionManager::sharedManager();
     OO_CHECK(manager != nullptr);
-    OO_CHECK(OOOpenGLExtensionManager::sharedManager() == manager);
+    OO_CHECK(oo::OpenGLExtensionManager::sharedManager() == manager);
     OO_CHECK(sPathsCalls ==
              1);  // the resource paths are set up while the manager initialises
 
@@ -148,7 +153,7 @@ OO_TEST(readsTheDriver) {
     OO_CHECK(manager->majorVersionNumber() == major);
     OO_CHECK(manager->minorVersionNumber() == minor);
     OO_CHECK(manager->releaseVersionNumber() == release);
-    const OOOpenGLExtensionManager::Version got = manager->version();
+    const oo::OpenGLExtensionManager::Version got = manager->version();
     OO_CHECK(got.major == major && got.minor == minor && got.release == release);
     OO_CHECK(manager->version().minor == minor);  // one part on its own
     OO_CHECK(manager->versionIsAtLeastMajor(major, minor));
@@ -187,18 +192,18 @@ OO_TEST(readsTheDriver) {
       GLint imageUnits = 0;
       glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS_ARB, &imageUnits);
       OO_CHECK(manager->textureImageUnitCount() == imageUnits);
-      OO_CHECK(manager->defaultDetailLevel() == kOOGraphicsDetailMaximum);
-      OO_CHECK(manager->maximumDetailLevel() == kOOGraphicsDetailMaximum);
+      OO_CHECK(manager->defaultDetailLevel() == oo::kGraphicsDetailMaximum);
+      OO_CHECK(manager->maximumDetailLevel() == oo::kGraphicsDetailMaximum);
     }
-    OO_CHECK(OOShadersSupported() == manager->shadersSupported());
+    OO_CHECK(oo::ShadersSupported() == manager->shadersSupported());
   }
 }
 
 OO_TEST(gpuSettingsMatchInPrecedenceOrder) {
   OO_CHECK(OOTestGLContext());
   {
-    OOOpenGLExtensionManager* manager =
-        OOOpenGLExtensionManager::sharedManager();
+    oo::OpenGLExtensionManager* manager =
+        oo::OpenGLExtensionManager::sharedManager();
     const bool shaders = GLHasShaderExtensions() ? true : false;
 
     sGPUSettings = Dict({
@@ -239,8 +244,8 @@ OO_TEST(gpuSettingsMatchInPrecedenceOrder) {
       OO_CHECK(manager->shadersSupported());
       OO_CHECK(manager->textureImageUnitCount() == 2);
       OO_CHECK(manager->defaultDetailLevel() ==
-               OOGraphicsDetail::kMinimum);  // OOShaderSetting::kSimple < OOShaderSetting::kFull
-      OO_CHECK(manager->maximumDetailLevel() == kOOGraphicsDetailMaximum);
+               oo::GraphicsDetail::kMinimum);  // OOShaderSetting::kSimple < OOShaderSetting::kFull
+      OO_CHECK(manager->maximumDetailLevel() == oo::kGraphicsDetailMaximum);
     }
 
     // An override can only lower a limit; a maximum of OOShaderSetting::kOff turns
@@ -257,8 +262,8 @@ OO_TEST(gpuSettingsMatchInPrecedenceOrder) {
              manager->useDustShader());
     if (shaders) {
       OO_CHECK(manager->textureImageUnitCount() == 0);
-      OO_CHECK(manager->defaultDetailLevel() == OOGraphicsDetail::kMinimum);
-      OO_CHECK(manager->maximumDetailLevel() == OOGraphicsDetail::kMinimum);
+      OO_CHECK(manager->defaultDetailLevel() == oo::GraphicsDetail::kMinimum);
+      OO_CHECK(manager->maximumDetailLevel() == oo::GraphicsDetail::kMinimum);
     }
     GLint units = 1;
     if (manager->textureCombinersSupported())
@@ -276,8 +281,8 @@ OO_TEST(gpuSettingsPassTakesOneMatcher) {
   // tester). A pass with no regexp takes none.
   OO_CHECK(OOTestGLContext());
   {
-    OOOpenGLExtensionManager* manager =
-        OOOpenGLExtensionManager::sharedManager();
+    oo::OpenGLExtensionManager* manager =
+        oo::OpenGLExtensionManager::sharedManager();
 
     sGPUSettings = Dict({
         {"a-strict",
@@ -308,15 +313,15 @@ OO_TEST(gpuSettingsPassTakesOneMatcher) {
 OO_TEST(noShadersArgument) {
   OO_CHECK(OOTestGLContext());
   {
-    OOOpenGLExtensionManager* manager =
-        OOOpenGLExtensionManager::sharedManager();
+    oo::OpenGLExtensionManager* manager =
+        oo::OpenGLExtensionManager::sharedManager();
     SetArguments({"test_OOOpenGLExtensionManager", "--noshaders"});
     manager->reset();
     OO_CHECK(manager->shadersForceDisabled() == true);
     OO_CHECK(manager->shadersSupported() == false);
-    OO_CHECK(OOShadersSupported() == false);
-    OO_CHECK(manager->defaultDetailLevel() == OOGraphicsDetail::kMinimum);
-    OO_CHECK(manager->maximumDetailLevel() == OOGraphicsDetail::kMinimum);
+    OO_CHECK(oo::ShadersSupported() == false);
+    OO_CHECK(manager->defaultDetailLevel() == oo::GraphicsDetail::kMinimum);
+    OO_CHECK(manager->maximumDetailLevel() == oo::GraphicsDetail::kMinimum);
 
     SetArguments({"test_OOOpenGLExtensionManager"});
     manager->reset();

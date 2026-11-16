@@ -37,11 +37,11 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "OOEnumFlags.h"
-#include "OOFoundation.h"
-#include "OOMouseInteractionMode.h"
-#include "OOOpenGL.h"
-#include "OOOpenGLMatrixManager.h"
+#include "EnumFlags.h"
+#include "Foundation.h"
+#include "MouseInteractionMode.h"
+#include "OpenGL.h"
+#include "OpenGLMatrixManager.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Object.h"
@@ -335,7 +335,7 @@ class MyOpenGLView : public oo::Object {
   void setMsaa(bool newMsaa);
   bool msaa();
   static bool pollShiftKey();
-  OOOpenGLMatrixManager* getOpenGLMatrixManager();  // borrowed
+  oo::OpenGLMatrixManager* getOpenGLMatrixManager();  // borrowed
 
   // Snapshots and debug image dumps.
   bool snapShot(const std::optional<std::string>&
@@ -372,7 +372,7 @@ class MyOpenGLView : public oo::Object {
   virtual void resetTypedString();
   void setTypedString(const std::string& value);
   virtual void noteMouseInteractionModeChangedFrom(
-      OOMouseInteractionMode oldMode, OOMouseInteractionMode newMode);
+      oo::MouseInteractionMode oldMode, oo::MouseInteractionMode newMode);
   void pollControls();
   void setVirtualJoystick(double vmx, double vmy);
   NSPoint getVirtualJoystickPosition();
@@ -484,7 +484,7 @@ class MyOpenGLView : public oo::Object {
 
   NSSize firstScreen = {};
 
-  std::shared_ptr<OOOpenGLMatrixManager>
+  std::shared_ptr<oo::OpenGLMatrixManager>
       matrixManager;  // Mouse mode indicator (for mouse movement model)
   bool mouseInDeltaMode = {};
   float _mouseWheelDelta = {};

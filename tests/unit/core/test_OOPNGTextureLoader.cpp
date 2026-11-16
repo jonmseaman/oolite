@@ -21,7 +21,7 @@
 #include <fstream>
 #include <vector>
 
-#include "OOAsyncWorkManager.h"
+#include "AsyncWorkManager.h"
 #include "PNGTextureLoader.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
@@ -268,8 +268,8 @@ OO_TEST(cxxApi) {
 
     // The work manager takes the C++ loader.
     OO_CHECK(loader->description().starts_with("<OOPNGTextureLoader 0x"));
-    OO_CHECK(OOAsyncWorkManager::sharedAsyncWorkManager()->addTask(
-        loader.get(), OOAsyncWorkPriority::kMedium));
+    OO_CHECK(oo::AsyncWorkManager::sharedAsyncWorkManager()->addTask(
+        loader.get(), oo::AsyncWorkPriority::kMedium));
     oo::PixMap pixMap = oo::kNullPixMap;
     oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
     std::optional<oo::TextureLoader::Result> loaded = loader->getResult();

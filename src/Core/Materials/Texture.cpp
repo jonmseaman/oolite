@@ -41,13 +41,13 @@
 #include <utility>
 #include <vector>
 
+#include "Cache.h"
 #include "ConcreteTexture.h"
+#include "Demangle.h"
+#include "Description.h"
+#include "MacroOpenGL.h"
 #include "NullTexture.h"
-#include "OOCache.h"
-#include "OODemangle.h"
-#include "OODescription.h"
-#include "OOMacroOpenGL.h"
-#include "OOOpenGLExtensionManager.h"
+#include "OpenGLExtensionManager.h"
 #include "PixMap.h"
 #include "ResourceManager.h"
 #include "TextureGenerator.h"
@@ -105,8 +105,8 @@ std::unordered_set<oo::Texture*>* sAllLiveTextures;
 // The textures, retained, as Object nodes (OOTextureObjectNode()); null until
 // the first texture is cached. The holder is never deleted, so exit(0) frees no
 // texture after the GL context and the logger have gone.
-std::shared_ptr<OOCache>& RecentTextures() {
-  static std::shared_ptr<OOCache>& recent = *new std::shared_ptr<OOCache>();
+std::shared_ptr<oo::Cache>& RecentTextures() {
+  static std::shared_ptr<oo::Cache>& recent = *new std::shared_ptr<oo::Cache>();
   return recent;
 }
 
@@ -170,7 +170,7 @@ std::shared_ptr<oo::Texture> oo::Texture::loadTextureWithName(
     path = ResourceManager::pathForFileNamed(*name, directory);
     if (!path.has_value()) {
       if (!noFNF)
-        OO_LOG_WARN(kOOLogFileNotFound, "Could not find texture file \"{}\".",
+        OO_LOG_WARN(oo::kLogFileNotFound, "Could not find texture file \"{}\".",
                     *name);
       return nullptr;
     }
@@ -328,7 +328,7 @@ void oo::Texture::clearCache() {
 void oo::Texture::rebindAllTextures() {
   // Keeping around unused, cached textures is unhelpful at this point.
   // DESTROY(): cleared before the release
-  const std::shared_ptr<OOCache> recentTextures = std::move(RecentTextures());
+  const std::shared_ptr<oo::Cache> recentTextures = std::move(RecentTextures());
 
   if (sAllLiveTextures == nullptr) return;
   // A copy: the set is unordered (as the Foundation set was) and must not
@@ -441,7 +441,7 @@ void oo::Texture::addToCaches() {
 
   // Add self to recent textures cache.
   if (RecentTextures() == nullptr) [[unlikely]] {
-    RecentTextures() = OOCache::cacheWithPList(oo::PList());
+    RecentTextures() = oo::Cache::cacheWithPList(oo::PList());
     RecentTextures()->setName(std::string("recent textures"));
     RecentTextures()->setAutoPrune(true);
     RecentTextures()->setPruneThreshold(kRecentTexturesCount);
@@ -508,7 +508,8 @@ void oo::Texture::checkExtensions() {
 
   sCheckedExtensions = true;
 
-  OOOpenGLExtensionManager* extMgr = OOOpenGLExtensionManager::sharedManager();
+  oo::OpenGLExtensionManager* extMgr =
+      oo::OpenGLExtensionManager::sharedManager();
   bool ver120 = extMgr->versionIsAtLeastMajor(1, 2);
   bool ver130 = extMgr->versionIsAtLeastMajor(1, 3);
 
@@ -520,7 +521,7 @@ void oo::Texture::checkExtensions() {
   {
     const oo::PList anisoScale =
         oo::Defaults::standard().object("texture-anisotropy-scale");
-    gOOTextureInfo.anisotropyScale *= OOClamp_0_1_f(oo::PListGet<float>::from(
+    gOOTextureInfo.anisotropyScale *= oo::Clamp_0_1_f(oo::PListGet<float>::from(
         anisoScale.isNull() ? nullptr : &anisoScale, 0.5f));
   }
 #endif
@@ -706,8 +707,8 @@ std::optional<TextureSpecifier> InterpretTextureSpecifier(
     // "got" names an object's class, or the property-list type; an Object node
     // is "(null)".
     if (!specifier.isNull())
-      OO_LOG(kOOLogParameterError, "{}: expected string or dictionary, got {}.",
-             __PRETTY_FUNCTION__,
+      OO_LOG(oo::kLogParameterError,
+             "{}: expected string or dictionary, got {}.", __PRETTY_FUNCTION__,
              (specifier.type() == oo::PList::Type::kObject)
                  ? std::string("(null)")
                  : std::string(oo::typeName(specifier.type())));

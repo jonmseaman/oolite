@@ -41,14 +41,14 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "oofnd/Notification.hpp"
 #if OO_CACHE_JS_SCRIPTS
-#include "OOCacheManager.h"
+#include "CacheManager.h"
 #endif
 #include <unordered_map>
 
 #include "DebugStandards.h"
+#include "ManifestProperties.h"
 #include "OOJSPrivateObject.h"
-#include "OOManifestProperties.h"
-#include "OOPListParsing.h"
+#include "PListParsing.h"
 #include "oofnd/Encoding.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
@@ -591,11 +591,12 @@ oo::PList::Dict OOJSScript::defaultPropertiesFromPath(
   // remove file name, remove OXP subfolder, add manifest.plist (a nil path
   // messaged nil: no manifest)
   oo::PList manifest =
-      path.has_value() ? OOPropertyListFromFile(oo::str::appendingPathComponent(
-                             oo::str::deletingLastPathComponent(
-                                 oo::str::deletingLastPathComponent(*path)),
-                             "manifest.plist"))
-                       : oo::PList();
+      path.has_value()
+          ? oo::PropertyListFromFile(oo::str::appendingPathComponent(
+                oo::str::deletingLastPathComponent(
+                    oo::str::deletingLastPathComponent(*path)),
+                "manifest.plist"))
+          : oo::PList();
   if (!manifest.isDict())
     manifest = oo::PList();  // a dictionary or nothing, as OODictionaryFromFile
                              // answered (its plist.wrongType line, which named
@@ -604,25 +605,25 @@ oo::PList::Dict OOJSScript::defaultPropertiesFromPath(
   /* __oolite.tmp.* is allocated for OXPs without manifests. Its
    * values are meaningless and shouldn't be used here */
   const std::optional<std::string> identifier =
-      StringForKey(manifest, std::string(kOOManifestIdentifier));
+      StringForKey(manifest, std::string(oo::kManifestIdentifier));
   if (manifest && !(identifier.has_value() &&
                     oo::str::hasPrefix(*identifier, "__oolite.tmp."))) {
-    if (manifest.get<oo::PList>(kOOManifestVersion) != nullptr) {
+    if (manifest.get<oo::PList>(oo::kManifestVersion) != nullptr) {
       properties["version"] = ValueForKey(
-          StringForKey(manifest, std::string(kOOManifestVersion)), "version");
+          StringForKey(manifest, std::string(oo::kManifestVersion)), "version");
     }
-    if (manifest.get<oo::PList>(kOOManifestIdentifier) != nullptr) {
+    if (manifest.get<oo::PList>(oo::kManifestIdentifier) != nullptr) {
       // used for system info
       properties[std::string(kLocalManifestProperty)] =
           ValueForKey(identifier, kLocalManifestProperty);
     }
-    if (manifest.get<oo::PList>(kOOManifestAuthor) != nullptr) {
+    if (manifest.get<oo::PList>(oo::kManifestAuthor) != nullptr) {
       properties["author"] = ValueForKey(
-          StringForKey(manifest, std::string(kOOManifestAuthor)), "author");
+          StringForKey(manifest, std::string(oo::kManifestAuthor)), "author");
     }
-    if (manifest.get<oo::PList>(kOOManifestLicense) != nullptr) {
+    if (manifest.get<oo::PList>(oo::kManifestLicense) != nullptr) {
       properties["license"] = ValueForKey(
-          StringForKey(manifest, std::string(kOOManifestLicense)), "license");
+          StringForKey(manifest, std::string(oo::kManifestLicense)), "license");
     }
   }
   return properties;
@@ -847,7 +848,7 @@ static const oo::PList* EntryMember(const oo::PList::Dict& entry,
 // entry.
 static JSValue CachedCompiledScript(JSContext* context, const std::string& path,
                                     std::string_view source) {
-  const oo::PList cached = OOCacheManager::sharedCache()->pListForKey(
+  const oo::PList cached = oo::CacheManager::sharedCache()->pListForKey(
       path, std::string(kCompiledScriptCache));
   const oo::PList::Dict* entry = cached.getIf<oo::PList::Dict>();
   if (entry == nullptr) return JS_UNDEFINED;
@@ -914,8 +915,8 @@ static void CacheCompiledScript(JSContext* context, const std::string& path,
   entry.emplace(kCompiledScriptKeyFormat,
                 oo::PList::unsignedInteger(kCompiledScriptFormat));
 
-  OOCacheManager::sharedCache()->setPList(oo::PList(std::move(entry)), path,
-                                          std::string(kCompiledScriptCache));
+  oo::CacheManager::sharedCache()->setPList(oo::PList(std::move(entry)), path,
+                                            std::string(kCompiledScriptCache));
   OO_LOG("script.javaScript.cache.store", "Cached compiled script {}.", path);
 }
 #endif

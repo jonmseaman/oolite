@@ -16,7 +16,7 @@
 	tests/run.sh unit
 */
 
-#include "OOTypes.h"
+#include "Types.h"
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
@@ -46,8 +46,8 @@ class WormholeEntity : public Entity
 public:
 	double arrivalTime();
 	double expiryTime();
-	OOSystemID getOrigin();
-	OOSystemID getDestination();
+	oo::SystemID getOrigin();
+	oo::SystemID getDestination();
 
 	JSClassID jsClassID() override;
 	std::optional<std::string> jsClassName() override;
@@ -55,8 +55,8 @@ public:
 
 	double _arrivalTime = 0;
 	double _expiryTime = 0;
-	OOSystemID _origin = 0;
-	OOSystemID _destination = 0;
+	oo::SystemID _origin = 0;
+	oo::SystemID _destination = 0;
 };
 
 
@@ -111,8 +111,8 @@ double WormholeEntity::arrivalTime()
 }
 
 double WormholeEntity::expiryTime()  { return _expiryTime; }
-OOSystemID WormholeEntity::getOrigin()  { return _origin; }
-OOSystemID WormholeEntity::getDestination()  { return _destination; }
+oo::SystemID WormholeEntity::getOrigin()  { return _origin; }
+oo::SystemID WormholeEntity::getDestination()  { return _destination; }
 
 
 // The binding's category, as the C++ class's overrides answer it.

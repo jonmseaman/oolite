@@ -31,9 +31,9 @@ MA 02110-1301, USA.
 #include <set>
 #include <string>
 
+#include "Color.h"
 #include "Entity.h"
-#include "OOColor.h"
-#include "OOGraphicsResetManager.h"
+#include "GraphicsResetManager.h"
 #include "StellarBody.h"
 #include "legacy_random.h"
 #include "oofnd/Object.hpp"
@@ -52,7 +52,13 @@ class Texture;
 }  // namespace oo
 
 class ShipEntity;
-class OOPlanetDrawable;  // this class is its one caller
+
+namespace oo {
+
+class PlanetDrawable;
+
+}  // namespace oo
+   // this class is its one caller
 
 /*	The universe and the legacy scripts make it with
    oo::makeShared<OOPlanetEntity>() and hold it as
@@ -62,16 +68,16 @@ class OOPlanetDrawable;  // this class is its one caller
 */
 namespace oo {
 
-class PlanetEntity : public Entity, public ::OOGraphicsResetClient {
+class PlanetEntity : public Entity, public ::oo::GraphicsResetClient {
  public:
   ~PlanetEntity() override;  // unregisters the graphics reset client
 
   /*	The initialisers' bodies after [self init] (the constructor ran
      Entity's), run on a new planet once its object is made.
   */
-  void initAsMainPlanetForSystem(OOSystemID s);
+  void initAsMainPlanetForSystem(oo::SystemID s);
   void initFromDictionary(const oo::PList& dict, bool atmosphere,
-                          Random_Seed seed, OOSystemID systemID);
+                          Random_Seed seed, oo::SystemID systemID);
 
   std::shared_ptr<PlanetEntity> miniatureVersion();
 
@@ -99,11 +105,11 @@ class PlanetEntity : public Entity, public ::OOGraphicsResetClient {
   bool isFinishedLoading();
 
   Vector airColorAsVector();  // visible to shader bindings
-  OOColor* airColor();
-  void setAirColor(OOColor* newColor);
+  oo::Color* airColor();
+  void setAirColor(oo::Color* newColor);
   Vector illuminationColorAsVector();  // visible to shader bindings
-  OOColor* illuminationColor();
-  void setIlluminationColor(OOColor* newColor);
+  oo::Color* illuminationColor();
+  void setIlluminationColor(oo::Color* newColor);
   float airColorMixRatio();  // visible to shader bindings
   void setAirColorMixRatio(float newRatio);
   float airDensity();  // visible to shafer bindings
@@ -123,7 +129,7 @@ class PlanetEntity : public Entity, public ::OOGraphicsResetClient {
 
   std::optional<std::string> descriptionComponents() const override;
   void setOrientation(Quaternion quat) override;
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void drawImmediate(bool immediate, bool translucent) override;
   bool checkCloseCollisionWith(Entity* other) override;
   bool isPlanet() override;
@@ -149,14 +155,14 @@ class PlanetEntity : public Entity, public ::OOGraphicsResetClient {
   void setUpTypeParametersWithSourceInfo(const oo::PList& sourceInfo,
                                          oo::PList& targetInfo);
 
-  std::shared_ptr<OOPlanetDrawable> _planetDrawable;
-  std::shared_ptr<OOPlanetDrawable> _atmosphereDrawable;
-  std::shared_ptr<OOPlanetDrawable> _cloudsShaderDrawable;
-  std::shared_ptr<OOPlanetDrawable> _atmosphereShaderDrawable;
+  std::shared_ptr<oo::PlanetDrawable> _planetDrawable;
+  std::shared_ptr<oo::PlanetDrawable> _atmosphereDrawable;
+  std::shared_ptr<oo::PlanetDrawable> _cloudsShaderDrawable;
+  std::shared_ptr<oo::PlanetDrawable> _atmosphereShaderDrawable;
 
   bool _miniature = false;
-  std::shared_ptr<OOColor> _airColor;
-  std::shared_ptr<OOColor> _illuminationColor;
+  std::shared_ptr<oo::Color> _airColor;
+  std::shared_ptr<oo::Color> _illuminationColor;
   float _airColorMixRatio = {};
   float _airDensity = {};
   double _mesopause2 = {};
@@ -169,8 +175,8 @@ class PlanetEntity : public Entity, public ::OOGraphicsResetClient {
   Vector _terminatorThresholdVector = {};
 
   unsigned _shuttlesOnGround = {};
-  OOTimeDelta _lastLaunchTime = {};
-  OOTimeDelta _shuttleLaunchInterval = {};
+  oo::TimeDelta _lastLaunchTime = {};
+  oo::TimeDelta _shuttleLaunchInterval = {};
 
   oo::PList _materialParameters;  // null where it was nil
   std::optional<std::string> _textureName;

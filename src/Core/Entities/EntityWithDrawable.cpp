@@ -27,22 +27,22 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "OODrawable.h"
+#include "Drawable.h"
 #include "Texture.h"  // allTextures() destroys std::shared_ptr<OOTexture>s
 #include "Universe.h"
 
 // The drawable is a member, released with the entity.
 
-OODrawable* oo::EntityWithDrawable::getDrawable() { return drawable.get(); }
+oo::Drawable* oo::EntityWithDrawable::getDrawable() { return drawable.get(); }
 
-void oo::EntityWithDrawable::setDrawable(OODrawable* inDrawable) {
+void oo::EntityWithDrawable::setDrawable(oo::Drawable* inDrawable) {
   if (inDrawable != drawable.get()) {
-    OODrawableAutorelease(
+    oo::DrawableAutorelease(
         std::move(drawable));  // [drawable autorelease]: the old one lives
                                // until the pool drains
     drawable = oo::share(inDrawable);
     // Messages to a nil drawable did nothing and answered 0.
-    OODrawable* cxxDrawable = drawable.get();
+    oo::Drawable* cxxDrawable = drawable.get();
     if (cxxDrawable != nullptr)
       cxxDrawable->setBindingTarget(this);  // the C++ entity
 
@@ -56,7 +56,7 @@ void oo::EntityWithDrawable::setDrawable(OODrawable* inDrawable) {
 }
 
 double oo::EntityWithDrawable::findCollisionRadius() {
-  OODrawable* cxxDrawable = drawable.get();
+  oo::Drawable* cxxDrawable = drawable.get();
   return cxxDrawable != nullptr ? cxxDrawable->collisionRadius() : 0.0f;
 }
 
@@ -105,9 +105,9 @@ void oo::EntityWithDrawable::drawImmediate(bool /*immediate*/,
   }
 
   if ((UNIVERSE != nullptr ? UNIVERSE->getWireframeGraphics() : false))
-    OOGLWireframeModeOn();
+    oo::GLWireframeModeOn();
 
-  OODrawable* cxxDrawable = drawable.get();
+  oo::Drawable* cxxDrawable = drawable.get();
   if (cxxDrawable != nullptr) {
     if (translucent)
       cxxDrawable->renderTranslucentParts();
@@ -116,13 +116,13 @@ void oo::EntityWithDrawable::drawImmediate(bool /*immediate*/,
   }
 
   if ((UNIVERSE != nullptr ? UNIVERSE->getWireframeGraphics() : false))
-    OOGLWireframeModeOff();
+    oo::GLWireframeModeOff();
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 std::vector<std::shared_ptr<oo::Texture>>
 oo::EntityWithDrawable::allTextures() {
-  OODrawable* cxxDrawable = getDrawable();
+  oo::Drawable* cxxDrawable = getDrawable();
   return cxxDrawable != nullptr ? cxxDrawable->allTextures()
                                 : std::vector<std::shared_ptr<oo::Texture>>();
 }

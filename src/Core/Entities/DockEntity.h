@@ -93,7 +93,7 @@ class DockEntity : public ShipEntity {
   std::size_t pruneAndCountShipsOnApproach();
   void noteDockingForShip(::ShipEntity* ship);
   void autoDockShipsInQueue(
-      std::map<OOUniversalID, std::vector<oo::PList>>& queue);
+      std::map<oo::UniversalID, std::vector<oo::PList>>& queue);
   void addShipToShipsOnApproach(::ShipEntity* ship);
   void pullInShipIfPermitted(::ShipEntity* ship);
 
@@ -115,7 +115,7 @@ class DockEntity : public ShipEntity {
   // The ship's answer.
   bool isVisibleToScripts() override;
   bool setUpShipFromDictionary(const oo::PList& dict) override;
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void noteTakingDamage(double amount, Entity* entity,
                         oo::ShipDamageType type) override;
   void takeEnergyDamage(double amount, Entity* ent, Entity* other,
@@ -123,7 +123,7 @@ class DockEntity : public ShipEntity {
   void drawImmediate(bool immediate, bool translucent) override;
 
   // Public so the tests read them.
-  std::map<OOUniversalID, std::vector<oo::PList>>
+  std::map<oo::UniversalID, std::vector<oo::PList>>
       shipsOnApproach;  // coordinate stacks (Dicts) by ship ID
   std::vector<oo::EntityHold> launchQueue;  // the ships' objects held
   double last_launch_time = {};

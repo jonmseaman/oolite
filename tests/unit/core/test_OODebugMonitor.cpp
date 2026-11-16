@@ -350,19 +350,24 @@ size_t oo::Texture::dataSize()	{ std::abort(); }
 // An entity with a drawable: the member the monitor's entity dump calls
 // (declared as OOEntityWithDrawable.h declares it). The test dumps no entity,
 // so none is reached.
-class OODrawable;
+namespace oo {
+
+class Drawable;
+
+}  // namespace oo
+
 namespace oo {
 
 class EntityWithDrawable : public Entity
 {
 public:
-	OODrawable *getDrawable();
+	oo::Drawable *getDrawable();
 };
 
 }  // namespace oo
 
 
-OODrawable *oo::EntityWithDrawable::getDrawable()  { std::abort(); }
+oo::Drawable *oo::EntityWithDrawable::getDrawable()  { std::abort(); }
 
 
 // MARK: The debugger

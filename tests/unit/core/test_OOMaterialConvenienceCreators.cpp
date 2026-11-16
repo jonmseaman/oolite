@@ -26,8 +26,8 @@
 #include "CombinedEmissionMapGenerator.h"
 #include "MaterialConvenienceCreators.h"
 #include "MultiTextureMaterial.h"
-#include "OOOpenGLExtensionManager.h"
-#include "OORegExpMatcher.h"
+#include "OpenGLExtensionManager.h"
+#include "RegExpMatcher.h"
 #include "ShaderMaterial.h"
 #include "SingleTextureMaterial.h"
 #include "Texture.h"
@@ -39,15 +39,20 @@
 // --------------------------------------------------------------------------------------
 
 // OOLogging.mm's (it would bring the resource manager into the link).
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
-void OOLogGenericParameterErrorForFunction(const char* inFunction) {
+void LogGenericParameterErrorForFunction(const char* inFunction) {
   (void)inFunction;
 }
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
-const char* const kOOLogFileNotFound = "files.notFound";
+void LogIndent(void) {}
+void LogOutdent(void) {}
+const char* const kLogFileNotFound = "files.notFound";
+
+}  // namespace oo
+
 uint32_t gDebugFlags = 0;
 
 // Link stubs, never reached here: OOStringParsing.mm's parsers of a vector or
@@ -96,37 +101,47 @@ std::optional<std::string> ResourceManager::stringFromFilesNamed(
 }
 
 // OORegExpMatcher: the stub answers no match.
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
-  return oo::makeShared<OORegExpMatcher>();
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher() {
+  return oo::makeShared<oo::RegExpMatcher>();
 }
-bool OORegExpMatcher::string(const std::string&, const std::string&) {
+bool oo::RegExpMatcher::string(const std::string&, const std::string&) {
   return false;
 }
-OORegExpMatcher::~OORegExpMatcher() {}
+namespace oo {
 
-OOShaderSetting OOShaderSettingFromString(const std::string& string) {
-  return string == "SHADERS_FULL" ? OOShaderSetting::kFull : OOShaderSetting::kNotSupported;
+RegExpMatcher::~RegExpMatcher() {}
+
+ShaderSetting ShaderSettingFromString(const std::string& string) {
+  return string == "SHADERS_FULL" ? ShaderSetting::kFull : ShaderSetting::kNotSupported;
 }
+
+}  // namespace oo
+
 
 // The cache manager: the synthesized configurations, by key, as they are
 // written and read.
 static std::map<std::string, oo::PList> gCache;
 static std::vector<std::string> gCacheWrites;
 
-#include "OOCacheManager.h"
+#include "CacheManager.h"
 
 // The cache manager: a C++ stand-in.
-OOCacheManager* OOCacheManager::sharedCache() {
-  static OOCacheManager* shared = new OOCacheManager;
+oo::CacheManager* oo::CacheManager::sharedCache() {
+  static oo::CacheManager* shared = new oo::CacheManager;
   return shared;
 }
-OOCacheManager::~OOCacheManager() {}
-oo::PList OOCacheManager::pListForKey(const std::string& key,
+namespace oo {
+
+CacheManager::~CacheManager() {}
+
+}  // namespace oo
+
+oo::PList oo::CacheManager::pListForKey(const std::string& key,
                                       const std::string& cache) {
   auto found = gCache.find(cache + "|" + key);
   return found != gCache.end() ? found->second : oo::PList();
 }
-void OOCacheManager::setPList(const oo::PList& value, const std::string& key,
+void oo::CacheManager::setPList(const oo::PList& value, const std::string& key,
                               const std::string& cache) {
   gCacheWrites.push_back(cache + "|" + key);
   gCache[cache + "|" + key] = value;
@@ -243,14 +258,14 @@ std::optional<std::string> oo::TextureGenerator::cacheKey() {
 bool oo::TextureGenerator::enqueue() { return false; }
 std::shared_ptr<oo::CombinedEmissionMapGenerator>
 oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
-    const oo::PList& emissionMapSpec, OOColor*, oo::Texture*, OOColor*,
-    const oo::PList& illuminationMapSpec, OOColor*, const oo::PList&) {
+    const oo::PList& emissionMapSpec, oo::Color*, oo::Texture*, oo::Color*,
+    const oo::PList& illuminationMapSpec, oo::Color*, const oo::PList&) {
   if (emissionMapSpec.isNull() && illuminationMapSpec.isNull()) return {};
   return oo::makeShared<oo::CombinedEmissionMapGenerator>();
 }
 std::shared_ptr<oo::CombinedEmissionMapGenerator>
 oo::CombinedEmissionMapGenerator::generatorWithEmissionAndIlluminationMapSpec(
-    const oo::PList&, oo::Texture*, OOColor*, OOColor*, OOColor*,
+    const oo::PList&, oo::Texture*, oo::Color*, oo::Color*, oo::Color*,
     const oo::PList&) {
   return oo::makeShared<oo::CombinedEmissionMapGenerator>();
 }
@@ -294,7 +309,7 @@ Universe* gSharedUniverse = nullptr;
 // The game view is C++ (MyOpenGLView). There is none here: its manager
 // accessor, which the shader program's matrix uniforms would use, is never
 // reached.
-OOOpenGLMatrixManager* MyOpenGLView::getOpenGLMatrixManager() {
+oo::OpenGLMatrixManager* MyOpenGLView::getOpenGLMatrixManager() {
   return matrixManager.get();
 }
 
@@ -309,10 +324,10 @@ class Universe : public oo::Object {
 
   bool _useShaders;
   bool _reducedDetail;
-  OOGraphicsDetail _detailLevel;
+  oo::GraphicsDetail _detailLevel;
 
   bool useShaders();
-  OOGraphicsDetail getDetailLevel();
+  oo::GraphicsDetail getDetailLevel();
 };
 
 class TestUniverse : public Universe {
@@ -321,7 +336,7 @@ class TestUniverse : public Universe {
 };
 
 bool Universe::useShaders() { return _useShaders; }
-OOGraphicsDetail Universe::getDetailLevel() { return _detailLevel; }
+oo::GraphicsDetail Universe::getDetailLevel() { return _detailLevel; }
 
 namespace {
 
@@ -332,9 +347,9 @@ const char* kFragment =
     "uniform sampler2D uDiffuseMap;\nvoid main() { gl_FragColor = "
     "texture2D(uDiffuseMap, vec2(0.0)); }\n";
 
-bool SetUp(bool useShaders, OOGraphicsDetail detail = OOGraphicsDetail::kMinimum) {
+bool SetUp(bool useShaders, oo::GraphicsDetail detail = oo::GraphicsDetail::kMinimum) {
   if (!OOTestGLContext()) return false;
-  OOOpenGLExtensionManager::sharedManager();
+  oo::OpenGLExtensionManager::sharedManager();
   if (gUniverse == nullptr) gUniverse = new TestUniverse();
   gUniverse->_useShaders = useShaders;
   gUniverse->_detailLevel = detail;
@@ -421,7 +436,7 @@ OO_TEST(namedShaders) {
 }
 
 OO_TEST(synthesizedShaders) {
-  if (!SetUp(true, OOGraphicsDetail::kShaders)) {
+  if (!SetUp(true, oo::GraphicsDetail::kShaders)) {
     OO_CHECK(false);
     return;
   }
@@ -484,7 +499,7 @@ OO_TEST(synthesizedShaders) {
 }
 
 OO_TEST(synthesisTriggersAndLoops) {
-  if (!SetUp(true, OOGraphicsDetail::kMinimum)) {
+  if (!SetUp(true, oo::GraphicsDetail::kMinimum)) {
     OO_CHECK(false);
     return;
   }
@@ -564,7 +579,7 @@ OO_TEST(cxxStaticMembers) {
     OO_CHECK(Make("Named", {})->name() == std::optional<std::string>("Named"));
   }
 
-  if (!SetUp(true, OOGraphicsDetail::kShaders)) {
+  if (!SetUp(true, oo::GraphicsDetail::kShaders)) {
     OO_CHECK(false);
     return;
   }

@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-#include "OOLogging.h"
+#include "Logging.h"
 #include "Material.h"
 #include "oo_test.hpp"
 
@@ -28,15 +28,20 @@
 static int gSubclassResponsibilities = 0;
 static int gParameterErrors = 0;
 
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
   gSubclassResponsibilities++;
 }
 
-void OOLogGenericParameterErrorForFunction(const char* inFunction) {
+void LogGenericParameterErrorForFunction(const char* inFunction) {
   (void)inFunction;
   gParameterErrors++;
 }
+
+}  // namespace oo
+
 
 // Every unapplyWithNext() sent to a test material, in order: (material, next).
 static std::vector<std::pair<oo::Material*, oo::Material*>> gUnapplied;

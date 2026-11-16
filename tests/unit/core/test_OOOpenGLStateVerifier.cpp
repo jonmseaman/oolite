@@ -18,9 +18,9 @@
 #include <string_view>
 #include <vector>
 
-#include "OOOpenGL.h"
-#include "OOOpenGLExtensionManager.h"
-#include "OORegExpMatcher.h"
+#include "OpenGL.h"
+#include "OpenGLExtensionManager.h"
+#include "RegExpMatcher.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
@@ -38,20 +38,25 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
   return oo::PList(oo::PList::Dict{});
 }
 
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
-  return oo::makeShared<OORegExpMatcher>();
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher() {
+  return oo::makeShared<oo::RegExpMatcher>();
 }
-bool OORegExpMatcher::string(const std::string&, const std::string&) {
+bool oo::RegExpMatcher::string(const std::string&, const std::string&) {
   return false;
 }
-OORegExpMatcher::~OORegExpMatcher() {}
+namespace oo {
 
-OOShaderSetting OOShaderSettingFromString(const std::string& string) {
-  return string == "SHADERS_FULL" ? OOShaderSetting::kFull : OOShaderSetting::kNotSupported;
+RegExpMatcher::~RegExpMatcher() {}
+
+ShaderSetting ShaderSettingFromString(const std::string& string) {
+  return string == "SHADERS_FULL" ? ShaderSetting::kFull : ShaderSetting::kNotSupported;
 }
 
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
+void LogIndent(void) {}
+void LogOutdent(void) {}
+
+}  // namespace oo
+
 
 // --- The log
 // -----------------------------------------------------------------------------------
@@ -117,8 +122,8 @@ void StartInOpaque() {
   glShadeModel(GL_SMOOTH);
   glActiveTextureARB(GL_TEXTURE0);
   glBlendFunc(GL_ONE, GL_ZERO);
-  OOResetGLStateVerifier();
-  OOSetOpenGLState(OOOpenGLStateID::kOpaque);
+  oo::ResetGLStateVerifier();
+  OOSetOpenGLState(oo::OpenGLStateID::kOpaque);
 }
 
 }  // namespace
@@ -128,7 +133,7 @@ void StartInOpaque() {
 
 OO_TEST(anOpenItemIsNotReported) {
   OO_CHECK(OOTestGLContext());
-  (void)OOOpenGLExtensionManager::sharedManager();  // loads glActiveTextureARB
+  (void)oo::OpenGLExtensionManager::sharedManager();  // loads glActiveTextureARB
                                                     // & co.
   StartInOpaque();
   CaptureLog();
@@ -144,7 +149,7 @@ OO_TEST(anOpenItemIsNotReported) {
 
 OO_TEST(mismatchesAreReportedInOrderAndRepaired) {
   OO_CHECK(OOTestGLContext());
-  (void)OOOpenGLExtensionManager::sharedManager();
+  (void)oo::OpenGLExtensionManager::sharedManager();
   StartInOpaque();
   CaptureLog();
 

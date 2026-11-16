@@ -40,10 +40,10 @@ JSValue OOJSValueFromPList(JSContext *context, const oo::PList &plist)
 #if OOJS_PROFILE
 // The engine's time limiter, which the profiler reads, pauses and extends: a limiter that is never
 // started.
-OOTimeDelta OOJSGetTimeLimiterLimit(void)  { return 0.0; }
+oo::TimeDelta OOJSGetTimeLimiterLimit(void)  { return 0.0; }
 void OOJSPauseTimeLimiter(void)  {}
 void OOJSResumeTimeLimiter(void)  {}
-void OOJSExcludeTimeFromLimiter(OOTimeDelta)  {}
+void OOJSExcludeTimeFromLimiter(oo::TimeDelta)  {}
 #endif
 
 
@@ -121,10 +121,10 @@ OO_TEST(profiling)
 		OO_CHECK(profile->nativeTime() >= outerEntry->selfTimeSum() + innerEntry->selfTimeSum());
 
 		// Comparisons: "reverse" is longest first.
-		OO_CHECK_EQ(outerEntry->compareBySelfTime(outerEntry), OOComparisonResult::kSame);
+		OO_CHECK_EQ(outerEntry->compareBySelfTime(outerEntry), oo::ComparisonResult::kSame);
 		OO_CHECK_EQ(oo::ToUnderlying(outerEntry->compareByTotalTime(innerEntry)), -oo::ToUnderlying(outerEntry->compareByTotalTimeReverse(innerEntry)));
 		OO_CHECK_EQ(oo::ToUnderlying(innerEntry->compareBySelfTime(outerEntry)), -oo::ToUnderlying(innerEntry->compareBySelfTimeReverse(outerEntry)));
-		if (outerEntry->totalTimeSum() > innerEntry->totalTimeSum())  OO_CHECK_EQ(outerEntry->compareByTotalTimeReverse(innerEntry), OOComparisonResult::kAscending);
+		if (outerEntry->totalTimeSum() > innerEntry->totalTimeSum())  OO_CHECK_EQ(outerEntry->compareByTotalTimeReverse(innerEntry), oo::ComparisonResult::kAscending);
 
 		// The descriptions.
 		const std::string profileText = profile->description().value_or("");

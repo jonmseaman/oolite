@@ -33,14 +33,14 @@ MA 02110-1301, USA.
 
 #include "DebugStandards.h"
 #include "GuiDisplayGen.h"
+#include "MusicController.h"
 #include "OOConstToJSString.h"
 #include "OOJSPlayer.h"
 #include "OOJSScript.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOMusicController.h"
-#include "OOStringExpander.h"
 #include "PlayerEntityScriptMethods.h"
+#include "StringExpander.h"
 #include "oofnd/Notification.hpp"
 #include "oofnd/objc/Exception.h"
 
@@ -236,7 +236,7 @@ void MissionRunCallback() {
     const auto exception = oo::CurrentOOException();
     if (!exception) throw;  // not an OOException: it goes on up, as before
     // Squash any exception, allow cleanup to happen and so forth.
-    OO_LOG(kOOLogException,
+    OO_LOG(oo::kLogException,
            "Ignoring exception {}:{} during handling of mission screen "
            "completion callback.",
            exception->name(), exception->reason());
@@ -373,15 +373,15 @@ static JSValue MissionMarkSystem(JSContext* context, JSValueConst /*oojsThis*/,
         if (player != nullptr)
           player->addMissionDestinationMarker(
               (player != nullptr
-                   ? player->defaultMarker(static_cast<OOSystemID>(dest))
+                   ? player->defaultMarker(static_cast<oo::SystemID>(dest))
                    : oo::PList()));
       }
     } else {
       // must be object, from above
       oo::PList marker =
           MarkerFromJSObject(context, OOJS_ARGV[i], "markSystem");
-      OOSystemID system =
-          static_cast<OOSystemID>(marker.get<int>("system", -1));
+      oo::SystemID system =
+          static_cast<oo::SystemID>(marker.get<int>("system", -1));
       if (system >= 0) {
         if (player != nullptr) player->addMissionDestinationMarker(marker);
       }
@@ -421,10 +421,10 @@ static JSValue MissionUnmarkSystem(JSContext* context,
           "Use of numbers for mission.unmarkSystem is deprecated");
       if (!oo::EnforceStandards()) {
         if (!(player != nullptr
-                  ? player->removeMissionDestinationMarker(
-                        (player != nullptr ? player->defaultMarker(
-                                                 static_cast<OOSystemID>(dest))
-                                           : oo::PList()))
+                  ? player->removeMissionDestinationMarker((
+                        player != nullptr ? player->defaultMarker(
+                                                static_cast<oo::SystemID>(dest))
+                                          : oo::PList()))
                   : false)) {
           result = false;
         }
@@ -433,8 +433,8 @@ static JSValue MissionUnmarkSystem(JSContext* context,
       // must be object, from above
       oo::PList marker =
           MarkerFromJSObject(context, OOJS_ARGV[i], "unmarkSystem");
-      OOSystemID system =
-          static_cast<OOSystemID>(marker.get<int>("system", -1));
+      oo::SystemID system =
+          static_cast<oo::SystemID>(marker.get<int>("system", -1));
       if (system >= 0) {
         if (!(player != nullptr ? player->removeMissionDestinationMarker(marker)
                                 : false)) {
@@ -714,7 +714,7 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
   }
   JS_FreeValue(context, value);
 
-  OOMusicController::sharedController()->setMissionMusic(
+  oo::MusicController::sharedController()->setMissionMusic(
       GetParameterString(context, params, "music"));
   if (player != nullptr)
     player->setMissionOverlayDescriptor(
@@ -732,7 +732,7 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
     if (JS_ToFloat64(context, &zoom, value) == 0) {
       if (zoom >= 1 && zoom <= CHART_MAX_ZOOM) {
         if (player != nullptr)
-          player->setCustomChartZoom(static_cast<OOScalar>(zoom));
+          player->setCustomChartZoom(static_cast<oo::Scalar>(zoom));
       } else {
         OOJSReportWarning(
             context,
@@ -927,7 +927,7 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
   std::optional<std::string> firstKey =
       GetParameterString(context, params, "initialChoicesKey");
   if (firstKey.has_value()) {
-    OOGUIRow row = UNIVERSE->getGui()->rowForKey(firstKey);
+    oo::GUIRow row = UNIVERSE->getGui()->rowForKey(firstKey);
     if (row != -1) {
       UNIVERSE->getGui()->setSelectedRow(row);
     }

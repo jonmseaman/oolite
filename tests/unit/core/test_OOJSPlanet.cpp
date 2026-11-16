@@ -15,7 +15,7 @@
 */
 
 #include "EntityManualRefs.h"  // the tests' manual references
-#include "OOColor.h"
+#include "Color.h"
 #include "OOJSEngineCore.h"
 #include "StellarBody.h"
 #include "oofnd/PList.hpp"
@@ -55,10 +55,10 @@ public:
 	double radius();
 	std::optional<std::string> name();
 	void setName(const std::optional<std::string> &name);
-	OOColor *airColor();
-	void setAirColor(OOColor *newColor);
-	OOColor *illuminationColor();
-	void setIlluminationColor(OOColor *newColor);
+	oo::Color *airColor();
+	void setAirColor(oo::Color *newColor);
+	oo::Color *illuminationColor();
+	void setIlluminationColor(oo::Color *newColor);
 	float airColorMixRatio();
 	void setAirColorMixRatio(float newRatio);
 	float airDensity();
@@ -79,8 +79,8 @@ public:
 	StellarBodyType _type = (StellarBodyType)0;
 	double _radius = 0;
 	std::optional<std::string> _name;
-	std::shared_ptr<OOColor> _airColor;
-	std::shared_ptr<OOColor> _illuminationColor;
+	std::shared_ptr<oo::Color> _airColor;
+	std::shared_ptr<oo::Color> _illuminationColor;
 	float _airColorMixRatio = 0;
 	float _airDensity = 0;
 	bool _hasAtmosphere = false;
@@ -174,10 +174,10 @@ void oo::PlanetEntity::setOrientation(Quaternion quat)  { TestObjectOf(this)->_o
 oo::StellarBodyType oo::PlanetEntity::planetType()  { return _type; }
 std::optional<std::string> oo::PlanetEntity::name()  { return _name; }
 void oo::PlanetEntity::setName(const std::optional<std::string> &name)  { _name = name; }
-OOColor *oo::PlanetEntity::airColor()  { return _airColor.get(); }
-void oo::PlanetEntity::setAirColor(OOColor *newColor)  { _airColor = oo::share(newColor); }
-OOColor *oo::PlanetEntity::illuminationColor()  { return _illuminationColor.get(); }
-void oo::PlanetEntity::setIlluminationColor(OOColor *newColor)  { _illuminationColor = oo::share(newColor); }
+oo::Color *oo::PlanetEntity::airColor()  { return _airColor.get(); }
+void oo::PlanetEntity::setAirColor(oo::Color *newColor)  { _airColor = oo::share(newColor); }
+oo::Color *oo::PlanetEntity::illuminationColor()  { return _illuminationColor.get(); }
+void oo::PlanetEntity::setIlluminationColor(oo::Color *newColor)  { _illuminationColor = oo::share(newColor); }
 float oo::PlanetEntity::airColorMixRatio()  { return _airColorMixRatio; }
 void oo::PlanetEntity::setAirColorMixRatio(float newRatio)  { _airColorMixRatio = newRatio; }
 float oo::PlanetEntity::airDensity()  { return _airDensity; }
@@ -535,7 +535,7 @@ void SetUpContext()
 	sPlanet->_type = oo::StellarBodyType::kNormalPlanet;
 	sPlanet->_radius = 5000;
 	sPlanet->_name = "Lave";
-	sPlanet->_airColor = OOColor::colorWithRed(0.5f, 0.25f, 1, 1);
+	sPlanet->_airColor = oo::Color::colorWithRed(0.5f, 0.25f, 1, 1);
 	sPlanet->_airColorMixRatio = 0.5f;
 	sPlanet->_airDensity = 0.75f;
 	sPlanet->_hasAtmosphere = true;

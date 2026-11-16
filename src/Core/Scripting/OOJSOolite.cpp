@@ -32,8 +32,8 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "ConstToString.h"
 #include "MyOpenGLView.h"
-#include "OOConstToString.h"
 #include "OOJavaScriptEngine.h"
 #include "ResourceManager.h"
 #include "oofnd/FileSystem.hpp"
@@ -217,7 +217,7 @@ static JSValue OoliteGetProperty(OOJS_GETTER_ARGS) {
       std::optional<std::string> toneMapperStr = "OOHDR_TONEMAPPER_UNDEFINED";
 #if OOLITE_WINDOWS
       if ((gameView != nullptr ? gameView->hdrOutput() : false)) {
-        toneMapperStr = OOStringFromHDRToneMapper(
+        toneMapperStr = oo::StringFromHDRToneMapper(
             (gameView != nullptr ? gameView->hdrToneMapper()
                                  : oo::HDRToneMapper{}));
       }
@@ -229,7 +229,7 @@ static JSValue OoliteGetProperty(OOJS_GETTER_ARGS) {
     case kSdrToneMapper: {
       std::optional<std::string> toneMapperStr = "OOSDR_TONEMAPPER_UNDEFINED";
       if (!(gameView != nullptr ? gameView->hdrOutput() : false)) {
-        toneMapperStr = OOStringFromSDRToneMapper(
+        toneMapperStr = oo::StringFromSDRToneMapper(
             (gameView != nullptr ? gameView->sdrToneMapper()
                                  : oo::SDRToneMapper{}));
       }
@@ -292,7 +292,7 @@ static JSValue OoliteSetProperty(OOJS_SETTER_ARGS) {
 #if OOLITE_WINDOWS
         if ((gameView != nullptr ? gameView->hdrOutput() : false)) {
           if (gameView != nullptr) {
-            gameView->setHDRToneMapper(OOHDRToneMapperFromString(*sValue));
+            gameView->setHDRToneMapper(oo::HDRToneMapperFromString(*sValue));
           }
         } else {
           OOJSReportWarning(
@@ -310,7 +310,7 @@ static JSValue OoliteSetProperty(OOJS_SETTER_ARGS) {
       if (sValue.has_value()) {
         if (!(gameView != nullptr ? gameView->hdrOutput() : false)) {
           if (gameView != nullptr) {
-            gameView->setSDRToneMapper(OOSDRToneMapperFromString(*sValue));
+            gameView->setSDRToneMapper(oo::SDRToneMapperFromString(*sValue));
           }
         } else {
           OOJSReportWarning(

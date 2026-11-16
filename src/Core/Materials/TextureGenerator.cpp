@@ -29,7 +29,7 @@ SOFTWARE.
 
 #include <string>
 
-#include "OOAsyncWorkManager.h"
+#include "AsyncWorkManager.h"
 #include "Texture.h"
 
 oo::TextureFlags oo::TextureGenerator::textureOptions() {
@@ -47,6 +47,6 @@ std::optional<std::string> oo::TextureGenerator::cacheKey() {
 }
 
 bool oo::TextureGenerator::enqueue() {
-  return OOAsyncWorkManager::sharedAsyncWorkManager()->addTask(
-      this, OOAsyncWorkPriority::kMedium);
+  return oo::AsyncWorkManager::sharedAsyncWorkManager()->addTask(
+      this, oo::AsyncWorkPriority::kMedium);
 }

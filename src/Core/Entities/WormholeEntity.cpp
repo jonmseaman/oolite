@@ -36,18 +36,18 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "AI.h"
+#include "Logging.h"
 #include "OOJSWormhole.h"
-#include "OOLogging.h"
-#include "OOPListGameTypes.h"
-#include "OOShipGroup.h"
-#include "OOStringParsing.h"
-#include "OOSystemDescriptionManager.h"
+#include "PListGameTypes.h"
 #include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
 #include "ShipEntityLoadRestore.h"
+#include "ShipGroup.h"
 #include "StationEntity.h"
+#include "StringParsing.h"
 #include "SunEntity.h"
+#include "SystemDescriptionManager.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Log.hpp"
@@ -66,8 +66,8 @@ namespace {
 
 // [[UNIVERSE systemManager] getCoordinatesForSystem:inGalaxy:]: the manager is
 // converted (a message to a missing manager answered zeros).
-NSPoint SystemCoordinates(OOSystemID system, OOGalaxyID galaxy) {
-  OOSystemDescriptionManager* manager =
+NSPoint SystemCoordinates(oo::SystemID system, oo::GalaxyID galaxy) {
+  oo::SystemDescriptionManager* manager =
       (UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr);
   return manager != nullptr ? manager->getCoordinatesForSystem(system, galaxy)
                             : NSMakePoint(0, 0);
@@ -106,14 +106,15 @@ void WormholeEntity::initWithDict(const oo::PList& dict) {
       oo::AutoreleaseScope pool;  // was @autoreleasepool
       // wormholes from pre-1.80 savegames using "origin_seed" and "dest_seed"
       // currently get defaults set; will probably disappear unnoticed
-      origin = static_cast<OOSystemID>(dict.get<int>("origin_id", 0));
-      destination = static_cast<OOSystemID>(dict.get<int>("dest_id", 255));
+      origin = static_cast<oo::SystemID>(dict.get<int>("origin_id", 0));
+      destination = static_cast<oo::SystemID>(dict.get<int>("dest_id", 255));
 
       originCoords = SystemCoordinates(
-          origin, (PLAYER != nullptr ? PLAYER->galaxyNumber() : OOGalaxyID{}));
+          origin,
+          (PLAYER != nullptr ? PLAYER->galaxyNumber() : oo::GalaxyID{}));
       destinationCoords = SystemCoordinates(
           destination,
-          (PLAYER != nullptr ? PLAYER->galaxyNumber() : OOGalaxyID{}));
+          (PLAYER != nullptr ? PLAYER->galaxyNumber() : oo::GalaxyID{}));
 
       // We only ever init from dictionary if we're loaded by the player, so
       // by definition we have been scanned
@@ -133,7 +134,7 @@ void WormholeEntity::initWithDict(const oo::PList& dict) {
       estimated_arrival_time =
           dict.get<double>("estimated_arrival_time", arrival_time);
       const oo::PList* positionNode = dict.find("position");
-      position = OOHPVectorFromPList(
+      position = oo::HPVectorFromPList(
           positionNode,
           kZeroHPVector);  // what PListView's get<HPVector> called
       _misjump = dict.get<bool>("misjump", false);
@@ -173,7 +174,7 @@ void WormholeEntity::initWithDict(const oo::PList& dict) {
   }
 }
 
-void WormholeEntity::initWormholeTo(OOSystemID s, ::ShipEntity* ship) {
+void WormholeEntity::initWormholeTo(oo::SystemID s, ::ShipEntity* ship) {
   assert(ship != nullptr);
 
   init();
@@ -190,7 +191,7 @@ void WormholeEntity::initWormholeTo(OOSystemID s, ::ShipEntity* ship) {
         (PLAYER != nullptr ? PLAYER->getGalaxy_coordinates() : NSPoint{});
     destinationCoords = SystemCoordinates(
         destination,
-        (PLAYER != nullptr ? PLAYER->galaxyNumber() : OOGalaxyID{}));
+        (PLAYER != nullptr ? PLAYER->galaxyNumber() : oo::GalaxyID{}));
     distance = distanceBetweenPlanetPositions(
         static_cast<int>(originCoords.x), static_cast<int>(originCoords.y),
         static_cast<int>(destinationCoords.x),
@@ -325,7 +326,7 @@ bool WormholeEntity::suckInShip(::ShipEntity* ship) {
   if (d > 0.0f) {
     float afterburnerFactor =
         (ship != nullptr ? ship->hasFuelInjection() : false) &&
-                (ship != nullptr ? ship->getFuel() : OOFuelQuantity{}) >
+                (ship != nullptr ? ship->getFuel() : oo::FuelQuantity{}) >
                     MIN_FUEL
             ? (ship != nullptr ? ship->afterburnerFactor() : 0.0f)
             : 1.0;
@@ -335,15 +336,15 @@ bool WormholeEntity::suckInShip(::ShipEntity* ship) {
     // try and prevent escorts from entering the wormhole before their mother.
     ::ShipEntity* leader =
         ((ship != nullptr ? ship->group()
-                          : static_cast<OOShipGroup*>(nullptr)) != nullptr
+                          : static_cast<oo::ShipGroup*>(nullptr)) != nullptr
              ? (ship != nullptr ? ship->group()
-                                : static_cast<OOShipGroup*>(nullptr))
+                                : static_cast<oo::ShipGroup*>(nullptr))
                    ->leader()
              : static_cast<::ShipEntity*>(nullptr));
     if (leader && (leader != ship)) {
       afterburnerFactor =
           (leader != nullptr ? leader->hasFuelInjection() : false) &&
-                  (leader != nullptr ? leader->getFuel() : OOFuelQuantity{}) >
+                  (leader != nullptr ? leader->getFuel() : oo::FuelQuantity{}) >
                       MIN_FUEL
               ? (leader != nullptr ? leader->afterburnerFactor() : 0.0f)
               : 1.0;
@@ -582,9 +583,9 @@ void WormholeEntity::setExitPosition(HPVector pos) {
   hasExitPosition = true;
 }
 
-OOSystemID WormholeEntity::getOrigin() { return origin; }
+oo::SystemID WormholeEntity::getOrigin() { return origin; }
 
-OOSystemID WormholeEntity::getDestination() { return destination; }
+oo::SystemID WormholeEntity::getDestination() { return destination; }
 
 NSPoint WormholeEntity::originCoordinates() { return originCoords; }
 
@@ -660,7 +661,7 @@ std::optional<std::string> WormholeEntity::identFromShip(::ShipEntity* ship) {
       return OO_DESC("wormhole-desc");
     }
   } else {
-    OO_LOG_ERR(kOOLogInconsistentState, "{}",
+    OO_LOG_ERR(oo::kLogInconsistentState, "{}",
                "Wormhole identified when ship has no EQ_WORMHOLE_SCANNER.");
     /*
             This was previously an assertion, but a player reported hitting it.
@@ -695,12 +696,12 @@ bool WormholeEntity::checkCloseCollisionWith(Entity* otherEntity) {
   return otherEntity == nullptr || !otherEntity->isEffect();
 }
 
-void WormholeEntity::update(OOTimeDelta delta_t) {
+void WormholeEntity::update(oo::TimeDelta delta_t) {
   Entity::update(delta_t);
 
   ::PlayerEntity* player = PLAYER;
   assert(player != nullptr);
-  rotMatrix = OOMatrixForBillboard(
+  rotMatrix = oo::MatrixForBillboard(
       position, (player != nullptr ? player->viewpointPosition() : HPVector{}));
   double now = (player != nullptr ? player->clockTimeAdjusted() : 0.0);
 
@@ -746,7 +747,7 @@ void WormholeEntity::drawImmediate(bool /*immediate*/, bool translucent) {
 
     GLfloat color_fv[4] = OO_WORMHOLE_COLOR_FVEC4;
 
-    OOSetOpenGLState(OOOpenGLStateID::kTranslucentPass);
+    OOSetOpenGLState(oo::OpenGLStateID::kTranslucentPass);
     OOGL(glDisable(GL_CULL_FACE));
     OOGL(glEnable(GL_BLEND));
 
@@ -764,7 +765,7 @@ void WormholeEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   }
 
   OOVerifyOpenGLState();
-  OOCheckOpenGLErrors([&]() -> std::string {
+  oo::CheckOpenGLErrors([&]() -> std::string {
     return "WormholeEntity after drawing " + oo::EntityDescription(this);
   });
 }
@@ -851,7 +852,7 @@ oo::PList WormholeEntity::getDict() {
   myDict["expiry_time"] = oo::PList(expiry_time);
   myDict["arrival_time"] = oo::PList(arrival_time);
   myDict["estimated_arrival_time"] = oo::PList(estimated_arrival_time);
-  myDict["position"] = OOPListFromHPVector(position);  // -oo_setHPVector:
+  myDict["position"] = oo::PListFromHPVector(position);  // -oo_setHPVector:
   myDict["misjump"] = oo::PList(_misjump);
 
   oo::PList::Array shipArray;

@@ -17,8 +17,8 @@
 	Run: tests/run.sh unit
 */
 
-#include "OOFoundation.h"
-#include "OOMaths.h"  // IWYU pragma: keep
+#include "Foundation.h"
+#include "Maths.h"  // IWYU pragma: keep
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"

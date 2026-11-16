@@ -32,7 +32,7 @@ MA 02110-1301, USA.
 #include <optional>
 #include <string>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 
 void InitOOJSSun(JSContext* context, JSValueConst global);
 

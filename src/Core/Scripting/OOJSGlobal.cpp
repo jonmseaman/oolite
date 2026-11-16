@@ -29,17 +29,17 @@ MA 02110-1301, USA.
 #include <memory>
 #include <string>
 
+#include "ConstToString.h"
 #include "GameController.h"
 #include "GuiDisplayGen.h"
 #include "MyOpenGLView.h"
 #include "OOConstToJSString.h"
-#include "OOConstToString.h"
 #include "OOJSGuiScreenKeyDefinition.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
-#include "OOStringExpander.h"
-#include "OOSystemDescriptionManager.h"
 #include "ResourceManager.h"
+#include "StringExpander.h"
+#include "SystemDescriptionManager.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/Scanner.hpp"
@@ -164,9 +164,9 @@ static JSValue GlobalGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewInt32(
           context,
           (player != nullptr ? player->PlayerEntity::currentGalaxyID()
-                             : OOGalaxyID{}));  // qualified: the final
-                                                // overrider so the binding test
-                                                // stands in for it
+                             : oo::GalaxyID{}));  // qualified: the final
+                                                  // overrider so the binding
+                                                  // test stands in for it
 
     case kGuiScreen:
       return OOJSValueFromGUIScreenID(
@@ -290,9 +290,9 @@ static JSValue GlobalExpandDescription(JSContext* context,
   }
 
   OOJS_BEGIN_FULL_NATIVE(context)
-  string = OOExpandDescriptionString(
+  string = oo::ExpandDescriptionString(
       kNilRandomSeed, *string, overrides, oo::PList(), std::nullopt,
-      OOExpandOptions::kForJavaScript | OOExpandOptions::kGoodRNG);
+      oo::ExpandOptions::kForJavaScript | oo::ExpandOptions::kGoodRNG);
   OOJS_END_FULL_NATIVE
 
   OOJS_RETURN_STRING_OR_NULL(string);
@@ -351,10 +351,10 @@ static JSValue GlobalExpandMissionText(JSContext* context,
       (UNIVERSE != nullptr ? UNIVERSE->getMissiontext() : oo::PList());
   string = StringFromPList(missionText.find(*string));  // -objectForKey:
   if (string.has_value())
-    string = OOExpandDescriptionString(
+    string = oo::ExpandDescriptionString(
         kNilRandomSeed, *string, overrides, oo::PList(), std::nullopt,
-        OOExpandOptions::kForJavaScript | OOExpandOptions::kBackslashN |
-            OOExpandOptions::kGoodRNG);  // nil expanded to nil
+        oo::ExpandOptions::kForJavaScript | oo::ExpandOptions::kBackslashN |
+            oo::ExpandOptions::kGoodRNG);  // nil expanded to nil
 
   OOJS_RETURN_STRING_OR_NULL(string);
 
@@ -799,7 +799,7 @@ static JSValue GlobalGetGuiColorSettingForKey(JSContext* context,
   }
 
   GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  std::shared_ptr<OOColor> col = gui->colorFromSetting(key, nullptr);
+  std::shared_ptr<oo::Color> col = gui->colorFromSetting(key, nullptr);
 
   // The components as the colour's -normalizedArray gave them: floats, nil for
   // no colour.
@@ -820,7 +820,7 @@ static JSValue GlobalSetGuiColorSettingForKey(JSContext* context,
   OOJS_NATIVE_ENTER(context)
 
   bool result = false;
-  std::shared_ptr<OOColor> col;
+  std::shared_ptr<oo::Color> col;
 
   if (argc != 2) [[unlikely]] {
     OOJSReportBadArguments(context, std::nullopt, "setGuiColorForKey", 0,
@@ -842,7 +842,7 @@ static JSValue GlobalSetGuiColorSettingForKey(JSContext* context,
   }
 
   if (!JS_IsNull(value)) {
-    col = OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+    col = oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
     if (col == nullptr) {
       OOJSReportBadArguments(context, std::nullopt, "setGuiColorForKey", 1,
                              OOJS_ARGV, std::nullopt, "color descriptor");
@@ -993,7 +993,7 @@ static JSValue GlobalQuitGame(JSContext* context, JSValueConst /*oojsThis*/,
   /*	Quit once the calling script has returned, so that the JavaScript
           runtime can be shut down and leak-checked with no script on the stack.
   */
-  OOScheduleDeferredCall(
+  oo::ScheduleDeferredCall(
       []() {
         if (UNIVERSE != nullptr) UNIVERSE->quitGame();
       },

@@ -40,13 +40,13 @@ class SkyEntity : public oo::EntityWithDrawable {
   /*	-initWithColors::andSystemInfo:'s body after [super init] (the
      constructor ran Entity's), run on a new sky once its object is made.
   */
-  void initWithColors(OOColor* col1, OOColor* col2,
+  void initWithColors(oo::Color* col1, oo::Color* col2,
                       const oo::PList& systemInfo);
   bool changeProperty(const std::string& key, const oo::PList& dict);
 
-  OOColor* getSkyColor();  // -skyColor (the ivar keeps the name)
+  oo::Color* getSkyColor();  // -skyColor (the ivar keeps the name)
 
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   bool isSky() override;
   bool isVisible() override;
   bool canCollide() override;
@@ -59,11 +59,11 @@ class SkyEntity : public oo::EntityWithDrawable {
 #endif
 
  private:
-  bool readColor1(std::shared_ptr<OOColor>* ioColor1,
-                  std::shared_ptr<OOColor>* ioColor2,
-                  std::shared_ptr<OOColor>* ioColor3,
-                  std::shared_ptr<OOColor>* ioColor4,
+  bool readColor1(std::shared_ptr<oo::Color>* ioColor1,
+                  std::shared_ptr<oo::Color>* ioColor2,
+                  std::shared_ptr<oo::Color>* ioColor3,
+                  std::shared_ptr<oo::Color>* ioColor4,
                   const oo::PList& dictionary);
 
-  std::shared_ptr<OOColor> skyColor;
+  std::shared_ptr<oo::Color> skyColor;
 };

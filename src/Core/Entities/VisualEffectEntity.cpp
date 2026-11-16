@@ -39,37 +39,37 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "Color.h"
+#include "Description.h"
 #include "Entity.h"
 #include "EntityHelpers.h"
 #include "EntityHold.h"
 #include "EntityPListForeign.h"
 #include "EntityStatus.h"
 #include "EntityWithDrawable.h"
+#include "FastArithmetic.h"
 #include "FlasherEntity.h"
+#include "Foundation.h"
 #include "HeadUpDisplay.h"
+#include "Maths.h"
+#include "Mesh.h"
 #include "MyOpenGLView.h"
-#include "OOColor.h"
-#include "OODescription.h"
-#include "OOFastArithmetic.h"
-#include "OOFoundation.h"
 #include "OOJSEngineCore.h"
 #include "OOJSEngineNativeWrappers.h"
 #include "OOJSPropID.h"
 #include "OOJSVisualEffect.h"
-#include "OOMaths.h"
-#include "OOMesh.h"
-#include "OOOpenGLMatrixManager.h"
-#include "OOPListGameTypes.h"
-#include "OOPolygonSprite.h"
-#include "OOQuaternion.h"
 #include "OOScript.h"
-#include "OOStringExpander.h"
-#include "OOTypes.h"
-#include "OOVector.h"
+#include "OpenGLMatrixManager.h"
+#include "PListGameTypes.h"
+#include "PolygonSprite.h"
+#include "Quaternion.h"
 #include "ScanClass.h"
 #include "ShaderMaterial.h"
 #include "ShipEntity.h"
+#include "StringExpander.h"
+#include "Types.h"
 #include "Universe.h"
+#include "Vector.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
@@ -167,7 +167,7 @@ bool oo::VisualEffectEntity::setUpVisualEffectFromDictionary(
   const std::optional<std::string> modelName =
       OptionalStringForKey(effectDict, "model");
   if (modelName.has_value()) {
-    const std::shared_ptr<::OOMesh> mesh = ::OOMesh::meshWithName(
+    const std::shared_ptr<::oo::Mesh> mesh = ::oo::Mesh::meshWithName(
         *modelName, _effectKey, DictionaryForKey(effectDict, "materials"),
         DictionaryForKey(effectDict, "shaders"),
         effectDict.get<bool>("smooth", false), oo::DefaultShipShaderMacros(),
@@ -230,12 +230,12 @@ bool oo::VisualEffectEntity::getIsVisualEffect() { return true; }
 
 bool oo::VisualEffectEntity::canCollide() { return false; }
 
-::OOMesh* oo::VisualEffectEntity::mesh() {
-  return static_cast<::OOMesh*>(
+::oo::Mesh* oo::VisualEffectEntity::mesh() {
+  return static_cast<::oo::Mesh*>(
       getDrawable());  // an effect's drawable is its mesh
 }
 
-void oo::VisualEffectEntity::setMesh(::OOMesh* mesh) {
+void oo::VisualEffectEntity::setMesh(::oo::Mesh* mesh) {
   if (mesh != this->mesh()) {
     setDrawable(mesh);
   }
@@ -311,7 +311,7 @@ bool oo::VisualEffectEntity::setUpOneFlasher(const oo::PList& subentDict) {
   if (flasher != nullptr)
     flasher->setPosition(
         subentDict
-            ? OOHPVectorFromPList(subentDict.find("position"), kZeroHPVector)
+            ? oo::HPVectorFromPList(subentDict.find("position"), kZeroHPVector)
             : kZeroHPVector);
   addSubEntity(flasher);
   return true;
@@ -341,9 +341,10 @@ bool oo::VisualEffectEntity::setUpOneStandardSubentity(
     return false;
   }
 
-  subPosition = OOHPVectorFromPList(subentDict.find("position"), kZeroHPVector);
-  subOrientation = OOQuaternionFromPList(subentDict.find("orientation"),
-                                         kIdentityQuaternion);
+  subPosition =
+      oo::HPVectorFromPList(subentDict.find("position"), kZeroHPVector);
+  subOrientation = oo::QuaternionFromPList(subentDict.find("orientation"),
+                                           kIdentityQuaternion);
 
   subentity->setPosition(subPosition);
   subentity->setOrientation(subOrientation);
@@ -425,13 +426,13 @@ void oo::VisualEffectEntity::drawSubEntityImmediate(bool immediate,
     // culling
     return;  // TOO FAR AWAY
   }
-  OOGLPushModelView();
+  oo::GLPushModelView();
   // HPVect: camera position
-  OOGLTranslateModelView(HPVectorToVector(position));
-  OOGLMultModelView(rotMatrix);
+  oo::GLTranslateModelView(HPVectorToVector(position));
+  oo::GLMultModelView(rotMatrix);
   drawImmediate(immediate, translucent);
 
-  OOGLPopModelView();
+  oo::GLPopModelView();
 }
 
 void oo::VisualEffectEntity::rescaleBy(GLfloat factor) {
@@ -576,13 +577,13 @@ void oo::VisualEffectEntity::drawImmediate(bool immediate, bool translucent) {
   if (no_draw_distance < cam_zero_distance) {
     return;  // too far away to draw
   }
-  OOGLPushModelView();
-  OOGLScaleModelView(make_vector(_scaleX, _scaleY, _scaleZ));
+  oo::GLPushModelView();
+  oo::GLScaleModelView(make_vector(_scaleX, _scaleY, _scaleZ));
 
   if (mesh() != nullptr) {
     oo::EntityWithDrawable::drawImmediate(immediate, translucent);
   }
-  OOGLPopModelView();
+  oo::GLPopModelView();
 
   // Draw subentities.
   if (!immediate) {
@@ -599,7 +600,7 @@ void oo::VisualEffectEntity::drawImmediate(bool immediate, bool translucent) {
   }
 }
 
-void oo::VisualEffectEntity::update(OOTimeDelta delta_t) {
+void oo::VisualEffectEntity::update(oo::TimeDelta delta_t) {
   oo::EntityWithDrawable::update(delta_t);
 
   if (!_haveExecutedSpawnAction) {
@@ -654,29 +655,29 @@ bool oo::VisualEffectEntity::isShipWithSubEntityShip(Entity* other) {
   return true;
 }
 
-OOColor* oo::VisualEffectEntity::scannerDisplayColor1() {
+oo::Color* oo::VisualEffectEntity::scannerDisplayColor1() {
   return scanner_display_color1.get();
 }
 
-OOColor* oo::VisualEffectEntity::scannerDisplayColor2() {
+oo::Color* oo::VisualEffectEntity::scannerDisplayColor2() {
   return scanner_display_color2.get();
 }
 
-void oo::VisualEffectEntity::setScannerDisplayColor1(OOColor* color) {
+void oo::VisualEffectEntity::setScannerDisplayColor1(oo::Color* color) {
   scanner_display_color1 = nullptr;
 
   if (color == nullptr)
-    scanner_display_color1 = OOColor::colorWithDescription(
+    scanner_display_color1 = oo::Color::colorWithDescription(
         ValueForKey(effectinfoDictionary, "scanner_display_color1"));
   else
     scanner_display_color1 = oo::share(color);
 }
 
-void oo::VisualEffectEntity::setScannerDisplayColor2(OOColor* color) {
+void oo::VisualEffectEntity::setScannerDisplayColor2(oo::Color* color) {
   scanner_display_color2 = nullptr;
 
   if (color == nullptr)
-    scanner_display_color2 = OOColor::colorWithDescription(
+    scanner_display_color2 = oo::Color::colorWithDescription(
         ValueForKey(effectinfoDictionary, "scanner_display_color2"));
   else
     scanner_display_color2 = oo::share(color);
@@ -686,7 +687,8 @@ static GLfloat default_color[4] = {0.0, 0.0, 0.0, 0.0};
 static GLfloat scripted_color[4] = {0.0, 0.0, 0.0, 0.0};
 
 GLfloat* oo::VisualEffectEntity::scannerDisplayColorForShip(
-    bool flash, OOColor* scannerDisplayColor1, OOColor* scannerDisplayColor2) {
+    bool flash, oo::Color* scannerDisplayColor1,
+    oo::Color* scannerDisplayColor2) {
   if (scannerDisplayColor1 || scannerDisplayColor2) {
     if (scannerDisplayColor1 && !scannerDisplayColor2) {
       scannerDisplayColor1->getRed(&scripted_color[0], &scripted_color[1],
@@ -752,9 +754,9 @@ void oo::VisualEffectEntity::remove() {
 
 /* beacons */
 
-OOComparisonResult oo::VisualEffectEntity::compareBeaconCodeWith(
+oo::ComparisonResult oo::VisualEffectEntity::compareBeaconCodeWith(
     Entity* other) {
-  return static_cast<OOComparisonResult>(oo::str::caseInsensitiveCompare(
+  return static_cast<oo::ComparisonResult>(oo::str::caseInsensitiveCompare(
       beaconCode().value_or(""), oo::BeaconCode(other).value_or("")));
 }
 
@@ -798,7 +800,7 @@ void oo::VisualEffectEntity::setBeaconLabel(
 
 bool oo::VisualEffectEntity::isBeacon() { return beaconCode().has_value(); }
 
-OOHUDBeaconIcon* oo::VisualEffectEntity::beaconDrawable() {
+oo::HUDBeaconIcon* oo::VisualEffectEntity::beaconDrawable() {
   if (_beaconDrawable == nullptr) {
     const std::u16string beaconCode =
         oo::utf8ToUtf16(_beaconCode.value_or(std::string()));
@@ -809,16 +811,16 @@ OOHUDBeaconIcon* oo::VisualEffectEntity::beaconDrawable() {
       const oo::PList iconData =
           (iconEntry != nullptr) ? *iconEntry : oo::PList();
       if (iconData.isArray())
-        _beaconDrawable = OOPolygonSprite::initWithDataArray(
+        _beaconDrawable = oo::PolygonSprite::initWithDataArray(
             iconData, 0.5, *_beaconCode);  // null where it answered nil
     }
 
     if (_beaconDrawable == nullptr) {
       if (length > 0)
-        _beaconDrawable = oo::makeShared<OOHUDBeaconCodeIcon>(
+        _beaconDrawable = oo::makeShared<oo::HUDBeaconCodeIcon>(
             oo::utf16ToUtf8(beaconCode.substr(0, 1)));  // -substringToIndex:1
       else
-        _beaconDrawable = oo::makeShared<OOHUDBeaconCodeIcon>(std::string());
+        _beaconDrawable = oo::makeShared<oo::HUDBeaconCodeIcon>(std::string());
     }
   }
 
@@ -853,7 +855,7 @@ bool oo::VisualEffectEntity::isJammingScanning() { return false; }
 GLfloat oo::VisualEffectEntity::hullHeatLevel() { return _hullHeatLevel; }
 
 void oo::VisualEffectEntity::setHullHeatLevel(GLfloat value) {
-  _hullHeatLevel = OOClamp_0_1_f(value);
+  _hullHeatLevel = oo::Clamp_0_1_f(value);
 }
 
 GLfloat oo::VisualEffectEntity::shaderFloat1() { return _shaderFloat1; }

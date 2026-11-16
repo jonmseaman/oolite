@@ -42,21 +42,21 @@ class FlashEffectEntity : public LightParticleEntity {
   static std::shared_ptr<FlashEffectEntity> explosionFlashFromEntity(
       Entity* entity);  // the C++ entity
   static std::shared_ptr<FlashEffectEntity> laserFlashWithPosition(
-      HPVector position, Vector vel, OOColor* color);
+      HPVector position, Vector vel, oo::Color* color);
 
   static void setUpTexture();
   // Called by the texture's file-local graphics reset client.
   static void resetGraphicsState();
 
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   oo::Texture* texture() override;
 
  private:
   // The initialisers' bodies, run once right after construction.
   void initExplosionFlashWithPosition(HPVector pos, Vector vel, float size);
-  void initLaserFlashWithPosition(HPVector pos, Vector vel, OOColor* color);
+  void initLaserFlashWithPosition(HPVector pos, Vector vel, oo::Color* color);
   // Designated initializer.
-  void initWithPosition(HPVector pos, float size, OOColor* color,
+  void initWithPosition(HPVector pos, float size, oo::Color* color,
                         float duration);
 
   float _duration = {};

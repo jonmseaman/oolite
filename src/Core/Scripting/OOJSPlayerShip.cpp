@@ -36,11 +36,11 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "ConstToString.h"
+#include "EquipmentType.h"
 #include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
 #include "OOConstToJSString.h"
-#include "OOConstToString.h"
-#include "OOEquipmentType.h"
 #include "OOJSEntity.h"
 #include "OOJSEquipmentInfo.h"
 #include "OOJSPlayer.h"
@@ -48,10 +48,10 @@ MA 02110-1301, USA.
 #include "OOJSShip.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOSystemDescriptionManager.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityScriptMethods.h"
 #include "StationEntity.h"
+#include "SystemDescriptionManager.h"
 #include "Universe.h"
 #include "oofnd/Notification.hpp"
 #include "oofnd/PList.hpp"
@@ -70,7 +70,7 @@ namespace {
 
 // A colour's components as its -normalizedArray gave them to JavaScript:
 // floats, null for no colour.
-oo::PList NormalizedColorComponents(OOColor* color) {
+oo::PList NormalizedColorComponents(oo::Color* color) {
   if (color == nullptr) return oo::PList();
   oo::PList::Array components;
   for (float component : color->normalizedArray())
@@ -94,13 +94,13 @@ HeadUpDisplay* HudOf(PlayerEntity* player) {
                             : static_cast<HeadUpDisplay*>(nullptr));
 }
 
-std::shared_ptr<OOColor> HudReticleColor(PlayerEntity* player,
-                                         std::size_t idx) {
+std::shared_ptr<oo::Color> HudReticleColor(PlayerEntity* player,
+                                           std::size_t idx) {
   HeadUpDisplay* hud =
       (player != nullptr ? player->getHud()
                          : static_cast<HeadUpDisplay*>(nullptr));
   return (hud != nullptr) ? hud->reticleColorForIndex(idx)
-                          : std::shared_ptr<OOColor>();
+                          : std::shared_ptr<oo::Color>();
 }
 
 // A string, or null for none (what an NSString or nil gave JavaScript).
@@ -142,10 +142,10 @@ static JSValue PlayerShipShowHUDSelector(OOJS_NATIVE_ARGS);
 static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS);
 
 static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
-                              bool isCargo, OOSystemID* start,
-                              OOSystemID* destination, double* eta, double* fee,
-                              double* premium, const std::string& functionName,
-                              unsigned* risk);
+                              bool isCargo, oo::SystemID* start,
+                              oo::SystemID* destination, double* eta,
+                              double* fee, double* premium,
+                              const std::string& functionName, unsigned* risk);
 
 namespace {
 
@@ -656,7 +656,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
           !(player != nullptr ? player->dialIdentEngaged() : false));
 
     case kChartHightlightMode:
-      result = oo::PList(OOStringFromLongRangeChartMode(
+      result = oo::PList(oo::StringFromLongRangeChartMode(
           player != nullptr ? player->getLongRangeChartMode()
                             : oo::LongRangeChartMode{}));
       break;
@@ -696,16 +696,16 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
                          player != nullptr ? player->previousSystemID() : 0);
 
     case kRouteMode: {
-      OORouteType route =
-          (player != nullptr ? player->ANAMode() : OORouteType{});
+      oo::RouteType route =
+          (player != nullptr ? player->ANAMode() : oo::RouteType{});
       switch (route) {
-        case OORouteType::kTime:
+        case oo::RouteType::kTime:
           result = oo::PList("OPTIMIZED_BY_TIME");
           break;
-        case OORouteType::kJumps:
+        case oo::RouteType::kJumps:
           result = oo::PList("OPTIMIZED_BY_JUMPS");
           break;
-        case OORouteType::kNone:
+        case oo::RouteType::kNone:
           result = oo::PList("OPTIMIZED_BY_NONE");
           break;
       }
@@ -750,9 +750,9 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
 
     case kCompassType:
       result = oo::PList(
-          (OOStringFromCompassMode(player != nullptr ? player->getCompassMode()
-                                                     : oo::CompassMode{}) ==
-           "COMPASS_MODE_BASIC")
+          (oo::StringFromCompassMode(
+               player != nullptr ? player->getCompassMode()
+                                 : oo::CompassMode{}) == "COMPASS_MODE_BASIC")
               ? "OO_COMPASSTYPE_BASIC"
               : "OO_COMPASSTYPE_ADVANCED");
       break;
@@ -803,13 +803,13 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
           (player != nullptr ? player->viewpointOffsetStarboard() : Vector{}));
 
     case kCurrentWeapon:
-      result = OOEquipmentTypeObjectNode(
+      result = oo::EquipmentTypeObjectNode(
           player != nullptr
               ? player->weaponTypeForFacing(
                     (player != nullptr ? player->getCurrentWeaponFacing()
-                                       : OOWeaponFacing{}),
+                                       : oo::WeaponFacing{}),
                     false)
-              : static_cast<OOEquipmentType*>(nullptr));
+              : static_cast<oo::EquipmentType*>(nullptr));
       break;
 
     case kPrice:
@@ -883,7 +883,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
   std::optional<std::string> sValue;
   oo::GalacticHyperspaceBehaviour ghBehaviour;
   Vector vValue;
-  std::shared_ptr<OOColor>
+  std::shared_ptr<oo::Color>
       colorForScript;        // the colours are converted (OOColor)
   Entity* eValue = nullptr;  // as JSValueToEntity() answers (the C++ entity)
 
@@ -916,13 +916,13 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         oo::LongRangeChartMode chartMode =
-            OOLongRangeChartModeFromString(sValue.value_or(""));
+            oo::LongRangeChartModeFromString(sValue.value_or(""));
         if (chartMode > oo::LongRangeChartMode::kUnknown) {
           if (player != nullptr) player->setLongRangeChartMode(chartMode);
           if (player != nullptr)
             player->doScriptEvent(
                 OOJSID("chartHighlightModeChanged"),
-                {oo::PList(OOStringFromLongRangeChartMode(
+                {oo::PList(oo::StringFromLongRangeChartMode(
                     player != nullptr ? player->getLongRangeChartMode()
                                       : oo::LongRangeChartMode{}))});
           return JS_UNDEFINED;
@@ -1276,7 +1276,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
         if (OOJSValueToInt32(context, value, &iValue)) {
           if (iValue >= 0 && iValue < OO_SYSTEMS_PER_GALAXY) {
             if (player != nullptr)
-              player->setTargetSystemID(static_cast<OOSystemID>(iValue));
+              player->setTargetSystemID(static_cast<oo::SystemID>(iValue));
             return JS_UNDEFINED;
           } else {
             return OOJSNativeFailure(context);
@@ -1298,7 +1298,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue >= 0 && iValue < OO_SYSTEMS_PER_GALAXY) {
           if (player != nullptr)
-            player->setInfoSystemID(static_cast<OOSystemID>(iValue), true);
+            player->setInfoSystemID(static_cast<oo::SystemID>(iValue), true);
           return JS_UNDEFINED;
         } else {
           return OOJSNativeFailure(context);
@@ -1308,7 +1308,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kMessageGuiTextColor:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         UNIVERSE->messageGUI()->setTextColor(colorForScript.get());
         return JS_UNDEFINED;
@@ -1317,7 +1317,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kMessageGuiTextCommsColor:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         UNIVERSE->messageGUI()->setTextCommsColor(colorForScript.get());
         return JS_UNDEFINED;
@@ -1326,7 +1326,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kReticleColorTarget:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         if (!(HudOf(player) != nullptr &&
               HudOf(player)->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET,
@@ -1338,7 +1338,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kReticleColorTargetSensitive:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         if (!(HudOf(player) != nullptr &&
               HudOf(player)->setReticleColorForIndex(
@@ -1350,7 +1350,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kReticleColorWormhole:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         if (!(HudOf(player) != nullptr &&
               HudOf(player)->setReticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE,
@@ -1557,12 +1557,12 @@ static JSValue PlayerShipAwardEquipmentToCurrentPylon(JSContext* context,
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> key;
-  std::shared_ptr<OOEquipmentType>
+  std::shared_ptr<oo::EquipmentType>
       eqType;  // the equipment types are converted (OOEquipmentType)
 
   if (argc > 0) key = JSValueToEquipmentKey(context, OOJS_ARGV[0]);
   if (key.has_value())
-    eqType = OOEquipmentType::equipmentTypeWithIdentifier(*key);
+    eqType = oo::EquipmentType::equipmentTypeWithIdentifier(*key);
   if (!(eqType != nullptr && eqType->isMissileOrMine())) [[unlikely]] {
     OOJSReportBadArguments(context, "PlayerShip",
                            "awardEquipmentToCurrentPylon", std::min(argc, 1),
@@ -1587,7 +1587,7 @@ static JSValue PlayerShipAddPassenger(JSContext* context,
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> name;
-  OOSystemID start = 0, destination = 0;
+  oo::SystemID start = 0, destination = 0;
   double eta = 0.0, fee = 0.0, advance = 0.0;
   unsigned risk = 0;
 
@@ -1663,7 +1663,7 @@ static JSValue PlayerShipAddParcel(JSContext* context,
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> name;
-  OOSystemID start = 0, destination = 0;
+  oo::SystemID start = 0, destination = 0;
   double eta = 0.0, fee = 0.0, premium = 0.0;
   unsigned risk = 0;
 
@@ -1735,7 +1735,7 @@ static JSValue PlayerShipAwardContract(JSContext* context,
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> key;
   int32_t qty = 0;
-  OOSystemID start = 0, destination = 0;
+  oo::SystemID start = 0, destination = 0;
   double eta = 0.0, fee = 0.0, premium = 0.0;
 
   if (argc < 6) {
@@ -2252,10 +2252,10 @@ static JSValue PlayerShipShowHUDSelector(JSContext* context,
 }
 
 static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
-                              bool isCargo, OOSystemID* start,
-                              OOSystemID* destination, double* eta, double* fee,
-                              double* premium, const std::string& functionName,
-                              unsigned* risk) {
+                              bool isCargo, oo::SystemID* start,
+                              oo::SystemID* destination, double* eta,
+                              double* fee, double* premium,
+                              const std::string& functionName, unsigned* risk) {
   OOJS_PROFILE_SCOPE();
 
   OOCParameterAssert(context != nullptr && argv != nullptr &&
@@ -2268,20 +2268,20 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
   int32_t iValue;
 
   if (!OOJSValueToInt32(context, argv[offset + 0], &iValue) || iValue < 0 ||
-      iValue > kOOMaximumSystemID) {
+      iValue > oo::kMaximumSystemID) {
     OOJSReportBadArguments(context, "PlayerShip", functionName, 1,
                            &argv[offset + 0], std::nullopt, "system ID");
     return false;
   }
-  *start = static_cast<OOSystemID>(iValue);
+  *start = static_cast<oo::SystemID>(iValue);
 
   if (!OOJSValueToInt32(context, argv[offset + 1], &iValue) || iValue < 0 ||
-      iValue > kOOMaximumSystemID) {
+      iValue > oo::kMaximumSystemID) {
     OOJSReportBadArguments(context, "PlayerShip", functionName, 1,
                            &argv[offset + 1], std::nullopt, "system ID");
     return false;
   }
-  *destination = static_cast<OOSystemID>(iValue);
+  *destination = static_cast<oo::SystemID>(iValue);
 
   if (JS_ToFloat64(context, &fValue, argv[offset + 2]) != 0 ||
       !isfinite(fValue) ||

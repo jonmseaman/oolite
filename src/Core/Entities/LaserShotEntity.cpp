@@ -30,9 +30,9 @@ MA 02110-1301, USA.
 #include <numbers>
 #include <string>
 
+#include "GraphicsResetManager.h"
+#include "MacroOpenGL.h"
 #include "MyOpenGLView.h"
-#include "OOGraphicsResetManager.h"
-#include "OOMacroOpenGL.h"
 #include "ShipEntity.h"
 #include "Texture.h"
 #include "Universe.h"
@@ -75,7 +75,7 @@ namespace {
 
 // The shot textures' graphics reset client: registered once, with the textures,
 // and never destroyed.
-class ShotTextureResetClient : public OOGraphicsResetClient {
+class ShotTextureResetClient : public oo::GraphicsResetClient {
  public:
   void resetGraphicsState() override {
     oo::LaserShotEntity::resetGraphicsState();
@@ -85,14 +85,14 @@ class ShotTextureResetClient : public OOGraphicsResetClient {
 }  // namespace
 
 void oo::LaserShotEntity::initLaserFromShip(::ShipEntity* srcEntity,
-                                            OOWeaponFacing direction,
+                                            oo::WeaponFacing direction,
                                             Vector offset) {
   // [super init] could not fail: the constructor ran Entity's -init body.
 
   ::ShipEntity* ship =
       oo::ToShip((srcEntity != nullptr ? srcEntity->rootShipEntity()
                                        : static_cast<Entity*>(nullptr)));
-  Vector middle = OOBoundingBoxCenter(
+  Vector middle = oo::BoundingBoxCenter(
       (srcEntity != nullptr ? srcEntity->getBoundingBox() : BoundingBox{}));
 
   OOCParameterAssert((srcEntity != nullptr ? srcEntity->getIsShip() : false) &&
@@ -104,9 +104,9 @@ void oo::LaserShotEntity::initLaserFromShip(::ShipEntity* srcEntity,
     // main laser offset
     setPosition(HPvector_add(
         (ship != nullptr ? ship->getPosition() : HPVector{}),
-        vectorToHPVector(OOVectorMultiplyMatrix(
+        vectorToHPVector(oo::VectorMultiplyMatrix(
             offset,
-            (ship != nullptr ? ship->drawRotationMatrix() : OOMatrix{})))));
+            (ship != nullptr ? ship->drawRotationMatrix() : oo::Matrix{})))));
   } else {
     // subentity laser
     setPosition((srcEntity != nullptr
@@ -123,23 +123,23 @@ void oo::LaserShotEntity::initLaserFromShip(::ShipEntity* srcEntity,
                              (ship != nullptr ? ship->getFlightSpeed() : 0.0f));
 
   switch (direction) {
-    case OOWeaponFacing::kNone:
-    case OOWeaponFacing::kForward:
+    case oo::WeaponFacing::kNone:
+    case oo::WeaponFacing::kForward:
       break;
 
-    case OOWeaponFacing::kAft:
+    case oo::WeaponFacing::kAft:
       quaternion_rotate_about_axis(&q, q_up,
-                                   static_cast<OOScalar>(std::numbers::pi));
+                                   static_cast<oo::Scalar>(std::numbers::pi));
       break;
 
-    case OOWeaponFacing::kPort:
+    case oo::WeaponFacing::kPort:
       quaternion_rotate_about_axis(
-          &q, q_up, static_cast<OOScalar>(std::numbers::pi / 2.0));
+          &q, q_up, static_cast<oo::Scalar>(std::numbers::pi / 2.0));
       break;
 
-    case OOWeaponFacing::kStarboard:
+    case oo::WeaponFacing::kStarboard:
       quaternion_rotate_about_axis(
-          &q, q_up, static_cast<OOScalar>(-std::numbers::pi / 2.0));
+          &q, q_up, static_cast<oo::Scalar>(-std::numbers::pi / 2.0));
       break;
   }
 
@@ -158,7 +158,7 @@ void oo::LaserShotEntity::initLaserFromShip(::ShipEntity* srcEntity,
 }
 
 std::shared_ptr<oo::LaserShotEntity> oo::LaserShotEntity::laserFromShip(
-    ::ShipEntity* ship, OOWeaponFacing direction, Vector offset) {
+    ::ShipEntity* ship, oo::WeaponFacing direction, Vector offset) {
   const std::shared_ptr<oo::LaserShotEntity> shot =
       oo::makeShared<oo::LaserShotEntity>();
   shot->initLaserFromShip(ship, direction, offset);
@@ -175,7 +175,7 @@ std::optional<std::string> oo::LaserShotEntity::descriptionComponents() const {
                      QuaternionDescription(orientation));
 }
 
-void oo::LaserShotEntity::setColor(OOColor* color) {
+void oo::LaserShotEntity::setColor(oo::Color* color) {
   // Messages to a nil colour answered 0.
   _color[0] = static_cast<GLfloat>(
       kLaserBrightness * (color != nullptr ? color->redComponent() : 0.0f) /
@@ -194,7 +194,7 @@ void oo::LaserShotEntity::setRange(GLfloat range) {
   setCollisionRadius(range);
 }
 
-void oo::LaserShotEntity::update(OOTimeDelta delta_t) {
+void oo::LaserShotEntity::update(oo::TimeDelta delta_t) {
   Entity::update(delta_t);
   _lifetime -= delta_t;
   ::ShipEntity* ship = oo::ToShip(owner());
@@ -207,9 +207,9 @@ void oo::LaserShotEntity::update(OOTimeDelta delta_t) {
     */
     setPosition(HPvector_add(
         (ship != nullptr ? ship->getPosition() : HPVector{}),
-        vectorToHPVector(OOVectorMultiplyMatrix(
+        vectorToHPVector(oo::VectorMultiplyMatrix(
             _offset,
-            (ship != nullptr ? ship->drawRotationMatrix() : OOMatrix{})))));
+            (ship != nullptr ? ship->drawRotationMatrix() : oo::Matrix{})))));
     setOrientation(quaternion_multiply(
         _relOrientation,
         (ship != nullptr ? ship->normalOrientation() : Quaternion{})));
@@ -232,7 +232,7 @@ void oo::LaserShotEntity::drawImmediate(bool /*immediate*/, bool translucent) {
     return;
 
   OO_ENTER_OPENGL();
-  OOSetOpenGLState(OOOpenGLStateID::kAdditiveBlending);
+  OOSetOpenGLState(oo::OpenGLStateID::kAdditiveBlending);
 
   /*	FIXME: spread damage across the lifetime of the shot,
           hurting whatever is hit in a given frame.
@@ -240,9 +240,9 @@ void oo::LaserShotEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   */
   OOGL(glEnableClientState(GL_TEXTURE_COORD_ARRAY));
   OOGL(glEnable(GL_TEXTURE_2D));
-  OOGLPushModelView();
+  oo::GLPushModelView();
 
-  OOGLScaleModelView(make_vector(kLaserHalfWidth, kLaserHalfWidth, _range));
+  oo::GLScaleModelView(make_vector(kLaserHalfWidth, kLaserHalfWidth, _range));
   if (oo::Texture* shot = texture1())
     shot->apply();  // a message to nil did nothing
   GLfloat s = sinf(
@@ -266,26 +266,26 @@ void oo::LaserShotEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   glTexCoordPointer(2, GL_FLOAT, 0, laserTexCoords2);
   glDrawArrays(GL_QUADS, 0, 8);
 
-  OOGLScaleModelView(make_vector(kLaserCoreWidth / kLaserHalfWidth,
-                                 kLaserCoreWidth / kLaserHalfWidth, 1.0));
+  oo::GLScaleModelView(make_vector(kLaserCoreWidth / kLaserHalfWidth,
+                                   kLaserCoreWidth / kLaserHalfWidth, 1.0));
   OOGL(glColor4f(kLaserBrightness, kLaserBrightness, kLaserBrightness,
                  static_cast<GLfloat>(0.9)));
   glDrawArrays(GL_QUADS, 0, 8);
 
   if (oo::Texture* shot = texture2())
     shot->apply();  // a message to nil did nothing
-  OOGLScaleModelView(make_vector(kLaserFlareWidth / kLaserCoreWidth,
-                                 kLaserFlareWidth / kLaserCoreWidth, 1.0));
+  oo::GLScaleModelView(make_vector(kLaserFlareWidth / kLaserCoreWidth,
+                                   kLaserFlareWidth / kLaserCoreWidth, 1.0));
   OOGL(glColor4f(_color[0], _color[1], _color[2], static_cast<GLfloat>(0.9)));
   glTexCoordPointer(2, GL_FLOAT, 0, laserTexCoords);
   glDrawArrays(GL_QUADS, 0, 8);
 
-  OOGLPopModelView();
+  oo::GLPopModelView();
   OOGL(glDisableClientState(GL_TEXTURE_COORD_ARRAY));
   OOGL(glDisable(GL_TEXTURE_2D));
 
   OOVerifyOpenGLState();
-  OOCheckOpenGLErrors([&]() -> std::string {
+  oo::CheckOpenGLErrors([&]() -> std::string {
     return "OOLaserShotEntity after drawing " + oo::EntityDescription(this);
   });
 }
@@ -310,7 +310,7 @@ void oo::LaserShotEntity::setUpTexture() {
             oo::TextureFlags::kMagFilterLinear | oo::TextureFlags::kAlphaMask |
             oo::TextureFlags::kRepeatT,
         kOOTextureDefaultAnisotropy / 2.0, 0.0));
-    OOGraphicsResetManager::sharedManager()->registerCxxClient(
+    oo::GraphicsResetManager::sharedManager()->registerCxxClient(
         new ShotTextureResetClient);
 
     ShotTexture2() = (oo::Texture::textureWithName(

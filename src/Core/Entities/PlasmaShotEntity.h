@@ -39,19 +39,19 @@ class PlasmaShotEntity : public LightParticleEntity {
  public:
   // [[OOPlasmaShotEntity alloc] initWithPosition:...]: a new shot, initialised.
   static std::shared_ptr<PlasmaShotEntity> shotWithPosition(
-      HPVector position, Vector velocity, float energy, OOTimeDelta duration,
-      OOColor* color);
+      HPVector position, Vector velocity, float energy, oo::TimeDelta duration,
+      oo::Color* color);
 
   // -initWithPosition:...'s body, run once right after construction.
   void initWithPosition(HPVector position, Vector velocity, float energy,
-                        OOTimeDelta duration, OOColor* color);
+                        oo::TimeDelta duration, oo::Color* color);
 
   bool canCollide() override;
   bool checkCloseCollisionWith(Entity* other) override;
   void update(double delta_t) override;
 
  private:
-  OOTimeDelta _duration = {};
+  oo::TimeDelta _duration = {};
 };
 
 }  // namespace oo

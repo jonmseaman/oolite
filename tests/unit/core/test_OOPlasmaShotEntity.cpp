@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "PlasmaBurstEntity.h"
 #include "PlasmaShotEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
@@ -59,7 +59,7 @@ T* NewTestPlayer() {
 // added and removed.
 class TestUniverse : public Universe {
  public:
-  OOTimeAbsolute& _time =
+  oo::TimeAbsolute& _time =
       universal_time;  // the universe's own state, which its getter answers
   Entity* _removed = {};
   Entity* _added = {};
@@ -112,7 +112,7 @@ namespace {
 
 TestUniverse* sUniverse = nullptr;
 
-void SetUp(OOTimeAbsolute time) {
+void SetUp(oo::TimeAbsolute time) {
   if (sUniverse == nullptr) {
     sUniverse = new TestUniverse();  // never released
   }
@@ -135,7 +135,7 @@ void SetUp(OOTimeAbsolute time) {
 // conversion), and nothing else -
 
 Entity* Shot(HPVector position, Vector velocity, float energy,
-             OOTimeDelta duration, OOColor* color) {
+             oo::TimeDelta duration, oo::Color* color) {
   return oo::MadeEntity(oo::PlasmaShotEntity::shotWithPosition(
       position, velocity, energy, duration, color));
 }
@@ -155,7 +155,7 @@ void SetIsShip(Entity* e) { e->isShip = true; }
 
 Entity* RedShot() {
   return Shot(make_HPvector(1, 2, 3), make_vector(4, 5, 6), 7.0f, 2.0,
-              OOColor::colorWithRed(1.0f, 0.0f, 0.0f, 0.5f).get());
+              oo::Color::colorWithRed(1.0f, 0.0f, 0.0f, 0.5f).get());
 }
 
 // A ship: C++ (its root ship entity is the C++ ship), never set up,

@@ -21,18 +21,23 @@
 #include <string>
 #include <vector>
 
-#include "OOALBufferedSound.h"
-#include "OOALMusic.h"
-#include "OOALSoundDecoder.h"
-#include "OOALSoundMixer.h"
-#include "OOALStreamedSound.h"
+#include "ALBufferedSound.h"
+#include "ALMusic.h"
+#include "ALSoundDecoder.h"
+#include "ALSoundMixer.h"
+#include "ALStreamedSound.h"
 #include "oo_test.hpp"
 
 namespace stdfs = std::filesystem;
 
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
+
+}  // namespace oo
+
 
 /*	The decoder: "missing.ogg" (and no path) has none; any other is small.
    Counts the decoders alive. A C++ stand-in: the factory the cluster calls, a
@@ -42,7 +47,7 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 static int gLiveDecoders = 0;
 
 namespace {
-class TestDecoder final : public OOALSoundDecoder {
+class TestDecoder final : public oo::ALSoundDecoder {
  public:
   explicit TestDecoder(const std::string& path) : _path(path) {
     gLiveDecoders++;
@@ -57,20 +62,20 @@ class TestDecoder final : public OOALSoundDecoder {
 };
 }  // namespace
 
-std::shared_ptr<OOALSoundDecoder> OOALSoundDecoder::initWithPath(
+std::shared_ptr<oo::ALSoundDecoder> oo::ALSoundDecoder::initWithPath(
     const std::optional<std::string>& inPath) {
   if (!inPath.has_value() || *inPath == "missing.ogg") return nullptr;
   return oo::makeShared<TestDecoder>(*inPath);
 }
 
-bool OOALSoundDecoder::readCreatingBuffer(std::vector<char>&) { return false; }
-size_t OOALSoundDecoder::streamToBuffer(char*) { return 0; }
-size_t OOALSoundDecoder::sizeAsBuffer() { return 0; }
-bool OOALSoundDecoder::isStereo() { return false; }
-long OOALSoundDecoder::sampleRate() { return 0; }
-void OOALSoundDecoder::reset() {}
-std::optional<std::string> OOALSoundDecoder::name() { return std::string(); }
-std::optional<std::string> OOALSoundDecoder::descriptionComponents() const {
+bool oo::ALSoundDecoder::readCreatingBuffer(std::vector<char>&) { return false; }
+size_t oo::ALSoundDecoder::streamToBuffer(char*) { return 0; }
+size_t oo::ALSoundDecoder::sizeAsBuffer() { return 0; }
+bool oo::ALSoundDecoder::isStereo() { return false; }
+long oo::ALSoundDecoder::sampleRate() { return 0; }
+void oo::ALSoundDecoder::reset() {}
+std::optional<std::string> oo::ALSoundDecoder::name() { return std::string(); }
+std::optional<std::string> oo::ALSoundDecoder::descriptionComponents() const {
   return std::nullopt;
 }
 
@@ -78,33 +83,43 @@ static int gLiveSounds = 0;
 
 // The buffered sound: a C++ stand-in (the members the cluster and the root
 // call). Counts the live ones.
-std::shared_ptr<OOALBufferedSound> OOALBufferedSound::initWithDecoder(
-    OOALSoundDecoder* inDecoder) {
-  std::shared_ptr<OOALBufferedSound> sound = std::shared_ptr<OOALBufferedSound>(new OOALBufferedSound(), oo::Dispose{});
+std::shared_ptr<oo::ALBufferedSound> oo::ALBufferedSound::initWithDecoder(
+    oo::ALSoundDecoder* inDecoder) {
+  std::shared_ptr<oo::ALBufferedSound> sound = std::shared_ptr<oo::ALBufferedSound>(new oo::ALBufferedSound(), oo::Dispose{});
   sound->_name = inDecoder->name();
   gLiveSounds++;
   return sound;
 }
 
-OOALBufferedSound::~OOALBufferedSound() { gLiveSounds--; }
+namespace oo {
 
-std::optional<std::string> OOALBufferedSound::name() { return _name; }
+ALBufferedSound::~ALBufferedSound() { gLiveSounds--; }
 
-ALuint OOALBufferedSound::soundBuffer() {
-  return OOSound::soundBuffer();  // the stub did not override it
+}  // namespace oo
+
+
+std::optional<std::string> oo::ALBufferedSound::name() { return _name; }
+
+ALuint oo::ALBufferedSound::soundBuffer() {
+  return oo::Sound::soundBuffer();  // the stub did not override it
 }
 
 // The streamed sound: a C++ stand-in. It refuses every decoder.
-std::shared_ptr<OOALStreamedSound> OOALStreamedSound::initWithDecoder(
-    OOALSoundDecoder* inDecoder) {
+std::shared_ptr<oo::ALStreamedSound> oo::ALStreamedSound::initWithDecoder(
+    oo::ALSoundDecoder* inDecoder) {
   (void)inDecoder;
   return nullptr;
 }
-OOALStreamedSound::~OOALStreamedSound() {}
-std::optional<std::string> OOALStreamedSound::name() { return _name; }
-void OOALStreamedSound::rewind() {}
-bool OOALStreamedSound::soundIncomplete() { return false; }
-ALuint OOALStreamedSound::soundBuffer() { return 0; }
+namespace oo {
+
+ALStreamedSound::~ALStreamedSound() {}
+
+}  // namespace oo
+
+std::optional<std::string> oo::ALStreamedSound::name() { return _name; }
+void oo::ALStreamedSound::rewind() {}
+bool oo::ALStreamedSound::soundIncomplete() { return false; }
+ALuint oo::ALStreamedSound::soundBuffer() { return 0; }
 
 /*	The mixer and its channels, under the real sound source
    (OOSoundSource.mm): the mixer hands out channels that record what they are
@@ -114,16 +129,21 @@ ALuint OOALStreamedSound::soundBuffer() { return 0; }
 */
 static std::vector<std::string> gChannelLog;
 
-OOSoundChannel::~OOSoundChannel() {}
-void OOSoundChannel::setDelegate(OOSoundChannelDelegate* delegate) {
+namespace oo {
+
+SoundChannel::~SoundChannel() {}
+
+}  // namespace oo
+
+void oo::SoundChannel::setDelegate(oo::SoundChannelDelegate* delegate) {
   _delegate = delegate;
 }
-void OOSoundChannel::setPosition(Vector position) { (void)position; }
-void OOSoundChannel::setGain(float gain) {
+void oo::SoundChannel::setPosition(Vector position) { (void)position; }
+void oo::SoundChannel::setGain(float gain) {
   gChannelLog.push_back("gain " + std::to_string(gain));
 }
 
-bool OOSoundChannel::playSound(OOSound* sound, bool loop) {
+bool oo::SoundChannel::playSound(oo::Sound* sound, bool loop) {
   gChannelLog.push_back(
       "play " +
       ((sound != nullptr) ? sound->name() : std::nullopt).value_or("(none)") +
@@ -132,9 +152,9 @@ bool OOSoundChannel::playSound(OOSound* sound, bool loop) {
   return true;
 }
 
-void OOSoundChannel::stop() {
+void oo::SoundChannel::stop() {
   gChannelLog.push_back("stop");
-  std::shared_ptr<OOSound> sound = std::move(
+  std::shared_ptr<oo::Sound> sound = std::move(
       _sound);  // _sound = nil; [sound release] at the end of the scope
   if (_delegate != nullptr) _delegate->channel(this, sound.get());
 }
@@ -143,21 +163,21 @@ static int gChannelsOut = 0;
 
 // The mixer (a C++ stand-in): one, never released, handing out a new channel
 // each time.
-OOSoundMixer* OOSoundMixer::sharedMixer() {
-  static OOSoundMixer* mixer = (*new std::shared_ptr<OOSoundMixer>(oo::makeShared<OOSoundMixer>())).get();
+oo::SoundMixer* oo::SoundMixer::sharedMixer() {
+  static oo::SoundMixer* mixer = (*new std::shared_ptr<oo::SoundMixer>(oo::makeShared<oo::SoundMixer>())).get();
   return mixer;
 }
 
-void OOSoundMixer::update() {}
+void oo::SoundMixer::update() {}
 
-void OOSoundMixer::shutdown() {}
+void oo::SoundMixer::shutdown() {}
 
-::OOSoundChannel* OOSoundMixer::popChannel() {
+::oo::SoundChannel* oo::SoundMixer::popChannel() {
   gChannelsOut++;
-  return (*new std::shared_ptr<OOSoundChannel>(oo::makeShared<OOSoundChannel>())).get();  // leaked: a few per run
+  return (*new std::shared_ptr<oo::SoundChannel>(oo::makeShared<oo::SoundChannel>())).get();  // leaked: a few per run
 }
 
-void OOSoundMixer::pushChannel(::OOSoundChannel* channel) {
+void oo::SoundMixer::pushChannel(::oo::SoundChannel* channel) {
   (void)channel;
   gChannelsOut--;
 }
@@ -176,7 +196,7 @@ void SetUp() {
   stdfs::create_directories(sRoot);
   OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
-  OO_CHECK(OOSound::setUp());
+  OO_CHECK(oo::Sound::setUp());
 }
 
 std::vector<std::string> TakeChannelLog() {
@@ -192,8 +212,8 @@ std::vector<std::string> TakeChannelLog() {
 OO_TEST(noSourceBeforeTheFirstPlay) {
   SetUp();
   {
-    std::shared_ptr<OOMusic> music =
-        OOMusic::initWithContentsOfFile(std::string("theme.ogg"));
+    std::shared_ptr<oo::Music> music =
+        oo::Music::initWithContentsOfFile(std::string("theme.ogg"));
     OO_CHECK(music != nullptr);
     OO_CHECK(music->musicSoundSource() == nullptr);
     OO_CHECK(music->musicGain() == 0.0f);
@@ -208,15 +228,15 @@ OO_TEST(noSourceBeforeTheFirstPlay) {
 OO_TEST(wrapsTheClustersSound) {
   SetUp();
   {
-    std::shared_ptr<OOMusic> music =
-        OOMusic::initWithContentsOfFile(std::string("theme.ogg"));
+    std::shared_ptr<oo::Music> music =
+        oo::Music::initWithContentsOfFile(std::string("theme.ogg"));
     OO_CHECK(music.get() != nullptr);
     OO_CHECK(music->name() == std::optional<std::string>("theme.ogg"));
     OO_CHECK(gLiveSounds == 1 && gLiveDecoders == 0);
     OO_CHECK(!music->soundIncomplete());
 
-    OO_CHECK(!OOMusic::initWithContentsOfFile(std::string("missing.ogg")));
-    OO_CHECK(!OOMusic::initWithContentsOfFile(std::nullopt));
+    OO_CHECK(!oo::Music::initWithContentsOfFile(std::string("missing.ogg")));
+    OO_CHECK(!oo::Music::initWithContentsOfFile(std::nullopt));
     OO_CHECK(gLiveSounds == 1);
   }
   OO_CHECK(gLiveSounds == 0);  // released with the music
@@ -226,14 +246,14 @@ OO_TEST(playsThroughTheSharedSource) {
   SetUp();
   TakeChannelLog();
   {
-    std::shared_ptr<OOMusic> theme =
-        OOMusic::initWithContentsOfFile(std::string("theme.ogg"));
+    std::shared_ptr<oo::Music> theme =
+        oo::Music::initWithContentsOfFile(std::string("theme.ogg"));
     theme->playLooped(true);
     OO_CHECK(
         (TakeChannelLog() ==
          std::vector<std::string>{"gain 1.000000", "play theme.ogg looped"}));
     OO_CHECK(theme->isPlaying() && gChannelsOut == 1);
-    OOSoundSource* source = theme->musicSoundSource();
+    oo::SoundSource* source = theme->musicSoundSource();
     OO_CHECK(source != nullptr && source->sound() != nullptr && source->loop());
 
     theme->playLooped(false);  // already playing: nothing
@@ -244,8 +264,8 @@ OO_TEST(playsThroughTheSharedSource) {
     OO_CHECK((TakeChannelLog() == std::vector<std::string>{"gain 0.250000"}));
 
     // Another music takes the source; the first is no longer playing.
-    std::shared_ptr<OOMusic> docked =
-        OOMusic::initWithContentsOfFile(std::string("docked.ogg"));
+    std::shared_ptr<oo::Music> docked =
+        oo::Music::initWithContentsOfFile(std::string("docked.ogg"));
     OO_CHECK(!docked->isPlaying());
     docked->playLooped(false);
     OO_CHECK(docked->musicSoundSource() == source && gChannelsOut == 1);
@@ -274,10 +294,10 @@ OO_TEST(playsThroughTheSharedSource) {
 OO_TEST(releasedWhilePlaying) {
   SetUp();
   TakeChannelLog();
-  OOSoundSource* source = nullptr;
+  oo::SoundSource* source = nullptr;
   {
-    std::shared_ptr<OOMusic> music =
-        OOMusic::initWithContentsOfFile(std::string("theme.ogg"));
+    std::shared_ptr<oo::Music> music =
+        oo::Music::initWithContentsOfFile(std::string("theme.ogg"));
     music->playLooped(true);
     source = music->musicSoundSource();
     TakeChannelLog();
@@ -295,9 +315,9 @@ OO_TEST(cxxApi) {
   SetUp();
   TakeChannelLog();
   {
-    OO_CHECK(!OOMusic::initWithContentsOfFile(std::string("missing.ogg")));
-    const std::shared_ptr<OOMusic> music =
-        OOMusic::initWithContentsOfFile(std::string("theme.ogg"));
+    OO_CHECK(!oo::Music::initWithContentsOfFile(std::string("missing.ogg")));
+    const std::shared_ptr<oo::Music> music =
+        oo::Music::initWithContentsOfFile(std::string("theme.ogg"));
     OO_CHECK(music && music->name() == std::optional<std::string>("theme.ogg"));
     OO_CHECK(!music->isPlaying() &&
              music->soundBuffer() == 0);  // the root's default

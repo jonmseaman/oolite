@@ -39,7 +39,7 @@ SOFTWARE.
 #include <string_view>
 #include <variant>
 
-#include "OOMaths.h"
+#include "Maths.h"
 #include "ShaderProgram.h"
 #include "ShaderUniformMethodType.h"
 #include "oofnd/String.hpp"
@@ -96,7 +96,7 @@ std::shared_ptr<oo::ShaderUniform> oo::ShaderUniform::initWithName(
 
 std::shared_ptr<oo::ShaderUniform> oo::ShaderUniform::initWithName(
     const std::string& uniformName, oo::ShaderProgram* shaderProgram,
-    OOColor* constValue) {
+    oo::Color* constValue) {
   if (constValue == nullptr) [[unlikely]] {
     return nullptr;
   }
@@ -125,7 +125,7 @@ std::shared_ptr<oo::ShaderUniform> oo::ShaderUniform::initWithName(
   {
     if (asMatrix) {
       result->type = oo::kShaderUniformTypeMatrix;
-      result->value = OOMatrixForQuaternionRotation(constValue);
+      result->value = oo::MatrixForQuaternionRotation(constValue);
     } else {
       result->type = oo::kShaderUniformTypeVector;
       result->value = std::array<GLfloat, 4>{constValue.x, constValue.y,
@@ -138,7 +138,7 @@ std::shared_ptr<oo::ShaderUniform> oo::ShaderUniform::initWithName(
 
 std::shared_ptr<oo::ShaderUniform> oo::ShaderUniform::initWithName(
     const std::string& uniformName, oo::ShaderProgram* shaderProgram,
-    OOMatrix constValue) {
+    oo::Matrix constValue) {
   std::shared_ptr<oo::ShaderUniform> result =
       std::shared_ptr<oo::ShaderUniform>(new oo::ShaderUniform(),
                                          oo::Dispose{});
@@ -285,7 +285,7 @@ std::optional<std::string> oo::ShaderUniform::description() {
       } break;
 
       case oo::kShaderUniformTypeMatrix:
-        valueDesc = OOMatrixDescription(std::get<OOMatrix>(value));
+        valueDesc = oo::MatrixDescription(std::get<oo::Matrix>(value));
         break;
     }
   }
@@ -441,7 +441,7 @@ void oo::ShaderUniform::applySimple() {
       break;
 
     case oo::kShaderUniformTypeMatrix:
-      GLUniformMatrix(location, std::get<OOMatrix>(value));
+      GLUniformMatrix(location, std::get<oo::Matrix>(value));
   }
 }
 
@@ -451,7 +451,7 @@ void oo::ShaderUniform::applyBinding() {
   Vector vVal;
   HPVector hpvVal;
   GLfloat expVVal[4];
-  OOMatrix mVal;
+  oo::Matrix mVal;
   Quaternion qVal;
   NSPoint pVal = {};
   bool isInt = false, isFloat = false, isVector = false, isMatrix = false,
@@ -521,7 +521,7 @@ void oo::ShaderUniform::applyBinding() {
     case oo::kShaderUniformTypeQuaternion:
       qVal = member.q;
       if (convertToMatrix) {
-        mVal = OOMatrixForQuaternionRotation(qVal);
+        mVal = oo::MatrixForQuaternionRotation(qVal);
         isMatrix = true;
       } else {
         expVVal[0] = qVal.x;
@@ -550,7 +550,7 @@ void oo::ShaderUniform::applyBinding() {
       break;
 
     case oo::kShaderUniformTypeColor:
-      if (::OOColor* color = member.color) {
+      if (::oo::Color* color = member.color) {
         expVVal[0] = color->redComponent();
         expVVal[1] = color->greenComponent();
         expVVal[2] = color->blueComponent();
@@ -561,7 +561,7 @@ void oo::ShaderUniform::applyBinding() {
   }
 
   if (isFloat) {
-    if (convertClamp) fVal = OOClamp_0_1_f(fVal);
+    if (convertClamp) fVal = oo::Clamp_0_1_f(fVal);
     OOGL(glUniform1fARB(location, fVal));
   } else if (isInt) {
     if (convertClamp) iVal = iVal ? 1 : 0;

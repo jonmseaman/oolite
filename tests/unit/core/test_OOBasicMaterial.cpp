@@ -23,15 +23,20 @@
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked; what the material and the GL error check call of it is defined here.
 */
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
-void OOLogGenericParameterErrorForFunction(const char* inFunction) {
+void LogGenericParameterErrorForFunction(const char* inFunction) {
   (void)inFunction;
 }
-void OOLogIndent(void) {
+void LogIndent(void) {
 }  // OOOpenGL.mm's error check (OOGL) indents what it logs
-void OOLogOutdent(void) {}
+void LogOutdent(void) {}
+
+}  // namespace oo
+
 
 /*	OOTexture (OOTexture.mm links the texture loaders and the game) stands
    in for the one class method the material sends, and counts it.
@@ -52,10 +57,10 @@ oo::PList TextureSpecFromObject(const oo::PList&,
 
 }  // namespace oo
 
-OOOpenGLExtensionManager* OOOpenGLExtensionManager::sharedManager() {
+oo::OpenGLExtensionManager* oo::OpenGLExtensionManager::sharedManager() {
   std::abort();
 }
-GLint OOOpenGLExtensionManager::textureUnitCount() { std::abort(); }
+GLint oo::OpenGLExtensionManager::textureUnitCount() { std::abort(); }
 // OOOpenGLStateManager.mm's (linked for the debug build's
 // OOGLNoteCurrentFunction) multitexture entry points live in
 // OOOpenGLExtensionManager.mm, which this test stubs; never called here.
@@ -138,7 +143,7 @@ Components Emission(oo::BasicMaterial* m) {
   return c;
 }
 
-bool SameColor(const std::shared_ptr<OOColor>& color,
+bool SameColor(const std::shared_ptr<oo::Color>& color,
                std::initializer_list<GLfloat> b) {
   if (color == nullptr) return false;
   const GLfloat v[4] = {color->redComponent(), color->greenComponent(),
@@ -278,22 +283,22 @@ OO_TEST(accessors) {
     OO_CHECK(SameColor(m->diffuseColor(), {0.1f, 0.2f, 0.3f, 0.4f}));
     m->setDiffuseColor(nullptr);  // null: unchanged
     OO_CHECK(Same(Diffuse(m).v, {0.1f, 0.2f, 0.3f, 0.4f}));
-    m->setDiffuseColor(OOColor::redColor().get());
+    m->setDiffuseColor(oo::Color::redColor().get());
     OO_CHECK(Same(Diffuse(m).v, {1, 0, 0, 1}));
 
-    m->setAmbientAndDiffuseColor(OOColor::greenColor().get());
+    m->setAmbientAndDiffuseColor(oo::Color::greenColor().get());
     OO_CHECK(Same(Diffuse(m).v, {0, 1, 0, 1}) &&
              Same(Ambient(m).v, {0, 1, 0, 1}));
-    m->setAmbientColor(OOColor::blueColor().get());
+    m->setAmbientColor(oo::Color::blueColor().get());
     OO_CHECK(SameColor(m->ambientColor(), {0, 0, 1, 1}));
     m->setAmbientColor(nullptr);
     OO_CHECK(Same(Ambient(m).v, {0, 0, 1, 1}));
 
-    m->setSpecularColor(OOColor::yellowColor().get());
+    m->setSpecularColor(oo::Color::yellowColor().get());
     OO_CHECK(SameColor(m->specularColor(), {1, 1, 0, 1}));
     m->setSpecularColor(nullptr);
     OO_CHECK(Same(Specular(m).v, {1, 1, 0, 1}));
-    m->setEmissionColor(OOColor::magentaColor().get());
+    m->setEmissionColor(oo::Color::magentaColor().get());
     OO_CHECK(SameColor(m->emmisionColor(), {1, 0, 1, 1}));
     m->setEmissionColor(nullptr);
     OO_CHECK(Same(Emission(m).v, {1, 0, 1, 1}));
@@ -447,7 +452,7 @@ OO_TEST(cxxAPI) {
     OO_CHECK(Same(c, {0, 0, 0, 1}));
     m->setShininess(200);
     OO_CHECK(m->shininess() == 128);
-    m->setAmbientAndDiffuseColor(OOColor::redColor().get());
+    m->setAmbientAndDiffuseColor(oo::Color::redColor().get());
     m->setDiffuseColor(nullptr);
     OO_CHECK(m->diffuseColor()->redComponent() == 1 &&
              m->ambientColor()->greenComponent() == 0);

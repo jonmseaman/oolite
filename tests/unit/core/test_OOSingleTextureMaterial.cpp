@@ -26,14 +26,19 @@
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked; what the material and the GL error check call of it is defined here.
 */
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
-void OOLogGenericParameterErrorForFunction(const char* inFunction) {
+void LogGenericParameterErrorForFunction(const char* inFunction) {
   (void)inFunction;
 }
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
+void LogIndent(void) {}
+void LogOutdent(void) {}
+
+}  // namespace oo
+
 
 /*	OOTexture (OOTexture.mm links the texture loaders and the game) is a
    stand-in that records what the material asks of it.
@@ -131,10 +136,10 @@ oo::PList TextureSpecFromObject(
 
 // Link stubs, never reached here: OOOpenGL.mm's GL
 // state dump.
-OOOpenGLExtensionManager* OOOpenGLExtensionManager::sharedManager() {
+oo::OpenGLExtensionManager* oo::OpenGLExtensionManager::sharedManager() {
   std::abort();
 }
-GLint OOOpenGLExtensionManager::textureUnitCount() { std::abort(); }
+GLint oo::OpenGLExtensionManager::textureUnitCount() { std::abort(); }
 // OOOpenGLStateManager.mm's (linked for the debug build's
 // OOGLNoteCurrentFunction) multitexture entry points live in
 // OOOpenGLExtensionManager.mm, which this test stubs; never called here.

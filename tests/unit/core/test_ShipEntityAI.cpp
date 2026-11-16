@@ -16,7 +16,7 @@
 #include "StationEntity.h"
 #include "Universe.h"
 #include "PlayerEntity.h"
-#include "OOCallByName.h"	// oo::EntityRespondsToName / oo::CallEntityByName
+#include "CallByName.h"	// oo::EntityRespondsToName / oo::CallEntityByName
 
 #include "oo_test.hpp"
 
@@ -565,8 +565,8 @@ OO_TEST(slice2MembersFromCxx)
 
 namespace {
 
-OOAegisStatus AegisStatus3(ShipEntity *s)			{ return s->aegis_status; }
-void SetAegisStatus3(ShipEntity *s, int status)	{ s->aegis_status = (OOAegisStatus)status; }
+oo::AegisStatus AegisStatus3(ShipEntity *s)			{ return s->aegis_status; }
+void SetAegisStatus3(ShipEntity *s, int status)	{ s->aegis_status = (oo::AegisStatus)status; }
 void SetEnergy3(Entity *e, GLfloat energy, GLfloat maxEnergy)	{ e->energy = energy; e->maxEnergy = maxEnergy; }
 HPVector Coordinates3(ShipEntity *s)				{ return s->coordinates; }
 void SetCoordinates3(ShipEntity *s, HPVector c)	{ s->coordinates = c; }
@@ -586,9 +586,9 @@ OO_TEST(slice3ChecksAndScans)
 		// An aegis status out of range is an internal error, and is reset.
 		SetAegisStatus3(ship, 99);
 		if (ship != nullptr)  ship->checkAegis();
-		OO_CHECK(AegisStatus3(ship) == OOAegisStatus::kNone);
+		OO_CHECK(AegisStatus3(ship) == oo::AegisStatus::kNone);
 		if (ship != nullptr)  ship->checkAegis();
-		OO_CHECK(AegisStatus3(ship) == OOAegisStatus::kNone);
+		OO_CHECK(AegisStatus3(ship) == oo::AegisStatus::kNone);
 
 		SetEnergy3(ship, 50, 100);
 		if (ship != nullptr)  ship->checkEnergy();
@@ -709,7 +709,7 @@ OO_TEST(slice3MembersFromCxx)
 		OO_CHECK((ship != nullptr ? ship->rememberedShip() : (Entity *)nullptr) == other);
 		SetAegisStatus3(ship, 42);
 		part->checkAegis();
-		OO_CHECK(AegisStatus3(ship) == OOAegisStatus::kNone);
+		OO_CHECK(AegisStatus3(ship) == oo::AegisStatus::kNone);
 		part->disengageAutopilot();		// virtual: the ship's, which logs
 	}
 }
@@ -818,7 +818,7 @@ OO_TEST(slice4ActionsAndRacepoints)
 
 		if (ship != nullptr)  ship->setFuel(0);
 		if (ship != nullptr)  ship->addFuel("3");
-		OO_CHECK((ship != nullptr ? ship->getFuel() : OOFuelQuantity{}) == 30);
+		OO_CHECK((ship != nullptr ? ship->getFuel() : oo::FuelQuantity{}) == 30);
 
 		if (ship != nullptr)  ship->ai_throwSparks();
 		OO_CHECK(ThrowSparks4(ship));
@@ -862,7 +862,7 @@ OO_TEST(slice4MembersFromCxx)
 		ShipEntity *part = ship;
 		if (ship != nullptr)  ship->setFuel(0);
 		part->addFuel("2");
-		OO_CHECK((ship != nullptr ? ship->getFuel() : OOFuelQuantity{}) == 20);
+		OO_CHECK((ship != nullptr ? ship->getFuel() : oo::FuelQuantity{}) == 20);
 		SetCollisionRadius4(ship, 12);
 		part->performFlyRacepoints();
 		OO_CHECK(Behaviour(ship) == oo::Behaviour::kFlyThruNavpoints && DesiredRange(ship) == 12);

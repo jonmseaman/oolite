@@ -34,7 +34,7 @@ MA 02110-1301, USA.
 #include <set>
 #include <string>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
@@ -61,7 +61,7 @@ class OOJSGuiScreenKeyDefinition : public oo::Object {
 
   void runCallback(const std::string& key);
 
-  OOComparisonResult interfaceCompare(OOJSGuiScreenKeyDefinition* other);
+  oo::ComparisonResult interfaceCompare(OOJSGuiScreenKeyDefinition* other);
 
  private:
   void deleteJSPointers();

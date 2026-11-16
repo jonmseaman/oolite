@@ -19,7 +19,7 @@
 
 
 #include "DustEntity.h"
-#include "OOColor.h"
+#include "Color.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_gl_test_context.hpp"
@@ -80,7 +80,7 @@ Entity* MakeDust(DustEntity** outDust) {
   return oo::MadeEntity(dust);
 }
 
-bool ColorIs(OOColor* color, float r, float g, float b, float a) {
+bool ColorIs(oo::Color* color, float r, float g, float b, float a) {
   float cr, cg, cb, ca;
   color->getRed(&cr, &cg, &cb, &ca);
   return cr == r && cg == g && cb == b && ca == a;
@@ -100,7 +100,7 @@ OO_TEST(init) {
     OO_CHECK(ColorIs(dust->dustColor(), 0.5f, 1.0f, 1.0f, 1.0f));
     OO_CHECK(oo::EntityClassName(dust) == "DustEntity");
 
-    std::shared_ptr<OOColor> color = OOColor::colorWithRed(0.25f, 0.5f, 0.75f, 1.0f);
+    std::shared_ptr<oo::Color> color = oo::Color::colorWithRed(0.25f, 0.5f, 0.75f, 1.0f);
     dust->setDustColor(color.get());
     OO_CHECK(dust->dustColor() == color.get());
 

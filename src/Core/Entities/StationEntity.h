@@ -96,24 +96,24 @@ class StationEntity : public ShipEntity {
   std::optional<std::string> jsClassName() override;
   // The ship's answer.
   bool isVisibleToScripts() override;
-  OOTechLevelID getEquivalentTechLevel();
-  void setEquivalentTechLevel(OOTechLevelID value);
+  oo::TechLevelID getEquivalentTechLevel();
+  void setEquivalentTechLevel(oo::TechLevelID value);
   Vector virtualPortDimensions();
   ::DockEntity* playerReservedDock();
   HPVector beaconPosition();
   float getEquipmentPriceFactor();
-  OOCargoQuantity getMarketCapacity();
+  oo::CargoQuantity getMarketCapacity();
   oo::PList getMarketDefinition();  // null: none
   std::optional<std::string> getMarketScriptName();
   bool getMarketMonitored();
   bool getMarketBroadcast();
-  OOCreditsQuantity legalStatusOfManifest(::OOCommodityMarket* manifest,
-                                          bool isExport);
-  ::OOCommodityMarket* getLocalMarket();
+  oo::CreditsQuantity legalStatusOfManifest(::oo::CommodityMarket* manifest,
+                                            bool isExport);
+  ::oo::CommodityMarket* getLocalMarket();
   void setLocalMarket(const oo::PList& some_market);
   oo::PList localMarketForScripting();
-  void setPrice(OOCreditsQuantity price, const std::string& commodity);
-  void setQuantity(OOCargoQuantity quantity, const std::string& commodity);
+  void setPrice(oo::CreditsQuantity price, const std::string& commodity);
+  void setQuantity(oo::CargoQuantity quantity, const std::string& commodity);
   std::vector<oo::PList>* getLocalShipyard();
   void setLocalShipyard(const std::vector<oo::PList>& some_market);
   std::map<std::string, std::shared_ptr<::OOJSInterfaceDefinition>,
@@ -121,7 +121,7 @@ class StationEntity : public ShipEntity {
   getLocalInterfaces();
   void setInterfaceDefinition(::OOJSInterfaceDefinition* definition,
                               const std::string& key);
-  ::OOCommodityMarket* initialiseLocalMarket();
+  ::oo::CommodityMarket* initialiseLocalMarket();
   void setPlanet(::oo::PlanetEntity* planet_entity);
   ::oo::PlanetEntity* getPlanet();
   unsigned countOfDockedContractors();
@@ -145,7 +145,7 @@ class StationEntity : public ShipEntity {
   std::optional<std::string> marketOverrideName();
   bool hasShipyard();
   void generateShipyard();
-  void generateShipyard(OOTechLevelID stationTechLevel);
+  void generateShipyard(oo::TechLevelID stationTechLevel);
   bool suppressArrivalReports();
   void setSuppressArrivalReports(bool newValue);
   bool getHasBreakPattern();
@@ -170,7 +170,7 @@ class StationEntity : public ShipEntity {
   void pullInShipIfPermitted(::ShipEntity* ship);
   bool dockingCorridorIsEmpty();
   void clearDockingCorridor();
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void clear();
   bool hasMultipleDocks();
   bool hasClearDock();
@@ -237,7 +237,7 @@ class StationEntity : public ShipEntity {
   unsigned max_scavengers = {};  // max no. of scavenger ships allowed
   unsigned scavengers_launched = {};
 
-  OOTechLevelID equivalentTechLevel = {};
+  oo::TechLevelID equivalentTechLevel = {};
   float equipmentPriceFactor = {};
 
   Vector port_dimensions = {};
@@ -246,12 +246,12 @@ class StationEntity : public ShipEntity {
   unsigned no_docking_while_launching : 1 = 0, hasNPCTraffic : 1 = 0;
   bool hasPatrolShips = {};
 
-  OOUniversalID planet = {};
+  oo::UniversalID planet = {};
 
   std::optional<std::string> allegiance;  // nullopt: none (was nil)
 
-  std::shared_ptr<OOCommodityMarket> localMarket;
-  OOCargoQuantity marketCapacity = {};
+  std::shared_ptr<oo::CommodityMarket> localMarket;
+  oo::CargoQuantity marketCapacity = {};
   oo::PList marketDefinition;  // an array; null: none (was nil)
   std::optional<std::string> marketScriptName;  // nullopt: none (was nil)
   std::optional<std::vector<oo::PList>>

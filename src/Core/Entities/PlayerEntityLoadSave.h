@@ -60,11 +60,11 @@ inline constexpr int SAVE_OVERWRITE_NO_ROW = 9;
 
 namespace oo {
 
-OOCreditsQuantity DeciCreditsFromDouble(double doubleDeciCredits);
+oo::CreditsQuantity DeciCreditsFromDouble(double doubleDeciCredits);
 
 /*	Value is either a real or something that can be duck-typed to an integer
    as oo::plist_get::unsignedLongLongFrom() reads it (nullptr: 0).
 */
-OOCreditsQuantity DeciCreditsFromPList(const oo::PList* value);
+oo::CreditsQuantity DeciCreditsFromPList(const oo::PList* value);
 
 }  // namespace oo

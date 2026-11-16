@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 #include <numbers>
 #include <string>
 
-#include "OOMacroOpenGL.h"
+#include "MacroOpenGL.h"
 #include "Universe.h"
 
 #define kRingDuration (2.0f)  // seconds
@@ -121,7 +121,7 @@ std::optional<std::string> oo::RingEffectEntity::descriptionComponents() const {
   return std::format("{:f} seconds passed of {:f}", _timePassed, kRingDuration);
 }
 
-void oo::RingEffectEntity::update(OOTimeDelta delta_t) {
+void oo::RingEffectEntity::update(oo::TimeDelta delta_t) {
   Entity::update(delta_t);
   _timePassed += static_cast<GLfloat>(delta_t);
 
@@ -139,9 +139,9 @@ void oo::RingEffectEntity::drawImmediate(bool /*immediate*/, bool translucent) {
     return;
 
   OO_ENTER_OPENGL();
-  OOSetOpenGLState(OOOpenGLStateID::kAdditiveBlending);
+  OOSetOpenGLState(oo::OpenGLStateID::kAdditiveBlending);
 
-  GLfloat alpha = OOClamp_0_1_f((kRingDuration - _timePassed) / kRingAttack);
+  GLfloat alpha = oo::Clamp_0_1_f((kRingDuration - _timePassed) / kRingAttack);
 
   GLfloat ex_em_hi[4] = {static_cast<GLfloat>(0.6), static_cast<GLfloat>(0.8),
                          1.0, alpha};  // pale blue
@@ -160,7 +160,7 @@ void oo::RingEffectEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   OOGLEND();
 
   OOVerifyOpenGLState();
-  OOCheckOpenGLErrors([&]() -> std::string {
+  oo::CheckOpenGLErrors([&]() -> std::string {
     return "OOQuiriumCascadeEntity after drawing " +
            oo::EntityDescription(this);
   });

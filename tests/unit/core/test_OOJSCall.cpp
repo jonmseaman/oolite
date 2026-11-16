@@ -18,8 +18,8 @@
 
 #include "OOJSCall.h"
 #include "EntityCalledByName.h"	// oo::CallEntityByNameTyped, stood in below
-#include "OOCallByName.h"
-#include "OOMaths.h"
+#include "CallByName.h"
+#include "Maths.h"
 #include <quickjs.h>
 #include "EntityPListForeign.h"	// an entity's node
 #include "OOJSEngineCore.h"	// with OOJSEngineNativeWrappers.h, for the profiler frame
@@ -118,7 +118,7 @@ JSValue JSQuaternionWithQuaternion(JSContext *context, Quaternion quaternion)
 // Link stub: OOShaderUniformMethodType.mm's matrix
 // reader answers it for a nil object; the test calls no matrix method, and
 // OOMatrix.mm would bring OpenGL.
-const OOMatrix kZeroMatrix = {};
+const oo::Matrix kZeroMatrix = {};
 
 
 #if OOJS_PROFILE

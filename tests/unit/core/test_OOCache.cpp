@@ -10,7 +10,7 @@
    C++ class's. Run: tests/run.sh unit
 */
 
-#include "OOCache.h"
+#include "Cache.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PList.hpp"
 #include <cstdint>
@@ -52,9 +52,9 @@ oo::PList Entry(const std::string& key, const oo::PList& value) {
 
 OO_TEST(emptyCache) {
   {
-    std::shared_ptr<OOCache> cache = OOCache::cacheWithPList(oo::PList());
+    std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
     OO_CHECK(cache != nullptr);
-    OO_CHECK(cache->pruneThreshold() == kOOCacheDefaultPruneThreshold);
+    OO_CHECK(cache->pruneThreshold() == oo::kCacheDefaultPruneThreshold);
     OO_CHECK(cache->autoPrune());
     OO_CHECK(!cache->dirty());
     OO_CHECK(!cache->name().has_value());
@@ -79,7 +79,7 @@ OO_TEST(emptyCache) {
 
 OO_TEST(storeReplaceRemove) {
   {
-    std::shared_ptr<OOCache> cache = OOCache::cacheWithPList(oo::PList());
+    std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
     cache->setPList(oo::PList(), "null");  // a null value is not stored
     OO_CHECK(!cache->dirty() && cache->pListsByAge().empty());
 
@@ -106,7 +106,7 @@ OO_TEST(storeReplaceRemove) {
 
 OO_TEST(leastRecentlyUsedOrder) {
   {
-    std::shared_ptr<OOCache> cache = OOCache::cacheWithPList(oo::PList());
+    std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
     for (const char* key : {"d", "b", "a", "c"})
       cache->setPList(Str(std::string("value ") + key), key);
     OO_CHECK(Strings(cache->pListsByAge()) ==
@@ -131,10 +131,10 @@ OO_TEST(leastRecentlyUsedOrder) {
 
 OO_TEST(pruning) {
   {
-    std::shared_ptr<OOCache> cache = OOCache::cacheWithPList(oo::PList());
+    std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
     cache->setPruneThreshold(3);
     OO_CHECK(cache->pruneThreshold() ==
-             kOOCacheMinimumPruneThreshold);  // the floor
+             oo::kCacheMinimumPruneThreshold);  // the floor
 
     // Auto-pruning: past the threshold, down to 80% of it, oldest first.
     for (int i = 0; i < 25; i++)
@@ -161,12 +161,12 @@ OO_TEST(pruning) {
     cache->setAutoPrune(
         true);  // turning it on prunes (under the threshold: nothing)
     OO_CHECK(cache->pListsByAge().size() == 25);
-    cache->setPruneThreshold(kOOCacheMinimumPruneThreshold);
+    cache->setPruneThreshold(oo::kCacheMinimumPruneThreshold);
     OO_CHECK(cache->pListsByAge().size() == 25);  // not over the threshold
     cache->setPList(Str("x"), "x");
     OO_CHECK(cache->pListsByAge().size() == 20);
 
-    cache->setPruneThreshold(kOOCacheNoPrune);
+    cache->setPruneThreshold(oo::kCacheNoPrune);
     for (int i = 0; i < 40; i++)
       cache->setPList(Str("y"), "y" + std::to_string(i));
     cache->prune();
@@ -186,23 +186,23 @@ OO_TEST(propertyListRoundTrip) {
                                    {"value", Str("key not a string")}})));
     entries.push_back(oo::PList(oo::PList::Dict({{"key", Str("no value")}})));
 
-    std::shared_ptr<OOCache> loaded = OOCache::cacheWithPList(oo::PList(entries));
+    std::shared_ptr<oo::Cache> loaded = oo::Cache::cacheWithPList(oo::PList(entries));
     OO_CHECK(loaded != nullptr);
     OO_CHECK(loaded->pListsByAge().size() ==
              250);  // loading does not prune, even past the threshold
     OO_CHECK(loaded->dirty());
-    OO_CHECK(loaded->pruneThreshold() == kOOCacheDefaultPruneThreshold &&
+    OO_CHECK(loaded->pruneThreshold() == oo::kCacheDefaultPruneThreshold &&
              loaded->autoPrune());
     OO_CHECK(loaded->pListForKey("k0") == oo::PList(std::int64_t(0)));
     OO_CHECK(loaded->pListForKey("no value").isNull());
 
-    std::shared_ptr<OOCache> again =
-        OOCache::cacheWithPList(loaded->pListRepresentation());
+    std::shared_ptr<oo::Cache> again =
+        oo::Cache::cacheWithPList(loaded->pListRepresentation());
     OO_CHECK(again->pListRepresentation() == loaded->pListRepresentation());
 
-    OO_CHECK(OOCache::cacheWithPList(oo::PList())->pListsByAge().empty());
-    OO_CHECK(OOCache::cacheWithPList(Str("not an array")) == nullptr);
-    OO_CHECK(OOCache::cacheWithPList(oo::PList(oo::PList::Dict())) == nullptr);
+    OO_CHECK(oo::Cache::cacheWithPList(oo::PList())->pListsByAge().empty());
+    OO_CHECK(oo::Cache::cacheWithPList(Str("not an array")) == nullptr);
+    OO_CHECK(oo::Cache::cacheWithPList(oo::PList(oo::PList::Dict())) == nullptr);
   }
 }
 
@@ -219,7 +219,7 @@ class TestForeign final : public oo::PListForeign {
 
 OO_TEST(holdsALiveObject) {
   std::shared_ptr<TestForeign> object = oo::makeShared<TestForeign>();
-  std::shared_ptr<OOCache> cache = OOCache::cacheWithPList(oo::PList());
+  std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
   {
     oo::AutoreleaseScope pool;
     cache->setPList(oo::PList(oo::PList::Object(object)), "texture");
@@ -241,7 +241,7 @@ namespace {
 
 class SelfLookingUpForeign final : public oo::PListForeign {
  public:
-  SelfLookingUpForeign(std::weak_ptr<OOCache> cache, std::string key,
+  SelfLookingUpForeign(std::weak_ptr<oo::Cache> cache, std::string key,
                       int* destroyed)
       : _cache(std::move(cache)), _key(std::move(key)), _destroyed(destroyed) {}
 
@@ -249,7 +249,7 @@ class SelfLookingUpForeign final : public oo::PListForeign {
     ++*_destroyed;
     // The lookup moves the key's entry to the young end, as the texture's
     // does; the value found is never this object.
-    if (const std::shared_ptr<OOCache> cache = _cache.lock())
+    if (const std::shared_ptr<oo::Cache> cache = _cache.lock())
       (void)cache->pListForKey(_key);
   }
 
@@ -257,7 +257,7 @@ class SelfLookingUpForeign final : public oo::PListForeign {
   std::string description() const override { return "<SelfLookingUpForeign>"; }
 
  private:
-  std::weak_ptr<OOCache> _cache;
+  std::weak_ptr<oo::Cache> _cache;
   std::string _key;
   int* _destroyed;
 };
@@ -265,7 +265,7 @@ class SelfLookingUpForeign final : public oo::PListForeign {
 }  // namespace
 
 OO_TEST(aValueMayUseTheCacheAsItGoes) {
-  std::shared_ptr<OOCache> cache = OOCache::cacheWithPList(oo::PList());
+  std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
   int destroyed = 0;
   auto Add = [&](const std::string& key) {
     cache->setPList(oo::PList(oo::PList::Object(
@@ -284,10 +284,10 @@ OO_TEST(aValueMayUseTheCacheAsItGoes) {
   OO_CHECK(destroyed == 2);
   OO_CHECK(!cache->pListForKey("b").isNull());
 
-  cache->setPruneThreshold(kOOCacheMinimumPruneThreshold);
+  cache->setPruneThreshold(oo::kCacheMinimumPruneThreshold);
   for (int i = 0; i < 30; ++i) Add("p" + std::to_string(i));
   OO_CHECK(destroyed > 2);  // pruning dropped the oldest values
-  OO_CHECK(cache->pListsByAge().size() <= kOOCacheMinimumPruneThreshold);
+  OO_CHECK(cache->pListsByAge().size() <= oo::kCacheMinimumPruneThreshold);
 }
 
 OO_TEST_MAIN()

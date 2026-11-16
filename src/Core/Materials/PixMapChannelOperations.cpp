@@ -31,7 +31,7 @@ SOFTWARE.
 
 #include <cstdint>
 
-#include "OOCPUInfoEndian.h"
+#include "CPUInfoEndian.h"
 #include "PixMap.h"
 #include "oofnd/objc/Assert.h"
 

@@ -29,7 +29,7 @@
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
-#include "OOColor.h"
+#include "Color.h"
 #include "ExhaustPlumeEntity.h"
 #include "OOJSEntity.h"
 #include "OOJSExhaustPlume.h"
@@ -67,7 +67,7 @@ T* NewTestPlayer() {
 // UNIVERSE: never initialised; answers the test's time.
 class TestUniverse : public Universe {
  public:
-  OOTimeAbsolute& _time =
+  oo::TimeAbsolute& _time =
       universal_time;  // the universe's own state, which its getter answers
 };
 
@@ -109,7 +109,7 @@ std::shared_ptr<oo::Texture> LoadTexture(const std::optional<std::string>& name,
   return oo::share(sTexture);
 }
 
-void SetUp(OOTimeAbsolute time) {
+void SetUp(oo::TimeAbsolute time) {
   if (sUniverse == nullptr) {
     sUniverse = new TestUniverse();                 // never released
     sTexture = oo::test::NewRetained<oo::Texture>();  // never released
@@ -152,7 +152,7 @@ Entity* Ship() {
   ship->_visible = true;
   ship->setSpeedFactor(1.0f);
   ship->suppressAegisMessages = false;
-  ship->exhaust_emissive_color = OOColor::colorWithRed(0.7f, 0.9f, 1.0f, 0.9f);
+  ship->exhaust_emissive_color = oo::Color::colorWithRed(0.7f, 0.9f, 1.0f, 0.9f);
   ship->v_forward = make_vector(0, 0, 1);
   ship->v_right = make_vector(1, 0, 0);
   ship->v_up = make_vector(0, 1, 0);

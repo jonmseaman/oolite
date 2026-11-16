@@ -36,7 +36,7 @@ SOFTWARE.
 #include <optional>
 #include <string>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "TextureGenerator.h"
 #include "oofnd/PList.hpp"
 
@@ -59,16 +59,16 @@ class CombinedEmissionMapGenerator : public TextureGenerator {
   */
   static std::shared_ptr<CombinedEmissionMapGenerator>
   generatorWithEmissionMapSpec(const oo::PList& emissionMapSpec,
-                               OOColor* emissionColor, Texture* diffuseMap,
-                               OOColor* diffuseColor,
+                               oo::Color* emissionColor, Texture* diffuseMap,
+                               oo::Color* diffuseColor,
                                const oo::PList& illuminationMapSpec,
-                               OOColor* illuminationColor,
+                               oo::Color* illuminationColor,
                                const oo::PList& spec);
   static std::shared_ptr<CombinedEmissionMapGenerator>
   generatorWithEmissionAndIlluminationMapSpec(
       const oo::PList& emissionAndIlluminationMapSpec, Texture* diffuseMap,
-      OOColor* diffuseColor, OOColor* emissionColor, OOColor* illuminationColor,
-      const oo::PList& spec);
+      oo::Color* diffuseColor, oo::Color* emissionColor,
+      oo::Color* illuminationColor, const oo::PList& spec);
 
 #ifndef NDEBUG
   std::optional<std::string> descriptionComponents() const override;
@@ -83,10 +83,10 @@ class CombinedEmissionMapGenerator : public TextureGenerator {
 
  private:
   bool initWithEmissionMapSpec(const oo::PList& emissionMapSpec,
-                               OOColor* emissionColor, Texture* diffuseMap,
-                               OOColor* diffuseColor,
+                               oo::Color* emissionColor, Texture* diffuseMap,
+                               oo::Color* diffuseColor,
                                const oo::PList& illuminationMapSpec,
-                               OOColor* illuminationColor, bool isCombinedMap,
+                               oo::Color* illuminationColor, bool isCombinedMap,
                                const oo::PList& spec);
 
   std::string constructCacheKey();
@@ -100,8 +100,8 @@ class CombinedEmissionMapGenerator : public TextureGenerator {
   PixMap _emissionPx = {};
   PixMap _diffusePx = {};
   PixMap _illuminationPx = {};
-  std::shared_ptr<OOColor> _emissionColor;
-  std::shared_ptr<OOColor> _illuminationColor;
+  std::shared_ptr<oo::Color> _emissionColor;
+  std::shared_ptr<oo::Color> _illuminationColor;
   bool _isCombinedMap = false;
 
   TextureFlags _textureOptions = TextureFlags::kNone;

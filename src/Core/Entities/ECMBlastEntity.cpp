@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 #include <memory>
 #include <vector>
 
-#include "OOEntityFilterPredicate.h"
+#include "EntityFilterPredicate.h"
 #include "OOJavaScriptEngine.h"
 #include "ShipEntity.h"
 #include "Universe.h"
@@ -44,7 +44,7 @@ constexpr int ECM_PULSE_COUNT = 4;
 #define ECM_DEBUG_DRAW 0
 
 #if ECM_DEBUG_DRAW
-#include "OODebugGLDrawing.h"
+#include "DebugGLDrawing.h"
 #endif
 
 // The part of -initFromShip: that could not fail. Virtual members are called as
@@ -69,7 +69,7 @@ std::shared_ptr<oo::ECMBlastEntity> oo::ECMBlastEntity::initFromShip(
                                              oo::Dispose{});
 }
 
-void oo::ECMBlastEntity::update(OOTimeDelta delta_t) {
+void oo::ECMBlastEntity::update(oo::TimeDelta delta_t) {
   _nextBlast -= delta_t;
   ShipEntity* ship = oo::ToShip(_ship.lock().get());
   bool validShip = (ship != nullptr) &&
@@ -78,7 +78,7 @@ void oo::ECMBlastEntity::update(OOTimeDelta delta_t) {
 
   if (_nextBlast <= 0.0 && validShip) {
     // Do ECM stuff.
-    double radius = OOClamp_0_1_d(
+    double radius = oo::Clamp_0_1_d(
         static_cast<double>(ECM_PULSE_COUNT - _blastsRemaining + 1) * 1.0 /
         static_cast<double>(ECM_PULSE_COUNT));
     radius *= SCANNER_MAX_RANGE;
@@ -118,7 +118,7 @@ void oo::ECMBlastEntity::update(OOTimeDelta delta_t) {
 void oo::ECMBlastEntity::drawImmediate(bool /*immediate*/,
                                        bool /*translucent*/) {
 #if ECM_DEBUG_DRAW && OO_DEBUG
-  OODebugDrawPoint(kZeroVector, OOColor::cyanColor().get());
+  oo::DebugDrawPoint(kZeroVector, oo::Color::cyanColor().get());
 #endif
   // Else do nothing, we're invisible!
 }

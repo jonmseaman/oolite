@@ -37,18 +37,18 @@ class SparkEntity : public LightParticleEntity {
   // [[OOSparkEntity alloc] initWithPosition:...]: a new spark, initialised.
   static std::shared_ptr<SparkEntity> sparkWithPosition(HPVector position,
                                                         Vector velocity,
-                                                        OOTimeDelta duration,
+                                                        oo::TimeDelta duration,
                                                         float size,
-                                                        OOColor* color);
+                                                        oo::Color* color);
 
   // -initWithPosition:...'s body, run once right after construction.
   void initWithPosition(HPVector position, Vector velocity,
-                        OOTimeDelta duration, float size, OOColor* color);
+                        oo::TimeDelta duration, float size, oo::Color* color);
 
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
 
  private:
-  void performUpdate(OOTimeDelta delta_t);
+  void performUpdate(oo::TimeDelta delta_t);
 
   GLfloat _baseRGBA[4] = {};
   GLfloat _duration = {}, _timeRemaining = {};

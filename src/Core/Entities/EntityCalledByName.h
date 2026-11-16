@@ -33,14 +33,19 @@ MA 02110-1301, USA.
 #include <span>
 #include <string>
 
-#include "OOEnumFlags.h"
-#include "OOMaths.h"
+#include "EnumFlags.h"
+#include "Maths.h"
 #include "ValueType.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Object.h"
 
 class Entity;
-class OOColor;
+
+namespace oo {
+
+class Color;
+
+}  // namespace oo
 
 // The name sets: a row applies to an entity whose C++ part is
 // of a class one of its flags names (a proxy's flag with the player's: the
@@ -75,8 +80,8 @@ struct EntityByNameValue {
   double real = 0;
   Vector vector{};
   Quaternion quaternion{};
-  Entity* entity = nullptr;  // an entity result, borrowed: the C++ entity
-  OOColor* color = nullptr;  // a colour result, borrowed (fogUniform)
+  Entity* entity = nullptr;    // an entity result, borrowed: the C++ entity
+  oo::Color* color = nullptr;  // a colour result, borrowed (fogUniform)
   oo::PList plist;
 };
 

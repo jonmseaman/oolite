@@ -45,9 +45,9 @@ SOFTWARE.
 #include <variant>
 #include <vector>
 
-#include "OOColor.h"
-#include "OOFoundation.h"
-#include "OOMaths.h"
+#include "Color.h"
+#include "Foundation.h"
+#include "Maths.h"
 #include "oofnd/Object.hpp"
 
 namespace oo {
@@ -87,7 +87,7 @@ class ShaderUniform : public oo::Object {
       GLfloat constValue[4]);  // vectorValue:
   static std::shared_ptr<ShaderUniform> initWithName(
       const std::string& uniformName, ShaderProgram* shaderProgram,
-      OOColor* constValue);  // colorValue: Converted to vector
+      oo::Color* constValue);  // colorValue: Converted to vector
   static std::shared_ptr<ShaderUniform> initWithName(
       const std::string& uniformName, ShaderProgram* shaderProgram,
       Quaternion constValue,
@@ -95,7 +95,7 @@ class ShaderUniform : public oo::Object {
                        // order, not wxyz!) or rotation matrix.
   static std::shared_ptr<ShaderUniform> initWithName(
       const std::string& uniformName, ShaderProgram* shaderProgram,
-      OOMatrix constValue);  // matrixValue:
+      oo::Matrix constValue);  // matrixValue:
 
   /*	"Convert" has different meanings for different types.
           For float and int types, it clamps to the range [0, 1].
@@ -168,8 +168,8 @@ class ShaderUniform : public oo::Object {
 
   // The constant a simple uniform uploads (the alternative `type` names), or
   // a binding's getter.
-  std::variant<std::monostate, GLint, GLfloat, std::array<GLfloat, 4>, OOMatrix,
-               Binding>
+  std::variant<std::monostate, GLint, GLfloat, std::array<GLfloat, 4>,
+               oo::Matrix, Binding>
       value = {};
   std::weak_ptr<oo::Object> cxxTarget = {};
   std::string cxxProperty = {};

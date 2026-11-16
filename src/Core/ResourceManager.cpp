@@ -39,16 +39,16 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "ALMusic.h"
+#include "CacheManager.h"
 #include "DebugStandards.h"
+#include "Description.h"
 #include "HeadUpDisplay.h"
+#include "LogOutputHandler.h"
+#include "ManifestProperties.h"
 #include "MyOpenGLView.h"
-#include "OOALMusic.h"
-#include "OOCacheManager.h"
-#include "OODescription.h"
-#include "OOLogOutputHandler.h"
-#include "OOManifestProperties.h"
-#include "OOPListParsing.h"
-#include "OOSystemDescriptionManager.h"
+#include "PListParsing.h"
+#include "SystemDescriptionManager.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Defaults.hpp"
@@ -69,21 +69,21 @@ namespace {
 // otherwise (their plist.wrongType log line, which named the Foundation class,
 // is not kept).
 oo::PList PListDictionaryFromFile(const std::string& path) {
-  oo::PList result = OOPropertyListFromFile(path);
+  oo::PList result = oo::PropertyListFromFile(path);
   return result.isDict() ? result : oo::PList();
 }
 
 oo::PList PListArrayFromFile(const std::string& path) {
-  oo::PList result = OOPropertyListFromFile(path);
+  oo::PList result = oo::PropertyListFromFile(path);
   return result.isArray() ? result : oo::PList();
 }
 
 // OOCacheManager cache and keys for the search-path modification dates (the log
 // classes are literals at their OOLog calls).
-constexpr const char* kOOCacheSearchPathModDates =
+constexpr const char* kCacheSearchPathModDates =
     "search path modification dates";
-constexpr const char* kOOCacheKeySearchPaths = "search paths";
-constexpr const char* kOOCacheKeyModificationDates = "modification dates";
+constexpr const char* kCacheKeySearchPaths = "search paths";
+constexpr const char* kCacheKeyModificationDates = "modification dates";
 
 }  // namespace
 
@@ -136,7 +136,8 @@ bool ManifestListContains(const oo::PList& manifest, const std::string& key,
 // The strings of a required_by set (held as a sorted array of unique strings).
 std::set<std::string> ManifestRequiredBy(const oo::PList& manifest) {
   std::set<std::string> result;
-  const oo::PList* list = manifest.get<oo::PList::Array>(kOOManifestRequiredBy);
+  const oo::PList* list =
+      manifest.get<oo::PList::Array>(oo::kManifestRequiredBy);
   if (list == nullptr) return result;
   for (const oo::PList& element : *list->getIf<oo::PList::Array>()) {
     if (const std::string* elementString = element.getIf<std::string>())
@@ -345,7 +346,7 @@ static bool sAllMet = false;
 //
 namespace {
 
-std::map<std::string, std::shared_ptr<::OOSound>, std::less<>> sSoundCache;
+std::map<std::string, std::shared_ptr<::oo::Sound>, std::less<>> sSoundCache;
 std::map<std::string, std::string, std::less<>> sStringCache;
 
 }  // namespace
@@ -649,7 +650,7 @@ void ResourceManager::preloadFileListFromFolder(
 void ResourceManager::preloadFilePathFor(const std::string& fileName,
                                          const std::string& subFolder,
                                          const std::string& path) {
-  OOCacheManager* cache = OOCacheManager::sharedCache();
+  oo::CacheManager* cache = oo::CacheManager::sharedCache();
   const std::string cacheKey = subFolder + "/" + fileName;
   // if nil, not found in another OXP already
   if (cache->pListForKey(cacheKey, "resolved paths").isNull()) {
@@ -700,9 +701,9 @@ void ResourceManager::setUseAddOns(const std::string& useAddOns) {
     sUseAddOnsParts = oo::str::split(*sUseAddOns, ";");
 
     clearCaches();
-    OOHUDResetTextEngine();
+    oo::HUDResetTextEngine();
 
-    OOCacheManager* cmgr = OOCacheManager::sharedCache();
+    oo::CacheManager* cmgr = oo::CacheManager::sharedCache();
     /* only allow cache writes for the "all OXPs" default
      *
      * cache should be less necessary for restricted sets anyway */
@@ -837,12 +838,12 @@ void ResourceManager::checkPotentialPath(
       }
       // make up a basic manifest in relaxed mode or for base folders
       oo::PList::Dict basicManifest;
-      basicManifest[std::string(kOOManifestIdentifier)] =
+      basicManifest[std::string(oo::kManifestIdentifier)] =
           oo::PList("__oolite.tmp." + path);
-      basicManifest[std::string(kOOManifestVersion)] = oo::PList("1");
-      basicManifest[std::string(kOOManifestTitle)] =
+      basicManifest[std::string(oo::kManifestVersion)] = oo::PList("1");
+      basicManifest[std::string(oo::kManifestTitle)] =
           oo::PList("OXP without manifest");
-      basicManifest[std::string(kOOManifestRequiredOoliteVersion)] =
+      basicManifest[std::string(oo::kManifestRequiredOoliteVersion)] =
           oo::PList("1");
       manifest = oo::PList(std::move(basicManifest));
     }
@@ -859,40 +860,40 @@ bool ResourceManager::validateManifest(const oo::PList& manifest,
                                        const std::string& path) {
   bool OK = true;
   const std::optional<std::string> identifier =
-      ManifestString(manifest, std::string(kOOManifestIdentifier));
+      ManifestString(manifest, std::string(oo::kManifestIdentifier));
   const std::optional<std::string> version =
-      ManifestString(manifest, std::string(kOOManifestVersion));
+      ManifestString(manifest, std::string(oo::kManifestVersion));
   const std::optional<std::string> required =
-      ManifestString(manifest, std::string(kOOManifestRequiredOoliteVersion));
+      ManifestString(manifest, std::string(oo::kManifestRequiredOoliteVersion));
   const std::optional<std::string> title =
-      ManifestString(manifest, std::string(kOOManifestTitle));
+      ManifestString(manifest, std::string(oo::kManifestTitle));
 
   if (!identifier.has_value()) {
     OO_LOG("oxp.noManifest", "OXZ {} manifest.plist has no '{}' field.", path,
-           kOOManifestIdentifier);
+           oo::kManifestIdentifier);
     addErrorWithKey("oxp-manifest-incomplete", title.value_or(""),
-                    std::string(kOOManifestIdentifier));
+                    std::string(oo::kManifestIdentifier));
     OK = false;
   }
   if (!version.has_value()) {
     OO_LOG("oxp.noManifest", "OXZ {} manifest.plist has no '{}' field.", path,
-           kOOManifestVersion);
+           oo::kManifestVersion);
     addErrorWithKey("oxp-manifest-incomplete", title.value_or(""),
-                    std::string(kOOManifestVersion));
+                    std::string(oo::kManifestVersion));
     OK = false;
   }
   if (!required.has_value()) {
     OO_LOG("oxp.noManifest", "OXZ {} manifest.plist has no '{}' field.", path,
-           kOOManifestRequiredOoliteVersion);
+           oo::kManifestRequiredOoliteVersion);
     addErrorWithKey("oxp-manifest-incomplete", title.value_or(""),
-                    std::string(kOOManifestRequiredOoliteVersion));
+                    std::string(oo::kManifestRequiredOoliteVersion));
     OK = false;
   }
   if (!title.has_value()) {
     OO_LOG("oxp.noManifest", "OXZ {} manifest.plist has no '{}' field.", path,
-           kOOManifestTitle);
+           oo::kManifestTitle);
     addErrorWithKey("oxp-manifest-incomplete", title.value_or(""),
-                    std::string(kOOManifestTitle));
+                    std::string(oo::kManifestTitle));
     OK = false;
   }
   if (!OK) {
@@ -914,7 +915,7 @@ bool ResourceManager::validateManifest(const oo::PList& manifest,
   auto duplicate = sOXPManifests.find(*identifier);
   if (duplicate != sOXPManifests.end()) {
     const std::optional<std::string> duplicatePath =
-        ManifestString(duplicate->second, std::string(kOOManifestFilePath));
+        ManifestString(duplicate->second, std::string(oo::kManifestFilePath));
     OO_LOG("oxp.duplicate",
            "OXP {} has the same identifier ({}) as {} which has already been "
            "loaded.",
@@ -925,7 +926,7 @@ bool ResourceManager::validateManifest(const oo::PList& manifest,
   oo::PList mData = manifest;
   // add an extra key
   if (oo::PList::Dict* dict = mData.getIf<oo::PList::Dict>())
-    (*dict)[std::string(kOOManifestFilePath)] = oo::PList(path);
+    (*dict)[std::string(oo::kManifestFilePath)] = oo::PList(path);
   sOXPManifests[*identifier] = std::move(mData);
   return true;
 }
@@ -933,9 +934,9 @@ bool ResourceManager::validateManifest(const oo::PList& manifest,
 bool ResourceManager::checkVersionCompatibility(
     const oo::PList& manifest, const std::optional<std::string>& title) {
   const std::optional<std::string> required =
-      ManifestString(manifest, std::string(kOOManifestRequiredOoliteVersion));
+      ManifestString(manifest, std::string(oo::kManifestRequiredOoliteVersion));
   const std::optional<std::string> maxRequired =
-      ManifestString(manifest, std::string(kOOManifestMaximumOoliteVersion));
+      ManifestString(manifest, std::string(oo::kManifestMaximumOoliteVersion));
   // A nil required version ended the old key/value list at once: an empty
   // requirements dictionary.
   oo::PList::Dict requirements;
@@ -1025,13 +1026,13 @@ bool ResourceManager::areRequirementsFulfilled(
 bool ResourceManager::manifestHasConflicts(const oo::PList& manifest,
                                            bool logErrors) {
   const oo::PList* conflicts =
-      manifest.get<oo::PList::Array>(kOOManifestConflictOXPs, nullptr);
+      manifest.get<oo::PList::Array>(oo::kManifestConflictOXPs, nullptr);
   // if it has a non-empty conflict_oxps list
   if (conflicts != nullptr && conflicts->count() > 0) {
     // iterate over that list
     for (const oo::PList& conflicting : *conflicts->getIf<oo::PList::Array>()) {
       const std::optional<std::string> conflictID = ManifestString(
-          conflicting, std::string(kOOManifestRelationIdentifier));
+          conflicting, std::string(oo::kManifestRelationIdentifier));
       auto conflictManifest = conflictID.has_value()
                                   ? sOXPManifests.find(*conflictID)
                                   : sOXPManifests.end();
@@ -1040,25 +1041,25 @@ bool ResourceManager::manifestHasConflicts(const oo::PList& manifest,
         // then check versions
         if (matchVersions(conflicting,
                           ManifestString(conflictManifest->second,
-                                         std::string(kOOManifestVersion))
+                                         std::string(oo::kManifestVersion))
                               .value_or(""))) {
           if (logErrors) {
             addErrorWithKey(
                 "oxp-conflict",
-                ManifestString(manifest, std::string(kOOManifestTitle))
+                ManifestString(manifest, std::string(oo::kManifestTitle))
                     .value_or(""),
                 ManifestString(conflictManifest->second,
-                               std::string(kOOManifestTitle))
+                               std::string(oo::kManifestTitle))
                     .value_or(""));
             OO_LOG("oxp.conflict",
                    "OXP {} conflicts with {} and was removed from the loading "
                    "list",
                    (LastPathComponent(ManifestString(
-                        manifest, std::string(kOOManifestFilePath))))
+                        manifest, std::string(oo::kManifestFilePath))))
                        .value_or("(null)"),
                    (LastPathComponent(
                         ManifestString(conflictManifest->second,
-                                       std::string(kOOManifestFilePath))))
+                                       std::string(oo::kManifestFilePath))))
                        .value_or("(null)"));
           }
           return true;
@@ -1084,8 +1085,9 @@ void ResourceManager::filterSearchPathsForConflicts(
       const oo::PList manifest = entry->second;
       if (manifestHasConflicts(manifest, true)) {
         // then we have a conflict, so remove this path
-        RemovePath(searchPaths,
-                   ManifestString(manifest, std::string(kOOManifestFilePath)));
+        RemovePath(
+            searchPaths,
+            ManifestString(manifest, std::string(oo::kManifestFilePath)));
         sOXPManifests.erase(identifier);
       }
     }
@@ -1095,7 +1097,7 @@ void ResourceManager::filterSearchPathsForConflicts(
 bool ResourceManager::manifestHasMissingDependencies(const oo::PList& manifest,
                                                      bool logErrors) {
   const oo::PList* requireds =
-      manifest.get<oo::PList::Array>(kOOManifestRequiresOXPs, nullptr);
+      manifest.get<oo::PList::Array>(oo::kManifestRequiresOXPs, nullptr);
   // if it has a non-empty required_oxps list
   if (requireds != nullptr && requireds->count() > 0) {
     // iterate over that list
@@ -1111,7 +1113,7 @@ bool ResourceManager::manifestHasMissingDependencies(const oo::PList& manifest,
 bool ResourceManager::manifest(const oo::PList& manifest,
                                const oo::PList& required, bool logErrors) {
   const std::optional<std::string> requiredID =
-      ManifestString(required, std::string(kOOManifestRelationIdentifier));
+      ManifestString(required, std::string(oo::kManifestRelationIdentifier));
   auto requiredManifest = requiredID.has_value()
                               ? sOXPManifests.find(*requiredID)
                               : sOXPManifests.end();
@@ -1119,9 +1121,10 @@ bool ResourceManager::manifest(const oo::PList& manifest,
   bool requirementsMet = false;
   if (requiredManifest != sOXPManifests.end()) {
     // then check versions
-    if (matchVersions(required, ManifestString(requiredManifest->second,
-                                               std::string(kOOManifestVersion))
-                                    .value_or(""))) {
+    if (matchVersions(required,
+                      ManifestString(requiredManifest->second,
+                                     std::string(oo::kManifestVersion))
+                          .value_or(""))) {
       requirementsMet = true;
       /* Mark the requiredManifest as a dependency of the
        * requiring manifest */
@@ -1132,7 +1135,7 @@ bool ResourceManager::manifest(const oo::PList& manifest,
        * done without checking if it's already there, because
        * the list of nested requirements may have changed. */
       if (std::optional<std::string> identifier =
-              ManifestString(manifest, std::string(kOOManifestIdentifier)))
+              ManifestString(manifest, std::string(oo::kManifestIdentifier)))
         reqby.insert(*identifier);
       // *and* anything that requires this OXP to be installed
       const std::set<std::string> manifestReqby = ManifestRequiredBy(manifest);
@@ -1151,24 +1154,25 @@ bool ResourceManager::manifest(const oo::PList& manifest,
         reqbyList.emplace_back(identifier);
       if (oo::PList::Dict* dict =
               requiredManifest->second.getIf<oo::PList::Dict>())
-        (*dict)[std::string(kOOManifestRequiredBy)] =
+        (*dict)[std::string(oo::kManifestRequiredBy)] =
             oo::PList(std::move(reqbyList));
     }
   }
   if (!requirementsMet) {
     if (logErrors) {
-      const std::optional<std::string> requiredDescription =
-          ManifestString(required, std::string(kOOManifestRelationDescription));
-      addErrorWithKey(
-          "oxp-required",
-          ManifestString(manifest, std::string(kOOManifestTitle)).value_or(""),
-          requiredDescription.has_value() ? *requiredDescription
-                                          : requiredID.value_or(""));
+      const std::optional<std::string> requiredDescription = ManifestString(
+          required, std::string(oo::kManifestRelationDescription));
+      addErrorWithKey("oxp-required",
+                      ManifestString(manifest, std::string(oo::kManifestTitle))
+                          .value_or(""),
+                      requiredDescription.has_value()
+                          ? *requiredDescription
+                          : requiredID.value_or(""));
       OO_LOG(
           "oxp.requirementMissing",
           "OXP {} had unmet requirements and was removed from the loading list",
           (LastPathComponent(
-               ManifestString(manifest, std::string(kOOManifestFilePath))))
+               ManifestString(manifest, std::string(oo::kManifestFilePath))))
               .value_or("(null)"));
     }
     return true;
@@ -1193,8 +1197,9 @@ bool ResourceManager::filterSearchPathsForRequirements(
       const oo::PList manifest = entry->second;
       if (manifestHasMissingDependencies(manifest, true)) {
         // then we have a missing requirement, so remove this path
-        RemovePath(searchPaths,
-                   ManifestString(manifest, std::string(kOOManifestFilePath)));
+        RemovePath(
+            searchPaths,
+            ManifestString(manifest, std::string(oo::kManifestFilePath)));
         sOXPManifests.erase(identifier);
         sAllMet = false;
       }
@@ -1207,9 +1212,9 @@ bool ResourceManager::filterSearchPathsForRequirements(
 bool ResourceManager::matchVersions(const oo::PList& rangeDict,
                                     const std::string& version) {
   const std::optional<std::string> minimum =
-      ManifestString(rangeDict, std::string(kOOManifestRelationVersion));
+      ManifestString(rangeDict, std::string(oo::kManifestRelationVersion));
   const std::optional<std::string> maximum =
-      ManifestString(rangeDict, std::string(kOOManifestRelationMaxVersion));
+      ManifestString(rangeDict, std::string(oo::kManifestRelationMaxVersion));
   const std::vector<unsigned> isVersionComponents = oo::str::versionComponents(
       version);  // "" (was nil) compares as the empty version
   if (minimum.has_value()) {
@@ -1243,10 +1248,11 @@ void ResourceManager::filterSearchPathsToExcludeScenarioOnlyPaths(
     auto entry = sOXPManifests.find(identifier);
     if (entry != sOXPManifests.end()) {
       const oo::PList manifest = entry->second;
-      if (ManifestListContains(manifest, std::string(kOOManifestTags),
-                               kOOManifestTagScenarioOnly)) {
-        RemovePath(searchPaths,
-                   ManifestString(manifest, std::string(kOOManifestFilePath)));
+      if (ManifestListContains(manifest, std::string(oo::kManifestTags),
+                               oo::kManifestTagScenarioOnly)) {
+        RemovePath(
+            searchPaths,
+            ManifestString(manifest, std::string(oo::kManifestFilePath)));
         sOXPManifests.erase(identifier);
       }
     }
@@ -1268,8 +1274,9 @@ void ResourceManager::filterSearchPathsByScenario(
       const oo::PList manifest = entry->second;
       if (!manifestAllowedByScenario(manifest)) {
         // then we don't need this one
-        RemovePath(searchPaths,
-                   ManifestString(manifest, std::string(kOOManifestFilePath)));
+        RemovePath(
+            searchPaths,
+            ManifestString(manifest, std::string(oo::kManifestFilePath)));
         sOXPManifests.erase(identifier);
       }
     }
@@ -1293,7 +1300,7 @@ bool ResourceManager::manifestAllowedByScenario(const oo::PList& manifest) {
     return false;
   }
 #endif
-  if (ManifestString(manifest, std::string(kOOManifestIdentifier)) ==
+  if (ManifestString(manifest, std::string(oo::kManifestIdentifier)) ==
       "org.oolite.oolite") {
     // the core data is always allowed!
     return true;
@@ -1315,14 +1322,14 @@ bool ResourceManager::manifestAllowedByScenario(const oo::PList& manifest) {
 
 bool ResourceManager::manifestAllowedByScenario(const oo::PList& manifest,
                                                 const std::string& identifier) {
-  if (ManifestString(manifest, std::string(kOOManifestIdentifier)) ==
+  if (ManifestString(manifest, std::string(oo::kManifestIdentifier)) ==
       identifier) {
     // manifest has the identifier - easy
     return true;
   }
   // manifest is also allowed if a manifest with that identifier
   // requires it to be installed
-  if (ManifestListContains(manifest, std::string(kOOManifestRequiredBy),
+  if (ManifestListContains(manifest, std::string(oo::kManifestRequiredBy),
                            identifier)) {
     return true;
   }
@@ -1332,7 +1339,7 @@ bool ResourceManager::manifestAllowedByScenario(const oo::PList& manifest,
 
 bool ResourceManager::manifestAllowedByScenarioWithTag(
     const oo::PList& manifest, const std::string& tag) {
-  if (ManifestListContains(manifest, std::string(kOOManifestTags), tag)) {
+  if (ManifestListContains(manifest, std::string(oo::kManifestTags), tag)) {
     // manifest has the tag - easy
     return true;
   }
@@ -1342,8 +1349,8 @@ bool ResourceManager::manifestAllowedByScenarioWithTag(
     auto reqManifest = sOXPManifests.find(identifier);
     // need to check for nil as this one may already have been ruled out
     if (reqManifest != sOXPManifests.end() &&
-        ManifestListContains(reqManifest->second, std::string(kOOManifestTags),
-                             tag)) {
+        ManifestListContains(reqManifest->second,
+                             std::string(oo::kManifestTags), tag)) {
       return true;
     }
   }
@@ -1370,7 +1377,7 @@ bool ResourceManager::checkCacheUpToDateForPaths(
      two arrays are built for it at each call and compared with -isEqual:, as
      before.
   */
-  OOCacheManager* cacheMgr = OOCacheManager::sharedCache();
+  oo::CacheManager* cacheMgr = oo::CacheManager::sharedCache();
   bool upToDate = true;
 
   if (oo::Defaults::standard().boolForKey("always-flush-cache")) [[unlikely]] {
@@ -1385,7 +1392,7 @@ bool ResourceManager::checkCacheUpToDateForPaths(
   }
 
   const oo::PList oldPaths = cacheMgr->pListForKey(
-      kOOCacheKeySearchPaths, kOOCacheSearchPathModDates);  // null: none
+      kCacheKeySearchPaths, kCacheSearchPathModDates);  // null: none
   const oo::PList searchPathList = StringArray(searchPaths);
   if (upToDate && !PListIsEqual(&oldPaths, &searchPathList)) {
     // OXPs added/removed
@@ -1412,7 +1419,7 @@ bool ResourceManager::checkCacheUpToDateForPaths(
   const oo::PList modDateList(std::move(modDates));
 
   const oo::PList oldModDates = cacheMgr->pListForKey(
-      kOOCacheKeyModificationDates, kOOCacheSearchPathModDates);
+      kCacheKeyModificationDates, kCacheSearchPathModDates);
   if (upToDate && !PListIsEqual(&oldModDates, &modDateList)) {
     OO_LOG("dataCache.rebuild.datesChanged", "{}",
            "Cache is stale (modification dates have changed). Rebuilding from "
@@ -1422,10 +1429,10 @@ bool ResourceManager::checkCacheUpToDateForPaths(
 
   if (!upToDate) {
     cacheMgr->clearAllCaches();
-    cacheMgr->setPList(searchPathList, kOOCacheKeySearchPaths,
-                       kOOCacheSearchPathModDates);
-    cacheMgr->setPList(modDateList, kOOCacheKeyModificationDates,
-                       kOOCacheSearchPathModDates);
+    cacheMgr->setPList(searchPathList, kCacheKeySearchPaths,
+                       kCacheSearchPathModDates);
+    cacheMgr->setPList(modDateList, kCacheKeyModificationDates,
+                       kCacheSearchPathModDates);
   } else {
     OO_LOG("dataCache.upToDate", "{}", "Data cache is up to date.");
   }
@@ -1465,33 +1472,33 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
     bool mergeFiles) {
   return dictionaryFromFilesNamed(
       fileName, folderName,
-      mergeFiles ? OOResourceMergeMode::kBasic : OOResourceMergeMode::kNone,
+      mergeFiles ? oo::ResourceMergeMode::kBasic : oo::ResourceMergeMode::kNone,
       true);
 }
 
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& fileName, const std::optional<std::string>& folderName,
-    OOResourceMergeMode mergeMode, bool cache) {
+    oo::ResourceMergeMode mergeMode, bool cache) {
   oo::PList result;
   std::string cacheKey;
   std::optional<std::string_view> mergeType;
-  OOCacheManager* cacheMgr = OOCacheManager::sharedCache();
+  oo::CacheManager* cacheMgr = oo::CacheManager::sharedCache();
 
   switch (mergeMode) {
-    case OOResourceMergeMode::kNone:
+    case oo::ResourceMergeMode::kNone:
       mergeType = "none";
       break;
 
-    case OOResourceMergeMode::kBasic:
+    case oo::ResourceMergeMode::kBasic:
       mergeType = "basic";
       break;
 
-    case OOResourceMergeMode::kSmart:
+    case oo::ResourceMergeMode::kSmart:
       mergeType = "smart";
       break;
   }
   if (!mergeType.has_value()) {
-    OO_LOG(kOOLogParameterError,
+    OO_LOG(oo::kLogParameterError,
            "Unknown dictionary merge mode {} for {}. (This is an internal "
            "programming error, please report it.)",
            static_cast<unsigned>(mergeMode), fileName);
@@ -1511,7 +1518,7 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
 
   // OODictionaryFromFile (OOPListParsing) is an unmigrated callee: its
   // dictionaries arrive through oo::PListFrom.
-  if (mergeMode == OOResourceMergeMode::kNone) {
+  if (mergeMode == oo::ResourceMergeMode::kNone) {
     // Find "last" matching dictionary
     const std::vector<std::string> paths = ResourceManager::paths();
     for (auto pathIt = paths.rbegin(); pathIt != paths.rend(); ++pathIt) {
@@ -1549,7 +1556,7 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
 
     for (const oo::PList& dict : results) {
       const oo::PList::Dict& entries = *dict.getIf<oo::PList::Dict>();
-      if (mergeMode == OOResourceMergeMode::kSmart)
+      if (mergeMode == oo::ResourceMergeMode::kSmart)
         MergeEntries(merged, entries);
       else
         for (const auto& [key, value] : entries)
@@ -1575,7 +1582,7 @@ oo::PList ResourceManager::arrayFromFilesNamed(
     bool mergeFiles, bool useCache) {
   oo::PList result;
   std::string cacheKey;
-  OOCacheManager* cache = OOCacheManager::sharedCache();
+  oo::CacheManager* cache = oo::CacheManager::sharedCache();
   const std::string lowercaseName = oo::str::lowercase(fileName);
   const bool textureList = lowercaseName == "nebulatextures.plist" ||
                            lowercaseName == "startextures.plist";
@@ -1713,7 +1720,7 @@ void ResourceManager::handleEquipmentListMerging(oo::PList& arrayToProcess,
 void ResourceManager::handleEquipmentOverrides(oo::PList& arrayToProcess) {
   const oo::PList overrides = dictionaryFromFilesNamed(
       "equipment-overrides.plist", std::string("Config"),
-      OOResourceMergeMode::kSmart, false);
+      oo::ResourceMergeMode::kSmart, false);
   const oo::PList::Dict* overrideEntries = overrides.getIf<oo::PList::Dict>();
   if (overrideEntries == nullptr) return;
   oo::PList::Array& entries = *arrayToProcess.getIf<oo::PList::Array>();
@@ -1983,11 +1990,11 @@ void ResourceManager::mergeRoleCategories(const oo::PList& catData,
   }
 }
 
-std::shared_ptr<OOSystemDescriptionManager>
+std::shared_ptr<oo::SystemDescriptionManager>
 ResourceManager::systemDescriptionManager() {
   OO_LOG("resourceManager.planetinfo.load", "{}", "Initialising manager");
-  std::shared_ptr<OOSystemDescriptionManager> manager =
-      oo::makeShared<OOSystemDescriptionManager>();
+  std::shared_ptr<oo::SystemDescriptionManager> manager =
+      oo::makeShared<oo::SystemDescriptionManager>();
 
   // OODictionaryFromFile (OOPListParsing) and OOSystemDescriptionManager are
   // unmigrated callees: the planetinfo dictionaries arrive through
@@ -2079,7 +2086,7 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
     bool useCache) {
   std::optional<std::string> result;
   std::string cacheKey;
-  OOCacheManager* cache = OOCacheManager::sharedCache();
+  oo::CacheManager* cache = oo::CacheManager::sharedCache();
   std::string filePath;
 
   // (The resolved-paths cache is consulted whatever useCache says: the old test
@@ -2132,11 +2139,11 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
 
 /* use extreme caution in calling with usePathCache:NO - this can be
  * an extremely expensive operation */
-::OOSound* ResourceManager::retrieveFileNamed(
+::oo::Sound* ResourceManager::retrieveFileNamed(
     const std::string& fileName, const std::optional<std::string>& folderName,
-    std::map<std::string, std::shared_ptr<::OOSound>, std::less<>>* ioCache,
+    std::map<std::string, std::shared_ptr<::oo::Sound>, std::less<>>* ioCache,
     std::optional<std::string> key, bool useCache) {
-  std::shared_ptr<::OOSound> result;
+  std::shared_ptr<::oo::Sound> result;
 
   if (ioCache) {
     if (!key.has_value())
@@ -2156,7 +2163,7 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
   // upstream's did.
   const std::optional<std::string> path =
       pathForFileNamed(fileName, folderName, useCache);
-  if (path.has_value()) result = ::OOSound::initWithContentsOfFile(path);
+  if (path.has_value()) result = ::oo::Sound::initWithContentsOfFile(path);
 
   if (result != nullptr && ioCache != nullptr) {
     (*ioCache)[*key] = result;
@@ -2166,16 +2173,16 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
   return oo::autorelease(std::move(result));
 }
 
-std::shared_ptr<OOMusic> ResourceManager::ooMusicNamed(
+std::shared_ptr<oo::Music> ResourceManager::ooMusicNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   // Don't cache music objects; minimizing latency isn't really important.
   const std::optional<std::string> path =
       pathForFileNamed(fileName, folderName, true);
   if (!path.has_value()) return nullptr;
-  return OOMusic::initWithContentsOfFile(path);
+  return oo::Music::initWithContentsOfFile(path);
 }
 
-::OOSound* ResourceManager::ooSoundNamed(
+::oo::Sound* ResourceManager::ooSoundNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   return retrieveFileNamed(
       fileName, folderName, &sSoundCache,
@@ -2382,5 +2389,5 @@ bool ResourceManager::directoryExists(const std::string& inPath,
 }
 
 std::optional<std::string> ResourceManager::diagnosticFileLocation() {
-  return OOLogHandlerGetLogBasePath();
+  return oo::LogHandlerGetLogBasePath();
 }

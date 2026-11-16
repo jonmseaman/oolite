@@ -40,15 +40,15 @@ SOFTWARE.
 #include <typeinfo>
 #include <utility>
 
+#include "ConvertCubeMapToLatLong.h"
 #include "DebugStandards.h"
-#include "OOConvertCubeMapToLatLong.h"
-#include "OODemangle.h"
-#include "OOTextureScaling.h"
+#include "Demangle.h"
 #include "PNGTextureLoader.h"
 #include "PixMapChannelOperations.h"
 #include "ResourceManager.h"
 #include "Texture.h"
 #include "TextureGenerator.h"
+#include "TextureScaling.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/PListGet.hpp"
@@ -103,8 +103,8 @@ std::shared_ptr<oo::TextureLoader> oo::TextureLoader::loaderWithPath(
   }
 
   if (result != nullptr) {
-    if (!OOAsyncWorkManager::sharedAsyncWorkManager()->addTask(
-            result.get(), OOAsyncWorkPriority::kMedium))
+    if (!oo::AsyncWorkManager::sharedAsyncWorkManager()->addTask(
+            result.get(), oo::AsyncWorkPriority::kMedium))
       result = nullptr;
   }
 
@@ -125,7 +125,7 @@ oo::TextureLoader::loaderWithTextureSpecifier(
   path = ResourceManager::pathForFileNamed(name, folder);
   if (!path.has_value()) {
     if (!oo::Any(options & oo::TextureFlags::kNoFNFMessage)) {
-      OO_LOG_WARN(kOOLogFileNotFound, "Could not find texture file \"{}\".",
+      OO_LOG_WARN(oo::kLogFileNotFound, "Could not find texture file \"{}\".",
                   name);
       oo::StandardsError("Texture file not found");
     }
@@ -270,7 +270,7 @@ bool oo::TextureLoader::isReady() { return _ready; }
 std::optional<oo::TextureLoader::Result> oo::TextureLoader::getResult() {
   if (!_ready) {
     // The work manager knows the task as the C++ loader.
-    OOAsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(this);
+    oo::AsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(this);
   }
   if (_data == nullptr) return std::nullopt;
 
@@ -314,7 +314,7 @@ void oo::TextureLoader::setUp() {
   if (sUserMaxSize < 0x80000000)
     OO_LOG("texture.load.rescale.maxSize", "User maximum texture size: {}",
            static_cast<unsigned>(sUserMaxSize));
-  sUserMaxSize = OORoundUpToPowerOf2_32(sUserMaxSize);
+  sUserMaxSize = oo::RoundUpToPowerOf2_32(sUserMaxSize);
   sUserMaxSize = std::max(sUserMaxSize, 64U);
 
   sHaveSetUp = true;
@@ -374,7 +374,7 @@ void oo::TextureLoader::generateMipMapsForCubeMap() {
     void* dstBytes = newData->data() + newSideSize * i;
 
     memcpy(dstBytes, srcBytes, srcSideSize);
-    OOGenerateMipMaps(dstBytes, _width, _width, _format);
+    oo::GenerateMipMaps(dstBytes, _width, _width, _format);
   }
 
   _data = std::move(newData);
@@ -421,7 +421,7 @@ void oo::TextureLoader::applySettings() {
     desiredWidth = desiredHeight * 2;
 
     oo::PixMap converted =
-        OOConvertCubeMapToLatLong(pixMap, desiredHeight, _generateMipMaps);
+        oo::ConvertCubeMapToLatLong(pixMap, desiredHeight, _generateMipMaps);
     oo::FreePixMap(&pixMap);
     pixMap = converted;
     _isCubeMap = false;
@@ -452,8 +452,8 @@ void oo::TextureLoader::applySettings() {
            static_cast<unsigned>(desiredWidth),
            static_cast<unsigned>(desiredHeight));
 
-    pixMap = OOScalePixMap(pixMap, desiredWidth, desiredHeight,
-                           leaveSpaceForMipMaps);
+    pixMap = oo::ScalePixMap(pixMap, desiredWidth, desiredHeight,
+                             leaveSpaceForMipMaps);
     if (!oo::IsValidPixMap(pixMap)) [[unlikely]]
       return;
 
@@ -488,7 +488,7 @@ void oo::TextureLoader::applySettings() {
     _rowBytes = pixMap.rowBytes;
   }
   if (_generateMipMaps) {
-    OOGenerateMipMaps(_data->data(), _width, _height, _format);
+    oo::GenerateMipMaps(_data->data(), _width, _height, _format);
   }
 
   // All done.

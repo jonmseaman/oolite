@@ -1,0 +1,534 @@
+/*
+
+OOJoystickProfile.m
+
+Oolite
+Copyright (C) 2004-2013 Giles C Williams and contributors
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301, USA.
+
+*/
+
+#include "JoystickProfile.h"
+
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "FastArithmetic.h"
+#include "JoystickManager.h"
+#include "oofnd/Object.hpp"
+#include "oofnd/objc/FoundationTypes.h"
+constexpr double SPLINE_POINT_MIN_SPACING = 0.02;
+
+namespace oo {
+
+class JoystickSplineSegment : public oo::Object {
+ public:
+  JoystickSplineSegment();  // -init
+
+  // Linear spline from left point to right point.  Returns nil if right.x -
+  // left.x <= 0.0.
+  static std::shared_ptr<JoystickSplineSegment> segmentWithData(NSPoint left,
+                                                                NSPoint right);
+
+  // Quadratic spline from left point to right point, with gradient specified at
+  // left.  returns nil if right.x - left.x <= 0.0.
+  static std::shared_ptr<JoystickSplineSegment> segmentWithData(
+      NSPoint left, NSPoint right, double gradientleft);
+
+  // Quadratic spline from left point to right point, with gradient specified at
+  // right.  returns nil if right.x - left.x <= 0.0.
+  // (+segmentWithData:right:gradientright: has the same argument types as the
+  // one above, so it keeps its last keyword.)
+  static std::shared_ptr<JoystickSplineSegment> segmentWithDataGradientRight(
+      NSPoint left, NSPoint right, double gradientright);
+
+  // Cubic spline from left point to right point, with gradients specified at
+  // end points.  returns nil if right.x - left.x <= 0.0.
+  static std::shared_ptr<JoystickSplineSegment> segmentWithData(
+      NSPoint left, NSPoint right, double gradientleft, double gradientright);
+
+  std::shared_ptr<JoystickSplineSegment> copy();  // -copyWithZone:
+  double start();
+  double end();
+  double value(double t);
+  double gradient(double t);
+
+ private:
+  // The -initWithData:... initialisers, which could fail.
+  bool initWithData(NSPoint left, NSPoint right);
+  bool initWithData(NSPoint left, NSPoint right, double gradientleft);
+  bool initWithDataGradientRight(NSPoint left, NSPoint right,
+                                 double gradientright);
+  bool initWithData(NSPoint left, NSPoint right, double gradientleft,
+                    double gradientright);
+
+  double start_ = {};  // the ivars start and end (they clash
+                       // with start(), end())
+  double end_ = {};
+  double a[4] = {};
+};
+
+}  // namespace oo
+
+oo::JoystickAxisProfile::JoystickAxisProfile() { deadzone_ = STICK_DEADZONE; }
+
+std::shared_ptr<oo::JoystickAxisProfile> oo::JoystickAxisProfile::copy() {
+  // [[[self class] alloc] init]: only an OOJoystickAxisProfile itself gets
+  // here; both subclasses override.
+  std::shared_ptr<oo::JoystickAxisProfile> copy =
+      oo::makeShared<oo::JoystickAxisProfile>();
+  return copy;
+}
+
+double oo::JoystickAxisProfile::rawValue(double x) { return x; }
+
+double oo::JoystickAxisProfile::value(double x) {
+  if (fabs(x) < deadzone_) {
+    return 0.0;
+  }
+  return x < 0 ? -rawValue((-x - deadzone_) / (1.0 - deadzone_))
+               : rawValue((x - deadzone_) / (1.0 - deadzone_));
+}
+
+double oo::JoystickAxisProfile::deadzone() { return deadzone_; }
+
+void oo::JoystickAxisProfile::setDeadzone(double newValue) {
+  deadzone_ = oo::Clamp_0_max_d(newValue, STICK_MAX_DEADZONE);
+}
+
+oo::JoystickStandardAxisProfile::JoystickStandardAxisProfile() {
+  power_ = 1.0;
+  parameter_ = 1.0;
+}
+
+std::shared_ptr<oo::JoystickAxisProfile>
+oo::JoystickStandardAxisProfile::copy() {
+  std::shared_ptr<oo::JoystickStandardAxisProfile> copy =
+      oo::makeShared<oo::JoystickStandardAxisProfile>();
+  copy->power_ = power_;
+  copy->parameter_ = parameter_;
+  return copy;
+}
+
+void oo::JoystickStandardAxisProfile::setPower(double newValue) {
+  if (newValue < 1.0) {
+    power_ = 1.0;
+  } else if (newValue > STICKPROFILE_MAX_POWER) {
+    power_ = STICKPROFILE_MAX_POWER;
+  } else {
+    power_ = newValue;
+  }
+  return;
+}
+
+double oo::JoystickStandardAxisProfile::power() { return power_; }
+
+void oo::JoystickStandardAxisProfile::setParameter(double newValue) {
+  parameter_ = oo::Clamp_0_1_d(newValue);
+  return;
+}
+
+double oo::JoystickStandardAxisProfile::parameter() { return parameter_; }
+
+double oo::JoystickStandardAxisProfile::rawValue(double x) {
+  if (x < 0) {
+    return -oo::Clamp_0_1_d(parameter_ * pow(-x, power_) -
+                            (parameter_ - 1.0) * (-x));
+  }
+  return oo::Clamp_0_1_d(parameter_ * pow(x, power_) -
+                         (parameter_ - 1.0) * (x));
+}
+
+oo::JoystickSplineSegment::JoystickSplineSegment() {
+  start_ = 0.0;
+  end_ = 1.0;
+  a[0] = 0.0;
+  a[1] = 1.0;
+  a[2] = 0.0;
+  a[3] = 0.0;
+}
+
+std::shared_ptr<oo::JoystickSplineSegment> oo::JoystickSplineSegment::copy() {
+  std::shared_ptr<oo::JoystickSplineSegment> copy =
+      oo::makeShared<oo::JoystickSplineSegment>();
+  copy->start_ = start_;
+  copy->end_ = end_;
+  copy->a[0] = a[0];
+  copy->a[1] = a[1];
+  copy->a[2] = a[2];
+  copy->a[3] = a[3];
+  return copy;
+}
+
+/*	The -initWithData:... bodies ran on a zeroed object ([super init], not
+   [self init]); here the constructor above has run first. Every path that
+   returns true sets start, end and a[0..2], and the two that leave a[3] alone
+   leave it 0 either way, so the segment is the same.
+*/
+bool oo::JoystickSplineSegment::initWithData(NSPoint left, NSPoint right) {
+  double dx = right.x - left.x;
+  if (dx <= 0.0) {
+    return false;
+  }
+  start_ = left.x;
+  end_ = right.x;
+  a[1] = (right.y - left.y) / dx;
+  a[0] = left.y - a[1] * left.x;
+  a[2] = 0.0;
+  a[3] = 0.0;
+  return true;
+}
+
+bool oo::JoystickSplineSegment::initWithData(NSPoint left, NSPoint right,
+                                             double gradientleft) {
+  double dx = right.x - left.x;
+  if (dx <= 0.0) {
+    return false;
+  }
+  start_ = left.x;
+  end_ = right.x;
+  a[0] = left.y * right.x * (right.x - 2 * left.x) / (dx * dx) +
+         right.y * left.x * left.x / (dx * dx) -
+         gradientleft * left.x * right.x / dx;
+  a[1] = 2 * left.x * (left.y - right.y) / (dx * dx) +
+         gradientleft * (left.x + right.x) / dx;
+  a[2] = (right.y - left.y) / (dx * dx) - gradientleft / dx;
+  return true;
+}
+
+bool oo::JoystickSplineSegment::initWithDataGradientRight(
+    NSPoint left, NSPoint right, double gradientright) {
+  double dx = right.x - left.x;
+  if (dx <= 0.0) {
+    return false;
+  }
+  start_ = left.x;
+  end_ = right.x;
+  a[0] =
+      (left.y * right.x * right.x + right.y * left.x * (left.x - 2 * right.x)) /
+          (dx * dx) +
+      gradientright * left.x * right.x / dx;
+  a[1] = 2 * right.x * (right.y - left.y) / (dx * dx) -
+         gradientright * (left.x + right.x) / dx;
+  a[2] = (left.y - right.y) / (dx * dx) + gradientright / dx;
+  return true;
+}
+
+bool oo::JoystickSplineSegment::initWithData(NSPoint left, NSPoint right,
+                                             double gradientleft,
+                                             double gradientright) {
+  double dx = right.x - left.x;
+  if (dx <= 0.0) {
+    return false;
+  }
+  start_ = left.x;
+  end_ = right.x;
+  a[0] = (left.y * right.x * right.x * (right.x - 3 * left.x) -
+          right.y * left.x * left.x * (left.x - 3 * right.x)) /
+             (dx * dx * dx) -
+         (gradientleft * right.x + gradientright * left.x) * left.x * right.x /
+             (dx * dx);
+  a[1] = 6 * left.x * right.x * (left.y - right.y) / (dx * dx * dx) +
+         (gradientleft * right.x * (right.x + 2 * left.x) +
+          gradientright * left.x * (left.x + 2 * right.x)) /
+             (dx * dx);
+  a[2] = 3 * (left.x + right.x) * (right.y - left.y) / (dx * dx * dx) -
+         (gradientleft * (2 * right.x + left.x) +
+          gradientright * (2 * left.x + right.x)) /
+             (dx * dx);
+  a[3] = 2 * (left.y - right.y) / (dx * dx * dx) +
+         (gradientleft + gradientright) / (dx * dx);
+  return true;
+}
+
+std::shared_ptr<oo::JoystickSplineSegment>
+oo::JoystickSplineSegment::segmentWithData(NSPoint left, NSPoint right) {
+  std::shared_ptr<oo::JoystickSplineSegment> segment =
+      oo::makeShared<oo::JoystickSplineSegment>();
+  if (!segment->initWithData(left, right)) return nullptr;
+  return segment;
+}
+
+std::shared_ptr<oo::JoystickSplineSegment>
+oo::JoystickSplineSegment::segmentWithData(NSPoint left, NSPoint right,
+                                           double gradientleft) {
+  std::shared_ptr<oo::JoystickSplineSegment> segment =
+      oo::makeShared<oo::JoystickSplineSegment>();
+  if (!segment->initWithData(left, right, gradientleft)) return nullptr;
+  return segment;
+}
+
+std::shared_ptr<oo::JoystickSplineSegment>
+oo::JoystickSplineSegment::segmentWithDataGradientRight(NSPoint left,
+                                                        NSPoint right,
+                                                        double gradientright) {
+  std::shared_ptr<oo::JoystickSplineSegment> segment =
+      oo::makeShared<oo::JoystickSplineSegment>();
+  if (!segment->initWithDataGradientRight(left, right, gradientright))
+    return nullptr;
+  return segment;
+}
+
+std::shared_ptr<oo::JoystickSplineSegment>
+oo::JoystickSplineSegment::segmentWithData(NSPoint left, NSPoint right,
+                                           double gradientleft,
+                                           double gradientright) {
+  std::shared_ptr<oo::JoystickSplineSegment> segment =
+      oo::makeShared<oo::JoystickSplineSegment>();
+  if (!segment->initWithData(left, right, gradientleft, gradientright))
+    return nullptr;
+  return segment;
+}
+
+double oo::JoystickSplineSegment::start() { return start_; }
+
+double oo::JoystickSplineSegment::end() { return end_; }
+
+double oo::JoystickSplineSegment::value(double x) {
+  return a[0] + (a[1] + (a[2] + a[3] * x) * x) * x;
+}
+
+double oo::JoystickSplineSegment::gradient(double x) {
+  return a[1] + (2 * a[2] + 3 * a[3] * x) * x;
+}
+
+oo::JoystickSplineAxisProfile::JoystickSplineAxisProfile() {
+  controlPoints_.reserve(2);
+  segments.clear();
+  makeSegments();
+}
+
+namespace oo {
+
+JoystickSplineAxisProfile::~JoystickSplineAxisProfile() { return; }
+
+}  // namespace oo
+
+std::shared_ptr<oo::JoystickAxisProfile> oo::JoystickSplineAxisProfile::copy() {
+  std::shared_ptr<oo::JoystickSplineAxisProfile> copy =
+      oo::makeShared<oo::JoystickSplineAxisProfile>();
+  copy->controlPoints_ = controlPoints_;
+  copy->segments =
+      segments;  // the same segment objects, as the array copy held
+  return copy;
+}
+
+int oo::JoystickSplineAxisProfile::addControl(NSPoint point) {
+  NSPoint left, right;
+  std::size_t i;
+
+  if (point.x <= SPLINE_POINT_MIN_SPACING ||
+      point.x >= 1 - SPLINE_POINT_MIN_SPACING) {
+    return -1;
+  }
+
+  left.x = 0.0;
+  left.y = 0.0;
+  for (i = 0; i <= controlPoints_.size(); i++) {
+    if (i < controlPoints_.size()) {
+      right = controlPoints_[i];
+    } else {
+      right = NSMakePoint(1.0, 1.0);
+    }
+    if ((point.x - left.x) < SPLINE_POINT_MIN_SPACING) {
+      if (i == 0) {
+        return -1;
+      }
+      controlPoints_[i - 1] = point;
+      makeSegments();
+      return static_cast<int>(i - 1);
+    }
+    if ((right.x - point.x) >= SPLINE_POINT_MIN_SPACING) {
+      controlPoints_.insert(
+          controlPoints_.begin() + static_cast<std::ptrdiff_t>(i), point);
+      makeSegments();
+      return static_cast<int>(i);
+    }
+    left = right;
+  }
+  return -1;
+}
+
+NSPoint oo::JoystickSplineAxisProfile::pointAtIndex(std::ptrdiff_t index) {
+  NSPoint point;
+  if (index < 0) {
+    point.x = 0.0;
+    point.y = 0.0;
+  } else if (index >= static_cast<std::ptrdiff_t>(controlPoints_.size())) {
+    point.x = 1.0;
+    point.y = 1.0;
+  } else {
+    point = controlPoints_[static_cast<std::size_t>(index)];
+  }
+  return point;
+}
+
+int oo::JoystickSplineAxisProfile::countPoints() {
+  return static_cast<int>(controlPoints_.size());
+}
+
+std::vector<NSPoint> oo::JoystickSplineAxisProfile::controlPoints() {
+  return controlPoints_;
+}
+
+// Calculate segments from control points
+bool oo::JoystickSplineAxisProfile::makeSegments() {
+  std::size_t i;
+  NSPoint left, right, next;
+  double gradientleft, gradientright;
+  std::shared_ptr<oo::JoystickSplineSegment> segment;
+  bool first_segment = true;
+  std::vector<std::shared_ptr<oo::JoystickSplineSegment>> new_segments;
+  new_segments.reserve(controlPoints_.size() + 1);
+
+  left.x = 0.0;
+  left.y = 0.0;
+  if (controlPoints_.empty()) {
+    right.x = 1.0;
+    right.y = 1.0;
+    segment = oo::JoystickSplineSegment::segmentWithData(left, right);
+    new_segments.emplace_back(segment);
+  } else {
+    gradientleft = 1.0;
+    right = controlPoints_[0];
+    for (i = 0; i < controlPoints_.size(); i++) {
+      next = pointAtIndex(static_cast<std::ptrdiff_t>(i + 1));
+      if (next.x - left.x > 0.0) {
+        // we make the gradient at right equal to the gradient of a straight
+        // line between the neighcouring points
+        gradientright = (next.y - left.y) / (next.x - left.x);
+        if (first_segment) {
+          segment = oo::JoystickSplineSegment::segmentWithDataGradientRight(
+              left, right, gradientright);
+        } else {
+          segment = oo::JoystickSplineSegment::segmentWithData(
+              left, right, gradientleft, gradientright);
+        }
+        if (segment == nullptr) {
+          return false;
+        } else {
+          new_segments.emplace_back(segment);
+          gradientleft = gradientright;
+          first_segment = false;
+          left = right;
+        }
+      }
+      right = next;
+    }
+    right.x = 1.0;
+    right.y = 1.0;
+    segment =
+        oo::JoystickSplineSegment::segmentWithData(left, right, gradientleft);
+    if (segment == nullptr) {
+      return false;
+    }
+    new_segments.emplace_back(segment);
+  }
+  segments = std::move(new_segments);
+  return true;
+}
+
+void oo::JoystickSplineAxisProfile::removeControl(std::ptrdiff_t index) {
+  if (index >= 0 &&
+      index < static_cast<std::ptrdiff_t>(controlPoints_.size())) {
+    controlPoints_.erase(controlPoints_.begin() + index);
+    makeSegments();
+  }
+  return;
+}
+
+void oo::JoystickSplineAxisProfile::clearControlPoints() {
+  controlPoints_.clear();
+  makeSegments();
+}
+
+void oo::JoystickSplineAxisProfile::moveControl(std::ptrdiff_t index,
+                                                NSPoint point) {
+  NSPoint left, right;
+
+  point.x = oo::Clamp_0_1_d(point.x);
+  point.y = oo::Clamp_0_1_d(point.y);
+  if (index < 0 ||
+      index >= static_cast<std::ptrdiff_t>(controlPoints_.size())) {
+    return;
+  }
+  if (index == 0) {
+    left.x = 0.0;
+    right.x = 0.0;
+  } else {
+    left = controlPoints_[static_cast<std::size_t>(index - 1)];
+  }
+  if (index == static_cast<std::ptrdiff_t>(controlPoints_.size()) - 1) {
+    right.x = 1.0;
+    right.y = 1.0;
+  } else {
+    right = controlPoints_[static_cast<std::size_t>(index + 1)];
+  }
+  // preserve order of control points - if we attempt to move this control point
+  // beyond either of its neighbours, move it back inside.  Also keep neighbours
+  // a distance of at least SPLINE_POINT_MIN_SPACING apart
+  if (point.x - left.x < SPLINE_POINT_MIN_SPACING) {
+    point.x = left.x + SPLINE_POINT_MIN_SPACING;
+    if (right.x - point.x < SPLINE_POINT_MIN_SPACING) {
+      point.x = (left.x + right.x) / 2;
+    }
+  } else if (right.x - point.x < SPLINE_POINT_MIN_SPACING) {
+    point.x = right.x - SPLINE_POINT_MIN_SPACING;
+    if (point.x - left.x < SPLINE_POINT_MIN_SPACING) {
+      point.x = (left.x + right.x) / 2;
+    }
+  }
+  controlPoints_[static_cast<std::size_t>(index)] = point;
+  makeSegments();
+  return;
+}
+
+double oo::JoystickSplineAxisProfile::rawValue(double x) {
+  std::size_t i;
+  oo::JoystickSplineSegment* segment;
+  double sign;
+
+  if (x < 0) {
+    sign = -1.0;
+    x = -x;
+  } else {
+    sign = 1.0;
+  }
+  for (i = 0; i < segments.size(); i++) {
+    segment = segments[i].get();
+    if (segment->end() > x) {
+      return sign * oo::Clamp_0_1_d(segment->value(x));
+    }
+  }
+  return 1.0;
+}
+
+double oo::JoystickSplineAxisProfile::gradient(double x) {
+  std::size_t i;
+  oo::JoystickSplineSegment* segment;
+  for (i = 0; i < segments.size(); i++) {
+    segment = segments[i].get();
+    if (segment->end() > x) {
+      return segment->gradient(x);
+    }
+  }
+  return 1.0;
+}

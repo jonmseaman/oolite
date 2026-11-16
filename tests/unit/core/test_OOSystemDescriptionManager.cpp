@@ -22,24 +22,24 @@
 #include <cstdlib>  // IWYU pragma: keep
 #include <string>
 
-#include "OOSystemDescriptionManager.h"
+#include "SystemDescriptionManager.h"
 #include "oo_test.hpp"
 
 // --- The game around the class
 // --------------------------------------------------------------
 
 // UNIVERSE: the current system (settable), and PLAYER: the galaxy (settable).
-static OOSystemID gCurrentSystem = 7;
-static OOGalaxyID gGalaxy = 0;
+static oo::SystemID gCurrentSystem = 7;
+static oo::GalaxyID gGalaxy = 0;
 
 // The universe as the code under test sees it: a stand-in for the C++ class,
 // with the header's names and signatures.
 class Universe {
  public:
-  OOSystemID currentSystemID();
+  oo::SystemID currentSystemID();
 };
 
-OOSystemID Universe::currentSystemID() { return gCurrentSystem; }
+oo::SystemID Universe::currentSystemID() { return gCurrentSystem; }
 
 Universe* gSharedUniverse = nullptr;
 
@@ -48,10 +48,10 @@ Universe* gSharedUniverse = nullptr;
 // the same answers.
 class PlayerEntity {
  public:
-  OOGalaxyID galaxyNumber();
+  oo::GalaxyID galaxyNumber();
 };
 
-OOGalaxyID PlayerEntity::galaxyNumber() { return gGalaxy; }
+oo::GalaxyID PlayerEntity::galaxyNumber() { return gGalaxy; }
 
 PlayerEntity* gOOPlayer = nullptr;
 
@@ -112,8 +112,8 @@ bool SameSeed(Random_Seed a, Random_Seed b) {
          a.f == b.f;
 }
 
-std::shared_ptr<OOSystemDescriptionManager> NewManager() {
-  return oo::makeShared<OOSystemDescriptionManager>();
+std::shared_ptr<oo::SystemDescriptionManager> NewManager() {
+  return oo::makeShared<oo::SystemDescriptionManager>();
 }
 
 }  // namespace
@@ -124,7 +124,7 @@ std::shared_ptr<OOSystemDescriptionManager> NewManager() {
 OO_TEST(emptyManager) {
   Fake();
   {
-    std::shared_ptr<OOSystemDescriptionManager> manager = NewManager();
+    std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
     OO_CHECK(manager != nullptr);
     OO_CHECK(manager->getPropertiesForSystem(7, 0) ==
              oo::PList(oo::PList::Dict()));
@@ -147,7 +147,7 @@ OO_TEST(emptyManager) {
 OO_TEST(invalidSystems) {
   Fake();
   {
-    std::shared_ptr<OOSystemDescriptionManager> manager = NewManager();
+    std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
     manager->setUniversalProperties(Dict({{"economy", oo::PList(3)}}));
 
     // A negative system, and one past the last galaxy.
@@ -190,7 +190,7 @@ OO_TEST(invalidSystems) {
 OO_TEST(layersAndUniversal) {
   Fake();
   {
-    std::shared_ptr<OOSystemDescriptionManager> manager = NewManager();
+    std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
     manager->setUniversalProperties(
         Dict({{"economy", oo::PList(3)}, {"sky", Str("blue")}}));
     // Universal properties reach only systems that have a description of their
@@ -214,7 +214,7 @@ OO_TEST(layersAndUniversal) {
     OO_CHECK(manager->getProperty("economy", "0 7") == oo::PList(6));
 
     // Priority (3) over dynamic (2) over static.
-    manager->setProperty("economy", "0 7", OOSystemLayer::kOXPDynamic, oo::PList(7),
+    manager->setProperty("economy", "0 7", oo::SystemLayer::kOXPDynamic, oo::PList(7),
                          std::nullopt);
     OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(7));
     manager->setProperties(
@@ -226,10 +226,10 @@ OO_TEST(layersAndUniversal) {
     OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(9));
 
     // Removing the top layers' values uncovers the ones below.
-    manager->setProperty("economy", "0 7", OOSystemLayer::kOXPPriority, oo::PList(),
+    manager->setProperty("economy", "0 7", oo::SystemLayer::kOXPPriority, oo::PList(),
                          std::nullopt);
     OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(7));
-    manager->setProperty("economy", "0 7", OOSystemLayer::kOXPDynamic, oo::PList(),
+    manager->setProperty("economy", "0 7", oo::SystemLayer::kOXPDynamic, oo::PList(),
                          std::nullopt);
     OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(6));
 
@@ -250,7 +250,7 @@ OO_TEST(layersAndUniversal) {
 OO_TEST(validation) {
   Fake();
   {
-    std::shared_ptr<OOSystemDescriptionManager> manager = NewManager();
+    std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
     manager->setProperties(Dict({
                                {"coordinates", Str("20 173")},
                                {"radius", oo::PList(5000)},
@@ -288,7 +288,7 @@ OO_TEST(validation) {
 OO_TEST(interstellar) {
   Fake();
   {
-    std::shared_ptr<OOSystemDescriptionManager> manager = NewManager();
+    std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
     manager->setUniversalProperties(Dict({{"economy", oo::PList(3)}}));
     manager->setInterstellarProperties(
         Dict({{"sky_n_stars", oo::PList(100)}, {"economy", oo::PList(1)}}));
@@ -306,7 +306,7 @@ OO_TEST(interstellar) {
 
     // A region's own properties win, and are not cached as a system.
     manager->setProperty("sky_n_stars", "interstellar: 0 7 8",
-                         OOSystemLayer::kOXPStatic, oo::PList(5), std::nullopt);
+                         oo::SystemLayer::kOXPStatic, oo::PList(5), std::nullopt);
     OO_CHECK(manager->getPropertiesForSystemKey("interstellar: 0 7 8") ==
              Dict({{"economy", oo::PList(1)}, {"sky_n_stars", oo::PList(5)}}));
     OO_CHECK(manager->getProperty("sky_n_stars", "interstellar: 0 7 8") ==
@@ -320,20 +320,20 @@ OO_TEST(interstellar) {
 OO_TEST(scriptedChanges) {
   Fake();
   {
-    std::shared_ptr<OOSystemDescriptionManager> manager = NewManager();
+    std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
     // Saved under manifest~|~key~|~property~|~layer; not saved without a
     // manifest.
-    manager->setProperty("description", "0 7", OOSystemLayer::kOXPDynamic,
+    manager->setProperty("description", "0 7", oo::SystemLayer::kOXPDynamic,
                          Str("A nice place."),
                          std::string("org.test.installed"));
-    manager->setProperty("economy", "0 7", OOSystemLayer::kOXPDynamic, oo::PList(4),
+    manager->setProperty("economy", "0 7", oo::SystemLayer::kOXPDynamic, oo::PList(4),
                          std::nullopt);
     manager->setProperty("sky_n_stars", "interstellar: 0 7 8",
-                         OOSystemLayer::kOXPPriority, oo::PList(9),
+                         oo::SystemLayer::kOXPPriority, oo::PList(9),
                          std::string("org.test.gone"));
     // A key that is neither a system nor an interstellar region: set, not
     // saved.
-    manager->setProperty("economy", "elsewhere", OOSystemLayer::kOXPDynamic,
+    manager->setProperty("economy", "elsewhere", oo::SystemLayer::kOXPDynamic,
                          oo::PList(4), std::string("org.test.installed"));
     const oo::PList exported = manager->exportScriptedChanges();
     OO_CHECK(exported ==
@@ -348,7 +348,7 @@ OO_TEST(scriptedChanges) {
 
     // Removing the value removes the saved change.
     manager->setProperty("sky_n_stars", "interstellar: 0 7 8",
-                         OOSystemLayer::kOXPPriority, oo::PList(),
+                         oo::SystemLayer::kOXPPriority, oo::PList(),
                          std::string("org.test.gone"));
     OO_CHECK(manager->exportScriptedChanges() ==
              Dict({{"org.test.installed~|~0 7~|~description~|~2",
@@ -357,7 +357,7 @@ OO_TEST(scriptedChanges) {
     // Importing into a new manager: an installed OXP's changes are applied (and
     // kept for the next export); another's are skipped; a key of the wrong
     // shape is skipped; a layer past the last is the priority layer.
-    std::shared_ptr<OOSystemDescriptionManager> loaded = NewManager();
+    std::shared_ptr<oo::SystemDescriptionManager> loaded = NewManager();
     loaded->importScriptedChanges(Dict({
         {"org.test.installed~|~0 7~|~description~|~2", Str("A nice place.")},
         {"org.test.installed~|~0 8~|~economy~|~9", oo::PList(2)},
@@ -382,7 +382,7 @@ OO_TEST(scriptedChanges) {
 OO_TEST(legacyScriptedChanges) {
   Fake();
   {
-    std::shared_ptr<OOSystemDescriptionManager> manager = NewManager();
+    std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
     manager->importLegacyScriptedChanges(Dict({
         {"0 7", Dict({{"sun_gone_nova", oo::PList(true)},
                       {"sun_radius", oo::PList(1000)},
@@ -414,7 +414,7 @@ OO_TEST(legacyScriptedChanges) {
 OO_TEST(routeCacheAndSeeds) {
   Fake();
   {
-    std::shared_ptr<OOSystemDescriptionManager> manager = NewManager();
+    std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
     // Distances are 0.4 * the truncated distance with dy halved: 4 (10 apart)
     // and 8 (20 apart).
     manager->setProperties(Dict({{"coordinates", Str("100 100")},
@@ -429,11 +429,11 @@ OO_TEST(routeCacheAndSeeds) {
     const NSPoint p = manager->getCoordinatesForSystem(1, 0);
     OO_CHECK(p.x == 110 && p.y == 100);
     OO_CHECK((manager->getNeighbourIDsForSystem(0, 0) ==
-              std::vector<OOSystemID>{1, 3}));
+              std::vector<oo::SystemID>{1, 3}));
     OO_CHECK((manager->getNeighbourIDsForSystem(1, 0) ==
-              std::vector<OOSystemID>{0, 2, 3}));
+              std::vector<oo::SystemID>{0, 2, 3}));
     OO_CHECK((manager->getNeighbourIDsForSystem(2, 0) ==
-              std::vector<OOSystemID>{1}));
+              std::vector<oo::SystemID>{1}));
     // Systems with no coordinates are all at the zero point, so they are each
     // other's neighbours: every other system of the galaxy.
     OO_CHECK(manager->getNeighbourIDsForSystem(4, 0).size() == 251);
@@ -456,8 +456,8 @@ OO_TEST(routeCacheAndSeeds) {
 OO_TEST(cxxApi) {
   Fake();
   {
-    std::shared_ptr<OOSystemDescriptionManager> manager =
-        oo::makeShared<OOSystemDescriptionManager>();
+    std::shared_ptr<oo::SystemDescriptionManager> manager =
+        oo::makeShared<oo::SystemDescriptionManager>();
     manager->setUniversalProperties(Dict({{"economy", oo::PList(3)}}));
     manager->setProperties(
         Dict({{"name", Str("Lave")}, {"coordinates", Str("100 100")}}), "0 7");
@@ -470,14 +470,14 @@ OO_TEST(cxxApi) {
     OO_CHECK(manager->getProperty("name", 7, 0) == Str("Lave"));
     OO_CHECK(manager->getPropertiesForCurrentSystem() ==
              manager->getPropertiesForSystemKey("0 7"));
-    manager->setProperty("name", "0 7", OOSystemLayer::kOXPPriority, Str("Leesti"),
+    manager->setProperty("name", "0 7", oo::SystemLayer::kOXPPriority, Str("Leesti"),
                          std::string("org.test.installed"));
     OO_CHECK(manager->getProperty("name", 7, 0) == Str("Leesti"));
     OO_CHECK(manager->exportScriptedChanges() ==
              Dict({{"org.test.installed~|~0 7~|~name~|~3", Str("Leesti")}}));
     manager->buildRouteCache();
     OO_CHECK((manager->getNeighbourIDsForSystem(7, 0) ==
-              std::vector<OOSystemID>{8}));
+              std::vector<oo::SystemID>{8}));
     const NSPoint p = manager->getCoordinatesForSystem(8, 0);
     OO_CHECK(p.x == 105 && p.y == 100);
     OO_CHECK(SameSeed(manager->getRandomSeedForSystem(7, 0), kNilRandomSeed));
@@ -487,21 +487,21 @@ OO_TEST(cxxApi) {
 }
 
 OO_TEST(entry) {
-  std::shared_ptr<OOSystemDescriptionEntry> entry =
-      oo::makeShared<OOSystemDescriptionEntry>();
-  OO_CHECK(entry->getProperty("name", OOSystemLayer::kCore).isNull());
-  entry->setProperty("name", OOSystemLayer::kCore, Str("Lave"));
-  entry->setProperty("name", OOSystemLayer::kOXPStatic, Str("Diso"));
-  OO_CHECK(entry->getProperty("name", OOSystemLayer::kCore) == Str("Lave"));
-  OO_CHECK(entry->getProperty("name", OOSystemLayer::kOXPStatic) == Str("Diso"));
-  OO_CHECK(entry->getProperty("name", OOSystemLayer::kOXPDynamic).isNull());
+  std::shared_ptr<oo::SystemDescriptionEntry> entry =
+      oo::makeShared<oo::SystemDescriptionEntry>();
+  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kCore).isNull());
+  entry->setProperty("name", oo::SystemLayer::kCore, Str("Lave"));
+  entry->setProperty("name", oo::SystemLayer::kOXPStatic, Str("Diso"));
+  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kCore) == Str("Lave"));
+  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kOXPStatic) == Str("Diso"));
+  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kOXPDynamic).isNull());
   // Validated as the manager's setters validate; null removes.
-  entry->setProperty("radius", OOSystemLayer::kCore, oo::PList(4000));
-  OO_CHECK(entry->getProperty("radius", OOSystemLayer::kCore) == Str("4000"));
-  entry->setProperty("name", OOSystemLayer::kCore, oo::PList(1));
-  OO_CHECK(entry->getProperty("name", OOSystemLayer::kCore) == Str("Lave"));
-  entry->setProperty("name", OOSystemLayer::kCore, oo::PList());
-  OO_CHECK(entry->getProperty("name", OOSystemLayer::kCore).isNull());
+  entry->setProperty("radius", oo::SystemLayer::kCore, oo::PList(4000));
+  OO_CHECK(entry->getProperty("radius", oo::SystemLayer::kCore) == Str("4000"));
+  entry->setProperty("name", oo::SystemLayer::kCore, oo::PList(1));
+  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kCore) == Str("Lave"));
+  entry->setProperty("name", oo::SystemLayer::kCore, oo::PList());
+  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kCore).isNull());
 }
 
 OO_TEST_MAIN()

@@ -14,7 +14,7 @@
 
 #include <cmath>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "SparkEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
@@ -62,8 +62,8 @@ namespace {
 // --- How a spark is made, and its colour, and nothing else
 // -------------------
 
-Entity* MakeSpark(HPVector position, Vector velocity, OOTimeDelta duration,
-                  float size, OOColor* color) {
+Entity* MakeSpark(HPVector position, Vector velocity, oo::TimeDelta duration,
+                  float size, oo::Color* color) {
   return oo::MadeEntity(oo::SparkEntity::sparkWithPosition(
       position, velocity, duration, size, color));
 }
@@ -102,7 +102,7 @@ bool ComponentsAre(Entity* e, GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 OO_TEST(initWithPosition) {
   {
     SetUp();
-    std::shared_ptr<OOColor> color = OOColor::colorWithRed(0.2f, 0.4f, 0.6f, 0.8f);
+    std::shared_ptr<oo::Color> color = oo::Color::colorWithRed(0.2f, 0.4f, 0.6f, 0.8f);
     Entity* spark = MakeSpark(make_HPvector(1, 2, 3), make_vector(10, 0, 0),
                               2.0, 4.0f, color.get());
     OO_CHECK(spark != nullptr);
@@ -121,7 +121,7 @@ OO_TEST(initWithPosition) {
 OO_TEST(fadesTowardsRedAndIsRemoved) {
   {
     SetUp();
-    std::shared_ptr<OOColor> color = OOColor::colorWithRed(0.2f, 0.4f, 0.6f, 0.8f);
+    std::shared_ptr<oo::Color> color = oo::Color::colorWithRed(0.2f, 0.4f, 0.6f, 0.8f);
     Entity* spark = MakeSpark(make_HPvector(1, 2, 3), make_vector(10, 0, 0),
                               2.0, 4.0f, color.get());
 

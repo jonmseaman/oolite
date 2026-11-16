@@ -32,7 +32,7 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "EntityHold.h"
-#include "OOFoundation.h"
+#include "Foundation.h"
 
 class Entity;
 

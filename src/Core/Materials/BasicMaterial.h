@@ -39,8 +39,8 @@ SOFTWARE.
 #include <string>
 #include <vector>
 
+#include "Color.h"
 #include "Material.h"
-#include "OOColor.h"
 
 namespace oo {
 
@@ -92,15 +92,15 @@ class BasicMaterial : public Material {
   std::vector<std::shared_ptr<Texture>> allTextures() override;
 #endif
 
-  std::shared_ptr<OOColor> diffuseColor();
-  void setDiffuseColor(OOColor* color);
-  void setAmbientAndDiffuseColor(OOColor* color);
-  std::shared_ptr<OOColor> specularColor();
-  void setSpecularColor(OOColor* color);
-  std::shared_ptr<OOColor> ambientColor();
-  void setAmbientColor(OOColor* color);
-  std::shared_ptr<OOColor> emmisionColor();
-  void setEmissionColor(OOColor* color);
+  std::shared_ptr<oo::Color> diffuseColor();
+  void setDiffuseColor(oo::Color* color);
+  void setAmbientAndDiffuseColor(oo::Color* color);
+  std::shared_ptr<oo::Color> specularColor();
+  void setSpecularColor(oo::Color* color);
+  std::shared_ptr<oo::Color> ambientColor();
+  void setAmbientColor(oo::Color* color);
+  std::shared_ptr<oo::Color> emmisionColor();
+  void setEmissionColor(oo::Color* color);
 
   void getDiffuseComponents(GLfloat outComponents[4]);
   void setDiffuseComponents(const GLfloat components[4]);

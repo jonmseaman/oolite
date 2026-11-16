@@ -41,12 +41,12 @@ MA 02110-1301, USA.
 #include "EntityOOJavaScriptExtensions.h"
 #include "HeadUpDisplay.h"
 #include "OOJSDock.h"
-#include "OOShipGroup.h"
-#include "OOStringExpander.h"
 #include "PlanetEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "ShipEntityAI.h"
+#include "ShipGroup.h"
 #include "StationEntity.h"
+#include "StringExpander.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListWriting.hpp"
@@ -55,9 +55,9 @@ namespace {
 
 // [shipsOnApproach allKeys]: a snapshot, since the loops over it change the
 // map.
-std::vector<OOUniversalID> ShipIDsIn(
-    const std::map<OOUniversalID, std::vector<oo::PList>>& queue) {
-  std::vector<OOUniversalID> shipIDs;
+std::vector<oo::UniversalID> ShipIDsIn(
+    const std::map<oo::UniversalID, std::vector<oo::PList>>& queue) {
+  std::vector<oo::UniversalID> shipIDs;
   shipIDs.reserve(queue.size());
   for (const auto& [shipID, coordinatesStack] : queue)
     shipIDs.push_back(shipID);
@@ -257,7 +257,7 @@ bool DockEntity::setUpShipFromDictionary(const oo::PList& dict) {
   return true;
 }
 
-void DockEntity::update(OOTimeDelta delta_t) {
+void DockEntity::update(oo::TimeDelta delta_t) {
   ShipEntity::update(delta_t);  // [super update:delta_t]
 
   if ((!launchQueue.empty()) && (shipsOnApproach.empty()) &&
@@ -310,7 +310,7 @@ void DockEntity::drawImmediate(bool immediate, bool translucent) {
 std::size_t DockEntity::pruneAndCountShipsOnApproach() {
   // Remove dead entities.
   // Enumerate over a snapshot of the keys because we mutate the map.
-  for (OOUniversalID idObj : ShipIDsIn(shipsOnApproach)) {
+  for (oo::UniversalID idObj : ShipIDsIn(shipsOnApproach)) {
     ::ShipEntity* ship = oo::ToShip((
         UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(idObj) : nullptr));
     /* Remove ships from the approach queue if they are dead, or
@@ -344,7 +344,7 @@ void DockEntity::abortAllDockings() {
 
   no_docking_while_launching = true;
 
-  for (OOUniversalID idObj : ShipIDsIn(shipsOnApproach)) {
+  for (oo::UniversalID idObj : ShipIDsIn(shipsOnApproach)) {
     ::ShipEntity* ship = oo::ToShip((
         UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(idObj) : nullptr));
     if ((ship != nullptr ? ship->getIsShip() : false)) {
@@ -367,8 +367,8 @@ void DockEntity::abortAllDockings() {
       (player != nullptr ? player->status() : oo::EntityStatus{}) ==
           oo::EntityStatus::kInFlight &&
       (player != nullptr ? player->getDockingClearanceStatus()
-                         : OODockingClearanceStatus{}) >=
-          OODockingClearanceStatus::kRequested) {
+                         : oo::DockingClearanceStatus{}) >=
+          oo::DockingClearanceStatus::kRequested) {
     if (HPmagnitude2(HPvector_subtract(
             (player != nullptr ? player->getPosition() : HPVector{}),
             absolutePositionForSubentity())) > 2250000) {
@@ -377,7 +377,7 @@ void DockEntity::abortAllDockings() {
         station->sendExpandedMessage(
             "[station-docking-clearance-abort-cancelled]", player);
       if (player != nullptr)
-        player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
+        player->setDockingClearanceStatus(oo::DockingClearanceStatus::kNone);
       if (player != nullptr)
         player->doScriptEvent(OOJSID("stationWithdrewDockingClearance"));
     } else {
@@ -390,7 +390,8 @@ void DockEntity::abortAllDockings() {
         if (station != nullptr) station->sendExpandedMessage(*message, player);
       }  // nil: nothing sent, as before
       if (player != nullptr)
-        player->setDockingClearanceStatus(OODockingClearanceStatus::kTimingOut);
+        player->setDockingClearanceStatus(
+            oo::DockingClearanceStatus::kTimingOut);
     }
   }
 
@@ -402,8 +403,8 @@ void DockEntity::abortAllDockings() {
 }
 
 void DockEntity::autoDockShipsInQueue(
-    std::map<OOUniversalID, std::vector<oo::PList>>& queue) {
-  for (OOUniversalID idObj : ShipIDsIn(queue)) {
+    std::map<oo::UniversalID, std::vector<oo::PList>>& queue) {
+  for (oo::UniversalID idObj : ShipIDsIn(queue)) {
     ::ShipEntity* ship = oo::ToShip((
         UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(idObj) : nullptr));
     if ((ship != nullptr ? ship->getIsShip() : false)) {
@@ -470,10 +471,10 @@ oo::PList DockEntity::dockingInstructionsForShip(::ShipEntity* ship) {
   ShipEntity* self = this;
   if (ship == nullptr) return oo::PList();
 
-  OOUniversalID ship_id =
-      (ship != nullptr ? ship->getUniversalID() : OOUniversalID{});
-  const OOUniversalID shipID =
-      static_cast<OOUniversalID>(ship_id);  // +numberWithUnsignedShort:
+  oo::UniversalID ship_id =
+      (ship != nullptr ? ship->getUniversalID() : oo::UniversalID{});
+  const oo::UniversalID shipID =
+      static_cast<oo::UniversalID>(ship_id);  // +numberWithUnsignedShort:
   ::StationEntity* station = oo::ToStation(parentEntity());
 
   HPVector launchVector = HPvector_forward_from_quaternion(quaternion_multiply(
@@ -524,7 +525,7 @@ oo::PList DockEntity::dockingInstructionsForShip(::ShipEntity* ship) {
                                           // launchVector towards target.
       return DockingInstructions(
           station,
-          OOHPVectorTowards(
+          oo::HPVectorTowards(
               absolutePositionForSubentity(), approachVector,
               (station != nullptr ? station->collisionRadius() : 0.0f) + 5000),
           (ship != nullptr ? ship->getMaxFlightSpeed() : 0.0f), 1000,
@@ -698,9 +699,9 @@ void DockEntity::addShipToShipsOnApproach(::ShipEntity* ship) {
   int corridor_count = 9;
   int corridor_final_approach = 3;
 
-  const OOUniversalID shipID = static_cast<OOUniversalID>(
+  const oo::UniversalID shipID = static_cast<oo::UniversalID>(
       ship != nullptr ? ship->getUniversalID()
-                      : OOUniversalID{});  // +numberWithUnsignedShort:
+                      : oo::UniversalID{});  // +numberWithUnsignedShort:
   ::StationEntity* station = oo::ToStation(parentEntity());
 
   HPVector launchVector = HPvector_forward_from_quaternion(quaternion_multiply(
@@ -843,10 +844,10 @@ void DockEntity::noteDockingForShip(::ShipEntity* ship) {
 }
 
 void DockEntity::abortDockingForShip(::ShipEntity* ship) {
-  OOUniversalID ship_id =
-      (ship != nullptr ? ship->getUniversalID() : OOUniversalID{});
-  const OOUniversalID shipID =
-      static_cast<OOUniversalID>(ship_id);  // +numberWithUnsignedShort:
+  oo::UniversalID ship_id =
+      (ship != nullptr ? ship->getUniversalID() : oo::UniversalID{});
+  const oo::UniversalID shipID =
+      static_cast<oo::UniversalID>(ship_id);  // +numberWithUnsignedShort:
 
   shipsOnApproach.erase(shipID);
 
@@ -855,8 +856,8 @@ void DockEntity::abortDockingForShip(::ShipEntity* ship) {
     if ((player != nullptr ? player->status() : oo::EntityStatus{}) ==
             oo::EntityStatus::kInFlight &&
         (player != nullptr ? player->getDockingClearanceStatus()
-                           : OODockingClearanceStatus{}) >=
-            OODockingClearanceStatus::kRequested) {
+                           : oo::DockingClearanceStatus{}) >=
+            oo::DockingClearanceStatus::kRequested) {
       if (HPmagnitude2(HPvector_subtract(
               (player != nullptr ? player->getPosition() : HPVector{}),
               absolutePositionForSubentity())) > 2250000) {
@@ -866,7 +867,7 @@ void DockEntity::abortDockingForShip(::ShipEntity* ship) {
               ->sendExpandedMessage(
                   "[station-docking-clearance-abort-cancelled]", player);
         if (player != nullptr)
-          player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
+          player->setDockingClearanceStatus(oo::DockingClearanceStatus::kNone);
       } else {
         int seconds = 10;  // when very close to the port, give the player a few
                            // seconds to react on the abort message.
@@ -878,7 +879,7 @@ void DockEntity::abortDockingForShip(::ShipEntity* ship) {
         }  // nil: nothing sent, as before
         if (player != nullptr)
           player->setDockingClearanceStatus(
-              OODockingClearanceStatus::kTimingOut);
+              oo::DockingClearanceStatus::kTimingOut);
       }
     }
   }
@@ -894,10 +895,10 @@ bool DockEntity::shipIsInDockingQueue(::ShipEntity* ship) {
           oo::EntityStatus::kDead)
     return false;
 
-  OOUniversalID ship_id =
-      (ship != nullptr ? ship->getUniversalID() : OOUniversalID{});
-  const OOUniversalID shipID =
-      static_cast<OOUniversalID>(ship_id);  // +numberWithUnsignedShort:
+  oo::UniversalID ship_id =
+      (ship != nullptr ? ship->getUniversalID() : oo::UniversalID{});
+  const oo::UniversalID shipID =
+      static_cast<oo::UniversalID>(ship_id);  // +numberWithUnsignedShort:
 
   if (shipsOnApproach.contains(shipID)) {
     return true;
@@ -1020,8 +1021,8 @@ bool DockEntity::shipIsInDockingCorridor(::ShipEntity* ship) {
         (ship != nullptr ? ship->status() : oo::EntityStatus{}) !=
             oo::EntityStatus::kAutopilotEngaged &&
         (PLAYER != nullptr ? PLAYER->getDockingClearanceStatus()
-                           : OODockingClearanceStatus{}) <
-            OODockingClearanceStatus::kGranted) {
+                           : oo::DockingClearanceStatus{}) <
+            oo::DockingClearanceStatus::kGranted) {
       if ((0.90 * arbb.max.z + 0.10 * arbb.min.z < 3000) &&
           (dot_product(vk, (ship != nullptr ? ship->forwardVector()
                                             : Vector{})) < -0.9)) {
@@ -1184,7 +1185,7 @@ void DockEntity::launchShip(::ShipEntity* ship) {
       (bb.max.x - bb.min.x < bb.max.y - bb.min.y)) {
     quaternion_rotate_about_axis(
         &q1, launchVector,
-        static_cast<OOScalar>(
+        static_cast<oo::Scalar>(
             std::numbers::pi *
             0.5));  // to account for the slot being at 90 degrees to vertical
   }
@@ -1199,8 +1200,8 @@ void DockEntity::launchShip(::ShipEntity* ship) {
     no_docking_while_launching = true;
   // launch speed
   launchVel = vector_add(
-      launchVel,
-      vector_multiply_scalar(launchVector, static_cast<OOScalar>(launchSpeed)));
+      launchVel, vector_multiply_scalar(launchVector,
+                                        static_cast<oo::Scalar>(launchSpeed)));
   launchSpeed = magnitude(launchVel);
   if (ship != nullptr) ship->setSpeed(launchSpeed);
   if (ship != nullptr) ship->setVelocity(launchVel);
@@ -1408,9 +1409,9 @@ void DockEntity::clearDockingCorridor() {
           //
           Vector v_out = vector_forward_from_quaternion(q1);
           Vector r_pos =
-              make_vector(static_cast<OOScalar>(ship->position.x - ppos.x),
-                          static_cast<OOScalar>(ship->position.y - ppos.y),
-                          static_cast<OOScalar>(ship->position.z - ppos.z));
+              make_vector(static_cast<oo::Scalar>(ship->position.x - ppos.x),
+                          static_cast<oo::Scalar>(ship->position.y - ppos.y),
+                          static_cast<oo::Scalar>(ship->position.z - ppos.z));
           if (static_cast<bool>(r_pos.x) || static_cast<bool>(r_pos.y) ||
               static_cast<bool>(r_pos.z))
             r_pos = vector_normal(r_pos);

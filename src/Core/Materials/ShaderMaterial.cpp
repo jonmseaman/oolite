@@ -39,18 +39,18 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "Description.h"
 #include "LogIndentScope.h"
-#include "OODescription.h"
 #include "ShaderUniformMethodType.h"  // the binding target's hooks
 #include "oofnd/PList.hpp"
 
 #if OO_SHADERS
 
-#include "OOIsNumberLiteral.h"
-#include "OOLogging.h"
-#include "OOMacroOpenGL.h"
-#include "OOOpenGLExtensionManager.h"
-#include "OOPListGameTypes.h"
+#include "IsNumberLiteral.h"
+#include "Logging.h"
+#include "MacroOpenGL.h"
+#include "OpenGLExtensionManager.h"
+#include "PListGameTypes.h"
 #include "ResourceManager.h"
 #include "ShaderProgram.h"
 #include "ShaderUniform.h"
@@ -139,7 +139,7 @@ bool oo::ShaderMaterial::initWithName(const std::optional<std::string>& name,
   std::optional<std::string> vertexShader;
   std::optional<std::string> fragmentShader;
   GLint textureUnits =
-      OOOpenGLExtensionManager::sharedManager()->textureImageUnitCount();
+      oo::OpenGLExtensionManager::sharedManager()->textureImageUnitCount();
   oo::PList modifiedMacros;
   std::optional<std::string> vsName = "<synthesized>";
   std::optional<std::string> fsName = "<synthesized>";
@@ -229,9 +229,9 @@ bool oo::ShaderMaterial::initWithName(const std::optional<std::string>& name,
 					macroString = MacrosToString(modifiedMacros);
 					cacheKey = *cacheKey + "\n$SIMPLIFIED FALLBACK\n";
 
-					OOLogIndent();
+					oo::LogIndent();
 					shaderProgram = oo::ShaderProgram::shaderProgramWithVertexShader(vertexShader, fragmentShader, vsName, fsName, macroString, attributeBindings, cacheKey);
-					OOLogOutdent();
+					oo::LogOutdent();
 
 					if (shaderProgram != nullptr) {
 						OO_LOG("shader.load.fallbackSuccess", "{}", "Simple mode fallback successful.");
@@ -282,7 +282,7 @@ bool oo::ShaderMaterial::initWithName(const std::optional<std::string>& name,
     // write gloss and gamma correction preference to the uniforms dictionary
 
     if (uniforms.find("uGloss") == uniforms.end()) {
-      float gloss = OOClamp_0_1_f(configuration.get<float>("gloss", 0.5f));
+      float gloss = oo::Clamp_0_1_f(configuration.get<float>("gloss", 0.5f));
       setUniform("uGloss", gloss);
     }
 
@@ -401,7 +401,7 @@ void oo::ShaderMaterial::setUniform(const std::string& uniformName,
       vecArray[i] = value.at<float>(i, 0.0f);  // OOFloatFromObject's conversion
     }
   } else {
-    Vector vec = OOVectorFromPList(&value, kZeroVector);
+    Vector vec = oo::VectorFromPList(&value, kZeroVector);
     vecArray[0] = vec.x;
     vecArray[1] = vec.y;
     vecArray[2] = vec.z;
@@ -488,7 +488,7 @@ void oo::ShaderMaterial::addUniformsFromDictionary(const oo::PList& uniformDefs,
       value = definition;
       type = "float";
     } else if (const std::string* string = definition.getIf<std::string>()) {
-      if (OOIsNumberLiteral(*string, false)) {
+      if (oo::IsNumberLiteral(*string, false)) {
         value = definition;
         type = "float";
       } else {
@@ -507,17 +507,17 @@ void oo::ShaderMaterial::addUniformsFromDictionary(const oo::PList& uniformDefs,
       value = oo::PList::singleReal(randf() * scale);
     } else if (type == "randomUnitVector") {
       type = "vector";
-      value = OOPListFromVector(
-          vector_multiply_scalar(OORandomUnitVector(), scale));
+      value = oo::PListFromVector(
+          vector_multiply_scalar(oo::RandomUnitVector(), scale));
     } else if (type == "randomVectorSpatial") {
       type = "vector";
-      value = OOPListFromVector(OOVectorRandomSpatial(scale));
+      value = oo::PListFromVector(oo::VectorRandomSpatial(scale));
     } else if (type == "randomVectorRadial") {
       type = "vector";
-      value = OOPListFromVector(OOVectorRandomRadial(scale));
+      value = oo::PListFromVector(oo::VectorRandomRadial(scale));
     } else if (type == "randomQuaternion") {
       type = "quaternion";
-      value = OOPListFromQuaternion(OORandomQuaternion());
+      value = oo::PListFromQuaternion(oo::RandomQuaternion());
     }
 
     if (type == "float" || type == "real") {
@@ -556,7 +556,7 @@ void oo::ShaderMaterial::addUniformsFromDictionary(const oo::PList& uniformDefs,
       if (definition.isDict()) {
         quatAsMatrix = definition.get<bool>("asMatrix", quatAsMatrix);
       }
-      setUniform(name, OOQuaternionFromPList(&value, kIdentityQuaternion),
+      setUniform(name, oo::QuaternionFromPList(&value, kIdentityQuaternion),
                  quatAsMatrix);
       gotValue = true;
     } else if (target != nullptr && type == "binding") {
@@ -790,7 +790,7 @@ bool GetShaderSource(
       }
     }
     if (!result.has_value()) {
-      OO_LOG(kOOLogFileNotFound, "GLSL ERROR: failed to find {} program {}.",
+      OO_LOG(oo::kLogFileNotFound, "GLSL ERROR: failed to find {} program {}.",
              shaderType, *fileName);
       return false;
     }

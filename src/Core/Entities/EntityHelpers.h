@@ -41,7 +41,12 @@ MA 02110-1301, USA.
 #include "EntityPListForeign.h"  // the entity's node, and whether it has its object
 #include "oofnd/PList.hpp"
 
-class OOHUDBeaconIcon;  // OOPolygonSprite.h
+namespace oo {
+
+class HUDBeaconIcon;
+
+}  // namespace oo
+   // OOPolygonSprite.h
 
 namespace oo {
 
@@ -132,9 +137,9 @@ void SetPrevBeacon(Entity* beacon, Entity* other);
 void SetNextBeacon(Entity* beacon, Entity* other);
 std::optional<std::string> BeaconCode(Entity* beacon);
 void SetBeaconCode(Entity* beacon, const std::optional<std::string>& code);
-OOComparisonResult CompareBeaconCodes(Entity* beacon, Entity* other);
+oo::ComparisonResult CompareBeaconCodes(Entity* beacon, Entity* other);
 bool BeaconIsJammingScanning(Entity* beacon);            // -isJammingScanning
-OOHUDBeaconIcon* BeaconDrawable(Entity* beacon);         // -beaconDrawable
+oo::HUDBeaconIcon* BeaconDrawable(Entity* beacon);       // -beaconDrawable
 std::optional<std::string> BeaconLabel(Entity* beacon);  // -beaconLabel
 
 }  // namespace oo

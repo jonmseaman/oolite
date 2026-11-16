@@ -27,12 +27,12 @@ MA 02110-1301, USA.
 
 #include <memory>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "Universe.h"
 
 std::shared_ptr<oo::SparkEntity> oo::SparkEntity::sparkWithPosition(
-    HPVector pos, Vector vel, OOTimeDelta duration, float size,
-    OOColor* color) {
+    HPVector pos, Vector vel, oo::TimeDelta duration, float size,
+    oo::Color* color) {
   const std::shared_ptr<oo::SparkEntity> spark =
       oo::makeShared<oo::SparkEntity>();
   spark->initWithPosition(pos, vel, duration, size, color);
@@ -40,8 +40,8 @@ std::shared_ptr<oo::SparkEntity> oo::SparkEntity::sparkWithPosition(
 }
 
 void oo::SparkEntity::initWithPosition(HPVector pos, Vector vel,
-                                       OOTimeDelta duration, float size,
-                                       OOColor* color) {
+                                       oo::TimeDelta duration, float size,
+                                       oo::Color* color) {
   oo::LightParticleEntity::initWithDiameter(size);
   // [super initWithDiameter:] could not fail.
   {
@@ -57,15 +57,15 @@ void oo::SparkEntity::initWithPosition(HPVector pos, Vector vel,
   }
 }
 
-void oo::SparkEntity::update(OOTimeDelta delta_t) {
+void oo::SparkEntity::update(oo::TimeDelta delta_t) {
   oo::LightParticleEntity::update(delta_t);
   performUpdate(delta_t);
 }
 
-void oo::SparkEntity::performUpdate(OOTimeDelta delta_t) {
+void oo::SparkEntity::performUpdate(oo::TimeDelta delta_t) {
   _timeRemaining -= static_cast<GLfloat>(delta_t);
 
-  float mix = OOClamp_0_1_f(_timeRemaining / _duration);
+  float mix = oo::Clamp_0_1_f(_timeRemaining / _duration);
 
   // Fade towards red while fading out.
   _colorComponents[0] = mix * _baseRGBA[0] + (1.0f - mix);

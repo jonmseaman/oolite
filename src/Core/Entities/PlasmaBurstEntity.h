@@ -41,7 +41,7 @@ class PlasmaBurstEntity : public LightParticleEntity {
   // -initWithPosition:'s body, run once right after construction.
   void initWithPosition(HPVector position);
 
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
 };
 
 }  // namespace oo

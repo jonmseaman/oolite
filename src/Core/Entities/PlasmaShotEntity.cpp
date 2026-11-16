@@ -30,7 +30,7 @@ MA 02110-1301, USA.
 #include <memory>
 #include <vector>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "PlasmaBurstEntity.h"
 #include "Universe.h"
 
@@ -45,7 +45,7 @@ MA 02110-1301, USA.
 
 std::shared_ptr<oo::PlasmaShotEntity> oo::PlasmaShotEntity::shotWithPosition(
     HPVector inPosition, Vector inVelocity, float inEnergy,
-    OOTimeDelta duration, OOColor* color) {
+    oo::TimeDelta duration, oo::Color* color) {
   const std::shared_ptr<oo::PlasmaShotEntity> shot =
       oo::makeShared<oo::PlasmaShotEntity>();
   shot->initWithPosition(inPosition, inVelocity, inEnergy, duration, color);
@@ -54,8 +54,8 @@ std::shared_ptr<oo::PlasmaShotEntity> oo::PlasmaShotEntity::shotWithPosition(
 
 void oo::PlasmaShotEntity::initWithPosition(HPVector inPosition,
                                             Vector inVelocity, float inEnergy,
-                                            OOTimeDelta duration,
-                                            OOColor* color) {
+                                            oo::TimeDelta duration,
+                                            oo::Color* color) {
   oo::LightParticleEntity::initWithDiameter(kPlasmaShotSize);
   // [super initWithDiameter:] could not fail.
   {
@@ -86,10 +86,10 @@ bool oo::PlasmaShotEntity::checkCloseCollisionWith(Entity* otherEntity) {
 void oo::PlasmaShotEntity::update(double delta_t) {
   oo::LightParticleEntity::update(delta_t);
 
-  OOTimeDelta lifeTime = timeElapsedSinceSpawn();
+  oo::TimeDelta lifeTime = timeElapsedSinceSpawn();
 
 #if PLASMA_ATTENUATION
-  float attenuation = OOClamp_0_1_f(1.0f - lifeTime / _duration);
+  float attenuation = oo::Clamp_0_1_f(1.0f - lifeTime / _duration);
 #else
   const float attenuation = 1.0f;
 #endif

@@ -17,8 +17,8 @@
 	the category answers the engine. Run: tests/run.sh unit
 */
 
-#include "OOEquipmentType.h"
-#include "OOColor.h"
+#include "EquipmentType.h"
+#include "Color.h"
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
@@ -124,16 +124,21 @@ oo::PList Universe::getEquipmentDataOutfitting()	{ return EquipmentData(); }
 Universe *gSharedUniverse = nullptr;
 
 
-#include "OOCacheManager.h"
+#include "CacheManager.h"
 
 // The cache manager: a C++ stand-in with the Objective-C stand-in's answers.
-OOCacheManager *OOCacheManager::sharedCache()
+oo::CacheManager *oo::CacheManager::sharedCache()
 {
-	static OOCacheManager *shared = new OOCacheManager;
+	static oo::CacheManager *shared = new oo::CacheManager;
 	return shared;
 }
-OOCacheManager::~OOCacheManager()  {}
-void OOCacheManager::setPList(const oo::PList &value, const std::string &key, const std::string &cache)  { (void)value; (void)key; (void)cache; }
+namespace oo {
+
+CacheManager::~CacheManager()  {}
+
+}  // namespace oo
+
+void oo::CacheManager::setPList(const oo::PList &value, const std::string &key, const std::string &cache)  { (void)value; (void)key; (void)cache; }
 
 
 #include "OOScript.h"
@@ -178,7 +183,7 @@ public:
 class ShipEntity : public Entity
 {
 public:
-	OOFuelQuantity getFuel();
+	oo::FuelQuantity getFuel();
 };
 
 class PlayerEntity : public ShipEntity
@@ -187,13 +192,13 @@ public:
 	void setScriptTarget(::ShipEntity *ship);
 	GLfloat fuelChargeRate();
 	double renovationCosts();
-	OOCreditsQuantity adjustPriceByScriptForEqKey(const std::string &eqKey, OOCreditsQuantity price);
+	oo::CreditsQuantity adjustPriceByScriptForEqKey(const std::string &eqKey, oo::CreditsQuantity price);
 	oo::PList processKeyCode(const oo::PList &key_def);
 	std::optional<std::string> validateKey(const std::string &key, const oo::PList &check_keys);
 	oo::PList missionVariableForKey(const std::string &key);
 	void setMissionVariable(const oo::PList &value, const std::string &key);
 
-	OOFuelQuantity _fuel = {};
+	oo::FuelQuantity _fuel = {};
 	float _fuelChargeRate = {};
 	double _renovationCosts = {};
 	oo::PList::Dict _missionVariables;
@@ -201,10 +206,10 @@ public:
 };
 
 void PlayerEntity::setScriptTarget(::ShipEntity *target)  { (void)target; }
-OOFuelQuantity ShipEntity::getFuel()  { return static_cast<PlayerEntity *>(this)->_fuel; }
+oo::FuelQuantity ShipEntity::getFuel()  { return static_cast<PlayerEntity *>(this)->_fuel; }
 GLfloat PlayerEntity::fuelChargeRate()  { return _fuelChargeRate; }
 double PlayerEntity::renovationCosts()  { return _renovationCosts; }
-OOCreditsQuantity PlayerEntity::adjustPriceByScriptForEqKey(const std::string &eqKey, OOCreditsQuantity price)
+oo::CreditsQuantity PlayerEntity::adjustPriceByScriptForEqKey(const std::string &eqKey, oo::CreditsQuantity price)
 {
 	if (eqKey == "EQ_SCOOPER")  oo::RaiseException(oo::InvalidArgumentException, "price %s", "boom");
 	if (eqKey == "EQ_MISSILE" && _throwCxx)  throw std::runtime_error("cxx boom");
@@ -378,7 +383,7 @@ oo::PList OOJSPListFromJSValue(JSContext *context, JSValueConst value)
 		return oo::PList(std::move(array));
 	}
 	const char *jsClass = OOJSClassName(JS_GetClassID(value));
-	if (jsClass != nullptr && std::strcmp(jsClass, "EquipmentInfo") == 0)  return OOEquipmentTypeObjectNode(static_cast<OOEquipmentType *>(OOJSCxxPrivateFromOpaque(JS_GetOpaque(value, JS_GetClassID(value)))));
+	if (jsClass != nullptr && std::strcmp(jsClass, "EquipmentInfo") == 0)  return oo::EquipmentTypeObjectNode(static_cast<oo::EquipmentType *>(OOJSCxxPrivateFromOpaque(JS_GetOpaque(value, JS_GetClassID(value)))));
 	return oo::PList(std::string("[object]"));
 }
 
@@ -519,7 +524,7 @@ void SetUpContext()
 	sPlayer->_fuelChargeRate = 1.5f;
 	sPlayer->_renovationCosts = 1234.5;
 	gOOPlayer = sPlayer;
-	OOEquipmentType::loadEquipment();
+	oo::EquipmentType::loadEquipment();
 
 	sRuntime = JS_NewRuntime();
 	JS_SetMemoryLimit(sRuntime, 8u * 1024u * 1024u);
@@ -583,7 +588,7 @@ OO_TEST(registration)
 OO_TEST(categoryAnswersTheEngine)
 {
 	SetUpContext();
-	OOEquipmentType *fuel = OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get();
+	oo::EquipmentType *fuel = oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get();
 	OO_CHECK(OOJSEquipmentInfoJSClassName() == std::optional<std::string>("EquipmentInfo"));
 	// One JS object per type, made on first use, with the type (retained) in its private slot.
 	JSValue first = fuel->jsValueInContext(sContext);
@@ -708,7 +713,7 @@ OO_TEST(staticMembers)
 OO_TEST(cFunctions)
 {
 	SetUpContext();
-	OOEquipmentType *missile = OOEquipmentType::equipmentTypeWithIdentifier("EQ_MISSILE").get();
+	oo::EquipmentType *missile = oo::EquipmentType::equipmentTypeWithIdentifier("EQ_MISSILE").get();
 	JSValue missileValue = missile->jsValueInContext(sContext);
 	JSValue key = JS_NewString(sContext, "EQ_MISSILE");
 	JSValue damagedKey = JS_NewString(sContext, "EQ_MISSILE_DAMAGED");

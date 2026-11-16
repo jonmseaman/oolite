@@ -19,16 +19,16 @@
 #include <cstdlib>
 #include <string>
 
-#include "OOCommodityMarket.h"
-#include "OOConstToString.h"
-#include "OOEquipmentType.h"
-#include "OOStringExpander.h"
+#include "CommodityMarket.h"
+#include "ConstToString.h"
+#include "EquipmentType.h"
+#include "StringExpander.h"
 #include "oo_test.hpp"
 
 // ShipEntity.h's declarations (it imports the whole game).
 namespace oo {
 
-typedef OOEquipmentType* WeaponType;
+typedef oo::EquipmentType* WeaponType;
 std::optional<std::string> EquipmentIdentifierFromWeaponType(
     WeaponType weapon);
 WeaponType WeaponTypeFromEquipmentIdentifierSloppy(
@@ -82,11 +82,11 @@ class Universe : public oo::Object {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
 
-  std::shared_ptr<OOCommodityMarket> market;
+  std::shared_ptr<oo::CommodityMarket> market;
 
   oo::PList getEquipmentData();
   oo::PList getEquipmentDataOutfitting();
-  ::OOCommodityMarket* getCommodityMarket();
+  ::oo::CommodityMarket* getCommodityMarket();
 };
 
 class StandInUniverse : public Universe {
@@ -103,12 +103,14 @@ class StandInUniverse : public Universe {
 
 oo::PList Universe::getEquipmentData() { return EquipmentData(); }
 oo::PList Universe::getEquipmentDataOutfitting() { return EquipmentData(); }
-::OOCommodityMarket* Universe::getCommodityMarket() { return market.get(); }
+::oo::CommodityMarket* Universe::getCommodityMarket() { return market.get(); }
 
 Universe* gSharedUniverse = nullptr;
 
 // The mass-unit symbols, as descriptions.plist spells them.
-std::string OOLookUpDescriptionPRIV(const std::string& key) {
+namespace oo {
+
+std::string LookUpDescriptionPRIV(const std::string& key) {
   if (key == "cargo-tons-symbol") return "t";
   if (key == "cargo-kilograms-symbol") return "kg";
   if (key == "cargo-grams-symbol") return "g";
@@ -116,25 +118,33 @@ std::string OOLookUpDescriptionPRIV(const std::string& key) {
 }
 
 // The expander (a whole-game unit); the functions pinned here never expand.
-std::optional<std::string> OOExpandDescriptionString(
+std::optional<std::string> ExpandDescriptionString(
     Random_Seed /*seed*/, const std::string& string,
     const oo::PList& /*overrides*/, const oo::PList& /*legacyLocals*/,
     const std::optional<std::string>& /*systemName*/,
-    OOExpandOptions /*options*/) {
+    ExpandOptions /*options*/) {
   return string;
 }
 
-Random_Seed OOStringExpanderDefaultRandomSeed(void) { return Random_Seed(); }
+Random_Seed StringExpanderDefaultRandomSeed(void) { return Random_Seed(); }
 
-#include "OOCacheManager.h"
+}  // namespace oo
+
+
+#include "CacheManager.h"
 
 // The cache manager: a C++ stand-in.
-OOCacheManager* OOCacheManager::sharedCache() {
-  static OOCacheManager* shared = new OOCacheManager;
+oo::CacheManager* oo::CacheManager::sharedCache() {
+  static oo::CacheManager* shared = new oo::CacheManager;
   return shared;
 }
-OOCacheManager::~OOCacheManager() {}
-void OOCacheManager::setPList(const oo::PList& value, const std::string& key,
+namespace oo {
+
+CacheManager::~CacheManager() {}
+
+}  // namespace oo
+
+void oo::CacheManager::setPList(const oo::PList& value, const std::string& key,
                               const std::string& cache) {
   (void)value;
   (void)key;
@@ -214,7 +224,7 @@ namespace {
 void LoadEquipment() {
   if (gSharedUniverse == nullptr) gSharedUniverse = new StandInUniverse();
   if (gOOPlayer == nullptr) gOOPlayer = new PlayerEntity;  // never deleted
-  OOEquipmentType::loadEquipment();
+  oo::EquipmentType::loadEquipment();
 }
 
 std::string IdentifierOf(oo::WeaponType weapon) {
@@ -230,7 +240,7 @@ OO_TEST(weaponTypeIdentifiers) {
   {
     LoadEquipment();
     oo::WeaponType pulse =
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
             .get();
     OO_CHECK(pulse != nullptr);
 
@@ -250,10 +260,10 @@ OO_TEST(sloppyLookUp) {
   {
     LoadEquipment();
     oo::WeaponType pulse =
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
             .get();
     oo::WeaponType none =
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_NONE").get();
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_NONE").get();
     OO_CHECK(pulse != nullptr && none != nullptr && pulse != none);
 
     // The identifier itself, then with "EQ_" put in front, then EQ_WEAPON_NONE.
@@ -263,10 +273,10 @@ OO_TEST(sloppyLookUp) {
                  "WEAPON_PULSE_LASER") == pulse);
     OO_CHECK(
         oo::WeaponTypeFromEquipmentIdentifierSloppy("LASER_WITHOUT_PREFIX") ==
-        OOEquipmentType::equipmentTypeWithIdentifier("LASER_WITHOUT_PREFIX")
+        oo::EquipmentType::equipmentTypeWithIdentifier("LASER_WITHOUT_PREFIX")
             .get());
     OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy("EQ_FUEL") ==
-             OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get());
+             oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get());
     OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy("PULSE_LASER") ==
              none);
     OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy(
@@ -276,7 +286,7 @@ OO_TEST(sloppyLookUp) {
     // The other spellings are the same look-up.
     OO_CHECK(
         oo::WeaponTypeFromEquipmentIdentifierStrict("WEAPON_BEAM_LASER") ==
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_BEAM_LASER")
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_BEAM_LASER")
             .get());
     OO_CHECK(oo::WeaponTypeFromString("WEAPON_PULSE_LASER") == pulse);
     OO_CHECK(oo::WeaponTypeFromString("nonsense") == none);
@@ -288,7 +298,7 @@ OO_TEST(sloppyLookUp) {
     OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierLegacy("4") ==
              none);  // no mining laser here
     OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierLegacy("EQ_FUEL") ==
-             OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get());
+             oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get());
   }
 }
 
@@ -304,7 +314,7 @@ OO_TEST(massUnitOfACommodity) {
     OO_CHECK(DisplayStringForMassUnitForCommodity("gold") ==
              std::optional<std::string>("t"));
 
-    std::shared_ptr<OOCommodityMarket> market = oo::makeShared<OOCommodityMarket>();
+    std::shared_ptr<oo::CommodityMarket> market = oo::makeShared<oo::CommodityMarket>();
     market->setGood("gold", Good({{"name", oo::PList("Gold")},
                                   {"quantity_unit", oo::PList(1)}}));
     market->setGood("gems", Good({{"name", oo::PList("Gem-stones")},
@@ -324,7 +334,7 @@ OO_TEST(massUnitOfACommodity) {
     OO_CHECK(DisplayStringForMassUnitForCommodity("unobtainium") ==
              std::optional<std::string>("t"));
     OO_CHECK(DisplayStringForMassUnitForCommodity("alloys") ==
-             DisplayStringForMassUnit(OOMassUnit::kUnknown));
+             DisplayStringForMassUnit(oo::MassUnit::kUnknown));
 
     gSharedUniverse->market = nullptr;
   }
@@ -332,9 +342,9 @@ OO_TEST(massUnitOfACommodity) {
 
 // The JS glue of OOEquipmentType (OOJSPrivateObject), defined in
 // OOJSEquipmentInfo.mm, which this test does not link: the vtable names these.
-JSValue OOEquipmentType::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
-void OOEquipmentType::clearJSSelf(JSValueConst) {}
-std::optional<std::string> OOEquipmentType::jsDescription() {
+JSValue oo::EquipmentType::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
+void oo::EquipmentType::clearJSSelf(JSValueConst) {}
+std::optional<std::string> oo::EquipmentType::jsDescription() {
   return std::nullopt;
 }
 

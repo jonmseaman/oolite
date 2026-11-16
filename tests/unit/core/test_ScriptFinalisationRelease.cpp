@@ -27,7 +27,7 @@
 
 #include "EntityManualRefs.h"  // the tests' manual entity references
 #include "OOJSShipGroup.h"
-#include "OOShipGroup.h"
+#include "ShipGroup.h"
 #include "WaypointEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
@@ -104,11 +104,11 @@ OO_TEST(aScriptObjectKeepsItsNativeObjectUntilFinalised) {
   {
     oo::AutoreleaseScope scope;
     JSContext* context = Context();
-    std::weak_ptr<OOShipGroup> watched;
+    std::weak_ptr<oo::ShipGroup> watched;
     JSValue wrapper = JS_UNDEFINED;
     {
-      std::shared_ptr<OOShipGroup> group =
-          OOShipGroup::groupWithName(std::string("finalised"));
+      std::shared_ptr<oo::ShipGroup> group =
+          oo::ShipGroup::groupWithName(std::string("finalised"));
       watched = group;
       wrapper = group->jsValueInContext(context);
       OO_CHECK(JS_IsObject(wrapper));

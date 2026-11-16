@@ -31,7 +31,7 @@
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJSWormhole.h"
-#include "OOSystemDescriptionManager.h"
+#include "SystemDescriptionManager.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "WormholeEntity.h"
@@ -53,7 +53,7 @@ class TestPlayer : public PlayerEntity {
   NSPoint _coordinates = {};
 
   HPVector viewpointPosition() override { return kZeroHPVector; }
-  OOGalaxyID galaxyNumber() override { return 0; }
+  oo::GalaxyID galaxyNumber() override { return 0; }
   double clockTime() override { return _clock; }
   double clockTimeAdjusted() override { return _clock; }
   NSPoint getGalaxy_coordinates() override { return _coordinates; }
@@ -81,12 +81,12 @@ class TestEffect : public Entity {
 // records removals.
 class TestUniverse : public Universe {
  public:
-  OOSystemID& _system =
+  oo::SystemID& _system =
       systemID;  // the universe's own state, which its getter answers
   Entity* _removed = {};
 
-  std::optional<std::string> getSystemName(OOSystemID sys,
-                                           OOGalaxyID /*gnum*/) override {
+  std::optional<std::string> getSystemName(oo::SystemID sys,
+                                           oo::GalaxyID /*gnum*/) override {
     return "System " + std::to_string(sys);
   }  // getSystemName(sys) asks it
   bool removeEntity(Entity* entity) override {
@@ -100,7 +100,7 @@ extern JSContext*
 
 namespace {
 
-OOSystemDescriptionManager* sManager = nullptr;
+oo::SystemDescriptionManager* sManager = nullptr;
 
 }
 
@@ -115,14 +115,14 @@ void SetUp() {
     sPlayer = NewTestPlayer<TestPlayer>();
     // Systems 7 at (10, 20) and 9 at (13, 24) of galaxy 0: 5 light-year units
     // apart, 2.0 LY.
-    std::shared_ptr<OOSystemDescriptionManager> manager =
-        oo::makeShared<OOSystemDescriptionManager>();
+    std::shared_ptr<oo::SystemDescriptionManager> manager =
+        oo::makeShared<oo::SystemDescriptionManager>();
     manager->setProperties(
         oo::PList(oo::PList::Dict{{"coordinates", oo::PList("10 20")}}), "0 7");
     manager->setProperties(
         oo::PList(oo::PList::Dict{{"coordinates", oo::PList("13 24")}}), "0 9");
     manager->buildRouteCache();    // fills the coordinates cache
-    sManager = (*new std::shared_ptr<OOSystemDescriptionManager>(std::move(manager)))
+    sManager = (*new std::shared_ptr<oo::SystemDescriptionManager>(std::move(manager)))
                    .get();  // never released
     // The universe's own manager and descriptions (the game's clock format, for
     // the description's arrival time).

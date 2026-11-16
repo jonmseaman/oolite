@@ -27,8 +27,8 @@ MA 02110-1301, USA.
 
 #include <memory>
 
-#include "OOColor.h"
-#include "OOGraphicsResetManager.h"
+#include "Color.h"
+#include "GraphicsResetManager.h"
 #include "PlayerEntity.h"
 #include "Texture.h"
 #include "Universe.h"
@@ -53,7 +53,7 @@ namespace {
 
 // The texture's graphics reset client (as OOLaserShotEntity's): registered
 // once, with the texture, and never destroyed.
-class FlashTextureResetClient : public OOGraphicsResetClient {
+class FlashTextureResetClient : public oo::GraphicsResetClient {
  public:
   void resetGraphicsState() override {
     oo::FlashEffectEntity::resetGraphicsState();
@@ -65,7 +65,7 @@ class FlashTextureResetClient : public OOGraphicsResetClient {
 void oo::FlashEffectEntity::initExplosionFlashWithPosition(HPVector pos,
                                                            Vector vel,
                                                            float size) {
-  initWithPosition(pos, size, OOColor::whiteColor().get(),
+  initWithPosition(pos, size, oo::Color::whiteColor().get(),
                    kExplosionFlashDuration);
   // [self initWithPosition:...] could not fail.
   {
@@ -76,7 +76,7 @@ void oo::FlashEffectEntity::initExplosionFlashWithPosition(HPVector pos,
 }
 
 void oo::FlashEffectEntity::initLaserFlashWithPosition(HPVector pos, Vector vel,
-                                                       OOColor* color) {
+                                                       oo::Color* color) {
   initWithPosition(pos, kLaserFlashInitialSize, color, kLaserFlashDuration);
   // [self initWithPosition:...] could not fail.
   {
@@ -101,7 +101,7 @@ oo::FlashEffectEntity::explosionFlashFromEntity(Entity* entity) {
 
 std::shared_ptr<oo::FlashEffectEntity>
 oo::FlashEffectEntity::laserFlashWithPosition(HPVector pos, Vector vel,
-                                              OOColor* color) {
+                                              oo::Color* color) {
   const std::shared_ptr<oo::FlashEffectEntity> flash =
       oo::makeShared<oo::FlashEffectEntity>();
   flash->initLaserFlashWithPosition(pos, vel, color);
@@ -109,7 +109,7 @@ oo::FlashEffectEntity::laserFlashWithPosition(HPVector pos, Vector vel,
 }
 
 void oo::FlashEffectEntity::initWithPosition(HPVector pos, float size,
-                                             OOColor* color, float duration) {
+                                             oo::Color* color, float duration) {
   oo::LightParticleEntity::initWithDiameter(size);
   // [super initWithDiameter:] could not fail.
   {
@@ -122,7 +122,7 @@ void oo::FlashEffectEntity::initWithPosition(HPVector pos, float size,
   }
 }
 
-void oo::FlashEffectEntity::update(OOTimeDelta delta_t) {
+void oo::FlashEffectEntity::update(oo::TimeDelta delta_t) {
   oo::LightParticleEntity::update(delta_t);
 
   float tf = _duration * 0.667f;
@@ -132,7 +132,7 @@ void oo::FlashEffectEntity::update(OOTimeDelta delta_t) {
   _diameter += static_cast<float>(delta_t * _growthRate);
 
   // Fade in and out.
-  OOTimeDelta lifeTime = timeElapsedSinceSpawn();
+  oo::TimeDelta lifeTime = timeElapsedSinceSpawn();
   _colorComponents[3] = static_cast<GLfloat>(
       _alpha *
       ((lifeTime < tf) ? (lifeTime / tf) : (_duration - lifeTime) / tf1));
@@ -155,7 +155,7 @@ void oo::FlashEffectEntity::setUpTexture() {
         oo::TextureFlags::kMinFilterMipMap |
             oo::TextureFlags::kMagFilterLinear | oo::TextureFlags::kAlphaMask,
         kOOTextureDefaultAnisotropy, 0.0));
-    OOGraphicsResetManager::sharedManager()->registerCxxClient(
+    oo::GraphicsResetManager::sharedManager()->registerCxxClient(
         new FlashTextureResetClient);
   }
 }

@@ -38,11 +38,15 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
-class OOMesh;
+namespace oo {
+
+class Mesh;
+
+}  // namespace oo
 
 /*	The material configuration is an oo::PList dictionary, the
         material key and entity name are nil-able strings, and the outputs are

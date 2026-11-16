@@ -33,7 +33,7 @@
 #include "OOJSEntity.h"
 #include "OOJSShip.h"
 #include "OOJSStation.h"
-#include "OOCallByName.h"	// oo::EntityRespondsToName / oo::CallEntityByName
+#include "CallByName.h"	// oo::EntityRespondsToName / oo::CallEntityByName
 
 #include "oo_test.hpp"
 
@@ -205,8 +205,8 @@ OO_TEST(initAndSetUpFromDictionary)
 		OO_CHECK((station != nullptr ? station->getAllowsSaving() : false) == (UNIVERSE != nullptr ? UNIVERSE->deterministicPopulation() : false));	// a fixed station (no top speed)
 		OO_CHECK(vector_equal((station != nullptr ? station->virtualPortDimensions() : Vector{}), make_vector(69, 69, 250)));
 		OO_CHECK((station != nullptr ? station->playerReservedDock() : (DockEntity *)nullptr) == nullptr);
-		OO_CHECK((station != nullptr ? station->group() : (OOShipGroup *)nullptr) != nullptr && (station != nullptr ? station->group() : (OOShipGroup *)nullptr) == (station != nullptr ? station->stationGroup() : (OOShipGroup *)nullptr));
-		OO_CHECK(!(station != nullptr ? station->getCrew() : std::optional<std::vector<std::shared_ptr<OOCharacter>>>()).has_value());
+		OO_CHECK((station != nullptr ? station->group() : (oo::ShipGroup *)nullptr) != nullptr && (station != nullptr ? station->group() : (oo::ShipGroup *)nullptr) == (station != nullptr ? station->stationGroup() : (oo::ShipGroup *)nullptr));
+		OO_CHECK(!(station != nullptr ? station->getCrew() : std::optional<std::vector<std::shared_ptr<oo::Character>>>()).has_value());
 
 		// No docks: a virtual one, at the port radius.
 		OO_CHECK(sVirtualDocks == 1);
@@ -598,7 +598,7 @@ OO_TEST(slice3DamageAndMovement)
 		SetUp();
 		TestStation *station = MakeStation("target");
 		TestVisitor *friendly = MakeVisitor("defender");
-		if (friendly != nullptr)  friendly->setGroup((station != nullptr ? station->group() : (OOShipGroup *)nullptr));
+		if (friendly != nullptr)  friendly->setGroup((station != nullptr ? station->group() : (oo::ShipGroup *)nullptr));
 
 		// Friendly fire is ignored.
 		SetEnergy3(station, 500);
@@ -641,7 +641,7 @@ OO_TEST(slice3MembersFromCxx)
 		SetPrimaryTarget3(station, MakeVisitor("foe"));
 		OO_CHECK(asShip->hasHostileTarget());		// virtual: the station's
 		TestVisitor *friendly = MakeVisitor("friend");
-		if (friendly != nullptr)  friendly->setGroup((station != nullptr ? station->group() : (OOShipGroup *)nullptr));
+		if (friendly != nullptr)  friendly->setGroup((station != nullptr ? station->group() : (oo::ShipGroup *)nullptr));
 		SetEnergy3(station, 500);
 		Entity *asEntity = part;
 		asEntity->takeEnergyDamage(100, friendly, friendly, "");

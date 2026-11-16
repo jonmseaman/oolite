@@ -18,7 +18,7 @@
 
 #include <cstdlib>
 
-#include "OOAsyncWorkManager.h"
+#include "AsyncWorkManager.h"
 #include "Texture.h"
 #include "TextureLoader.h"
 #include "oo_gl_test_context.hpp"
@@ -100,8 +100,8 @@ TestLoader* Loader(const char* path, oo::TextureFlags options, uint32_t width,
 
 bool Queue(oo::TextureLoader* loader) {
   // The work manager's task is the C++ loader.
-  return OOAsyncWorkManager::sharedAsyncWorkManager()->addTask(
-      loader, OOAsyncWorkPriority::kMedium);
+  return oo::AsyncWorkManager::sharedAsyncWorkManager()->addTask(
+      loader, oo::AsyncWorkPriority::kMedium);
 }
 
 struct Result {

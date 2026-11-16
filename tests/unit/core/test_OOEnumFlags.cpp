@@ -8,8 +8,8 @@
 #include <string_view>
 
 #include "DebugFlags.h"
-#include "OOEnumFlags.h"
-#include "OOEnumTable.h"
+#include "EnumFlags.h"
+#include "EnumTable.h"
 #include "oo_test.hpp"
 
 namespace {

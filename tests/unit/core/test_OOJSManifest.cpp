@@ -19,9 +19,9 @@
    native's exception. Run: tests/run.sh unit
 */
 
-#include "OOCommodities.h"
-#include "OOCommodityMarket.h"
-#include "OOStringExpander.h"
+#include "Commodities.h"
+#include "CommodityMarket.h"
+#include "StringExpander.h"
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
@@ -44,15 +44,15 @@ class PlayerEntity
 {
 public:
 	oo::PList cargoListForScripting();
-	OOCargoQuantity cargoQuantityForType(const std::string &type);
-	OOCargoQuantity setCargoQuantityForType(const std::string &type, OOCargoQuantity amount);
+	oo::CargoQuantity cargoQuantityForType(const std::string &type);
+	oo::CargoQuantity setCargoQuantityForType(const std::string &type, oo::CargoQuantity amount);
 	std::optional<std::string> getSpecialCargo();
-	::OOCommodityMarket * getShipCommodityData();
+	::oo::CommodityMarket * getShipCommodityData();
 	::OOScript * commodityScriptNamed(const std::optional<std::string> &scriptName);
 
-	std::map<std::string, OOCargoQuantity> _cargo;
+	std::map<std::string, oo::CargoQuantity> _cargo;
 	std::optional<std::string> _specialCargo;
-	std::shared_ptr<OOCommodityMarket> _shipCommodityData;
+	std::shared_ptr<oo::CommodityMarket> _shipCommodityData;
 	int _sets = {};
 	bool _throwCxx = {};
 };
@@ -62,17 +62,17 @@ public:
 class Universe
 {
 public:
-	std::shared_ptr<OOCommodities> _commodities;
-	std::shared_ptr<OOCommodityMarket> _market;
+	std::shared_ptr<oo::Commodities> _commodities;
+	std::shared_ptr<oo::CommodityMarket> _market;
 
-	::OOCommodities *getCommodities();
-	::OOCommodityMarket *getCommodityMarket();
-	OOSystemID currentSystemID();
+	::oo::Commodities *getCommodities();
+	::oo::CommodityMarket *getCommodityMarket();
+	oo::SystemID currentSystemID();
 };
 
-::OOCommodities *Universe::getCommodities()	{ return _commodities.get(); }
-::OOCommodityMarket *Universe::getCommodityMarket()	{ return _market.get(); }
-OOSystemID Universe::currentSystemID()	{ return 7; }
+::oo::Commodities *Universe::getCommodities()	{ return _commodities.get(); }
+::oo::CommodityMarket *Universe::getCommodityMarket()	{ return _market.get(); }
+oo::SystemID Universe::currentSystemID()	{ return 7; }
 
 #include "ResourceManager.h"
 
@@ -84,7 +84,7 @@ class StationEntity
 public:
 	oo::PList getMarketDefinition();
 	std::optional<std::string> getMarketScriptName();
-	OOCargoQuantity getMarketCapacity();
+	oo::CargoQuantity getMarketCapacity();
 	bool getMarketMonitored();
 };
 
@@ -135,20 +135,20 @@ oo::PList PlayerEntity::cargoListForScripting()
 	}
 	return oo::PList(std::move(list));
 }
-OOCargoQuantity PlayerEntity::cargoQuantityForType(const std::string &type)
+oo::CargoQuantity PlayerEntity::cargoQuantityForType(const std::string &type)
 {
 	if (type == "furs")  oo::RaiseException(oo::InvalidArgumentException, "cargo %s", "boom");
 	if (type == "gems" && _throwCxx)  throw std::runtime_error("cxx boom");
 	return _cargo[type];
 }
-OOCargoQuantity PlayerEntity::setCargoQuantityForType(const std::string &type, OOCargoQuantity amount)
+oo::CargoQuantity PlayerEntity::setCargoQuantityForType(const std::string &type, oo::CargoQuantity amount)
 {
 	_sets++;
 	_cargo[type] = amount;
 	return amount;
 }
 std::optional<std::string> PlayerEntity::getSpecialCargo()  { return _specialCargo; }
-::OOCommodityMarket * PlayerEntity::getShipCommodityData()  { return _shipCommodityData.get(); }
+::oo::CommodityMarket * PlayerEntity::getShipCommodityData()  { return _shipCommodityData.get(); }
 ::OOScript * PlayerEntity::commodityScriptNamed(const std::optional<std::string> &script)  { (void)script; return nullptr; }
 
 
@@ -156,7 +156,7 @@ std::optional<std::string> PlayerEntity::getSpecialCargo()  { return _specialCar
 
 // ResourceManager: C++ definitions of the statics the code under test calls,
 // with the Objective-C stand-in's answers.
-oo::PList ResourceManager::dictionaryFromFilesNamed(const std::string &fileName, const std::optional<std::string> &folderName, OOResourceMergeMode mergeMode, bool useCache)
+oo::PList ResourceManager::dictionaryFromFilesNamed(const std::string &fileName, const std::optional<std::string> &folderName, oo::ResourceMergeMode mergeMode, bool useCache)
 {
 	(void)fileName; (void)folderName; (void)mergeMode; (void)useCache;
 	return TradeGoods();
@@ -166,21 +166,26 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(const std::string &fileName,
 
 oo::PList StationEntity::getMarketDefinition()					{ std::abort(); }
 std::optional<std::string> StationEntity::getMarketScriptName()	{ std::abort(); }
-OOCargoQuantity StationEntity::getMarketCapacity()				{ std::abort(); }
+oo::CargoQuantity StationEntity::getMarketCapacity()				{ std::abort(); }
 bool StationEntity::getMarketMonitored()						{ std::abort(); }
 
 
 
 // The expander: "<string>".
-std::optional<std::string> OOExpandDescriptionString(Random_Seed, const std::string &string, const oo::PList &, const oo::PList &, const std::optional<std::string> &, OOExpandOptions)
+namespace oo {
+
+std::optional<std::string> ExpandDescriptionString(Random_Seed, const std::string &string, const oo::PList &, const oo::PList &, const std::optional<std::string> &, ExpandOptions)
 {
 	return "<" + string + ">";
 }
 
-Random_Seed OOStringExpanderDefaultRandomSeed(void)
+Random_Seed StringExpanderDefaultRandomSeed(void)
 {
 	return Random_Seed{};
 }
+
+}  // namespace oo
+
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
@@ -419,7 +424,7 @@ void SetUpContext()
 	gSharedUniverse = sUniverse;
 	sPlayer = new PlayerEntity;
 	gOOPlayer = sPlayer;
-	sUniverse->_commodities = oo::makeShared<OOCommodities>();
+	sUniverse->_commodities = oo::makeShared<oo::Commodities>();
 	sUniverse->_market = sUniverse->_commodities->generateBlankMarket();
 	sPlayer->_shipCommodityData = sUniverse->_commodities->generateManifestForPlayer();
 	sPlayer->_cargo["food"] = 3;

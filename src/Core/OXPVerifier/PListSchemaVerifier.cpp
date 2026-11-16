@@ -39,14 +39,14 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
-#include "OODescription.h"
+#include "Description.h"
 #include "oofnd/PList.hpp"
 
 #if OO_OXP_VERIFIER_ENABLED
 
 #include <limits.h>
 
-#include "OOPListGameTypes.h"
+#include "PListGameTypes.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
@@ -1527,8 +1527,8 @@ static std::optional<oo::PListSchemaVerifierError> Verify_Vector(
   // Check basic parseability. If there's inequality here, the default value is
   // being returned. OOVectorFromObject is not migrated: it reads the same
   // object.
-  if (vector_equal(OOVectorFromPList(&value, kZeroVector),
-                   OOVectorFromPList(&value, kBasisXVector)))
+  if (vector_equal(oo::VectorFromPList(&value, kZeroVector),
+                   oo::VectorFromPList(&value, kBasisXVector)))
     return std::nullopt;
   else
     return ErrorTypeMismatch("vector", value, keyPath);
@@ -1548,8 +1548,8 @@ static std::optional<oo::PListSchemaVerifierError> Verify_Quaternion(
   // Check basic parseability. If there's inequality here, the default value is
   // being returned. OOQuaternionFromObject is not migrated: it reads the same
   // object.
-  if (quaternion_equal(OOQuaternionFromPList(&value, kZeroQuaternion),
-                       OOQuaternionFromPList(&value, kIdentityQuaternion)))
+  if (quaternion_equal(oo::QuaternionFromPList(&value, kZeroQuaternion),
+                       oo::QuaternionFromPList(&value, kIdentityQuaternion)))
     return std::nullopt;
   else
     return ErrorTypeMismatch("quaternion", value, keyPath);

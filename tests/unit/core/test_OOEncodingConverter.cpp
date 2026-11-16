@@ -10,7 +10,7 @@
    tests/run.sh unit
 */
 
-#include "OOEncodingConverter.h"
+#include "EncodingConverter.h"
 #include "oo_test.hpp"
 
 /*	The game's OOStringParsing.mm reaches the JavaScript engine, so it is
@@ -42,15 +42,15 @@ oo::PList Substitutions(
   return oo::PList(std::move(result));
 }
 
-std::shared_ptr<OOEncodingConverter> ConverterForFont(const oo::PList& font) {
-  return oo::makeShared<OOEncodingConverter>(font);
+std::shared_ptr<oo::EncodingConverter> ConverterForFont(const oo::PList& font) {
+  return oo::makeShared<oo::EncodingConverter>(font);
 }
 
 }  // namespace
 
 OO_TEST(fontPListLatin1) {
   {
-    std::shared_ptr<OOEncodingConverter> converter = ConverterForFont(
+    std::shared_ptr<oo::EncodingConverter> converter = ConverterForFont(
         FontPList("windows-latin-1",
                   Substitutions({{"\xE2\x98\x85", "\b"}, {"q", "Q"}})));
     OO_CHECK(converter != nullptr);
@@ -75,7 +75,7 @@ OO_TEST(fontPListLatin1) {
 OO_TEST(substitutionOrderAndValues) {
   {
     // Applied in key order: "ab" before "b".
-    std::shared_ptr<OOEncodingConverter> converter = ConverterForFont(
+    std::shared_ptr<oo::EncodingConverter> converter = ConverterForFont(
         FontPList("windows-latin-1", Substitutions({{"b", "Y"}, {"ab", "X"}})));
     OO_CHECK_EQ(Bytes(converter->convertString("abb")), std::string("XY"));
 
@@ -92,7 +92,7 @@ OO_TEST(substitutionOrderAndValues) {
 
 OO_TEST(otherEncodings) {
   {
-    std::shared_ptr<OOEncodingConverter> converter =
+    std::shared_ptr<oo::EncodingConverter> converter =
         ConverterForFont(FontPList("windows-cyrillic", oo::PList()));
     OO_CHECK(converter->encoding() == std::optional<oo::str::Encoding>(
                                           oo::str::Encoding::kWindowsCP1251));
@@ -102,7 +102,7 @@ OO_TEST(otherEncodings) {
     OO_CHECK(converter->descriptionComponents() ==
              std::optional<std::string>("encoding: 11"));
 
-    converter = oo::makeShared<OOEncodingConverter>(
+    converter = oo::makeShared<oo::EncodingConverter>(
         oo::str::Encoding::kWindowsCP1253, Substitutions({{"a", "b"}}));
     OO_CHECK(converter->encoding() == std::optional<oo::str::Encoding>(
                                           oo::str::Encoding::kWindowsCP1253));
@@ -110,7 +110,7 @@ OO_TEST(otherEncodings) {
     OO_CHECK(converter->descriptionComponents() ==
              std::optional<std::string>("encoding: 13"));
 
-    converter = oo::makeShared<OOEncodingConverter>(
+    converter = oo::makeShared<oo::EncodingConverter>(
         oo::str::Encoding::kWindowsCP1254, oo::PList());
     OO_CHECK_EQ(Bytes(converter->convertString("abc")), std::string("abc"));
   }
@@ -119,7 +119,7 @@ OO_TEST(otherEncodings) {
 OO_TEST(noEncoding) {
   {
     // An unknown encoding name: no encoding, and every conversion is empty.
-    std::shared_ptr<OOEncodingConverter> converter =
+    std::shared_ptr<oo::EncodingConverter> converter =
         ConverterForFont(FontPList("klingon", Substitutions({{"a", "b"}})));
     OO_CHECK(converter != nullptr);
     OO_CHECK(!converter->encoding().has_value());
@@ -136,7 +136,7 @@ OO_TEST(noEncoding) {
     converter = ConverterForFont(FontPList(oo::PList(12), oo::PList()));
     OO_CHECK(!converter->encoding().has_value());
 
-    converter = oo::makeShared<OOEncodingConverter>(std::nullopt, oo::PList());
+    converter = oo::makeShared<oo::EncodingConverter>(std::nullopt, oo::PList());
     OO_CHECK(!converter->encoding().has_value());
     OO_CHECK_EQ(Bytes(converter->convertString("abc")), std::string());
   }

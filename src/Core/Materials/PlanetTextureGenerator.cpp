@@ -22,7 +22,7 @@
         MA 02110-1301, USA.
 */
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 
 #define DEBUG_DUMP (0 && OOLITE_DEBUG)
 #define DEBUG_DUMP_RAW (1 && DEBUG_DUMP)
@@ -45,8 +45,8 @@
 #include <utility>
 #include <vector>
 
-#include "OOColor.h"
-#include "OODescription.h"
+#include "Color.h"
+#include "Description.h"
 #include "PlanetTextureGenerator.h"
 #include "oofnd/Defaults.hpp"  // IWYU pragma: keep: used only without NDEBUG
 #include "oofnd/PList.hpp"
@@ -180,9 +180,9 @@ bool oo::PlanetTextureGenerator::initWithPlanetInfo(const oo::PList& planetInfo,
     OO_LOG("texture.planet.generate", "Extracting parameters for generator {}",
            description());
 
-    _info.landFraction = OOClamp_0_1_f(
+    _info.landFraction = oo::Clamp_0_1_f(
         planetInfo.get<float>("land_fraction", static_cast<float>(0.3)));
-    _info.polarFraction = OOClamp_0_1_f(
+    _info.polarFraction = oo::Clamp_0_1_f(
         planetInfo.get<float>("polar_fraction", static_cast<float>(0.05)));
     _info.landColor = FloatRGBFromDictColor(planetInfo, "land_color");
     _info.seaColor = FloatRGBFromDictColor(planetInfo, "sea_color");
@@ -194,21 +194,22 @@ bool oo::PlanetTextureGenerator::initWithPlanetInfo(const oo::PList& planetInfo,
              "Extracting atmosphere parameters");
       // we have an atmosphere:
       _info.cloudAlpha = planetInfo.get<float>("cloud_alpha", 1.0f);
-      _info.cloudFraction = OOClamp_0_1_f(
+      _info.cloudFraction = oo::Clamp_0_1_f(
           planetInfo.get<float>("cloud_fraction", static_cast<float>(0.3)));
       _info.cloudColor = FloatRGBFromDictColor(planetInfo, "cloud_color");
       _info.paleCloudColor =
           FloatRGBFromDictColor(planetInfo, "polar_cloud_color");
     }
 
-    OOGraphicsDetail detailLevel =
-        (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel() : OOGraphicsDetail{});
+    oo::GraphicsDetail detailLevel =
+        (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel()
+                             : oo::GraphicsDetail{});
 
 #ifndef TEXGEN_TEST_RIG
-    if (detailLevel < OOGraphicsDetail::kShaders ||
+    if (detailLevel < oo::GraphicsDetail::kShaders ||
         planetInfo.get<bool>("isMiniature", false)) {
       _planetScale = kPlanetScaleReducedDetail;
-    } else if (detailLevel == OOGraphicsDetail::kShaders) {
+    } else if (detailLevel == oo::GraphicsDetail::kShaders) {
       _planetScale = kPlanetScaleFullDetail;
     } else {
       _planetScale = kPlanetScaleExtraDetail;
@@ -217,7 +218,7 @@ bool oo::PlanetTextureGenerator::initWithPlanetInfo(const oo::PList& planetInfo,
     _planetScale = kPlanetScale4096x4096;
 #endif
     _info.perlin3d = planetInfo.get<bool>(
-        "perlin_3d", detailLevel > OOGraphicsDetail::kShaders);
+        "perlin_3d", detailLevel > oo::GraphicsDetail::kShaders);
     _info.planetAspectRatio = _info.perlin3d ? 2 : 1;
     _info.planetScaleOffset = 8 - _info.planetAspectRatio;
     return true;
@@ -526,7 +527,7 @@ void oo::PlanetTextureGenerator::loadTexture() {
           shade = 1.0f;
 
           // Flatten the sea.
-          norm = OOVectorInterpolate(norm, kBasisZVector, color.a);
+          norm = oo::VectorInterpolate(norm, kBasisZVector, color.a);
 
           // Put norm in normal map, scaled from [-1..1] to [0..255].
           *npx++ = static_cast<uint8_t>(127.5f * (norm.y + 1.0f));
@@ -765,8 +766,8 @@ namespace {
 FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary,
                                const std::string& key) {
   const oo::PList* value = dictionary.find(key);
-  OOColor* color = (value != nullptr) ? OOColorInObjectNode(*value)
-                                      : nullptr;  // an Object node
+  oo::Color* color = (value != nullptr) ? oo::ColorInObjectNode(*value)
+                                        : nullptr;  // an Object node
   OOCAssert(color != nullptr, "Expected OOColor, got %s",
             (value != nullptr) ? oo::DescriptionOf(*value).c_str() : "(null)");
 
@@ -1249,7 +1250,7 @@ void oo::PlanetAtmosphereGenerator::loadTexture() {
 std::optional<oo::TextureLoader::Result>
 oo::PlanetAtmosphereGenerator::getResult() {
   if (!_ready) {
-    OOAsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(
+    oo::AsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(
         _parent.get());
   }
 

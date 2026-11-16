@@ -19,7 +19,7 @@
 #include <cstdlib>
 #include <string>
 
-#include "OOCharacter.h"
+#include "Character.h"
 #include "oofnd/PList.hpp"
 #include <memory>
 #include <optional>
@@ -27,7 +27,7 @@
 #include <string_view>
 #include <utility>
 #include <vector>
-#include "OOStringExpander.h"
+#include "StringExpander.h"
 #include "oo_test.hpp"
 
 // --- The game around the class
@@ -47,8 +47,8 @@ class Universe : public oo::Object {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
 
-  oo::PList generateSystemData(OOSystemID);
-  std::optional<std::string> getSystemInhabitants(OOSystemID, bool);
+  oo::PList generateSystemData(oo::SystemID);
+  std::optional<std::string> getSystemInhabitants(oo::SystemID, bool);
 };
 
 class StandInUniverse : public Universe {
@@ -57,17 +57,17 @@ class StandInUniverse : public Universe {
     static const oo::PList* descriptions = new oo::PList(oo::PList::Dict{});
     return descriptions;
   }
-  OOSystemID findSystemFromName(const std::string& sysName) override {
+  oo::SystemID findSystemFromName(const std::string& sysName) override {
     return (sysName == "Lave") ? 7 : -1;
   }
 };
 
-oo::PList Universe::generateSystemData(OOSystemID s) {
+oo::PList Universe::generateSystemData(oo::SystemID s) {
   oo::PList::Dict data{{"government", oo::PList(s % 8)}};
   if (s != 200) data.emplace("name", oo::PList("System " + std::to_string(s)));
   return oo::PList(std::move(data));
 }
-std::optional<std::string> Universe::getSystemInhabitants(OOSystemID sys,
+std::optional<std::string> Universe::getSystemInhabitants(oo::SystemID sys,
                                                           bool /*plural*/) {
   if (sys == 9) return std::nullopt;
   return (sys % 2 == 0) ? " Human Colonials " : "Furry Felines";
@@ -79,11 +79,13 @@ Universe* gSharedUniverse = nullptr;
 // the species and planet overrides a description asks for.
 static int gExpansions = 0;
 
-std::optional<std::string> OOExpandDescriptionString(
+namespace oo {
+
+std::optional<std::string> ExpandDescriptionString(
     Random_Seed /*seed*/, const std::string& string, const oo::PList& overrides,
     const oo::PList& /*legacyLocals*/,
     const std::optional<std::string>& /*systemName*/,
-    OOExpandOptions /*options*/) {
+    ExpandOptions /*options*/) {
   if (string == "%R") return "R" + std::to_string(++gExpansions);
   std::string result = "<" + string;
   for (const char* key : {"species", "planet"}) {
@@ -94,9 +96,12 @@ std::optional<std::string> OOExpandDescriptionString(
   return result + ">";
 }
 
-std::string OOLookUpDescriptionPRIV(const std::string& key) {
+std::string LookUpDescriptionPRIV(const std::string& key) {
   return "desc:" + key;
 }
+
+}  // namespace oo
+
 
 // "1 2 3 4 5 6" is that seed; anything else is kNilRandomSeed's zeroes.
 Random_Seed RandomSeedFromString(
@@ -129,7 +134,7 @@ void Fake() {
   Reseed();
 }
 
-std::string Describe(OOCharacter* c) {
+std::string Describe(oo::Character* c) {
   return c->name().value_or("-") + "|" + c->shortDescription().value_or("-") +
          "|" + std::to_string(c->legalStatus()) + "|" +
          std::to_string(c->insuranceCredits()) + "|" +
@@ -137,12 +142,12 @@ std::string Describe(OOCharacter* c) {
          c->species().value_or("-");
 }
 
-std::string Describe(const std::shared_ptr<OOCharacter>& c) {
+std::string Describe(const std::shared_ptr<oo::Character>& c) {
   return Describe(c.get());
 }
 
-std::shared_ptr<OOCharacter> FromDictionary(oo::PList::Dict dict) {
-  return OOCharacter::characterWithDictionary(oo::PList(std::move(dict)));
+std::shared_ptr<oo::Character> FromDictionary(oo::PList::Dict dict) {
+  return oo::Character::characterWithDictionary(oo::PList(std::move(dict)));
 }
 
 const oo::PList kSeed("1 2 3 4 5 6");
@@ -168,11 +173,11 @@ OO_TEST(generatedCharacters) {
     // Human: "%R" and "nom"; a legal status and insurance from the
     // planet-description RNG.
     Fake();
-    OO_CHECK(Same(Describe(OOCharacter::randomCharacterWithRole(
+    OO_CHECK(Same(Describe(oo::Character::randomCharacterWithRole(
                       "nobody in particular", 4)),
                   kHuman4 + "|0|125|4|human colonials"));
     Fake();
-    std::shared_ptr<OOCharacter> pirate = OOCharacter::characterWithRole("pirate", 3);
+    std::shared_ptr<oo::Character> pirate = oo::Character::characterWithRole("pirate", 3);
     OO_CHECK(Same(Describe(pirate),
                   "R1 <nom>|<character-generic-description species=human "
                   "colonials planet=System 3>|8|500|3|human colonials"));
@@ -181,17 +186,17 @@ OO_TEST(generatedCharacters) {
 
     // Not human: "%R" twice.
     Fake();
-    OO_CHECK(Same(Describe(OOCharacter::randomCharacterWithRole("trader", 5)),
+    OO_CHECK(Same(Describe(oo::Character::randomCharacterWithRole("trader", 5)),
                   kFeline + "5>|0|250|5|furry felines"));
 
     // No species (the description is expanded without one), and no planet name.
     Fake();
     OO_CHECK(
-        Same(Describe(OOCharacter::randomCharacterWithRole("", 9)),
+        Same(Describe(oo::Character::randomCharacterWithRole("", 9)),
              "R1 R2|<character-generic-description planet=System 9>|32|0|9|-"));
     Fake();
-    std::shared_ptr<OOCharacter> nowhere =
-        OOCharacter::randomCharacterWithRole("", 200);
+    std::shared_ptr<oo::Character> nowhere =
+        oo::Character::randomCharacterWithRole("", 200);
     OO_CHECK(Same(Describe(nowhere),
                   "R1 <nom>|<character-generic-description species=human "
                   "colonials>|36|0|200|human colonials"));
@@ -214,7 +219,7 @@ OO_TEST(generatedCharacters) {
         "planet=System 5>|0|0|5|furry felines",
     };
     for (int i = 0; i < 6; i++) {
-      OO_CHECK(Same(Describe(OOCharacter::randomCharacterWithRole("", i)),
+      OO_CHECK(Same(Describe(oo::Character::randomCharacterWithRole("", i)),
                     expected[i]));
     }
   }
@@ -240,7 +245,7 @@ OO_TEST(roles) {
   {
     for (const auto& c : cases) {
       Fake();
-      std::shared_ptr<OOCharacter> character =
+      std::shared_ptr<oo::Character> character =
           FromDictionary({{"origin", oo::PList(4)}, {"random_seed", kSeed}});
       OO_CHECK(Same(Describe(character), kHuman4 + "|0|250|4|human colonials"));
       OO_CHECK(character->castInRole(c.role) == c.cast);
@@ -248,7 +253,7 @@ OO_TEST(roles) {
     }
 
     Fake();
-    std::shared_ptr<OOCharacter> thargoid =
+    std::shared_ptr<oo::Character> thargoid =
         FromDictionary({{"origin", oo::PList(4)}, {"random_seed", kSeed}});
     OO_CHECK(thargoid->castInRole("thargoid"));
     OO_CHECK(Same(Describe(thargoid),
@@ -301,7 +306,7 @@ OO_TEST(dictionaries) {
     // Everything else overrides the generated character; bounty wins over
     // legal_status.
     Fake();
-    std::shared_ptr<OOCharacter> c = FromDictionary(
+    std::shared_ptr<oo::Character> c = FromDictionary(
         {{"origin", oo::PList(4)},
          {"random_seed", kSeed},
          {"role", oo::PList("police")},
@@ -326,7 +331,7 @@ OO_TEST(dictionaries) {
 OO_TEST(scriptingInfoAndSetters) {
   {
     Fake();
-    std::shared_ptr<OOCharacter> c =
+    std::shared_ptr<oo::Character> c =
         FromDictionary({{"origin", oo::PList(4)}, {"random_seed", kSeed}});
     OO_CHECK(c->infoForScripting() ==
              oo::PList(oo::PList::Dict{
@@ -350,7 +355,7 @@ OO_TEST(scriptingInfoAndSetters) {
     // The list ended at the first missing value: no species, no description, no
     // name.
     Fake();
-    std::shared_ptr<OOCharacter> alien = OOCharacter::randomCharacterWithRole("", 9);
+    std::shared_ptr<oo::Character> alien = oo::Character::randomCharacterWithRole("", 9);
     OO_CHECK(
         alien->infoForScripting() ==
         oo::PList(oo::PList::Dict{
@@ -375,22 +380,22 @@ OO_TEST(cxxClass) {
   // The same answers as the Objective-C API above.
   Fake();
   OO_CHECK(Same(
-      Describe(OOCharacter::randomCharacterWithRole("nobody in particular", 4)
+      Describe(oo::Character::randomCharacterWithRole("nobody in particular", 4)
                    .get()),
       kHuman4 + "|0|125|4|human colonials"));
   Fake();
-  std::shared_ptr<OOCharacter> pirate = OOCharacter::characterWithRole("pirate", 3);
+  std::shared_ptr<oo::Character> pirate = oo::Character::characterWithRole("pirate", 3);
   OO_CHECK(Same(Describe(pirate.get()),
                 "R1 <nom>|<character-generic-description species=human "
                 "colonials planet=System 3>|8|500|3|human colonials"));
   OO_CHECK(pirate->planetOfOrigin() == std::optional<std::string>("System 3"));
   Fake();
-  OO_CHECK(Same(Describe(oo::makeShared<OOCharacter>("pirate", 3).get()),
+  OO_CHECK(Same(Describe(oo::makeShared<oo::Character>("pirate", 3).get()),
                 "R1 <nom>|<character-generic-description species=human "
                 "colonials planet=System 3>|8|500|3|human colonials"));
 
   Fake();
-  std::shared_ptr<OOCharacter> c = OOCharacter::characterWithDictionary(oo::PList(
+  std::shared_ptr<oo::Character> c = oo::Character::characterWithDictionary(oo::PList(
       oo::PList::Dict{{"origin", oo::PList(4)}, {"random_seed", kSeed}}));
   OO_CHECK(Same(Describe(c.get()), kHuman4 + "|0|250|4|human colonials"));
   OO_CHECK(c->castInRole("police"));
@@ -405,7 +410,7 @@ OO_TEST(cxxClass) {
   OO_CHECK(c->infoForScripting().count() == 6);
 
   // [[OOCharacter alloc] init]: every field zero.
-  std::shared_ptr<OOCharacter> blank = oo::makeShared<OOCharacter>();
+  std::shared_ptr<oo::Character> blank = oo::makeShared<oo::Character>();
   OO_CHECK(!blank->name().has_value() &&
            !blank->shortDescription().has_value());
   OO_CHECK(blank->legalStatus() == 0 && blank->insuranceCredits() == 0 &&
@@ -415,26 +420,26 @@ OO_TEST(cxxClass) {
 
 OO_TEST(facadeIdentity) {
   Fake();
-  std::shared_ptr<OOCharacter> pilot =
+  std::shared_ptr<oo::Character> pilot =
       FromDictionary({{"origin", oo::PList(4)}, {"random_seed", kSeed}});
 
   // A crew list (std::shared_ptr) keeps finding the same object.
-  std::vector<std::shared_ptr<OOCharacter>> crew{pilot};
+  std::vector<std::shared_ptr<oo::Character>> crew{pilot};
   OO_CHECK(crew[0] == pilot);
 
   // Objects made as +alloc and an initialiser made them.
-  std::shared_ptr<OOCharacter> blank = oo::makeShared<OOCharacter>();
+  std::shared_ptr<oo::Character> blank = oo::makeShared<oo::Character>();
   OO_CHECK(!blank->name().has_value() && blank->legalStatus() == 0 &&
            blank->planetIDOfOrigin() == 0);
   Fake();
-  std::shared_ptr<OOCharacter> trader = oo::makeShared<OOCharacter>("pirate", 3);
+  std::shared_ptr<oo::Character> trader = oo::makeShared<oo::Character>("pirate", 3);
   OO_CHECK(Same(Describe(trader),
                 "R1 <nom>|<character-generic-description species=human "
                 "colonials planet=System 3>|8|500|3|human colonials"));
 
   OO_CHECK(
-      OOCharacter::characterWithRole("", 1) !=
-      OOCharacter::characterWithRole("", 1));  // distinct objects, as before
+      oo::Character::characterWithRole("", 1) !=
+      oo::Character::characterWithRole("", 1));  // distinct objects, as before
 }
 
 OO_TEST_MAIN()

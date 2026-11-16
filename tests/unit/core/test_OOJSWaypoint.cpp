@@ -15,7 +15,7 @@
 	and what the category answers the engine. Run: tests/run.sh unit
 */
 
-#include "OOMaths.h"
+#include "Maths.h"
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
@@ -54,8 +54,8 @@ public:
 	bool isVisibleToScripts() override;
 
 	bool getOriented();
-	OOScalar size();
-	void setSize(OOScalar newSize);
+	oo::Scalar size();
+	void setSize(oo::Scalar newSize);
 	std::optional<std::string> beaconCode();	// the binding calls these
 	void setBeaconCode(const std::optional<std::string> &bcode);
 	std::optional<std::string> beaconLabel();
@@ -63,7 +63,7 @@ public:
 	bool isBeacon();
 
 	bool _oriented = false;
-	OOScalar _size = 0;
+	oo::Scalar _size = 0;
 };
 
 }  // namespace oo
@@ -172,8 +172,8 @@ std::optional<std::string> oo::WaypointEntity::jsClassName()  { return ::OOJSWay
 bool oo::WaypointEntity::isVisibleToScripts()  { return ::OOJSWaypointIsVisibleToScripts(); }
 
 bool oo::WaypointEntity::getOriented()  { return _oriented; }
-void oo::WaypointEntity::setSize(OOScalar newSize)  { _size = newSize; }
-OOScalar oo::WaypointEntity::size()
+void oo::WaypointEntity::setSize(oo::Scalar newSize)  { _size = newSize; }
+oo::Scalar oo::WaypointEntity::size()
 {
 	if (_size == 99)  oo::RaiseException(oo::InvalidArgumentException, "size %s", "boom");
 	if (_size == 98)  throw std::runtime_error("cxx boom");

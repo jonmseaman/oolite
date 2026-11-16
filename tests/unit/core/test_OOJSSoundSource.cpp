@@ -16,14 +16,14 @@
 	Run: tests/run.sh unit
 */
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "OOJSEngineCore.h"
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 
 
-#include "OOSoundSource.h"
+#include "SoundSource.h"
 #include "OOJSPrivateObject.h"
 #include "OOJSSoundSource.h"
 
@@ -40,14 +40,14 @@
 
 // The sound: an object the binding hands on (the root's members its vtable names; OOALSound.mm is
 // not linked). A C++ stand-in.
-OOSound::OOSound()  {}
-std::optional<std::string> OOSound::name()  { return std::nullopt; }
-ALuint OOSound::soundBuffer()  { return 0; }
-bool OOSound::soundIncomplete()  { return false; }
-void OOSound::rewind()  {}
-std::optional<std::string> OOSound::descriptionComponents() const  { return std::nullopt; }
+oo::Sound::Sound()  {}
+std::optional<std::string> oo::Sound::name()  { return std::nullopt; }
+ALuint oo::Sound::soundBuffer()  { return 0; }
+bool oo::Sound::soundIncomplete()  { return false; }
+void oo::Sound::rewind()  {}
+std::optional<std::string> oo::Sound::descriptionComponents() const  { return std::nullopt; }
 
-class TestSound final : public OOSound
+class TestSound final : public oo::Sound
 {
 public:
 	std::string _name;
@@ -61,7 +61,7 @@ public:
 */
 struct SourceRecord
 {
-	std::shared_ptr<OOSound> _sound;
+	std::shared_ptr<oo::Sound> _sound;
 	bool _loop = false;
 	uint8_t _repeatCount = 0;
 	bool _playing = false;
@@ -74,31 +74,36 @@ struct SourceRecord
 };
 
 namespace {
-std::map<const OOSoundSource *, SourceRecord> sRecords;
+std::map<const oo::SoundSource *, SourceRecord> sRecords;
 } // namespace
 
-OOSoundSource::OOSoundSource()  { sRecords[this]; }
-OOSoundSource::~OOSoundSource()  { sRecords.erase(this); }
-void OOSoundSource::channel(OOSoundChannel *, OOSound *)  {}
-std::optional<std::string> OOSoundSource::descriptionComponents() const  { return std::nullopt; }
+oo::SoundSource::SoundSource()  { sRecords[this]; }
+namespace oo {
 
-OOSound *OOSoundSource::sound()  { return sRecords[this]._sound.get(); }
-void OOSoundSource::setSound(OOSound *inSound)  { sRecords[this]._sound = oo::share(inSound); }
-bool OOSoundSource::loop()  { return sRecords[this]._loop; }
-void OOSoundSource::setLoop(bool inLoop)  { sRecords[this]._loop = inLoop; }
-uint8_t OOSoundSource::repeatCount()  { return sRecords[this]._repeatCount; }
-void OOSoundSource::setRepeatCount(uint8_t inCount)  { sRecords[this]._repeatCount = inCount; }
-bool OOSoundSource::isPlaying()  { return sRecords[this]._playing; }
-void OOSoundSource::play()  { sRecords[this]._plays++; sRecords[this]._playing = true; }
-void OOSoundSource::playOrRepeat()  { sRecords[this]._playOrRepeats++; sRecords[this]._playing = true; }
-void OOSoundSource::stop()  { sRecords[this]._stops++; sRecords[this]._playing = false; }
-void OOSoundSource::setPositional(bool inPositional)  { sRecords[this]._positional = inPositional; }
-bool OOSoundSource::positional()  { return sRecords[this]._positional; }
-void OOSoundSource::setPosition(Vector inPosition)  { sRecords[this]._position = inPosition; }
-Vector OOSoundSource::position()  { return sRecords[this]._position; }
-void OOSoundSource::setGain(float gain)  { sRecords[this]._gain = gain; }
+SoundSource::~SoundSource()  { sRecords.erase(this); }
 
-float OOSoundSource::gain()
+}  // namespace oo
+
+void oo::SoundSource::channel(oo::SoundChannel *, oo::Sound *)  {}
+std::optional<std::string> oo::SoundSource::descriptionComponents() const  { return std::nullopt; }
+
+oo::Sound *oo::SoundSource::sound()  { return sRecords[this]._sound.get(); }
+void oo::SoundSource::setSound(oo::Sound *inSound)  { sRecords[this]._sound = oo::share(inSound); }
+bool oo::SoundSource::loop()  { return sRecords[this]._loop; }
+void oo::SoundSource::setLoop(bool inLoop)  { sRecords[this]._loop = inLoop; }
+uint8_t oo::SoundSource::repeatCount()  { return sRecords[this]._repeatCount; }
+void oo::SoundSource::setRepeatCount(uint8_t inCount)  { sRecords[this]._repeatCount = inCount; }
+bool oo::SoundSource::isPlaying()  { return sRecords[this]._playing; }
+void oo::SoundSource::play()  { sRecords[this]._plays++; sRecords[this]._playing = true; }
+void oo::SoundSource::playOrRepeat()  { sRecords[this]._playOrRepeats++; sRecords[this]._playing = true; }
+void oo::SoundSource::stop()  { sRecords[this]._stops++; sRecords[this]._playing = false; }
+void oo::SoundSource::setPositional(bool inPositional)  { sRecords[this]._positional = inPositional; }
+bool oo::SoundSource::positional()  { return sRecords[this]._positional; }
+void oo::SoundSource::setPosition(Vector inPosition)  { sRecords[this]._position = inPosition; }
+Vector oo::SoundSource::position()  { return sRecords[this]._position; }
+void oo::SoundSource::setGain(float gain)  { sRecords[this]._gain = gain; }
+
+float oo::SoundSource::gain()
 {
 	const float gain = sRecords[this]._gain;
 	if (gain == 0.99f)  oo::RaiseException(oo::InvalidArgumentException, "gain %s", "boom");
@@ -260,7 +265,7 @@ void OOJSResumeTimeLimiter(void)  { sLimiterPauses--; }
 
 // A sound's JS value, as the Sound binding gives it (owned by the caller): a JS Sound holding the
 // sound (OOJSSound.mm is not linked); null for none.
-JSValue OOJSSoundJSValueInContext(OOSound *sound, JSContext *context)
+JSValue OOJSSoundJSValueInContext(oo::Sound *sound, JSContext *context)
 {
 	if (sound == nullptr)  return JS_NULL;
 	JSValue object = JS_NewObjectClass(context, static_cast<int>(sFakeSoundClassID));
@@ -279,10 +284,10 @@ JSValue OOJSSoundJSValueInContext(OOSound *sound, JSContext *context)
 
 
 // A JS Sound's sound, or null for anything else (a name is not looked up here).
-OOSound *SoundFromJSValue(JSContext *, JSValueConst value)
+oo::Sound *SoundFromJSValue(JSContext *, JSValueConst value)
 {
 	if (!JS_IsObject(value) || JS_GetClassID(value) != sFakeSoundClassID)  return nullptr;
-	return static_cast<OOSound *>(JS_GetOpaque(value, sFakeSoundClassID));
+	return static_cast<oo::Sound *>(JS_GetOpaque(value, sFakeSoundClassID));
 }
 
 
@@ -332,7 +337,7 @@ namespace {
 JSRuntime *sRuntime;
 JSContext *sContext;
 JSValue sGlobal = JS_UNDEFINED;	// owned for the life of the test
-OOSoundSource *sSourceObject = nullptr;	// the source the tests ask through `source`
+oo::SoundSource *sSourceObject = nullptr;	// the source the tests ask through `source`
 SourceRecord *sSource = nullptr;		// what it was asked
 TestSound *sSound = nullptr;
 
@@ -358,7 +363,7 @@ void SetUpContext()
 
 	sSound = (*new std::shared_ptr<TestSound>(oo::makeShared<TestSound>())).get();	// kept for the life of the test
 	sSound->_name = "ping";
-	sSourceObject = (*new std::shared_ptr<OOSoundSource>(oo::makeShared<OOSoundSource>())).get();	// kept for the life of the test
+	sSourceObject = (*new std::shared_ptr<oo::SoundSource>(oo::makeShared<oo::SoundSource>())).get();	// kept for the life of the test
 	sSource = &sRecords[sSourceObject];
 	sSource->_sound = oo::share(sSound);
 	sSource->_repeatCount = 1;

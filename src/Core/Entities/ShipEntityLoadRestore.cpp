@@ -33,12 +33,12 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "AI.h"
-#include "OOEquipmentType.h"
-#include "OOPListGameTypes.h"
-#include "OORoleSet.h"
-#include "OOShipGroup.h"
-#include "OOShipRegistry.h"
+#include "EquipmentType.h"
+#include "PListGameTypes.h"
+#include "RoleSet.h"
 #include "ShipEntityAI.h"
+#include "ShipGroup.h"
+#include "ShipRegistry.h"
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -73,8 +73,9 @@ constexpr std::string_view kKeyEscortGroupId = "escort_group";
 namespace {
 
 void StripIgnoredKeys(oo::PList::Dict& dict);
-std::size_t GroupIDForGroup(OOShipGroup* group, oo::ShipSaveContext& context);
-OOShipGroup* GroupForGroupID(std::size_t groupID, oo::ShipSaveContext& context);
+std::size_t GroupIDForGroup(oo::ShipGroup* group, oo::ShipSaveContext& context);
+oo::ShipGroup* GroupForGroupID(std::size_t groupID,
+                               oo::ShipSaveContext& context);
 oo::PList::Dict DictFrom(const oo::PList& plist);
 oo::PList ArrayFromStrings(const std::vector<std::string>& strings);
 std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
@@ -100,7 +101,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
 
   // A role set without a role string (nil before, which -setObject:forKey:
   // refused) adds no key.
-  const std::shared_ptr<OORoleSet> roles = getRoleSet();
+  const std::shared_ptr<oo::RoleSet> roles = getRoleSet();
   if (const std::optional<std::string> roleString =
           (roles != nullptr) ? roles->roleString() : std::nullopt)
     updatedShipInfo[std::string(kKeyRoles)] = *roleString;
@@ -122,11 +123,11 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
     result[std::string(kKeyShipdataDeletes)] = ArrayFromStrings(deletes);
 
   if (!HPvector_equal(getPosition(), kZeroHPVector)) {
-    result[std::string(kKeyPosition)] = OOPListFromHPVector(getPosition());
+    result[std::string(kKeyPosition)] = oo::PListFromHPVector(getPosition());
   }
   if (!quaternion_equal(normalOrientation(), kIdentityQuaternion)) {
     result[std::string(kKeyOrientation)] =
-        OOPListFromQuaternion(normalOrientation());
+        oo::PListFromQuaternion(normalOrientation());
   }
 
   // -oo_setFloat:forKey: stored a double.
@@ -215,7 +216,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   const std::string shipKey =
       dict.get<std::string>(kKeyShipKey);  // "" finds no ship, as nil did
   const oo::PList shipData =
-      OOShipRegistry::sharedRegistry()->shipInfoForKey(shipKey);
+      oo::ShipRegistry::sharedRegistry()->shipInfoForKey(shipKey);
 
   if (shipData) {
     oo::PList::Dict mergedData = DictFrom(shipData);
@@ -275,10 +276,10 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   // fallback.
   if (ship != nullptr)
     ship->setPosition(
-        OOHPVectorFromPList(dict.find(kKeyPosition), kZeroHPVector));
+        oo::HPVectorFromPList(dict.find(kKeyPosition), kZeroHPVector));
   if (ship != nullptr)
-    ship->setNormalOrientation(
-        OOQuaternionFromPList(dict.find(kKeyOrientation), kIdentityQuaternion));
+    ship->setNormalOrientation(oo::QuaternionFromPList(
+        dict.find(kKeyOrientation), kIdentityQuaternion));
 
   float energyLevel = dict.get<float>(kKeyEnergyLevel, 1.0f);
   if (ship != nullptr)
@@ -307,7 +308,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   std::size_t groupID = static_cast<std::size_t>(
       dict.get<std::ptrdiff_t>(kKeyGroupId, oo::kNotFound));
   if (groupID != oo::kNotFound) {
-    ::OOShipGroup* group = GroupForGroupID(groupID, *context);
+    ::oo::ShipGroup* group = GroupForGroupID(groupID, *context);
     if (ship != nullptr) ship->setGroup(group);  // Handles adding to group
     if (dict.get<bool>(kKeyIsGroupLeader)) {
       if (group != nullptr) group->setLeader(ship);
@@ -330,7 +331,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   groupID = static_cast<std::size_t>(
       dict.get<std::ptrdiff_t>(kKeyEscortGroupId, oo::kNotFound));
   if (groupID != oo::kNotFound) {
-    ::OOShipGroup* group = GroupForGroupID(groupID, *context);
+    ::oo::ShipGroup* group = GroupForGroupID(groupID, *context);
     if (group != nullptr) group->setLeader(ship);
     if (group != nullptr) group->setName(std::string("escort group"));
     if (ship != nullptr) ship->setEscortGroup(group);
@@ -346,7 +347,7 @@ void ShipEntity::simplifyShipdata(oo::PList::Dict& data,
 
   // Get original ship data.
   oo::PList::Dict referenceData =
-      DictFrom(OOShipRegistry::sharedRegistry()->shipInfoForKey(
+      DictFrom(oo::ShipRegistry::sharedRegistry()->shipInfoForKey(
           shipDataKey().value_or(std::string())));
 
   // Discard stuff that we handle separately.
@@ -378,7 +379,8 @@ void StripIgnoredKeys(oo::PList::Dict& dict) {
   }
 }
 
-std::size_t GroupIDForGroup(OOShipGroup* group, oo::ShipSaveContext& context) {
+std::size_t GroupIDForGroup(oo::ShipGroup* group,
+                            oo::ShipSaveContext& context) {
   const auto found = context.groupIDs.find(group);
   unsigned groupID;
   if (found == context.groupIDs.end()) {
@@ -400,11 +402,11 @@ std::size_t GroupIDForGroup(OOShipGroup* group, oo::ShipSaveContext& context) {
   return groupID;
 }
 
-OOShipGroup* GroupForGroupID(std::size_t groupID,
-                             oo::ShipSaveContext& context) {
-  std::shared_ptr<OOShipGroup>& group = context.groupsByID[groupID];
+oo::ShipGroup* GroupForGroupID(std::size_t groupID,
+                               oo::ShipSaveContext& context) {
+  std::shared_ptr<oo::ShipGroup>& group = context.groupsByID[groupID];
   if (group == nullptr) {
-    group = OOShipGroup::groupWithName(std::nullopt);  // -init
+    group = oo::ShipGroup::groupWithName(std::nullopt);  // -init
   }
 
   return group.get();

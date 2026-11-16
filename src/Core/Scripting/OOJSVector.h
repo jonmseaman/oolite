@@ -33,8 +33,8 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOFoundation.h"
-#include "OOMaths.h"
+#include "Foundation.h"
+#include "Maths.h"
 
 void InitOOJSVector(JSContext* context, JSValueConst global);
 

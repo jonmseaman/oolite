@@ -30,7 +30,7 @@
 #include <vector>
 
 #include "Entity.h"
-#include "OOCacheManager.h"
+#include "CacheManager.h"
 #include "OOPListScript.h"
 #include "oo_test.hpp"
 #include "oofnd/FileSystem.hpp"
@@ -92,7 +92,7 @@ OO_TEST(cachedScripts) {
         Dict({{"description", Str("A test script")}, {"version", Str("1.2")}});
     const oo::PList actions =
         oo::PList(oo::PList::Array{Str("set: mission_x 1")});
-    OOCacheManager::sharedCache()->setPList(
+    oo::CacheManager::sharedCache()->setPList(
         Dict({
             {"zeta", Dict({{"script", actions}, {"!metadata!", metadata}})},
             {"alpha", Dict({{"script", actions}})},
@@ -136,7 +136,7 @@ OO_TEST(metadataTypes) {
     const oo::PList metadata =
         Dict({{"description", oo::PList(3)},
               {"version", oo::PList(oo::PList::Array{})}});
-    OOCacheManager::sharedCache()->setPList(
+    oo::CacheManager::sharedCache()->setPList(
         Dict({{"odd", Dict({{"script", oo::PList(oo::PList::Array{})},
                             {"!metadata!", metadata}})}}),
         "odd.plist", kCacheName);
@@ -151,7 +151,7 @@ OO_TEST(metadataTypes) {
                 "odd");  // the name is the key, whatever the metadata says
 
     // The metadata's own name does not win over the key.
-    OOCacheManager::sharedCache()->setPList(
+    oo::CacheManager::sharedCache()->setPList(
         Dict({{"key", Dict({{"script", oo::PList(oo::PList::Array{})},
                             {"!metadata!", Dict({{"name", Str("other")}})}})}}),
         "named.plist", kCacheName);
@@ -184,7 +184,7 @@ OO_TEST(files) {
     const auto scripts = OOPListScript::scriptsInPListFile(path);
     OO_CHECK(scripts.has_value() && scripts->empty());
     const oo::PList cached =
-        OOCacheManager::sharedCache()->pListForKey(path, kCacheName);
+        oo::CacheManager::sharedCache()->pListForKey(path, kCacheName);
     OO_CHECK(cached.isDict() && cached.count() == 0);
     // The second read comes from the cache (the file is gone).
     stdfs::remove(sRoot / "empty.plist");
@@ -197,7 +197,7 @@ OO_TEST(files) {
 OO_TEST(plistScriptIsItsOwnObject) {
   SetUp();
   {
-    OOCacheManager::sharedCache()->setPList(
+    oo::CacheManager::sharedCache()->setPList(
         Dict({{"one", Dict({{"script", oo::PList(oo::PList::Array{})},
                             {"!metadata!", Dict({{"version", Str("3")}})}})}}),
         "facade.plist", kCacheName);

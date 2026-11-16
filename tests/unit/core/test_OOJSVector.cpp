@@ -236,7 +236,7 @@ HPVector Universe::coordinatesFromCoordinateSystemString(
     const std::string& text) {
   if (text.rfind("throw-objc", 0) == 0)
     oo::RaiseException(oo::InvalidArgumentException, "coords %s", "boom");
-  return make_HPvector(static_cast<OOHPScalar>(text.size()), 0, 0);
+  return make_HPvector(static_cast<oo::HPScalar>(text.size()), 0, 0);
 }
 
 alignas(Universe) unsigned char sUniverseStorage[sizeof(Universe)];

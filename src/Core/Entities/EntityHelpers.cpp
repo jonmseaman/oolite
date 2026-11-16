@@ -30,8 +30,8 @@ MA 02110-1301, USA.
 #include <string>
 #include <typeinfo>
 
+#include "Demangle.h"
 #include "Entity.h"
-#include "OODemangle.h"
 #include "ShipEntity.h"
 #include "VisualEffectEntity.h"
 #include "WaypointEntity.h"
@@ -221,7 +221,7 @@ void oo::SetBeaconCode(Entity* beacon, const std::optional<std::string>& code) {
     waypoint->setBeaconCode(code);
 }
 
-OOComparisonResult oo::CompareBeaconCodes(Entity* beacon, Entity* other) {
+oo::ComparisonResult oo::CompareBeaconCodes(Entity* beacon, Entity* other) {
   beacon = WithObject(beacon);
   other = WithObject(other);
   if (ShipEntity* ship = ShipPart(beacon))
@@ -230,7 +230,7 @@ OOComparisonResult oo::CompareBeaconCodes(Entity* beacon, Entity* other) {
     return effect->compareBeaconCodeWith(other);
   if (oo::WaypointEntity* waypoint = WaypointPart(beacon))
     return waypoint->compareBeaconCodeWith(other);
-  return static_cast<OOComparisonResult>(0);
+  return static_cast<oo::ComparisonResult>(0);
 }
 
 bool oo::BeaconIsJammingScanning(Entity* beacon) {
@@ -243,7 +243,7 @@ bool oo::BeaconIsJammingScanning(Entity* beacon) {
   return false;
 }
 
-OOHUDBeaconIcon* oo::BeaconDrawable(Entity* beacon) {
+oo::HUDBeaconIcon* oo::BeaconDrawable(Entity* beacon) {
   beacon = WithObject(beacon);
   if (ShipEntity* ship = ShipPart(beacon)) return ship->beaconDrawable();
   if (oo::VisualEffectEntity* effect = EffectPart(beacon))

@@ -30,10 +30,10 @@ MA 02110-1301, USA.
 #include <memory>
 #include <string>
 
-#include "OOMaths.h"
-#include "OOTypes.h"
+#include "Maths.h"
 #include "ShipEntity.h"
 #include "Texture.h"
+#include "Types.h"
 
 struct OOLaserShotEntityTestAccess;
 
@@ -43,15 +43,15 @@ class LaserShotEntity : public Entity {
  public:
   // A new shot, initialised.
   static std::shared_ptr<LaserShotEntity> laserFromShip(
-      ::ShipEntity* ship, OOWeaponFacing direction, Vector offset);
+      ::ShipEntity* ship, oo::WeaponFacing direction, Vector offset);
 
   std::optional<std::string> descriptionComponents() const override;
 
-  void setColor(OOColor* color);
+  void setColor(oo::Color* color);
 
   void setRange(GLfloat range);
 
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void drawImmediate(bool immediate, bool translucent) override;
   bool isEffect() override;
   bool canCollide() override;
@@ -70,11 +70,11 @@ class LaserShotEntity : public Entity {
 
   // -initLaserFromShip:direction:offset:'s body, run once right after
   // construction.
-  void initLaserFromShip(::ShipEntity* srcEntity, OOWeaponFacing direction,
+  void initLaserFromShip(::ShipEntity* srcEntity, oo::WeaponFacing direction,
                          Vector offset);
 
   GLfloat _color[4] = {};
-  OOTimeDelta _lifetime = {};
+  oo::TimeDelta _lifetime = {};
   GLfloat _range = {};
   Vector _offset = {};
   Quaternion _relOrientation = {};

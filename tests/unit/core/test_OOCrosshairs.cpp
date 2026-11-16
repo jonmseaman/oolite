@@ -22,10 +22,10 @@
 #include <vector>
 
 #include "MyOpenGLView.h"
-#include "OOColor.h"
-#include "OOCrosshairs.h"
-#include "OOOpenGL.h"
-#include "OOOpenGLMatrixManager.h"
+#include "Color.h"
+#include "Crosshairs.h"
+#include "OpenGL.h"
+#include "OpenGLMatrixManager.h"
 #include "oo_test.hpp"
 
 // --- Link stubs: what render() references. The test never renders; a call is a
@@ -35,12 +35,17 @@ class Universe;
 Universe* gSharedUniverse = nullptr;
 GLfloat MyOpenGLView::getDisplay_z() { std::abort(); }
 
-void OOSetOpenGLState_(OOOpenGLStateID, const char*, unsigned) { std::abort(); }
-void OOVerifyOpenGLState_(const char*, unsigned) { std::abort(); }
-void OOGLPushModelView(void) { std::abort(); }
-OOMatrix OOGLPopModelView(void) { std::abort(); }
-void OOGLTranslateModelView(Vector) { std::abort(); }
-bool OOCheckOpenGLErrors(const char*, ...) { std::abort(); }
+namespace oo {
+
+void SetOpenGLState_(OpenGLStateID, const char*, unsigned) { std::abort(); }
+void VerifyOpenGLState_(const char*, unsigned) { std::abort(); }
+void GLPushModelView(void) { std::abort(); }
+Matrix GLPopModelView(void) { std::abort(); }
+void GLTranslateModelView(Vector) { std::abort(); }
+bool CheckOpenGLErrors(const char*, ...) { std::abort(); }
+
+}  // namespace oo
+
 #if OO_CHECK_GL_HEAVY && OO_GL_STATE_VERIFICATION
 void OOGLNoteCurrentFunction(const char*, unsigned) {
   std::abort();
@@ -50,7 +55,7 @@ void OOGLNoteCurrentFunction(const char*, unsigned) {
 // The vertex buffer: 12 floats (x, y, r, g, b, a of each endpoint) per line
 // segment.
 struct OOCrosshairsTestAccess {
-  static std::vector<float> Buffer(OOCrosshairs* crosshairs) {
+  static std::vector<float> Buffer(oo::Crosshairs* crosshairs) {
     if (crosshairs->_data.empty()) return {};
     return std::vector<float>(crosshairs->_data.begin(),
                               crosshairs->_data.begin() + 12 * crosshairs->_count);
@@ -59,10 +64,10 @@ struct OOCrosshairsTestAccess {
 
 namespace {
 
-std::vector<float> Build(const oo::PList& points, float scale, OOColor* color,
+std::vector<float> Build(const oo::PList& points, float scale, oo::Color* color,
                          float alpha) {
   return OOCrosshairsTestAccess::Buffer(
-      oo::makeShared<OOCrosshairs>(points, scale, color, alpha).get());
+      oo::makeShared<oo::Crosshairs>(points, scale, color, alpha).get());
 }
 
 oo::PList Segment(double a1, double x1, double y1, double a2, double x2,
@@ -91,7 +96,7 @@ OO_TEST(greenWithoutAColour) {
 }
 
 OO_TEST(colourAndAlpha) {
-  std::shared_ptr<OOColor> color = OOColor::colorWithRed(0.25f, 0.5f, 0.75f, 0.5f);
+  std::shared_ptr<oo::Color> color = oo::Color::colorWithRed(0.25f, 0.5f, 0.75f, 0.5f);
   oo::PList points(oo::PList::Array{Segment(1.0, -1.0, 0.0, 0.5, 1.0, 0.0),
                                     Segment(0.0, 0.0, -2.0, 1.0, 0.0, 2.0)});
 
@@ -125,7 +130,7 @@ OO_TEST(nothingIsBuilt) {
   oo::PList points(oo::PList::Array{Segment(1.0, 1.0, 2.0, 0.5, 3.0, 4.0)});
   OO_CHECK(Build(points, 1.0f, nullptr, 0.0f).empty());  // no overall alpha
   OO_CHECK(Build(points, 1.0f, nullptr, -1.0f).empty());
-  OO_CHECK(Build(points, 1.0f, OOColor::clearColor().get(), 1.0f)
+  OO_CHECK(Build(points, 1.0f, oo::Color::clearColor().get(), 1.0f)
                .empty());  // a transparent colour
   OO_CHECK(Build(oo::PList(oo::PList::Array{}), 1.0f, nullptr, 1.0f)
                .empty());                                     // no points

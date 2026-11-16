@@ -32,8 +32,8 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOFoundation.h"
-#include "OOMaths.h"
+#include "Foundation.h"
+#include "Maths.h"
 #include "oofnd/Object.hpp"
 
 inline constexpr float COLLISION_REGION_BORDER_RADIUS = 32000.0f;

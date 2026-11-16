@@ -21,7 +21,7 @@
 #include <cstring>
 #include <string>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "ConcreteTexture.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PList.hpp"
@@ -65,15 +65,15 @@ oo::PList PlanetInfo(bool perlin3d) {
       {"land_fraction", oo::PList(0.25)},
       {"polar_fraction", oo::PList(0.05)},
       {"land_color",
-       OOColorObjectNode(
-           OOColor::colorWithRed(0.25f, 0.5f, 0.125f, 1.0f).get())},
-      {"sea_color", OOColorObjectNode(OOColor::blueColor().get())},
-      {"polar_land_color", OOColorObjectNode(OOColor::whiteColor().get())},
-      {"polar_sea_color", OOColorObjectNode(OOColor::cyanColor().get())},
+       oo::ColorObjectNode(
+           oo::Color::colorWithRed(0.25f, 0.5f, 0.125f, 1.0f).get())},
+      {"sea_color", oo::ColorObjectNode(oo::Color::blueColor().get())},
+      {"polar_land_color", oo::ColorObjectNode(oo::Color::whiteColor().get())},
+      {"polar_sea_color", oo::ColorObjectNode(oo::Color::cyanColor().get())},
       {"cloud_alpha", oo::PList(1.0)},
       {"cloud_fraction", oo::PList(0.5)},
-      {"cloud_color", OOColorObjectNode(OOColor::whiteColor().get())},
-      {"polar_cloud_color", OOColorObjectNode(OOColor::lightGrayColor().get())},
+      {"cloud_color", oo::ColorObjectNode(oo::Color::whiteColor().get())},
+      {"polar_cloud_color", oo::ColorObjectNode(oo::Color::lightGrayColor().get())},
       {"perlin_3d", oo::PList(perlin3d)},
   });
 }

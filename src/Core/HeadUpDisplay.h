@@ -35,13 +35,13 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
+#include "Foundation.h"
+#include "Maths.h"
 #include "MyOpenGLView.h"
-#include "OOFoundation.h"
-#include "OOMaths.h"
-#include "OOOpenGL.h"
-#include "OOPolygonSprite.h"  // OOHUDBeaconIcon
-#include "OOTypes.h"
+#include "OpenGL.h"
+#include "PolygonSprite.h"  // OOHUDBeaconIcon
 #include "ShipEntity.h"
+#include "Types.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Object.h"
@@ -54,10 +54,14 @@ enum class MissileStatus : std::int32_t;
 
 }  // namespace oo
 
-struct OOHUDWidget;  // HeadUpDisplay.cpp
+namespace oo {
 
-class OOColor;
-class OOCrosshairs;
+struct HUDWidget;  // HeadUpDisplay.cpp
+
+class Color;
+class Crosshairs;
+
+}  // namespace oo
 
 inline constexpr int SCANNER_CENTRE_X = 0;
 inline constexpr int SCANNER_CENTRE_Y = -180;
@@ -333,8 +337,8 @@ class HeadUpDisplay : public oo::Object {
   bool scannerUltraZoom();
   void setScannerUltraZoom(bool newValue);
 
-  std::shared_ptr<OOColor> reticleColorForIndex(std::size_t idx);
-  bool setReticleColorForIndex(std::size_t idx, OOColor* newColor);
+  std::shared_ptr<oo::Color> reticleColorForIndex(std::size_t idx);
+  bool setReticleColorForIndex(std::size_t idx, oo::Color* newColor);
 
   bool checkPlayerInFlight();
   bool checkPlayerInSystemFlight();
@@ -379,9 +383,9 @@ class HeadUpDisplay : public oo::Object {
 
   // Internal: the state (the old ivars).
   // Widgets in draw order; were mutable arrays of array tuples.
-  std::vector<OOHUDWidget> legendArray;
-  std::vector<OOHUDWidget> dialArray;
-  std::vector<OOHUDWidget> mfdArray;
+  std::vector<oo::HUDWidget> legendArray;
+  std::vector<oo::HUDWidget> dialArray;
+  std::vector<oo::HUDWidget> mfdArray;
 
   // zoom level
   GLfloat scanner_zoom = {};
@@ -420,18 +424,18 @@ class HeadUpDisplay : public oo::Object {
   std::set<std::string> _hiddenSelectors;
 
   // Crosshairs
-  std::unique_ptr<OOCrosshairs> _crosshairs;
+  std::unique_ptr<oo::Crosshairs> _crosshairs;
   oo::WeaponType _lastWeaponType = {};
   GLfloat _lastOverallAlpha = {};
   bool _lastWeaponsOnline = {};
   oo::PList _crosshairOverrides;  // null for none
-  std::shared_ptr<OOColor> _crosshairColor;
+  std::shared_ptr<oo::Color> _crosshairColor;
   GLfloat _crosshairScale = {};
   GLfloat _crosshairWidth = {};
   std::optional<std::string> crosshairDefinition;
   bool _compassActive = {};
 
-  std::vector<std::shared_ptr<OOColor>> _reticleColors;
+  std::vector<std::shared_ptr<oo::Color>> _reticleColors;
 
   // essentially scanner without gridlines
   bool minimalistic_scanner = {};
@@ -484,9 +488,11 @@ class HeadUpDisplay : public oo::Object {
    character, drawn as text. The entities hold it by the C++ OOHUDBeaconIcon
    interface (OOPolygonSprite.h).
 */
-class OOHUDBeaconCodeIcon : public OOHUDBeaconIcon {
+namespace oo {
+
+class HUDBeaconCodeIcon : public HUDBeaconIcon {
  public:
-  explicit OOHUDBeaconCodeIcon(const std::string& text);  // -initWithText:
+  explicit HUDBeaconCodeIcon(const std::string& text);  // -initWithText:
 
   void drawHUDBeaconIconAt(NSPoint where, NSSize size, GLfloat alpha,
                            GLfloat z) override;
@@ -496,13 +502,13 @@ class OOHUDBeaconCodeIcon : public OOHUDBeaconIcon {
 };
 
 // Draws the sprite as a beacon icon (the sprite's OOHUDBeaconIcon interface).
-void OOPolygonSpriteDrawHUDBeaconIcon(OOPolygonSprite* sprite, NSPoint where,
-                                      NSSize size, GLfloat alpha, GLfloat z);
+void PolygonSpriteDrawHUDBeaconIcon(PolygonSprite* sprite, NSPoint where,
+                                    NSSize size, GLfloat alpha, GLfloat z);
 
-void OODrawString(const std::string& text, GLfloat x, GLfloat y, GLfloat z,
-                  NSSize siz);
-void OODrawStringAligned(const std::string& text, GLfloat x, GLfloat y,
-                         GLfloat z, NSSize siz, bool rightAlign);
+void DrawString(const std::string& text, GLfloat x, GLfloat y, GLfloat z,
+                NSSize siz);
+void DrawStringAligned(const std::string& text, GLfloat x, GLfloat y, GLfloat z,
+                       NSSize siz, bool rightAlign);
 
 /* OODrawString(Aligned) handles all the string drawing, but because
  * it does texture application and GL_QUADS beginning once per string
@@ -521,23 +527,29 @@ void OODrawStringAligned(const std::string& text, GLfloat x, GLfloat y,
  *
  * - CIM
  */
-void OOStartDrawingStrings();
-void OODrawStringQuadsAligned(const std::string& text, GLfloat x, GLfloat y,
-                              GLfloat z, NSSize siz, bool rightAlign);
-void OOStopDrawingStrings();
+void StartDrawingStrings();
+void DrawStringQuadsAligned(const std::string& text, GLfloat x, GLfloat y,
+                            GLfloat z, NSSize siz, bool rightAlign);
+void StopDrawingStrings();
 
-void OODrawHilightedString(const std::string& text, GLfloat x, GLfloat y,
-                           GLfloat z, NSSize siz);
-void OODrawPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y,
-                      GLfloat z, NSSize siz);
-void OODrawHilightedPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y,
-                               GLfloat z, NSSize siz);
-NSRect OORectFromString(const std::string& text, GLfloat x, GLfloat y,
-                        NSSize siz);
+void DrawHilightedString(const std::string& text, GLfloat x, GLfloat y,
+                         GLfloat z, NSSize siz);
+void DrawPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y, GLfloat z,
+                    NSSize siz);
+void DrawHilightedPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y,
+                             GLfloat z, NSSize siz);
+NSRect RectFromString(const std::string& text, GLfloat x, GLfloat y,
+                      NSSize siz);
 
-#include "OOStringWidth.h"  // OOStringWidthInEm()
+}  // namespace oo
 
-void OOHUDResetTextEngine();
+#include "StringWidth.h"  // OOStringWidthInEm()
+
+namespace oo {
+
+void HUDResetTextEngine();
+
+}  // namespace oo
 
 #include "WormholeEntity.h"  // WORMHOLE_SCANINFO (a send below)
 
@@ -552,7 +564,7 @@ class VisualEffectEntity;
 */
 // UNIVERSE->getGui()->setGLColorFromSetting() (OODrawPlanetInfo()).
 void HeadUpDisplayUniverseGUISetGLColorFromSetting(
-    const std::optional<std::string>& setting, OOColor* defaultValue,
+    const std::optional<std::string>& setting, oo::Color* defaultValue,
     GLfloat alpha);
 // The player, entities and universe as the reticles and waypoints read them
 // (hudDrawReticleOnTarget(), hudDrawWaypoint(),
@@ -566,7 +578,7 @@ double HeadUpDisplayPlayerClockTimeAdjusted(PlayerEntity* player);
 Vector HeadUpDisplayPlayerCustomViewForwardVector(PlayerEntity* player);
 Vector HeadUpDisplayPlayerCustomViewUpVector(PlayerEntity* player);
 Quaternion HeadUpDisplayPlayerCustomViewQuaternion(PlayerEntity* player);
-OOMatrix HeadUpDisplayPlayerRotationMatrix(PlayerEntity* player);
+oo::Matrix HeadUpDisplayPlayerRotationMatrix(PlayerEntity* player);
 bool HeadUpDisplayEntityIsShip(Entity* entity);
 bool HeadUpDisplayEntityIsWormhole(Entity* entity);
 bool HeadUpDisplayEntityIsVisualEffect(Entity* entity);
@@ -583,7 +595,7 @@ GLfloat* HeadUpDisplayVisualEffectScannerDisplayColor(
 WORMHOLE_SCANINFO HeadUpDisplayWormholeScanInfo(WormholeEntity* wormhole);
 double HeadUpDisplayWormholeEstimatedArrivalTime(WormholeEntity* wormhole);
 double HeadUpDisplayWormholeExpiryTime(WormholeEntity* wormhole);
-OOTimeAbsolute HeadUpDisplayUniverseGetTime();
+oo::TimeAbsolute HeadUpDisplayUniverseGetTime();
 const oo::PList*
 HeadUpDisplayUniverseDescriptions();  // MissileIconDefinition()
 oo::ViewID HeadUpDisplayUniverseViewDirection();

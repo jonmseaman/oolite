@@ -45,7 +45,7 @@ class QuiriumCascadeEntity : public Entity {
 
   std::optional<std::string> descriptionComponents() const override;
 
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void drawImmediate(bool immediate, bool translucent) override;
   bool isEffect() override;
   bool isCascadeWeapon();
@@ -56,7 +56,7 @@ class QuiriumCascadeEntity : public Entity {
   // -initQuiriumCascadeFromShip:'s body: false (no cascade) for a nil ship.
   bool initQuiriumCascadeFromShip(ShipEntity* ship);
 
-  OOTimeDelta _timePassed = {};
+  oo::TimeDelta _timePassed = {};
   GLfloat _color[4] = {};
 };
 

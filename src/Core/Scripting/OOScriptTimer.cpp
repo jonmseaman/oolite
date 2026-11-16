@@ -30,20 +30,20 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOLogging.h"
-#include "OOPriorityQueue.h"
+#include "Logging.h"
+#include "PriorityQueue.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"
 
 namespace {
 
 // The queue's order.
-OOComparisonResult CompareByNextFireTime(OOScriptTimer* a, OOScriptTimer* b) {
+oo::ComparisonResult CompareByNextFireTime(OOScriptTimer* a, OOScriptTimer* b) {
   return a->compareByNextFireTime(b);
 }
 
 // The scheduled timers, held.
-OOPriorityQueueOf<OOScriptTimer>* sTimers;
+oo::PriorityQueueOf<OOScriptTimer>* sTimers;
 
 // During an update, new timers must be deferred to avoid an infinite loop.
 bool sUpdating;
@@ -52,7 +52,7 @@ std::unique_ptr<std::vector<std::shared_ptr<OOScriptTimer>>> sDeferredTimers;
 }  // namespace
 
 std::shared_ptr<OOScriptTimer> OOScriptTimer::timerWithNextTime(
-    OOTimeAbsolute nextTime, OOTimeDelta interval) {
+    oo::TimeAbsolute nextTime, oo::TimeDelta interval) {
   std::shared_ptr<OOScriptTimer> timer =
       std::shared_ptr<OOScriptTimer>(new OOScriptTimer(), oo::Dispose{});
   if (!timer->initWithNextTime(nextTime, interval)) return nullptr;
@@ -60,16 +60,16 @@ std::shared_ptr<OOScriptTimer> OOScriptTimer::timerWithNextTime(
 }
 
 std::shared_ptr<OOScriptTimer> OOScriptTimer::oneShotTimerWithDelay(
-    OOTimeDelta delay) {
+    oo::TimeDelta delay) {
   std::shared_ptr<OOScriptTimer> timer =
       std::shared_ptr<OOScriptTimer>(new OOScriptTimer(), oo::Dispose{});
   if (!timer->initOneShotTimerWithDelay(delay)) return nullptr;
   return timer;
 }
 
-bool OOScriptTimer::initWithNextTime(OOTimeAbsolute nextTime,
-                                     OOTimeDelta interval) {
-  OOTimeAbsolute now;
+bool OOScriptTimer::initWithNextTime(oo::TimeAbsolute nextTime,
+                                     oo::TimeDelta interval) {
+  oo::TimeAbsolute now;
 
   {
     if (interval <= 0.0) interval = -1.0;
@@ -90,7 +90,7 @@ bool OOScriptTimer::initWithNextTime(OOTimeAbsolute nextTime,
 }
 
 // Sets nextTime to current time + delay.
-bool OOScriptTimer::initOneShotTimerWithDelay(OOTimeDelta delay) {
+bool OOScriptTimer::initOneShotTimerWithDelay(oo::TimeDelta delay) {
   return initWithNextTime(
       (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) + delay, -1.0);
 }
@@ -125,18 +125,18 @@ std::optional<std::string> OOScriptTimer::descriptionComponents() const {
                      _isScheduled ? "" : "not ");
 }
 
-OOTimeAbsolute OOScriptTimer::nextTime() { return _nextTime; }
+oo::TimeAbsolute OOScriptTimer::nextTime() { return _nextTime; }
 
-bool OOScriptTimer::setNextTime(OOTimeAbsolute nextTime) {
+bool OOScriptTimer::setNextTime(oo::TimeAbsolute nextTime) {
   if (_isScheduled) return false;
 
   _nextTime = nextTime;
   return true;
 }
 
-OOTimeDelta OOScriptTimer::interval() { return _interval; }
+oo::TimeDelta OOScriptTimer::interval() { return _interval; }
 
-void OOScriptTimer::setInterval(OOTimeDelta interval) {
+void OOScriptTimer::setInterval(oo::TimeDelta interval) {
   if (interval <= 0.0) interval = -1.0;
   _interval = interval;
 }
@@ -149,7 +149,7 @@ bool OOScriptTimer::scheduleTimer() {
 
   if (!sUpdating) [[likely]] {
     if (sTimers == nullptr) [[unlikely]]
-      sTimers = new OOPriorityQueueOf<OOScriptTimer>(CompareByNextFireTime);
+      sTimers = new oo::PriorityQueueOf<OOScriptTimer>(CompareByNextFireTime);
     sTimers->addObject(this);  // the queue holds the timer
   } else {
     if (sDeferredTimers == nullptr)
@@ -174,7 +174,7 @@ bool OOScriptTimer::isScheduled() { return _isScheduled; }
 
 void OOScriptTimer::updateTimers() {
   OOScriptTimer* next = nullptr;
-  OOTimeAbsolute now;
+  oo::TimeAbsolute now;
 
   sUpdating = true;
 
@@ -220,7 +220,7 @@ void OOScriptTimer::noteGameReset() {
 }
 
 bool OOScriptTimer::isValidForScheduling() {
-  OOTimeAbsolute now;
+  oo::TimeAbsolute now;
   double scaled;
 
   now = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
@@ -242,8 +242,9 @@ bool OOScriptTimer::isValidForScheduling() {
   return true;
 }
 
-OOComparisonResult OOScriptTimer::compareByNextFireTime(OOScriptTimer* other) {
-  OOTimeAbsolute otherTime = -INFINITY;
+oo::ComparisonResult OOScriptTimer::compareByNextFireTime(
+    OOScriptTimer* other) {
+  oo::TimeAbsolute otherTime = -INFINITY;
 
   // The old body read [other nextTime] inside a try block, logging and ignoring
   // an OOException. It is a plain C++ getter now, which cannot throw, so the
@@ -251,9 +252,9 @@ OOComparisonResult OOScriptTimer::compareByNextFireTime(OOScriptTimer* other) {
   if (other != nullptr) otherTime = other->nextTime();
 
   if (_nextTime < otherTime)
-    return OOComparisonResult::kAscending;
+    return oo::ComparisonResult::kAscending;
   else if (_nextTime > otherTime)
-    return OOComparisonResult::kDescending;
+    return oo::ComparisonResult::kDescending;
   else
-    return OOComparisonResult::kSame;
+    return oo::ComparisonResult::kSame;
 }

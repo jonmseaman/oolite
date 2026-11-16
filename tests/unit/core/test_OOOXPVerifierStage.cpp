@@ -12,7 +12,7 @@
    tests/run.sh unit
 */
 
-#include "OOLogging.h"
+#include "Logging.h"
 #include "OXPVerifierStage.h"
 #include "oo_test.hpp"
 #include "oofnd/objc/Exception.h"
@@ -23,10 +23,15 @@
 */
 static int gSubclassResponsibilities = 0;
 
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
   gSubclassResponsibilities++;
 }
+
+}  // namespace oo
+
 
 /*	A verifier for verifierIsNotRetained: the stage keeps the C++ verifier.
    Its constructor is private; the class names this struct

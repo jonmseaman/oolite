@@ -44,11 +44,11 @@ MA 02110-1301, USA.
 #include <utility>
 
 #include "AI.h"
+#include "CallByName.h"
 #include "DockEntity.h"
 #include "Entity.h"
 #include "GameController.h"  // OOScheduleDeferredCall (oo::ScheduleEntityCall, the player's selectors called by name)
-#include "OOCallByName.h"
-#include "PlanetEntity.h"  // the root-entity rows
+#include "PlanetEntity.h"    // the root-entity rows
 #include "PlayerEntity.h"
 #include "ProxyPlayerEntity.h"
 #include "QuiriumCascadeEntity.h"
@@ -149,7 +149,7 @@ void EntityByNameTyped(Entity* entity, oo::EntityByNameValue& value) {
     value.vector = Function(entity);
   } else if constexpr (std::is_same_v<Result, Quaternion>) {
     value.quaternion = Function(entity);
-  } else if constexpr (std::is_same_v<Result, OOColor*>) {
+  } else if constexpr (std::is_same_v<Result, oo::Color*>) {
     value.color = Function(entity);  // borrowed
   } else if constexpr (std::is_convertible_v<Result, Entity*>) {
     value.entity = Function(entity);  // the C++ entity
@@ -208,7 +208,7 @@ float Facade_airDensity(Entity* entity) {
   return planet != nullptr ? planet->airDensity() : 0.0f;
 }
 
-OOHUDBeaconIcon* Facade_beaconDrawable(Entity* entity) {
+oo::HUDBeaconIcon* Facade_beaconDrawable(Entity* entity) {
   if (entity == nullptr) return {};
   if (ShipEntity* ship = ShipPart(entity)) return ship->beaconDrawable();
   if (oo::VisualEffectEntity* effect = EffectPart(entity))
@@ -277,7 +277,7 @@ double Facade_findCollisionRadius(Entity* entity) {
   return entity->findCollisionRadius();
 }
 
-OOColor* Facade_fogUniform(Entity* entity) {
+oo::Color* Facade_fogUniform(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->fogUniform().get();
 }
@@ -534,7 +534,7 @@ GLfloat Facade_timeElapsedSinceSpawn(Entity* entity) {
   return entity->timeElapsedSinceSpawn();
 }
 
-OOUniversalID Facade_universalID(Entity* entity) {
+oo::UniversalID Facade_universalID(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getUniversalID();
 }
@@ -1001,5 +1001,5 @@ void oo::ScheduleEntityCall(Entity* entity, void (*call)(Entity* entity),
   if (entity == nullptr || call == nullptr) return;
   // The call holds the entity, so it keeps the entity alive until it has run.
   std::shared_ptr<Entity> held = oo::share(entity);
-  OOScheduleDeferredCall([held, call]() { call(held.get()); }, delay);
+  oo::ScheduleDeferredCall([held, call]() { call(held.get()); }, delay);
 }

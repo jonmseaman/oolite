@@ -35,12 +35,17 @@ MA 02110-1301, USA.
  * declared in PlayerEntity.h. This header stays for the files that include it.
  */
 #include "GuiDisplayGen.h"
+#include "JoystickProfile.h"
 #include "MyOpenGLView.h"
-#include "OOJoystickProfile.h"
 #include "Universe.h"
 #include "oofnd/Object.hpp"
 
-class OOJoystickManager;  // OOJoystickManager.h
+namespace oo {
+
+class JoystickManager;
+
+}  // namespace oo
+   // OOJoystickManager.h
 
 /* The player is the screen's one caller (the category above drives it); the
  * player keeps it as a std::shared_ptr.
@@ -72,10 +77,10 @@ class StickProfileScreen : public oo::Object {
   std::optional<std::string> profileType();
 
  private:
-  OOJoystickManager* stickHandler =
+  oo::JoystickManager* stickHandler =
       nullptr;  // the shared handler, not retained, as before
   std::size_t current_axis = 0;
-  std::shared_ptr<OOJoystickAxisProfile> profiles[3][2] = {};
+  std::shared_ptr<oo::JoystickAxisProfile> profiles[3][2] = {};
   GuiDisplayGen* gui = nullptr;  // not retained, as before
   NSRect graphRect = {};
   std::ptrdiff_t selected_control_point = 0;

@@ -67,7 +67,7 @@ unsigned int SpeechSynthesizer::prevVoice(unsigned int index) const {
 
 unsigned int SpeechSynthesizer::setVoice(unsigned int index, bool isMale) {
   if (index == UINT_MAX)
-    index = voiceNumber(OOLookUpDescriptionPRIV("espeak-default-voice"));
+    index = voiceNumber(oo::LookUpDescriptionPRIV("espeak-default-voice"));
 
   if (index < _voiceNames.size()) selectVoice(_voiceNames[index], isMale);
 

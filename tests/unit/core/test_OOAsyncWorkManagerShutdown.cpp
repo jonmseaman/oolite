@@ -13,17 +13,22 @@
 #include <chrono>
 #include <thread>
 
-#include "OOAsyncWorkManager.h"
+#include "AsyncWorkManager.h"
 #include "oo_test.hpp"
 
 // OOLogging.mm would link the game's log file and resource manager in; the
 // abstract base class's subclass-responsibility message it defines is never
 // reached by these tests.
-void OOLogGenericSubclassResponsibilityForFunction(const char*) {}
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char*) {}
+
+}  // namespace oo
+
 
 namespace {
 
-class SlowTask : public OOAsyncWorkTask {
+class SlowTask : public oo::AsyncWorkTask {
  public:
   void performAsyncTask() override {
     started = true;
@@ -35,7 +40,7 @@ class SlowTask : public OOAsyncWorkTask {
   std::atomic<bool> finished = false;
 };
 
-class FlagTask : public OOAsyncWorkTask {
+class FlagTask : public oo::AsyncWorkTask {
  public:
   void performAsyncTask() override { performed = true; }
 
@@ -52,9 +57,9 @@ bool WaitFor(const std::atomic<bool>& flag) {
 }  // namespace
 
 OO_TEST(shutdownWaitsForAStartedTaskThenStopsTheWorkers) {
-  OOAsyncWorkManager* manager = OOAsyncWorkManager::sharedAsyncWorkManager();
+  oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
   const std::shared_ptr<SlowTask> slow = oo::makeShared<SlowTask>();
-  OO_CHECK(manager->addTask(slow.get(), OOAsyncWorkPriority::kMedium));
+  OO_CHECK(manager->addTask(slow.get(), oo::AsyncWorkPriority::kMedium));
   OO_CHECK(WaitFor(slow->started));
 
   const auto start = std::chrono::steady_clock::now();
@@ -64,7 +69,7 @@ OO_TEST(shutdownWaitsForAStartedTaskThenStopsTheWorkers) {
 
   // No worker is left to perform a task added now.
   const std::shared_ptr<FlagTask> late = oo::makeShared<FlagTask>();
-  manager->addTask(late.get(), OOAsyncWorkPriority::kHigh);
+  manager->addTask(late.get(), oo::AsyncWorkPriority::kHigh);
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
   OO_CHECK(!late->performed);
 

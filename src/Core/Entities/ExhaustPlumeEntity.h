@@ -89,7 +89,7 @@ class ExhaustPlumeEntity : public Entity, public cxx::OOSubEntityInterface {
   bool isVisibleToScripts() override;
 
   double findCollisionRadius() override;
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
 
  private:
   void saveToLastFrame();
@@ -98,11 +98,11 @@ class ExhaustPlumeEntity : public Entity, public cxx::OOSubEntityInterface {
                                         // half a second ago.
 
   Vector _exhaustScale = {};
-  OOHPScalar _vertices[34 * 3] = {};
+  oo::HPScalar _vertices[34 * 3] = {};
   GLfloat _glVertices[34 * 3] = {};
   GLfloat _exhaustBaseColors[34 * 4] = {};
   Frame _track[kExhaustFrameCount] = {};
-  OOTimeAbsolute _trackTime = {};
+  oo::TimeAbsolute _trackTime = {};
   uint8_t _nextFrame = {};
 };
 

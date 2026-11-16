@@ -22,10 +22,10 @@
 #include <vector>
 #include "EntityManualRefs.h"  // the tests' manual references
 
-#include "OOOpenGLExtensionManager.h"
-#include "OORegExpMatcher.h"
+#include "OpenGLExtensionManager.h"
+#include "RegExpMatcher.h"
 #include "Texture.h"
-#include "OOTextureSprite.h"
+#include "TextureSprite.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -47,22 +47,27 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
 }
 
 // OORegExpMatcher stub: answers no match.
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
-  return oo::makeShared<OORegExpMatcher>();
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher() {
+  return oo::makeShared<oo::RegExpMatcher>();
 }
-bool OORegExpMatcher::string(const std::string&, const std::string&) {
+bool oo::RegExpMatcher::string(const std::string&, const std::string&) {
   return false;
 }
-OORegExpMatcher::~OORegExpMatcher() {}
+namespace oo {
 
-OOShaderSetting OOShaderSettingFromString(const std::string& string) {
-  return string == "SHADERS_FULL" ? OOShaderSetting::kFull : OOShaderSetting::kNotSupported;
+RegExpMatcher::~RegExpMatcher() {}
+
+ShaderSetting ShaderSettingFromString(const std::string& string) {
+  return string == "SHADERS_FULL" ? ShaderSetting::kFull : ShaderSetting::kNotSupported;
 }
 
 // OOLogging.mm's (it would bring the resource manager into the link); only the
 // state dump uses them.
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
+void LogIndent(void) {}
+void LogOutdent(void) {}
+
+}  // namespace oo
+
 
 // The sprite's texture: its original dimensions, and how often it was applied.
 // The stand-in is C++: TestTexture, and the root's own members (a texture
@@ -235,7 +240,7 @@ bool IsQuad(const std::vector<Vertex>& vertices, double x, double y, double z,
 bool GLReady() {
   if (!OOTestGLContext()) return false;
   (void)
-      OOOpenGLExtensionManager::sharedManager();  // loads glActiveTextureARB &
+      oo::OpenGLExtensionManager::sharedManager();  // loads glActiveTextureARB &
                                                   // co. for the state manager
   return true;
 }
@@ -248,8 +253,8 @@ bool GLReady() {
 OO_TEST(noTextureNoSprite) {
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(OOTextureSprite::initWithTexture(nullptr).get() == nullptr);
-    OO_CHECK(OOTextureSprite::initWithTexture(nullptr, NSMakeSize(4, 4)).get() ==
+    OO_CHECK(oo::TextureSprite::initWithTexture(nullptr).get() == nullptr);
+    OO_CHECK(oo::TextureSprite::initWithTexture(nullptr, NSMakeSize(4, 4)).get() ==
              nullptr);
   }
 }
@@ -257,24 +262,24 @@ OO_TEST(noTextureNoSprite) {
 OO_TEST(sizeIsTheTexturesOrGiven) {
   {
     oo::AutoreleaseScope pool;
-    std::shared_ptr<OOTextureSprite> sprite =
-        OOTextureSprite::initWithTexture(Texture(64, 32));
+    std::shared_ptr<oo::TextureSprite> sprite =
+        oo::TextureSprite::initWithTexture(Texture(64, 32));
     OO_CHECK(sprite != nullptr);
     OO_CHECK(sprite->getSize().width == 64 && sprite->getSize().height == 32);
 
     sprite =
-        OOTextureSprite::initWithTexture(Texture(64, 32), NSMakeSize(10, 20));
+        oo::TextureSprite::initWithTexture(Texture(64, 32), NSMakeSize(10, 20));
     OO_CHECK(sprite->getSize().width == 10 && sprite->getSize().height == 20);
   }
 }
 
 OO_TEST(spriteKeepsItsTexture) {
-  std::shared_ptr<OOTextureSprite> sprite;
+  std::shared_ptr<oo::TextureSprite> sprite;
   TestTexture* texture = nullptr;
   {
     oo::AutoreleaseScope pool;
     texture = Texture(8, 8);
-    sprite = OOTextureSprite::initWithTexture(texture);
+    sprite = oo::TextureSprite::initWithTexture(texture);
     oo::test::Retain(texture);
   }
   OO_CHECK(texture->weak_from_this().use_count() == 2);  // the test's and the sprite's
@@ -288,8 +293,8 @@ OO_TEST(blitDrawsTheTexturedQuad) {
   {
     oo::AutoreleaseScope pool;
     TestTexture* texture = Texture(64, 32);
-    std::shared_ptr<OOTextureSprite> sprite =
-        OOTextureSprite::initWithTexture(texture, NSMakeSize(100, 50));
+    std::shared_ptr<oo::TextureSprite> sprite =
+        oo::TextureSprite::initWithTexture(texture, NSMakeSize(100, 50));
 
     std::vector<Vertex> quad =
         Feedback([&] { sprite->blitToX(10, -20, 30, 0.25f); });
@@ -313,8 +318,8 @@ OO_TEST(centredBlits) {
   {
     oo::AutoreleaseScope pool;
     TestTexture* texture = Texture(64, 32);
-    std::shared_ptr<OOTextureSprite> sprite =
-        OOTextureSprite::initWithTexture(texture, NSMakeSize(1.5, 0.75));
+    std::shared_ptr<oo::TextureSprite> sprite =
+        oo::TextureSprite::initWithTexture(texture, NSMakeSize(1.5, 0.75));
 
     OO_CHECK(
         IsQuad(Feedback([&] { sprite->blitCentredToX(100, 200, -5, 0.5f); }),
@@ -339,23 +344,23 @@ OO_TEST(cxxSprite) {
   OO_CHECK(GLReady());
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(OOTextureSprite::initWithTexture(nullptr).get() == nullptr);
-    OO_CHECK(OOTextureSprite::initWithTexture(nullptr, NSMakeSize(4, 4)).get() ==
+    OO_CHECK(oo::TextureSprite::initWithTexture(nullptr).get() == nullptr);
+    OO_CHECK(oo::TextureSprite::initWithTexture(nullptr, NSMakeSize(4, 4)).get() ==
              nullptr);
 
     TestTexture* texture = Texture(64, 32);
-    std::shared_ptr<OOTextureSprite> sprite = OOTextureSprite::initWithTexture(texture);
+    std::shared_ptr<oo::TextureSprite> sprite = oo::TextureSprite::initWithTexture(texture);
     OO_CHECK(sprite.get() != nullptr && sprite->getSize().width == 64 &&
              sprite->getSize().height == 32);
 
-    sprite = OOTextureSprite::initWithTexture(texture, NSMakeSize(100, 50));
+    sprite = oo::TextureSprite::initWithTexture(texture, NSMakeSize(100, 50));
     OO_CHECK(IsQuad(Feedback([&] { sprite->blitToX(10, -20, 30, 0.25f); }), 10,
                     -20, 30, 100, 50, 0.25));
     OO_CHECK(IsQuad(Feedback([&] { sprite->blitCentredToX(0, 0, 0, 1.0f); }),
                     -50, -25, 0, 100, 50, 1.0));
     OO_CHECK(sprite->getSize().width == 100 && sprite->getSize().height == 50);
 
-    sprite = OOTextureSprite::initWithTexture(texture, NSMakeSize(1.5, 0.75));
+    sprite = oo::TextureSprite::initWithTexture(texture, NSMakeSize(1.5, 0.75));
     OO_CHECK(IsQuad(
         Feedback([&] { sprite->blitBackgroundCentredToX(1, -2, 3, 1.0f); }),
         1 - 384, -2 - 192, 3 * 512, 768, 384, 1.0));

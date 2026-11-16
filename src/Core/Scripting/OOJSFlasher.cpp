@@ -27,9 +27,9 @@ MA 02110-1301, USA.
 #include <string>
 #include <utility>
 
+#include "Color.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "FlasherEntity.h"
-#include "OOColor.h"
 #include "OOJSEntity.h"
 #include "OOJavaScriptEngine.h"
 #include "ShipEntity.h"
@@ -49,7 +49,7 @@ namespace {
 
 // A colour's components as its -normalizedArray gave them to JavaScript:
 // floats, null for no colour.
-oo::PList NormalizedColorComponents(OOColor* color) {
+oo::PList NormalizedColorComponents(oo::Color* color) {
   if (color == nullptr) return oo::PList();
   oo::PList::Array components;
   for (float component : color->normalizedArray())
@@ -197,7 +197,7 @@ static JSValue FlasherSetProperty(OOJS_SETTER_ARGS) {
   oo::FlasherEntity* entity = nullptr;
   double fValue;
   int bValue;
-  std::shared_ptr<OOColor> colorForScript;
+  std::shared_ptr<oo::Color> colorForScript;
 
   if (!JSFlasherGetFlasherEntity(context, thisObj, &entity))
     return OOJSNativeFailure(context);
@@ -214,7 +214,7 @@ static JSValue FlasherSetProperty(OOJS_SETTER_ARGS) {
 
     case kColor:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         entity->setColor(colorForScript.get());
         return JS_UNDEFINED;

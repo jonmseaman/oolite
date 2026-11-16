@@ -37,13 +37,14 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "AI.h"
+#include "CallByName.h"
+#include "Character.h"
+#include "Color.h"
+#include "Commodities.h"
 #include "EntityOOJavaScriptExtensions.h"
+#include "EquipmentType.h"
 #include "GameController.h"
-#include "OOCallByName.h"
-#include "OOCharacter.h"
-#include "OOColor.h"
-#include "OOCommodities.h"
-#include "OOEquipmentType.h"
+#include "Mesh.h"
 #include "OOJSEntity.h"
 #include "OOJSEquipmentInfo.h"
 #include "OOJSPlayer.h"
@@ -51,15 +52,14 @@ MA 02110-1301, USA.
 #include "OOJSVector.h"
 #include "OOJSWormhole.h"
 #include "OOJavaScriptEngine.h"
-#include "OOMesh.h"
-#include "OORoleSet.h"
 #include "OOScript.h"
-#include "OOShipGroup.h"
-#include "OOShipRegistry.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
+#include "RoleSet.h"
 #include "ShipEntity.h"
 #include "ShipEntityAI.h"
+#include "ShipGroup.h"
+#include "ShipRegistry.h"
 #include "StationEntity.h"
 #include "Universe.h"
 #include "WormholeEntity.h"
@@ -77,7 +77,7 @@ oo::PList NativeVectorArray(const std::vector<Vector>& vectors) {
     // The box is the Object node's foreign object; the engine gives JavaScript
     // its Vector3D.
     result.push_back(
-        oo::PList(oo::PList::Object(oo::makeShared<OONativeVector>(v))));
+        oo::PList(oo::PList::Object(oo::makeShared<oo::NativeVector>(v))));
   }
   return oo::PList(std::move(result));
 }
@@ -769,7 +769,7 @@ namespace {
 
 // A colour's components as its -normalizedArray gave them to JavaScript:
 // floats, null for no colour.
-oo::PList NormalizedColorComponents(OOColor* color) {
+oo::PList NormalizedColorComponents(oo::Color* color) {
   if (color == nullptr) return oo::PList();
   oo::PList::Array components;
   for (float component : color->normalizedArray())
@@ -804,12 +804,12 @@ bool IsShip(Entity* entity) {
    -materials and -shaders; so does a null mesh here.
 */
 oo::PList MeshMaterials(ShipEntity* ship) {
-  OOMesh* mesh = ship->mesh();
+  oo::Mesh* mesh = ship->mesh();
   return (mesh != nullptr) ? mesh->getMaterials() : oo::PList();
 }
 
 oo::PList MeshShaders(ShipEntity* ship) {
-  OOMesh* mesh = ship->mesh();
+  oo::Mesh* mesh = ship->mesh();
   return (mesh != nullptr) ? mesh->shaders() : oo::PList();
 }
 
@@ -861,14 +861,14 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       break;
 
     case kRoles: {
-      const std::shared_ptr<OORoleSet> roleSet = ship->getRoleSet();
+      const std::shared_ptr<oo::RoleSet> roleSet = ship->getRoleSet();
       result = roleSet != nullptr ? StringArray(roleSet->sortedRoles())
                                   : oo::PList();
     } break;
 
     case kRoleWeights: {
       // Floats, as numberWithFloat: made them; nil when there is no role set.
-      const std::shared_ptr<OORoleSet> roleSet = ship->getRoleSet();
+      const std::shared_ptr<oo::RoleSet> roleSet = ship->getRoleSet();
       if (const auto roleWeights = (roleSet != nullptr)
                                        ? roleSet->rolesAndProbabilities()
                                        : std::nullopt) {
@@ -976,7 +976,7 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       break;
 
     case kEscorts: {
-      OOShipGroup* escortGroup = ship->escortGroup();
+      oo::ShipGroup* escortGroup = ship->escortGroup();
       result =
           (escortGroup != nullptr)
               ? oo::EntityNodesFrom(escortGroup->memberArrayExcludingLeader())
@@ -984,11 +984,11 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
     } break;
 
     case kGroup:
-      result = OOShipGroupObjectNode(ship->group());
+      result = oo::ShipGroupObjectNode(ship->group());
       break;
 
     case kEscortGroup:
-      result = OOShipGroupObjectNode(ship->escortGroup());
+      result = oo::ShipGroupObjectNode(ship->escortGroup());
       break;
 
     case kTemperature:
@@ -1049,7 +1049,7 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       if (ship->getIsPlayer()) {
         PlayerEntity* pent = static_cast<PlayerEntity*>(entity);
         return JS_NewNumber(context, (pent != nullptr ? pent->availableFacings()
-                                                      : OOWeaponFacingSet{}));
+                                                      : oo::WeaponFacingSet{}));
       }
       return JS_NewNumber(context, ship->weaponFacings());
 
@@ -1241,7 +1241,7 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       return OOJSValueFromBOOL(
           ship->getIsPlayer() ||
           ship->getCrew()
-                  .value_or(std::vector<std::shared_ptr<OOCharacter>>())
+                  .value_or(std::vector<std::shared_ptr<oo::Character>>())
                   .size() > 0);
 
     case kScriptedMisjump:
@@ -1281,32 +1281,32 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       OOJS_RETURN_HPVECTOR(ship->getCoordinates());
 
     case kEquipment:
-      result = OOEquipmentTypeObjectNodes(ship->equipmentListForScripting());
+      result = oo::EquipmentTypeObjectNodes(ship->equipmentListForScripting());
       break;
 
     case kCurrentWeapon:
-      result = OOEquipmentTypeObjectNode(
+      result = oo::EquipmentTypeObjectNode(
           ship->weaponTypeForFacing(ship->getCurrentWeaponFacing(), true));
       break;
 
     case kForwardWeapon:
-      result = OOEquipmentTypeObjectNode(
-          ship->weaponTypeForFacing(OOWeaponFacing::kForward, true));
+      result = oo::EquipmentTypeObjectNode(
+          ship->weaponTypeForFacing(oo::WeaponFacing::kForward, true));
       break;
 
     case kAftWeapon:
-      result = OOEquipmentTypeObjectNode(
-          ship->weaponTypeForFacing(OOWeaponFacing::kAft, true));
+      result = oo::EquipmentTypeObjectNode(
+          ship->weaponTypeForFacing(oo::WeaponFacing::kAft, true));
       break;
 
     case kPortWeapon:
-      result = OOEquipmentTypeObjectNode(
-          ship->weaponTypeForFacing(OOWeaponFacing::kPort, true));
+      result = oo::EquipmentTypeObjectNode(
+          ship->weaponTypeForFacing(oo::WeaponFacing::kPort, true));
       break;
 
     case kStarboardWeapon:
-      result = OOEquipmentTypeObjectNode(
-          ship->weaponTypeForFacing(OOWeaponFacing::kStarboard, true));
+      result = oo::EquipmentTypeObjectNode(
+          ship->weaponTypeForFacing(oo::WeaponFacing::kStarboard, true));
       break;
 
     case kLaserHeatLevel:
@@ -1325,7 +1325,7 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewNumber(context, ship->laserHeatLevelStarboard());
 
     case kMissiles:
-      result = OOEquipmentTypeObjectNodes(ship->missilesList());
+      result = oo::EquipmentTypeObjectNodes(ship->missilesList());
       break;
 
     case kPassengers:
@@ -1433,8 +1433,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
   Vector vValue;
   Quaternion qValue;
   HPVector hpvValue;
-  OOShipGroup* group = nullptr;
-  std::shared_ptr<OOColor> colorForScript;
+  oo::ShipGroup* group = nullptr;
+  std::shared_ptr<oo::Color> colorForScript;
   bool exists;  // JSValueToEquipmentKeyRelaxed()'s out parameter
   auto playerReadOnly = [&] {
     OOJSReportError(context, "player.ship.%s is read-only.",
@@ -1573,8 +1573,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kFuel:
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
-        fValue = OOClamp_0_max_d(fValue, MAX_JUMP_RANGE);
-        ship->setFuel(static_cast<OOFuelQuantity>(lround(fValue * 10.0)));
+        fValue = oo::Clamp_0_max_d(fValue, MAX_JUMP_RANGE);
+        ship->setFuel(static_cast<oo::FuelQuantity>(lround(fValue * 10.0)));
         return JS_UNDEFINED;
       }
       break;
@@ -1607,7 +1607,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kBounty:
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue < 0) iValue = 0;
-        ship->setBounty(static_cast<OOCreditsQuantity>(iValue),
+        ship->setBounty(static_cast<oo::CreditsQuantity>(iValue),
                         oo::LegalStatusReason::kByScript);
         return JS_UNDEFINED;
       }
@@ -1621,13 +1621,13 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         // iValue become negative.
         if (ship->maxAvailableCargoSpace() < ship->availableCargoSpace()) {
           iValue = 0;
-        } else if (static_cast<OOCargoQuantity>(iValue) <
+        } else if (static_cast<oo::CargoQuantity>(iValue) <
                    ship->maxAvailableCargoSpace() -
                        ship->availableCargoSpace()) {
           iValue = static_cast<int32_t>(ship->maxAvailableCargoSpace() -
                                         ship->availableCargoSpace());
         }
-        ship->setMaxAvailableCargoSpace(static_cast<OOCargoQuantity>(iValue));
+        ship->setMaxAvailableCargoSpace(static_cast<oo::CargoQuantity>(iValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1635,7 +1635,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kDestinationSystem:
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue < 0) iValue = 0;
-        ship->setDestinationSystem(static_cast<OOSystemID>(iValue));
+        ship->setDestinationSystem(static_cast<oo::SystemID>(iValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1643,7 +1643,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kHomeSystem:
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue < 0) iValue = 0;
-        ship->setHomeSystem(static_cast<OOSystemID>(iValue));
+        ship->setHomeSystem(static_cast<oo::SystemID>(iValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1688,7 +1688,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kGroup:
-      group = OOShipGroupInObjectNode(OOJSPListFromJSValue(
+      group = oo::ShipGroupInObjectNode(OOJSPListFromJSValue(
           context, value));  // a ShipGroup's group, else null
       if (group != nullptr || JS_IsNull(value)) {
         ship->setGroup(group);
@@ -1857,7 +1857,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kScannerDisplayColor1:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         ship->setScannerDisplayColor1(colorForScript.get());
         return JS_UNDEFINED;
@@ -1866,7 +1866,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kScannerDisplayColor2:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         ship->setScannerDisplayColor2(colorForScript.get());
         return JS_UNDEFINED;
@@ -1875,7 +1875,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kScannerHostileDisplayColor1:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         ship->setScannerDisplayColorHostile1(colorForScript.get());
         return JS_UNDEFINED;
@@ -1884,7 +1884,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kScannerHostileDisplayColor2:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         ship->setScannerDisplayColorHostile2(colorForScript.get());
         return JS_UNDEFINED;
@@ -1893,7 +1893,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kExhaustEmissiveColor:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         ship->setExhaustEmissiveColor(colorForScript.get());
         return JS_UNDEFINED;
@@ -1954,7 +1954,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         ship->setThrust(
-            OOClamp_0_max_f(static_cast<float>(fValue), ship->maxThrust()));
+            oo::Clamp_0_max_f(static_cast<float>(fValue), ship->maxThrust()));
         return JS_UNDEFINED;
       }
       break;
@@ -2093,19 +2093,19 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       const std::string weaponKey =
           JSValueToEquipmentKeyRelaxed(context, value, &exists)
               .value_or("EQ_WEAPON_NONE");
-      OOWeaponFacing facing = OOWeaponFacing::kForward;
+      oo::WeaponFacing facing = oo::WeaponFacing::kForward;
       switch (static_cast<ShipProperty>(magic)) {
         case kAftWeapon:
-          facing = OOWeaponFacing::kAft;
+          facing = oo::WeaponFacing::kAft;
           break;
         case kForwardWeapon:
-          facing = OOWeaponFacing::kForward;
+          facing = oo::WeaponFacing::kForward;
           break;
         case kPortWeapon:
-          facing = OOWeaponFacing::kPort;
+          facing = oo::WeaponFacing::kPort;
           break;
         case kStarboardWeapon:
-          facing = OOWeaponFacing::kStarboard;
+          facing = oo::WeaponFacing::kStarboard;
           break;
         case kCurrentWeapon:
           facing = ship->getCurrentWeaponFacing();
@@ -2128,7 +2128,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         return playerReadOnly();
 
       if (OOJSValueToInt32(context, value, &iValue)) {
-        OOShipGroup* escortGroup = ship->escortGroup();
+        oo::ShipGroup* escortGroup = ship->escortGroup();
         if (static_cast<std::ptrdiff_t>(iValue) <
             static_cast<std::ptrdiff_t>(
                 escortGroup != nullptr ? escortGroup->count() : 0) -
@@ -2890,7 +2890,7 @@ static JSValue ShipAwardEquipment(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   ShipEntity* thisEnt = nullptr;
-  OOEquipmentType* eqType = nullptr;
+  oo::EquipmentType* eqType = nullptr;
   std::string identifier;
   bool OK = true;
   bool berth;
@@ -2907,7 +2907,7 @@ static JSValue ShipAwardEquipment(OOJS_NATIVE_ARGS) {
   }
 
   // Check that equipment is permitted.
-  OOEquipmentType* cxxEqType = eqType;  // not null: eqType is not
+  oo::EquipmentType* cxxEqType = eqType;  // not null: eqType is not
   identifier = cxxEqType->identifier().value_or("");
   berth = identifier == "EQ_PASSENGER_BERTH";
   if (berth) {
@@ -3062,7 +3062,7 @@ static JSValue ShipSetEquipmentStatus(OOJS_NATIVE_ARGS) {
   // equipment status accepted: @"EQUIPMENT_OK", @"EQUIPMENT_DAMAGED"
 
   ShipEntity* thisEnt = nullptr;
-  OOEquipmentType* eqType = nullptr;
+  oo::EquipmentType* eqType = nullptr;
   std::string key;
   std::string damagedKey;
   std::optional<std::string> status;
@@ -3101,7 +3101,7 @@ static JSValue ShipSetEquipmentStatus(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  OOEquipmentType* cxxEqType = eqType;  // not null: eqType is not
+  oo::EquipmentType* cxxEqType = eqType;  // not null: eqType is not
   key = cxxEqType->identifier().value_or("");
   hasOK = ship->hasEquipmentItem(oo::PList(key));
   bool setOK = *status == "EQUIPMENT_OK";
@@ -3207,7 +3207,7 @@ static JSValue ShipSelectNewMissile(JSContext* context, JSValueConst oojsThis,
   ShipEntity* ship = thisEnt;  // not null: thisEnt is not
 
   // if there's a badly defined missile, selectMissile may return nil
-  OOEquipmentType* missile = ship->selectMissile();
+  oo::EquipmentType* missile = ship->selectMissile();
   const std::string result =
       ((missile != nullptr) ? missile->identifier() : std::nullopt)
           .value_or("EQ_MISSILE");
@@ -3295,7 +3295,7 @@ static JSValue ShipSetBounty(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  ship->setBounty(static_cast<OOCreditsQuantity>(newbounty), *reason);
+  ship->setBounty(static_cast<oo::CreditsQuantity>(newbounty), *reason);
 
   OOJS_RETURN_VOID;
 
@@ -3323,12 +3323,12 @@ static JSValue ShipSetCargo(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  OOCommodities* commodities =
+  oo::Commodities* commodities =
       (UNIVERSE != nullptr
            ? UNIVERSE->getCommodities()
            : nullptr);  // null: no good is defined, as a message to nil
   if (commodities != nullptr && commodities->goodDefined(*commodity)) {
-    ship->setCommodityForPod(commodity, static_cast<OOCargoQuantity>(count));
+    ship->setCommodityForPod(commodity, static_cast<oo::CargoQuantity>(count));
   }
 
   OOJS_RETURN_BOOL(commodities != nullptr &&
@@ -3361,10 +3361,10 @@ static JSValue ShipSetCrew(OOJS_NATIVE_ARGS) {
     if (JS_IsNull(OOJS_ARGV[0])) {
       ship->setCrew(std::nullopt);
     } else {
-      const std::shared_ptr<OOCharacter> crew =
-          OOCharacter::characterWithDictionary(
+      const std::shared_ptr<oo::Character> crew =
+          oo::Character::characterWithDictionary(
               OOJSPListFromJSObject(context, OOJS_ARGV[0]));
-      std::vector<std::shared_ptr<OOCharacter>> members;
+      std::vector<std::shared_ptr<oo::Character>> members;
       if (crew != nullptr)
         members.emplace_back(crew);  // a nil character was skipped (a
                                      // Foundation array cannot hold nil)
@@ -3395,7 +3395,7 @@ static JSValue ShipSetCargoType(OOJS_NATIVE_ARGS) {
                            std::nullopt, "cargo type name");
     return OOJSNativeFailure(context);
   }
-  if (ship->cargoType() != OOCargoType::kNotCargo) {
+  if (ship->cargoType() != oo::CargoType::kNotCargo) {
     OOJSReportBadArguments(
         context, "Ship", "setCargoType", argc, OOJS_ARGV, std::nullopt,
         std::format(
@@ -3405,15 +3405,15 @@ static JSValue ShipSetCargoType(OOJS_NATIVE_ARGS) {
   }
   bool ok = true;
   if (*cargoType == "SCARCE_GOODS") {
-    ship->setCargoFlag(OOCargoFlag::kFullScarce);
+    ship->setCargoFlag(oo::CargoFlag::kFullScarce);
   } else if (*cargoType == "PLENTIFUL_GOODS") {
-    ship->setCargoFlag(OOCargoFlag::kFullPlentiful);
+    ship->setCargoFlag(oo::CargoFlag::kFullPlentiful);
   } else if (*cargoType == "MEDICAL_GOODS") {
-    ship->setCargoFlag(OOCargoFlag::kFullMedical);
+    ship->setCargoFlag(oo::CargoFlag::kFullMedical);
   } else if (*cargoType == "ILLEGAL_GOODS") {
-    ship->setCargoFlag(OOCargoFlag::kFullContraband);
+    ship->setCargoFlag(oo::CargoFlag::kFullContraband);
   } else if (*cargoType == "PIRATE_GOODS") {
-    ship->setCargoFlag(OOCargoFlag::kPirate);
+    ship->setCargoFlag(oo::CargoFlag::kPirate);
   } else {
     ok = false;
   }
@@ -3537,7 +3537,7 @@ JSValue ShipSetMaterialsInternal(OOJS_NATIVE_ARGS, ShipEntity* thisEnt,
   const oo::PList* prefixMacros = materialDefaults.find("ship-prefix-macros");
 
   // First we test to see if we can create the mesh.
-  const std::shared_ptr<OOMesh> mesh = OOMesh::meshWithName(
+  const std::shared_ptr<oo::Mesh> mesh = oo::Mesh::meshWithName(
       shipDict.get<std::string>("model"), std::nullopt, materials, shaders,
       shipDict.get<bool>("smooth", false),
       (prefixMacros != nullptr && prefixMacros->isDict()) ? *prefixMacros
@@ -3582,7 +3582,7 @@ static JSValue ShipExitSystem(OOJS_NATIVE_ARGS) {
   }
 
   OK = ship->performHyperSpaceToSpecificSystem(
-      static_cast<OOSystemID>(systemID));  // -1 == random destination system
+      static_cast<oo::SystemID>(systemID));  // -1 == random destination system
 
   OOJS_RETURN_BOOL(OK);
 
@@ -4278,7 +4278,7 @@ static JSValue ShipAdjustCargo(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  if (ship->cargoType() != OOCargoType::kNotCargo || ship->getIsPlayer()) {
+  if (ship->cargoType() != oo::CargoType::kNotCargo || ship->getIsPlayer()) {
     OOJSReportError(context,
                     "ship.adjustCargo may only be used on NPC cargo carriers");
     return OOJSNativeFailure(context);
@@ -4291,10 +4291,10 @@ static JSValue ShipAdjustCargo(OOJS_NATIVE_ARGS) {
         (UNIVERSE != nullptr
              ? UNIVERSE->getContainersOfCommodity(
                    commodity.value_or(""),
-                   static_cast<OOCargoQuantity>(adjustment))
+                   static_cast<oo::CargoQuantity>(adjustment))
              : std::vector<oo::EntityHold>()));  // non-reified templates
   } else if (adjustment < 0) {
-    OOCargoQuantity r = static_cast<OOCargoQuantity>(-adjustment);
+    oo::CargoQuantity r = static_cast<oo::CargoQuantity>(-adjustment);
     ok = ship->removeCargo(commodity.value_or(""), r);
   }
 
@@ -4386,7 +4386,7 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
 
     // check lasers
     oo::WeaponType wt =
-        ship->weaponTypeIDForFacing(OOWeaponFacing::kForward, false);
+        ship->weaponTypeIDForFacing(oo::WeaponFacing::kForward, false);
     /* Not affected by multiple mounts here: they're either just a
      * split of the power, or only more dangerous until they
      * overheat */
@@ -4395,16 +4395,16 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
       assessment -= 1.5;  // further penalty for ships with no forward laser
     }
 
-    wt = ship->weaponTypeIDForFacing(OOWeaponFacing::kAft, false);
+    wt = ship->weaponTypeIDForFacing(oo::WeaponFacing::kAft, false);
     if (!isWeaponNone(wt)) {
       assessment += 1 + ShipThreatAssessmentWeapon(wt);
     }
     // port and starboard weapons less important
-    wt = ship->weaponTypeIDForFacing(OOWeaponFacing::kPort, false);
+    wt = ship->weaponTypeIDForFacing(oo::WeaponFacing::kPort, false);
     if (!isWeaponNone(wt)) {
       assessment += 0.2 + ShipThreatAssessmentWeapon(wt) / 5.0;
     }
-    wt = ship->weaponTypeIDForFacing(OOWeaponFacing::kStarboard, false);
+    wt = ship->weaponTypeIDForFacing(oo::WeaponFacing::kStarboard, false);
     if (!isWeaponNone(wt)) {
       assessment += 0.2 + ShipThreatAssessmentWeapon(wt) / 5.0;
     }
@@ -4466,7 +4466,7 @@ static double ShipThreatAssessmentWeapon(oo::WeaponType wt) {
 static JSValue ShipStaticKeys(JSContext* context, JSValueConst /*oojsThis*/,
                               int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context);
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
 
   OOJS_RETURN_PLIST(StringArray(registry->shipKeys()));
 
@@ -4477,7 +4477,7 @@ static JSValue ShipStaticKeysForRole(JSContext* context,
                                      JSValueConst /*oojsThis*/, int argc,
                                      JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context);
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
 
   if (argc > 0) {
     const std::string role =
@@ -4525,7 +4525,7 @@ static JSValue ShipStaticRoleIsInCategory(JSContext* context,
 static JSValue ShipStaticRoles(JSContext* context, JSValueConst /*oojsThis*/,
                                int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context);
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
 
   OOJS_RETURN_PLIST(StringArray(registry->shipRoles()));
 
@@ -4536,7 +4536,7 @@ static JSValue ShipStaticShipDataForKey(JSContext* context,
                                         JSValueConst /*oojsThis*/, int argc,
                                         JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context);
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
 
   if (argc > 0) {
     const std::optional<std::string> key =
@@ -4555,7 +4555,7 @@ static JSValue ShipStaticSetShipDataForKey(JSContext* context,
                                            JSValueConst /*oojsThis*/, int argc,
                                            JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context);
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
 
   if (argc >= 2) {
     registry->setShipInfoForKey(

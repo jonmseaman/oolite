@@ -88,7 +88,7 @@ static OOTimeProfileEntry* ProfileEntryForKey(const void* key) {
 static double sProfilerOverhead;
 static double sProfilerTotalNativeTime;
 static double sProfilerEntryTimeLimit;
-static OOHighResTimeValue sProfilerStartTime;
+static oo::HighResTimeValue sProfilerStartTime;
 
 void OOJSBeginProfiling(bool trace) {
   assert(sProfiling == false);
@@ -112,7 +112,7 @@ void OOJSBeginProfiling(bool trace) {
 
 std::shared_ptr<OOTimeProfile> OOJSEndProfiling() {
   // This should be at the top for precision.
-  OOHighResTimeValue now = OOGetHighResTime();
+  oo::HighResTimeValue now = OOGetHighResTime();
   // Time limiter should be as close to outermost as practical.
   OOJSPauseTimeLimiter();
 
@@ -122,7 +122,7 @@ std::shared_ptr<OOTimeProfile> OOJSEndProfiling() {
 
   std::shared_ptr<OOTimeProfile> result = oo::makeShared<OOTimeProfile>();
 
-  result->setTotalTime(OOHighResTimeDeltaInSeconds(sProfilerStartTime, now));
+  result->setTotalTime(oo::HighResTimeDeltaInSeconds(sProfilerStartTime, now));
   result->setNativeTime(sProfilerTotalNativeTime);
   result->setProfilerOverhead(sProfilerOverhead);
 
@@ -136,7 +136,7 @@ std::shared_ptr<OOTimeProfile> OOJSEndProfiling() {
   std::stable_sort(entries.begin(), entries.end(),
                    [](const auto& a, const auto& b) {
                      return a->compareBySelfTimeReverse(b.get()) ==
-                            OOComparisonResult::kAscending;
+                            oo::ComparisonResult::kAscending;
                    });
   result->setProfileEntries(entries);
 
@@ -148,9 +148,9 @@ std::shared_ptr<OOTimeProfile> OOJSEndProfiling() {
 
   // Clean up (the table held the entries' references).
   sProfileInfo.reset();
-  OODisposeHighResTime(sProfilerStartTime);
+  oo::DisposeHighResTime(sProfilerStartTime);
 
-  OODisposeHighResTime(now);
+  oo::DisposeHighResTime(now);
 
   OOJSResumeTimeLimiter();
   return result;
@@ -159,7 +159,7 @@ std::shared_ptr<OOTimeProfile> OOJSEndProfiling() {
 bool OOJSIsProfiling() { return sProfiling; }
 
 namespace {
-static void UpdateProfileForFrame(OOHighResTimeValue now,
+static void UpdateProfileForFrame(oo::HighResTimeValue now,
                                   OOJSProfileStackFrame* frame);
 }  // namespace
 
@@ -193,7 +193,7 @@ void OOJSProfileExit(OOJSProfileStackFrame* frame) {
   while (search != nullptr && search != frame) search = search->back;
   if (search == nullptr) return;
 
-  OOHighResTimeValue now = OOGetHighResTime();
+  oo::HighResTimeValue now = OOGetHighResTime();
   {
     bool done = false;
 
@@ -208,19 +208,19 @@ void OOJSProfileExit(OOJSProfileStackFrame* frame) {
     }
   }
 
-  OODisposeHighResTime(frame->startTime);
+  oo::DisposeHighResTime(frame->startTime);
 
-  OOHighResTimeValue end = OOGetHighResTime();
-  double currentOverhead = OOHighResTimeDeltaInSeconds(now, end);
+  oo::HighResTimeValue end = OOGetHighResTime();
+  double currentOverhead = oo::HighResTimeDeltaInSeconds(now, end);
   sProfilerOverhead += currentOverhead;
   OOJSExcludeTimeFromLimiter(currentOverhead);
 
-  OODisposeHighResTime(now);
-  OODisposeHighResTime(end);
+  oo::DisposeHighResTime(now);
+  oo::DisposeHighResTime(end);
 }
 
 namespace {
-static void UpdateProfileForFrame(OOHighResTimeValue now,
+static void UpdateProfileForFrame(oo::HighResTimeValue now,
                                   OOJSProfileStackFrame* frame) {
   sProfileStack = frame->back;
 
@@ -232,8 +232,8 @@ static void UpdateProfileForFrame(OOHighResTimeValue now,
     entry = made.get();
   }
 
-  OOTimeDelta time = OOHighResTimeDeltaInSeconds(frame->startTime, now);
-  OOTimeDelta selfTime = time - frame->subTime;
+  oo::TimeDelta time = oo::HighResTimeDeltaInSeconds(frame->startTime, now);
+  oo::TimeDelta selfTime = time - frame->subTime;
   entry->addSampleWithTotalTime(time, selfTime);
 
   *(frame->total) += selfTime;
@@ -344,8 +344,8 @@ OOTimeProfileEntry::OOTimeProfileEntry(const char* name) {
   }
 }
 
-void OOTimeProfileEntry::addSampleWithTotalTime(OOTimeDelta totalTime,
-                                                OOTimeDelta selfTime) {
+void OOTimeProfileEntry::addSampleWithTotalTime(oo::TimeDelta totalTime,
+                                                oo::TimeDelta selfTime) {
   _hitCount++;
   _totalTimeSum += totalTime;
   _selfTimeSum += selfTime;
@@ -412,38 +412,38 @@ double OOTimeProfileEntry::selfTimeMax() { return _selfTimeMax; }
 
 bool OOTimeProfileEntry::isJavaScriptFrame() { return false; }
 
-OOComparisonResult OOTimeProfileEntry::compareByTotalTime(
+oo::ComparisonResult OOTimeProfileEntry::compareByTotalTime(
     OOTimeProfileEntry* other) {
-  return static_cast<OOComparisonResult>(
+  return static_cast<oo::ComparisonResult>(
       -oo::ToUnderlying(compareByTotalTimeReverse(other)));
 }
 
-OOComparisonResult OOTimeProfileEntry::compareByTotalTimeReverse(
+oo::ComparisonResult OOTimeProfileEntry::compareByTotalTimeReverse(
     OOTimeProfileEntry* other) {
   double selfTotal = totalTimeSum();
   double otherTotal = (other != nullptr) ? other->totalTimeSum()
                                          : 0.0;  // (a message to nil gave 0)
 
-  if (selfTotal < otherTotal) return OOComparisonResult::kDescending;
-  if (selfTotal > otherTotal) return OOComparisonResult::kAscending;
-  return OOComparisonResult::kSame;
+  if (selfTotal < otherTotal) return oo::ComparisonResult::kDescending;
+  if (selfTotal > otherTotal) return oo::ComparisonResult::kAscending;
+  return oo::ComparisonResult::kSame;
 }
 
-OOComparisonResult OOTimeProfileEntry::compareBySelfTime(
+oo::ComparisonResult OOTimeProfileEntry::compareBySelfTime(
     OOTimeProfileEntry* other) {
-  return static_cast<OOComparisonResult>(
+  return static_cast<oo::ComparisonResult>(
       -oo::ToUnderlying(compareBySelfTimeReverse(other)));
 }
 
-OOComparisonResult OOTimeProfileEntry::compareBySelfTimeReverse(
+oo::ComparisonResult OOTimeProfileEntry::compareBySelfTimeReverse(
     OOTimeProfileEntry* other) {
   double selfTotal = selfTimeSum();
   double otherTotal = (other != nullptr) ? other->selfTimeSum()
                                          : 0.0;  // (a message to nil gave 0)
 
-  if (selfTotal < otherTotal) return OOComparisonResult::kDescending;
-  if (selfTotal > otherTotal) return OOComparisonResult::kAscending;
-  return OOComparisonResult::kSame;
+  if (selfTotal < otherTotal) return oo::ComparisonResult::kDescending;
+  if (selfTotal > otherTotal) return oo::ComparisonResult::kAscending;
+  return oo::ComparisonResult::kSame;
 }
 
 JSValue OOTimeProfileEntry::oo_jsValueInContext(JSContext* context) {

@@ -48,7 +48,7 @@ void OOInitDebugSupport() {
 
   // Load debug settings.
   debugSettings = ResourceManager::dictionaryFromFilesNamed(
-      "debugConfig.plist", "Config", OOResourceMergeMode::kBasic, false);
+      "debugConfig.plist", "Config", oo::ResourceMergeMode::kBasic, false);
 
   // Check that the debug OXP is installed. If not, we don't enable debug
   // support.

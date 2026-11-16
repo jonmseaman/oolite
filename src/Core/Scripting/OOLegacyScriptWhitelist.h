@@ -131,7 +131,7 @@ MA 02110-1301, USA.
 #include <set>
 #include <string>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "oofnd/PList.hpp"
 
 // context is used for error messages.

@@ -26,7 +26,7 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "GameController.h"
-#include "OOLoggingExtended.h"
+#include "LoggingExtended.h"
 #include "OOVersion.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Process.hpp"
@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) {
   // (Popped below, before applicationDidFinishLaunching.)
   std::optional<oo::AutoreleaseScope> pool;
   pool.emplace();
-  OOLoggingInit();
+  oo::LoggingInit();
 
   try {
     // dajt: allocate and set the NSApplication delegate manually because not
@@ -314,7 +314,7 @@ int main(int argc, char* argv[]) {
   } catch (...) {
     const auto exception = oo::CurrentOOException();
     if (!exception) throw;  // not an OOException: it goes on up, as before
-    OO_LOG_ERR(kOOLogException,
+    OO_LOG_ERR(oo::kLogException,
                "Root exception handler hit - terminating. This is an internal "
                "error, please report it. Exception name: {}, reason: {}",
                exception->name(), exception->reason());

@@ -38,8 +38,8 @@ MA 02110-1301, USA.
 #include <utility>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "Foundation.h"  // OOLITE_DEBUG
 #include "OOConstToJSString.h"
-#include "OOFoundation.h"  // OOLITE_DEBUG
 #include "OOJSClock.h"
 #include "OOJSDock.h"
 #include "OOJSEngineTimeManagement.h"
@@ -651,7 +651,7 @@ static double MonotonicTime() {
 #endif
 }
 
-void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit) {
+void OOJSStartTimeLimiterWithTimeLimit(oo::TimeDelta limit) {
   if (sLimiterStartDepth++ == 0) {
     if (limit <= 0.0) limit = OOJS_TIME_LIMIT;
     sLimiterTimeLimit = limit;
@@ -683,13 +683,13 @@ void OOJSResumeTimeLimiter() {
 #ifndef NDEBUG
 void OOJSResetTimeLimiter() { sLimiterStart = MonotonicTime(); }
 
-OOTimeDelta OOJSGetTimeLimiterLimit() { return sLimiterTimeLimit; }
+oo::TimeDelta OOJSGetTimeLimiterLimit() { return sLimiterTimeLimit; }
 
-void OOJSSetTimeLimiterLimit(OOTimeDelta limit) { sLimiterTimeLimit = limit; }
+void OOJSSetTimeLimiterLimit(oo::TimeDelta limit) { sLimiterTimeLimit = limit; }
 #endif
 
 #if OOJS_PROFILE
-void OOJSExcludeTimeFromLimiter(OOTimeDelta time) {
+void OOJSExcludeTimeFromLimiter(oo::TimeDelta time) {
   /*	Equivalent of pausing/resuming time limiter, except that it guarantees
           excluded time will match profiler overhead if there are no other
           pauses happening.
@@ -1239,7 +1239,8 @@ JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
         if (OOJSPrivateObject* glue =
                 dynamic_cast<OOJSPrivateObject*>(node->get()))
           return OOJSValueFromCxxObject(context, glue);
-        if (OONativeVector* box = dynamic_cast<OONativeVector*>(node->get()))
+        if (oo::NativeVector* box =
+                dynamic_cast<oo::NativeVector*>(node->get()))
           return OONativeVectorJSValueInContext(box, context);
         // An entity's node: the entity's JS value, which its object's forwarded
         // to.
@@ -1541,7 +1542,7 @@ std::string OOJSEscapedForJavaScriptLiteral(std::string_view string) {
 }
 
 // A vector box's JS value, a Vector3D.
-JSValue OONativeVectorJSValueInContext(OONativeVector* vector,
+JSValue OONativeVectorJSValueInContext(oo::NativeVector* vector,
                                        JSContext* context) {
   JSValue value = JS_UNDEFINED;
   VectorToJSValue(context, vector->getVector(), &value);

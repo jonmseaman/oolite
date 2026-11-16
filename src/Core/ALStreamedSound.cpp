@@ -1,0 +1,113 @@
+/*
+
+OOALStreamedSound.m
+
+
+OOALStreamedSound - OpenAL sound implementation for Oolite.
+Copyright (C) 2005-2013 Jens Ayton
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
+#include "ALStreamedSound.h"
+
+#include <memory>
+#include <string>
+
+#include "ALSoundDecoder.h"
+
+// The decoder is released by its std::shared_ptr, the chunk buffer by its
+// vector.
+namespace oo {
+
+ALStreamedSound::~ALStreamedSound() = default;
+
+}  // namespace oo
+
+std::optional<std::string> oo::ALStreamedSound::name() { return _name; }
+
+/*	The body of -initWithDecoder:, with self as the new sound; its [self
+   release]; self = nil; is the null it answers. [inDecoder retain] is the
+   std::shared_ptr.
+*/
+std::shared_ptr<oo::ALStreamedSound> oo::ALStreamedSound::initWithDecoder(
+    oo::ALSoundDecoder* inDecoder) {
+  bool OK = true;
+  std::shared_ptr<oo::ALStreamedSound> self;
+
+  setUp();
+  if (!isSoundOK() || nullptr == inDecoder) OK = false;
+
+  if (OK) {
+    self = std::shared_ptr<oo::ALStreamedSound>(new oo::ALStreamedSound(),
+                                                oo::Dispose{});
+  }
+
+  if (OK) {
+    self->_name = inDecoder->name();
+    self->_sampleRate = inDecoder->sampleRate();
+    self->_stereo = inDecoder->isStereo();
+    self->_reachedEnd = false;
+    self->_buffer.resize(oo::AL_STREAM_CHUNK_SIZE);
+    self->decoder = oo::share(inDecoder);
+    self->rewind();
+  }
+
+  if (!OK) {
+    self = nullptr;
+  }
+  return self;
+}
+
+void oo::ALStreamedSound::rewind() {
+  if (decoder != nullptr) decoder->reset();  // a message to nil did nothing
+  _reachedEnd = false;
+}
+
+bool oo::ALStreamedSound::soundIncomplete() { return !_reachedEnd; }
+
+ALuint oo::ALStreamedSound::soundBuffer() {
+  size_t transferred = (decoder != nullptr)
+                           ? decoder->streamToBuffer(_buffer.data())
+                           : 0;  // a message to nil answered 0
+  if (transferred < oo::AL_STREAM_CHUNK_SIZE) {
+    // otherwise keep going
+    _reachedEnd = true;
+  }
+
+  ALuint buffer;
+  ALint error;
+  OOAL(alGenBuffers(1, &buffer));
+  if ((error = alGetError()) != AL_NO_ERROR) {
+    OO_LOG(oo::kLogSoundLoadingError, "{}", "Could not create OpenAL buffer");
+    return 0;
+  } else {
+    if (!_stereo) {
+      alBufferData(buffer, AL_FORMAT_MONO16, _buffer.data(),
+                   static_cast<ALsizei>(transferred),
+                   static_cast<ALsizei>(_sampleRate));
+    } else {
+      alBufferData(buffer, AL_FORMAT_STEREO16, _buffer.data(),
+                   static_cast<ALsizei>(transferred),
+                   static_cast<ALsizei>(_sampleRate));
+    }
+    return buffer;
+  }
+}

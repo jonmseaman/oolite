@@ -59,9 +59,9 @@ const bool kTrue = (1 == 1);  // a Bool node (OOCocoa.h defines true as 1)
 // with the stand-in's answers.
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& fileName, const std::optional<std::string>& folderName,
-    OOResourceMergeMode mergeMode, bool useCache) {
+    oo::ResourceMergeMode mergeMode, bool useCache) {
   if (fileName == "debugConfig.plist" && folderName == "Config" &&
-      mergeMode == OOResourceMergeMode::kBasic && !useCache)
+      mergeMode == oo::ResourceMergeMode::kBasic && !useCache)
     return sRecord.configuration;
   return oo::PList();
 }

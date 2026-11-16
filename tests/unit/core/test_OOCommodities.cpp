@@ -16,9 +16,9 @@
 	Run: tests/run.sh unit
 */
 
-#include "OOCommodities.h"
-#include "OOCommodityMarket.h"
-#include "OOStringExpander.h"
+#include "Commodities.h"
+#include "CommodityMarket.h"
+#include "StringExpander.h"
 #include "OOJSPropID.h"
 
 #include "oo_test.hpp"
@@ -81,7 +81,7 @@ oo::PList TradeGoods()
 
 // C++ definitions of the ResourceManager statics the code under test calls,
 // with the stand-in's answers.
-oo::PList ResourceManager::dictionaryFromFilesNamed(const std::string &fileName, const std::optional<std::string> &folderName, OOResourceMergeMode mergeMode, bool useCache)
+oo::PList ResourceManager::dictionaryFromFilesNamed(const std::string &fileName, const std::optional<std::string> &folderName, oo::ResourceMergeMode mergeMode, bool useCache)
 {
 	gLog.push_back("resources " + fileName + " in " + folderName.value_or("-") + " merge " + std::to_string(oo::ToUnderlying(mergeMode)) + " cache " + std::to_string((int)useCache));
 	return TradeGoods();
@@ -113,14 +113,14 @@ PlayerEntity *gOOPlayer = nullptr;
 class Universe
 {
 public:
-	std::shared_ptr<OOCommodityMarket> mainMarket;	// the C++ market
+	std::shared_ptr<oo::CommodityMarket> mainMarket;	// the C++ market
 
-	OOSystemID currentSystemID();
-	::OOCommodityMarket *getCommodityMarket();
+	oo::SystemID currentSystemID();
+	::oo::CommodityMarket *getCommodityMarket();
 };
 
-OOSystemID Universe::currentSystemID()	{ return 7; }
-::OOCommodityMarket *Universe::getCommodityMarket()	{ return mainMarket.get(); }
+oo::SystemID Universe::currentSystemID()	{ return 7; }
+::oo::CommodityMarket *Universe::getCommodityMarket()	{ return mainMarket.get(); }
 
 
 Universe *gSharedUniverse = nullptr;
@@ -134,32 +134,37 @@ class StationEntity
 public:
 	oo::PList getMarketDefinition();
 	std::optional<std::string> getMarketScriptName();
-	OOCargoQuantity getMarketCapacity();
+	oo::CargoQuantity getMarketCapacity();
 	bool getMarketMonitored();
 
 	oo::PList definition;
 	std::optional<std::string> scriptName;
-	OOCargoQuantity capacity = 0;
+	oo::CargoQuantity capacity = 0;
 	bool monitored = false;
 };
 
 oo::PList StationEntity::getMarketDefinition()					{ return definition; }
 std::optional<std::string> StationEntity::getMarketScriptName()	{ return scriptName; }
-OOCargoQuantity StationEntity::getMarketCapacity()				{ return capacity; }
+oo::CargoQuantity StationEntity::getMarketCapacity()				{ return capacity; }
 bool StationEntity::getMarketMonitored()						{ return monitored; }
 
 
 
 // The expander: "<string>".
-std::optional<std::string> OOExpandDescriptionString(Random_Seed /*seed*/, const std::string &string, const oo::PList &/*overrides*/, const oo::PList &/*legacyLocals*/, const std::optional<std::string> &/*systemName*/, OOExpandOptions /*options*/)
+namespace oo {
+
+std::optional<std::string> ExpandDescriptionString(Random_Seed /*seed*/, const std::string &string, const oo::PList &/*overrides*/, const oo::PList &/*legacyLocals*/, const std::optional<std::string> &/*systemName*/, ExpandOptions /*options*/)
 {
 	return "<" + string + ">";
 }
 
-Random_Seed OOStringExpanderDefaultRandomSeed(void)
+Random_Seed StringExpanderDefaultRandomSeed(void)
 {
 	return Random_Seed{};
 }
+
+}  // namespace oo
+
 
 
 // Link stubs: commodity scripts. The fakes answer no script, so the test never runs one.
@@ -180,14 +185,14 @@ void Reset()
 }
 
 
-std::shared_ptr<OOCommodities> Commodities()
+std::shared_ptr<oo::Commodities> Commodities()
 {
-	return oo::makeShared<OOCommodities>();
+	return oo::makeShared<oo::Commodities>();
 }
 
 
 // A market, one good per entry: key quantity price capacity export/import legality unit.
-std::string Describe(OOCommodityMarket *market)
+std::string Describe(oo::CommodityMarket *market)
 {
 	std::string result;
 	for (const std::string &good : market->goods())
@@ -201,7 +206,7 @@ std::string Describe(OOCommodityMarket *market)
 }
 
 
-std::string Describe(const std::shared_ptr<OOCommodityMarket> &market)
+std::string Describe(const std::shared_ptr<oo::CommodityMarket> &market)
 {
 	return Describe(market.get());
 }
@@ -237,7 +242,7 @@ std::string Log()
 }
 
 
-StationEntity *Station(oo::PList definition, OOCargoQuantity capacity, bool monitored)
+StationEntity *Station(oo::PList definition, oo::CargoQuantity capacity, bool monitored)
 {
 	static std::deque<StationEntity> stations;	// each lives for the test run, as an autoreleased one outlived its case
 	StationEntity *station = &stations.emplace_back();
@@ -263,7 +268,7 @@ OO_TEST(goods)
 
 	{
 		Reset();
-		std::shared_ptr<OOCommodities> c = Commodities();
+		std::shared_ptr<oo::Commodities> c = Commodities();
 		OO_CHECK(expect(Log()));
 		OO_CHECK(c->count() == 4);
 		std::string goods;
@@ -272,13 +277,13 @@ OO_TEST(goods)
 		OO_CHECK(c->goodDefined("food") && !c->goodDefined("junk") && !c->goodDefined("unobtainium"));
 		OO_CHECK(expect(c->goodNamed("<Furs>").value_or("-")));
 		OO_CHECK(expect(c->goodNamed("Furs").value_or("-")));
-		OO_CHECK(c->massUnitForGood("food") == OOMassUnit::kTons && c->massUnitForGood("furs") == OOMassUnit::kKilograms && c->massUnitForGood("gems") == OOMassUnit::kGrams);
-		OO_CHECK(c->massUnitForGood("junk") == OOMassUnit::kTons && c->massUnitForGood("unobtainium") == OOMassUnit::kTons);
+		OO_CHECK(c->massUnitForGood("food") == oo::MassUnit::kTons && c->massUnitForGood("furs") == oo::MassUnit::kKilograms && c->massUnitForGood("gems") == oo::MassUnit::kGrams);
+		OO_CHECK(c->massUnitForGood("junk") == oo::MassUnit::kTons && c->massUnitForGood("unobtainium") == oo::MassUnit::kTons);
 		std::string random;
 		for (int i = 0; i < 8; i++)  random += c->getRandomCommodity() + " ";
 		OO_CHECK(expect(random));
 		std::string legacy;
-		for (std::size_t i = 0; i <= 18; i++)  legacy += OOCommodities::legacyCommodityType(i).value_or("-") + " ";
+		for (std::size_t i = 0; i <= 18; i++)  legacy += oo::Commodities::legacyCommodityType(i).value_or("-") + " ";
 		OO_CHECK(expect(legacy));
 	}
 }
@@ -299,11 +304,11 @@ OO_TEST(markets)
 
 	{
 		Reset();
-		std::shared_ptr<OOCommodities> c = Commodities();
+		std::shared_ptr<oo::Commodities> c = Commodities();
 		OO_CHECK(expect(Describe(c->generateManifestForPlayer())));
 		OO_CHECK(expect(Describe(c->generateBlankMarket())));
 		OO_CHECK(expect(c->generateManifestForPlayer()->definitionForGood("food").get<std::string>("key")));
-		for (OOEconomyID economy : { 0, 3, 7 })
+		for (oo::EconomyID economy : { 0, 3, 7 })
 		{
 			Reset();
 			OO_CHECK(expect(Describe(c->generateMarketForSystemWithEconomy(economy, std::nullopt))));
@@ -311,7 +316,7 @@ OO_TEST(markets)
 		OO_CHECK(expect(Log()));
 		Reset();
 		// A sample price: a fresh price for one good (0 for one that is not a dictionary).
-		struct { OOEconomyID economy; OOCreditsQuantity food, furs, gems; } const samples[] = { { 0, 78, 553, 178 }, { 4, 45, 659, 132 }, { 7, 23, 685, 159 } };
+		struct { oo::EconomyID economy; oo::CreditsQuantity food, furs, gems; } const samples[] = { { 0, 78, 553, 178 }, { 4, 45, 659, 132 }, { 7, 23, 685, 159 } };
 		for (const auto &sample : samples)
 		{
 			OO_CHECK(c->samplePriceForCommodity("food", sample.economy, std::nullopt, 3) == sample.food);
@@ -337,7 +342,7 @@ OO_TEST(stationMarkets)
 
 	{
 		Reset();
-		std::shared_ptr<OOCommodities> c = Commodities();
+		std::shared_ptr<oo::Commodities> c = Commodities();
 		gSharedUniverse->mainMarket = c->generateMarketForSystemWithEconomy(2, std::nullopt);
 		OO_CHECK(expect(Describe(gSharedUniverse->mainMarket)));
 
@@ -368,15 +373,15 @@ OO_TEST(cxxClass)
 {
 	{
 		Reset();
-		std::shared_ptr<OOCommodities> c = oo::makeShared<OOCommodities>();
+		std::shared_ptr<oo::Commodities> c = oo::makeShared<oo::Commodities>();
 		OO_CHECK(c->count() == 4 && c->goods() == std::vector<std::string>({ "food", "furs", "gems", "junk" }));
 		OO_CHECK(c->goodDefined("furs") && !c->goodDefined("junk"));
 		OO_CHECK(c->goodNamed("<Gem-stones>") == std::optional<std::string>("gems"));
-		OO_CHECK(c->massUnitForGood("gems") == OOMassUnit::kGrams);
-		OO_CHECK(OOCommodities::legacyCommodityType(11) == std::optional<std::string>("furs"));
+		OO_CHECK(c->massUnitForGood("gems") == oo::MassUnit::kGrams);
+		OO_CHECK(oo::Commodities::legacyCommodityType(11) == std::optional<std::string>("furs"));
 
 		// Its markets are C++ markets; the same answers as above.
-		std::shared_ptr<OOCommodityMarket> manifest = c->generateManifestForPlayer();
+		std::shared_ptr<oo::CommodityMarket> manifest = c->generateManifestForPlayer();
 		OO_CHECK(manifest->count() == 4 && manifest->capacityForGood("food") == UINT32_MAX);
 		OO_CHECK(Describe(c->generateBlankMarket()) == "food q0 p0 c0 l0/0 u0; furs q0 p0 c0 l1/2 u1; gems q0 p0 c0 l0/0 u2; junk q0 p0 c0 l0/0 u0; ");
 		Reset();
@@ -399,10 +404,10 @@ OO_TEST(facadeIdentity)
 {
 	{
 		Reset();
-		std::shared_ptr<OOCommodities> c = Commodities();
+		std::shared_ptr<oo::Commodities> c = Commodities();
 
 		// It makes a market, and a new one each time, as before.
-		std::shared_ptr<OOCommodityMarket> manifest = c->generateManifestForPlayer();
+		std::shared_ptr<oo::CommodityMarket> manifest = c->generateManifestForPlayer();
 		OO_CHECK(manifest != nullptr);
 		OO_CHECK(c->generateBlankMarket() != c->generateBlankMarket());	// a new market each time, as before
 		OO_CHECK(c->count() == 4);

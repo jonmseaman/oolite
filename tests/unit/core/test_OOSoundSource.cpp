@@ -22,8 +22,8 @@
 #include <string>
 #include <vector>
 
-#include "OOALSoundMixer.h"
-#include "OOSoundSource.h"
+#include "ALSoundMixer.h"
+#include "SoundSource.h"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/String.hpp"
@@ -34,16 +34,16 @@ static int gLiveSounds = 0;
    and the sound's vtable name are defined here as the root answers them (C++),
    and a test sound has only a name, which "%@" prints between the braces.
 */
-OOSound::OOSound() {}
-std::optional<std::string> OOSound::name() { return std::nullopt; }
-ALuint OOSound::soundBuffer() { return 0; }
-bool OOSound::soundIncomplete() { return false; }
-void OOSound::rewind() {}
-std::optional<std::string> OOSound::descriptionComponents() const {
+oo::Sound::Sound() {}
+std::optional<std::string> oo::Sound::name() { return std::nullopt; }
+ALuint oo::Sound::soundBuffer() { return 0; }
+bool oo::Sound::soundIncomplete() { return false; }
+void oo::Sound::rewind() {}
+std::optional<std::string> oo::Sound::descriptionComponents() const {
   return std::nullopt;
 }
 
-std::string OOSound::description() const {
+std::string oo::Sound::description() const {
   std::string result = oo::str::format(
       "<OOSound %s>", oo::str::pointerDescription(this).c_str());
   if (const std::optional<std::string> components = descriptionComponents())
@@ -51,7 +51,7 @@ std::string OOSound::description() const {
   return result;
 }
 
-class TestSound final : public OOSound {
+class TestSound final : public oo::Sound {
  public:
   explicit TestSound(const std::string& name) : _name(name) { gLiveSounds++; }
   ~TestSound() override { gLiveSounds--; }
@@ -75,16 +75,16 @@ struct TestChannelState {
   Vector position = {};
   float gain = 0;
 };
-static std::map<OOSoundChannel*, TestChannelState> gChannels;
+static std::map<oo::SoundChannel*, TestChannelState> gChannels;
 
 struct OOSoundChannelTestAccess {
-  static OOSoundChannelDelegate* Delegate(OOSoundChannel* channel) {
+  static oo::SoundChannelDelegate* Delegate(oo::SoundChannel* channel) {
     return channel->_delegate;
   }
 
   // The stub's -finish.
-  static void Finish(OOSoundChannel* channel) {
-    std::shared_ptr<OOSound> sound =
+  static void Finish(oo::SoundChannel* channel) {
+    std::shared_ptr<oo::Sound> sound =
         std::move(channel->_sound);  // [sound release] at the end of the scope
     channel->_sound = nullptr;
     if (channel->_delegate != nullptr)
@@ -92,19 +92,24 @@ struct OOSoundChannelTestAccess {
   }
 };
 
-OOSoundChannel::~OOSoundChannel() { gChannels.erase(this); }
+namespace oo {
 
-void OOSoundChannel::setDelegate(OOSoundChannelDelegate* delegate) {
+SoundChannel::~SoundChannel() { gChannels.erase(this); }
+
+}  // namespace oo
+
+
+void oo::SoundChannel::setDelegate(oo::SoundChannelDelegate* delegate) {
   _delegate = delegate;
 }
 
-void OOSoundChannel::setPosition(Vector position) {
+void oo::SoundChannel::setPosition(Vector position) {
   gChannels[this].position = position;
 }
 
-void OOSoundChannel::setGain(float gain) { gChannels[this].gain = gain; }
+void oo::SoundChannel::setGain(float gain) { gChannels[this].gain = gain; }
 
-bool OOSoundChannel::playSound(OOSound* sound, bool loop) {
+bool oo::SoundChannel::playSound(oo::Sound* sound, bool loop) {
   gLog.push_back("play " + static_cast<TestSound*>(sound)->_name +
                  (loop ? " looped" : ""));
   _loop = loop;
@@ -112,7 +117,7 @@ bool OOSoundChannel::playSound(OOSound* sound, bool loop) {
   return true;
 }
 
-void OOSoundChannel::stop() {
+void oo::SoundChannel::stop() {
   gLog.push_back("stop");
   OOSoundChannelTestAccess::Finish(this);
 }
@@ -122,20 +127,20 @@ static int gChannelsAvailable = 8;
 
 // The mixer (a C++ stand-in): one, never released, handing out at most
 // gChannelsAvailable channels.
-OOSoundMixer* OOSoundMixer::sharedMixer() {
-  static OOSoundMixer* mixer =
-      (*new std::shared_ptr<OOSoundMixer>(oo::makeShared<OOSoundMixer>())).get();
+oo::SoundMixer* oo::SoundMixer::sharedMixer() {
+  static oo::SoundMixer* mixer =
+      (*new std::shared_ptr<oo::SoundMixer>(oo::makeShared<oo::SoundMixer>())).get();
   return mixer;
 }
 
-::OOSoundChannel* OOSoundMixer::popChannel() {
+::oo::SoundChannel* oo::SoundMixer::popChannel() {
   if (gChannelsOut == gChannelsAvailable) return nullptr;
   gChannelsOut++;
-  return (*new std::shared_ptr<OOSoundChannel>(oo::makeShared<OOSoundChannel>()))
+  return (*new std::shared_ptr<oo::SoundChannel>(oo::makeShared<oo::SoundChannel>()))
       .get();  // leaked: a few per run
 }
 
-void OOSoundMixer::pushChannel(::OOSoundChannel* channel) {
+void oo::SoundMixer::pushChannel(::oo::SoundChannel* channel) {
   (void)channel;
   gChannelsOut--;
   gLog.push_back("push");
@@ -145,7 +150,7 @@ namespace {
 
 // [[[OOSound alloc] init] autorelease] with a name: it lives until the
 // innermost scope ends.
-OOSound* MakeSound(const char* name) {
+oo::Sound* MakeSound(const char* name) {
   return oo::autorelease(oo::makeShared<TestSound>(name));
 }
 
@@ -158,7 +163,7 @@ std::vector<std::string> TakeLog() {
 }  // namespace
 
 struct OOSoundSourceTestAccess {
-  static OOSoundChannel* Channel(OOSoundSource* source) {
+  static oo::SoundChannel* Channel(oo::SoundSource* source) {
     return source->_channel;
   }
 };
@@ -166,7 +171,7 @@ struct OOSoundSourceTestAccess {
 namespace {
 
 // The channel a playing source has (its private _channel).
-OOSoundChannel* ChannelOf(OOSoundSource* source) {
+oo::SoundChannel* ChannelOf(oo::SoundSource* source) {
   return OOSoundSourceTestAccess::Channel(source);
 }
 
@@ -175,7 +180,7 @@ OOSoundChannel* ChannelOf(OOSoundSource* source) {
 OO_TEST(defaults) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
-    const std::shared_ptr<OOSoundSource> source = oo::makeShared<OOSoundSource>();
+    const std::shared_ptr<oo::SoundSource> source = oo::makeShared<oo::SoundSource>();
     OO_CHECK(source->sound() == nullptr);
     OO_CHECK(!source->loop() && source->repeatCount() == 1 &&
              !source->isPlaying());
@@ -195,10 +200,10 @@ OO_TEST(defaults) {
 OO_TEST(attributes) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
-    OOSound* sound = MakeSound("beep");
-    const std::shared_ptr<OOSoundSource> source = OOSoundSource::sourceWithSound(sound);
+    oo::Sound* sound = MakeSound("beep");
+    const std::shared_ptr<oo::SoundSource> source = oo::SoundSource::sourceWithSound(sound);
     OO_CHECK(source->sound() == sound);
-    OO_CHECK(dynamic_cast<OOSoundSource*>(source.get()) != nullptr);
+    OO_CHECK(dynamic_cast<oo::SoundSource*>(source.get()) != nullptr);
 
     source->setLoop(true);
     OO_CHECK(source->loop());
@@ -228,7 +233,7 @@ OO_TEST(attributes) {
     source->setGainInsideCone(1.0f, 0.5f);
     source->positionRelativeTo(nullptr);
 
-    OOSound* other = MakeSound("boop");
+    oo::Sound* other = MakeSound("boop");
     source->setSound(other);
     OO_CHECK(source->sound() == other);
     OO_CHECK(
@@ -242,11 +247,11 @@ OO_TEST(attributes) {
 // keeps itself alive.
 OO_TEST(playsThroughAChannel) {
   TakeLog();
-  OOSoundSource* weak = nullptr;
+  oo::SoundSource* weak = nullptr;
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
-    std::shared_ptr<OOSoundSource> source =
-        oo::makeShared<OOSoundSource>(MakeSound("beep"));
+    std::shared_ptr<oo::SoundSource> source =
+        oo::makeShared<oo::SoundSource>(MakeSound("beep"));
     source->setPosition(make_vector(4, 5, 6));
     source->setGain(0.25f);
     source->setLoop(true);
@@ -254,7 +259,7 @@ OO_TEST(playsThroughAChannel) {
     OO_CHECK(source->isPlaying() && gChannelsOut == 1);
     OO_CHECK((TakeLog() == std::vector<std::string>{"play beep looped"}));
 
-    OOSoundChannel* channel = ChannelOf(source.get());
+    oo::SoundChannel* channel = ChannelOf(source.get());
     OO_CHECK(channel != nullptr &&
              OOSoundChannelTestAccess::Delegate(channel) == source.get());
     OO_CHECK(vector_equal(gChannels[channel].position, make_vector(4, 5, 6)) &&
@@ -288,10 +293,10 @@ OO_TEST(repeats) {
   TakeLog();
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
-    const std::shared_ptr<OOSoundSource> source = oo::makeShared<OOSoundSource>();
+    const std::shared_ptr<oo::SoundSource> source = oo::makeShared<oo::SoundSource>();
     source->playSound(MakeSound("beep"), 3);
     OO_CHECK(source->repeatCount() == 3);
-    OOSoundChannel* channel = ChannelOf(source.get());
+    oo::SoundChannel* channel = ChannelOf(source.get());
     OOSoundChannelTestAccess::Finish(channel);
     OOSoundChannelTestAccess::Finish(channel);
     OO_CHECK(source->isPlaying());
@@ -320,8 +325,8 @@ OO_TEST(stops) {
   TakeLog();
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
-    OOSound* beep = MakeSound("beep");
-    const std::shared_ptr<OOSoundSource> source = OOSoundSource::sourceWithSound(beep);
+    oo::Sound* beep = MakeSound("beep");
+    const std::shared_ptr<oo::SoundSource> source = oo::SoundSource::sourceWithSound(beep);
     source->play();
     source->play();
     OO_CHECK((TakeLog() == std::vector<std::string>{"play beep", "stop", "push",
@@ -337,7 +342,7 @@ OO_TEST(stops) {
     OO_CHECK(source->isPlaying());
     source->playOrRepeatSound(beep);
     OO_CHECK((TakeLog() == std::vector<std::string>{"play beep"}));
-    OOSound* boop = MakeSound("boop");
+    oo::Sound* boop = MakeSound("boop");
     source->playOrRepeatSound(boop);
     OO_CHECK(source->sound() == boop);
     OO_CHECK(
@@ -363,18 +368,18 @@ OO_TEST(stopAllAndNoChannel) {
   TakeLog();
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
-    const std::shared_ptr<OOSoundSource> a =
-        OOSoundSource::sourceWithSound(MakeSound("a"));
-    const std::shared_ptr<OOSoundSource> b =
-        OOSoundSource::sourceWithSound(MakeSound("b"));
+    const std::shared_ptr<oo::SoundSource> a =
+        oo::SoundSource::sourceWithSound(MakeSound("a"));
+    const std::shared_ptr<oo::SoundSource> b =
+        oo::SoundSource::sourceWithSound(MakeSound("b"));
     a->play();
     b->play();
     OO_CHECK(gChannelsOut == 2);
-    OOSoundSource::stopAll();
+    oo::SoundSource::stopAll();
     OO_CHECK(!a->isPlaying() && !b->isPlaying() && gChannelsOut == 0);
     OO_CHECK((TakeLog() == std::vector<std::string>{"play a", "play b", "stop",
                                                     "push", "stop", "push"}));
-    OOSoundSource::stopAll();  // none playing
+    oo::SoundSource::stopAll();  // none playing
     OO_CHECK(TakeLog().empty());
 
     gChannelsAvailable = 0;
@@ -384,7 +389,7 @@ OO_TEST(stopAllAndNoChannel) {
 
     // It was still recorded as playing (as before); +stopAll lets every source
     // go.
-    OOSoundSource::stopAll();
+    oo::SoundSource::stopAll();
     OO_CHECK(TakeLog().empty());
   }
   OO_CHECK(gLiveSounds == 0);
@@ -394,11 +399,11 @@ OO_TEST(stopAllAndNoChannel) {
 // keeps itself alive.
 OO_TEST(cxxApi) {
   TakeLog();
-  OOSoundSource* weak = nullptr;
+  oo::SoundSource* weak = nullptr;
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
-    const std::shared_ptr<OOSoundSource> source =
-        OOSoundSource::sourceWithSound(MakeSound("beep"));
+    const std::shared_ptr<oo::SoundSource> source =
+        oo::SoundSource::sourceWithSound(MakeSound("beep"));
     OO_CHECK(source->sound() != nullptr && source->repeatCount() == 1 &&
              source->gain() == OO_DEFAULT_SOUNDSOURCE_GAIN);
     OO_CHECK(
@@ -408,7 +413,7 @@ OO_TEST(cxxApi) {
     source->setGain(0.5f);
     source->play();
     OO_CHECK(source->isPlaying());
-    OOSoundChannel* channel = OOSoundSourceTestAccess::Channel(source.get());
+    oo::SoundChannel* channel = OOSoundSourceTestAccess::Channel(source.get());
     OO_CHECK(OOSoundChannelTestAccess::Delegate(channel) == source.get() &&
              gChannels[channel].gain == 0.5f);
     weak = source.get();
@@ -422,7 +427,7 @@ OO_TEST(cxxApi) {
   OO_CHECK((TakeLog() == std::vector<std::string>{"play beep", "push"}));
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
-    OOSoundSource::stopAll();    // lets it go
+    oo::SoundSource::stopAll();    // lets it go
   }
 }
 

@@ -32,7 +32,7 @@ SOFTWARE.
 #include <cstdint>
 #include <string>
 
-#include "OOCPUInfoEndian.h"
+#include "CPUInfoEndian.h"
 #include "PixMap.h"
 #include "Texture.h"
 #include "oofnd/Log.hpp"

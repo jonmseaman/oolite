@@ -26,7 +26,7 @@
 #include <string>
 #include "EntityManualRefs.h"  // the tests' manual references
 
-#include "OODescription.h"
+#include "Description.h"
 
 class Entity;
 

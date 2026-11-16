@@ -23,7 +23,7 @@
 #include "OOJSClock.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
-#include "OOStringParsing.h"
+#include "StringParsing.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 #include "oofnd/String.hpp"
@@ -164,7 +164,7 @@ double PlayerEntity::clockTime() {
 
 double PlayerEntity::clockTimeAdjusted() { return sPlayer->_adjusted; }
 bool PlayerEntity::clockAdjusting() { return sPlayer->_adjusting; }
-OOTimeDelta PlayerEntity::scriptTimer() { return 42.5; }
+oo::TimeDelta PlayerEntity::scriptTimer() { return 42.5; }
 std::string PlayerEntity::dial_clock() {
   return oo::str::format("dial %.1f", sPlayer->_clockTime);
 }
@@ -178,7 +178,7 @@ void PlayerEntity::addToAdjustTime(double seconds) {
    bodies, and UNIVERSE is storage nothing constructs: those members read no
    state.
 */
-OOTimeAbsolute Universe::getTime() { return 1234.5; }
+oo::TimeAbsolute Universe::getTime() { return 1234.5; }
 
 alignas(Universe) unsigned char sUniverseStorage[sizeof(Universe)];
 

@@ -40,12 +40,12 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "EntityHold.h"     // owning entity references
-#include "OOEntityEnums.h"  // OOScanClass
-#include "OOFoundation.h"
-#include "OOMaths.h"
-#include "OOSystemDescriptionManager.h"  // OOSystemLayer
-#include "OOTypes.h"
+#include "EntityEnums.h"  // OOScanClass
+#include "EntityHold.h"   // owning entity references
+#include "Foundation.h"
+#include "Maths.h"
+#include "SystemDescriptionManager.h"  // OOSystemLayer
+#include "Types.h"
 #include "oofnd/PList.hpp"
 
 class Entity;
@@ -94,7 +94,7 @@ using EntityFilterPredicate = bool (*)(Entity* entity,
   /* cargo */                                                                  \
   virtual std::vector<oo::EntityHold> getContainersOfCommodity(                \
       const std::string& /*commodity_name*/,                                   \
-      OOCargoQuantity /*how_much*/) VALUE_BODY                                 \
+      oo::CargoQuantity /*how_much*/) VALUE_BODY                                 \
   /* adding and removing entities */                                           \
   virtual bool addEntity(Entity* /*entity*/) VALUE_BODY                        \
   virtual bool removeEntity(Entity* /*entity*/) VALUE_BODY                     \
@@ -116,15 +116,15 @@ using EntityFilterPredicate = bool (*)(Entity* entity,
   /* the reference's C++ entity */                                             \
   /* system data and names */                                                  \
   virtual oo::PList generateSystemData(                                        \
-      OOSystemID /*s*/,                                                        \
+      oo::SystemID /*s*/,                                                        \
       bool /*useCache*/) VALUE_BODY                                            \
   virtual void setSystemDataKey(                                               \
       const std::string& /*key*/,                                              \
       const oo::PList& /*value*/,                                              \
       const std::optional<std::string>& /*manifest*/) VOID_BODY                \
   virtual std::optional<std::string> getSystemName(                            \
-      OOSystemID /*sys*/,                                                      \
-      OOGalaxyID /*gnum*/) VALUE_BODY                                          \
+      oo::SystemID /*sys*/,                                                      \
+      oo::GalaxyID /*gnum*/) VALUE_BODY                                          \
   /* detail levels */                                                          \
   virtual bool reducedDetail() VALUE_BODY                                      \
   /* The whole-game JS tests' universes (test_OOJSSystem, test_OOJSPlayerShip, \
@@ -158,12 +158,12 @@ using EntityFilterPredicate = bool (*)(Entity* entity,
   virtual std::optional<std::string> descriptionForKey(                        \
       const std::string& /*key*/) VALUE_BODY                                   \
   virtual void setSystemDataForGalaxy(                                         \
-      OOGalaxyID /*gnum*/,                                                     \
-      OOSystemID /*pnum*/,                                                     \
+      oo::GalaxyID /*gnum*/,                                                     \
+      oo::SystemID /*pnum*/,                                                     \
       const std::string& /*key*/,                                              \
       const oo::PList& /*value*/,                                              \
       const std::optional<std::string>& /*manifest*/,                          \
-      OOSystemLayer /*layer*/) VOID_BODY                                       \
+      oo::SystemLayer /*layer*/) VOID_BODY                                       \
   virtual unsigned countShipsWithPrimaryRole(                                  \
       const std::string& /*role*/,                                             \
       double /*range*/,                                                        \
@@ -186,7 +186,7 @@ using EntityFilterPredicate = bool (*)(Entity* entity,
       const std::string& /*desc*/,                                             \
       double /*route_fraction*/) VOID_BODY                                     \
   virtual bool spawnShip(const std::string& /*shipdesc*/) VALUE_BODY           \
-  virtual OOSystemID findSystemFromName(                                       \
+  virtual oo::SystemID findSystemFromName(                                       \
       const std::string& /*sysName*/) VALUE_BODY                               \
   virtual Entity* addVisualEffectAt(                                           \
       HPVector /*pos*/,                                                        \
@@ -212,13 +212,13 @@ using EntityFilterPredicate = bool (*)(Entity* entity,
       bool /*isGroup*/) VALUE_BODY                                             \
   virtual oo::ViewID getViewDirection() VALUE_BODY                               \
   virtual ::GuiDisplayGen* messageGUI() VALUE_BODY                             \
-  virtual OOCreditsQuantity tradeInValueForCommanderDictionary(                \
+  virtual oo::CreditsQuantity tradeInValueForCommanderDictionary(                \
       const oo::PList& /*dict*/) VALUE_BODY                                    \
   virtual ::GuiDisplayGen* getGui() VALUE_BODY                                 \
   virtual void addMessage(                                                     \
       const std::optional<std::string>& /*text*/,                              \
-      OOTimeDelta /*count*/) VOID_BODY                                         \
+      oo::TimeDelta /*count*/) VOID_BODY                                         \
   virtual ::MyOpenGLView* getGameView() VALUE_BODY                             \
-  virtual ::OOSystemDescriptionManager* getSystemManager() VALUE_BODY          \
+  virtual ::oo::SystemDescriptionManager* getSystemManager() VALUE_BODY          \
   virtual bool reinitAndShowDemo(bool /*showDemo*/) VALUE_BODY
 // clang-format on

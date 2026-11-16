@@ -34,10 +34,10 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
-#include "OOFoundation.h"
-#include "OOFullScreenController.h"
-#include "OOFunctionAttributes.h"
-#include "OOMouseInteractionMode.h"
+#include "Foundation.h"
+#include "FullScreenController.h"
+#include "FunctionAttributes.h"
+#include "MouseInteractionMode.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Object.h"
@@ -80,8 +80,8 @@ class GameController : public oo::Object {
   */
   void setEcoQoS(bool efficiencyModeRequested);
 
-  OOMouseInteractionMode mouseInteractionMode();
-  void setMouseInteractionMode(OOMouseInteractionMode mode);
+  oo::MouseInteractionMode mouseInteractionMode();
+  void setMouseInteractionMode(oo::MouseInteractionMode mode);
   void setMouseInteractionModeForFlight();  // Chooses mouse control mode
                                             // appropriately.
   void setMouseInteractionModeForUIWithMouseInteraction(bool interaction);
@@ -194,8 +194,8 @@ class GameController : public oo::Object {
 
   bool gameIsPaused = {};
 
-  OOMouseInteractionMode _mouseMode = {};
-  OOMouseInteractionMode _resumeMode = {};
+  oo::MouseInteractionMode _mouseMode = {};
+  oo::MouseInteractionMode _resumeMode = {};
 
 // Fullscreen mode stuff.
 #if OOLITE_SDL
@@ -241,7 +241,11 @@ class GameController : public oo::Object {
    An OOException from it is caught and logged as the perform's was, and the
    call is then never destroyed, as the performer leaked its target.
 */
-void OOScheduleDeferredCall(std::function<void()> call, double delay);
+namespace oo {
+
+void ScheduleDeferredCall(std::function<void()> call, double delay);
+
+}  // namespace oo
 
 #if OO_DEBUG
 #define OO_DEBUG_PROGRESS(message) \

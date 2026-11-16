@@ -20,7 +20,7 @@
 
 #include <cmath>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "LaserShotEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
@@ -110,7 +110,7 @@ Entity* MakeShip() {
 }
 
 // A shot, made as the ship makes one: it is held in the test's pool.
-std::shared_ptr<oo::LaserShotEntity> Shot(Entity* ship, OOWeaponFacing direction,
+std::shared_ptr<oo::LaserShotEntity> Shot(Entity* ship, oo::WeaponFacing direction,
                                 Vector offset) {
   std::shared_ptr<oo::LaserShotEntity> shot =
       oo::LaserShotEntity::laserFromShip(oo::ToShip(ship), direction, offset);
@@ -132,7 +132,7 @@ OO_TEST(laserFromShip) {
     SetUp();
     Entity* ship = MakeShip();
     std::shared_ptr<oo::LaserShotEntity> shot =
-        Shot(ship, OOWeaponFacing::kForward, make_vector(0, 0, 10));
+        Shot(ship, oo::WeaponFacing::kForward, make_vector(0, 0, 10));
     OO_CHECK(shot != nullptr);
     OO_CHECK(HPvector_equal(shot->getPosition(), make_HPvector(100, 0, 10)));
     OO_CHECK(vector_equal(shot->getVelocity(), make_vector(0, 0, 50)));
@@ -149,13 +149,13 @@ OO_TEST(laserFromShip) {
              std::string::npos);
 
     // The other facings turn the shot about the ship's up axis.
-    std::shared_ptr<oo::LaserShotEntity> aft = Shot(ship, OOWeaponFacing::kAft, kZeroVector);
+    std::shared_ptr<oo::LaserShotEntity> aft = Shot(ship, oo::WeaponFacing::kAft, kZeroVector);
     Vector forward = vector_forward_from_quaternion(aft->getOrientation());
     OO_CHECK(Near(forward.x, 0) && Near(forward.z, -1));
     std::shared_ptr<oo::LaserShotEntity> port =
-        Shot(ship, OOWeaponFacing::kPort, kZeroVector);
+        Shot(ship, oo::WeaponFacing::kPort, kZeroVector);
     std::shared_ptr<oo::LaserShotEntity> starboard =
-        Shot(ship, OOWeaponFacing::kStarboard, kZeroVector);
+        Shot(ship, oo::WeaponFacing::kStarboard, kZeroVector);
     Vector portForward = vector_forward_from_quaternion(port->getOrientation());
     Vector starboardForward =
         vector_forward_from_quaternion(starboard->getOrientation());
@@ -169,9 +169,9 @@ OO_TEST(color) {
   {
     SetUp();
     std::shared_ptr<oo::LaserShotEntity> shot =
-        Shot(MakeShip(), OOWeaponFacing::kForward, kZeroVector);
+        Shot(MakeShip(), oo::WeaponFacing::kForward, kZeroVector);
     // Brightened five times, then a third; the alpha stays.
-    shot->setColor(OOColor::colorWithRed(0.3f, 0.6f, 0.9f, 0.1f).get());
+    shot->setColor(oo::Color::colorWithRed(0.3f, 0.6f, 0.9f, 0.1f).get());
     OO_CHECK(ColorIs(shot.get(), 0.5f, 1.0f, 1.5f, 0.09f));
     shot->setColor(nullptr);
     OO_CHECK(ColorIs(shot.get(), 0.0f, 0.0f, 0.0f, 0.09f));
@@ -189,7 +189,7 @@ OO_TEST(update) {
     SetUp();
     Entity* ship = MakeShip();
     std::shared_ptr<oo::LaserShotEntity> shot =
-        Shot(ship, OOWeaponFacing::kForward, make_vector(0, 0, 10));
+        Shot(ship, oo::WeaponFacing::kForward, make_vector(0, 0, 10));
 
     // An NPC's shot moves by its velocity.
     shot->update(0.05);
@@ -202,7 +202,7 @@ OO_TEST(update) {
     sRemoved = nullptr;
     ship->isPlayer = true;
     std::shared_ptr<oo::LaserShotEntity> playerShot =
-        Shot(ship, OOWeaponFacing::kForward, make_vector(0, 0, 10));
+        Shot(ship, oo::WeaponFacing::kForward, make_vector(0, 0, 10));
     ship->setPosition(make_HPvector(200, 0, 0));
     playerShot->update(0.05);
     OO_CHECK(

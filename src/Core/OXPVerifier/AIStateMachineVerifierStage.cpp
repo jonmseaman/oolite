@@ -30,7 +30,7 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
-#include "OOPListParsing.h"
+#include "PListParsing.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -46,7 +46,7 @@ namespace {
 // property list when it is a dictionary, a null PList otherwise (its
 // plist.wrongType log line, which named the Foundation class, is not kept).
 oo::PList PListDictionaryFromFile(const std::string& path) {
-  oo::PList result = OOPropertyListFromFile(path);
+  oo::PList result = oo::PropertyListFromFile(path);
   return result.isDict() ? result : oo::PList();
 }
 

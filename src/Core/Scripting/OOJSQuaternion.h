@@ -31,8 +31,8 @@ MA 02110-1301, USA.
 #include <optional>
 #include <string>
 
-#include "OOFoundation.h"
-#include "OOMaths.h"
+#include "Foundation.h"
+#include "Maths.h"
 
 void InitOOJSQuaternion(JSContext* context, JSValueConst global);
 

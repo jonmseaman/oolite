@@ -25,10 +25,10 @@ MA 02110-1301, USA.
 #include "DustEntity.h"
 
 #include "DebugFlags.h"
+#include "GraphicsResetManager.h"
+#include "MacroOpenGL.h"
+#include "Maths.h"
 #include "MyOpenGLView.h"
-#include "OOGraphicsResetManager.h"
-#include "OOMacroOpenGL.h"
-#include "OOMaths.h"
 #include "Universe.h"
 #include "oofnd/Process.hpp"
 
@@ -76,7 +76,7 @@ void DustOffsetPlayerPositionBinding(oo::Object* target,
 #endif
 
 DustEntity::~DustEntity() {
-  OOGraphicsResetManager::sharedManager()->unregisterCxxClient(this);
+  oo::GraphicsResetManager::sharedManager()->unregisterCxxClient(this);
 }
 
 void DustEntity::init() {
@@ -110,10 +110,10 @@ void DustEntity::init() {
 
   drawDust = !oo::process::hasArgument("-nodust");
 
-  dust_color = OOColor::colorWithRed(0.5, 1.0, 1.0, 1.0);
+  dust_color = oo::Color::colorWithRed(0.5, 1.0, 1.0, 1.0);
   setStatus(oo::EntityStatus::kActive);
 
-  hasPointSprites = OOOpenGLExtensionManager::sharedManager()->haveExtension(
+  hasPointSprites = oo::OpenGLExtensionManager::sharedManager()->haveExtension(
       "GL_ARB_point_sprite");
 
   if (hasPointSprites) {
@@ -126,20 +126,20 @@ void DustEntity::init() {
 
   collision_radius = DUST_SCALE;  // for draw pass calculations
 
-  OOGraphicsResetManager::sharedManager()->registerCxxClient(this);
+  oo::GraphicsResetManager::sharedManager()->registerCxxClient(this);
 }
 
 // The destructor unregisters this from the graphics reset manager. The members
 // release the colour, texture, shader and uniforms.
 
-void DustEntity::setDustColor(OOColor* color) {
+void DustEntity::setDustColor(oo::Color* color) {
   dust_color = oo::share(color);
   // A message to a nil colour did nothing.
   if (dust_color != nullptr)
     dust_color->getRed(&color_fv[0], &color_fv[1], &color_fv[2], &color_fv[3]);
 }
 
-OOColor* DustEntity::dustColor() { return dust_color.get(); }
+oo::Color* DustEntity::dustColor() { return dust_color.get(); }
 
 bool DustEntity::canCollide() { return false; }
 
@@ -147,12 +147,12 @@ void DustEntity::updateCameraRelativePosition() {
   HPVector c_pos =
       (PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector{});
   cameraRelativePosition =
-      make_vector(static_cast<OOScalar>(-fmod(c_pos.x, DUST_SCALE)),
-                  static_cast<OOScalar>(-fmod(c_pos.y, DUST_SCALE)),
-                  static_cast<OOScalar>(-fmod(c_pos.z, DUST_SCALE)));
+      make_vector(static_cast<oo::Scalar>(-fmod(c_pos.x, DUST_SCALE)),
+                  static_cast<oo::Scalar>(-fmod(c_pos.y, DUST_SCALE)),
+                  static_cast<oo::Scalar>(-fmod(c_pos.z, DUST_SCALE)));
 }
 
-void DustEntity::update(OOTimeDelta /*delta_t*/) {
+void DustEntity::update(oo::TimeDelta /*delta_t*/) {
   // [self setPosition:position];
   zero_distance = 0.0;
 
@@ -225,9 +225,10 @@ Vector DustEntity::offsetPlayerPosition() {
   // used as shader uniform, so needs to be low precision
   HPVector c_pos =
       (PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector{});
-  Vector offset = make_vector(static_cast<OOScalar>(fmod(c_pos.x, DUST_SCALE)),
-                              static_cast<OOScalar>(fmod(c_pos.y, DUST_SCALE)),
-                              static_cast<OOScalar>(fmod(c_pos.z, DUST_SCALE)));
+  Vector offset =
+      make_vector(static_cast<oo::Scalar>(fmod(c_pos.x, DUST_SCALE)),
+                  static_cast<oo::Scalar>(fmod(c_pos.y, DUST_SCALE)),
+                  static_cast<oo::Scalar>(fmod(c_pos.z, DUST_SCALE)));
   return vector_subtract(
       offset,
       make_vector(DUST_SCALE * 0.5f, DUST_SCALE * 0.5f, DUST_SCALE * 0.5f));
@@ -235,9 +236,10 @@ Vector DustEntity::offsetPlayerPosition() {
 
 void DustEntity::checkShaderMode() {
   shaderMode = kShaderModeOff;
-  if ((UNIVERSE != nullptr ? UNIVERSE->getDetailLevel() : OOGraphicsDetail{}) >=
-      OOGraphicsDetail::kShaders) {
-    if (OOOpenGLExtensionManager::sharedManager()->useDustShader()) {
+  if ((UNIVERSE != nullptr
+           ? UNIVERSE->getDetailLevel()
+           : oo::GraphicsDetail{}) >= oo::GraphicsDetail::kShaders) {
+    if (oo::OpenGLExtensionManager::sharedManager()->useDustShader()) {
       shaderMode = kShaderModeOn;
     }
   }
@@ -282,7 +284,7 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   float dustIntensity;
 
   OO_ENTER_OPENGL();
-  OOSetOpenGLState(OOOpenGLStateID::kOpaque);
+  OOSetOpenGLState(oo::OpenGLStateID::kOpaque);
   OOGL(glDisableClientState(GL_NORMAL_ARRAY));
 
   if (!warp_stars) {
@@ -290,19 +292,19 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
     float dustPointSize = ceil(idealDustSize);
     if (dustPointSize < 1.0f) dustPointSize = 1.0f;
     OOGL(GLScaledPointSize(dustPointSize));
-    dustIntensity = OOClamp_0_1_f(idealDustSize / dustPointSize);
+    dustIntensity = oo::Clamp_0_1_f(idealDustSize / dustPointSize);
   } else {
     // Draw lines.
     float idealLineSize = idealDustSize * 0.5f;
     float dustLineSize = ceil(idealLineSize);
     if (dustLineSize < 1.0f) dustLineSize = 1.0f;
     GLScaledLineWidth(dustLineSize);
-    dustIntensity = OOClamp_0_1_f(idealLineSize / dustLineSize);
+    dustIntensity = oo::Clamp_0_1_f(idealLineSize / dustLineSize);
   }
   if (fogcolor[3] > 0.0) {
     // fade out dust when entering atmosphere (issue #100)
-    dustIntensity =
-        OOClamp_0_1_f(static_cast<float>(dustIntensity - (fogcolor[3] * 3.0)));
+    dustIntensity = oo::Clamp_0_1_f(
+        static_cast<float>(dustIntensity - (fogcolor[3] * 3.0)));
   }
 
   if (dustIntensity > 0.0) {
@@ -405,7 +407,7 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   OOGL(glEnableClientState(GL_NORMAL_ARRAY));
 
   OOVerifyOpenGLState();
-  OOCheckOpenGLErrors([&]() -> std::string {
+  oo::CheckOpenGLErrors([&]() -> std::string {
     return "DustEntity after drawing " + oo::EntityDescription(this);
   });
 }

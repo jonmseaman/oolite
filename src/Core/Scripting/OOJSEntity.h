@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "Entity.h"
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "OOJSEntityHolder.h"
 #include "OOJavaScriptEngine.h"
 #include "Universe.h"

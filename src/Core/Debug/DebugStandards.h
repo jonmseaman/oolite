@@ -30,7 +30,7 @@ SOFTWARE.
 
 #include <string>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 
 // Warn/exit if deprecated functionality used
 namespace oo {

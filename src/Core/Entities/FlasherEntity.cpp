@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "OOJSFlasher.h"
 
 std::shared_ptr<oo::FlasherEntity> oo::FlasherEntity::flasherWithDictionary(
@@ -60,11 +60,11 @@ void oo::FlasherEntity::initWithDictionary(const oo::PList& dictionary) {
 }
 
 void oo::FlasherEntity::setUpColors(const oo::PList* colorSpecifiers) {
-  std::vector<std::shared_ptr<OOColor>> colors;
+  std::vector<std::shared_ptr<oo::Color>> colors;
   if (colorSpecifiers != nullptr) {
     for (const oo::PList& specifier :
          *colorSpecifiers->getIf<oo::PList::Array>()) {
-      colors.emplace_back(OOColor::colorWithDescription(specifier, 0.75f));
+      colors.emplace_back(oo::Color::colorWithDescription(specifier, 0.75f));
     }
   }
 
@@ -72,7 +72,7 @@ void oo::FlasherEntity::setUpColors(const oo::PList* colorSpecifiers) {
 }
 
 // The colour at index; null past the end (-objectAtIndex: raised there).
-OOColor* oo::FlasherEntity::flasherColorAtIndex(std::size_t index) {
+oo::Color* oo::FlasherEntity::flasherColorAtIndex(std::size_t index) {
   return index < _colors.size() ? _colors[index].get() : nullptr;
 }
 
@@ -84,9 +84,9 @@ bool oo::FlasherEntity::isActive() { return _active; }
 
 void oo::FlasherEntity::setActive(bool active) { _active = !!active; }
 
-std::shared_ptr<OOColor> oo::FlasherEntity::color() {
-  return OOColor::colorWithRed(_colorComponents[0], _colorComponents[1],
-                               _colorComponents[2], _colorComponents[3]);
+std::shared_ptr<oo::Color> oo::FlasherEntity::color() {
+  return oo::Color::colorWithRed(_colorComponents[0], _colorComponents[1],
+                                 _colorComponents[2], _colorComponents[3]);
 }
 
 float oo::FlasherEntity::frequency() { return _frequency; }
@@ -105,7 +105,7 @@ void oo::FlasherEntity::setFraction(float fraction) {
   _brightfraction = fraction;
 }
 
-void oo::FlasherEntity::update(OOTimeDelta delta_t) {
+void oo::FlasherEntity::update(oo::TimeDelta delta_t) {
   oo::LightParticleEntity::update(delta_t);
 
   _time += delta_t;

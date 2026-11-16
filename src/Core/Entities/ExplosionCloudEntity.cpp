@@ -57,11 +57,11 @@ constexpr std::string_view kExplosionTexture = "texture";
 bool oo::ExplosionCloudEntity::initExplosionCloudWithEntity(
     Entity* entity, float size, const oo::PList& settings) {
   unsigned i;
-  unsigned maxCount =
-      (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel() : OOGraphicsDetail{}) <=
-              OOGraphicsDetail::kShaders
-          ? 10
-          : 25;
+  unsigned maxCount = (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel()
+                                           : oo::GraphicsDetail{}) <=
+                              oo::GraphicsDetail::kShaders
+                          ? 10
+                          : 25;
   HPVector pos = entity != nullptr ? entity->getPosition()
                                    : kZeroHPVector;  // the C++ entity; nil
                                                      // answered zero
@@ -192,7 +192,7 @@ oo::ExplosionCloudEntity::explosionCloudFromEntity(Entity* entity, float size,
   return result;
 }
 
-void oo::ExplosionCloudEntity::update(OOTimeDelta delta_t) {
+void oo::ExplosionCloudEntity::update(oo::TimeDelta delta_t) {
   oo::ParticleSystem::update(delta_t);
 
   // Fade out.

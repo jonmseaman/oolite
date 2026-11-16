@@ -33,8 +33,8 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "Entity.h"
-#include "OOMaths.h"
-#include "OOTypes.h"
+#include "Maths.h"
+#include "Types.h"
 
 namespace oo {
 
@@ -42,7 +42,11 @@ class Texture;
 
 }  // namespace oo
 
-class OOColor;
+namespace oo {
+
+class Color;
+
+}  // namespace oo
 
 inline constexpr int kFragmentBurstMaxParticles = 64;
 inline constexpr int kBigFragmentBurstMaxParticles = 16;
@@ -54,7 +58,7 @@ class ParticleSystem : public Entity {
   std::optional<std::string> descriptionComponents() const override;
   bool canCollide() override;
   bool checkCloseCollisionWith(Entity* other) override;
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void drawImmediate(bool immediate, bool translucent) override;
   bool isEffect() override;
 
@@ -73,7 +77,7 @@ class ParticleSystem : public Entity {
           Initiali _particleSize[] is equal to speed.
    */
   void initWithPosition(HPVector position, Vector velocity, unsigned count,
-                        float minSpeed, float maxSpeed, OOTimeDelta duration,
+                        float minSpeed, float maxSpeed, oo::TimeDelta duration,
                         GLfloat baseColor[4]);
 
   Vector _particlePosition[kFragmentBurstMaxParticles] = {};
@@ -84,7 +88,7 @@ class ParticleSystem : public Entity {
 
   unsigned _particleType = {};
 
-  OOTimeDelta _timePassed = {}, _duration = {};
+  oo::TimeDelta _timePassed = {}, _duration = {};
   double _maxSpeed = {};
 };
 
@@ -93,7 +97,7 @@ class SmallFragmentBurstEntity : public ParticleSystem {
   static std::shared_ptr<SmallFragmentBurstEntity> fragmentBurstFromEntity(
       Entity* entity);  // the C++ entity
 
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
 
  private:
   void initFragmentBurstFrom(HPVector fragPosition, Vector fragVelocity,

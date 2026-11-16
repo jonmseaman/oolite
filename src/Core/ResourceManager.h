@@ -38,27 +38,33 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "OOEnumFlags.h"
-#include "OOFoundation.h"
-#include "OOOpenGL.h"
+#include "EnumFlags.h"
+#include "Foundation.h"
 #include "OOScript.h"  // std::shared_ptr<OOScript> members and results
+#include "OpenGL.h"
 #include "oofnd/Data.hpp"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Object.h"
-class OOSystemDescriptionManager;  // OOSystemDescriptionManager.h
-class OOSound;
-class OOMusic;
 
-enum class OOResourceMergeMode : std::int32_t {
+namespace oo {
+
+class SystemDescriptionManager;  // OOSystemDescriptionManager.h
+class Sound;
+class Music;
+
+enum class ResourceMergeMode : std::int32_t {
   kNone,   // Just use the last file in search order.
   kBasic,  // Merge files by adding the top-level items of each file.
   kSmart,  // Merge files by merging the top-level elements of each file
            // (second-order merge, but not recursive)
 };
-static_assert(std::to_underlying(OOResourceMergeMode::kNone) == 0);
-static_assert(std::to_underlying(OOResourceMergeMode::kBasic) == 1);
-static_assert(std::to_underlying(OOResourceMergeMode::kSmart) == 2);
+
+}  // namespace oo
+
+static_assert(std::to_underlying(oo::ResourceMergeMode::kNone) == 0);
+static_assert(std::to_underlying(oo::ResourceMergeMode::kBasic) == 1);
+static_assert(std::to_underlying(oo::ResourceMergeMode::kSmart) == 2);
 
 /* 'All' doesn't quite mean 'all' - OXPs with the tag
  * "oolite-scenario-only" will only be loaded if required by a
@@ -117,7 +123,7 @@ class ResourceManager {
   // Clear ResourceManager-internal caches (not those handled by OOCacheManager)
   static void clearCaches();
 
-  static std::shared_ptr<OOSystemDescriptionManager>
+  static std::shared_ptr<oo::SystemDescriptionManager>
   systemDescriptionManager();  // a new manager
   static oo::PList shaderBindingTypesDictionary();
   // nullopt when not found (was nil); folderName nullopt where nil was passed.
@@ -127,11 +133,11 @@ class ResourceManager {
   static std::optional<std::string> pathForFileNamed(
       const std::string& fileName, const std::optional<std::string>& folderName,
       bool useCache);
-  static std::shared_ptr<OOMusic> ooMusicNamed(
+  static std::shared_ptr<oo::Music> ooMusicNamed(
       const std::string& fileName,
       const std::optional<std::string>&
           folderName);  // a new music each call (not cached); null when none
-  static OOSound* ooSoundNamed(
+  static oo::Sound* ooSoundNamed(
       const std::string& fileName,
       const std::optional<std::string>&
           folderName);  // borrowed: the cache keeps it (was autoreleased)
@@ -171,7 +177,7 @@ class ResourceManager {
       bool mergeFiles);
   static oo::PList dictionaryFromFilesNamed(
       const std::string& fileName, const std::optional<std::string>& folderName,
-      OOResourceMergeMode mergeMode, bool cache);
+      oo::ResourceMergeMode mergeMode, bool cache);
   static oo::PList arrayFromFilesNamed(
       const std::string& fileName, const std::optional<std::string>& folderName,
       bool mergeFiles);
@@ -216,9 +222,9 @@ class ResourceManager {
   static void preloadFilePathFor(const std::string& fileName,
                                  const std::string& subFolder,
                                  const std::string& path);
-  static OOSound* retrieveFileNamed(
+  static oo::Sound* retrieveFileNamed(
       const std::string& fileName, const std::optional<std::string>& folderName,
-      std::map<std::string, std::shared_ptr<OOSound>, std::less<>>* ioCache,
+      std::map<std::string, std::shared_ptr<oo::Sound>, std::less<>>* ioCache,
       std::optional<std::string> key,
       bool useCache);  // the class was always OOSound; borrowed: the cache
                        // keeps it

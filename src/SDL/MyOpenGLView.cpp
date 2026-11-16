@@ -35,10 +35,10 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <utility>
 
+#include "ConstToString.h"
+#include "FullScreenController.h"
 #include "GameController.h"
 #include "GuiDisplayGen.h"
-#include "OOConstToString.h"
-#include "OOFullScreenController.h"
 #include "OOVersion.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
@@ -131,11 +131,11 @@ oo::PList MyOpenGLView::getNativeSize() {
            "SDL_GetWMInfo failed, defaulting to 1024x768 for native size");
   }
 
-  mode[std::string(kOODisplayWidth)] =
+  mode[std::string(oo::kDisplayWidth)] =
       oo::PList(static_cast<std::int64_t>(nativeDisplayWidth));
-  mode[std::string(kOODisplayHeight)] =
+  mode[std::string(oo::kDisplayHeight)] =
       oo::PList(static_cast<std::int64_t>(nativeDisplayHeight));
-  mode[std::string(kOODisplayRefreshRate)] =
+  mode[std::string(oo::kDisplayRefreshRate)] =
       oo::PList(static_cast<std::int64_t>(0));
 
   return oo::PList(std::move(mode));
@@ -321,11 +321,11 @@ void MyOpenGLView::createWindowWithSize(NSSize size) {
   _hdrPaperWhiteBrightness = oo::PListGet<float>::from(
       hdrPaperWhiteBrightness.isNull() ? nullptr : &hdrPaperWhiteBrightness,
       200.0f);
-  _hdrToneMapper = OOHDRToneMapperFromString(
+  _hdrToneMapper = oo::HDRToneMapperFromString(
       DefaultsString("hdr-tone-mapper", "OOHDR_TONEMAPPER_ACES_APPROX"));
 #endif
 
-  _sdrToneMapper = OOSDRToneMapperFromString(
+  _sdrToneMapper = oo::SDRToneMapperFromString(
       DefaultsString("sdr-tone-mapper", "OOSDR_TONEMAPPER_ACES"));
 
 #if OOLITE_MACOS
@@ -440,7 +440,7 @@ bool MyOpenGLView::init() {
           : std::nullopt);
 #endif
 
-  matrixManager = oo::makeShared<OOOpenGLMatrixManager>();
+  matrixManager = oo::makeShared<oo::OpenGLMatrixManager>();
 
   // TODO: This code up to and including stickHandler really ought
   // not to be in this class.
@@ -465,14 +465,14 @@ bool MyOpenGLView::init() {
   viewSize = firstScreen;  // viewSize must be set prior to splash screen
                            // initialization
 
-  OOJoystickManager::setStickHandlerFactory(
-      []() -> std::shared_ptr<OOJoystickManager> {
+  oo::JoystickManager::setStickHandlerFactory(
+      []() -> std::shared_ptr<oo::JoystickManager> {
         return oo::makeShared<oo::SDLJoystickManager>();
       });  // was +setStickHandlerClass:
   // end TODO
 
-  OOSound::setUp();
-  if (!OOSound::isSoundOK())
+  oo::Sound::setUp();
+  if (!oo::Sound::isSoundOK())
     OO_LOG("sound.init", "{}", "Sound system disabled.");
 
   grabMouseStatus = false;
@@ -491,9 +491,10 @@ bool MyOpenGLView::init() {
 
   const oo::PList mouseFlightSensitivity =
       prefs.object("mouse-flight-sensitivity");
-  _mouseVirtualStickSensitivityFactor = OOClamp_0_1_f(oo::PListGet<float>::from(
-      mouseFlightSensitivity.isNull() ? nullptr : &mouseFlightSensitivity,
-      0.95f));
+  _mouseVirtualStickSensitivityFactor =
+      oo::Clamp_0_1_f(oo::PListGet<float>::from(
+          mouseFlightSensitivity.isNull() ? nullptr : &mouseFlightSensitivity,
+          0.95f));
   // ensure no chance of a divide by zero later on
   if (_mouseVirtualStickSensitivityFactor < 0.005f)
     _mouseVirtualStickSensitivityFactor = 0.005f;
@@ -609,13 +610,14 @@ void MyOpenGLView::updateGLSize(NSSize size) {
 
   OOGL(glViewport(0, 0, static_cast<GLsizei>(bounds.size.width),
                   static_cast<GLsizei>(bounds.size.height)));
-  OOGLResetProjection();
-  OOGLFrustum(-ratio, ratio, -aspect * ratio, aspect * ratio, 1.0,
-              MAX_CLEAR_DEPTH);
+  oo::GLResetProjection();
+  oo::GLFrustum(-ratio, ratio, -aspect * ratio, aspect * ratio, 1.0,
+                MAX_CLEAR_DEPTH);
 }
 
 void MyOpenGLView::setUpBasicOpenGLStateWithSize() {
-  OOOpenGLExtensionManager* extMgr = OOOpenGLExtensionManager::sharedManager();
+  oo::OpenGLExtensionManager* extMgr =
+      oo::OpenGLExtensionManager::sharedManager();
 
   OOGL(glClearColor(0.0, 0.0, 0.0, 0.0));
   OOGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -750,7 +752,7 @@ void MyOpenGLView::initSplashScreen() {
   dest.h = image->h;
 
   createWindowWithSize(NSMakeSize(image->w, image->h));
-  OOSetOpenGLState(OOOpenGLStateID::kOverlay);
+  OOSetOpenGLState(oo::OpenGLStateID::kOverlay);
   float pixelDensity = SDL_GetWindowPixelDensity(window);
   if (pixelDensity == 0.0f) {
     pixelDensity = 1.0f;
@@ -904,8 +906,8 @@ std::vector<oo::PList> MyOpenGLView::getScreenSizeArray() {
 
 NSSize MyOpenGLView::modeAsSize(int sizeIndex) {
   const oo::PList& mode = screenSizes.at(static_cast<std::size_t>(sizeIndex));
-  return NSMakeSize(mode.get<int>(kOODisplayWidth),
-                    mode.get<int>(kOODisplayHeight));
+  return NSMakeSize(mode.get<int>(oo::kDisplayWidth),
+                    mode.get<int>(oo::kDisplayHeight));
 }
 
 #endif
@@ -1034,7 +1036,7 @@ float MyOpenGLView::colorSaturation() { return _colorSaturation; }
 
 void MyOpenGLView::adjustColorSaturation(float colorSaturationAdjustment) {
   _colorSaturation += colorSaturationAdjustment;
-  _colorSaturation = OOClamp_0_max_f(_colorSaturation, MAX_COLOR_SATURATION);
+  _colorSaturation = oo::Clamp_0_max_f(_colorSaturation, MAX_COLOR_SATURATION);
 }
 
 // Full screen mode enumerator.
@@ -1059,11 +1061,11 @@ void MyOpenGLView::populateFullScreenModelist() {
 
   for (i = 0; i < displayModeCount; i++) {
     oo::PList::Dict modeDict;
-    modeDict[std::string(kOODisplayWidth)] =
+    modeDict[std::string(oo::kDisplayWidth)] =
         oo::PList(static_cast<std::int64_t>(modes[i]->w));
-    modeDict[std::string(kOODisplayHeight)] =
+    modeDict[std::string(oo::kDisplayHeight)] =
         oo::PList(static_cast<std::int64_t>(modes[i]->h));
-    modeDict[std::string(kOODisplayRefreshRate)] =
+    modeDict[std::string(oo::kDisplayRefreshRate)] =
         oo::PList::singleReal(static_cast<float>(
             static_cast<int>(modes[i]->refresh_rate)));  // +numberWithFloat:
     const oo::PList mode(std::move(modeDict));
@@ -1146,10 +1148,10 @@ int MyOpenGLView::indexOfDisplayModeForWidth(unsigned int d_width,
 
   for (i = 0; i < modeCount; i++) {
     const oo::PList& mode = screenSizes[static_cast<std::size_t>(i)];
-    modeWidth = static_cast<unsigned int>(mode.get<int>(kOODisplayWidth));
-    modeHeight = static_cast<unsigned int>(mode.get<int>(kOODisplayHeight));
+    modeWidth = static_cast<unsigned int>(mode.get<int>(oo::kDisplayWidth));
+    modeHeight = static_cast<unsigned int>(mode.get<int>(oo::kDisplayHeight));
     modeRefresh =
-        static_cast<unsigned int>(mode.get<int>(kOODisplayRefreshRate));
+        static_cast<unsigned int>(mode.get<int>(oo::kDisplayRefreshRate));
     if ((modeWidth == d_width) && (modeHeight == d_height) &&
         (modeRefresh == d_refresh)) {
       OO_LOG("display.mode.found", "Found mode {}", oo::DescriptionOf(mode));
@@ -1170,8 +1172,8 @@ NSSize MyOpenGLView::currentScreenSize() {
   const oo::PList& mode = screenSizes.at(static_cast<std::size_t>(currentSize));
 
   if (mode) {
-    return NSMakeSize(mode.get<int>(kOODisplayWidth),
-                      mode.get<int>(kOODisplayHeight));
+    return NSMakeSize(mode.get<int>(oo::kDisplayWidth),
+                      mode.get<int>(oo::kDisplayHeight));
   }
   OO_LOG("display.mode.unknown", "{}", "Screen size unknown!");
   return NSMakeSize(WINDOW_SIZE_DEFAULT_WIDTH, WINDOW_SIZE_DEFAULT_HEIGHT);
@@ -1197,7 +1199,7 @@ bool MyOpenGLView::msaa() { return _msaa; }
 
 void MyOpenGLView::setMsaa(bool newMsaa) { _msaa = !!newMsaa; }
 
-OOOpenGLMatrixManager* MyOpenGLView::getOpenGLMatrixManager() {
+oo::OpenGLMatrixManager* MyOpenGLView::getOpenGLMatrixManager() {
   return matrixManager.get();  // borrowed
 }
 

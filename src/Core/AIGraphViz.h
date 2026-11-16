@@ -33,7 +33,7 @@ MA 02110-1301, USA.
 
 #if DEBUG_GRAPHVIZ
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "oofnd/PList.hpp"
 
 void GenerateGraphVizForAIStateMachine(const oo::PList& stateMachine,

@@ -34,7 +34,11 @@ SOFTWARE.
 #include "Material.h"
 #include "oofnd/PList.hpp"
 
-class OOColor;
+namespace oo {
+
+class Color;
+
+}  // namespace oo
 
 // The creators are static members of OOMaterial (materialWithName(), in
 // OOMaterial.h), defined in OOMaterialConvenienceCreators.cpp.

@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "BreakPatternEntity.h"
-#include "OOColor.h"
+#include "Color.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -155,8 +155,8 @@ OO_TEST(flagsAndColors) {
              ColorIs(ring, 1, 0.0f, 0.0f, 1.0f, 0.25f));
     OO_CHECK(ColorIs(ring, 7, 0.0f, 0.0f, 1.0f, 0.25f));
 
-    ring->setInnerColor(OOColor::colorWithRed(0.0f, 1.0f, 0.0f, 1.0f).get(),
-                        OOColor::colorWithRed(1.0f, 1.0f, 1.0f, 0.5f).get());
+    ring->setInnerColor(oo::Color::colorWithRed(0.0f, 1.0f, 0.0f, 1.0f).get(),
+                        oo::Color::colorWithRed(1.0f, 1.0f, 1.0f, 0.5f).get());
     OO_CHECK(ColorIs(ring, 0, 0.0f, 1.0f, 0.0f, 1.0f) &&
              ColorIs(ring, 1, 1.0f, 1.0f, 1.0f, 0.5f));
     OO_CHECK(ColorIs(ring, 6, 0.0f, 1.0f, 0.0f, 1.0f) &&

@@ -23,8 +23,8 @@
 #include <string>
 #include <vector>
 
-#include "OODescription.h"
-#include "OOSystemDescriptionManager.h"
+#include "Description.h"
+#include "SystemDescriptionManager.h"
 #include "ResourceManager.h"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -400,13 +400,13 @@ OO_TEST(mergedPlistsFromTheSearchPaths) {
     // OOResourceMergeMode::kNone: the last file in search order; OOResourceMergeMode::kBasic: top-level keys;
     // OOResourceMergeMode::kSmart: second level.
     const oo::PList last = ResourceManager::dictionaryFromFilesNamed(
-        "oo-test-dict.plist", std::string("Config"), OOResourceMergeMode::kNone, false);
+        "oo-test-dict.plist", std::string("Config"), oo::ResourceMergeMode::kNone, false);
     std::printf("  MERGE_NONE: %s\n", oo::DescriptionOf(last).c_str());
     const oo::PList basic = ResourceManager::dictionaryFromFilesNamed(
-        "oo-test-dict.plist", std::string("Config"), OOResourceMergeMode::kBasic, false);
+        "oo-test-dict.plist", std::string("Config"), oo::ResourceMergeMode::kBasic, false);
     std::printf("  MERGE_BASIC: %s\n", oo::DescriptionOf(basic).c_str());
     const oo::PList smart = ResourceManager::dictionaryFromFilesNamed(
-        "oo-test-dict.plist", std::string("Config"), OOResourceMergeMode::kSmart, false);
+        "oo-test-dict.plist", std::string("Config"), oo::ResourceMergeMode::kSmart, false);
     std::printf("  MERGE_SMART: %s\n", oo::DescriptionOf(smart).c_str());
     OO_CHECK(basic.find("base") != nullptr && basic.find("fromA") != nullptr &&
              basic.find("fromH") != nullptr);
@@ -505,7 +505,7 @@ OO_TEST(cxxSlice3API) {
   {
     OO_CHECK(ResourceManager::dictionaryFromFilesNamed("oo-test-dict.plist",
                                                        std::string("Config"),
-                                                       OOResourceMergeMode::kBasic, false)
+                                                       oo::ResourceMergeMode::kBasic, false)
                  .find("fromA") != nullptr);
     OO_CHECK(ResourceManager::dictionaryFromFilesNamed(
                  "oo-test-none.plist", std::string("Config"), true)
@@ -577,7 +577,7 @@ OO_TEST(scriptsAndSystemsAndDiagnostics) {
     OO_CHECK(ResourceManager::loadScripts().empty());
 
     // No planetinfo.plist: a manager with nothing set, made anew on each call.
-    std::shared_ptr<OOSystemDescriptionManager> manager =
+    std::shared_ptr<oo::SystemDescriptionManager> manager =
         ResourceManager::systemDescriptionManager();
     OO_CHECK(manager != nullptr);
     OO_CHECK(manager != ResourceManager::systemDescriptionManager());
@@ -616,7 +616,7 @@ OO_TEST(cxxSlice4API) {
     OO_CHECK(ResourceManager::diagnosticFileLocation() ==
              ResourceManager::diagnosticFileLocation());
     // A new C++ manager.
-    std::shared_ptr<OOSystemDescriptionManager> manager =
+    std::shared_ptr<oo::SystemDescriptionManager> manager =
         ResourceManager::systemDescriptionManager();
     OO_CHECK(manager != nullptr);
   }

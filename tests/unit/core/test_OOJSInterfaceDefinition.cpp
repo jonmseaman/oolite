@@ -274,37 +274,37 @@ OO_TEST(interfaceCompare) {
   // By category, then by title, ignoring case.
   OO_CHECK_EQ(
       Interface("alpha", "z")->interfaceCompare(Interface("Beta", "a").get()),
-      OOComparisonResult::kAscending);
+      oo::ComparisonResult::kAscending);
   OO_CHECK_EQ(
       Interface("beta", "a")->interfaceCompare(Interface("ALPHA", "z").get()),
-      OOComparisonResult::kDescending);
+      oo::ComparisonResult::kDescending);
   OO_CHECK_EQ(Interface("same", "apple")
                   ->interfaceCompare(Interface("SAME", "Banana").get()),
-              OOComparisonResult::kAscending);
+              oo::ComparisonResult::kAscending);
   OO_CHECK_EQ(Interface("same", "Banana")
                   ->interfaceCompare(Interface("same", "apple").get()),
-              OOComparisonResult::kDescending);
+              oo::ComparisonResult::kDescending);
   OO_CHECK_EQ(
       Interface("same", "x")->interfaceCompare(Interface("same", "X").get()),
-      OOComparisonResult::kSame);
+      oo::ComparisonResult::kSame);
   // No category of its own: the same category as anything (a message to nil);
   // then the titles.
   OO_CHECK_EQ(Interface(std::nullopt, "b")
                   ->interfaceCompare(Interface("cat", "a").get()),
-              OOComparisonResult::kDescending);
+              oo::ComparisonResult::kDescending);
   // The other's missing category or title is the empty string.
   OO_CHECK_EQ(Interface("cat", "a")
                   ->interfaceCompare(Interface(std::nullopt, "a").get()),
-              OOComparisonResult::kDescending);
+              oo::ComparisonResult::kDescending);
   OO_CHECK_EQ(Interface("", "a")->interfaceCompare(
                   Interface(std::nullopt, std::nullopt).get()),
-              OOComparisonResult::kDescending);
+              oo::ComparisonResult::kDescending);
   OO_CHECK_EQ(Interface("", std::nullopt)
                   ->interfaceCompare(Interface(std::nullopt, "a").get()),
-              OOComparisonResult::kSame);
+              oo::ComparisonResult::kSame);
   // Null: its category and title are missing.
   OO_CHECK_EQ(Interface("cat", "a")->interfaceCompare(nullptr),
-              OOComparisonResult::kDescending);
+              oo::ComparisonResult::kDescending);
 }
 
 OO_TEST(engineReset) {

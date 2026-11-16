@@ -27,9 +27,9 @@
 #include <vector>
 #include "EntityManualRefs.h"  // the tests' manual references
 
-#include "OOProbabilisticTextureManager.h"
+#include "ProbabilisticTextureManager.h"
 #include "Texture.h"
-#include "OOTypes.h"
+#include "Types.h"
 #include "oo_test.hpp"
 #include "oofnd/String.hpp"
 
@@ -112,17 +112,17 @@ std::string oo::Texture::shortDescription() const { return description(); }
 std::string oo::Texture::className() const { return "OOTexture"; }
 void oo::Texture::forceRebind() {}
 
-static OOGalaxyID gGalaxy = 0;
+static oo::GalaxyID gGalaxy = 0;
 
 // PLAYER: the members the code under test calls, declared as PlayerEntity.h
 // declares them (the test imports no game header that defines the class), with
 // the same answers.
 class PlayerEntity {
  public:
-  OOGalaxyID currentGalaxyID();
+  oo::GalaxyID currentGalaxyID();
 };
 
-OOGalaxyID PlayerEntity::currentGalaxyID() { return gGalaxy; }
+oo::GalaxyID PlayerEntity::currentGalaxyID() { return gGalaxy; }
 
 PlayerEntity* gOOPlayer = nullptr;
 
@@ -162,7 +162,7 @@ void Reset(const oo::PList& config) {
   gGalaxy = 0;
 }
 
-std::string Picks(const std::shared_ptr<OOProbabilisticTextureManager>& manager,
+std::string Picks(const std::shared_ptr<oo::ProbabilisticTextureManager>& manager,
                   int count) {
   std::string picks;
   for (int i = 0; i < count; i++) {
@@ -176,8 +176,8 @@ bool SameSeed(RANROTSeed a, RANROTSeed b) {
   return a.high == b.high && a.low == b.low;
 }
 
-std::shared_ptr<OOProbabilisticTextureManager> Manager(RANROTSeed seed) {
-  return OOProbabilisticTextureManager::createWithPListName("test.plist", static_cast<oo::TextureFlags>(0x803),
+std::shared_ptr<oo::ProbabilisticTextureManager> Manager(RANROTSeed seed) {
+  return oo::ProbabilisticTextureManager::createWithPListName("test.plist", static_cast<oo::TextureFlags>(0x803),
                                                             0.5f, -0.25f, seed);
 }
 
@@ -197,7 +197,7 @@ bool CheckPicks(const char* what, const std::string& picks,
 OO_TEST(entriesKeptAndHowTheyAreLoaded) {
   {
     Reset(Config());
-    std::shared_ptr<OOProbabilisticTextureManager> manager = Manager(MakeRanrotSeed(1));
+    std::shared_ptr<oo::ProbabilisticTextureManager> manager = Manager(MakeRanrotSeed(1));
     OO_CHECK(manager != nullptr);
     OO_CHECK(manager->textureCount() == 4);
     const std::vector<std::string> expected = {
@@ -240,8 +240,8 @@ OO_TEST(seed) {
     Reset(Config());
     RANROTSeed global = MakeRanrotSeed(77);
     RANROTSetFullSeed(global);
-    std::shared_ptr<OOProbabilisticTextureManager> manager =
-        OOProbabilisticTextureManager::createWithPListName("test.plist", oo::TextureFlags::kNone, 0,
+    std::shared_ptr<oo::ProbabilisticTextureManager> manager =
+        oo::ProbabilisticTextureManager::createWithPListName("test.plist", oo::TextureFlags::kNone, 0,
                                                            0);
     OO_CHECK(SameSeed(manager->seed(), global));  // copied from the global seed
     OO_CHECK(SameSeed(RANROTGetFullSeed(), global));  // and that is left alone
@@ -303,11 +303,11 @@ OO_TEST(picks) {
 
 OO_TEST(texturesAreLoadedAndKept) {
   std::vector<TestTexture*> textures;
-  std::shared_ptr<OOProbabilisticTextureManager> manager;
+  std::shared_ptr<oo::ProbabilisticTextureManager> manager;
   {
     Reset(Config());
     manager = Manager(MakeRanrotSeed(0x1234567));
-    for (OOGalaxyID galaxy :
+    for (oo::GalaxyID galaxy :
          {0, 2})  // a, b and h in galaxy 0; g only in galaxy 2
     {
       gGalaxy = galaxy;

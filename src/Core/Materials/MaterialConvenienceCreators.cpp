@@ -31,8 +31,8 @@ SOFTWARE.
 
 #include "MaterialConvenienceCreators.h"
 
+#include "Color.h"
 #include "MaterialSpecifier.h"
-#include "OOColor.h"
 
 #if USE_NEW_SHADER_SYNTHESIZER
 #include "DefaultShaderSynthesizer.h"
@@ -49,10 +49,10 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "CacheManager.h"
 #include "DebugFlags.h"
 #include "MultiTextureMaterial.h"
-#include "OOCacheManager.h"
-#include "OOOpenGLExtensionManager.h"
+#include "OpenGLExtensionManager.h"
 #include "ShaderMaterial.h"
 #include "SingleTextureMaterial.h"
 #include "Texture.h"
@@ -91,10 +91,10 @@ void AddTexture(MaterialSynthContext* context, std::string_view uniformName,
                 std::optional<std::string_view> macroName,
                 const oo::PList& specifier);
 
-void AddColorIfAppropriate(MaterialSynthContext* context, OOColor* color,
+void AddColorIfAppropriate(MaterialSynthContext* context, oo::Color* color,
                            std::string_view key,
                            std::optional<std::string_view> macroName);
-void AddMacroColorIfAppropriate(MaterialSynthContext* context, OOColor* color,
+void AddMacroColorIfAppropriate(MaterialSynthContext* context, oo::Color* color,
                                 std::string_view macroName);
 
 void SynthDiffuse(MaterialSynthContext* context,
@@ -122,7 +122,7 @@ oo::PList oo::Material::synthesizeMaterialDictionaryWithName(
       .outConfig = oo::PList::Dict{},
       .texturesUsed = 0,
       .maxTextures = static_cast<std::size_t>(
-          OOOpenGLExtensionManager::sharedManager()->textureImageUnitCount()),
+          oo::OpenGLExtensionManager::sharedManager()->textureImageUnitCount()),
 
       .macros = std::move(macrosCopy),
       .textures = {},
@@ -144,8 +144,9 @@ oo::PList oo::Material::synthesizeMaterialDictionaryWithName(
   SynthNormalMap(&context);
   SynthSpecular(&context);
 
-  if ((UNIVERSE != nullptr ? UNIVERSE->getDetailLevel() : OOGraphicsDetail{}) >=
-      OOGraphicsDetail::kShaders) {
+  if ((UNIVERSE != nullptr
+           ? UNIVERSE->getDetailLevel()
+           : oo::GraphicsDetail{}) >= oo::GraphicsDetail::kShaders) {
     //	Add uniforms required for hull heat glow.
     context.uniforms["uHullHeatLevel"] = oo::PList("hullHeatLevel");
     context.uniforms["uTime"] = oo::PList("timeElapsedSinceSpawn");
@@ -175,7 +176,7 @@ std::shared_ptr<oo::Material> oo::Material::defaultShaderMaterialWithName(
     const std::optional<std::string>& name,
     const std::optional<std::string>& cacheKey, const oo::PList& configuration,
     const oo::PList& macros, Entity* target) {
-  ::OOCacheManager* cache = nullptr;
+  ::oo::CacheManager* cache = nullptr;
   oo::PList synthesizedConfig;
   std::shared_ptr<oo::Material> result;
 
@@ -188,7 +189,7 @@ std::shared_ptr<oo::Material> oo::Material::defaultShaderMaterialWithName(
 
   std::string cacheKeyStr;
   if (cacheKey.has_value()) {
-    cache = OOCacheManager::sharedCache();
+    cache = oo::CacheManager::sharedCache();
     // configuration must be in cache key, as otherwise changes in
     // non-diffuse map can end up miscached
     cacheKeyStr = std::format("{}/{}/{}", *cacheKey, name.value_or(""),
@@ -329,7 +330,7 @@ std::shared_ptr<oo::Material> oo::Material::materialWithName(
         (smooth || oo::DebugFlagIsOn(oo::DebugFlags::kNoShaderFallback) ||
          (UNIVERSE != nullptr
               ? UNIVERSE->getDetailLevel()
-              : OOGraphicsDetail{}) >= OOGraphicsDetail::kShaders ||
+              : oo::GraphicsDetail{}) >= oo::GraphicsDetail::kShaders ||
          !oo::MaterialCombinedSpecularMapSpecifier(configuration).isNull() ||
          !oo::MaterialNormalMapSpecifier(configuration).isNull() ||
          !oo::MaterialParallaxMapSpecifier(configuration).isNull() ||
@@ -455,7 +456,7 @@ void AddTexture(MaterialSynthContext* context, std::string_view uniformName,
   }
 }
 
-void AddColorIfAppropriate(MaterialSynthContext* context, OOColor* color,
+void AddColorIfAppropriate(MaterialSynthContext* context, oo::Color* color,
                            std::string_view key,
                            std::optional<std::string_view> macroName) {
   if (color != nullptr) {
@@ -469,7 +470,7 @@ void AddColorIfAppropriate(MaterialSynthContext* context, OOColor* color,
   }
 }
 
-void AddMacroColorIfAppropriate(MaterialSynthContext* context, OOColor* color,
+void AddMacroColorIfAppropriate(MaterialSynthContext* context, oo::Color* color,
                                 std::string_view macroName) {
   if (color != nullptr) {
     std::string macroText =
@@ -603,7 +604,7 @@ void SynthSpecular(MaterialSynthContext* context) {
       oo::MaterialGammaCorrect(context->inConfig) ? true : false;
 
   oo::PList specularMapSpec;
-  std::shared_ptr<OOColor> specularColor;
+  std::shared_ptr<oo::Color> specularColor;
 
   if (context->texturesUsed < context->maxTextures) {
     specularMapSpec =

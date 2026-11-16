@@ -50,8 +50,8 @@ class LightParticleEntity : public Entity {
   float diameter();
   void setDiameter(float diameter);
 
-  void setColor(OOColor* color);
-  void setColor(OOColor* color, GLfloat alpha);
+  void setColor(oo::Color* color);
+  void setColor(oo::Color* color, GLfloat alpha);
 
   /*	For subclasses that don't want the default blur texture.
           NOTE: such subclasses must deal with the OOGraphicsResetManager. Also,
