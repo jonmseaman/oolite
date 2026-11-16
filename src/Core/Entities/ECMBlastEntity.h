@@ -43,7 +43,7 @@ class ECMBlastEntity : public Entity {
   // -initFromShip:, which answered nil for a nil ship: null then.
   static std::shared_ptr<ECMBlastEntity> initFromShip(ShipEntity* ship);
 
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void drawImmediate(bool immediate, bool translucent) override;
 
   bool isECMBlast();
@@ -51,7 +51,7 @@ class ECMBlastEntity : public Entity {
  private:
   explicit ECMBlastEntity(ShipEntity* ship);
 
-  OOTimeDelta _nextBlast = {};
+  oo::TimeDelta _nextBlast = {};
   uint8_t _blastsRemaining = {};
   std::weak_ptr<Entity> _ship;  // the ship's C++ part
 };

@@ -29,7 +29,7 @@
 
 #include "AI.h"
 #include "GameController.h"  // OOScheduleDeferredCall, stood in below
-#include "OOCallByName.h"    // oo::CallEntityByName, stood in below
+#include "CallByName.h"    // oo::CallEntityByName, stood in below
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Log.hpp"
@@ -58,28 +58,38 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
 
 oo::PList ResourceManager::whitelistDictionary() { return gWhitelist; }
 
-oo::PList OOPropertyListFromFile(const std::string& path) {
+namespace oo {
+
+oo::PList PropertyListFromFile(const std::string& path) {
   const std::string name = path.substr(path.find('/') + 1);
   const auto found = gAIFiles.find(name);
   return found != gAIFiles.end() ? found->second : oo::PList();
 }
 
+}  // namespace oo
+
+
 // The cache manager: a C++ stand-in.
 static std::map<std::string, oo::PList> gCacheEntries;  // "cache/key" -> value
 
-#include "OOCacheManager.h"
+#include "CacheManager.h"
 
-OOCacheManager* OOCacheManager::sharedCache() {
-  static OOCacheManager* shared = new OOCacheManager;
+oo::CacheManager* oo::CacheManager::sharedCache() {
+  static oo::CacheManager* shared = new oo::CacheManager;
   return shared;
 }
-OOCacheManager::~OOCacheManager() {}
-oo::PList OOCacheManager::pListForKey(const std::string& key,
+namespace oo {
+
+CacheManager::~CacheManager() {}
+
+}  // namespace oo
+
+oo::PList oo::CacheManager::pListForKey(const std::string& key,
                                       const std::string& cache) {
   const auto found = gCacheEntries.find(cache + "/" + key);
   return found != gCacheEntries.end() ? found->second : oo::PList();
 }
-void OOCacheManager::setPList(const oo::PList& value, const std::string& key,
+void oo::CacheManager::setPList(const oo::PList& value, const std::string& key,
                               const std::string& cache) {
   gCacheEntries[cache + "/" + key] = value;
 }
@@ -105,9 +115,14 @@ void FireDeferredCalls() {
 
 }  // namespace
 
-void OOScheduleDeferredCall(std::function<void()> call, double delay) {
+namespace oo {
+
+void ScheduleDeferredCall(std::function<void()> call, double delay) {
   gDeferred.push_back({std::move(call), delay});
 }
+
+}  // namespace oo
+
 
 // Link stub: the graph dump runs only under a
 // default the test never sets.
@@ -115,11 +130,16 @@ void GenerateGraphVizForAIStateMachine(const oo::PList&, const std::string&) {
   std::abort();
 }
 
-const char* const kOOLogException = "exception";
-void OOLogPushIndent(void) { oo::log::pushIndent(); }
-void OOLogPopIndent(void) { oo::log::popIndent(); }
-void OOLogIndent(void) { oo::log::indent(); }
-void OOLogOutdent(void) { oo::log::outdent(); }
+namespace oo {
+
+const char* const kLogException = "exception";
+void LogPushIndent(void) { oo::log::pushIndent(); }
+void LogPopIndent(void) { oo::log::popIndent(); }
+void LogIndent(void) { oo::log::indent(); }
+void LogOutdent(void) { oo::log::outdent(); }
+
+}  // namespace oo
+
 
 // --- The owner
 // -------------------------------------------------------------------------------
@@ -136,7 +156,7 @@ class TestEntityObject;
 class Entity : public oo::Object {
  public:
   virtual ~Entity();
-  OOUniversalID getUniversalID();
+  oo::UniversalID getUniversalID();
   bool getIsPlayer();
 
   ::TestEntityObject* _object = nullptr;  // not retained
@@ -189,7 +209,7 @@ class TestShip final : public TestEntityObject {
 
   void sendLoop() { _ai->reactToMessage("LOOP", "loop"); }
 
-  OOUniversalID _id = {};
+  oo::UniversalID _id = {};
   bool _isPlayer = false;
   AI* _ai = nullptr;                // not retained
   std::vector<std::string> _calls;  // "selector argument", in order
@@ -199,7 +219,7 @@ class TestShip final : public TestEntityObject {
 };
 
 Entity::~Entity() = default;
-OOUniversalID Entity::getUniversalID() {
+oo::UniversalID Entity::getUniversalID() {
   return static_cast<TestShip*>(_object)->_id;
 }
 bool Entity::getIsPlayer() {
@@ -366,7 +386,7 @@ void SetUp() {
       Dict({{"GLOBAL", Dict({{"ENTER", Strings({"doThing: other"})}})}});
 }
 
-TestShip* NewShip(OOUniversalID uid) {
+TestShip* NewShip(oo::UniversalID uid) {
   TestShip* ship = oo::autorelease(oo::makeShared<TestShip>());
   ship->_id = uid;
   return ship;
@@ -375,7 +395,7 @@ TestShip* NewShip(OOUniversalID uid) {
 // [[[AI alloc] init] autorelease] (OOAIAutorelease).
 AI* Autoreleased(std::shared_ptr<AI> ai) {
   AI* result = ai.get();
-  OOAIAutorelease(std::move(ai));
+  oo::AIAutorelease(std::move(ai));
   return result;
 }
 
@@ -487,7 +507,7 @@ OO_TEST(loadsAndRunsAStateMachine) {
 
     // The cleaned machine is cached, with its script name.
     const oo::PList cached =
-        OOCacheManager::sharedCache()->pListForKey("test.plist", "AIs");
+        oo::CacheManager::sharedCache()->pListForKey("test.plist", "AIs");
     OO_CHECK(cached.get<std::string>("jsScript") == "test.js");
     OO_CHECK(cached.find("BROKEN") == nullptr);
     OO_CHECK(*cached.find("ATTACK")->find("ENTER") ==
@@ -520,7 +540,7 @@ OO_TEST(unknownStateMachines) {
     OO_CHECK(ai->name() == std::optional<std::string>("<no AI>"));
     OO_CHECK(LogLinesContaining("to \"missing.plist\" - could not load file") ==
              1);
-    OO_CHECK(OOCacheManager::sharedCache()->pListForKey(
+    OO_CHECK(oo::CacheManager::sharedCache()->pListForKey(
                  "missing.plist", "AIs") == oo::PList(std::string("nil")));
 
     // Remembered as missing: no second attempt, no second log line.

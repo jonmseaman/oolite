@@ -106,7 +106,7 @@ std::shared_ptr<OOTimeProfile> OOJSEndProfiling();
 void OOJSBeginProfiling(bool trace);
 bool OOJSIsProfiling();
 
-void OOJSExcludeTimeFromLimiter(OOTimeDelta time);
+void OOJSExcludeTimeFromLimiter(oo::TimeDelta time);
 
 class OOTimeProfileEntry;
 
@@ -155,7 +155,7 @@ class OOTimeProfileEntry : public oo::Object {
   OOTimeProfileEntry(JSValueConst function, JSContext* context);
 #endif
 
-  void addSampleWithTotalTime(OOTimeDelta totalTime, OOTimeDelta selfTime);
+  void addSampleWithTotalTime(oo::TimeDelta totalTime, oo::TimeDelta selfTime);
 
   std::optional<std::string> description();
 
@@ -169,10 +169,10 @@ class OOTimeProfileEntry : public oo::Object {
   double selfTimeMax();
   bool isJavaScriptFrame();
 
-  OOComparisonResult compareByTotalTime(OOTimeProfileEntry* other);
-  OOComparisonResult compareByTotalTimeReverse(OOTimeProfileEntry* other);
-  OOComparisonResult compareBySelfTime(OOTimeProfileEntry* other);
-  OOComparisonResult compareBySelfTimeReverse(OOTimeProfileEntry* other);
+  oo::ComparisonResult compareByTotalTime(OOTimeProfileEntry* other);
+  oo::ComparisonResult compareByTotalTimeReverse(OOTimeProfileEntry* other);
+  oo::ComparisonResult compareBySelfTime(OOTimeProfileEntry* other);
+  oo::ComparisonResult compareBySelfTimeReverse(OOTimeProfileEntry* other);
 
   JSValue oo_jsValueInContext(JSContext* context);
 

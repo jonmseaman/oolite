@@ -18,9 +18,9 @@
 #include <string>
 #include <vector>
 
-#include "OOOpenGL.h"
-#include "OOOpenGLExtensionManager.h"
-#include "OORegExpMatcher.h"
+#include "OpenGL.h"
+#include "OpenGLExtensionManager.h"
+#include "RegExpMatcher.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/PList.hpp"
@@ -40,22 +40,27 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
 }
 
 // OORegExpMatcher: the stub answers no match.
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
-  return oo::makeShared<OORegExpMatcher>();
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher() {
+  return oo::makeShared<oo::RegExpMatcher>();
 }
-bool OORegExpMatcher::string(const std::string&, const std::string&) {
+bool oo::RegExpMatcher::string(const std::string&, const std::string&) {
   return false;
 }
-OORegExpMatcher::~OORegExpMatcher() {}
+namespace oo {
 
-OOShaderSetting OOShaderSettingFromString(const std::string& string) {
-  return string == "SHADERS_FULL" ? OOShaderSetting::kFull : OOShaderSetting::kNotSupported;
+RegExpMatcher::~RegExpMatcher() {}
+
+ShaderSetting ShaderSettingFromString(const std::string& string) {
+  return string == "SHADERS_FULL" ? ShaderSetting::kFull : ShaderSetting::kNotSupported;
 }
 
 // OOLogging.mm's (it would bring the resource manager into the link); only the
 // state dump uses them.
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
+void LogIndent(void) {}
+void LogOutdent(void) {}
+
+}  // namespace oo
+
 
 // --- The state table, as the test expects it
 // ----------------------------------------------------
@@ -73,7 +78,7 @@ struct Expected {
 
 // In OOOpenGLStateID order: opaque, translucent pass, additive blending,
 // overlay.
-const Expected kStates[oo::ToUnderlying(OOOpenGLStateID::kInternalUseOnly)] = {
+const Expected kStates[oo::ToUnderlying(oo::OpenGLStateID::kInternalUseOnly)] = {
     {"opaque", kOn, kEither, kEither, kOn, kOff, kEither, kOn, kOn, true, true,
      true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA},
     {"translucent", kOff, kEither, kEither, kOff, kOff, kEither, kOn, kOn,
@@ -96,7 +101,7 @@ GLint Integer(GLenum name) {
 }
 
 // Every item of OOOpenGLStates.tbl, against the expectation for <state>.
-bool Matches(OOOpenGLStateID state) {
+bool Matches(oo::OpenGLStateID state) {
   const Expected& e = kStates[oo::ToUnderlying(state)];
   GLboolean depthMask = GL_FALSE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMask);
@@ -141,10 +146,10 @@ bool Matches(OOOpenGLStateID state) {
 
 OO_TEST(fromTheInitialState) {
   OO_CHECK(OOTestGLContext());
-  (void)OOOpenGLExtensionManager::sharedManager();  // loads glActiveTextureARB
+  (void)oo::OpenGLExtensionManager::sharedManager();  // loads glActiveTextureARB
                                                     // & co.
 
-  for (int s = 0; s < oo::ToUnderlying(OOOpenGLStateID::kInternalUseOnly); s++) {
+  for (int s = 0; s < oo::ToUnderlying(oo::OpenGLStateID::kInternalUseOnly); s++) {
     // Put the context back in the canonical initial state (GL's defaults) and
     // say so.
     glDisable(GL_LIGHTING);
@@ -157,24 +162,24 @@ OO_TEST(fromTheInitialState) {
     glDisableClientState(GL_NORMAL_ARRAY);
     glDepthMask(GL_TRUE);
     glBlendFunc(GL_ONE, GL_ZERO);
-    OOResetGLStateVerifier();
+    oo::ResetGLStateVerifier();
 
-    OOSetOpenGLState((OOOpenGLStateID)s);
-    OO_CHECK(Matches((OOOpenGLStateID)s));
+    OOSetOpenGLState((oo::OpenGLStateID)s);
+    OO_CHECK(Matches((oo::OpenGLStateID)s));
     OO_CHECK(glGetError() == GL_NO_ERROR);
   }
 }
 
 OO_TEST(betweenEveryPairOfStates) {
   OO_CHECK(OOTestGLContext());
-  for (int from = 0; from < oo::ToUnderlying(OOOpenGLStateID::kInternalUseOnly); from++) {
-    for (int to = 0; to < oo::ToUnderlying(OOOpenGLStateID::kInternalUseOnly); to++) {
-      OOSetOpenGLState((OOOpenGLStateID)from);
-      OO_CHECK(Matches((OOOpenGLStateID)from));
-      OOSetOpenGLState((OOOpenGLStateID)to);
-      OO_CHECK(Matches((OOOpenGLStateID)to));
+  for (int from = 0; from < oo::ToUnderlying(oo::OpenGLStateID::kInternalUseOnly); from++) {
+    for (int to = 0; to < oo::ToUnderlying(oo::OpenGLStateID::kInternalUseOnly); to++) {
+      OOSetOpenGLState((oo::OpenGLStateID)from);
+      OO_CHECK(Matches((oo::OpenGLStateID)from));
+      OOSetOpenGLState((oo::OpenGLStateID)to);
+      OO_CHECK(Matches((oo::OpenGLStateID)to));
       OOVerifyOpenGLState();
-      OO_CHECK(Matches((OOOpenGLStateID)to));
+      OO_CHECK(Matches((oo::OpenGLStateID)to));
     }
   }
   OO_CHECK(glGetError() == GL_NO_ERROR);
@@ -187,22 +192,22 @@ OO_TEST(openItemsAreLeftAlone) {
   // state, so it leaves them alone, and switching from an open FOG to the
   // overlay's "off" leaves fog as it was (on here), where the overlay's own
   // table entry says off.
-  OOSetOpenGLState(OOOpenGLStateID::kOpaque);
+  OOSetOpenGLState(oo::OpenGLStateID::kOpaque);
   glEnable(GL_LIGHT0);
   glDisable(GL_LIGHT1);
   glEnable(GL_FOG);
-  OOSetOpenGLState(OOOpenGLStateID::kTranslucentPass);
+  OOSetOpenGLState(oo::OpenGLStateID::kTranslucentPass);
   OO_CHECK(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
            glIsEnabled(GL_FOG));
-  OOSetOpenGLState(OOOpenGLStateID::kAdditiveBlending);
+  OOSetOpenGLState(oo::OpenGLStateID::kAdditiveBlending);
   OO_CHECK(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
            glIsEnabled(GL_FOG));
-  OOSetOpenGLState(OOOpenGLStateID::kOverlay);
+  OOSetOpenGLState(oo::OpenGLStateID::kOverlay);
   OO_CHECK(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
            glIsEnabled(GL_FOG));
   glDisable(GL_FOG);  // as the overlay expects, so that the next switch has
                       // nothing to verify
-  OOSetOpenGLState(OOOpenGLStateID::kOpaque);
+  OOSetOpenGLState(oo::OpenGLStateID::kOpaque);
   OO_CHECK(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
            !glIsEnabled(GL_FOG));
   glDisable(GL_LIGHT0);

@@ -32,8 +32,8 @@ SOFTWARE.
 #include <memory>
 #include <string>
 
-#include "OOColor.h"  // the colour readers answer std::shared_ptr<OOColor>
-#include "OOFoundation.h"
+#include "Color.h"  // the colour readers answer std::shared_ptr<OOColor>
+#include "Foundation.h"
 #include "oofnd/PList.hpp"
 
 /*	Material configuration properties. A material configuration is an
@@ -44,15 +44,17 @@ SOFTWARE.
 */
 namespace oo {
 
-std::shared_ptr<OOColor> MaterialDiffuseColor(const oo::PList& configuration);
-std::shared_ptr<OOColor> MaterialAmbientColor(const oo::PList& configuration);
-std::shared_ptr<OOColor> MaterialSpecularColor(const oo::PList& configuration);
-std::shared_ptr<OOColor> MaterialSpecularModulateColor(
+std::shared_ptr<oo::Color> MaterialDiffuseColor(const oo::PList& configuration);
+std::shared_ptr<oo::Color> MaterialAmbientColor(const oo::PList& configuration);
+std::shared_ptr<oo::Color> MaterialSpecularColor(
     const oo::PList& configuration);
-std::shared_ptr<OOColor> MaterialEmissionColor(const oo::PList& configuration);
-std::shared_ptr<OOColor> MaterialEmissionModulateColor(
+std::shared_ptr<oo::Color> MaterialSpecularModulateColor(
     const oo::PList& configuration);
-std::shared_ptr<OOColor> MaterialIlluminationModulateColor(
+std::shared_ptr<oo::Color> MaterialEmissionColor(
+    const oo::PList& configuration);
+std::shared_ptr<oo::Color> MaterialEmissionModulateColor(
+    const oo::PList& configuration);
+std::shared_ptr<oo::Color> MaterialIlluminationModulateColor(
     const oo::PList& configuration);
 
 oo::PList MaterialDiffuseMapSpecifier(

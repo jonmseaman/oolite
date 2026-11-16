@@ -20,7 +20,7 @@
 
 #include <cmath>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "LightParticleEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
@@ -157,9 +157,9 @@ OO_TEST(colorAndDiameter) {
   {
     SetUp();
     oo::LightParticleEntity* particle = NewParticle<oo::LightParticleEntity>(1.0f);
-    particle->setColor(OOColor::colorWithRed(0.25f, 0.5f, 0.75f, 0.5f).get());
+    particle->setColor(oo::Color::colorWithRed(0.25f, 0.5f, 0.75f, 0.5f).get());
     OO_CHECK(ComponentsAre(particle, 0.25f, 0.5f, 0.75f, 0.5f));
-    particle->setColor(OOColor::colorWithRed(1.0f, 0.0f, 0.5f, 1.0f).get(),
+    particle->setColor(oo::Color::colorWithRed(1.0f, 0.0f, 0.5f, 1.0f).get(),
                        0.125f);
     OO_CHECK(ComponentsAre(particle, 1.0f, 0.0f, 0.5f, 0.125f));
 
@@ -252,7 +252,7 @@ OO_TEST(cxxSubclassFacade) {
     OO_CHECK(facade != nullptr);
     OO_CHECK(particle->diameter() == 6.0f && facade->isEffect() &&
              !facade->canCollide() && facade->status() == oo::EntityStatus::kEffect);
-    particle->setColor(OOColor::colorWithRed(0.5f, 0.25f, 0.0f, 1.0f).get(),
+    particle->setColor(oo::Color::colorWithRed(0.5f, 0.25f, 0.0f, 1.0f).get(),
                        0.5f);
     OO_CHECK(ComponentsAre(particle.get(), 0.5f, 0.25f, 0.0f, 0.5f));
     OO_CHECK(oo::EntityDescription(facade).starts_with("<TestCxxParticle 0x"));

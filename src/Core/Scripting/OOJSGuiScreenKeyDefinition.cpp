@@ -138,16 +138,16 @@ void OOJSGuiScreenKeyDefinition::runCallback(const std::string& key) {
   OOJSRelinquishContext(context);
 }
 
-OOComparisonResult OOJSGuiScreenKeyDefinition::interfaceCompare(
+oo::ComparisonResult OOJSGuiScreenKeyDefinition::interfaceCompare(
     OOJSGuiScreenKeyDefinition* other) {
   // -caseInsensitiveCompare: as it was sent: a nil name answers
   // OOComparisonResult::kSame (a message to nil); a nil other name compares as
   // the empty string.
-  if (!_name.has_value()) return OOComparisonResult::kSame;
+  if (!_name.has_value()) return oo::ComparisonResult::kSame;
   int order = oo::str::caseInsensitiveCompare(
       *_name, ((other != nullptr) ? other->name() : std::nullopt)
                   .value_or(std::string()));
-  return (order < 0) ? OOComparisonResult::kAscending
-                     : ((order > 0) ? OOComparisonResult::kDescending
-                                    : OOComparisonResult::kSame);
+  return (order < 0) ? oo::ComparisonResult::kAscending
+                     : ((order > 0) ? oo::ComparisonResult::kDescending
+                                    : oo::ComparisonResult::kSame);
 }

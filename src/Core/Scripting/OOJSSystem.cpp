@@ -41,15 +41,15 @@ OOJSSystem.m (QuickJS-ng)
 #include <vector>
 
 #include "DebugStandards.h"
+#include "Description.h"
 #include "Entity.h"
+#include "EntityFilterPredicate.h"
 #include "EntityHold.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "EntityPListForeign.h"
+#include "Foundation.h"
+#include "HPVector.h"
 #include "OOConstToJSString.h"
-#include "OODescription.h"
-#include "OOEntityFilterPredicate.h"
-#include "OOFoundation.h"
-#include "OOHPVector.h"
 #include "OOJSEngineNativeWrappers.h"
 #include "OOJSEntity.h"
 #include "OOJSPlayer.h"
@@ -60,17 +60,17 @@ OOJSSystem.m (QuickJS-ng)
 #include "OOJSSystemInfo.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOQuaternion.h"
-#include "OOShipGroup.h"
-#include "OOSystemDescriptionManager.h"
-#include "OOTypes.h"
-#include "OOVector.h"
 #include "PlanetEntity.h"
+#include "Quaternion.h"
 #include "ScanClass.h"
 #include "ShipEntity.h"
+#include "ShipGroup.h"
 #include "StationEntity.h"  // IWYU pragma: keep: converting StationEntity* to Entity* needs the complete type
 #include "SunEntity.h"      // the sun is C++
+#include "SystemDescriptionManager.h"
+#include "Types.h"
 #include "Universe.h"
+#include "Vector.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
@@ -88,8 +88,8 @@ static std::vector<oo::EntityHold> FindJSVisibleEntities(
 static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate,
                                              void* parameter,
                                              Entity* relativeTo, double range);
-static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
-                                                    Entity* relativeTo);
+static oo::ComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
+                                                      Entity* relativeTo);
 
 static JSValue SystemAddShipsOrGroup(JSContext* context, int argc,
                                      JSValueConst* argv, bool isGroup);
@@ -415,7 +415,7 @@ static JSValue SystemGetProperty(OOJS_GETTER_ARGS) {
     case kInfo:
       return GetJSSystemInfoForSystem(
           context,
-          (player != nullptr ? player->currentGalaxyID() : OOGalaxyID{}),
+          (player != nullptr ? player->currentGalaxyID() : oo::GalaxyID{}),
           (player != nullptr ? player->currentSystemID() : 0));
 
     case kPseudoRandomNumber:
@@ -477,8 +477,8 @@ static JSValue SystemGetProperty(OOJS_GETTER_ARGS) {
 
         case kGovernmentDescription:
           result =
-              oo::PList(OODisplayStringFromGovernmentID(
-                            static_cast<OOGovernmentID>(
+              oo::PList(oo::DisplayStringFromGovernmentID(
+                            static_cast<oo::GovernmentID>(
                                 systemData.get<int>(KEY_GOVERNMENT)))
                             .value_or(std::string(OO_DESC("not-applicable"))));
           break;
@@ -488,8 +488,8 @@ static JSValue SystemGetProperty(OOJS_GETTER_ARGS) {
 
         case kEconomyDescription:
           result = oo::PList(
-              OODisplayStringFromEconomyID(
-                  static_cast<OOEconomyID>(systemData.get<int>(KEY_ECONOMY)))
+              oo::DisplayStringFromEconomyID(
+                  static_cast<oo::EconomyID>(systemData.get<int>(KEY_ECONOMY)))
                   .value_or(std::string(OO_DESC("not-applicable"))));
           break;
 
@@ -565,8 +565,8 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = nullptr;
-  OOGalaxyID galaxy;
-  OOSystemID system;
+  oo::GalaxyID galaxy;
+  oo::SystemID system;
   std::optional<std::string> stringValue;
   oo::PList manifest;  // the running script's manifest identifier, handed on as
                        // it was read
@@ -576,7 +576,7 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
 
   player = OOPlayerForScripting();
 
-  galaxy = (player != nullptr ? player->currentGalaxyID() : OOGalaxyID{});
+  galaxy = (player != nullptr ? player->currentGalaxyID() : oo::GalaxyID{});
   system = (player != nullptr ? player->currentSystemID() : 0);
 
   switch (static_cast<SystemProperty>(magic)) {
@@ -623,7 +623,7 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
         if (UNIVERSE != nullptr)
           UNIVERSE->setSystemDataForGalaxy(
               galaxy, system, std::string(KEY_NAME), oo::PList(*stringValue),
-              manifestID, OOSystemLayer::kOXPDynamic);
+              manifestID, oo::SystemLayer::kOXPDynamic);
         return JS_UNDEFINED;
       }
       break;
@@ -632,9 +632,10 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
       stringValue = OOStringFromJSValue(context, value);
       if (stringValue.has_value()) {
         if (UNIVERSE != nullptr)
-          UNIVERSE->setSystemDataForGalaxy(
-              galaxy, system, std::string(KEY_DESCRIPTION),
-              oo::PList(*stringValue), manifestID, OOSystemLayer::kOXPDynamic);
+          UNIVERSE->setSystemDataForGalaxy(galaxy, system,
+                                           std::string(KEY_DESCRIPTION),
+                                           oo::PList(*stringValue), manifestID,
+                                           oo::SystemLayer::kOXPDynamic);
         return JS_UNDEFINED;
       }
       break;
@@ -643,9 +644,10 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
       stringValue = OOStringFromJSValue(context, value);
       if (stringValue.has_value()) {
         if (UNIVERSE != nullptr)
-          UNIVERSE->setSystemDataForGalaxy(
-              galaxy, system, std::string(KEY_INHABITANTS),
-              oo::PList(*stringValue), manifestID, OOSystemLayer::kOXPDynamic);
+          UNIVERSE->setSystemDataForGalaxy(galaxy, system,
+                                           std::string(KEY_INHABITANTS),
+                                           oo::PList(*stringValue), manifestID,
+                                           oo::SystemLayer::kOXPDynamic);
         return JS_UNDEFINED;
       }
       break;
@@ -658,7 +660,7 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
           UNIVERSE->setSystemDataForGalaxy(
               galaxy, system, std::string(KEY_GOVERNMENT),
               oo::PList::signedInteger(iValue), manifestID,
-              OOSystemLayer::kOXPDynamic);
+              oo::SystemLayer::kOXPDynamic);
         return JS_UNDEFINED;
       }
       break;
@@ -671,7 +673,7 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
           UNIVERSE->setSystemDataForGalaxy(
               galaxy, system, std::string(KEY_ECONOMY),
               oo::PList::signedInteger(iValue), manifestID,
-              OOSystemLayer::kOXPDynamic);
+              oo::SystemLayer::kOXPDynamic);
         return JS_UNDEFINED;
       }
       break;
@@ -684,7 +686,7 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
           UNIVERSE->setSystemDataForGalaxy(
               galaxy, system, std::string(KEY_TECHLEVEL),
               oo::PList::signedInteger(iValue), manifestID,
-              OOSystemLayer::kOXPDynamic);
+              oo::SystemLayer::kOXPDynamic);
         return JS_UNDEFINED;
       }
       break;
@@ -695,7 +697,7 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
           UNIVERSE->setSystemDataForGalaxy(
               galaxy, system, std::string(KEY_POPULATION),
               oo::PList::signedInteger(iValue), manifestID,
-              OOSystemLayer::kOXPDynamic);
+              oo::SystemLayer::kOXPDynamic);
         return JS_UNDEFINED;
       }
       break;
@@ -706,7 +708,7 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
           UNIVERSE->setSystemDataForGalaxy(
               galaxy, system, std::string(KEY_PRODUCTIVITY),
               oo::PList::signedInteger(iValue), manifestID,
-              OOSystemLayer::kOXPDynamic);
+              oo::SystemLayer::kOXPDynamic);
         return JS_UNDEFINED;
       }
       break;
@@ -740,7 +742,7 @@ static JSValue SystemToString(JSContext* context, JSValueConst /*oojsThis*/,
       systemData.find(KEY_NAME);  // -objectForKey:; "(null)" for none
   systemDesc = std::format(
       "[System {}:{} \"{}\"]",
-      (player != nullptr ? player->currentGalaxyID() : OOGalaxyID{}),
+      (player != nullptr ? player->currentGalaxyID() : oo::GalaxyID{}),
       static_cast<unsigned int>(
           (player != nullptr ? player->currentSystemID() : 0)),
       oo::DescriptionOf(systemName != nullptr ? *systemName : oo::PList()));
@@ -1408,7 +1410,7 @@ static JSValue SystemStaticSystemNameForID(JSContext* context,
   int32_t systemID;
 
   if (argc < 1 || !OOJSValueToInt32(context, OOJS_ARGV[0], &systemID) ||
-      systemID < -1 || kOOMaximumSystemID < systemID) {
+      systemID < -1 || oo::kMaximumSystemID < systemID) {
     // -1 interstellar space!
     OOJSReportBadArguments(context, "System", "systemNameForID",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
@@ -1421,7 +1423,7 @@ static JSValue SystemStaticSystemNameForID(JSContext* context,
   else
     OOJS_RETURN_STRING_OR_NULL(
         (UNIVERSE != nullptr
-             ? UNIVERSE->getSystemName(static_cast<OOSystemID>(systemID))
+             ? UNIVERSE->getSystemName(static_cast<oo::SystemID>(systemID))
              : std::optional<std::string>()));
 
   OOJS_NATIVE_EXIT
@@ -1475,26 +1477,26 @@ static JSValue SystemStaticInfoForSystem(JSContext* context,
     return OOJSNativeFailure(context);
   }
 
-  if (galaxyID < 0 || galaxyID > kOOMaximumGalaxyID) {
+  if (galaxyID < 0 || galaxyID > oo::kMaximumGalaxyID) {
     OOJSReportBadArguments(
         context, "System", "infoForSystem", 1, OOJS_ARGV, "Invalid galaxy ID",
         std::format("number in the range 0 to {}",
-                    static_cast<unsigned int>(kOOMaximumGalaxyID)));
+                    static_cast<unsigned int>(oo::kMaximumGalaxyID)));
     return OOJSNativeFailure(context);
   }
 
-  if (systemID < kOOMinimumSystemID || systemID > kOOMaximumSystemID) {
+  if (systemID < oo::kMinimumSystemID || systemID > oo::kMaximumSystemID) {
     OOJSReportBadArguments(context, "System", "infoForSystem", 1, OOJS_ARGV + 1,
                            "Invalid system ID",
                            std::format("number in the range {} to {}",
-                                       static_cast<int>(kOOMinimumSystemID),
-                                       static_cast<int>(kOOMaximumSystemID)));
+                                       static_cast<int>(oo::kMinimumSystemID),
+                                       static_cast<int>(oo::kMaximumSystemID)));
     return OOJSNativeFailure(context);
   }
 
   OOJS_RETURN(GetJSSystemInfoForSystem(context,
-                                       static_cast<OOGalaxyID>(galaxyID),
-                                       static_cast<OOSystemID>(systemID)));
+                                       static_cast<oo::GalaxyID>(galaxyID),
+                                       static_cast<oo::SystemID>(systemID)));
 
   OOJS_NATIVE_EXIT
 }
@@ -1791,7 +1793,7 @@ static JSValue SystemAddShipsOrGroup(JSContext* context, int argc,
     ShipEntity* first = (ships.size() > 0 ? oo::ToShip(ships[0]) : nullptr);
     if (ships.size() > 0)
       result =
-          OOShipGroupObjectNode(first != nullptr ? first->group() : nullptr);
+          oo::ShipGroupObjectNode(first != nullptr ? first->group() : nullptr);
     else
       result = oo::PList();
   }
@@ -1874,7 +1876,7 @@ static JSValue SystemAddShipsOrGroupToRoute(JSContext* context, int argc,
     ShipEntity* first = (ships.size() > 0 ? oo::ToShip(ships[0]) : nullptr);
     if (ships.size() > 0)
       result =
-          OOShipGroupObjectNode(first != nullptr ? first->group() : nullptr);
+          oo::ShipGroupObjectNode(first != nullptr ? first->group() : nullptr);
     else
       result = oo::PList();
   }
@@ -1942,7 +1944,7 @@ static std::vector<oo::EntityHold> FindJSVisibleEntities(
         result.begin(), result.end(),
         [relativeTo](const oo::EntityHold& a, const oo::EntityHold& b) {
           return CompareEntitiesByDistance(a.get(), b.get(), relativeTo) ==
-                 OOComparisonResult::kAscending;
+                 oo::ComparisonResult::kAscending;
         });
   }
   return result;  // empty for no matches, as the empty array was
@@ -1958,8 +1960,8 @@ static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate,
   return FindJSVisibleEntities(ANDPredicate, &param, relativeTo, range);
 }
 
-static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
-                                                    Entity* relativeTo) {
+static oo::ComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
+                                                      Entity* relativeTo) {
   OOJS_PROFILE_SCOPE();
 
   Entity *ea = a,  // the C++ entities
@@ -1971,9 +1973,9 @@ static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
   d2 = static_cast<float>(HPdistance2(eb->position, r->position));
 
   if (d1 < d2)
-    return OOComparisonResult::kAscending;
+    return oo::ComparisonResult::kAscending;
   else if (d1 > d2)
-    return OOComparisonResult::kDescending;
+    return oo::ComparisonResult::kDescending;
   else
-    return OOComparisonResult::kSame;
+    return oo::ComparisonResult::kSame;
 }

@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOIsNumberLiteral.h"
+#include "IsNumberLiteral.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "oofnd/String.hpp"
@@ -148,7 +148,7 @@ static JSValue ValueForMissionVariable(JSContext* context,
   if (const std::string* string = mvar.getIf<std::string>()) {
     // Currently there should only be strings,
     // but we may want to change this.
-    if (OOIsNumberLiteral(*string, true)) {
+    if (oo::IsNumberLiteral(*string, true)) {
       return JS_NewNumber(
           context, oo::str::doubleValue(*string));  // as NSString's doubleValue
     }

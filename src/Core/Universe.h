@@ -37,21 +37,21 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
+#include "Character.h"  // the character pool is std::shared_ptr
+#include "Color.h"
+#include "Commodities.h"
+#include "CommodityMarket.h"  // the universe keeps its market (std::shared_ptr)
 #include "EntityWithDrawable.h"
-#include "OOCharacter.h"  // the character pool is std::shared_ptr
-#include "OOColor.h"
-#include "OOCommodities.h"
-#include "OOCommodityMarket.h"  // the universe keeps its market (std::shared_ptr)
-#include "OOFoundation.h"
-#include "OOHeadless.h"
+#include "Foundation.h"
+#include "Headless.h"
+#include "Maths.h"
 #include "OOJSPropID.h"
-#include "OOMaths.h"
-#include "OOOpenGL.h"
-#include "OOSound.h"
-#include "OOSystemDescriptionManager.h"
-#include "OOTypes.h"
+#include "OpenGL.h"
 #include "ShaderProgram.h"
+#include "Sound.h"
 #include "StellarBody.h"
+#include "SystemDescriptionManager.h"
+#include "Types.h"
 #include "UniverseVirtualMembers.h"  // the test seams
 #include "legacy_random.h"
 #include "oofnd/Object.hpp"
@@ -142,7 +142,7 @@ inline constexpr int OO_POSTFX_CRTBADSIGNAL = OO_POSTFX_CRT + 1;
 inline constexpr int OO_POSTFX_ENDOFLIST =
     OO_POSTFX_CRTBADSIGNAL + 1;  // keep this for last
 
-inline constexpr auto SHADERS_MIN = OOShaderSetting::kOff;
+inline constexpr auto SHADERS_MIN = oo::ShaderSetting::kOff;
 
 inline constexpr int MAX_MESSAGES = 5;
 
@@ -255,15 +255,16 @@ class Universe : public oo::Object {
   */
   static std::unique_ptr<Universe> newUniverse(
       ::MyOpenGLView* inGameView,
-      const OOHeadlessOptions& options = OOHeadlessOptions());
+      const oo::HeadlessOptions& options = oo::HeadlessOptions());
 
   // The set-up of a new universe. Default options: the windowed game's.
-  void initWithGameView(::MyOpenGLView* inGameView,
-                        const OOHeadlessOptions& options = OOHeadlessOptions());
+  void initWithGameView(
+      ::MyOpenGLView* inGameView,
+      const oo::HeadlessOptions& options = oo::HeadlessOptions());
 
   // The options the universe was made with: which add-ons it reads, whether
   // it populates, its seed.
-  const OOHeadlessOptions& headlessOptions() const { return _options; }
+  const oo::HeadlessOptions& headlessOptions() const { return _options; }
 
   // The teardown body, run by the destructor.
   void dealloc();
@@ -327,7 +328,7 @@ class Universe : public oo::Object {
 
   oo::ViewID viewDirection = {};
 
-  OOMatrix viewMatrix = {};
+  oo::Matrix viewMatrix = {};
 
   GLfloat airResistanceFactor = 0;
 
@@ -346,8 +347,8 @@ class Universe : public oo::Object {
   GLfloat skyClearColor[4] = {};
 
   std::optional<std::string> currentMessage;
-  OOTimeAbsolute messageRepeatTime = 0;
-  OOTimeAbsolute countdown_messageRepeatTime =
+  oo::TimeAbsolute messageRepeatTime = 0;
+  oo::TimeAbsolute countdown_messageRepeatTime =
       0;  // Getafix(4/Aug/2010) - Quickfix countdown messages colliding with
           // weapon overheat messages.
           //                       For proper handling of message dispatching,
@@ -362,9 +363,9 @@ class Universe : public oo::Object {
   // The commodities, the system manager and the character pool setUpSettings()
   // and setUpInitialUniverse() replaced, kept until they replace them again:
   // they are not released until then.
-  std::shared_ptr<OOCommodities> replacedCommodities;
-  std::shared_ptr<OOSystemDescriptionManager> replacedSystemManager;
-  std::vector<std::shared_ptr<OOCharacter>> replacedCharacterPool;
+  std::shared_ptr<oo::Commodities> replacedCommodities;
+  std::shared_ptr<oo::SystemDescriptionManager> replacedSystemManager;
+  std::vector<std::shared_ptr<oo::Character>> replacedCharacterPool;
 
   bool displayGUI = false;
   bool wasDisplayGUI = false;
@@ -372,18 +373,18 @@ class Universe : public oo::Object {
   bool autoSaveNow = false;
   bool autoSave = false;
   bool wireframeGraphics = false;
-  OOGraphicsDetail detailLevel = {};
+  oo::GraphicsDetail detailLevel = {};
   // Above entry replaces these two
   //	bool					reducedDetail;
   //	OOShaderSetting			shaderEffectsLevel;
 
   bool displayFPS = false;
 
-  OOTimeAbsolute universal_time = 0;
-  OOTimeDelta time_delta = 0;
+  oo::TimeAbsolute universal_time = 0;
+  oo::TimeDelta time_delta = 0;
 
-  OOTimeAbsolute demo_stage_time = 0;
-  OOTimeAbsolute demo_start_time = 0;
+  oo::TimeAbsolute demo_stage_time = 0;
+  oo::TimeAbsolute demo_start_time = 0;
   GLfloat demo_start_z = 0;
   int demo_stage = 0;
   std::size_t demo_ship_index = 0;
@@ -394,8 +395,8 @@ class Universe : public oo::Object {
 
   bool dumpCollisionInfo = false;
 
-  std::shared_ptr<OOCommodities> commodities;
-  std::shared_ptr<OOCommodityMarket> commodityMarket;
+  std::shared_ptr<oo::Commodities> commodities;
+  std::shared_ptr<oo::CommodityMarket> commodityMarket;
 
   oo::PList _descriptions;  // holds descriptive text for lots of stuff, loaded
                             // at initialisation (a dict; null until loaded)
@@ -407,7 +408,7 @@ class Universe : public oo::Object {
   oo::PList characters;    // holds descriptons of characters
   oo::PList _scenarios;    // game start scenarios (an array)
   oo::PList globalSettings;  // miscellaneous global game settings
-  std::shared_ptr<OOSystemDescriptionManager>
+  std::shared_ptr<oo::SystemDescriptionManager>
       systemManager;        // planetinfo data manager
   oo::PList missiontext;    // holds descriptive text for missions, loaded at
                             // initialisation
@@ -427,9 +428,9 @@ class Universe : public oo::Object {
   std::map<std::string, oo::EntityHold, std::less<>>
       cargoPods;  // template cargo pods, by commodity key
 
-  OOGalaxyID galaxyID = 0;
-  OOSystemID systemID = 0;
-  OOSystemID targetSystemID = 0;
+  oo::GalaxyID galaxyID = 0;
+  oo::SystemID systemID = 0;
+  oo::SystemID targetSystemID = 0;
 
   std::optional<std::string>
       system_names[256];  // hold pregenerated universe info (nullopt where the
@@ -453,15 +454,15 @@ class Universe : public oo::Object {
   oo::PList
       populatorSettings;  // key -> populator block (a mixed configuration: each
                           // block's callbackObj is an Object node)
-  OOTimeDelta next_repopulation = 0;
+  oo::TimeDelta next_repopulation = 0;
   std::optional<std::string> system_repopulator;
   bool deterministic_population = false;
 
-  std::optional<std::vector<OOSystemID>>
+  std::optional<std::vector<oo::SystemID>>
       closeSystems;  // the current system's neighbours; nullopt until cached
 
   std::string useAddOns;
-  OOHeadlessOptions _options;  // as made; the windowed game's by default
+  oo::HeadlessOptions _options;  // as made; the windowed game's by default
 
   bool no_update = false;
 
@@ -473,7 +474,7 @@ class Universe : public oo::Object {
 
   std::vector<oo::EntityHold> activeWormholes;
 
-  std::vector<std::shared_ptr<OOCharacter>> characterPool;
+  std::vector<std::shared_ptr<oo::Character>> characterPool;
 
   std::shared_ptr<::CollisionRegion> universeRegion;
 
@@ -535,7 +536,7 @@ class Universe : public oo::Object {
   void setUpUniverseFromWitchspace();
   void setUpUniverseFromMisjump();
   void setUpWitchspace();
-  void setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2);
+  void setUpWitchspaceBetweenSystem(oo::SystemID s1, oo::SystemID s2);
   ::oo::PlanetEntity* setUpPlanet();
 
   // SetUpSpace, populating normal space, the system populator.
@@ -674,26 +675,26 @@ class Universe : public oo::Object {
   std::shared_ptr<::ShipEntity> newShipWithName(const std::string& shipKey);
   bool isStationShipDictionary(const oo::PList& dict);
   std::optional<std::string> defaultAIForRole(const std::string& role);
-  OOCargoQuantity maxCargoForShip(const std::string& desc);
+  oo::CargoQuantity maxCargoForShip(const std::string& desc);
 
   // Equipment prices, commodities and cargo pods, the game view and
   // controller, settings, entity lighting, the active view matrix.
-  OOCreditsQuantity getEquipmentPriceForKey(const std::string& eq_key);
-  ::OOCommodities* getCommodities();
+  oo::CreditsQuantity getEquipmentPriceForKey(const std::string& eq_key);
+  ::oo::Commodities* getCommodities();
   ::ShipEntity* reifyCargoPod(::ShipEntity* cargoObj);
   ::ShipEntity* cargoPodFromTemplate(::ShipEntity* cargoObj);
-  std::vector<oo::EntityHold> getContainersOfGoods(OOCargoQuantity how_many,
+  std::vector<oo::EntityHold> getContainersOfGoods(oo::CargoQuantity how_many,
                                                    bool scarce, bool legal);
   // getContainersOfCommodity(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
   void fillCargopodWithRandomCargo(::ShipEntity* cargopod);
   std::string getRandomCommodity();
-  OOCargoQuantity getRandomAmountOfCommodity(const std::string& co_type);
+  oo::CargoQuantity getRandomAmountOfCommodity(const std::string& co_type);
   oo::PList commodityDataForType(const std::string& type);
   std::optional<std::string> displayNameForCommodity(
       const std::string& co_type);
   std::optional<std::string> describeCommodity(const std::string& co_type,
-                                               OOCargoQuantity co_amount);
+                                               oo::CargoQuantity co_amount);
   void setGameView(::MyOpenGLView* view);
   // getGameView(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
@@ -704,13 +705,13 @@ class Universe : public oo::Object {
 
   // The active view's matrix, forward and up vectors.
   struct ActiveView {
-    OOMatrix matrix;
+    oo::Matrix matrix;
     Vector forward;
     Vector up;
   };
 
   ActiveView activeView();
-  OOMatrix activeViewMatrix();
+  oo::Matrix activeViewMatrix();
 
   // The view frustum.
   void defineFrustum();
@@ -722,13 +723,13 @@ class Universe : public oo::Object {
   void prepareToRenderIntoDefaultFramebuffer();
   int getFramesDoneThisUpdate();
   void resetFramesDoneThisUpdate();
-  OOMatrix getViewMatrix();
+  oo::Matrix getViewMatrix();
 
   // Messages and the watermark, entity look-up, the linked lists,
   // adding and removing entities, demo ships.
   void drawMessage();
   void drawWatermarkString(const std::string& watermarkString);
-  Entity* entityForUniversalID(OOUniversalID u_id);
+  Entity* entityForUniversalID(oo::UniversalID u_id);
   // addEntity(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h) removeEntity(): virtual, in
   // OO_UNIVERSE_VIRTUAL_MEMBERS (UniverseVirtualMembers.h)
@@ -747,9 +748,9 @@ class Universe : public oo::Object {
                                 const std::string& wreckRole, HPVector rpos,
                                 GLfloat scale, GLfloat lifetime);
   void addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target, float damage,
-                            ::OOColor* color);
+                            ::oo::Color* color);
   ::ShipEntity* firstShipHitByLaserFromShip(::ShipEntity* srcEntity,
-                                            OOWeaponFacing direction,
+                                            oo::WeaponFacing direction,
                                             Vector offset, GLfloat* range_ptr);
 
   // Player targeting, entities in range, counting and finding ships
@@ -781,8 +782,8 @@ class Universe : public oo::Object {
                                          void* parameter, Entity* entity);
   Entity* nearestShipMatchingPredicate(EntityFilterPredicate predicate,
                                        void* parameter, Entity* entity);
-  OOTimeAbsolute getTime();
-  OOTimeDelta getTimeDelta();
+  oo::TimeAbsolute getTime();
+  oo::TimeDelta getTimeDelta();
   void findCollisionsAndShadows();
   std::string collisionDescription();
   void dumpCollisions();
@@ -799,31 +800,31 @@ class Universe : public oo::Object {
   void setScreenTextureDescriptorForKey(const std::string& key,
                                         const oo::PList& desc);
   void clearPreviousMessage();
-  void setMessageGuiBackgroundColor(::OOColor* some_color);
+  void setMessageGuiBackgroundColor(::oo::Color* some_color);
   void displayMessage(const std::optional<std::string>& text,
-                      OOTimeDelta count);
+                      oo::TimeDelta count);
   void displayCountdownMessage(const std::optional<std::string>& text,
-                               OOTimeDelta count);
+                               oo::TimeDelta count);
   void addDelayedMessage(const std::optional<std::string>& text,
-                         OOTimeDelta count, double delay);
+                         oo::TimeDelta count, double delay);
   void addDelayedMessage(
       const oo::PList& message);  // the deferred call's delivery
   // addMessage(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
   void speakWithSubstitutions(const std::optional<std::string>& text);
-  void addMessage(const std::optional<std::string>& text, OOTimeDelta count,
+  void addMessage(const std::optional<std::string>& text, oo::TimeDelta count,
                   bool forceDisplay);
   void addCommsMessage(const std::optional<std::string>& text,
-                       OOTimeDelta count);
+                       oo::TimeDelta count);
   void addCommsMessage(const std::optional<std::string>& text,
-                       OOTimeDelta count, bool showComms, bool logOnly);
-  void showCommsLog(OOTimeDelta how_long);
+                       oo::TimeDelta count, bool showComms, bool logOnly);
+  void showCommsLog(oo::TimeDelta how_long);
   void showGUIMessage(const std::optional<std::string>& text, bool scroll,
-                      ::OOColor* selectedColor, OOTimeDelta how_long);
+                      ::oo::Color* selectedColor, oo::TimeDelta how_long);
   void repopulateSystem();
 
   // Update:, time acceleration, ECM visual effects.
-  void update(OOTimeDelta inDeltaT);
+  void update(oo::TimeDelta inDeltaT);
   bool getECMVisualFXEnabled();
   void setECMVisualFXEnabled(bool isEnabled);
   double getTimeAccelerationFactor();
@@ -831,13 +832,13 @@ class Universe : public oo::Object {
 
   // FilterSortedLists, setGalaxyTo:.
   void filterSortedLists();
-  void setGalaxyTo(OOGalaxyID g);
+  void setGalaxyTo(oo::GalaxyID g);
 
   // Galaxy and system changes, descriptions, scenarios, characters,
   // mission text, system data and names, finding systems.
-  void setGalaxyTo(OOGalaxyID g, bool forced);
-  void setSystemTo(OOSystemID s);
-  OOSystemID currentSystemID();
+  void setGalaxyTo(oo::GalaxyID g, bool forced);
+  void setSystemTo(oo::SystemID s);
+  oo::SystemID currentSystemID();
   // descriptions(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
   unsigned descriptionsGeneration();
@@ -855,11 +856,11 @@ class Universe : public oo::Object {
   bool descriptionBooleanForKey(const std::string& key);
   // getSystemManager(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
-  std::optional<std::string> keyForPlanetOverridesForSystem(OOSystemID s,
-                                                            OOGalaxyID g);
+  std::optional<std::string> keyForPlanetOverridesForSystem(oo::SystemID s,
+                                                            oo::GalaxyID g);
   std::optional<std::string> keyForInterstellarOverridesForSystems(
-      OOSystemID s1, OOSystemID s2, OOGalaxyID g);
-  oo::PList generateSystemData(OOSystemID s);
+      oo::SystemID s1, oo::SystemID s2, oo::GalaxyID g);
+  oo::PList generateSystemData(oo::SystemID s);
   // generateSystemData(s, useCache): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h) currentSystemData(): virtual, in
   // OO_UNIVERSE_VIRTUAL_MEMBERS (UniverseVirtualMembers.h)
@@ -868,43 +869,44 @@ class Universe : public oo::Object {
   // OO_UNIVERSE_VIRTUAL_MEMBERS (UniverseVirtualMembers.h)
   // setSystemDataForGalaxy(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
-  oo::PList generateSystemDataForGalaxy(OOGalaxyID gnum, OOSystemID pnum);
-  std::vector<std::string> systemDataKeysForGalaxy(OOGalaxyID gnum,
-                                                   OOSystemID pnum);
-  oo::PList systemDataForGalaxy(OOGalaxyID gnum, OOSystemID pnum,
+  oo::PList generateSystemDataForGalaxy(oo::GalaxyID gnum, oo::SystemID pnum);
+  std::vector<std::string> systemDataKeysForGalaxy(oo::GalaxyID gnum,
+                                                   oo::SystemID pnum);
+  oo::PList systemDataForGalaxy(oo::GalaxyID gnum, oo::SystemID pnum,
                                 const std::string& key);
-  std::optional<std::string> getSystemName(OOSystemID sys);
+  std::optional<std::string> getSystemName(oo::SystemID sys);
   // getSystemName(sys, gnum): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
-  OOGovernmentID getSystemGovernment(OOSystemID sys);
-  std::optional<std::string> getSystemInhabitants(OOSystemID sys);
-  std::optional<std::string> getSystemInhabitants(OOSystemID sys, bool plural);
-  NSPoint coordinatesForSystem(OOSystemID s);
+  oo::GovernmentID getSystemGovernment(oo::SystemID sys);
+  std::optional<std::string> getSystemInhabitants(oo::SystemID sys);
+  std::optional<std::string> getSystemInhabitants(oo::SystemID sys,
+                                                  bool plural);
+  NSPoint coordinatesForSystem(oo::SystemID s);
   // findSystemFromName(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
-  OOSystemID findSystemAtCoords(NSPoint coords, OOGalaxyID g);
+  oo::SystemID findSystemAtCoords(NSPoint coords, oo::GalaxyID g);
 
   // Neighbouring systems, system-name look-up, routes (with
   // RouteElement), planet textures, global and equipment data, the commodity
   // market, time descriptions.
   oo::PList nearbyDestinationsWithinRange(double range);
-  OOSystemID findNeighbouringSystemToCoords(NSPoint coords, OOGalaxyID g);
-  OOSystemID findConnectedSystemAtCoords(NSPoint coords, OOGalaxyID g);
-  OOSystemID findSystemNumberAtCoords(NSPoint coords, OOGalaxyID g,
-                                      bool hidden);
+  oo::SystemID findNeighbouringSystemToCoords(NSPoint coords, oo::GalaxyID g);
+  oo::SystemID findConnectedSystemAtCoords(NSPoint coords, oo::GalaxyID g);
+  oo::SystemID findSystemNumberAtCoords(NSPoint coords, oo::GalaxyID g,
+                                        bool hidden);
   NSPoint findSystemCoordinatesWithPrefix(const std::string& p_fix);
   NSPoint findSystemCoordinatesWithPrefix(const std::string& p_fix,
                                           bool exactMatch);
   bool* systemsFound();
-  std::optional<std::string> systemNameIndex(OOSystemID index);
-  oo::PList routeFromSystem(OOSystemID start, OOSystemID goal,
-                            OORouteType optimizeBy);
-  std::vector<OOSystemID> neighboursToSystem(OOSystemID s);
-  void preloadPlanetTexturesForSystem(OOSystemID /*s*/);
+  std::optional<std::string> systemNameIndex(oo::SystemID index);
+  oo::PList routeFromSystem(oo::SystemID start, oo::SystemID goal,
+                            oo::RouteType optimizeBy);
+  std::vector<oo::SystemID> neighboursToSystem(oo::SystemID s);
+  void preloadPlanetTexturesForSystem(oo::SystemID /*s*/);
   oo::PList getGlobalSettings();
   oo::PList getEquipmentData();
   oo::PList getEquipmentDataOutfitting();
-  ::OOCommodityMarket* getCommodityMarket();
+  ::oo::CommodityMarket* getCommodityMarket();
   std::optional<std::string> timeDescription(double interval);
 
   // Short time descriptions, sun skimmers, station markets.
@@ -915,8 +917,8 @@ class Universe : public oo::Object {
   oo::PList getStationMarkets();
 
   // Ships for sale (shipsForSaleForSystem:withTL:atTime:).
-  oo::PList shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
-                                  OOTimeAbsolute current_time);
+  oo::PList shipsForSaleForSystem(oo::SystemID s, oo::TechLevelID specialTL,
+                                  oo::TimeAbsolute current_time);
 
   // Trade-in value, brochure descriptions, witchspace exit and
   // sun-skim positions, beacons by code, script events to all ships, the GUIs,
@@ -956,9 +958,9 @@ class Universe : public oo::Object {
   bool getWireframeGraphics();
   // reducedDetail(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
-  void setDetailLevelDirectly(OOGraphicsDetail value);
-  void setDetailLevel(OOGraphicsDetail value);
-  OOGraphicsDetail getDetailLevel();
+  void setDetailLevelDirectly(oo::GraphicsDetail value);
+  void setDetailLevel(oo::GraphicsDetail value);
+  oo::GraphicsDetail getDetailLevel();
   bool useShaders();
   void handleOoliteException(const oo::Exception* exception);
   GLfloat getAirResistanceFactor();
@@ -1025,60 +1027,68 @@ class Universe : public oo::Object {
         The purpose of this is that it makes UNIVERSE essentially a read-only
         global with zero overhead.
 */
-inline Universe* OOGetUniverse() INLINE_CONST_FUNC;
+// The shared universe, defined in Universe.cpp; read through oo::GetUniverse().
+extern Universe* gSharedUniverse;
 
-inline Universe* OOGetUniverse() {
-  extern Universe* gSharedUniverse;
-  return gSharedUniverse;
-}
+namespace oo {
 
-#define UNIVERSE OOGetUniverse()
+inline Universe* GetUniverse() INLINE_CONST_FUNC;
+
+inline Universe* GetUniverse() { return ::gSharedUniverse; }
+
+}  // namespace oo
+
+#define UNIVERSE oo::GetUniverse()
 
 // Only for use with string literals, and only for looking up strings: the
 // description, or the key itself when there is none. OO_DESC() is deprecated in
 // favour of OOExpandKey() except in known performance-critical contexts.
-#define OO_DESC(key) (OOLookUpDescriptionPRIV(key ""))
+#define OO_DESC(key) (oo::LookUpDescriptionPRIV(key ""))
 #define OO_DESC_PLURAL(key, count) \
-  (OOLookUpPluralDescriptionPRIV(key "", count))
+  (oo::LookUpPluralDescriptionPRIV(key "", count))
 
 // Not for direct use.
 // The lookups behind OO_DESC() / OO_DESC_PLURAL(): the description, or the key
 // itself when there is none.
-std::string OOLookUpDescriptionPRIV(const std::string& key);
-std::string OOLookUpPluralDescriptionPRIV(const std::string& key,
-                                          std::ptrdiff_t count);
+namespace oo {
+
+std::string LookUpDescriptionPRIV(const std::string& key);
+std::string LookUpPluralDescriptionPRIV(const std::string& key,
+                                        std::ptrdiff_t count);
 
 /*	The bodies of the custom-sound categories of OOSound and OOSoundSource
    The sound for a customsounds.plist key (borrowed: the resource
    manager's cache keeps it; null for none), and playing it on a source (nothing
    for a null source, as a message to nil did).
 */
-::OOSound* OOSoundWithCustomSoundKey(const std::string& key);
-void OOSoundSourcePlayCustomSoundWithKey(::OOSoundSource* source,
-                                         const std::string& key);
+::oo::Sound* SoundWithCustomSoundKey(const std::string& key);
+void SoundSourcePlayCustomSoundWithKey(::oo::SoundSource* source,
+                                       const std::string& key);
 
 // C++ forms, defined in OOConstToString.cpp: nullopt where the
 // old Foundation forms gave nil.
-std::optional<std::string> OODisplayStringFromGovernmentID(
-    OOGovernmentID government);
-std::optional<std::string> OODisplayStringFromEconomyID(OOEconomyID economy);
+std::optional<std::string> DisplayStringFromGovernmentID(
+    GovernmentID government);
+std::optional<std::string> DisplayStringFromEconomyID(EconomyID economy);
 
 /*	The look-ups behind the description and custom-sound keys: a
    call to the universe when there is one, else what the message to nil
    answered. Inline, so a test that stands in for the universe with a class of
    its own defines only the members it answers.
 */
-inline std::optional<std::string> OOUniverseDescriptionForKey(
+inline std::optional<std::string> UniverseDescriptionForKey(
     const std::string& key) {
   return UNIVERSE != nullptr ? UNIVERSE->descriptionForKey(key) : std::nullopt;
 }
 
-inline const oo::PList* OOUniverseDescriptions() {
+inline const oo::PList* UniverseDescriptions() {
   return UNIVERSE != nullptr ? UNIVERSE->descriptions() : nullptr;
 }
 
-inline std::optional<std::string> OOUniverseSoundNameForCustomSoundKey(
+inline std::optional<std::string> UniverseSoundNameForCustomSoundKey(
     const std::string& key) {
   return UNIVERSE != nullptr ? UNIVERSE->soundNameForCustomSoundKey(key)
                              : std::nullopt;
 }
+
+}  // namespace oo

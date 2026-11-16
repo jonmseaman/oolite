@@ -30,10 +30,10 @@ MA 02110-1301, USA.
 
 #include <string>
 
+#include "CallByName.h"
+#include "Color.h"               // a colour result (kMethodTypeColorVoid)
 #include "EntityCalledByName.h"  // the entities' by-name methods
 #include "EntityPListForeign.h"  // oo::EntityObjectNode, oo::EntityShortDescription
-#include "OOCallByName.h"
-#include "OOColor.h"                // a colour result (kMethodTypeColorVoid)
 #include "OOJSCallEntityMethods.h"  // callObjC()'s names for an entity (generated)
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
@@ -208,7 +208,7 @@ bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
 
         case kMethodTypeColorVoid:
           // A colour result is its PList::Object node.
-          result = OOColorObjectNode(typed.color);
+          result = oo::ColorObjectNode(typed.color);
           if (selectorString.has_value() &&
               oo::str::hasSuffix(*selectorString, "_bool"))
             result = oo::PList(

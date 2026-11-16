@@ -15,8 +15,8 @@
 	nothing else here makes it wherever the test runs from. Run: tests/run.sh unit
 */
 
-#include "OOCallByName.h"
-#include "OOConstToString.h"
+#include "CallByName.h"
+#include "ConstToString.h"
 #include "EntityCalledByName.h"
 #include "OOJavaScriptEngine.h"
 #include "PlayerEntity.h"
@@ -111,7 +111,7 @@ OO_TEST(savedChartAndSpeechNumbers)
 		const struct { int route, chart, speech; } kCases[] = { {0, 0, 0}, {1, 1, 2}, {2, 4, 1} };
 		for (const auto &c : kCases)
 		{
-			PlayerEntityTestAccess::ANA_mode(player) = static_cast<OORouteType>(c.route);
+			PlayerEntityTestAccess::ANA_mode(player) = static_cast<oo::RouteType>(c.route);
 			PlayerEntityTestAccess::longRangeChartMode(player) = static_cast<oo::LongRangeChartMode>(c.chart);
 			PlayerEntityTestAccess::isSpeechOn(player) = static_cast<oo::SpeechSettings>(c.speech);
 			const oo::PList save = player->commanderDataDictionary();
@@ -121,13 +121,13 @@ OO_TEST(savedChartAndSpeechNumbers)
 			OO_CHECK(Saved(save, "chart_colour_mode") == c.chart);
 			OO_CHECK(Saved(save, "speech_on") == c.speech);
 			// Read back as setCommanderDataFromDictionary() converts them.
-			OO_CHECK(static_cast<OORouteType>(Saved(save, "chart_ana_mode")) == PlayerEntityTestAccess::ANA_mode(player));
+			OO_CHECK(static_cast<oo::RouteType>(Saved(save, "chart_ana_mode")) == PlayerEntityTestAccess::ANA_mode(player));
 			OO_CHECK(static_cast<oo::LongRangeChartMode>(Saved(save, "chart_colour_mode")) == PlayerEntityTestAccess::longRangeChartMode(player));
 			OO_CHECK(static_cast<oo::SpeechSettings>(Saved(save, "speech_on")) == PlayerEntityTestAccess::isSpeechOn(player));
 		}
 		// The route and speech numbers name what they did.
-		OO_CHECK(RouteTypeToString(static_cast<OORouteType>(2)) == "OPTIMIZED_BY_TIME");
-		OO_CHECK(RouteTypeToString(static_cast<OORouteType>(1)) == "OPTIMIZED_BY_JUMPS");
+		OO_CHECK(RouteTypeToString(static_cast<oo::RouteType>(2)) == "OPTIMIZED_BY_TIME");
+		OO_CHECK(RouteTypeToString(static_cast<oo::RouteType>(1)) == "OPTIMIZED_BY_JUMPS");
 		gOOPlayer = nullptr;
 		oo::ReleaseEntity(player);
 	}
@@ -139,8 +139,8 @@ OO_TEST(longRangeChartModeOrdinals)
 	const char *const kModes[] = { "OOLRC_MODE_UNKNOWN", "OOLRC_MODE_SUNCOLOR", "OOLRC_MODE_ECONOMY", "OOLRC_MODE_GOVERNMENT", "OOLRC_MODE_TECHLEVEL" };
 	for (int i = 0; i < 5; i++)
 	{
-		OO_CHECK(static_cast<int>(OOLongRangeChartModeFromString(kModes[i])) == i);
-		OO_CHECK(OOStringFromLongRangeChartMode(static_cast<oo::LongRangeChartMode>(i)) == kModes[i]);
+		OO_CHECK(static_cast<int>(oo::LongRangeChartModeFromString(kModes[i])) == i);
+		OO_CHECK(oo::StringFromLongRangeChartMode(static_cast<oo::LongRangeChartMode>(i)) == kModes[i]);
 	}
 }
 
@@ -149,15 +149,15 @@ OO_TEST(legacyEnergyUnitNumbers)
 	// A pre-1.80 save's energy_unit: 15 was the normal unit and 20 the naval one, which
 	// setCommanderDataFromDictionary() turns into EQ_ENERGY_UNIT and EQ_NAVAL_ENERGY_UNIT; the
 	// current units are 8 and 16, the damaged ones 1 and 2.
-	OO_CHECK(static_cast<int>(OOEnergyUnitType::kOldNormal) == 15);
-	OO_CHECK(static_cast<int>(OOEnergyUnitType::kOldNaval) == 20);
-	OO_CHECK(static_cast<int>(OOEnergyUnitType::kNormal) == 8);
-	OO_CHECK(static_cast<int>(OOEnergyUnitType::kNaval) == 16);
-	OO_CHECK(static_cast<int>(OOEnergyUnitType::kNormalDamaged) == 1);
-	OO_CHECK(static_cast<int>(OOEnergyUnitType::kNavalDamaged) == 2);
-	OO_CHECK(static_cast<int>(OOEnergyUnitType::kNone) == 0);
-	OO_CHECK(EnergyUnitTypeToString(static_cast<OOEnergyUnitType>(8)) == "ENERGY_UNIT_NORMAL");
-	OO_CHECK(EnergyUnitTypeToString(static_cast<OOEnergyUnitType>(16)) == "ENERGY_UNIT_NAVAL");
+	OO_CHECK(static_cast<int>(oo::EnergyUnitType::kOldNormal) == 15);
+	OO_CHECK(static_cast<int>(oo::EnergyUnitType::kOldNaval) == 20);
+	OO_CHECK(static_cast<int>(oo::EnergyUnitType::kNormal) == 8);
+	OO_CHECK(static_cast<int>(oo::EnergyUnitType::kNaval) == 16);
+	OO_CHECK(static_cast<int>(oo::EnergyUnitType::kNormalDamaged) == 1);
+	OO_CHECK(static_cast<int>(oo::EnergyUnitType::kNavalDamaged) == 2);
+	OO_CHECK(static_cast<int>(oo::EnergyUnitType::kNone) == 0);
+	OO_CHECK(EnergyUnitTypeToString(static_cast<oo::EnergyUnitType>(8)) == "ENERGY_UNIT_NORMAL");
+	OO_CHECK(EnergyUnitTypeToString(static_cast<oo::EnergyUnitType>(16)) == "ENERGY_UNIT_NAVAL");
 }
 
 OO_TEST(shipBehaviourNumbersByName)

@@ -40,6 +40,6 @@ void InitOOJSFrameCallbacks(JSContext* context, JSValueConst global);
 // (a headless game sets its seed before the engine starts), so ids repeat.
 void OOJSFrameCallbacksSetIDSeed(std::optional<std::uint32_t> seed);
 
-void OOJSFrameCallbacksInvoke(OOTimeDelta delta);
+void OOJSFrameCallbacksInvoke(oo::TimeDelta delta);
 
 void OOJSFrameCallbacksRemoveAll();

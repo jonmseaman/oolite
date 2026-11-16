@@ -217,8 +217,8 @@ bool HPVectorToJSValue(JSContext* context, HPVector vector, JSValue* outValue) {
 bool NSPointToVectorJSValue(JSContext* context, NSPoint point,
                             JSValue* outValue) {
   return VectorToJSValue(context,
-                         make_vector(static_cast<OOScalar>(point.x),
-                                     static_cast<OOScalar>(point.y), 0),
+                         make_vector(static_cast<oo::Scalar>(point.x),
+                                     static_cast<oo::Scalar>(point.y), 0),
                          outValue);
 }
 
@@ -425,7 +425,7 @@ static JSValue VectorGetProperty(JSContext* context, JSValueConst thisObj,
   OOJS_PROFILE_SCOPE();
 
   HPVector vector;
-  OOHPScalar fValue;
+  oo::HPScalar fValue;
 
   if (!JSObjectGetVector(context, thisObj, &vector)) [[unlikely]]
     return JS_UNDEFINED;
@@ -900,7 +900,7 @@ static JSValue VectorStaticInterpolate(JSContext* context,
                                  &interp, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
-  result = OOHPVectorInterpolate(av, bv, interp);
+  result = oo::HPVectorInterpolate(av, bv, interp);
 
   OOJS_RETURN_HPVECTOR(result);
 }
@@ -916,7 +916,7 @@ static JSValue VectorStaticRandom(JSContext* context, JSValueConst /*oojsThis*/,
                                                      &maxLength, nullptr))
     maxLength = 1.0;
 
-  OOJS_RETURN_HPVECTOR(OOHPVectorRandomSpatial(maxLength));
+  OOJS_RETURN_HPVECTOR(oo::HPVectorRandomSpatial(maxLength));
 }
 
 // randomDirection([scale : Number]) : Vector3D
@@ -931,7 +931,8 @@ static JSValue VectorStaticRandomDirection(JSContext* context,
                                                      &scale, nullptr))
     scale = 1.0;
 
-  OOJS_RETURN_HPVECTOR(HPvector_multiply_scalar(OORandomUnitHPVector(), scale));
+  OOJS_RETURN_HPVECTOR(
+      HPvector_multiply_scalar(oo::RandomUnitHPVector(), scale));
 }
 
 // randomDirectionAndLength([maxLength : Number]) : Vector3D
@@ -947,7 +948,7 @@ static JSValue VectorStaticRandomDirectionAndLength(JSContext* context,
                                                      &maxLength, nullptr))
     maxLength = 1.0;
 
-  OOJS_RETURN_HPVECTOR(OOHPVectorRandomRadial(maxLength));
+  OOJS_RETURN_HPVECTOR(oo::HPVectorRandomRadial(maxLength));
 }
 
 #ifndef OOJS_POC_HARNESS

@@ -24,8 +24,8 @@
 #include <string>
 #include <vector>
 
-#include "OOColor.h"
-#include "OOEquipmentType.h"
+#include "Color.h"
+#include "EquipmentType.h"
 #include "oo_test.hpp"
 
 // --- The game around the class
@@ -147,15 +147,20 @@ oo::PList Universe::getEquipmentDataOutfitting() {
 
 Universe* gSharedUniverse = nullptr;
 
-#include "OOCacheManager.h"
+#include "CacheManager.h"
 
 // The cache manager: a C++ stand-in.
-OOCacheManager* OOCacheManager::sharedCache() {
-  static OOCacheManager* shared = new OOCacheManager;
+oo::CacheManager* oo::CacheManager::sharedCache() {
+  static oo::CacheManager* shared = new oo::CacheManager;
   return shared;
 }
-OOCacheManager::~OOCacheManager() {}
-void OOCacheManager::setPList(const oo::PList& value, const std::string& key,
+namespace oo {
+
+CacheManager::~CacheManager() {}
+
+}  // namespace oo
+
+void oo::CacheManager::setPList(const oo::PList& value, const std::string& key,
                               const std::string& cache) {
   std::string items;
   for (size_t i = 0; i < value.count(); i++)
@@ -258,7 +263,7 @@ std::string Keys(const std::optional<std::vector<std::string>>& keys) {
   return result + "]";
 }
 
-std::string Colour(OOColor* color) {
+std::string Colour(oo::Color* color) {
   if (color == nullptr) return "nil";
   char buffer[64];
   std::snprintf(buffer, sizeof buffer, "(%g %g %g %g)", color->redComponent(),
@@ -268,7 +273,7 @@ std::string Colour(OOColor* color) {
 }
 
 // Everything an equipment type answers, in one line.
-std::string Describe(OOEquipmentType* t) {
+std::string Describe(oo::EquipmentType* t) {
   if (t == nullptr) return "nil";
   char buffer[1024];
   std::snprintf(
@@ -353,7 +358,7 @@ std::string Log() {
   return result;
 }
 
-std::string Identifiers(const std::vector<std::shared_ptr<OOEquipmentType>>& types) {
+std::string Identifiers(const std::vector<std::shared_ptr<oo::EquipmentType>>& types) {
   std::string result;
   for (const auto& t : types) result += t->identifier().value_or("-") + " ";
   return result;
@@ -471,22 +476,22 @@ OO_TEST(loading) {
 
   {
     Reset();
-    OOEquipmentType::loadEquipment();
+    oo::EquipmentType::loadEquipment();
     OO_CHECK(expect(Log()));
-    OO_CHECK(expect(Identifiers(OOEquipmentType::allEquipmentTypes())));
+    OO_CHECK(expect(Identifiers(oo::EquipmentType::allEquipmentTypes())));
     OO_CHECK(
-        expect(Identifiers(OOEquipmentType::allEquipmentTypesOutfitting())));
+        expect(Identifiers(oo::EquipmentType::allEquipmentTypesOutfitting())));
     for (const char* key :
          {"EQ_FUEL", "EQ_MISSILE", "EQ_PASSENGER_BERTH_REMOVAL", "EQ_QC_MINE",
           "EQ_WEAPON_PULSE_LASER", "EQ_SHIELD_BOOSTER", "EQ_SCOOPER",
           "EQ_BROKEN", "EQ_EMPTY_NAME", "EQ_NO_NAME", "EQ_OUTFIT"}) {
       gLog.clear();
       OO_CHECK(expect(
-          Describe(OOEquipmentType::equipmentTypeWithIdentifier(key).get())));
+          Describe(oo::EquipmentType::equipmentTypeWithIdentifier(key).get())));
       OO_CHECK(expect(Log()));
     }
     OO_CHECK(
-        expect(OOEquipmentType::equipmentTypeWithIdentifier("EQ_SHIELD_BOOSTER")
+        expect(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_SHIELD_BOOSTER")
                    .get()
                    ->descriptionComponents()
                    .value_or("-")));
@@ -517,49 +522,49 @@ OO_TEST(registries) {
       "scripts/equipment conditions = cond.js,; ",
   };
 
-  OOEquipmentType* fuel = nullptr;
+  oo::EquipmentType* fuel = nullptr;
   {
     Reset();
-    OOEquipmentType::loadEquipment();
-    fuel = OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL")
+    oo::EquipmentType::loadEquipment();
+    fuel = oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL")
                .get();  // not retained, as ShipEntity keeps weapon types
   }
   {
     // The registry keeps its types: the same object, pool after pool, and from
     // every list.
     OO_CHECK(fuel != nullptr &&
-             OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get() ==
+             oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get() ==
                  fuel);
-    OO_CHECK(OOEquipmentType::allEquipmentTypes().front().get() == fuel);
+    OO_CHECK(oo::EquipmentType::allEquipmentTypes().front().get() == fuel);
     OO_CHECK(fuel->identifier() == std::optional<std::string>("EQ_FUEL"));
-    OO_CHECK(OOEquipmentType::allEquipmentTypesOutfitting().front().get() !=
+    OO_CHECK(oo::EquipmentType::allEquipmentTypesOutfitting().front().get() !=
              fuel);  // its own objects
 
     // Added types go to both lists and the index.
-    OOEquipmentType::addEquipmentWithInfo(
+    oo::EquipmentType::addEquipmentWithInfo(
         Item(3, 30, "Extra", "EQ_EXTRA_MISSILE", "Added"));
-    OOEquipmentType::addEquipmentWithInfo(oo::PList("not an entry"));
-    OO_CHECK(expect(Identifiers(OOEquipmentType::allEquipmentTypes())));
+    oo::EquipmentType::addEquipmentWithInfo(oo::PList("not an entry"));
+    OO_CHECK(expect(Identifiers(oo::EquipmentType::allEquipmentTypes())));
     OO_CHECK(
-        expect(Identifiers(OOEquipmentType::allEquipmentTypesOutfitting())));
+        expect(Identifiers(oo::EquipmentType::allEquipmentTypesOutfitting())));
     OO_CHECK(expect(Describe(
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MISSILE")
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MISSILE")
             .get())));
 
     // The missile registry.
     OO_CHECK(
-        !OOEquipmentType::getMissileRegistryRoleForShip("viper").has_value());
-    OOEquipmentType::setMissileRegistryRole("EQ_MISSILE", "viper");
-    OOEquipmentType::setMissileRegistryRole("EQ_MINE", "");
-    OO_CHECK(OOEquipmentType::getMissileRegistryRoleForShip("viper") ==
+        !oo::EquipmentType::getMissileRegistryRoleForShip("viper").has_value());
+    oo::EquipmentType::setMissileRegistryRole("EQ_MISSILE", "viper");
+    oo::EquipmentType::setMissileRegistryRole("EQ_MINE", "");
+    OO_CHECK(oo::EquipmentType::getMissileRegistryRoleForShip("viper") ==
              std::optional<std::string>("EQ_MISSILE"));
-    OO_CHECK(!OOEquipmentType::getMissileRegistryRoleForShip("").has_value());
+    OO_CHECK(!oo::EquipmentType::getMissileRegistryRoleForShip("").has_value());
 
     // The display colour can be replaced.
-    OOEquipmentType* laser =
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
+    oo::EquipmentType* laser =
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
             .get();
-    laser->setDisplayColor(OOColor::blueColor().get());
+    laser->setDisplayColor(oo::Color::blueColor().get());
     OO_CHECK(expect(Colour(laser->displayColor().get())));
     laser->setDisplayColor(nullptr);
     OO_CHECK(expect(Colour(laser->displayColor().get())));
@@ -568,15 +573,15 @@ OO_TEST(registries) {
     // Strict standards: legacy conditions are dropped and TL99 stays 99.
     Reset();
     gEnforceStandards = true;
-    OOEquipmentType::loadEquipment();
+    oo::EquipmentType::loadEquipment();
     OO_CHECK(expect(Log()));
-    OOEquipmentType* booster =
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_SHIELD_BOOSTER").get();
+    oo::EquipmentType* booster =
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_SHIELD_BOOSTER").get();
     OO_CHECK(booster->conditions().isNull() &&
              booster->effectiveTechLevel() == 99);
-    OO_CHECK(OOEquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MISSILE")
+    OO_CHECK(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MISSILE")
                  .get() == nullptr);  // a reload starts again
-    OO_CHECK(OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL")
+    OO_CHECK(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL")
                  .get()
                  ->identifier() == std::optional<std::string>("EQ_FUEL"));
   }
@@ -585,15 +590,15 @@ OO_TEST(registries) {
 OO_TEST(cxxClass) {
   {
     Reset();
-    OOEquipmentType::loadEquipment();
-    const std::vector<std::shared_ptr<OOEquipmentType>> all =
-        OOEquipmentType::allEquipmentTypes();
+    oo::EquipmentType::loadEquipment();
+    const std::vector<std::shared_ptr<oo::EquipmentType>> all =
+        oo::EquipmentType::allEquipmentTypes();
     OO_CHECK(all.size() == 9 &&
-             OOEquipmentType::allEquipmentTypesOutfitting().size() == 2);
-    std::shared_ptr<OOEquipmentType> laser =
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER");
+             oo::EquipmentType::allEquipmentTypesOutfitting().size() == 2);
+    std::shared_ptr<oo::EquipmentType> laser =
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER");
     OO_CHECK(laser != nullptr && laser == all[4]);
-    OO_CHECK(OOEquipmentType::equipmentTypeWithIdentifier("EQ_NO_NAME") ==
+    OO_CHECK(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_NO_NAME") ==
              nullptr);
     OO_CHECK(laser->identifier() ==
                  std::optional<std::string>("EQ_WEAPON_PULSE_LASER") &&
@@ -604,27 +609,27 @@ OO_TEST(cxxClass) {
     OO_CHECK(laser->displayColor() != nullptr &&
              laser->displayColor()->greenComponent() == 1.0f);
     OO_CHECK(laser->weaponColor()->redComponent() == 1.0f);
-    laser->setDisplayColor(OOColor::blueColor().get());
+    laser->setDisplayColor(oo::Color::blueColor().get());
     OO_CHECK(laser->displayColor()->blueComponent() == 1.0f);
     OO_CHECK(
         laser->descriptionComponents() ==
         std::optional<std::string>("EQ_WEAPON_PULSE_LASER \"Pulse laser\""));
 
-    std::shared_ptr<OOEquipmentType> booster =
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_SHIELD_BOOSTER");
+    std::shared_ptr<oo::EquipmentType> booster =
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_SHIELD_BOOSTER");
     OO_CHECK(booster->techLevel() == 99 && booster->effectiveTechLevel() == 7);
     OO_CHECK(booster->requiresEquipment() ==
              std::optional<std::vector<std::string>>({"EQ_A", "EQ_B"}));
     OO_CHECK(booster->provides("boost") && !booster->provides("speed") &&
              booster->repairTime() == 300);
 
-    OOEquipmentType::addEquipmentWithInfo(
+    oo::EquipmentType::addEquipmentWithInfo(
         Item(3, 30, "Extra", "EQ_EXTRA_MINE", "Added"));
-    OO_CHECK(OOEquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MINE")
+    OO_CHECK(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MINE")
                  ->fxWeaponLaunchedName() ==
              std::optional<std::string>("[mine-launched]"));
-    OOEquipmentType::setMissileRegistryRole("EQ_EXTRA_MINE", "cobra");
-    OO_CHECK(OOEquipmentType::getMissileRegistryRoleForShip("cobra") ==
+    oo::EquipmentType::setMissileRegistryRole("EQ_EXTRA_MINE", "cobra");
+    OO_CHECK(oo::EquipmentType::getMissileRegistryRoleForShip("cobra") ==
              std::optional<std::string>("EQ_EXTRA_MINE"));
   }
 }
@@ -634,62 +639,62 @@ OO_TEST(objectNode) {
   // back, and describes it as "%@" printed it.
   {
     Reset();
-    OOEquipmentType::loadEquipment();
-    OOEquipmentType* fuel =
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get();
-    const oo::PList node = OOEquipmentTypeObjectNode(fuel);
-    OO_CHECK(OOEquipmentTypeInObjectNode(node) == fuel);
-    OO_CHECK(OOEquipmentTypeObjectNode(nullptr).isNull() &&
-             OOEquipmentTypeInObjectNode(oo::PList("EQ_FUEL")) == nullptr);
+    oo::EquipmentType::loadEquipment();
+    oo::EquipmentType* fuel =
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get();
+    const oo::PList node = oo::EquipmentTypeObjectNode(fuel);
+    OO_CHECK(oo::EquipmentTypeInObjectNode(node) == fuel);
+    OO_CHECK(oo::EquipmentTypeObjectNode(nullptr).isNull() &&
+             oo::EquipmentTypeInObjectNode(oo::PList("EQ_FUEL")) == nullptr);
     OO_CHECK(fuel->className() == "OOEquipmentType");
     const std::string text = fuel->description();
     OO_CHECK(text.rfind("<OOEquipmentType 0x", 0) == 0 &&
              text.find(">{EQ_FUEL \"Fuel\"}") != std::string::npos);
-    const oo::PList nodes = OOEquipmentTypeObjectNodes(
-        {oo::share(fuel), std::shared_ptr<OOEquipmentType>(),
+    const oo::PList nodes = oo::EquipmentTypeObjectNodes(
+        {oo::share(fuel), std::shared_ptr<oo::EquipmentType>(),
          oo::share(fuel)});
     OO_CHECK(nodes.count() == 2 &&
-             OOEquipmentTypeInObjectNode(
+             oo::EquipmentTypeInObjectNode(
                  (*nodes.getIf<oo::PList::Array>())[1]) == fuel);
   }
 }
 
 OO_TEST(facadeIdentity) {
-  OOEquipmentType* fuel = nullptr;
-  std::shared_ptr<OOColor> blue;  // the C++ colour
+  oo::EquipmentType* fuel = nullptr;
+  std::shared_ptr<oo::Color> blue;  // the C++ colour
   {
     Reset();
-    OOEquipmentType::loadEquipment();
-    fuel = OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get();
+    oo::EquipmentType::loadEquipment();
+    fuel = oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get();
 
     // The display colour comes back as the same colour.
-    blue = OOColor::blueColor();
+    blue = oo::Color::blueColor();
     fuel->setDisplayColor(blue.get());
     OO_CHECK(fuel->displayColor().get() == blue.get());
   }
   {
     // A registered type outlives the pool (ships keep them unretained), and a
     // type registered later is the same object each time it is looked up.
-    OO_CHECK(OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get() ==
+    OO_CHECK(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get() ==
                  fuel &&
              fuel->displayColor().get() == blue.get());
-    OOEquipmentType::addEquipmentWithInfo(
+    oo::EquipmentType::addEquipmentWithInfo(
         Item(3, 30, "Quiet", "EQ_QUIET", "Added in C++"));
-    OOEquipmentType* quiet =
-        OOEquipmentType::equipmentTypeWithIdentifier("EQ_QUIET").get();
+    oo::EquipmentType* quiet =
+        oo::EquipmentType::equipmentTypeWithIdentifier("EQ_QUIET").get();
     OO_CHECK(
         quiet != nullptr &&
         quiet ==
-            OOEquipmentType::equipmentTypeWithIdentifier("EQ_QUIET").get());
+            oo::EquipmentType::equipmentTypeWithIdentifier("EQ_QUIET").get());
     blue = nullptr;
   }
 }
 
 // The JS glue of OOEquipmentType (OOJSPrivateObject), defined in
 // OOJSEquipmentInfo.mm, which this test does not link: the vtable names these.
-JSValue OOEquipmentType::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
-void OOEquipmentType::clearJSSelf(JSValueConst) {}
-std::optional<std::string> OOEquipmentType::jsDescription() {
+JSValue oo::EquipmentType::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
+void oo::EquipmentType::clearJSSelf(JSValueConst) {}
+std::optional<std::string> oo::EquipmentType::jsDescription() {
   return std::nullopt;
 }
 

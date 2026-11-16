@@ -42,7 +42,7 @@ SOFTWARE.
 #include <format>
 #include <typeinfo>
 
-#include "OODemangle.h"
+#include "Demangle.h"
 #include "oofnd/Log.hpp"
 
 // Adding a stage to a set of stages: identity, no duplicates, null ignored.

@@ -34,17 +34,17 @@ class PlayerEntity;
    named "throw" throws a C++ exception, so the test sees what an exception
    under a native becomes.
 */
-#include "OOALSound.h"
+#include "ALSound.h"
 #include <stdexcept>
 
-OOSound::OOSound()  {}
-ALuint OOSound::soundBuffer()  { return 0; }
-bool OOSound::soundIncomplete()  { return false; }
-void OOSound::rewind()  {}
-std::optional<std::string> OOSound::descriptionComponents() const  { return std::nullopt; }
-std::optional<std::string> OOSound::name()  { return std::nullopt; }
+oo::Sound::Sound()  {}
+ALuint oo::Sound::soundBuffer()  { return 0; }
+bool oo::Sound::soundIncomplete()  { return false; }
+void oo::Sound::rewind()  {}
+std::optional<std::string> oo::Sound::descriptionComponents() const  { return std::nullopt; }
+std::optional<std::string> oo::Sound::name()  { return std::nullopt; }
 
-class TestSound final : public OOSound
+class TestSound final : public oo::Sound
 {
 public:
 	std::optional<std::string> name() override
@@ -57,7 +57,12 @@ public:
 	std::optional<std::string> _name;
 };
 
-class OOSoundSource;	// only handed on (OOSoundSource.h)
+namespace oo {
+
+class SoundSource;
+
+}  // namespace oo
+	// only handed on (OOSoundSource.h)
 
 #include "ResourceManager.h"
 
@@ -67,15 +72,20 @@ class OOSoundSource;	// only handed on (OOSoundSource.h)
    what was asked.
 */
 #include "oofnd/Object.hpp"
-class OOMusicController : public oo::Object
+namespace oo {
+
+class MusicController : public oo::Object
 {
 public:
-	static OOMusicController *sharedController();
+	static MusicController *sharedController();
 	void playMusicNamed(const std::string &name, bool loop, float gain);
 	void stop();
-	::OOSoundSource *soundSource();
+	::oo::SoundSource *soundSource();
 	std::optional<std::string> playingMusic();
 };
+
+}  // namespace oo
+
 
 // What the controller was asked.
 struct MusicRecord
@@ -118,13 +128,13 @@ public:
 
 
 namespace {
-std::vector<std::shared_ptr<OOSound>> sLoaded;	// the sounds made, kept as the resource manager's cache keeps them
+std::vector<std::shared_ptr<oo::Sound>> sLoaded;	// the sounds made, kept as the resource manager's cache keeps them
 MusicRecord *sMusic = nullptr;
 char sMusicSourceObject;	// the music's source: an object the binding hands on unopened
-OOSoundSource *sMusicSource = reinterpret_cast<OOSoundSource *>(&sMusicSourceObject);
+oo::SoundSource *sMusicSource = reinterpret_cast<oo::SoundSource *>(&sMusicSourceObject);
 
 
-OOSound *MakeSound(const std::optional<std::string> &name)
+oo::Sound *MakeSound(const std::optional<std::string> &name)
 {
 	const std::shared_ptr<TestSound> sound = oo::makeShared<TestSound>();
 	sound->_name = name;
@@ -134,15 +144,20 @@ OOSound *MakeSound(const std::optional<std::string> &name)
 } // namespace
 
 
-OOSound *OOSoundWithCustomSoundKey(const std::string &key)
+namespace oo {
+
+Sound *SoundWithCustomSoundKey(const std::string &key)
 {
 	return MakeSound("custom:" + key);
 }
 
+}  // namespace oo
+
+
 
 // ResourceManager: C++ definitions of the statics the code under test calls,
 // with the stand-in's answers.
-OOSound * ResourceManager::ooSoundNamed(const std::string &fileName, const std::optional<std::string> &folderName)
+oo::Sound * ResourceManager::ooSoundNamed(const std::string &fileName, const std::optional<std::string> &folderName)
 {
 	if (fileName == "missing.ogg")  return nullptr;
 	return MakeSound((fileName == "raise" || fileName == "throw") ? fileName : folderName.value_or("") + "/" + fileName);
@@ -153,7 +168,7 @@ OOSound * ResourceManager::ooSoundNamed(const std::string &fileName, const std::
 // The SoundSource binding's JS value for a source (owned by the caller): a string naming the
 // class, as the engine's stand-in answered for any object but a sound (OOJSSoundSource.mm is not
 // linked).
-JSValue OOJSSoundSourceJSValueInContext(OOSoundSource *source, JSContext *context)
+JSValue OOJSSoundSourceJSValueInContext(oo::SoundSource *source, JSContext *context)
 {
 	if (source == nullptr)  return JS_NULL;
 	const std::string name = "native OOSoundSource";
@@ -161,17 +176,17 @@ JSValue OOJSSoundSourceJSValueInContext(OOSoundSource *source, JSContext *contex
 }
 
 
-OOMusicController *OOMusicController::sharedController()
+oo::MusicController *oo::MusicController::sharedController()
 {
-	static OOMusicController *shared = new OOMusicController();	// never released, as the game's
+	static oo::MusicController *shared = new oo::MusicController();	// never released, as the game's
 	return shared;
 }
 
-::OOSoundSource *OOMusicController::soundSource()  { return sMusicSource; }
-std::optional<std::string> OOMusicController::playingMusic()  { return sMusic->_playing; }
-void OOMusicController::stop()  { sMusic->_playing = std::nullopt; sMusic->_stops++; }
+::oo::SoundSource *oo::MusicController::soundSource()  { return sMusicSource; }
+std::optional<std::string> oo::MusicController::playingMusic()  { return sMusic->_playing; }
+void oo::MusicController::stop()  { sMusic->_playing = std::nullopt; sMusic->_stops++; }
 
-void OOMusicController::playMusicNamed(const std::string &name, bool loop, float gain)
+void oo::MusicController::playMusicNamed(const std::string &name, bool loop, float gain)
 {
 	sMusic->_playing = name;
 	sMusic->_loop = loop;
@@ -369,7 +384,7 @@ std::string EvalShown(const char *src, const char *expected)
 #define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
 
 
-std::optional<std::string> NameOf(OOSound *sound)
+std::optional<std::string> NameOf(oo::Sound *sound)
 {
 	return sound != nullptr ? static_cast<TestSound *>(sound)->_name : std::optional<std::string>("<nil>");
 }

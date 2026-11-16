@@ -20,12 +20,12 @@
 #include <vector>
 
 #include "GuiDisplayGen.h"
-#include "OOColor.h"
+#include "Color.h"
 #include "EntityHold.h"
-#include "OOFoundation.h"
-#include "OOMaths.h"
+#include "Foundation.h"
+#include "Maths.h"
 #include "ShaderUniformMethodType.h"
-#include "OOTypes.h"
+#include "Types.h"
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
 #include "StationEntity.h"
@@ -59,55 +59,55 @@ static_assert(kValueType<double> == VT::kDouble);
 // Typedefs resolve to what they name.
 static_assert(kValueType<GLfloat> == VT::kFloat);
 static_assert(kValueType<GLint> == VT::kInt);
-static_assert(kValueType<OOScalar> == VT::kFloat);
-static_assert(kValueType<OOTimeDelta> == VT::kDouble);
-static_assert(kValueType<OOTimeAbsolute> == VT::kDouble);
+static_assert(kValueType<oo::Scalar> == VT::kFloat);
+static_assert(kValueType<oo::TimeDelta> == VT::kDouble);
+static_assert(kValueType<oo::TimeAbsolute> == VT::kDouble);
 static_assert(kValueType<std::uint8_t> == VT::kUChar);
 static_assert(kValueType<std::uint32_t> == VT::kUInt);
 static_assert(kValueType<std::size_t> == kValueType<decltype(sizeof(0))>);
 static_assert(kValueType<std::ptrdiff_t> ==
               kValueType<decltype(static_cast<int*>(nullptr) -
                                   static_cast<int*>(nullptr))>);
-static_assert(kValueType<OOSystemID> == VT::kShort);
-static_assert(kValueType<OOGalaxyID> == VT::kUChar);
-static_assert(kValueType<OOFuelQuantity> == VT::kUShort);
-static_assert(kValueType<OOCargoQuantity> == VT::kUInt);
-static_assert(kValueType<OOCreditsQuantity> == kValueType<std::uint64_t>);
-static_assert(kValueType<OOTechLevelID> == kValueType<std::size_t>);
-static_assert(kValueType<OOUniversalID> == VT::kUShort);
-static_assert(kValueType<OOWeaponFacingSet> == VT::kUChar);
+static_assert(kValueType<oo::SystemID> == VT::kShort);
+static_assert(kValueType<oo::GalaxyID> == VT::kUChar);
+static_assert(kValueType<oo::FuelQuantity> == VT::kUShort);
+static_assert(kValueType<oo::CargoQuantity> == VT::kUInt);
+static_assert(kValueType<oo::CreditsQuantity> == kValueType<std::uint64_t>);
+static_assert(kValueType<oo::TechLevelID> == kValueType<std::size_t>);
+static_assert(kValueType<oo::UniversalID> == VT::kUShort);
+static_assert(kValueType<oo::WeaponFacingSet> == VT::kUChar);
 
 // Every game enum was encoded "i", whatever its underlying type.
-static_assert(kValueType<OOAegisStatus> == VT::kInt);
+static_assert(kValueType<oo::AegisStatus> == VT::kInt);
 static_assert(kValueType<oo::AlertCondition> == VT::kInt);
 static_assert(kValueType<oo::Behaviour> == VT::kInt);
-static_assert(kValueType<OOCargoType> == VT::kInt);
+static_assert(kValueType<oo::CargoType> == VT::kInt);
 static_assert(kValueType<oo::CompassMode> == VT::kInt);
-static_assert(kValueType<OODockingClearanceStatus> == VT::kInt);
-static_assert(kValueType<OOEnergyUnitType> == VT::kInt);
+static_assert(kValueType<oo::DockingClearanceStatus> == VT::kInt);
+static_assert(kValueType<oo::EnergyUnitType> == VT::kInt);
 static_assert(kValueType<oo::EntityStatus> == VT::kInt);
 static_assert(kValueType<oo::FuelScoopStatus> == VT::kInt);
-static_assert(kValueType<OOGUIBackgroundSpecial> == VT::kInt);
+static_assert(kValueType<oo::GUIBackgroundSpecial> == VT::kInt);
 static_assert(kValueType<oo::GUIScreenID> == VT::kInt);
 static_assert(kValueType<oo::GalacticHyperspaceBehaviour> == VT::kInt);
 static_assert(kValueType<oo::LongRangeChartMode> == VT::kInt);
 static_assert(kValueType<oo::MissileStatus> == VT::kInt);
 static_assert(kValueType<oo::PlayerFleeingStatus> == VT::kInt);
-static_assert(kValueType<OORouteType> == VT::kInt);
+static_assert(kValueType<oo::RouteType> == VT::kInt);
 static_assert(kValueType<oo::ScanClass> == VT::kInt);
 static_assert(kValueType<oo::SpeechSettings> == VT::kInt);
 static_assert(kValueType<oo::StationAlertLevel> == VT::kInt);
-static_assert(kValueType<OOWeaponFacing> == VT::kInt);  // a uint8_t enum
+static_assert(kValueType<oo::WeaponFacing> == VT::kInt);  // a uint8_t enum
 
 // Structures, the colour, objects.
 static_assert(kValueType<Vector> == VT::kVector);
 static_assert(kValueType<HPVector> == VT::kHPVector);
 static_assert(kValueType<Quaternion> == VT::kQuaternion);
-static_assert(kValueType<OOMatrix> == VT::kMatrix);
+static_assert(kValueType<oo::Matrix> == VT::kMatrix);
 static_assert(kValueType<NSPoint> == VT::kPoint);
 static_assert(kValueType<NSRect> == VT::kRect);
 static_assert(kValueType<BoundingBox> == VT::kBoundingBox);
-static_assert(kValueType<OOColor*> == VT::kColor);
+static_assert(kValueType<oo::Color*> == VT::kColor);
 static_assert(kValueType<oo::ObjectResult> == VT::kObject);
 
 // Values, with references and cv dropped.
@@ -119,7 +119,7 @@ static_assert(kValueType<std::optional<std::string>> == VT::kOptionalString);
 
 // Any other pointer or class.
 static_assert(kValueType<ShipEntity*> == VT::kOther);
-static_assert(kValueType<OOHUDBeaconIcon*> == VT::kOther);
+static_assert(kValueType<oo::HUDBeaconIcon*> == VT::kOther);
 static_assert(kValueType<std::vector<oo::EntityHold>*> == VT::kOther);
 static_assert(kValueType<std::vector<std::shared_ptr<oo::Texture>>> ==
               VT::kOther);
@@ -150,9 +150,9 @@ OO_TEST(shaderUniformTypes) {
   OO_CHECK(TypeOf<Vector>() == oo::kShaderUniformTypeVector);
   OO_CHECK(TypeOf<HPVector>() == oo::kShaderUniformTypeHPVector);
   OO_CHECK(TypeOf<Quaternion>() == oo::kShaderUniformTypeQuaternion);
-  OO_CHECK(TypeOf<OOMatrix>() == oo::kShaderUniformTypeMatrix);
+  OO_CHECK(TypeOf<oo::Matrix>() == oo::kShaderUniformTypeMatrix);
   OO_CHECK(TypeOf<NSPoint>() == oo::kShaderUniformTypePoint);
-  OO_CHECK(TypeOf<OOColor*>() == oo::kShaderUniformTypeColor);
+  OO_CHECK(TypeOf<oo::Color*>() == oo::kShaderUniformTypeColor);
   OO_CHECK(TypeOf<oo::ObjectResult>() == oo::kShaderUniformTypeObject);
 
   // No template matched these encodings.

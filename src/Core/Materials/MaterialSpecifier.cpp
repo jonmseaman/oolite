@@ -31,7 +31,7 @@ SOFTWARE.
 #include <string>
 #include <string_view>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "Texture.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
@@ -44,9 +44,9 @@ oo::PList ValueFor(const oo::PList& configuration, std::string_view key) {
   return value != nullptr ? *value : oo::PList();
 }
 
-std::shared_ptr<OOColor> ColorFor(const oo::PList& configuration,
-                                  std::string_view key) {
-  return OOColor::colorWithDescription(ValueFor(configuration, key));
+std::shared_ptr<oo::Color> ColorFor(const oo::PList& configuration,
+                                    std::string_view key) {
+  return oo::Color::colorWithDescription(ValueFor(configuration, key));
 }
 
 // OOTextureSpecFromObject() applied to the value for key, as
@@ -78,8 +78,9 @@ int RawSpecularExponentValue(const oo::PList& configuration) {
 
 namespace oo {
 
-std::shared_ptr<OOColor> MaterialDiffuseColor(const oo::PList& configuration) {
-  std::shared_ptr<OOColor> result =
+std::shared_ptr<oo::Color> MaterialDiffuseColor(
+    const oo::PList& configuration) {
+  std::shared_ptr<oo::Color> result =
       ColorFor(configuration, kMaterialDiffuseColorName);
   if (result == nullptr)
     result = ColorFor(configuration, kMaterialDiffuseColorLegacyName);
@@ -89,36 +90,39 @@ std::shared_ptr<OOColor> MaterialDiffuseColor(const oo::PList& configuration) {
   return result;
 }
 
-std::shared_ptr<OOColor> MaterialAmbientColor(const oo::PList& configuration) {
-  std::shared_ptr<OOColor> result =
+std::shared_ptr<oo::Color> MaterialAmbientColor(
+    const oo::PList& configuration) {
+  std::shared_ptr<oo::Color> result =
       ColorFor(configuration, kMaterialAmbientColorName);
   if (result == nullptr)
     result = ColorFor(configuration, kMaterialAmbientColorLegacyName);
   return result;
 }
 
-std::shared_ptr<OOColor> MaterialSpecularColor(const oo::PList& configuration) {
-  std::shared_ptr<OOColor> result =
+std::shared_ptr<oo::Color> MaterialSpecularColor(
+    const oo::PList& configuration) {
+  std::shared_ptr<oo::Color> result =
       ColorFor(configuration, kMaterialSpecularColorName);
   if (result == nullptr)
     result = ColorFor(configuration, kMaterialSpecularColorLegacyName);
   if (result == nullptr) {
-    result = OOColor::colorWithWhite(0.2f, 1.0f);
+    result = oo::Color::colorWithWhite(0.2f, 1.0f);
   }
   return result;
 }
 
-std::shared_ptr<OOColor> MaterialSpecularModulateColor(
+std::shared_ptr<oo::Color> MaterialSpecularModulateColor(
     const oo::PList& configuration) {
-  std::shared_ptr<OOColor> result =
+  std::shared_ptr<oo::Color> result =
       ColorFor(configuration, kMaterialSpecularModulateColorName);
-  if (result == nullptr) result = OOColor::whiteColor();
+  if (result == nullptr) result = oo::Color::whiteColor();
 
   return result;
 }
 
-std::shared_ptr<OOColor> MaterialEmissionColor(const oo::PList& configuration) {
-  std::shared_ptr<OOColor> result =
+std::shared_ptr<oo::Color> MaterialEmissionColor(
+    const oo::PList& configuration) {
+  std::shared_ptr<oo::Color> result =
       ColorFor(configuration, kMaterialEmissionColorName);
   if (result == nullptr)
     result = ColorFor(configuration, kMaterialEmissionColorLegacyName);
@@ -128,9 +132,9 @@ std::shared_ptr<OOColor> MaterialEmissionColor(const oo::PList& configuration) {
   return result;
 }
 
-std::shared_ptr<OOColor> MaterialEmissionModulateColor(
+std::shared_ptr<oo::Color> MaterialEmissionModulateColor(
     const oo::PList& configuration) {
-  std::shared_ptr<OOColor> result =
+  std::shared_ptr<oo::Color> result =
       ColorFor(configuration, kMaterialEmissionModulateColorName);
 
   if (result != nullptr && result->isWhite())
@@ -138,9 +142,9 @@ std::shared_ptr<OOColor> MaterialEmissionModulateColor(
   return result;
 }
 
-std::shared_ptr<OOColor> MaterialIlluminationModulateColor(
+std::shared_ptr<oo::Color> MaterialIlluminationModulateColor(
     const oo::PList& configuration) {
-  std::shared_ptr<OOColor> result =
+  std::shared_ptr<oo::Color> result =
       ColorFor(configuration, kMaterialIlluminationModulateColorName);
 
   if (result != nullptr && result->isWhite())
@@ -240,7 +244,7 @@ bool MaterialGammaCorrect(const oo::PList& configuration) {
 }
 
 float MaterialGloss(const oo::PList& configuration) {
-  return OOClamp_0_1_f(configuration.get<float>(kMaterialGlossName, 0.375f));
+  return oo::Clamp_0_1_f(configuration.get<float>(kMaterialGlossName, 0.375f));
 }
 
 int MaterialSpecularExponent(const oo::PList& configuration) {

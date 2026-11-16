@@ -408,7 +408,7 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
 
     case kEnergy:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        fValue = OOClamp_0_max_d(fValue, cxxEntity->getMaxEnergy());
+        fValue = oo::Clamp_0_max_d(fValue, cxxEntity->getMaxEnergy());
         cxxEntity->setEnergy(static_cast<GLfloat>(fValue));
         return JS_UNDEFINED;
       }

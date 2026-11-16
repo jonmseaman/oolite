@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 
 #include <quickjs.h>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 
 void InitOOJSMission(JSContext* context, JSValueConst global);
 void MissionRunCallback();

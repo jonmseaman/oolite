@@ -41,7 +41,7 @@ SOFTWARE.
 #include <optional>
 #include <string>
 
-#include "OOAsyncWorkManager.h"
+#include "AsyncWorkManager.h"
 #include "PixMap.h"
 #include "TextureFlags.h"
 #include "oofnd/PList.hpp"
@@ -63,7 +63,7 @@ using TextureDataFormat = PixMapFormat;
         The C++ root of the texture loaders, and a task on the work manager.
    The state below is public (the subclasses read it).
 */
-class TextureLoader : public ::OOAsyncWorkTask {
+class TextureLoader : public ::oo::AsyncWorkTask {
  public:
   TextureLoader();
   ~TextureLoader() override;  // was -dealloc: frees the pixels not handed over

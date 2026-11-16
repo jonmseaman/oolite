@@ -32,7 +32,7 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "Entity.h"
-#include "OOPolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is std::shared_ptr
+#include "PolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is std::shared_ptr
 #include "oofnd/PList.hpp"
 
 /*	+waypointWithDictionary: takes an oo::PList; the beacon accessors are
@@ -56,8 +56,8 @@ class WaypointEntity : public Entity {
   void initWithDictionary(const oo::PList& info);
 
   bool getOriented();  // -oriented (the ivar keeps the name)
-  OOScalar size();
-  void setSize(OOScalar newSize);
+  oo::Scalar size();
+  void setSize(oo::Scalar newSize);
 
   void setOrientation(Quaternion q) override;
   bool isEffect() override;
@@ -70,13 +70,13 @@ class WaypointEntity : public Entity {
   bool isVisibleToScripts() override;
 
   // OOBeaconEntity, answered for the waypoint.
-  OOComparisonResult compareBeaconCodeWith(Entity* other);
+  oo::ComparisonResult compareBeaconCodeWith(Entity* other);
   std::optional<std::string> beaconCode();
   void setBeaconCode(const std::optional<std::string>& bcode);
   std::optional<std::string> beaconLabel();
   void setBeaconLabel(const std::optional<std::string>& blabel);
   bool isBeacon();
-  OOHUDBeaconIcon* beaconDrawable();  // borrowed
+  oo::HUDBeaconIcon* beaconDrawable();  // borrowed
   Entity* prevBeacon();  // the C++ entity (null once its object has gone)
   Entity* nextBeacon();
   void setPrevBeacon(Entity* beaconShip);
@@ -84,13 +84,13 @@ class WaypointEntity : public Entity {
   bool isJammingScanning();
 
  private:
-  OOScalar _size = {};
+  oo::Scalar _size = {};
 
   std::optional<std::string> _beaconCode;  // nullopt: nil
   std::optional<std::string> _beaconLabel;
   std::weak_ptr<Entity> _prevBeacon;  // the beacons' C++ parts
   std::weak_ptr<Entity> _nextBeacon;
-  std::shared_ptr<OOHUDBeaconIcon> _beaconDrawable;
+  std::shared_ptr<oo::HUDBeaconIcon> _beaconDrawable;
   bool oriented = {};
 };
 

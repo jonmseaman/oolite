@@ -12,7 +12,7 @@
 #include <cmath>
 #include <numbers>
 
-#include "OOMaths.h"
+#include "Maths.h"
 #include "oo_test.hpp"
 
 // The test links the whole game but main, which defines the debug flags.
@@ -68,11 +68,11 @@ OO_TEST(aRotationKeepsLengthsAndItsConjugateUndoesIt) {
 
 OO_TEST(theRotationMatrixTurnsVectorsAsTheQuaternionDoes) {
 	const Quaternion q = Turn(make_vector(1, 2, 3), 1.1f);
-	const OOMatrix m = OOMatrixForQuaternionRotation(q);
+	const oo::Matrix m = oo::MatrixForQuaternionRotation(q);
 	const Vector v = make_vector(0.3f, 0.6f, -0.9f);
 	const Vector byQuaternion = quaternion_rotate_vector(q, v);
-	const Vector byMatrix = OOVectorMultiplyMatrix(v, m);
-	const Vector byMatrixTransposed = OOVectorMultiplyMatrix(v, OOMatrixTranspose(m));
+	const Vector byMatrix = oo::VectorMultiplyMatrix(v, m);
+	const Vector byMatrixTransposed = oo::VectorMultiplyMatrix(v, oo::MatrixTranspose(m));
 	// The matrix is the quaternion's rotation in one of the two storage orders.
 	OO_CHECK(NearVector(byMatrix, byQuaternion, 1e-4f) || NearVector(byMatrixTransposed, byQuaternion, 1e-4f));
 	OO_CHECK(Near(magnitude(byMatrix), magnitude(v), 1e-4f));

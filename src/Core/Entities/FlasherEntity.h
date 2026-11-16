@@ -61,7 +61,7 @@ class FlasherEntity : public LightParticleEntity,
   bool isActive();
   void setActive(bool active);
 
-  std::shared_ptr<OOColor> color();
+  std::shared_ptr<oo::Color> color();
   // setColor is defined by superclass
 
   float frequency();
@@ -86,7 +86,7 @@ class FlasherEntity : public LightParticleEntity,
   std::optional<std::string> jsClassName() override;
   bool isVisibleToScripts() override;
 
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void drawImmediate(bool immediate, bool translucent) override;
   void drawSubEntityImmediate(bool immediate, bool translucent) override;
   double findCollisionRadius() override;
@@ -95,16 +95,16 @@ class FlasherEntity : public LightParticleEntity,
   void setUpColors(
       const oo::PList* colorSpecifiers);  // an array node, or nullptr
   void getCurrentColorComponents();
-  OOColor* flasherColorAtIndex(std::size_t index);
+  oo::Color* flasherColorAtIndex(std::size_t index);
 
   float _frequency = {};
   float _phase = {};
   float _wave = {};
   float _brightfraction = {};
-  std::vector<std::shared_ptr<OOColor>> _colors;
+  std::vector<std::shared_ptr<oo::Color>> _colors;
   std::size_t _activeColor = {};
 
-  OOTimeDelta _time = {};
+  oo::TimeDelta _time = {};
 
   bool _active = {};
   bool _justSwitched = {};

@@ -30,7 +30,7 @@ SOFTWARE.
 #include <format>
 #include <memory>
 
-#include "OOTextureScaling.h"
+#include "TextureScaling.h"
 #include "oofnd/String.hpp"
 
 std::shared_ptr<oo::PixMapTextureLoader>
@@ -77,8 +77,8 @@ void oo::PixMapTextureLoader::loadTexture() {
     size_t size = oo::MinimumPixMapBufferSize(_pixMap) * 4 / 3;
     bool generateMipMaps = oo::ExpandPixMap(&_pixMap, size);
     if (generateMipMaps) {
-      OOGenerateMipMaps(_pixMap.pixels, _pixMap.width, _pixMap.height,
-                        _pixMap.format);
+      oo::GenerateMipMaps(_pixMap.pixels, _pixMap.width, _pixMap.height,
+                          _pixMap.format);
     } else {
       _texOptions = (_texOptions & ~oo::TextureFlags::kMinFilterMask) |
                     oo::TextureFlags::kMinFilterMipMap;

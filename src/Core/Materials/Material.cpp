@@ -34,9 +34,9 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "Demangle.h"
+#include "Logging.h"
 #include "MaterialState.h"
-#include "OODemangle.h"
-#include "OOLogging.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/String.hpp"
 

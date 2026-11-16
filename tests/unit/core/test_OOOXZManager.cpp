@@ -21,12 +21,12 @@
 */
 
 #include "EntityManualRefs.h"  // the tests' manual entity references
-#include "OOCacheManager.h"
-#include "OOColor.h"
-#include "OOManifestProperties.h"
-#include "OOOXZManager.h"
-#include "OOPListParsing.h"
-#include "OOXMLExtensions.h"
+#include "CacheManager.h"
+#include "Color.h"
+#include "ManifestProperties.h"
+#include "OXZManager.h"
+#include "PListParsing.h"
+#include "XMLExtensions.h"
 #include "PlayerEntity.h"  // the stand-in PLAYER
 #include "ResourceManager.h"
 #include "oo_test.hpp"
@@ -89,23 +89,23 @@ oo::PList Manifest(const char* identifier, const char* title,
                    std::vector<std::string> tags, long long uploadDate,
                    const char* downloadURL) {
   oo::PList::Dict entries;
-  entries[std::string(kOOManifestIdentifier)] = oo::PList(identifier);
-  entries[std::string(kOOManifestTitle)] = oo::PList(title);
-  entries[std::string(kOOManifestVersion)] = oo::PList(version);
-  entries[std::string(kOOManifestCategory)] = oo::PList(category);
+  entries[std::string(oo::kManifestIdentifier)] = oo::PList(identifier);
+  entries[std::string(oo::kManifestTitle)] = oo::PList(title);
+  entries[std::string(oo::kManifestVersion)] = oo::PList(version);
+  entries[std::string(oo::kManifestCategory)] = oo::PList(category);
   if (author != nullptr)
-    entries[std::string(kOOManifestAuthor)] = oo::PList(author);
+    entries[std::string(oo::kManifestAuthor)] = oo::PList(author);
   if (description != nullptr)
-    entries[std::string(kOOManifestDescription)] = oo::PList(description);
+    entries[std::string(oo::kManifestDescription)] = oo::PList(description);
   if (!tags.empty()) {
     oo::PList::Array array;
     for (const std::string& tag : tags) array.push_back(oo::PList(tag));
-    entries[std::string(kOOManifestTags)] = oo::PList(std::move(array));
+    entries[std::string(oo::kManifestTags)] = oo::PList(std::move(array));
   }
   if (uploadDate >= 0)
-    entries[std::string(kOOManifestUploadDate)] = oo::PList(uploadDate);
+    entries[std::string(oo::kManifestUploadDate)] = oo::PList(uploadDate);
   if (downloadURL != nullptr)
-    entries[std::string(kOOManifestDownloadURL)] = oo::PList(downloadURL);
+    entries[std::string(oo::kManifestDownloadURL)] = oo::PList(downloadURL);
   return oo::PList(std::move(entries));
 }
 
@@ -170,7 +170,7 @@ void SetUp() {
                             "Missions", "Ann Author", "A mission", {"story"}, 0,
                             nullptr));
   stdfs::create_directories(CacheDirectory());
-  OO_CHECK(OOWriteXMLPListToFile(
+  OO_CHECK(oo::WriteXMLPListToFile(
       oo::PList(std::move(cached)),
       Generic(CacheDirectory() / "Oolite-manifests.plist")));
 }
@@ -190,15 +190,15 @@ std::string Titles(const oo::PList& list) {
   if (const oo::PList::Array* array = list.getIf<oo::PList::Array>()) {
     for (const oo::PList& manifest : *array) {
       if (!result.empty()) result += ", ";
-      result += Str(manifest, kOOManifestTitle) + " " +
-                Str(manifest, kOOManifestVersion);
+      result += Str(manifest, oo::kManifestTitle) + " " +
+                Str(manifest, oo::kManifestVersion);
     }
   }
   return result;
 }
 
 // The manager's private API its C++ members.
-OOOXZManager* Manager() { return OOOXZManager::sharedManager(); }
+oo::OXZManager* Manager() { return oo::OXZManager::sharedManager(); }
 std::optional<std::string> ManifestPath() { return Manager()->manifestPath(); }
 std::optional<std::string> DownloadPath() { return Manager()->downloadPath(); }
 std::optional<std::string> ExtractionBase(const std::string& identifier,
@@ -224,9 +224,9 @@ std::string Filtered(const std::string& filter) {
 OO_TEST(sharedManagerLoadsTheCachedListSorted) {
   SetUp();
   {
-    OOOXZManager* manager = OOOXZManager::sharedManager();
+    oo::OXZManager* manager = oo::OXZManager::sharedManager();
     OO_CHECK(manager != nullptr);
-    OO_CHECK(OOOXZManager::sharedManager() == manager);
+    OO_CHECK(oo::OXZManager::sharedManager() == manager);
     // category, then title, then version descending
     OO_CHECK_TEXT(Titles(manager->manifests()),
                   "Mission 0.1, Alpha 2.0, Alpha 1.5, Zeta 1.0");
@@ -242,7 +242,7 @@ OO_TEST(sharedManagerLoadsTheCachedListSorted) {
 OO_TEST(paths) {
   SetUp();
   {
-    OOOXZManager* manager = OOOXZManager::sharedManager();
+    oo::OXZManager* manager = oo::OXZManager::sharedManager();
     OO_CHECK_EQ(manager->installPath().value_or("(none)"),
                 Generic(sRoot / "Managed"));
     OO_CHECK_EQ(manager->extractAddOnsPath().value_or("(none)"),
@@ -257,7 +257,7 @@ OO_TEST(paths) {
     }
 
     const std::string cacheDirectory =
-        OOCacheManager::sharedCache()
+        oo::CacheManager::sharedCache()
             ->cacheDirectoryPathCreatingIfNecessary(true)
             .value_or("(none)");
     OO_CHECK_EQ(ManifestPath().value_or("(none)"),
@@ -359,23 +359,23 @@ OO_TEST(managedOXZs) {
               "version = \"3\"; category = Ambience; }");
     WriteText(sRoot / "Managed" / "stray.txt", "not a manifest");
 
-    const oo::PList managed = OOOXZManager::sharedManager()->managedOXZs();
+    const oo::PList managed = oo::OXZManager::sharedManager()->managedOXZs();
     OO_CHECK_TEXT(Titles(managed), "Local 3, Alpha 1.0");
     const oo::PList::Array* array = managed.getIf<oo::PList::Array>();
     OO_CHECK(array != nullptr && array->size() == 2);
     if (array != nullptr && array->size() == 2) {
       const oo::PList& local = (*array)[0];
       const oo::PList& alpha = (*array)[1];
-      OO_CHECK_EQ(Str(local, kOOManifestFilePath),
+      OO_CHECK_EQ(Str(local, oo::kManifestFilePath),
                   oo::str::appendingPathComponent(Generic(sRoot / "Managed"),
                                                   "local.oxp"));
-      OO_CHECK_EQ(Str(local, kOOManifestAvailableVersion), "-");
-      OO_CHECK_EQ(Str(local, kOOManifestDownloadURL), "-");
-      OO_CHECK_EQ(Str(alpha, kOOManifestFilePath),
+      OO_CHECK_EQ(Str(local, oo::kManifestAvailableVersion), "-");
+      OO_CHECK_EQ(Str(local, oo::kManifestDownloadURL), "-");
+      OO_CHECK_EQ(Str(alpha, oo::kManifestFilePath),
                   oo::str::appendingPathComponent(Generic(sRoot / "Managed"),
                                                   "alpha.oxp"));
-      OO_CHECK_EQ(Str(alpha, kOOManifestAvailableVersion), "2.0");
-      OO_CHECK_EQ(Str(alpha, kOOManifestDownloadURL),
+      OO_CHECK_EQ(Str(alpha, oo::kManifestAvailableVersion), "2.0");
+      OO_CHECK_EQ(Str(alpha, oo::kManifestDownloadURL),
                   "file:///nowhere/alpha-2.0.oxz");
     }
 
@@ -383,7 +383,7 @@ OO_TEST(managedOXZs) {
     WriteText(sRoot / "Managed" / "late.oxp" / "manifest.plist",
               "{ identifier = \"oolite.oxp.test.late\"; title = Late; version "
               "= \"1\"; category = Ambience; }");
-    OO_CHECK_TEXT(Titles(OOOXZManager::sharedManager()->managedOXZs()),
+    OO_CHECK_TEXT(Titles(oo::OXZManager::sharedManager()->managedOXZs()),
                   "Local 3, Alpha 1.0");
 
     // The installable states decide these, from the managed OXZs.
@@ -396,7 +396,7 @@ OO_TEST(managedOXZs) {
 OO_TEST(manifestDownload) {
   SetUp();
   {
-    OOOXZManager* manager = OOOXZManager::sharedManager();
+    oo::OXZManager* manager = oo::OXZManager::sharedManager();
 
     // The new index, served from a file: URL named by the oxz-index-url default
     // (in memory only: nothing synchronizes the defaults).
@@ -406,14 +406,14 @@ OO_TEST(manifestDownload) {
     index.push_back(Manifest("oolite.oxp.test.alpha", "Alpha", "3.0", "Ships",
                              "Bob Builder", "Cobra variants", {}, -1,
                              "file:///nowhere/alpha-3.0.oxz"));
-    OO_CHECK(OOWriteXMLPListToFile(oo::PList(std::move(index)),
+    OO_CHECK(oo::WriteXMLPListToFile(oo::PList(std::move(index)),
                                    Generic(sRoot / "index.plist")));
     const std::string url = "file:///" + Generic(sRoot / "index.plist");
     oo::Defaults::standard().setObject("oxz-index-url", oo::PList(url));
     OO_CHECK_EQ(DataURL().value_or("(none)"), url);
 
     const std::string cacheDirectory =
-        OOCacheManager::sharedCache()
+        oo::CacheManager::sharedCache()
             ->cacheDirectoryPathCreatingIfNecessary(true)
             .value_or("(none)");
     OO_CHECK(manager->updateManifests());
@@ -435,7 +435,7 @@ OO_TEST(manifestDownload) {
     // The cache holds the new list, the temporary file is gone, and the managed
     // list is rebuilt.
     const oo::PList cached =
-        OOPropertyListFromFile(oo::str::appendingPathComponent(
+        oo::PropertyListFromFile(oo::str::appendingPathComponent(
             cacheDirectory, "Oolite-manifests.plist"));
     OO_CHECK_TEXT(Titles(cached), "Alpha 3.0, Beta 1.0");
     OO_CHECK(!stdfs::exists(stdfs::path(oo::str::appendingPathComponent(
@@ -444,8 +444,8 @@ OO_TEST(manifestDownload) {
     OO_CHECK_TEXT(Titles(managed), "Late 1, Local 3, Alpha 1.0");
     const oo::PList::Array* array = managed.getIf<oo::PList::Array>();
     if (array != nullptr && array->size() == 3) {
-      OO_CHECK_EQ(Str((*array)[2], kOOManifestAvailableVersion), "3.0");
-      OO_CHECK_EQ(Str((*array)[2], kOOManifestDownloadURL),
+      OO_CHECK_EQ(Str((*array)[2], oo::kManifestAvailableVersion), "3.0");
+      OO_CHECK_EQ(Str((*array)[2], oo::kManifestDownloadURL),
                   "file:///nowhere/alpha-3.0.oxz");
     }
 
@@ -538,13 +538,13 @@ const char* kGammaManifest =
     "{ identifier = \"oolite.oxp.test.gamma\"; title = Gamma; version = "
     "\"1.0\"; category = Ships; }";
 
-std::string ColorName(OOColor* c) {
+std::string ColorName(oo::Color* c) {
   if (c == nullptr) return "nil";
-  const std::pair<const char*, std::shared_ptr<OOColor>> named[] = {
-      {"yellow", OOColor::yellowColor()}, {"cyan", OOColor::cyanColor()},
-      {"orange", OOColor::orangeColor()}, {"brown", OOColor::brownColor()},
-      {"white", OOColor::whiteColor()},   {"red", OOColor::redColor()},
-      {"gray", OOColor::grayColor()},     {"blue", OOColor::blueColor()}};
+  const std::pair<const char*, std::shared_ptr<oo::Color>> named[] = {
+      {"yellow", oo::Color::yellowColor()}, {"cyan", oo::Color::cyanColor()},
+      {"orange", oo::Color::orangeColor()}, {"brown", oo::Color::brownColor()},
+      {"white", oo::Color::whiteColor()},   {"red", oo::Color::redColor()},
+      {"gray", oo::Color::grayColor()},     {"blue", oo::Color::blueColor()}};
   for (const auto& [name, n] : named) {
     if (n->redComponent() == c->redComponent() &&
         n->greenComponent() == c->greenComponent() &&
@@ -568,7 +568,7 @@ bool InstallOXZ(std::size_t item) { return Manager()->installOXZ(item); }
 bool UpdateAllOXZ() { return Manager()->updateAllOXZ(); }
 bool RemoveOXZ(std::size_t item) { return Manager()->removeOXZ(item); }
 std::string ExtractOXZ(std::size_t item) { return Manager()->extractOXZ(item); }
-bool IsRestarting() { return OOOXZManager::sharedManager()->isRestarting(); }
+bool IsRestarting() { return oo::OXZManager::sharedManager()->isRestarting(); }
 
 // Deliver the download's events until it is no longer under way (at most 20 s).
 void FinishDownload() {
@@ -584,7 +584,7 @@ void FinishDownload() {
 
 std::string Element(const oo::PList& list, std::size_t index) {
   const oo::PList* element = list.at(index);
-  return (element != nullptr) ? Str(*element, kOOManifestTitle) : "(none)";
+  return (element != nullptr) ? Str(*element, oo::kManifestTitle) : "(none)";
 }
 
 }  // namespace
@@ -601,7 +601,7 @@ OO_TEST(installableStates) {
     OO_CHECK_TEXT(Color(alpha), "cyan");
     OO_CHECK_TEXT(Color(beta), "yellow");
     OO_CHECK_TEXT(
-        Str(InstalledManifest("oolite.oxp.test.alpha"), kOOManifestVersion),
+        Str(InstalledManifest("oolite.oxp.test.alpha"), oo::kManifestVersion),
         "1.0");
     OO_CHECK(InstalledManifest("oolite.oxp.test.beta").isNull());
     OO_CHECK(!IsRestarting());
@@ -619,7 +619,7 @@ OO_TEST(installExtractAndRemove) {
     auto parsed = oo::parsePropertyList(kGammaManifest);
     oo::PList gamma = parsed ? *parsed : oo::PList();
     gamma.getIf<oo::PList::Dict>()->insert_or_assign(
-        std::string(kOOManifestDownloadURL),
+        std::string(oo::kManifestDownloadURL),
         oo::PList("file:///" + Generic(sRoot / "gamma.oxz")));
     entries.push_back(gamma);
     Manager()->setOXZList(oo::PList(std::move(entries)));
@@ -723,7 +723,7 @@ class TestGui : public GuiDisplayGen {
                       GUI_DEFAULT_ROWS, 16, 40, std::nullopt) {}
 
   std::vector<std::string> log;
-  OOGUIRow selected = 0;
+  oo::GUIRow selected = 0;
 
   void clearAndKeepBackground(bool keepBackground) override {
     log.push_back(keepBackground ? "clear keep" : "clear");
@@ -731,32 +731,32 @@ class TestGui : public GuiDisplayGen {
   void setTitle(const std::optional<std::string>& str) override {
     log.push_back("title " + str.value_or("(nil)"));
   }
-  void setText(const std::optional<std::string>& str, OOGUIRow row,
-               OOGUIAlignment alignment) override {
+  void setText(const std::optional<std::string>& str, oo::GUIRow row,
+               oo::GUIAlignment alignment) override {
     log.push_back("text " + std::to_string(row) + " " +
                   std::to_string(static_cast<int>(alignment)) + " " +
                   str.value_or("(nil)"));
   }
-  void setText(const std::string& str, OOGUIRow row) override {
+  void setText(const std::string& str, oo::GUIRow row) override {
     log.push_back("text " + std::to_string(row) + " " + str);
   }
-  OOGUIRow addLongText(const std::optional<std::string>& str, OOGUIRow row,
-                       OOGUIAlignment alignment) override {
+  oo::GUIRow addLongText(const std::optional<std::string>& str, oo::GUIRow row,
+                       oo::GUIAlignment alignment) override {
     log.push_back("long " + std::to_string(row) + " " +
                   std::to_string(static_cast<int>(alignment)) + " " +
                   str.value_or("(nil)"));
     return row + 1;
   }
-  void setKey(const std::string& str, OOGUIRow row) override {
+  void setKey(const std::string& str, oo::GUIRow row) override {
     log.push_back("key " + std::to_string(row) + " " + str);
   }
-  void setArray(const std::vector<std::string>& arr, OOGUIRow row) override {
+  void setArray(const std::vector<std::string>& arr, oo::GUIRow row) override {
     std::string line = "array " + std::to_string(row);
     for (const std::string& column : arr) line += " |" + column;
     log.push_back(line);
   }
-  void setColor(OOColor* color, OOGUIRow row) override {
-    OOColor* c = color;
+  void setColor(oo::Color* color, oo::GUIRow row) override {
+    oo::Color* c = color;
     log.push_back(
         "color " + std::to_string(row) + " " +
         (c != nullptr
@@ -766,8 +766,8 @@ class TestGui : public GuiDisplayGen {
                    std::to_string(static_cast<int>(c->blueComponent() * 100))
              : std::string("nil")));
   }
-  OOGUIRow getSelectedRow() override { return selected; }
-  bool setSelectedRow(OOGUIRow row) override {
+  oo::GUIRow getSelectedRow() override { return selected; }
+  bool setSelectedRow(oo::GUIRow row) override {
     log.push_back("select " + std::to_string(row));
     selected = row;
     return true;
@@ -776,7 +776,7 @@ class TestGui : public GuiDisplayGen {
     log.push_back("range " + std::to_string(range.location) + "+" +
                   std::to_string(range.length));
   }
-  void setTabStops(OOGUITabSettings stops) override {
+  void setTabStops(oo::GUITabSettings stops) override {
     log.push_back("tabs " + std::to_string(stops[1]) + "," +
                   std::to_string(stops[2]));
   }
@@ -819,7 +819,7 @@ class TestUniverse : public Universe {
     return std::nullopt;
   }
   const oo::PList* descriptions() override { return &testDescriptions; }
-  ::OOSystemDescriptionManager* getSystemManager() override { return nullptr; }
+  ::oo::SystemDescriptionManager* getSystemManager() override { return nullptr; }
   bool reinitAndShowDemo(bool showDemo) override {
     (void)showDemo;
     return true;
@@ -880,7 +880,7 @@ OO_TEST(guiPages) {
   SetUp();
   {
     StandInUniverse standIn;
-    OOOXZManager* m = Manager();
+    oo::OXZManager* m = Manager();
     m->_changesMade = false;
     m->_offset = 0;
     m->_item = 0;
@@ -1302,7 +1302,7 @@ OO_TEST(guiInput) {
 #if !OO_DEBUG
   {
     StandInUniverse standIn;
-    OOOXZManager* m = Manager();
+    oo::OXZManager* m = Manager();
     TestGui* gui = standIn.universe->testGui.get();
 
     // The filter: the key, typed text, its prompt.
@@ -1676,7 +1676,7 @@ OO_TEST(optionPages) {
   gOOPlayer = nullptr;
   {
     StandInUniverse standIn;
-    OOOXZManager* m = Manager();
+    oo::OXZManager* m = Manager();
     TestGui* gui = standIn.universe->testGui.get();
     const oo::PList savedList = m->manifests();
 
@@ -1949,7 +1949,7 @@ OO_TEST(copyUrlKey) {
   {
     oo::AutoreleaseScope pool;
     StandInUniverse standIn;
-    OOOXZManager* m = Manager();
+    oo::OXZManager* m = Manager();
     TestGui* gui = standIn.universe->testGui.get();
     std::string& clipboard = standIn.universe->testGameView->clipboard;
 
@@ -1957,7 +1957,7 @@ OO_TEST(copyUrlKey) {
         *Manifest("oolite.oxp.test.url", "Url", "1.0", "Ships", nullptr,
                   nullptr, {}, -1, nullptr)
              .getIf<oo::PList::Dict>();
-    withURL[std::string(kOOManifestInformationURL)] =
+    withURL[std::string(oo::kManifestInformationURL)] =
         oo::PList("HTTPS://Example.ORG/Pack");
     oo::PList::Array list;
     list.push_back(oo::PList(std::move(withURL)));

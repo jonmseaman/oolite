@@ -20,9 +20,9 @@
 #include <string>
 #include <vector>
 
-#include "OOALSound.h"
-#include "OOSoundSource.h"
-#include "OOSoundSourcePool.h"
+#include "ALSound.h"
+#include "SoundSource.h"
+#include "SoundSourcePool.h"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
@@ -30,12 +30,12 @@
 // The universe as the code under test sees it: a stand-in for the C++ class, with the header's names and signatures.
 class Universe {
  public:
-  OOTimeAbsolute _time;
+  oo::TimeAbsolute _time;
 
-  OOTimeAbsolute getTime();
+  oo::TimeAbsolute getTime();
 };
 
-OOTimeAbsolute Universe::getTime() { return _time; }
+oo::TimeAbsolute Universe::getTime() { return _time; }
 
 Universe* gSharedUniverse = nullptr;
 
@@ -43,28 +43,33 @@ Universe* gSharedUniverse = nullptr;
    custom-sound look-up the pool calls (Universe.h; its sound lives until the
    innermost scope ends) and the root's members a sound's vtable names.
 */
-OOSound::OOSound() {}
-std::optional<std::string> OOSound::name() { return std::nullopt; }
-ALuint OOSound::soundBuffer() { return 0; }
-bool OOSound::soundIncomplete() { return false; }
-void OOSound::rewind() {}
-std::optional<std::string> OOSound::descriptionComponents() const {
+oo::Sound::Sound() {}
+std::optional<std::string> oo::Sound::name() { return std::nullopt; }
+ALuint oo::Sound::soundBuffer() { return 0; }
+bool oo::Sound::soundIncomplete() { return false; }
+void oo::Sound::rewind() {}
+std::optional<std::string> oo::Sound::descriptionComponents() const {
   return std::nullopt;
 }
 
-class TestSound final : public OOSound {
+class TestSound final : public oo::Sound {
  public:
   explicit TestSound(const std::string& key) : _key(key) {}
 
   std::string _key;
 };
 
-::OOSound* OOSoundWithCustomSoundKey(const std::string& key);
+namespace oo {
 
-::OOSound* OOSoundWithCustomSoundKey(const std::string& key) {
+::oo::Sound* SoundWithCustomSoundKey(const std::string& key);
+
+::oo::Sound* SoundWithCustomSoundKey(const std::string& key) {
   if (key == "[missing]") return nullptr;
   return oo::autorelease(oo::makeShared<TestSound>(key));
 }
+
+}  // namespace oo
+
 
 /*	A source records what it plays; the test says when it has stopped
    playing. A C++ stand-in: the members the pool calls (and the delegate member
@@ -77,35 +82,40 @@ struct SourceRecord {
   int _stops = 0;
 };
 
-static std::map<const OOSoundSource*, SourceRecord> gRecords;
+static std::map<const oo::SoundSource*, SourceRecord> gRecords;
 static std::vector<SourceRecord*> gSources;
 
-OOSoundSource::OOSoundSource() { gSources.push_back(&gRecords[this]); }
+oo::SoundSource::SoundSource() { gSources.push_back(&gRecords[this]); }
 
-OOSoundSource::~OOSoundSource() {
+namespace oo {
+
+SoundSource::~SoundSource() {
   SourceRecord* record = &gRecords[this];
   gSources.erase(std::remove(gSources.begin(), gSources.end(), record),
                  gSources.end());
   gRecords.erase(this);
 }
 
-void OOSoundSource::stop() {
+}  // namespace oo
+
+
+void oo::SoundSource::stop() {
   gRecords[this]._stops++;
   gRecords[this]._playing = false;
 }
 
-void OOSoundSource::setPosition(Vector position) {
+void oo::SoundSource::setPosition(Vector position) {
   gRecords[this]._position = position;
 }
 
-void OOSoundSource::playOOSound(OOSound* sound) {
+void oo::SoundSource::playOOSound(oo::Sound* sound) {
   gRecords[this]._key = static_cast<TestSound*>(sound)->_key;
   gRecords[this]._playing = true;
 }
 
-bool OOSoundSource::isPlaying() { return gRecords[this]._playing; }
+bool oo::SoundSource::isPlaying() { return gRecords[this]._playing; }
 
-void OOSoundSource::channel(OOSoundChannel*, OOSound*) {}
+void oo::SoundSource::channel(oo::SoundChannel*, oo::Sound*) {}
 
 namespace {
 
@@ -133,7 +143,7 @@ void StopAll() {
   for (SourceRecord* source : gSources) source->_playing = false;
 }
 
-void Reset(OOTimeAbsolute time) {
+void Reset(oo::TimeAbsolute time) {
   gSources.clear();  // the pools of earlier tests keep their own
   if (gSharedUniverse == nullptr) gSharedUniverse = new Universe();
   gSharedUniverse->_time = time;
@@ -147,7 +157,7 @@ OO_TEST(countsAndSources) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
-    std::shared_ptr<OOSoundSourcePool> one = OOSoundSourcePool::poolWithCount(0, 0.0);
+    std::shared_ptr<oo::SoundSourcePool> one = oo::SoundSourcePool::poolWithCount(0, 0.0);
     OO_CHECK(one != nullptr && gSources.empty());
     one->playSoundWithKey("[a]");
     OO_CHECK((Playing() == std::vector<std::string>{"[a]"}));
@@ -160,14 +170,14 @@ OO_TEST(countsAndSources) {
              Source(0)->_stops == 1);
 
     Reset(100.0);
-    std::shared_ptr<OOSoundSourcePool> many =
-        OOSoundSourcePool::poolWithCount(255, -1.0);
+    std::shared_ptr<oo::SoundSourcePool> many =
+        oo::SoundSourcePool::poolWithCount(255, -1.0);
     for (int i = 0; i < 300; i++) many->playSoundWithKey("[k]", 1.0f, 10.0);
     OO_CHECK(gSources.size() == 254);
 
     // A missing sound plays nothing and makes no source.
     Reset(100.0);
-    std::shared_ptr<OOSoundSourcePool> pool = OOSoundSourcePool::poolWithCount(2, 0.0);
+    std::shared_ptr<oo::SoundSourcePool> pool = oo::SoundSourcePool::poolWithCount(2, 0.0);
     pool->playSoundWithKey("[missing]");
     OO_CHECK(gSources.empty());
   }
@@ -177,7 +187,7 @@ OO_TEST(slotsByPriorityAndExpiry) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
-    std::shared_ptr<OOSoundSourcePool> pool = OOSoundSourcePool::poolWithCount(3, 0.0);
+    std::shared_ptr<oo::SoundSourcePool> pool = oo::SoundSourcePool::poolWithCount(3, 0.0);
     pool->playSoundWithKey("[low]", 1.0f, 1.0);
     pool->playSoundWithKey("[mid]", 2.0f, 5.0);
     pool->playSoundWithKey("[high]", 3.0f, 1.0);
@@ -195,7 +205,7 @@ OO_TEST(slotsByPriorityAndExpiry) {
 
     // An expired lower-priority source is preferred to an unexpired one.
     Reset(100.0);
-    pool = OOSoundSourcePool::poolWithCount(2, 0.0);
+    pool = oo::SoundSourcePool::poolWithCount(2, 0.0);
     pool->playSoundWithKey("[short]", 1.0f, 1.0);
     pool->playSoundWithKey("[long]", 1.0f, 10.0);
     gSharedUniverse->_time += 2.0;
@@ -215,7 +225,7 @@ OO_TEST(positionsAndDefaults) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
-    std::shared_ptr<OOSoundSourcePool> pool = OOSoundSourcePool::poolWithCount(4, 0.0);
+    std::shared_ptr<oo::SoundSourcePool> pool = oo::SoundSourcePool::poolWithCount(4, 0.0);
     pool->playSoundWithKey("[p]", 1.0f, make_vector(1, 2, 3));
     OO_CHECK(vector_equal(Source(0)->_position, make_vector(1, 2, 3)));
     pool->playSoundWithKey("[q]", make_vector(4, 5, 6));
@@ -242,7 +252,7 @@ OO_TEST(minimumRepeatTime) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
-    std::shared_ptr<OOSoundSourcePool> pool = OOSoundSourcePool::poolWithCount(4, 0.1);
+    std::shared_ptr<oo::SoundSourcePool> pool = oo::SoundSourcePool::poolWithCount(4, 0.1);
     pool->playSoundWithKey("[scrape]");
     pool->playSoundWithKey("[scrape]");
     OO_CHECK(gSources.size() == 1);
@@ -261,7 +271,7 @@ OO_TEST(noOverlap) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
-    std::shared_ptr<OOSoundSourcePool> pool = OOSoundSourcePool::poolWithCount(3, 0.0);
+    std::shared_ptr<oo::SoundSourcePool> pool = oo::SoundSourcePool::poolWithCount(3, 0.0);
     pool->playSoundWithKey("[overheat]", static_cast<bool>(false));
     pool->playSoundWithKey("[overheat]", static_cast<bool>(false));
     pool->playSoundWithKey("[other]", static_cast<bool>(false), kZeroVector);
@@ -282,8 +292,8 @@ OO_TEST(cxxApi) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
-    const std::shared_ptr<OOSoundSourcePool> pool =
-        OOSoundSourcePool::poolWithCount(3, 0.0);
+    const std::shared_ptr<oo::SoundSourcePool> pool =
+        oo::SoundSourcePool::poolWithCount(3, 0.0);
     OO_CHECK(pool);
     pool->playSoundWithKey("[a]", overlap);  // overlapping, priority 1
     pool->playSoundWithKey("[b]", noOverlap,

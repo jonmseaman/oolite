@@ -10,7 +10,7 @@
 
 #include <cmath>
 
-#include "OOMaths.h"
+#include "Maths.h"
 #include "oo_test.hpp"
 
 // The test links the whole game but main, which defines the debug flags.

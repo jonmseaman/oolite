@@ -33,8 +33,8 @@
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
 #include "OOJavaScriptEngine.h"
-#include "OOStringParsing.h"
-#include "OOStringExpander.h"
+#include "StringParsing.h"
+#include "StringExpander.h"
 #include "legacy_random.h"
 #include "oofnd/Exception.hpp"
 #include "oofnd/FileSystem.hpp"
@@ -111,10 +111,15 @@ void HarnessLogSink(std::string_view line)
 
 }	// namespace
 
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
-void OOLogPushIndent(void) {}
-void OOLogPopIndent(void) {}
+namespace oo {
+
+void LogIndent(void) {}
+void LogOutdent(void) {}
+void LogPushIndent(void) {}
+void LogPopIndent(void) {}
+
+}  // namespace oo
+
 
 JSContext *OOJSAcquireContext(void) { return nullptr; }
 void OOJSRelinquishContext(JSContext *context) { (void)context; }
@@ -125,7 +130,7 @@ void OOJSReportWarningWithArguments(JSContext *context, const char *format, va_l
 	sLog.push_back(u"JS warning: " + MaskPercentLc(U(oo::str::vformat(format, args))));
 }
 
-std::string OOHarnessCredits(OOCreditsQuantity tenths, bool decimal)
+std::string OOHarnessCredits(oo::CreditsQuantity tenths, bool decimal)
 {
 	return decimal ? std::format("{}.{} Cr", static_cast<unsigned long long>(tenths / 10), static_cast<unsigned long long>(tenths % 10))
 				   : std::format("{} Cr", static_cast<unsigned long long>(tenths / 10));
@@ -140,11 +145,16 @@ const oo::PList *Universe::descriptions()
 	static const oo::PList *descriptions = new oo::PList(sDescriptions);
 	return descriptions;
 }
-std::optional<std::string> Universe::getSystemName(OOSystemID sys)  { return std::format("Sys{}", static_cast<int>(sys)); }
-std::optional<std::string> Universe::getSystemName(OOSystemID sys, OOGalaxyID gal)  { return std::format("G{}Sys{}", static_cast<int>(gal), static_cast<int>(sys)); }
+std::optional<std::string> Universe::getSystemName(oo::SystemID sys)  { return std::format("Sys{}", static_cast<int>(sys)); }
+std::optional<std::string> Universe::getSystemName(oo::SystemID sys, oo::GalaxyID gal)  { return std::format("G{}Sys{}", static_cast<int>(gal), static_cast<int>(sys)); }
 OOHarnessSystemManager *Universe::getSystemManager()  { static OOHarnessSystemManager manager; return &manager; }
 static Universe *sUniverse;
-Universe *OOGetUniverse(void) { return sUniverse; }
+namespace oo {
+
+Universe *GetUniverse(void) { return sUniverse; }
+
+}  // namespace oo
+
 
 // The player's by-name queries are recorded (PlayerEntity.h).
 void OOHarnessRecordQuery(const std::string &name)
@@ -227,11 +237,11 @@ const oo::PList &Locals()
 	return locals;
 }
 
-std::optional<Units> Expand(Random_Seed seed, const Units &string, const std::optional<std::string> &systemName, OOExpandOptions options)
+std::optional<Units> Expand(Random_Seed seed, const Units &string, const std::optional<std::string> &systemName, oo::ExpandOptions options)
 {
 	try
 	{
-		return UnitsOf(OOExpandDescriptionString(seed, oo::utf16ToUtf8(string), Overrides(), Locals(), systemName, options));
+		return UnitsOf(oo::ExpandDescriptionString(seed, oo::utf16ToUtf8(string), Overrides(), Locals(), systemName, options));
 	}
 	catch (const oo::Exception &e)
 	{
@@ -240,9 +250,9 @@ std::optional<Units> Expand(Random_Seed seed, const Units &string, const std::op
 	return std::nullopt;
 }
 
-const OOExpandOptions kOptionSets[] =
+const oo::ExpandOptions kOptionSets[] =
 {
-	OOExpandOptions::kNone, OOExpandOptions::kGoodRNG, OOExpandOptions::kBackslashN | OOExpandOptions::kGoodRNG, OOExpandOptions::kForJavaScript, OOExpandOptions::kDisallowPercentI
+	oo::ExpandOptions::kNone, oo::ExpandOptions::kGoodRNG, oo::ExpandOptions::kBackslashN | oo::ExpandOptions::kGoodRNG, oo::ExpandOptions::kForJavaScript, oo::ExpandOptions::kDisallowPercentI
 };
 enum { kOptionCount = sizeof kOptionSets / sizeof *kOptionSets };
 
@@ -369,12 +379,12 @@ int main(int argc, char **argv)
 			{
 				ranrot_srand(1000 + s * 7 + o);
 				seed_for_planet_description(seed);
-				std::optional<Units> r = Expand(seed, key, (o & 1) ? std::optional<std::string>("Zaonce") : std::nullopt, kOptionSets[o] | OOExpandOptions::kKey);
+				std::optional<Units> r = Expand(seed, key, (o & 1) ? std::optional<std::string>("Zaonce") : std::nullopt, kOptionSets[o] | oo::ExpandOptions::kKey);
 				Record(U(std::format("seed {} key ", s)) + key + U(std::format(" opt {}", o)), r);
 			}
 		}
 		ranrot_srand(77 + s);
-		Record(u"system description", UnitsOf(OOGenerateSystemDescription(seed, std::string("Riedquat"))));
+		Record(u"system description", UnitsOf(oo::GenerateSystemDescription(seed, std::string("Riedquat"))));
 	}
 	const uint64_t keysHash = sHash;
 	const unsigned keysLines = sLines;
@@ -417,7 +427,7 @@ int main(int argc, char **argv)
 			std::optional<Units> r;
 			try
 			{
-				r = UnitsOf(OOExpandDescriptionString(seed, oo::utf16ToUtf8(c[0]), del, oo::PList(), std::nullopt, OOExpandOptions::kNone));
+				r = UnitsOf(oo::ExpandDescriptionString(seed, oo::utf16ToUtf8(c[0]), del, oo::PList(), std::nullopt, oo::ExpandOptions::kNone));
 			}
 			catch (const oo::Exception &e)
 			{

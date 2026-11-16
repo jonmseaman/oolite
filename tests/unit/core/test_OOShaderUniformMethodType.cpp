@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "OORegExpMatcher.h"
+#include "RegExpMatcher.h"
 #include "ShaderUniformMethodType.h"
 #include "ValueType.h"
 #include "oo_test.hpp"
@@ -33,22 +33,27 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
 }
 
 // OORegExpMatcher stub: answers no match.
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
-  return oo::makeShared<OORegExpMatcher>();
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher() {
+  return oo::makeShared<oo::RegExpMatcher>();
 }
-bool OORegExpMatcher::string(const std::string&, const std::string&) {
+bool oo::RegExpMatcher::string(const std::string&, const std::string&) {
   return false;
 }
-OORegExpMatcher::~OORegExpMatcher() {}
+namespace oo {
+
+RegExpMatcher::~RegExpMatcher() {}
 
 // OOLogging.mm's (it would bring the resource manager into the link);
 // OOOpenGL.mm's OOGL error check and state dump call them.
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
+void LogIndent(void) {}
+void LogOutdent(void) {}
 
-OOShaderSetting OOShaderSettingFromString(const std::string& string) {
-  return string == "SHADERS_FULL" ? OOShaderSetting::kFull : OOShaderSetting::kNotSupported;
+ShaderSetting ShaderSettingFromString(const std::string& string) {
+  return string == "SHADERS_FULL" ? ShaderSetting::kFull : ShaderSetting::kNotSupported;
 }
+
+}  // namespace oo
+
 
 namespace {
 
@@ -78,7 +83,7 @@ OO_TEST(typesFromEncodings) {
   OO_CHECK(TypeOf<Vector>() == oo::kShaderUniformTypeVector);
   OO_CHECK(TypeOf<HPVector>() == oo::kShaderUniformTypeHPVector);
   OO_CHECK(TypeOf<Quaternion>() == oo::kShaderUniformTypeQuaternion);
-  OO_CHECK(TypeOf<OOMatrix>() == oo::kShaderUniformTypeMatrix);
+  OO_CHECK(TypeOf<oo::Matrix>() == oo::kShaderUniformTypeMatrix);
   OO_CHECK(TypeOf<NSPoint>() == oo::kShaderUniformTypePoint);
   OO_CHECK(TypeOf<oo::ObjectResult>() == oo::kShaderUniformTypeObject);
 }

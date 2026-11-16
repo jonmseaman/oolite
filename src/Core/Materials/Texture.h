@@ -43,8 +43,8 @@ SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "OOFoundation.h"
-#include "OOOpenGL.h"
+#include "Foundation.h"
+#include "OpenGL.h"
 #include "PixMap.h"
 #include "TextureFlags.h"
 #include "oofnd/Object.hpp"

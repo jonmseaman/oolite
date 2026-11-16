@@ -11,17 +11,17 @@
 
 #include <cstring>
 
-#include "OODrawable.h"
+#include "Drawable.h"
 #include "oo_test.hpp"
 
 // A subclass that overrides the root's members.
-class TestSubDrawable : public OODrawable {
+class TestSubDrawable : public oo::Drawable {
  public:
   void renderOpaqueParts() override { opaqueRenders++; }
   bool hasOpaqueParts() override { return true; }
   GLfloat collisionRadius() override { return radius; }
 #ifndef NDEBUG
-  size_t totalSize() override { return OODrawable::totalSize() + 100; }
+  size_t totalSize() override { return oo::Drawable::totalSize() + 100; }
   size_t objectSize() const override { return sizeof *this; }
 #endif
 
@@ -31,7 +31,7 @@ class TestSubDrawable : public OODrawable {
 
 // A converted drawable: a C++ subclass. Global, as a game class is, so that its
 // description names it as the game's would.
-class TestCxxDrawable : public OODrawable {
+class TestCxxDrawable : public oo::Drawable {
  public:
   void renderTranslucentParts() override { translucentRenders++; }
   bool hasTranslucentParts() override { return true; }
@@ -53,7 +53,7 @@ bool IsZero(const BoundingBox& box) {
 
 OO_TEST(rootDefaults) {
   {
-    const std::shared_ptr<OODrawable> drawable = oo::makeShared<OODrawable>();
+    const std::shared_ptr<oo::Drawable> drawable = oo::makeShared<oo::Drawable>();
     drawable->renderOpaqueParts();
     drawable->renderTranslucentParts();
     OO_CHECK(!drawable->hasOpaqueParts() && !drawable->hasTranslucentParts());
@@ -65,7 +65,7 @@ OO_TEST(rootDefaults) {
 #ifndef NDEBUG
     OO_CHECK(drawable->allTextures().empty());
     OO_CHECK(drawable->totalSize() == drawable->objectSize());
-    OO_CHECK(drawable->objectSize() == sizeof(OODrawable));
+    OO_CHECK(drawable->objectSize() == sizeof(oo::Drawable));
 #endif
   }
 }
@@ -85,7 +85,7 @@ OO_TEST(objCSubclass) {
 #endif
     // Virtual calls through the root's type reach the overrides, or the root's
     // own answers.
-    OODrawable* part = drawable.get();
+    oo::Drawable* part = drawable.get();
     part->renderOpaqueParts();
     OO_CHECK(drawable->opaqueRenders == 2);
     OO_CHECK(!part->descriptionComponents().has_value());
@@ -95,7 +95,7 @@ OO_TEST(objCSubclass) {
 OO_TEST(cxxDrawableBehindTheFacade) {
   {
     const std::shared_ptr<TestCxxDrawable> drawable = oo::makeShared<TestCxxDrawable>();
-    OODrawable* part = drawable.get();
+    oo::Drawable* part = drawable.get();
 
     // The entities' calls reach the C++ overrides, and the root's defaults.
     part->renderTranslucentParts();
@@ -117,11 +117,11 @@ OO_TEST(autoreleaseKeepsTheDrawable) {
   std::shared_ptr<TestCxxDrawable> drawable = oo::makeShared<TestCxxDrawable>();
   TestCxxDrawable* raw = drawable.get();
   {
-    OODrawableAutorelease(std::shared_ptr<OODrawable>(std::move(drawable)));
+    oo::DrawableAutorelease(std::shared_ptr<oo::Drawable>(std::move(drawable)));
     raw->renderTranslucentParts();  // still alive
     OO_CHECK(raw->translucentRenders == 1);
   }
-  OODrawableAutorelease(std::shared_ptr<OODrawable>());  // null: nothing
+  oo::DrawableAutorelease(std::shared_ptr<oo::Drawable>());  // null: nothing
 }
 
 OO_TEST_MAIN()

@@ -308,7 +308,7 @@ static double MonotonicTime(void) {
       .count();
 }
 
-void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit) {
+void OOJSStartTimeLimiterWithTimeLimit(oo::TimeDelta limit) {
   if (sLimiterStartDepth++ == 0) {
     if (limit <= 0.0) limit = OOJS_TIME_LIMIT;
     sLimiterTimeLimit = limit;

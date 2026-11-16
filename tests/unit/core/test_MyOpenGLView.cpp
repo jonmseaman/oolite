@@ -39,7 +39,7 @@
 
 #include "GameController.h"
 #include "MyOpenGLView.h"
-#include "OOFullScreenController.h"
+#include "FullScreenController.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
@@ -126,15 +126,15 @@ OO_TEST(displayAndNativeSize) {
     OO_CHECK(view->getDisplayId() != 0);
     const oo::PList native = view->getNativeSize();
     OO_CHECK(native.isDict());
-    OO_CHECK(native.get<int>(std::string(kOODisplayWidth), -1) > 0);
-    OO_CHECK(native.get<int>(std::string(kOODisplayHeight), -1) > 0);
-    OO_CHECK(native.get<int>(std::string(kOODisplayRefreshRate), -1) == 0);
+    OO_CHECK(native.get<int>(std::string(oo::kDisplayWidth), -1) > 0);
+    OO_CHECK(native.get<int>(std::string(oo::kDisplayHeight), -1) > 0);
+    OO_CHECK(native.get<int>(std::string(oo::kDisplayRefreshRate), -1) == 0);
     OO_CHECK_EQ(native.count(), 3u);
     // The mode list starts with it.
     const std::vector<oo::PList> modes = view->getScreenSizeArray();
     OO_CHECK(!modes.empty() &&
-             modes[0].get<int>(std::string(kOODisplayWidth), -1) ==
-                 native.get<int>(std::string(kOODisplayWidth), -2));
+             modes[0].get<int>(std::string(oo::kDisplayWidth), -1) ==
+                 native.get<int>(std::string(oo::kDisplayWidth), -2));
   }
 }
 
@@ -274,9 +274,9 @@ OO_TEST(slice2DisplayModesAndSavedSettings) {
     const std::vector<oo::PList> modes = view->getScreenSizeArray();
     OO_CHECK(!modes.empty());
     if (modes.empty()) return;
-    const int nativeWidth = modes[0].get<int>(std::string(kOODisplayWidth), -1);
+    const int nativeWidth = modes[0].get<int>(std::string(oo::kDisplayWidth), -1);
     const int nativeHeight =
-        modes[0].get<int>(std::string(kOODisplayHeight), -1);
+        modes[0].get<int>(std::string(oo::kDisplayHeight), -1);
 
     // Mode 0 is the native mode, refresh 0.
     OO_CHECK(view->modeAsSize(0).width == nativeWidth &&
@@ -288,9 +288,9 @@ OO_TEST(slice2DisplayModesAndSavedSettings) {
     const int last = static_cast<int>(modes.size()) - 1;
     const oo::PList& lastMode = modes[last];
     const int lastIndex = view->indexOfDisplayModeForWidth(
-        lastMode.get<int>(std::string(kOODisplayWidth)),
-        lastMode.get<int>(std::string(kOODisplayHeight)),
-        lastMode.get<int>(std::string(kOODisplayRefreshRate)));
+        lastMode.get<int>(std::string(oo::kDisplayWidth)),
+        lastMode.get<int>(std::string(oo::kDisplayHeight)),
+        lastMode.get<int>(std::string(oo::kDisplayRefreshRate)));
     OO_CHECK(lastIndex >= 0 && lastIndex <= last);
 
     // Repopulating the list gives the same list.
@@ -302,7 +302,7 @@ OO_TEST(slice2DisplayModesAndSavedSettings) {
     view->setScreenSize(last);
     OO_CHECK(view->currentScreenMode() == lastMode);
     OO_CHECK(view->currentScreenSize().width ==
-             lastMode.get<int>(std::string(kOODisplayWidth)));
+             lastMode.get<int>(std::string(oo::kDisplayWidth)));
     view->setDisplayMode(0, false);
     OO_CHECK(!view->inFullScreenMode());
     OO_CHECK(view->currentScreenMode() == modes[0]);

@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 #include <algorithm>
 #include <cstddef>
 
-#include "OOFunctionAttributes.h"
+#include "FunctionAttributes.h"
 
 /*	Engine-neutral names for a property ID and a value (jsid and jsval with
         SpiderMonkey). Declared here, rather than in OOJavaScriptEngine.h, so

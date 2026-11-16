@@ -37,13 +37,13 @@ namespace {
 // -caseInsensitiveCompare: as the definitions used it: a nil receiver answers
 // OOComparisonResult::kSame (a message to nil); a nil argument compares as the
 // empty string.
-static OOComparisonResult CaseInsensitiveCompare(
+static oo::ComparisonResult CaseInsensitiveCompare(
     const std::optional<std::string>& a, const std::optional<std::string>& b) {
-  if (!a.has_value()) return OOComparisonResult::kSame;
+  if (!a.has_value()) return oo::ComparisonResult::kSame;
   int order = oo::str::caseInsensitiveCompare(*a, b.value_or(std::string()));
-  return (order < 0) ? OOComparisonResult::kAscending
-                     : ((order > 0) ? OOComparisonResult::kDescending
-                                    : OOComparisonResult::kSame);
+  return (order < 0) ? oo::ComparisonResult::kAscending
+                     : ((order > 0) ? oo::ComparisonResult::kDescending
+                                    : oo::ComparisonResult::kSame);
 }
 }  // namespace
 
@@ -159,11 +159,11 @@ void OOJSInterfaceDefinition::runCallback(const std::string& key) {
   OOJSRelinquishContext(context);
 }
 
-OOComparisonResult OOJSInterfaceDefinition::interfaceCompare(
+oo::ComparisonResult OOJSInterfaceDefinition::interfaceCompare(
     OOJSInterfaceDefinition* other) {
-  OOComparisonResult byCategory = CaseInsensitiveCompare(
+  oo::ComparisonResult byCategory = CaseInsensitiveCompare(
       _category, (other != nullptr) ? other->category() : std::nullopt);
-  if (byCategory == OOComparisonResult::kSame) {
+  if (byCategory == oo::ComparisonResult::kSame) {
     return CaseInsensitiveCompare(
         _title, (other != nullptr) ? other->title() : std::nullopt);
   } else {

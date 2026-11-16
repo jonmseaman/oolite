@@ -33,7 +33,7 @@ SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "OOOpenGLExtensionManager.h"
+#include "OpenGLExtensionManager.h"
 
 #if OO_MULTITEXTURE
 

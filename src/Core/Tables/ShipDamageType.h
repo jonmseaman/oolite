@@ -12,8 +12,8 @@ X-macro table.
 #include <cstdint>
 #include <string_view>
 
-#include "OOEnumFlags.h"
-#include "OOEnumTable.h"
+#include "EnumFlags.h"
+#include "EnumTable.h"
 
 namespace oo {
 

@@ -14,21 +14,26 @@
 #include <string>
 #include <vector>
 
-#include "OOCommodityMarket.h"
-#include "OOStringExpander.h"
+#include "CommodityMarket.h"
+#include "StringExpander.h"
 #include "oo_test.hpp"
 
 // The expander: "<string>". A test replacement, not a stub: the names and
 // comments go through it.
-std::optional<std::string> OOExpandDescriptionString(
+namespace oo {
+
+std::optional<std::string> ExpandDescriptionString(
     Random_Seed /*seed*/, const std::string& string,
     const oo::PList& /*overrides*/, const oo::PList& /*legacyLocals*/,
     const std::optional<std::string>& /*systemName*/,
-    OOExpandOptions /*options*/) {
+    ExpandOptions /*options*/) {
   return "<" + string + ">";
 }
 
-Random_Seed OOStringExpanderDefaultRandomSeed(void) { return Random_Seed{}; }
+Random_Seed StringExpanderDefaultRandomSeed(void) { return Random_Seed{}; }
+
+}  // namespace oo
+
 
 namespace {
 
@@ -41,8 +46,8 @@ oo::PList Good(
 
 // food (sort 1), furs and gems (both sort 2: key order), alloys (sort 0),
 // radioactives (no sort order: 0, and after alloys by key).
-std::shared_ptr<OOCommodityMarket> Market() {
-  std::shared_ptr<OOCommodityMarket> market = oo::makeShared<OOCommodityMarket>();
+std::shared_ptr<oo::CommodityMarket> Market() {
+  std::shared_ptr<oo::CommodityMarket> market = oo::makeShared<oo::CommodityMarket>();
   market->setGood("gems", Good({{"name", oo::PList("Gem-stones")},
                                 {"sort_order", oo::PList(2)},
                                 {"quantity_unit", oo::PList(2)},
@@ -78,7 +83,7 @@ using Goods = std::vector<std::string>;
 
 OO_TEST(goodsAndDefinitions) {
   {
-    std::shared_ptr<OOCommodityMarket> m = Market();
+    std::shared_ptr<oo::CommodityMarket> m = Market();
     OO_CHECK(m->count() == 5);
     OO_CHECK(m->goods() ==
              Goods({"alloys", "radioactives", "food", "furs", "gems"}));
@@ -113,11 +118,11 @@ OO_TEST(goodsAndDefinitions) {
              m->priceForGood("unobtainium") == 0);
     OO_CHECK(m->quantityForGood("food") == 20 &&
              m->quantityForGood("unobtainium") == 0);
-    OO_CHECK(m->massUnitForGood("food") == OOMassUnit::kTons &&
-             m->massUnitForGood("furs") == OOMassUnit::kKilograms &&
-             m->massUnitForGood("gems") == OOMassUnit::kGrams);
-    OO_CHECK(m->massUnitForGood("alloys") == OOMassUnit::kUnknown &&
-             m->massUnitForGood("unobtainium") == OOMassUnit::kTons);
+    OO_CHECK(m->massUnitForGood("food") == oo::MassUnit::kTons &&
+             m->massUnitForGood("furs") == oo::MassUnit::kKilograms &&
+             m->massUnitForGood("gems") == oo::MassUnit::kGrams);
+    OO_CHECK(m->massUnitForGood("alloys") == oo::MassUnit::kUnknown &&
+             m->massUnitForGood("unobtainium") == oo::MassUnit::kTons);
     OO_CHECK(m->exportLegalityForGood("furs") == 1 &&
              m->importLegalityForGood("furs") == 2);
     OO_CHECK(m->exportLegalityForGood("food") == 0 &&
@@ -141,7 +146,7 @@ OO_TEST(goodsAndDefinitions) {
 
 OO_TEST(pricesAndQuantities) {
   {
-    std::shared_ptr<OOCommodityMarket> m = Market();
+    std::shared_ptr<oo::CommodityMarket> m = Market();
     OO_CHECK(m->setPrice(99, "food") && m->priceForGood("food") == 99);
     OO_CHECK(!m->setPrice(99, "unobtainium"));
 
@@ -176,7 +181,7 @@ OO_TEST(pricesAndQuantities) {
 
 OO_TEST(savedAmounts) {
   {
-    std::shared_ptr<OOCommodityMarket> m = Market();
+    std::shared_ptr<oo::CommodityMarket> m = Market();
     OO_CHECK(m->savePlayerAmounts() ==
              oo::PList(oo::PList::Array{
                  oo::PList(oo::PList::Array{oo::PList("alloys"),
@@ -198,7 +203,7 @@ OO_TEST(savedAmounts) {
     // Loading zeroes the goods a save does not mention; a 1.80 save names a
     // good by its (expanded) name; a good that no longer exists, or too much of
     // one, is skipped.
-    std::shared_ptr<OOCommodityMarket> player = Market();
+    std::shared_ptr<oo::CommodityMarket> player = Market();
     player->loadPlayerAmounts(oo::PList(oo::PList::Array{
         oo::PList(oo::PList::Array{oo::PList("furs"), oo::PList(5)}),
         oo::PList(oo::PList::Array{oo::PList("<Gem-stones>"), oo::PList(2),
@@ -213,7 +218,7 @@ OO_TEST(savedAmounts) {
     player->loadPlayerAmounts(oo::PList());
     OO_CHECK(player->quantityForGood("furs") == 0);
 
-    std::shared_ptr<OOCommodityMarket> station = Market();
+    std::shared_ptr<oo::CommodityMarket> station = Market();
     station->loadStationAmounts(oo::PList(oo::PList::Array{
         oo::PList(
             oo::PList::Array{oo::PList("furs"), oo::PList(5), oo::PList(600)}),
@@ -231,7 +236,7 @@ OO_TEST(savedAmounts) {
 }
 
 OO_TEST(cxxClass) {
-  std::shared_ptr<OOCommodityMarket> m = oo::makeShared<OOCommodityMarket>();
+  std::shared_ptr<oo::CommodityMarket> m = oo::makeShared<oo::CommodityMarket>();
   OO_CHECK(m->count() == 0 && m->goods().empty() &&
            m->savePlayerAmounts() == oo::PList(oo::PList::Array{}));
   m->setGood("gems", Good({{"name", oo::PList("Gem-stones")},
@@ -261,14 +266,14 @@ OO_TEST(cxxClass) {
 OO_TEST(facadeIdentity) {
   {
     // A C++ market sees its goods.
-    std::shared_ptr<OOCommodityMarket> cxxMarket = oo::makeShared<OOCommodityMarket>();
+    std::shared_ptr<oo::CommodityMarket> cxxMarket = oo::makeShared<oo::CommodityMarket>();
     cxxMarket->setGood("food", Good({{"price", oo::PList(3)}}));
     OO_CHECK(cxxMarket->priceForGood("food") == 3);
     cxxMarket->setPrice(4, "food");
     OO_CHECK(cxxMarket->priceForGood("food") == 4);
 
-    OO_CHECK(oo::makeShared<OOCommodityMarket>() !=
-             oo::makeShared<OOCommodityMarket>());  // distinct objects, as before
+    OO_CHECK(oo::makeShared<oo::CommodityMarket>() !=
+             oo::makeShared<oo::CommodityMarket>());  // distinct objects, as before
   }
 }
 

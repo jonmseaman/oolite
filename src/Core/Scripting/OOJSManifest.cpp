@@ -27,8 +27,8 @@ MA 02110-1301, USA.
 #include <algorithm>
 #include <string>
 
-#include "OOCommodities.h"
-#include "OOCommodityMarket.h"
+#include "Commodities.h"
+#include "CommodityMarket.h"
 #include "OOJSPlayer.h"
 #include "OOJSPlayerShip.h"
 #include "OOJavaScriptEngine.h"
@@ -191,7 +191,7 @@ static int ManifestGetOwnProperty(JSContext* context,
      * compatible-ish with 1.80 and earlier except that
      * alienItems and similar aliases don't work */
     std::optional<std::string> key = NameForPropertyID(context, propID);
-    OOCommodities* commodities =
+    oo::Commodities* commodities =
         (UNIVERSE != nullptr
              ? UNIVERSE->getCommodities()
              : nullptr);  // null: no good is defined, as a message to nil
@@ -226,15 +226,15 @@ static bool ManifestSetProperty(JSContext* context, JSValueConst thisObj,
   PlayerEntity* entity = OOPlayerForScripting();
   int32_t iValue;
 
-  OOCommodityMarket* market =
+  oo::CommodityMarket* market =
       (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket() : nullptr);
-  OOMassUnit unit = (market != nullptr)
-                        ? market->massUnitForGood(key)
-                        : OOMassUnit::kTons;  // OOMassUnit::kTons (0): what a
-                                              // message to nil answered
+  oo::MassUnit unit = (market != nullptr)
+                          ? market->massUnitForGood(key)
+                          : oo::MassUnit::kTons;  // OOMassUnit::kTons (0): what
+                                                  // a message to nil answered
   // we can always change gold, platinum & gem-stones quantities, even with
   // special cargo
-  if (unit == OOMassUnit::kTons &&
+  if (unit == oo::MassUnit::kTons &&
       (entity != nullptr ? entity->PlayerEntity::getSpecialCargo()
                          : std::optional<std::string>())
           .has_value()) {
@@ -250,7 +250,7 @@ static bool ManifestSetProperty(JSContext* context, JSValueConst thisObj,
     if (iValue < 0) iValue = 0;
     if (entity != nullptr)
       entity->setCargoQuantityForType(key,
-                                      static_cast<OOCargoQuantity>(iValue));
+                                      static_cast<oo::CargoQuantity>(iValue));
   } else {
     // OOJSReportBadPropertyValue() takes a tinyid; this is the same message for
     // a named property.
@@ -313,7 +313,7 @@ static int ManifestSetPropertyExotic(JSContext* context, JSValueConst object,
             get hook overrode it; for other names, it was what later reads
             returned.
     */
-    OOCommodities* commodities =
+    oo::Commodities* commodities =
         (UNIVERSE != nullptr
              ? UNIVERSE->getCommodities()
              : nullptr);  // null: no good is defined, as a message to nil
@@ -363,11 +363,11 @@ static JSValue ManifestComment(JSContext* context, JSValueConst /*oojsThis*/,
     return JS_EXCEPTION;
   }
 
-  OOCommodityMarket* market =
-      (PLAYER != nullptr
-           ? PLAYER->getShipCommodityData()
-           : static_cast<OOCommodityMarket*>(nullptr));  // null: no comment,
-                                                         // as a message to nil
+  oo::CommodityMarket* market =
+      (PLAYER != nullptr ? PLAYER->getShipCommodityData()
+                         : static_cast<oo::CommodityMarket*>(
+                               nullptr));  // null: no comment,
+                                           // as a message to nil
   if (market != nullptr) information = market->commentForGood(*good);
 
   OOJS_RETURN_STRING_OR_NULL(information);
@@ -394,9 +394,9 @@ static JSValue ManifestSetComment(JSContext* context, JSValueConst /*oojsThis*/,
     return JS_EXCEPTION;
   }
 
-  OOCommodityMarket* market =
+  oo::CommodityMarket* market =
       (PLAYER != nullptr ? PLAYER->getShipCommodityData()
-                         : static_cast<OOCommodityMarket*>(
+                         : static_cast<oo::CommodityMarket*>(
                                nullptr));  // null: false, as a message to nil
   OK = market != nullptr && market->setComment(*information, *good);
 
@@ -422,11 +422,11 @@ static JSValue ManifestShortComment(JSContext* context,
     return JS_EXCEPTION;
   }
 
-  OOCommodityMarket* market =
-      (PLAYER != nullptr
-           ? PLAYER->getShipCommodityData()
-           : static_cast<OOCommodityMarket*>(nullptr));  // null: no comment,
-                                                         // as a message to nil
+  oo::CommodityMarket* market =
+      (PLAYER != nullptr ? PLAYER->getShipCommodityData()
+                         : static_cast<oo::CommodityMarket*>(
+                               nullptr));  // null: no comment,
+                                           // as a message to nil
   if (market != nullptr) information = market->shortCommentForGood(*good);
 
   OOJS_RETURN_STRING_OR_NULL(information);
@@ -454,9 +454,9 @@ static JSValue ManifestSetShortComment(JSContext* context,
     return JS_EXCEPTION;
   }
 
-  OOCommodityMarket* market =
+  oo::CommodityMarket* market =
       (PLAYER != nullptr ? PLAYER->getShipCommodityData()
-                         : static_cast<OOCommodityMarket*>(
+                         : static_cast<oo::CommodityMarket*>(
                                nullptr));  // null: false, as a message to nil
   OK = market != nullptr && market->setShortComment(*information, *good);
 

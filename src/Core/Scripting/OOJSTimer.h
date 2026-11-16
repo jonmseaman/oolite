@@ -47,8 +47,8 @@ class OOJSTimer : public OOScriptTimer, public ::OOJSPrivateObject {
   // Timer constructor: null where the initialiser answered nil. function and
   // jsThis are borrowed (the timer takes its own references); jsThis may be JS
   // null.
-  static std::shared_ptr<OOJSTimer> timerWithDelay(OOTimeAbsolute delay,
-                                                   OOTimeDelta interval,
+  static std::shared_ptr<OOJSTimer> timerWithDelay(oo::TimeAbsolute delay,
+                                                   oo::TimeDelta interval,
                                                    JSContext* context,
                                                    JSValueConst function,
                                                    JSValueConst jsThis);
@@ -85,7 +85,7 @@ class OOJSTimer : public OOScriptTimer, public ::OOJSPrivateObject {
  private:
   OOJSTimer() = default;
 
-  bool initWithDelay(OOTimeAbsolute delay, OOTimeDelta interval,
+  bool initWithDelay(oo::TimeAbsolute delay, oo::TimeDelta interval,
                      JSContext* context, JSValueConst function,
                      JSValueConst jsThis);
   // Notification handler: engine reset.

@@ -39,8 +39,8 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "Color.h"
 #include "MaterialSpecifier.h"
-#include "OOColor.h"
 #include "ResourceManager.h"
 #include "Texture.h"
 #include "oofnd/Log.hpp"
@@ -651,9 +651,9 @@ void oo::DefaultShaderSynthesizer::writeTextureCoordRead() {
 void oo::DefaultShaderSynthesizer::writeDiffuseColorTermIfNeeded() {
   oo::PList diffuseMap =
       oo::MaterialDiffuseMapSpecifier(_configuration, materialKey());
-  std::shared_ptr<OOColor> diffuseColor(
+  std::shared_ptr<oo::Color> diffuseColor(
       oo::MaterialDiffuseColor(_configuration));
-  if (diffuseColor == nullptr) diffuseColor = OOColor::whiteColor();
+  if (diffuseColor == nullptr) diffuseColor = oo::Color::whiteColor();
 
   if (diffuseColor->isBlack()) return;
   _usesDiffuseTerm = true;
@@ -807,8 +807,8 @@ void oo::DefaultShaderSynthesizer::writeSpecularLighting() {
         oo::kTextureSpecifierScaleFactorKey, 1.0f));
   }
 
-  std::shared_ptr<OOColor> specularColor;  // never null: both functions below
-                                           // answer a default colour
+  std::shared_ptr<oo::Color> specularColor;  // never null: both functions below
+                                             // answer a default colour
   if (specularColorMap.isNull()) {
     specularColor = oo::MaterialSpecularColor(_configuration);
   } else {
@@ -1104,15 +1104,16 @@ oo::PList AddingValue(oo::PList specifier, std::string_view key,
 }
 
 // OOColor::colorWithDescription() of the value for key (null if there is none).
-std::shared_ptr<OOColor> ColorIn(const oo::PList& spec, std::string_view key) {
+std::shared_ptr<oo::Color> ColorIn(const oo::PList& spec,
+                                   std::string_view key) {
   const oo::PList* value = spec.find(key);
-  return OOColor::colorWithDescription((value != nullptr) ? *value
-                                                          : oo::PList());
+  return oo::Color::colorWithDescription((value != nullptr) ? *value
+                                                            : oo::PList());
 }
 
 // OOColor::normalizedArray(): four +numberWithFloat: components. (The callers
 // never pass null.)
-oo::PList NormalizedArray(OOColor* color) {
+oo::PList NormalizedArray(oo::Color* color) {
   oo::PList::Array result;
   for (float component : color->normalizedArray())
     result.push_back(oo::PList::singleReal(component));
@@ -1129,7 +1130,7 @@ oo::PList NormalizedArray(OOColor* color) {
 oo::PList CanonicalizeMaterialSpecifier(
     const oo::PList& spec, const std::optional<std::string>& materialKey) {
   oo::PList::Dict result;
-  std::shared_ptr<OOColor> col;
+  std::shared_ptr<oo::Color> col;
   oo::PList texSpec;
 
   // Colours.
@@ -1283,7 +1284,7 @@ oo::PList CanonicalizeMaterialSpecifier(
       if (modulateColor != lmDict.end() && !modulateColor->second.isArray()) {
         // Don't convert arrays here, because we specifically don't want the
         // behaviour of treating numbers greater than 1 as 0..255 components.
-        col = OOColor::colorWithDescription(modulateColor->second);
+        col = oo::Color::colorWithDescription(modulateColor->second);
         // A description that is no colour leaves no colour (upstream set nil,
         // which Foundation refuses).
         if (col != nullptr)

@@ -31,11 +31,11 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <utility>
 
-#include "OOCommodities.h"
-#include "OOStringParsing.h"
-#include "OOSystemDescriptionManager.h"
+#include "Commodities.h"
 #include "PlayerEntityLoadSave.h"
 #include "StationEntity.h"
+#include "StringParsing.h"
+#include "SystemDescriptionManager.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/PListGet.hpp"
@@ -44,7 +44,7 @@ namespace {
 
 // A contract marker, as the four marker methods built it (the system a
 // +numberWithInt:).
-oo::PList MarkerFor(OOSystemID system, std::string_view color,
+oo::PList MarkerFor(oo::SystemID system, std::string_view color,
                     std::string_view shape) {
   oo::PList::Dict marker;
   marker["system"] = oo::PList::signedInteger(system);
@@ -108,8 +108,8 @@ bool PlayerEntity::dockedAtMainStation() {
 }
 
 void PlayerEntity::awardCommodityType(const std::string& type,
-                                      OOCargoQuantity amount) {
-  OOMassUnit unit;
+                                      oo::CargoQuantity amount) {
+  oo::MassUnit unit;
 
   if (!((UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr) != nullptr
             ? UNIVERSE->getCommodities()->goodDefined(type)
@@ -122,23 +122,23 @@ void PlayerEntity::awardCommodityType(const std::string& type,
 
   unit =
       (shipCommodityData != nullptr ? shipCommodityData->massUnitForGood(type)
-                                    : OOMassUnit::kTons);
+                                    : oo::MassUnit::kTons);
 
   if (status() != oo::EntityStatus::kDocked) {
     // in-flight
     while (amount) {
-      if (unit != OOMassUnit::kTons) {
+      if (unit != oo::MassUnit::kTons) {
         if (specialCargo) {
           // is this correct behaviour?
           if (shipCommodityData != nullptr)
             shipCommodityData->addQuantity(amount, type);
         } else {
           int amount_per_container =
-              (unit == OOMassUnit::kKilograms) ? 1000 : 1000000;
+              (unit == oo::MassUnit::kKilograms) ? 1000 : 1000000;
           while (amount > 0) {
             int smaller_quantity = static_cast<int>(
                 1 + ((amount - 1) %
-                     static_cast<OOCargoQuantity>(amount_per_container)));
+                     static_cast<oo::CargoQuantity>(amount_per_container)));
             if (cargo.size() < maxAvailableCargoSpace()) {
               std::shared_ptr<::ShipEntity> container =
                   (UNIVERSE != nullptr
@@ -154,12 +154,12 @@ void PlayerEntity::awardCommodityType(const std::string& type,
                   container->setStatus(oo::EntityStatus::kInHold);
                 if (container != nullptr)
                   container->setCommodity(
-                      type, static_cast<OOCargoQuantity>(smaller_quantity));
+                      type, static_cast<oo::CargoQuantity>(smaller_quantity));
                 cargo.emplace_back(container);
                 container.reset();
               }
             }
-            amount -= static_cast<OOCargoQuantity>(smaller_quantity);
+            amount -= static_cast<oo::CargoQuantity>(smaller_quantity);
           }
         }
       } else if (!specialCargo) {
@@ -196,11 +196,11 @@ void PlayerEntity::awardCommodityType(const std::string& type,
     while ((amount) && (current_cargo < maxAvailableCargoSpace())) {
       manifest_quantity++;
       amount--;
-      if (unit == OOMassUnit::kTons) current_cargo++;
+      if (unit == oo::MassUnit::kTons) current_cargo++;
     }
     if (shipCommodityData != nullptr)
       shipCommodityData->setQuantity(
-          static_cast<OOCargoQuantity>(manifest_quantity), type);
+          static_cast<oo::CargoQuantity>(manifest_quantity), type);
   }
   calculateCurrentCargo();
 }
@@ -209,9 +209,9 @@ void PlayerEntity::resetScannerZoom() {
   scanner_zoom_rate = SCANNER_ZOOM_RATE_DOWN;
 }
 
-OOGalaxyID PlayerEntity::currentGalaxyID() { return galaxy_number; }
+oo::GalaxyID PlayerEntity::currentGalaxyID() { return galaxy_number; }
 
-OOSystemID PlayerEntity::currentSystemID() {
+oo::SystemID PlayerEntity::currentSystemID() {
   if ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) == nullptr)
     return -1;  // Interstellar space
   return (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0);
@@ -257,7 +257,7 @@ void PlayerEntity::setMissionChoice(const std::optional<std::string>& newChoice,
 
 void PlayerEntity::allowMissionInterrupt() { _missionAllowInterrupt = true; }
 
-OOTimeDelta PlayerEntity::scriptTimer() { return script_time; }
+oo::TimeDelta PlayerEntity::scriptTimer() { return script_time; }
 
 /* FIXME: these next three functions seed the RNG when called. That
  * could cause unwanted effects - should save its state, and then
@@ -292,19 +292,19 @@ double PlayerEntity::systemPseudoRandomFloat() {
   return static_cast<double>(a) / static_cast<double>(0x01000000);
 }
 
-oo::PList PlayerEntity::passengerContractMarker(OOSystemID system) {
+oo::PList PlayerEntity::passengerContractMarker(oo::SystemID system) {
   return MarkerFor(system, "orangeColor", "MARKER_DIAMOND");
 }
 
-oo::PList PlayerEntity::parcelContractMarker(OOSystemID system) {
+oo::PList PlayerEntity::parcelContractMarker(oo::SystemID system) {
   return MarkerFor(system, "orangeColor", "MARKER_PLUS");
 }
 
-oo::PList PlayerEntity::cargoContractMarker(OOSystemID system) {
+oo::PList PlayerEntity::cargoContractMarker(oo::SystemID system) {
   return MarkerFor(system, "orangeColor", "MARKER_SQUARE");
 }
 
-oo::PList PlayerEntity::defaultMarker(OOSystemID system) {
+oo::PList PlayerEntity::defaultMarker(oo::SystemID system) {
   return MarkerFor(system, "redColor", "MARKER_X");
 }
 
@@ -316,9 +316,9 @@ oo::PList PlayerEntity::validatedMarker(const oo::PList& marker) {
     result["system"] = oo::PList::signedInteger(0);
     return oo::PList(std::move(result));
   }
-  OOSystemID dest = static_cast<OOSystemID>(marker.get<int>("system"));
+  oo::SystemID dest = static_cast<oo::SystemID>(marker.get<int>("system"));
   // FIXME: parameters
-  if (dest < 0 || dest > kOOMaximumSystemID) {
+  if (dest < 0 || dest > oo::kMaximumSystemID) {
     return oo::PList();
   }
   std::string group =
@@ -337,7 +337,7 @@ oo::PList PlayerEntity::validatedMarker(const oo::PList& marker) {
 // Implements string expansion code [credits_number].
 std::optional<std::string> PlayerEntity::creditsFormattedForSubstitution() {
   return std::optional<std::string>(
-      OOStringFromDeciCredits(deciCredits(), true, false));
+      oo::StringFromDeciCredits(deciCredits(), true, false));
 }
 
 /*	Implements string expansion code [_oo_legacy_credits_number].
@@ -348,7 +348,7 @@ std::optional<std::string> PlayerEntity::creditsFormattedForSubstitution() {
 */
 std::optional<std::string>
 PlayerEntity::creditsFormattedForLegacySubstitution() {
-  OOCreditsQuantity tenthsOfCredits = deciCredits();
+  oo::CreditsQuantity tenthsOfCredits = deciCredits();
   std::uint64_t integerCredits = tenthsOfCredits / 10;
   std::uint64_t tenths = tenthsOfCredits % 10;
 
@@ -388,7 +388,8 @@ std::optional<std::string> PlayerEntity::getKeyBindingDescription(
   for (i = 0; i < count; i++) {
     if (i != 0) final += " or ";
     const oo::PList* def = keyList.at(i);
-    OOKeyCode k_int = static_cast<OOKeyCode>(IntegerValueOf(def->find("key")));
+    oo::KeyCode k_int =
+        static_cast<oo::KeyCode>(IntegerValueOf(def->find("key")));
     const std::string desc =
         keyCodeDescription(k_int).value_or("(null)");  // %@ of nil
     // 0 = key not set
@@ -402,7 +403,7 @@ std::optional<std::string> PlayerEntity::getKeyBindingDescription(
   return final;
 }
 
-std::optional<std::string> PlayerEntity::keyCodeDescription(OOKeyCode code) {
+std::optional<std::string> PlayerEntity::keyCodeDescription(oo::KeyCode code) {
   switch (code) {
     case 0:
       return OO_DESC("oolite-keycode-unset");
@@ -502,7 +503,7 @@ std::optional<std::string> PlayerEntity::keyCodeDescription(OOKeyCode code) {
 }
 
 std::optional<std::string> PlayerEntity::keyCodeDescriptionShort(
-    OOKeyCode code) {
+    oo::KeyCode code) {
   switch (code) {
     case 0:
       return OO_DESC("oolite-keycode-short-unset");

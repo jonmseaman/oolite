@@ -34,7 +34,7 @@ SOFTWARE.
 #include <string>
 
 #include "OOJSEngineCore.h"
-#include "OOStringWidth.h"
+#include "StringWidth.h"
 
 static JSValue FontMeasureString(OOJS_NATIVE_ARGS);
 
@@ -65,8 +65,8 @@ static JSValue FontMeasureString(JSContext* context, JSValueConst /*oojsThis*/,
   }
 
   OOJS_RETURN_DOUBLE(
-      OOStringWidthInEm(OOStringFromJSValue(context, OOJS_ARGV[0])
-                            .value_or(std::string())));  // nil measured as ""
+      oo::StringWidthInEm(OOStringFromJSValue(context, OOJS_ARGV[0])
+                              .value_or(std::string())));  // nil measured as ""
 
   OOJS_NATIVE_EXIT
 }

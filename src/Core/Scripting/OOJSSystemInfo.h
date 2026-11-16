@@ -42,9 +42,9 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "OOJSPrivateObject.h"
-#include "OOTypes.h"
+#include "Types.h"
 #include "oofnd/PList.hpp"
 
 // The system a SystemInfo stands for, and its data through the universe.
@@ -52,8 +52,8 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
  public:
   // -initWithGalaxy:system:, as a factory: null for a galaxy or system out of
   // range.
-  static std::shared_ptr<OOSystemInfo> initWithGalaxy(OOGalaxyID galaxy,
-                                                      OOSystemID system);
+  static std::shared_ptr<OOSystemInfo> initWithGalaxy(oo::GalaxyID galaxy,
+                                                      oo::SystemID system);
 
   std::optional<std::string> descriptionComponents() const;
   std::optional<std::string> shortDescriptionComponents() const;
@@ -73,8 +73,8 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
   void setNullAssigned(bool flag, const std::string& key);
   bool isNullAssignedForKey(const std::string& key) const;
 
-  OOGalaxyID galaxy() const;
-  OOSystemID system() const;
+  oo::GalaxyID galaxy() const;
+  oo::SystemID system() const;
   NSPoint coordinates();
 
   // The JS glue (OOJSPrivateObject): a new SystemInfo object holding this (no
@@ -89,10 +89,10 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
   std::string description() const override;
 
  private:
-  OOSystemInfo(OOGalaxyID galaxy, OOSystemID system);
+  OOSystemInfo(oo::GalaxyID galaxy, oo::SystemID system);
 
-  OOGalaxyID _galaxy;
-  OOSystemID _system;
+  oo::GalaxyID _galaxy;
+  oo::SystemID _system;
   std::string _planetKey;
   std::set<std::string>
       _nullAssignedKeys;  // See SystemInfoExoticSetProperty().
@@ -102,5 +102,5 @@ void InitOOJSSystemInfo(JSContext* context, JSValueConst global);
 
 // Returns an owned value, or JS_NULL on failure (with a JS warning, but no
 // exception).
-JSValue GetJSSystemInfoForSystem(JSContext* context, OOGalaxyID galaxy,
-                                 OOSystemID system);
+JSValue GetJSSystemInfoForSystem(JSContext* context, oo::GalaxyID galaxy,
+                                 oo::SystemID system);

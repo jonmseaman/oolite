@@ -16,22 +16,27 @@
 	ignored), runShipLibrary(), and a native's exception. Run: bash tests/run.sh unit
 */
 
-#include "OOFoundation.h"
-#include "OOMaths.h"
-#include "OOTypes.h"
+#include "Foundation.h"
+#include "Maths.h"
+#include "Types.h"
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "OOConstToJSString.h"
-#include "OOStringExpander.h"
+#include "StringExpander.h"
 #include "EntityManualRefs.h"  // the tests' manual references
 
 
 // MARK: The classes, as far as the binding sees them ----------------------------------------------
 
-typedef std::ptrdiff_t OOGUIRow;	// as GuiDisplayGen.h declares it
+namespace oo {
+
+typedef std::ptrdiff_t GUIRow;
+
+}  // namespace oo
+	// as GuiDisplayGen.h declares it
 
 // The demo ship's object (the root's), which TestObjectOf answers for the demo
 // ship. Its selector is a member of the same name.
@@ -81,7 +86,7 @@ public:
 	oo::GUIScreenID missionExitScreen();
 	void setMissionExitScreen(oo::GUIScreenID screen);
 	void addMissionDestinationMarker(const oo::PList &marker);
-	oo::PList defaultMarker(OOSystemID system);
+	oo::PList defaultMarker(oo::SystemID system);
 	bool removeMissionDestinationMarker(const oo::PList &marker);
 	void addLiteralMissionText(const std::string &text);
 	void setMissionDescription(const std::string &textKey, const std::optional<std::string> &key);
@@ -92,7 +97,7 @@ public:
 	void setMissionOverlayDescriptor(const oo::PList &descriptor);
 	void setMissionBackgroundDescriptor(const oo::PList &descriptor);
 	void setMissionBackgroundSpecial(const std::string &special);
-	void setCustomChartZoom(OOScalar zoom);
+	void setCustomChartZoom(oo::Scalar zoom);
 	void setCustomChartCentre(NSPoint coords);
 	NSPoint getGalaxy_coordinates();
 	void setMissionScreenID(const std::optional<std::string> &msid);
@@ -127,7 +132,7 @@ public:
 // The GUI: the members the binding calls are defined below (a C++ stand-in
 // with the facade stand-in's answers), recording into sGuiCalls.
 #include "GuiDisplayGen.h"
-#include "OOColor.h"	// and its row colours
+#include "Color.h"	// and its row colours
 
 
 #include "UniverseStandIn.h"
@@ -174,7 +179,7 @@ public:
 
 // The music controller, a converted class the binding only calls: the members
 // the binding calls are defined below.
-#include "OOMusicController.h"
+#include "MusicController.h"
 
 
 #include "OOJSEngineCore.h"
@@ -287,7 +292,7 @@ void PlayerEntity::addMissionDestinationMarker(const oo::PList &marker)
 	_calls.push_back("addMarker(" + Describe(marker) + ")");
 	_destinations[oo::str::format("%d", marker.get<int>("system", -1))] = marker;
 }
-oo::PList PlayerEntity::defaultMarker(OOSystemID system)
+oo::PList PlayerEntity::defaultMarker(oo::SystemID system)
 {
 	return Dict({ { "system", oo::PList(static_cast<int>(system)) }, { "name", oo::PList("default") } });
 }
@@ -318,7 +323,7 @@ void PlayerEntity::setMissionBackgroundDescriptor(const oo::PList &descriptor)
 	_calls.push_back("background(" + Describe(descriptor) + ")");
 }
 void PlayerEntity::setMissionBackgroundSpecial(const std::string &special)  { _calls.push_back("backgroundSpecial('" + special + "')"); }
-void PlayerEntity::setCustomChartZoom(OOScalar zoom)
+void PlayerEntity::setCustomChartZoom(oo::Scalar zoom)
 {
 	_calls.push_back(oo::str::format("chartZoom(%g)", static_cast<double>(zoom)));
 }
@@ -376,13 +381,13 @@ oo::PList GuiDisplayGen::textureDescriptorFromJSValue(JSValue value, JSContext *
 	return Dict({ { "name", oo::PList(name) } });
 }
 
-OOGUIRow GuiDisplayGen::rowForKey(const std::optional<std::string> &key)
+oo::GUIRow GuiDisplayGen::rowForKey(const std::optional<std::string> &key)
 {
 	sGuiCalls.push_back("rowForKey(" + Optional(key) + ")");
 	return key == std::optional<std::string>("2_NO") ? 7 : -1;
 }
 
-bool GuiDisplayGen::setSelectedRow(OOGUIRow row)
+bool GuiDisplayGen::setSelectedRow(oo::GUIRow row)
 {
 	sGuiCalls.push_back(oo::str::format("selectRow(%ld)", static_cast<long>(row)));
 	return true;
@@ -390,21 +395,21 @@ bool GuiDisplayGen::setSelectedRow(OOGUIRow row)
 
 // The GUI's virtual members the binding does not call (its vtable needs them): never run.
 void GuiDisplayGen::setTitle(const std::optional<std::string> &)  { std::abort(); }
-OOColor *GuiDisplayGen::getTextColor()  { std::abort(); }
-void GuiDisplayGen::setTextColor(OOColor *)  { std::abort(); }
-OOColor *GuiDisplayGen::getTextCommsColor()  { std::abort(); }
-void GuiDisplayGen::setTextCommsColor(OOColor *)  { std::abort(); }
-void GuiDisplayGen::setColor(OOColor *, OOGUIRow)  { std::abort(); }
-OOGUIRow GuiDisplayGen::getSelectedRow()  { std::abort(); }
+oo::Color *GuiDisplayGen::getTextColor()  { std::abort(); }
+void GuiDisplayGen::setTextColor(oo::Color *)  { std::abort(); }
+oo::Color *GuiDisplayGen::getTextCommsColor()  { std::abort(); }
+void GuiDisplayGen::setTextCommsColor(oo::Color *)  { std::abort(); }
+void GuiDisplayGen::setColor(oo::Color *, oo::GUIRow)  { std::abort(); }
+oo::GUIRow GuiDisplayGen::getSelectedRow()  { std::abort(); }
 void GuiDisplayGen::setSelectableRange(NSRange)  { std::abort(); }
-void GuiDisplayGen::setTabStops(OOGUITabSettings)  { std::abort(); }
+void GuiDisplayGen::setTabStops(oo::GUITabSettings)  { std::abort(); }
 void GuiDisplayGen::clearAndKeepBackground(bool)  { std::abort(); }
-void GuiDisplayGen::setKey(const std::string &, OOGUIRow)  { std::abort(); }
-void GuiDisplayGen::setText(const std::string &, OOGUIRow)  { std::abort(); }
-void GuiDisplayGen::setText(const std::optional<std::string> &, OOGUIRow, OOGUIAlignment)  { std::abort(); }
+void GuiDisplayGen::setKey(const std::string &, oo::GUIRow)  { std::abort(); }
+void GuiDisplayGen::setText(const std::string &, oo::GUIRow)  { std::abort(); }
+void GuiDisplayGen::setText(const std::optional<std::string> &, oo::GUIRow, oo::GUIAlignment)  { std::abort(); }
 std::optional<std::string> GuiDisplayGen::reflowTextForMFD(const std::optional<std::string> &)  { std::abort(); }
-OOGUIRow GuiDisplayGen::addLongText(const std::optional<std::string> &, OOGUIRow, OOGUIAlignment)  { std::abort(); }
-void GuiDisplayGen::setArray(const std::vector<std::string> &, OOGUIRow)  { std::abort(); }
+oo::GUIRow GuiDisplayGen::addLongText(const std::optional<std::string> &, oo::GUIRow, oo::GUIAlignment)  { std::abort(); }
+void GuiDisplayGen::setArray(const std::vector<std::string> &, oo::GUIRow)  { std::abort(); }
 
 
 // The demo ship's object, which TestObjectOf answers (only the demo ship
@@ -485,19 +490,19 @@ bool OOJavaScriptEngine::callJSFunction(JSValueConst function, JSValueConst jsTh
 }
 
 
-OOMusicController::OOMusicController()
+oo::MusicController::MusicController()
 {
 }
 
 
-OOMusicController *OOMusicController::sharedController()
+oo::MusicController *oo::MusicController::sharedController()
 {
-	static OOMusicController *shared = new OOMusicController();	// never released, as the game's
+	static oo::MusicController *shared = new oo::MusicController();	// never released, as the game's
 	return shared;
 }
 
 
-void OOMusicController::setMissionMusic(const std::optional<std::string> &missionMusicName)
+void oo::MusicController::setMissionMusic(const std::optional<std::string> &missionMusicName)
 {
 	sMusic.push_back(Optional(missionMusicName));
 }
@@ -505,19 +510,24 @@ void OOMusicController::setMissionMusic(const std::optional<std::string> &missio
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
 
-const char *const kOOLogException = "exception";
+namespace oo {
+
+const char *const kLogException = "exception";
 
 
 // The expander: "<string>".
-std::optional<std::string> OOExpandDescriptionString(Random_Seed, const std::string &string, const oo::PList &, const oo::PList &, const std::optional<std::string> &, OOExpandOptions)
+std::optional<std::string> ExpandDescriptionString(Random_Seed, const std::string &string, const oo::PList &, const oo::PList &, const std::optional<std::string> &, ExpandOptions)
 {
 	return "<" + string + ">";
 }
 
-Random_Seed OOStringExpanderDefaultRandomSeed(void)
+Random_Seed StringExpanderDefaultRandomSeed(void)
 {
 	return Random_Seed{};
 }
+
+}  // namespace oo
+
 
 
 namespace {
@@ -756,7 +766,7 @@ std::optional<Vector> JSValueToVector(JSContext *context, JSValueConst value)
 		JS_FreeValue(context, element);
 		if (!ok)  return std::nullopt;
 	}
-	return make_vector(static_cast<OOScalar>(v[0]), static_cast<OOScalar>(v[1]), static_cast<OOScalar>(v[2]));
+	return make_vector(static_cast<oo::Scalar>(v[0]), static_cast<oo::Scalar>(v[1]), static_cast<oo::Scalar>(v[2]));
 }
 
 

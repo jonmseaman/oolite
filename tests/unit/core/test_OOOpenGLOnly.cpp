@@ -8,8 +8,8 @@
    meson test -C build/meson_test test_OOOpenGLOnly
 */
 
-#include "OOOpenGLOnly.h"
-#include "OOOpenGLOnly.h"  // #pragma once: a second include adds nothing
+#include "OpenGLOnly.h"
+#include "OpenGLOnly.h"  // #pragma once: a second include adds nothing
 #include "oo_test.hpp"
 
 namespace {

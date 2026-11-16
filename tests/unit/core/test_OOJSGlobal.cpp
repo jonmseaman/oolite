@@ -16,17 +16,17 @@
 	Run: bash tests/run.sh unit
 */
 
-#include "OOFoundation.h"
-#include "OOColor.h"
+#include "Foundation.h"
+#include "Color.h"
 #include "GuiDisplayGen.h"
 #include "OOJSGuiScreenKeyDefinition.h"
-#include "OOStringExpander.h"
-#include "OOTypes.h"
+#include "StringExpander.h"
+#include "Types.h"
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "OODescription.h"
+#include "Description.h"
 #include "OOConstToJSString.h"
 #include "oofnd/Log.hpp"
 
@@ -44,14 +44,14 @@ class MyOpenGLView;
 class PlayerEntity
 {
 public:
-	OOGalaxyID currentGalaxyID();
+	oo::GalaxyID currentGalaxyID();
 	oo::GUIScreenID guiScreen();
 	std::optional<std::string> keyBindingDescription2(const std::string &binding);
 	void clearExtraGuiScreenKeys(oo::GUIScreenID gui, const std::string &key);
 	void setEquipScreenBackgroundDescriptor(const oo::PList &descriptor);
 	bool setExtraGuiScreenKeys(oo::GUIScreenID gui, ::OOJSGuiScreenKeyDefinition *definition);
 
-	OOGalaxyID _galaxy = {};
+	oo::GalaxyID _galaxy = {};
 	oo::GUIScreenID _screen = {};
 	std::string _lastKeys;
 	std::shared_ptr<OOJSGuiScreenKeyDefinition> _definition;
@@ -85,7 +85,7 @@ public:
 	void pauseGame();
 	void quitGame();
 	oo::PList getMissiontext();
-	std::optional<std::string> getSystemInhabitants(OOSystemID, bool);
+	std::optional<std::string> getSystemInhabitants(oo::SystemID, bool);
 	oo::PList screenTextureDescriptorForKey(const std::string &);
 	void setScreenTextureDescriptorForKey(const std::string &, const oo::PList &);
 };
@@ -137,10 +137,10 @@ std::shared_ptr<GuiDisplayGen> sGui;
 // colours it holds (the facade stand-in's ivars).
 oo::PList sGuiBackground;
 oo::PList sGuiForeground;
-std::map<std::string, std::shared_ptr<OOColor>> sGuiColors;
+std::map<std::string, std::shared_ptr<oo::Color>> sGuiColors;
 }  // namespace
 
-OOGalaxyID PlayerEntity::currentGalaxyID()  { return _galaxy; }
+oo::GalaxyID PlayerEntity::currentGalaxyID()  { return _galaxy; }
 oo::GUIScreenID PlayerEntity::guiScreen()  { return _screen; }
 std::optional<std::string> PlayerEntity::keyBindingDescription2(const std::string &binding)
 {
@@ -173,7 +173,7 @@ oo::PList Universe::getMissiontext()
 	text["number"] = oo::PList(5.0);
 	return oo::PList(std::move(text));
 }
-std::optional<std::string> Universe::getSystemInhabitants(OOSystemID sys, bool plural)
+std::optional<std::string> Universe::getSystemInhabitants(oo::SystemID sys, bool plural)
 {
 	(void)sys;
 	return plural ? std::string("Furry Felines") : std::string("Furry Feline");
@@ -213,13 +213,13 @@ oo::PList GuiDisplayGen::textureDescriptorFromJSValue(JSValue value, JSContext *
 bool GuiDisplayGen::setBackgroundTextureDescriptor(const oo::PList &descriptor)  { sGuiBackground = descriptor; return !descriptor.isNull(); }
 bool GuiDisplayGen::setForegroundTextureDescriptor(const oo::PList &descriptor)  { sGuiForeground = descriptor; return !descriptor.isNull(); }
 
-std::shared_ptr<OOColor> GuiDisplayGen::colorFromSetting(const std::optional<std::string> &setting, OOColor *def)
+std::shared_ptr<oo::Color> GuiDisplayGen::colorFromSetting(const std::optional<std::string> &setting, oo::Color *def)
 {
 	auto found = sGuiColors.find(setting.value_or(""));
 	return found != sGuiColors.end() ? found->second : oo::share(def);
 }
 
-void GuiDisplayGen::setGuiColorSettingFromKey(const std::string &key, OOColor *col)
+void GuiDisplayGen::setGuiColorSettingFromKey(const std::string &key, oo::Color *col)
 {
 	if (col == nullptr)  sGuiColors.erase(key);
 	else  sGuiColors[key] = oo::share(col);
@@ -227,22 +227,22 @@ void GuiDisplayGen::setGuiColorSettingFromKey(const std::string &key, OOColor *c
 
 // The GUI's virtual members the binding does not call (its vtable needs them): never run.
 void GuiDisplayGen::setTitle(const std::optional<std::string> &)  { std::abort(); }
-OOColor *GuiDisplayGen::getTextColor()  { std::abort(); }
-void GuiDisplayGen::setTextColor(OOColor *)  { std::abort(); }
-OOColor *GuiDisplayGen::getTextCommsColor()  { std::abort(); }
-void GuiDisplayGen::setTextCommsColor(OOColor *)  { std::abort(); }
-void GuiDisplayGen::setColor(OOColor *, OOGUIRow)  { std::abort(); }
-OOGUIRow GuiDisplayGen::getSelectedRow()  { std::abort(); }
-bool GuiDisplayGen::setSelectedRow(OOGUIRow)  { std::abort(); }
+oo::Color *GuiDisplayGen::getTextColor()  { std::abort(); }
+void GuiDisplayGen::setTextColor(oo::Color *)  { std::abort(); }
+oo::Color *GuiDisplayGen::getTextCommsColor()  { std::abort(); }
+void GuiDisplayGen::setTextCommsColor(oo::Color *)  { std::abort(); }
+void GuiDisplayGen::setColor(oo::Color *, oo::GUIRow)  { std::abort(); }
+oo::GUIRow GuiDisplayGen::getSelectedRow()  { std::abort(); }
+bool GuiDisplayGen::setSelectedRow(oo::GUIRow)  { std::abort(); }
 void GuiDisplayGen::setSelectableRange(NSRange)  { std::abort(); }
-void GuiDisplayGen::setTabStops(OOGUITabSettings)  { std::abort(); }
+void GuiDisplayGen::setTabStops(oo::GUITabSettings)  { std::abort(); }
 void GuiDisplayGen::clearAndKeepBackground(bool)  { std::abort(); }
-void GuiDisplayGen::setKey(const std::string &, OOGUIRow)  { std::abort(); }
-void GuiDisplayGen::setText(const std::string &, OOGUIRow)  { std::abort(); }
-void GuiDisplayGen::setText(const std::optional<std::string> &, OOGUIRow, OOGUIAlignment)  { std::abort(); }
+void GuiDisplayGen::setKey(const std::string &, oo::GUIRow)  { std::abort(); }
+void GuiDisplayGen::setText(const std::string &, oo::GUIRow)  { std::abort(); }
+void GuiDisplayGen::setText(const std::optional<std::string> &, oo::GUIRow, oo::GUIAlignment)  { std::abort(); }
 std::optional<std::string> GuiDisplayGen::reflowTextForMFD(const std::optional<std::string> &)  { std::abort(); }
-OOGUIRow GuiDisplayGen::addLongText(const std::optional<std::string> &, OOGUIRow, OOGUIAlignment)  { std::abort(); }
-void GuiDisplayGen::setArray(const std::vector<std::string> &, OOGUIRow)  { std::abort(); }
+oo::GUIRow GuiDisplayGen::addLongText(const std::optional<std::string> &, oo::GUIRow, oo::GUIAlignment)  { std::abort(); }
+void GuiDisplayGen::setArray(const std::vector<std::string> &, oo::GUIRow)  { std::abort(); }
 
 
 bool MyOpenGLView::snapShot(const std::optional<std::string> &filename)  { (void)filename; std::abort(); }	// never run
@@ -311,22 +311,27 @@ void OOJSScript::popScript(OOJSScript *)  { std::abort(); }
 // MARK: What the rest of the game provides --------------------------------------------------------
 
 // The expander: "<string>", with each override "{key=value}" after it, in key order.
-std::optional<std::string> OOExpandDescriptionString(Random_Seed, const std::string &string, const oo::PList &overrides, const oo::PList &, const std::optional<std::string> &, OOExpandOptions options)
+namespace oo {
+
+std::optional<std::string> ExpandDescriptionString(Random_Seed, const std::string &string, const oo::PList &overrides, const oo::PList &, const std::optional<std::string> &, ExpandOptions options)
 {
 	std::string result = "<" + string + ">";
 	if (const oo::PList::Dict *dict = overrides.getIf<oo::PList::Dict>())
 	{
 		for (const auto &entry : *dict)  result += "{" + entry.first + "=" + oo::DescriptionOf(entry.second) + "}";
 	}
-	if (oo::Any(options & OOExpandOptions::kBackslashN))  result += "\\n";
+	if (oo::Any(options & ExpandOptions::kBackslashN))  result += "\\n";
 	return result;
 }
 
 
-Random_Seed OOStringExpanderDefaultRandomSeed(void)
+Random_Seed StringExpanderDefaultRandomSeed(void)
 {
 	return Random_Seed{};
 }
+
+}  // namespace oo
+
 
 
 std::string CommodityDisplayNameForSymbolicName(const std::string &symbolicName)
@@ -499,11 +504,16 @@ namespace {
 std::vector<std::function<void()>> sDeferredCalls;
 }
 
-void OOScheduleDeferredCall(std::function<void()> call, double delay)
+namespace oo {
+
+void ScheduleDeferredCall(std::function<void()> call, double delay)
 {
 	(void)delay;
 	sDeferredCalls.push_back(std::move(call));
 }
+
+}  // namespace oo
+
 
 
 void OOJSReportBadPropertySelector(JSContext *context, JSValueConst, int, const JSCFunctionListEntry *, size_t)

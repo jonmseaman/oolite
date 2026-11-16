@@ -33,7 +33,7 @@ MA 02110-1301, USA.
 
 #include <cstdint>
 
-#include "OOFunctionAttributes.h"
+#include "FunctionAttributes.h"
 
 struct Random_Seed {
   uint8_t a, /* 6c */
@@ -125,24 +125,28 @@ inline int equal_seeds(Random_Seed seed1, Random_Seed seed2) INLINE_CONST_FUNC;
    thread.
 */
 
-uint32_t OOReallyRandom();
-void OOInitReallyRandom(uint64_t seed);
+namespace oo {
 
-void OOSetReallyRandomRANROTSeed();
-void OOSetReallyRandomRndSeed();
-void OOSetReallyRandomRANROTAndRndSeeds();
+uint32_t ReallyRandom();
+void InitReallyRandom(uint64_t seed);
+
+void SetReallyRandomRANROTSeed();
+void SetReallyRandomRndSeed();
+void SetReallyRandomRANROTAndRndSeeds();
 
 /*
         OOSaveRandomState()/OORestoreRandomState(): save and restore both the
    main RANROT seed and the rnd seed in one shot.
 */
-struct OORandomState {
+struct RandomState {
   RANROTSeed ranrot;
   RNG_Seed rnd;
 };
 
-OORandomState OOSaveRandomState();
-void OORestoreRandomState(OORandomState state);
+RandomState SaveRandomState();
+void RestoreRandomState(RandomState state);
+
+}  // namespace oo
 
 /*** Only inline definitions beyond this point ***/
 

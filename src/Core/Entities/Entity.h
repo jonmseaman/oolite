@@ -41,15 +41,15 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
+#include "CacheManager.h"
 #include "CollisionRegion.h"
+#include "Color.h"
 #include "EntityHold.h"            // the owning entity lists
 #include "EntityVirtualMembers.h"  // the virtual members
-#include "OOCacheManager.h"
-#include "OOColor.h"
-#include "OOFoundation.h"
+#include "Foundation.h"
+#include "Maths.h"
 #include "OOJSPrivateObject.h"
-#include "OOMaths.h"
-#include "OOTypes.h"
+#include "Types.h"
 #include "oofnd/Object.hpp"
 
 class Entity;
@@ -83,7 +83,7 @@ inline constexpr double SCANNER_MAX_RANGE2 = 655360000.0;
 inline constexpr double CLOSE_COLLISION_CHECK_MAX_RANGE2 = 1000000000.0;
 
 // OOEntityStatus, OOScanClass and their defaults (a plain header).
-#include "OOEntityEnums.h"
+#include "EntityEnums.h"
 
 /*	The base object for ships, stations, anything actually.
 
@@ -157,8 +157,8 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
   CollisionRegion* getCollisionRegion();
   void setCollisionRegion(CollisionRegion* region);
 
-  void setUniversalID(OOUniversalID uid);
-  OOUniversalID getUniversalID();
+  void setUniversalID(oo::UniversalID uid);
+  oo::UniversalID getUniversalID();
 
   bool throwingSparks();
   void setThrowSparks(bool value);
@@ -178,7 +178,7 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
 
   // setPosition(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
   // (EntityVirtualMembers.h)
-  void setPositionX(OOHPScalar x, OOHPScalar y, OOHPScalar z);
+  void setPositionX(oo::HPScalar x, oo::HPScalar y, oo::HPScalar z);
   HPVector getPosition();
   Vector getCameraRelativePosition();
   // cameraRangeFront(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
@@ -238,10 +238,10 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
   // moveForward(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
   // (EntityVirtualMembers.h)
 
-  OOMatrix rotationMatrix();
+  oo::Matrix rotationMatrix();
   // drawRotationMatrix(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
   // (EntityVirtualMembers.h)
-  OOMatrix transformationMatrix();
+  oo::Matrix transformationMatrix();
   // drawTransformationMatrix(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
   // (EntityVirtualMembers.h)
 
@@ -254,7 +254,7 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
 
   // update(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS (EntityVirtualMembers.h)
 
-  void applyVelocity(OOTimeDelta delta_t);
+  void applyVelocity(oo::TimeDelta delta_t);
   // checkCloseCollisionWith(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
   // (EntityVirtualMembers.h)
 
@@ -283,8 +283,8 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
   GLfloat universalTime();
   GLfloat getSpawnTime();
   GLfloat timeElapsedSinceSpawn();
-  void setAtmosphereFogging(OOColor* fogging);
-  std::shared_ptr<OOColor> fogUniform();
+  void setAtmosphereFogging(oo::Color* fogging);
+  std::shared_ptr<oo::Color> fogUniform();
 
   // The category ShaderBindings (EntityShaderBindings.cpp): more values the
   // shader uniforms bind to by name, through the entities' shader binding
@@ -342,7 +342,7 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
   // we forego encapsulation for some variables in order to
   // lose the overheads of accessor methods...
   //
-  OOUniversalID universalID = {};  // used to reference the entity
+  oo::UniversalID universalID = {};  // used to reference the entity
 
   unsigned isShip : 1 = 0, isStation : 1 = 0, isPlayer : 1 = 0,
                     isWormhole : 1 = 0, isSubEntity : 1 = 0, hasMoved : 1 = 0,
@@ -360,7 +360,7 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
   HPVector position = {};  // use high-precision vectors for global position
   Vector cameraRelativePosition = {};
   Quaternion orientation = {};
-  std::shared_ptr<OOColor> atmosphereFogging;
+  std::shared_ptr<oo::Color> atmosphereFogging;
 
   int zero_index = {};
 
@@ -372,7 +372,7 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
 
   Entity* collision_chain = {};
 
-  OOUniversalID shadingEntityID = {};
+  oo::UniversalID shadingEntityID = {};
 
   Entity* collider = {};
 
@@ -385,7 +385,7 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
 
   GLfloat distanceTravelled = {};  // set to zero initially
 
-  OOMatrix rotMatrix = {};
+  oo::Matrix rotMatrix = {};
 
   Vector velocity = {};
 
@@ -398,7 +398,7 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
   std::vector<oo::EntityHold>
       collidingEntities;  // filled by CollisionRegion each frame
 
-  OOTimeAbsolute spawnTime = {};
+  oo::TimeAbsolute spawnTime = {};
 
   JSValue _jsSelf = {};  // Zero-filled (not an object) until created; test with
                          // JS_IsObject().

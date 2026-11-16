@@ -29,7 +29,7 @@ OO_TEST(a_ship_told_to_attack_opens_fire) {
   oo::component::ShipHandle hunter = game.add(ShipWithKey("adder").near(target, 5'000.0));
   OO_CHECK(hunter.alive());
   hunter->setAITo("nullAI.plist");
-  OO_CHECK(hunter->setWeaponMount(OOWeaponFacing::kForward,
+  OO_CHECK(hunter->setWeaponMount(oo::WeaponFacing::kForward,
                                   oo::component::hasArgument("--without-weapon")
                                       ? "EQ_WEAPON_NONE"
                                       : "EQ_WEAPON_PULSE_LASER"));

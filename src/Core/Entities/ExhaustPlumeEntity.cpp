@@ -30,10 +30,10 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
+#include "GraphicsResetManager.h"
+#include "MacroOpenGL.h"
 #include "MyOpenGLView.h"
-#include "OOGraphicsResetManager.h"
 #include "OOJSExhaustPlume.h"
-#include "OOMacroOpenGL.h"
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
 #include "Texture.h"
@@ -60,7 +60,7 @@ namespace {
 
 // The plume texture's graphics reset client: registered once, with the
 // texture, and never destroyed.
-class PlumeTextureResetClient : public OOGraphicsResetClient {
+class PlumeTextureResetClient : public oo::GraphicsResetClient {
  public:
   void resetGraphicsState() override {
     oo::ExhaustPlumeEntity::resetGraphicsState();
@@ -120,7 +120,7 @@ double oo::ExhaustPlumeEntity::findCollisionRadius() {
   return collision_radius;
 }
 
-void oo::ExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
+void oo::ExhaustPlumeEntity::update(oo::TimeDelta /*delta_t*/) {
   // Profiling: this function and subfunctions are expensive - CIM
 
   // don't draw if there's no ship, or if we're just jumping out of
@@ -133,7 +133,7 @@ void oo::ExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
       [[unlikely]]
     return;
 
-  OOTimeAbsolute now = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
+  oo::TimeAbsolute now = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
   if ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) >
       _trackTime + kTimeStep) {
     saveToLastFrame();
@@ -146,8 +146,9 @@ void oo::ExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
   GLfloat length;
   HPVector vertex;
   GLfloat ex_emissive[4];
-  if (::OOColor* emissive = (ship != nullptr ? ship->exhaustEmissiveColor()
-                                             : static_cast<OOColor*>(nullptr)))
+  if (::oo::Color* emissive =
+          (ship != nullptr ? ship->exhaustEmissiveColor()
+                           : static_cast<oo::Color*>(nullptr)))
     emissive->getRed(&ex_emissive[0], &ex_emissive[1], &ex_emissive[2],
                      &ex_emissive[3]);  // a nil colour left them as they were
   const GLfloat s1[8] = {0.0,  static_cast<GLfloat>(M_SQRT1_2),
@@ -433,10 +434,10 @@ void oo::ExhaustPlumeEntity::drawSubEntityImmediate(bool /*immediate*/,
     return;  // don't draw if not moving according to 'update' calculation
 
   OO_ENTER_OPENGL();
-  OOSetOpenGLState(OOOpenGLStateID::kAdditiveBlending);
+  OOSetOpenGLState(oo::OpenGLStateID::kAdditiveBlending);
 
-  OOGLPopModelView();
-  OOGLPushModelView();
+  oo::GLPopModelView();
+  oo::GLPushModelView();
   //	GLTranslateOOVector(vector_flip([self cameraRelativePosition]));
   HPVector cam = (PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector{});
   for (unsigned n = 0; n < 34 * 3; n++) {
@@ -613,9 +614,9 @@ void oo::ExhaustPlumeEntity::saveToLastFrame() {
   // normally this would use the transformation matrix, but that
   // introduces inaccuracies
   // so just use the rotation matrix, then translate using HPVectors
-  HPVector framePos = OOHPVectorMultiplyMatrix(
+  HPVector framePos = oo::HPVectorMultiplyMatrix(
       getPosition(),
-      (ship != nullptr ? ship->drawRotationMatrix() : OOMatrix{}));
+      (ship != nullptr ? ship->drawRotationMatrix() : oo::Matrix{}));
   framePos = HPvector_add(framePos,
                           (ship != nullptr ? ship->getPosition() : HPVector{}));
   Frame frame = {(UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0), framePos,
@@ -693,10 +694,10 @@ void oo::ExhaustPlumeEntity::resetPlume() {
   _track[_nextFrame] = frame;
   _nextFrame = (_nextFrame + 1) % kExhaustFrameCount;*/
   _nextFrame = 0;
-  HPVector framePos = OOHPVectorMultiplyMatrix(
+  HPVector framePos = oo::HPVectorMultiplyMatrix(
       getPosition(),
       (owner() != nullptr ? owner()->drawTransformationMatrix()
-                          : OOMatrix{}));  // a message to nil's zero matrix
+                          : oo::Matrix{}));  // a message to nil's zero matrix
   uint8_t i;
   for (i = 0; i < kExhaustFrameCount; i++) {
     _track[i].timeframe = 0.0;
@@ -728,7 +729,7 @@ void oo::ExhaustPlumeEntity::setUpTexture() {
             oo::TextureFlags::kMagFilterLinear | oo::TextureFlags::kAlphaMask |
             oo::TextureFlags::kRepeatT | oo::TextureFlags::kRepeatS,
         kOOTextureDefaultAnisotropy / 2.0, 0.0));
-    OOGraphicsResetManager::sharedManager()->registerCxxClient(
+    oo::GraphicsResetManager::sharedManager()->registerCxxClient(
         new PlumeTextureResetClient);
   }
 }

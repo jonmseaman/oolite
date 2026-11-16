@@ -76,7 +76,7 @@ OO_TEST(defaults) {
     OO_CHECK(sky[0] == 0.0f && sky[1] == 0.0f && sky[2] == 0.0f &&
              sky[3] == 0.0f);
 
-    OO_CHECK(u->getDetailLevel() == OOGraphicsDetail::kMinimum);
+    OO_CHECK(u->getDetailLevel() == oo::GraphicsDetail::kMinimum);
     OO_CHECK(u->reducedDetail() && !u->useShaders());
     OO_CHECK(!u->bloom());
     OO_CHECK(u->currentPostFX() == OO_POSTFX_NONE &&
@@ -510,7 +510,7 @@ OO_TEST(slice12FrameCounterAndViewMatrix) {
              part->framesDoneThisUpdate == 0);
 
     part->viewMatrix = kIdentityMatrix;
-    OO_CHECK(OOMatrixEqual(u->getViewMatrix(), kIdentityMatrix));
+    OO_CHECK(oo::MatrixEqual(u->getViewMatrix(), kIdentityMatrix));
   }
 }
 
@@ -606,7 +606,7 @@ OO_TEST(slice14NoEntity) {
     OO_CHECK(u->hazardOnRouteFromEntity(nullptr, 0, p2) == nullptr);
     OO_CHECK(HPvector_equal(u->getSafeVectorFromEntity(nullptr, 0, p2),
                             kZeroHPVector));
-    OO_CHECK(u->firstShipHitByLaserFromShip(nullptr, OOWeaponFacing::kForward,
+    OO_CHECK(u->firstShipHitByLaserFromShip(nullptr, oo::WeaponFacing::kForward,
                                             kZeroVector, NULL) == nullptr);
     // The demo ship needs a docked player; with none there is no ship.
     SetUpTestPlayer();
@@ -812,8 +812,8 @@ namespace {
 std::optional<std::string> CurrentMessage(Universe* u) {
   return u->currentMessage;
 }
-OOTimeAbsolute MessageRepeatTime(Universe* u) { return u->messageRepeatTime; }
-OOTimeAbsolute CountdownRepeatTime(Universe* u) {
+oo::TimeAbsolute MessageRepeatTime(Universe* u) { return u->messageRepeatTime; }
+oo::TimeAbsolute CountdownRepeatTime(Universe* u) {
   return u->countdown_messageRepeatTime;
 }
 
@@ -1031,7 +1031,7 @@ OO_TEST(slice19Descriptions) {
     OO_CHECK(!u->descriptionForArrayKey("slice19-text", 0).has_value());
     OO_CHECK(u->descriptionBooleanForKey("slice19-flag"));
     OO_CHECK(!u->descriptionBooleanForKey("slice19-missing"));
-    OO_CHECK(OOLookUpDescriptionPRIV("slice19-text") == "Hello");
+    OO_CHECK(oo::LookUpDescriptionPRIV("slice19-text") == "Hello");
   }
 }
 
@@ -1086,14 +1086,14 @@ OO_TEST(slice20NamesAndRoutes) {
     OO_CHECK(u->systemsFound() == (bool*)u->system_found);
 
     // No route from or to interstellar space, or outside the galaxy.
-    OO_CHECK(u->routeFromSystem(-1, 7, OORouteType::kJumps).isNull());
-    OO_CHECK(u->routeFromSystem(7, -1, OORouteType::kTime).isNull());
-    OO_CHECK(u->routeFromSystem(300, 7, OORouteType::kJumps).isNull());
+    OO_CHECK(u->routeFromSystem(-1, 7, oo::RouteType::kJumps).isNull());
+    OO_CHECK(u->routeFromSystem(7, -1, oo::RouteType::kTime).isNull());
+    OO_CHECK(u->routeFromSystem(300, 7, oo::RouteType::kJumps).isNull());
 
     // The current system's neighbours, once cached, are the cache.
     u->systemID = 3;
-    u->closeSystems = std::vector<OOSystemID>{1, 2};
-    OO_CHECK(u->neighboursToSystem(3) == (std::vector<OOSystemID>{1, 2}));
+    u->closeSystems = std::vector<oo::SystemID>{1, 2};
+    OO_CHECK(u->neighboursToSystem(3) == (std::vector<oo::SystemID>{1, 2}));
 
     u->preloadPlanetTexturesForSystem(3);  // disabled: does nothing
   }
@@ -1212,10 +1212,10 @@ OO_TEST(slice24DetailAndLogs) {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
-    u->detailLevel = OOGraphicsDetail::kShaders;
-    OO_CHECK(u->getDetailLevel() == OOGraphicsDetail::kShaders && u->useShaders() &&
+    u->detailLevel = oo::GraphicsDetail::kShaders;
+    OO_CHECK(u->getDetailLevel() == oo::GraphicsDetail::kShaders && u->useShaders() &&
              !u->reducedDetail());
-    u->detailLevel = OOGraphicsDetail::kMinimum;
+    u->detailLevel = oo::GraphicsDetail::kMinimum;
     OO_CHECK(u->reducedDetail() && !u->useShaders());
     u->wireframeGraphics = true;
     OO_CHECK(u->getWireframeGraphics());
@@ -1391,7 +1391,7 @@ OO_TEST(slice26ConditionScriptsAndSounds) {
 
     // A key with no custom sound makes no sound.
     u->customSounds = oo::PList(oo::PList::Dict{});
-    OO_CHECK(OOSoundWithCustomSoundKey("[slice26-missing]") == nullptr);
+    OO_CHECK(oo::SoundWithCustomSoundKey("[slice26-missing]") == nullptr);
   }
 }
 
@@ -1405,11 +1405,11 @@ OO_TEST(slice26PluralDescriptions) {
         {"slice26-apple%1", oo::PList("apples")},
         {"slice26-word", oo::PList("word")},
     });
-    OO_CHECK(OOLookUpPluralDescriptionPRIV("slice26-apple", 1) == "apple");
-    OO_CHECK(OOLookUpPluralDescriptionPRIV("slice26-apple", 3) == "apples");
-    OO_CHECK(OOLookUpPluralDescriptionPRIV("slice26-apple", 0) == "apples");
-    OO_CHECK(OOLookUpDescriptionPRIV("slice26-word") == "word");
-    OO_CHECK(OOLookUpDescriptionPRIV("slice26-none") ==
+    OO_CHECK(oo::LookUpPluralDescriptionPRIV("slice26-apple", 1) == "apple");
+    OO_CHECK(oo::LookUpPluralDescriptionPRIV("slice26-apple", 3) == "apples");
+    OO_CHECK(oo::LookUpPluralDescriptionPRIV("slice26-apple", 0) == "apples");
+    OO_CHECK(oo::LookUpDescriptionPRIV("slice26-word") == "word");
+    OO_CHECK(oo::LookUpDescriptionPRIV("slice26-none") ==
              "slice26-none");  // the key itself
   }
 }

@@ -43,18 +43,18 @@ SOFTWARE.
 #include <string_view>
 #include <utility>
 
+#include "ConstToString.h"
 #include "DebugFlags.h"
 #include "DebugMonitor.h"
 #include "Entity.h"                        // an entity's -inspect
 #include "EntityOOJavaScriptExtensions.h"  // IWYU pragma: keep: used only in OO_DEBUG builds
-#include "OOConstToString.h"
+#include "LogHeader.h"                     // OOPlatformDescription()
+#include "LoggingExtended.h"
 #include "OOJSCall.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSEntity.h"
 #include "OOJSScript.h"
-#include "OOLogHeader.h"  // OOPlatformDescription()
-#include "OOLoggingExtended.h"
-#include "OOOpenGLExtensionManager.h"
+#include "OpenGLExtensionManager.h"
 #include "ResourceManager.h"  // IWYU pragma: keep: used only in DEBUG builds
 #include "oofnd/AutoreleaseScope.hpp"  // IWYU pragma: keep: used only with OOJS_PROFILE
 #include "oofnd/PList.hpp"
@@ -431,20 +431,20 @@ static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
 #endif
 
     case kDetailLevel:
-      OOJS_RETURN_PLIST(oo::PList(OOStringFromGraphicsDetail(
+      OOJS_RETURN_PLIST(oo::PList(oo::StringFromGraphicsDetail(
           (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel()
-                               : OOGraphicsDetail{}))));
+                               : oo::GraphicsDetail{}))));
 
     case kMaximumDetailLevel:
-      OOJS_RETURN_PLIST(oo::PList(OOStringFromGraphicsDetail(
-          OOOpenGLExtensionManager::sharedManager()->maximumDetailLevel())));
+      OOJS_RETURN_PLIST(oo::PList(oo::StringFromGraphicsDetail(
+          oo::OpenGLExtensionManager::sharedManager()->maximumDetailLevel())));
 
     case kDisplayFPS:
       return OOJSValueFromBOOL(
           (UNIVERSE != nullptr ? UNIVERSE->getDisplayFPS() : false));
 
     case kPlatformDescription:
-      OOJS_RETURN_PLIST(oo::PList(OOPlatformDescription()));
+      OOJS_RETURN_PLIST(oo::PList(oo::PlatformDescription()));
 
     case kPedanticMode:
       return OOJSValueFromBOOL(sPedanticMode);
@@ -467,21 +467,21 @@ static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
 
     case kGlVendorString:
       OOJS_RETURN_STRING_OR_NULL(
-          OOOpenGLExtensionManager::sharedManager()->vendorString());
+          oo::OpenGLExtensionManager::sharedManager()->vendorString());
 
     case kGlRendererString:
       OOJS_RETURN_STRING_OR_NULL(
-          OOOpenGLExtensionManager::sharedManager()->rendererString());
+          oo::OpenGLExtensionManager::sharedManager()->rendererString());
 
     case kGlFixedFunctionTextureUnitCount:
       return JS_NewInt32(
           context,
-          OOOpenGLExtensionManager::sharedManager()->textureUnitCount());
+          oo::OpenGLExtensionManager::sharedManager()->textureUnitCount());
 
     case kGlFragmentShaderTextureUnitCount:
       return JS_NewInt32(
           context,
-          OOOpenGLExtensionManager::sharedManager()->textureImageUnitCount());
+          oo::OpenGLExtensionManager::sharedManager()->textureImageUnitCount());
 
 #define DEBUG_FLAG_CASE(flag, magic)                  \
   case magic:                                         \
@@ -530,7 +530,7 @@ static JSValue ConsoleSetProperty(OOJS_SETTER_ARGS) {
       OOJS_BEGIN_FULL_NATIVE(context)
       if (UNIVERSE != nullptr)
         UNIVERSE->setDetailLevel(
-            OOGraphicsDetailFromString(sValue.value_or("")));
+            oo::GraphicsDetailFromString(sValue.value_or("")));
       OOJS_END_FULL_NATIVE
       break;
 
@@ -1224,7 +1224,7 @@ static JSValue ConsoleWriteLogMarker(JSContext* context,
                                      JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
-  OOLogInsertMarker();
+  oo::LogInsertMarker();
   OOJS_RETURN_VOID;
 
   OOJS_NATIVE_EXIT
@@ -1443,7 +1443,7 @@ bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
   constexpr double LONG_TIME =
       (1e7);  // A long time - 115.7 days - but, crucially, finite.
 
-  OOTimeDelta originalLimit = OOJSGetTimeLimiterLimit();
+  oo::TimeDelta originalLimit = OOJSGetTimeLimiterLimit();
   OOJSSetTimeLimiterLimit(LONG_TIME);
   OOJSResetTimeLimiter();
 

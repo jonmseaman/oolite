@@ -27,29 +27,34 @@
 #include <thread>
 #include <vector>
 
-#include "OOALBufferedSound.h"
-#include "OOALSound.h"
-#include "OOALSoundChannel.h"
-#include "OOALSoundDecoder.h"
-#include "OOALSoundMixer.h"
-#include "OOALStreamedSound.h"
+#include "ALBufferedSound.h"
+#include "ALSound.h"
+#include "ALSoundChannel.h"
+#include "ALSoundDecoder.h"
+#include "ALSoundMixer.h"
+#include "ALStreamedSound.h"
 #include "oo_test.hpp"
 
 namespace stdfs = std::filesystem;
 
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
 
+}  // namespace oo
+
+
 // The mixer, as the root's update() and the OpenAL controller's shutdown()
 // reach it: there is none (a C++ stand-in).
-OOSoundMixer* OOSoundMixer::sharedMixer() { return nullptr; }
-void OOSoundMixer::update() {}
-void OOSoundMixer::shutdown() {}
+oo::SoundMixer* oo::SoundMixer::sharedMixer() { return nullptr; }
+void oo::SoundMixer::update() {}
+void oo::SoundMixer::shutdown() {}
 
 // The decoder the root's cluster asks for: none, for every path (a C++
 // stand-in).
-std::shared_ptr<OOALSoundDecoder> OOALSoundDecoder::initWithPath(
+std::shared_ptr<oo::ALSoundDecoder> oo::ALSoundDecoder::initWithPath(
     const std::optional<std::string>& inPath) {
   (void)inPath;
   return nullptr;
@@ -57,27 +62,37 @@ std::shared_ptr<OOALSoundDecoder> OOALSoundDecoder::initWithPath(
 
 // The buffered sound the root's cluster names: a C++ stand-in. The decoder
 // above refuses every path, so none is made.
-std::shared_ptr<OOALBufferedSound> OOALBufferedSound::initWithDecoder(
-    OOALSoundDecoder* inDecoder) {
+std::shared_ptr<oo::ALBufferedSound> oo::ALBufferedSound::initWithDecoder(
+    oo::ALSoundDecoder* inDecoder) {
   (void)inDecoder;
   return nullptr;
 }
-OOALBufferedSound::~OOALBufferedSound() {}
-std::optional<std::string> OOALBufferedSound::name() { return _name; }
-ALuint OOALBufferedSound::soundBuffer() { return 0; }
+namespace oo {
+
+ALBufferedSound::~ALBufferedSound() {}
+
+}  // namespace oo
+
+std::optional<std::string> oo::ALBufferedSound::name() { return _name; }
+ALuint oo::ALBufferedSound::soundBuffer() { return 0; }
 
 // The streamed sound the root's cluster names: a C++ stand-in. None is made
 // here.
-std::shared_ptr<OOALStreamedSound> OOALStreamedSound::initWithDecoder(
-    OOALSoundDecoder* inDecoder) {
+std::shared_ptr<oo::ALStreamedSound> oo::ALStreamedSound::initWithDecoder(
+    oo::ALSoundDecoder* inDecoder) {
   (void)inDecoder;
   return nullptr;
 }
-OOALStreamedSound::~OOALStreamedSound() {}
-std::optional<std::string> OOALStreamedSound::name() { return _name; }
-void OOALStreamedSound::rewind() {}
-bool OOALStreamedSound::soundIncomplete() { return false; }
-ALuint OOALStreamedSound::soundBuffer() { return 0; }
+namespace oo {
+
+ALStreamedSound::~ALStreamedSound() {}
+
+}  // namespace oo
+
+std::optional<std::string> oo::ALStreamedSound::name() { return _name; }
+void oo::ALStreamedSound::rewind() {}
+bool oo::ALStreamedSound::soundIncomplete() { return false; }
+ALuint oo::ALStreamedSound::soundBuffer() { return 0; }
 
 /*	A sound of `chunks` buffers of `frames` frames of mono silence at 22050
    Hz: incomplete until the last has been made. Counts its buffers and rewinds.
@@ -85,7 +100,7 @@ ALuint OOALStreamedSound::soundBuffer() { return 0; }
 static int gLiveSounds = 0;
 
 // A C++ subclass of the root.
-class TestSound final : public OOSound {
+class TestSound final : public oo::Sound {
  public:
   TestSound() { gLiveSounds++; }
   ~TestSound() override { gLiveSounds--; }
@@ -117,15 +132,15 @@ class TestSound final : public OOSound {
 
 // The delegate: records each sound it is told has finished, and on which
 // channel.
-class TestDelegate final : public OOSoundChannelDelegate {
+class TestDelegate final : public oo::SoundChannelDelegate {
  public:
-  void channel(OOSoundChannel* inChannel, OOSound* inSound) override {
+  void channel(oo::SoundChannel* inChannel, oo::Sound* inSound) override {
     _lastChannel = inChannel;
     _finished.push_back(inSound);
   }
 
-  std::vector<OOSound*> _finished;  // compared by identity only
-  OOSoundChannel* _lastChannel = nullptr;
+  std::vector<oo::Sound*> _finished;  // compared by identity only
+  oo::SoundChannel* _lastChannel = nullptr;
 };
 
 namespace {
@@ -142,26 +157,26 @@ void SetUp() {
   stdfs::create_directories(sRoot);
   OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
-  OO_CHECK(OOSound::setUp());
+  OO_CHECK(oo::Sound::setUp());
 }
 
 }  // namespace
 
 struct OOSoundChannelTestAccess {
-  static ALuint Source(OOSoundChannel* channel) { return channel->_source; }
+  static ALuint Source(oo::SoundChannel* channel) { return channel->_source; }
 };
 
 namespace {
 
 // The channel's OpenAL source (its private _source).
-ALuint SourceOf(OOSoundChannel* channel) {
+ALuint SourceOf(oo::SoundChannel* channel) {
   return OOSoundChannelTestAccess::Source(channel);
 }
 
 // What [[OOSoundChannel alloc] init] made: a new channel, null when OpenAL
 // would not make its source.
-std::shared_ptr<OOSoundChannel> NewChannel() {
-  std::shared_ptr<OOSoundChannel> channel = oo::makeShared<OOSoundChannel>();
+std::shared_ptr<oo::SoundChannel> NewChannel() {
+  std::shared_ptr<oo::SoundChannel> channel = oo::makeShared<oo::SoundChannel>();
   if (!channel->init()) channel = nullptr;
   return channel;
 }
@@ -173,7 +188,7 @@ ALint SourceInt(ALuint source, ALenum what) {
 }
 
 // Updates the channel until its sound is gone (at most two seconds).
-bool UpdateUntilFinished(OOSoundChannel* channel) {
+bool UpdateUntilFinished(oo::SoundChannel* channel) {
   for (int i = 0; i < 400 && channel->sound() != nullptr; i++) {
     channel->update();
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -186,7 +201,7 @@ bool UpdateUntilFinished(OOSoundChannel* channel) {
 OO_TEST(aNewChannelHasARelativeSource) {
   SetUp();
   {
-    const std::shared_ptr<OOSoundChannel> channel = NewChannel();
+    const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
     OO_CHECK(channel != nullptr);
     const ALuint source = SourceOf(channel.get());
     OO_CHECK(source != 0 && alIsSource(source));
@@ -201,8 +216,8 @@ OO_TEST(aNewChannelHasARelativeSource) {
 OO_TEST(positionGainAndTheFreeList) {
   SetUp();
   {
-    const std::shared_ptr<OOSoundChannel> channel = NewChannel();
-    const std::shared_ptr<OOSoundChannel> other = NewChannel();
+    const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
+    const std::shared_ptr<oo::SoundChannel> other = NewChannel();
     const ALuint source = SourceOf(channel.get());
 
     channel->setPosition(make_vector(1.0f, 2.0f, 3.0f));
@@ -228,7 +243,7 @@ OO_TEST(playsASoundToTheEnd) {
   SetUp();
   TestDelegate delegate;
   {
-    const std::shared_ptr<OOSoundChannel> channel = NewChannel();
+    const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
     channel->setDelegate(&delegate);
 
     OO_CHECK(!channel->playSound(nullptr, false));
@@ -258,7 +273,7 @@ OO_TEST(stopAndReplace) {
   SetUp();
   TestDelegate delegate;
   {
-    const std::shared_ptr<OOSoundChannel> channel = NewChannel();
+    const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
     channel->setDelegate(&delegate);
 
     const std::shared_ptr<TestSound> first = oo::makeShared<TestSound>();
@@ -288,7 +303,7 @@ OO_TEST(streamsAnIncompleteSound) {
   SetUp();
   TestDelegate delegate;
   {
-    const std::shared_ptr<OOSoundChannel> channel = NewChannel();
+    const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
     channel->setDelegate(&delegate);
 
     const std::shared_ptr<TestSound> sound = oo::makeShared<TestSound>();
@@ -306,7 +321,7 @@ OO_TEST(streamsAnIncompleteSound) {
 OO_TEST(loopsASound) {
   SetUp();
   {
-    const std::shared_ptr<OOSoundChannel> channel = NewChannel();
+    const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
     const std::shared_ptr<TestSound> sound = oo::makeShared<TestSound>();
     sound->_frames = 2205;
     OO_CHECK(channel->playSound(sound.get(), true));
@@ -327,13 +342,13 @@ OO_TEST(cxxApi) {
   SetUp();
   TestDelegate delegate;
   {
-    const std::shared_ptr<OOSoundChannel> channel = oo::makeShared<OOSoundChannel>();
+    const std::shared_ptr<oo::SoundChannel> channel = oo::makeShared<oo::SoundChannel>();
     OO_CHECK(channel->init());
     const ALuint source = OOSoundChannelTestAccess::Source(channel.get());
     OO_CHECK(source != 0 && alIsSource(source) &&
              SourceInt(source, AL_SOURCE_RELATIVE) == AL_TRUE);
 
-    const std::shared_ptr<OOSoundChannel> other = oo::makeShared<OOSoundChannel>();
+    const std::shared_ptr<oo::SoundChannel> other = oo::makeShared<oo::SoundChannel>();
     OO_CHECK(other->init());
     channel->setNext(other.get());
     OO_CHECK(channel->next() == other.get() && other->next() == nullptr);
@@ -358,12 +373,12 @@ OO_TEST(cxxApi) {
 OO_TEST(releasedWhilePlayingTellsTheDelegate) {
   SetUp();
   TestDelegate delegate;
-  OOSoundChannel* released = nullptr;
+  oo::SoundChannel* released = nullptr;
   TestSound* sound = nullptr;
   {
     const std::shared_ptr<TestSound> made =
         oo::makeShared<TestSound>();  // was autoreleased in this pool
-    std::shared_ptr<OOSoundChannel> channel = NewChannel();
+    std::shared_ptr<oo::SoundChannel> channel = NewChannel();
     sound = made.get();
     sound->_frames = 22050;
     channel->setDelegate(&delegate);

@@ -118,7 +118,7 @@ class TestUniverse : public Universe {
     return role == "trader";
   }
   std::vector<oo::EntityHold> getContainersOfCommodity(
-      const std::string& commodity_name, OOCargoQuantity how_many) override {
+      const std::string& commodity_name, oo::CargoQuantity how_many) override {
     sLog.push_back(oo::str::format("getContainersOfCommodity %s %u",
                                    commodity_name.c_str(),
                                    static_cast<unsigned>(how_many)));
@@ -138,7 +138,7 @@ class PlainShip : public ShipEntity {};
 
 namespace {
 
-OOWeaponFacingSet sAvailableFacings = 0;
+oo::WeaponFacingSet sAvailableFacings = 0;
 oo::PlayerFleeingStatus sFleeingStatus = oo::PlayerFleeingStatus::kNone;
 
 }  // namespace
@@ -147,10 +147,10 @@ oo::PlayerFleeingStatus sFleeingStatus = oo::PlayerFleeingStatus::kNone;
 // for set by the test.
 class TestPlayerShip : public PlayerEntity {
  public:
-  OOWeaponFacingSet availableFacings() override { return sAvailableFacings; }
+  oo::WeaponFacingSet availableFacings() override { return sAvailableFacings; }
   oo::PlayerFleeingStatus fleeingStatus() override { return sFleeingStatus; }
   bool isDocked() override { return sPlayerDocked; }
-  bool setWeaponMount(OOWeaponFacing facing, const std::string& eqKey,
+  bool setWeaponMount(oo::WeaponFacing facing, const std::string& eqKey,
                       const std::optional<std::string>& context) override {
     sLog.push_back(oo::str::format("player setWeaponMount %d %s %s",
                                    static_cast<int>(facing), eqKey.c_str(),
@@ -558,7 +558,7 @@ OO_TEST(getterColours) {
 // The player's ship reads two answers of PlayerEntity's own.
 OO_TEST(getterPlayerBranches) {
   SetUp();
-  sAvailableFacings = oo::ToUnderlying(OOWeaponFacing::kForward | OOWeaponFacing::kAft);
+  sAvailableFacings = oo::ToUnderlying(oo::WeaponFacing::kForward | oo::WeaponFacing::kAft);
   OO_CHECK_EVAL("player.ship.weaponFacings", "3");
   sFleeingStatus = oo::PlayerFleeingStatus::kCargo;
   OO_CHECK_EVAL("player.ship.isFleeing", "true");
@@ -731,11 +731,11 @@ OO_TEST(setterWeapons) {
                 "set");
   OO_CHECK_LOG(
       oo::str::format("player setWeaponMount %d EQ_WEAPON_PULSE_LASER scripted",
-                      static_cast<int>(OOWeaponFacing::kPort)));
+                      static_cast<int>(oo::WeaponFacing::kPort)));
   OO_CHECK_EVAL("(player.ship.starboardWeapon = null, 'set')", "set");
   OO_CHECK_LOG(
       oo::str::format("player setWeaponMount %d EQ_WEAPON_NONE scripted",
-                      static_cast<int>(OOWeaponFacing::kStarboard)));
+                      static_cast<int>(oo::WeaponFacing::kStarboard)));
 }
 
 // The player's ship refuses what is the player's to fly.

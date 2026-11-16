@@ -36,17 +36,17 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "Commodities.h"
+#include "CommodityMarket.h"
 #include "EntityOOJavaScriptExtensions.h"
+#include "EquipmentType.h"
 #include "GameController.h"
-#include "OOCommodities.h"
-#include "OOCommodityMarket.h"
-#include "OOEquipmentType.h"
 #include "OOJSEntity.h"
 #include "OOJSInterfaceDefinition.h"
 #include "OOJSPlayer.h"
 #include "OOJSShip.h"
 #include "OOJavaScriptEngine.h"
-#include "OOShipRegistry.h"
+#include "ShipRegistry.h"
 #include "StationEntity.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
@@ -606,7 +606,7 @@ static JSValue StationDockPlayer(JSContext* context, JSValueConst oojsThis,
     // does not.
     if (JS_HasException(context)) return JS_EXCEPTION;
     if (player != nullptr)
-      player->setDockingClearanceStatus(OODockingClearanceStatus::kGranted);
+      player->setDockingClearanceStatus(oo::DockingClearanceStatus::kGranted);
     if (player != nullptr)
       player->PlayerEntity::safeAllMissiles();  // qualified: the final
                                                 // overrider, so the binding
@@ -1017,7 +1017,7 @@ static JSValue StationSetMarketPrice(OOJS_NATIVE_ARGS) {
 
   std::optional<std::string> commodity =
       OOStringFromJSValue(context, OOJS_ARGV[0]);
-  OOCommodities* commodities =
+  oo::Commodities* commodities =
       (UNIVERSE != nullptr
            ? UNIVERSE->getCommodities()
            : nullptr);  // null: no good is defined, as a message to nil
@@ -1070,7 +1070,7 @@ static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
 
   const std::string commodity =
       OOStringFromJSValue(context, OOJS_ARGV[0]).value_or("");
-  OOCommodities* commodities =
+  oo::Commodities* commodities =
       (UNIVERSE != nullptr
            ? UNIVERSE->getCommodities()
            : nullptr);  // null: no good is defined, as a message to nil
@@ -1084,13 +1084,13 @@ static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
 
   int32_t quantity;
   bool gotQuantity = OOJSValueToInt32(context, OOJS_ARGV[1], &quantity);
-  OOCommodityMarket* market =
-      (station != nullptr
-           ? station->getLocalMarket()
-           : static_cast<OOCommodityMarket*>(nullptr));  // null: no capacity,
-                                                         // as a message to nil
+  oo::CommodityMarket* market =
+      (station != nullptr ? station->getLocalMarket()
+                          : static_cast<oo::CommodityMarket*>(
+                                nullptr));  // null: no capacity,
+                                            // as a message to nil
   if (!gotQuantity || quantity < 0 ||
-      static_cast<OOCargoQuantity>(quantity) >
+      static_cast<oo::CargoQuantity>(quantity) >
           ((market != nullptr) ? market->capacityForGood(commodity) : 0))
       [[unlikely]] {
     OOJSReportBadArguments(
@@ -1101,7 +1101,7 @@ static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
   }
 
   if (station != nullptr)
-    station->setQuantity(static_cast<OOCargoQuantity>(quantity), commodity);
+    station->setQuantity(static_cast<oo::CargoQuantity>(quantity), commodity);
 
   if (station == (PLAYER != nullptr ? PLAYER->PlayerEntity::dockedStation()
                                     : static_cast<StationEntity*>(nullptr)) &&
@@ -1154,7 +1154,7 @@ static std::string ValueForKey(const std::optional<std::string>& value,
 
 // OOEquipmentType::weaponThreatAssessment() of a weapon: 0 for no weapon.
 static GLfloat WeaponThreatAssessment(oo::WeaponType weapon) {
-  OOEquipmentType* type = weapon;
+  oo::EquipmentType* type = weapon;
   return (type != nullptr) ? type->weaponThreatAssessment() : 0;
 }
 
@@ -1229,7 +1229,7 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
   // get the shipInfo and shipyardInfo for this key
   const std::optional<std::string> shipKey =
       StringForKey(shipyardDefinition, SHIPYARD_KEY_SHIPDATA_KEY);
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
   // A copy of the registry's entry: -dictionaryWithDictionary: made an empty
   // one for an unknown key, never nil, so an unknown key goes on to the tests
   // below (its "Invalid shipdata_key" test could not fire and is gone).
@@ -1269,10 +1269,10 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
 
   if (!shipyardDefinition.get<oo::PList>(SHIPYARD_KEY_PRICE)) {
     // if not provided, get the price from the registry
-    OOCreditsQuantity price = shipyardInfo.get<unsigned int>(KEY_PRICE);
+    oo::CreditsQuantity price = shipyardInfo.get<unsigned int>(KEY_PRICE);
     result[std::string(SHIPYARD_KEY_PRICE)] = oo::PList::unsignedInteger(price);
   } else {
-    OOCreditsQuantity price =
+    oo::CreditsQuantity price =
         shipyardDefinition.get<unsigned int>(SHIPYARD_KEY_PRICE);
     if (price > 0) {
       result[std::string(SHIPYARD_KEY_PRICE)] =
@@ -1320,10 +1320,10 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
         (standardEquipment != nullptr)
             ? StringForKey(*standardEquipment, KEY_EQUIPMENT_AFT_WEAPON)
             : std::nullopt;
-    OOWeaponFacingSet availableFacings =
+    oo::WeaponFacingSet availableFacings =
         shipyardInfo.get<unsigned int>(KEY_WEAPON_FACINGS,
-                                       kOOValidWeaponFacings) &
-        kOOValidWeaponFacings;
+                                       oo::kValidWeaponFacings) &
+        oo::kValidWeaponFacings;
 
     oo::WeaponType fwdWeapon = oo::WeaponTypeFromEquipmentIdentifierSloppy(
         fwdWeaponString.value_or(""));
@@ -1339,7 +1339,8 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
         oo::WeaponType new_weapon = oo::WeaponTypeFromEquipmentIdentifierSloppy(
             equipmentKey.value_or(""));
         // fit best weapon forward
-        if (OOWeaponFacingIsIn(availableFacings, OOWeaponFacing::kForward) &&
+        if (oo::WeaponFacingIsIn(availableFacings,
+                                 oo::WeaponFacing::kForward) &&
             WeaponThreatAssessment(new_weapon) >
                 WeaponThreatAssessment(fwdWeapon)) {
           // again remember to divide price by 10 to get credits from tenths of
@@ -1350,7 +1351,7 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
               KEY_EQUIPMENT_FORWARD_WEAPON)] = *fwdWeaponString;
         } else {
           // if less good than current forward, try fitting is to rear
-          if (OOWeaponFacingIsIn(availableFacings, OOWeaponFacing::kAft) &&
+          if (oo::WeaponFacingIsIn(availableFacings, oo::WeaponFacing::kAft) &&
               (isWeaponNone(aftWeapon) ||
                WeaponThreatAssessment(new_weapon) >
                    WeaponThreatAssessment(aftWeapon))) {

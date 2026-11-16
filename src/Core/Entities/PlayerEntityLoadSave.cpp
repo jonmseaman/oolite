@@ -35,19 +35,19 @@
 #include <utility>
 #include <vector>
 
+#include "Color.h"
 #include "GameController.h"
-#include "OOColor.h"
+#include "JoystickManager.h"
 #include "OOJavaScriptEngine.h"
-#include "OOJoystickManager.h"
-#include "OOPListGameTypes.h"
-#include "OOPListParsing.h"
-#include "OOShipRegistry.h"
-#include "OOStringExpander.h"
-#include "OOStringParsing.h"
-#include "OOXMLExtensions.h"
+#include "PListGameTypes.h"
+#include "PListParsing.h"
 #include "ResourceManager.h"
 #include "ShipEntityAI.h"
+#include "ShipRegistry.h"
 #include "StationEntity.h"
+#include "StringExpander.h"
+#include "StringParsing.h"
+#include "XMLExtensions.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Exception.h"
@@ -208,14 +208,14 @@ void PlayerEntity::setGuiToScenarioScreen(int page) {
   // GUI stuff
   {
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-    OOGUIRow start_row = GUI_ROW_SCENARIOS_START;
-    OOGUIRow row = start_row;
+    oo::GUIRow start_row = GUI_ROW_SCENARIOS_START;
+    oo::GUIRow row = start_row;
     bool guiChanged = (gui_screen != oo::GUIScreenID::kNewGame);
 
     gui->clearAndKeepBackground(!guiChanged);
     gui->setTitle(OO_DESC("oolite-newgame-title"));
 
-    OOGUITabSettings tab_stops;
+    oo::GUITabSettings tab_stops;
     tab_stops[0] = 0;
     tab_stops[1] = -480;
     gui->setTabStops(tab_stops);
@@ -224,12 +224,12 @@ void PlayerEntity::setGuiToScenarioScreen(int page) {
     std::size_t i, count = scenarios.count();
 
     gui->setArray({OO_DESC("oolite-scenario-exit"), " <----- "}, start_row - 2);
-    gui->setColor(OOColor::redColor().get(), start_row - 2);
+    gui->setColor(oo::Color::redColor().get(), start_row - 2);
     gui->setKey("exit", start_row - 2);
 
     if (page > 0) {
       gui->setArray({OO_DESC("gui-back"), " <-- "}, start_row - 1);
-      gui->setColor(OOColor::greenColor().get(), start_row - 1);
+      gui->setColor(oo::Color::greenColor().get(), start_row - 1);
       gui->setKey(std::format("__page:{}", page - 1), start_row - 1);
     }
 
@@ -250,7 +250,7 @@ void PlayerEntity::setGuiToScenarioScreen(int page) {
 
     if (static_cast<std::size_t>(page + 1) * n_rows < count) {
       gui->setArray({OO_DESC("gui-more"), " --> "}, row);
-      gui->setColor(OOColor::greenColor().get(), row);
+      gui->setColor(oo::Color::greenColor().get(), row);
       gui->setKey(std::format("__page:{}", page + 1), row);
       ++row;
     }
@@ -290,7 +290,7 @@ void PlayerEntity::showScenarioDetails() {
     const oo::PList* scenario = scenarios.at(static_cast<std::size_t>(item));
     setShowDemoShips(false);
     for (std::size_t i = GUI_ROW_SCENARIOS_DETAIL; i <= 27; i++) {
-      gui->setText("", static_cast<OOGUIRow>(i));
+      gui->setText("", static_cast<oo::GUIRow>(i));
     }
     if (scenario) {
       const std::optional<std::string> scenarioDescription =
@@ -299,7 +299,7 @@ void PlayerEntity::showScenarioDetails() {
           scenarioDescription.has_value() ? OOExpand(*scenarioDescription)
                                           : std::nullopt;
       gui->addLongText(expandedDescription, GUI_ROW_SCENARIOS_DETAIL,
-                       OOGUIAlignment::kLeft);
+                       oo::GUIAlignment::kLeft);
       const std::optional<std::string> shipKey =
           OptionalStringValue(scenario->find("model"));
       if (shipKey) {
@@ -361,7 +361,7 @@ std::optional<std::string> PlayerEntity::commanderSelector() {
            : std::optional<std::string>())
           .value_or("");
   const bool* joyButtonState =
-      OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+      oo::JoystickManager::sharedStickHandler()->getAllButtonStates();
 
   int idx;
   if (handleGUIUpDownArrowKeys()) {
@@ -372,13 +372,13 @@ std::optional<std::string> PlayerEntity::commanderSelector() {
       showCommanderShip(idx);
     } else {
       if (UNIVERSE != nullptr) UNIVERSE->removeDemoShips();
-      gui->setText("", CDRDESCROW, OOGUIAlignment::kLeft);
-      gui->setText("", CDRDESCROW + 1, OOGUIAlignment::kLeft);
-      gui->setText("", CDRDESCROW + 2, OOGUIAlignment::kLeft);
+      gui->setText("", CDRDESCROW, oo::GUIAlignment::kLeft);
+      gui->setText("", CDRDESCROW + 1, oo::GUIAlignment::kLeft);
+      gui->setText("", CDRDESCROW + 2, oo::GUIAlignment::kLeft);
     }
   } else {
     idx = static_cast<int>((gui->getSelectedRow() - STARTROW) +
-                           static_cast<OOGUIRow>(currentPage * NUMROWS));
+                           static_cast<oo::GUIRow>(currentPage * NUMROWS));
   }
 
   // handle page <-- and page --> keys
@@ -464,7 +464,7 @@ void PlayerEntity::saveCommanderInputHandler() {
            : std::optional<std::string>())
           .value_or("");
   const bool* joyButtonState =
-      OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+      oo::JoystickManager::sharedStickHandler()->getAllButtonStates();
 
   if (handleGUIUpDownArrowKeys()) {
     int guiSelectedRow = static_cast<int>(gui->getSelectedRow());
@@ -484,9 +484,9 @@ void PlayerEntity::saveCommanderInputHandler() {
                 .value_or("");
     } else {
       if (UNIVERSE != nullptr) UNIVERSE->removeDemoShips();
-      gui->setText("", CDRDESCROW, OOGUIAlignment::kLeft);
-      gui->setText("", CDRDESCROW + 1, OOGUIAlignment::kLeft);
-      gui->setText("", CDRDESCROW + 2, OOGUIAlignment::kLeft);
+      gui->setText("", CDRDESCROW, oo::GUIAlignment::kLeft);
+      gui->setText("", CDRDESCROW + 1, oo::GUIAlignment::kLeft);
+      gui->setText("", CDRDESCROW + 2, oo::GUIAlignment::kLeft);
     }
   } else {
     commanderNameString = (gameView != nullptr ? gameView->getTypedString()
@@ -499,7 +499,7 @@ void PlayerEntity::saveCommanderInputHandler() {
   gui->setText(oo::str::formatRuntime(OO_DESC("savescreen-commander-name-@"),
                                       {commanderNameString}),
                INPUTROW);
-  gui->setColor(OOColor::cyanColor().get(), INPUTROW);
+  gui->setColor(oo::Color::cyanColor().get(), INPUTROW);
 
   // handle page <-- and page --> keys, and on-screen buttons
   if (((((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false) ||
@@ -580,7 +580,7 @@ void PlayerEntity::overwriteCommanderInputHandler() {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
 
   const bool* joyButtonState =
-      OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+      oo::JoystickManager::sharedStickHandler()->getAllButtonStates();
 
   handleGUIUpDownArrowKeys();
 
@@ -646,7 +646,7 @@ bool PlayerEntity::loadPlayerFromFile(const std::string& fileToOpen,
 
   if (loadedOK) {
     OO_LOG("load.progress", "{}", "Reading file");
-    fileDic = OOPropertyListFromFile(fileToOpen);
+    fileDic = oo::PropertyListFromFile(fileToOpen);
     if (!fileDic.isDict())
       fileDic =
           oo::PList();  // a dictionary or nothing, as OODictionaryFromFile
@@ -691,7 +691,7 @@ bool PlayerEntity::loadPlayerFromFile(const std::string& fileToOpen,
     oo::PList shipDict;
 
     if (shipKey)
-      shipDict = OOShipRegistry::sharedRegistry()->shipInfoForKey(*shipKey);
+      shipDict = oo::ShipRegistry::sharedRegistry()->shipInfoForKey(*shipKey);
 
     if (shipDict.isNull()) {
       loadedOK = false;
@@ -825,7 +825,7 @@ bool PlayerEntity::loadPlayerFromFile(const std::string& fileToOpen,
   // appropriate station at those coordinates, if found, switch
   // docked station to that one.
   const oo::PList* dockedPosNode = fileDic.find("docked_station_position");
-  HPVector dockedPos = OOHPVectorFromPList(dockedPosNode, kZeroHPVector);
+  HPVector dockedPos = oo::HPVectorFromPList(dockedPosNode, kZeroHPVector);
   const std::string dockedRole =
       OptionalStringValue(fileDic.find("docked_station_role")).value_or("");
   ::StationEntity* saveStation =
@@ -889,7 +889,7 @@ void PlayerEntity::writePlayerToPath(const std::string& path) {
     errDesc = "could not construct commander data dictionary.";
   } else {
     const std::expected<void, std::string> written =
-        OOWriteXMLPListToFile(dict, path);
+        oo::WriteXMLPListToFile(dict, path);
     didSave = written.has_value();
     if (!didSave) errDesc = written.error();
   }
@@ -979,7 +979,7 @@ void PlayerEntity::setGuiToSaveCommanderScreen(const std::string& cdrName) {
   lsCommanders(gui, dir, currentPage, std::nullopt);
 
   gui->setText(OO_DESC("savescreen-commander-name"), INPUTROW);
-  gui->setColor(OOColor::cyanColor().get(), INPUTROW);
+  gui->setColor(oo::Color::cyanColor().get(), INPUTROW);
   gui->setShowTextCursor(true);
   gui->setCurrentRow(INPUTROW);
 
@@ -1011,14 +1011,14 @@ void PlayerEntity::setGuiToOverwriteScreen(const std::string& cdrName) {
       oo::str::formatRuntime(
           OO_DESC("overwritescreen-commander-@-already-exists-overwrite-query"),
           {cdrName}),
-      SAVE_OVERWRITE_WARN_ROW, OOGUIAlignment::kCenter);
+      SAVE_OVERWRITE_WARN_ROW, oo::GUIAlignment::kCenter);
 
   gui->setText(OO_DESC("overwritescreen-yes"), SAVE_OVERWRITE_YES_ROW,
-               OOGUIAlignment::kCenter);
+               oo::GUIAlignment::kCenter);
   gui->setKey(std::string(GUI_KEY_OK), SAVE_OVERWRITE_YES_ROW);
 
   gui->setText(OO_DESC("overwritescreen-no"), SAVE_OVERWRITE_NO_ROW,
-               OOGUIAlignment::kCenter);
+               oo::GUIAlignment::kCenter);
   gui->setKey(std::string(GUI_KEY_OK), SAVE_OVERWRITE_NO_ROW);
 
   gui->setSelectableRange(NSMakeRange(SAVE_OVERWRITE_YES_ROW, 2));
@@ -1077,7 +1077,7 @@ void PlayerEntity::lsCommanders(
     if (type != oo::fs::FileType::kNone) {
       if (type != oo::fs::FileType::kDirectory &&
           oo::str::lowercase(oo::str::pathExtension(path)) == "oolite-save") {
-        oo::PList cdr = OOPropertyListFromFile(path);
+        oo::PList cdr = oo::PropertyListFromFile(path);
         if (!cdr.isDict())
           cdr =
               oo::PList();  // a dictionary or nothing, as OODictionaryFromFile
@@ -1102,7 +1102,7 @@ void PlayerEntity::lsCommanders(
   if (cdrDetailArray.empty()) {
     // Empty directory; tell the user and exit immediately.
     gui->setText(OO_DESC("loadsavescreen-no-commanders-found"), STARTROW,
-                 OOGUIAlignment::kCenter);
+                 oo::GUIAlignment::kCenter);
     return;
   }
 
@@ -1136,7 +1136,7 @@ void PlayerEntity::lsCommanders(
   unsigned firstIndex = static_cast<unsigned int>(page * NUMROWS);
 
   // Set up the GUI.
-  OOGUITabSettings tabStop;
+  oo::GUITabSettings tabStop;
   tabStop[0] = 0;
   tabStop[1] = 160;
   tabStop[2] = 270;
@@ -1144,18 +1144,18 @@ void PlayerEntity::lsCommanders(
 
   // clear text lines here
   for (i = EXITROW; i < ENDROW + 1; i++) {
-    gui->setText("", i, OOGUIAlignment::kLeft);
-    gui->setColor(OOColor::yellowColor().get(), i);
+    gui->setText("", i, oo::GUIAlignment::kLeft);
+    gui->setColor(oo::Color::yellowColor().get(), i);
     gui->setKey(std::string(GUI_KEY_SKIP), i);
   }
 
-  gui->setColor(OOColor::greenColor().get(), LABELROW);
+  gui->setColor(oo::Color::greenColor().get(), LABELROW);
   gui->setArray({OO_DESC("loadsavescreen-commander-name"),
                  OO_DESC("loadsavescreen-rating")},
                 LABELROW);
 
   if (page) {
-    gui->setColor(OOColor::greenColor().get(), STARTROW - 1);
+    gui->setColor(oo::Color::greenColor().get(), STARTROW - 1);
     gui->setArray({OO_DESC("gui-back"), " <-- "}, STARTROW - 1);
     gui->setKey(std::string(GUI_KEY_OK), STARTROW - 1);
     rangeStart = STARTROW - 1;
@@ -1163,7 +1163,7 @@ void PlayerEntity::lsCommanders(
 
   if (status() == oo::EntityStatus::kStartGame) {
     gui->setArray({OO_DESC("oolite-loadsave-exit"), " <----- "}, EXITROW);
-    gui->setColor(OOColor::redColor().get(), EXITROW);
+    gui->setColor(oo::Color::redColor().get(), EXITROW);
     gui->setKey(std::string(GUI_KEY_OK), EXITROW);
     rangeStart = EXITROW;
   }
@@ -1175,7 +1175,7 @@ void PlayerEntity::lsCommanders(
                     static_cast<std::size_t>(rangeStart + NUMROWS + 2)));
   } else {
     lastIndex = static_cast<unsigned int>((page * NUMROWS) + NUMROWS);
-    gui->setColor(OOColor::greenColor().get(), ENDROW);
+    gui->setColor(oo::Color::greenColor().get(), ENDROW);
     gui->setArray({OO_DESC("gui-more"), " --> "}, ENDROW);
     gui->setKey(std::string(GUI_KEY_OK), ENDROW);
     gui->setSelectableRange(
@@ -1207,7 +1207,7 @@ void PlayerEntity::lsCommanders(
                          " ",
                      ""},
                     row);
-      gui->setColor(OOColor::orangeColor().get(), row);
+      gui->setColor(oo::Color::orangeColor().get(), row);
       gui->setKey(std::string(GUI_KEY_OK), row);
       row++;
     }
@@ -1218,7 +1218,7 @@ void PlayerEntity::lsCommanders(
                          " ",
                      ""},
                     row);
-      gui->setColor(OOColor::orangeColor().get(), row);
+      gui->setColor(oo::Color::orangeColor().get(), row);
       gui->setKey(std::string(GUI_KEY_OK), row);
       row++;
     }
@@ -1251,17 +1251,17 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
     return;  // (-objectAtIndex: raised)
   const oo::PList cdr = cdrDetailArray[static_cast<std::size_t>(cdrArrayIndex)];
 
-  gui->setText("", CDRDESCROW, OOGUIAlignment::kLeft);
-  gui->setText("", CDRDESCROW + 1, OOGUIAlignment::kLeft);
-  gui->setText("", CDRDESCROW + 2, OOGUIAlignment::kLeft);
+  gui->setText("", CDRDESCROW, oo::GUIAlignment::kLeft);
+  gui->setText("", CDRDESCROW + 1, oo::GUIAlignment::kLeft);
+  gui->setText("", CDRDESCROW + 2, oo::GUIAlignment::kLeft);
 
   if (cdr.get<bool>("isFolder")) {
     const std::string folderDesc = oo::str::formatRuntime(
         OO_DESC("loadsavescreen-hold-@-and-press-return-to-open-folder-@"),
         {kCommandModifierKey,
          oo::str::lastPathComponent(cdr.get<std::string>("saved_game_path"))});
-    gui->setColor(OOColor::orangeColor().get(), CDRDESCROW);
-    gui->addLongText(folderDesc, CDRDESCROW, OOGUIAlignment::kLeft);
+    gui->setColor(oo::Color::orangeColor().get(), CDRDESCROW);
+    gui->addLongText(folderDesc, CDRDESCROW, oo::GUIAlignment::kLeft);
     return;
   }
 
@@ -1271,8 +1271,8 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
             "loadsavescreen-hold-@-and-press-return-to-open-parent-folder-@"),
         {kCommandModifierKey,
          oo::str::lastPathComponent(cdr.get<std::string>("saved_game_path"))});
-    gui->setColor(OOColor::orangeColor().get(), CDRDESCROW);
-    gui->addLongText(folderDesc, CDRDESCROW, OOGUIAlignment::kLeft);
+    gui->setColor(oo::Color::orangeColor().get(), CDRDESCROW);
+    gui->addLongText(folderDesc, CDRDESCROW, oo::GUIAlignment::kLeft);
     return;
   }
   gui->setColor(gui->colorFromSetting(std::nullopt, nullptr).get(), CDRDESCROW);
@@ -1291,7 +1291,7 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
   uint16_t personality = PersonalityForCommanderDict(cdr);
 
   if (shipDesc)
-    shipDict = OOShipRegistry::sharedRegistry()->shipInfoForKey(*shipDesc);
+    shipDict = oo::ShipRegistry::sharedRegistry()->shipInfoForKey(*shipDesc);
   if (!shipDict.isNull()) {
     oo::PList dict = shipDict;
     const oo::PList* subEntStatus = cdr.find("subentities_status");
@@ -1322,7 +1322,7 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
 
   rating = KillCountToRatingAndKillString(cdr.get<unsigned int>("ship_kills"));
   const oo::PList* creditsNode = cdr.find("credits");
-  OOCreditsQuantity money = oo::DeciCreditsFromPList(creditsNode);
+  oo::CreditsQuantity money = oo::DeciCreditsFromPList(creditsNode);
 
   // Nikos - Add some more information in the load game screen (current
   // location, galaxy number and timestamp).
@@ -1365,12 +1365,12 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
       OO_DESC("loadsavescreen-commander-@-rated-@-has-@-legal-status-@-ship-@-"
               "location-@-g-@-eco-@-gov-@-tl-@-timestamp-@"),
       {TextArg(OptionalStringValue(cdr.find("player_name"))), rating,
-       OOCredits(money), legalDesc, TextArg(shipName), locationName, galNumber,
-       locationEco, locationGov, locationTL, timeStamp});
+       oo::Credits(money), legalDesc, TextArg(shipName), locationName,
+       galNumber, locationEco, locationGov, locationTL, timeStamp});
 
   //-------------------------------------------------------------------------------------------------------------------------
 
-  gui->addLongText(cdrDesc, CDRDESCROW, OOGUIAlignment::kLeft);
+  gui->addLongText(cdrDesc, CDRDESCROW, oo::GUIAlignment::kLeft);
 }
 
 int PlayerEntity::findIndexOfCommander(const std::string& cdrName) {
@@ -1413,7 +1413,7 @@ uint16_t PersonalityForCommanderDict(const oo::PList& dict) {
 
 namespace oo {
 
-OOCreditsQuantity DeciCreditsFromDouble(double doubleDeciCredits) {
+oo::CreditsQuantity DeciCreditsFromDouble(double doubleDeciCredits) {
   /*	Clamp value to 0..kOOMaxCredits.
           The important bit here is that kOOMaxCredits can't be represented
           exactly as a double, and casting it rounds it up; casting this value
@@ -1431,7 +1431,7 @@ OOCreditsQuantity DeciCreditsFromDouble(double doubleDeciCredits) {
     double threshold = nextafter(kOOMaxCredits, -1);
 
     if (doubleDeciCredits <= threshold) {
-      return static_cast<OOCreditsQuantity>(doubleDeciCredits);
+      return static_cast<oo::CreditsQuantity>(doubleDeciCredits);
     } else {
       return kOOMaxCredits;
     }
@@ -1440,7 +1440,7 @@ OOCreditsQuantity DeciCreditsFromDouble(double doubleDeciCredits) {
   }
 }
 
-OOCreditsQuantity DeciCreditsFromPList(const oo::PList* value) {
+oo::CreditsQuantity DeciCreditsFromPList(const oo::PList* value) {
   if (value != nullptr && value->isReal()) {
     // a real (was a float/double NSNumber, objCType f or d)
     double d = value->doubleValue();

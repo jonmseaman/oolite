@@ -19,7 +19,7 @@
 	Run: tests/run.sh unit
 */
 
-#include "OOColor.h"
+#include "Color.h"
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
@@ -50,10 +50,10 @@ class LightParticleEntity : public Entity
 public:
 	float diameter();
 	void setDiameter(float diameter);
-	void setColor(OOColor *color);
+	void setColor(oo::Color *color);
 
 	float _diameter = 0;
-	std::shared_ptr<OOColor> _color;
+	std::shared_ptr<oo::Color> _color;
 };
 
 
@@ -65,7 +65,7 @@ class FlasherEntity : public LightParticleEntity
 public:
 	bool isActive();
 	void setActive(bool active);
-	std::shared_ptr<OOColor> color();
+	std::shared_ptr<oo::Color> color();
 	float frequency();
 	void setFrequency(float frequency);
 	float phase();
@@ -179,11 +179,11 @@ bool Entity::isVisibleToScripts()  { return false; }
 
 float oo::LightParticleEntity::diameter()  { return _diameter; }
 void oo::LightParticleEntity::setDiameter(float diameter)  { _diameter = diameter; }
-void oo::LightParticleEntity::setColor(OOColor *color)  { _color = oo::share(color); }
+void oo::LightParticleEntity::setColor(oo::Color *color)  { _color = oo::share(color); }
 
 bool oo::FlasherEntity::isActive()  { return _active; }
 void oo::FlasherEntity::setActive(bool active)  { _active = active; }
-std::shared_ptr<OOColor> oo::FlasherEntity::color()  { return _color; }
+std::shared_ptr<oo::Color> oo::FlasherEntity::color()  { return _color; }
 void oo::FlasherEntity::setFrequency(float frequency)  { _frequency = frequency; }
 float oo::FlasherEntity::fraction()  { return _fraction; }
 void oo::FlasherEntity::setFraction(float fraction)  { _fraction = fraction; }
@@ -478,7 +478,7 @@ void SetUpContext()
 	sFlasher->_cxxEntity = part;
 	sFlasherPart = part.get();
 	sFlasherPart->_active = true;
-	sFlasherPart->_color = OOColor::colorWithRed(1, 0.5f, 0.25f, 1);
+	sFlasherPart->_color = oo::Color::colorWithRed(1, 0.5f, 0.25f, 1);
 	sFlasherPart->_frequency = 2;
 	sFlasherPart->_fraction = 0.5f;
 	sFlasherPart->_phase = 0.25f;

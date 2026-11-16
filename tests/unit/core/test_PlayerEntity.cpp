@@ -21,13 +21,13 @@
 #include "PlayerEntity.h"
 #include "WormholeEntity.h"
 #include "MyOpenGLView.h"
-#include "OOConstToString.h"
+#include "ConstToString.h"
 #include "Universe.h"
 #include "PlayerEntityContracts.h"
 #include "PlayerEntityKeyMapper.h"
 #include "PlayerEntityStickMapper.h"
-#include "OOJoystickManager.h"
-#include "OOCallByName.h"	// oo::EntityRespondsToName / oo::CallEntityByName
+#include "JoystickManager.h"
+#include "CallByName.h"	// oo::EntityRespondsToName / oo::CallEntityByName
 
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -447,8 +447,8 @@ OO_TEST(slice2Accessors)
 		OO_CHECK(player->getCustom_chart_zoom() == 2.5);
 		player->setCustomChartCentre(NSMakePoint(30, 40));
 		OO_CHECK(Near(player->getCustom_chart_centre_coordinates(), NSMakePoint(30, 40)));
-		PlayerEntityTestAccess::ANA_mode(part) = OORouteType::kTime;
-		OO_CHECK(player->ANAMode() == OORouteType::kTime);
+		PlayerEntityTestAccess::ANA_mode(part) = oo::RouteType::kTime;
+		OO_CHECK(player->ANAMode() == oo::RouteType::kTime);
 		PlayerEntityTestAccess::system_id(part) = 42;
 		OO_CHECK(player->systemID() == 42);
 		player->setPreviousSystemID(17);
@@ -472,16 +472,16 @@ OO_TEST(slice2ChartZoomAndCentre)
 		PlayerEntityTestAccess::chart_centre_coordinates(part) = NSMakePoint(100, 110);
 		PlayerEntityTestAccess::chart_focus_coordinates(part) = NSMakePoint(100, 110);
 
-		PlayerEntityTestAccess::_missionBackgroundSpecial(part) = OOGUIBackgroundSpecial::kNone;
+		PlayerEntityTestAccess::_missionBackgroundSpecial(part) = oo::GUIBackgroundSpecial::kNone;
 		OO_CHECK(player->getChart_zoom() == 1.0);
 		OO_CHECK(Near(player->adjusted_chart_centre(), NSMakePoint(100, 110)));
-		PlayerEntityTestAccess::_missionBackgroundSpecial(part) = OOGUIBackgroundSpecial::kShort;
+		PlayerEntityTestAccess::_missionBackgroundSpecial(part) = oo::GUIBackgroundSpecial::kShort;
 		OO_CHECK(player->getChart_zoom() == 1.0);
 		OO_CHECK(Near(player->adjusted_chart_centre(), NSMakePoint(20, 30)));
-		PlayerEntityTestAccess::_missionBackgroundSpecial(part) = OOGUIBackgroundSpecial::kLongAnaQuickest;
-		OO_CHECK(player->getChart_zoom() == (OOScalar)CHART_MAX_ZOOM);
+		PlayerEntityTestAccess::_missionBackgroundSpecial(part) = oo::GUIBackgroundSpecial::kLongAnaQuickest;
+		OO_CHECK(player->getChart_zoom() == (oo::Scalar)CHART_MAX_ZOOM);
 		OO_CHECK(Near(player->adjusted_chart_centre(), NSMakePoint(128, 128)));
-		PlayerEntityTestAccess::_missionBackgroundSpecial(part) = OOGUIBackgroundSpecial::kCustom;
+		PlayerEntityTestAccess::_missionBackgroundSpecial(part) = oo::GUIBackgroundSpecial::kCustom;
 		OO_CHECK(player->getChart_zoom() == 3.0);
 		OO_CHECK(Near(player->adjusted_chart_centre(), NSMakePoint(50, 60)));
 	}
@@ -517,7 +517,7 @@ OO_TEST(slice3TargetAndInfoSystems)
 		PlayerEntityTestAccess::system_id(part) = 7;
 		PlayerEntityTestAccess::target_system_id(part) = 9;
 		PlayerEntityTestAccess::info_system_id(part) = 11;
-		PlayerEntityTestAccess::ANA_mode(part) = OORouteType::kJumps;
+		PlayerEntityTestAccess::ANA_mode(part) = oo::RouteType::kJumps;
 		OO_CHECK(player->targetSystemID() == 9);
 		OO_CHECK(player->nextHopTargetSystemID() == 9);
 		OO_CHECK(player->infoSystemID() == 11);
@@ -604,7 +604,7 @@ OO_TEST(slice6NearestValidAndAtmosphere)
 		oo::AutoreleaseScope scope;
 		SetUp();
 		TestPlayer *player = MakePlayer();
-		OO_CHECK(player->compareZeroDistance(player) == OOComparisonResult::kDescending);
+		OO_CHECK(player->compareZeroDistance(player) == oo::ComparisonResult::kDescending);
 		OO_CHECK(player->validForAddToUniverse());
 		OO_CHECK(player->insideAtmosphereFraction() == 0.0f);
 		OO_CHECK(player->lookingAtSunWithThresholdAngleCos(0.5f) == 0.0f);	// no sun
@@ -857,7 +857,7 @@ namespace {
 struct Sent
 {
 	int count = 0;
-	OOCreditsQuantity amount = 0;
+	oo::CreditsQuantity amount = 0;
 	std::string text;
 	int number = 0;
 	bool flag = false;
@@ -882,7 +882,7 @@ public:
 	using TestPlayer::setWeaponMount;
 	using TestPlayer::addEquipmentItem;
 
-	void setBounty(OOCreditsQuantity amount, const std::string &reason) override
+	void setBounty(oo::CreditsQuantity amount, const std::string &reason) override
 	{
 		sSent.count++; sSent.amount = amount; sSent.text = reason;
 	}
@@ -890,13 +890,13 @@ public:
 
 	void markAsOffender(int offence_value, oo::LegalStatusReason reason) override
 	{
-		sSent.count++; sSent.number = offence_value; sSent.text = OOStringFromLegalStatusReason(reason);
+		sSent.count++; sSent.number = offence_value; sSent.text = oo::StringFromLegalStatusReason(reason);
 	}
 
 
-	OOFuelQuantity fuelRequiredForJump() override
+	oo::FuelQuantity fuelRequiredForJump() override
 	{
-		return (OOFuelQuantity)sSent.number;
+		return (oo::FuelQuantity)sSent.number;
 	}
 
 
@@ -930,14 +930,14 @@ public:
 	}
 
 
-	bool setWeaponMount(OOWeaponFacing facing, const std::string &eqKey, const std::optional<std::string> &context) override
+	bool setWeaponMount(oo::WeaponFacing facing, const std::string &eqKey, const std::optional<std::string> &context) override
 	{
 		sSent.count++; sSent.number = (int)facing; sSent.text = eqKey; sSent.optionalText = context;
 		return true;
 	}
 
 
-	OOCargoQuantity cargoQuantityOnBoard() override
+	oo::CargoQuantity cargoQuantityOnBoard() override
 	{
 		return 7;
 	}
@@ -987,7 +987,7 @@ OO_TEST(slice14BountyAndRotateCargo)
 		RecordingPlayer *player = MakeRecordingPlayer();
 		player->setBounty(25);
 		OO_CHECK(sSent.count == 1 && sSent.amount == 25);
-		OO_CHECK(sSent.text == OOStringFromLegalStatusReason(oo::LegalStatusReason::kUnknown));
+		OO_CHECK(sSent.text == oo::StringFromLegalStatusReason(oo::LegalStatusReason::kUnknown));
 		player->setBounty(30, oo::LegalStatusReason::kUnknown);
 		OO_CHECK(sSent.count == 2 && sSent.amount == 30);
 		player->rotateCargo();
@@ -1011,7 +1011,7 @@ OO_TEST(slice15LegalStatusOffenceAndScenario)
 		OO_CHECK(player->getBounty() == 64 && player->getLegalStatus() == 64);
 		player->markAsOffender(8);
 		OO_CHECK(sSent.count == 1 && sSent.number == 8);
-		OO_CHECK(sSent.text == OOStringFromLegalStatusReason(oo::LegalStatusReason::kUnknown));
+		OO_CHECK(sSent.text == oo::StringFromLegalStatusReason(oo::LegalStatusReason::kUnknown));
 		OO_CHECK(!player->endScenario("some-scenario"));
 		PlayerEntityTestAccess::scenarioKey(player) = std::string("other-scenario");
 		OO_CHECK(!player->endScenario("some-scenario"));
@@ -1146,8 +1146,8 @@ OO_TEST(slice22WeaponMountAndBerths)
 		oo::AutoreleaseScope scope;
 		SetUp();
 		RecordingPlayer *player = MakeRecordingPlayer();
-		OO_CHECK(player->setWeaponMount(OOWeaponFacing::kAft, "EQ_WEAPON_PULSE_LASER"));
-		OO_CHECK(sSent.count == 1 && sSent.number == (int)OOWeaponFacing::kAft && sSent.text == "EQ_WEAPON_PULSE_LASER");
+		OO_CHECK(player->setWeaponMount(oo::WeaponFacing::kAft, "EQ_WEAPON_PULSE_LASER"));
+		OO_CHECK(sSent.count == 1 && sSent.number == (int)oo::WeaponFacing::kAft && sSent.text == "EQ_WEAPON_PULSE_LASER");
 		OO_CHECK(sSent.optionalText == std::optional<std::string>("purchase"));
 		OO_CHECK(!player->changePassengerBerths(0));
 		PlayerEntityTestAccess::max_passengers(player) = 0;
@@ -1231,7 +1231,7 @@ OO_TEST(slice25CountsTradeInAndViewOffsets)
 		OO_CHECK(NearV(PlayerEntityTestAccess::portViewOffset(part), make_vector(0.0f, 0.0f, 0.0f)));
 		OO_CHECK(NearV(PlayerEntityTestAccess::customViewOffset(part), kZeroVector));
 		PlayerEntityTestAccess::aftViewOffset(part) = make_vector(1.0f, 2.0f, 3.0f);
-		player->currentWeaponFacing = OOWeaponFacing::kAft;
+		player->currentWeaponFacing = oo::WeaponFacing::kAft;
 		OO_CHECK(NearV(player->weaponViewOffset(), make_vector(1.0f, 2.0f, 3.0f)));
 	}
 }
@@ -1320,11 +1320,11 @@ OO_TEST(slice28ClearanceMarkerKeyAndExtraKeys)
 		SetUp();
 		RecordingPlayer *player = MakeRecordingPlayer();
 		PlayerEntity *part = player;
-		PlayerEntityTestAccess::dockingClearanceStatus(part) = OODockingClearanceStatus::kRequested;
-		OO_CHECK(!player->clearedToDock() && player->getDockingClearanceStatus() == OODockingClearanceStatus::kRequested);
-		PlayerEntityTestAccess::dockingClearanceStatus(part) = OODockingClearanceStatus::kGranted;
+		PlayerEntityTestAccess::dockingClearanceStatus(part) = oo::DockingClearanceStatus::kRequested;
+		OO_CHECK(!player->clearedToDock() && player->getDockingClearanceStatus() == oo::DockingClearanceStatus::kRequested);
+		PlayerEntityTestAccess::dockingClearanceStatus(part) = oo::DockingClearanceStatus::kGranted;
 		OO_CHECK(player->clearedToDock());
-		PlayerEntityTestAccess::dockingClearanceStatus(part) = OODockingClearanceStatus::kNotRequired;
+		PlayerEntityTestAccess::dockingClearanceStatus(part) = oo::DockingClearanceStatus::kNotRequired;
 		OO_CHECK(player->clearedToDock());
 		const oo::PList marker(oo::PList::Dict{ { "system", oo::PList(7) }, { "name", oo::PList(std::string("beacon")) } });
 		OO_CHECK(player->markerKey(marker) == std::optional<std::string>("7-beacon"));

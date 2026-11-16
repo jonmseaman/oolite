@@ -37,9 +37,9 @@ SOFTWARE.
 
 #pragma once
 
-#include "OOFoundation.h"
-#include "OOOpenGL.h"
-#include "OOOpenGLExtensionManager.h"
+#include "Foundation.h"
+#include "OpenGL.h"
+#include "OpenGLExtensionManager.h"
 #include "oofnd/objc/Object.h"
 class Entity;  // Entity.h: the shader binding target
 

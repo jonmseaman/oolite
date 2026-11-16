@@ -19,7 +19,7 @@
 #include <cstring>
 #include <string>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "ConcreteTexture.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PList.hpp"
@@ -65,8 +65,8 @@ oo::PList PlanetInfo(float cloudAlpha, bool perlin3d) {
       {"cloud_alpha", oo::PList(cloudAlpha)},
       {"cloud_fraction", oo::PList(0.5)},
       {"cloud_color",
-       OOColorObjectNode(OOColor::colorWithRed(1.0f, 0.5f, 0.25f, 1.0f).get())},
-      {"polar_cloud_color", OOColorObjectNode(OOColor::whiteColor().get())},
+       oo::ColorObjectNode(oo::Color::colorWithRed(1.0f, 0.5f, 0.25f, 1.0f).get())},
+      {"polar_cloud_color", oo::ColorObjectNode(oo::Color::whiteColor().get())},
       {"perlin_3d", oo::PList(perlin3d)},
   });
 }

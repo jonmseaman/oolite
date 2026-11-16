@@ -35,9 +35,9 @@
 
 #include "Entity.h"
 #include "BasicMaterial.h"
-#include "OOCacheManager.h"
-#include "OOGraphicsResetManager.h"
-#include "OOMesh.h"
+#include "CacheManager.h"
+#include "GraphicsResetManager.h"
+#include "Mesh.h"
 #include "Octree.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
@@ -127,28 +127,28 @@ void SetUp() {
   OO_CHECK(OOTestGLContext());
 }
 
-std::shared_ptr<OOMesh> Mesh(const std::string& name, float scale = 1.0f,
+std::shared_ptr<oo::Mesh> Mesh(const std::string& name, float scale = 1.0f,
                      bool cacheWriteable = true, bool smooth = false,
                      const oo::PList& materials = oo::PList(),
                      const oo::PList& shaders = oo::PList()) {
-  return OOMesh::meshWithName(name, std::nullopt, materials, shaders, smooth,
+  return oo::Mesh::meshWithName(name, std::nullopt, materials, shaders, smooth,
                               oo::PList(), nullptr, scale, cacheWriteable);
 }
 
 oo::PList CachedPList(const std::string& key, const std::string& cache) {
-  return OOCacheManager::sharedCache()->pListForKey(key, cache);
+  return oo::CacheManager::sharedCache()->pListForKey(key, cache);
 }
 
 // The OOCacheManager (Octree) category: free functions on the C++ octree.
 std::shared_ptr<Octree> OctreeForModel(const std::string& key) {
-  return OOCacheManagerOctreeForModel(key);
+  return oo::CacheManagerOctreeForModel(key);
 }
 
 // The mesh's octree.
-Octree* MeshOctree(OOMesh* mesh) { return mesh->getOctree().get(); }
+Octree* MeshOctree(oo::Mesh* mesh) { return mesh->getOctree().get(); }
 
 void SetOctreeForModel(Octree* octree, const std::string& key) {
-  OOCacheManagerSetOctree(octree, key);
+  oo::CacheManagerSetOctree(octree, key);
 }
 
 bool Near(double a, double b) {
@@ -164,11 +164,11 @@ bool SameVector(Vector a, Vector b) {
 OO_TEST(loadsModel) {
   SetUp();
   {
-    const std::shared_ptr<OOMesh> mesh = Mesh("tetra.dat");
+    const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
     OO_CHECK(mesh != nullptr);
     if (mesh == nullptr) return;
-    OO_CHECK(dynamic_cast<OOMesh*>(mesh.get()) != nullptr);
-    OO_CHECK(dynamic_cast<OODrawable*>(mesh.get()) != nullptr);
+    OO_CHECK(dynamic_cast<oo::Mesh*>(mesh.get()) != nullptr);
+    OO_CHECK(dynamic_cast<oo::Drawable*>(mesh.get()) != nullptr);
     OO_CHECK_EQ(mesh->modelName().value_or("<none>"), "tetra.dat");
     OO_CHECK_EQ(mesh->getVertexCount(), 4u);
     OO_CHECK_EQ(mesh->getFaceCount(), 4u);
@@ -198,7 +198,7 @@ OO_TEST(loadsModel) {
     // The placeholder material has no textures; the size counts the vertex and
     // face buffers.
     OO_CHECK(mesh->allTextures().empty());
-    OO_CHECK(mesh->totalSize() >= 4 * sizeof(Vector) + 4 * sizeof(OOMeshFace));
+    OO_CHECK(mesh->totalSize() >= 4 * sizeof(Vector) + 4 * sizeof(oo::MeshFace));
 #endif
   }
 }
@@ -210,7 +210,7 @@ OO_TEST(dictionariesAndSmoothing) {
     materials["other.png"] = oo::PList(oo::PList::Dict{});
     oo::PList::Dict shaders;
     shaders["other.png"] = oo::PList(oo::PList::Dict{});
-    const std::shared_ptr<OOMesh> mesh = Mesh("tetra2.dat", 1.0f, true, true,
+    const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra2.dat", 1.0f, true, true,
                                       oo::PList(materials), oo::PList(shaders));
     OO_CHECK(mesh != nullptr);
     if (mesh == nullptr) return;
@@ -223,7 +223,7 @@ OO_TEST(dictionariesAndSmoothing) {
 OO_TEST(scaleAndMissingModel) {
   SetUp();
   {
-    const std::shared_ptr<OOMesh> mesh = Mesh("tetra3.dat", 2.0f, false);
+    const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra3.dat", 2.0f, false);
     OO_CHECK(mesh != nullptr);
     if (mesh == nullptr) return;
     OO_CHECK(Near(mesh->collisionRadius(), 20.0));
@@ -240,7 +240,7 @@ OO_TEST(scaleAndMissingModel) {
 OO_TEST(caches) {
   SetUp();
   {
-    const std::shared_ptr<OOMesh> mesh = Mesh("tetra.dat");
+    const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
     OO_CHECK(mesh != nullptr);
     if (mesh == nullptr) return;
 
@@ -275,14 +275,14 @@ OO_TEST(caches) {
 OO_TEST(placeholderMaterial) {
   SetUp();
   {
-    const std::shared_ptr<oo::Material> placeholder = OOMesh::placeholderMaterial();
+    const std::shared_ptr<oo::Material> placeholder = oo::Mesh::placeholderMaterial();
     OO_CHECK(placeholder != nullptr);
     OO_CHECK(dynamic_cast<oo::BasicMaterial*>(placeholder.get()) != nullptr);
     OO_CHECK_EQ(placeholder->name().value_or("<none>"), "/placeholder/");
-    OO_CHECK(OOMesh::placeholderMaterial() == placeholder);
+    OO_CHECK(oo::Mesh::placeholderMaterial() == placeholder);
   }
   {
-    const std::shared_ptr<oo::Material> again = OOMesh::placeholderMaterial();
+    const std::shared_ptr<oo::Material> again = oo::Mesh::placeholderMaterial();
     OO_CHECK(again != nullptr);
     OO_CHECK_EQ(again->name().value_or("<none>"), "/placeholder/");
   }
@@ -291,20 +291,20 @@ OO_TEST(placeholderMaterial) {
 OO_TEST(copies) {
   SetUp();
   {
-    const std::shared_ptr<OOMesh> mesh = Mesh("tetra.dat");
+    const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
     OO_CHECK(mesh != nullptr);
     if (mesh == nullptr) return;
 
     // Immutable seen from outside: a copy is the mesh itself, retained.
-    const std::shared_ptr<OOMesh> copy = mesh->copyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> copy = mesh->copyWithZone(nullptr);
     OO_CHECK(copy == mesh);
 
     // A mutable copy is a new mesh with the same model, sharing nothing it can
     // change.
-    const std::shared_ptr<OOMesh> mutableCopy = mesh->mutableCopyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone(nullptr);
     OO_CHECK(mutableCopy != nullptr);
     OO_CHECK(mutableCopy != mesh);
-    OO_CHECK(dynamic_cast<OOMesh*>(mutableCopy.get()) != nullptr);
+    OO_CHECK(dynamic_cast<oo::Mesh*>(mutableCopy.get()) != nullptr);
     OO_CHECK_EQ(mutableCopy->modelName().value_or("<none>"), "tetra.dat");
     OO_CHECK_EQ(mutableCopy->getVertexCount(), 4u);
     OO_CHECK_EQ(mutableCopy->getFaceCount(), 4u);
@@ -320,7 +320,7 @@ OO_TEST(copies) {
 
     // Rescaled: a mutable copy, scaled, with no name (so its octree is not
     // cached).
-    const std::shared_ptr<OOMesh> rescaled = mesh->meshRescaledBy(3.0f);
+    const std::shared_ptr<oo::Mesh> rescaled = mesh->meshRescaledBy(3.0f);
     OO_CHECK(rescaled != nullptr && rescaled != mesh);
     OO_CHECK(Near(rescaled->collisionRadius(), 30.0));
     OO_CHECK(!rescaled->modelName().has_value());
@@ -338,18 +338,18 @@ OO_TEST(copies) {
 OO_TEST(graphicsResetAfterRelease) {
   SetUp();
   {
-    const std::shared_ptr<OOMesh> mesh = Mesh("tetra.dat");
+    const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
     OO_CHECK(mesh != nullptr);
-    std::shared_ptr<OOMesh> mutableCopy = mesh->mutableCopyWithZone(nullptr);
+    std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone(nullptr);
     // Both are registered: the reset rebinds their materials.
-    OOGraphicsResetManager::sharedManager()->resetGraphicsState();
+    oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
     OO_CHECK_EQ(mesh->getVertexCount(), 4u);
     OO_CHECK_EQ(mutableCopy->getVertexCount(), 4u);
     mutableCopy = nullptr;
   }
   // Both are gone and unregistered themselves, so the reset does not reach
   // them.
-  OOGraphicsResetManager::sharedManager()->resetGraphicsState();
+  oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
   OO_CHECK(true);
 }
 
@@ -359,7 +359,7 @@ OO_TEST(laterSlices) {
   {
     // Loading: a smooth mesh caches its normals and tangents with
     // normal mode 1.
-    const std::shared_ptr<OOMesh> smooth = Mesh("tetra2.dat", 1.0f, true, true);
+    const std::shared_ptr<oo::Mesh> smooth = Mesh("tetra2.dat", 1.0f, true, true);
     OO_CHECK(smooth != nullptr);
     const oo::PList smoothData = CachedPList("tetra2.dat:1:1.000", "OOMesh");
     OO_CHECK(smoothData.isDict());
@@ -372,7 +372,7 @@ OO_TEST(laterSlices) {
 
     // Explicit normals: the normal mode is explicit, cached under the per-face
     // key.
-    const std::shared_ptr<OOMesh> normals = Mesh("normals.dat");
+    const std::shared_ptr<oo::Mesh> normals = Mesh("normals.dat");
     OO_CHECK(normals != nullptr);
     if (normals == nullptr) return;
     OO_CHECK(normals->description().find("normals: explicit}") !=
@@ -411,8 +411,8 @@ OO_TEST(laterSlices) {
 OO_TEST(facadeContract) {
   SetUp();
   {
-    const std::shared_ptr<OOMesh> mesh = Mesh("tetra.dat");
-    OOMesh* cxxMesh = mesh.get();
+    const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
+    oo::Mesh* cxxMesh = mesh.get();
     OO_CHECK(cxxMesh != nullptr);
     if (cxxMesh == nullptr) return;
 
@@ -426,27 +426,27 @@ OO_TEST(facadeContract) {
 
     // Through the root's C++ pointer, the overrides answer (the bounding box is
     // geometry's).
-    OODrawable* drawable = cxxMesh;
+    oo::Drawable* drawable = cxxMesh;
     OO_CHECK(Near(drawable->collisionRadius(), 10.0));
     OO_CHECK(Near(drawable->maxDrawDistance(), cxxMesh->maxDrawDistance()));
     OO_CHECK(SameVector(drawable->boundingBox().max, make_vector(10, 10, 10)));
     OO_CHECK(!drawable->hasTranslucentParts());
 
     // The C++ factory: a mesh; null for a missing model.
-    const std::shared_ptr<OOMesh> made =
-        OOMesh::meshWithName("tetra.dat", std::nullopt, oo::PList(),
+    const std::shared_ptr<oo::Mesh> made =
+        oo::Mesh::meshWithName("tetra.dat", std::nullopt, oo::PList(),
                              oo::PList(), false, oo::PList(), nullptr, 2.0f, false);
     OO_CHECK(made.get() != nullptr);
     if (made.get() == nullptr) return;
     OO_CHECK(Near(made->collisionRadius(), 20.0));
     OO_CHECK(made->description().starts_with("<OOMesh "));
-    OO_CHECK(OOMesh::meshWithName("no such model.dat", std::nullopt,
+    OO_CHECK(oo::Mesh::meshWithName("no such model.dat", std::nullopt,
                                   oo::PList(), oo::PList(), false, oo::PList(),
                                   nullptr)
                  .get() == nullptr);
 
     // A C++ mesh made bare is the old -init's: no model yet.
-    const std::shared_ptr<OOMesh> bare = oo::makeShared<OOMesh>();
+    const std::shared_ptr<oo::Mesh> bare = oo::makeShared<oo::Mesh>();
     OO_CHECK_EQ(bare->modelName().value_or("<none>"), "No Model");
     OO_CHECK_EQ(bare->getVertexCount(), 0u);
   }
@@ -456,8 +456,8 @@ OO_TEST(facadeContract) {
 OO_TEST(geometryMembers) {
   SetUp();
   {
-    const std::shared_ptr<OOMesh> mesh = Mesh("tetra.dat");
-    OOMesh* cxxMesh = mesh.get();
+    const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
+    oo::Mesh* cxxMesh = mesh.get();
     OO_CHECK(cxxMesh != nullptr);
     if (cxxMesh == nullptr) return;
 
@@ -478,7 +478,7 @@ OO_TEST(geometryMembers) {
     OO_CHECK(SameVector(moved.max, make_vector(12, 12, 12)));
 
     // Rescaled through the C++ member: a new mesh, with no name.
-    const std::shared_ptr<OOMesh> rescaled = cxxMesh->meshRescaledBy(0.5f);
+    const std::shared_ptr<oo::Mesh> rescaled = cxxMesh->meshRescaledBy(0.5f);
     OO_CHECK(rescaled.get() != nullptr && rescaled.get() != cxxMesh);
     if (rescaled.get() == nullptr) return;
     OO_CHECK(Near(rescaled->collisionRadius(), 5.0));
@@ -491,8 +491,8 @@ OO_TEST(geometryMembers) {
 OO_TEST(rendering) {
   SetUp();
   {
-    const std::shared_ptr<OOMesh> mesh = Mesh("tetra.dat");
-    const std::shared_ptr<OOMesh> smooth = Mesh("tetra2.dat", 1.0f, true, true);
+    const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
+    const std::shared_ptr<oo::Mesh> smooth = Mesh("tetra2.dat", 1.0f, true, true);
     OO_CHECK(mesh != nullptr && smooth != nullptr);
     if (mesh == nullptr || smooth == nullptr) return;
     while (glGetError() != GL_NO_ERROR) {
@@ -505,14 +505,14 @@ OO_TEST(rendering) {
 
     // A reset deletes the display lists and rebinds the materials; the next
     // draw remakes them.
-    OOGraphicsResetManager::sharedManager()->resetGraphicsState();
+    oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
     mesh->renderOpaqueParts();
     OO_CHECK_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
     OO_CHECK_EQ(mesh->getVertexCount(), 4u);
     OO_CHECK(Near(mesh->collisionRadius(), 10.0));
 
     // A mutable copy draws on its own lists.
-    const std::shared_ptr<OOMesh> copy = mesh->mutableCopyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone(nullptr);
     copy->renderOpaqueParts();
     OO_CHECK_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
   }
@@ -522,15 +522,15 @@ OO_TEST(rendering) {
 OO_TEST(renderingMembers) {
   SetUp();
   {
-    const std::shared_ptr<OOMesh> mesh = Mesh("tetra.dat");
-    OOMesh* cxxMesh = mesh.get();
+    const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
+    oo::Mesh* cxxMesh = mesh.get();
     OO_CHECK(cxxMesh != nullptr);
     if (cxxMesh == nullptr) return;
     while (glGetError() != GL_NO_ERROR) {
     }
 
     // Through the root's C++ pointer, as the entities draw.
-    OODrawable* drawable = cxxMesh;
+    oo::Drawable* drawable = cxxMesh;
     drawable->renderOpaqueParts();
     OO_CHECK(cxxMesh->listsReady);
     cxxMesh->deleteDisplayLists();
@@ -540,10 +540,10 @@ OO_TEST(renderingMembers) {
 
     // The materials: the placeholder, rebound; a reset.
     cxxMesh->rebindMaterials();
-    OO_CHECK(cxxMesh->materials[0].get() == OOMesh::placeholderMaterial().get());
+    OO_CHECK(cxxMesh->materials[0].get() == oo::Mesh::placeholderMaterial().get());
     cxxMesh->resetGraphicsState();
     OO_CHECK(!cxxMesh->listsReady);
-    OO_CHECK(cxxMesh->materials[0].get() == OOMesh::placeholderMaterial().get());
+    OO_CHECK(cxxMesh->materials[0].get() == oo::Mesh::placeholderMaterial().get());
 
     // The buffers: a renamed key, and bytes kept by key.
     cxxMesh->renameTexturesFrom("_oo_placeholder_material",
@@ -561,8 +561,8 @@ OO_TEST(renderingMembers) {
 OO_TEST(loadingMembers) {
   SetUp();
   {
-    const std::shared_ptr<OOMesh> mesh =
-        OOMesh::meshWithName("tetra.dat", std::nullopt, oo::PList(),
+    const std::shared_ptr<oo::Mesh> mesh =
+        oo::Mesh::meshWithName("tetra.dat", std::nullopt, oo::PList(),
                              oo::PList(), false, oo::PList(), nullptr);
     OO_CHECK(mesh.get() != nullptr);
     if (mesh.get() == nullptr) return;
@@ -570,7 +570,7 @@ OO_TEST(loadingMembers) {
     OO_CHECK_EQ(mesh->modelName().value_or("<none>"), "tetra.dat");
 
     // A mutable copy shares the buffers and is a new mesh.
-    const std::shared_ptr<OOMesh> copy = mesh->mutableCopyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone(nullptr);
     OO_CHECK(copy.get() != nullptr && copy.get() != mesh.get());
     if (copy.get() == nullptr) return;
     OO_CHECK(copy->_vertices == mesh->_vertices);
@@ -584,7 +584,7 @@ OO_TEST(loadingMembers) {
     mesh->renderOpaqueParts();
     copy->renderOpaqueParts();
     OO_CHECK(mesh->listsReady && copy->listsReady);
-    OOGraphicsResetManager::sharedManager()->resetGraphicsState();
+    oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
     OO_CHECK(!mesh->listsReady && !copy->listsReady);
     OO_CHECK_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
   }

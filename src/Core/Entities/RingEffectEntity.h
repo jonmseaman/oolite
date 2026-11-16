@@ -45,7 +45,7 @@ class RingEffectEntity : public Entity {
       Entity* sourceEntity);
 
   std::optional<std::string> descriptionComponents() const override;
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void drawImmediate(bool immediate, bool translucent) override;
   bool isEffect() override;
   bool canCollide() override;

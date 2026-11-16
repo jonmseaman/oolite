@@ -44,11 +44,22 @@ MA 02110-1301, USA.
 struct Vector;
 struct HPVector;
 struct Quaternion;
-struct OOMatrix;
+
+namespace oo {
+
+struct Matrix;
+
+}  // namespace oo
+
 struct CGPoint;
 struct CGRect;
 struct BoundingBox;
-class OOColor;
+
+namespace oo {
+
+class Color;
+
+}  // namespace oo
 
 namespace oo {
 
@@ -126,7 +137,7 @@ consteval ValueType ValueTypeOf() {
     return ValueType::kHPVector;
   else if constexpr (std::is_same_v<U, Quaternion>)
     return ValueType::kQuaternion;
-  else if constexpr (std::is_same_v<U, OOMatrix>)
+  else if constexpr (std::is_same_v<U, oo::Matrix>)
     return ValueType::kMatrix;
   else if constexpr (std::is_same_v<U, CGPoint>)
     return ValueType::kPoint;
@@ -134,7 +145,7 @@ consteval ValueType ValueTypeOf() {
     return ValueType::kRect;
   else if constexpr (std::is_same_v<U, BoundingBox>)
     return ValueType::kBoundingBox;
-  else if constexpr (std::is_same_v<U, OOColor*>)
+  else if constexpr (std::is_same_v<U, oo::Color*>)
     return ValueType::kColor;
   else if constexpr (std::is_same_v<U, ObjectResult>)
     return ValueType::kObject;

@@ -36,7 +36,7 @@
 
 #include "GameController.h"
 #include "MyOpenGLView.h"
-#include "OOFullScreenController.h"
+#include "FullScreenController.h"
 #include "OOJSPropID.h"
 #include "OOJavaScriptEngine.h"
 #include "PlayerEntity.h"
@@ -97,7 +97,7 @@ class TestView : public MyOpenGLView {
     _controller = controller;
   }
   void noteMouseInteractionModeChangedFrom(
-      OOMouseInteractionMode oldMode, OOMouseInteractionMode newMode) override {
+      oo::MouseInteractionMode oldMode, oo::MouseInteractionMode newMode) override {
     _modeNotes.push_back({(int)oldMode, (int)newMode});
   }
   std::vector<oo::PList> getScreenSizeArray() override { return _screenModes; }
@@ -132,7 +132,7 @@ class TestArgument final : public oo::Object {};
 // until it has run.
 void Call(TestTarget* target, void (TestTarget::*method)(oo::Object*),
           oo::Object* argument, double delay) {
-  OOScheduleDeferredCall(
+  oo::ScheduleDeferredCall(
       [target = oo::share(target), method,
        argument = oo::share(argument)]() {
         (target.get()->*method)(argument.get());
@@ -201,9 +201,9 @@ bool SameId(OOJSPropID a, OOJSPropID b) { return a == b; }
 
 oo::PList Mode(int width, int height, int refresh) {
   oo::PList::Dict mode;
-  mode[std::string(kOODisplayWidth)] = oo::PList(std::int64_t(width));
-  mode[std::string(kOODisplayHeight)] = oo::PList(std::int64_t(height));
-  mode[std::string(kOODisplayRefreshRate)] = oo::PList(std::int64_t(refresh));
+  mode[std::string(oo::kDisplayWidth)] = oo::PList(std::int64_t(width));
+  mode[std::string(oo::kDisplayHeight)] = oo::PList(std::int64_t(height));
+  mode[std::string(oo::kDisplayRefreshRate)] = oo::PList(std::int64_t(refresh));
   return oo::PList(std::move(mode));
 }
 
@@ -218,7 +218,7 @@ OO_TEST(sharedControllerIsOneObject) {
     OO_CHECK(!controller->finishedLaunching());
     OO_CHECK(!controller->isGamePaused());
     OO_CHECK(controller->mouseInteractionMode() ==
-             OOMouseInteractionMode::kUiScreenNoInteraction);
+             oo::MouseInteractionMode::kUiScreenNoInteraction);
     OO_CHECK(controller->gameView() == nullptr);
     OO_CHECK(!controller->playerFileToLoad().has_value());
   }
@@ -275,39 +275,39 @@ OO_TEST(mouseInteractionModes) {
     OO_CHECK(view != nullptr);
     view->_modeNotes.clear();
 
-    controller->setMouseInteractionMode(OOMouseInteractionMode::kFlightNoMouseControl);
+    controller->setMouseInteractionMode(oo::MouseInteractionMode::kFlightNoMouseControl);
     OO_CHECK(controller->mouseInteractionMode() ==
-             OOMouseInteractionMode::kFlightNoMouseControl);
+             oo::MouseInteractionMode::kFlightNoMouseControl);
     OO_CHECK_EQ(view->_modeNotes.size(), 1u);
     OO_CHECK(view->_modeNotes.back() ==
-             std::make_pair((int)OOMouseInteractionMode::kUiScreenNoInteraction,
-                            (int)OOMouseInteractionMode::kFlightNoMouseControl));
+             std::make_pair((int)oo::MouseInteractionMode::kUiScreenNoInteraction,
+                            (int)oo::MouseInteractionMode::kFlightNoMouseControl));
 
     // The same mode again changes nothing and tells nobody.
-    controller->setMouseInteractionMode(OOMouseInteractionMode::kFlightNoMouseControl);
+    controller->setMouseInteractionMode(oo::MouseInteractionMode::kFlightNoMouseControl);
     OO_CHECK_EQ(view->_modeNotes.size(), 1u);
 
     controller->setMouseInteractionModeForUIWithMouseInteraction(true);
     OO_CHECK(controller->mouseInteractionMode() ==
-             OOMouseInteractionMode::kUiScreenWithInteraction);
+             oo::MouseInteractionMode::kUiScreenWithInteraction);
     controller->setMouseInteractionModeForUIWithMouseInteraction(false);
     OO_CHECK(controller->mouseInteractionMode() ==
-             OOMouseInteractionMode::kUiScreenNoInteraction);
+             oo::MouseInteractionMode::kUiScreenNoInteraction);
 
     // Flight: the player's mouse control chooses the mode.
     sPlayer->_mouseControlOn = true;
     controller->setMouseInteractionModeForFlight();
     OO_CHECK(controller->mouseInteractionMode() ==
-             OOMouseInteractionMode::kFlightWithMouseControl);
+             oo::MouseInteractionMode::kFlightWithMouseControl);
     sPlayer->_mouseControlOn = false;
     controller->setMouseInteractionModeForFlight();
     OO_CHECK(controller->mouseInteractionMode() ==
-             OOMouseInteractionMode::kFlightNoMouseControl);
+             oo::MouseInteractionMode::kFlightNoMouseControl);
 
     OO_CHECK_EQ(view->_modeNotes.size(), 5u);
     OO_CHECK(view->_modeNotes.back() ==
-             std::make_pair((int)OOMouseInteractionMode::kFlightWithMouseControl,
-                            (int)OOMouseInteractionMode::kFlightNoMouseControl));
+             std::make_pair((int)oo::MouseInteractionMode::kFlightWithMouseControl,
+                            (int)oo::MouseInteractionMode::kFlightNoMouseControl));
   }
 }
 
@@ -315,13 +315,13 @@ OO_TEST(pauseAndResume) {
   SetUp();
   {
     GameController* controller = ::GameController::sharedController();
-    controller->setMouseInteractionMode(OOMouseInteractionMode::kFlightWithMouseControl);
+    controller->setMouseInteractionMode(oo::MouseInteractionMode::kFlightWithMouseControl);
     sPlayer->_events.clear();
 
     controller->setGamePaused(true);
     OO_CHECK(controller->isGamePaused());
     OO_CHECK(controller->mouseInteractionMode() ==
-             OOMouseInteractionMode::kUiScreenNoInteraction);
+             oo::MouseInteractionMode::kUiScreenNoInteraction);
     OO_CHECK_EQ(sPlayer->_events.size(), 1u);
     OO_CHECK(!sPlayer->_events.empty() &&
              SameId(sPlayer->_events.back(), OOJSID("gamePaused")));
@@ -337,7 +337,7 @@ OO_TEST(pauseAndResume) {
     controller->setGamePaused(false);
     OO_CHECK(!controller->isGamePaused());
     OO_CHECK(controller->mouseInteractionMode() ==
-             OOMouseInteractionMode::kFlightWithMouseControl);  // the mode it paused in
+             oo::MouseInteractionMode::kFlightWithMouseControl);  // the mode it paused in
     OO_CHECK_EQ(sPlayer->_events.size(), 2u);
     OO_CHECK(sPlayer->_events.size() == 2 &&
              SameId(sPlayer->_events.back(), OOJSID("gameResumed")));
@@ -540,9 +540,9 @@ OO_TEST(deferredCalls) {
     std::vector<std::string> order;
     std::shared_ptr<int> kept = std::make_shared<int>(1);
 
-    OOScheduleDeferredCall([&order, kept]() { order.push_back("cxx"); }, 0.0);
+    oo::ScheduleDeferredCall([&order, kept]() { order.push_back("cxx"); }, 0.0);
     Call(cxxTarget, &TestTarget::record, nullptr, -1.0);
-    OOScheduleDeferredCall(std::function<void()>(),
+    oo::ScheduleDeferredCall(std::function<void()>(),
                            0.0);  // an empty call: nothing scheduled
     OO_CHECK(kept.use_count() == 2);
 
@@ -557,7 +557,7 @@ OO_TEST(deferredCalls) {
     OO_CHECK(order.size() == 1 && cxxTarget->_calls.size() == 1);
 
     std::shared_ptr<int> leaked = std::make_shared<int>(2);
-    OOScheduleDeferredCall(
+    oo::ScheduleDeferredCall(
         [&order, leaked]() {
           order.push_back("raise");
           oo::RaiseException(oo::GenericException, "%s", "deferred call failure");
@@ -656,12 +656,12 @@ OO_TEST(cxxAPI) {
     oo::test::Release(other);
     oo::test::Release(view);
 
-    controller->setMouseInteractionMode(OOMouseInteractionMode::kUiScreenWithInteraction);
+    controller->setMouseInteractionMode(oo::MouseInteractionMode::kUiScreenWithInteraction);
     OO_CHECK(controller->mouseInteractionMode() ==
-             OOMouseInteractionMode::kUiScreenWithInteraction);
+             oo::MouseInteractionMode::kUiScreenWithInteraction);
     controller->setMouseInteractionModeForUIWithMouseInteraction(false);
     OO_CHECK(controller->mouseInteractionMode() ==
-             OOMouseInteractionMode::kUiScreenNoInteraction);
+             oo::MouseInteractionMode::kUiScreenNoInteraction);
 
     // The state the members keep.
     controller->setPlayerFileToLoad("x.oolite-save");

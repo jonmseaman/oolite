@@ -41,11 +41,12 @@ void MyOpenGLView::initKeyMappingData() {
   // load in our keyboard scancode mappings
 #if OOLITE_WINDOWS
   const oo::PList kmap = ResourceManager::dictionaryFromFilesNamed(
-      "keymappings_windows.plist", "Config", OOResourceMergeMode::kBasic,
+      "keymappings_windows.plist", "Config", oo::ResourceMergeMode::kBasic,
       false);
 #else
   const oo::PList kmap = ResourceManager::dictionaryFromFilesNamed(
-      "keymappings_linux.plist", "Config", OOResourceMergeMode::kBasic, false);
+      "keymappings_linux.plist", "Config", oo::ResourceMergeMode::kBasic,
+      false);
 #endif
   // get the stored keyboard code from preferences
   // (oo_stringForKey:defaultValue: over the value)
@@ -97,9 +98,9 @@ void MyOpenGLView::setTypedString(const std::string& value) {
 }
 
 void MyOpenGLView::noteMouseInteractionModeChangedFrom(
-    OOMouseInteractionMode /*oldMode*/, OOMouseInteractionMode newMode) {
+    oo::MouseInteractionMode /*oldMode*/, oo::MouseInteractionMode newMode) {
   autoShowMouse();
-  setMouseInDeltaMode(OOMouseInteractionModeIsFlightMode(newMode));
+  setMouseInDeltaMode(oo::MouseInteractionModeIsFlightMode(newMode));
 }
 
 void MyOpenGLView::setVirtualJoystick(double vmx, double vmy) {
@@ -244,7 +245,7 @@ void MyOpenGLView::pollControls() {
       case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
       case SDL_EVENT_JOYSTICK_HAT_MOTION:
         static_cast<oo::SDLJoystickManager*>(
-            OOJoystickManager::sharedStickHandler())
+            oo::JoystickManager::sharedStickHandler())
             ->handleSDLEvent(
                 &event);  // the registered SDL handler (was a C cast)
         break;

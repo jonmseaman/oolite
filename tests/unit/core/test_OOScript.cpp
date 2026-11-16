@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "Entity.h"
-#include "OOCacheManager.h"
+#include "CacheManager.h"
 #include "OOPListScript.h"
 #include "OOScript.h"
 #include "oo_test.hpp"
@@ -111,7 +111,7 @@ void CacheLegacyScript(const std::string& path, const char* scriptName) {
   entry["script"] = oo::PList(oo::PList::Array{});
   oo::PList::Dict scripts;
   scripts[scriptName] = oo::PList(std::move(entry));
-  OOCacheManager::sharedCache()->setPList(oo::PList(std::move(scripts)), path,
+  oo::CacheManager::sharedCache()->setPList(oo::PList(std::move(scripts)), path,
                                           kCacheName);
 }
 

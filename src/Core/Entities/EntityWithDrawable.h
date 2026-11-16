@@ -29,15 +29,15 @@ MA 02110-1301, USA.
 #include <memory>
 #include <vector>
 
+#include "Drawable.h"  // the drawable is held by std::shared_ptr (a complete type wherever the entity is destroyed)
 #include "Entity.h"
-#include "OODrawable.h"  // the drawable is held by std::shared_ptr (a complete type wherever the entity is destroyed)
 
 namespace oo {
 
 class EntityWithDrawable : public Entity {
  public:
-  OODrawable* getDrawable();  // borrowed
-  void setDrawable(OODrawable* drawable);
+  oo::Drawable* getDrawable();  // borrowed
+  void setDrawable(oo::Drawable* drawable);
 
   double findCollisionRadius() override;
   void drawImmediate(bool immediate, bool translucent) override;
@@ -48,7 +48,7 @@ class EntityWithDrawable : public Entity {
 
  private:
   // The drawable, held.
-  std::shared_ptr<OODrawable> drawable;
+  std::shared_ptr<oo::Drawable> drawable;
 };
 
 }  // namespace oo

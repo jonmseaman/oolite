@@ -28,10 +28,10 @@ MA 02110-1301, USA.
 #include <memory>
 #include <vector>
 
+#include "Color.h"
+#include "GraphicsResetManager.h"
+#include "MacroOpenGL.h"
 #include "MyOpenGLView.h"
-#include "OOColor.h"
-#include "OOGraphicsResetManager.h"
-#include "OOMacroOpenGL.h"
 #include "PlayerEntity.h"
 #include "Texture.h"
 #include "Universe.h"
@@ -51,7 +51,7 @@ namespace {
 
 // The texture's graphics reset client (as OOLaserShotEntity's): registered
 // once, with the texture, and never destroyed.
-class BlobTextureResetClient : public OOGraphicsResetClient {
+class BlobTextureResetClient : public oo::GraphicsResetClient {
  public:
   void resetGraphicsState() override {
     oo::LightParticleEntity::resetGraphicsState();
@@ -88,14 +88,14 @@ void oo::LightParticleEntity::setDiameter(float diameter) {
   _diameter = diameter;
 }
 
-void oo::LightParticleEntity::setColor(OOColor* color) {
+void oo::LightParticleEntity::setColor(oo::Color* color) {
   // A message to a nil colour did nothing.
   if (color != nullptr)
     color->getRed(&_colorComponents[0], &_colorComponents[1],
                   &_colorComponents[2], &_colorComponents[3]);
 }
 
-void oo::LightParticleEntity::setColor(OOColor* color, GLfloat alpha) {
+void oo::LightParticleEntity::setColor(oo::Color* color, GLfloat alpha) {
   setColor(color);
   _colorComponents[3] = alpha;
 }
@@ -121,8 +121,8 @@ void oo::LightParticleEntity::drawSubEntityImmediate(bool immediate,
   while (father != nullptr && father != last) {
     // && father != (Entity *)NO_TARGET, which is nil:
     // NO_TARGET is 0
-    OOMatrix rM = father->drawRotationMatrix();
-    abspos = HPvector_add(OOHPVectorMultiplyMatrix(abspos, rM),
+    oo::Matrix rM = father->drawRotationMatrix();
+    abspos = HPvector_add(oo::HPVectorMultiplyMatrix(abspos, rM),
                           father->getPosition());
     last = father;
 
@@ -130,20 +130,20 @@ void oo::LightParticleEntity::drawSubEntityImmediate(bool immediate,
     father = oo::LiveOwner(father);  // [father owner]
   }
 
-  OOMatrix temp_matrix = OOGLPopModelView();
-  OOGLPushModelView();
+  oo::Matrix temp_matrix = oo::GLPopModelView();
+  oo::GLPushModelView();
 
   /* Flashers are drawn using the absolute view matrix */
-  OOGLLoadModelView(
-      (UNIVERSE != nullptr ? UNIVERSE->getViewMatrix() : OOMatrix{}));
+  oo::GLLoadModelView(
+      (UNIVERSE != nullptr ? UNIVERSE->getViewMatrix() : oo::Matrix{}));
   /* ...modified by the aggregate translation calculated above */
-  OOGLTranslateModelView(HPVectorToVector(HPvector_subtract(
+  oo::GLTranslateModelView(HPVectorToVector(HPvector_subtract(
       abspos,
       (PLAYER != nullptr ? PLAYER->viewpointPosition()
                          : HPVector{}))));  // move to camera-relative position
   drawImmediate(immediate, translucent);
 
-  OOGLLoadModelView(temp_matrix);
+  oo::GLLoadModelView(temp_matrix);
 }
 
 void oo::LightParticleEntity::drawImmediate(bool /*immediate*/,
@@ -166,7 +166,7 @@ void oo::LightParticleEntity::drawImmediate(bool /*immediate*/,
   if (no_draw_distance <= cam_zero_distance) return;
 
   OO_ENTER_OPENGL();
-  OOSetOpenGLState(OOOpenGLStateID::kAdditiveBlending);
+  OOSetOpenGLState(oo::OpenGLStateID::kAdditiveBlending);
 
   OOGL(glPushAttrib(GL_COLOR_BUFFER_BIT | GL_ENABLE_BIT));
   OOGL(glEnable(GL_BLEND));
@@ -188,8 +188,8 @@ void oo::LightParticleEntity::drawImmediate(bool /*immediate*/,
   oo::ViewID viewDir =
       (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{});
   if (viewDir != oo::ViewID::kGUIDisplay)
-    OOGLMultModelView(
-        (PLAYER != nullptr ? PLAYER->drawRotationMatrix() : OOMatrix{}));
+    oo::GLMultModelView(
+        (PLAYER != nullptr ? PLAYER->drawRotationMatrix() : oo::Matrix{}));
   if (oo::Texture* blob = texture())
     blob->apply();  // a message to nil did nothing
 
@@ -319,7 +319,7 @@ void oo::LightParticleEntity::setUpTexture() {
         oo::TextureFlags::kMinFilterMipMap |
             oo::TextureFlags::kMagFilterLinear | oo::TextureFlags::kAlphaMask,
         kOOTextureDefaultAnisotropy / 2.0, 0.0));
-    OOGraphicsResetManager::sharedManager()->registerCxxClient(
+    oo::GraphicsResetManager::sharedManager()->registerCxxClient(
         new BlobTextureResetClient);
   }
 }

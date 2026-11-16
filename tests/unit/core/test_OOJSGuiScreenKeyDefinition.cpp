@@ -271,20 +271,20 @@ std::shared_ptr<OOJSGuiScreenKeyDefinition> Keys(std::optional<std::string> name
 OO_TEST(interfaceCompare) {
   // By name, ignoring case.
   OO_CHECK_EQ(Keys("apple")->interfaceCompare(Keys("Banana").get()),
-              OOComparisonResult::kAscending);
+              oo::ComparisonResult::kAscending);
   OO_CHECK_EQ(Keys("banana")->interfaceCompare(Keys("APPLE").get()),
-              OOComparisonResult::kDescending);
+              oo::ComparisonResult::kDescending);
   OO_CHECK_EQ(Keys("same")->interfaceCompare(Keys("SAME").get()),
-              OOComparisonResult::kSame);
+              oo::ComparisonResult::kSame);
   // No name of its own: the same as anything (a message to nil); the other's
   // missing name is the empty string, as is null's.
   OO_CHECK_EQ(Keys(std::nullopt)->interfaceCompare(Keys("a").get()),
-              OOComparisonResult::kSame);
+              oo::ComparisonResult::kSame);
   OO_CHECK_EQ(Keys("a")->interfaceCompare(Keys(std::nullopt).get()),
-              OOComparisonResult::kDescending);
+              oo::ComparisonResult::kDescending);
   OO_CHECK_EQ(Keys("")->interfaceCompare(Keys(std::nullopt).get()),
-              OOComparisonResult::kSame);
-  OO_CHECK_EQ(Keys("a")->interfaceCompare(nullptr), OOComparisonResult::kDescending);
+              oo::ComparisonResult::kSame);
+  OO_CHECK_EQ(Keys("a")->interfaceCompare(nullptr), oo::ComparisonResult::kDescending);
 }
 
 OO_TEST(engineReset) {

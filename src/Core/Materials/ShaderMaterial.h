@@ -36,8 +36,8 @@ SOFTWARE.
 #include <vector>
 
 #include "BasicMaterial.h"
-#include "OOEnumFlags.h"
-#include "OOMaths.h"
+#include "EnumFlags.h"
+#include "Maths.h"
 #include "ShaderProgram.h"
 #include "oofnd/PList.hpp"
 

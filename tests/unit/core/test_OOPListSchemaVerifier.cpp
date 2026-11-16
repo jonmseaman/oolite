@@ -21,9 +21,9 @@
 #include <string>
 #include <vector>
 
-#include "OODescription.h"
+#include "Description.h"
 #include "PListSchemaVerifier.h"
-#include "OOStringParsing.h"
+#include "StringParsing.h"
 #include "oo_test.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/objc/Exception.h"

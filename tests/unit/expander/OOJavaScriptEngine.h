@@ -3,7 +3,7 @@
 #pragma once
 #include <cstdarg>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 typedef struct JSContext JSContext;
 JSContext* OOJSAcquireContext(void);
 void OOJSRelinquishContext(JSContext* context);

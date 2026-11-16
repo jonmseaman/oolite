@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include "OOColor.h"
+#include "Color.h"
 #include "CombinedEmissionMapGenerator.h"
 #include "ConcreteTexture.h"
 #include "TextureInternal.h"
@@ -112,10 +112,10 @@ oo::TextureGenerator* Kept(std::shared_ptr<oo::TextureGenerator> generator) {
 // autoreleased; null for null), as the facade initialiser
 // initWithEmissionMapSpec:... answered it.
 oo::TextureGenerator* NewGenerator(const oo::PList& emission,
-                                 OOColor* emissionColor, oo::Texture* diffuseMap,
-                                 OOColor* diffuseColor,
+                                 oo::Color* emissionColor, oo::Texture* diffuseMap,
+                                 oo::Color* diffuseColor,
                                  const oo::PList& illumination,
-                                 OOColor* illuminationColor,
+                                 oo::Color* illuminationColor,
                                  const oo::PList& options) {
   return Kept(oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
       emission, emissionColor, diffuseMap, diffuseColor, illumination,
@@ -126,9 +126,9 @@ oo::TextureGenerator* NewGenerator(const oo::PList& emission,
 // likewise.
 oo::TextureGenerator* NewCombinedGenerator(const oo::PList& map,
                                          oo::Texture* diffuseMap,
-                                         OOColor* diffuseColor,
-                                         OOColor* emissionColor,
-                                         OOColor* illuminationColor) {
+                                         oo::Color* diffuseColor,
+                                         oo::Color* emissionColor,
+                                         oo::Color* illuminationColor) {
   return Kept(oo::CombinedEmissionMapGenerator::
                   generatorWithEmissionAndIlluminationMapSpec(
                       map, diffuseMap, diffuseColor, emissionColor,
@@ -182,7 +182,7 @@ OO_TEST(nothingToBake) {
   {
     oo::AutoreleaseScope pool;
     OO_CHECK(NewGenerator(oo::PList(), nullptr, nullptr, nullptr, oo::PList(),
-                          OOColor::redColor().get(),
+                          oo::Color::redColor().get(),
                           oo::PList("e.png")) == nullptr);
     OO_CHECK(NewCombinedGenerator(oo::PList(), nullptr, nullptr, nullptr, nullptr) == nullptr);
   }
@@ -221,7 +221,7 @@ OO_TEST(cacheKeys) {
   SetUp();
   {
     oo::AutoreleaseScope pool;
-    std::shared_ptr<OOColor> red = OOColor::redColor();
+    std::shared_ptr<oo::Color> red = oo::Color::redColor();
     const std::string redRGBA = red->rgbaDescription().value_or("");
 
     OO_CHECK(NewGenerator(oo::PList("e.png"), red.get(), nullptr, nullptr, oo::PList(),
@@ -233,7 +233,7 @@ OO_TEST(cacheKeys) {
     // illumination. The generator before the expected key, the order Clang
     // evaluates the two sides of ==.
     const std::optional<std::string> whiteKey =
-        NewGenerator(oo::PList("e.png"), OOColor::whiteColor().get(),
+        NewGenerator(oo::PList("e.png"), oo::Color::whiteColor().get(),
                      DiffuseMap(), nullptr, oo::PList(), nullptr, oo::PList("e.png"))
             ->cacheKey();
     OO_CHECK(whiteKey == std::optional<std::string>("emission map;emission:{" +
@@ -245,7 +245,7 @@ OO_TEST(cacheKeys) {
     // The illumination colour is the diffuse colour times the illumination
     // colour.
     OO_CHECK(NewGenerator(oo::PList(), nullptr, diffuse, red.get(),
-                          oo::PList("i.png"), OOColor::yellowColor().get(),
+                          oo::PList("i.png"), oo::Color::yellowColor().get(),
                           oo::PList("i.png"))
                  ->cacheKey() ==
              std::optional<std::string>("illumination map;illumination:{" +
@@ -275,7 +275,7 @@ OO_TEST(bakesTheEmissionMap) {
     // Emission alone, tinted (0.5, 1, 0.25).
     Baked baked;
     Bake(NewGenerator(oo::PList("e.png"),
-                      OOColor::colorWithRed(0.5f, 1.0f, 0.25f, 1.0f).get(), nullptr,
+                      oo::Color::colorWithRed(0.5f, 1.0f, 0.25f, 1.0f).get(), nullptr,
                       nullptr, oo::PList(), nullptr, oo::PList("e.png")),
          baked);
     OO_CHECK(baked.ok && baked.format == oo::kPixMapRGBA &&
@@ -340,20 +340,20 @@ OO_TEST(aTextureOfTheGenerator) {
   {
     oo::AutoreleaseScope pool;
     oo::Texture* texture = Autoreleased(oo::Texture::textureWithGenerator(
-        NewGenerator(oo::PList("e.png"), OOColor::redColor().get(), nullptr, nullptr,
+        NewGenerator(oo::PList("e.png"), oo::Color::redColor().get(), nullptr, nullptr,
                      oo::PList(), nullptr, oo::PList("e.png"))));
     OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(texture) != nullptr));
     texture->ensureFinishedLoading();
     OO_CHECK(texture->isFinishedLoading() && texture->dimensions().width > 0);
     OO_CHECK(texture->cacheKey() ==
-             NewGenerator(oo::PList("e.png"), OOColor::redColor().get(), nullptr,
+             NewGenerator(oo::PList("e.png"), oo::Color::redColor().get(), nullptr,
                           nullptr, oo::PList(), nullptr, oo::PList("e.png"))
                  ->cacheKey());
 
     // While that texture is cached, a generator of its key reads no map, so it
     // bakes nothing.
     Baked baked;
-    Bake(NewGenerator(oo::PList("e.png"), OOColor::redColor().get(), nullptr, nullptr,
+    Bake(NewGenerator(oo::PList("e.png"), oo::Color::redColor().get(), nullptr, nullptr,
                       oo::PList(), nullptr, oo::PList("e.png")),
          baked);
     OO_CHECK(!baked.ok);
@@ -367,13 +367,13 @@ OO_TEST(description) {
   {
     oo::AutoreleaseScope pool;
     const std::string description =
-        NewGenerator(oo::PList("e.png"), OOColor::redColor().get(), nullptr, nullptr,
+        NewGenerator(oo::PList("e.png"), oo::Color::redColor().get(), nullptr, nullptr,
                      oo::PList(), nullptr, oo::PList("e.png"))
             ->description();
     OO_CHECK(description.starts_with("<OOCombinedEmissionMapGenerator 0x"));
     OO_CHECK(description.find("{emission map: ") != std::string::npos);
     OO_CHECK(description.find(
-                 " * " + OOColor::redColor()->rgbaDescription().value_or("") +
+                 " * " + oo::Color::redColor()->rgbaDescription().value_or("") +
                  "}") != std::string::npos);
   }
 }
@@ -392,8 +392,8 @@ OO_TEST(cxxApi) {
                  generatorWithEmissionAndIlluminationMapSpec(
                      oo::PList(), nullptr, nullptr, nullptr, nullptr, oo::PList()));
 
-    const std::shared_ptr<OOColor> red = OOColor::colorWithRGBAComponents(
-        (OORGBAComponents){1.0f, 0.0f, 0.0f, 1.0f});
+    const std::shared_ptr<oo::Color> red = oo::Color::colorWithRGBAComponents(
+        (oo::RGBAComponents){1.0f, 0.0f, 0.0f, 1.0f});
     const std::shared_ptr<oo::CombinedEmissionMapGenerator> generator =
         oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
             oo::PList("e.png"), red.get(), nullptr, nullptr, oo::PList(), nullptr,

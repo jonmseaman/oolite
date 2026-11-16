@@ -26,8 +26,8 @@
 #include <cmath>
 
 #include "MyOpenGLView.h"
-#include "OOColor.h"
-#include "OOSkyDrawable.h"
+#include "Color.h"
+#include "SkyDrawable.h"
 #include "PlayerEntity.h"
 #include "SkyEntity.h"
 #include "Universe.h"
@@ -64,10 +64,10 @@ TestUniverse* sUniverse = nullptr;
 TestPlayer* sPlayer = nullptr;
 
 // The drawable's star set-up's stand-in: the colours the sky passed.
-std::shared_ptr<OOColor> sStarColor1;
-std::shared_ptr<OOColor> sStarColor2;
+std::shared_ptr<oo::Color> sStarColor1;
+std::shared_ptr<oo::Color> sStarColor2;
 
-void SetUpStars(OOSkyDrawable*, OOColor* color1, OOColor* color2) {
+void SetUpStars(oo::SkyDrawable*, oo::Color* color1, oo::Color* color2) {
   sStarColor1 = oo::share(color1);
   sStarColor2 = oo::share(color2);
 }
@@ -76,9 +76,9 @@ void SetUpStars(OOSkyDrawable*, OOColor* color1, OOColor* color2) {
 
 // The drawable's test seam for its star set-up.
 struct OOSkyDrawableTestAccess {
-  static void SetStarSetUpStandIn(void (*standIn)(OOSkyDrawable*, OOColor*,
-                                                  OOColor*)) {
-    OOSkyDrawable::sSetUpStarsStandIn = standIn;
+  static void SetStarSetUpStandIn(void (*standIn)(oo::SkyDrawable*, oo::Color*,
+                                                  oo::Color*)) {
+    oo::SkyDrawable::sSetUpStarsStandIn = standIn;
   }
 };
 
@@ -120,7 +120,7 @@ oo::PList Dict(oo::PList::Dict entries) {
 
 bool Near(double a, double b) { return std::fabs(a - b) < 1e-4; }
 
-bool ColorIs(OOColor* color, float r, float g, float b, float a) {
+bool ColorIs(oo::Color* color, float r, float g, float b, float a) {
   if (color == nullptr) return false;
   float cr = -1, cg = -1, cb = -1, ca = -1;
   color->getRed(&cr, &cg, &cb, &ca);
@@ -131,7 +131,7 @@ bool ColorIs(OOColor* color, float r, float g, float b, float a) {
 Entity* Sky(const oo::PList& info) {
   const std::shared_ptr<SkyEntity> sky = oo::makeShared<SkyEntity>();
   Entity* object = oo::MadeEntity(sky);
-  sky->initWithColors(OOColor::redColor().get(), OOColor::blueColor().get(),
+  sky->initWithColors(oo::Color::redColor().get(), oo::Color::blueColor().get(),
                       info);
   return object;
 }
@@ -146,7 +146,7 @@ OO_TEST(made) {
     Entity* sky = Sky(Dict({{"sky_n_stars", oo::PList(7)}}));
     OO_CHECK(sky != nullptr && SkyPart(sky) != nullptr &&
              dynamic_cast<oo::EntityWithDrawable*>(sky) != nullptr);
-    OO_CHECK(dynamic_cast<OOSkyDrawable*>(SkyPart(sky)->getDrawable()) !=
+    OO_CHECK(dynamic_cast<oo::SkyDrawable*>(SkyPart(sky)->getDrawable()) !=
              nullptr);
     OO_CHECK(sky->status() == oo::EntityStatus::kEffect);
     OO_CHECK(sky->isSky() && sky->isVisible() && !sky->canCollide());

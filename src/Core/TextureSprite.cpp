@@ -1,0 +1,107 @@
+/*
+
+OOTextureSprite.m
+
+Oolite
+Copyright (C) 2004-2013 Giles C Williams and contributors
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301, USA.
+
+*/
+
+#include "TextureSprite.h"
+
+#include <memory>
+
+#include "MacroOpenGL.h"
+#include "Texture.h"
+
+std::shared_ptr<oo::TextureSprite> oo::TextureSprite::initWithTexture(
+    oo::Texture* inTexture) {
+  return initWithTexture(
+      inTexture, (inTexture != nullptr)
+                     ? inTexture->originalDimensions()
+                     : NSSize{});  // a message to nil answered a zero size
+}
+
+// -initWithTexture:size:'s failure test, then the object.
+std::shared_ptr<oo::TextureSprite> oo::TextureSprite::initWithTexture(
+    oo::Texture* inTexture, NSSize spriteSize) {
+  if (inTexture == nullptr) {
+    return nullptr;
+  }
+
+  return std::shared_ptr<oo::TextureSprite>(
+      new oo::TextureSprite(inTexture, spriteSize), oo::Dispose{});
+}
+
+oo::TextureSprite::TextureSprite(oo::Texture* inTexture, NSSize spriteSize) {
+  texture = oo::share(inTexture);
+  size = spriteSize;
+}
+
+NSSize oo::TextureSprite::getSize() { return size; }
+
+void oo::TextureSprite::blitToX(float x, float y, float z, float a) {
+  OO_ENTER_OPENGL();
+  OOSetOpenGLState(oo::OpenGLStateID::kOverlay);
+
+  a = oo::Clamp_0_1_f(a);
+  OOGL(glEnable(GL_TEXTURE_2D));
+  OOGL(glColor4f(1.0, 1.0, 1.0, a));
+
+  // Note that the textured Quad is drawn ACW from the top left.
+
+  if (texture != nullptr) texture->apply();  // a message to nil did nothing
+  OOGLBEGIN(GL_QUADS);
+  glTexCoord2f(0.0, 0.0);
+  glVertex3f(x, static_cast<GLfloat>(y + size.height), z);
+
+  glTexCoord2f(0.0, 1.0);
+  glVertex3f(x, y, z);
+
+  glTexCoord2f(1.0, 1.0);
+  glVertex3f(static_cast<GLfloat>(x + size.width), y, z);
+
+  glTexCoord2f(1.0, 0.0);
+  glVertex3f(static_cast<GLfloat>(x + size.width),
+             static_cast<GLfloat>(y + size.height), z);
+  OOGLEND();
+
+  OOGL(glDisable(GL_TEXTURE_2D));
+
+  OOVerifyOpenGLState();
+}
+
+void oo::TextureSprite::blitCentredToX(float x, float y, float z, float a) {
+  float xs = static_cast<float>(x - size.width / 2.0);
+  float ys = static_cast<float>(y - size.height / 2.0);
+  blitToX(xs, ys, z, a);
+}
+
+void oo::TextureSprite::blitBackgroundCentredToX(float x, float y, float z,
+                                                 float a) {
+  // Without distance, coriolis stations would be rendered behind the background
+  // image. Set an arbitrary value for distance, might not be sufficient for
+  // really huge ships.
+  float distance = 512.0f;
+
+  size.width *= distance;
+  size.height *= distance;
+  blitCentredToX(x, y, z * distance, a);
+  size.width /= distance;
+  size.height /= distance;
+}

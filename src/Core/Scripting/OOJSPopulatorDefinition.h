@@ -33,8 +33,8 @@ MA 02110-1301, USA.
 
 #include <memory>
 
-#include "OOFoundation.h"
-#include "OOMaths.h"
+#include "Foundation.h"
+#include "Maths.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 

@@ -39,10 +39,10 @@
 
 #include "GameController.h"
 #include "MyOpenGLView.h"
-#include "OOHeadless.h"
+#include "Headless.h"
 #include "OOJSEngineCore.h"
-#include "OOLogOutputHandler.h"
-#include "OOLoggingExtended.h"
+#include "LogOutputHandler.h"
+#include "LoggingExtended.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityKeyMapper.h"
 #include "oofnd/Defaults.hpp"
@@ -369,11 +369,11 @@ void RecordLogLine(std::string_view line) {
     event.isError = true;
   }
   AddEvent(std::move(event));
-  OOLogOutputHandlerPrintLine(line);
+  oo::LogOutputHandlerPrintLine(line);
 }
 
 // The game's script events, as they are dispatched.
-class Observer final : public OOGameObserver {
+class Observer final : public oo::GameObserver {
  public:
   void shipEvent(double time, ShipEntity* ship, std::string_view name) override {
     Event event;
@@ -477,7 +477,7 @@ bool ShipHandle::alive() const {
   if (ship == nullptr || UNIVERSE == nullptr) return false;
   if (ship->status() == oo::EntityStatus::kDead) return false;
   return UNIVERSE->entityForUniversalID(
-             static_cast<OOUniversalID>(id_)) == ship.get();
+             static_cast<oo::UniversalID>(id_)) == ship.get();
 }
 
 ShipEntity* ShipHandle::operator->() const {
@@ -564,11 +564,11 @@ namespace {
 
 // The options every game here shares: headless, seeded, no add-ons, fixed
 // step and script limit.
-OOHeadlessOptions BaseOptions(std::uint32_t seed) {
-  OOHeadlessOptions options;
+oo::HeadlessOptions BaseOptions(std::uint32_t seed) {
+  oo::HeadlessOptions options;
   options.headless = true;
   options.seed = seed;
-  options.addOns = OOHeadlessOptions::AddOns::kNone;
+  options.addOns = oo::HeadlessOptions::AddOns::kNone;
   options.step = kStepSeconds;
   options.scriptTimeLimit = kScriptTimeLimitSeconds;
   return options;
@@ -648,7 +648,7 @@ Settings& Settings::keyboardCode(std::string_view code) {
   return *this;
 }
 
-bool Game::start(const OOHeadlessOptions& options, const Settings& settings) {
+bool Game::start(const oo::HeadlessOptions& options, const Settings& settings) {
   State& state = TheState();
   if (state.exists) {
     fail("a second Game in one process: one game per process; use "
@@ -658,7 +658,7 @@ bool Game::start(const OOHeadlessOptions& options, const Settings& settings) {
   }
   const auto startedAt = std::chrono::steady_clock::now();
   PrepareProcess();
-  OOLoggingInit();
+  oo::LoggingInit();
   oo::log::logger().setSink(&RecordLogLine);
   GameController::sharedController()->setObserver(&TheObserver());
   WriteSettings(settings.remaps_, settings.keyboardCode_);
@@ -692,7 +692,7 @@ bool Game::start(const OOHeadlessOptions& options, const Settings& settings) {
 }
 
 Game Game::atStartScreen(std::uint32_t seed) {
-  OOHeadlessOptions options = BaseOptions(seed);
+  oo::HeadlessOptions options = BaseOptions(seed);
   options.populate = true;
   options.startInFlight = false;
   options.inputView = true;
@@ -837,7 +837,7 @@ std::string Trimmed(const std::string& text) {
   return text.substr(first, text.find_last_not_of(' ') - first + 1);
 }
 
-std::string RowText(GuiDisplayGen* gui, OOGUIRow row) {
+std::string RowText(GuiDisplayGen* gui, oo::GUIRow row) {
   if (gui == nullptr || row < 0) return std::string();
   const oo::PList text = gui->objectForRow(row);
   if (const std::string* string = text.getIf<std::string>()) return Trimmed(*string);
@@ -1119,7 +1119,7 @@ std::vector<long> Game::selectableRows() const {
   for (std::size_t row = range.location; row < range.location + range.length;
        ++row) {
     const std::optional<std::string> key =
-        gui->keyForRow(static_cast<OOGUIRow>(row));
+        gui->keyForRow(static_cast<oo::GUIRow>(row));
     if (key.has_value() && !key->empty() && *key != "SKIP-ROW") {
       rows.push_back(static_cast<long>(row));
     }
@@ -1145,14 +1145,14 @@ void Game::checkPressEffect(std::string_view key, bool changed,
 }
 
 Game Game::scenario(std::uint32_t seed) {
-  OOHeadlessOptions options = BaseOptions(seed);
+  oo::HeadlessOptions options = BaseOptions(seed);
   options.populate = false;
   options.startInFlight = true;
   return clearedScenario(options, Settings());
 }
 
 Game Game::inFlightWithKeys(std::uint32_t seed, const Settings& settings) {
-  OOHeadlessOptions options = BaseOptions(seed);
+  oo::HeadlessOptions options = BaseOptions(seed);
   options.populate = false;
   options.startInFlight = true;
   options.inputView = true;
@@ -1164,7 +1164,7 @@ Game Game::inFlightWithKeys(std::uint32_t seed, const Settings& settings) {
 }
 
 Game Game::docked(std::uint32_t seed, const Settings& settings) {
-  OOHeadlessOptions options = BaseOptions(seed);
+  oo::HeadlessOptions options = BaseOptions(seed);
   options.populate = true;
   options.startInFlight = false;
   options.inputView = true;
@@ -1190,7 +1190,7 @@ Game Game::docked(std::uint32_t seed, const Settings& settings) {
   return game;
 }
 
-Game Game::clearedScenario(const OOHeadlessOptions& options,
+Game Game::clearedScenario(const oo::HeadlessOptions& options,
                            const Settings& settings) {
   if (!start(options, settings)) return Game();
 
@@ -1302,7 +1302,7 @@ constexpr double kNearPlayerMetres = 5000.0;
 
 // Somewhere within metres of centre, from the game's seeded generator.
 HPVector Near(HPVector centre, double metres) {
-  const HPVector direction = OORandomUnitHPVector();
+  const HPVector direction = oo::RandomUnitHPVector();
   return HPvector_add(centre, HPvector_multiply_scalar(direction, metres * randf()));
 }
 
@@ -1369,7 +1369,7 @@ void Game::remove(ShipEntity* ship) {
   std::shared_ptr<ShipEntity> held = oo::share(ship);
   const std::weak_ptr<ShipEntity> watched = held;
   held.reset();
-  const OOUniversalID id = ship->getUniversalID();
+  const oo::UniversalID id = ship->getUniversalID();
   for (int i = 0; i < 60; ++i) {  // a second at most
     const std::shared_ptr<ShipEntity> still = watched.lock();
     if (still == nullptr || universe()->entityForUniversalID(id) != still.get()) return;
@@ -1523,7 +1523,7 @@ std::vector<std::string> Game::logLinesContaining(std::string_view text) const {
   return lines;
 }
 
-const OOPresentationRecord& Game::presentation() const {
+const oo::PresentationRecord& Game::presentation() const {
   return controller()->presentation();
 }
 
@@ -1649,7 +1649,7 @@ void FinishScratch(int result) {
   const State& state = TheState();
   if (!state.scratch.empty()) {
     if (result == 0) {
-      OOLoggingTerminate();  // close the log, so its directory can go
+      oo::LoggingTerminate();  // close the log, so its directory can go
       std::error_code error;
       fs::remove_all(state.scratch, error);
     } else {

@@ -60,6 +60,7 @@ SOFTWARE.
 #endif
 
 #include "AIStateMachineVerifierStage.h"
+#include "CacheManager.h"
 #include "CheckDemoShipsPListVerifierStage.h"
 #include "CheckEquipmentPListVerifierStage.h"
 #include "CheckJSSyntaxVerifierStage.h"
@@ -69,8 +70,7 @@ SOFTWARE.
 #include "DebugStandards.h"
 #include "GameController.h"
 #include "LogIndentScope.h"
-#include "OOCacheManager.h"
-#include "OOLoggingExtended.h"
+#include "LoggingExtended.h"
 #include "OXPVerifierStage.h"
 #include "ResourceManager.h"
 #include "TextureVerifierStage.h"
@@ -380,8 +380,8 @@ void oo::OXPVerifier::run() {
   /*	We need to be able to look up internal files, but not other OXP files.
           To do this without clobbering the disk cache, we disable cache writes.
   */
-  OOCacheManager::sharedCache()->flush();
-  OOCacheManager::sharedCache()->setAllowCacheWrites(false);
+  oo::CacheManager::sharedCache()->flush();
+  oo::CacheManager::sharedCache()->setAllowCacheWrites(false);
   /* FIXME: the OXP verifier should load files from OXPs which have
    * been explicitly listed as required_oxps in the
    * manifest. Reading the manifest from the OXP being verified and
@@ -403,7 +403,7 @@ void oo::OXPVerifier::run() {
 }
 
 void oo::OXPVerifier::setUpLogOverrides() {
-  OOLogSetShowMessageClassTemporary(
+  oo::LogSetShowMessageClassTemporary(
       _verifierPList.get<bool>("logShowMessageClassOverride", false));
 
   const oo::PList* overrides =
@@ -777,7 +777,7 @@ void oo::OXPVerifier::dumpDebugGraphviz() {
   }
 }
 
-#include "OOLogOutputHandler.h"
+#include "LogOutputHandler.h"
 
 namespace {
 
@@ -786,7 +786,7 @@ void SwitchLogFile(const std::string& name) {
   const std::string logName = oo::str::appendingPathExtension(name, "log");
   OO_LOG("verifyOXP.switchingLog", "Switching log files -- logging to \"{}\".",
          logName);
-  OOLogOutputHandlerChangeLogFile(logName);
+  oo::LogOutputHandlerChangeLogFile(logName);
   // #else
   //	OO_LOG("verifyOXP.switchingLog", "Switching logging to <stdout>.");
   //	OOLogOutputHandlerStartLoggingToStdout();
@@ -809,7 +809,7 @@ void OpenLogFile() {
 #if OOLITE_WINDOWS
       // ShellExecute will automatically use the app associated with .log files
       // A nil path's -UTF8String was NULL.
-      const std::optional<std::string> logPath = OOLogHandlerGetLogPath();
+      const std::optional<std::string> logPath = oo::LogHandlerGetLogPath();
       ShellExecute(nullptr, nullptr,
                    logPath.has_value() ? logPath->c_str() : nullptr, nullptr,
                    nullptr, SW_SHOWNORMAL);
@@ -821,9 +821,9 @@ void OpenLogFile() {
       // value to void seems to keep it quiet for now
       // Nothing to do here, since we dump to stdout instead of to a file.
       // OOLogOutputHandlerStopLoggingToStdout();
-      (void)system(
-          std::format("cat \"{}\"", OOLogHandlerGetLogPath().value_or("(null)"))
-              .c_str());
+      (void)system(std::format("cat \"{}\"",
+                               oo::LogHandlerGetLogPath().value_or("(null)"))
+                       .c_str());
 #else
       do {
       } while (0);

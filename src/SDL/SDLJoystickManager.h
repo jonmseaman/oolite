@@ -52,13 +52,13 @@ MA 02110-1301, USA.
 #include <set>
 #include <string>
 
-#include "OOFoundation.h"
-#include "OOJoystickManager.h"
+#include "Foundation.h"
+#include "JoystickManager.h"
 #include "oofnd/Object.hpp"
 
 namespace oo {
 
-class SDLJoystickManager : public OOJoystickManager {
+class SDLJoystickManager : public oo::JoystickManager {
  public:
   SDLJoystickManager();  // opens the sticks SDL reports (at most MAX_STICKS)
 

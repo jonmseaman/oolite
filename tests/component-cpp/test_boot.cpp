@@ -17,9 +17,9 @@
 #include <vector>
 
 #include "GameController.h"
-#include "OOHeadless.h"
+#include "Headless.h"
 #include "OOJSEngineCore.h"
-#include "OOSound.h"
+#include "Sound.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
 #include "Universe.h"
@@ -109,10 +109,10 @@ OO_TEST(six_hundred_steps_advance_game_time_by_10_s) {
 // follows game time.
 OO_TEST(the_ship_clock_starts_from_the_seed) {
   Game game = Game::current();
-  const OOGameClock& clock = game.controller()->clock();
+  const oo::GameClock& clock = game.controller()->clock();
   OO_CHECK(clock.isManual());
   const double expected =
-      OOGameClock::manualTimeOfDayStart(kSeed) + clock.monotonicSeconds();
+      oo::GameClock::manualTimeOfDayStart(kSeed) + clock.monotonicSeconds();
   OO_CHECK(std::fabs(clock.timeOfDay() - std::fmod(expected, 86400.0)) < 1e-6);
   const double shipBefore = game.player()->clockTime();
   const double gameBefore = game.time();
@@ -128,7 +128,7 @@ OO_TEST(the_ship_clock_starts_from_the_seed) {
 OO_TEST(a_deferred_call_fires_on_game_time) {
   Game game = Game::current();
   bool fired = false;
-  OOScheduleDeferredCall([&fired] { fired = true; }, 2.0);
+  oo::ScheduleDeferredCall([&fired] { fired = true; }, 2.0);
   game.step(119);
   OO_CHECK(!fired);
   game.step(1);
@@ -141,7 +141,7 @@ OO_TEST(a_deferred_call_fires_on_game_time) {
 OO_TEST(math_random_draws_from_the_seed) {
   Game game = Game::current();
   const std::uint64_t taken = OOJSSeededMathRandomDraws();
-  OOSeededRandom expected(kSeed);
+  oo::SeededRandom expected(kSeed);
   for (std::uint64_t i = 0; i < taken; ++i) expected.nextDouble();
   std::printf("Math.random drawn %llu times before this case\n",
               static_cast<unsigned long long>(taken));

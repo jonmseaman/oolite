@@ -42,8 +42,8 @@ MA 02110-1301, USA.
 #include <optional>
 #include <string>
 
-#include "OOFoundation.h"
-#include "OOTypes.h"
+#include "Foundation.h"
+#include "Types.h"
 #include "oofnd/PList.hpp"
 
 class OOScriptTimer : public oo::PListForeign {
@@ -52,12 +52,12 @@ class OOScriptTimer : public oo::PListForeign {
   // initialiser answered nil (a next time in the past, or negative, with no
   // interval).
   static std::shared_ptr<OOScriptTimer> timerWithNextTime(
-      OOTimeAbsolute nextTime, OOTimeDelta interval);
+      oo::TimeAbsolute nextTime, oo::TimeDelta interval);
 
   // [[OOScriptTimer alloc] initOneShotTimerWithDelay:]: sets nextTime to
   // current time + delay.
   static std::shared_ptr<OOScriptTimer> oneShotTimerWithDelay(
-      OOTimeDelta delay);
+      oo::TimeDelta delay);
 
   ~OOScriptTimer() override;
 
@@ -80,11 +80,11 @@ class OOScriptTimer : public oo::PListForeign {
   // for any other timer.
   virtual std::optional<std::string> oo_jsClassName() { return std::nullopt; }
 
-  OOTimeAbsolute nextTime();
+  oo::TimeAbsolute nextTime();
   bool setNextTime(
-      OOTimeAbsolute nextTime);  // Only works when timer is not scheduled.
-  OOTimeDelta interval();
-  void setInterval(OOTimeDelta interval);
+      oo::TimeAbsolute nextTime);  // Only works when timer is not scheduled.
+  oo::TimeDelta interval();
+  void setInterval(oo::TimeDelta interval);
 
   // Subclass responsibility:
   virtual void timerFired();
@@ -98,7 +98,7 @@ class OOScriptTimer : public oo::PListForeign {
 
   bool isValidForScheduling();
 
-  OOComparisonResult compareByNextFireTime(OOScriptTimer* other);
+  oo::ComparisonResult compareByNextFireTime(OOScriptTimer* other);
 
  protected:
   OOScriptTimer() = default;
@@ -106,12 +106,12 @@ class OOScriptTimer : public oo::PListForeign {
   // The initialisers (-initWithNextTime:interval:,
   // -initOneShotTimerWithDelay:), for the factories above and a subclass's:
   // false where they answered nil.
-  bool initWithNextTime(OOTimeAbsolute nextTime, OOTimeDelta interval);
-  bool initOneShotTimerWithDelay(OOTimeDelta delay);
+  bool initWithNextTime(oo::TimeAbsolute nextTime, oo::TimeDelta interval);
+  bool initOneShotTimerWithDelay(oo::TimeDelta delay);
 
  private:
-  OOTimeAbsolute _nextTime = {};
-  OOTimeDelta _interval = {};
+  oo::TimeAbsolute _nextTime = {};
+  oo::TimeDelta _interval = {};
   bool _isScheduled = {};
   bool _hasBeenRun = {};  // Needed for one-shot timers.
 };

@@ -29,9 +29,9 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "OOCacheManager.h"
+#include "CacheManager.h"
 #include "OOLegacyScriptWhitelist.h"
-#include "OOPListParsing.h"
+#include "PListParsing.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 
 namespace {
@@ -53,14 +53,14 @@ constexpr const char* kCacheName = "sanitized legacy scripts";
 
 std::optional<std::vector<std::shared_ptr<OOScript>>>
 OOPListScript::scriptsInPListFile(const std::string& filePath) {
-  OOCacheManager* cache = OOCacheManager::sharedCache();
+  oo::CacheManager* cache = oo::CacheManager::sharedCache();
   const oo::PList cachedScripts = (cache != nullptr)
                                       ? cache->pListForKey(filePath, kCacheName)
                                       : oo::PList();
   if (cachedScripts) {
     return loadCachedScripts(cachedScripts);
   } else {
-    oo::PList dict = OOPropertyListFromFile(filePath);
+    oo::PList dict = oo::PropertyListFromFile(filePath);
     if (!dict.isDict())
       dict = oo::PList();  // a dictionary or nothing, as OODictionaryFromFile
                            // answered (its plist.wrongType line, which named
@@ -152,7 +152,7 @@ OOPListScript::scriptsFromDictionaryOfScripts(const oo::PList& dictionary,
     }
   }
 
-  if (OOCacheManager* cache = OOCacheManager::sharedCache())
+  if (oo::CacheManager* cache = oo::CacheManager::sharedCache())
     cache->setPList(oo::PList(std::move(cachedScripts)), filePath, kCacheName);
 
   return result;

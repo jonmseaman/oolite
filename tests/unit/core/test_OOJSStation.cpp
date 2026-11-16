@@ -16,19 +16,19 @@
 	a native's exception) and what the category answers the engine. Run: tests/run.sh unit
 */
 
-#include "OOFoundation.h"
-#include "OOCommodities.h"
-#include "OOCommodityMarket.h"
+#include "Foundation.h"
+#include "Commodities.h"
+#include "CommodityMarket.h"
 #include "OOJSInterfaceDefinition.h"
-#include "OOEquipmentType.h"
-#include "OOStringExpander.h"
-#include "OOShipRegistry.h"
-#include "OOTypes.h"
-#include "OOEntityEnums.h"  // IWYU pragma: keep
+#include "EquipmentType.h"
+#include "StringExpander.h"
+#include "ShipRegistry.h"
+#include "Types.h"
+#include "EntityEnums.h"  // IWYU pragma: keep
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "OODescription.h"  // IWYU pragma: keep
+#include "Description.h"  // IWYU pragma: keep
 #include <algorithm>  // IWYU pragma: keep
 #include <chrono>  // IWYU pragma: keep
 #include <condition_variable>  // IWYU pragma: keep
@@ -73,7 +73,7 @@ enum class StationAlertLevel : std::int32_t {
 	kRed		= static_cast<std::int32_t>(AlertCondition::kRed)
 };
 
-typedef OOEquipmentType* WeaponType;
+typedef oo::EquipmentType* WeaponType;
 
 }  // namespace oo
 
@@ -155,7 +155,7 @@ public:
 	unsigned countOfDockedContractors();
 	unsigned countOfDockedPolice();
 	unsigned countOfDockedDefenders();
-	OOTechLevelID getEquivalentTechLevel();
+	oo::TechLevelID getEquivalentTechLevel();
 	float getEquipmentPriceFactor();
 	bool suppressArrivalReports();
 	void setSuppressArrivalReports(bool newValue);
@@ -164,9 +164,9 @@ public:
 	std::vector<oo::PList> *getLocalShipyard();
 	void generateShipyard();
 	oo::PList localMarketForScripting();
-	::OOCommodityMarket *getLocalMarket();
-	void setPrice(OOCreditsQuantity price, const std::string &commodity);
-	void setQuantity(OOCargoQuantity quantity, const std::string &commodity);
+	::oo::CommodityMarket *getLocalMarket();
+	void setPrice(oo::CreditsQuantity price, const std::string &commodity);
+	void setQuantity(oo::CargoQuantity quantity, const std::string &commodity);
 	void abortAllDockings();
 	void abortDockingForShip(::ShipEntity *ship);
 	bool fitsInDock(::ShipEntity *ship, bool logNoFit);
@@ -182,7 +182,7 @@ public:
 	void setInterfaceDefinition(::OOJSInterfaceDefinition *definition, const std::string &key);
 	oo::PList getMarketDefinition();
 	std::optional<std::string> getMarketScriptName();
-	OOCargoQuantity getMarketCapacity();
+	oo::CargoQuantity getMarketCapacity();
 	bool getMarketMonitored();
 
 	::ShipEntity *launched(const char *what);
@@ -197,13 +197,13 @@ public:
 	bool _fastDocking = false;
 	bool _autoDocking = false;
 	unsigned _contractors = 0, _police = 0, _defenders = 0;
-	OOTechLevelID _techLevel = 0;
+	oo::TechLevelID _techLevel = 0;
 	float _priceFactor = 0;
 	bool _suppressReports = false;
 	bool _breakPattern = false;
 	std::vector<oo::PList> *_shipyard = nullptr;
 	int _shipyardsMade = 0;
-	std::shared_ptr<OOCommodityMarket> _market;
+	std::shared_ptr<oo::CommodityMarket> _market;
 	int _abortAll = 0;
 	::ShipEntity *_abortedShip = nullptr;
 	bool _fits = false;
@@ -223,7 +223,7 @@ public:
 	void setGuiToMarketScreen();
 	void setGuiToShipyardScreen(std::size_t skip);
 	bool isDocked();
-	void setDockingClearanceStatus(OODockingClearanceStatus newValue);
+	void setDockingClearanceStatus(oo::DockingClearanceStatus newValue);
 	void safeAllMissiles();
 	void enterDock(::StationEntity *station);
 	::OOScript * commodityScriptNamed(const std::optional<std::string> &scriptName);
@@ -263,22 +263,22 @@ public:
 	OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
 
 	StationEntity *_station;
-	std::shared_ptr<OOCommodities> _commodities;
+	std::shared_ptr<oo::Commodities> _commodities;
 	GameController *_controller;
 	oo::ViewID _view;
 
-	::OOCommodities *getCommodities();
+	::oo::Commodities *getCommodities();
 	::GameController *gameController();
 	void setViewDirection(oo::ViewID);
 	Random_Seed marketSeed();
-	OOSystemID currentSystemID();
-	::OOCommodityMarket *getCommodityMarket();	// link stub
+	oo::SystemID currentSystemID();
+	::oo::CommodityMarket *getCommodityMarket();	// link stub
 	oo::PList getEquipmentData();	// link stub
 	oo::PList getEquipmentDataOutfitting();	// link stub
 };
 
 // Link stubs, never reached: the code under test calls them on paths the test does not take.
-::OOCommodityMarket *Universe::getCommodityMarket()  { std::abort(); }
+::oo::CommodityMarket *Universe::getCommodityMarket()  { std::abort(); }
 oo::PList Universe::getEquipmentData()  { std::abort(); }
 oo::PList Universe::getEquipmentDataOutfitting()  { std::abort(); }
 
@@ -418,10 +418,10 @@ void StationEntity::setSuppressArrivalReports(bool newValue)  { _suppressReports
 bool StationEntity::getHasBreakPattern()  { return _breakPattern; }
 void StationEntity::setHasBreakPattern(bool newValue)  { _breakPattern = newValue; }
 std::vector<oo::PList> *StationEntity::getLocalShipyard()  { return _shipyard; }
-::OOCommodityMarket *StationEntity::getLocalMarket()  { return _market.get(); }
+::oo::CommodityMarket *StationEntity::getLocalMarket()  { return _market.get(); }
 oo::PList StationEntity::localMarketForScripting()  { return _market->dictionaryForScripting(); }
-void StationEntity::setPrice(OOCreditsQuantity price, const std::string &commodity)  { _market->setPrice(price, commodity); }
-void StationEntity::setQuantity(OOCargoQuantity quantity, const std::string &commodity)  { _market->setQuantity(quantity, commodity); }
+void StationEntity::setPrice(oo::CreditsQuantity price, const std::string &commodity)  { _market->setPrice(price, commodity); }
+void StationEntity::setQuantity(oo::CargoQuantity quantity, const std::string &commodity)  { _market->setQuantity(quantity, commodity); }
 void StationEntity::abortAllDockings()  { _abortAll++; }
 void StationEntity::abortDockingForShip(::ShipEntity *ship)  { _abortedShip = ship; }
 bool StationEntity::fitsInDock(::ShipEntity *ship, bool logNoFit)  { (void)ship; (void)logNoFit; return _fits; }
@@ -434,7 +434,7 @@ void StationEntity::setAlertLevel(oo::StationAlertLevel level, bool signallingSc
 	_alertLevel = level;
 }
 
-OOTechLevelID StationEntity::getEquivalentTechLevel()
+oo::TechLevelID StationEntity::getEquivalentTechLevel()
 {
 	if (_techLevel == 99)  oo::RaiseException(oo::InvalidArgumentException, "techlevel %s", "boom");
 	if (_techLevel == 98)  throw std::runtime_error("cxx boom");
@@ -484,7 +484,7 @@ void StationEntity::setInterfaceDefinition(::OOJSInterfaceDefinition *definition
 // a commodity script, which no case reaches (the stations' markets are made blank).
 oo::PList StationEntity::getMarketDefinition()  { std::abort(); }
 std::optional<std::string> StationEntity::getMarketScriptName()  { std::abort(); }
-OOCargoQuantity StationEntity::getMarketCapacity()  { std::abort(); }
+oo::CargoQuantity StationEntity::getMarketCapacity()  { std::abort(); }
 bool StationEntity::getMarketMonitored()  { std::abort(); }
 ::TestEntityObject *TestObjectOf(Entity *entity)
 {
@@ -498,7 +498,7 @@ oo::GUIScreenID PlayerEntity::guiScreen()  { return _screen; }
 void PlayerEntity::setGuiToMarketScreen()  { _marketRefreshes++; }
 void PlayerEntity::setGuiToShipyardScreen(std::size_t skip)  { (void)skip; _shipyardRefreshes++; }
 bool PlayerEntity::isDocked()  { return _docked; }
-void PlayerEntity::setDockingClearanceStatus(OODockingClearanceStatus newValue)
+void PlayerEntity::setDockingClearanceStatus(oo::DockingClearanceStatus newValue)
 {
 	_dockLog += "clearance " + std::to_string(static_cast<int>(newValue)) + "; ";
 }
@@ -517,22 +517,22 @@ bool GameController::isGamePaused()  { return _paused; }
 void GameController::setGamePaused(bool value)  { _paused = value; }
 
 
-::OOCommodities *Universe::getCommodities()	{ return _commodities.get(); }
+::oo::Commodities *Universe::getCommodities()	{ return _commodities.get(); }
 ::GameController *Universe::gameController()	{ return _controller; }
 void Universe::setViewDirection(oo::ViewID vd)	{ _view = vd; }
 Random_Seed Universe::marketSeed()	{ return Random_Seed{}; }
-OOSystemID Universe::currentSystemID()	{ return 7; }
+oo::SystemID Universe::currentSystemID()	{ return 7; }
 
 
 // The ship registry: a C++ stand-in.
-OOShipRegistry *OOShipRegistry::sharedRegistry()  { return nullptr; }	// the test adds no ship to a shipyard
-oo::PList OOShipRegistry::shipInfoForKey(const std::string &key)  { (void)key; return oo::PList(); }
-oo::PList OOShipRegistry::shipyardInfoForKey(const std::string &key)  { (void)key; return oo::PList(); }
+oo::ShipRegistry *oo::ShipRegistry::sharedRegistry()  { return nullptr; }	// the test adds no ship to a shipyard
+oo::PList oo::ShipRegistry::shipInfoForKey(const std::string &key)  { (void)key; return oo::PList(); }
+oo::PList oo::ShipRegistry::shipyardInfoForKey(const std::string &key)  { (void)key; return oo::PList(); }
 
 
 // ResourceManager: C++ definitions of the statics the code under test calls,
 // with the stand-in's answers. trade-goods.plist: food and gems.
-oo::PList ResourceManager::dictionaryFromFilesNamed(const std::string &fileName, const std::optional<std::string> &folderName, OOResourceMergeMode mergeMode, bool useCache)
+oo::PList ResourceManager::dictionaryFromFilesNamed(const std::string &fileName, const std::optional<std::string> &folderName, oo::ResourceMergeMode mergeMode, bool useCache)
 {
 	(void)fileName; (void)folderName; (void)mergeMode; (void)useCache;
 	return oo::PList(oo::PList::Dict{
@@ -576,29 +576,34 @@ void OOJSScript::popScript(OOJSScript *)  { std::abort(); }
 
 // MARK: What the rest of the game provides --------------------------------------------------------
 
-std::optional<std::string> OOExpandDescriptionString(Random_Seed, const std::string &string, const oo::PList &, const oo::PList &, const std::optional<std::string> &, OOExpandOptions)
+namespace oo {
+
+std::optional<std::string> ExpandDescriptionString(Random_Seed, const std::string &string, const oo::PList &, const oo::PList &, const std::optional<std::string> &, ExpandOptions)
 {
 	return "<" + string + ">";
 }
 
-Random_Seed OOStringExpanderDefaultRandomSeed(void)
+Random_Seed StringExpanderDefaultRandomSeed(void)
 {
 	return Random_Seed{};
 }
 
-std::string OOLookUpDescriptionPRIV(const std::string &key)
+std::string LookUpDescriptionPRIV(const std::string &key)
 {
 	return "desc(" + key + ")";
 }
 
-#include "OOCacheManager.h"
+}  // namespace oo
+
+
+#include "CacheManager.h"
 
 // Link stubs: what OOEquipmentType reaches to load
 // equipment, which the test never does (no equipment type is made), and the
 // weapon lookups of addShipToShipyard(), which the test's shipyard items never
 // reach.
-OOCacheManager *OOCacheManager::sharedCache()  { std::abort(); }
-void OOCacheManager::setPList(const oo::PList &, const std::string &, const std::string &)  { std::abort(); }
+oo::CacheManager *oo::CacheManager::sharedCache()  { std::abort(); }
+void oo::CacheManager::setPList(const oo::PList &, const std::string &, const std::string &)  { std::abort(); }
 
 std::shared_ptr<OOScript> OOScript::jsScriptFromFileNamed(const std::string &, const oo::PList &)  { std::abort(); }
 void OOScriptAutorelease(std::shared_ptr<OOScript>)  { std::abort(); }
@@ -905,7 +910,7 @@ void SetUpContext()
 	sUniverse = new StandInUniverse();	// kept for the life of the test
 	gSharedUniverse = sUniverse;
 	sUniverse->_controller = new GameController();	// kept for the life of the test
-	sUniverse->_commodities = oo::makeShared<OOCommodities>();
+	sUniverse->_commodities = oo::makeShared<oo::Commodities>();
 	sPlayer = new PlayerEntity;
 	sPlayer->_name = "player";
 	sPlayer->_screen = oo::GUIScreenID::kStatus;
@@ -1062,7 +1067,7 @@ OO_TEST(docking)
 	sUniverse->_controller->_paused = true;
 	OO_CHECK_EVAL("station.dockPlayer()", "undefined");
 	OO_CHECK(!sUniverse->_controller->_paused);
-	OO_CHECK_EQ(sPlayer->_dockLog, "clearance " + std::to_string(static_cast<int>(OODockingClearanceStatus::kGranted)) + "; safe; dock Coriolis");
+	OO_CHECK_EQ(sPlayer->_dockLog, "clearance " + std::to_string(static_cast<int>(oo::DockingClearanceStatus::kGranted)) + "; safe; dock Coriolis");
 	OO_CHECK_EQ(static_cast<int>(sUniverse->_view), static_cast<int>(oo::ViewID::kForward));
 	sPlayer->_dockLog.clear();
 	OO_CHECK_EVAL("other.dockPlayer()", "undefined");
@@ -1229,9 +1234,9 @@ OO_TEST(nativeExceptions)
 
 // The JS glue of OOEquipmentType (OOJSPrivateObject), defined in OOJSEquipmentInfo.mm, which
 // this test does not link: the vtable names these.
-JSValue OOEquipmentType::jsValueInContext(JSContext *)  { return JS_UNDEFINED; }
-void OOEquipmentType::clearJSSelf(JSValueConst)  {}
-std::optional<std::string> OOEquipmentType::jsDescription()  { return std::nullopt; }
+JSValue oo::EquipmentType::jsValueInContext(JSContext *)  { return JS_UNDEFINED; }
+void oo::EquipmentType::clearJSSelf(JSValueConst)  {}
+std::optional<std::string> oo::EquipmentType::jsDescription()  { return std::nullopt; }
 
 
 OO_TEST_MAIN()

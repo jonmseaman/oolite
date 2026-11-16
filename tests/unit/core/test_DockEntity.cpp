@@ -250,7 +250,7 @@ OO_TEST(virtualDockTakesNoDamage) {
 namespace {
 
 // A ship with the universal ID the approach queue keys it by.
-ShipEntity* MakeQueuedShip(OOUniversalID shipID) {
+ShipEntity* MakeQueuedShip(oo::UniversalID shipID) {
   ShipEntity* ship = oo::ToShip(oo::autorelease(oo::NewShipObject(oo::makeShared<::ShipEntity>(), "queued", Definition())));
   ship->universalID = shipID;
   return ship;

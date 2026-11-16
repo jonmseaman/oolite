@@ -16,9 +16,9 @@
 #include <string>
 #include <vector>
 
-#include "OOGraphicsResetManager.h"
-#include "OOOpenGLExtensionManager.h"
-#include "OORegExpMatcher.h"
+#include "GraphicsResetManager.h"
+#include "OpenGLExtensionManager.h"
+#include "RegExpMatcher.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/PList.hpp"
@@ -48,26 +48,31 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
 }
 
 // OORegExpMatcher: the stub answers no match.
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
-  return oo::makeShared<OORegExpMatcher>();
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher() {
+  return oo::makeShared<oo::RegExpMatcher>();
 }
-bool OORegExpMatcher::string(const std::string&, const std::string&) {
+bool oo::RegExpMatcher::string(const std::string&, const std::string&) {
   return false;
 }
-OORegExpMatcher::~OORegExpMatcher() {}
+namespace oo {
+
+RegExpMatcher::~RegExpMatcher() {}
 
 // OOLogging.mm's (it would bring the resource manager into the link); in the
 // debug flavour OOOpenGL.mm's OOGL error check and state dump call them.
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
+void LogIndent(void) {}
+void LogOutdent(void) {}
 
-OOShaderSetting OOShaderSettingFromString(const std::string& string) {
-  return string == "SHADERS_FULL" ? OOShaderSetting::kFull : OOShaderSetting::kNotSupported;
+ShaderSetting ShaderSettingFromString(const std::string& string) {
+  return string == "SHADERS_FULL" ? ShaderSetting::kFull : ShaderSetting::kNotSupported;
 }
 
 // OOLogging.mm's (it would bring the resource manager into the link).
-extern const char* const kOOLogException;
-const char* const kOOLogException = "exception";
+extern const char* const kLogException;
+const char* const kLogException = "exception";
+
+}  // namespace oo
+
 
 // The C++ OOTexture's static member.
 void oo::Texture::rebindAllTextures() {
@@ -77,7 +82,7 @@ void oo::Texture::rebindAllTextures() {
 
 // A client: counts its resets; may unregister another client, or raise, when
 // told. Reference counted, so the test can see the manager does not retain it.
-struct OOTestResetClient : oo::Object, OOGraphicsResetClient {
+struct OOTestResetClient : oo::Object, oo::GraphicsResetClient {
   int tag = 0;
   unsigned resets = 0;
   OOTestResetClient* victim = nullptr;
@@ -87,7 +92,7 @@ struct OOTestResetClient : oo::Object, OOGraphicsResetClient {
     resets++;
     sOrder.push_back(tag);
     if (victim != nullptr)
-      OOGraphicsResetManager::sharedManager()->unregisterCxxClient(victim);
+      oo::GraphicsResetManager::sharedManager()->unregisterCxxClient(victim);
     if (raises) oo::RaiseException("OOTestException", "client %d raised", tag);
   }
 };
@@ -112,11 +117,11 @@ OOTestResetClient* Client(int tag) {
 OO_TEST(resetTellsEachClientOnce) {
   OO_CHECK(OOTestGLContext());
   {
-    OOGraphicsResetManager* manager = OOGraphicsResetManager::sharedManager();
+    oo::GraphicsResetManager* manager = oo::GraphicsResetManager::sharedManager();
     OO_CHECK(manager != nullptr);
-    OO_CHECK(OOGraphicsResetManager::sharedManager() == manager);
+    OO_CHECK(oo::GraphicsResetManager::sharedManager() == manager);
 
-    (void)OOOpenGLExtensionManager::sharedManager();
+    (void)oo::OpenGLExtensionManager::sharedManager();
     const unsigned pathsBefore = sPathsCalls;
 
     OOTestResetClient *a = Client(1), *b = Client(2), *c = Client(3);
@@ -149,7 +154,7 @@ OO_TEST(resetTellsEachClientOnce) {
 OO_TEST(clientsMayUnregisterAndRaise) {
   OO_CHECK(OOTestGLContext());
   {
-    OOGraphicsResetManager* manager = OOGraphicsResetManager::sharedManager();
+    oo::GraphicsResetManager* manager = oo::GraphicsResetManager::sharedManager();
 
     // Two clients that each unregister the other: whichever is told first is
     // the only one told.
@@ -180,7 +185,7 @@ OO_TEST(clientsMayUnregisterAndRaise) {
 OO_TEST(clientsAreNotRetained) {
   OO_CHECK(OOTestGLContext());
   {
-    OOGraphicsResetManager* manager = OOGraphicsResetManager::sharedManager();
+    oo::GraphicsResetManager* manager = oo::GraphicsResetManager::sharedManager();
     std::shared_ptr<OOTestResetClient> client = oo::makeShared<OOTestResetClient>();
     const long before = client->weak_from_this().use_count();
     manager->registerCxxClient(client.get());
@@ -193,7 +198,7 @@ OO_TEST(clientsAreNotRetained) {
 // null is never registered; unregistered, it is not told.
 namespace {
 
-struct TestCxxClient : OOGraphicsResetClient {
+struct TestCxxClient : oo::GraphicsResetClient {
   unsigned resets = 0;
   void resetGraphicsState() override {
     resets++;
@@ -206,7 +211,7 @@ struct TestCxxClient : OOGraphicsResetClient {
 OO_TEST(cxxClients) {
   OO_CHECK(OOTestGLContext());
   {
-    OOGraphicsResetManager* manager = OOGraphicsResetManager::sharedManager();
+    oo::GraphicsResetManager* manager = oo::GraphicsResetManager::sharedManager();
     TestCxxClient c1, c2;
     OOTestResetClient* objc = Client(40);
     manager->registerCxxClient(&c1);

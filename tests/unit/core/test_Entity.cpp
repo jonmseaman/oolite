@@ -182,7 +182,7 @@ void SetUpUniverse() {
   }
   gSharedUniverse = sUniverse;
   UniverseIvar<std::size_t>("_sessionID") = 0;
-  UniverseIvar<OOTimeAbsolute>("universal_time") = 0;
+  UniverseIvar<oo::TimeAbsolute>("universal_time") = 0;
   sUniverse->n_entities = 0;
   sUniverse->x_list_start = sUniverse->y_list_start = sUniverse->z_list_start =
       nullptr;
@@ -225,7 +225,7 @@ OO_TEST(defaults) {
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
     UniverseIvar<std::size_t>("_sessionID") = 7;
-    UniverseIvar<OOTimeAbsolute>("universal_time") = 12.5;
+    UniverseIvar<oo::TimeAbsolute>("universal_time") = 12.5;
 
     Entity* entity = oo::MadeEntity(oo::makeShared<Entity>());
     OO_CHECK(entity->sessionID() == 7);
@@ -244,7 +244,7 @@ OO_TEST(defaults) {
     OO_CHECK(!entity->isInSpace());
     OO_CHECK(HPvector_equal(entity->getPosition(), kZeroHPVector));
     OO_CHECK(quaternion_equal(entity->getOrientation(), kIdentityQuaternion));
-    OO_CHECK(OOMatrixEqual(entity->rotationMatrix(), kIdentityMatrix));
+    OO_CHECK(oo::MatrixEqual(entity->rotationMatrix(), kIdentityMatrix));
     OO_CHECK(entity->getEnergy() == 0 && entity->getMaxEnergy() == 0 &&
              entity->getMass() == 0);
     OO_CHECK(entity->collisionRadius() == 0 && entity->frustumRadius() == 0);
@@ -259,7 +259,7 @@ OO_TEST(defaults) {
              !entity->throwingSparks());
     OO_CHECK(NoDrawDistance(entity) == 100000.0f);
 
-    OOColor* fog = entity->fogUniform().get();
+    oo::Color* fog = entity->fogUniform().get();
     OO_CHECK(fog != nullptr);
     OO_CHECK(fog->redComponent() == 0 && fog->greenComponent() == 0 &&
              fog->blueComponent() == 0 && fog->alphaComponent() == 0);
@@ -325,9 +325,9 @@ OO_TEST(accessors) {
     entity->update(0);
     other->update(0);
     OO_CHECK(entity->zeroDistance() == 14.0 && other->zeroDistance() == 12.0);
-    OO_CHECK(entity->compareZeroDistance(other) == OOComparisonResult::kAscending);
-    OO_CHECK(other->compareZeroDistance(entity) == OOComparisonResult::kDescending);
-    OO_CHECK(entity->compareZeroDistance(nullptr) == OOComparisonResult::kDescending);
+    OO_CHECK(entity->compareZeroDistance(other) == oo::ComparisonResult::kAscending);
+    OO_CHECK(other->compareZeroDistance(entity) == oo::ComparisonResult::kDescending);
+    OO_CHECK(entity->compareZeroDistance(nullptr) == oo::ComparisonResult::kDescending);
 
     OO_CHECK(!entity->checkCloseCollisionWith(nullptr) &&
              entity->checkCloseCollisionWith(other));
@@ -364,10 +364,10 @@ OO_TEST(orientationAndMovement) {
     entity->applyRoll(0.25f, 0.5f);
     OO_CHECK(QuaternionNear(entity->getOrientation(), expected));
     OO_CHECK(
-        OOMatrixEqual(entity->rotationMatrix(),
-                      OOMatrixForQuaternionRotation(entity->getOrientation())));
+        oo::MatrixEqual(entity->rotationMatrix(),
+                      oo::MatrixForQuaternionRotation(entity->getOrientation())));
     OO_CHECK(
-        OOMatrixEqual(entity->drawRotationMatrix(), entity->rotationMatrix()));
+        oo::MatrixEqual(entity->drawRotationMatrix(), entity->rotationMatrix()));
 
     quaternion_rotate_about_z(&expected, -0.1f);
     quaternion_rotate_about_x(&expected, -0.2f);
@@ -384,10 +384,10 @@ OO_TEST(orientationAndMovement) {
     OO_CHECK(HPvector_equal(entity->getPosition(), make_HPvector(0, 0, 5)));
     OO_CHECK(entity->getDistanceTravelled() == 5);
 
-    OOMatrix translated =
-        OOMatrixHPTranslate(kIdentityMatrix, make_HPvector(0, 0, 5));
-    OO_CHECK(OOMatrixEqual(entity->transformationMatrix(), translated));
-    OO_CHECK(OOMatrixEqual(entity->drawTransformationMatrix(), translated));
+    oo::Matrix translated =
+        oo::MatrixHPTranslate(kIdentityMatrix, make_HPvector(0, 0, 5));
+    OO_CHECK(oo::MatrixEqual(entity->transformationMatrix(), translated));
+    OO_CHECK(oo::MatrixEqual(entity->drawTransformationMatrix(), translated));
 
     // With no parent, the absolute position of an offset is position + offset
     // rotated.
@@ -554,21 +554,21 @@ OO_TEST(sessionAndShaderBindings) {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(make_HPvector(0, 1, 0), kZeroHPVector);
-    UniverseIvar<OOTimeAbsolute>("universal_time") = 100;
+    UniverseIvar<oo::TimeAbsolute>("universal_time") = 100;
 
     Entity* entity = MakeEntity(make_HPvector(0, 0, 3), 1.0f);
     OO_CHECK(entity->validForAddToUniverse());
     UniverseIvar<std::size_t>("_sessionID") = 1;  // a new game started since
     OO_CHECK(!entity->validForAddToUniverse());
 
-    UniverseIvar<OOTimeAbsolute>("universal_time") = 104.5;
+    UniverseIvar<oo::TimeAbsolute>("universal_time") = 104.5;
     OO_CHECK(entity->universalTime() == 104.5f &&
              entity->getSpawnTime() == 100.0f);
     OO_CHECK(entity->timeElapsedSinceSpawn() == 4.5f);
     OO_CHECK(VectorEqual(entity->relativePosition(), make_vector(0, -1, 3)));
 
     entity->setAtmosphereFogging(
-        OOColor::colorWithRed(0.25f, 0.5f, 0.75f, 1.0f).get());
+        oo::Color::colorWithRed(0.25f, 0.5f, 0.75f, 1.0f).get());
     OO_CHECK(entity->fogUniform().get()->greenComponent() == 0.5f &&
              entity->fogUniform().get()->alphaComponent() == 1.0f);
     entity->setAtmosphereFogging(nullptr);

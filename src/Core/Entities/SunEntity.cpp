@@ -33,34 +33,34 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "AI.h"
+#include "Color.h"
 #include "DebugFlags.h"
+#include "Headless.h"
+#include "MacroOpenGL.h"
 #include "MyOpenGLView.h"
-#include "OOColor.h"
-#include "OOHeadless.h"
 #include "OOJSSun.h"
-#include "OOMacroOpenGL.h"
-#include "OOStringExpander.h"
 #include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "ShipEntityAI.h"
+#include "StringExpander.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/objc/Assert.h"
 
-bool oo::SunEntity::setSunColor(OOColor* sun_colorIn) {
+bool oo::SunEntity::setSunColor(oo::Color* sun_colorIn) {
   if (sun_colorIn == nullptr) return false;
 
   OO_ENTER_OPENGL();
 
   float hue, sat, bri, alf;
-  std::shared_ptr<OOColor> color;
+  std::shared_ptr<oo::Color> color;
 
   // blend some white into the sun color to brighten it up
-  const std::shared_ptr<OOColor> sun_color =
+  const std::shared_ptr<oo::Color> sun_color =
       sun_colorIn->blendedColorWithFraction(static_cast<float>(0.3),
-                                            OOColor::whiteColor().get());
+                                            oo::Color::whiteColor().get());
 
   sun_color->getHue(&hue, &sat, &bri, &alf);
   hue /= 360;
@@ -90,7 +90,7 @@ bool oo::SunEntity::setSunColor(OOColor* sun_colorIn) {
   sun_specular[2] = b;
   sun_specular[3] = 1.0;
 
-  if (OOGraphicsAvailable()) {  // headless: nothing to tell the GL about
+  if (oo::GraphicsAvailable()) {  // headless: nothing to tell the GL about
     OOGL(glLightfv(GL_LIGHT1, GL_AMBIENT, sun_ambient));
     OOGL(glLightfv(GL_LIGHT1, GL_DIFFUSE, sun_diffuse));
     OOGL(glLightfv(GL_LIGHT1, GL_SPECULAR, sun_specular));
@@ -98,14 +98,14 @@ bool oo::SunEntity::setSunColor(OOColor* sun_colorIn) {
 
   // main disc less saturation (partially taken care of by the ACES tonemapper)
   // more brightness
-  color = OOColor::colorWithHue(hue, sat * 0.75f, 1.0f, 1.0f);
+  color = oo::Color::colorWithHue(hue, sat * 0.75f, 1.0f, 1.0f);
   // our OpenGL color values are unclamped, so we can multiply the color
   // components by any value we want, in order to make the sun a truly bright
   // object in the sky
-  color = OOColor::colorWithRed(color->redComponent() * _sunBrightnessFactor,
-                                color->greenComponent() * _sunBrightnessFactor,
-                                color->blueComponent() * _sunBrightnessFactor,
-                                color->alphaComponent());
+  color = oo::Color::colorWithRed(
+      color->redComponent() * _sunBrightnessFactor,
+      color->greenComponent() * _sunBrightnessFactor,
+      color->blueComponent() * _sunBrightnessFactor, color->alphaComponent());
   color->getRed(&discColor[0], &discColor[1], &discColor[2], &discColor[3]);
 
   /*	Two inner corona layers with low alpha and saturation are additively
@@ -114,19 +114,19 @@ bool oo::SunEntity::setSunColor(OOColor* sun_colorIn) {
   */
   hue += hue_drift * 3;
   // saturation = 1 would shift white to red
-  color =
-      OOColor::colorWithHue(hue, OOClamp_0_1_f(sat * 1.0f), bri * 0.75f, 0.45f);
-  color = OOColor::colorWithRed(color->redComponent() * _sunBrightnessFactor,
-                                color->greenComponent() * _sunBrightnessFactor,
-                                color->blueComponent() * _sunBrightnessFactor,
-                                color->alphaComponent());
+  color = oo::Color::colorWithHue(hue, oo::Clamp_0_1_f(sat * 1.0f), bri * 0.75f,
+                                  0.45f);
+  color = oo::Color::colorWithRed(
+      color->redComponent() * _sunBrightnessFactor,
+      color->greenComponent() * _sunBrightnessFactor,
+      color->blueComponent() * _sunBrightnessFactor, color->alphaComponent());
   color->getRed(&outerCoronaColor[0], &outerCoronaColor[1],
                 &outerCoronaColor[2], &outerCoronaColor[3]);
 
   return true;
 }
 
-void oo::SunEntity::initSunWithColor(OOColor* sun_color,
+void oo::SunEntity::initSunWithColor(oo::Color* sun_color,
                                      const oo::PList& dict) {
   int i;
 
@@ -153,7 +153,7 @@ void oo::SunEntity::initSunWithColor(OOColor* sun_color,
                                                 "[oolite-default-star-name]"))
                : std::nullopt);
 
-  corona_blending = OOClamp_0_1_f(dict.get<float>("corona_hues", 1.0f));
+  corona_blending = oo::Clamp_0_1_f(dict.get<float>("corona_hues", 1.0f));
   corona_speed_factor = dict.get<float>("corona_shimmer", -1.0);
   if (corona_speed_factor < 0) {
     // from .22222 to 2
@@ -162,7 +162,7 @@ void oo::SunEntity::initSunWithColor(OOColor* sun_color,
     // on average:  0 = .25 , 1 = 2.25  -  the same sun should give the same
     // random component
     corona_speed_factor =
-        OOClamp_0_1_f(static_cast<float>(corona_speed_factor)) * 2.0 +
+        oo::Clamp_0_1_f(static_cast<float>(corona_speed_factor)) * 2.0 +
         randf() * randf();
   }
 #ifdef OO_DUMP_PLANETINFO
@@ -243,12 +243,12 @@ bool oo::SunEntity::checkCloseCollisionWith(Entity* other) {
 }
 #endif
 
-void oo::SunEntity::update(OOTimeDelta delta_t) {
+void oo::SunEntity::update(oo::TimeDelta delta_t) {
   Entity::update(delta_t);
 
   ::PlayerEntity* player = PLAYER;
   assert(player != nullptr);
-  rotMatrix = OOMatrixForBillboard(
+  rotMatrix = oo::MatrixForBillboard(
       position, (player != nullptr ? player->viewpointPosition() : HPVector{}));
 
   if (throw_sparks && _novaExpansionRate > 0.0f) {
@@ -379,7 +379,7 @@ void oo::SunEntity::drawOpaqueParts() {
 
   OO_ENTER_OPENGL();
 
-  OOSetOpenGLState(OOOpenGLStateID::kAdditiveBlending);
+  OOSetOpenGLState(oo::OpenGLStateID::kAdditiveBlending);
 
   if ((UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false)) {
     int subdivideLevel = 2;  // 4 is probably the maximum!
@@ -440,7 +440,7 @@ void oo::SunEntity::drawOpaqueParts() {
   }
 
   OOVerifyOpenGLState();
-  OOCheckOpenGLErrors([&]() -> std::string {
+  oo::CheckOpenGLErrors([&]() -> std::string {
     return "SunEntity after drawing " + oo::EntityDescription(this);
   });
 }
@@ -452,7 +452,7 @@ void oo::SunEntity::drawTranslucentParts() {
 
   OO_ENTER_OPENGL();
 
-  OOSetOpenGLState(OOOpenGLStateID::kAdditiveBlending);
+  OOSetOpenGLState(oo::OpenGLStateID::kAdditiveBlending);
 
   OOGL(glVertexPointer(3, GL_FLOAT, 0, sunVertices));
 
@@ -590,7 +590,7 @@ void oo::SunEntity::drawDirectVisionSunGlare() {
 #if SUN_DIRECT_VISION_GLARE
   OO_ENTER_OPENGL();
 
-  OOSetOpenGLState(OOOpenGLStateID::kOverlay);
+  OOSetOpenGLState(oo::OpenGLStateID::kOverlay);
 
   GLfloat sunGlareAngularSize = static_cast<GLfloat>(
       atan(radius() /
@@ -617,7 +617,7 @@ void oo::SunEntity::drawDirectVisionSunGlare() {
         1.0f - (PLAYER != nullptr ? PLAYER->insideAtmosphereFraction() : 0.0f);
     // 182: square of ratio of radius to sun-witchpoint distance
     // in default Lave
-    GLfloat distanceReductionFactor = OOClamp_0_1_f(static_cast<float>(
+    GLfloat distanceReductionFactor = oo::Clamp_0_1_f(static_cast<float>(
         (radius() * radius() * 182.0) /
         HPdistance2((PLAYER != nullptr ? PLAYER->getPosition() : HPVector{}),
                     getPosition())));
@@ -648,7 +648,7 @@ void oo::SunEntity::drawDirectVisionSunGlare() {
 void oo::SunEntity::drawStarGlare() {
   OO_ENTER_OPENGL();
 
-  OOSetOpenGLState(OOOpenGLStateID::kOverlay);
+  OOSetOpenGLState(oo::OpenGLStateID::kOverlay);
 
   float sqrt_zero_distance = sqrtf(cam_zero_distance);
   float alt = sqrt_zero_distance - collision_radius;
@@ -704,9 +704,9 @@ bool oo::SunEntity::changeSunProperty(const std::string& key,
     setRadius(collision_radius, dict.get<float>(key, 0.0f));
   } else if (key == "corona_shimmer") {
     corona_speed_factor =
-        OOClamp_0_1_f(dict.get<float>(key, 0.0f)) * 2.0 + randf() * randf();
+        oo::Clamp_0_1_f(dict.get<float>(key, 0.0f)) * 2.0 + randf() * randf();
   } else if (key == "corona_hues") {
-    corona_blending = OOClamp_0_1_f(dict.get<float>(key, 0.0f));
+    corona_blending = oo::Clamp_0_1_f(dict.get<float>(key, 0.0f));
   } else if (key == "sun_gone_nova") {
     if (dict.get<bool>(key)) {
       setGoingNova(true, 0);

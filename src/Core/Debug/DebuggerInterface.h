@@ -35,7 +35,7 @@ SOFTWARE.
 #include <optional>
 #include <string>
 
-#include "OOFoundation.h"  // NSRange
+#include "Foundation.h"  // NSRange
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 

@@ -32,7 +32,7 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOMaths.h"
+#include "Maths.h"
 #include "TextureGenerator.h"
 #include "oofnd/PList.hpp"
 

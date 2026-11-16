@@ -16,8 +16,8 @@
 #include <cmath>
 #include <cstdlib>  // IWYU pragma: keep
 
-#include "OOALSoundMixer.h"
-#include "OOOpenALController.h"
+#include "ALSoundMixer.h"
+#include "OpenALController.h"
 #include "oo_test.hpp"
 #include "oofnd/Process.hpp"
 
@@ -25,12 +25,12 @@ static unsigned sMixerShutdowns = 0;
 
 // The mixer (a C++ stand-in): one, never released, counting the shutdowns the
 // controller sends it.
-OOSoundMixer* OOSoundMixer::sharedMixer() {
-  static OOSoundMixer* mixer = (*new std::shared_ptr<OOSoundMixer>(oo::makeShared<OOSoundMixer>())).get();
+oo::SoundMixer* oo::SoundMixer::sharedMixer() {
+  static oo::SoundMixer* mixer = (*new std::shared_ptr<oo::SoundMixer>(oo::makeShared<oo::SoundMixer>())).get();
   return mixer;
 }
 
-void OOSoundMixer::shutdown() { sMixerShutdowns++; }
+void oo::SoundMixer::shutdown() { sMixerShutdowns++; }
 
 namespace {
 
@@ -47,21 +47,21 @@ OO_TEST(noSoundArgumentsRefuseTheController) {
   _putenv_s("ALSOFT_DRIVERS", "null");
 
   SetArguments({"test_OOOpenALController", "-nosound"});
-  OO_CHECK(OOOpenALController::sharedController() == nullptr);
-  OO_CHECK(OOOpenALController::sharedController() == nullptr);
+  OO_CHECK(oo::OpenALController::sharedController() == nullptr);
+  OO_CHECK(oo::OpenALController::sharedController() == nullptr);
   SetArguments({"test_OOOpenALController", "--nosound"});
-  OO_CHECK(OOOpenALController::sharedController() == nullptr);
+  OO_CHECK(oo::OpenALController::sharedController() == nullptr);
   OO_CHECK(alcGetCurrentContext() == nullptr);  // no device was opened
 
   // A refusal is not remembered: the next call asks again.
   SetArguments({"test_OOOpenALController"});
-  OO_CHECK(OOOpenALController::sharedController() != nullptr);
+  OO_CHECK(oo::OpenALController::sharedController() != nullptr);
 }
 
 OO_TEST(opensTheDefaultDevice) {
-  OOOpenALController* controller = OOOpenALController::sharedController();
+  oo::OpenALController* controller = oo::OpenALController::sharedController();
   OO_CHECK(controller != nullptr);
-  OO_CHECK(OOOpenALController::sharedController() == controller);
+  OO_CHECK(oo::OpenALController::sharedController() == controller);
 
   ALCcontext* context = alcGetCurrentContext();
   OO_CHECK(context != nullptr);
@@ -78,7 +78,7 @@ OO_TEST(opensTheDefaultDevice) {
 }
 
 OO_TEST(masterVolumeIsTheListenerGain) {
-  OOOpenALController* controller = OOOpenALController::sharedController();
+  oo::OpenALController* controller = oo::OpenALController::sharedController();
   OO_CHECK(Near(controller->masterVolume(), 1.0f));  // OpenAL's default gain
 
   controller->setMasterVolume(0.25f);
@@ -102,7 +102,7 @@ OO_TEST(masterVolumeIsTheListenerGain) {
 
 // Last: it destroys the shared controller's context.
 OO_TEST(shutdownStopsTheMixerAndReleasesTheContext) {
-  OOOpenALController* controller = OOOpenALController::sharedController();
+  oo::OpenALController* controller = oo::OpenALController::sharedController();
   OO_CHECK(alcGetCurrentContext() != nullptr);
   OO_CHECK(sMixerShutdowns == 0);
 
@@ -111,7 +111,7 @@ OO_TEST(shutdownStopsTheMixerAndReleasesTheContext) {
   OO_CHECK(alcGetCurrentContext() == nullptr);
 
   // The shared controller is not replaced.
-  OO_CHECK(OOOpenALController::sharedController() == controller);
+  OO_CHECK(oo::OpenALController::sharedController() == controller);
 }
 
 OO_TEST_MAIN()

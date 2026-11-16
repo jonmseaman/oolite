@@ -23,8 +23,8 @@
 #include "SunEntity.h"
 #include "StationEntity.h"
 #include "OOJSPopulatorDefinition.h"
-#include "OOShipGroup.h"
-#include "OODescription.h"
+#include "ShipGroup.h"
+#include "Description.h"
 #include "oofnd/PList.hpp"
 #include <cstdint>
 #include <functional>
@@ -62,7 +62,7 @@ uint32_t gDebugFlags = 0;
 // The ship's group, private again in C++, and nothing else.
 struct ShipEntityTestAccess
 {
-	static std::shared_ptr<::OOShipGroup> &Group(::ShipEntity *s)	{ return s->_group; }
+	static std::shared_ptr<::oo::ShipGroup> &Group(::ShipEntity *s)	{ return s->_group; }
 };
 
 
@@ -114,14 +114,14 @@ std::vector<oo::EntityHold> MatchingEntities(const std::vector<oo::EntityHold> &
 class FakePlayer : public PlayerEntity
 {
 public:
-	OOGalaxyID _galaxy = {};
-	OOSystemID _system = {};
+	oo::GalaxyID _galaxy = {};
+	oo::SystemID _system = {};
 	std::vector<std::string> _log;
 	Entity *_planetToAdd = {};
 
 	void setScriptTarget(::ShipEntity * /*ship*/) override	{  }
-	OOGalaxyID currentGalaxyID() override	{ return _galaxy; }
-	OOSystemID currentSystemID() override	{ return _system; }
+	oo::GalaxyID currentGalaxyID() override	{ return _galaxy; }
+	oo::SystemID currentSystemID() override	{ return _system; }
 	unsigned systemPseudoRandom100() override	{ return 42; }
 	unsigned systemPseudoRandom256() override	{ return 200; }
 	double systemPseudoRandomFloat() override	{ return 0.25; }
@@ -249,7 +249,7 @@ public:
 		}
 		return std::nullopt;
 	}
-	void setSystemDataForGalaxy(OOGalaxyID gnum, OOSystemID pnum, const std::string &key, const oo::PList &value, const std::optional<std::string> &manifest, OOSystemLayer layer) override	{ _log.push_back(oo::str::format("set %d:%d %s=%s manifest=%s layer=%d", gnum, pnum, key.c_str(), oo::DescriptionOf(value).c_str(), manifest.value_or("none").c_str(), static_cast<int>(layer))); }
+	void setSystemDataForGalaxy(oo::GalaxyID gnum, oo::SystemID pnum, const std::string &key, const oo::PList &value, const std::optional<std::string> &manifest, oo::SystemLayer layer) override	{ _log.push_back(oo::str::format("set %d:%d %s=%s manifest=%s layer=%d", gnum, pnum, key.c_str(), oo::DescriptionOf(value).c_str(), manifest.value_or("none").c_str(), static_cast<int>(layer))); }
 	unsigned countShipsWithPrimaryRole(const std::string &role, double range, Entity *entity) override
 	{
 		_log.push_back(oo::str::format("countPrimary %s %g %s", role.c_str(), range, Describe(entity).c_str()));
@@ -277,13 +277,13 @@ public:
 		_log.push_back("spawnShip " + shipdesc);
 		return true;
 	}
-	std::optional<std::string> getSystemName(OOSystemID sys, OOGalaxyID /*gnum*/) override
+	std::optional<std::string> getSystemName(oo::SystemID sys, oo::GalaxyID /*gnum*/) override
 	{
 		_log.push_back(oo::str::format("systemName %d", sys));
 		if (sys == 99)  return std::nullopt;
 		return oo::str::format("System%d", sys);
 	}
-	OOSystemID findSystemFromName(const std::string &sysName) override
+	oo::SystemID findSystemFromName(const std::string &sysName) override
 	{
 		_log.push_back("findSystem " + sysName);
 		return sysName == "Lave" ? 7 : -1;
@@ -804,7 +804,7 @@ OO_TEST(shipCreators)
 	Log(sUniverse->_log);
 	::ShipEntity *first = MakeShip(60);
 	::ShipEntity *second = MakeShip(61);
-	ShipEntityTestAccess::Group(first) = OOShipGroup::groupWithName(std::string("convoy"));
+	ShipEntityTestAccess::Group(first) = oo::ShipGroup::groupWithName(std::string("convoy"));
 	sUniverse->_shipsToAdd = { oo::Hold(first), oo::Hold(second) };
 
 	OO_CHECK_EVAL("system.addShips('trader', 2).map(function (s) { return s.position.x; }).join()", "60,61");

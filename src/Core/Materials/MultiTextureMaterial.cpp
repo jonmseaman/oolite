@@ -32,9 +32,9 @@ SOFTWARE.
 #include <vector>
 
 #include "CombinedEmissionMapGenerator.h"
+#include "MacroOpenGL.h"
 #include "MaterialSpecifier.h"
-#include "OOMacroOpenGL.h"
-#include "OOOpenGLExtensionManager.h"
+#include "OpenGLExtensionManager.h"
 #include "Texture.h"
 #include "oofnd/objc/Assert.h"
 
@@ -51,7 +51,8 @@ oo::MultiTextureMaterial::materialWithName(
 
 bool oo::MultiTextureMaterial::initWithName(
     const std::optional<std::string>& name, const oo::PList& configuration) {
-  if (!OOOpenGLExtensionManager::sharedManager()->textureCombinersSupported()) {
+  if (!oo::OpenGLExtensionManager::sharedManager()
+           ->textureCombinersSupported()) {
     return false;  // [self release]; return nil: the factory drops the object
   }
 
@@ -64,9 +65,9 @@ bool oo::MultiTextureMaterial::initWithName(
       oo::MaterialIlluminationMapSpecifier(config);
   const oo::PList emissionAndIlluminationSpec =
       oo::MaterialEmissionAndIlluminationMapSpecifier(config);
-  std::shared_ptr<OOColor> diffuseColor = oo::MaterialDiffuseColor(config);
-  std::shared_ptr<OOColor> emissionColor;
-  std::shared_ptr<OOColor> illuminationColor =
+  std::shared_ptr<oo::Color> diffuseColor = oo::MaterialDiffuseColor(config);
+  std::shared_ptr<oo::Color> emissionColor;
+  std::shared_ptr<oo::Color> illuminationColor =
       oo::MaterialIlluminationModulateColor(config);
 
   // A copy of the configuration (an empty one for nil, as

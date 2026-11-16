@@ -20,8 +20,8 @@
 
 #include "MyOpenGLView.h"  // the game view is C++
 #include "BasicMaterial.h"
-#include "OOPlanetData.h"
-#include "OOPlanetDrawable.h"
+#include "PlanetData.h"
+#include "PlanetDrawable.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 
@@ -84,12 +84,12 @@ oo::Material* NamedMaterial(const char* name) {
 // --- The drawable, made and read; the only lines the conversion ported
 // ------------------------------
 
-using Planet = std::shared_ptr<OOPlanetDrawable>;
+using Planet = std::shared_ptr<oo::PlanetDrawable>;
 
-Planet NewPlanet() { return oo::makeShared<OOPlanetDrawable>(); }
-Planet NewAtmosphere() { return OOPlanetDrawable::initAsAtmosphere(); }
+Planet NewPlanet() { return oo::makeShared<oo::PlanetDrawable>(); }
+Planet NewAtmosphere() { return oo::PlanetDrawable::initAsAtmosphere(); }
 Planet AtmosphereWithRadius(float radius) {
-  return OOPlanetDrawable::atmosphereWithRadius(radius);
+  return oo::PlanetDrawable::atmosphereWithRadius(radius);
 }
 Planet Copy(const Planet& d) { return d->copy(); }
 float Radius(const Planet& d) { return d->radius(); }

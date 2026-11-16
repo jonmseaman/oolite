@@ -13,7 +13,7 @@
 	Run: bash tests/run.sh unit
 */
 
-#include "OOShipGroup.h"
+#include "ShipGroup.h"
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "oo_test.hpp"
@@ -27,9 +27,9 @@
 
 // The JS glue of OOShipGroup, which OOJSShipGroup.mm defines and this test
 // does not link: the vtable names them. Nothing here reaches the JS engine.
-JSValue OOShipGroup::jsValueInContext(JSContext*)  { return JS_NULL; }
-void OOShipGroup::clearJSSelf(JSValueConst)  {}
-std::optional<std::string> OOShipGroup::jsDescription()  { return std::nullopt; }
+JSValue oo::ShipGroup::jsValueInContext(JSContext*)  { return JS_NULL; }
+void oo::ShipGroup::clearJSSelf(JSValueConst)  {}
+std::optional<std::string> oo::ShipGroup::jsDescription()  { return std::nullopt; }
 
 
 // --- A stand-in for ShipEntity (see the banner)
@@ -55,10 +55,10 @@ public:
 class ShipEntity : public Entity
 {
 public:
-	void setGroup(::OOShipGroup *group);
+	void setGroup(::oo::ShipGroup *group);
 	void setOwner(Entity *who_owns_entity);
 
-	::OOShipGroup *lastGroup = nullptr;
+	::oo::ShipGroup *lastGroup = nullptr;
 	Entity *lastOwner = nullptr;
 	int setGroupCalls = 0;
 };
@@ -76,7 +76,7 @@ public:
 
 Entity::~Entity() = default;
 
-void ShipEntity::setGroup(::OOShipGroup *group)
+void ShipEntity::setGroup(::oo::ShipGroup *group)
 {
 	setGroupCalls++;
 	lastGroup = group;
@@ -123,19 +123,19 @@ OO_TEST(namesAndEmptyGroups)
 {
 	{
 		oo::AutoreleaseScope pool;
-		std::shared_ptr<OOShipGroup> unnamed = OOShipGroup::groupWithName(std::nullopt);	// -init
+		std::shared_ptr<oo::ShipGroup> unnamed = oo::ShipGroup::groupWithName(std::nullopt);	// -init
 		OO_CHECK(unnamed != nullptr && !unnamed->name().has_value());
 		OO_CHECK(unnamed->count() == 0 && unnamed->isEmpty() && unnamed->leader() == nullptr);
 		OO_CHECK(unnamed->memberArray().empty() && unnamed->memberArrayExcludingLeader().empty());
 
-		std::shared_ptr<OOShipGroup> named = OOShipGroup::groupWithName(std::string("escort group"));
+		std::shared_ptr<oo::ShipGroup> named = oo::ShipGroup::groupWithName(std::string("escort group"));
 		OO_CHECK(named->name() == std::optional<std::string>("escort group"));
 		named->setName(std::string("renamed"));
 		OO_CHECK(named->name() == std::optional<std::string>("renamed"));
 		named->setName(std::nullopt);
 		OO_CHECK(!named->name().has_value());
 
-		std::shared_ptr<OOShipGroup> made = OOShipGroup::groupWithName(std::string("ship group"));	// -initWithName:
+		std::shared_ptr<oo::ShipGroup> made = oo::ShipGroup::groupWithName(std::string("ship group"));	// -initWithName:
 		OO_CHECK(made->name() == std::optional<std::string>("ship group") && made->isEmpty());
 	}
 }
@@ -145,7 +145,7 @@ OO_TEST(addingAndGrowing)
 {
 	{
 		oo::AutoreleaseScope pool;
-		std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::nullopt);
+		std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::nullopt);
 		std::vector<ShipEntity *> ships;
 		for (int i = 0; i < 20; i++)  ships.push_back(NewShip());	// past kMinSize (4): the array grows
 
@@ -166,7 +166,7 @@ OO_TEST(leader)
 		oo::AutoreleaseScope pool;
 		ShipEntity *leader = NewShip();
 		ShipEntity *wingman = NewShip();
-		std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::string("g"), leader);
+		std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::string("g"), leader);
 		OO_CHECK(group->leader() == leader && group->containsShip(leader) && group->count() == 1);
 		group->addShip(wingman);
 		OO_CHECK(HasMembers(group->memberArrayExcludingLeader(), { wingman }));
@@ -185,7 +185,7 @@ OO_TEST(removing)
 	{
 		oo::AutoreleaseScope pool;
 		ShipEntity *a = NewShip(), *b = NewShip(), *c = NewShip();
-		std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::nullopt, a);
+		std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::nullopt, a);
 		group->addShip(b);
 		group->addShip(c);
 
@@ -204,7 +204,7 @@ OO_TEST(deadShipsLeave)
 {
 	{
 		oo::AutoreleaseScope pool;
-		std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::nullopt);
+		std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::nullopt);
 		ShipEntity *survivor = NewShip();
 		::TestEntityObject *doomedObject = oo::test::NewRetained<::TestEntityObject>();
 		::TestEntityObject *doomedLeaderObject = oo::test::NewRetained<::TestEntityObject>();
@@ -228,17 +228,17 @@ OO_TEST(cursor)
 {
 	{
 		oo::AutoreleaseScope pool;
-		std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::nullopt);
+		std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::nullopt);
 		std::vector<ShipEntity *> ships = { NewShip(), NewShip(), NewShip() };
 		for (ShipEntity *ship : ships)  group->addShip(ship);
 
 		std::vector<ShipEntity *> seen;
-		OOShipGroupCursor cursor(group.get());
+		oo::ShipGroupCursor cursor(group.get());
 		while (ShipEntity *ship = cursor.next())  seen.push_back(ship);
 		OO_CHECK(seen == ships);	// internal order: the order added
 		OO_CHECK(cursor.index() == 3);
 
-		OOShipGroupCursor mutated(group.get());
+		oo::ShipGroupCursor mutated(group.get());
 		OO_CHECK(mutated.next() == ships[0]);
 		group->addShip(NewShip());
 		bool raised = false;
@@ -259,14 +259,14 @@ OO_TEST(description)
 {
 	{
 		oo::AutoreleaseScope pool;
-		std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::string("pirates"));
+		std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::string("pirates"));
 		group->addShip(NewShip());
 		OO_CHECK(group->descriptionComponents() == std::optional<std::string>("\"pirates\", 1 ships"));
 		ShipEntity *leader = NewShip();
 		group->setLeader(leader);
 		std::optional<std::string> text = group->descriptionComponents();
 		OO_CHECK(text.has_value() && *text == "\"pirates\", 2 ships, leader: " + TestEntityObjectDescription(TestObjectOf(leader)));
-		OO_CHECK(OOShipGroup::groupWithName(std::nullopt)->descriptionComponents() == std::optional<std::string>("0 ships"));
+		OO_CHECK(oo::ShipGroup::groupWithName(std::nullopt)->descriptionComponents() == std::optional<std::string>("0 ships"));
 	}
 }
 
@@ -276,7 +276,7 @@ OO_TEST(cxxGroup)
 	{
 		oo::AutoreleaseScope pool;
 		ShipEntity *leader = NewShip(), *wingman = NewShip();
-		std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::string("g"), leader);
+		std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::string("g"), leader);
 		OO_CHECK(group != nullptr && group->name() == std::optional<std::string>("g"));
 		OO_CHECK(group->leader() == leader && group->count() == 1);
 		OO_CHECK(group->addShip(wingman) && group->addShip(wingman) && group->count() == 2);
@@ -285,7 +285,7 @@ OO_TEST(cxxGroup)
 		OO_CHECK(group->descriptionComponents() == std::optional<std::string>("\"g\", 2 ships, leader: " + TestEntityObjectDescription(TestObjectOf(leader))));
 
 		std::vector<ShipEntity *> seen;
-		OOShipGroupCursor cursor(group.get());
+		oo::ShipGroupCursor cursor(group.get());
 		while (ShipEntity *ship = cursor.next())  seen.push_back(ship);
 		OO_CHECK(seen == std::vector<ShipEntity *>({ leader, wingman }));
 
@@ -303,14 +303,14 @@ OO_TEST(objectNode)
   // back, and describes it as "%@" printed it.
 	{
 		oo::AutoreleaseScope pool;
-		std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::string("node"));
-		const oo::PList node = OOShipGroupObjectNode(group.get());
-		OO_CHECK(OOShipGroupInObjectNode(node) == group.get());
-		OO_CHECK(OOShipGroupObjectNode(nullptr).isNull() && OOShipGroupInObjectNode(oo::PList("node")) == nullptr);
+		std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::string("node"));
+		const oo::PList node = oo::ShipGroupObjectNode(group.get());
+		OO_CHECK(oo::ShipGroupInObjectNode(node) == group.get());
+		OO_CHECK(oo::ShipGroupObjectNode(nullptr).isNull() && oo::ShipGroupInObjectNode(oo::PList("node")) == nullptr);
 		OO_CHECK(group->className() == "OOShipGroup");
 		const std::string text = group->description();
 		OO_CHECK(text.rfind("<OOShipGroup 0x", 0) == 0 && text.find(">{\"node\", 0 ships}") != std::string::npos);
-		OO_CHECK(OOShipGroup::groupWithName(std::nullopt) != OOShipGroup::groupWithName(std::nullopt));	// distinct groups, as before
+		OO_CHECK(oo::ShipGroup::groupWithName(std::nullopt) != oo::ShipGroup::groupWithName(std::nullopt));	// distinct groups, as before
 	}
 }
 
@@ -326,7 +326,7 @@ OO_TEST(dyingGroupReleasesLeaderReference)
 	ShipEntity *leader = Ship(leaderObject), *member = Ship(memberObject);
 	{
 		oo::AutoreleaseScope pool;
-		std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::string("doomed"));
+		std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::string("doomed"));
 		group->addShip(member);
 		group->setLeader(leader);
 		OO_CHECK(group->leader() == leader && group->count() == 2);

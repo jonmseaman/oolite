@@ -34,7 +34,7 @@ MA 02110-1301, USA.
 #include "DockEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
-#include "OOMaths.h"
+#include "Maths.h"
 #include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "StationEntity.h"  // willDispose(): the station's and the dock's parts
@@ -93,7 +93,7 @@ void Entity::init() {
 
   isSunlit = true;
 
-  atmosphereFogging = OOColor::colorWithRed(0.0, 0.0, 0.0, 0.0);
+  atmosphereFogging = oo::Color::colorWithRed(0.0, 0.0, 0.0, 0.0);
 
   lastDrawCounter = 0;
 }
@@ -517,9 +517,9 @@ void Entity::setCollisionRegion(CollisionRegion* region) {
   collisionRegion = oo::share(region);
 }
 
-void Entity::setUniversalID(OOUniversalID uid) { universalID = uid; }
+void Entity::setUniversalID(oo::UniversalID uid) { universalID = uid; }
 
-OOUniversalID Entity::getUniversalID() { return universalID; }
+oo::UniversalID Entity::getUniversalID() { return universalID; }
 
 bool Entity::throwingSparks() { return throw_sparks; }
 
@@ -597,7 +597,7 @@ void Entity::setPosition(HPVector posn) {
   updateCameraRelativePosition();
 }
 
-void Entity::setPositionX(OOHPScalar x, OOHPScalar y, OOHPScalar z) {
+void Entity::setPositionX(oo::HPScalar x, oo::HPScalar y, oo::HPScalar z) {
   position.x = x;
   position.y = y;
   position.z = z;
@@ -616,13 +616,13 @@ HPVector Entity::absolutePositionForSubentity() {
 
 HPVector Entity::absolutePositionForSubentityOffset(HPVector offset) {
   HPVector abspos =
-      HPvector_add(position, OOHPVectorMultiplyMatrix(offset, rotMatrix));
+      HPvector_add(position, oo::HPVectorMultiplyMatrix(offset, rotMatrix));
   Entity* last = nullptr;
   Entity* father = parentEntity();
 
   while (father != nullptr && father != last) {
     abspos = HPvector_add(
-        OOHPVectorMultiplyMatrix(abspos, father->drawRotationMatrix()),
+        oo::HPVectorMultiplyMatrix(abspos, father->drawRotationMatrix()),
         father->getPosition());
     last = father;
     if (!last->getIsSubEntity()) break;
@@ -635,11 +635,11 @@ double Entity::zeroDistance() { return zero_distance; }
 
 double Entity::camZeroDistance() { return cam_zero_distance; }
 
-OOComparisonResult Entity::compareZeroDistance(Entity* otherEntity) {
+oo::ComparisonResult Entity::compareZeroDistance(Entity* otherEntity) {
   if ((otherEntity) && (zero_distance > otherEntity->zero_distance))
-    return OOComparisonResult::kAscending;
+    return oo::ComparisonResult::kAscending;
   else
-    return OOComparisonResult::kDescending;
+    return oo::ComparisonResult::kDescending;
 }
 
 BoundingBox Entity::getBoundingBox() { return boundingBox; }
@@ -659,7 +659,7 @@ void Entity::setNormalOrientation(Quaternion quat) { setOrientation(quat); }
 
 void Entity::orientationChanged() {
   quaternion_normalize(&orientation);
-  rotMatrix = OOMatrixForQuaternionRotation(orientation);
+  rotMatrix = oo::MatrixForQuaternionRotation(orientation);
 }
 
 void Entity::setVelocity(Vector vel) { velocity = vel; }
@@ -714,18 +714,18 @@ void Entity::moveForward(double amount) {
   distanceTravelled += static_cast<GLfloat>(amount);
 }
 
-OOMatrix Entity::rotationMatrix() { return rotMatrix; }
+oo::Matrix Entity::rotationMatrix() { return rotMatrix; }
 
-OOMatrix Entity::drawRotationMatrix() { return rotMatrix; }
+oo::Matrix Entity::drawRotationMatrix() { return rotMatrix; }
 
-OOMatrix Entity::transformationMatrix() {
-  OOMatrix result = rotMatrix;
-  return OOMatrixHPTranslate(result, position);
+oo::Matrix Entity::transformationMatrix() {
+  oo::Matrix result = rotMatrix;
+  return oo::MatrixHPTranslate(result, position);
 }
 
-OOMatrix Entity::drawTransformationMatrix() {
-  OOMatrix result = rotMatrix;
-  return OOMatrixHPTranslate(result, position);
+oo::Matrix Entity::drawTransformationMatrix() {
+  oo::Matrix result = rotMatrix;
+  return oo::MatrixHPTranslate(result, position);
 }
 
 bool Entity::canCollide() { return true; }
@@ -740,7 +740,7 @@ std::vector<oo::EntityHold>* Entity::getCollidingEntities() {
   return &collidingEntities;
 }
 
-void Entity::update(OOTimeDelta delta_t) {
+void Entity::update(oo::TimeDelta delta_t) {
   if (_status != oo::EntityStatus::kCockpitDisplay) {
     if (getIsSubEntity()) {
       // A message to a nil owner answered 0.
@@ -777,7 +777,7 @@ void Entity::update(OOTimeDelta delta_t) {
   lastOrientation = orientation;
 }
 
-void Entity::applyVelocity(OOTimeDelta delta_t) {
+void Entity::applyVelocity(oo::TimeDelta delta_t) {
   position = HPvector_add(
       position, HPvector_multiply_scalar(vectorToHPVector(velocity), delta_t));
 }
@@ -893,11 +893,11 @@ GLfloat Entity::timeElapsedSinceSpawn() {
       (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - spawnTime);
 }
 
-void Entity::setAtmosphereFogging(OOColor* fogging) {
+void Entity::setAtmosphereFogging(oo::Color* fogging) {
   atmosphereFogging = oo::share(fogging);
 }
 
-std::shared_ptr<OOColor> Entity::fogUniform() { return atmosphereFogging; }
+std::shared_ptr<oo::Color> Entity::fogUniform() { return atmosphereFogging; }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 std::optional<std::string> Entity::descriptionForObjDumpBasic() {

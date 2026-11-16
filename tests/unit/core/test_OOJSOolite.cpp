@@ -178,7 +178,9 @@ std::vector<std::string> ResourceManager::maskUserNameInPathArray(const std::vec
 
 
 // The tone mappers' names, as OOConstToString.mm gives them, for the ones the test uses.
-std::string OOStringFromHDRToneMapper(oo::HDRToneMapper toneMapper)
+namespace oo {
+
+std::string StringFromHDRToneMapper(oo::HDRToneMapper toneMapper)
 {
 	switch (toneMapper)
 	{
@@ -189,14 +191,14 @@ std::string OOStringFromHDRToneMapper(oo::HDRToneMapper toneMapper)
 	}
 }
 
-oo::HDRToneMapper OOHDRToneMapperFromString(const std::string &string)
+oo::HDRToneMapper HDRToneMapperFromString(const std::string &string)
 {
 	if (string == "OOHDR_TONEMAPPER_DICE")  return oo::HDRToneMapper::kDice;
 	if (string == "OOHDR_TONEMAPPER_REINHARD")  return oo::HDRToneMapper::kReinhard;
 	return oo::HDRToneMapper::kAcesApprox;
 }
 
-std::string OOStringFromSDRToneMapper(oo::SDRToneMapper toneMapper)
+std::string StringFromSDRToneMapper(oo::SDRToneMapper toneMapper)
 {
 	switch (toneMapper)
 	{
@@ -207,12 +209,15 @@ std::string OOStringFromSDRToneMapper(oo::SDRToneMapper toneMapper)
 	}
 }
 
-oo::SDRToneMapper OOSDRToneMapperFromString(const std::string &string)
+oo::SDRToneMapper SDRToneMapperFromString(const std::string &string)
 {
 	if (string == "OOSDR_TONEMAPPER_AGX")  return oo::SDRToneMapper::kAgX;
 	if (string == "OOSDR_TONEMAPPER_REINHARD")  return oo::SDRToneMapper::kReinhard;
 	return oo::SDRToneMapper::kAces;
 }
+
+}  // namespace oo
+
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------

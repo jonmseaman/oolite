@@ -34,11 +34,11 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
-#include "OOFoundation.h"
-#include "OOFullScreenController.h"
-#include "OOFunctionAttributes.h"
-#include "OOHeadless.h"
-#include "OOMouseInteractionMode.h"
+#include "Foundation.h"
+#include "FullScreenController.h"
+#include "FunctionAttributes.h"
+#include "Headless.h"
+#include "MouseInteractionMode.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Object.h"
@@ -81,8 +81,8 @@ class GameController : public oo::Object {
   */
   void setEcoQoS(bool efficiencyModeRequested);
 
-  OOMouseInteractionMode mouseInteractionMode();
-  void setMouseInteractionMode(OOMouseInteractionMode mode);
+  oo::MouseInteractionMode mouseInteractionMode();
+  void setMouseInteractionMode(oo::MouseInteractionMode mode);
   void setMouseInteractionModeForFlight();  // Chooses mouse control mode
                                             // appropriately.
   void setMouseInteractionModeForUIWithMouseInteraction(bool interaction);
@@ -106,15 +106,15 @@ class GameController : public oo::Object {
 
   // What the simulation reads as "now": the system clock, unless a headless
   // game installed a manual one.
-  const OOGameClock& clock() const { return _clock; }
+  const oo::GameClock& clock() const { return _clock; }
 
   /*	For the game's code that must not make a controller as a side effect (a
      controller's constructor reseeds RANROT, which a unit test with no
      controller would notice): the shared controller's clock and observer if
      it exists, else the system clock and none.
   */
-  static const OOGameClock& currentClock();
-  static OOGameObserver* currentObserver();
+  static const oo::GameClock& currentClock();
+  static oo::GameObserver* currentObserver();
   void startAnimationTimer();
   void stopAnimationTimer();
 
@@ -144,18 +144,18 @@ class GameController : public oo::Object {
      message, if the options are inconsistent or a universe already exists.
      Call it on sharedController(), the controller the game's code reaches.
   */
-  void startHeadless(const OOHeadlessOptions& options);
+  void startHeadless(const oo::HeadlessOptions& options);
 
-  const OOHeadlessOptions& headlessOptions() const { return _options; }
+  const oo::HeadlessOptions& headlessOptions() const { return _options; }
 
   // Told of each ship and world script event before the scripts run; null,
   // the default, in the windowed game. Not owned.
-  OOGameObserver* observer() const { return _observer; }
+  oo::GameObserver* observer() const { return _observer; }
 
-  void setObserver(OOGameObserver* observer) { _observer = observer; }
+  void setObserver(oo::GameObserver* observer) { _observer = observer; }
 
   // What a headless game would have drawn and played.
-  OOPresentationRecord& presentation() { return _presentation; }
+  oo::PresentationRecord& presentation() { return _presentation; }
 
   void exitAppWithContext(const std::string& context);
 
@@ -222,11 +222,11 @@ class GameController : public oo::Object {
       _gameView;                          // was gameView, named like its getter
   std::unique_ptr<::Universe> _universe;  // the game's universe (UNIVERSE)
 
-  OOGameClock _clock;  // the system clock unless a headless game set one
+  oo::GameClock _clock;  // the system clock unless a headless game set one
   std::optional<std::string> _exitRequested;
-  OOHeadlessOptions _options;  // the windowed game's unless startHeadless
-  OOGameObserver* _observer = nullptr;  // not owned; null when windowed
-  OOPresentationRecord _presentation;   // a headless game's only
+  oo::HeadlessOptions _options;  // the windowed game's unless startHeadless
+  oo::GameObserver* _observer = nullptr;  // not owned; null when windowed
+  oo::PresentationRecord _presentation;   // a headless game's only
   double last_timeInterval = {};
   double delta_t = {};
 
@@ -254,8 +254,8 @@ class GameController : public oo::Object {
 
   bool gameIsPaused = {};
 
-  OOMouseInteractionMode _mouseMode = {};
-  OOMouseInteractionMode _resumeMode = {};
+  oo::MouseInteractionMode _mouseMode = {};
+  oo::MouseInteractionMode _resumeMode = {};
 
 // Fullscreen mode stuff.
 #if OOLITE_SDL
@@ -301,7 +301,11 @@ class GameController : public oo::Object {
    An OOException from it is caught and logged as the perform's was, and the
    call is then never destroyed, as the performer leaked its target.
 */
-void OOScheduleDeferredCall(std::function<void()> call, double delay);
+namespace oo {
+
+void ScheduleDeferredCall(std::function<void()> call, double delay);
+
+}  // namespace oo
 
 #if OO_DEBUG
 #define OO_DEBUG_PROGRESS(message) \

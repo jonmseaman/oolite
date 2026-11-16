@@ -10,7 +10,7 @@
    OOPListGameTypes.mm use it). Run: tests/run.sh unit
 */
 
-#include "OOMaths.h"
+#include "Maths.h"
 #include "oofnd/PList.hpp"
 #include <memory>
 #include "oo_test.hpp"
@@ -24,12 +24,12 @@ bool Same(Vector a, Vector b) { return a.x == b.x && a.y == b.y && a.z == b.z; }
 OO_TEST(boxHoldsItsVector) {
   {
     Vector v = make_vector(1.5f, -2.0f, 3.25f);
-    std::shared_ptr<OONativeVector> box = oo::makeShared<OONativeVector>(v);
+    std::shared_ptr<oo::NativeVector> box = oo::makeShared<oo::NativeVector>(v);
     OO_CHECK(box != nullptr);
     OO_CHECK(box->className() == "OONativeVector");
     OO_CHECK(Same(box->getVector(), v));
 
-    std::shared_ptr<OONativeVector> zero = oo::makeShared<OONativeVector>(kZeroVector);
+    std::shared_ptr<oo::NativeVector> zero = oo::makeShared<oo::NativeVector>(kZeroVector);
     OO_CHECK(Same(zero->getVector(), kZeroVector));
     OO_CHECK(zero != box);
   }
@@ -38,11 +38,11 @@ OO_TEST(boxHoldsItsVector) {
 OO_TEST(boxSurvivesAnObjectNode) {
   {
     Vector v = make_vector(4.0f, 5.0f, 6.0f);
-    std::shared_ptr<OONativeVector> box = oo::makeShared<OONativeVector>(v);
+    std::shared_ptr<oo::NativeVector> box = oo::makeShared<oo::NativeVector>(v);
     oo::PList node = oo::PList(oo::PList::Object(box));
     const oo::PList::Object* object = node.getIf<oo::PList::Object>();
     OO_CHECK(object != nullptr && object->get() == box.get());
-    OONativeVector* held = dynamic_cast<OONativeVector*>(object->get());
+    oo::NativeVector* held = dynamic_cast<oo::NativeVector*>(object->get());
     OO_CHECK(held != nullptr);
     OO_CHECK(Same(held->getVector(), v));
   }
@@ -54,20 +54,20 @@ OO_TEST(freeFunctions) {
            Same(kBasisYVector, make_vector(0, 1, 0)) &&
            Same(kBasisZVector, make_vector(0, 0, 1)));
   OO_CHECK(
-      Same(OORandomPositionInBoundingBox((BoundingBox){{2, 3, 4}, {2, 3, 4}}),
+      Same(oo::RandomPositionInBoundingBox((BoundingBox){{2, 3, 4}, {2, 3, 4}}),
            make_vector(2, 3, 4)));
   ranrot_srand(12345);  // unseeded, randf() is always 0 and
                         // OORandomUnitVector() never returns
   for (int i = 0; i < 100; i++) {
-    OO_CHECK(fabs(magnitude(OORandomUnitVector()) - 1.0f) < 1e-5f);
-    OO_CHECK(magnitude(OOVectorRandomSpatial(2.0f)) <= 2.0f + 1e-5f);
-    OO_CHECK(magnitude(OOVectorRandomRadial(3.0f)) <= 3.0f + 1e-5f);
+    OO_CHECK(fabs(magnitude(oo::RandomUnitVector()) - 1.0f) < 1e-5f);
+    OO_CHECK(magnitude(oo::VectorRandomSpatial(2.0f)) <= 2.0f + 1e-5f);
+    OO_CHECK(magnitude(oo::VectorRandomRadial(3.0f)) <= 3.0f + 1e-5f);
   }
 }
 
 OO_TEST(cxxBox) {
   Vector v = make_vector(-1.0f, 0.25f, 8.0f);
-  std::shared_ptr<OONativeVector> box = oo::makeShared<OONativeVector>(v);
+  std::shared_ptr<oo::NativeVector> box = oo::makeShared<oo::NativeVector>(v);
   OO_CHECK(Same(box->getVector(), v));
 }
 

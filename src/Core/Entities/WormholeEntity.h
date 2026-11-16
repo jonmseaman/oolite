@@ -36,7 +36,7 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "Entity.h"
-#include "OOEnumFlags.h"
+#include "EnumFlags.h"
 #include "oofnd/PList.hpp"
 
 inline constexpr double WORMHOLE_EXPIRES_TIMEINTERVAL = 900.0;
@@ -108,14 +108,14 @@ class WormholeEntity : public Entity {
    * wormhole (after init()).
    */
   void initWithDict(const oo::PList& dict);
-  void initWormholeTo(OOSystemID s, ::ShipEntity* ship);
+  void initWormholeTo(oo::SystemID s, ::ShipEntity* ship);
 
   bool suckInShip(::ShipEntity* ship);
   void disgorgeShips();
   void setExitPosition(HPVector pos);
 
-  OOSystemID getOrigin();       // -origin (the ivar keeps the name)
-  OOSystemID getDestination();  // -destination
+  oo::SystemID getOrigin();       // -origin (the ivar keeps the name)
+  oo::SystemID getDestination();  // -destination
   NSPoint originCoordinates();
   NSPoint destinationCoordinates();
 
@@ -152,7 +152,7 @@ class WormholeEntity : public Entity {
   std::optional<std::string> descriptionComponents() const override;
   bool canCollide() override;
   bool checkCloseCollisionWith(Entity* other) override;
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void drawImmediate(bool immediate, bool translucent) override;
   void dumpSelfState() override;
 
@@ -172,8 +172,8 @@ class WormholeEntity : public Entity {
            // misjump wormholes)
   double scan_time = {};  // Time when wormhole was scanned
 
-  OOSystemID origin = {};
-  OOSystemID destination = {};
+  oo::SystemID origin = {};
+  oo::SystemID destination = {};
 
   NSPoint originCoords = {};  // May not equal our origin system if the wormhole
                               // opens from Interstellar Space

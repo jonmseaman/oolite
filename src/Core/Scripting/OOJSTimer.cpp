@@ -73,8 +73,8 @@ static JSClassID sTimerClassID;
         deallocated or the engine is reset.
 */
 
-std::shared_ptr<OOJSTimer> OOJSTimer::timerWithDelay(OOTimeAbsolute delay,
-                                                     OOTimeDelta interval,
+std::shared_ptr<OOJSTimer> OOJSTimer::timerWithDelay(oo::TimeAbsolute delay,
+                                                     oo::TimeDelta interval,
                                                      JSContext* context,
                                                      JSValueConst function,
                                                      JSValueConst jsThis) {
@@ -85,7 +85,7 @@ std::shared_ptr<OOJSTimer> OOJSTimer::timerWithDelay(OOTimeAbsolute delay,
   return timer;
 }
 
-bool OOJSTimer::initWithDelay(OOTimeAbsolute delay, OOTimeDelta interval,
+bool OOJSTimer::initWithDelay(oo::TimeAbsolute delay, oo::TimeDelta interval,
                               JSContext* context, JSValueConst function,
                               JSValueConst jsThis) {
   if (!initWithNextTime(

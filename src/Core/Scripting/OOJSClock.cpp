@@ -30,8 +30,8 @@ MA 02110-1301, USA.
 #include "DebugStandards.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
-#include "OOStringParsing.h"
 #include "PlayerEntity.h"
+#include "StringParsing.h"
 #include "Universe.h"
 
 static JSValue ClockGetProperty(OOJS_GETTER_ARGS);
@@ -183,8 +183,8 @@ static JSValue ClockGetProperty(OOJS_GETTER_ARGS) {
 
     case kLegacyScriptTimer:
       oo::StandardsDeprecated("The legacy_scriptTimer property is deprecated");
-      return JS_NewNumber(
-          context, (player != nullptr ? player->scriptTimer() : OOTimeDelta{}));
+      return JS_NewNumber(context, (player != nullptr ? player->scriptTimer()
+                                                      : oo::TimeDelta{}));
 
     default:
       OOJSReportBadPropertySelector(context, thisObj, magic, sClockProperties,

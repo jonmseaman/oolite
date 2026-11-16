@@ -42,17 +42,14 @@ A leaf of Entity. The class is global.
 #define NEW_ATMOSPHERE 1
 
 #include "AI.h"
-#include "OOCharacter.h"
-#include "OOEntityFilterPredicate.h"
-#include "OOGraphicsResetManager.h"
+#include "Character.h"
+#include "EntityFilterPredicate.h"
+#include "GraphicsResetManager.h"
+#include "Maths.h"
 #include "OOJavaScriptEngine.h"  // OONull
-#include "OOMaths.h"
-#include "OOOpenGLMatrixManager.h"
-#include "OOPListGameTypes.h"
-#include "OOPlanetDrawable.h"
-#include "OOStringExpander.h"
-#include "OOStringParsing.h"
-#include "OOSystemDescriptionManager.h"
+#include "OpenGLMatrixManager.h"
+#include "PListGameTypes.h"
+#include "PlanetDrawable.h"
 #include "PlanetTextureGenerator.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
@@ -61,16 +58,19 @@ A leaf of Entity. The class is global.
 #include "ShipEntityAI.h"
 #include "SingleTextureMaterial.h"
 #include "StandaloneAtmosphereGenerator.h"
+#include "StringExpander.h"
+#include "StringParsing.h"
+#include "SystemDescriptionManager.h"
 #include "Texture.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/objc/Assert.h"
 
-#define OO_TERMINATOR_THRESHOLD_VECTOR_DEFAULT                   \
-  (make_vector(                                                  \
-      static_cast<OOScalar>(0.105), static_cast<OOScalar>(0.18), \
-      static_cast<OOScalar>(0.28)))  // used to be (0.1, 0.105, 0.12);
+#define OO_TERMINATOR_THRESHOLD_VECTOR_DEFAULT                       \
+  (make_vector(                                                      \
+      static_cast<oo::Scalar>(0.105), static_cast<oo::Scalar>(0.18), \
+      static_cast<oo::Scalar>(0.28)))  // used to be (0.1, 0.105, 0.12);
 
 namespace {
 
@@ -85,9 +85,9 @@ void SetInfo(oo::PList& info, const std::string& key, oo::PList value) {
 // other value, which the callers never store there: the colours this class puts
 // in the planet info). The colour an Object node of the planet info holds (the
 // colour is the node's foreign object); null for none.
-OOColor* ColorForKey(const oo::PList& dict, std::string_view key) {
+oo::Color* ColorForKey(const oo::PList& dict, std::string_view key) {
   const oo::PList* value = dict.find(key);
-  return value != nullptr ? OOColorInObjectNode(*value) : nullptr;
+  return value != nullptr ? oo::ColorInObjectNode(*value) : nullptr;
 }
 
 // -objectForKey: as plist data (a null PList when absent), for
@@ -112,7 +112,7 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
 Vector VectorForKey(const oo::PList& dict, std::string_view key,
                     Vector fallback) {
   if (dict.isNull()) return kZeroVector;
-  return OOVectorFromPList(dict.find(key), fallback);
+  return oo::VectorFromPList(dict.find(key), fallback);
 }
 
 // get<PList::Dict>: the dictionary, or null (nil).
@@ -166,7 +166,7 @@ oo::PList MaterialConfigWithTextures(
 }  // namespace
 
 // this is exclusively called to initialise the main planet.
-void oo::PlanetEntity::initAsMainPlanetForSystem(OOSystemID s) {
+void oo::PlanetEntity::initAsMainPlanetForSystem(oo::SystemID s) {
   oo::PList planetInfo =
       (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(s) : oo::PList());
 
@@ -178,7 +178,8 @@ void oo::PlanetEntity::initAsMainPlanetForSystem(OOSystemID s) {
       planetInfo, planetInfo.get<bool>("has_atmosphere", true),
       ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) != nullptr
            ? UNIVERSE->getSystemManager()->getRandomSeedForSystem(
-                 s, (PLAYER != nullptr ? PLAYER->galaxyNumber() : OOGalaxyID{}))
+                 s,
+                 (PLAYER != nullptr ? PLAYER->galaxyNumber() : oo::GalaxyID{}))
            : Random_Seed()),
       s);
 }
@@ -189,7 +190,7 @@ static const double kMesosphere =
 
 void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
                                           bool atmosphere, Random_Seed seed,
-                                          OOSystemID systemID) {
+                                          oo::SystemID systemID) {
   const oo::PList dict =
       dictionary.isNull() ? oo::PList(oo::PList::Dict{}) : dictionary;
   RANROTSeed savedRanrotSeed = RANROTGetFullSeed();
@@ -234,7 +235,7 @@ void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
   int radius_km = dict.get<int>(KEY_RADIUS, planetInfo.get<int>(KEY_RADIUS));
   collision_radius =
       static_cast<GLfloat>(radius_km * 10.0);  // Scale down by a factor of 100
-  OOTechLevelID techLevel = static_cast<OOTechLevelID>(
+  oo::TechLevelID techLevel = static_cast<oo::TechLevelID>(
       dict.get<int>(KEY_TECHLEVEL, planetInfo.get<int>(KEY_TECHLEVEL)));
 
   if (techLevel > 14) techLevel = 14;
@@ -260,7 +261,7 @@ void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
 
   RNG_Seed savedRndSeed = currentRandomSeed();
 
-  _planetDrawable = oo::makeShared<OOPlanetDrawable>();
+  _planetDrawable = oo::makeShared<oo::PlanetDrawable>();
 
   _terminatorThresholdVector =
       VectorForKey(planetInfo, "terminator_threshold_vector",
@@ -284,16 +285,16 @@ void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
     // so that it doesn't conflict with the shader atmosphere at the planet
     // edges. If no shader atmosphere is used, then set it to the standard
     // radius
-    double atmosphereRadius =
-        (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel()
-                             : OOGraphicsDetail{}) >= OOGraphicsDetail::kShaders
-            ? collision_radius
-            : collision_radius + ATMOSPHERE_DEPTH;
-    _atmosphereDrawable = OOPlanetDrawable::atmosphereWithRadius(
+    double atmosphereRadius = (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel()
+                                                   : oo::GraphicsDetail{}) >=
+                                      oo::GraphicsDetail::kShaders
+                                  ? collision_radius
+                                  : collision_radius + ATMOSPHERE_DEPTH;
+    _atmosphereDrawable = oo::PlanetDrawable::atmosphereWithRadius(
         static_cast<float>(atmosphereRadius));
-    _cloudsShaderDrawable = OOPlanetDrawable::atmosphereWithRadius(
+    _cloudsShaderDrawable = oo::PlanetDrawable::atmosphereWithRadius(
         static_cast<float>(atmosphereRadius));
-    _atmosphereShaderDrawable = OOPlanetDrawable::atmosphereWithRadius(
+    _atmosphereShaderDrawable = oo::PlanetDrawable::atmosphereWithRadius(
         static_cast<float>(collision_radius + ATMOSPHERE_DEPTH));
 
     // convert the atmosphere settings to generic 'material parameters'
@@ -307,7 +308,7 @@ void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
     _airColor = oo::share(ColorForKey(planetInfo, "air_color"));
     _airColorMixRatio = planetInfo.get<float>("air_color_mix_ratio");
 
-    _airDensity = OOClamp_0_1_f(planetInfo.get<float>("air_density"));
+    _airDensity = oo::Clamp_0_1_f(planetInfo.get<float>("air_density"));
     // (debug) translated air colour / cloud colour / polar cloud color via
     // descriptionComponents
 
@@ -322,9 +323,9 @@ void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
 #else
   // NEW_ATMOSPHERE is 0? still differentiate between normal planets and moons.
   if (atmosphere) {
-    _atmosphereDrawable = OOPlanetDrawable::atmosphereWithRadius(
+    _atmosphereDrawable = oo::PlanetDrawable::atmosphereWithRadius(
         collision_radius + ATMOSPHERE_DEPTH);
-    _airColor = OOColor::colorWithRed(0.8f, 0.8f, 0.9f, 1.0f);
+    _airColor = oo::Color::colorWithRed(0.8f, 0.8f, 0.9f, 1.0f);
   }
   if (true)  // create _materialParameters when NEW_ATMOSPHERE is set to 0
 #endif
@@ -349,8 +350,8 @@ void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
 
   // Orientation should be handled by the code that calls this planetEntity.
   // Starting with a default value anyway.
-  orientation = Quaternion{static_cast<OOScalar>(M_SQRT1_2),
-                           static_cast<OOScalar>(M_SQRT1_2), 0, 0};
+  orientation = Quaternion{static_cast<oo::Scalar>(M_SQRT1_2),
+                           static_cast<oo::Scalar>(M_SQRT1_2), 0, 0};
   _atmosphereOrientation = kIdentityQuaternion;
   _rotationAxis = vector_up_from_quaternion(orientation);
 
@@ -410,13 +411,13 @@ void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
 
   setStatus(oo::EntityStatus::kActive);
 
-  OOGraphicsResetManager::sharedManager()->registerCxxClient(this);
+  oo::GraphicsResetManager::sharedManager()->registerCxxClient(this);
 }
 
 static Vector RandomHSBColor() {
-  return Vector{static_cast<OOScalar>(gen_rnd_number() / 256.0),
-                static_cast<OOScalar>(gen_rnd_number() / 256.0),
-                static_cast<OOScalar>(0.5 + gen_rnd_number() / 512.0)};
+  return Vector{static_cast<oo::Scalar>(gen_rnd_number() / 256.0),
+                static_cast<oo::Scalar>(gen_rnd_number() / 256.0),
+                static_cast<oo::Scalar>(0.5 + gen_rnd_number() / 512.0)};
 }
 
 static Vector LighterHSBColor(Vector c) {
@@ -425,14 +426,14 @@ static Vector LighterHSBColor(Vector c) {
 
 namespace {
 
-Vector HSBColorWithColor(OOColor* color) {
-  OOHSBAComponents c = color->hsbaComponents();  // never nil here
+Vector HSBColorWithColor(oo::Color* color) {
+  oo::HSBAComponents c = color->hsbaComponents();  // never nil here
   return Vector{c.h / 360, c.s, c.b};
 }
 
 // The planet info's colours are Object nodes of the colour.
 oo::PList ColorWithHSBColor(Vector c) {
-  return OOColorObjectNode(OOColor::colorWithHue(c.x, c.y, c.z, 1.0).get());
+  return oo::ColorObjectNode(oo::Color::colorWithHue(c.x, c.y, c.z, 1.0).get());
 }
 
 }  // namespace
@@ -479,7 +480,7 @@ void oo::PlanetEntity::setUpColorParametersWithSourceInfo(
 
   Vector landHSB, seaHSB, landPolarHSB, seaPolarHSB, illumHSB;
   Vector terminatorThreshold;
-  std::shared_ptr<OOColor> color;
+  std::shared_ptr<oo::Color> color;
 
   landHSB = RandomHSBColor();
 
@@ -496,7 +497,7 @@ void oo::PlanetEntity::setUpColorParametersWithSourceInfo(
 
     // planetinfo.plist overrides
     color =
-        OOColor::colorWithDescription(ValueForKey(sourceInfo, "land_color"));
+        oo::Color::colorWithDescription(ValueForKey(sourceInfo, "land_color"));
     if (color != nullptr) {
       landHSB = HSBColorWithColor(color.get());
     } else if (const std::optional<Vector> scanned = ScanVectorFromString(
@@ -504,7 +505,8 @@ void oo::PlanetEntity::setUpColorParametersWithSourceInfo(
       landHSB = *scanned;
     }
 
-    color = OOColor::colorWithDescription(ValueForKey(sourceInfo, "sea_color"));
+    color =
+        oo::Color::colorWithDescription(ValueForKey(sourceInfo, "sea_color"));
     if (color != nullptr) {
       seaHSB = HSBColorWithColor(color.get());
     } else if (const std::optional<Vector> scanned = ScanVectorFromString(
@@ -512,7 +514,7 @@ void oo::PlanetEntity::setUpColorParametersWithSourceInfo(
       seaHSB = *scanned;
     }
 
-    color = OOColor::colorWithDescription(
+    color = oo::Color::colorWithDescription(
         ValueForKey(sourceInfo, "illumination_color"));
     if (color != nullptr) {
       illumHSB = HSBColorWithColor(color.get());
@@ -525,12 +527,12 @@ void oo::PlanetEntity::setUpColorParametersWithSourceInfo(
           illumHSB = *scanned;
       } else {
         illumHSB = HSBColorWithColor(
-            OOColor::colorWithRed(0.8f, 0.8f, 0.4f, 1.0f).get());
+            oo::Color::colorWithRed(0.8f, 0.8f, 0.4f, 1.0f).get());
       }
     }
 
     // polar areas are brighter but have less colour (closer to white)
-    color = OOColor::colorWithDescription(
+    color = oo::Color::colorWithDescription(
         ValueForKey(sourceInfo, "polar_land_color"));
     if (color != nullptr) {
       landPolarHSB = HSBColorWithColor(color.get());
@@ -538,7 +540,7 @@ void oo::PlanetEntity::setUpColorParametersWithSourceInfo(
       landPolarHSB = LighterHSBColor(landHSB);
     }
 
-    color = OOColor::colorWithDescription(
+    color = oo::Color::colorWithDescription(
         ValueForKey(sourceInfo, "polar_sea_color"));
     if (color != nullptr) {
       seaPolarHSB = HSBColorWithColor(color.get());
@@ -558,28 +560,29 @@ void oo::PlanetEntity::setUpColorParametersWithSourceInfo(
     // add a cloud_color tinge to sky blue({0.66, 0.3, 1}).
     seaHSB = vector_add(
         landHSB,
-        (Vector{static_cast<OOScalar>(1.333), static_cast<OOScalar>(0.6),
+        (Vector{static_cast<oo::Scalar>(1.333), static_cast<oo::Scalar>(0.6),
                 2}));  // 1 part cloud, 2 parts sky blue
-    scale_vector(&seaHSB, static_cast<OOScalar>(0.333));
+    scale_vector(&seaHSB, static_cast<oo::Scalar>(0.333));
 
     float cloudAlpha =
-        OOClamp_0_1_f(sourceInfo.get<float>("cloud_alpha", 1.0f));
+        oo::Clamp_0_1_f(sourceInfo.get<float>("cloud_alpha", 1.0f));
     SetInfo(targetInfo, "cloud_alpha",
             oo::PList::singleReal(cloudAlpha));  // +numberWithFloat:
 
     // planetinfo overrides
-    color = OOColor::colorWithDescription(ValueForKey(sourceInfo, "air_color"));
+    color =
+        oo::Color::colorWithDescription(ValueForKey(sourceInfo, "air_color"));
     if (color != nullptr) seaHSB = HSBColorWithColor(color.get());
 
     color =
-        OOColor::colorWithDescription(ValueForKey(sourceInfo, "cloud_color"));
+        oo::Color::colorWithDescription(ValueForKey(sourceInfo, "cloud_color"));
     if (color != nullptr) landHSB = HSBColorWithColor(color.get());
 
     // polar areas: brighter, less saturation
     landPolarHSB = vector_add(landHSB, LighterHSBColor(landHSB));
     scale_vector(&landPolarHSB, 0.5);
 
-    color = OOColor::colorWithDescription(
+    color = oo::Color::colorWithDescription(
         ValueForKey(sourceInfo, "polar_cloud_color"));
     if (color != nullptr) landPolarHSB = HSBColorWithColor(color.get());
 
@@ -629,13 +632,13 @@ bool oo::PlanetEntity::initAsMiniatureVersionOfPlanet(
   // A copy of nil was nil.
   _atmosphereDrawable = planet->_atmosphereDrawable
                             ? planet->_atmosphereDrawable->copy()
-                            : std::shared_ptr<OOPlanetDrawable>();
+                            : std::shared_ptr<oo::PlanetDrawable>();
   _cloudsShaderDrawable = planet->_cloudsShaderDrawable
                               ? planet->_cloudsShaderDrawable->copy()
-                              : std::shared_ptr<OOPlanetDrawable>();
+                              : std::shared_ptr<oo::PlanetDrawable>();
   _atmosphereShaderDrawable = planet->_atmosphereShaderDrawable
                                   ? planet->_atmosphereShaderDrawable->copy()
-                                  : std::shared_ptr<OOPlanetDrawable>();
+                                  : std::shared_ptr<oo::PlanetDrawable>();
   if (_atmosphereDrawable)
     _atmosphereDrawable->setRadius(static_cast<float>(
         collision_radius + ATMOSPHERE_DEPTH * PLANET_MINIATURE_FACTOR *
@@ -661,7 +664,7 @@ bool oo::PlanetEntity::initAsMiniatureVersionOfPlanet(
 namespace oo {
 
 PlanetEntity::~PlanetEntity() {
-  OOGraphicsResetManager::sharedManager()->unregisterCxxClient(this);
+  oo::GraphicsResetManager::sharedManager()->unregisterCxxClient(this);
 }
 
 }  // namespace oo
@@ -694,7 +697,7 @@ std::shared_ptr<oo::PlanetEntity> oo::PlanetEntity::miniatureVersion() {
   return result;
 }
 
-void oo::PlanetEntity::update(OOTimeDelta delta_t) {
+void oo::PlanetEntity::update(oo::TimeDelta delta_t) {
   Entity::update(delta_t);
 
   if (!_miniature) [[likely]] {
@@ -702,7 +705,7 @@ void oo::PlanetEntity::update(OOTimeDelta delta_t) {
         _atmosphereShaderDrawable != nullptr &&
         (UNIVERSE != nullptr
              ? UNIVERSE->getDetailLevel()
-             : OOGraphicsDetail{}) >= OOGraphicsDetail::kShaders;
+             : oo::GraphicsDetail{}) >= oo::GraphicsDetail::kShaders;
     if (_atmosphereDrawable != nullptr && cam_zero_distance < _mesopause2)
         [[unlikely]] {
       OOCAssert(_airColor != nullptr,
@@ -724,9 +727,9 @@ void oo::PlanetEntity::update(OOTimeDelta delta_t) {
 
         // night sky, reddish flash on entering the atmosphere, low light
         // pollution otherwhise
-        std::shared_ptr<OOColor> mixColor =
-            OOColor::colorWithRed(((alt > 0.98) ? 30.0f : 0.1f), 0.1f, 0.1f,
-                                  static_cast<float>(aleph));
+        std::shared_ptr<oo::Color> mixColor =
+            oo::Color::colorWithRed(((alt > 0.98) ? 30.0f : 0.1f), 0.1f, 0.1f,
+                                    static_cast<float>(aleph));
 
         // occlusion rate: .9 is 18 degrees after the terminus, where twilight
         // ends. 1 is the terminus, 1.033 is 6 degrees before the terminus,
@@ -774,7 +777,7 @@ void oo::PlanetEntity::update(OOTimeDelta delta_t) {
         // it immediately
         if (UNIVERSE != nullptr)
           UNIVERSE->setAirResistanceFactor(
-              OOClamp_0_1_f(static_cast<float>(1.0 - trueAlt)));
+              oo::Clamp_0_1_f(static_cast<float>(1.0 - trueAlt)));
       }
     } else {
       // No atmosphere: [nil radius] was 0, and the messages to nil did nothing.
@@ -819,11 +822,11 @@ void oo::PlanetEntity::update(OOTimeDelta delta_t) {
 
   quaternion_rotate_about_axis(
       &orientation, _rotationAxis,
-      static_cast<OOScalar>(_rotationalVelocity * delta_t));
+      static_cast<oo::Scalar>(_rotationalVelocity * delta_t));
   // atmosphere orientation is relative to the orientation of the planet
   quaternion_rotate_about_axis(
       &_atmosphereOrientation, kBasisYVector,
-      static_cast<OOScalar>(_atmosphereRotationalVelocity * delta_t));
+      static_cast<oo::Scalar>(_atmosphereRotationalVelocity * delta_t));
 
   orientationChanged();
 
@@ -845,8 +848,9 @@ bool oo::PlanetEntity::isFinishedLoading() {
 void oo::PlanetEntity::drawImmediate(bool /*immediate*/, bool /*translucent*/) {
   bool canDrawShaderAtmosphere =
       _atmosphereShaderDrawable != nullptr &&
-      (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel() : OOGraphicsDetail{}) >=
-          OOGraphicsDetail::kShaders;
+      (UNIVERSE != nullptr
+           ? UNIVERSE->getDetailLevel()
+           : oo::GraphicsDetail{}) >= oo::GraphicsDetail::kShaders;
 
   if ((UNIVERSE != nullptr ? UNIVERSE->breakPatternHide() : false))
     return;  // DON'T DRAW
@@ -867,7 +871,7 @@ void oo::PlanetEntity::drawImmediate(bool /*immediate*/, bool /*translucent*/) {
   }
 
   if ((UNIVERSE != nullptr ? UNIVERSE->getWireframeGraphics() : false))
-    OOGLWireframeModeOn();
+    oo::GLWireframeModeOn();
 
   if (!_miniature) {
     _planetDrawable->calculateLevelOfDetailForViewDistance(cam_zero_distance);
@@ -896,8 +900,9 @@ void oo::PlanetEntity::drawImmediate(bool /*immediate*/, bool /*translucent*/) {
      * far enough away that painter's algorithm should do fine */
     _planetDrawable->renderOpaqueParts();
     if (_atmosphereDrawable != nullptr) {
-      OOGLPushModelView();
-      OOGLMultModelView(OOMatrixForQuaternionRotation(_atmosphereOrientation));
+      oo::GLPushModelView();
+      oo::GLMultModelView(
+          oo::MatrixForQuaternionRotation(_atmosphereOrientation));
       if (canDrawShaderAtmosphere) {
         if (_cloudsShaderDrawable)
           _cloudsShaderDrawable->renderTranslucentPartsOnOpaquePass();
@@ -905,7 +910,7 @@ void oo::PlanetEntity::drawImmediate(bool /*immediate*/, bool /*translucent*/) {
       } else {
         _atmosphereDrawable->renderTranslucentPartsOnOpaquePass();
       }
-      OOGLPopModelView();
+      oo::GLPopModelView();
     }
   }
 #if OOLITE_HAVE_FIXED_THE_ABOVE_DESCRIBED_BUG_WHICH_WE_HAVENT
@@ -914,13 +919,13 @@ void oo::PlanetEntity::drawImmediate(bool /*immediate*/, bool /*translucent*/) {
      * atmosphere on the transparent pass */
     if (translucent) {
       if (_atmosphereDrawable != nullptr) {
-        OOGLPushModelView();
-        OOGLMultModelView(
-            OOMatrixForQuaternionRotation(_atmosphereOrientation));
+        oo::GLPushModelView();
+        oo::GLMultModelView(
+            oo::MatrixForQuaternionRotation(_atmosphereOrientation));
         _atmosphereDrawable->renderTranslucentParts();
         if (canDrawShaderAtmosphere)
           _atmosphereShaderDrawable->renderTranslucentParts();
-        OOGLPopModelView();
+        oo::GLPopModelView();
       }
     } else {
       _planetDrawable->renderOpaqueParts();
@@ -929,7 +934,7 @@ void oo::PlanetEntity::drawImmediate(bool /*immediate*/, bool /*translucent*/) {
 #endif
 
   if ((UNIVERSE != nullptr ? UNIVERSE->getWireframeGraphics() : false))
-    OOGLWireframeModeOff();
+    oo::GLWireframeModeOff();
 }
 
 bool oo::PlanetEntity::checkCloseCollisionWith(Entity* other) {
@@ -991,8 +996,8 @@ void oo::PlanetEntity::launchShuttle() {
   if (shuttle_ship) {
     if ((shuttle_ship != nullptr
              ? shuttle_ship->getCrew()
-             : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
-            .value_or(std::vector<std::shared_ptr<OOCharacter>>())
+             : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
+            .value_or(std::vector<std::shared_ptr<oo::Character>>())
             .empty()) {
       if (shuttle_ship != nullptr)
         shuttle_ship->setSingleCrewWithRole("trader");
@@ -1004,7 +1009,7 @@ void oo::PlanetEntity::launchShuttle() {
     if (shuttle_ship != nullptr)
       shuttle_ship->setScanClass(oo::ScanClass::kNeutral);
     if (shuttle_ship != nullptr)
-      shuttle_ship->setCargoFlag(OOCargoFlag::kFullPlentiful);
+      shuttle_ship->setCargoFlag(oo::CargoFlag::kFullPlentiful);
     if (shuttle_ship != nullptr)
       shuttle_ship->switchAITo("oolite-shuttleAI.js");
     if (UNIVERSE != nullptr)
@@ -1041,9 +1046,9 @@ Vector oo::PlanetEntity::airColorAsVector() {
   return make_vector(r, g, b);  // don't care about a
 }
 
-OOColor* oo::PlanetEntity::airColor() { return _airColor.get(); }
+oo::Color* oo::PlanetEntity::airColor() { return _airColor.get(); }
 
-void oo::PlanetEntity::setAirColor(OOColor* newColor) {
+void oo::PlanetEntity::setAirColor(oo::Color* newColor) {
   if (newColor) {
     _airColor = oo::share(newColor);
   }
@@ -1056,11 +1061,11 @@ Vector oo::PlanetEntity::illuminationColorAsVector() {
   return make_vector(r, g, b);  // don't care about a
 }
 
-OOColor* oo::PlanetEntity::illuminationColor() {
+oo::Color* oo::PlanetEntity::illuminationColor() {
   return _illuminationColor.get();
 }
 
-void oo::PlanetEntity::setIlluminationColor(OOColor* newColor) {
+void oo::PlanetEntity::setIlluminationColor(oo::Color* newColor) {
   if (newColor) {
     _illuminationColor = oo::share(newColor);
   }
@@ -1070,14 +1075,14 @@ void oo::PlanetEntity::setIlluminationColor(OOColor* newColor) {
 float oo::PlanetEntity::airColorMixRatio() { return _airColorMixRatio; }
 
 void oo::PlanetEntity::setAirColorMixRatio(float newRatio) {
-  _airColorMixRatio = OOClamp_0_1_f(newRatio);
+  _airColorMixRatio = oo::Clamp_0_1_f(newRatio);
 }
 
 // visible to shader bindings
 float oo::PlanetEntity::airDensity() { return _airDensity; }
 
 void oo::PlanetEntity::setAirDensity(float newDensity) {
-  _airDensity = OOClamp_0_1_f(newDensity);
+  _airDensity = oo::Clamp_0_1_f(newDensity);
 }
 
 void oo::PlanetEntity::setTerminatorThresholdVector(
@@ -1119,9 +1124,9 @@ void oo::PlanetEntity::setTextureFileName(
   const oo::PList materialDefaults = ResourceManager::materialDefaults();
 
 #if OO_SHADERS
-  OOGraphicsDetail detailLevel =
-      (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel() : OOGraphicsDetail{});
-  bool shadersOn = detailLevel >= OOGraphicsDetail::kShaders;
+  oo::GraphicsDetail detailLevel =
+      (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel() : oo::GraphicsDetail{});
+  bool shadersOn = detailLevel >= oo::GraphicsDetail::kShaders;
 #else
   const bool shadersOn = false;
 #endif
@@ -1172,8 +1177,8 @@ void oo::PlanetEntity::setTextureFileName(
   } else {
     oo::PlanetTextureGenerator::generatePlanetTexture(
         &generatedDiffuseMap,
-        (detailLevel >= OOGraphicsDetail::kShaders) ? &generatedNormalMap
-                                                    : nullptr,
+        (detailLevel >= oo::GraphicsDetail::kShaders) ? &generatedNormalMap
+                                                      : nullptr,
         _materialParameters, _noiseMapSeed);
     diffuseMap = generatedDiffuseMap;
     normalMap = generatedNormalMap;

@@ -29,7 +29,7 @@
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "HeadUpDisplay.h"
-#include "OOColor.h"
+#include "Color.h"
 #include "OOJSPlayer.h"
 #include "OOJSPlayerShip.h"
 #include "OOJavaScriptEngine.h"
@@ -69,14 +69,14 @@ class FakeGui : public GuiDisplayGen {
  public:
   FakeGui() : GuiDisplayGen(NSMakeSize(480, 160), 1, 9, 19, 20, std::nullopt) {}
 
-  std::shared_ptr<OOColor> _textColor, _textCommsColor;
+  std::shared_ptr<oo::Color> _textColor, _textCommsColor;
 
-  OOColor* getTextColor() override { return _textColor.get(); }
-  OOColor* getTextCommsColor() override { return _textCommsColor.get(); }
-  void setTextColor(OOColor* color) override {
+  oo::Color* getTextColor() override { return _textColor.get(); }
+  oo::Color* getTextCommsColor() override { return _textCommsColor.get(); }
+  void setTextColor(oo::Color* color) override {
     _textColor = oo::share(color);
   }
-  void setTextCommsColor(OOColor* color) override {
+  void setTextCommsColor(oo::Color* color) override {
     _textCommsColor = oo::share(color);
   }
   std::optional<std::string> reflowTextForMFD(
@@ -94,7 +94,7 @@ class FakeUniverse : public Universe {
 
   oo::ViewID getViewDirection() override { return _viewDirection; }
   ::GuiDisplayGen* messageGUI() override { return _gui.get(); }
-  OOCreditsQuantity tradeInValueForCommanderDictionary(
+  oo::CreditsQuantity tradeInValueForCommanderDictionary(
       const oo::PList& cmdrDict) override {
     _lastCommander = oo::DescriptionOf(cmdrDict);
     return 123456;
@@ -105,7 +105,7 @@ class FakeUniverse : public Universe {
   }
   ::GuiDisplayGen* getGui() override { return _gui.get(); }
   void addMessage(const std::optional<std::string>& text,
-                  OOTimeDelta count) override {
+                  oo::TimeDelta count) override {
     _messages.push_back(
         oo::str::format("%s %g", text.value_or("(nil)").c_str(), count));
   }
@@ -166,11 +166,11 @@ class FakePlayer : public PlayerEntity {
   }
   NSPoint getGalaxy_coordinates() override { return NSMakePoint(20, 40); }
   NSPoint getCursor_coordinates() override { return NSMakePoint(30, 60); }
-  OOSystemID targetSystemID() override { return 7; }
-  OOSystemID nextHopTargetSystemID() override { return 8; }
-  OOSystemID infoSystemID() override { return 9; }
-  OOSystemID previousSystemID() override { return 6; }
-  OORouteType ANAMode() override { return OORouteType::kTime; }
+  oo::SystemID targetSystemID() override { return 7; }
+  oo::SystemID nextHopTargetSystemID() override { return 8; }
+  oo::SystemID infoSystemID() override { return 9; }
+  oo::SystemID previousSystemID() override { return 6; }
+  oo::RouteType ANAMode() override { return oo::RouteType::kTime; }
   bool getScoopOverride() override { return true; }
   bool injectorsEngaged() override { return false; }
   bool getMassLockable() override { return true; }
@@ -182,10 +182,10 @@ class FakePlayer : public PlayerEntity {
   Vector viewpointOffsetForward() override { return make_vector(0, 0, 1); }
   Vector viewpointOffsetPort() override { return make_vector(-1, 0, 0); }
   Vector viewpointOffsetStarboard() override { return make_vector(1, 0, 0); }
-  OOWeaponFacing getCurrentWeaponFacing() override {
-    return OOWeaponFacing::kForward;
+  oo::WeaponFacing getCurrentWeaponFacing() override {
+    return oo::WeaponFacing::kForward;
   }
-  ::OOEquipmentType* weaponTypeForFacing(OOWeaponFacing facing,
+  ::oo::EquipmentType* weaponTypeForFacing(oo::WeaponFacing facing,
                                          bool strict) override {
     _log.push_back(oo::str::format("weaponTypeForFacing %d %d",
                                    static_cast<int>(facing), strict ? 1 : 0));
@@ -298,7 +298,7 @@ class FakePlayer : public PlayerEntity {
   void adjustTradeInFactorBy(int value) override {
     _log.push_back(oo::str::format("adjustTradeInFactorBy %d", value));
   }
-  bool setWeaponMount(OOWeaponFacing facing, const std::string& eqKey,
+  bool setWeaponMount(oo::WeaponFacing facing, const std::string& eqKey,
                       const std::optional<std::string>& context) override {
     _log.push_back(oo::str::format("setWeaponMount %d %s %s",
                                    static_cast<int>(facing), eqKey.c_str(),
@@ -309,10 +309,10 @@ class FakePlayer : public PlayerEntity {
     _log.push_back(oo::str::format("setStatus %d", static_cast<int>(stat)));
     Entity::setStatus(stat);
   }  // the root's status, which status() answers
-  void setTargetSystemID(OOSystemID sid) override {
+  void setTargetSystemID(oo::SystemID sid) override {
     _log.push_back(oo::str::format("setTargetSystemID %d", sid));
   }
-  void setInfoSystemID(OOSystemID sid, bool moveChart) override {
+  void setInfoSystemID(oo::SystemID sid, bool moveChart) override {
     _log.push_back(
         oo::str::format("setInfoSystemID %d %d", sid, moveChart ? 1 : 0));
   }
@@ -480,9 +480,9 @@ void SetUp() {
   sUniverse = new FakeUniverse();
   sUniverse->_viewDirection = oo::ViewID::kAft;
   sUniverse->_gui = oo::makeShared<FakeGui>();
-  sUniverse->_gui->_textColor = OOColor::colorWithRed(1.0f, 0.5f, 0.25f, 1.0f);
+  sUniverse->_gui->_textColor = oo::Color::colorWithRed(1.0f, 0.5f, 0.25f, 1.0f);
   sUniverse->_gui->_textCommsColor =
-      OOColor::colorWithRed(0.0f, 1.0f, 0.0f, 0.5f);
+      oo::Color::colorWithRed(0.0f, 1.0f, 0.0f, 0.5f);
   gSharedUniverse = sUniverse;
 
   sPlayer = NewTestPlayer<FakePlayer>();
@@ -634,7 +634,7 @@ OO_TEST(getterPlayerState) {
   OO_CHECK_EVAL("player.ship.currentWeapon", "null");
   OO_CHECK_LOG(sPlayer->_log,
                oo::str::format("weaponTypeForFacing %d 0",
-                               static_cast<int>(OOWeaponFacing::kForward)));
+                               static_cast<int>(oo::WeaponFacing::kForward)));
   OO_CHECK_EVAL("player.ship.price", "123456");
   OO_CHECK_EQ(sUniverse->_lastCommander, "commander");
   OO_CHECK_EVAL("player.ship.serviceLevel", "95");
@@ -822,7 +822,7 @@ OO_TEST(setterPlayerState) {
       "undefined");
   OO_CHECK_LOG(sPlayer->_log,
                oo::str::format("setWeaponMount %d EQ_WEAPON_NONE scripted",
-                               static_cast<int>(OOWeaponFacing::kForward)));
+                               static_cast<int>(oo::WeaponFacing::kForward)));
 }
 
 OO_TEST(setterChartAndCompass) {

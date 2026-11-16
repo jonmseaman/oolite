@@ -16,7 +16,7 @@
 #include "OOJavaScriptEngine.h"
 #include "OOJSPropID.h"
 #include "Entity.h"
-#include "OOVector.h"
+#include "Vector.h"
 #include "oofnd/PList.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -705,7 +705,7 @@ OO_TEST(nativeObjectValues)
 		OO_CHECK(JS_IsNull(Owned(null->jsValueInContext(context))));
 
 		// A native vector is a Vector3D.
-		std::shared_ptr<OONativeVector> vector = oo::makeShared<OONativeVector>(make_vector(1.0f, 2.0f, 3.0f));
+		std::shared_ptr<oo::NativeVector> vector = oo::makeShared<oo::NativeVector>(make_vector(1.0f, 2.0f, 3.0f));
 		Owned vectorValue(OOJSValueFromPList(context, oo::PList(oo::PList::Object(vector))));
 		OO_CHECK(JS_IsObject(vectorValue));
 		const char *className = OOJSClassName(JS_GetClassID(vectorValue));

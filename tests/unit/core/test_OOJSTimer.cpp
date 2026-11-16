@@ -271,23 +271,28 @@ double sNow = 100.0;
 class Universe
 {
 public:
-	OOTimeAbsolute getTime();
+	oo::TimeAbsolute getTime();
 };
 typedef Universe FakeUniverse;
 
-OOTimeAbsolute Universe::getTime()	{ return sNow; }
+oo::TimeAbsolute Universe::getTime()	{ return sNow; }
 
 class Universe;
 Universe *gSharedUniverse = nullptr;
 
 
-extern const char *const kOOLogException;
-const char *const kOOLogException = "exception";
+namespace oo {
 
-void OOLogGenericSubclassResponsibilityForFunction(const char *inFunction)
+extern const char *const kLogException;
+const char *const kLogException = "exception";
+
+void LogGenericSubclassResponsibilityForFunction(const char *inFunction)
 {
 	(void)inFunction;
 }
+
+}  // namespace oo
+
 
 
 // MARK: The context -------------------------------------------------------------------------------

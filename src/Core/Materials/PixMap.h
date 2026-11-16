@@ -37,7 +37,7 @@ SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "OOMaths.h"
+#include "Maths.h"
 
 namespace oo {
 
@@ -47,7 +47,7 @@ using PixMapDimension = uint32_t;
    // Note: dimensions are assumed to be less
    // than 1048576 (2^20) pixels.
 
-#define OORoundUpToPowerOf2_PixMap OORoundUpToPowerOf2_32
+#define OORoundUpToPowerOf2_PixMap oo::RoundUpToPowerOf2_32
 
 // A pixel map's format: its number of components per pixel, which sizes rows
 // and buffers: a number used in arithmetic, so not an enumeration.

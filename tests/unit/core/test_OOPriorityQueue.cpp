@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "OOPriorityQueue.h"
+#include "PriorityQueue.h"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
@@ -35,10 +35,10 @@ class CxxItem : public oo::Object {
 
 int CxxItem::sLive = 0;
 
-OOComparisonResult CompareCxx(CxxItem* a, CxxItem* b) {
-  if (a->key < b->key) return OOComparisonResult::kAscending;
-  if (a->key > b->key) return OOComparisonResult::kDescending;
-  return OOComparisonResult::kSame;
+oo::ComparisonResult CompareCxx(CxxItem* a, CxxItem* b) {
+  if (a->key < b->key) return oo::ComparisonResult::kAscending;
+  if (a->key > b->key) return oo::ComparisonResult::kDescending;
+  return oo::ComparisonResult::kSame;
 }
 
 }  // namespace
@@ -57,7 +57,7 @@ std::string Tags(const std::vector<std::shared_ptr<CxxItem>>& items) {
 OO_TEST(cxxQueueGivesTheSameOrder) {
   {
     oo::AutoreleaseScope pool;
-    OOPriorityQueueOf<CxxItem> cxxQueue(CompareCxx);
+    oo::PriorityQueueOf<CxxItem> cxxQueue(CompareCxx);
     OO_CHECK(cxxQueue.count() == 0 && cxxQueue.peekAtNextObject() == nullptr);
     OO_CHECK(cxxQueue.removeNextObject() == nullptr);
 
@@ -92,7 +92,7 @@ OO_TEST(cxxQueueHoldsAndRemovesByIdentity) {
   CxxItem::sLive = 0;
   {
     oo::AutoreleaseScope pool;
-    OOPriorityQueueOf<CxxItem> queue(CompareCxx);
+    oo::PriorityQueueOf<CxxItem> queue(CompareCxx);
     std::shared_ptr<CxxItem> three = CxxItem::make(3, 0);
     queue.addObject(three.get());
     queue.addObject(three.get());

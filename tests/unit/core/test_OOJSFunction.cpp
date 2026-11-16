@@ -16,7 +16,7 @@
 */
 
 #include "OOJSFunction.h"
-#include "OOTypes.h"
+#include "Types.h"
 #include "oofnd/Notification.hpp"
 
 #include "oo_test.hpp"
@@ -65,7 +65,7 @@ void OOJSReportPendingException(JSContext *context)
 }
 
 
-void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta)  { sLimiterDepth++; sLimiterStarts++; }
+void OOJSStartTimeLimiterWithTimeLimit(oo::TimeDelta)  { sLimiterDepth++; sLimiterStarts++; }
 void OOJSStopTimeLimiter(void)  { sLimiterDepth--; }
 
 

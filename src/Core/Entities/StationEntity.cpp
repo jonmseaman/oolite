@@ -37,22 +37,22 @@
 #include <vector>
 
 #include "AI.h"
+#include "Character.h"
 #include "DebugStandards.h"
 #include "DockEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
 #include "HeadUpDisplay.h"
 #include "LogIndentScope.h"
-#include "OOCharacter.h"
 #include "OOJSStation.h"
 #include "OOLegacyScriptWhitelist.h"
-#include "OOPListGameTypes.h"
-#include "OOShipGroup.h"
-#include "OOStringParsing.h"
+#include "PListGameTypes.h"
 #include "PlanetEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "QuiriumCascadeEntity.h"
 #include "ShipEntityAI.h"
+#include "ShipGroup.h"
+#include "StringParsing.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Log.hpp"
@@ -143,7 +143,7 @@ oo::PList StationEntity::launchIndependentShip(const std::string& role) {
   if (ship) {
     if (!(ship != nullptr
               ? ship->getCrew()
-              : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+              : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
              .has_value()) {
       if (ship != nullptr) ship->setSingleCrewWithRole(shipRole);
     }
@@ -155,7 +155,7 @@ oo::PList StationEntity::launchIndependentShip(const std::string& role) {
 
     if (trader) {
       if (ship != nullptr) ship->setBounty(0, oo::LegalStatusReason::kSetup);
-      if (ship != nullptr) ship->setCargoFlag(OOCargoFlag::kFullPlentiful);
+      if (ship != nullptr) ship->setCargoFlag(oo::CargoFlag::kFullPlentiful);
       if (sunskimmer) {
         if (ship != nullptr) ship->setFuel((Ranrot() & 31));
         if (UNIVERSE != nullptr) UNIVERSE->makeSunSkimmer(ship.get(), true);
@@ -164,7 +164,7 @@ oo::PList StationEntity::launchIndependentShip(const std::string& role) {
         // and plentiful cargo
         //				[ship
         // switchAITo:@"exitingTraderAI.plist"];
-        if ((ship != nullptr ? ship->getFuel() : OOFuelQuantity{}) == 0) {
+        if ((ship != nullptr ? ship->getFuel() : oo::FuelQuantity{}) == 0) {
           if (ship != nullptr) ship->setFuel(70);
         }
         //				if ([ship hasRole:"sunskim-trader"])
@@ -174,11 +174,11 @@ oo::PList StationEntity::launchIndependentShip(const std::string& role) {
 
     addShipToLaunchQueue(ship.get(), false);
 
-    ::OOShipGroup* escortGroup =
+    ::oo::ShipGroup* escortGroup =
         (ship != nullptr ? ship->escortGroup()
-                         : static_cast<OOShipGroup*>(nullptr));
+                         : static_cast<oo::ShipGroup*>(nullptr));
     if ((ship != nullptr ? ship->group()
-                         : static_cast<OOShipGroup*>(nullptr)) == nullptr) {
+                         : static_cast<oo::ShipGroup*>(nullptr)) == nullptr) {
       if (ship != nullptr) ship->setGroup(escortGroup);
     }
     // Eric: Escorts are defined both as _group and as _escortGroup because
@@ -213,11 +213,11 @@ oo::PList StationEntity::launchPolice() {
     return oo::EntityNodesFrom(result);
   }
 
-  OOUniversalID police_target =
+  oo::UniversalID police_target =
       (primaryTarget() != nullptr ? primaryTarget()->getUniversalID()
-                                  : OOUniversalID{});
+                                  : oo::UniversalID{});
   unsigned i;
-  OOTechLevelID techlevel = getEquivalentTechLevel();
+  oo::TechLevelID techlevel = getEquivalentTechLevel();
   if (techlevel == oo::kNotFound) techlevel = 6;
 
   result.reserve(4);
@@ -244,7 +244,7 @@ oo::PList StationEntity::launchPolice() {
     if (police_ship && fitsInDock(police_ship.get())) {
       if (!(police_ship != nullptr
                 ? police_ship->getCrew()
-                : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+                : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
                .has_value()) {
         if (police_ship != nullptr)
           police_ship->setSingleCrewWithRole("police");
@@ -290,14 +290,14 @@ oo::PList StationEntity::launchPolice() {
     return nullptr;
   }
 
-  OOUniversalID defense_target =
+  oo::UniversalID defense_target =
       (primaryTarget() != nullptr ? primaryTarget()->getUniversalID()
-                                  : OOUniversalID{});
+                                  : oo::UniversalID{});
   std::shared_ptr<::ShipEntity> defense_ship;
   std::string default_defense_ship_role;
   const std::string defense_ship_ai = "oolite-defenseShipAI.js";
 
-  OOTechLevelID techlevel;
+  oo::TechLevelID techlevel;
 
   techlevel = getEquivalentTechLevel();
   if (techlevel == oo::kNotFound) techlevel = 6;
@@ -364,7 +364,7 @@ oo::PList StationEntity::launchPolice() {
 
   if (!(defense_ship != nullptr
             ? defense_ship->getCrew()
-            : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+            : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
            .has_value()) {
     if ((defense_ship != nullptr ? defense_ship->isPolice() : false)) {
       if (defense_ship != nullptr)
@@ -444,7 +444,7 @@ oo::PList StationEntity::launchPolice() {
   if (scavenger_ship) {
     if (!(scavenger_ship != nullptr
               ? scavenger_ship->getCrew()
-              : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+              : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
              .has_value()) {
       if (scavenger_ship != nullptr)
         scavenger_ship->setSingleCrewWithRole("miner");
@@ -504,7 +504,7 @@ oo::PList StationEntity::launchPolice() {
   if (miner_ship) {
     if (!(miner_ship != nullptr
               ? miner_ship->getCrew()
-              : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+              : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
              .has_value()) {
       if (miner_ship != nullptr) miner_ship->setSingleCrewWithRole("miner");
     }
@@ -540,9 +540,9 @@ oo::PList StationEntity::launchPolice() {
     return nullptr;
   }
   // Pirate ships are launched from the same pool as defence ships.
-  OOUniversalID defense_target =
+  oo::UniversalID defense_target =
       (primaryTarget() != nullptr ? primaryTarget()->getUniversalID()
-                                  : OOUniversalID{});
+                                  : oo::UniversalID{});
   std::shared_ptr<::ShipEntity> pirate_ship;
 
   if (defenders_launched >= max_defense_ships)
@@ -568,7 +568,7 @@ oo::PList StationEntity::launchPolice() {
   if (pirate_ship) {
     if (!(pirate_ship != nullptr
               ? pirate_ship->getCrew()
-              : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+              : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
              .has_value()) {
       if (pirate_ship != nullptr) pirate_ship->setSingleCrewWithRole("pirate");
     }
@@ -594,7 +594,7 @@ oo::PList StationEntity::launchPolice() {
     //**Lazygun** added 30 Nov 04 to put a bounty on those pirates' heads.
     if (pirate_ship != nullptr)
       pirate_ship->setBounty(
-          static_cast<OOCreditsQuantity>(10 + floor(randf() * 20)),
+          static_cast<oo::CreditsQuantity>(10 + floor(randf() * 20)),
           oo::LegalStatusReason::kSetup);  // modified for variety
 
     addShipToLaunchQueue(pirate_ship.get(), false);
@@ -626,7 +626,7 @@ oo::PList StationEntity::launchPolice() {
   if (shuttle_ship) {
     if (!(shuttle_ship != nullptr
               ? shuttle_ship->getCrew()
-              : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+              : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
              .has_value()) {
       if (shuttle_ship != nullptr)
         shuttle_ship->setSingleCrewWithRole("trader");
@@ -636,7 +636,7 @@ oo::PList StationEntity::launchPolice() {
     if (shuttle_ship != nullptr)
       shuttle_ship->setScanClass(oo::ScanClass::kNeutral);
     if (shuttle_ship != nullptr)
-      shuttle_ship->setCargoFlag(OOCargoFlag::kFullScarce);
+      shuttle_ship->setCargoFlag(oo::CargoFlag::kFullScarce);
     if (shuttle_ship != nullptr)
       shuttle_ship->switchAITo("oolite-shuttleAI.js");
     addShipToLaunchQueue(shuttle_ship.get(), false);
@@ -663,7 +663,7 @@ oo::PList StationEntity::launchPolice() {
   if (escort_ship && fitsInDock(escort_ship.get())) {
     if (!(escort_ship != nullptr
               ? escort_ship->getCrew()
-              : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+              : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
              .has_value()) {
       if (escort_ship != nullptr) escort_ship->setSingleCrewWithRole("hunter");
     }
@@ -671,7 +671,7 @@ oo::PList StationEntity::launchPolice() {
     if (escort_ship != nullptr)
       escort_ship->setScanClass(oo::ScanClass::kNeutral);
     if (escort_ship != nullptr)
-      escort_ship->setCargoFlag(OOCargoFlag::kFullPlentiful);
+      escort_ship->setCargoFlag(oo::CargoFlag::kFullPlentiful);
     if (escort_ship != nullptr) escort_ship->switchAITo("oolite-escortAI.js");
     addShipToLaunchQueue(escort_ship.get(), false);
   }
@@ -690,7 +690,7 @@ oo::PList StationEntity::launchPolice() {
   }
   if (defenders_launched < max_police) {
     std::shared_ptr<::ShipEntity> patrol_ship;
-    OOTechLevelID techlevel;
+    oo::TechLevelID techlevel;
 
     techlevel = getEquivalentTechLevel();
     if (techlevel == oo::kNotFound) techlevel = 6;
@@ -711,7 +711,7 @@ oo::PList StationEntity::launchPolice() {
     if (patrol_ship) {
       if (!(patrol_ship != nullptr
                 ? patrol_ship->getCrew()
-                : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+                : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
                .has_value()) {
         if (patrol_ship != nullptr)
           patrol_ship->setSingleCrewWithRole("police");
@@ -760,7 +760,7 @@ void StationEntity::launchShipWithRole(const std::string& role) {
   if (ship && fitsInDock(ship.get())) {
     if (!(ship != nullptr
               ? ship->getCrew()
-              : std::optional<std::vector<std::shared_ptr<OOCharacter>>>())
+              : std::optional<std::vector<std::shared_ptr<oo::Character>>>())
              .has_value()) {
       if (ship != nullptr) ship->setSingleCrewWithRole(shipRole);
     }
@@ -817,9 +817,9 @@ std::optional<std::string> StationEntity::jsClassName() {
   return ::OOJSStationJSClassName();
 }
 
-OOTechLevelID StationEntity::getEquivalentTechLevel() {
+oo::TechLevelID StationEntity::getEquivalentTechLevel() {
   if (equivalentTechLevel == oo::kNotFound) {
-    return static_cast<OOTechLevelID>(
+    return static_cast<oo::TechLevelID>(
         (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
             .get<int>(KEY_TECHLEVEL));
   } else {
@@ -827,7 +827,7 @@ OOTechLevelID StationEntity::getEquivalentTechLevel() {
   }
 }
 
-void StationEntity::setEquivalentTechLevel(OOTechLevelID value) {
+void StationEntity::setEquivalentTechLevel(oo::TechLevelID value) {
   equivalentTechLevel = value;
 }
 
@@ -842,14 +842,14 @@ HPVector StationEntity::beaconPosition() {
   Vector v_f = vector_forward_from_quaternion(getOrientation());
   HPVector result = HPvector_add(
       getPosition(), vectorToHPVector(vector_multiply_scalar(
-                         v_f, static_cast<OOScalar>(buoy_distance))));
+                         v_f, static_cast<oo::Scalar>(buoy_distance))));
 
   return result;
 }
 
 float StationEntity::getEquipmentPriceFactor() { return equipmentPriceFactor; }
 
-OOCargoQuantity StationEntity::getMarketCapacity() { return marketCapacity; }
+oo::CargoQuantity StationEntity::getMarketCapacity() { return marketCapacity; }
 
 oo::PList StationEntity::getMarketDefinition() { return marketDefinition; }
 
@@ -871,10 +871,10 @@ bool StationEntity::getMarketBroadcast() {
   return marketBroadcast;
 }
 
-OOCreditsQuantity StationEntity::legalStatusOfManifest(
-    ::OOCommodityMarket* manifest, bool isExport) {
-  OOCreditsQuantity penalty, status = 0;
-  ::OOCommodityMarket* market = getLocalMarket();
+oo::CreditsQuantity StationEntity::legalStatusOfManifest(
+    ::oo::CommodityMarket* manifest, bool isExport) {
+  oo::CreditsQuantity penalty, status = 0;
+  ::oo::CommodityMarket* market = getLocalMarket();
   for (const std::string& good : market->goods()) {
     if (isExport) {
       penalty = market->exportLegalityForGood(good);
@@ -886,7 +886,7 @@ OOCreditsQuantity StationEntity::legalStatusOfManifest(
   return status;
 }
 
-::OOCommodityMarket* StationEntity::getLocalMarket() {
+::oo::CommodityMarket* StationEntity::getLocalMarket() {
   if (this == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr)) {
     // main stations use the system market
     // just return a reference
@@ -899,27 +899,27 @@ OOCreditsQuantity StationEntity::legalStatusOfManifest(
 }
 
 void StationEntity::setLocalMarket(const oo::PList& some_market) {
-  OOCommodityMarket* market =
+  oo::CommodityMarket* market =
       getLocalMarket();  // null: nothing set, as a message to nil
   if (market != nullptr) market->loadStationAmounts(some_market);
 }
 
 oo::PList StationEntity::localMarketForScripting() {
-  OOCommodityMarket* market =
+  oo::CommodityMarket* market =
       getLocalMarket();  // null: null, as a message to nil
   return (market != nullptr) ? market->dictionaryForScripting() : oo::PList();
 }
 
-void StationEntity::setPrice(OOCreditsQuantity price,
+void StationEntity::setPrice(oo::CreditsQuantity price,
                              const std::string& commodity) {
-  OOCommodityMarket* market =
+  oo::CommodityMarket* market =
       getLocalMarket();  // null: nothing set, as a message to nil
   if (market != nullptr) market->setPrice(price, commodity);
 }
 
-void StationEntity::setQuantity(OOCargoQuantity quantity,
+void StationEntity::setQuantity(oo::CargoQuantity quantity,
                                 const std::string& commodity) {
-  OOCommodityMarket* market =
+  oo::CommodityMarket* market =
       getLocalMarket();  // null: nothing set, as a message to nil
   if (market != nullptr) market->setQuantity(quantity, commodity);
 }
@@ -947,18 +947,18 @@ void StationEntity::setInterfaceDefinition(
   }
 }
 
-::OOCommodityMarket* StationEntity::initialiseLocalMarket() {
+::oo::CommodityMarket* StationEntity::initialiseLocalMarket() {
   localMarket =
       ((UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr) != nullptr
            ? UNIVERSE->getCommodities()->generateMarketForStation(this)
-           : std::shared_ptr<OOCommodityMarket>());
+           : std::shared_ptr<oo::CommodityMarket>());
   return localMarket.get();
 }
 
 void StationEntity::setPlanet(::oo::PlanetEntity* planet_entity) {
   if (planet_entity)
     planet = (planet_entity != nullptr ? planet_entity->getUniversalID()
-                                       : OOUniversalID{});
+                                       : oo::UniversalID{});
   else
     planet = NO_TARGET;
 }
@@ -1033,11 +1033,11 @@ bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
   equipmentPriceFactor =
       dict.get<oo::NonNegative<float>>("equipment_price_factor", 1.0);
   equipmentPriceFactor = fmax(equipmentPriceFactor, 0.5f);
-  hasNPCTraffic = static_cast<unsigned char>(OOFuzzyBooleanFromPList(
+  hasNPCTraffic = static_cast<unsigned char>(oo::FuzzyBooleanFromPList(
       dict.find("has_npc_traffic"),
       (maxFlightSpeed == 0)));  // carriers default to NO
   hasPatrolShips =
-      OOFuzzyBooleanFromPList(dict.find("has_patrol_ships"), false);
+      oo::FuzzyBooleanFromPList(dict.find("has_patrol_ships"), false);
   suppress_arrival_reports = static_cast<unsigned char>(
       dict.get<bool>("suppress_arrival_reports", false));
   setAllegiance(OptionalStringValue(dict.find("allegiance")));
@@ -1144,7 +1144,7 @@ bool StationEntity::setUpSubEntities() {
   // no real docks, make a virtual one
   // position and orientation as OOPropertyListFromVector /
   // OOPropertyListFromQuaternion built them (floats)
-  Vector dockPosition = make_vector(0, 0, static_cast<OOScalar>(port_radius));
+  Vector dockPosition = make_vector(0, 0, static_cast<oo::Scalar>(port_radius));
   oo::PList::Dict virtualDockDict;
   virtualDockDict["type"] = oo::PList("standard");
   virtualDockDict["subentity_key"] = oo::PList("oolite-dock-virtual");
@@ -1244,7 +1244,7 @@ bool StationEntity::hasShipyard() {
                                           *determinantValue, std::nullopt))
                                 : false);
     } else {
-      return OOFuzzyBooleanFromPList(determinantValue, 0.0f);
+      return oo::FuzzyBooleanFromPList(determinantValue, 0.0f);
     }
   } else {
     return false;
@@ -1255,7 +1255,7 @@ void StationEntity::generateShipyard() {
   generateShipyard(getEquivalentTechLevel());
 }
 
-void StationEntity::generateShipyard(OOTechLevelID stationTechLevel) {
+void StationEntity::generateShipyard(oo::TechLevelID stationTechLevel) {
   unsigned i;
 
   if (getLocalShipyard() == nullptr) {
@@ -1462,13 +1462,13 @@ void StationEntity::abortAllDockings() {
   if ((player != nullptr ? player->getTargetDockStation()
                          : static_cast<::StationEntity*>(nullptr)) == this &&
       (player != nullptr ? player->getDockingClearanceStatus()
-                         : OODockingClearanceStatus{}) >=
-          OODockingClearanceStatus::kRequested) {
+                         : oo::DockingClearanceStatus{}) >=
+          oo::DockingClearanceStatus::kRequested) {
     // then docking clearance is requested but hasn't been cancelled
     // yet by a DockEntity
     sendExpandedMessage("[station-docking-clearance-abort-cancelled]", player);
     if (player != nullptr)
-      player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
+      player->setDockingClearanceStatus(oo::DockingClearanceStatus::kNone);
     if (player != nullptr)
       player->doScriptEvent(OOJSID("stationWithdrewDockingClearance"));
   }
@@ -1544,8 +1544,8 @@ oo::PList StationEntity::dockingInstructionsForShip(::ShipEntity* ship) {
   bool player_is_ahead =
       (!(ship != nullptr ? ship->getIsPlayer() : false) &&
        (player != nullptr ? player->getDockingClearanceStatus()
-                          : OODockingClearanceStatus{}) ==
-           OODockingClearanceStatus::kRequested &&
+                          : oo::DockingClearanceStatus{}) ==
+           oo::DockingClearanceStatus::kRequested &&
        (this == (player != nullptr ? player->getTargetDockStation()
                                    : static_cast<::StationEntity*>(nullptr))));
 
@@ -1717,7 +1717,7 @@ void StationEntity::clearDockingCorridor() {
   return;
 }
 
-void StationEntity::update(OOTimeDelta delta_t) {
+void StationEntity::update(oo::TimeDelta delta_t) {
   bool isRockHermit = (scanClass == oo::ScanClass::kRock);
   bool isMainStation =
       (this == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr));
@@ -1739,23 +1739,23 @@ void StationEntity::update(OOTimeDelta delta_t) {
       (player != nullptr ? player->status() : oo::EntityStatus{}) ==
           oo::EntityStatus::kInFlight) {
     if ((player != nullptr ? player->getDockingClearanceStatus()
-                           : OODockingClearanceStatus{}) >=
-        OODockingClearanceStatus::kGranted) {
+                           : oo::DockingClearanceStatus{}) >=
+        oo::DockingClearanceStatus::kGranted) {
       if (last_launch_time - 30 < unitime &&
           (player != nullptr ? player->getDockingClearanceStatus()
-                             : OODockingClearanceStatus{}) !=
-              OODockingClearanceStatus::kTimingOut) {
+                             : oo::DockingClearanceStatus{}) !=
+              oo::DockingClearanceStatus::kTimingOut) {
         sendExpandedMessage("[station-docking-clearance-about-to-expire]",
                             player);
         if (player != nullptr)
           player->setDockingClearanceStatus(
-              OODockingClearanceStatus::kTimingOut);
+              oo::DockingClearanceStatus::kTimingOut);
       } else if (last_launch_time < unitime) {
         sendExpandedMessage("[station-docking-clearance-expired]", player);
         if (player != nullptr)
           player->setDockingClearanceStatus(
-              OODockingClearanceStatus::kNone);  // Docking clearance for player
-                                                 // has expired.
+              oo::DockingClearanceStatus::kNone);  // Docking clearance for
+                                                   // player has expired.
         if (player != nullptr)
           player->doScriptEvent(OOJSID("playerDockingClearanceExpired"));
         if (currentlyInDockingQueues() == 0) {
@@ -1765,19 +1765,19 @@ void StationEntity::update(OOTimeDelta delta_t) {
         player_reserved_dock = nullptr;
       }
     } else if ((player != nullptr ? player->getDockingClearanceStatus()
-                                  : OODockingClearanceStatus{}) ==
-               OODockingClearanceStatus::kNotRequired) {
+                                  : oo::DockingClearanceStatus{}) ==
+               oo::DockingClearanceStatus::kNotRequired) {
       if (last_launch_time < unitime) {
         if (player != nullptr)
-          player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
+          player->setDockingClearanceStatus(oo::DockingClearanceStatus::kNone);
         if (currentlyInDockingQueues() == 0) {
           if (getAI() != nullptr) getAI()->message("DOCKING_COMPLETE");
           doScriptEvent(OOJSID("stationDockingQueuesAreEmpty"));
         }
       }
     } else if ((player != nullptr ? player->getDockingClearanceStatus()
-                                  : OODockingClearanceStatus{}) ==
-                   OODockingClearanceStatus::kRequested &&
+                                  : oo::DockingClearanceStatus{}) ==
+                   oo::DockingClearanceStatus::kRequested &&
                hasClearDock()) {
       ::DockEntity* dock = selectDockForDocking();
       last_launch_time = unitime + DOCKING_CLEARANCE_WINDOW;
@@ -1818,7 +1818,7 @@ void StationEntity::update(OOTimeDelta delta_t) {
       }
       player_reserved_dock = dock;
       if (player != nullptr)
-        player->setDockingClearanceStatus(OODockingClearanceStatus::kGranted);
+        player->setDockingClearanceStatus(oo::DockingClearanceStatus::kGranted);
       if (player != nullptr)
         player->doScriptEvent(OOJSID("playerDockingClearanceGranted"));
     }
@@ -1835,7 +1835,7 @@ void StationEntity::update(OOTimeDelta delta_t) {
     // begin launch of shuttles, traders, patrols
     if ((docked_shuttles > 0) && (!isRockHermit)) {
       if (unitime > last_shuttle_launch_time + shuttle_launch_interval) {
-        if ((getHasNPCTraffic()) && (aegis_status != OOAegisStatus::kNone)) {
+        if ((getHasNPCTraffic()) && (aegis_status != oo::AegisStatus::kNone)) {
           launchShuttle();
         }
         last_shuttle_launch_time = unitime;
@@ -2039,8 +2039,8 @@ void StationEntity::noteDockedShip(::ShipEntity* ship) {
   ::PlayerEntity* player = PLAYER;
   // set last launch time to avoid clashes with outgoing ships
   if ((player != nullptr ? player->getDockingClearanceStatus()
-                         : OODockingClearanceStatus{}) !=
-      OODockingClearanceStatus::kGranted) {
+                         : oo::DockingClearanceStatus{}) !=
+      oo::DockingClearanceStatus::kGranted) {
     // avoid interfering with docking clearance on another bay
     last_launch_time = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
   }
@@ -2061,8 +2061,8 @@ void StationEntity::noteDockedShip(::ShipEntity* ship) {
       (player != nullptr ? player->status() : oo::EntityStatus{}) ==
           oo::EntityStatus::kInFlight &&
       (player != nullptr ? player->getDockingClearanceStatus()
-                         : OODockingClearanceStatus{}) ==
-          OODockingClearanceStatus::kRequested) {
+                         : oo::DockingClearanceStatus{}) ==
+          oo::DockingClearanceStatus::kRequested) {
     if (!hasClearDock()) {
       // then say why
       if (currentlyInDockingQueues()) {
@@ -2131,12 +2131,12 @@ void StationEntity::takeEnergyDamage(double amount, Entity* entPart,
   Entity* other = otherPart;
   // stations must ignore friendly fire, otherwise the defenders' AI gets stuck.
   bool isFriend = false;
-  ::OOShipGroup* group = this->group();
+  ::oo::ShipGroup* group = this->group();
 
   if (oo::EntityIsShip(other) && group != nullptr) {
-    ::OOShipGroup* otherGroup =
+    ::oo::ShipGroup* otherGroup =
         (oo::ToShip(other) != nullptr ? oo::ToShip(other)->group()
-                                      : static_cast<OOShipGroup*>(nullptr));
+                                      : static_cast<oo::ShipGroup*>(nullptr));
     isFriend =
         otherGroup == group ||
         (otherGroup != nullptr ? otherGroup->leader()
@@ -2339,7 +2339,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
     if ((other != nullptr ? other->getIsPlayer() : false)) {
       if (player != nullptr)
         player->setDockingClearanceStatus(
-            OODockingClearanceStatus::kNotRequired);
+            oo::DockingClearanceStatus::kNotRequired);
     }
     if (shipAI != nullptr)
       shipAI->reactToMessage("DOCKING_REQUESTED",
@@ -2356,8 +2356,8 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
       this == (player != nullptr ? player->getTargetDockStation()
                                  : static_cast<::StationEntity*>(nullptr))) {
     switch ((player != nullptr ? player->getDockingClearanceStatus()
-                               : OODockingClearanceStatus{})) {
-      case OODockingClearanceStatus::kTimingOut:
+                               : oo::DockingClearanceStatus{})) {
+      case oo::DockingClearanceStatus::kTimingOut:
         if (!no_docking_while_launching) {
           last_launch_time = timeNow + DOCKING_CLEARANCE_WINDOW;
           const std::string extendedFormat = OO_DESC(
@@ -2378,18 +2378,18 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
               other);
           if (player != nullptr)
             player->setDockingClearanceStatus(
-                OODockingClearanceStatus::kGranted);
+                oo::DockingClearanceStatus::kGranted);
           result = "DOCKING_CLEARANCE_EXTENDED";
           break;
         }
         // else, continue with canceling.
         [[fallthrough]];
-      case OODockingClearanceStatus::kRequested:
-      case OODockingClearanceStatus::kGranted:
+      case oo::DockingClearanceStatus::kRequested:
+      case oo::DockingClearanceStatus::kGranted:
         last_launch_time = timeNow;
         sendExpandedMessage("[station-docking-clearance-cancelled]", other);
         if (player != nullptr)
-          player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
+          player->setDockingClearanceStatus(oo::DockingClearanceStatus::kNone);
         result = "DOCKING_CLEARANCE_CANCELLED";
         player_reserved_dock = nullptr;
         if (currentlyInDockingQueues() == 0) {
@@ -2397,8 +2397,8 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
           doScriptEvent(OOJSID("stationDockingQueuesAreEmpty"));
         }
         break;
-      case OODockingClearanceStatus::kNone:
-      case OODockingClearanceStatus::kNotRequired:
+      case oo::DockingClearanceStatus::kNone:
+      case oo::DockingClearanceStatus::kNotRequired:
         break;
     }
   }
@@ -2410,7 +2410,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
                                  : static_cast<::StationEntity*>(nullptr))) {
     player_reserved_dock = nullptr;  // and clear any previously reserved dock
     if (player != nullptr)
-      player->setDockingClearanceStatus(OODockingClearanceStatus::kRequested);
+      player->setDockingClearanceStatus(oo::DockingClearanceStatus::kRequested);
   }
 
   // Deny docking for fugitives at the main station
@@ -2424,7 +2424,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
                         other);
     if ((other != nullptr ? other->getIsPlayer() : false))
       if (player != nullptr)
-        player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
+        player->setDockingClearanceStatus(oo::DockingClearanceStatus::kNone);
     result = "DOCKING_CLEARANCE_DENIED_SHIP_FUGITIVE";
   }
 
@@ -2433,7 +2433,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
     sendExpandedMessage("[station-docking-clearance-denied]", other);
     if ((other != nullptr ? other->getIsPlayer() : false))
       if (player != nullptr)
-        player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
+        player->setDockingClearanceStatus(oo::DockingClearanceStatus::kNone);
     result = "DOCKING_CLEARANCE_DENIED_SHIP_HOSTILE";
   }
 
@@ -2442,7 +2442,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
     // the player
     if ((other != nullptr ? other->getIsPlayer() : false)) {
       if (player != nullptr)
-        player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
+        player->setDockingClearanceStatus(oo::DockingClearanceStatus::kNone);
     }
     sendExpandedMessage("[station-docking-clearance-denied-no-docks]", other);
 
@@ -2456,8 +2456,8 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
         ((currentlyInDockingQueues() && last_launch_time < timeNow) ||
          (!(other != nullptr ? other->getIsPlayer() : false) &&
           (player != nullptr ? player->getDockingClearanceStatus()
-                             : OODockingClearanceStatus{}) ==
-              OODockingClearanceStatus::kRequested))) {
+                             : oo::DockingClearanceStatus{}) ==
+              oo::DockingClearanceStatus::kRequested))) {
       sendExpandedMessage(
           oo::str::formatRuntime(
               OO_DESC(
@@ -2483,7 +2483,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
       // docking, so deny clearance
       if ((other != nullptr ? other->getIsPlayer() : false)) {
         if (player != nullptr)
-          player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
+          player->setDockingClearanceStatus(oo::DockingClearanceStatus::kNone);
       }
       result = "DOCKING_CLEARANCE_DENIED_NO_DOCKS";
       // but can check to see if we'll open some for later.
@@ -2535,7 +2535,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
     last_launch_time = timeNow + DOCKING_CLEARANCE_WINDOW;
     if ((other != nullptr ? other->getIsPlayer() : false)) {
       if (player != nullptr)
-        player->setDockingClearanceStatus(OODockingClearanceStatus::kGranted);
+        player->setDockingClearanceStatus(oo::DockingClearanceStatus::kGranted);
       player_reserved_dock = selectDockForDocking();
     }
 

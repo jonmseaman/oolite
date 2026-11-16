@@ -8,13 +8,13 @@
 #include <optional>
 #include <string>
 
-#include "OOFoundation.h"
-#include "OOTypes.h"
+#include "Foundation.h"
+#include "Types.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 
 struct OOHarnessPlayer {
-  OOSystemID systemID();
+  oo::SystemID systemID();
   std::optional<std::string> keyBindingDescription2(const std::string& binding);
   oo::PList missionVariableForKey(const std::string& key);
   // The by-name methods (the special keys and whitelist.plist's query methods).
@@ -54,7 +54,7 @@ inline std::string RoundTrip(const std::string& text) {
 
 }  // namespace oo_harness
 
-inline OOSystemID OOHarnessPlayer::systemID() { return 7; }
+inline oo::SystemID OOHarnessPlayer::systemID() { return 7; }
 
 inline std::optional<std::string> OOHarnessPlayer::keyBindingDescription2(
     const std::string& binding) {
@@ -89,7 +89,7 @@ inline oo::PList OOHarnessPlayer::callByName(const std::string& name) {
 // The expander asks and calls the player's by-name methods on its C++ part
 // (OOCallByName.h); the harness's player answers them
 // itself.
-#include "OOCallByName.h"
+#include "CallByName.h"
 namespace oo {
 inline bool EntityRespondsToName(OOHarnessPlayer* player,
                                  const std::string& name) {

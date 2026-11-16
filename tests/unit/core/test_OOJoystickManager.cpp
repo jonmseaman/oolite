@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-#include "OOJoystickManager.h"
+#include "JoystickManager.h"
 #include "SDLJoystickManager.h"
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
@@ -39,7 +39,7 @@ struct StickCallbackTarget {
     _calls++;
   }
 
-  OOJoystickManager::StickCallback callback() {
+  oo::JoystickManager::StickCallback callback() {
     return [this](const oo::PList& stickFn) { stickPicked(stickFn); };
   }
 };
@@ -65,7 +65,7 @@ class TestStickManager : public oo::SDLJoystickManager {
   std::optional<std::string> superNameOfJoystick(std::size_t stickNumber) {
     // OOJoystickManager's own member (the SDL manager, its superclass,
     // overrides it).
-    return OOJoystickManager::nameOfJoystick(stickNumber);
+    return oo::JoystickManager::nameOfJoystick(stickNumber);
   }
 };
 
@@ -75,15 +75,15 @@ class TestStickManager : public oo::SDLJoystickManager {
 class DecodingStickManager : public oo::SDLJoystickManager {
  public:
   std::size_t joystickCount() override {
-    return OOJoystickManager::joystickCount();
+    return oo::JoystickManager::joystickCount();
   }
 
   std::optional<std::string> nameOfJoystick(std::size_t stickNumber) override {
-    return OOJoystickManager::nameOfJoystick(stickNumber);
+    return oo::JoystickManager::nameOfJoystick(stickNumber);
   }
 
   int16_t getAxisWithStick(std::size_t stickNum, std::size_t axisNum) override {
-    return OOJoystickManager::getAxisWithStick(stickNum, axisNum);
+    return oo::JoystickManager::getAxisWithStick(stickNum, axisNum);
   }
 };
 
@@ -160,9 +160,9 @@ SDL_JoyHatEvent Hat(int stick, int hat, int value) {
 }
 
 // [[OOJoystickManager alloc] init]: made, then -init's body.
-std::shared_ptr<OOJoystickManager> NewManager() {
+std::shared_ptr<oo::JoystickManager> NewManager() {
   Defaults();
-  std::shared_ptr<OOJoystickManager> manager = oo::makeShared<OOJoystickManager>();
+  std::shared_ptr<oo::JoystickManager> manager = oo::makeShared<oo::JoystickManager>();
   manager->init();
   return manager;
 }
@@ -183,7 +183,7 @@ std::shared_ptr<TestStickManager> NewTestStickManager() {
 
 // The registered factory: it makes the manager; sharedStickHandler() runs
 // init().
-std::shared_ptr<OOJoystickManager> MakeTestStickManager() {
+std::shared_ptr<oo::JoystickManager> MakeTestStickManager() {
   return oo::makeShared<TestStickManager>();
 }
 
@@ -192,7 +192,7 @@ std::shared_ptr<OOJoystickManager> MakeTestStickManager() {
 OO_TEST(defaultMapping) {
   ClearStickDefaults();
   {
-    std::shared_ptr<OOJoystickManager> manager = NewManager();
+    std::shared_ptr<oo::JoystickManager> manager = NewManager();
     OO_CHECK(manager != nullptr);
 
     // No hardware in the base class.
@@ -225,11 +225,11 @@ OO_TEST(defaultMapping) {
     OO_CHECK(!anyButton);
 
     // Roll, pitch and yaw have standard profiles; nothing else has one.
-    OO_CHECK(dynamic_cast<OOJoystickStandardAxisProfile*>(
+    OO_CHECK(dynamic_cast<oo::JoystickStandardAxisProfile*>(
                  manager->getProfileForAxis(AXIS_ROLL)) != nullptr);
-    OO_CHECK(dynamic_cast<OOJoystickStandardAxisProfile*>(
+    OO_CHECK(dynamic_cast<oo::JoystickStandardAxisProfile*>(
                  manager->getProfileForAxis(AXIS_PITCH)) != nullptr);
-    OO_CHECK(dynamic_cast<OOJoystickStandardAxisProfile*>(
+    OO_CHECK(dynamic_cast<oo::JoystickStandardAxisProfile*>(
                  manager->getProfileForAxis(AXIS_YAW)) != nullptr);
     OO_CHECK(manager->getProfileForAxis(AXIS_THRUST) == nullptr);
   }
@@ -257,7 +257,7 @@ OO_TEST(decodesAxes) {
 
     SDL_JoyAxisEvent evt = Axis(0, 2, 16384);
     manager->decodeAxisEvent(&evt);
-    OOJoystickAxisProfile* roll = manager->getProfileForAxis(AXIS_ROLL);
+    oo::JoystickAxisProfile* roll = manager->getProfileForAxis(AXIS_ROLL);
     const double rollValue = roll->value(0.5);
     OO_CHECK(rollValue > 0.0);
     OO_CHECK(manager->getAxisState(AXIS_ROLL) == rollValue);
@@ -436,20 +436,20 @@ OO_TEST(savesAndLoadsSettings) {
   ClearStickDefaults();
   oo::Defaults& defaults = Defaults();
   {
-    std::shared_ptr<OOJoystickManager> manager = NewManager();
+    std::shared_ptr<oo::JoystickManager> manager = NewManager();
     manager->setFunction(AXIS_YAW, StickFn(true, 1, 6));
     manager->setFunction(BUTTON_ECM, StickFn(false, 2, 11));
 
-    std::shared_ptr<OOJoystickStandardAxisProfile> standard =
-        oo::makeShared<OOJoystickStandardAxisProfile>();
+    std::shared_ptr<oo::JoystickStandardAxisProfile> standard =
+        oo::makeShared<oo::JoystickStandardAxisProfile>();
     standard->setDeadzone(0.0625);
     standard->setPower(2.5);
     standard->setParameter(0.75);
     manager->setProfile(standard.get(), AXIS_ROLL);
     OO_CHECK(manager->getProfileForAxis(AXIS_ROLL) == standard.get());
 
-    std::shared_ptr<OOJoystickSplineAxisProfile> spline =
-        oo::makeShared<OOJoystickSplineAxisProfile>();
+    std::shared_ptr<oo::JoystickSplineAxisProfile> spline =
+        oo::makeShared<oo::JoystickSplineAxisProfile>();
     spline->setDeadzone(0.03125);
     spline->addControl(NSMakePoint(0.25, 0.5));
     spline->addControl(NSMakePoint(0.5, 0.625));
@@ -480,20 +480,20 @@ OO_TEST(savesAndLoadsSettings) {
     std::shared_ptr<DecodingStickManager> loaded = NewDecodingManager();
     OO_CHECK(loaded->axisFunctions() == manager->axisFunctions());
     OO_CHECK(loaded->buttonFunctions() == manager->buttonFunctions());
-    OOJoystickAxisProfile* loadedRoll = loaded->getProfileForAxis(AXIS_ROLL);
-    OO_CHECK(dynamic_cast<OOJoystickStandardAxisProfile*>(loadedRoll) !=
+    oo::JoystickAxisProfile* loadedRoll = loaded->getProfileForAxis(AXIS_ROLL);
+    OO_CHECK(dynamic_cast<oo::JoystickStandardAxisProfile*>(loadedRoll) !=
              nullptr);
     OO_CHECK(loadedRoll->deadzone() == 0.0625);
-    OO_CHECK(static_cast<OOJoystickStandardAxisProfile*>(loadedRoll)->power() ==
+    OO_CHECK(static_cast<oo::JoystickStandardAxisProfile*>(loadedRoll)->power() ==
              2.5);
     OO_CHECK(
-        static_cast<OOJoystickStandardAxisProfile*>(loadedRoll)->parameter() ==
+        static_cast<oo::JoystickStandardAxisProfile*>(loadedRoll)->parameter() ==
         0.75);
-    OOJoystickAxisProfile* loadedPitch = loaded->getProfileForAxis(AXIS_PITCH);
-    OO_CHECK(dynamic_cast<OOJoystickSplineAxisProfile*>(loadedPitch) !=
+    oo::JoystickAxisProfile* loadedPitch = loaded->getProfileForAxis(AXIS_PITCH);
+    OO_CHECK(dynamic_cast<oo::JoystickSplineAxisProfile*>(loadedPitch) !=
              nullptr);
     OO_CHECK(loadedPitch->deadzone() == 0.03125);
-    OO_CHECK(static_cast<OOJoystickSplineAxisProfile*>(loadedPitch)
+    OO_CHECK(static_cast<oo::JoystickSplineAxisProfile*>(loadedPitch)
                  ->controlPoints()
                  .size() == spline->controlPoints().size());
     for (double x : {0.1, 0.3, 0.6, 0.9})
@@ -508,7 +508,7 @@ OO_TEST(savesAndLoadsSettings) {
         BUTTON_FIRE));  // still saved on stick 0 button 0
     loaded->unsetButtonFunction(BUTTON_FIRE);
     loaded->saveStickSettings();
-    std::shared_ptr<OOJoystickManager> noFire = NewManager();
+    std::shared_ptr<oo::JoystickManager> noFire = NewManager();
     OO_CHECK(noFire->buttonFunctions() ==
              Functions({{BUTTON_LAUNCHMISSILE, StickFn(false, 0, 1)},
                         {BUTTON_ECM, StickFn(false, 2, 11)}}));
@@ -549,10 +549,10 @@ OO_TEST(subclassOverrides) {
 OO_TEST(sharedHandlerOfTheRegisteredClass) {
   ClearStickDefaults();
   {
-    OO_CHECK(OOJoystickManager::setStickHandlerFactory(MakeTestStickManager));
-    OOJoystickManager* shared = OOJoystickManager::sharedStickHandler();
+    OO_CHECK(oo::JoystickManager::setStickHandlerFactory(MakeTestStickManager));
+    oo::JoystickManager* shared = oo::JoystickManager::sharedStickHandler();
     OO_CHECK(dynamic_cast<TestStickManager*>(shared) != nullptr);
-    OO_CHECK(OOJoystickManager::sharedStickHandler() == shared);
+    OO_CHECK(oo::JoystickManager::sharedStickHandler() == shared);
     OO_CHECK(shared->joystickCount() == 2);
   }
 }
@@ -575,7 +575,7 @@ void ClearGuiStickDefaults() {
 OO_TEST(guiFunctionsHaveATableOfTheirOwn) {
   ClearGuiStickDefaults();
   {
-    std::shared_ptr<OOJoystickManager> manager = NewManager();
+    std::shared_ptr<oo::JoystickManager> manager = NewManager();
     const oo::PList defaultButtons =
         Functions({{BUTTON_FIRE, StickFn(false, 0, 0)},
                    {BUTTON_LAUNCHMISSILE, StickFn(false, 0, 1)}});
@@ -689,7 +689,7 @@ OO_TEST(savesAndLoadsGuiButtons) {
   ClearGuiStickDefaults();
   oo::Defaults& defaults = Defaults();
   {
-    std::shared_ptr<OOJoystickManager> manager = NewManager();
+    std::shared_ptr<oo::JoystickManager> manager = NewManager();
     manager->setFunction(BUTTON_GUISELECT, StickFn(false, 1, 4));
     manager->setFunction(BUTTON_GUIPAGEUP, StickFn(false, 0, 7));
     manager->setFunction(BUTTON_ECM, StickFn(false, 2, 11));
@@ -718,7 +718,7 @@ OO_TEST(savesAndLoadsGuiButtons) {
 
     // GUI settings alone still leave the default flight mapping in place.
     defaults.removeObject(BUTTON_SETTINGS);
-    std::shared_ptr<OOJoystickManager> guiOnly = NewManager();
+    std::shared_ptr<oo::JoystickManager> guiOnly = NewManager();
     OO_CHECK(guiOnly->guiButtonFunctions() == savedGui);
     OO_CHECK(guiOnly->buttonFunctions() ==
              Functions({{BUTTON_FIRE, StickFn(false, 0, 0)},

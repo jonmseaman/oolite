@@ -25,7 +25,7 @@
 #include "Universe.h"
 #include "PlayerEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
-#include "OOCallByName.h"	// oo::EntityRespondsToName / oo::CallEntityByName
+#include "CallByName.h"	// oo::EntityRespondsToName / oo::CallEntityByName
 #include "EntityCalledByName.h"	// oo::CallEntityByNameTyped
 
 #include "oo_test.hpp"

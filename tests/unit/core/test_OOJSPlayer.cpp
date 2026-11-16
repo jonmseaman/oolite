@@ -15,14 +15,14 @@
 	player is sent, and a native's exception. Run: bash tests/run.sh unit
 */
 
-#include "OOFoundation.h"
-#include "OOTypes.h"
-#include "OOEntityEnums.h"  // IWYU pragma: keep
+#include "Foundation.h"
+#include "Types.h"
+#include "EntityEnums.h"  // IWYU pragma: keep
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "OODescription.h"  // IWYU pragma: keep
+#include "Description.h"  // IWYU pragma: keep
 #include <algorithm>  // IWYU pragma: keep
 #include <chrono>  // IWYU pragma: keep
 #include <condition_variable>  // IWYU pragma: keep
@@ -130,7 +130,7 @@ public:
 	double creditBalance();
 	void setCreditBalance(double value);
 	int getLegalStatus();
-	void setBounty(OOCreditsQuantity amount, oo::LegalStatusReason reason);
+	void setBounty(oo::CreditsQuantity amount, oo::LegalStatusReason reason);
 	oo::AlertCondition getAlertCondition();
 	int getAlertFlags();
 	double escapePodRescueTime();
@@ -145,7 +145,7 @@ public:
 	void decreasePassengerReputation(unsigned amount);
 	void increaseParcelReputation(unsigned amount);
 	void decreaseParcelReputation(unsigned amount);
-	OODockingClearanceStatus getDockingClearanceStatus();
+	oo::DockingClearanceStatus getDockingClearanceStatus();
 	std::vector<std::string> getRoleWeights();
 	bool endScenario(const std::string &key);
 	void addMessageToReport(const std::string &report);
@@ -153,7 +153,7 @@ public:
 	bool replaceShipWithNamedShip(const std::string &shipKey);
 	void setDockTarget(::ShipEntity *entity);
 	void addToAdjustTime(double seconds);
-	void setTargetSystemID(OOSystemID sid);
+	void setTargetSystemID(oo::SystemID sid);
 	void addRoleToPlayer(const std::string &role);
 	void addRoleToPlayer(const std::string &role, std::size_t slot);
 
@@ -167,7 +167,7 @@ public:
 	double _escapePodRescueTime = {};
 	std::size_t _trumbleCount = {};
 	int _contractReputation = {}, _passengerReputation = {}, _parcelReputation = {};
-	OODockingClearanceStatus _dockingClearanceStatus = {};
+	oo::DockingClearanceStatus _dockingClearanceStatus = {};
 	std::vector<std::string> _roleWeights;
 	std::vector<std::string> _events;
 	std::vector<std::string> _report;
@@ -179,7 +179,7 @@ public:
 	::ShipEntity *_dockTarget = {};
 	bool _dockTargetSet = {};
 	double _adjustTime = {};
-	OOSystemID _targetSystem = {};
+	oo::SystemID _targetSystem = {};
 	std::string _lastRole;
 	std::size_t _lastRoleSlot = {};
 	int _scriptTargetSets = {};
@@ -208,7 +208,7 @@ public:
 	double _range;
 	oo::PList _destinations;
 
-	void addCommsMessage(const std::optional<std::string> &, OOTimeDelta);
+	void addCommsMessage(const std::optional<std::string> &, oo::TimeDelta);
 	void startSpeakingString(const std::string &);
 	bool isSpeaking();
 	void stopSpeaking();
@@ -218,7 +218,7 @@ public:
 class StandInUniverse : public Universe
 {
 public:
-	void addMessage(const std::optional<std::string> &text, OOTimeDelta count) override	{ _console.push_back(text.value_or("(nil)")); _counts.push_back(count); }
+	void addMessage(const std::optional<std::string> &text, oo::TimeDelta count) override	{ _console.push_back(text.value_or("(nil)")); _counts.push_back(count); }
 	bool inInterstellarSpace() override	{ return _interstellar; }
 };
 
@@ -325,7 +325,7 @@ void PlayerEntity::setScore(unsigned value)  { _score = value; }
 double PlayerEntity::creditBalance()  { return _credits; }
 void PlayerEntity::setCreditBalance(double value)  { _credits = value; }
 int PlayerEntity::getLegalStatus()  { return _legalStatus; }
-void PlayerEntity::setBounty(OOCreditsQuantity amount, oo::LegalStatusReason reason)
+void PlayerEntity::setBounty(oo::CreditsQuantity amount, oo::LegalStatusReason reason)
 {
 	_legalStatus = static_cast<int>(amount); _bountyReason = reason;
 }
@@ -343,7 +343,7 @@ void PlayerEntity::increasePassengerReputation(unsigned amount)  { _passengerRep
 void PlayerEntity::decreasePassengerReputation(unsigned amount)  { _passengerReputation -= static_cast<int>(amount); }
 void PlayerEntity::increaseParcelReputation(unsigned amount)  { _parcelReputation += static_cast<int>(amount); }
 void PlayerEntity::decreaseParcelReputation(unsigned amount)  { _parcelReputation -= static_cast<int>(amount); }
-OODockingClearanceStatus PlayerEntity::getDockingClearanceStatus()  { return _dockingClearanceStatus; }
+oo::DockingClearanceStatus PlayerEntity::getDockingClearanceStatus()  { return _dockingClearanceStatus; }
 std::vector<std::string> PlayerEntity::getRoleWeights()  { return _roleWeights; }
 void ShipEntity::doScriptEvent(JSAtom message, const std::vector<oo::PList> &arguments)
 {
@@ -366,12 +366,12 @@ bool PlayerEntity::replaceShipWithNamedShip(const std::string &shipName)
 void ShipEntity::setEntityPersonalityInt(uint16_t value)  { static_cast<PlayerEntity *>(this)->_personality = value; }
 void PlayerEntity::setDockTarget(::ShipEntity *entity)  { _dockTarget = entity; _dockTargetSet = true; }
 void PlayerEntity::addToAdjustTime(double seconds)  { _adjustTime += seconds; }
-void PlayerEntity::setTargetSystemID(OOSystemID sid)  { _targetSystem = sid; }
+void PlayerEntity::setTargetSystemID(oo::SystemID sid)  { _targetSystem = sid; }
 void PlayerEntity::addRoleToPlayer(const std::string &role)  { _lastRole = role; _lastRoleSlot = 999; }
 void PlayerEntity::addRoleToPlayer(const std::string &role, std::size_t slot)  { _lastRole = role; _lastRoleSlot = slot; }
 
 
-void Universe::addCommsMessage(const std::optional<std::string> &text, OOTimeDelta count)	{ _comms.push_back(text.value_or("(nil)")); _counts.push_back(count); }
+void Universe::addCommsMessage(const std::optional<std::string> &text, oo::TimeDelta count)	{ _comms.push_back(text.value_or("(nil)")); _counts.push_back(count); }
 void Universe::startSpeakingString(const std::string &text)	{ _spoken.push_back(text); }
 bool Universe::isSpeaking()	{ return _speaking; }
 void Universe::stopSpeaking()	{ _stops++; _speaking = false; }
@@ -395,9 +395,9 @@ std::optional<std::string> DisplayStringFromLegalStatus(int legalStatus)
 }  // namespace oo
 
 
-std::string DockingClearanceStatusToString(OODockingClearanceStatus dockingClearanceStatus)
+std::string DockingClearanceStatusToString(oo::DockingClearanceStatus dockingClearanceStatus)
 {
-	return dockingClearanceStatus == OODockingClearanceStatus::kGranted ? "DOCKING_CLEARANCE_STATUS_GRANTED" : "DOCKING_CLEARANCE_STATUS_NONE";
+	return dockingClearanceStatus == oo::DockingClearanceStatus::kGranted ? "DOCKING_CLEARANCE_STATUS_GRANTED" : "DOCKING_CLEARANCE_STATUS_NONE";
 }
 
 
@@ -646,7 +646,7 @@ void SetUpContext()
 	sPlayer->_contractReputation = 35;
 	sPlayer->_passengerReputation = -17;
 	sPlayer->_parcelReputation = 70;
-	sPlayer->_dockingClearanceStatus = OODockingClearanceStatus::kGranted;
+	sPlayer->_dockingClearanceStatus = oo::DockingClearanceStatus::kGranted;
 	sPlayer->_roleWeights = { "trader", "pirate", "trader" };
 	sPlayer->_status = oo::EntityStatus::kDocked;
 	sPlayer->_targetSystem = -1;

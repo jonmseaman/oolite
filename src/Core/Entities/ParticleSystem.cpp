@@ -33,12 +33,12 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "LightParticleEntity.h"
+#include "MacroOpenGL.h"
 #include "MyOpenGLView.h"
-#include "OOMacroOpenGL.h"
-#include "OOVector.h"  // make_vector
 #include "PlayerEntity.h"
 #include "Texture.h"
 #include "Universe.h"
+#include "Vector.h"  // make_vector
 #include "oofnd/objc/Assert.h"
 
 //	Testing toy: cause particle systems to stop after half a second.
@@ -49,7 +49,8 @@ MA 02110-1301, USA.
 */
 void oo::ParticleSystem::initWithPosition(HPVector pos, Vector vel,
                                           unsigned count, float minSpeed,
-                                          float maxSpeed, OOTimeDelta duration,
+                                          float maxSpeed,
+                                          oo::TimeDelta duration,
                                           GLfloat baseColor[4]) {
   OOCParameterAssert(count <= kFragmentBurstMaxParticles);
 
@@ -68,7 +69,7 @@ void oo::ParticleSystem::initWithPosition(HPVector pos, Vector vel,
           0.5f * (randf() + randf()) *
               (maxSpeed - minSpeed);  // speed tends toward middle of range
       _particleVelocity[i] =
-          vector_multiply_scalar(OORandomUnitVector(), speed);
+          vector_multiply_scalar(oo::RandomUnitVector(), speed);
 
       GLfloat red = baseColor[0] * 0.1f *
                     (9.5f + randf());  // one draw per local, in the order Clang
@@ -102,7 +103,7 @@ bool oo::ParticleSystem::checkCloseCollisionWith(Entity* other) {
   return other == nullptr || !other->isEffect();  // [nil isEffect] answered NO
 }
 
-void oo::ParticleSystem::update(OOTimeDelta delta_t) {
+void oo::ParticleSystem::update(oo::TimeDelta delta_t) {
   Entity::update(delta_t);
 
   _timePassed += delta_t;
@@ -116,7 +117,7 @@ void oo::ParticleSystem::update(OOTimeDelta delta_t) {
     particlePosition[i] =
         vector_add(particlePosition[i],
                    vector_multiply_scalar(particleVelocity[i],
-                                          static_cast<OOScalar>(delta_t)));
+                                          static_cast<oo::Scalar>(delta_t)));
   }
 
   // disappear eventually.
@@ -143,7 +144,7 @@ void oo::ParticleSystem::drawImmediate(bool /*immediate*/, bool translucent) {
     return;
 
   OO_ENTER_OPENGL();
-  OOSetOpenGLState(OOOpenGLStateID::kAdditiveBlending);
+  OOSetOpenGLState(oo::OpenGLStateID::kAdditiveBlending);
 
   OOGL(glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT));
 
@@ -164,8 +165,8 @@ void oo::ParticleSystem::drawImmediate(bool /*immediate*/, bool translucent) {
 
   if ((UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false)) {
     // Quick rendering - particle cloud is effectively a 2D billboard.
-    OOGLPushModelView();
-    OOGLMultModelView(OOMatrixForBillboard(selfPosition, viewPosition));
+    oo::GLPushModelView();
+    oo::GLMultModelView(oo::MatrixForBillboard(selfPosition, viewPosition));
 
     OOGLBEGIN(GL_QUADS);
     for (i = 0; i < count; i++) {
@@ -175,7 +176,7 @@ void oo::ParticleSystem::drawImmediate(bool /*immediate*/, bool translucent) {
     }
     OOGLEND();
 
-    OOGLPopModelView();
+    oo::GLPopModelView();
   } else {
     float distanceThreshold =
         collision_radius *
@@ -189,19 +190,19 @@ void oo::ParticleSystem::drawImmediate(bool /*immediate*/, bool translucent) {
               orientation is shared. This can cause noticeable distortion
               if the player is close to the centre of the cloud.
       */
-      OOMatrix bbMatrix = OOMatrixForBillboard(selfPosition, viewPosition);
+      oo::Matrix bbMatrix = oo::MatrixForBillboard(selfPosition, viewPosition);
 
       for (i = 0; i < count; i++) {
-        OOGLPushModelView();
-        OOGLTranslateModelView(particlePosition[i]);
-        OOGLMultModelView(bbMatrix);
+        oo::GLPushModelView();
+        oo::GLTranslateModelView(particlePosition[i]);
+        oo::GLMultModelView(bbMatrix);
 
         glColor4fv(particleColor[i]);
         OOGLBEGIN(GL_QUADS);
         DrawQuadForView(0, 0, 0, particleSize[i]);
         OOGLEND();
 
-        OOGLPopModelView();
+        oo::GLPopModelView();
       }
     } else {
       /*	Non-fast rendering - each particle is billboarded individually.
@@ -209,12 +210,12 @@ void oo::ParticleSystem::drawImmediate(bool /*immediate*/, bool translucent) {
               and "semi-quick" to avoid jumping at the boundary.
       */
       float individuality = 3.0f * (1.0f - distanceSq / thresholdSq);
-      individuality = OOClamp_0_1_f(individuality);
+      individuality = oo::Clamp_0_1_f(individuality);
 
       for (i = 0; i < count; i++) {
-        OOGLPushModelView();
-        OOGLTranslateModelView(particlePosition[i]);
-        OOGLMultModelView(OOMatrixForBillboard(
+        oo::GLPushModelView();
+        oo::GLTranslateModelView(particlePosition[i]);
+        oo::GLMultModelView(oo::MatrixForBillboard(
             HPvector_add(selfPosition,
                          vectorToHPVector(vector_multiply_scalar(
                              particlePosition[i], individuality))),
@@ -225,7 +226,7 @@ void oo::ParticleSystem::drawImmediate(bool /*immediate*/, bool translucent) {
         DrawQuadForView(0, 0, 0, particleSize[i]);
         OOGLEND();
 
-        OOGLPopModelView();
+        oo::GLPopModelView();
       }
     }
   }
@@ -233,7 +234,7 @@ void oo::ParticleSystem::drawImmediate(bool /*immediate*/, bool translucent) {
   OOGL(glPopAttrib());
 
   OOVerifyOpenGLState();
-  OOCheckOpenGLErrors([&]() -> std::string {
+  oo::CheckOpenGLErrors([&]() -> std::string {
     return "OOParticleSystem after drawing " + oo::EntityDescription(this);
   });
 }
@@ -266,8 +267,8 @@ void oo::SmallFragmentBurstEntity::initFragmentBurstFrom(HPVector fragPosition,
   // Select base colour
   // yellow/orange (0.12) through yellow (0.1667) to yellow/slightly green
   // (0.20)
-  std::shared_ptr<OOColor> hsvColor =
-      OOColor::colorWithHue(0.12f + 0.08f * randf(), 1.0f, 1.0f, 1.0f);
+  std::shared_ptr<oo::Color> hsvColor =
+      oo::Color::colorWithHue(0.12f + 0.08f * randf(), 1.0f, 1.0f, 1.0f);
   GLfloat baseColor[4];
   hsvColor->getRed(&baseColor[0], &baseColor[1], &baseColor[2], &baseColor[3]);
 
@@ -295,7 +296,7 @@ oo::SmallFragmentBurstEntity::fragmentBurstFromEntity(Entity* entity) {
   return result;
 }
 
-void oo::SmallFragmentBurstEntity::update(OOTimeDelta delta_t) {
+void oo::SmallFragmentBurstEntity::update(oo::TimeDelta delta_t) {
 #if FREEZE_PARTICLES
   if (_timePassed + delta_t > 0.5) delta_t = 0.5 - _timePassed;
 #endif
@@ -308,7 +309,7 @@ void oo::SmallFragmentBurstEntity::update(OOTimeDelta delta_t) {
 
   for (i = 0; i < count; i++) {
     GLfloat du = 0.5f + (1.0f / 32.0f) * (static_cast<float>(32 - i));
-    particleColor[i][3] = OOClamp_0_1_f(1.0f - timePassed / du);
+    particleColor[i][3] = oo::Clamp_0_1_f(1.0f - timePassed / du);
   }
 }
 
@@ -344,7 +345,7 @@ oo::BigFragmentBurstEntity::fragmentBurstFromEntity(Entity* entity) {
       entity != nullptr ? entity->getPosition() : kZeroHPVector,
       vector_multiply_scalar(
           entity != nullptr ? entity->getVelocity() : kZeroVector,
-          static_cast<OOScalar>(0.85)),
+          static_cast<oo::Scalar>(0.85)),
       entity != nullptr ? entity->collisionRadius()
                         : 0.0f);  // the C++ entity's members
   return result;
@@ -368,7 +369,7 @@ void oo::BigFragmentBurstEntity::update(double delta_t) {
 
   for (i = 0; i < count; i++) {
     GLfloat du = duration * (0.5f + di * static_cast<GLfloat>(i));
-    particleColor[i][3] = OOClamp_0_1_f(1.0f - timePassed / du);
+    particleColor[i][3] = oo::Clamp_0_1_f(1.0f - timePassed / du);
 
     particleSize[i] = size;
   }

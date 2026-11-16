@@ -30,7 +30,7 @@ OO_TEST(a_mining_laser_breaks_an_asteroid_into_boulders) {
   oo::component::ShipHandle miner = game.add(ShipWithKey("adder").near(asteroid, 2'000.0));
   OO_CHECK(miner.alive());
   miner->setAITo("nullAI.plist");
-  OO_CHECK(miner->setWeaponMount(OOWeaponFacing::kForward,
+  OO_CHECK(miner->setWeaponMount(oo::WeaponFacing::kForward,
                                  oo::component::hasArgument("--without-weapon")
                                      ? "EQ_WEAPON_NONE"
                                      : "EQ_WEAPON_MINING_LASER"));

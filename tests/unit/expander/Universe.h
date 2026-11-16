@@ -1,9 +1,9 @@
 // Stub for tests/unit/expander: only what
 // src/Core/OOStringExpander.mm uses.
 #pragma once
-#include "OOFoundation.h"
-#include "OOMaths.h"
-#include "OOTypes.h"
+#include "Foundation.h"
+#include "Maths.h"
+#include "Types.h"
 #ifdef __cplusplus
 #include <optional>
 #include <string>
@@ -23,13 +23,18 @@ class OOHarnessSystemManager {
 class Universe {
  public:
   const oo::PList* descriptions();
-  std::optional<std::string> getSystemName(OOSystemID sys);
-  std::optional<std::string> getSystemName(OOSystemID sys, OOGalaxyID gal);
+  std::optional<std::string> getSystemName(oo::SystemID sys);
+  std::optional<std::string> getSystemName(oo::SystemID sys, oo::GalaxyID gal);
   OOHarnessSystemManager* getSystemManager();
 };
 #ifdef __cplusplus
 #endif
-Universe* OOGetUniverse(void);
+namespace oo {
+
+Universe* GetUniverse(void);
+
+}  // namespace oo
+
 #ifdef __cplusplus
 #endif
-#define UNIVERSE OOGetUniverse()
+#define UNIVERSE oo::GetUniverse()

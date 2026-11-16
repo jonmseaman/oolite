@@ -223,16 +223,16 @@ bool JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj,
       // ...use the four numbers as [w, x, y, z]
       if (!GetArrayElementNumber(context, quaternionObj, 0, &dVal))
         return false;
-      outQuaternion->w = static_cast<OOScalar>(dVal);
+      outQuaternion->w = static_cast<oo::Scalar>(dVal);
       if (!GetArrayElementNumber(context, quaternionObj, 1, &dVal))
         return false;
-      outQuaternion->x = static_cast<OOScalar>(dVal);
+      outQuaternion->x = static_cast<oo::Scalar>(dVal);
       if (!GetArrayElementNumber(context, quaternionObj, 2, &dVal))
         return false;
-      outQuaternion->y = static_cast<OOScalar>(dVal);
+      outQuaternion->y = static_cast<oo::Scalar>(dVal);
       if (!GetArrayElementNumber(context, quaternionObj, 3, &dVal))
         return false;
-      outQuaternion->z = static_cast<OOScalar>(dVal);
+      outQuaternion->z = static_cast<oo::Scalar>(dVal);
 
       return true;
     }
@@ -336,8 +336,8 @@ static bool QuaternionFromArgumentListNoErrorInternal(
 
   // We got our four numbers.
   *outQuaternion =
-      make_quaternion(static_cast<OOScalar>(w), static_cast<OOScalar>(x),
-                      static_cast<OOScalar>(y), static_cast<OOScalar>(z));
+      make_quaternion(static_cast<oo::Scalar>(w), static_cast<oo::Scalar>(x),
+                      static_cast<oo::Scalar>(y), static_cast<oo::Scalar>(z));
   if (outConsumed != nullptr) *outConsumed = 4;
 
   return true;
@@ -429,19 +429,19 @@ static JSValue QuaternionSetProperty(JSContext* context, JSValueConst thisObj,
   switch (static_cast<QuaternionProperty>(magic)) {
     using enum QuaternionProperty;
     case kW:
-      quaternion.w = static_cast<OOScalar>(dval);
+      quaternion.w = static_cast<oo::Scalar>(dval);
       break;
 
     case kX:
-      quaternion.x = static_cast<OOScalar>(dval);
+      quaternion.x = static_cast<oo::Scalar>(dval);
       break;
 
     case kY:
-      quaternion.y = static_cast<OOScalar>(dval);
+      quaternion.y = static_cast<oo::Scalar>(dval);
       break;
 
     case kZ:
-      quaternion.z = static_cast<OOScalar>(dval);
+      quaternion.z = static_cast<oo::Scalar>(dval);
       break;
 
     default:
@@ -536,7 +536,7 @@ static JSValue QuaternionDot(OOJS_NATIVE_ARGS) {
   OOJS_PROFILE_SCOPE();
 
   Quaternion thisq, thatq;
-  OOScalar result;
+  oo::Scalar result;
 
   if (!GetThisQuaternion(context, OOJS_THIS, &thisq, "dot")) [[unlikely]]
     return JS_EXCEPTION;
@@ -572,7 +572,7 @@ static JSValue QuaternionRotate(OOJS_NATIVE_ARGS) {
                                    &angle, nullptr)) [[unlikely]]
       return JS_EXCEPTION;
     quaternion_rotate_about_axis(&thisq, HPVectorToVector(axis),
-                                 static_cast<OOScalar>(angle));
+                                 static_cast<oo::Scalar>(angle));
   }
   // Else no angle specified, so don't rotate and pass value through unchanged.
 
@@ -592,7 +592,7 @@ static JSValue QuaternionRotateX(OOJS_NATIVE_ARGS) {
                                  OOJS_ARGV, &angle, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
-  quaternion_rotate_about_x(&quat, static_cast<OOScalar>(angle));
+  quaternion_rotate_about_x(&quat, static_cast<oo::Scalar>(angle));
 
   OOJS_RETURN_QUATERNION(quat);
 }
@@ -610,7 +610,7 @@ static JSValue QuaternionRotateY(OOJS_NATIVE_ARGS) {
                                  OOJS_ARGV, &angle, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
-  quaternion_rotate_about_y(&quat, static_cast<OOScalar>(angle));
+  quaternion_rotate_about_y(&quat, static_cast<oo::Scalar>(angle));
 
   OOJS_RETURN_QUATERNION(quat);
 }
@@ -628,7 +628,7 @@ static JSValue QuaternionRotateZ(OOJS_NATIVE_ARGS) {
                                  OOJS_ARGV, &angle, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
-  quaternion_rotate_about_z(&quat, static_cast<OOScalar>(angle));
+  quaternion_rotate_about_z(&quat, static_cast<oo::Scalar>(angle));
 
   OOJS_RETURN_QUATERNION(quat);
 }
@@ -752,5 +752,5 @@ static JSValue QuaternionStaticRandom(JSContext* context,
                                       JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
-  OOJS_RETURN_QUATERNION(OORandomQuaternion());
+  OOJS_RETURN_QUATERNION(oo::RandomQuaternion());
 }

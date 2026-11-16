@@ -32,11 +32,11 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "OOColor.h"
+#include "Color.h"
+#include "Mesh.h"
 #include "OOJSEntity.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOMesh.h"
 #include "OOScript.h"
 #include "ResourceManager.h"
 #include "VisualEffectEntity.h"
@@ -77,7 +77,7 @@ namespace {
 
 // A colour's components as its -normalizedArray gave them to JavaScript:
 // floats, null for no colour.
-oo::PList NormalizedColorComponents(OOColor* color) {
+oo::PList NormalizedColorComponents(oo::Color* color) {
   if (color == nullptr) return oo::PList();
   oo::PList::Array components;
   for (float component : color->normalizedArray())
@@ -318,13 +318,13 @@ static JSValue VisualEffectGetProperty(OOJS_GETTER_ARGS) {
     case kScannerDisplayColor1:
       result = NormalizedColorComponents(
           (entity != nullptr ? entity->scannerDisplayColor1()
-                             : static_cast<OOColor*>(nullptr)));
+                             : static_cast<oo::Color*>(nullptr)));
       break;
 
     case kScannerDisplayColor2:
       result = NormalizedColorComponents(
           (entity != nullptr ? entity->scannerDisplayColor2()
-                             : static_cast<OOColor*>(nullptr)));
+                             : static_cast<oo::Color*>(nullptr)));
       break;
 
     case kHullHeatLevel:
@@ -391,7 +391,7 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
 
   oo::VisualEffectEntity* entity = nullptr;
   int bValue;
-  std::shared_ptr<OOColor> colorForScript;
+  std::shared_ptr<oo::Color> colorForScript;
   int32_t iValue;
   double fValue;
   Vector vValue;
@@ -447,7 +447,7 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
 
     case kScannerDisplayColor1:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         if (entity != nullptr)
           entity->setScannerDisplayColor1(colorForScript.get());
@@ -457,7 +457,7 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
 
     case kScannerDisplayColor2:
       colorForScript =
-          OOColor::colorWithDescription(OOJSPListFromJSValue(context, value));
+          oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         if (entity != nullptr)
           entity->setScannerDisplayColor2(colorForScript.get());
@@ -571,14 +571,14 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
 // nil answered.
 namespace {
 oo::PList MeshMaterials(oo::VisualEffectEntity* effect) {
-  OOMesh* mesh =
-      (effect != nullptr ? effect->mesh() : static_cast<OOMesh*>(nullptr));
+  oo::Mesh* mesh =
+      (effect != nullptr ? effect->mesh() : static_cast<oo::Mesh*>(nullptr));
   return (mesh != nullptr) ? mesh->getMaterials() : oo::PList();
 }
 
 oo::PList MeshShaders(oo::VisualEffectEntity* effect) {
-  OOMesh* mesh =
-      (effect != nullptr ? effect->mesh() : static_cast<OOMesh*>(nullptr));
+  oo::Mesh* mesh =
+      (effect != nullptr ? effect->mesh() : static_cast<oo::Mesh*>(nullptr));
   return (mesh != nullptr) ? mesh->shaders() : oo::PList();
 }
 }  // namespace
@@ -772,7 +772,7 @@ static JSValue VisualEffectSetMaterialsInternal(OOJS_NATIVE_ARGS,
   const oo::PList shaderMacros = (macros != nullptr) ? *macros : oo::PList();
 
   // First we test to see if we can create the mesh.
-  const std::shared_ptr<OOMesh> mesh = OOMesh::meshWithName(
+  const std::shared_ptr<oo::Mesh> mesh = oo::Mesh::meshWithName(
       modelName.value_or(std::string()), std::nullopt, materials, shaders,
       effectDict.get<bool>("smooth", false), shaderMacros, thisEnt);
 

@@ -126,11 +126,11 @@ void StoreShaderBindingValue(oo::ShaderBindingValue& out, R value) {
     out.hpv = value;
   else if constexpr (std::is_same_v<R, Quaternion>)
     out.q = value;
-  else if constexpr (std::is_same_v<R, OOMatrix>)
+  else if constexpr (std::is_same_v<R, oo::Matrix>)
     out.m = value;
   else if constexpr (std::is_same_v<R, NSPoint>)
     out.p = value;
-  else if constexpr (std::is_same_v<R, OOColor*>)
+  else if constexpr (std::is_same_v<R, oo::Color*>)
     out.color = value;  // borrowed (fogUniform)
   else if constexpr (std::is_floating_point_v<R>)
     out.f = value;
@@ -371,12 +371,12 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return ship != nullptr ? ship->withinStationAegis() : false;
        }());
      }},
-    {"fuel", oo::kValueType<OOFuelQuantity>,
+    {"fuel", oo::kValueType<oo::FuelQuantity>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, oo::ShaderBindingValue& out) {
-       StoreShaderBindingValue(out, [part]() -> OOFuelQuantity {
+       StoreShaderBindingValue(out, [part]() -> oo::FuelQuantity {
          ShipEntity* ship = ShipPart(part);
-         return ship != nullptr ? ship->getFuel() : OOFuelQuantity{};
+         return ship != nullptr ? ship->getFuel() : oo::FuelQuantity{};
        }());
      }},
     {"flightPitch", oo::kValueType<GLfloat>,
@@ -742,11 +742,11 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return part->getCameraRelativePosition();
        }());
      }},
-    {"fogUniform", oo::kValueType<OOColor*>,
+    {"fogUniform", oo::kValueType<oo::Color*>,
      [](Entity*) -> bool { return true; },
      [](Entity* part, oo::ShaderBindingValue& out) {
        StoreShaderBindingValue(
-           out, [part]() -> OOColor* { return part->fogUniform().get(); }());
+           out, [part]() -> oo::Color* { return part->fogUniform().get(); }());
      }},  // borrowed: the entity holds it
     // The ship family's, found by name (an effect's part answers the three
     // vectors too):

@@ -23,7 +23,7 @@
         MA 02110-1301, USA.
 */
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 
 #define DEBUG_DUMP (0 && OOLITE_DEBUG)
 #define DEBUG_DUMP_RAW (1 && DEBUG_DUMP)
@@ -44,8 +44,8 @@
 #include <string_view>
 #include <vector>
 
-#include "OOColor.h"
-#include "OODescription.h"
+#include "Color.h"
+#include "Description.h"
 #include "StandaloneAtmosphereGenerator.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
@@ -117,17 +117,18 @@ bool oo::StandaloneAtmosphereGenerator::initWithPlanetInfo(
     OO_LOG("texture.planet.generate", "{}", "Extracting atmosphere parameters");
     // we are an atmosphere:
     _info.cloudAlpha = planetInfo.get<float>("cloud_alpha", 1.0f);
-    _info.cloudFraction = OOClamp_0_1_f(
+    _info.cloudFraction = oo::Clamp_0_1_f(
         planetInfo.get<float>("cloud_fraction", static_cast<float>(0.3)));
     _info.cloudColor = FloatRGBFromDictColor(planetInfo, "cloud_color");
     _info.paleCloudColor =
         FloatRGBFromDictColor(planetInfo, "polar_cloud_color");
 
-    OOGraphicsDetail detailLevel =
-        (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel() : OOGraphicsDetail{});
+    oo::GraphicsDetail detailLevel =
+        (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel()
+                             : oo::GraphicsDetail{});
 
 #ifndef TEXGEN_TEST_RIG
-    if (detailLevel < OOGraphicsDetail::kShaders) {
+    if (detailLevel < oo::GraphicsDetail::kShaders) {
       _planetScale = kPlanetScaleReducedDetail;
     } else {
       _planetScale = kPlanetScaleFullDetail;
@@ -136,7 +137,7 @@ bool oo::StandaloneAtmosphereGenerator::initWithPlanetInfo(
     _planetScale = kPlanetScale4096x4096;
 #endif
     _info.perlin3d = planetInfo.get<bool>(
-        "perlin_3d", detailLevel > OOGraphicsDetail::kShaders);
+        "perlin_3d", detailLevel > oo::GraphicsDetail::kShaders);
     _info.planetAspectRatio = _info.perlin3d ? 2 : 1;
     _info.planetScaleOffset = 8 - _info.planetAspectRatio;
     return true;
@@ -386,8 +387,8 @@ namespace {
 FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary,
                                const std::string& key) {
   const oo::PList* value = dictionary.find(key);
-  OOColor* color = (value != nullptr) ? OOColorInObjectNode(*value)
-                                      : nullptr;  // an Object node
+  oo::Color* color = (value != nullptr) ? oo::ColorInObjectNode(*value)
+                                        : nullptr;  // an Object node
   OOCAssert(color != nullptr, "Expected OOColor, got %s",
             (value != nullptr) ? oo::DescriptionOf(*value).c_str() : "(null)");
 

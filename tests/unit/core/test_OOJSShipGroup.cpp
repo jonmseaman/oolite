@@ -18,7 +18,7 @@
 	clears it). Run: tests/run.sh unit
 */
 
-#include "OOShipGroup.h"
+#include "ShipGroup.h"
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
@@ -56,15 +56,15 @@ public:
 class ShipEntity : public Entity
 {
 public:
-	::OOShipGroup *group();
-	void setGroup(::OOShipGroup *group);
+	::oo::ShipGroup *group();
+	void setGroup(::oo::ShipGroup *group);
 	void setOwner(Entity *who_owns_entity);
-	::OOShipGroup *escortGroup();
+	::oo::ShipGroup *escortGroup();
 	bool acceptAsEscort(::ShipEntity *other_ship);
 
 	std::string _name;
-	std::shared_ptr<OOShipGroup> _group;
-	std::shared_ptr<OOShipGroup> _escortGroup;
+	std::shared_ptr<oo::ShipGroup> _group;
+	std::shared_ptr<oo::ShipGroup> _escortGroup;
 	bool _acceptsEscorts = false;
 	int _accepted = 0;
 };
@@ -113,10 +113,10 @@ JSClassID sFakeShipClassID = 0;
 
 
 Entity::~Entity() = default;
-OOShipGroup *ShipEntity::group()  { return _group.get(); }
-void ShipEntity::setGroup(OOShipGroup *group)  { _group = oo::share(group); }
+oo::ShipGroup *ShipEntity::group()  { return _group.get(); }
+void ShipEntity::setGroup(oo::ShipGroup *group)  { _group = oo::share(group); }
 void ShipEntity::setOwner(Entity *who_owns_entity)  { (void)who_owns_entity; }
-OOShipGroup *ShipEntity::escortGroup()  { return _escortGroup.get(); }
+oo::ShipGroup *ShipEntity::escortGroup()  { return _escortGroup.get(); }
 
 bool ShipEntity::acceptAsEscort(::ShipEntity *other_ship)
 {
@@ -469,7 +469,7 @@ OO_TEST(category)
 {
 	SetUpContext();
 	// One JS object per group, made on first use; the engine's finalizer clears it.
-	std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::string("cat"));
+	std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::string("cat"));
 	JSValue first = group->jsValueInContext(sContext);
 	OO_CHECK(JS_IsObject(first));
 	JSValue again = group->jsValueInContext(sContext);
@@ -550,7 +550,7 @@ OO_TEST(escorts)
 	ShipEntity *other = NewShip("otherLeader");
 	ShipEntity *taken = NewShip("taken");
 	// The leader's escort group with escorts already: the new ship must be accepted as an escort.
-	std::shared_ptr<OOShipGroup> escorts = OOShipGroup::groupWithName(std::string("escorts"), leader);
+	std::shared_ptr<oo::ShipGroup> escorts = oo::ShipGroup::groupWithName(std::string("escorts"), leader);
 	escorts->addShip(NewShip("first"));
 	leader->_escortGroup = escorts;
 	leader->_group = escorts;
@@ -561,7 +561,7 @@ OO_TEST(escorts)
 	OO_CHECK_EVAL("[escorts.addShip(escort), escorts.containsShip(escort)].join()", "true,true");
 	OO_CHECK_EQ(leader->_accepted, 1);
 	// A ship that already escorts someone else is refused, with a warning.
-	std::shared_ptr<OOShipGroup> otherEscorts = OOShipGroup::groupWithName(std::string("other"), other);
+	std::shared_ptr<oo::ShipGroup> otherEscorts = oo::ShipGroup::groupWithName(std::string("other"), other);
 	otherEscorts->addShip(taken);
 	other->_escortGroup = otherEscorts;
 	taken->_group = otherEscorts;
@@ -571,7 +571,7 @@ OO_TEST(escorts)
 	OO_CHECK(TestEntityObjectDescription(TestObjectOf(taken), true).find("{taken}") != std::string::npos);
 	// A lone leader whose escort group is its own group gets a new group, and the ship joins that.
 	ShipEntity *lone = NewShip("lone");
-	std::shared_ptr<OOShipGroup> loneGroup = OOShipGroup::groupWithName(std::string("alone"), lone);
+	std::shared_ptr<oo::ShipGroup> loneGroup = oo::ShipGroup::groupWithName(std::string("alone"), lone);
 	lone->_escortGroup = loneGroup;
 	lone->_group = loneGroup;
 	Define("loneGroup", loneGroup->jsValueInContext(sContext));
@@ -580,9 +580,9 @@ OO_TEST(escorts)
 	OO_CHECK(lone->_group->name() == std::optional<std::string>("ship group"));
 	// A lone leader with a group of its own: it is asked to accept the escort.
 	ShipEntity *custom = NewShip("custom");
-	std::shared_ptr<OOShipGroup> customGroup = OOShipGroup::groupWithName(std::string("custom"), custom);
+	std::shared_ptr<oo::ShipGroup> customGroup = oo::ShipGroup::groupWithName(std::string("custom"), custom);
 	custom->_escortGroup = customGroup;
-	custom->_group = OOShipGroup::groupWithName(std::string("elsewhere"));
+	custom->_group = oo::ShipGroup::groupWithName(std::string("elsewhere"));
 	Define("customGroup", customGroup->jsValueInContext(sContext));
 	custom->_acceptsEscorts = false;
 	OO_CHECK_EVAL("customGroup.addShip(escort)", "false");
@@ -609,7 +609,7 @@ OO_TEST(nativeExceptions)
 	SetUpContext();
 	ShipEntity *chief = NewShip("chief");
 	NewShip("boom");
-	std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::string("ex"), chief);
+	std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::string("ex"), chief);
 	group->addShip(NewShip("wingman"));
 	chief->_escortGroup = group;
 	chief->_group = group;

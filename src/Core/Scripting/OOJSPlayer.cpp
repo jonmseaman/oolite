@@ -32,8 +32,8 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
+#include "ConstToString.h"
 #include "EntityOOJavaScriptExtensions.h"
-#include "OOConstToString.h"
 #include "OOJSEntity.h"
 #include "OOJSShip.h"
 #include "OOJavaScriptEngine.h"
@@ -370,7 +370,7 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
       return OOJSValueFromPList(
           context, oo::PList(DockingClearanceStatusToString(
                        (player != nullptr ? player->getDockingClearanceStatus()
-                                          : OODockingClearanceStatus{}))));
+                                          : oo::DockingClearanceStatus{}))));
 
     case kBounty:
       return JS_NewInt32(
@@ -434,7 +434,7 @@ static JSValue PlayerSetProperty(OOJS_SETTER_ARGS) {
         if (iValue < 0) iValue = 0;
         if (player != nullptr)
           player->PlayerEntity::setBounty(
-              static_cast<OOCreditsQuantity>(iValue),
+              static_cast<oo::CreditsQuantity>(iValue),
               oo::LegalStatusReason::kByScript);  // qualified: the final
                                                   // overrider, so the binding
                                                   // test stands in for it
@@ -803,7 +803,7 @@ static JSValue PlayerSetEscapePodDestination(JSContext* context,
           // at the end of the docking sequence we'll check if the target system
           // is the same as the system we're in...
           if (player != nullptr)
-            player->PlayerEntity::setTargetSystemID(static_cast<OOSystemID>(
+            player->PlayerEntity::setTargetSystemID(static_cast<oo::SystemID>(
                 i));  // qualified: the final overrider, so the binding test
                       // stands in for it
         }

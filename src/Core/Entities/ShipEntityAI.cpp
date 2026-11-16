@@ -41,40 +41,40 @@
 
 #include "AI.h"
 #include "Behaviour.h"
+#include "CallByName.h"  // oo::ScheduleEntityCall
+#include "Character.h"
 #include "Entity.h"
+#include "EntityFilterPredicate.h"
 #include "EntityHelpers.h"
 #include "EntityHold.h"
 #include "EntityOOJavaScriptExtensions.h"  // OOJSEntityJSValue
 #include "EntityPListForeign.h"
 #include "EntityStatus.h"
+#include "FastArithmetic.h"
 #include "GameController.h"
 #include "LegalStatusReason.h"
-#include "OOCallByName.h"  // oo::ScheduleEntityCall
-#include "OOCharacter.h"
-#include "OOEntityFilterPredicate.h"
-#include "OOFastArithmetic.h"
+#include "Maths.h"
 #include "OOJSFunction.h"
 #include "OOJSPropID.h"
 #include "OOJavaScriptEngine.h"
-#include "OOMaths.h"
-#include "OOPListGameTypes.h"
-#include "OOQuaternion.h"
 #include "OOScript.h"
-#include "OOShipGroup.h"
-#include "OOStringExpander.h"
-#include "OOTypes.h"
-#include "OOVector.h"
+#include "PListGameTypes.h"
 #include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
+#include "Quaternion.h"
 #include "ResourceManager.h"
 #include "ScanClass.h"
 #include "ShipDamageType.h"
 #include "ShipEntity.h"
+#include "ShipGroup.h"
 #include "StationEntity.h"
 #include "StellarBody.h"
+#include "StringExpander.h"
 #include "SunEntity.h"  // IWYU pragma: keep: converting OOSunEntity* to Entity* needs the complete type
+#include "Types.h"
 #include "Universe.h"
+#include "Vector.h"
 #include "WormholeEntity.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/Object.hpp"
@@ -221,21 +221,21 @@ void ShipEntity::groupAttackTarget() {
       ship->doScriptEvent(OOJSID("helpRequestReceived"), this, target);
 
     if ((ship != nullptr ? ship->escortGroup()
-                         : static_cast<OOShipGroup*>(nullptr)) !=
+                         : static_cast<oo::ShipGroup*>(nullptr)) !=
             (ship != nullptr ? ship->group()
-                             : static_cast<OOShipGroup*>(nullptr)) &&
+                             : static_cast<oo::ShipGroup*>(nullptr)) &&
         ((ship != nullptr ? ship->escortGroup()
-                          : static_cast<OOShipGroup*>(nullptr)) != nullptr
+                          : static_cast<oo::ShipGroup*>(nullptr)) != nullptr
              ? (ship != nullptr ? ship->escortGroup()
-                                : static_cast<OOShipGroup*>(nullptr))
+                                : static_cast<oo::ShipGroup*>(nullptr))
                    ->count()
              : 0) > 1) {
       // Ship has a seperate escort group.
       for (const oo::EntityHold& escortRef :
            ((ship != nullptr ? ship->escortGroup()
-                             : static_cast<OOShipGroup*>(nullptr)) != nullptr
+                             : static_cast<oo::ShipGroup*>(nullptr)) != nullptr
                 ? (ship != nullptr ? ship->escortGroup()
-                                   : static_cast<OOShipGroup*>(nullptr))
+                                   : static_cast<oo::ShipGroup*>(nullptr))
                       ->memberArrayExcludingLeader()
                 : std::vector<oo::EntityHold>())) {
         ::ShipEntity* escort = oo::ToShip(escortRef.get());
@@ -316,7 +316,7 @@ void ShipEntity::performLandOnPlanet() {
     _destination = (nearest != nullptr ? nearest->getPosition() : HPVector{});
     behaviour = oo::Behaviour::kLandOnPlanet;
     planetForLanding =
-        (nearest != nullptr ? nearest->getUniversalID() : OOUniversalID{});
+        (nearest != nullptr ? nearest->getUniversalID() : oo::UniversalID{});
   } else {
     behaviour = oo::Behaviour::kIdle;
     if (shipAI != nullptr) shipAI->message("NO_PLANET_NEARBY");
@@ -368,7 +368,7 @@ void ShipEntity::performTumble() {
   frustration = 0.0;
 }
 
-bool ShipEntity::performHyperSpaceToSpecificSystem(OOSystemID systemID) {
+bool ShipEntity::performHyperSpaceToSpecificSystem(oo::SystemID systemID) {
   return performHyperSpaceExitReplace(false, systemID);
 }
 
@@ -438,7 +438,7 @@ void ShipEntity::requestDockingCoordinates() {
 void ShipEntity::recallDockingInstructions() {
   if (!dockingInstructions.isNull()) {
     const oo::PList* destination = dockingInstructions.find("destination");
-    _destination = OOHPVectorFromPList(destination, kZeroHPVector);
+    _destination = oo::HPVectorFromPList(destination, kZeroHPVector);
     desired_speed =
         fmin(dockingInstructions.get<float>("speed"), maxFlightSpeed);
     desired_range = dockingInstructions.get<float>("range");
@@ -566,7 +566,7 @@ bool ShipEntity::suggestEscortTo(::ShipEntity* mother) {
 
       setOwner(mother);
       setGroup((mother != nullptr ? mother->escortGroup()
-                                  : static_cast<OOShipGroup*>(nullptr)));
+                                  : static_cast<oo::ShipGroup*>(nullptr)));
       if (shipAI != nullptr) shipAI->message("ESCORTING");
       return true;
     }
@@ -637,7 +637,7 @@ void ShipEntity::broadcastDistressMessageWithDumping(bool dumpCargo) {
                (ship != nullptr
                     ? ship->getCrew()
                     : std::optional<
-                          std::vector<std::shared_ptr<OOCharacter>>>())
+                          std::vector<std::shared_ptr<oo::Character>>>())
                    .has_value()) {
       // Only clean ships can have their distress
       // calls accepted
@@ -677,7 +677,7 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace) {
 }
 
 bool ShipEntity::performHyperSpaceExitReplace(bool replace,
-                                              OOSystemID systemID) {
+                                              oo::SystemID systemID) {
   if (!hasHyperspaceMotor()) {
     if (shipAI != nullptr)
       shipAI->reactToMessage("WITCHSPACE UNAVAILABLE", "performHyperSpaceExit");
@@ -688,7 +688,7 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace,
     return false;
   }
 
-  OOSystemID targetSystem;
+  oo::SystemID targetSystem;
   std::size_t i = 0;
 
   // get a list of destinations within range
@@ -711,7 +711,7 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace,
   // check if we're clear of nearby masses
   ::ShipEntity* blocker = oo::ToShip(
       (UNIVERSE != nullptr
-           ? UNIVERSE->entityForUniversalID(static_cast<OOUniversalID>(
+           ? UNIVERSE->entityForUniversalID(static_cast<oo::UniversalID>(
                  checkShipsInVicinityForWitchJumpExit()))
            : nullptr));
   if (blocker) {
@@ -729,7 +729,7 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace,
       i = static_cast<std::size_t>(ranrot_rand()) % n_dests;
     }
 
-    targetSystem = static_cast<OOSystemID>(sDests.at(i)->get<int>("sysID"));
+    targetSystem = static_cast<oo::SystemID>(sDests.at(i)->get<int>("sysID"));
   } else {
     targetSystem = systemID;
 
@@ -749,7 +749,7 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace,
         "DEBUG: {} Jumping {:f} which is further than allowed.  I have {} fuel",
         oo::EntityDescription(this), dist, fuel);
   }
-  fuel = static_cast<OOFuelQuantity>(fuel - (10 * dist));
+  fuel = static_cast<oo::FuelQuantity>(fuel - (10 * dist));
 
   // create wormhole
   // A new C++ wormhole.
@@ -947,7 +947,7 @@ void ShipEntity::debugDumpPendingMessages() {
 
 void ShipEntity::setDestinationToCurrentLocation() {
   // randomly add a .5m variance
-  _destination = HPvector_add(position, OOHPVectorRandomSpatial(0.5));
+  _destination = HPvector_add(position, oo::HPVectorRandomSpatial(0.5));
 }
 
 void ShipEntity::setDestinationToJinkPosition() {
@@ -955,7 +955,7 @@ void ShipEntity::setDestinationToJinkPosition() {
                                         flightSpeed / max_flight_pitch * 2);
   _destination = HPvector_add(
       position,
-      vectorToHPVector(vector_add(front, OOVectorRandomSpatial(100))));
+      vectorToHPVector(vector_add(front, oo::VectorRandomSpatial(100))));
   pitching_over =
       true;  // don't complete roll first, but immediately start with pitching.
 }
@@ -986,7 +986,7 @@ void ShipEntity::setSpeedToCruiseSpeed() { desired_speed = cruiseSpeed; }
 
 void ShipEntity::setThrustFactorTo(const std::string& thrustFactorString) {
   // called by name
-  thrust = OOClamp_0_1_f(
+  thrust = oo::Clamp_0_1_f(
                static_cast<float>(oo::str::doubleValue(thrustFactorString))) *
            max_thrust;
 }
@@ -1022,7 +1022,7 @@ void ShipEntity::setTargetToPrimaryAggressor() {
                         universalID,
                         (primaryAggressor() != nullptr
                              ? primaryAggressor()->getUniversalID()
-                             : OOUniversalID{})));
+                             : oo::UniversalID{})));
       if (currentShip != nullptr)
         currentShip->doScriptEvent(OOJSID("shipAttackerDistracted"),
                                    primaryAggressor());
@@ -1146,7 +1146,7 @@ void ShipEntity::scanForLoot() {
     ::ShipEntity* other = oo::ToShip(scanned_ships[i]);
     if ((other != nullptr ? other->getScanClass() : oo::ScanClass{}) ==
             oo::ScanClass::kCargo &&
-        (other == nullptr || other->cargoType() != OOCargoType::kNotCargo) &&
+        (other == nullptr || other->cargoType() != oo::CargoType::kNotCargo) &&
         (other != nullptr ? other->status() : oo::EntityStatus{}) !=
             oo::EntityStatus::kBeingScooped) {
       if ((!isPolice()) ||
@@ -1184,7 +1184,7 @@ void ShipEntity::scanForRandomLoot() {
     ::ShipEntity* other = scanned_ships[i];
     if ((other != nullptr ? other->getScanClass() : oo::ScanClass{}) ==
             oo::ScanClass::kCargo &&
-        (other == nullptr || other->cargoType() != OOCargoType::kNotCargo) &&
+        (other == nullptr || other->cargoType() != oo::CargoType::kNotCargo) &&
         (other != nullptr ? other->status() : oo::EntityStatus{}) !=
             oo::EntityStatus::kBeingScooped) {
       thing_uids_found[things_found++] = other;
@@ -1239,7 +1239,8 @@ void ShipEntity::getWitchspaceEntryCoordinates() {
   if (!UNIVERSE) {
     Vector vr = vector_multiply_scalar(
         v_forward,
-        static_cast<OOScalar>(maxFlightSpeed * 10.0));  // 10 second flying away
+        static_cast<oo::Scalar>(maxFlightSpeed *
+                                10.0));  // 10 second flying away
     coordinates = HPvector_add(position, vectorToHPVector(vr));
     return;
   }
@@ -1268,7 +1269,8 @@ void ShipEntity::getWitchspaceEntryCoordinates() {
   } else {
     Vector vr = vector_multiply_scalar(
         v_forward,
-        static_cast<OOScalar>(maxFlightSpeed * 10.0));  // 10 second flying away
+        static_cast<oo::Scalar>(maxFlightSpeed *
+                                10.0));  // 10 second flying away
     coordinates = HPvector_add(position, vectorToHPVector(vr));
   }
 }
@@ -1358,7 +1360,7 @@ void ShipEntity::setCourseToPlanet() {
   ::oo::PlanetEntity* the_planet = findNearestPlanetExcludingMoons();
   if (the_planet) {
     double variation =
-        (aegis_status == OOAegisStatus::kNone
+        (aegis_status == oo::AegisStatus::kNone
              ? 0.5
              : 0.2);  // more random deviation when far from planet.
     HPVector p_pos = the_planet->position;
@@ -1483,7 +1485,7 @@ void ShipEntity::checkCourseToDestination() {
   if (hazard == nullptr ||
       (oo::EntityIsShip(hazard) &&
        HPdistance(position, hazard->getPosition()) > scannerRange) ||
-      (oo::EntityIsPlanet(hazard) && aegis_status == OOAegisStatus::kNone)) {
+      (oo::EntityIsPlanet(hazard) && aegis_status == oo::AegisStatus::kNone)) {
     if (shipAI != nullptr) shipAI->message("COURSE_OK");
   }  // Avoid going into a waypoint.plist for far away objects, it cripples the
      // main AI a bit in its funtionality.
@@ -1507,14 +1509,14 @@ void ShipEntity::checkCourseToDestination() {
 
 void ShipEntity::checkAegis() {
   switch (aegis_status) {
-    case OOAegisStatus::kCloseToMainPlanet:
+    case oo::AegisStatus::kCloseToMainPlanet:
       if (shipAI != nullptr) shipAI->message("AEGIS_CLOSE_TO_MAIN_PLANET");
       // It's been a few years since 1.71 - it should be safe enough to comment
       // out the line below for 1.77/1.78 -- Kaks 20120917
       //[shipAI message:@"AEGIS_CLOSE_TO_PLANET"];	     // fires only for
       // main planets, kept for compatibility with pre-1.72 AI plists.
       return;
-    case OOAegisStatus::kCloseToAnyPlanet: {
+    case oo::AegisStatus::kCloseToAnyPlanet: {
       Entity* nearest = findNearestStellarBody();
 
       if (nearest != nullptr && nearest->isSun()) {
@@ -1529,10 +1531,10 @@ void ShipEntity::checkAegis() {
       }
       return;
     }
-    case OOAegisStatus::kInDockingRange:
+    case oo::AegisStatus::kInDockingRange:
       if (shipAI != nullptr) shipAI->message("AEGIS_IN_DOCKING_RANGE");
       return;
-    case OOAegisStatus::kNone:
+    case oo::AegisStatus::kNone:
       if (shipAI != nullptr) shipAI->message("AEGIS_NONE");
       return;
   }
@@ -1541,7 +1543,7 @@ void ShipEntity::checkAegis() {
          "Aegis status for {} has taken on invalid value {}. This is an "
          "internal error, please report it.",
          oo::EntityDescription(this), static_cast<int>(aegis_status));
-  aegis_status = OOAegisStatus::kNone;
+  aegis_status = oo::AegisStatus::kNone;
   if (shipAI != nullptr) shipAI->message("AEGIS_NONE");
 }
 
@@ -1611,7 +1613,7 @@ void ShipEntity::scanForOffenders() {
   unsigned i;
   float worst_legal_factor = 0;
   GLfloat found_d2 = scannerRange * scannerRange;
-  ::OOShipGroup* group = this->group();
+  ::oo::ShipGroup* group = this->group();
   for (i = 0; i < n_scanned_ships; i++) {
     ::ShipEntity* ship = scanned_ships[i];
     if ((ship->scanClass != oo::ScanClass::kCargo) &&
@@ -1631,7 +1633,7 @@ void ShipEntity::scanForOffenders() {
           (legal_factor > worst_legal_factor)) {
         if (group == nullptr ||
             group != (ship != nullptr ? ship->group()
-                                      : static_cast<OOShipGroup*>(nullptr))) {
+                                      : static_cast<oo::ShipGroup*>(nullptr))) {
           // fellows with bounty
           // can't be offenders
           setFoundTarget(ship);
@@ -1713,11 +1715,11 @@ void ShipEntity::commsMessageByUnpiloted(const std::string& valueString) {
 }
 
 void ShipEntity::ejectCargo() {
-  OOCargoQuantity i,
+  oo::CargoQuantity i,
       cargo_to_go =
-          static_cast<OOCargoQuantity>(0.1 * maxAvailableCargoSpace());
+          static_cast<oo::CargoQuantity>(0.1 * maxAvailableCargoSpace());
   while (cargo_to_go > 15) {
-    cargo_to_go = static_cast<OOCargoQuantity>(ranrot_rand()) % cargo_to_go;
+    cargo_to_go = static_cast<oo::CargoQuantity>(ranrot_rand()) % cargo_to_go;
   }
   dumpCargo();
   for (i = 1; i < cargo_to_go; i++) {
@@ -1783,13 +1785,13 @@ void ShipEntity::thargonCheckMother() {
       mother = oo::ToShip(foundTarget());
       setOwner(mother);
       if ((mother != nullptr ? mother->group()
-                             : static_cast<OOShipGroup*>(nullptr)) !=
+                             : static_cast<oo::ShipGroup*>(nullptr)) !=
           (mother != nullptr ? mother->escortGroup()
-                             : static_cast<OOShipGroup*>(nullptr))) {
+                             : static_cast<oo::ShipGroup*>(nullptr))) {
         // avoid adding thargon
         // to an escort group.
         setGroup((mother != nullptr ? mother->group()
-                                    : static_cast<OOShipGroup*>(nullptr)));
+                                    : static_cast<oo::ShipGroup*>(nullptr)));
       }
     }
   }
@@ -1879,12 +1881,12 @@ void ShipEntity::escortCheckMother() {
   if ((mother != nullptr ? mother->acceptAsEscort(this) : false)) {
     setOwner(mother);
     setGroup((mother != nullptr ? mother->escortGroup()
-                                : static_cast<OOShipGroup*>(nullptr)));
+                                : static_cast<oo::ShipGroup*>(nullptr)));
     if (shipAI != nullptr) shipAI->message("ESCORTING");
   } else {
     setOwner(this);
     if (group() == (mother != nullptr ? mother->escortGroup()
-                                      : static_cast<OOShipGroup*>(nullptr)))
+                                      : static_cast<oo::ShipGroup*>(nullptr)))
       setGroup(nullptr);
     if (shipAI != nullptr) shipAI->message("NOT_ESCORTING");
   }
@@ -1894,9 +1896,9 @@ void ShipEntity::checkGroupOddsVersusTarget() {
   std::size_t ownGroupCount = (group() != nullptr ? group()->count() : 0) +
                               (ranrot_rand() & 3);  // add a random fudge factor
   ::ShipEntity* target = oo::ToShip(primaryTarget());
-  ::OOShipGroup* targetGroup =
+  ::oo::ShipGroup* targetGroup =
       (target != nullptr ? target->group()
-                         : static_cast<OOShipGroup*>(nullptr));
+                         : static_cast<oo::ShipGroup*>(nullptr));
   std::size_t targetGroupCount =
       (targetGroup != nullptr ? targetGroup->count() : 0) +
       (ranrot_rand() & 3);  // add a random fudge factor
@@ -2606,8 +2608,8 @@ void ShipEntity::setTargetToLastStation() {
 
 void ShipEntity::addFuel(const std::string& fuel_number) {
   // called by name
-  setFuel(static_cast<OOFuelQuantity>(getFuel() +
-                                      oo::str::intValue(fuel_number) * 10));
+  setFuel(static_cast<oo::FuelQuantity>(getFuel() +
+                                        oo::str::intValue(fuel_number) * 10));
 }
 
 void ShipEntity::scriptActionOnTarget(const std::string& action) {

@@ -29,9 +29,9 @@ MA 02110-1301, USA.
 #include <memory>
 #include <vector>
 
-#include "OOFoundation.h"
-#include "OOMaths.h"
-#include "OOOpenGL.h"
+#include "Foundation.h"
+#include "Maths.h"
+#include "OpenGL.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Object.h"
@@ -42,7 +42,12 @@ inline constexpr double OCTREE_MIN_HALF_WIDTH = 1.0;
 #define OODEBUGLDRAWING_DISABLE 1
 #endif
 
-class OOOctreeBuilder;
+namespace oo {
+
+class OctreeBuilder;
+
+}  // namespace oo
+
 struct Octree_details;
 
 class Octree : public oo::Object {
@@ -83,7 +88,7 @@ class Octree : public oo::Object {
   ~Octree() override;
 
  private:
-  friend class ::OOOctreeBuilder;
+  friend class ::oo::OctreeBuilder;
 
   Octree(const oo::Data& data,
          GLfloat radius);  // -initWithData:radius:, less its failure
@@ -113,10 +118,12 @@ class Octree : public oo::Object {
 
 inline constexpr int kMaxOctreeDepth = 7;  // 128x128x128
 
-class OOOctreeBuilder : public oo::Object {
+namespace oo {
+
+class OctreeBuilder : public oo::Object {
  public:
-  OOOctreeBuilder();  // -init; raises OOMallocException if it cannot allocate
-  ~OOOctreeBuilder() override;
+  OctreeBuilder();  // -init; raises OOMallocException if it cannot allocate
+  ~OctreeBuilder() override;
 
   /*
           buildOctreeWithRadius()
@@ -155,14 +162,16 @@ class OOOctreeBuilder : public oo::Object {
   };
 
   // The file-static helpers that read the builder's state.
-  static OOOctreeBuildState* State(OOOctreeBuilder* self);
-  static void SetNode_slow(OOOctreeBuilder* self, uint32_t index,
+  static OOOctreeBuildState* State(OctreeBuilder* self);
+  static void SetNode_slow(OctreeBuilder* self, uint32_t index,
                            int value) NO_INLINE_FUNC;
-  static void SetNode(OOOctreeBuilder* self, uint32_t index, int value);
-  static void InsertNode(OOOctreeBuilder* self, int value);
+  static void SetNode(OctreeBuilder* self, uint32_t index, int value);
+  static void InsertNode(OctreeBuilder* self, int value);
 
   std::vector<int> _octree;  // the nodes; its size is the capacity
   uint32_t _nodeCount = {};
   OOOctreeBuildState _stateStack[kMaxOctreeDepth + 1] = {};
   uint8_t _level = {};
 };
+
+}  // namespace oo

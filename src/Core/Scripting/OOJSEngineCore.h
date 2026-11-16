@@ -80,9 +80,9 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <type_traits>
 
-#include "OOFunctionAttributes.h"
+#include "FunctionAttributes.h"
 #include "OOJSPropID.h"
-#include "OOTypes.h"
+#include "Types.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Assert.h"
@@ -472,7 +472,7 @@ void OOJSRegisterObjectConverter(JSClassID classID,
 
 // Time limiter. Calls must be balanced, as before; nesting is supported.
 #define kOOJSLongTimeLimit (5.0)
-void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit);
+void OOJSStartTimeLimiterWithTimeLimit(oo::TimeDelta limit);
 #define OOJSStartTimeLimiter() OOJSStartTimeLimiterWithTimeLimit(0.0)
 void OOJSStopTimeLimiter();
 
@@ -484,7 +484,7 @@ void OOJSStopTimeLimiter();
    engine's own behaviour.
 */
 void OOJSSetHeadlessScripting(std::optional<std::uint32_t> mathRandomSeed,
-                              OOTimeDelta defaultTimeLimit);
+                              oo::TimeDelta defaultTimeLimit);
 // How many numbers the seeded Math.random has handed out since it was set.
 std::uint64_t OOJSSeededMathRandomDraws();
 void OOJSPauseTimeLimiter();
@@ -493,8 +493,8 @@ void OOJSResumeTimeLimiter();
 #ifndef NDEBUG
 // Debug console support for the time limiter.
 void OOJSResetTimeLimiter();
-OOTimeDelta OOJSGetTimeLimiterLimit();
-void OOJSSetTimeLimiterLimit(OOTimeDelta limit);
+oo::TimeDelta OOJSGetTimeLimiterLimit();
+void OOJSSetTimeLimiterLimit(oo::TimeDelta limit);
 #endif
 
 /*	OOJSValue: an object whose purpose in life is to hold a JavaScript

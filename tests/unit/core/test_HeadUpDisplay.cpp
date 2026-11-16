@@ -31,7 +31,7 @@
 #include <string>
 
 #include "HeadUpDisplay.h"
-#include "OOColor.h"
+#include "Color.h"
 #include "ResourceManager.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
@@ -88,7 +88,7 @@ oo::PList Dial(const char* selector) {
   return oo::PList(oo::PList::Dict{{"selector", oo::PList(selector)}});
 }
 
-bool SameRGBA(OOColor* color, float r, float g, float b, float a) {
+bool SameRGBA(oo::Color* color, float r, float g, float b, float a) {
   if (color == nullptr) return false;
   float cr = 0, cg = 0, cb = 0, ca = 0;
   color->getRed(&cr, &cg, &cb, &ca);
@@ -206,7 +206,7 @@ OO_TEST(reticleColoursFromTheTargetReticleDial) {
                  OO_RETICLE_COLOR_TARGET_SENSITIVE) == nullptr);
     OO_CHECK(shortHUD->reticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE) == nullptr);
     OO_CHECK(!shortHUD->setReticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE,
-                                                OOColor::whiteColor().get()));
+                                                oo::Color::whiteColor().get()));
   }
 }
 
@@ -214,7 +214,7 @@ OO_TEST(setReticleColour) {
   SetUp();
   {
     std::shared_ptr<HeadUpDisplay> hud = NewHUD(oo::PList(oo::PList::Dict{}));
-    std::shared_ptr<OOColor> magenta = OOColor::magentaColor();
+    std::shared_ptr<oo::Color> magenta = oo::Color::magentaColor();
     OO_CHECK(
         hud->setReticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE, magenta.get()));
     OO_CHECK(hud->reticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE) ==
@@ -351,9 +351,9 @@ OO_TEST(beaconCodeIcon) {
   SetUp();
   {
     // The entities hold the code icon by the C++ OOHUDBeaconIcon interface.
-    std::shared_ptr<OOHUDBeaconCodeIcon> icon = oo::makeShared<OOHUDBeaconCodeIcon>("A");
+    std::shared_ptr<oo::HUDBeaconCodeIcon> icon = oo::makeShared<oo::HUDBeaconCodeIcon>("A");
     OO_CHECK(icon != nullptr);
-    OO_CHECK(dynamic_cast<OOHUDBeaconIcon*>(icon.get()) != nullptr);
+    OO_CHECK(dynamic_cast<oo::HUDBeaconIcon*>(icon.get()) != nullptr);
   }
 }
 
@@ -382,12 +382,12 @@ OO_TEST(cxxAPI) {
     OO_CHECK(hud->getPropertiesReticleTargetSensitive()->get<bool>("isAccurate",
                                                                    false));
 
-    std::shared_ptr<OOColor> target =
+    std::shared_ptr<oo::Color> target =
         hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET);
     OO_CHECK(target != nullptr && target->redComponent() == 0.0f &&
              target->greenComponent() == 1.0f);
     OO_CHECK(hud->reticleColorForIndex(3) == nullptr);
-    std::shared_ptr<OOColor> blue = OOColor::blueColor();
+    std::shared_ptr<oo::Color> blue = oo::Color::blueColor();
     OO_CHECK(hud->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET, blue.get()));
     OO_CHECK(hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET) == blue);
     OO_CHECK(!hud->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET, nullptr));

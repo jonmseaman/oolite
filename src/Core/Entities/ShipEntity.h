@@ -43,22 +43,28 @@
 
 #include "EntityWithDrawable.h"
 #include "OOJSPropID.h"
-#include "OORoleSet.h"
 #include "Octree.h"
 #include "PlanetEntity.h"
+#include "RoleSet.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/WeakSet.hpp"
 
 class StationEntity;
-class OOMesh;
+
+namespace oo {
+
+class Mesh;
+
+}  // namespace oo
+
 #include "OOScript.h"  // std::shared_ptr<OOScript> members and results
 class WormholeEntity;
 #include "AI.h"               // shipAI is std::shared_ptr
-#include "OOCharacter.h"      // the crew is std::shared_ptr
-#include "OOColor.h"          // the colours are std::shared_ptr members
-#include "OOEquipmentType.h"  // OOWeaponType is a C++ pointer
-#include "OOPolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is std::shared_ptr
-#include "OOShipGroup.h"      // the groups are std::shared_ptr
+#include "Character.h"        // the crew is std::shared_ptr
+#include "Color.h"            // the colours are std::shared_ptr members
+#include "EquipmentType.h"    // OOWeaponType is a C++ pointer
+#include "PolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is std::shared_ptr
+#include "ShipGroup.h"  // the groups are std::shared_ptr
 
 namespace oo {
 
@@ -201,7 +207,7 @@ inline constexpr auto MAX_COS2 = (MAX_COS * MAX_COS);
         } OOWeaponType; */
 namespace oo {
 
-using WeaponType = OOEquipmentType*;
+using WeaponType = oo::EquipmentType*;
 
 enum class AlertCondition : std::int32_t {
   // Alert conditions are used by player and station entities.
@@ -220,7 +226,7 @@ static_assert(oo::ToUnderlying(oo::AlertCondition::kYellow) == 2);
 static_assert(oo::ToUnderlying(oo::AlertCondition::kRed) == 3);
 
 // OOShipDamageType (plain header).
-#include "OOEntityEnums.h"
+#include "EntityEnums.h"
 
 namespace oo {
 
@@ -292,8 +298,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   void setSunGlareFilter(GLfloat newValue);
   GLfloat getAccuracy();
   void setAccuracy(GLfloat new_accuracy);
-  ::OOMesh* mesh();
-  void setMesh(::OOMesh* mesh);
+  ::oo::Mesh* mesh();
+  void setMesh(::oo::Mesh* mesh);
   BoundingBox getTotalBoundingBox();
   virtual Vector forwardVector();
   Vector upVector();
@@ -315,8 +321,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   void setSubEntityTakingDamage(::ShipEntity* sub);
   ::OOScript* shipScript();
   ::OOScript* shipAIScript();
-  OOTimeAbsolute shipAIScriptWakeTime();
-  void setAIScriptWakeTime(OOTimeAbsolute t);
+  oo::TimeAbsolute shipAIScriptWakeTime();
+  void setAIScriptWakeTime(oo::TimeAbsolute t);
   std::optional<std::string> descriptionComponents() const override;
 
   // bounding boxes, octree hit tests, universe add / remove, beacons, boulders,
@@ -339,7 +345,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   void setBeaconLabel(const std::optional<std::string>& blabel);
   bool isVisible() override;
   bool isBeacon();
-  OOHUDBeaconIcon* beaconDrawable();  // borrowed
+  oo::HUDBeaconIcon* beaconDrawable();  // borrowed
   Entity* prevBeacon();
   virtual Entity* nextBeacon();
   Entity* nextBeaconEntity();  // nextBeacon(), null for none
@@ -354,7 +360,7 @@ class ShipEntity : public oo::EntityWithDrawable,
 
   // escort creation, ship data key, weapon offsets, octree collision checks,
   // subentity geometry, escape-pod launch.
-  void setUpOneEscort(::ShipEntity* escorter, ::OOShipGroup* escortGroup,
+  void setUpOneEscort(::ShipEntity* escorter, ::oo::ShipGroup* escortGroup,
                       const std::string& escortRole, HPVector ex_pos,
                       uint8_t currentEscortCount);
   std::optional<std::string> shipDataKey();
@@ -377,14 +383,14 @@ class ShipEntity : public oo::EntityWithDrawable,
   Triangle absoluteIJKForSubentity();
   void addSubentityToCollisionRadius(Entity* subent);
   ::ShipEntity* launchPodWithCrew(
-      const std::vector<std::shared_ptr<OOCharacter>>& podCrew);
+      const std::vector<std::shared_ptr<oo::Character>>& podCrew);
   bool validForAddToUniverse() override;
 
   // update:.
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
 
   // behaviour dispatch, attack response, equipment queries.
-  void processBehaviour(OOTimeDelta delta_t);
+  void processBehaviour(oo::TimeDelta delta_t);
   void noteFrustration(const std::string& context);
   void respondToAttackFrom(Entity* from, Entity* other);
   bool hasOneEquipmentItem(const std::string& itemKey, bool includeWeapons,
@@ -409,21 +415,23 @@ class ShipEntity : public oo::EntityWithDrawable,
   // equipment validity and adding, weapon mounts, scripting lists.
   virtual bool canAddEquipment(const std::string& equipmentKeyIn,
                                const std::string& context);
-  OOWeaponFacingSet weaponFacings();
-  oo::WeaponType weaponTypeIDForFacing(OOWeaponFacing facing, bool strict);
-  virtual ::OOEquipmentType* weaponTypeForFacing(OOWeaponFacing facing,
-                                                 bool strict);
-  virtual std::vector<std::shared_ptr<::OOEquipmentType>> missilesList();
+  oo::WeaponFacingSet weaponFacings();
+  oo::WeaponType weaponTypeIDForFacing(oo::WeaponFacing facing, bool strict);
+  virtual ::oo::EquipmentType* weaponTypeForFacing(oo::WeaponFacing facing,
+                                                   bool strict);
+  virtual std::vector<std::shared_ptr<::oo::EquipmentType>> missilesList();
   virtual oo::PList passengerListForScripting();
   virtual oo::PList parcelListForScripting();
   virtual oo::PList contractListForScripting();
-  ::OOEquipmentType* generateMissileEquipmentTypeFrom(const std::string& role);
-  std::vector<std::shared_ptr<::OOEquipmentType>> equipmentListForScripting();
+  ::oo::EquipmentType* generateMissileEquipmentTypeFrom(
+      const std::string& role);
+  std::vector<std::shared_ptr<::oo::EquipmentType>> equipmentListForScripting();
   bool equipmentValidToAdd(const std::string& equipmentKey,
                            const std::string& context);
   bool equipmentValidToAdd(const std::string& fullEquipmentKey, bool loading,
                            const std::string& context);
-  virtual bool setWeaponMount(OOWeaponFacing facing, const std::string& eqKey);
+  virtual bool setWeaponMount(oo::WeaponFacing facing,
+                              const std::string& eqKey);
   virtual bool addEquipmentItem(const std::string& equipmentKey,
                                 const std::string& context);
   virtual bool addEquipmentItem(const std::string& equipmentKeyIn,
@@ -435,12 +443,12 @@ class ShipEntity : public oo::EntityWithDrawable,
   // equipment removal, missile selection, capacities and has-equipment
   // predicates, shields.
   virtual void removeEquipmentItem(const std::string& equipmentKey);
-  virtual bool removeExternalStore(::OOEquipmentType* eqType);
-  ::OOEquipmentType* verifiedMissileTypeFromRole(
+  virtual bool removeExternalStore(::oo::EquipmentType* eqType);
+  ::oo::EquipmentType* verifiedMissileTypeFromRole(
       const std::string& requestedRole);
-  ::OOEquipmentType* selectMissile();
+  ::oo::EquipmentType* selectMissile();
   void removeAllEquipment();
-  virtual OOCreditsQuantity removeMissiles();
+  virtual oo::CreditsQuantity removeMissiles();
   virtual std::size_t parcelCount();
   virtual std::size_t passengerCount();
   virtual std::size_t passengerCapacity();
@@ -537,18 +545,18 @@ class ShipEntity : public oo::EntityWithDrawable,
   void drawSubEntityImmediate(bool immediate, bool translucent) override;
   GLfloat* scannerDisplayColorForShip(::ShipEntity* otherShip, bool isHostile,
                                       bool flash,
-                                      ::OOColor* scannerDisplayColor1,
-                                      ::OOColor* scannerDisplayColor2,
-                                      ::OOColor* scannerDisplayColorH1,
-                                      ::OOColor* scannerDisplayColorH2);
-  void setScannerDisplayColor1(::OOColor* color);
-  void setScannerDisplayColor2(::OOColor* color);
-  ::OOColor* scannerDisplayColor1();
-  ::OOColor* scannerDisplayColor2();
-  void setScannerDisplayColorHostile1(::OOColor* color);
-  void setScannerDisplayColorHostile2(::OOColor* color);
-  ::OOColor* scannerDisplayColorHostile1();
-  ::OOColor* scannerDisplayColorHostile2();
+                                      ::oo::Color* scannerDisplayColor1,
+                                      ::oo::Color* scannerDisplayColor2,
+                                      ::oo::Color* scannerDisplayColorH1,
+                                      ::oo::Color* scannerDisplayColorH2);
+  void setScannerDisplayColor1(::oo::Color* color);
+  void setScannerDisplayColor2(::oo::Color* color);
+  ::oo::Color* scannerDisplayColor1();
+  ::oo::Color* scannerDisplayColor2();
+  void setScannerDisplayColorHostile1(::oo::Color* color);
+  void setScannerDisplayColorHostile2(::oo::Color* color);
+  ::oo::Color* scannerDisplayColorHostile1();
+  ::oo::Color* scannerDisplayColorHostile2();
   bool isCloaked();
   bool getCloakPassive();
   void setCloaked(bool cloak);
@@ -569,14 +577,14 @@ class ShipEntity : public oo::EntityWithDrawable,
   void resumePostProximityAlert();
   double getMessageTime();
   void setMessageTime(double value);
-  ::OOShipGroup* group();
-  void setGroup(::OOShipGroup* group);
-  ::OOShipGroup* escortGroup();
-  void setEscortGroup(::OOShipGroup* group);
+  ::oo::ShipGroup* group();
+  void setGroup(::oo::ShipGroup* group);
+  ::oo::ShipGroup* escortGroup();
+  void setEscortGroup(::oo::ShipGroup* group);
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  ::OOShipGroup* rawEscortGroup();
+  ::oo::ShipGroup* rawEscortGroup();
 #endif
-  ::OOShipGroup* stationGroup();
+  ::oo::ShipGroup* stationGroup();
   bool hasEscorts();
   std::vector<oo::EntityHold> escorts();
   std::vector<oo::EntityHold> escortArray();
@@ -605,7 +613,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   // transition, nearest planet.
   std::optional<std::string> identFromShip(::ShipEntity* otherShip);
   bool hasRole(const std::string& role);
-  std::shared_ptr<::OORoleSet> getRoleSet();  // null where there is none
+  std::shared_ptr<::oo::RoleSet> getRoleSet();  // null where there is none
   void addRole(const std::string& role);
   void addRole(const std::string& role, float probability);
   void removeRole(const std::string& role);
@@ -641,7 +649,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   float weaponRechargeRate();
   void setWeaponRechargeRate(float value);
   void setWeaponEnergy(float value);
-  virtual OOWeaponFacing getCurrentWeaponFacing();
+  virtual oo::WeaponFacing getCurrentWeaponFacing();
   GLfloat getScannerRange();
   void setScannerRange(GLfloat value);
   Vector getReference();
@@ -655,19 +663,19 @@ class ShipEntity : public oo::EntityWithDrawable,
 
   // aegis, home and destination systems, status, crew, AI and ship script,
   // fuel.
-  OOAegisStatus checkForAegis();
+  oo::AegisStatus checkForAegis();
   void forceAegisCheck();
   bool withinStationAegis();
   Entity* lastAegisLock();  // a planet or sun, its C++ entity
   void setLastAegisLock(Entity* lastAegisLock);
-  OOSystemID homeSystem();
-  OOSystemID destinationSystem();
-  void setHomeSystem(OOSystemID s);
-  void setDestinationSystem(OOSystemID s);
+  oo::SystemID homeSystem();
+  oo::SystemID destinationSystem();
+  void setHomeSystem(oo::SystemID s);
+  void setDestinationSystem(oo::SystemID s);
   void setStatus(oo::EntityStatus stat) override;
   void setLaunchDelay(double delay);
-  std::optional<std::vector<std::shared_ptr<OOCharacter>>> getCrew();
-  void setCrew(const std::optional<std::vector<std::shared_ptr<OOCharacter>>>&
+  std::optional<std::vector<std::shared_ptr<oo::Character>>> getCrew();
+  void setCrew(const std::optional<std::vector<std::shared_ptr<oo::Character>>>&
                    crewArray);
   void setSingleCrewWithRole(const std::string& crewRole);
   std::vector<oo::PList> crewForScripting();
@@ -679,9 +687,9 @@ class ShipEntity : public oo::EntityWithDrawable,
   bool hasAutoWeapons();
   void setShipScript(const std::optional<std::string>& script_name);
   double getFrustration();
-  OOFuelQuantity getFuel();
-  void setFuel(OOFuelQuantity amount);
-  OOFuelQuantity fuelCapacity();
+  oo::FuelQuantity getFuel();
+  void setFuel(oo::FuelQuantity amount);
+  oo::FuelQuantity fuelCapacity();
   virtual GLfloat fuelChargeRate();  // PlayerEntity overrides
 
   // sticks, bounty and legal status, commodities and cargo, speed.
@@ -692,31 +700,31 @@ class ShipEntity : public oo::EntityWithDrawable,
   void setYaw(double amount);
   void setThrust(double amount);
   void setThrustForDemo(float factor);
-  virtual void setBounty(OOCreditsQuantity amount);
-  virtual void setBounty(OOCreditsQuantity amount,
+  virtual void setBounty(oo::CreditsQuantity amount);
+  virtual void setBounty(oo::CreditsQuantity amount,
                          oo::LegalStatusReason reason);
-  virtual void setBounty(OOCreditsQuantity amount, const std::string& reason);
-  virtual OOCreditsQuantity getBounty();
+  virtual void setBounty(oo::CreditsQuantity amount, const std::string& reason);
+  virtual oo::CreditsQuantity getBounty();
   virtual int legalStatus();
-  void setCommodity(const std::string& co_type, OOCargoQuantity co_amount);
+  void setCommodity(const std::string& co_type, oo::CargoQuantity co_amount);
   void setCommodityForPod(const std::optional<std::string>& co_type,
-                          OOCargoQuantity co_amount);
+                          oo::CargoQuantity co_amount);
   std::optional<std::string> commodityType();
-  OOCargoQuantity commodityAmount();
-  OOCargoQuantity maxAvailableCargoSpace();
-  void setMaxAvailableCargoSpace(OOCargoQuantity newValue);
-  OOCargoQuantity availableCargoSpace();
-  virtual OOCargoQuantity cargoQuantityOnBoard();
-  OOCargoType cargoType();
+  oo::CargoQuantity commodityAmount();
+  oo::CargoQuantity maxAvailableCargoSpace();
+  void setMaxAvailableCargoSpace(oo::CargoQuantity newValue);
+  oo::CargoQuantity availableCargoSpace();
+  virtual oo::CargoQuantity cargoQuantityOnBoard();
+  oo::CargoType cargoType();
   std::vector<oo::EntityHold>* getCargo();
   std::size_t cargoCount();
   virtual oo::PList cargoListForScripting();
   void setCargo(const std::vector<oo::EntityHold>& some_cargo);
   bool addCargo(const std::vector<oo::EntityHold>& some_cargo);
-  bool removeCargo(const std::string& commodity, OOCargoQuantity amount);
+  bool removeCargo(const std::string& commodity, oo::CargoQuantity amount);
   bool showScoopMessage();
-  OOCargoFlag cargoFlag();
-  void setCargoFlag(OOCargoFlag flag);
+  oo::CargoFlag cargoFlag();
+  void setCargoFlag(oo::CargoFlag flag);
   void setSpeed(double amount);
   void setDesiredSpeed(double amount);
   double desiredSpeed();
@@ -784,7 +792,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   Vector positionOffsetForAlignment(const std::string& align);
   virtual void becomeLargeExplosion(double factor);
   virtual void collectBountyFor(::ShipEntity* other);
-  OOComparisonResult compareBeaconCodeWith(Entity* other);  // an OOBeaconEntity
+  oo::ComparisonResult compareBeaconCodeWith(
+      Entity* other);  // an OOBeaconEntity
   GLfloat weaponRecoveryTime();
   virtual GLfloat laserHeatLevel();
   virtual GLfloat laserHeatLevelAft();
@@ -873,28 +882,28 @@ class ShipEntity : public oo::EntityWithDrawable,
   // aim tolerance, sun glare, main weapons and turret fire, laser colours.
   GLfloat currentAimTolerance();
   virtual GLfloat lookingAtSunWithThresholdAngleCos(GLfloat thresholdAngleCos);
-  bool onTarget(OOWeaponFacing direction, oo::WeaponType weapon_type);
-  bool fireWeapon(oo::WeaponType weapon_type, OOWeaponFacing direction,
+  bool onTarget(oo::WeaponFacing direction, oo::WeaponType weapon_type);
+  bool fireWeapon(oo::WeaponType weapon_type, oo::WeaponFacing direction,
                   double range);
   bool fireMainWeapon(double range);
   bool fireAftWeapon(double range);
   bool firePortWeapon(double range);
   bool fireStarboardWeapon(double range);
-  OOTimeDelta shotTime();
+  oo::TimeDelta shotTime();
   void resetShotTime();
   bool fireTurretCannon(double range);
-  void setLaserColor(::OOColor* color);
-  void setExhaustEmissiveColor(::OOColor* color);
-  ::OOColor* laserColor();
-  ::OOColor* exhaustEmissiveColor();
+  void setLaserColor(::oo::Color* color);
+  void setExhaustEmissiveColor(::oo::Color* color);
+  ::oo::Color* laserColor();
+  ::oo::Color* exhaustEmissiveColor();
 
   // laser shots, missed shots, sparks, missile launch decision.
   bool fireSubentityLaserShot(double range);
   bool fireDirectLaserShot(double range);
   bool fireDirectLaserDefensiveShot();
   bool fireDirectLaserShotAt(Entity* my_target);
-  std::vector<Vector> laserPortOffset(OOWeaponFacing direction);
-  bool fireLaserShotInDirection(OOWeaponFacing direction,
+  std::vector<Vector> laserPortOffset(oo::WeaponFacing direction);
+  bool fireLaserShotInDirection(oo::WeaponFacing direction,
                                 const std::string& weaponIdentifier);
   void adjustMissedShots(int delta);
   int missedShots();
@@ -908,8 +917,8 @@ class ShipEntity : public oo::EntityWithDrawable,
       const std::optional<std::string>& requestedIdentifier, Entity* target);
   bool isMissileFlagSet();
   void setIsMissileFlag(bool newValue);
-  OOTimeDelta missileLoadTime();
-  void setMissileLoadTime(OOTimeDelta newMissileLoadTime);
+  oo::TimeDelta missileLoadTime();
+  void setMissileLoadTime(oo::TimeDelta newMissileLoadTime);
   virtual void noticeECM();
   virtual bool fireECM();
   virtual bool activateCloakingDevice();
@@ -918,7 +927,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   virtual ::ShipEntity* launchEscapeCapsule();
   virtual void dumpCargo();
   ::ShipEntity* dumpCargoItem(const std::optional<std::string>& preferred);
-  OOCargoType dumpItem(::ShipEntity* cargoObj);
+  oo::CargoType dumpItem(::ShipEntity* cargoObj);
 
   // collisions, velocity, tractoring and scooping.
   void manageCollisions();
@@ -1010,10 +1019,10 @@ class ShipEntity : public oo::EntityWithDrawable,
   oo::PList getScriptInfo();
   void overrideScriptInfo(const oo::PList& override);
   Entity* entityForShaderProperties();
-  void setDemoShip(OOScalar rate);
+  void setDemoShip(oo::Scalar rate);
   bool getIsDemoShip();
-  void setDemoStartTime(OOTimeAbsolute time);
-  OOTimeAbsolute getDemoStartTime();
+  void setDemoStartTime(oo::TimeAbsolute time);
+  oo::TimeAbsolute getDemoStartTime();
   virtual void doScriptEvent(OOJSPropID message);
   void doScriptEvent(
       OOJSPropID message,
@@ -1081,7 +1090,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   void performBuoyTumble();
   void performStop();
   void performTumble();
-  bool performHyperSpaceToSpecificSystem(OOSystemID systemID);
+  bool performHyperSpaceToSpecificSystem(oo::SystemID systemID);
   void requestDockingCoordinates();
   void recallDockingInstructions();
   void scanForNearestIncomingMissile();
@@ -1094,7 +1103,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   void broadcastDistressMessageWithDumping(bool dumpCargo);
   void checkFoundTarget();
   bool performHyperSpaceExitReplace(bool replace);
-  bool performHyperSpaceExitReplace(bool replace, OOSystemID systemID);
+  bool performHyperSpaceExitReplace(bool replace, oo::SystemID systemID);
   void scanForNearestShipWithPredicate(EntityFilterPredicate predicate,
                                        void* parameter);
   void scanForNearestShipWithNegatedPredicate(EntityFilterPredicate predicate,
@@ -1229,7 +1238,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   void performFlyRacepoints();
 
   // derived variables
-  OOTimeDelta shot_time = {};  // time elapsed since last shot was fired
+  oo::TimeDelta shot_time = {};  // time elapsed since last shot was fired
 
   // navigation
   Vector v_forward = {}, v_up = {},
@@ -1257,19 +1266,19 @@ class ShipEntity : public oo::EntityWithDrawable,
   // scripting
   std::shared_ptr<OOScript> script;
   std::shared_ptr<OOScript> aiScript;
-  OOTimeAbsolute aiScriptWakeTime = {};
+  oo::TimeAbsolute aiScriptWakeTime = {};
 
   // docking instructions
   oo::PList dockingInstructions;  // null: none (was nil); the station is an
                                   // Object node (a weak reference)
 
-  std::shared_ptr<OOColor> laser_color;
-  std::shared_ptr<OOColor> default_laser_color;
-  std::shared_ptr<OOColor> exhaust_emissive_color;
-  std::shared_ptr<OOColor> scanner_display_color1;
-  std::shared_ptr<OOColor> scanner_display_color2;
-  std::shared_ptr<OOColor> scanner_display_color_hostile1;
-  std::shared_ptr<OOColor> scanner_display_color_hostile2;
+  std::shared_ptr<oo::Color> laser_color;
+  std::shared_ptr<oo::Color> default_laser_color;
+  std::shared_ptr<oo::Color> exhaust_emissive_color;
+  std::shared_ptr<oo::Color> scanner_display_color1;
+  std::shared_ptr<oo::Color> scanner_display_color2;
+  std::shared_ptr<oo::Color> scanner_display_color_hostile1;
+  std::shared_ptr<oo::Color> scanner_display_color_hostile2;
 
   // per ship-type variables
   //
@@ -1332,28 +1341,28 @@ class ShipEntity : public oo::EntityWithDrawable,
   GLfloat sunGlareFilter = {};  // Range 0.0 - 1.0, where 0 means no sun glare
                                 // filter, 1 means glare fully filtered
 
-  OOFuelQuantity fuel = {};  // witch-space fuel
+  oo::FuelQuantity fuel = {};  // witch-space fuel
   GLfloat fuel_accumulator = {};
 
   GLfloat afterburner_rate = {};
   GLfloat afterburner_speed_factor = {};
 
-  OOCargoQuantity likely_cargo = {};  // likely amount of cargo (for pirates,
-                                      // this is what is spilled as loot)
-  OOCargoQuantity max_cargo = {};     // capacity of cargo hold
-  OOCargoQuantity extra_cargo =
+  oo::CargoQuantity likely_cargo = {};  // likely amount of cargo (for pirates,
+                                        // this is what is spilled as loot)
+  oo::CargoQuantity max_cargo = {};     // capacity of cargo hold
+  oo::CargoQuantity extra_cargo =
       {};  // capacity of cargo hold extension (if any)
-  OOCargoQuantity equipment_weight =
+  oo::CargoQuantity equipment_weight =
       {};  // amount of equipment using cargo space (excluding passenger_berth &
            // extra_cargo_bay)
-  OOCargoType cargo_type =
+  oo::CargoType cargo_type =
       {};  // if this is scooped, this is indicates contents
-  OOCargoFlag cargo_flag = {};    // indicates contents for merchantmen
-  OOCreditsQuantity bounty = {};  // bounty (if any)
+  oo::CargoFlag cargo_flag = {};    // indicates contents for merchantmen
+  oo::CreditsQuantity bounty = {};  // bounty (if any)
 
   GLfloat energy_recharge_rate = {};  // recharge rate for energy banks
 
-  OOWeaponFacingSet weapon_facings = {};  // weapon mounts available (bitmask)
+  oo::WeaponFacingSet weapon_facings = {};  // weapon mounts available (bitmask)
   oo::WeaponType forward_weapon_type =
       {};  // type of forward weapon (allows lasers, plasma cannon, others)
   oo::WeaponType aft_weapon_type =
@@ -1364,7 +1373,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   GLfloat weapon_damage_override =
       {};  // custom energy damage dealt by front laser, if applicable
   GLfloat weaponRange = {};  // range of the weapon (in meters)
-  OOWeaponFacing currentWeaponFacing =
+  oo::WeaponFacing currentWeaponFacing =
       {};  // not necessarily the same as view for the player
 
   GLfloat weapon_energy_use = {}, weapon_temp = {},
@@ -1378,9 +1387,9 @@ class ShipEntity : public oo::EntityWithDrawable,
   unsigned max_missiles = {};  // number of missile pylons
   std::optional<std::string>
       _missileRole;  // nullopt: no missile_role (the generic fallback)
-  OOTimeDelta missile_load_time =
+  oo::TimeDelta missile_load_time =
       {};  // minimum time interval between missile launches
-  OOTimeAbsolute missile_launch_time = {};  // time of last missile launch
+  oo::TimeAbsolute missile_launch_time = {};  // time of last missile launch
 
   std::shared_ptr<::AI> shipAI = {};  // ship's AI system
 
@@ -1390,7 +1399,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   std::optional<std::string> shipClassName;  // e.g. "Cobra III"; nullopt: nil
   std::optional<std::string> displayName;  // name shown on screen; nullopt: nil
   std::optional<std::string> scan_description;  // scan class name; nullopt: nil
-  std::shared_ptr<::OORoleSet>
+  std::shared_ptr<::oo::RoleSet>
       roleSet;  // Roles a ship can take, eg. trader, hunter,
                 // police, pirate, scavenger &c.
   std::optional<std::string>
@@ -1410,7 +1419,7 @@ class ShipEntity : public oo::EntityWithDrawable,
                                     // subentities inside the shipdata
   double launch_time = {};          // time at which launched
   double launch_delay = {};         // delay for thinking after launch
-  OOUniversalID planetForLanding = {};  // for landing
+  oo::UniversalID planetForLanding = {};  // for landing
 
   GLfloat frustration = {},  // degree of dissatisfaction with the current
                              // behavioural state, factor used to test this
@@ -1425,8 +1434,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   // derived variables
   float weapon_recharge_rate = {};      // time between shots
   int shot_counter = {};                // number of shots fired
-  OOTimeAbsolute cargo_dump_time = {};  // time cargo was last dumped
-  OOTimeAbsolute last_shot_time = {};   // time shot was last fired
+  oo::TimeAbsolute cargo_dump_time = {};  // time cargo was last dumped
+  oo::TimeAbsolute last_shot_time = {};   // time shot was last fired
 
   std::vector<oo::EntityHold>
       cargo;  // cargo containers go in here (index 0 is the eject position);
@@ -1435,7 +1444,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   std::optional<std::string>
       commodity_type;  // type of commodity in a container; nullopt: not a pod
                        // (was nil)
-  OOCargoQuantity commodity_amount =
+  oo::CargoQuantity commodity_amount =
       {};  // 1 if unit is TONNES (0), possibly more if precious metals
            // KILOGRAMS (1)
   // or gem stones GRAMS (2)
@@ -1451,10 +1460,10 @@ class ShipEntity : public oo::EntityWithDrawable,
   GLfloat aim_tolerance = {};
   int _missed_shots = {};
 
-  OOAegisStatus aegis_status =
+  oo::AegisStatus aegis_status =
       {};  // set to YES when within the station's protective zone
-  OOSystemID home_system = {};
-  OOSystemID destination_system = {};
+  oo::SystemID home_system = {};
+  oo::SystemID destination_system = {};
 
   double messageTime =
       {};  // counts down the seconds a radio message is active for
@@ -1472,7 +1481,7 @@ class ShipEntity : public oo::EntityWithDrawable,
 
   // crew (typically one OOCharacter - the pilot); nullopt: unpiloted (was nil);
   // an empty vector is crewed
-  std::optional<std::vector<std::shared_ptr<OOCharacter>>> crew;
+  std::optional<std::vector<std::shared_ptr<oo::Character>>> crew;
 
   // close contact / collision tracking
   std::map<std::string, std::string, std::less<>>
@@ -1510,7 +1519,7 @@ class ShipEntity : public oo::EntityWithDrawable,
                          // to scripts; null: none
 
   std::vector<oo::EntityHold> subEntities;  // empty == none (was nil)
-  ::OOEquipmentType* missile_list[SHIPENTITY_MAX_MISSILES] = {};
+  ::oo::EquipmentType* missile_list[SHIPENTITY_MAX_MISSILES] = {};
 
   // various types of target
   std::weak_ptr<Entity> _primaryTarget;     // for combat or rendezvous
@@ -1532,7 +1541,7 @@ class ShipEntity : public oo::EntityWithDrawable,
   // human.
   float reactionTime = {};
   HPVector trackingCurvePositions[4] = {};
-  OOTimeAbsolute trackingCurveTimes[4] = {};
+  oo::TimeAbsolute trackingCurveTimes[4] = {};
   HPVector trackingCurveCoeffs[3] = {};
 
   // Private, in declaration
@@ -1553,10 +1562,10 @@ class ShipEntity : public oo::EntityWithDrawable,
  private:
   std::weak_ptr<Entity> _lastAegisLock;  // remember last aegis planet/sun
 
-  std::shared_ptr<::OOShipGroup> _group;
+  std::shared_ptr<::oo::ShipGroup> _group;
 
  private:
-  std::shared_ptr<::OOShipGroup> _escortGroup;
+  std::shared_ptr<::oo::ShipGroup> _escortGroup;
   uint8_t _maxEscortCount = {};
   uint8_t _pendingEscortCount = {};
 
@@ -1583,16 +1592,16 @@ class ShipEntity : public oo::EntityWithDrawable,
   std::optional<std::string> _beaconLabel;  // nullopt: nil (never empty)
   std::weak_ptr<Entity> _prevBeacon;
   std::weak_ptr<Entity> _nextBeacon;
-  std::shared_ptr<OOHUDBeaconIcon> _beaconDrawable;
+  std::shared_ptr<oo::HUDBeaconIcon> _beaconDrawable;
 
   double _nextAegisCheck = {};
 
   // Demo ship state
   bool isDemoShip = {};
-  OOScalar demoRate = {};
+  oo::Scalar demoRate = {};
 
  private:
-  OOTimeAbsolute demoStartTime = {};
+  oo::TimeAbsolute demoStartTime = {};
   Quaternion demoStartOrientation = {};
 };
 

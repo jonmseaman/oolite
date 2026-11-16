@@ -18,8 +18,8 @@
 #include <string>
 #include <vector>
 
-#include "OOColor.h"
-#include "OORegExpMatcher.h"
+#include "Color.h"
+#include "RegExpMatcher.h"
 #include "ShaderUniform.h"
 #include "ShaderUniformMethodType.h"
 #include "oo_gl_test_context.hpp"
@@ -31,8 +31,13 @@
 // --------------------------------------------------------------------------------------
 
 // OOLogging.mm's (it would bring the resource manager into the link).
-void OOLogIndent(void) {}
-void OOLogOutdent(void) {}
+namespace oo {
+
+void LogIndent(void) {}
+void LogOutdent(void) {}
+
+}  // namespace oo
+
 
 // The extension manager's collaborators, as test_OOOpenGLExtensionManager stubs
 // them.
@@ -48,17 +53,22 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
 }
 
 // OORegExpMatcher stub: answers no match.
-std::shared_ptr<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
-  return oo::makeShared<OORegExpMatcher>();
+std::shared_ptr<oo::RegExpMatcher> oo::RegExpMatcher::regExpMatcher() {
+  return oo::makeShared<oo::RegExpMatcher>();
 }
-bool OORegExpMatcher::string(const std::string&, const std::string&) {
+bool oo::RegExpMatcher::string(const std::string&, const std::string&) {
   return false;
 }
-OORegExpMatcher::~OORegExpMatcher() {}
+namespace oo {
 
-OOShaderSetting OOShaderSettingFromString(const std::string& string) {
-  return string == "SHADERS_FULL" ? OOShaderSetting::kFull : OOShaderSetting::kNotSupported;
+RegExpMatcher::~RegExpMatcher() {}
+
+ShaderSetting ShaderSettingFromString(const std::string& string) {
+  return string == "SHADERS_FULL" ? ShaderSetting::kFull : ShaderSetting::kNotSupported;
 }
+
+}  // namespace oo
+
 
 // The shader program (OOShaderProgram.mm reaches the resource manager): the one
 // member the uniform calls, program(), answering the program the test linked.
@@ -96,7 +106,7 @@ std::shared_ptr<oo::ShaderProgram> gShaderProgramHeld;
 bool SetUpProgram() {
   if (gProgram != 0) return true;
   if (!OOTestGLContext()) return false;
-  OOOpenGLExtensionManager::sharedManager();  // loads the ARB shader entry
+  oo::OpenGLExtensionManager::sharedManager();  // loads the ARB shader entry
                                               // points
   gGetUniformfv = (GetUniformfv)SDL_GL_GetProcAddress("glGetUniformfvARB");
   gGetUniformiv = (GetUniformiv)SDL_GL_GetProcAddress("glGetUniformivARB");
@@ -185,7 +195,7 @@ OO_TEST(initialisersThatFail) {
     OO_CHECK(oo::ShaderUniform::initWithName("uMissing", gShaderProgram,
                                            GLfloat(1)) == nullptr);
     OO_CHECK(oo::ShaderUniform::initWithName("uVector", gShaderProgram,
-                                           static_cast<OOColor*>(nullptr)) ==
+                                           static_cast<oo::Color*>(nullptr)) ==
              nullptr);
   }
 }
@@ -206,7 +216,7 @@ OO_TEST(constants) {
     OO_CHECK(Near(Floats("uVector", 4), {1, 2, 3, 4}));
     oo::ShaderUniform::initWithName(
         "uVector", gShaderProgram,
-        OOColor::colorWithRed(0.1f, 0.2f, 0.3f, 0.4f).get())
+        oo::Color::colorWithRed(0.1f, 0.2f, 0.3f, 0.4f).get())
         ->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0.1f, 0.2f, 0.3f, 0.4f}));
 
@@ -215,7 +225,7 @@ OO_TEST(constants) {
     oo::ShaderUniform::initWithName("uVector", gShaderProgram, q, false)->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0.5f, 0.5f, 0.5f, 0.5f}));
     oo::ShaderUniform::initWithName("uMatrix", gShaderProgram, q, true)->apply();
-    const OOMatrix rotation = OOMatrixForQuaternionRotation(q);
+    const oo::Matrix rotation = oo::MatrixForQuaternionRotation(q);
     const std::vector<GLfloat> m = Floats("uMatrix", 16);
     bool same = true;
     for (int i = 0; i < 16; i++)
@@ -224,7 +234,7 @@ OO_TEST(constants) {
     OO_CHECK(same);
 
     oo::ShaderUniform::initWithName("uMatrix", gShaderProgram,
-                                  OOMatrixForScale(2, 3, 4))
+                                  oo::MatrixForScale(2, 3, 4))
         ->apply();
     OO_CHECK(Near(Floats("uMatrix", 16),
                   {2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1}));
@@ -271,7 +281,7 @@ OO_TEST(description) {
     OO_CHECK(Description(oo::ShaderUniform::initWithName(
                              "uMatrix", gShaderProgram, kIdentityMatrix))
                  .ends_with(": matrix uMatrix = " +
-                            OOMatrixDescription(kIdentityMatrix) + ";}"));
+                            oo::MatrixDescription(kIdentityMatrix) + ";}"));
   }
 }
 
@@ -383,14 +393,14 @@ void QuaternionValue(oo::Object*, oo::ShaderBindingValue& v) {
   v.q = q;
 }
 void MatrixValue(oo::Object*, oo::ShaderBindingValue& v) {
-  v.m = OOMatrixForScale(2, 3, 4);
+  v.m = oo::MatrixForScale(2, 3, 4);
 }
 void PointValue(oo::Object*, oo::ShaderBindingValue& v) {
   v.p = NSMakePoint(1.5, -2.5);
 }
 void ColorValue(oo::Object*, oo::ShaderBindingValue& v) {
-  static std::shared_ptr<OOColor> color =
-      OOColor::colorWithRed(0.25f, 0.5f, 0.75f, 1.0f);
+  static std::shared_ptr<oo::Color> color =
+      oo::Color::colorWithRed(0.25f, 0.5f, 0.75f, 1.0f);
   v.color = color.get();
 }
 void NotAColor(oo::Object*, oo::ShaderBindingValue&) {}
@@ -475,7 +485,7 @@ OO_TEST(cxxTargetConvertOptions) {
              oo::UniformConvertOptions::kToMatrix)
         ->apply();
     const Quaternion q = {0.5f, 0.5f, 0.5f, 0.5f};
-    const OOMatrix rotation = OOMatrixForQuaternionRotation(q);
+    const oo::Matrix rotation = oo::MatrixForQuaternionRotation(q);
     OO_CHECK(std::fabs(Floats("uMatrix", 16)[1] -
                        OOMatrixValuesForOpenGL(rotation)[1]) < 1e-5f);
 
@@ -498,7 +508,7 @@ OO_TEST(cxxAPI) {
     OO_CHECK(oo::ShaderUniform::initWithName("uMissing", gShaderProgram, 1.0f) ==
              nullptr);
     OO_CHECK(oo::ShaderUniform::initWithName("uVector", gShaderProgram,
-                                           static_cast<OOColor*>(nullptr)) ==
+                                           static_cast<oo::Color*>(nullptr)) ==
              nullptr);
 
     Reset();
@@ -507,14 +517,14 @@ OO_TEST(cxxAPI) {
     OO_CHECK(Int("uInt") == 4 && Near(Floats("uFloat", 1), {0.5f}));
     oo::ShaderUniform::initWithName(
         "uVector", gShaderProgram,
-        OOColor::colorWithRed(0.1f, 0.2f, 0.3f, 0.4f).get())
+        oo::Color::colorWithRed(0.1f, 0.2f, 0.3f, 0.4f).get())
         ->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0.1f, 0.2f, 0.3f, 0.4f}));
     const Quaternion q = {0.5f, 0.5f, 0.5f, 0.5f};
     oo::ShaderUniform::initWithName("uVector", gShaderProgram, q, false)->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0.5f, 0.5f, 0.5f, 0.5f}));
     oo::ShaderUniform::initWithName("uMatrix", gShaderProgram,
-                                  OOMatrixForScale(2, 3, 4))
+                                  oo::MatrixForScale(2, 3, 4))
         ->apply();
     OO_CHECK(Near(Floats("uMatrix", 16),
                   {2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1}));

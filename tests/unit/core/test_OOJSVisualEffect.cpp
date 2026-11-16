@@ -19,12 +19,12 @@
 	with the members the binding calls and the same answers. Run: bash tests/run.sh unit
 */
 
-#include "OOFoundation.h"
-#include "OOColor.h"
-#include "OOMaths.h"  // IWYU pragma: keep
-#include "OOTypes.h"  // IWYU pragma: keep
+#include "Foundation.h"
+#include "Color.h"
+#include "Maths.h"  // IWYU pragma: keep
+#include "Types.h"  // IWYU pragma: keep
 #include <quickjs.h>
-#include "OODescription.h"
+#include "Description.h"
 #include "EntityHold.h"	// the sub-entity lists
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PList.hpp"
@@ -96,10 +96,12 @@ public:
 // with. The members of OOMesh (OOMesh.h) the binding calls, with their
 // signatures.
 
-class OOMesh : public oo::Object
+namespace oo {
+
+class Mesh : public oo::Object
 {
 public:
-	static std::shared_ptr<OOMesh> meshWithName(const std::string &name,
+	static std::shared_ptr<Mesh> meshWithName(const std::string &name,
 										const std::optional<std::string> &cacheKey,
 										const oo::PList &materialDict,
 										const oo::PList &shadersDict,
@@ -112,6 +114,9 @@ public:
 	oo::PList _materials;
 	oo::PList _shaders;
 };
+
+}  // namespace oo
+
 
 #include "ResourceManager.h"
 
@@ -141,10 +146,10 @@ public:
 	void setScaleY(GLfloat factor);
 	GLfloat scaleZ();
 	void setScaleZ(GLfloat factor);
-	OOColor *scannerDisplayColor1();
-	OOColor *scannerDisplayColor2();
-	void setScannerDisplayColor1(OOColor *color);
-	void setScannerDisplayColor2(OOColor *color);
+	oo::Color *scannerDisplayColor1();
+	oo::Color *scannerDisplayColor2();
+	void setScannerDisplayColor1(oo::Color *color);
+	void setScannerDisplayColor2(oo::Color *color);
 	GLfloat hullHeatLevel();
 	void setHullHeatLevel(GLfloat value);
 	GLfloat shaderFloat1();
@@ -163,8 +168,8 @@ public:
 	::OOScript *script();
 	oo::PList scriptInfo();
 	oo::PList effectInfoDictionary();
-	::OOMesh *mesh();
-	void setMesh(::OOMesh *mesh);
+	::oo::Mesh *mesh();
+	void setMesh(::oo::Mesh *mesh);
 	void removeSubEntity(OOVisualEffectSubEntity *sub);
 	void removeSubEntity(Entity *sub);	// the binding's
 	void remove();
@@ -183,8 +188,8 @@ public:
 	std::optional<std::string> _effectKey;
 	bool _isBreakPattern = false;
 	float _scaleX = 0, _scaleY = 0, _scaleZ = 0;
-	std::shared_ptr<OOColor> _color1;
-	std::shared_ptr<OOColor> _color2;
+	std::shared_ptr<oo::Color> _color1;
+	std::shared_ptr<oo::Color> _color2;
 	float _hullHeatLevel = 0;
 	float _shaderFloat1 = 0, _shaderFloat2 = 0;
 	int _shaderInt1 = 0, _shaderInt2 = 0;
@@ -194,7 +199,7 @@ public:
 	OOScript *_script = nullptr;	// a C++ script (retained)
 	oo::PList _scriptInfo;
 	oo::PList _effectInfo;
-	std::shared_ptr<OOMesh> _mesh;
+	std::shared_ptr<oo::Mesh> _mesh;
 	::TestEntityObject *_removedSub = nullptr;
 	int _removed = 0;
 	std::optional<std::string> _beaconCode;
@@ -334,7 +339,7 @@ bool sMeshSmooth = false;
 int sMeshesMade = 0;
 }  // namespace
 
-std::shared_ptr<OOMesh> OOMesh::meshWithName(const std::string &name,
+std::shared_ptr<oo::Mesh> oo::Mesh::meshWithName(const std::string &name,
 									 const std::optional<std::string> &cacheKey,
 									 const oo::PList &materialDict,
 									 const oo::PList &shadersDict,
@@ -351,14 +356,14 @@ std::shared_ptr<OOMesh> OOMesh::meshWithName(const std::string &name,
 	sMeshTarget = TestObjectOf(object);	// its object
 	sMeshesMade++;
 	if (name == "nomesh.dat")  return nullptr;
-	std::shared_ptr<OOMesh> mesh = oo::makeShared<OOMesh>();
+	std::shared_ptr<oo::Mesh> mesh = oo::makeShared<oo::Mesh>();
 	mesh->_materials = materialDict;
 	mesh->_shaders = shadersDict;
 	return mesh;
 }
 
-oo::PList OOMesh::getMaterials()  { return _materials; }
-oo::PList OOMesh::shaders()  { return _shaders; }
+oo::PList oo::Mesh::getMaterials()  { return _materials; }
+oo::PList oo::Mesh::shaders()  { return _shaders; }
 
 
 // ResourceManager: C++ definitions of the statics the code under test calls,
@@ -386,10 +391,10 @@ GLfloat oo::VisualEffectEntity::scaleY()  { return _scaleY; }
 void oo::VisualEffectEntity::setScaleY(GLfloat factor)  { _scaleY = factor; }
 GLfloat oo::VisualEffectEntity::scaleZ()  { return _scaleZ; }
 void oo::VisualEffectEntity::setScaleZ(GLfloat factor)  { _scaleZ = factor; }
-OOColor *oo::VisualEffectEntity::scannerDisplayColor1()  { return _color1.get(); }
-OOColor *oo::VisualEffectEntity::scannerDisplayColor2()  { return _color2.get(); }
-void oo::VisualEffectEntity::setScannerDisplayColor1(OOColor *color)  { _color1 = oo::share(color); }
-void oo::VisualEffectEntity::setScannerDisplayColor2(OOColor *color)  { _color2 = oo::share(color); }
+oo::Color *oo::VisualEffectEntity::scannerDisplayColor1()  { return _color1.get(); }
+oo::Color *oo::VisualEffectEntity::scannerDisplayColor2()  { return _color2.get(); }
+void oo::VisualEffectEntity::setScannerDisplayColor1(oo::Color *color)  { _color1 = oo::share(color); }
+void oo::VisualEffectEntity::setScannerDisplayColor2(oo::Color *color)  { _color2 = oo::share(color); }
 void oo::VisualEffectEntity::setHullHeatLevel(GLfloat value)  { _hullHeatLevel = value; }
 GLfloat oo::VisualEffectEntity::shaderFloat1()  { return _shaderFloat1; }
 void oo::VisualEffectEntity::setShaderFloat1(GLfloat value)  { _shaderFloat1 = value; }
@@ -407,8 +412,8 @@ std::optional<std::vector<oo::EntityHold>> oo::VisualEffectEntity::visualEffectS
 ::OOScript *oo::VisualEffectEntity::script()  { return _script; }
 oo::PList oo::VisualEffectEntity::scriptInfo()  { return _scriptInfo; }
 oo::PList oo::VisualEffectEntity::effectInfoDictionary()  { return _effectInfo; }
-::OOMesh *oo::VisualEffectEntity::mesh()  { return _mesh.get(); }
-void oo::VisualEffectEntity::setMesh(::OOMesh *mesh)  { _mesh = oo::share(mesh); }
+::oo::Mesh *oo::VisualEffectEntity::mesh()  { return _mesh.get(); }
+void oo::VisualEffectEntity::setMesh(::oo::Mesh *mesh)  { _mesh = oo::share(mesh); }
 void oo::VisualEffectEntity::removeSubEntity(OOVisualEffectSubEntity *sub)  { _removedSub = sub; }
 void oo::VisualEffectEntity::removeSubEntity(Entity *sub)  { _removedSub = TestObjectOf(sub); }	// its object, as the binding passed it
 void oo::VisualEffectEntity::remove()  { _removed++; }
@@ -811,7 +816,7 @@ void SetUpContext()
 	sEffectPart->_scaleX = 1;
 	sEffectPart->_scaleY = 2;
 	sEffectPart->_scaleZ = 4;
-	sEffectPart->_color1 = OOColor::colorWithRed(1, 0.5f, 0.25f, 1);
+	sEffectPart->_color1 = oo::Color::colorWithRed(1, 0.5f, 0.25f, 1);
 	sEffectPart->_hullHeatLevel = 0.5f;
 	sEffectPart->_shaderFloat1 = 1.5f;
 	sEffectPart->_shaderInt2 = -3;

@@ -31,7 +31,7 @@ SOFTWARE.
 
 #include <string>
 
-#include "OOOpenGLExtensionManager.h"
+#include "OpenGLExtensionManager.h"
 #include "Texture.h"
 
 // The subclass interface (the categories SubclassInterface,

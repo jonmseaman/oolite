@@ -34,9 +34,9 @@ MA 02110-1301, USA.
 
 #include <quickjs.h>
 
-#include "OOEntityEnums.h"
-#include "OOFunctionAttributes.h"
-#include "OOTypes.h"
+#include "EntityEnums.h"
+#include "FunctionAttributes.h"
+#include "Types.h"
 
 void OOConstToJSStringInit(JSContext* context);
 void OOConstToJSStringDestroy();

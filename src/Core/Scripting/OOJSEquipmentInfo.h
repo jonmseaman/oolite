@@ -32,7 +32,7 @@ MA 02110-1301, USA.
 #include <optional>
 #include <string>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 
 void InitOOJSEquipmentInfo(JSContext* context, JSValueConst global);
 
@@ -43,9 +43,15 @@ void InitOOJSEquipmentInfo(JSContext* context, JSValueConst global);
         JSValueToEquipmentKeyRelaxed() will return any string that does not end
         with _DAMAGED.
  */
-class OOEquipmentType;  // C++ (OOEquipmentType.h)
+namespace oo {
 
-OOEquipmentType* JSValueToEquipmentType(JSContext* context, JSValueConst value);
+class EquipmentType;
+
+}  // namespace oo
+   // C++ (OOEquipmentType.h)
+
+oo::EquipmentType* JSValueToEquipmentType(JSContext* context,
+                                          JSValueConst value);
 // C++ results; nullopt where there is none
 std::optional<std::string> JSValueToEquipmentKey(JSContext* context,
                                                  JSValueConst value);

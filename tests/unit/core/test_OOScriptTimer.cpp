@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#include "OOLogging.h"
+#include "Logging.h"
 #include "OOScriptTimer.h"
 #include "oo_test.hpp"
 
@@ -25,12 +25,17 @@
 */
 static int gSubclassResponsibilities = 0;
 
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
   gSubclassResponsibilities++;
 }
 
-const char* const kOOLogException = "exception";
+const char* const kLogException = "exception";
+
+}  // namespace oo
+
 
 /*	The universe, as far as OOScriptTimer sees it: the game clock
  * (-getTime), which the test sets.
@@ -41,11 +46,11 @@ static double gNow = 100.0;
 // with the header's names and signatures.
 class Universe {
  public:
-  OOTimeAbsolute getTime();
+  oo::TimeAbsolute getTime();
 };
 typedef Universe FakeUniverse;
 
-OOTimeAbsolute Universe::getTime() { return gNow; }
+oo::TimeAbsolute Universe::getTime() { return gNow; }
 
 class Universe;
 Universe* gSharedUniverse = nullptr;
@@ -56,8 +61,8 @@ static std::vector<std::string> gFired;
 
 class TestTimer final : public OOScriptTimer {
  public:
-  static std::shared_ptr<TestTimer> timerWithNextTime(OOTimeAbsolute nextTime,
-                                              OOTimeDelta interval) {
+  static std::shared_ptr<TestTimer> timerWithNextTime(oo::TimeAbsolute nextTime,
+                                              oo::TimeDelta interval) {
     std::shared_ptr<TestTimer> timer = std::shared_ptr<TestTimer>(new TestTimer(), oo::Dispose{});
     if (!timer->initWithNextTime(nextTime, interval)) return nullptr;
     return timer;
@@ -173,11 +178,11 @@ OO_TEST(ordering) {
     SetUp(100.0);
     std::shared_ptr<OOScriptTimer> early = OOScriptTimer::timerWithNextTime(110.0, 5.0);
     std::shared_ptr<OOScriptTimer> late = OOScriptTimer::timerWithNextTime(120.0, 5.0);
-    OO_CHECK_EQ(early->compareByNextFireTime(late.get()), OOComparisonResult::kAscending);
-    OO_CHECK_EQ(late->compareByNextFireTime(early.get()), OOComparisonResult::kDescending);
-    OO_CHECK_EQ(early->compareByNextFireTime(early.get()), OOComparisonResult::kSame);
+    OO_CHECK_EQ(early->compareByNextFireTime(late.get()), oo::ComparisonResult::kAscending);
+    OO_CHECK_EQ(late->compareByNextFireTime(early.get()), oo::ComparisonResult::kDescending);
+    OO_CHECK_EQ(early->compareByNextFireTime(early.get()), oo::ComparisonResult::kSame);
     OO_CHECK_EQ(early->compareByNextFireTime(nullptr),
-                OOComparisonResult::kDescending);  // nil is -INFINITY
+                oo::ComparisonResult::kDescending);  // nil is -INFINITY
   }
 }
 

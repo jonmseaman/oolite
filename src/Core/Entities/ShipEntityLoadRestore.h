@@ -42,12 +42,12 @@ MA 02110-1301, USA.
 namespace oo {
 
 struct ShipSaveContext {
-  std::map<OOShipGroup*, unsigned>
+  std::map<oo::ShipGroup*, unsigned>
       groupIDs;  // not retained, as the pointer-box keys were not
   unsigned nextGroupID = 0;
-  std::vector<std::shared_ptr<OOShipGroup>>
+  std::vector<std::shared_ptr<oo::ShipGroup>>
       groups;  // keeps the groups alive while they have IDs
-  std::map<std::size_t, std::shared_ptr<OOShipGroup>> groupsByID;
+  std::map<std::size_t, std::shared_ptr<oo::ShipGroup>> groupsByID;
 };
 
 }  // namespace oo

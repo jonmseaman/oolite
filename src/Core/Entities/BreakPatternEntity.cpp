@@ -33,8 +33,8 @@ MA 02110-1301, USA.
 #include <numbers>
 #include <string>
 
-#include "OOColor.h"
-#include "OOMacroOpenGL.h"
+#include "Color.h"
+#include "MacroOpenGL.h"
 #include "Universe.h"
 
 void oo::BreakPatternEntity::initWithPolygonSides(std::size_t sides,
@@ -88,7 +88,8 @@ oo::BreakPatternEntity::breakPatternWithPolygonSides(std::size_t sides,
   return ring;
 }
 
-void oo::BreakPatternEntity::setInnerColor(OOColor* color1, OOColor* color2) {
+void oo::BreakPatternEntity::setInnerColor(oo::Color* color1,
+                                           oo::Color* color2) {
   // Messages to a nil colour did nothing: those components stay uninitialised,
   // as they did.
   GLfloat inner[4], outer[4];
@@ -113,7 +114,7 @@ void oo::BreakPatternEntity::setLifetime(double lifetime) {
   _lifetime = lifetime;
 }
 
-void oo::BreakPatternEntity::update(OOTimeDelta delta_t) {
+void oo::BreakPatternEntity::update(oo::TimeDelta delta_t) {
   Entity::update(delta_t);
 
   _lifetime -= BREAK_PATTERN_RING_SPEED * delta_t;
@@ -128,7 +129,7 @@ void oo::BreakPatternEntity::drawImmediate(bool immediate, bool translucent) {
 
   if (translucent || immediate) {
     OO_ENTER_OPENGL();
-    OOSetOpenGLState(OOOpenGLStateID::kOpaque);
+    OOSetOpenGLState(oo::OpenGLStateID::kOpaque);
 
     OOGL(glDisable(GL_LIGHTING));
     OOGL(glDisable(GL_TEXTURE_2D));
@@ -151,7 +152,7 @@ void oo::BreakPatternEntity::drawImmediate(bool immediate, bool translucent) {
     OOGL(glDisableClientState(GL_COLOR_ARRAY));
 
     OOVerifyOpenGLState();
-    OOCheckOpenGLErrors([&]() -> std::string {
+    oo::CheckOpenGLErrors([&]() -> std::string {
       return "OOBreakPatternEntity after drawing " +
              oo::EntityDescription(this);
     });

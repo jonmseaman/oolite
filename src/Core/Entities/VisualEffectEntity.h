@@ -32,17 +32,27 @@
 #include <string>
 #include <vector>
 
+#include "Color.h"
 #include "EntityWithDrawable.h"
 #include "HeadUpDisplay.h"
-#include "OOColor.h"
 #include "OOJSPropID.h"
-#include "OOPolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is std::shared_ptr
 #include "PlanetEntity.h"
+#include "PolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is std::shared_ptr
 #include "oofnd/PList.hpp"
 
-class OOMesh;
+namespace oo {
+
+class Mesh;
+
+}  // namespace oo
+
 #include "OOScript.h"  // std::shared_ptr<OOScript> members and results
-class OOColor;
+
+namespace oo {
+
+class Color;
+
+}  // namespace oo
 
 namespace oo {
 
@@ -80,8 +90,8 @@ class VisualEffectEntity : public EntityWithDrawable,
   bool initWithKey(const std::string& key, const oo::PList& dict);
   bool setUpVisualEffectFromDictionary(const oo::PList& effectDict);
 
-  ::OOMesh* mesh();
-  void setMesh(::OOMesh* mesh);
+  ::oo::Mesh* mesh();
+  void setMesh(::oo::Mesh* mesh);
 
   std::optional<std::string> effectKey();
 
@@ -137,7 +147,7 @@ class VisualEffectEntity : public EntityWithDrawable,
   bool canCollide() override;
   GLfloat collisionRadius() override;
   void drawImmediate(bool immediate, bool translucent) override;
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
 
   // The JS questions the engine asks the object: the binding's functions
   // (OOJSVisualEffect.h).
@@ -145,12 +155,13 @@ class VisualEffectEntity : public EntityWithDrawable,
   std::optional<std::string> jsClassName() override;
   bool isVisibleToScripts() override;
 
-  OOColor* scannerDisplayColor1();
-  OOColor* scannerDisplayColor2();
-  void setScannerDisplayColor1(OOColor* color);
-  void setScannerDisplayColor2(OOColor* color);
-  GLfloat* scannerDisplayColorForShip(bool flash, OOColor* scannerDisplayColor1,
-                                      OOColor* scannerDisplayColor2);
+  oo::Color* scannerDisplayColor1();
+  oo::Color* scannerDisplayColor2();
+  void setScannerDisplayColor1(oo::Color* color);
+  void setScannerDisplayColor2(oo::Color* color);
+  GLfloat* scannerDisplayColorForShip(bool flash,
+                                      oo::Color* scannerDisplayColor1,
+                                      oo::Color* scannerDisplayColor2);
 
   void setScript(const std::optional<std::string>& script_name);
   ::OOScript* script();
@@ -159,13 +170,13 @@ class VisualEffectEntity : public EntityWithDrawable,
   void remove();
 
   // OOBeaconEntity, for an effect's part.
-  OOComparisonResult compareBeaconCodeWith(Entity* other);
+  oo::ComparisonResult compareBeaconCodeWith(Entity* other);
   std::optional<std::string> beaconCode();
   void setBeaconCode(const std::optional<std::string>& bcode);
   std::optional<std::string> beaconLabel();
   void setBeaconLabel(const std::optional<std::string>& blabel);
   bool isBeacon();
-  OOHUDBeaconIcon* beaconDrawable();  // borrowed
+  oo::HUDBeaconIcon* beaconDrawable();  // borrowed
   Entity* prevBeacon();  // the C++ entity (null once its object has gone)
   Entity* nextBeacon();
   void setPrevBeacon(Entity* beaconShip);
@@ -197,8 +208,8 @@ class VisualEffectEntity : public EntityWithDrawable,
 
   GLfloat _profileRadius = {};  // for frustum culling
 
-  std::shared_ptr<OOColor> scanner_display_color1;
-  std::shared_ptr<OOColor> scanner_display_color2;
+  std::shared_ptr<oo::Color> scanner_display_color1;
+  std::shared_ptr<oo::Color> scanner_display_color2;
 
   GLfloat _hullHeatLevel = {};
   GLfloat _shaderFloat1 = {};
@@ -224,7 +235,7 @@ class VisualEffectEntity : public EntityWithDrawable,
   std::optional<std::string> _beaconLabel;
   std::weak_ptr<Entity> _prevBeacon;  // the beacons' C++ parts
   std::weak_ptr<Entity> _nextBeacon;
-  std::shared_ptr<OOHUDBeaconIcon> _beaconDrawable;
+  std::shared_ptr<oo::HUDBeaconIcon> _beaconDrawable;
 
   // scaling (were scaleX, scaleY, scaleZ, named like their getters)
   GLfloat _scaleX = {};

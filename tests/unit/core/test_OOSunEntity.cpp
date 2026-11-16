@@ -24,7 +24,7 @@
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
-#include "OOColor.h"
+#include "Color.h"
 #include "OOJSEntity.h"
 #include "OOJSSun.h"
 #include "SunEntity.h"
@@ -118,7 +118,7 @@ oo::PList Dict(oo::PList::Dict entries) {
 bool Near(double a, double b) { return std::fabs(a - b) < 1e-4; }
 
 // A new C++ sun.
-oo::SunEntity* Sun(OOColor* color, double radius) {
+oo::SunEntity* Sun(oo::Color* color, double radius) {
   std::shared_ptr<oo::SunEntity> sun = oo::makeShared<oo::SunEntity>();
   (void)oo::MadeEntity(sun);
   sun->initSunWithColor(color, Dict({
@@ -131,7 +131,7 @@ oo::SunEntity* Sun(OOColor* color, double radius) {
 }
 
 oo::SunEntity* RedSun() {
-  return Sun(OOColor::colorWithRed(1.0f, 0.0f, 0.0f, 1.0f).get(), 1000.0);
+  return Sun(oo::Color::colorWithRed(1.0f, 0.0f, 0.0f, 1.0f).get(), 1000.0);
 }
 
 }  // namespace
@@ -165,7 +165,7 @@ OO_TEST(lightColours) {
     OO_CHECK(Near(diffuse[0], 1.0) && Near(diffuse[1], 0.65) &&
              Near(diffuse[2], 0.65) && diffuse[3] == 1.0f);
 
-    OO_CHECK(sun->setSunColor(OOColor::blueColor().get()));
+    OO_CHECK(sun->setSunColor(oo::Color::blueColor().get()));
     sun->getSpecularComponents(specular);
     OO_CHECK(Near(specular[0], 0.3) && Near(specular[1], 0.3) &&
              Near(specular[2], 1.0));

@@ -14,7 +14,7 @@
 	Run: tests/run.sh unit
 */
 
-#include "OOTypes.h"
+#include "Types.h"
 #include "OOJSEngineCore.h"	// the engine API this stage declares, and OOJSValue (not OOJavaScriptEngine.h: the test defines OOJSValue's members)
 #include "OOJSEngineNativeWrappers.h"
 #include "oofnd/String.hpp"
@@ -28,7 +28,7 @@
 
 
 void InitOOJSFrameCallbacks(JSContext *context, JSValueConst global);
-void OOJSFrameCallbacksInvoke(OOTimeDelta delta);
+void OOJSFrameCallbacksInvoke(oo::TimeDelta delta);
 void OOJSFrameCallbacksRemoveAll(void);
 
 
@@ -120,7 +120,7 @@ std::string OOJSValue::className() const  { return "OOJSValue"; }
 std::string OOJSValue::description() const  { return "<OOJSValue>"; }
 
 
-void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit)  { sLimiterDepth++; sLastLimit = limit; }
+void OOJSStartTimeLimiterWithTimeLimit(oo::TimeDelta limit)  { sLimiterDepth++; sLastLimit = limit; }
 void OOJSStopTimeLimiter(void)  { sLimiterDepth--; }
 
 #if OOJS_PROFILE

@@ -23,37 +23,47 @@
 #include <filesystem>
 #include <string>
 
-#include "OOALBufferedSound.h"
-#include "OOALSoundDecoder.h"
-#include "OOALSoundMixer.h"
-#include "OOALStreamedSound.h"
+#include "ALBufferedSound.h"
+#include "ALSoundDecoder.h"
+#include "ALSoundMixer.h"
+#include "ALStreamedSound.h"
 #include "oo_test.hpp"
 
 namespace stdfs = std::filesystem;
 
 // Link stubs for OOLogging.mm, which reaches the resource manager.
-const char* const kOOLogFileNotFound = "files.notFound";
+namespace oo {
 
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+const char* const kLogFileNotFound = "files.notFound";
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
 
+}  // namespace oo
+
+
 // The mixer, as the root's update() and the OpenAL controller's shutdown()
 // reach it: there is none.
-OOSoundMixer* OOSoundMixer::sharedMixer() { return nullptr; }
-void OOSoundMixer::update() {}
-void OOSoundMixer::shutdown() {}
+oo::SoundMixer* oo::SoundMixer::sharedMixer() { return nullptr; }
+void oo::SoundMixer::update() {}
+void oo::SoundMixer::shutdown() {}
 
 // OOALSound.mm makes a buffered sound for up to 1 MB of decoded data; never
 // here.
-std::shared_ptr<OOALBufferedSound> OOALBufferedSound::initWithDecoder(
-    OOALSoundDecoder* inDecoder) {
+std::shared_ptr<oo::ALBufferedSound> oo::ALBufferedSound::initWithDecoder(
+    oo::ALSoundDecoder* inDecoder) {
   (void)inDecoder;
   return nullptr;
 }
-OOALBufferedSound::~OOALBufferedSound() {}
-std::optional<std::string> OOALBufferedSound::name() { return _name; }
-ALuint OOALBufferedSound::soundBuffer() { return 0; }
+namespace oo {
+
+ALBufferedSound::~ALBufferedSound() {}
+
+}  // namespace oo
+
+std::optional<std::string> oo::ALBufferedSound::name() { return _name; }
+ALuint oo::ALBufferedSound::soundBuffer() { return 0; }
 
 namespace {
 
@@ -89,7 +99,7 @@ void SetUp() {
   stdfs::create_directories(sRoot);
   OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
-  OO_CHECK(OOSound::setUp());
+  OO_CHECK(oo::Sound::setUp());
 }
 
 ALint BufferInt(ALuint buffer, ALenum what) {
@@ -99,7 +109,7 @@ ALint BufferInt(ALuint buffer, ALenum what) {
 }
 
 // The next buffer's size; the buffer is deleted.
-ALint NextBufferSize(OOSound* sound) {
+ALint NextBufferSize(oo::Sound* sound) {
   ALuint buffer = sound->soundBuffer();
   const ALint size = BufferInt(buffer, AL_SIZE);
   alDeleteBuffers(1, &buffer);
@@ -115,19 +125,19 @@ constexpr ALint kBoopBytes = 7682;
 OO_TEST(madeFromADecoder) {
   SetUp();
   {
-    const std::shared_ptr<OOALSoundDecoder> decoder =
-        OOALSoundDecoder::codecWithPath(BoopPath());
+    const std::shared_ptr<oo::ALSoundDecoder> decoder =
+        oo::ALSoundDecoder::codecWithPath(BoopPath());
     OO_CHECK(decoder != nullptr);
-    const std::shared_ptr<OOALStreamedSound> sound =
-        OOALStreamedSound::initWithDecoder(decoder.get());
+    const std::shared_ptr<oo::ALStreamedSound> sound =
+        oo::ALStreamedSound::initWithDecoder(decoder.get());
     OO_CHECK(sound != nullptr);
-    OO_CHECK(dynamic_cast<OOALStreamedSound*>(sound.get()) != nullptr &&
-             dynamic_cast<OOSound*>(sound.get()) != nullptr);
+    OO_CHECK(dynamic_cast<oo::ALStreamedSound*>(sound.get()) != nullptr &&
+             dynamic_cast<oo::Sound*>(sound.get()) != nullptr);
     OO_CHECK(sound->name() == std::optional<std::string>("boop.ogg"));
     OO_CHECK(sound->soundIncomplete());  // nothing streamed yet
     OO_CHECK(sound->description().starts_with("<OOALStreamedSound 0x"));
 
-    OO_CHECK(!OOALStreamedSound::initWithDecoder(nullptr));
+    OO_CHECK(!oo::ALStreamedSound::initWithDecoder(nullptr));
   }
 }
 
@@ -136,8 +146,8 @@ OO_TEST(madeFromADecoder) {
 OO_TEST(aShortSoundIsOneChunk) {
   SetUp();
   {
-    const std::shared_ptr<OOALStreamedSound> sound = OOALStreamedSound::initWithDecoder(
-        OOALSoundDecoder::codecWithPath(BoopPath()).get());
+    const std::shared_ptr<oo::ALStreamedSound> sound = oo::ALStreamedSound::initWithDecoder(
+        oo::ALSoundDecoder::codecWithPath(BoopPath()).get());
     ALuint buffer = sound->soundBuffer();
     OO_CHECK(buffer != 0 && alIsBuffer(buffer));
     OO_CHECK(BufferInt(buffer, AL_SIZE) == kBoopBytes);
@@ -161,23 +171,23 @@ OO_TEST(aShortSoundIsOneChunk) {
 OO_TEST(theClusterStreamsTheMusic) {
   SetUp();
   {
-    const std::shared_ptr<OOSound> sound = OOSound::initWithContentsOfFile(ThemePath());
-    OO_CHECK(dynamic_cast<OOALStreamedSound*>(sound.get()) != nullptr);
+    const std::shared_ptr<oo::Sound> sound = oo::Sound::initWithContentsOfFile(ThemePath());
+    OO_CHECK(dynamic_cast<oo::ALStreamedSound*>(sound.get()) != nullptr);
     OO_CHECK(sound->name() == std::optional<std::string>("OoliteTheme.ogg"));
 
     ALuint buffer = sound->soundBuffer();
     OO_CHECK(BufferInt(buffer, AL_SIZE) ==
-             static_cast<ALint>(OOAL_STREAM_CHUNK_SIZE));
+             static_cast<ALint>(oo::AL_STREAM_CHUNK_SIZE));
     OO_CHECK(BufferInt(buffer, AL_CHANNELS) == 2);
     alDeleteBuffers(1, &buffer);
     OO_CHECK(sound->soundIncomplete());
     OO_CHECK(NextBufferSize(sound.get()) ==
-             static_cast<ALint>(OOAL_STREAM_CHUNK_SIZE));
+             static_cast<ALint>(oo::AL_STREAM_CHUNK_SIZE));
 
     sound->rewind();
     OO_CHECK(sound->soundIncomplete());
     OO_CHECK(NextBufferSize(sound.get()) ==
-             static_cast<ALint>(OOAL_STREAM_CHUNK_SIZE));
+             static_cast<ALint>(oo::AL_STREAM_CHUNK_SIZE));
   }
 }
 
@@ -185,9 +195,9 @@ OO_TEST(theClusterStreamsTheMusic) {
 OO_TEST(cxxApi) {
   SetUp();
   {
-    OO_CHECK(!OOALStreamedSound::initWithDecoder(nullptr));
-    const std::shared_ptr<OOALStreamedSound> sound = OOALStreamedSound::initWithDecoder(
-        OOALSoundDecoder::codecWithPath(BoopPath()).get());
+    OO_CHECK(!oo::ALStreamedSound::initWithDecoder(nullptr));
+    const std::shared_ptr<oo::ALStreamedSound> sound = oo::ALStreamedSound::initWithDecoder(
+        oo::ALSoundDecoder::codecWithPath(BoopPath()).get());
     OO_CHECK(sound && sound->name() == std::optional<std::string>("boop.ogg"));
     OO_CHECK(sound->soundIncomplete());
     ALuint buffer = sound->soundBuffer();

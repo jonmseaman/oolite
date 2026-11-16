@@ -93,7 +93,7 @@ std::shared_ptr<oo::SDLJoystickManager> NewManager() {
 }
 
 // The factory the game registers (MyOpenGLView.mm).
-std::shared_ptr<OOJoystickManager> MakeSDLManager() {
+std::shared_ptr<oo::JoystickManager> MakeSDLManager() {
   return oo::makeShared<oo::SDLJoystickManager>();
 }
 
@@ -166,9 +166,9 @@ OO_TEST(handlesEventsThroughTheSuperclass) {
   {
     // As the game makes it: the SDL class registered with the superclass, which
     // creates it.
-    OO_CHECK(OOJoystickManager::setStickHandlerFactory(MakeSDLManager));
+    OO_CHECK(oo::JoystickManager::setStickHandlerFactory(MakeSDLManager));
     oo::SDLJoystickManager* manager = dynamic_cast<oo::SDLJoystickManager*>(
-        OOJoystickManager::sharedStickHandler());
+        oo::JoystickManager::sharedStickHandler());
     OO_CHECK(manager != nullptr);
     OO_CHECK(manager->joystickCount() == 1);
 

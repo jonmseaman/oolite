@@ -32,14 +32,14 @@ SOFTWARE.
 
 #include <cstdint>
 
-#include "OOOpenGLExtensionManager.h"
+#include "OpenGLExtensionManager.h"
 
 #if OO_SHADERS || defined(OO_DEBUG_MONITOR_ENABLED)
 
 #include <cstddef>
 #include <string>
 
-#include "OOMaths.h"
+#include "Maths.h"
 #include "ValueType.h"
 
 // A uniform's (and a by-name method's) type tag: stored as uint8_t, an index
@@ -180,7 +180,11 @@ constexpr oo::ShaderUniformType ShaderUniformTypeOf(ValueType type) {
    enums) in i, floats in f, the structures in theirs, a colour in color
    (borrowed).
 */
-class OOColor;
+namespace oo {
+
+class Color;
+
+}  // namespace oo
 
 namespace oo {
 
@@ -190,9 +194,9 @@ struct ShaderBindingValue {
   Vector v;
   HPVector hpv;
   Quaternion q;
-  OOMatrix m;
+  oo::Matrix m;
   NSPoint p;
-  OOColor* color;
+  oo::Color* color;
 };
 
 }  // namespace oo

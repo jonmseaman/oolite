@@ -32,11 +32,15 @@ MA 02110-1301, USA.
 #include <optional>
 #include <string>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "OOJSPrivateObject.h"
 #include "oofnd/Object.hpp"
 
-class OOSoundSource;
+namespace oo {
+
+class SoundSource;
+
+}  // namespace oo
 
 void InitOOJSSoundSource(JSContext* context, JSValueConst global);
 
@@ -44,7 +48,7 @@ void InitOOJSSoundSource(JSContext* context, JSValueConst global);
    object for the source (owned by the caller; JS null for none) and the JS
    class name. The binding and the Sound binding call them.
 */
-JSValue OOJSSoundSourceJSValueInContext(OOSoundSource* source,
+JSValue OOJSSoundSourceJSValueInContext(oo::SoundSource* source,
                                         JSContext* context);
 std::optional<std::string> OOJSSoundSourceJSClassName();
 
@@ -58,15 +62,15 @@ std::optional<std::string> OOJSSoundSourceJSClassName();
 class OOJSSoundSourceHolder final : public oo::Object,
                                     public OOJSPrivateObject {
  public:
-  explicit OOJSSoundSourceHolder(OOSoundSource* inSource);
+  explicit OOJSSoundSourceHolder(oo::SoundSource* inSource);
   ~OOJSSoundSourceHolder() override;
 
-  OOSoundSource* source() const;
+  oo::SoundSource* source() const;
 
   JSValue jsValueInContext(JSContext* context) override;  // owned
   void clearJSSelf(JSValueConst selfVal) override;
   std::optional<std::string> jsDescription() override;
 
  private:
-  std::shared_ptr<OOSoundSource> _source;
+  std::shared_ptr<oo::SoundSource> _source;
 };

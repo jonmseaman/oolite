@@ -26,18 +26,18 @@ MA 02110-1301, USA.
 
 #include <stdlib.h>
 
+#include "AsyncWorkManager.h"
+#include "Foundation.h"
+#include "LogOutputHandler.h"
+#include "LoggingExtended.h"
 #include "MyOpenGLView.h"
-#include "OOAsyncWorkManager.h"
-#include "OOFoundation.h"
 #include "OOJSFrameCallbacks.h"
-#include "OOLogOutputHandler.h"
-#include "OOLoggingExtended.h"
-#include "OOOXZManager.h"
-#include "OOOpenALController.h"
-#include "OOOpenGLExtensionManager.h"
-#include "OOSoundSource.h"
 #include "OXPVerifier.h"
+#include "OXZManager.h"
+#include "OpenALController.h"
+#include "OpenGLExtensionManager.h"
 #include "ResourceManager.h"
+#include "SoundSource.h"
 #include "Universe.h"
 #include "legacy_random.h"
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -71,7 +71,7 @@ MA 02110-1301, USA.
 #if OOLITE_SDL
 #include <SDL3/SDL_init.h>
 
-#include "OOFullScreenController.h"
+#include "FullScreenController.h"
 #endif
 
 #if (OOLITE_SDL && defined(OO_DEBUG_MONITOR_ENABLED))
@@ -133,7 +133,7 @@ TickClock::time_point NextGameTick() {
 */
 namespace {
 
-struct OODeferredCall {
+struct DeferredCall {
   double deadline;              // on the game's clock (DeferredCallNow)
   std::function<void()>* call;  // a C++ call
 };
@@ -151,19 +151,23 @@ double DeferredCallNow() {
 bool DeferredCallRunCatching(const std::function<void()>& call,
                              std::string* outName, std::string* outReason);
 
-std::vector<OODeferredCall> sDeferredCalls;  // in scheduling order
+std::vector<DeferredCall> sDeferredCalls;  // in scheduling order
 
 }  // namespace
 
 // namespace
-void OOScheduleDeferredCall(std::function<void()> call, double delay) {
+namespace oo {
+
+void ScheduleDeferredCall(std::function<void()> call, double delay) {
   if (!oo::thread::isMainThread() || !call) return;
 
   if (delay <= 0.0) delay = 0.0001;  // as the Foundation timer did
-  OODeferredCall entry = {DeferredCallNow() + delay,
-                          new std::function<void()>(std::move(call))};
+  DeferredCall entry = {DeferredCallNow() + delay,
+                        new std::function<void()>(std::move(call))};
   sDeferredCalls.push_back(entry);
 }
+
+}  // namespace oo
 
 namespace {
 
@@ -182,10 +186,10 @@ void LogDeferredCallException(std::string_view exceptionName,
 // order.
 void FireOneDueDeferredCall() {
   const double now = DeferredCallNow();
-  for (std::vector<OODeferredCall>::iterator it = sDeferredCalls.begin();
+  for (std::vector<DeferredCall>::iterator it = sDeferredCalls.begin();
        it != sDeferredCalls.end(); ++it) {
     if (it->deadline <= now) {
-      OODeferredCall call = *it;
+      DeferredCall call = *it;
       sDeferredCalls.erase(it);
 
       // The call and its handler.
@@ -207,7 +211,7 @@ bool NextDeferredCallDeadline(
     std::chrono::steady_clock::time_point* outDeadline) {
   bool found = false;
   double earliest = 0.0;
-  for (const OODeferredCall& call : sDeferredCalls) {
+  for (const DeferredCall& call : sDeferredCalls) {
     if (!found || call.deadline < earliest) {
       earliest = call.deadline;
       found = true;
@@ -224,12 +228,12 @@ bool NextDeferredCallDeadline(
 
 }  // namespace
 
-const OOGameClock& GameController::currentClock() {
-  static const OOGameClock systemClock;
+const oo::GameClock& GameController::currentClock() {
+  static const oo::GameClock systemClock;
   return sSharedController != nullptr ? sSharedController->_clock : systemClock;
 }
 
-OOGameObserver* GameController::currentObserver() {
+oo::GameObserver* GameController::currentObserver() {
   return sSharedController != nullptr ? sSharedController->_observer : nullptr;
 }
 
@@ -339,19 +343,19 @@ void GameController::setEcoQoS(bool efficiencyModeRequested) {
 #endif
 }
 
-OOMouseInteractionMode GameController::mouseInteractionMode() {
+oo::MouseInteractionMode GameController::mouseInteractionMode() {
   return _mouseMode;
 }
 
-void GameController::setMouseInteractionMode(OOMouseInteractionMode mode) {
-  OOMouseInteractionMode oldMode = _mouseMode;
+void GameController::setMouseInteractionMode(oo::MouseInteractionMode mode) {
+  oo::MouseInteractionMode oldMode = _mouseMode;
   if (mode == oldMode) return;
 
   _mouseMode = mode;
   OO_LOG("input.mouseMode.changed",
          "Mouse interaction mode changed from {} to {}",
-         OOStringFromMouseInteractionMode(oldMode),
-         OOStringFromMouseInteractionMode(mode));
+         oo::StringFromMouseInteractionMode(oldMode),
+         oo::StringFromMouseInteractionMode(mode));
 
   {
     if (gameView() != nullptr)
@@ -362,15 +366,15 @@ void GameController::setMouseInteractionMode(OOMouseInteractionMode mode) {
 void GameController::setMouseInteractionModeForFlight() {
   setMouseInteractionMode(
       (PLAYER != nullptr ? PLAYER->isMouseControlOn() : false)
-          ? OOMouseInteractionMode::kFlightWithMouseControl
-          : OOMouseInteractionMode::kFlightNoMouseControl);
+          ? oo::MouseInteractionMode::kFlightWithMouseControl
+          : oo::MouseInteractionMode::kFlightNoMouseControl);
 }
 
 void GameController::setMouseInteractionModeForUIWithMouseInteraction(
     bool interaction) {
-  setMouseInteractionMode(interaction
-                              ? OOMouseInteractionMode::kUiScreenWithInteraction
-                              : OOMouseInteractionMode::kUiScreenNoInteraction);
+  setMouseInteractionMode(
+      interaction ? oo::MouseInteractionMode::kUiScreenWithInteraction
+                  : oo::MouseInteractionMode::kUiScreenNoInteraction);
 }
 
 ::MyOpenGLView* GameController::gameView() { return _gameView.get(); }
@@ -408,7 +412,7 @@ void GameController::tick(double dt) {
       oo::EntityStatus::kRestartGame) [[unlikely]] {
     if (UNIVERSE != nullptr) UNIVERSE->reinitAndShowDemo(true);
   }
-  ::OOSound::update();
+  ::oo::Sound::update();
   if (!gameIsPaused) {
     OOJSFrameCallbacksInvoke(dt);
   }
@@ -479,7 +483,7 @@ void GameController::performGameTickIfDue() {
 
 void GameController::fireDueDeadlines() {
   performGameTickIfDue();
-  OOLogOutputHandlerFlushIfDue();
+  oo::LogOutputHandlerFlushIfDue();
 }
 
 void GameController::fireDueDeferredCalls() {
@@ -508,7 +512,7 @@ void GameController::runFrameLoop() {
         haveWake = true;
       }
       // The OXZ download's callbacks, which the run loop delivered.
-      OOOXZManager::sharedManager()->processDownloadEvents();
+      oo::OXZManager::sharedManager()->processDownloadEvents();
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
       if (oo::DebugTCPConsoleIsWaitingForInput()) {
@@ -586,7 +590,7 @@ void GameController::applicationDidFinishLaunching() {
     }
 
     // initialise OXZ manager
-    OOOXZManager::sharedManager();
+    oo::OXZManager::sharedManager();
 
     // moved here to try to avoid initialising this before having an Open GL
     // context logProgress(OO_DESC("Initialising universe")); // DESC expansions
@@ -633,7 +637,7 @@ constexpr const char* kHeadlessScenarioSave =
 constexpr double kHeadlessLaunchLimitSeconds = 60.0;
 }  // namespace
 
-void GameController::startHeadless(const OOHeadlessOptions& options) {
+void GameController::startHeadless(const oo::HeadlessOptions& options) {
   if (!options.headless) {
     oo::RaiseException(oo::InvalidArgumentException, "%s",
                        "startHeadless: options.headless is false");
@@ -646,7 +650,7 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
   }
 
   _options = options;
-  _clock = OOGameClock::manual(*options.seed);
+  _clock = oo::GameClock::manual(*options.seed);
   last_timeInterval = _clock.monotonicSeconds();
   ranrot_srand(*options.seed);
 
@@ -662,7 +666,7 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
     oo::process::setArguments(static_cast<int>(argv.size()), argv.data());
   }
 
-  OOOpenGLExtensionManager::setHeadless(true);  // before its first use
+  oo::OpenGLExtensionManager::setHeadless(true);  // before its first use
   // The windowed start makes the script engine while the view sets up GL (the
   // extension manager's per-GPU look-up uses a regular expression, which needs
   // it); a headless start has no view, so it makes the engine here, at the
@@ -672,12 +676,12 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
   OOJavaScriptEngine::sharedEngine();
   // Each sound asked for, with the game time, in the presentation record. With
   // no device no sound would load, so sounds are names without data.
-  OOSound::setNamedWithoutDevice(true);
-  OOSoundSource::setPlayObserver([](OOSound* sound) {
+  oo::Sound::setNamedWithoutDevice(true);
+  oo::SoundSource::setPlayObserver([](oo::Sound* sound) {
     GameController* controller = sharedController();
     controller->_presentation.soundsRequested.push_back(
-        OOSoundRequest{UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
-                       sound != nullptr ? sound->name().value_or("") : ""});
+        oo::SoundRequest{UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
+                         sound != nullptr ? sound->name().value_or("") : ""});
   });
   if (options.inputView) {
     _gameView = oo::makeShared<::MyOpenGLView>();
@@ -828,7 +832,7 @@ void GameController::exitAppWithContext(const std::string& context) {
 #endif
   // The work threads are owned by the never-destroyed manager, so they are
   // joined here, before anything they might use is torn down.
-  OOAsyncWorkManager::sharedAsyncWorkManager()->shutdown();
+  oo::AsyncWorkManager::sharedAsyncWorkManager()->shutdown();
   oo::Defaults::standard().synchronize();
   OO_LOG("gameController.exitApp", "{}", ".GNUstepDefaults synchronized.");
 #ifndef NDEBUG
@@ -836,9 +840,10 @@ void GameController::exitAppWithContext(const std::string& context) {
   // alive.
   OOJavaScriptEngine::sharedEngine()->shutDown();
 #endif
-  OOLoggingTerminate();
+  oo::LoggingTerminate();
   SDL_Quit();
-  if (OOOpenALController* controller = OOOpenALController::sharedController())
+  if (oo::OpenALController* controller =
+          oo::OpenALController::sharedController())
     controller->shutdown();
   exit(0);
 }
@@ -965,11 +970,11 @@ const oo::PList* FindDisplayMode(const oo::PList::Array& modes,
                                  unsigned int d_refresh) {
   for (const oo::PList& mode : modes) {
     unsigned int modeWidth =
-        static_cast<unsigned int>(mode.get<int>(kOODisplayWidth));
+        static_cast<unsigned int>(mode.get<int>(oo::kDisplayWidth));
     unsigned int modeHeight =
-        static_cast<unsigned int>(mode.get<int>(kOODisplayHeight));
+        static_cast<unsigned int>(mode.get<int>(oo::kDisplayHeight));
     unsigned int modeRefresh =
-        static_cast<unsigned int>(mode.get<int>(kOODisplayRefreshRate));
+        static_cast<unsigned int>(mode.get<int>(oo::kDisplayRefreshRate));
     if ((modeWidth == d_width) && (modeHeight == d_height) &&
         (modeRefresh == d_refresh)) {
       return &mode;
@@ -991,9 +996,9 @@ void GameController::setUpDisplayModes() {
   displayModes.clear();
   for (const oo::PList& mode : modes) {
     unsigned int modeWidth =
-        static_cast<unsigned int>(mode.get<int>(kOODisplayWidth));
+        static_cast<unsigned int>(mode.get<int>(oo::kDisplayWidth));
     unsigned int modeHeight =
-        static_cast<unsigned int>(mode.get<int>(kOODisplayHeight));
+        static_cast<unsigned int>(mode.get<int>(oo::kDisplayHeight));
 
     if (modeWidth < DISPLAY_MIN_WIDTH || modeWidth > DISPLAY_MAX_WIDTH ||
         modeHeight < DISPLAY_MIN_HEIGHT || modeHeight > DISPLAY_MAX_HEIGHT)
@@ -1004,10 +1009,11 @@ void GameController::setUpDisplayModes() {
   const oo::PList currentMode =
       (_gameView != nullptr ? _gameView->currentScreenMode() : oo::PList());
   if (currentMode) {
-    width = static_cast<unsigned int>(currentMode.get<int>(kOODisplayWidth));
-    height = static_cast<unsigned int>(currentMode.get<int>(kOODisplayHeight));
-    refresh =
-        static_cast<unsigned int>(currentMode.get<int>(kOODisplayRefreshRate));
+    width = static_cast<unsigned int>(currentMode.get<int>(oo::kDisplayWidth));
+    height =
+        static_cast<unsigned int>(currentMode.get<int>(oo::kDisplayHeight));
+    refresh = static_cast<unsigned int>(
+        currentMode.get<int>(oo::kDisplayRefreshRate));
   } else {
     NSSize fsmSize =
         (_gameView != nullptr ? _gameView->currentScreenSize() : NSSize{});

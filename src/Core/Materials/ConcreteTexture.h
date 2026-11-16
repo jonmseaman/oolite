@@ -35,7 +35,7 @@ SOFTWARE.
 #include <optional>
 #include <string>
 
-#include "OOOpenGLExtensionManager.h"  // OO_TEXTURE_CUBE_MAP, which the members below test (upstream #748)
+#include "OpenGLExtensionManager.h"  // OO_TEXTURE_CUBE_MAP, which the members below test (upstream #748)
 #include "Texture.h"
 #include "TextureLoader.h"
 

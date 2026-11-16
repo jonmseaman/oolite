@@ -20,18 +20,18 @@
 	equality). Run: tests/run.sh unit
 */
 
-#include "OOFoundation.h"
-#include "OOSystemDescriptionManager.h"
-#include "OOCommodities.h"
-#include "OOCommodityMarket.h"
-#include "OOStringExpander.h"
-#include "OOMaths.h"
-#include "OOTypes.h"
+#include "Foundation.h"
+#include "SystemDescriptionManager.h"
+#include "Commodities.h"
+#include "CommodityMarket.h"
+#include "StringExpander.h"
+#include "Maths.h"
+#include "Types.h"
 #include <quickjs.h>
 #include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "OODescription.h"
+#include "Description.h"
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -64,24 +64,24 @@ public:
 	bool _interstellar;
 	std::map<std::string, oo::PList> _data;
 	oo::PList _currentSystemData;
-	std::shared_ptr<OOSystemDescriptionManager> _systemManager;
-	std::shared_ptr<OOCommodities> _commodities;
+	std::shared_ptr<oo::SystemDescriptionManager> _systemManager;
+	std::shared_ptr<oo::Commodities> _commodities;
 	std::string _lastSet;
-	OOSystemID _routeFrom, _routeTo;
-	OORouteType _routeType;
+	oo::SystemID _routeFrom, _routeTo;
+	oo::RouteType _routeType;
 
-	::OOCommodities *getCommodities();
-	OOSystemID currentSystemID();
-	oo::PList systemDataForGalaxy(OOGalaxyID, OOSystemID, const std::string &);
-	std::vector<std::string> systemDataKeysForGalaxy(OOGalaxyID, OOSystemID);
-	NSPoint coordinatesForSystem(OOSystemID);
-	oo::PList routeFromSystem(OOSystemID, OOSystemID, OORouteType);
-	::OOCommodityMarket *getCommodityMarket();	// link stub
+	::oo::Commodities *getCommodities();
+	oo::SystemID currentSystemID();
+	oo::PList systemDataForGalaxy(oo::GalaxyID, oo::SystemID, const std::string &);
+	std::vector<std::string> systemDataKeysForGalaxy(oo::GalaxyID, oo::SystemID);
+	NSPoint coordinatesForSystem(oo::SystemID);
+	oo::PList routeFromSystem(oo::SystemID, oo::SystemID, oo::RouteType);
+	::oo::CommodityMarket *getCommodityMarket();	// link stub
 };
 
 // Link stubs, never reached: the code under test calls them on paths the test
 // does not take.
-::OOCommodityMarket *Universe::getCommodityMarket()  { std::abort(); }
+::oo::CommodityMarket *Universe::getCommodityMarket()  { std::abort(); }
 
 
 class StandInUniverse : public Universe
@@ -89,8 +89,8 @@ class StandInUniverse : public Universe
 public:
 	bool inInterstellarSpace() override;
 	oo::PList currentSystemData() override;
-	::OOSystemDescriptionManager *getSystemManager() override;
-	void setSystemDataForGalaxy(OOGalaxyID, OOSystemID, const std::string &, const oo::PList &, const std::optional<std::string> &, OOSystemLayer) override;
+	::oo::SystemDescriptionManager *getSystemManager() override;
+	void setSystemDataForGalaxy(oo::GalaxyID, oo::SystemID, const std::string &, const oo::PList &, const std::optional<std::string> &, oo::SystemLayer) override;
 };
 
 // PLAYER: the members the code under test calls, declared as the game headers
@@ -99,12 +99,12 @@ public:
 class PlayerEntity
 {
 public:
-	OOGalaxyID currentGalaxyID();
-	OOGalaxyID galaxyNumber();
+	oo::GalaxyID currentGalaxyID();
+	oo::GalaxyID galaxyNumber();
 	NSPoint getGalaxy_coordinates();
 	::OOScript * commodityScriptNamed(const std::optional<std::string> &scriptName);
 
-	OOGalaxyID _galaxy = {};
+	oo::GalaxyID _galaxy = {};
 	NSPoint _coordinates = {};
 };
 
@@ -118,7 +118,7 @@ class StationEntity
 public:
 	oo::PList getMarketDefinition();
 	std::optional<std::string> getMarketScriptName();
-	OOCargoQuantity getMarketCapacity();
+	oo::CargoQuantity getMarketCapacity();
 	bool getMarketMonitored();
 };
 
@@ -149,7 +149,7 @@ oo::PList Dict(std::initializer_list<std::pair<const char *, oo::PList>> entries
 }
 
 
-std::string Key(OOGalaxyID g, OOSystemID s, const std::string &key)
+std::string Key(oo::GalaxyID g, oo::SystemID s, const std::string &key)
 {
 	return oo::str::format("%u %i ", g, s) + key;
 }
@@ -159,15 +159,15 @@ std::string Key(OOGalaxyID g, OOSystemID s, const std::string &key)
 
 bool StandInUniverse::inInterstellarSpace()	{ return _interstellar; }
 oo::PList StandInUniverse::currentSystemData()	{ return _currentSystemData; }
-::OOSystemDescriptionManager *StandInUniverse::getSystemManager()	{ return _systemManager.get(); }
-::OOCommodities *Universe::getCommodities()	{ return _commodities.get(); }
-OOSystemID Universe::currentSystemID()	{ return 7; }
-oo::PList Universe::systemDataForGalaxy(OOGalaxyID gnum, OOSystemID pnum, const std::string &key)
+::oo::SystemDescriptionManager *StandInUniverse::getSystemManager()	{ return _systemManager.get(); }
+::oo::Commodities *Universe::getCommodities()	{ return _commodities.get(); }
+oo::SystemID Universe::currentSystemID()	{ return 7; }
+oo::PList Universe::systemDataForGalaxy(oo::GalaxyID gnum, oo::SystemID pnum, const std::string &key)
 {
 	auto found = _data.find(Key(gnum, pnum, key));
 	return found != _data.end() ? found->second : oo::PList();
 }
-void StandInUniverse::setSystemDataForGalaxy(OOGalaxyID gnum, OOSystemID pnum, const std::string &key, const oo::PList &value, const std::optional<std::string> &manifest, OOSystemLayer layer)
+void StandInUniverse::setSystemDataForGalaxy(oo::GalaxyID gnum, oo::SystemID pnum, const std::string &key, const oo::PList &value, const std::optional<std::string> &manifest, oo::SystemLayer layer)
 {
 	_lastSet = Key(gnum, pnum, key) + "=" + oo::DescriptionOf(value) + " from " + manifest.value_or("(none)") + " layer " + std::to_string(static_cast<int>(layer));
 	if (value.isNull())  _data.erase(Key(gnum, pnum, key));
@@ -175,7 +175,7 @@ void StandInUniverse::setSystemDataForGalaxy(OOGalaxyID gnum, OOSystemID pnum, c
 	// The binding reads system data back from the system manager, where the game's universe stores it.
 	_systemManager->setProperty(key, oo::str::format("%u %i", gnum, pnum), layer, value, manifest);
 }
-std::vector<std::string> Universe::systemDataKeysForGalaxy(OOGalaxyID gnum, OOSystemID pnum)
+std::vector<std::string> Universe::systemDataKeysForGalaxy(oo::GalaxyID gnum, oo::SystemID pnum)
 {
 	std::vector<std::string> keys;
 	const std::string prefix = Key(gnum, pnum, "");
@@ -185,13 +185,13 @@ std::vector<std::string> Universe::systemDataKeysForGalaxy(OOGalaxyID gnum, OOSy
 	}
 	return keys;
 }
-NSPoint Universe::coordinatesForSystem(OOSystemID s)
+NSPoint Universe::coordinatesForSystem(oo::SystemID s)
 {
 	if (s == 99)  oo::RaiseException(oo::InvalidArgumentException, "coordinates %s", "boom");
 	if (s == 98)  throw std::runtime_error("cxx boom");
 	return NSMakePoint(s * 4, s * 2);
 }
-oo::PList Universe::routeFromSystem(OOSystemID start, OOSystemID goal, OORouteType optimizeBy)
+oo::PList Universe::routeFromSystem(oo::SystemID start, oo::SystemID goal, oo::RouteType optimizeBy)
 {
 	_routeFrom = start;
 	_routeTo = goal;
@@ -201,8 +201,8 @@ oo::PList Universe::routeFromSystem(OOSystemID start, OOSystemID goal, OORouteTy
 }
 
 
-OOGalaxyID PlayerEntity::currentGalaxyID()  { return _galaxy; }
-OOGalaxyID PlayerEntity::galaxyNumber()  { return _galaxy; }
+oo::GalaxyID PlayerEntity::currentGalaxyID()  { return _galaxy; }
+oo::GalaxyID PlayerEntity::galaxyNumber()  { return _galaxy; }
 NSPoint PlayerEntity::getGalaxy_coordinates()  { return _coordinates; }
 ::OOScript * PlayerEntity::commodityScriptNamed(const std::optional<std::string> &script)  { (void)script; return nullptr; }
 
@@ -252,7 +252,7 @@ oo::PList OOJSScript::propertyNamed(const std::string &name)
 // ResourceManager: C++ definitions of the statics the code under test calls, with the
 // stand-in's answers.
 // trade-goods.plist: food, with no random spread.
-oo::PList ResourceManager::dictionaryFromFilesNamed(const std::string &fileName, const std::optional<std::string> &folderName, OOResourceMergeMode mergeMode, bool useCache)
+oo::PList ResourceManager::dictionaryFromFilesNamed(const std::string &fileName, const std::optional<std::string> &folderName, oo::ResourceMergeMode mergeMode, bool useCache)
 {
 	(void)fileName; (void)folderName; (void)mergeMode; (void)useCache;
 	return Dict({ { "food", Dict({ { "name", oo::PList("Food") }, { "quantity_unit", oo::PList(0) }, { "peak_export", oo::PList(7) }, { "peak_import", oo::PList(0) },
@@ -269,21 +269,26 @@ oo::PList ResourceManager::manifestForIdentifier(const std::string &identifier)
 
 oo::PList StationEntity::getMarketDefinition()					{ std::abort(); }
 std::optional<std::string> StationEntity::getMarketScriptName()	{ std::abort(); }
-OOCargoQuantity StationEntity::getMarketCapacity()				{ std::abort(); }
+oo::CargoQuantity StationEntity::getMarketCapacity()				{ std::abort(); }
 bool StationEntity::getMarketMonitored()						{ std::abort(); }
 
 
 
 // The expander: "<string>".
-std::optional<std::string> OOExpandDescriptionString(Random_Seed, const std::string &string, const oo::PList &, const oo::PList &, const std::optional<std::string> &, OOExpandOptions)
+namespace oo {
+
+std::optional<std::string> ExpandDescriptionString(Random_Seed, const std::string &string, const oo::PList &, const oo::PList &, const std::optional<std::string> &, ExpandOptions)
 {
 	return "<" + string + ">";
 }
 
-Random_Seed OOStringExpanderDefaultRandomSeed(void)
+Random_Seed StringExpanderDefaultRandomSeed(void)
 {
 	return Random_Seed{};
 }
+
+}  // namespace oo
+
 
 
 // The system manager's parsers, for the inputs the test uses (as test_OOSystemDescriptionManager.mm).
@@ -302,11 +307,11 @@ Random_Seed RandomSeedFromString(const std::optional<std::string> &)
 
 
 // A route type by name: the two the test names.
-OORouteType StringToRouteType(const std::string &string)
+oo::RouteType StringToRouteType(const std::string &string)
 {
-	if (string == "OPTIMIZED_BY_TIME")  return OORouteType::kTime;
-	if (string == "OPTIMIZED_BY_NONE")  return OORouteType::kNone;
-	return OORouteType::kJumps;
+	if (string == "OPTIMIZED_BY_TIME")  return oo::RouteType::kTime;
+	if (string == "OPTIMIZED_BY_NONE")  return oo::RouteType::kNone;
+	return oo::RouteType::kJumps;
 }
 
 
@@ -585,7 +590,7 @@ JSValue TestInfo(JSContext *context, JSValueConst, int argc, JSValueConst *argv)
 	std::int32_t g = 0, s = 0;
 	if (argc > 0)  JS_ToInt32(context, &g, argv[0]);
 	if (argc > 1)  JS_ToInt32(context, &s, argv[1]);
-	return GetJSSystemInfoForSystem(context, static_cast<OOGalaxyID>(g), static_cast<OOSystemID>(s));
+	return GetJSSystemInfoForSystem(context, static_cast<oo::GalaxyID>(g), static_cast<oo::SystemID>(s));
 }
 
 
@@ -603,17 +608,17 @@ void SetUpContext()
 	gSharedUniverse = sUniverse;
 	sPlayer = new PlayerEntity;
 	gOOPlayer = sPlayer;
-	sUniverse->_systemManager = oo::makeShared<OOSystemDescriptionManager>();
-	sUniverse->_commodities = oo::makeShared<OOCommodities>();
+	sUniverse->_systemManager = oo::makeShared<oo::SystemDescriptionManager>();
+	sUniverse->_commodities = oo::makeShared<oo::Commodities>();
 	sUniverse->_data[Key(0, 7, "economy")] = oo::PList(2.0);
 	sUniverse->_data[Key(0, 7, "government")] = oo::PList(std::string("4"));
 	sUniverse->_data[Key(0, 7, "name")] = oo::PList(std::string("Lave"));
 	// The system manager holds the same data (the binding reads values there).
-	sUniverse->_systemManager->setProperty("economy", "0 7", OOSystemLayer::kCore, oo::PList(2.0), std::nullopt);
-	sUniverse->_systemManager->setProperty("government", "0 7", OOSystemLayer::kCore, oo::PList(std::string("4")), std::nullopt);
-	sUniverse->_systemManager->setProperty("name", "0 7", OOSystemLayer::kCore, oo::PList(std::string("Lave")), std::nullopt);
-	sUniverse->_systemManager->setProperty("population", "0 7", OOSystemLayer::kCore, oo::PList(std::string("2.5")), std::nullopt);
-	sUniverse->_systemManager->setProperty("techlevel", "0 7", OOSystemLayer::kCore, oo::PList(8.0), std::nullopt);
+	sUniverse->_systemManager->setProperty("economy", "0 7", oo::SystemLayer::kCore, oo::PList(2.0), std::nullopt);
+	sUniverse->_systemManager->setProperty("government", "0 7", oo::SystemLayer::kCore, oo::PList(std::string("4")), std::nullopt);
+	sUniverse->_systemManager->setProperty("name", "0 7", oo::SystemLayer::kCore, oo::PList(std::string("Lave")), std::nullopt);
+	sUniverse->_systemManager->setProperty("population", "0 7", oo::SystemLayer::kCore, oo::PList(std::string("2.5")), std::nullopt);
+	sUniverse->_systemManager->setProperty("techlevel", "0 7", oo::SystemLayer::kCore, oo::PList(8.0), std::nullopt);
 	sScript = oo::test::NewRetained<OOJSScript>();
 	sScriptManifest = oo::PList(std::string("org.test.script"));
 	Define("lave", GetJSSystemInfoForSystem(sContext, 0, 7));
@@ -807,9 +812,9 @@ OO_TEST(methods)
 	OO_CHECK_EVAL("lave.distanceToSystem({})", "threw: bad arguments: SystemInfo.distanceToSystem(1) - / system info");
 	OO_CHECK_EVAL("lave.distanceToSystem()", "threw: bad arguments: SystemInfo.distanceToSystem(0) - / system info");
 	OO_CHECK_EVAL("JSON.stringify(lave.routeToSystem(info(0, 10)))", "{\"jumps\":2,\"route\":[7,10]}");
-	OO_CHECK_EQ(static_cast<int>(sUniverse->_routeType), static_cast<int>(OORouteType::kJumps));
+	OO_CHECK_EQ(static_cast<int>(sUniverse->_routeType), static_cast<int>(oo::RouteType::kJumps));
 	OO_CHECK_EVAL("lave.routeToSystem(info(0, 10), 'OPTIMIZED_BY_TIME').jumps", "2");
-	OO_CHECK_EQ(static_cast<int>(sUniverse->_routeType), static_cast<int>(OORouteType::kTime));
+	OO_CHECK_EQ(static_cast<int>(sUniverse->_routeType), static_cast<int>(oo::RouteType::kTime));
 	OO_CHECK_EVAL("lave.routeToSystem(info(0, 13))", "null");
 	OO_CHECK_EVAL("lave.routeToSystem(info(4, 10))", "threw: SystemInfo.routeToSystem: Cannot calculate route for destinations in other galaxies.");
 	OO_CHECK_EVAL("lave.routeToSystem(5)", "threw: bad arguments: SystemInfo.routeToSystem(1) - / system info");

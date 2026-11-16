@@ -16,8 +16,8 @@
 
 #include <limits>
 
-#include "OOGraphicsResetManager.h"
-#include "OOPolygonSprite.h"
+#include "GraphicsResetManager.h"
+#include "PolygonSprite.h"
 #include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -37,8 +37,8 @@ oo::PList Contours(std::initializer_list<oo::PList> contours) {
   return oo::PList(oo::PList::Array(contours));
 }
 
-std::shared_ptr<OOPolygonSprite> Sprite(const oo::PList& data, const char* name) {
-  return OOPolygonSprite::initWithDataArray(data, 0.5f, name);
+std::shared_ptr<oo::PolygonSprite> Sprite(const oo::PList& data, const char* name) {
+  return oo::PolygonSprite::initWithDataArray(data, 0.5f, name);
 }
 
 }  // namespace
@@ -68,14 +68,14 @@ OO_TEST(dataArraysThatMakeASprite) {
 OO_TEST(emptyDataAnswersNil) {
   {
     OO_CHECK(Sprite(oo::PList(oo::PList::Array()), "empty") == nullptr);
-    OO_CHECK(OOPolygonSprite::initWithDataArray(oo::PList(), 1.0f, "null") ==
+    OO_CHECK(oo::PolygonSprite::initWithDataArray(oo::PList(), 1.0f, "null") ==
              nullptr);
   }
 }
 
 OO_TEST(descriptionAndProtocols) {
   {
-    std::shared_ptr<OOPolygonSprite> sprite =
+    std::shared_ptr<oo::PolygonSprite> sprite =
         Sprite(Numbers({0, 0, 1, 0, 1, 1}), "triangle");
     std::string text = sprite->description();
     OO_CHECK(text.starts_with("<OOPolygonSprite 0x"));
@@ -83,16 +83,16 @@ OO_TEST(descriptionAndProtocols) {
     OO_CHECK(text.ends_with(">{triangle}"));
 #endif
     // The protocols are C++ interfaces; drawFilled/drawOutline are members.
-    OO_CHECK(dynamic_cast<OOHUDBeaconIcon*>(sprite.get()) != nullptr);
-    OOGraphicsResetClient* client =
-        dynamic_cast<OOGraphicsResetClient*>(sprite.get());
+    OO_CHECK(dynamic_cast<oo::HUDBeaconIcon*>(sprite.get()) != nullptr);
+    oo::GraphicsResetClient* client =
+        dynamic_cast<oo::GraphicsResetClient*>(sprite.get());
     OO_CHECK(client != nullptr);
     client->resetGraphicsState();  // no buffers made yet: nothing to delete
   }
 }
 
 OO_TEST(cxxSprite) {
-  std::shared_ptr<OOPolygonSprite> sprite = OOPolygonSprite::initWithDataArray(
+  std::shared_ptr<oo::PolygonSprite> sprite = oo::PolygonSprite::initWithDataArray(
       Numbers({0, 0, 1, 0, 1, 1, 0, 1}), 0.5f, "square");
   OO_CHECK(sprite.get() != nullptr);
 #ifndef NDEBUG
@@ -100,7 +100,7 @@ OO_TEST(cxxSprite) {
            std::optional<std::string>("square"));
 #endif
   sprite->resetGraphicsState();
-  OO_CHECK(OOPolygonSprite::initWithDataArray(oo::PList(oo::PList::Array()),
+  OO_CHECK(oo::PolygonSprite::initWithDataArray(oo::PList(oo::PList::Array()),
                                               0.5f, "empty")
                .get() == nullptr);
 }

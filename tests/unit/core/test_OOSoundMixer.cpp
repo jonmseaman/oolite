@@ -23,23 +23,28 @@
 #include <set>
 #include <string>
 
-#include "OOALBufferedSound.h"
-#include "OOALSound.h"
-#include "OOALSoundChannel.h"
-#include "OOALSoundDecoder.h"
-#include "OOALSoundMixer.h"
-#include "OOALStreamedSound.h"
+#include "ALBufferedSound.h"
+#include "ALSound.h"
+#include "ALSoundChannel.h"
+#include "ALSoundDecoder.h"
+#include "ALSoundMixer.h"
+#include "ALStreamedSound.h"
 #include "oo_test.hpp"
 
 namespace stdfs = std::filesystem;
 
-void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
+namespace oo {
+
+void LogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   (void)inFunction;
 }
 
+}  // namespace oo
+
+
 // The decoder the root's cluster asks for: none, for every path (a C++
 // stand-in).
-std::shared_ptr<OOALSoundDecoder> OOALSoundDecoder::initWithPath(
+std::shared_ptr<oo::ALSoundDecoder> oo::ALSoundDecoder::initWithPath(
     const std::optional<std::string>& inPath) {
   (void)inPath;
   return nullptr;
@@ -47,27 +52,37 @@ std::shared_ptr<OOALSoundDecoder> OOALSoundDecoder::initWithPath(
 
 // The buffered sound the root's cluster names: a C++ stand-in. The decoder
 // above refuses every path, so none is made.
-std::shared_ptr<OOALBufferedSound> OOALBufferedSound::initWithDecoder(
-    OOALSoundDecoder* inDecoder) {
+std::shared_ptr<oo::ALBufferedSound> oo::ALBufferedSound::initWithDecoder(
+    oo::ALSoundDecoder* inDecoder) {
   (void)inDecoder;
   return nullptr;
 }
-OOALBufferedSound::~OOALBufferedSound() {}
-std::optional<std::string> OOALBufferedSound::name() { return _name; }
-ALuint OOALBufferedSound::soundBuffer() { return 0; }
+namespace oo {
+
+ALBufferedSound::~ALBufferedSound() {}
+
+}  // namespace oo
+
+std::optional<std::string> oo::ALBufferedSound::name() { return _name; }
+ALuint oo::ALBufferedSound::soundBuffer() { return 0; }
 
 // The streamed sound the root's cluster names: a C++ stand-in. None is made
 // here.
-std::shared_ptr<OOALStreamedSound> OOALStreamedSound::initWithDecoder(
-    OOALSoundDecoder* inDecoder) {
+std::shared_ptr<oo::ALStreamedSound> oo::ALStreamedSound::initWithDecoder(
+    oo::ALSoundDecoder* inDecoder) {
   (void)inDecoder;
   return nullptr;
 }
-OOALStreamedSound::~OOALStreamedSound() {}
-std::optional<std::string> OOALStreamedSound::name() { return _name; }
-void OOALStreamedSound::rewind() {}
-bool OOALStreamedSound::soundIncomplete() { return false; }
-ALuint OOALStreamedSound::soundBuffer() { return 0; }
+namespace oo {
+
+ALStreamedSound::~ALStreamedSound() {}
+
+}  // namespace oo
+
+std::optional<std::string> oo::ALStreamedSound::name() { return _name; }
+void oo::ALStreamedSound::rewind() {}
+bool oo::ALStreamedSound::soundIncomplete() { return false; }
+ALuint oo::ALStreamedSound::soundBuffer() { return 0; }
 
 /*	The channels: a C++ stand-in (the members the mixer calls). They
    count the live ones and the updates each is sent; the free list's link is the
@@ -75,27 +90,32 @@ ALuint OOALStreamedSound::soundBuffer() { return 0; }
 */
 static int gLiveChannels = 0;
 static int gChannelUpdates = 0;
-static std::map<OOSoundChannel*, int>
+static std::map<oo::SoundChannel*, int>
     gUpdates;  // per channel: the stub's _updates
 
-bool OOSoundChannel::init() {
+bool oo::SoundChannel::init() {
   gLiveChannels++;
   return true;
 }
 
-OOSoundChannel::~OOSoundChannel() {
+namespace oo {
+
+SoundChannel::~SoundChannel() {
   gLiveChannels--;
   gUpdates.erase(this);
 }
 
-void OOSoundChannel::update() {
+}  // namespace oo
+
+
+void oo::SoundChannel::update() {
   gUpdates[this]++;
   gChannelUpdates++;
 }
 
-OOSoundChannel* OOSoundChannel::next() { return _next; }
+oo::SoundChannel* oo::SoundChannel::next() { return _next; }
 
-void OOSoundChannel::setNext(OOSoundChannel* next) { _next = next; }
+void oo::SoundChannel::setNext(oo::SoundChannel* next) { _next = next; }
 
 namespace {
 
@@ -118,23 +138,23 @@ void SetUp() {
 // First: the shared mixer sets sound up and makes its channels, once.
 OO_TEST(theSharedMixerMakesItsChannels) {
   SetUp();
-  OO_CHECK(!OOSound::isSoundOK());
-  OOSoundMixer* mixer = OOSoundMixer::sharedMixer();
+  OO_CHECK(!oo::Sound::isSoundOK());
+  oo::SoundMixer* mixer = oo::SoundMixer::sharedMixer();
   OO_CHECK(mixer != nullptr);
-  OO_CHECK(OOSound::isSoundOK());
+  OO_CHECK(oo::Sound::isSoundOK());
   OO_CHECK(gLiveChannels == kMixerGeneralChannels);
-  OO_CHECK(OOSoundMixer::sharedMixer() == mixer);
+  OO_CHECK(oo::SoundMixer::sharedMixer() == mixer);
   OO_CHECK(gLiveChannels == kMixerGeneralChannels);
 }
 
 // The free list: last pushed, first popped; each channel once; nil when empty.
 OO_TEST(popAndPushTheFreeList) {
   SetUp();
-  OOSoundMixer* mixer = OOSoundMixer::sharedMixer();
-  std::set<OOSoundChannel*> popped;
-  OOSoundChannel* first = nullptr;
+  oo::SoundMixer* mixer = oo::SoundMixer::sharedMixer();
+  std::set<oo::SoundChannel*> popped;
+  oo::SoundChannel* first = nullptr;
   for (int i = 0; i < kMixerGeneralChannels; i++) {
-    OOSoundChannel* channel = mixer->popChannel();
+    oo::SoundChannel* channel = mixer->popChannel();
     OO_CHECK(channel != nullptr && channel->next() == nullptr);
     if (first == nullptr) first = channel;
     popped.insert(channel);
@@ -143,8 +163,8 @@ OO_TEST(popAndPushTheFreeList) {
   OO_CHECK(mixer->popChannel() == nullptr);
   OO_CHECK(mixer->popChannel() == nullptr);
 
-  OOSoundChannel* a = *popped.begin();
-  OOSoundChannel* b = *popped.rbegin();
+  oo::SoundChannel* a = *popped.begin();
+  oo::SoundChannel* b = *popped.rbegin();
   mixer->pushChannel(a);
   mixer->pushChannel(b);
   OO_CHECK(b->next() == a);
@@ -152,7 +172,7 @@ OO_TEST(popAndPushTheFreeList) {
   OO_CHECK(mixer->popChannel() == a);
   OO_CHECK(mixer->popChannel() == nullptr);
 
-  for (OOSoundChannel* channel : popped) mixer->pushChannel(channel);
+  for (oo::SoundChannel* channel : popped) mixer->pushChannel(channel);
   OO_CHECK(gLiveChannels == kMixerGeneralChannels);
   (void)first;
 }
@@ -160,14 +180,14 @@ OO_TEST(popAndPushTheFreeList) {
 // -update, and the root's +update, update every channel once.
 OO_TEST(updateUpdatesEveryChannel) {
   SetUp();
-  OOSoundMixer* mixer = OOSoundMixer::sharedMixer();
+  oo::SoundMixer* mixer = oo::SoundMixer::sharedMixer();
   const int before = gChannelUpdates;
   mixer->update();
   OO_CHECK(gChannelUpdates == before + kMixerGeneralChannels);
-  OOSound::update();
+  oo::Sound::update();
   OO_CHECK(gChannelUpdates == before + 2 * kMixerGeneralChannels);
 
-  OOSoundChannel* channel = mixer->popChannel();
+  oo::SoundChannel* channel = mixer->popChannel();
   OO_CHECK(gUpdates[channel] == 2);
   mixer->pushChannel(channel);
 }
@@ -176,14 +196,14 @@ OO_TEST(updateUpdatesEveryChannel) {
 // call.
 OO_TEST(cxxApi) {
   SetUp();
-  OOSoundMixer* mixer = OOSoundMixer::sharedMixer();
-  OO_CHECK(mixer != nullptr && mixer == OOSoundMixer::sharedMixer());
+  oo::SoundMixer* mixer = oo::SoundMixer::sharedMixer();
+  OO_CHECK(mixer != nullptr && mixer == oo::SoundMixer::sharedMixer());
 
-  OOSoundChannel* channel = mixer->popChannel();
+  oo::SoundChannel* channel = mixer->popChannel();
   OO_CHECK(channel != nullptr && channel->next() == nullptr);
   mixer->pushChannel(channel);
-  OO_CHECK(OOSoundMixer::sharedMixer()->popChannel() == channel);
-  OOSoundMixer::sharedMixer()->pushChannel(channel);
+  OO_CHECK(oo::SoundMixer::sharedMixer()->popChannel() == channel);
+  oo::SoundMixer::sharedMixer()->pushChannel(channel);
 
   const int before = gChannelUpdates;
   mixer->update();
@@ -193,13 +213,13 @@ OO_TEST(cxxApi) {
 // Last: -shutdown releases the channels; -update then has nothing to update.
 OO_TEST(shutdownReleasesTheChannels) {
   SetUp();
-  OOSoundMixer* mixer = OOSoundMixer::sharedMixer();
+  oo::SoundMixer* mixer = oo::SoundMixer::sharedMixer();
   mixer->shutdown();
   OO_CHECK(gLiveChannels == 0);
   const int before = gChannelUpdates;
   mixer->update();
   OO_CHECK(gChannelUpdates == before);
-  OO_CHECK(OOSoundMixer::sharedMixer() == mixer);
+  OO_CHECK(oo::SoundMixer::sharedMixer() == mixer);
 }
 
 OO_TEST_MAIN()

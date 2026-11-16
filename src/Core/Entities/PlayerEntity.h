@@ -44,14 +44,14 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "CommodityMarket.h"
+#include "Foundation.h"
 #include "GuiDisplayGen.h"
 #include "LaserShotEntity.h"
-#include "OOCommodityMarket.h"
-#include "OOFoundation.h"
 #include "OOJSPropID.h"
-#include "OOTrumble.h"
-#include "OOTypes.h"
 #include "ShipEntity.h"
+#include "Trumble.h"
+#include "Types.h"
 #include "WormholeEntity.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
@@ -61,8 +61,13 @@ class MyOpenGLView;
 class ShipEntity;
 class GuiDisplayGen;
 #include "HeadUpDisplay.h"  // the player keeps its HUD (std::shared_ptr)
-class OOSound;
-class OOSoundSource;
+
+namespace oo {
+
+class Sound;
+class SoundSource;
+
+}  // namespace oo
 
 namespace oo {
 
@@ -88,8 +93,8 @@ inline constexpr int CUSTOM_VIEW_MAX_ZOOM_OUT = 25;
 
 // OOGUIScreenID, OOGalacticHyperspaceBehaviour and their defaults (plain
 // header).
-#include "OOEntityEnums.h"
-#include "OOEnumFlags.h"
+#include "EntityEnums.h"
+#include "EnumFlags.h"
 
 namespace oo {
 
@@ -516,43 +521,45 @@ class PlayerEntity : public ShipEntity {
   void setName(const std::optional<std::string>& /*inName*/) override;
   GLfloat baseMass();
   void unloadAllCargoPodsForType(const std::string& type,
-                                 ::OOCommodityMarket* manifest);
+                                 ::oo::CommodityMarket* manifest);
   void unloadCargoPodsForType(const std::string& type,
-                              OOCargoQuantity quantity);
+                              oo::CargoQuantity quantity);
   void unloadCargoPods();
-  void createCargoPodWithType(const std::string& type, OOCargoQuantity amount);
+  void createCargoPodWithType(const std::string& type,
+                              oo::CargoQuantity amount);
   void loadCargoPodsForType(const std::string& type,
-                            ::OOCommodityMarket* manifest);
-  void loadCargoPodsForType(const std::string& type, OOCargoQuantity quantity);
+                            ::oo::CommodityMarket* manifest);
+  void loadCargoPodsForType(const std::string& type,
+                            oo::CargoQuantity quantity);
   void loadCargoPods();
-  ::OOCommodityMarket* getShipCommodityData();
-  OOCreditsQuantity deciCredits();
+  ::oo::CommodityMarket* getShipCommodityData();
+  oo::CreditsQuantity deciCredits();
   int random_factor();
   void setRandom_factor(int rf);
-  virtual OOGalaxyID galaxyNumber();
+  virtual oo::GalaxyID galaxyNumber();
   virtual NSPoint getGalaxy_coordinates();
   void setGalaxyCoordinates(NSPoint newPosition);
   virtual NSPoint getCursor_coordinates();
   NSPoint getChart_centre_coordinates();
-  OOScalar getChart_zoom();
-  OOScalar getCustom_chart_zoom();
-  void setCustomChartZoom(OOScalar zoom);
+  oo::Scalar getChart_zoom();
+  oo::Scalar getCustom_chart_zoom();
+  void setCustomChartZoom(oo::Scalar zoom);
   NSPoint getCustom_chart_centre_coordinates();
   void setCustomChartCentre(NSPoint coords);
   NSPoint adjusted_chart_centre();
-  virtual OORouteType ANAMode();
-  virtual OOSystemID systemID();
-  void setSystemID(OOSystemID sid);
-  virtual OOSystemID previousSystemID();
-  void setPreviousSystemID(OOSystemID sid);
+  virtual oo::RouteType ANAMode();
+  virtual oo::SystemID systemID();
+  void setSystemID(oo::SystemID sid);
+  virtual oo::SystemID previousSystemID();
+  void setPreviousSystemID(oo::SystemID sid);
 
   // target, next-hop and info systems, the wormhole, the commander data
   // dictionary (save).
-  virtual OOSystemID targetSystemID();
-  virtual void setTargetSystemID(OOSystemID sid);
-  virtual OOSystemID nextHopTargetSystemID();
-  virtual OOSystemID infoSystemID();
-  virtual void setInfoSystemID(OOSystemID sid, bool moveChart);
+  virtual oo::SystemID targetSystemID();
+  virtual void setTargetSystemID(oo::SystemID sid);
+  virtual oo::SystemID nextHopTargetSystemID();
+  virtual oo::SystemID infoSystemID();
+  virtual void setInfoSystemID(oo::SystemID sid, bool moveChart);
   void nextInfoSystem();
   void previousInfoSystem();
   void homeInfoSystem();
@@ -578,11 +585,11 @@ class PlayerEntity : public ShipEntity {
   bool canCollide() override;
 
   // sun glare, the atmosphere, update:.
-  OOComparisonResult compareZeroDistance(Entity* /*otherEntity*/) override;
+  oo::ComparisonResult compareZeroDistance(Entity* /*otherEntity*/) override;
   bool validForAddToUniverse() override;
   GLfloat lookingAtSunWithThresholdAngleCos(GLfloat thresholdAngleCos) override;
   GLfloat insideAtmosphereFraction();
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
 
   // the bookkeeping tick (doBookkeeping:), movement flags.
   void doBookkeeping(double delta_t);
@@ -596,11 +603,11 @@ class PlayerEntity : public ShipEntity {
   void setMaxFlightYaw(GLfloat newValue) override;
   bool checkEntityForMassLock(Entity* ent, oo::ScanClass theirClass);
   void updateAlertCondition();
-  void updateFuelScoops(OOTimeDelta delta_t);
-  void updateClocks(OOTimeDelta delta_t);
+  void updateFuelScoops(oo::TimeDelta delta_t);
+  void updateClocks(oo::TimeDelta delta_t);
   void checkScriptsIfAppropriate();
-  void updateTrumbles(OOTimeDelta delta_t);
-  void performAutopilotUpdates(OOTimeDelta delta_t);
+  void updateTrumbles(oo::TimeDelta delta_t);
+  void performAutopilotUpdates(oo::TimeDelta delta_t);
   void performDockingRequest(::StationEntity* stationForDocking);
   virtual void requestDockingClearance(::StationEntity* stationForDocking);
   virtual void cancelDockingRequest(::StationEntity* stationForDocking);
@@ -615,12 +622,12 @@ class PlayerEntity : public ShipEntity {
 #endif
   virtual bool injectorsEngaged();
   virtual bool hyperspeedEngaged();
-  void performInFlightUpdates(OOTimeDelta delta_t);
-  void performWitchspaceCountdownUpdates(OOTimeDelta delta_t);
-  void performWitchspaceExitUpdates(OOTimeDelta delta_t);
-  void performLaunchingUpdates(OOTimeDelta delta_t);
-  void performDockingUpdates(OOTimeDelta /*delta_t*/);
-  void performDeadUpdates(OOTimeDelta /*delta_t*/);
+  void performInFlightUpdates(oo::TimeDelta delta_t);
+  void performWitchspaceCountdownUpdates(oo::TimeDelta delta_t);
+  void performWitchspaceExitUpdates(oo::TimeDelta delta_t);
+  void performLaunchingUpdates(oo::TimeDelta delta_t);
+  void performDockingUpdates(oo::TimeDelta /*delta_t*/);
+  void performDeadUpdates(oo::TimeDelta /*delta_t*/);
   void gameOverFadeToBW();
   bool isValidTarget(Entity* target) override;
   void showGameOver();
@@ -638,8 +645,8 @@ class PlayerEntity : public ShipEntity {
                                 // override
   void applyRoll(GLfloat roll1, GLfloat climb1) override;
   void applyYaw(GLfloat yaw);
-  OOMatrix drawRotationMatrix() override;
-  OOMatrix drawTransformationMatrix() override;
+  oo::Matrix drawRotationMatrix() override;
+  oo::Matrix drawTransformationMatrix() override;
   Quaternion normalOrientation() override;
   void setNormalOrientation(Quaternion quat) override;
   void moveForward(double amount) override;
@@ -667,7 +674,7 @@ class PlayerEntity : public ShipEntity {
   virtual bool switchHudTo(const std::string& hudFileName);
   float dialCustomFloat(const std::string& dialKey);
   std::string dialCustomString(const std::string& dialKey);
-  std::shared_ptr<OOColor> dialCustomColor(const std::string& dialKey);
+  std::shared_ptr<oo::Color> dialCustomColor(const std::string& dialKey);
   virtual void setDialCustom(const oo::PList& value,
                              const std::string& dialKey);
   void setShowDemoShips(bool value);
@@ -787,8 +794,8 @@ class PlayerEntity : public ShipEntity {
   double scannerFuzziness();
   void noticeECM() override;
   bool fireECM() override;
-  OOEnergyUnitType installedEnergyUnitType();
-  OOEnergyUnitType energyUnitType();
+  oo::EnergyUnitType installedEnergyUnitType();
+  oo::EnergyUnitType energyUnitType();
   void currentWeaponStats();
   virtual bool weaponsOnline();
   void setWeaponsOnline(bool newValue);
@@ -796,7 +803,7 @@ class PlayerEntity : public ShipEntity {
   using ShipEntity::fireMainWeapon;  // the ship's fireMainWeapon(range),
                                      // another selector
   bool fireMainWeapon();
-  oo::WeaponType weaponForFacing(OOWeaponFacing facing);
+  oo::WeaponType weaponForFacing(oo::WeaponFacing facing);
   oo::WeaponType currentWeapon();
 
   // hit testing, damage, the doppelganger, the escape capsule, dumping cargo,
@@ -813,14 +820,15 @@ class PlayerEntity : public ShipEntity {
   ::ShipEntity* launchEscapeCapsule() override;
   void dumpCargo() override;
   void rotateCargo();
-  void setBounty(OOCreditsQuantity amount) override;
-  void setBounty(OOCreditsQuantity amount,
+  void setBounty(oo::CreditsQuantity amount) override;
+  void setBounty(oo::CreditsQuantity amount,
                  oo::LegalStatusReason reason) override;
-  void setBounty(OOCreditsQuantity amount, const std::string& reason) override;
+  void setBounty(oo::CreditsQuantity amount,
+                 const std::string& reason) override;
 
   // legal status, offences, bounties collected, internal damage, destruction,
   // ending a scenario, docking and leaving dock.
-  OOCreditsQuantity getBounty() override;
+  oo::CreditsQuantity getBounty() override;
   int getLegalStatus();
   void markAsOffender(int offence_value) override;
   void markAsOffender(int offence_value, oo::LegalStatusReason reason) override;
@@ -840,7 +848,7 @@ class PlayerEntity : public ShipEntity {
   virtual bool witchJumpChecklist(bool isGalacticJump);
   virtual void setJumpType(bool isGalacticJump);
   double hyperspaceJumpDistance();
-  virtual OOFuelQuantity fuelRequiredForJump();
+  virtual oo::FuelQuantity fuelRequiredForJump();
   bool hasSufficientFuelForJump();
   void noteCompassLostTarget();
   void enterGalacticWitchspace();
@@ -848,7 +856,7 @@ class PlayerEntity : public ShipEntity {
                                     // player does not override
   void enterWormhole(::WormholeEntity* w_hole) override;
   void enterWitchspace() override;
-  void witchJumpTo(OOSystemID sTo, bool misjump);
+  void witchJumpTo(oo::SystemID sTo, bool misjump);
 
   // leaving witchspace, the status screen, the equipment list, primed and fast
   // equipment, weapon types.
@@ -865,12 +873,12 @@ class PlayerEntity : public ShipEntity {
   virtual std::optional<std::string> fastEquipmentB();
   virtual void setFastEquipmentA(const std::optional<std::string>& eqKey);
   virtual void setFastEquipmentB(const std::optional<std::string>& eqKey);
-  ::OOEquipmentType* weaponTypeForFacing(OOWeaponFacing facing,
-                                         bool /*strict*/) override;
+  ::oo::EquipmentType* weaponTypeForFacing(oo::WeaponFacing facing,
+                                           bool /*strict*/) override;
 
   // scripting lists (missiles, cargo, contracts), the system data screen,
   // marked destinations, the chart screens.
-  std::vector<std::shared_ptr<::OOEquipmentType>> missilesList() override;
+  std::vector<std::shared_ptr<::oo::EquipmentType>> missilesList() override;
   std::vector<std::string> cargoList();
   oo::PList cargoListForScripting() override;
   unsigned legalStatusOfCargoList();
@@ -892,7 +900,7 @@ class PlayerEntity : public ShipEntity {
   void setGuiToGameOptionsScreen();
   void setGuiToLoadSaveScreen();
   void highlightEquipShipScreenKey(const std::string& highlightKey);
-  virtual OOWeaponFacingSet availableFacings();
+  virtual oo::WeaponFacingSet availableFacings();
 
   // the equip-ship screen and upgrade information.
   virtual void setGuiToEquipShipScreen(
@@ -920,32 +928,33 @@ class PlayerEntity : public ShipEntity {
   // buying equipment, script price adjustment, weapon mounts, passenger berths,
   // removing missiles, trade-in.
   void buySelectedItem();
-  OOCreditsQuantity adjustPriceByScriptForEqKey(const std::string& eqKey,
-                                                OOCreditsQuantity price);
+  oo::CreditsQuantity adjustPriceByScriptForEqKey(const std::string& eqKey,
+                                                  oo::CreditsQuantity price);
   bool tryBuyingItem(const std::string& eqKey);
-  bool setWeaponMount(OOWeaponFacing facing, const std::string& eqKey) override;
-  virtual bool setWeaponMount(OOWeaponFacing facing, const std::string& eqKey,
+  bool setWeaponMount(oo::WeaponFacing facing,
+                      const std::string& eqKey) override;
+  virtual bool setWeaponMount(oo::WeaponFacing facing, const std::string& eqKey,
                               const std::optional<std::string>& context);
   bool changePassengerBerths(int addRemove);
-  OOCreditsQuantity removeMissiles() override;
-  void doTradeIn(OOCreditsQuantity tradeInValue, double priceFactor);
+  oo::CreditsQuantity removeMissiles() override;
+  void doTradeIn(oo::CreditsQuantity tradeInValue, double priceFactor);
 
   // cargo quantities, the local market, market filters and sorters, market
   // screen rows.
-  OOCargoQuantity cargoQuantityForType(const std::string& type);
-  OOCargoQuantity setCargoQuantityForType(const std::string& type,
-                                          OOCargoQuantity amount);
+  oo::CargoQuantity cargoQuantityForType(const std::string& type);
+  oo::CargoQuantity setCargoQuantityForType(const std::string& type,
+                                            oo::CargoQuantity amount);
   void calculateCurrentCargo();
-  OOCargoQuantity cargoQuantityOnBoard() override;
-  ::OOCommodityMarket* localMarket();
+  oo::CargoQuantity cargoQuantityOnBoard() override;
+  ::oo::CommodityMarket* localMarket();
   std::vector<std::string> applyMarketFilter(
-      const std::vector<std::string>& goods, ::OOCommodityMarket* market);
+      const std::vector<std::string>& goods, ::oo::CommodityMarket* market);
   std::vector<std::string> applyMarketSorter(
-      const std::vector<std::string>& goods, ::OOCommodityMarket* market);
+      const std::vector<std::string>& goods, ::oo::CommodityMarket* market);
   void showMarketScreenHeaders();
-  void showMarketScreenDataLine(OOGUIRow row, const std::string& good,
-                                ::OOCommodityMarket* localMarket,
-                                OOCargoQuantity quantity);
+  void showMarketScreenDataLine(oo::GUIRow row, const std::string& good,
+                                ::oo::CommodityMarket* localMarket,
+                                oo::CargoQuantity quantity);
   std::optional<std::string> marketScreenTitle();
 
   // the market screens, buying and selling commodities, mining and speech
@@ -978,7 +987,7 @@ class PlayerEntity : public ShipEntity {
                                           // selector
   bool hasOneEquipmentItem(const std::string& itemKey, bool includeMissiles);
   bool hasPrimaryWeapon(oo::WeaponType weaponType) override;
-  bool removeExternalStore(::OOEquipmentType* eqType) override;
+  bool removeExternalStore(::oo::EquipmentType* eqType) override;
   bool removeFromPylon(std::size_t pylon);
   std::size_t parcelCount() override;
   std::size_t passengerCount() override;
@@ -995,9 +1004,9 @@ class PlayerEntity : public ShipEntity {
   void setDefaultCustomViews();
   Vector weaponViewOffset();
   void setUpTrumbles();
-  void addTrumble(OOTrumble* papaTrumble);
-  void removeTrumble(OOTrumble* deadTrumble);
-  std::shared_ptr<OOTrumble>* trumbleArray();
+  void addTrumble(oo::Trumble* papaTrumble);
+  void removeTrumble(oo::Trumble* deadTrumble);
+  std::shared_ptr<oo::Trumble>* trumbleArray();
   virtual std::size_t getTrumbleCount();
 
   // trumble values, checksums, screen modes, target memory, missile ident,
@@ -1020,27 +1029,27 @@ class PlayerEntity : public ShipEntity {
   virtual void printIdentLockedOnForMissile(bool missile);
   Quaternion getCustomViewQuaternion();
   void setCustomViewQuaternion(Quaternion q);
-  OOMatrix getCustomViewMatrix();
+  oo::Matrix getCustomViewMatrix();
   Vector getCustomViewOffset();
   void setCustomViewOffset(Vector offset);
   Vector getCustomViewRotationCenter();
   void setCustomViewRotationCenter(Vector center);
-  void customViewZoomIn(OOScalar rate);
-  void customViewZoomOut(OOScalar rate);
-  void customViewRotateLeft(OOScalar angle);
-  void customViewRotateRight(OOScalar angle);
-  void customViewRotateUp(OOScalar angle);
-  void customViewRotateDown(OOScalar angle);
-  void customViewRollRight(OOScalar angle);
-  void customViewRollLeft(OOScalar angle);
-  void customViewPanUp(OOScalar angle);
-  void customViewPanDown(OOScalar angle);
+  void customViewZoomIn(oo::Scalar rate);
+  void customViewZoomOut(oo::Scalar rate);
+  void customViewRotateLeft(oo::Scalar angle);
+  void customViewRotateRight(oo::Scalar angle);
+  void customViewRotateUp(oo::Scalar angle);
+  void customViewRotateDown(oo::Scalar angle);
+  void customViewRollRight(oo::Scalar angle);
+  void customViewRollLeft(oo::Scalar angle);
+  void customViewPanUp(oo::Scalar angle);
+  void customViewPanDown(oo::Scalar angle);
 
   // custom view vectors and data, the mission overlay and background, world
   // scripts and script events, galactic hyperspace, jump cause, commander and
   // save names.
-  void customViewPanLeft(OOScalar angle);
-  void customViewPanRight(OOScalar angle);
+  void customViewPanLeft(oo::Scalar angle);
+  void customViewPanRight(oo::Scalar angle);
   Vector getCustomViewForwardVector();
   Vector getCustomViewUpVector();
   Vector getCustomViewRightVector();
@@ -1056,7 +1065,7 @@ class PlayerEntity : public ShipEntity {
   oo::PList missionBackgroundDescriptor();
   oo::PList missionBackgroundDescriptorOrDefault();
   void setMissionBackgroundDescriptor(const oo::PList& descriptor);
-  OOGUIBackgroundSpecial missionBackgroundSpecial();
+  oo::GUIBackgroundSpecial missionBackgroundSpecial();
   void setMissionBackgroundSpecial(const std::string& special);
   void setMissionExitScreen(oo::GUIScreenID screen);
   oo::GUIScreenID missionExitScreen();
@@ -1075,7 +1084,7 @@ class PlayerEntity : public ShipEntity {
   bool doWorldEventUntilMissionScreen(OOJSPropID message);
   // argv is borrowed: the caller remains responsible for freeing the values.
   void doWorldScriptEvent(OOJSPropID message, JSContext* context, JSValue* argv,
-                          int argc, OOTimeDelta limit);
+                          int argc, oo::TimeDelta limit);
   virtual void setGalacticHyperspaceBehaviour(
       oo::GalacticHyperspaceBehaviour inBehaviour);
   virtual oo::GalacticHyperspaceBehaviour getGalacticHyperspaceBehaviour();
@@ -1102,8 +1111,8 @@ class PlayerEntity : public ShipEntity {
   // record, extra mission and GUI-screen keys, the state dump.
   virtual bool isDocked();
   bool clearedToDock();
-  void setDockingClearanceStatus(OODockingClearanceStatus newValue);
-  OODockingClearanceStatus getDockingClearanceStatus();
+  void setDockingClearanceStatus(oo::DockingClearanceStatus newValue);
+  oo::DockingClearanceStatus getDockingClearanceStatus();
   void penaltyForUnauthorizedDocking();
   void addScannedWormhole(::WormholeEntity* whole);
   void updateWormholes();
@@ -1136,10 +1145,10 @@ class PlayerEntity : public ShipEntity {
   std::optional<std::string> dockedStationName();
   std::optional<std::string> dockedStationDisplayName();
   bool dockedAtMainStation();
-  void awardCommodityType(const std::string& type, OOCargoQuantity amount);
+  void awardCommodityType(const std::string& type, oo::CargoQuantity amount);
   virtual void resetScannerZoom();
-  virtual OOGalaxyID currentGalaxyID();
-  virtual OOSystemID currentSystemID();
+  virtual oo::GalaxyID currentGalaxyID();
+  virtual oo::SystemID currentSystemID();
   void setMissionChoice(const std::optional<std::string>& newChoice);
   void setMissionChoice(const std::optional<std::string>& newChoice,
                         bool withEvent);
@@ -1149,19 +1158,19 @@ class PlayerEntity : public ShipEntity {
                         const std::optional<std::string>& keyPress,
                         bool withEvent);
   void allowMissionInterrupt();
-  OOTimeDelta scriptTimer();
+  oo::TimeDelta scriptTimer();
   virtual unsigned systemPseudoRandom100();
   virtual unsigned systemPseudoRandom256();
   virtual double systemPseudoRandomFloat();
-  oo::PList passengerContractMarker(OOSystemID system);
-  oo::PList parcelContractMarker(OOSystemID system);
-  oo::PList cargoContractMarker(OOSystemID system);
-  oo::PList defaultMarker(OOSystemID system);
+  oo::PList passengerContractMarker(oo::SystemID system);
+  oo::PList parcelContractMarker(oo::SystemID system);
+  oo::PList cargoContractMarker(oo::SystemID system);
+  oo::PList defaultMarker(oo::SystemID system);
   oo::PList validatedMarker(const oo::PList& marker);
   std::optional<std::string> keyBindingDescription2(const std::string& binding);
   std::optional<std::string> getKeyBindingDescription(const oo::PList& keyList);
-  std::optional<std::string> keyCodeDescription(OOKeyCode code);
-  std::optional<std::string> keyCodeDescriptionShort(OOKeyCode code);
+  std::optional<std::string> keyCodeDescription(oo::KeyCode code);
+  std::optional<std::string> keyCodeDescriptionShort(oo::KeyCode code);
   std::optional<std::string> commanderKillsAsString();
   std::optional<std::string> commanderBountyAsString();
   std::optional<std::string> creditsFormattedForSubstitution();
@@ -1212,7 +1221,7 @@ class PlayerEntity : public ShipEntity {
   void playDismissedReportScreen();
   void playDismissedMissionScreen();
   void playChangedOption();
-  void updateFuelScoopSoundWithInterval(OOTimeDelta delta_t);
+  void updateFuelScoopSoundWithInterval(oo::TimeDelta delta_t);
   void updateAfterburnerSound();
   void startAfterburnerSound();
   void stopAfterburnerSound();
@@ -1559,7 +1568,7 @@ class PlayerEntity : public ShipEntity {
   // PlayerEntityContracts.cpp, the categories Contracts: defined in that file.
   std::optional<std::string> processEscapePods();
   std::optional<std::string> checkPassengerContracts();
-  OOCargoQuantity contractedVolumeForGood(const std::string& good);
+  oo::CargoQuantity contractedVolumeForGood(const std::string& good);
   void addMessageToReport(const std::string& report);
   oo::PList getReputation();
   int passengerReputation();
@@ -1591,18 +1600,18 @@ class PlayerEntity : public ShipEntity {
   std::vector<std::string> contractsListFromEntries(
       const oo::PList::Array& contracts_array, bool forCargo, bool forParcels);
   void setGuiToManifestScreen();
-  void setManifestScreenRow(const oo::PList& object, ::OOColor* color,
-                            OOGUIRow row, OOGUIRow max_rows, OOGUIRow offset,
-                            bool multi);
+  void setManifestScreenRow(const oo::PList& object, ::oo::Color* color,
+                            oo::GUIRow row, oo::GUIRow max_rows,
+                            oo::GUIRow offset, bool multi);
   void setGuiToDockingReportScreen();
-  OOCreditsQuantity priceForShipKey(const std::string& key);
+  oo::CreditsQuantity priceForShipKey(const std::string& key);
   void setGuiToShipyardScreen(std::size_t skip);
   void showShipyardInfoForSelection();
   void showTradeInInformationFooter();
   void showShipyardModel(const std::string& shipKey, const oo::PList& shipData,
                          uint16_t personality);
   std::ptrdiff_t missingSubEntitiesAdjustment();
-  OOCreditsQuantity tradeInValue();
+  oo::CreditsQuantity tradeInValue();
   bool buySelectedShip();
   bool replaceShipWithNamedShip(const std::string& shipKey);
   void newShipCommonSetup(const std::string& shipKey,
@@ -1644,14 +1653,14 @@ class PlayerEntity : public ShipEntity {
   friend struct PlayerEntityTestAccess;
 
  private:
-  OOSystemID system_id = {};
-  OOSystemID target_system_id = {};
-  OOSystemID info_system_id = {};
-  OOSystemID previous_system_id = {};
+  oo::SystemID system_id = {};
+  oo::SystemID target_system_id = {};
+  oo::SystemID info_system_id = {};
+  oo::SystemID previous_system_id = {};
 
   float occlusion_dial = {};
 
-  OOSystemID found_system_id = {};
+  oo::SystemID found_system_id = {};
   int ship_trade_in_factor = {};
 
   std::vector<std::pair<std::string, std::shared_ptr<OOScript>>>
@@ -1684,7 +1693,7 @@ class PlayerEntity : public ShipEntity {
 
   oo::PList _missionOverlayDescriptor;  // null = none (was nil)
   oo::PList _missionBackgroundDescriptor;
-  OOGUIBackgroundSpecial _missionBackgroundSpecial = {};
+  oo::GUIBackgroundSpecial _missionBackgroundSpecial = {};
   oo::PList _equipScreenBackgroundDescriptor;
   std::optional<std::string> _missionScreenID;
 
@@ -1713,7 +1722,7 @@ class PlayerEntity : public ShipEntity {
   // temporary flags for role actions taking multiple steps, cleared on jump
   // (signed integers)
   oo::PList::Dict roleWeightFlags;
-  std::vector<OOSystemID> roleSystemList;  // list of recently visited sysids
+  std::vector<oo::SystemID> roleSystemList;  // list of recently visited sysids
 
   double script_time = {};
   double script_time_check = {};
@@ -1732,7 +1741,7 @@ class PlayerEntity : public ShipEntity {
   std::optional<std::string>
       planetSearchString;  // the lower-cased typed prefix; nullopt: no search
 
-  OOMatrix playerRotMatrix = {};
+  oo::Matrix playerRotMatrix = {};
 
   bool showingLongRangeChart = {};
 
@@ -1774,10 +1783,10 @@ class PlayerEntity : public ShipEntity {
   GLfloat forward_shield = {}, aft_shield = {};
   GLfloat max_forward_shield = {}, max_aft_shield = {},
           forward_shield_recharge_rate = {}, aft_shield_recharge_rate = {};
-  OOTimeDelta forward_shot_time = {}, aft_shot_time = {}, port_shot_time = {},
-              starboard_shot_time = {};
+  oo::TimeDelta forward_shot_time = {}, aft_shot_time = {}, port_shot_time = {},
+                starboard_shot_time = {};
 
-  OOWeaponFacing chosen_weapon_facing = {};  // for purchasing weapons
+  oo::WeaponFacing chosen_weapon_facing = {};  // for purchasing weapons
 
   double ecm_start_time = {};
   double last_ecm_time = {};
@@ -1793,7 +1802,7 @@ class PlayerEntity : public ShipEntity {
   std::optional<std::string> _fastEquipmentA;  // nullopt = never set (was nil)
   std::optional<std::string> _fastEquipmentB;
 
-  OOCargoQuantity current_cargo = {};
+  oo::CargoQuantity current_cargo = {};
 
   NSPoint cursor_coordinates = {};
   NSPoint chart_focus_coordinates = {};
@@ -1805,12 +1814,12 @@ class PlayerEntity : public ShipEntity {
   // Chart zoom is 1.0 when fully zoomed in and increases as we zoom out.  The
   // reason I've done it that way round is because we might want to implement
   // bigger galaxies one day, and thus may need to zoom out indefinitely.
-  OOScalar chart_zoom = {};
-  OOScalar custom_chart_zoom = {};
-  OOScalar target_chart_zoom = {};
-  OOScalar saved_chart_zoom = {};
-  OORouteType ANA_mode = {};
-  OOTimeDelta witchspaceCountdown = {};
+  oo::Scalar chart_zoom = {};
+  oo::Scalar custom_chart_zoom = {};
+  oo::Scalar target_chart_zoom = {};
+  oo::Scalar saved_chart_zoom = {};
+  oo::RouteType ANA_mode = {};
+  oo::TimeDelta witchspaceCountdown = {};
 
   std::optional<std::string> _jumpCause;
 
@@ -1819,15 +1828,15 @@ class PlayerEntity : public ShipEntity {
   std::optional<std::string> _lastsaveName;
   NSPoint galaxy_coordinates = {};
 
-  OOCreditsQuantity credits = {};
-  OOGalaxyID galaxy_number = {};
+  oo::CreditsQuantity credits = {};
+  oo::GalaxyID galaxy_number = {};
 
-  std::shared_ptr<OOCommodityMarket> shipCommodityData;
+  std::shared_ptr<oo::CommodityMarket> shipCommodityData;
 
   oo::EntityHold
       missile_entity[PLAYER_MAX_MISSILES];  // holds the actual missile entities
                                             // or equivalents (held)
-  OOUniversalID _dockTarget = {};           // used by the escape pod code
+  oo::UniversalID _dockTarget = {};         // used by the escape pod code
 
   int legalStatusValue = {};  // the ivar legalStatus; it both is and isn't an
                               // OOCreditsQuantity, because of quantum.
@@ -2026,7 +2035,7 @@ class PlayerEntity : public ShipEntity {
 
   // trumbles
   std::size_t trumbleCount = {};
-  std::shared_ptr<OOTrumble> trumble[PLAYER_MAX_TRUMBLES];
+  std::shared_ptr<oo::Trumble> trumble[PLAYER_MAX_TRUMBLES];
   float _trumbleAppetiteAccumulator = {};
 
   // smart zoom
@@ -2040,7 +2049,7 @@ class PlayerEntity : public ShipEntity {
 
   // custom view points
   Quaternion customViewQuaternion = {};
-  OOMatrix customViewMatrix = {};
+  oo::Matrix customViewMatrix = {};
   Vector customViewOffset = {}, customViewForwardVector = {},
          customViewUpVector = {}, customViewRightVector = {},
          customViewRotationCenter = {};
@@ -2113,7 +2122,7 @@ class PlayerEntity : public ShipEntity {
   std::vector<oo::PList> _customViews;  // the ship's custom view Dicts
   std::size_t _customViewIndex = {};
 
-  OODockingClearanceStatus dockingClearanceStatus = {};
+  oo::DockingClearanceStatus dockingClearanceStatus = {};
 
   std::vector<oo::EntityHold> scannedWormholes;  // their objects held
   WormholeEntity* wormhole = {};                 // wormholeObject holds it

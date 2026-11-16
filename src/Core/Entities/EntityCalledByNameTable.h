@@ -65,8 +65,8 @@ std::size_t ByName_20(Entity *entity)
 { if (oo::VisualEffectEntity *effect = EffectPart(entity))  return effect->subEntityCount(); ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->subEntityCount() : std::size_t{}; }
 Entity * ByName_21(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->subEntityTakingDamage() : nullptr; }
-OOTimeAbsolute ByName_22(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->shipAIScriptWakeTime() : OOTimeAbsolute{}; }
+oo::TimeAbsolute ByName_22(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->shipAIScriptWakeTime() : oo::TimeAbsolute{}; }
 float ByName_23(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->volume() : float{}; }
 HPVector ByName_24(Entity *entity)
@@ -113,8 +113,8 @@ void ByName_44(Entity *entity, const std::string &equipmentKey)
 { if (ShipEntity *ship = ShipPart(entity))  ship->removeEquipmentItem(equipmentKey); }
 void ByName_45(Entity *entity)
 { if (ShipEntity *ship = ShipPart(entity))  ship->removeAllEquipment(); }
-OOCreditsQuantity ByName_46(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->removeMissiles() : OOCreditsQuantity{}; }
+oo::CreditsQuantity ByName_46(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->removeMissiles() : oo::CreditsQuantity{}; }
 std::size_t ByName_47(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->parcelCount() : std::size_t{}; }
 std::size_t ByName_48(Entity *entity)
@@ -259,8 +259,8 @@ float ByName_116(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->energyRechargeRate() : float{}; }
 float ByName_117(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->weaponRechargeRate() : float{}; }
-OOWeaponFacing ByName_118(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getCurrentWeaponFacing() : OOWeaponFacing{}; }
+oo::WeaponFacing ByName_118(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getCurrentWeaponFacing() : oo::WeaponFacing{}; }
 GLfloat ByName_119(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getScannerRange() : GLfloat{}; }
 Vector ByName_120(Entity *entity)
@@ -271,18 +271,18 @@ void ByName_122(Entity *entity)
 { if (ShipEntity *ship = ShipPart(entity))  ship->transitionToAegisNone(); }
 Entity * ByName_123(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->findNearestStellarBody() : nullptr; }
-OOAegisStatus ByName_124(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->checkForAegis() : OOAegisStatus{}; }
+oo::AegisStatus ByName_124(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->checkForAegis() : oo::AegisStatus{}; }
 void ByName_125(Entity *entity)
 { if (ShipEntity *ship = ShipPart(entity))  ship->forceAegisCheck(); }
 bool ByName_126(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->withinStationAegis() : false; }
 Entity * ByName_127(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->lastAegisLock() : nullptr; }
-OOSystemID ByName_128(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->homeSystem() : OOSystemID{}; }
-OOSystemID ByName_129(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->destinationSystem() : OOSystemID{}; }
+oo::SystemID ByName_128(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->homeSystem() : oo::SystemID{}; }
+oo::SystemID ByName_129(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->destinationSystem() : oo::SystemID{}; }
 void ByName_130(Entity *entity, const std::string &crewRole)
 { if (ShipEntity *ship = ShipPart(entity))  ship->setSingleCrewWithRole(crewRole); }
 void ByName_131(Entity *entity, const std::string &smName)
@@ -295,26 +295,26 @@ bool ByName_134(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->hasAutoWeapons() : false; }
 double ByName_135(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getFrustration() : double{}; }
-OOFuelQuantity ByName_136(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getFuel() : OOFuelQuantity{}; }
-OOFuelQuantity ByName_137(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->fuelCapacity() : OOFuelQuantity{}; }
+oo::FuelQuantity ByName_136(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getFuel() : oo::FuelQuantity{}; }
+oo::FuelQuantity ByName_137(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->fuelCapacity() : oo::FuelQuantity{}; }
 GLfloat ByName_138(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->fuelChargeRate() : GLfloat{}; }
-OOCreditsQuantity ByName_139(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getBounty() : OOCreditsQuantity{}; }
+oo::CreditsQuantity ByName_139(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getBounty() : oo::CreditsQuantity{}; }
 int ByName_140(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->legalStatus() : int{}; }
-OOCargoQuantity ByName_141(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->commodityAmount() : OOCargoQuantity{}; }
-OOCargoQuantity ByName_142(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->maxAvailableCargoSpace() : OOCargoQuantity{}; }
-OOCargoQuantity ByName_143(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->availableCargoSpace() : OOCargoQuantity{}; }
-OOCargoQuantity ByName_144(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->cargoQuantityOnBoard() : OOCargoQuantity{}; }
-OOCargoType ByName_145(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->cargoType() : OOCargoType::kNotCargo; }
+oo::CargoQuantity ByName_141(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->commodityAmount() : oo::CargoQuantity{}; }
+oo::CargoQuantity ByName_142(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->maxAvailableCargoSpace() : oo::CargoQuantity{}; }
+oo::CargoQuantity ByName_143(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->availableCargoSpace() : oo::CargoQuantity{}; }
+oo::CargoQuantity ByName_144(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->cargoQuantityOnBoard() : oo::CargoQuantity{}; }
+oo::CargoType ByName_145(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->cargoType() : oo::CargoType::kNotCargo; }
 std::size_t ByName_146(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->cargoCount() : std::size_t{}; }
 oo::PList ByName_147(Entity *entity)
@@ -435,8 +435,8 @@ double ByName_204(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->approachAspectToPrimaryTarget() : double{}; }
 GLfloat ByName_205(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->currentAimTolerance() : GLfloat{}; }
-OOTimeDelta ByName_206(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->shotTime() : OOTimeDelta{}; }
+oo::TimeDelta ByName_206(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->shotTime() : oo::TimeDelta{}; }
 void ByName_207(Entity *entity)
 { if (ShipEntity *ship = ShipPart(entity))  ship->resetShotTime(); }
 bool ByName_208(Entity *entity)
@@ -449,8 +449,8 @@ Entity * ByName_211(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->fireMissile() : nullptr; }
 bool ByName_212(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->isMissileFlagSet() : false; }
-OOTimeDelta ByName_213(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->missileLoadTime() : OOTimeDelta{}; }
+oo::TimeDelta ByName_213(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->missileLoadTime() : oo::TimeDelta{}; }
 void ByName_214(Entity *entity)
 { if (ShipEntity *ship = ShipPart(entity))  ship->noticeECM(); }
 bool ByName_215(Entity *entity)
@@ -531,8 +531,8 @@ Entity * ByName_255(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->entityForShaderProperties() : nullptr; }
 bool ByName_256(Entity *entity)
 { ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getIsDemoShip() : false; }
-OOTimeAbsolute ByName_257(Entity *entity)
-{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getDemoStartTime() : OOTimeAbsolute{}; }
+oo::TimeAbsolute ByName_257(Entity *entity)
+{ ShipEntity *ship = ShipPart(entity); return ship != nullptr ? ship->getDemoStartTime() : oo::TimeAbsolute{}; }
 void ByName_258(Entity *entity, const std::string &message)
 { if (ShipEntity *ship = ShipPart(entity))  ship->sendAIMessage(message); }
 oo::AlertCondition ByName_259(Entity *entity)
@@ -895,38 +895,38 @@ void ByName_409(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->unloadCargoPods(); }
 void ByName_410(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->loadCargoPods(); }
-OOCreditsQuantity ByName_411(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->deciCredits() : OOCreditsQuantity{}; }
+oo::CreditsQuantity ByName_411(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->deciCredits() : oo::CreditsQuantity{}; }
 int ByName_412(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->random_factor() : int{}; }
-OOGalaxyID ByName_413(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->galaxyNumber() : OOGalaxyID{}; }
+oo::GalaxyID ByName_413(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->galaxyNumber() : oo::GalaxyID{}; }
 NSPoint ByName_414(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getGalaxy_coordinates() : NSMakePoint(0, 0); }
 NSPoint ByName_415(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getCursor_coordinates() : NSMakePoint(0, 0); }
 NSPoint ByName_416(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getChart_centre_coordinates() : NSMakePoint(0, 0); }
-OOScalar ByName_417(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getChart_zoom() : OOScalar{}; }
-OOScalar ByName_418(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getCustom_chart_zoom() : OOScalar{}; }
+oo::Scalar ByName_417(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getChart_zoom() : oo::Scalar{}; }
+oo::Scalar ByName_418(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getCustom_chart_zoom() : oo::Scalar{}; }
 NSPoint ByName_419(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getCustom_chart_centre_coordinates() : NSMakePoint(0, 0); }
 NSPoint ByName_420(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->adjusted_chart_centre() : NSMakePoint(0, 0); }
-OORouteType ByName_421(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->ANAMode() : OORouteType{}; }
-OOSystemID ByName_422(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->systemID() : OOSystemID{}; }
-OOSystemID ByName_423(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->previousSystemID() : OOSystemID{}; }
-OOSystemID ByName_424(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->targetSystemID() : OOSystemID{}; }
-OOSystemID ByName_425(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->nextHopTargetSystemID() : OOSystemID{}; }
-OOSystemID ByName_426(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->infoSystemID() : OOSystemID{}; }
+oo::RouteType ByName_421(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->ANAMode() : oo::RouteType{}; }
+oo::SystemID ByName_422(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->systemID() : oo::SystemID{}; }
+oo::SystemID ByName_423(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->previousSystemID() : oo::SystemID{}; }
+oo::SystemID ByName_424(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->targetSystemID() : oo::SystemID{}; }
+oo::SystemID ByName_425(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->nextHopTargetSystemID() : oo::SystemID{}; }
+oo::SystemID ByName_426(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->infoSystemID() : oo::SystemID{}; }
 void ByName_427(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->nextInfoSystem(); }
 void ByName_428(Entity *entity)
@@ -1107,10 +1107,10 @@ bool ByName_514(Entity *entity, const std::string &equipmentKey)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->assignToActivePylon(equipmentKey) : false; }
 double ByName_515(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->scannerFuzziness() : double{}; }
-OOEnergyUnitType ByName_516(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->installedEnergyUnitType() : OOEnergyUnitType{}; }
-OOEnergyUnitType ByName_517(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->energyUnitType() : OOEnergyUnitType{}; }
+oo::EnergyUnitType ByName_516(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->installedEnergyUnitType() : oo::EnergyUnitType{}; }
+oo::EnergyUnitType ByName_517(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->energyUnitType() : oo::EnergyUnitType{}; }
 void ByName_518(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->currentWeaponStats(); }
 bool ByName_519(Entity *entity)
@@ -1135,8 +1135,8 @@ void ByName_528(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->witchEnd(); }
 double ByName_529(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->hyperspaceJumpDistance() : double{}; }
-OOFuelQuantity ByName_530(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->fuelRequiredForJump() : OOFuelQuantity{}; }
+oo::FuelQuantity ByName_530(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->fuelRequiredForJump() : oo::FuelQuantity{}; }
 bool ByName_531(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->hasSufficientFuelForJump() : false; }
 void ByName_532(Entity *entity)
@@ -1161,8 +1161,8 @@ void ByName_541(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setGuiToLoadSaveScreen(); }
 void ByName_542(Entity *entity, const std::string &highlightKey)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->highlightEquipShipScreenKey(highlightKey); }
-OOWeaponFacingSet ByName_543(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->availableFacings() : OOWeaponFacingSet{}; }
+oo::WeaponFacingSet ByName_543(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->availableFacings() : oo::WeaponFacingSet{}; }
 void ByName_544(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->showInformationForSelectedUpgrade(); }
 void ByName_545(Entity *entity)
@@ -1177,8 +1177,8 @@ void ByName_549(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->buySelectedItem(); }
 bool ByName_550(Entity *entity, const std::string &eqKey)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->tryBuyingItem(eqKey) : false; }
-OOCargoQuantity ByName_551(Entity *entity, const std::string &type)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->cargoQuantityForType(type) : OOCargoQuantity{}; }
+oo::CargoQuantity ByName_551(Entity *entity, const std::string &type)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->cargoQuantityForType(type) : oo::CargoQuantity{}; }
 void ByName_552(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->calculateCurrentCargo(); }
 void ByName_553(Entity *entity)
@@ -1229,7 +1229,7 @@ void ByName_575(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->clearTargetMemory(); }
 Quaternion ByName_576(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getCustomViewQuaternion() : kZeroQuaternion; }
-OOMatrix ByName_577(Entity *entity)
+oo::Matrix ByName_577(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getCustomViewMatrix() : kZeroMatrix; }
 Vector ByName_578(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getCustomViewOffset() : kZeroVector; }
@@ -1259,8 +1259,8 @@ oo::PList ByName_590(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->missionBackgroundDescriptorOrDefault() : oo::PList(); }
 void ByName_591(Entity *entity, const oo::PList &descriptor)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setMissionBackgroundDescriptor(descriptor); }
-OOGUIBackgroundSpecial ByName_592(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->missionBackgroundSpecial() : OOGUIBackgroundSpecial{}; }
+oo::GUIBackgroundSpecial ByName_592(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->missionBackgroundSpecial() : oo::GUIBackgroundSpecial{}; }
 void ByName_593(Entity *entity, const std::string &special)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setMissionBackgroundSpecial(special); }
 oo::GUIScreenID ByName_594(Entity *entity)
@@ -1283,8 +1283,8 @@ bool ByName_602(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->isDocked() : false; }
 bool ByName_603(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->clearedToDock() : false; }
-OODockingClearanceStatus ByName_604(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getDockingClearanceStatus() : OODockingClearanceStatus{}; }
+oo::DockingClearanceStatus ByName_604(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->getDockingClearanceStatus() : oo::DockingClearanceStatus{}; }
 void ByName_605(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->penaltyForUnauthorizedDocking(); }
 void ByName_606(Entity *entity)
@@ -1307,14 +1307,14 @@ bool ByName_614(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->dockedAtMainStation() : false; }
 void ByName_615(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->resetScannerZoom(); }
-OOGalaxyID ByName_616(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->currentGalaxyID() : OOGalaxyID{}; }
-OOSystemID ByName_617(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->currentSystemID() : OOSystemID{}; }
+oo::GalaxyID ByName_616(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->currentGalaxyID() : oo::GalaxyID{}; }
+oo::SystemID ByName_617(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->currentSystemID() : oo::SystemID{}; }
 void ByName_618(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->allowMissionInterrupt(); }
-OOTimeDelta ByName_619(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->scriptTimer() : OOTimeDelta{}; }
+oo::TimeDelta ByName_619(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->scriptTimer() : oo::TimeDelta{}; }
 unsigned ByName_620(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->systemPseudoRandom100() : unsigned{}; }
 unsigned ByName_621(Entity *entity)
@@ -1825,8 +1825,8 @@ void ByName_865(Entity *entity, const std::string &galacticHyperspaceBehaviourSt
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setGalacticHyperspaceBehaviourTo(galacticHyperspaceBehaviourString); }
 void ByName_866(Entity *entity, const std::string &galacticHyperspaceFixedCoordsString)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setGalacticHyperspaceFixedCoordsTo(galacticHyperspaceFixedCoordsString); }
-OOCargoQuantity ByName_867(Entity *entity, const std::string &good)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->contractedVolumeForGood(good) : OOCargoQuantity{}; }
+oo::CargoQuantity ByName_867(Entity *entity, const std::string &good)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->contractedVolumeForGood(good) : oo::CargoQuantity{}; }
 void ByName_868(Entity *entity, const std::string &report)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->addMessageToReport(report); }
 oo::PList ByName_869(Entity *entity)
@@ -1849,16 +1849,16 @@ void ByName_877(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setGuiToManifestScreen(); }
 void ByName_878(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->setGuiToDockingReportScreen(); }
-OOCreditsQuantity ByName_879(Entity *entity, const std::string &key)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->priceForShipKey(key) : OOCreditsQuantity{}; }
+oo::CreditsQuantity ByName_879(Entity *entity, const std::string &key)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->priceForShipKey(key) : oo::CreditsQuantity{}; }
 void ByName_880(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->showShipyardInfoForSelection(); }
 void ByName_881(Entity *entity)
 { if (PlayerEntity *player = PlayerEntityPart(entity))  player->showTradeInInformationFooter(); }
 std::ptrdiff_t ByName_882(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->missingSubEntitiesAdjustment() : std::ptrdiff_t{}; }
-OOCreditsQuantity ByName_883(Entity *entity)
-{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->tradeInValue() : OOCreditsQuantity{}; }
+oo::CreditsQuantity ByName_883(Entity *entity)
+{ PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->tradeInValue() : oo::CreditsQuantity{}; }
 bool ByName_884(Entity *entity)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->buySelectedShip() : false; }
 bool ByName_885(Entity *entity, const std::string &shipKey)
@@ -1895,8 +1895,8 @@ bool ByName_900(Entity *entity, const std::string &cdrName)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->existingNativeSave(cdrName) : false; }
 int ByName_901(Entity *entity, const std::string &cdrName)
 { PlayerEntity *player = PlayerEntityPart(entity); return player != nullptr ? player->findIndexOfCommander(cdrName) : int{}; }
-OOTechLevelID ByName_902(Entity *entity)
-{ StationEntity *station = StationPart(entity); return station != nullptr ? station->getEquivalentTechLevel() : OOTechLevelID{}; }
+oo::TechLevelID ByName_902(Entity *entity)
+{ StationEntity *station = StationPart(entity); return station != nullptr ? station->getEquivalentTechLevel() : oo::TechLevelID{}; }
 Vector ByName_903(Entity *entity)
 { StationEntity *station = StationPart(entity); return station != nullptr ? station->virtualPortDimensions() : kZeroVector; }
 Entity * ByName_904(Entity *entity)
@@ -1905,8 +1905,8 @@ HPVector ByName_905(Entity *entity)
 { StationEntity *station = StationPart(entity); return station != nullptr ? station->beaconPosition() : kZeroHPVector; }
 float ByName_906(Entity *entity)
 { StationEntity *station = StationPart(entity); return station != nullptr ? station->getEquipmentPriceFactor() : float{}; }
-OOCargoQuantity ByName_907(Entity *entity)
-{ StationEntity *station = StationPart(entity); return station != nullptr ? station->getMarketCapacity() : OOCargoQuantity{}; }
+oo::CargoQuantity ByName_907(Entity *entity)
+{ StationEntity *station = StationPart(entity); return station != nullptr ? station->getMarketCapacity() : oo::CargoQuantity{}; }
 oo::PList ByName_908(Entity *entity)
 { StationEntity *station = StationPart(entity); return station != nullptr ? station->getMarketDefinition() : oo::PList(); }
 bool ByName_909(Entity *entity)
@@ -2058,7 +2058,7 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "scriptedMisjumpRange",	ByName::kShip,	oo::kValueType<GLfloat>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_19>,	&EntityByNameTyped<&ByName_19> },
 	{ "subEntityCount",	ByName::kShip | ByName::kEffect,	oo::kValueType<std::size_t>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_20>,	&EntityByNameTyped<&ByName_20> },
 	{ "subEntityTakingDamage",	ByName::kShip,	oo::kValueType<oo::ObjectResult>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_21>,	&EntityByNameTyped<&ByName_21> },
-	{ "shipAIScriptWakeTime",	ByName::kShip,	oo::kValueType<OOTimeAbsolute>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_22>,	&EntityByNameTyped<&ByName_22> },
+	{ "shipAIScriptWakeTime",	ByName::kShip,	oo::kValueType<oo::TimeAbsolute>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_22>,	&EntityByNameTyped<&ByName_22> },
 	{ "volume",	ByName::kShip,	oo::kValueType<float>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_23>,	&EntityByNameTyped<&ByName_23> },
 	{ "absoluteTractorPosition",	ByName::kShip,	oo::kValueType<HPVector>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_24>,	&EntityByNameTyped<&ByName_24> },
 	{ "isBoulder",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_25>,	&EntityByNameTyped<&ByName_25> },
@@ -2082,7 +2082,7 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "equipmentCount",	ByName::kShip,	oo::kValueType<std::size_t>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_43>,	&EntityByNameTyped<&ByName_43> },
 	{ "removeEquipmentItem:",	ByName::kShip,	oo::kValueType<void>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_44>,	nullptr },
 	{ "removeAllEquipment",	ByName::kShip,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_45>,	&EntityByNameTyped<&ByName_45> },
-	{ "removeMissiles",	ByName::kShip,	oo::kValueType<OOCreditsQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_46>,	&EntityByNameTyped<&ByName_46> },
+	{ "removeMissiles",	ByName::kShip,	oo::kValueType<oo::CreditsQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_46>,	&EntityByNameTyped<&ByName_46> },
 	{ "parcelCount",	ByName::kShip,	oo::kValueType<std::size_t>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_47>,	&EntityByNameTyped<&ByName_47> },
 	{ "passengerCount",	ByName::kShip,	oo::kValueType<std::size_t>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_48>,	&EntityByNameTyped<&ByName_48> },
 	{ "passengerCapacity",	ByName::kShip,	oo::kValueType<std::size_t>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_49>,	&EntityByNameTyped<&ByName_49> },
@@ -2156,34 +2156,34 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "weaponRange",	ByName::kShip,	oo::kValueType<GLfloat>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_115>,	&EntityByNameTyped<&ByName_115> },
 	{ "energyRechargeRate",	ByName::kShip,	oo::kValueType<float>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_116>,	&EntityByNameTyped<&ByName_116> },
 	{ "weaponRechargeRate",	ByName::kShip,	oo::kValueType<float>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_117>,	&EntityByNameTyped<&ByName_117> },
-	{ "currentWeaponFacing",	ByName::kShip,	oo::kValueType<OOWeaponFacing>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_118>,	&EntityByNameTyped<&ByName_118> },
+	{ "currentWeaponFacing",	ByName::kShip,	oo::kValueType<oo::WeaponFacing>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_118>,	&EntityByNameTyped<&ByName_118> },
 	{ "scannerRange",	ByName::kShip,	oo::kValueType<GLfloat>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_119>,	&EntityByNameTyped<&ByName_119> },
 	{ "reference",	ByName::kShip,	oo::kValueType<Vector>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_120>,	&EntityByNameTyped<&ByName_120> },
 	{ "reportAIMessages",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_121>,	&EntityByNameTyped<&ByName_121> },
 	{ "transitionToAegisNone",	ByName::kShip,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_122>,	&EntityByNameTyped<&ByName_122> },
 	{ "findNearestStellarBody",	ByName::kShip,	oo::kValueType<oo::ObjectResult>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_123>,	&EntityByNameTyped<&ByName_123> },
-	{ "checkForAegis",	ByName::kShip,	oo::kValueType<OOAegisStatus>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_124>,	&EntityByNameTyped<&ByName_124> },
+	{ "checkForAegis",	ByName::kShip,	oo::kValueType<oo::AegisStatus>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_124>,	&EntityByNameTyped<&ByName_124> },
 	{ "forceAegisCheck",	ByName::kShip,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_125>,	&EntityByNameTyped<&ByName_125> },
 	{ "withinStationAegis",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_126>,	&EntityByNameTyped<&ByName_126> },
 	{ "lastAegisLock",	ByName::kShip,	oo::kValueType<oo::ObjectResult>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_127>,	&EntityByNameTyped<&ByName_127> },
-	{ "homeSystem",	ByName::kShip,	oo::kValueType<OOSystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_128>,	&EntityByNameTyped<&ByName_128> },
-	{ "destinationSystem",	ByName::kShip,	oo::kValueType<OOSystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_129>,	&EntityByNameTyped<&ByName_129> },
+	{ "homeSystem",	ByName::kShip,	oo::kValueType<oo::SystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_128>,	&EntityByNameTyped<&ByName_128> },
+	{ "destinationSystem",	ByName::kShip,	oo::kValueType<oo::SystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_129>,	&EntityByNameTyped<&ByName_129> },
 	{ "setSingleCrewWithRole:",	ByName::kShip,	oo::kValueType<void>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_130>,	nullptr },
 	{ "setStateMachine:",	ByName::kShip,	oo::kValueType<void>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_131>,	nullptr },
 	{ "hasAutoAI",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_132>,	&EntityByNameTyped<&ByName_132> },
 	{ "hasNewAI",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_133>,	&EntityByNameTyped<&ByName_133> },
 	{ "hasAutoWeapons",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_134>,	&EntityByNameTyped<&ByName_134> },
 	{ "frustration",	ByName::kShip,	oo::kValueType<double>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_135>,	&EntityByNameTyped<&ByName_135> },
-	{ "fuel",	ByName::kShip,	oo::kValueType<OOFuelQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_136>,	&EntityByNameTyped<&ByName_136> },
-	{ "fuelCapacity",	ByName::kShip,	oo::kValueType<OOFuelQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_137>,	&EntityByNameTyped<&ByName_137> },
+	{ "fuel",	ByName::kShip,	oo::kValueType<oo::FuelQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_136>,	&EntityByNameTyped<&ByName_136> },
+	{ "fuelCapacity",	ByName::kShip,	oo::kValueType<oo::FuelQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_137>,	&EntityByNameTyped<&ByName_137> },
 	{ "fuelChargeRate",	ByName::kShip,	oo::kValueType<GLfloat>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_138>,	&EntityByNameTyped<&ByName_138> },
-	{ "bounty",	ByName::kShip,	oo::kValueType<OOCreditsQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_139>,	&EntityByNameTyped<&ByName_139> },
+	{ "bounty",	ByName::kShip,	oo::kValueType<oo::CreditsQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_139>,	&EntityByNameTyped<&ByName_139> },
 	{ "legalStatus",	ByName::kShip,	oo::kValueType<int>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_140>,	&EntityByNameTyped<&ByName_140> },
-	{ "commodityAmount",	ByName::kShip,	oo::kValueType<OOCargoQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_141>,	&EntityByNameTyped<&ByName_141> },
-	{ "maxAvailableCargoSpace",	ByName::kShip,	oo::kValueType<OOCargoQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_142>,	&EntityByNameTyped<&ByName_142> },
-	{ "availableCargoSpace",	ByName::kShip,	oo::kValueType<OOCargoQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_143>,	&EntityByNameTyped<&ByName_143> },
-	{ "cargoQuantityOnBoard",	ByName::kShip,	oo::kValueType<OOCargoQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_144>,	&EntityByNameTyped<&ByName_144> },
-	{ "cargoType",	ByName::kShip,	oo::kValueType<OOCargoType>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_145>,	&EntityByNameTyped<&ByName_145> },
+	{ "commodityAmount",	ByName::kShip,	oo::kValueType<oo::CargoQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_141>,	&EntityByNameTyped<&ByName_141> },
+	{ "maxAvailableCargoSpace",	ByName::kShip,	oo::kValueType<oo::CargoQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_142>,	&EntityByNameTyped<&ByName_142> },
+	{ "availableCargoSpace",	ByName::kShip,	oo::kValueType<oo::CargoQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_143>,	&EntityByNameTyped<&ByName_143> },
+	{ "cargoQuantityOnBoard",	ByName::kShip,	oo::kValueType<oo::CargoQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_144>,	&EntityByNameTyped<&ByName_144> },
+	{ "cargoType",	ByName::kShip,	oo::kValueType<oo::CargoType>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_145>,	&EntityByNameTyped<&ByName_145> },
 	{ "cargoCount",	ByName::kShip,	oo::kValueType<std::size_t>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_146>,	&EntityByNameTyped<&ByName_146> },
 	{ "cargoListForScripting",	ByName::kShip,	oo::kValueType<oo::PList>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_147>,	&EntityByNameTyped<&ByName_147> },
 	{ "showScoopMessage",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_148>,	&EntityByNameTyped<&ByName_148> },
@@ -2244,14 +2244,14 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "rangeToPrimaryTarget",	ByName::kShip,	oo::kValueType<double>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_203>,	&EntityByNameTyped<&ByName_203> },
 	{ "approachAspectToPrimaryTarget",	ByName::kShip,	oo::kValueType<double>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_204>,	&EntityByNameTyped<&ByName_204> },
 	{ "currentAimTolerance",	ByName::kShip,	oo::kValueType<GLfloat>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_205>,	&EntityByNameTyped<&ByName_205> },
-	{ "shotTime",	ByName::kShip,	oo::kValueType<OOTimeDelta>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_206>,	&EntityByNameTyped<&ByName_206> },
+	{ "shotTime",	ByName::kShip,	oo::kValueType<oo::TimeDelta>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_206>,	&EntityByNameTyped<&ByName_206> },
 	{ "resetShotTime",	ByName::kShip,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_207>,	&EntityByNameTyped<&ByName_207> },
 	{ "fireDirectLaserDefensiveShot",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_208>,	&EntityByNameTyped<&ByName_208> },
 	{ "missedShots",	ByName::kShip,	oo::kValueType<int>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_209>,	&EntityByNameTyped<&ByName_209> },
 	{ "missileLaunchPosition",	ByName::kShip,	oo::kValueType<Vector>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_210>,	&EntityByNameTyped<&ByName_210> },
 	{ "fireMissile",	ByName::kShip,	oo::kValueType<oo::ObjectResult>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_211>,	&EntityByNameTyped<&ByName_211> },
 	{ "isMissileFlagSet",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_212>,	&EntityByNameTyped<&ByName_212> },
-	{ "missileLoadTime",	ByName::kShip,	oo::kValueType<OOTimeDelta>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_213>,	&EntityByNameTyped<&ByName_213> },
+	{ "missileLoadTime",	ByName::kShip,	oo::kValueType<oo::TimeDelta>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_213>,	&EntityByNameTyped<&ByName_213> },
 	{ "noticeECM",	ByName::kShip,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_214>,	&EntityByNameTyped<&ByName_214> },
 	{ "fireECM",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_215>,	&EntityByNameTyped<&ByName_215> },
 	{ "activateCloakingDevice",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_216>,	&EntityByNameTyped<&ByName_216> },
@@ -2292,7 +2292,7 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "overrideScriptInfo:",	ByName::kShip,	oo::kValueType<void>,	EntityByNameArgument::kPList,	&EntityByNameAdaptPList<&ByName_254>,	nullptr },
 	{ "entityForShaderProperties",	ByName::kShip,	oo::kValueType<oo::ObjectResult>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_255>,	&EntityByNameTyped<&ByName_255> },
 	{ "isDemoShip",	ByName::kShip,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_256>,	&EntityByNameTyped<&ByName_256> },
-	{ "getDemoStartTime",	ByName::kShip,	oo::kValueType<OOTimeAbsolute>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_257>,	&EntityByNameTyped<&ByName_257> },
+	{ "getDemoStartTime",	ByName::kShip,	oo::kValueType<oo::TimeAbsolute>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_257>,	&EntityByNameTyped<&ByName_257> },
 	{ "sendAIMessage:",	ByName::kShip,	oo::kValueType<void>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_258>,	nullptr },
 	{ "alertCondition",	ByName::kShip,	oo::kValueType<AlertCondition>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_259>,	&EntityByNameTyped<&ByName_259> },
 	{ "realAlertCondition",	ByName::kShip,	oo::kValueType<AlertCondition>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_260>,	&EntityByNameTyped<&ByName_260> },
@@ -2446,22 +2446,22 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "baseMass",	ByName::kPlayer,	oo::kValueType<GLfloat>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_408>,	&EntityByNameTyped<&ByName_408> },
 	{ "unloadCargoPods",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_409>,	&EntityByNameTyped<&ByName_409> },
 	{ "loadCargoPods",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_410>,	&EntityByNameTyped<&ByName_410> },
-	{ "deciCredits",	ByName::kPlayer,	oo::kValueType<OOCreditsQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_411>,	&EntityByNameTyped<&ByName_411> },
+	{ "deciCredits",	ByName::kPlayer,	oo::kValueType<oo::CreditsQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_411>,	&EntityByNameTyped<&ByName_411> },
 	{ "random_factor",	ByName::kPlayer,	oo::kValueType<int>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_412>,	&EntityByNameTyped<&ByName_412> },
-	{ "galaxyNumber",	ByName::kPlayer,	oo::kValueType<OOGalaxyID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_413>,	&EntityByNameTyped<&ByName_413> },
+	{ "galaxyNumber",	ByName::kPlayer,	oo::kValueType<oo::GalaxyID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_413>,	&EntityByNameTyped<&ByName_413> },
 	{ "galaxy_coordinates",	ByName::kPlayer,	oo::kValueType<NSPoint>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_414>,	&EntityByNameTyped<&ByName_414> },
 	{ "cursor_coordinates",	ByName::kPlayer,	oo::kValueType<NSPoint>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_415>,	&EntityByNameTyped<&ByName_415> },
 	{ "chart_centre_coordinates",	ByName::kPlayer,	oo::kValueType<NSPoint>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_416>,	&EntityByNameTyped<&ByName_416> },
-	{ "chart_zoom",	ByName::kPlayer,	oo::kValueType<OOScalar>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_417>,	&EntityByNameTyped<&ByName_417> },
-	{ "custom_chart_zoom",	ByName::kPlayer,	oo::kValueType<OOScalar>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_418>,	&EntityByNameTyped<&ByName_418> },
+	{ "chart_zoom",	ByName::kPlayer,	oo::kValueType<oo::Scalar>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_417>,	&EntityByNameTyped<&ByName_417> },
+	{ "custom_chart_zoom",	ByName::kPlayer,	oo::kValueType<oo::Scalar>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_418>,	&EntityByNameTyped<&ByName_418> },
 	{ "custom_chart_centre_coordinates",	ByName::kPlayer,	oo::kValueType<NSPoint>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_419>,	&EntityByNameTyped<&ByName_419> },
 	{ "adjusted_chart_centre",	ByName::kPlayer,	oo::kValueType<NSPoint>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_420>,	&EntityByNameTyped<&ByName_420> },
-	{ "ANAMode",	ByName::kPlayer,	oo::kValueType<OORouteType>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_421>,	&EntityByNameTyped<&ByName_421> },
-	{ "systemID",	ByName::kPlayer,	oo::kValueType<OOSystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_422>,	&EntityByNameTyped<&ByName_422> },
-	{ "previousSystemID",	ByName::kPlayer,	oo::kValueType<OOSystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_423>,	&EntityByNameTyped<&ByName_423> },
-	{ "targetSystemID",	ByName::kPlayer,	oo::kValueType<OOSystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_424>,	&EntityByNameTyped<&ByName_424> },
-	{ "nextHopTargetSystemID",	ByName::kPlayer,	oo::kValueType<OOSystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_425>,	&EntityByNameTyped<&ByName_425> },
-	{ "infoSystemID",	ByName::kPlayer,	oo::kValueType<OOSystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_426>,	&EntityByNameTyped<&ByName_426> },
+	{ "ANAMode",	ByName::kPlayer,	oo::kValueType<oo::RouteType>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_421>,	&EntityByNameTyped<&ByName_421> },
+	{ "systemID",	ByName::kPlayer,	oo::kValueType<oo::SystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_422>,	&EntityByNameTyped<&ByName_422> },
+	{ "previousSystemID",	ByName::kPlayer,	oo::kValueType<oo::SystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_423>,	&EntityByNameTyped<&ByName_423> },
+	{ "targetSystemID",	ByName::kPlayer,	oo::kValueType<oo::SystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_424>,	&EntityByNameTyped<&ByName_424> },
+	{ "nextHopTargetSystemID",	ByName::kPlayer,	oo::kValueType<oo::SystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_425>,	&EntityByNameTyped<&ByName_425> },
+	{ "infoSystemID",	ByName::kPlayer,	oo::kValueType<oo::SystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_426>,	&EntityByNameTyped<&ByName_426> },
 	{ "nextInfoSystem",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_427>,	&EntityByNameTyped<&ByName_427> },
 	{ "previousInfoSystem",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_428>,	&EntityByNameTyped<&ByName_428> },
 	{ "homeInfoSystem",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_429>,	&EntityByNameTyped<&ByName_429> },
@@ -2553,8 +2553,8 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "mountMissileWithRole:",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_513>,	nullptr },
 	{ "assignToActivePylon:",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_514>,	nullptr },
 	{ "scannerFuzziness",	ByName::kPlayer,	oo::kValueType<double>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_515>,	&EntityByNameTyped<&ByName_515> },
-	{ "installedEnergyUnitType",	ByName::kPlayer,	oo::kValueType<OOEnergyUnitType>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_516>,	&EntityByNameTyped<&ByName_516> },
-	{ "energyUnitType",	ByName::kPlayer,	oo::kValueType<OOEnergyUnitType>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_517>,	&EntityByNameTyped<&ByName_517> },
+	{ "installedEnergyUnitType",	ByName::kPlayer,	oo::kValueType<oo::EnergyUnitType>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_516>,	&EntityByNameTyped<&ByName_516> },
+	{ "energyUnitType",	ByName::kPlayer,	oo::kValueType<oo::EnergyUnitType>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_517>,	&EntityByNameTyped<&ByName_517> },
 	{ "currentWeaponStats",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_518>,	&EntityByNameTyped<&ByName_518> },
 	{ "weaponsOnline",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_519>,	&EntityByNameTyped<&ByName_519> },
 	{ "fireMainWeapon",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_520>,	&EntityByNameTyped<&ByName_520> },
@@ -2567,7 +2567,7 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "witchStart",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_527>,	&EntityByNameTyped<&ByName_527> },
 	{ "witchEnd",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_528>,	&EntityByNameTyped<&ByName_528> },
 	{ "hyperspaceJumpDistance",	ByName::kPlayer,	oo::kValueType<double>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_529>,	&EntityByNameTyped<&ByName_529> },
-	{ "fuelRequiredForJump",	ByName::kPlayer,	oo::kValueType<OOFuelQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_530>,	&EntityByNameTyped<&ByName_530> },
+	{ "fuelRequiredForJump",	ByName::kPlayer,	oo::kValueType<oo::FuelQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_530>,	&EntityByNameTyped<&ByName_530> },
 	{ "hasSufficientFuelForJump",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_531>,	&EntityByNameTyped<&ByName_531> },
 	{ "noteCompassLostTarget",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_532>,	&EntityByNameTyped<&ByName_532> },
 	{ "enterGalacticWitchspace",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_533>,	&EntityByNameTyped<&ByName_533> },
@@ -2580,7 +2580,7 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "setGuiToGameOptionsScreen",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_540>,	&EntityByNameTyped<&ByName_540> },
 	{ "setGuiToLoadSaveScreen",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_541>,	&EntityByNameTyped<&ByName_541> },
 	{ "highlightEquipShipScreenKey:",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_542>,	nullptr },
-	{ "availableFacings",	ByName::kPlayer,	oo::kValueType<OOWeaponFacingSet>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_543>,	&EntityByNameTyped<&ByName_543> },
+	{ "availableFacings",	ByName::kPlayer,	oo::kValueType<oo::WeaponFacingSet>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_543>,	&EntityByNameTyped<&ByName_543> },
 	{ "showInformationForSelectedUpgrade",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_544>,	&EntityByNameTyped<&ByName_544> },
 	{ "showInformationForSelectedInterface",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_545>,	&EntityByNameTyped<&ByName_545> },
 	{ "activateSelectedInterface",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_546>,	&EntityByNameTyped<&ByName_546> },
@@ -2588,7 +2588,7 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "setGuiToOXZManager",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_548>,	&EntityByNameTyped<&ByName_548> },
 	{ "buySelectedItem",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_549>,	&EntityByNameTyped<&ByName_549> },
 	{ "tryBuyingItem:",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_550>,	nullptr },
-	{ "cargoQuantityForType:",	ByName::kPlayer,	oo::kValueType<OOCargoQuantity>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_551>,	nullptr },
+	{ "cargoQuantityForType:",	ByName::kPlayer,	oo::kValueType<oo::CargoQuantity>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_551>,	nullptr },
 	{ "calculateCurrentCargo",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_552>,	&EntityByNameTyped<&ByName_552> },
 	{ "showMarketScreenHeaders",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_553>,	&EntityByNameTyped<&ByName_553> },
 	{ "setGuiToMarketScreen",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_554>,	&EntityByNameTyped<&ByName_554> },
@@ -2614,7 +2614,7 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "setScoopsActive",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_574>,	&EntityByNameTyped<&ByName_574> },
 	{ "clearTargetMemory",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_575>,	&EntityByNameTyped<&ByName_575> },
 	{ "customViewQuaternion",	ByName::kPlayer,	oo::kValueType<Quaternion>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_576>,	&EntityByNameTyped<&ByName_576> },
-	{ "customViewMatrix",	ByName::kPlayer,	oo::kValueType<OOMatrix>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_577>,	&EntityByNameTyped<&ByName_577> },
+	{ "customViewMatrix",	ByName::kPlayer,	oo::kValueType<oo::Matrix>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_577>,	&EntityByNameTyped<&ByName_577> },
 	{ "customViewOffset",	ByName::kPlayer,	oo::kValueType<Vector>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_578>,	&EntityByNameTyped<&ByName_578> },
 	{ "customViewRotationCenter",	ByName::kPlayer,	oo::kValueType<Vector>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_579>,	&EntityByNameTyped<&ByName_579> },
 	{ "customViewForwardVector",	ByName::kPlayer,	oo::kValueType<Vector>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_580>,	&EntityByNameTyped<&ByName_580> },
@@ -2629,7 +2629,7 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "missionBackgroundDescriptor",	ByName::kPlayer,	oo::kValueType<oo::PList>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_589>,	&EntityByNameTyped<&ByName_589> },
 	{ "missionBackgroundDescriptorOrDefault",	ByName::kPlayer,	oo::kValueType<oo::PList>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_590>,	&EntityByNameTyped<&ByName_590> },
 	{ "setMissionBackgroundDescriptor:",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kPList,	&EntityByNameAdaptPList<&ByName_591>,	nullptr },
-	{ "missionBackgroundSpecial",	ByName::kPlayer,	oo::kValueType<OOGUIBackgroundSpecial>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_592>,	&EntityByNameTyped<&ByName_592> },
+	{ "missionBackgroundSpecial",	ByName::kPlayer,	oo::kValueType<oo::GUIBackgroundSpecial>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_592>,	&EntityByNameTyped<&ByName_592> },
 	{ "setMissionBackgroundSpecial:",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_593>,	nullptr },
 	{ "missionExitScreen",	ByName::kPlayer,	oo::kValueType<oo::GUIScreenID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_594>,	&EntityByNameTyped<&ByName_594> },
 	{ "equipScreenBackgroundDescriptor",	ByName::kPlayer,	oo::kValueType<oo::PList>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_595>,	&EntityByNameTyped<&ByName_595> },
@@ -2641,7 +2641,7 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "scoopOverride",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_601>,	&EntityByNameTyped<&ByName_601> },
 	{ "isDocked",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_602>,	&EntityByNameTyped<&ByName_602> },
 	{ "clearedToDock",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_603>,	&EntityByNameTyped<&ByName_603> },
-	{ "getDockingClearanceStatus",	ByName::kPlayer,	oo::kValueType<OODockingClearanceStatus>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_604>,	&EntityByNameTyped<&ByName_604> },
+	{ "getDockingClearanceStatus",	ByName::kPlayer,	oo::kValueType<oo::DockingClearanceStatus>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_604>,	&EntityByNameTyped<&ByName_604> },
 	{ "penaltyForUnauthorizedDocking",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_605>,	&EntityByNameTyped<&ByName_605> },
 	{ "updateWormholes",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_606>,	&EntityByNameTyped<&ByName_606> },
 	{ "addMissionDestinationMarker:",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kPList,	&EntityByNameAdaptPList<&ByName_607>,	nullptr },
@@ -2653,10 +2653,10 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "creditBalance",	ByName::kPlayer,	oo::kValueType<double>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_613>,	&EntityByNameTyped<&ByName_613> },
 	{ "dockedAtMainStation",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_614>,	&EntityByNameTyped<&ByName_614> },
 	{ "resetScannerZoom",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_615>,	&EntityByNameTyped<&ByName_615> },
-	{ "currentGalaxyID",	ByName::kPlayer,	oo::kValueType<OOGalaxyID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_616>,	&EntityByNameTyped<&ByName_616> },
-	{ "currentSystemID",	ByName::kPlayer,	oo::kValueType<OOSystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_617>,	&EntityByNameTyped<&ByName_617> },
+	{ "currentGalaxyID",	ByName::kPlayer,	oo::kValueType<oo::GalaxyID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_616>,	&EntityByNameTyped<&ByName_616> },
+	{ "currentSystemID",	ByName::kPlayer,	oo::kValueType<oo::SystemID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_617>,	&EntityByNameTyped<&ByName_617> },
 	{ "allowMissionInterrupt",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_618>,	&EntityByNameTyped<&ByName_618> },
-	{ "scriptTimer",	ByName::kPlayer,	oo::kValueType<OOTimeDelta>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_619>,	&EntityByNameTyped<&ByName_619> },
+	{ "scriptTimer",	ByName::kPlayer,	oo::kValueType<oo::TimeDelta>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_619>,	&EntityByNameTyped<&ByName_619> },
 	{ "systemPseudoRandom100",	ByName::kPlayer,	oo::kValueType<unsigned>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_620>,	&EntityByNameTyped<&ByName_620> },
 	{ "systemPseudoRandom256",	ByName::kPlayer,	oo::kValueType<unsigned>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_621>,	&EntityByNameTyped<&ByName_621> },
 	{ "systemPseudoRandomFloat",	ByName::kPlayer,	oo::kValueType<double>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_622>,	&EntityByNameTyped<&ByName_622> },
@@ -2904,7 +2904,7 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "targetNearestIncomingMissile",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_864>,	&EntityByNameTyped<&ByName_864> },
 	{ "setGalacticHyperspaceBehaviourTo:",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_865>,	nullptr },
 	{ "setGalacticHyperspaceFixedCoordsTo:",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_866>,	nullptr },
-	{ "contractedVolumeForGood:",	ByName::kPlayer,	oo::kValueType<OOCargoQuantity>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_867>,	nullptr },
+	{ "contractedVolumeForGood:",	ByName::kPlayer,	oo::kValueType<oo::CargoQuantity>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_867>,	nullptr },
 	{ "addMessageToReport:",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_868>,	nullptr },
 	{ "reputation",	ByName::kPlayer,	oo::kValueType<oo::PList>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_869>,	&EntityByNameTyped<&ByName_869> },
 	{ "passengerReputation",	ByName::kPlayer,	oo::kValueType<int>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_870>,	&EntityByNameTyped<&ByName_870> },
@@ -2916,11 +2916,11 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "removeParcel:",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_876>,	nullptr },
 	{ "setGuiToManifestScreen",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_877>,	&EntityByNameTyped<&ByName_877> },
 	{ "setGuiToDockingReportScreen",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_878>,	&EntityByNameTyped<&ByName_878> },
-	{ "priceForShipKey:",	ByName::kPlayer,	oo::kValueType<OOCreditsQuantity>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_879>,	nullptr },
+	{ "priceForShipKey:",	ByName::kPlayer,	oo::kValueType<oo::CreditsQuantity>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_879>,	nullptr },
 	{ "showShipyardInfoForSelection",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_880>,	&EntityByNameTyped<&ByName_880> },
 	{ "showTradeInInformationFooter",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_881>,	&EntityByNameTyped<&ByName_881> },
 	{ "missingSubEntitiesAdjustment",	ByName::kPlayer,	oo::kValueType<std::ptrdiff_t>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_882>,	&EntityByNameTyped<&ByName_882> },
-	{ "tradeInValue",	ByName::kPlayer,	oo::kValueType<OOCreditsQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_883>,	&EntityByNameTyped<&ByName_883> },
+	{ "tradeInValue",	ByName::kPlayer,	oo::kValueType<oo::CreditsQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_883>,	&EntityByNameTyped<&ByName_883> },
 	{ "buySelectedShip",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_884>,	&EntityByNameTyped<&ByName_884> },
 	{ "replaceShipWithNamedShip:",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_885>,	nullptr },
 	{ "loadPlayer",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_886>,	&EntityByNameTyped<&ByName_886> },
@@ -2939,12 +2939,12 @@ inline const EntityByNameRow kEntityByNameRows[] =
 	{ "setGuiToOverwriteScreen:",	ByName::kPlayer,	oo::kValueType<void>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_899>,	nullptr },
 	{ "existingNativeSave:",	ByName::kPlayer,	oo::kValueType<bool>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_900>,	nullptr },
 	{ "findIndexOfCommander:",	ByName::kPlayer,	oo::kValueType<int>,	EntityByNameArgument::kString,	&EntityByNameAdaptString<&ByName_901>,	nullptr },
-	{ "equivalentTechLevel",	ByName::kStation,	oo::kValueType<OOTechLevelID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_902>,	&EntityByNameTyped<&ByName_902> },
+	{ "equivalentTechLevel",	ByName::kStation,	oo::kValueType<oo::TechLevelID>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_902>,	&EntityByNameTyped<&ByName_902> },
 	{ "virtualPortDimensions",	ByName::kStation,	oo::kValueType<Vector>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_903>,	&EntityByNameTyped<&ByName_903> },
 	{ "playerReservedDock",	ByName::kStation,	oo::kValueType<oo::ObjectResult>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_904>,	&EntityByNameTyped<&ByName_904> },
 	{ "beaconPosition",	ByName::kStation,	oo::kValueType<HPVector>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_905>,	&EntityByNameTyped<&ByName_905> },
 	{ "equipmentPriceFactor",	ByName::kStation,	oo::kValueType<float>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_906>,	&EntityByNameTyped<&ByName_906> },
-	{ "marketCapacity",	ByName::kStation,	oo::kValueType<OOCargoQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_907>,	&EntityByNameTyped<&ByName_907> },
+	{ "marketCapacity",	ByName::kStation,	oo::kValueType<oo::CargoQuantity>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_907>,	&EntityByNameTyped<&ByName_907> },
 	{ "marketDefinition",	ByName::kStation,	oo::kValueType<oo::PList>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_908>,	&EntityByNameTyped<&ByName_908> },
 	{ "marketMonitored",	ByName::kStation,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_909>,	&EntityByNameTyped<&ByName_909> },
 	{ "marketBroadcast",	ByName::kStation,	oo::kValueType<bool>,	EntityByNameArgument::kNone,	&EntityByNameAdaptNone<&ByName_910>,	&EntityByNameTyped<&ByName_910> },

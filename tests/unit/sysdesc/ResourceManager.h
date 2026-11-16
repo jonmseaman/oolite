@@ -3,7 +3,7 @@
 #pragma once
 // ResourceManager is C++: the stub declares the
 // two statics the tools call.
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "oofnd/Data.hpp"
 #include "oofnd/PList.hpp"
 class ResourceManager {

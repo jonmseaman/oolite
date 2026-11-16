@@ -30,13 +30,13 @@ MA 02110-1301, USA.
 
 #include "Entity.h"
 #include "HeadUpDisplay.h"
+#include "MacroOpenGL.h"
 #include "OOJSWaypoint.h"
-#include "OOMacroOpenGL.h"
-#include "OOOpenGL.h"
-#include "OOPListGameTypes.h"
-#include "OOPolygonSprite.h"
-#include "OOStringExpander.h"
+#include "OpenGL.h"
+#include "PListGameTypes.h"
 #include "PlayerEntity.h"
+#include "PolygonSprite.h"
+#include "StringExpander.h"
 #include "Universe.h"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
@@ -61,13 +61,13 @@ void oo::WaypointEntity::initWithDictionary(const oo::PList& info) {
   // A nil dictionary read zero-filled values and nil strings (messaging nil),
   // not the defaults.
   oriented = true;
-  position =
-      info ? OOHPVectorFromPList(info.find(kWaypointKeyPosition), kZeroHPVector)
-           : kZeroHPVector;
-  Quaternion q = info
-                     ? OOQuaternionFromPList(info.find(kWaypointKeyOrientation),
-                                             kIdentityQuaternion)
-                     : Quaternion{0, 0, 0, 0};
+  position = info ? oo::HPVectorFromPList(info.find(kWaypointKeyPosition),
+                                          kZeroHPVector)
+                  : kZeroHPVector;
+  Quaternion q =
+      info ? oo::QuaternionFromPList(info.find(kWaypointKeyOrientation),
+                                     kIdentityQuaternion)
+           : Quaternion{0, 0, 0, 0};
   setOrientation(q);
   setSize(info.get<oo::NonNegative<float>>(kWaypointKeySize, 1000.0));
   setBeaconCode(info ? std::optional<std::string>(
@@ -94,9 +94,9 @@ void oo::WaypointEntity::setOrientation(Quaternion q) {
 
 bool oo::WaypointEntity::getOriented() { return oriented; }
 
-OOScalar oo::WaypointEntity::size() { return _size; }
+oo::Scalar oo::WaypointEntity::size() { return _size; }
 
-void oo::WaypointEntity::setSize(OOScalar newSize) {
+void oo::WaypointEntity::setSize(oo::Scalar newSize) {
   if (newSize > 0) {
     _size = newSize;
     no_draw_distance =
@@ -140,7 +140,7 @@ void oo::WaypointEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   GLfloat s1 = _size * 0.75f;
 
   OO_ENTER_OPENGL();
-  OOSetOpenGLState(OOOpenGLStateID::kTranslucentPass);
+  OOSetOpenGLState(oo::OpenGLStateID::kTranslucentPass);
   OOGL(glEnable(GL_BLEND));
   GLScaledLineWidth(1.0);
 
@@ -179,8 +179,8 @@ void oo::WaypointEntity::drawImmediate(bool /*immediate*/, bool translucent) {
 
 /* beacons */
 
-OOComparisonResult oo::WaypointEntity::compareBeaconCodeWith(Entity* other) {
-  return static_cast<OOComparisonResult>(oo::str::caseInsensitiveCompare(
+oo::ComparisonResult oo::WaypointEntity::compareBeaconCodeWith(Entity* other) {
+  return static_cast<oo::ComparisonResult>(oo::str::caseInsensitiveCompare(
       beaconCode().value_or(""), oo::BeaconCode(other).value_or("")));
 }
 
@@ -224,7 +224,7 @@ void oo::WaypointEntity::setBeaconLabel(
 
 bool oo::WaypointEntity::isBeacon() { return beaconCode().has_value(); }
 
-OOHUDBeaconIcon* oo::WaypointEntity::beaconDrawable() {
+oo::HUDBeaconIcon* oo::WaypointEntity::beaconDrawable() {
   if (_beaconDrawable == nullptr) {
     const std::u16string beaconCode =
         oo::utf8ToUtf16(_beaconCode.value_or(std::string()));
@@ -235,16 +235,16 @@ OOHUDBeaconIcon* oo::WaypointEntity::beaconDrawable() {
       const oo::PList iconData =
           (iconEntry != nullptr) ? *iconEntry : oo::PList();
       if (iconData.isArray())
-        _beaconDrawable = OOPolygonSprite::initWithDataArray(
+        _beaconDrawable = oo::PolygonSprite::initWithDataArray(
             iconData, 0.5, *_beaconCode);  // null where it answered nil
     }
 
     if (_beaconDrawable == nullptr) {
       if (length > 0)
-        _beaconDrawable = oo::makeShared<OOHUDBeaconCodeIcon>(
+        _beaconDrawable = oo::makeShared<oo::HUDBeaconCodeIcon>(
             oo::utf16ToUtf8(beaconCode.substr(0, 1)));  // -substringToIndex:1
       else
-        _beaconDrawable = oo::makeShared<OOHUDBeaconCodeIcon>(std::string());
+        _beaconDrawable = oo::makeShared<oo::HUDBeaconCodeIcon>(std::string());
     }
   }
 

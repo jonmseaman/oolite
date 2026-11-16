@@ -30,10 +30,10 @@ MA 02110-1301, USA.
 #include <string>
 #include <utility>
 
-#include "OOCallByName.h"  // oo::ScheduleEntityCall
-#include "OOEquipmentType.h"
-#include "OOSoundSourcePool.h"
+#include "CallByName.h"  // oo::ScheduleEntityCall
+#include "EquipmentType.h"
 #include "ResourceManager.h"
+#include "SoundSourcePool.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"
 
@@ -51,10 +51,11 @@ namespace {
 // mixer and the logger are gone by then), as the statics' references before
 // were never given up at exit either.
 struct PlayerSounds {
-  std::shared_ptr<OOSoundSourcePool> warningPool, weaponPool, damagePool,
+  std::shared_ptr<oo::SoundSourcePool> warningPool, weaponPool, damagePool,
       miscPool, buySellPool;
-  std::shared_ptr<::OOSoundSource> hyperspace, interfaceBeep, ecm, breakPattern;
-  std::shared_ptr<::OOSoundSource> afterburner[2];
+  std::shared_ptr<::oo::SoundSource> hyperspace, interfaceBeep, ecm,
+      breakPattern;
+  std::shared_ptr<::oo::SoundSource> afterburner[2];
 };
 
 PlayerSounds& Sounds() {
@@ -66,17 +67,19 @@ PlayerSounds& Sounds() {
 // Each pool static shares its pool until ReleasePool. A message to a nil pool
 // did nothing, so each play checks for none.
 namespace {
-void ReleasePool(std::shared_ptr<OOSoundSourcePool>& pool) { pool.reset(); }
+void ReleasePool(std::shared_ptr<oo::SoundSourcePool>& pool) { pool.reset(); }
 
 // Each source static owns its source until ReleaseSource. A message to a nil
 // source did nothing and -isPlaying answered NO, so each use checks for none.
-std::shared_ptr<::OOSoundSource> NewSource(::OOSound* sound = nullptr) {
-  return oo::makeShared<::OOSoundSource>(sound);
+std::shared_ptr<::oo::SoundSource> NewSource(::oo::Sound* sound = nullptr) {
+  return oo::makeShared<::oo::SoundSource>(sound);
 }
 
-void ReleaseSource(std::shared_ptr<::OOSoundSource>& source) { source.reset(); }
+void ReleaseSource(std::shared_ptr<::oo::SoundSource>& source) {
+  source.reset();
+}
 
-bool IsPlaying(const std::shared_ptr<::OOSoundSource>& source) {
+bool IsPlaying(const std::shared_ptr<::oo::SoundSource>& source) {
   return source != nullptr && source->isPlaying();
 }
 }  // namespace
@@ -134,20 +137,21 @@ void PlayerEntity::setUpSound() {
   Sounds().hyperspace->setPosition(kWitchspacePosition);
 
   Sounds().buySellPool =
-      OOSoundSourcePool::poolWithCount(kBuySellSourcePoolSize, 0.0);
+      oo::SoundSourcePool::poolWithCount(kBuySellSourcePoolSize, 0.0);
   Sounds().warningPool =
-      OOSoundSourcePool::poolWithCount(kWarningPoolSize, 0.0);
-  Sounds().weaponPool = OOSoundSourcePool::poolWithCount(kWeaponPoolSize, 0.0);
-  Sounds().damagePool = OOSoundSourcePool::poolWithCount(
+      oo::SoundSourcePool::poolWithCount(kWarningPoolSize, 0.0);
+  Sounds().weaponPool =
+      oo::SoundSourcePool::poolWithCount(kWeaponPoolSize, 0.0);
+  Sounds().damagePool = oo::SoundSourcePool::poolWithCount(
       kDamagePoolSize, 0.1);  // Repeat time limit is to avoid playing a scrape
                               // sound every frame on glancing scrapes. This
                               // does limit the number of laser hits that can
                               // be played in a furrball, though; maybe lasers
                               // and scrapes should use different pools.
-  Sounds().miscPool = OOSoundSourcePool::poolWithCount(kMiscPoolSize, 0.0);
+  Sounds().miscPool = oo::SoundSourcePool::poolWithCount(kMiscPoolSize, 0.0);
 
   // Two sources with the same sound are used to simulate looping.
-  ::OOSound* afterburnerSound =
+  ::oo::Sound* afterburnerSound =
       ResourceManager::ooSoundNamed("afterburner1.ogg", std::string("Sounds"));
   Sounds().afterburner[0] = NewSource(afterburnerSound);
   Sounds().afterburner[0]->setPosition(kAfterburner1Position);
@@ -175,16 +179,16 @@ void PlayerEntity::setUpWeaponSounds() {
   // grab a local copy of the sound identifiers for weapons to make the process
   // of looking up a sound ref as fast as possible a missing sound identifier is
   // stored as an empty key
-  auto assignSound = [](oo::WeaponSoundMap& sounds, ::OOEquipmentType* eqType,
+  auto assignSound = [](oo::WeaponSoundMap& sounds, ::oo::EquipmentType* eqType,
                         std::string soundName) {
     sounds[(eqType != nullptr ? eqType->identifier()
                               : std::optional<std::string>())
                .value_or("")] = std::move(soundName);
   };
 
-  for (const std::shared_ptr<::OOEquipmentType>& eqTypeRef :
-       OOEquipmentType::allEquipmentTypes()) {
-    ::OOEquipmentType* eqType = eqTypeRef.get();
+  for (const std::shared_ptr<::oo::EquipmentType>& eqTypeRef :
+       oo::EquipmentType::allEquipmentTypes()) {
+    ::oo::EquipmentType* eqType = eqTypeRef.get();
     if (oo::str::hasPrefix((eqType != nullptr ? eqType->identifier()
                                               : std::optional<std::string>())
                                .value_or(""),
@@ -258,7 +262,7 @@ void PlayerEntity::playInterfaceBeep(const std::string& beepKey) {
   }
 #endif
   if (Sounds().interfaceBeep != nullptr)
-    Sounds().interfaceBeep->playOOSound(OOSoundWithCustomSoundKey(beepKey));
+    Sounds().interfaceBeep->playOOSound(oo::SoundWithCustomSoundKey(beepKey));
 }
 
 bool PlayerEntity::isBeeping() { return IsPlaying(Sounds().interfaceBeep); }
@@ -400,7 +404,7 @@ void PlayerEntity::playChangedOption() {
   playInterfaceBeep("[changed-option]");
 }
 
-void PlayerEntity::updateFuelScoopSoundWithInterval(OOTimeDelta delta_t) {
+void PlayerEntity::updateFuelScoopSoundWithInterval(oo::TimeDelta delta_t) {
   static double scoopSoundPlayTime = 0.0;
   scoopSoundPlayTime -= delta_t;
   if (scoopSoundPlayTime < 0.0) {
@@ -492,45 +496,45 @@ void PlayerEntity::playCantBuyShip() {
 }
 
 void PlayerEntity::playStandardHyperspace() {
-  OOSoundSourcePlayCustomSoundWithKey(Sounds().hyperspace.get(),
-                                      "[hyperspace-countdown-begun]");
+  oo::SoundSourcePlayCustomSoundWithKey(Sounds().hyperspace.get(),
+                                        "[hyperspace-countdown-begun]");
 }
 
 void PlayerEntity::playGalacticHyperspace() {
-  OOSoundSourcePlayCustomSoundWithKey(Sounds().hyperspace.get(),
-                                      "[galactic-hyperspace-countdown-begun]");
+  oo::SoundSourcePlayCustomSoundWithKey(
+      Sounds().hyperspace.get(), "[galactic-hyperspace-countdown-begun]");
 }
 
 void PlayerEntity::playHyperspaceAborted() {
-  OOSoundSourcePlayCustomSoundWithKey(Sounds().hyperspace.get(),
-                                      "[hyperspace-countdown-aborted]");
+  oo::SoundSourcePlayCustomSoundWithKey(Sounds().hyperspace.get(),
+                                        "[hyperspace-countdown-aborted]");
 }
 
 void PlayerEntity::playHitByECMSound() {
   if (!IsPlaying(Sounds().ecm))
-    OOSoundSourcePlayCustomSoundWithKey(Sounds().ecm.get(),
-                                        "[player-hit-by-ecm]");
+    oo::SoundSourcePlayCustomSoundWithKey(Sounds().ecm.get(),
+                                          "[player-hit-by-ecm]");
 }
 
 void PlayerEntity::playFiredECMSound() {
   if (!IsPlaying(Sounds().ecm))
-    OOSoundSourcePlayCustomSoundWithKey(Sounds().ecm.get(),
-                                        "[player-fired-ecm]");
+    oo::SoundSourcePlayCustomSoundWithKey(Sounds().ecm.get(),
+                                          "[player-fired-ecm]");
 }
 
 void PlayerEntity::playLaunchFromStation() {
-  OOSoundSourcePlayCustomSoundWithKey(Sounds().breakPattern.get(),
-                                      "[player-launch-from-station]");
+  oo::SoundSourcePlayCustomSoundWithKey(Sounds().breakPattern.get(),
+                                        "[player-launch-from-station]");
 }
 
 void PlayerEntity::playDockWithStation() {
-  OOSoundSourcePlayCustomSoundWithKey(Sounds().breakPattern.get(),
-                                      "[player-dock-with-station]");
+  oo::SoundSourcePlayCustomSoundWithKey(Sounds().breakPattern.get(),
+                                        "[player-dock-with-station]");
 }
 
 void PlayerEntity::playExitWitchspace() {
-  OOSoundSourcePlayCustomSoundWithKey(Sounds().breakPattern.get(),
-                                      "[player-exit-witchspace]");
+  oo::SoundSourcePlayCustomSoundWithKey(Sounds().breakPattern.get(),
+                                        "[player-exit-witchspace]");
 }
 
 void PlayerEntity::playHostileWarning() {

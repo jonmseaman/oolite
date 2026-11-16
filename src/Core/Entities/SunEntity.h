@@ -30,8 +30,8 @@ MA 02110-1301, USA.
 #include <optional>
 #include <string>
 
+#include "Color.h"
 #include "Entity.h"
-#include "OOColor.h"
 #include "PlanetEntity.h"
 #include "legacy_random.h"
 #include "oofnd/PList.hpp"
@@ -67,8 +67,8 @@ class SunEntity : public Entity {
   /*	-initSunWithColor:andDictionary:'s body after [super init] (the
      constructor ran Entity's), run on a new sun.
   */
-  void initSunWithColor(OOColor* sun_color, const oo::PList& dict);
-  bool setSunColor(OOColor* sun_color);
+  void initSunWithColor(oo::Color* sun_color, const oo::PList& dict);
+  bool setSunColor(oo::Color* sun_color);
   bool changeSunProperty(const std::string& key, const oo::PList& dict);
 
   StellarBodyType planetType();
@@ -96,7 +96,7 @@ class SunEntity : public Entity {
 #ifdef OO_DEBUG_MONITOR_ENABLED
   bool checkCloseCollisionWith(Entity* other) override;
 #endif
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
   void drawImmediate(bool immediate, bool translucent) override;
   void updateCameraRelativePosition() override;
   void setPosition(HPVector posn) override;
@@ -133,8 +133,8 @@ class SunEntity : public Entity {
   GLfloat sunVertices[1801 * 3] = {};
   GLfloat sunColors[1801 * 4] = {};
 
-  OOTimeDelta _novaCountdown = {};
-  OOTimeDelta _novaExpansionTimer = {};
+  oo::TimeDelta _novaCountdown = {};
+  oo::TimeDelta _novaExpansionTimer = {};
   float _novaExpansionRate = {};
 
   float _sunBrightnessFactor = {};

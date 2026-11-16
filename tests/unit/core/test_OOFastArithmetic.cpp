@@ -18,19 +18,19 @@
    debug)
 */
 
-#include "OOMaths.h"  // IWYU pragma: keep
+#include "Maths.h"  // IWYU pragma: keep
 #include "oo_test.hpp"
 
 namespace {
 
 uint32_t Round32(uint32_t value) {
   volatile uint32_t in = value;
-  return OORoundUpToPowerOf2_32(in);
+  return oo::RoundUpToPowerOf2_32(in);
 }
 
 uint64_t Round64(uint64_t value) {
   volatile uint64_t in = value;
-  return OORoundUpToPowerOf2_64(in);
+  return oo::RoundUpToPowerOf2_64(in);
 }
 
 }  // namespace
@@ -48,7 +48,7 @@ OO_TEST(edgeInputsKeepTheOptimisedAnswer) {
   OO_CHECK(Round64(0xFFFFFFFFFFFFFFFFULL) == 1);
 
   volatile std::size_t one = 1;
-  OO_CHECK(OORoundUpToPowerOf2_NS(one) == 2);
+  OO_CHECK(oo::RoundUpToPowerOf2_NS(one) == 2);
 }
 
 OO_TEST(roundsUpToThePowerOfTwo) {
@@ -81,9 +81,9 @@ OO_TEST(aTwoPixelSideScalesToTwo) {
   // OOTextureLoader::getDesiredSize and OOTextureVerifierStage: (2 * side) / 3
   // (OORoundUpToPowerOf2_PixMap is the 32-bit one).
   volatile uint32_t side = 2;
-  OO_CHECK(OORoundUpToPowerOf2_32((2 * side) / 3) == 2);
+  OO_CHECK(oo::RoundUpToPowerOf2_32((2 * side) / 3) == 2);
   side = 4;
-  OO_CHECK(OORoundUpToPowerOf2_32((2 * side) / 3) == 2);
+  OO_CHECK(oo::RoundUpToPowerOf2_32((2 * side) / 3) == 2);
 }
 
 OO_TEST_MAIN()

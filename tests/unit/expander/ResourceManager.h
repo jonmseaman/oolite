@@ -2,7 +2,7 @@
 // ResourceManager is C++: the stub declares the
 // one static the expander's bridge calls, over the same stub data.
 #pragma once
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "oofnd/PList.hpp"
 class ResourceManager {
  public:

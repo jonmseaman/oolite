@@ -28,7 +28,7 @@ SOFTWARE.
 #include <cstdint>
 #include <memory>
 
-#include "OOOpenGLExtensionManager.h"  // IWYU pragma: keep: defines OO_SHADERS, which guards this file
+#include "OpenGLExtensionManager.h"  // IWYU pragma: keep: defines OO_SHADERS, which guards this file
 
 #if OO_SHADERS
 
@@ -46,8 +46,8 @@ SOFTWARE.
 #include <vector>
 
 #include "DebugFlags.h"
+#include "MacroOpenGL.h"
 #include "MyOpenGLView.h"
-#include "OOMacroOpenGL.h"
 #include "ResourceManager.h"
 #include "ShaderProgram.h"
 #include "Universe.h"
@@ -67,7 +67,7 @@ std::string GetGLSLInfoLog(GLhandleARB shaderObject);
 
 // The game view's matrix manager, taken from the C++ view. Null when there is
 // no universe or view.
-OOOpenGLMatrixManager* GameViewMatrixManager() {
+oo::OpenGLMatrixManager* GameViewMatrixManager() {
   MyOpenGLView* view =
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
   return (view != nullptr) ? view->getOpenGLMatrixManager() : nullptr;
@@ -422,7 +422,7 @@ bool oo::ShaderProgram::initWithVertexShaderSource(
   if (OK) {
     // The matrix manager is C++: taken from the C++ game view (null-guarded, as
     // a message to nil answered a null list).
-    OOOpenGLMatrixManager* matrixManager = GameViewMatrixManager();
+    oo::OpenGLMatrixManager* matrixManager = GameViewMatrixManager();
     standardMatrixUniformLocations =
         (matrixManager != nullptr)
             ? matrixManager->standardMatrixUniformLocations(_program)
@@ -452,7 +452,7 @@ void oo::ShaderProgram::bindAttributes(const oo::PList& attributeBindings) {
 
 void oo::ShaderProgram::bindStandardMatrixUniforms() {
   if (standardMatrixUniformLocations.isArray()) {
-    OOOpenGLMatrixManager* matrixManager = GameViewMatrixManager();
+    oo::OpenGLMatrixManager* matrixManager = GameViewMatrixManager();
 
     OO_ENTER_OPENGL();
 
@@ -471,9 +471,9 @@ void oo::ShaderProgram::bindStandardMatrixUniforms() {
                                     ? matrixManager->getMatrix(pair.at<int>(1))
                                     : kZeroMatrix));
         } else {
-          OOMatrix matrix = matrixManager != nullptr
-                                ? matrixManager->getMatrix(pair.at<int>(1))
-                                : kZeroMatrix;
+          oo::Matrix matrix = matrixManager != nullptr
+                                  ? matrixManager->getMatrix(pair.at<int>(1))
+                                  : kZeroMatrix;
           GLUniformMatrix(pair.at<int>(0), matrix);
         }
       }
@@ -514,7 +514,7 @@ bool GetShaderSource(const std::optional<std::string>& fileName,
       }
     }
     if (!result.has_value()) {
-      OO_LOG(kOOLogFileNotFound,
+      OO_LOG(oo::kLogFileNotFound,
              "GLSL ERROR: failed to find fragment program {}.", *fileName);
       return false;
     }

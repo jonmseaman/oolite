@@ -39,11 +39,11 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "OOEnumFlags.h"
-#include "OOFoundation.h"
-#include "OOFunctionAttributes.h"
-#include "OOMaths.h"
-#include "OOTypes.h"
+#include "EnumFlags.h"
+#include "Foundation.h"
+#include "FunctionAttributes.h"
+#include "Maths.h"
+#include "Types.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/Object.h"
@@ -59,16 +59,23 @@ inline constexpr int MAIN_GUI_PIXEL_WIDTH = 480;
 inline constexpr int MAIN_GUI_ROW_WIDTH = 16;
 inline constexpr int MAIN_GUI_PIXEL_ROW_START = 40;
 
-enum class OOGUIAlignment : std::int32_t {
+namespace oo {
+
+enum class GUIAlignment : std::int32_t {
   kLeft,
   kRight,
   kCenter,
 };
-static_assert(std::to_underlying(OOGUIAlignment::kLeft) == 0);
-static_assert(std::to_underlying(OOGUIAlignment::kRight) == 1);
-static_assert(std::to_underlying(OOGUIAlignment::kCenter) == 2);
 
-enum class OOGUIBackgroundSpecial : std::int32_t {
+}  // namespace oo
+
+static_assert(std::to_underlying(oo::GUIAlignment::kLeft) == 0);
+static_assert(std::to_underlying(oo::GUIAlignment::kRight) == 1);
+static_assert(std::to_underlying(oo::GUIAlignment::kCenter) == 2);
+
+namespace oo {
+
+enum class GUIBackgroundSpecial : std::int32_t {
   kNone,
   kCustom,
   kCustomAnaShortest,
@@ -80,21 +87,24 @@ enum class OOGUIBackgroundSpecial : std::int32_t {
   kLongAnaShortest,
   kLongAnaQuickest,
 };
-static_assert(std::to_underlying(OOGUIBackgroundSpecial::kNone) == 0);
-static_assert(std::to_underlying(OOGUIBackgroundSpecial::kCustom) == 1);
-static_assert(std::to_underlying(OOGUIBackgroundSpecial::kCustomAnaShortest) ==
-              2);
-static_assert(std::to_underlying(OOGUIBackgroundSpecial::kCustomAnaQuickest) ==
-              3);
-static_assert(std::to_underlying(OOGUIBackgroundSpecial::kShort) == 4);
-static_assert(std::to_underlying(OOGUIBackgroundSpecial::kShortAnaShortest) ==
+
+}  // namespace oo
+
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kNone) == 0);
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kCustom) == 1);
+static_assert(
+    std::to_underlying(oo::GUIBackgroundSpecial::kCustomAnaShortest) == 2);
+static_assert(
+    std::to_underlying(oo::GUIBackgroundSpecial::kCustomAnaQuickest) == 3);
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kShort) == 4);
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kShortAnaShortest) ==
               5);
-static_assert(std::to_underlying(OOGUIBackgroundSpecial::kShortAnaQuickest) ==
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kShortAnaQuickest) ==
               6);
-static_assert(std::to_underlying(OOGUIBackgroundSpecial::kLong) == 7);
-static_assert(std::to_underlying(OOGUIBackgroundSpecial::kLongAnaShortest) ==
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kLong) == 7);
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kLongAnaShortest) ==
               8);
-static_assert(std::to_underlying(OOGUIBackgroundSpecial::kLongAnaQuickest) ==
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kLongAnaQuickest) ==
               9);
 
 inline constexpr std::string_view GUI_KEY_OK = "OK";
@@ -232,15 +242,25 @@ class Texture;
 
 }  // namespace oo
 
-class OOColor;
+namespace oo {
+
+class Color;
+
+}  // namespace oo
+
 class HeadUpDisplay;
-class OOSound;
 
-class OOTextureSprite;  // C++ (OOTextureSprite.h)
+namespace oo {
 
-using OOGUIRow = std::ptrdiff_t;      // -1 for none
-using OOGUITabStop = std::ptrdiff_t;  // negative value = right align text
-using OOGUITabSettings = OOGUITabStop[GUI_MAX_COLUMNS];
+class Sound;
+
+class TextureSprite;  // C++ (OOTextureSprite.h)
+
+using GUIRow = std::ptrdiff_t;      // -1 for none
+using GUITabStop = std::ptrdiff_t;  // negative value = right align text
+using GUITabSettings = GUITabStop[GUI_MAX_COLUMNS];
+
+}  // namespace oo
 
 /*	The members marked virtual are the ones the whole-game unit tests
    (test_OOOXZManager, test_OOJSPlayerShip) stand in for with C++ subclasses
@@ -280,37 +300,37 @@ class GuiDisplayGen : public oo::Object {
   oo::PList userSettings();  // gui-settings.plist, with any colours set by
                              // setGuiColorSettingFromKey()
 
-  void fadeOutFromTime(OOTimeAbsolute now_time, OOTimeDelta duration);
+  void fadeOutFromTime(oo::TimeAbsolute now_time, oo::TimeDelta duration);
   void stopFadeOuts();
 
   GLfloat alpha();
   void setAlpha(GLfloat an_alpha);
   void setMaxAlpha(GLfloat an_alpha);
 
-  void setBackgroundColor(OOColor* color);
+  void setBackgroundColor(oo::Color* color);
 
-  virtual OOColor* getTextColor();
-  virtual void setTextColor(OOColor* color);
-  virtual OOColor* getTextCommsColor();
-  virtual void setTextCommsColor(OOColor* color);
-  std::shared_ptr<OOColor> colorFromSetting(
-      const std::optional<std::string>& setting, OOColor* def);
+  virtual oo::Color* getTextColor();
+  virtual void setTextColor(oo::Color* color);
+  virtual oo::Color* getTextCommsColor();
+  virtual void setTextCommsColor(oo::Color* color);
+  std::shared_ptr<oo::Color> colorFromSetting(
+      const std::optional<std::string>& setting, oo::Color* def);
   void setGLColorFromSetting(const std::optional<std::string>& setting,
-                             OOColor* def, GLfloat alpha);
-  void setGuiColorSettingFromKey(const std::string& key, OOColor* col);
+                             oo::Color* def, GLfloat alpha);
+  void setGuiColorSettingFromKey(const std::string& key, oo::Color* col);
 
   void setCharacterSize(NSSize character_size);
 
   void setShowAdvancedNavArray(bool inFlag);
 
-  virtual void setColor(OOColor* color, OOGUIRow row);
+  virtual void setColor(oo::Color* color, oo::GUIRow row);
 
-  oo::PList objectForRow(OOGUIRow row);  // a string, or an array of column
-                                         // strings; null out of range
-  std::optional<std::string> keyForRow(OOGUIRow row);
-  OOGUIRow rowForKey(const std::optional<std::string>& key);
-  virtual OOGUIRow getSelectedRow();
-  virtual bool setSelectedRow(OOGUIRow row);
+  oo::PList objectForRow(oo::GUIRow row);  // a string, or an array of column
+                                           // strings; null out of range
+  std::optional<std::string> keyForRow(oo::GUIRow row);
+  oo::GUIRow rowForKey(const std::optional<std::string>& key);
+  virtual oo::GUIRow getSelectedRow();
+  virtual bool setSelectedRow(oo::GUIRow row);
   bool setNextRow(int direction);
   bool setFirstSelectableRow();
   bool setLastSelectableRow();
@@ -320,52 +340,52 @@ class GuiDisplayGen : public oo::Object {
   void reportSelectedRow(int row);
 
   void setShowTextCursor(bool yesno);
-  void setCurrentRow(OOGUIRow value);
+  void setCurrentRow(oo::GUIRow value);
 
   NSRange getSelectableRange();
   virtual void setSelectableRange(NSRange range);
 
-  virtual void setTabStops(OOGUITabSettings stops);
-  void overrideTabs(OOGUITabSettings stops, const std::string& setting,
+  virtual void setTabStops(oo::GUITabSettings stops);
+  void overrideTabs(oo::GUITabSettings stops, const std::string& setting,
                     std::size_t len);
 
   void clear();
   virtual void clearAndKeepBackground(bool keepBackground);
 
-  virtual void setKey(const std::string& str, OOGUIRow row);
-  virtual void setText(const std::string& str, OOGUIRow row);
-  virtual void setText(const std::optional<std::string>& str, OOGUIRow row,
-                       OOGUIAlignment alignment);  // nullopt: no change
+  virtual void setKey(const std::string& str, oo::GUIRow row);
+  virtual void setText(const std::string& str, oo::GUIRow row);
+  virtual void setText(const std::optional<std::string>& str, oo::GUIRow row,
+                       oo::GUIAlignment alignment);  // nullopt: no change
 
   // A nil text or key is std::nullopt (nothing printed / no key set, as
   // before); text_array, when not nullptr, receives each line printed.
   virtual std::optional<std::string> reflowTextForMFD(
       const std::optional<std::string>& input);
-  virtual OOGUIRow addLongText(const std::optional<std::string>& str,
-                               OOGUIRow row, OOGUIAlignment alignment);
+  virtual oo::GUIRow addLongText(const std::optional<std::string>& str,
+                                 oo::GUIRow row, oo::GUIAlignment alignment);
   void printLongText(const std::optional<std::string>& str,
-                     OOGUIAlignment alignment, OOColor* text_color,
+                     oo::GUIAlignment alignment, oo::Color* text_color,
                      float text_fade,
                      const std::optional<std::string>& text_key,
                      std::vector<std::string>* text_array);
   void printLineNoScroll(const std::optional<std::string>& str,
-                         OOGUIAlignment alignment, OOColor* text_color,
+                         oo::GUIAlignment alignment, oo::Color* text_color,
                          float text_fade,
                          const std::optional<std::string>& text_key,
                          std::vector<std::string>* text_array);
 
   virtual void setArray(const std::vector<std::string>& arr,
-                        OOGUIRow row);  // one string per column
+                        oo::GUIRow row);  // one string per column
 
   // items: an array of row texts (a string, or an array of column strings);
   // item_keys: null or an array of the same length.
   void insertItemsFromArray(const oo::PList& items, const oo::PList& item_keys,
-                            OOGUIRow row, OOColor* text_color);
+                            oo::GUIRow row, oo::Color* text_color);
 
   void scrollUp(int how_much);
 
   /* allows the use of special dynamic backgrounds */
-  void setBackgroundTextureSpecial(OOGUIBackgroundSpecial spec,
+  void setBackgroundTextureSpecial(oo::GUIBackgroundSpecial spec,
                                    bool withBackground);
 
   /*
@@ -415,7 +435,7 @@ class GuiDisplayGen : public oo::Object {
   void refreshStarChart();
   void setStarChartTitle();
 
-  OOSystemID targetNextFoundSystem(int direction);
+  oo::SystemID targetNextFoundSystem(int direction);
 
  private:
   void drawSystemMarkers(const oo::PList& markers, GLfloat x, GLfloat y,
@@ -433,45 +453,45 @@ class GuiDisplayGen : public oo::Object {
 
   NSSize pixel_title_size = {};
 
-  std::shared_ptr<OOColor> backgroundColor;
-  std::shared_ptr<OOColor> textColor;
-  std::shared_ptr<OOColor> textCommsColor;
+  std::shared_ptr<oo::Color> backgroundColor;
+  std::shared_ptr<oo::Color> textColor;
+  std::shared_ptr<oo::Color> textCommsColor;
 
-  std::shared_ptr<OOTextureSprite> backgroundSprite;
-  std::shared_ptr<OOTextureSprite> foregroundSprite;
-  OOGUIBackgroundSpecial backgroundSpecial = {};
+  std::shared_ptr<oo::TextureSprite> backgroundSprite;
+  std::shared_ptr<oo::TextureSprite> foregroundSprite;
+  oo::GUIBackgroundSpecial backgroundSpecial = {};
 
   std::optional<std::string> title;  // none: no title bar
 
   std::vector<oo::PList>
       rowText;  // each a string, or an array of column strings
   std::vector<std::string> rowKey;
-  std::vector<std::shared_ptr<OOColor>> rowColor;
+  std::vector<std::shared_ptr<oo::Color>> rowColor;
 
   Vector drawPosition = {};
 
   NSPoint rowPosition[GUI_MAX_ROWS] = {};
-  OOGUIAlignment rowAlignment[GUI_MAX_ROWS] = {};
+  oo::GUIAlignment rowAlignment[GUI_MAX_ROWS] = {};
   float rowFadeTime[GUI_MAX_ROWS] = {};
 
-  OOGUITabSettings tabStops = {};
+  oo::GUITabSettings tabStops = {};
 
   // a mixed configuration: plist values and OOColors
   oo::PList guiUserSettings;
 
   NSRange rowRange = {};
 
-  OOGUIRow selectedRow = {};
+  oo::GUIRow selectedRow = {};
   NSRange selectableRange = {};
 
   bool showTextCursor = {};
-  OOGUIRow currentRow = {};
+  oo::GUIRow currentRow = {};
 
   GLfloat max_alpha = {};       // main alpha setting
   GLfloat fade_alpha = {};      // for fade-in / fade-out
   GLfloat fade_sign = {};       //	-1.0 to 1.0
   std::size_t statusPage = {};  // status  screen: paging equipped items
-  OOSystemID foundSystem = {};
+  oo::SystemID foundSystem = {};
 
   void drawGLDisplay(GLfloat x, GLfloat y, GLfloat z, GLfloat alpha);
   void drawCrossHairsWithSize(GLfloat size, GLfloat x, GLfloat y, GLfloat z);
@@ -481,7 +501,7 @@ class GuiDisplayGen : public oo::Object {
                         GLfloat z, GLfloat alpha, GLfloat scale);
   void drawAdvancedNavArrayAtX(float x, float y, float z, float alpha,
                                const oo::PList& routeInfo,
-                               OORouteType optimizeBy, OOScalar zoom);
+                               oo::RouteType optimizeBy, oo::Scalar zoom);
 };
 
 // One-line bridge for the file-scope helpers of GuiDisplayGen.cpp, which may

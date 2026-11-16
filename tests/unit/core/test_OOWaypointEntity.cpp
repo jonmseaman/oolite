@@ -230,11 +230,11 @@ OO_TEST(compareBeaconCodes) {
     oo::AutoreleaseScope scope;
     SetUp();
     OO_CHECK(Part(Waypoint("a"))->compareBeaconCodeWith(Waypoint("B")) ==
-             OOComparisonResult::kAscending);
+             oo::ComparisonResult::kAscending);
     OO_CHECK(Part(Waypoint("b"))->compareBeaconCodeWith(Waypoint("A")) ==
-             OOComparisonResult::kDescending);
+             oo::ComparisonResult::kDescending);
     OO_CHECK(Part(Waypoint("abc"))->compareBeaconCodeWith(Waypoint("ABC")) ==
-             OOComparisonResult::kSame);
+             oo::ComparisonResult::kSame);
   }
 }
 
@@ -244,8 +244,8 @@ OO_TEST(beaconDrawable) {
     SetUp();
     Entity* wp = Waypoint("W");
     // A C++ OOHUDBeaconIcon, held as the test retained it.
-    std::shared_ptr<OOHUDBeaconIcon> icon(oo::share(
-        static_cast<OOHUDBeaconIcon*>(oo::BeaconDrawable(wp))));
+    std::shared_ptr<oo::HUDBeaconIcon> icon(oo::share(
+        static_cast<oo::HUDBeaconIcon*>(oo::BeaconDrawable(wp))));
     OO_CHECK(icon != nullptr && oo::BeaconDrawable(wp) == icon.get());
     oo::SetBeaconCode(wp, std::string("V"));
     OO_CHECK(oo::BeaconDrawable(wp) != nullptr &&

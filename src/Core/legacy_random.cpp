@@ -201,12 +201,14 @@ static bool sReallyRandomInited = false;
 #endif
 static RANROTSeed sReallyRandomSeed;
 
-uint32_t OOReallyRandom() {
+namespace oo {
+
+uint32_t ReallyRandom() {
   assert(sReallyRandomInited);
   return RanrotWithSeed(&sReallyRandomSeed);
 }
 
-void OOInitReallyRandom(uint64_t seed) {
+void InitReallyRandom(uint64_t seed) {
   assert(!sReallyRandomInited);
   seed ^= 0xA471D52AEF3B6322ULL;
   sReallyRandomSeed.high = (seed >> 32) & 0xFFFFFFFF;
@@ -214,36 +216,38 @@ void OOInitReallyRandom(uint64_t seed) {
 #ifndef NDEBUG
   sReallyRandomInited = true;
 #endif
-  OOReallyRandom();
+  ReallyRandom();
 }
 
-void OOSetReallyRandomRANROTSeed() {
+void SetReallyRandomRANROTSeed() {
   assert(sReallyRandomInited);
   sRANROT = sReallyRandomSeed;
-  OOReallyRandom();  // Don't go reusing it.
+  ReallyRandom();  // Don't go reusing it.
 }
 
-void OOSetReallyRandomRndSeed() {
-  uint32_t val = OOReallyRandom();
+void SetReallyRandomRndSeed() {
+  uint32_t val = ReallyRandom();
   rnd_seed.a = (val >> 24) & 0xFF;
   rnd_seed.b = (val >> 16) & 0xFF;
   rnd_seed.c = (val >> 8) & 0xFF;
   rnd_seed.d = val & 0xFF;
 }
 
-void OOSetReallyRandomRANROTAndRndSeeds() {
-  OOSetReallyRandomRANROTSeed();
-  OOSetReallyRandomRndSeed();
+void SetReallyRandomRANROTAndRndSeeds() {
+  SetReallyRandomRANROTSeed();
+  SetReallyRandomRndSeed();
 }
 
-OORandomState OOSaveRandomState() {
-  return OORandomState{.ranrot = sRANROT, .rnd = rnd_seed};
+RandomState SaveRandomState() {
+  return RandomState{.ranrot = sRANROT, .rnd = rnd_seed};
 }
 
-void OORestoreRandomState(OORandomState state) {
+void RestoreRandomState(RandomState state) {
   sRANROT = state.ranrot;
   rnd_seed = state.rnd;
 }
+
+}  // namespace oo
 
 void make_pseudo_random_seed(Random_Seed* seed_ptr) {
   seed_ptr->a = static_cast<uint8_t>(gen_rnd_number());

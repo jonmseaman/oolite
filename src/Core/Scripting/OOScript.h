@@ -51,7 +51,7 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "OOJSPrivateObject.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"

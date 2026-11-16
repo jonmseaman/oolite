@@ -33,8 +33,8 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "Entity.h"
-#include "OOGraphicsResetManager.h"
-#include "OOOpenGLExtensionManager.h"
+#include "GraphicsResetManager.h"
+#include "OpenGLExtensionManager.h"
 #include "Texture.h"
 
 #if OO_SHADERS
@@ -50,7 +50,7 @@ inline constexpr int DUST_N_PARTICLES = 600;
    (OOGraphicsResetClient), and the dust shader's uniforms are bound to its
    members (OOShaderUniform's C++ target binding).
 */
-class DustEntity : public Entity, public OOGraphicsResetClient {
+class DustEntity : public Entity, public oo::GraphicsResetClient {
  public:
   DustEntity() = default;
   ~DustEntity() override;
@@ -61,12 +61,12 @@ class DustEntity : public Entity, public OOGraphicsResetClient {
   */
   void init();
 
-  void setDustColor(OOColor* color);
-  OOColor* dustColor();
+  void setDustColor(oo::Color* color);
+  oo::Color* dustColor();
 
   bool canCollide() override;
   void updateCameraRelativePosition() override;
-  void update(OOTimeDelta delta_t) override;
+  void update(oo::TimeDelta delta_t) override;
 
 #if OO_SHADERS
   oo::ShaderProgram* getShader();
@@ -88,7 +88,7 @@ class DustEntity : public Entity, public OOGraphicsResetClient {
   void checkShaderMode();
 #endif
 
-  std::shared_ptr<OOColor> dust_color;
+  std::shared_ptr<oo::Color> dust_color;
   Vector vertices[DUST_N_PARTICLES * 2] = {};
   GLushort indices[DUST_N_PARTICLES * 2] = {};
   GLfloat color_fv[4] = {};

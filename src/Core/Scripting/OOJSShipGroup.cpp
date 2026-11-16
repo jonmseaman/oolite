@@ -35,8 +35,8 @@ MA 02110-1301, USA.
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJavaScriptEngine.h"
-#include "OOShipGroup.h"
 #include "ShipEntity.h"
+#include "ShipGroup.h"
 #include "oofnd/PList.hpp"
 
 /*
@@ -99,10 +99,10 @@ static const JSCFunctionListEntry sShipGroupMethods[] = {
 // (null for the prototype).
 static oo::PList ShipGroupConverter(JSContext* /*context*/,
                                     JSValueConst object) {
-  OOShipGroup* group = static_cast<OOShipGroup*>(
+  oo::ShipGroup* group = static_cast<oo::ShipGroup*>(
       OOJSCxxPrivateFromOpaque(JS_GetOpaque(object, sShipGroupClassID)));
   if (group == nullptr) return oo::PList();
-  return OOShipGroupObjectNode(group);
+  return oo::ShipGroupObjectNode(group);
 }
 
 // *** Public ***
@@ -120,7 +120,7 @@ static JSValue ShipGroupGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   oo::PList result;  // null: nil
-  OOShipGroup* cxxGroup = nullptr;
+  oo::ShipGroup* cxxGroup = nullptr;
 
   if (!OOJSGetCxxPrivate(context, thisObj, sShipGroupClassID, &cxxGroup))
       [[unlikely]]
@@ -170,7 +170,7 @@ static JSValue ShipGroupSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   ShipEntity* shipValue = nullptr;
-  OOShipGroup* cxxGroup = nullptr;
+  oo::ShipGroup* cxxGroup = nullptr;
 
   if (!OOJSGetCxxPrivate(context, thisObj, sShipGroupClassID, &cxxGroup))
       [[unlikely]]
@@ -246,7 +246,7 @@ static JSValue ShipGroupConstruct(OOJS_NATIVE_ARGS) {
     }
   }
 
-  const std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(
+  const std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(
       name, leader);  // kept until the JS object holds it
   OOJS_RETURN(OOJSValueFromCxxObject(context, group.get()));
 
@@ -258,7 +258,7 @@ static JSValue ShipGroupConstruct(OOJS_NATIVE_ARGS) {
    _jsSelf is a weak (uncounted) reference to the JS object, cleared by
    clearJSSelf() when the JS object is finalized.
 */
-JSValue OOShipGroup::jsValueInContext(JSContext* context) {
+JSValue oo::ShipGroup::jsValueInContext(JSContext* context) {
   if (!JS_IsObject(_jsSelf)) {
     JSValue newSelf = JS_NewObjectClass(
         context, static_cast<JSClassID>(static_cast<int>(sShipGroupClassID)));
@@ -279,7 +279,7 @@ JSValue OOShipGroup::jsValueInContext(JSContext* context) {
   return JS_DupValue(context, _jsSelf);
 }
 
-void OOShipGroup::clearJSSelf(JSValueConst selfVal) {
+void oo::ShipGroup::clearJSSelf(JSValueConst selfVal) {
   if (JS_IsObject(_jsSelf) &&
       JS_VALUE_GET_PTR(_jsSelf) == JS_VALUE_GET_PTR(selfVal))
     _jsSelf = JS_UNDEFINED;
@@ -288,7 +288,7 @@ void OOShipGroup::clearJSSelf(JSValueConst selfVal) {
 // What the façade's -oo_jsDescription answered (OOObject
 // (OOJavaScriptConversion)): the class name (the façade had no jsClassName) and
 // the components.
-std::optional<std::string> OOShipGroup::jsDescription() {
+std::optional<std::string> oo::ShipGroup::jsDescription() {
   const std::optional<std::string> components = descriptionComponents();
   if (components.has_value())
     return std::format("[OOShipGroup {}]", *components);
@@ -307,7 +307,7 @@ static JSValue ShipGroupToString(JSContext* context, JSValueConst oojsThis,
 static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOShipGroup* cxxGroup = nullptr;
+  oo::ShipGroup* cxxGroup = nullptr;
   ShipEntity* ship = nullptr;
   bool OK = true;
 
@@ -327,7 +327,7 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
 
   // The groups are C++; a null one (the prototype's, or a ship's that has none)
   // answers what a message to nil did.
-  OOShipGroup* thisGroup = cxxGroup;
+  oo::ShipGroup* thisGroup = cxxGroup;
 
   if (cxxGroup != nullptr && cxxGroup->containsShip(ship)) {
     // nothing to do...
@@ -338,21 +338,21 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
 
     if ((thisGroupLeader != nullptr
              ? thisGroupLeader->escortGroup()
-             : static_cast<OOShipGroup*>(nullptr)) == thisGroup) {
+             : static_cast<oo::ShipGroup*>(nullptr)) == thisGroup) {
       // escort group!
       if (((cxxGroup != nullptr) ? cxxGroup->count() : 0) > 1) {
         // already with some escorts
-        OOShipGroup* thatGroup =
+        oo::ShipGroup* thatGroup =
             (ship != nullptr ? ship->group()
-                             : static_cast<OOShipGroup*>(nullptr));
-        OOShipGroup* cxxThatGroup = thatGroup;
+                             : static_cast<oo::ShipGroup*>(nullptr));
+        oo::ShipGroup* cxxThatGroup = thatGroup;
         if (((cxxThatGroup != nullptr) ? cxxThatGroup->count() : 0) > 1 &&
             (((cxxThatGroup != nullptr) ? cxxThatGroup->leader() : nullptr) !=
                      nullptr
                  ? ((cxxThatGroup != nullptr) ? cxxThatGroup->leader()
                                               : nullptr)
                        ->escortGroup()
-                 : static_cast<OOShipGroup*>(nullptr)) == thatGroup) {
+                 : static_cast<oo::ShipGroup*>(nullptr)) == thatGroup) {
           // new escort already escorting!
           OOJSReportWarningForCaller(
               context, "ShipGroup", "addShip",
@@ -366,21 +366,23 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
         }
       } else {
         // [thisGroup count] == 1, default unescorted ship?
-        if ((thisGroupLeader != nullptr ? thisGroupLeader->escortGroup()
-                                        : static_cast<OOShipGroup*>(nullptr)) ==
-            (thisGroupLeader != nullptr ? thisGroupLeader->group()
-                                        : static_cast<OOShipGroup*>(nullptr))) {
+        if ((thisGroupLeader != nullptr
+                 ? thisGroupLeader->escortGroup()
+                 : static_cast<oo::ShipGroup*>(nullptr)) ==
+            (thisGroupLeader != nullptr
+                 ? thisGroupLeader->group()
+                 : static_cast<oo::ShipGroup*>(nullptr))) {
           // Default unescorted, unescortable, ship. Create new group and use
           // that instead.
           if (thisGroupLeader != nullptr)
             thisGroupLeader->setGroup(
-                (*new std::shared_ptr<OOShipGroup>(
-                     OOShipGroup::groupWithName(std::string("ship group"))))
+                (*new std::shared_ptr<oo::ShipGroup>(
+                     oo::ShipGroup::groupWithName(std::string("ship group"))))
                     .get());  // +1 kept (a holder that is never deleted), as
                               // [[OOShipGroup alloc] initWithName:] was
-          thisGroup =
-              (thisGroupLeader != nullptr ? thisGroupLeader->group()
-                                          : static_cast<OOShipGroup*>(nullptr));
+          thisGroup = (thisGroupLeader != nullptr
+                           ? thisGroupLeader->group()
+                           : static_cast<oo::ShipGroup*>(nullptr));
           cxxGroup = thisGroup;
         } else {
           // Unescorted ship with custom group. See if it accepts escorts.
@@ -406,7 +408,7 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
 static JSValue ShipGroupRemoveShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOShipGroup* cxxGroup = nullptr;
+  oo::ShipGroup* cxxGroup = nullptr;
   ShipEntity* ship = nullptr;
 
   if (!OOJSGetCxxPrivate(context, OOJS_THIS, sShipGroupClassID, &cxxGroup))
@@ -433,7 +435,7 @@ static JSValue ShipGroupRemoveShip(OOJS_NATIVE_ARGS) {
 static JSValue ShipGroupContainsShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOShipGroup* cxxGroup = nullptr;
+  oo::ShipGroup* cxxGroup = nullptr;
   ShipEntity* ship = nullptr;
 
   if (!OOJSGetCxxPrivate(context, OOJS_THIS, sShipGroupClassID, &cxxGroup))

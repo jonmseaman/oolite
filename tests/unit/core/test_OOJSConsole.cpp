@@ -16,10 +16,10 @@
 	Run: tests/run.sh unit
 */
 
-#include "OOFoundation.h"
+#include "Foundation.h"
 #include "JSConsole.h"
 #include "DebugMonitor.h"
-#include "OOOpenGLExtensionManager.h"
+#include "OpenGLExtensionManager.h"
 #include "OOJSEngineCore.h"
 #include "DebugFlags.h"
 #include "oofnd/String.hpp"
@@ -293,14 +293,14 @@ JSValue OOJSUnconstructableConstruct(JSContext *context, JSValueConst, int, JSVa
 // The engine's time limiter (OOJavaScriptEngine.mm), which the profiler and the binding pause and
 // reset: it keeps the limit it is given and nothing else (no script here runs long).
 namespace {
-OOTimeDelta sTimeLimit = 1.0;
+oo::TimeDelta sTimeLimit = 1.0;
 }	// namespace
 void OOJSPauseTimeLimiter(void)  {}
 void OOJSResumeTimeLimiter(void)  {}
 void OOJSResetTimeLimiter(void)  {}
-OOTimeDelta OOJSGetTimeLimiterLimit(void)  { return sTimeLimit; }
-void OOJSSetTimeLimiterLimit(OOTimeDelta limit)  { sTimeLimit = limit; }
-void OOJSExcludeTimeFromLimiter(OOTimeDelta)  {}
+oo::TimeDelta OOJSGetTimeLimiterLimit(void)  { return sTimeLimit; }
+void OOJSSetTimeLimiterLimit(oo::TimeDelta limit)  { sTimeLimit = limit; }
+void OOJSExcludeTimeFromLimiter(oo::TimeDelta)  {}
 
 
 #ifndef NDEBUG
@@ -317,20 +317,25 @@ void OOJSDumpStack(JSContext *)  {}	// the profiler's, when a time limit is hit
 #endif
 
 
-std::string OOPlatformDescription(void)  { return "test platform"; }
-void OOLogInsertMarker(void)  { sLogMarkers++; }
+namespace oo {
+
+std::string PlatformDescription(void)  { return "test platform"; }
+void LogInsertMarker(void)  { sLogMarkers++; }
 
 
-std::string OOStringFromGraphicsDetail(OOGraphicsDetail detail)
+std::string StringFromGraphicsDetail(GraphicsDetail detail)
 {
 	return "DETAIL_" + std::to_string(static_cast<int>(detail));
 }
 
 
-OOGraphicsDetail OOGraphicsDetailFromString(const std::string &string)
+GraphicsDetail GraphicsDetailFromString(const std::string &string)
 {
-	return (string == "DETAIL_2") ? OOGraphicsDetail::kShaders : OOGraphicsDetail::kMinimum;
+	return (string == "DETAIL_2") ? GraphicsDetail::kShaders : GraphicsDetail::kMinimum;
 }
+
+}  // namespace oo
+
 
 
 // EntityHelpers.mm's, which the test does not link: an entity's node (its hold and its description)
@@ -409,19 +414,24 @@ void OOJavaScriptEngine::setDumpStackForWarnings(bool flag)  { _dumpStackForWarn
 
 
 // The OpenGL extension manager's answers: the C++ manager's members the console reads.
-OOOpenGLExtensionManager *OOOpenGLExtensionManager::sharedManager()
+oo::OpenGLExtensionManager *oo::OpenGLExtensionManager::sharedManager()
 {
-	static OOOpenGLExtensionManager *manager = nullptr;
-	if (manager == nullptr)  manager = new OOOpenGLExtensionManager;	// never released, as the game's
+	static oo::OpenGLExtensionManager *manager = nullptr;
+	if (manager == nullptr)  manager = new oo::OpenGLExtensionManager;	// never released, as the game's
 	return manager;
 }
 
-OOOpenGLExtensionManager::~OOOpenGLExtensionManager()  {}
-OOGraphicsDetail OOOpenGLExtensionManager::maximumDetailLevel()  { return kOOGraphicsDetailMaximum; }
-std::optional<std::string> OOOpenGLExtensionManager::vendorString()  { return std::string("Test Vendor"); }
-std::optional<std::string> OOOpenGLExtensionManager::rendererString()  { return std::nullopt; }
-GLint OOOpenGLExtensionManager::textureUnitCount()  { return 4; }
-GLint OOOpenGLExtensionManager::textureImageUnitCount()  { return 16; }
+namespace oo {
+
+OpenGLExtensionManager::~OpenGLExtensionManager()  {}
+
+}  // namespace oo
+
+oo::GraphicsDetail oo::OpenGLExtensionManager::maximumDetailLevel()  { return oo::kGraphicsDetailMaximum; }
+std::optional<std::string> oo::OpenGLExtensionManager::vendorString()  { return std::string("Test Vendor"); }
+std::optional<std::string> oo::OpenGLExtensionManager::rendererString()  { return std::nullopt; }
+GLint oo::OpenGLExtensionManager::textureUnitCount()  { return 4; }
+GLint oo::OpenGLExtensionManager::textureImageUnitCount()  { return 16; }
 
 
 // The universe as the code under test sees it: a stand-in for the C++ class,
@@ -429,18 +439,18 @@ GLint OOOpenGLExtensionManager::textureImageUnitCount()  { return 16; }
 class Universe
 {
 public:
-	OOGraphicsDetail _detailLevel;
+	oo::GraphicsDetail _detailLevel;
 	bool _displayFPS;
 
-	OOGraphicsDetail getDetailLevel();
-	void setDetailLevel(OOGraphicsDetail);
+	oo::GraphicsDetail getDetailLevel();
+	void setDetailLevel(oo::GraphicsDetail);
 	bool getDisplayFPS();
 	void setDisplayFPS(bool);
 };
 typedef Universe FakeUniverse;
 
-OOGraphicsDetail Universe::getDetailLevel()	{ return _detailLevel; }
-void Universe::setDetailLevel(OOGraphicsDetail value)	{ _detailLevel = value; }
+oo::GraphicsDetail Universe::getDetailLevel()	{ return _detailLevel; }
+void Universe::setDetailLevel(oo::GraphicsDetail value)	{ _detailLevel = value; }
 bool Universe::getDisplayFPS()	{ return _displayFPS; }
 void Universe::setDisplayFPS(bool value)	{ _displayFPS = value; }
 

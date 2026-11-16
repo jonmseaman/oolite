@@ -39,11 +39,11 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOEntityEnums.h"  // OOEntityStatus, OOScanClass
-#include "OOFoundation.h"
-#include "OOMaths.h"
-#include "OOTypes.h"
+#include "EntityEnums.h"  // OOEntityStatus, OOScanClass
+#include "Foundation.h"
+#include "Maths.h"
 #include "Texture.h"  // allTextures() answers std::shared_ptr<OOTexture>
+#include "Types.h"
 #include "oofnd/Object.hpp"
 
 class ShipEntity;  // C++
@@ -77,7 +77,7 @@ class Entity;
     virtual GLfloat cameraRangeFront() VALUE_BODY \
     virtual GLfloat cameraRangeBack() VALUE_BODY \
     virtual void updateCameraRelativePosition() VOID_BODY \
-    virtual OOComparisonResult compareZeroDistance(Entity* /*otherEntity*/) VALUE_BODY \
+    virtual oo::ComparisonResult compareZeroDistance(Entity* /*otherEntity*/) VALUE_BODY \
     virtual void setOrientation(Quaternion /*quat*/) VOID_BODY \
     /* Historical             \
                                                                              wart:                  \
@@ -99,12 +99,12 @@ class Entity;
     virtual void applyRoll(GLfloat /*roll*/, GLfloat /*climb*/) VOID_BODY \
     virtual void applyRoll(GLfloat /*roll*/, GLfloat /*climb*/, GLfloat /*yaw*/) VOID_BODY \
     virtual void moveForward(double /*amount*/) VOID_BODY \
-    virtual OOMatrix drawRotationMatrix() VALUE_BODY \
-    virtual OOMatrix drawTransformationMatrix() VALUE_BODY \
+    virtual oo::Matrix drawRotationMatrix() VALUE_BODY \
+    virtual oo::Matrix drawTransformationMatrix() VALUE_BODY \
     virtual bool canCollide() VALUE_BODY \
     virtual GLfloat collisionRadius() VALUE_BODY \
     virtual GLfloat frustumRadius() VALUE_BODY \
-    virtual void update(OOTimeDelta /*delta_t*/) VOID_BODY \
+    virtual void update(oo::TimeDelta /*delta_t*/) VOID_BODY \
     virtual bool checkCloseCollisionWith(Entity* /*other*/) VALUE_BODY \
     virtual void takeEnergyDamage(double /*amount*/, Entity* /*ent*/, Entity* /*other*/, const std::string& /*weaponIdentifier*/) VOID_BODY \
     /* Subclasses             \
