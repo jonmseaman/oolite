@@ -27,10 +27,10 @@ MA 02110-1301, USA.
 #include <memory>
 
 #include "OOMacroOpenGL.h"
-#include "OOTexture.h"
+#include "Texture.h"
 
 std::shared_ptr<OOTextureSprite> OOTextureSprite::initWithTexture(
-    OOTexture* inTexture) {
+    oo::Texture* inTexture) {
   return initWithTexture(
       inTexture, (inTexture != nullptr)
                      ? inTexture->originalDimensions()
@@ -39,7 +39,7 @@ std::shared_ptr<OOTextureSprite> OOTextureSprite::initWithTexture(
 
 // -initWithTexture:size:'s failure test, then the object.
 std::shared_ptr<OOTextureSprite> OOTextureSprite::initWithTexture(
-    OOTexture* inTexture, NSSize spriteSize) {
+    oo::Texture* inTexture, NSSize spriteSize) {
   if (inTexture == nullptr) {
     return nullptr;
   }
@@ -48,7 +48,7 @@ std::shared_ptr<OOTextureSprite> OOTextureSprite::initWithTexture(
       new OOTextureSprite(inTexture, spriteSize), oo::Dispose{});
 }
 
-OOTextureSprite::OOTextureSprite(OOTexture* inTexture, NSSize spriteSize) {
+OOTextureSprite::OOTextureSprite(oo::Texture* inTexture, NSSize spriteSize) {
   texture = oo::share(inTexture);
   size = spriteSize;
 }

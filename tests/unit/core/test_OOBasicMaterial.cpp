@@ -15,8 +15,8 @@
 #include <cmath>
 #include <cstdlib>
 
-#include "OOBasicMaterial.h"
-#include "OOTexture.h"
+#include "BasicMaterial.h"
+#include "Texture.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 
@@ -39,14 +39,19 @@ void OOLogOutdent(void) {}
 static int gTextureApplyNones = 0;
 
 // The C++ OOTexture's static member.
-void OOTexture::applyNone() { gTextureApplyNones++; }
+void oo::Texture::applyNone() { gTextureApplyNones++; }
 
 // Link stubs, never reached here:
 // OOMaterialSpecifier.mm's texture specifiers, and OOOpenGL.mm's GL state dump.
-oo::PList OOTextureSpecFromObject(const oo::PList&,
+namespace oo {
+
+oo::PList TextureSpecFromObject(const oo::PList&,
                                       const std::optional<std::string>&) {
   std::abort();
 }
+
+}  // namespace oo
+
 OOOpenGLExtensionManager* OOOpenGLExtensionManager::sharedManager() {
   std::abort();
 }
@@ -87,12 +92,12 @@ bool Universe::useShaders() { return false; }
 
 // A C++ subclass, as OOSingleTextureMaterial is: it denies specular, and asks
 // the base class.
-class TestSubMaterial : public OOBasicMaterial {
+class TestSubMaterial : public oo::BasicMaterial {
  public:
   bool permitSpecular() override { return false; }
   bool doApply() override {
     doApplies++;
-    return OOBasicMaterial::doApply();
+    return oo::BasicMaterial::doApply();
   }
 
   int doApplies = 0;
@@ -112,22 +117,22 @@ bool Same(const GLfloat* a, std::initializer_list<GLfloat> b) {
   return true;
 }
 
-Components Diffuse(OOBasicMaterial* m) {
+Components Diffuse(oo::BasicMaterial* m) {
   Components c = {};
   m->getDiffuseComponents(c.v);
   return c;
 }
-Components Ambient(OOBasicMaterial* m) {
+Components Ambient(oo::BasicMaterial* m) {
   Components c = {};
   m->getAmbientComponents(c.v);
   return c;
 }
-Components Specular(OOBasicMaterial* m) {
+Components Specular(oo::BasicMaterial* m) {
   Components c = {};
   m->getSpecularComponents(c.v);
   return c;
 }
-Components Emission(OOBasicMaterial* m) {
+Components Emission(oo::BasicMaterial* m) {
   Components c = {};
   m->getEmissionComponents(c.v);
   return c;
@@ -155,8 +160,8 @@ GLfloat GLShininess() {
 
 oo::PList Config(oo::PList::Dict dict) { return oo::PList(std::move(dict)); }
 
-std::shared_ptr<OOBasicMaterial> Named(const char* name) {
-  return OOBasicMaterial::materialWithName(std::string(name));
+std::shared_ptr<oo::BasicMaterial> Named(const char* name) {
+  return oo::BasicMaterial::materialWithName(std::string(name));
 }
 
 std::shared_ptr<TestSubMaterial> NamedSub(
@@ -171,7 +176,7 @@ std::shared_ptr<TestSubMaterial> NamedSub(
 
 OO_TEST(defaults) {
   {
-    const std::shared_ptr<OOBasicMaterial> m = Named("Hull");
+    const std::shared_ptr<oo::BasicMaterial> m = Named("Hull");
     OO_CHECK(m->name() == std::optional<std::string>("Hull"));
     OO_CHECK(Same(Diffuse(m.get()).v, {1, 1, 1, 1}));
     OO_CHECK(Same(Ambient(m.get()).v, {1, 1, 1, 1}));
@@ -184,7 +189,7 @@ OO_TEST(defaults) {
     OO_CHECK(m->allTextures().empty());
 #endif
     OO_CHECK(
-        !OOBasicMaterial::materialWithName(std::nullopt)->name().has_value());
+        !oo::BasicMaterial::materialWithName(std::nullopt)->name().has_value());
   }
 }
 
@@ -192,8 +197,8 @@ OO_TEST(emptyConfiguration) {
   {
     // A null configuration is an empty one: the specifier's defaults apply
     // (exponent 10, 0.2 white).
-    const std::shared_ptr<OOBasicMaterial> m =
-        OOBasicMaterial::materialWithName(std::string("Plain"), oo::PList());
+    const std::shared_ptr<oo::BasicMaterial> m =
+        oo::BasicMaterial::materialWithName(std::string("Plain"), oo::PList());
     OO_CHECK(m->name() == std::optional<std::string>("Plain"));
     OO_CHECK(Same(Diffuse(m.get()).v, {1, 1, 1, 1}));
     OO_CHECK(Same(Ambient(m.get()).v, {1, 1, 1, 1}));
@@ -205,7 +210,7 @@ OO_TEST(emptyConfiguration) {
 
 OO_TEST(configuration) {
   {
-    std::shared_ptr<OOBasicMaterial> m = OOBasicMaterial::materialWithName(
+    std::shared_ptr<oo::BasicMaterial> m = oo::BasicMaterial::materialWithName(
         std::string("Painted"),
         Config({
             {"diffuse_color", oo::PList("redColor")},
@@ -222,7 +227,7 @@ OO_TEST(configuration) {
 
     // Legacy names; white diffuse and black emission count as none; exponent 0:
     // no specular.
-    m = OOBasicMaterial::materialWithName(
+    m = oo::BasicMaterial::materialWithName(
         std::string("Legacy"), Config({
                                    {"diffuse", oo::PList("whiteColor")},
                                    {"ambient", oo::PList("yellowColor")},
@@ -247,8 +252,8 @@ OO_TEST(permitSpecular) {
     TestUniverse* universe = new TestUniverse();
     universe->_reducedDetail = true;
     gSharedUniverse = universe;
-    const std::shared_ptr<OOBasicMaterial> m =
-        OOBasicMaterial::materialWithName(std::string("Reduced"), config);
+    const std::shared_ptr<oo::BasicMaterial> m =
+        oo::BasicMaterial::materialWithName(std::string("Reduced"), config);
     OO_CHECK(!m->permitSpecular());
     OO_CHECK(m->shininess() == 0 && Same(Specular(m.get()).v, {0, 0, 0, 1}));
     universe->_reducedDetail = false;
@@ -266,8 +271,8 @@ OO_TEST(permitSpecular) {
 
 OO_TEST(accessors) {
   {
-    const std::shared_ptr<OOBasicMaterial> mRef = Named("Accessors");
-    OOBasicMaterial* m = mRef.get();
+    const std::shared_ptr<oo::BasicMaterial> mRef = Named("Accessors");
+    oo::BasicMaterial* m = mRef.get();
 
     m->setDiffuseRed(0.1f, 0.2f, 0.3f, 0.4f);
     OO_CHECK(SameColor(m->diffuseColor(), {0.1f, 0.2f, 0.3f, 0.4f}));
@@ -330,7 +335,7 @@ OO_TEST(doApplySetsTheGLMaterial) {
     return;
   }
   {
-    const std::shared_ptr<OOBasicMaterial> m = Named("Applied");
+    const std::shared_ptr<oo::BasicMaterial> m = Named("Applied");
     m->setDiffuseRed(0.1f, 0.2f, 0.3f, 0.4f);
     m->setAmbientRed(0.5f, 0.6f, 0.7f, 0.8f);
     m->setSpecularRed(0.9f, 0.8f, 0.7f, 0.6f);
@@ -365,7 +370,7 @@ OO_TEST(unapplyFallsBackToTheDefaultMaterial) {
     return;
   }
   {
-    const std::shared_ptr<OOBasicMaterial> m = Named("Current");
+    const std::shared_ptr<oo::BasicMaterial> m = Named("Current");
     m->setDiffuseRed(0.1f, 0.2f, 0.3f, 0.4f);
     m->setSpecularRed(0.9f, 0.8f, 0.7f, 0.6f);
     m->setShininess(64);
@@ -391,7 +396,7 @@ OO_TEST(unapplyFallsBackToTheDefaultMaterial) {
     OO_CHECK(GLShininess() == 0);
 
     m->doApply();
-    const std::shared_ptr<OOMaterial> plainMaterial = oo::makeShared<OOMaterial>();
+    const std::shared_ptr<oo::Material> plainMaterial = oo::makeShared<oo::Material>();
     m->unapplyWithNext(plainMaterial.get());
     OO_CHECK(gTextureApplyNones == applyNones + 3);
     OO_CHECK(Same(GLMaterial(GL_DIFFUSE).v, {1, 1, 1, 1}) &&
@@ -405,20 +410,20 @@ OO_TEST(applyAndCurrent) {
     return;
   }
   {
-    const std::shared_ptr<OOBasicMaterial> a = Named("A");
+    const std::shared_ptr<oo::BasicMaterial> a = Named("A");
     const std::shared_ptr<TestSubMaterial> b = NamedSub(std::string("B"));
     a->apply();
-    OO_CHECK(OOMaterial::current().get() == a.get());
+    OO_CHECK(oo::Material::current().get() == a.get());
     b->apply();
-    OO_CHECK(OOMaterial::current().get() == b.get() && b->doApplies == 1);
-    OOMaterial::applyNone();
-    OO_CHECK(OOMaterial::current() == nullptr);
+    OO_CHECK(oo::Material::current().get() == b.get() && b->doApplies == 1);
+    oo::Material::applyNone();
+    OO_CHECK(oo::Material::current() == nullptr);
   }
 }
 
 OO_TEST(description) {
   {
-    const std::shared_ptr<OOBasicMaterial> m = Named("Hull");
+    const std::shared_ptr<oo::BasicMaterial> m = Named("Hull");
     const std::string text = m->description();
     OO_CHECK(text.starts_with("<OOBasicMaterial 0x"));
     OO_CHECK(text.ends_with(">{\"Hull\"}"));
@@ -431,8 +436,8 @@ OO_TEST(description) {
 
 OO_TEST(cxxAPI) {
   {
-    const std::shared_ptr<OOBasicMaterial> m =
-        OOBasicMaterial::materialWithName(std::string("Cxx"));
+    const std::shared_ptr<oo::BasicMaterial> m =
+        oo::BasicMaterial::materialWithName(std::string("Cxx"));
     OO_CHECK(m->name() == std::optional<std::string>("Cxx") &&
              m->shininess() == 0);
     GLfloat c[4] = {};
@@ -450,8 +455,8 @@ OO_TEST(cxxAPI) {
              std::optional<std::string>("\"Cxx\""));
     OO_CHECK(m->permitSpecular() && m->isFinishedLoading());
 
-    const std::shared_ptr<OOBasicMaterial> configured =
-        OOBasicMaterial::materialWithName(
+    const std::shared_ptr<oo::BasicMaterial> configured =
+        oo::BasicMaterial::materialWithName(
             std::nullopt,
             Config({
                 {"diffuse_color", oo::PList("blueColor")},
@@ -475,8 +480,8 @@ OO_TEST(cxxAPI) {
 // The name of a C++ material.
 OO_TEST(nameOfACxxMaterial) {
   {
-    const std::shared_ptr<OOBasicMaterial> m =
-        OOBasicMaterial::materialWithName(std::string("Cxx"));
+    const std::shared_ptr<oo::BasicMaterial> m =
+        oo::BasicMaterial::materialWithName(std::string("Cxx"));
     OO_CHECK(m->name() == std::optional<std::string>("Cxx"));
   }
 }

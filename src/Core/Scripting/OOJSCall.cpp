@@ -38,8 +38,8 @@ MA 02110-1301, USA.
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOShaderUniformMethodType.h"
 #include "PlayerEntity.h"  // the script target (a C++ member)
+#include "ShaderUniformMethodType.h"
 #include "ShipEntity.h"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
@@ -47,28 +47,29 @@ MA 02110-1301, USA.
 // The by-name call kinds: the uniform type numbers and the ones after them,
 // so typed constants as they are.
 using MethodType = int;
-constexpr MethodType kMethodTypeInvalid = kOOShaderUniformTypeInvalid;
-constexpr MethodType kMethodTypeCharVoid = kOOShaderUniformTypeChar;
+constexpr MethodType kMethodTypeInvalid = oo::kShaderUniformTypeInvalid;
+constexpr MethodType kMethodTypeCharVoid = oo::kShaderUniformTypeChar;
 constexpr MethodType kMethodTypeUnsignedCharVoid =
-    kOOShaderUniformTypeUnsignedChar;
-constexpr MethodType kMethodTypeShortVoid = kOOShaderUniformTypeShort;
+    oo::kShaderUniformTypeUnsignedChar;
+constexpr MethodType kMethodTypeShortVoid = oo::kShaderUniformTypeShort;
 constexpr MethodType kMethodTypeUnsignedShortVoid =
-    kOOShaderUniformTypeUnsignedShort;
-constexpr MethodType kMethodTypeIntVoid = kOOShaderUniformTypeInt;
+    oo::kShaderUniformTypeUnsignedShort;
+constexpr MethodType kMethodTypeIntVoid = oo::kShaderUniformTypeInt;
 constexpr MethodType kMethodTypeUnsignedIntVoid =
-    kOOShaderUniformTypeUnsignedInt;
-constexpr MethodType kMethodTypeLongVoid = kOOShaderUniformTypeLong;
+    oo::kShaderUniformTypeUnsignedInt;
+constexpr MethodType kMethodTypeLongVoid = oo::kShaderUniformTypeLong;
 constexpr MethodType kMethodTypeUnsignedLongVoid =
-    kOOShaderUniformTypeUnsignedLong;
-constexpr MethodType kMethodTypeFloatVoid = kOOShaderUniformTypeFloat;
-constexpr MethodType kMethodTypeDoubleVoid = kOOShaderUniformTypeDouble;
-constexpr MethodType kMethodTypeVectorVoid = kOOShaderUniformTypeVector;
-constexpr MethodType kMethodTypeQuaternionVoid = kOOShaderUniformTypeQuaternion;
-constexpr MethodType kMethodTypeMatrixVoid = kOOShaderUniformTypeMatrix;
-constexpr MethodType kMethodTypePointVoid = kOOShaderUniformTypePoint;
+    oo::kShaderUniformTypeUnsignedLong;
+constexpr MethodType kMethodTypeFloatVoid = oo::kShaderUniformTypeFloat;
+constexpr MethodType kMethodTypeDoubleVoid = oo::kShaderUniformTypeDouble;
+constexpr MethodType kMethodTypeVectorVoid = oo::kShaderUniformTypeVector;
+constexpr MethodType kMethodTypeQuaternionVoid =
+    oo::kShaderUniformTypeQuaternion;
+constexpr MethodType kMethodTypeMatrixVoid = oo::kShaderUniformTypeMatrix;
+constexpr MethodType kMethodTypePointVoid = oo::kShaderUniformTypePoint;
 constexpr MethodType kMethodTypeColorVoid =
-    kOOShaderUniformTypeColor;  // a colour (OOColor *)
-constexpr MethodType kMethodTypeObjectVoid = kOOShaderUniformTypeObject;
+    oo::kShaderUniformTypeColor;  // a colour (OOColor *)
+constexpr MethodType kMethodTypeObjectVoid = oo::kShaderUniformTypeObject;
 constexpr MethodType kMethodTypeObjectObject = kMethodTypeObjectVoid + 1;
 constexpr MethodType kMethodTypeVoidVoid = kMethodTypeObjectObject + 1;
 constexpr MethodType kMethodTypeVoidObject = kMethodTypeVoidVoid + 1;

@@ -33,9 +33,9 @@ MA 02110-1301, USA.
 #include "oofnd/Process.hpp"
 
 #if OO_SHADERS
-#include "OOShaderProgram.h"
-#include "OOShaderUniform.h"
-#include "OOShaderUniformMethodType.h"
+#include "ShaderProgram.h"
+#include "ShaderUniform.h"
+#include "ShaderUniformMethodType.h"
 #endif
 
 #include <cstring>
@@ -62,12 +62,13 @@ constexpr int kShaderModeUnknown = kShaderModeOn + 1;
 */
 namespace {
 
-void DustWarpVectorBinding(oo::Object* target, OOShaderBindingValue& outValue) {
+void DustWarpVectorBinding(oo::Object* target,
+                           oo::ShaderBindingValue& outValue) {
   outValue.v = static_cast<DustEntity*>(target)->warpVector();
 }
 
 void DustOffsetPlayerPositionBinding(oo::Object* target,
-                                     OOShaderBindingValue& outValue) {
+                                     oo::ShaderBindingValue& outValue) {
   outValue.v = static_cast<DustEntity*>(target)->offsetPlayerPosition();
 }
 
@@ -116,10 +117,10 @@ void DustEntity::init() {
       "GL_ARB_point_sprite");
 
   if (hasPointSprites) {
-    texture = OOTexture::textureWithName(
+    texture = oo::Texture::textureWithName(
         "oolite-particle-dust.png", "Textures",
-        OOTextureFlags::kMinFilterMipMap | OOTextureFlags::kMagFilterLinear |
-            OOTextureFlags::kAlphaMask,
+        oo::TextureFlags::kMinFilterMipMap |
+            oo::TextureFlags::kMagFilterLinear | oo::TextureFlags::kAlphaMask,
         kOOTextureDefaultAnisotropy / 2.0, 0.0);
   }
 
@@ -182,7 +183,7 @@ void DustEntity::update(OOTimeDelta /*delta_t*/) {
 }
 
 #if OO_SHADERS
-OOShaderProgram* DustEntity::getShader() {
+oo::ShaderProgram* DustEntity::getShader() {
   if (shader == nullptr) {
     std::string prefix = std::format(
         "#define OODUST_SCALE_MAX    (float({:g}))\n"
@@ -196,21 +197,22 @@ OOShaderProgram* DustEntity::getShader() {
     attributes["aWarpiness"] =
         oo::PList::signedInteger(kTangentAttributeIndex);  // +numberWithInt:
 
-    shader = OOShaderProgram::shaderProgramWithVertexShaderName(
+    shader = oo::ShaderProgram::shaderProgramWithVertexShaderName(
         "oolite-dust.vertex", "oolite-dust.fragment",
         std::optional<std::string>(std::move(prefix)),
         oo::PList(std::move(attributes)));
 
     uniforms.clear();
-    std::shared_ptr<OOShaderUniform> uWarp = OOShaderUniform::initWithName(
+    std::shared_ptr<oo::ShaderUniform> uWarp = oo::ShaderUniform::initWithName(
         "uWarp", shader.get(), this, "warpVector",
-        kOOShaderUniformTypeVector,  // -warpVector's return type
-        DustWarpVectorBinding, OOUniformConvertOptions::kNone);
-    std::shared_ptr<OOShaderUniform> uOffsetPlayerPosition =
-        OOShaderUniform::initWithName(
+        oo::kShaderUniformTypeVector,  // -warpVector's return type
+        DustWarpVectorBinding, oo::UniformConvertOptions::kNone);
+    std::shared_ptr<oo::ShaderUniform> uOffsetPlayerPosition =
+        oo::ShaderUniform::initWithName(
             "uOffsetPlayerPosition", shader.get(), this, "offsetPlayerPosition",
-            kOOShaderUniformTypeVector,  // -offsetPlayerPosition's return type
-            DustOffsetPlayerPositionBinding, OOUniformConvertOptions::kNone);
+            oo::kShaderUniformTypeVector,  // -offsetPlayerPosition's return
+                                           // type
+            DustOffsetPlayerPositionBinding, oo::UniformConvertOptions::kNone);
 
     uniforms.push_back(uWarp);
     uniforms.push_back(uOffsetPlayerPosition);
@@ -314,10 +316,10 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
 #if OO_SHADERS
     if (useShader) {
       // A message to a nil program did nothing.
-      OOShaderProgram* program = getShader();
+      oo::ShaderProgram* program = getShader();
       if (program != nullptr) program->apply();
       // A message to a nil uniform (the initialiser answered nil) did nothing.
-      for (const std::shared_ptr<OOShaderUniform>& uniform : uniforms) {
+      for (const std::shared_ptr<oo::ShaderUniform>& uniform : uniforms) {
         if (uniform != nullptr) {
           uniform->apply();
         }
@@ -389,7 +391,7 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
     // reapply normal conditions
 #if OO_SHADERS
     if (useShader) {
-      OOShaderProgram::applyNone();
+      oo::ShaderProgram::applyNone();
     } else
 #endif
     {

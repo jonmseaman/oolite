@@ -16,7 +16,7 @@
 #include <string>
 
 #include "OOOpenGLExtensionManager.h"
-#include "OOTexture.h"
+#include "Texture.h"
 #include "oo_component.hpp"
 #include "oo_test.hpp"
 
@@ -34,7 +34,7 @@ bool IsChild() {
 OO_TEST(a_gl_call_while_headless_is_caught) {
   if (IsChild()) {
     OOOpenGLExtensionManager::setHeadless(true);
-    OOTexture::applyNone();  // glBindTexture: the trap aborts here
+    oo::Texture::applyNone();  // glBindTexture: the trap aborts here
     std::printf("the GL call returned: the trap is not linked\n");
     std::exit(0);
   }

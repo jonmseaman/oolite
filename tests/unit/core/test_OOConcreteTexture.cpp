@@ -16,8 +16,8 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "OOConcreteTexture.h"
-#include "OOTextureGenerator.h"
+#include "ConcreteTexture.h"
+#include "TextureGenerator.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -28,14 +28,14 @@ uint32_t gDebugFlags = 0;
 #endif
 
 // A generator of a 4 x 2 RGBA image whose bytes count up from 1, or of nothing.
-class TestGenerator : public OOTextureGenerator {
+class TestGenerator : public oo::TextureGenerator {
  public:
   void loadTexture() override {
     if (_empty) return;
     _width = 4;
     _height = 2;
-    _format = kOOPixMapRGBA;
-    OOPixelBuffer buffer = OOMakePixelBuffer(4 * 2 * 4);
+    _format = oo::kPixMapRGBA;
+    oo::PixelBuffer buffer = oo::MakePixelBuffer(4 * 2 * 4);
     uint8_t* bytes = buffer->data();
     for (unsigned i = 0; i < 4 * 2 * 4; i++) bytes[i] = (uint8_t)(i + 1);
     _data = buffer;
@@ -46,9 +46,9 @@ class TestGenerator : public OOTextureGenerator {
 
 // What an autoreleased texture is: the C++ texture, kept until the current
 // autorelease scope drains (oo::autorelease).
-static OOTexture* Autoreleased(const std::shared_ptr<OOTexture>& texture) {
+static oo::Texture* Autoreleased(const std::shared_ptr<oo::Texture>& texture) {
   if (texture == nullptr) return nullptr;
-  oo::autorelease(std::shared_ptr<OOTexture>(texture));
+  oo::autorelease(std::shared_ptr<oo::Texture>(texture));
   return texture.get();
 }
 
@@ -69,7 +69,7 @@ GLint BoundTexture() {
 void SetUpLoaders() {
   {
     oo::AutoreleaseScope pool;
-    (void)OOTextureLoader::loaderWithPath(std::string("unknown.type"), OOTextureFlags::kNone);
+    (void)oo::TextureLoader::loaderWithPath(std::string("unknown.type"), oo::TextureFlags::kNone);
   }
 }
 
@@ -77,7 +77,7 @@ void SetUpLoaders() {
 // case's pool).
 std::vector<std::shared_ptr<TestGenerator>> gKeptGenerators;
 
-TestGenerator* NewGenerator(OOTextureFlags options) {
+TestGenerator* NewGenerator(oo::TextureFlags options) {
   const std::shared_ptr<TestGenerator> generator = oo::makeShared<TestGenerator>();
   if (!generator->initWithPath(std::string("test generator"), options))
     return nullptr;
@@ -85,7 +85,7 @@ TestGenerator* NewGenerator(OOTextureFlags options) {
   return generator.get();
 }
 
-TestGenerator* QueuedGenerator(OOTextureFlags options, bool empty) {
+TestGenerator* QueuedGenerator(oo::TextureFlags options, bool empty) {
   TestGenerator* generator = NewGenerator(options);
   generator->_empty = empty;
   OO_CHECK(generator->enqueue());
@@ -94,16 +94,16 @@ TestGenerator* QueuedGenerator(OOTextureFlags options, bool empty) {
 
 // The texture the factory makes, kept until the pool drains as its facade was
 // (null for none).
-OOTexture* Texture(OOTextureLoader* loader,
-                   const std::optional<std::string>& key, OOTextureFlags options) {
+oo::Texture* Texture(oo::TextureLoader* loader,
+                   const std::optional<std::string>& key, oo::TextureFlags options) {
   return Autoreleased(
-      OOConcreteTexture::initWithLoader(loader, key, options, 0.5f, 0.0f));
+      oo::ConcreteTexture::initWithLoader(loader, key, options, 0.5f, 0.0f));
 }
 
 void ClearCache() {
   {
     oo::AutoreleaseScope scope;
-    OOTexture::clearCache();
+    oo::Texture::clearCache();
   }
 }
 
@@ -114,12 +114,12 @@ OO_TEST(noLoaderNoTexture) {
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(Texture(nullptr, std::string("test:none"), OOTextureFlags::kDefaultOptions) ==
+    OO_CHECK(Texture(nullptr, std::string("test:none"), oo::TextureFlags::kDefaultOptions) ==
              nullptr);
-    OO_CHECK(OOConcreteTexture::initWithPath(
+    OO_CHECK(oo::ConcreteTexture::initWithPath(
                  "no-such-loader.type", std::string("test:none"),
-                 OOTextureFlags::kDefaultOptions, 0.5f, 0.0f) == nullptr);
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:none")) == nullptr);
+                 oo::TextureFlags::kDefaultOptions, 0.5f, 0.0f) == nullptr);
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:none")) == nullptr);
   }
 }
 
@@ -128,13 +128,13 @@ OO_TEST(beforeLoading) {
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
-    const OOTextureFlags options =
-        OOTextureFlags::kMinFilterLinear | OOTextureFlags::kMagFilterLinear;
-    OOTexture* texture = Texture(QueuedGenerator(options, false),
+    const oo::TextureFlags options =
+        oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear;
+    oo::Texture* texture = Texture(QueuedGenerator(options, false),
                                  std::string("test:before"), options);
     OO_CHECK(texture != nullptr);
     OO_CHECK(texture->cacheKey() == std::optional<std::string>("test:before"));
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:before")) ==
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:before")) ==
              texture);
     OO_CHECK(SameSize(texture->texCoordsScale(), 1,
                       1));  // no rectangle texture: no wait
@@ -155,9 +155,9 @@ OO_TEST(loadsAndUploads) {
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
-    const OOTextureFlags options =
-        OOTextureFlags::kMinFilterLinear | OOTextureFlags::kMagFilterLinear;
-    OOTexture* texture = Texture(QueuedGenerator(options, false),
+    const oo::TextureFlags options =
+        oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear;
+    oo::Texture* texture = Texture(QueuedGenerator(options, false),
                                  std::string("test:linear"), options);
     texture->ensureFinishedLoading();
     OO_CHECK(texture->isFinishedLoading());
@@ -179,13 +179,13 @@ OO_TEST(loadsAndUploads) {
 
     // A generated texture keeps its bytes (it cannot be reloaded): the copy is
     // of them.
-    OOPixMap pixMap = texture->copyPixMapRepresentation();
-    OO_CHECK(OOIsValidPixMap(pixMap) && pixMap.width == 2 &&
-             pixMap.height == 2 && pixMap.format == kOOPixMapRGBA &&
+    oo::PixMap pixMap = texture->copyPixMapRepresentation();
+    OO_CHECK(oo::IsValidPixMap(pixMap) && pixMap.width == 2 &&
+             pixMap.height == 2 && pixMap.format == oo::kPixMapRGBA &&
              pixMap.rowBytes == 8);
     const uint8_t* bytes = (const uint8_t*)pixMap.pixels;
     OO_CHECK(bytes != NULL && bytes[0] == 3);  // the scaled first pixel
-    OOFreePixMap(&pixMap);
+    oo::FreePixMap(&pixMap);
 
     // A graphics reset deletes the GL texture; the next use uploads it again.
     texture->forceRebind();
@@ -202,9 +202,9 @@ OO_TEST(mipMapped) {
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
-    const OOTextureFlags options =
-        OOTextureFlags::kMinFilterMipMap | OOTextureFlags::kMagFilterLinear;
-    OOTexture* texture =
+    const oo::TextureFlags options =
+        oo::TextureFlags::kMinFilterMipMap | oo::TextureFlags::kMagFilterLinear;
+    oo::Texture* texture =
         Texture(QueuedGenerator(options, false), std::string("test:mip"), options);
     OO_CHECK(texture->isMipMapped());  // waits for loading
     OO_CHECK(SameSize(texture->dimensions(), 2, 2));
@@ -225,13 +225,13 @@ OO_TEST(failedLoad) {
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
-    OOTexture* texture =
-        Texture(QueuedGenerator(OOTextureFlags::kDefaultOptions, true),
-                std::string("test:empty"), OOTextureFlags::kDefaultOptions);
+    oo::Texture* texture =
+        Texture(QueuedGenerator(oo::TextureFlags::kDefaultOptions, true),
+                std::string("test:empty"), oo::TextureFlags::kDefaultOptions);
     OO_CHECK(SameSize(texture->dimensions(), 0, 0));
     OO_CHECK(texture->glTextureName() == 0 && texture->isFinishedLoading());
     OO_CHECK(texture->description().ends_with(">{test:empty, LOAD ERROR}"));
-    OO_CHECK(OOIsNullPixMap(texture->copyPixMapRepresentation()));
+    OO_CHECK(oo::IsNullPixMap(texture->copyPixMapRepresentation()));
     texture->forceRebind();  // not valid: nothing to delete
     texture->apply();
   }
@@ -243,23 +243,23 @@ OO_TEST(deallocUncaches) {
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
-    const OOTextureFlags options =
-        OOTextureFlags::kMinFilterLinear | OOTextureFlags::kMagFilterLinear;
-    OOTexture* texture = Texture(QueuedGenerator(options, false),
+    const oo::TextureFlags options =
+        oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear;
+    oo::Texture* texture = Texture(QueuedGenerator(options, false),
                                  std::string("test:gone"), options);
     texture->ensureFinishedLoading();
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:gone")) ==
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gone")) ==
              texture);
   }
   // Kept by the recent textures until they are cleared; then released, and
   // uncached.
-  OO_CHECK(OOTexture::existingTextureForKey(std::string("test:gone")) != nullptr);
+  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gone")) != nullptr);
   ClearCache();
-  OO_CHECK(OOTexture::existingTextureForKey(std::string("test:gone")) == nullptr);
+  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gone")) == nullptr);
 #ifndef NDEBUG
   {
     oo::AutoreleaseScope pool;
-    for (const std::shared_ptr<OOTexture>& texture : OOTexture::allTextures()) {
+    for (const std::shared_ptr<oo::Texture>& texture : oo::Texture::allTextures()) {
       OO_CHECK(texture->cacheKey() != std::optional<std::string>("test:gone"));
     }
   }
@@ -274,22 +274,22 @@ OO_TEST(cxxApi) {
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(OOConcreteTexture::initWithLoader(nullptr, std::string("test:cxx"),
-                                               OOTextureFlags::kDefaultOptions, 0.5f,
+    OO_CHECK(oo::ConcreteTexture::initWithLoader(nullptr, std::string("test:cxx"),
+                                               oo::TextureFlags::kDefaultOptions, 0.5f,
                                                0.0f) == nullptr);
-    OO_CHECK(OOConcreteTexture::initWithPath(
+    OO_CHECK(oo::ConcreteTexture::initWithPath(
                  "no-such-loader.type", std::string("test:cxx"),
-                 OOTextureFlags::kDefaultOptions, 0.5f, 0.0f) == nullptr);
+                 oo::TextureFlags::kDefaultOptions, 0.5f, 0.0f) == nullptr);
 
-    const OOTextureFlags options =
-        OOTextureFlags::kMinFilterLinear | OOTextureFlags::kMagFilterLinear;
-    const std::shared_ptr<OOConcreteTexture> texture =
-        OOConcreteTexture::initWithLoader(QueuedGenerator(options, false),
+    const oo::TextureFlags options =
+        oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear;
+    const std::shared_ptr<oo::ConcreteTexture> texture =
+        oo::ConcreteTexture::initWithLoader(QueuedGenerator(options, false),
                                           std::string("test:cxx"), options,
                                           0.5f, 0.0f);
     OO_CHECK(texture != nullptr &&
              texture->cacheKey() == std::optional<std::string>("test:cxx"));
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:cxx")) ==
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cxx")) ==
              texture.get());
     OO_CHECK(texture->descriptionComponents() ==
              std::optional<std::string>("test:cxx, loading"));

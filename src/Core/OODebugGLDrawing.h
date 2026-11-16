@@ -41,11 +41,15 @@ SOFTWARE.
 
 #ifndef OODEBUGLDRAWING_DISABLE
 
-class OOMaterial;
+namespace oo {
+
+class Material;
+
+}  // namespace oo
 
 struct OODebugWFState {
-  std::shared_ptr<OOMaterial> material;  // from OODebugBeginWireframe(),
-                                         // given up by OODebugEndWireframe()
+  std::shared_ptr<oo::Material> material;  // from OODebugBeginWireframe(),
+                                           // given up by OODebugEndWireframe()
 };
 
 OODebugWFState OODebugBeginWireframe(

@@ -31,9 +31,9 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "OOMaths.h"
-#include "OOTexture.h"
 #include "OOTypes.h"
 #include "ShipEntity.h"
+#include "Texture.h"
 
 struct OOLaserShotEntityTestAccess;
 
@@ -56,12 +56,12 @@ class LaserShotEntity : public Entity {
   bool isEffect() override;
   bool canCollide() override;
 
-  OOTexture* texture1();
-  OOTexture* texture2();
+  oo::Texture* texture1();
+  oo::Texture* texture2();
 
   static void setUpTexture();
-  static OOTexture* innerTexture();
-  static OOTexture* outerTexture();
+  static oo::Texture* innerTexture();
+  static oo::Texture* outerTexture();
   // The graphics reset client is a file-local C++ one (OOLaserShotEntity.cpp).
   static void resetGraphicsState();
 

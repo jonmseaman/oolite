@@ -33,8 +33,8 @@ MA 02110-1301, USA.
 #if OO_OXP_VERIFIER_ENABLED
 
 #include "FileScannerVerifierStage.h"
-#include "OOTexture.h"
-#include "OOTextureLoader.h"
+#include "Texture.h"
+#include "TextureLoader.h"
 #include "oofnd/Log.hpp"
 
 static const char* const kStageName = "Testing textures and images";
@@ -100,13 +100,13 @@ void oo::TextureVerifierStage::textureNamed(const std::string& name,
 
 void oo::TextureVerifierStage::checkTextureNamed(const std::string& name,
                                                  const std::string& folder) {
-  std::shared_ptr<OOTextureLoader> loader;
+  std::shared_ptr<oo::TextureLoader> loader;
   std::optional<std::string> path;
   oo::FileScannerVerifierStage* fileScanner = nullptr;
   std::optional<std::string> displayName;
-  OOPixMapDimension rWidth, rHeight;
+  oo::PixMapDimension rWidth, rHeight;
   bool success;
-  OOPixMap pixmap;
+  oo::PixMap pixmap;
 
   fileScanner = static_cast<oo::FileScannerVerifierStage*>(
       verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
@@ -115,10 +115,11 @@ void oo::TextureVerifierStage::checkTextureNamed(const std::string& name,
 
   if (!path.has_value()) return;
 
-  loader = OOTextureLoader::loaderWithPath(
-      path, OOTextureFlags::kMinFilterNearest |
-                OOTextureFlags::kMinFilterNearest | OOTextureFlags::kNoShrink |
-                OOTextureFlags::kNoFNFMessage | OOTextureFlags::kNeverScale);
+  loader = oo::TextureLoader::loaderWithPath(
+      path, oo::TextureFlags::kMinFilterNearest |
+                oo::TextureFlags::kMinFilterNearest |
+                oo::TextureFlags::kNoShrink | oo::TextureFlags::kNoFNFMessage |
+                oo::TextureFlags::kNeverScale);
 
   displayName = fileScanner->displayNameForFile(name, folder);
   if (loader == nullptr) {
@@ -126,7 +127,7 @@ void oo::TextureVerifierStage::checkTextureNamed(const std::string& name,
            "***** ERROR: image {} could not be read.",
            displayName.value_or("(null)"));
   } else {
-    std::optional<OOTextureLoader::Result> loaded = loader->getResult();
+    std::optional<oo::TextureLoader::Result> loaded = loader->getResult();
     success = loaded.has_value();
     if (success) pixmap = loaded->pixMap;
 
@@ -145,7 +146,7 @@ void oo::TextureVerifierStage::checkTextureNamed(const std::string& name,
                displayName.value_or("(null)"), pixmap.width, pixmap.height);
       }
 
-      OOFreePixMap(&pixmap);
+      oo::FreePixMap(&pixmap);
     } else {
       OO_LOG("verifyOXP.texture.failed",
              "***** ERROR: texture loader failed to load {}.",

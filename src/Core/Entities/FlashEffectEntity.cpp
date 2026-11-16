@@ -29,8 +29,8 @@ MA 02110-1301, USA.
 
 #include "OOColor.h"
 #include "OOGraphicsResetManager.h"
-#include "OOTexture.h"
 #include "PlayerEntity.h"
+#include "Texture.h"
 #include "Universe.h"
 
 #define kLaserFlashDuration 0.3f
@@ -43,9 +43,9 @@ MA 02110-1301, USA.
 
 // The texture, made on first use and given up by a graphics reset. The holder
 // is never deleted, so exit(0) frees no texture after the GL context has gone.
-static std::shared_ptr<OOTexture>& FlashTexture() {
-  static std::shared_ptr<OOTexture>& texture =
-      *new std::shared_ptr<OOTexture>();
+static std::shared_ptr<oo::Texture>& FlashTexture() {
+  static std::shared_ptr<oo::Texture>& texture =
+      *new std::shared_ptr<oo::Texture>();
   return texture;
 }
 
@@ -143,17 +143,17 @@ void oo::FlashEffectEntity::update(OOTimeDelta delta_t) {
   }
 }
 
-OOTexture* oo::FlashEffectEntity::texture() {
+oo::Texture* oo::FlashEffectEntity::texture() {
   if (FlashTexture() == nullptr) oo::FlashEffectEntity::setUpTexture();
   return FlashTexture().get();
 }
 
 void oo::FlashEffectEntity::setUpTexture() {
   if (FlashTexture() == nullptr) {
-    FlashTexture() = (OOTexture::textureWithName(
+    FlashTexture() = (oo::Texture::textureWithName(
         "oolite-particle-flash.png", "Textures",
-        OOTextureFlags::kMinFilterMipMap | OOTextureFlags::kMagFilterLinear |
-            OOTextureFlags::kAlphaMask,
+        oo::TextureFlags::kMinFilterMipMap |
+            oo::TextureFlags::kMagFilterLinear | oo::TextureFlags::kAlphaMask,
         kOOTextureDefaultAnisotropy, 0.0));
     OOGraphicsResetManager::sharedManager()->registerCxxClient(
         new FlashTextureResetClient);

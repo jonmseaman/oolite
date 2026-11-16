@@ -36,7 +36,12 @@ MA 02110-1301, USA.
 #include "OOMaths.h"
 #include "OOTypes.h"
 
-class OOTexture;
+namespace oo {
+
+class Texture;
+
+}  // namespace oo
+
 class OOColor;
 
 inline constexpr int kFragmentBurstMaxParticles = 64;
@@ -53,10 +58,10 @@ class ParticleSystem : public Entity {
   void drawImmediate(bool immediate, bool translucent) override;
   bool isEffect() override;
 
-  virtual OOTexture* texture();
+  virtual oo::Texture* texture();
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  std::vector<std::shared_ptr<OOTexture>> allTextures() override;
+  std::vector<std::shared_ptr<oo::Texture>> allTextures() override;
 #endif
 
  protected:

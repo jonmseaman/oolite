@@ -34,9 +34,9 @@ MA 02110-1301, USA.
 #include "OOGraphicsResetManager.h"
 #include "OOJSExhaustPlume.h"
 #include "OOMacroOpenGL.h"
-#include "OOTexture.h"
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
+#include "Texture.h"
 #include "Universe.h"
 
 #define kOverallAlpha 1.0f
@@ -50,9 +50,9 @@ MA 02110-1301, USA.
 
 // The texture, made on first use and given up by a graphics reset. The holder
 // is never deleted, so exit(0) frees no texture after the GL context has gone.
-static std::shared_ptr<OOTexture>& PlumeTexture() {
-  static std::shared_ptr<OOTexture>& texture =
-      *new std::shared_ptr<OOTexture>();
+static std::shared_ptr<oo::Texture>& PlumeTexture() {
+  static std::shared_ptr<oo::Texture>& texture =
+      *new std::shared_ptr<oo::Texture>();
   return texture;
 }
 
@@ -460,7 +460,7 @@ void oo::ExhaustPlumeEntity::drawSubEntityImmediate(bool /*immediate*/,
   OOGL(glDepthMask(GL_FALSE));
   OOGL(glEnableClientState(GL_TEXTURE_COORD_ARRAY));
   OOGL(glEnable(GL_TEXTURE_2D));
-  if (OOTexture* plume = texture())
+  if (oo::Texture* plume = texture())
     plume->apply();  // a message to nil did nothing
 
   //	OOGL(glDisable(GL_CULL_FACE));		// face culling
@@ -716,24 +716,24 @@ void oo::ExhaustPlumeEntity::rescaleBy(GLfloat /*factor*/,
      implementation requirements */
 }
 
-OOTexture* oo::ExhaustPlumeEntity::texture() {
+oo::Texture* oo::ExhaustPlumeEntity::texture() {
   return oo::ExhaustPlumeEntity::plumeTexture();
 }
 
 void oo::ExhaustPlumeEntity::setUpTexture() {
   if (PlumeTexture() == nullptr) {
-    PlumeTexture() = (OOTexture::textureWithName(
+    PlumeTexture() = (oo::Texture::textureWithName(
         "oolite-exhaust-blur.png", "Textures",
-        OOTextureFlags::kMinFilterMipMap | OOTextureFlags::kMagFilterLinear |
-            OOTextureFlags::kAlphaMask | OOTextureFlags::kRepeatT |
-            OOTextureFlags::kRepeatS,
+        oo::TextureFlags::kMinFilterMipMap |
+            oo::TextureFlags::kMagFilterLinear | oo::TextureFlags::kAlphaMask |
+            oo::TextureFlags::kRepeatT | oo::TextureFlags::kRepeatS,
         kOOTextureDefaultAnisotropy / 2.0, 0.0));
     OOGraphicsResetManager::sharedManager()->registerCxxClient(
         new PlumeTextureResetClient);
   }
 }
 
-OOTexture* oo::ExhaustPlumeEntity::plumeTexture() {
+oo::Texture* oo::ExhaustPlumeEntity::plumeTexture() {
   if (PlumeTexture() == nullptr) setUpTexture();
   return PlumeTexture().get();
 }

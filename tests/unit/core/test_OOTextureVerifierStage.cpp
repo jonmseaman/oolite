@@ -23,9 +23,9 @@
 #include <sstream>
 
 #include "OXPVerifierStage.h"
-#include "OOPixMap.h"
-#include "OOTexture.h"
-#include "OOTextureLoader.h"
+#include "PixMap.h"
+#include "Texture.h"
+#include "TextureLoader.h"
 #include "TextureVerifierStage.h"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
@@ -59,38 +59,48 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
 */
 namespace {
 
-OOTextureFlags gLoaderOptions = OOTextureFlags::kNone;
+oo::TextureFlags gLoaderOptions = oo::TextureFlags::kNone;
 int gPixMapsFreed = 0;
 
 }  // namespace
 
-void OOFreePixMap(OOPixMap* ioPixMap) {
+namespace oo {
+
+void FreePixMap(PixMap* ioPixMap) {
   gPixMapsFreed++;
-  *ioPixMap = OOPixMap{};
+  *ioPixMap = PixMap{};
 }
+
+}  // namespace oo
+
 
 /*	The loader factory and a loader of the file's contents: C++. The root's
    members are defined here (no texture
    loader is linked); the stand-in's subclass answers the result.
 */
-OOTextureLoader::OOTextureLoader() {}
-OOTextureLoader::~OOTextureLoader() {}
-std::optional<OOTextureLoader::Result> OOTextureLoader::getResult() {
-  return std::nullopt;
-}
-std::optional<std::string> OOTextureLoader::cacheKey() { return std::nullopt; }
-std::optional<std::string> OOTextureLoader::descriptionComponents() const {
-  return std::nullopt;
-}
-std::optional<std::string> OOTextureLoader::shortDescriptionComponents() const {
-  return std::nullopt;
-}
-void OOTextureLoader::loadTexture() {}
-// The work manager's task (its vtable): never queued here.
-void OOTextureLoader::performAsyncTask() { std::abort(); }
-void OOTextureLoader::completeAsyncTask() { std::abort(); }
+oo::TextureLoader::TextureLoader() {}
+namespace oo {
 
-class StandInLoader final : public OOTextureLoader {
+TextureLoader::~TextureLoader() {}
+
+}  // namespace oo
+
+std::optional<oo::TextureLoader::Result> oo::TextureLoader::getResult() {
+  return std::nullopt;
+}
+std::optional<std::string> oo::TextureLoader::cacheKey() { return std::nullopt; }
+std::optional<std::string> oo::TextureLoader::descriptionComponents() const {
+  return std::nullopt;
+}
+std::optional<std::string> oo::TextureLoader::shortDescriptionComponents() const {
+  return std::nullopt;
+}
+void oo::TextureLoader::loadTexture() {}
+// The work manager's task (its vtable): never queued here.
+void oo::TextureLoader::performAsyncTask() { std::abort(); }
+void oo::TextureLoader::completeAsyncTask() { std::abort(); }
+
+class StandInLoader final : public oo::TextureLoader {
  public:
   explicit StandInLoader(std::string contents)
       : _contents(std::move(contents)) {}
@@ -109,8 +119,8 @@ class StandInLoader final : public OOTextureLoader {
   std::string _contents;
 };
 
-std::shared_ptr<OOTextureLoader> OOTextureLoader::loaderWithPath(
-    const std::optional<std::string>& path, OOTextureFlags options) {
+std::shared_ptr<oo::TextureLoader> oo::TextureLoader::loaderWithPath(
+    const std::optional<std::string>& path, oo::TextureFlags options) {
   gLoaderOptions = options;
   std::ifstream file(path.value_or(""), std::ios::binary);
   std::stringstream bytes;
@@ -268,8 +278,8 @@ OO_TEST(runLoadsTexturesAndImages) {
     stage->run();
 
     OO_CHECK(gLoaderOptions ==
-             (OOTextureFlags::kMinFilterNearest | OOTextureFlags::kNoShrink |
-              OOTextureFlags::kNoFNFMessage | OOTextureFlags::kNeverScale));
+             (oo::TextureFlags::kMinFilterNearest | oo::TextureFlags::kNoShrink |
+              oo::TextureFlags::kNoFNFMessage | oo::TextureFlags::kNeverScale));
     OO_CHECK(LogLinesContaining("- Textures/pot.png (64x32 px) OK.") == 1);
     OO_CHECK(LogLinesContaining(
                  "----- WARNING: image Textures/npot.png has non-power-of-two "

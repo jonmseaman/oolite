@@ -43,10 +43,10 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "OOStringExpander.h"
 #include "OOSystemDescriptionManager.h"
-#include "OOTexture.h"
 #include "OOTextureSprite.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
+#include "Texture.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
@@ -105,8 +105,8 @@ std::optional<std::string> DescriptorName(const oo::PList& descriptor) {
   return descriptor.get<std::string>("name");
 }
 
-std::shared_ptr<OOTexture> TextureForGUITexture(const oo::PList& descriptor,
-                                                OOTextureFlags srgbaOption) {
+std::shared_ptr<oo::Texture> TextureForGUITexture(
+    const oo::PList& descriptor, oo::TextureFlags srgbaOption) {
   /*
           GUI textures like backgrounds, foregrounds etc. are not processed in
      any way after loading. However, they are subject to tone nmapping and gamma
@@ -119,10 +119,11 @@ std::shared_ptr<OOTexture> TextureForGUITexture(const oo::PList& descriptor,
           Also, remember that if no shaders are in use (as in lower detail
      levels), then we don't need to declare anything.
   */
-  if (!GuiDisplayGenUniverseUseShaders()) srgbaOption = OOTextureFlags::kNone;
-  return OOTexture::textureWithName(
+  if (!GuiDisplayGenUniverseUseShaders()) srgbaOption = oo::TextureFlags::kNone;
+  return oo::Texture::textureWithName(
       DescriptorName(descriptor), "Images",
-      OOTextureFlags::kDefaultOptions | OOTextureFlags::kNoShrink | srgbaOption,
+      oo::TextureFlags::kDefaultOptions | oo::TextureFlags::kNoShrink |
+          srgbaOption,
       kOOTextureDefaultAnisotropy, kOOTextureDefaultLODBias);
 }
 
@@ -131,8 +132,8 @@ std::shared_ptr<OOTexture> TextureForGUITexture(const oo::PList& descriptor,
    texture.
 */
 std::shared_ptr<OOTextureSprite> NewTextureSpriteWithDescriptor(
-    const oo::PList& descriptor, OOTextureFlags srgbaOption) {
-  std::shared_ptr<OOTexture> texture;
+    const oo::PList& descriptor, oo::TextureFlags srgbaOption) {
+  std::shared_ptr<oo::Texture> texture;
   NSSize size;
 
   texture = TextureForGUITexture(descriptor, srgbaOption);
@@ -1041,7 +1042,7 @@ bool GuiDisplayGen::setBackgroundTextureDescriptor(
     const oo::PList& descriptor) {
   backgroundSpecial = OOGUIBackgroundSpecial::kNone;  // reset
   backgroundSprite =
-      NewTextureSpriteWithDescriptor(descriptor, OOTextureFlags::kSRGBA);
+      NewTextureSpriteWithDescriptor(descriptor, oo::TextureFlags::kSRGBA);
   return backgroundSprite.get() != nullptr;
 }
 
@@ -1049,12 +1050,12 @@ bool GuiDisplayGen::setForegroundTextureDescriptor(
     const oo::PList& descriptor) {
   // FIXME: for some reason passing OOTextureFlags::kSRGBA when in SDR results
   // in double gamma correction
-  OOTextureFlags srgbaOption =
+  oo::TextureFlags srgbaOption =
       (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
            ? UNIVERSE->getGameView()->hdrOutput()
            : false)
-          ? OOTextureFlags::kSRGBA
-          : OOTextureFlags::kNone;
+          ? oo::TextureFlags::kSRGBA
+          : oo::TextureFlags::kNone;
   foregroundSprite = NewTextureSpriteWithDescriptor(descriptor, srgbaOption);
   return foregroundSprite.get() != nullptr;
 }
@@ -1076,7 +1077,7 @@ bool GuiDisplayGen::setForegroundTextureKey(
 }
 
 bool GuiDisplayGen::preloadGUITexture(const oo::PList& descriptor) {
-  return TextureForGUITexture(descriptor, OOTextureFlags::kSRGBA).get() !=
+  return TextureForGUITexture(descriptor, oo::TextureFlags::kSRGBA).get() !=
          nullptr;
 }
 
@@ -1735,7 +1736,7 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
     }
   }
   OOStopDrawingStrings();
-  OOTexture::applyNone();
+  oo::Texture::applyNone();
 }
 
 void GuiDisplayGen::drawCrossHairsWithSize(GLfloat size, GLfloat x, GLfloat y,

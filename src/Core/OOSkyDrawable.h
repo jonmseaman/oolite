@@ -60,7 +60,7 @@ class OOSkyDrawable : public OODrawable, public OOGraphicsResetClient {
   bool hasOpaqueParts() override;
   GLfloat maxDrawDistance() override;
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  std::vector<std::shared_ptr<OOTexture>> allTextures() override;
+  std::vector<std::shared_ptr<oo::Texture>> allTextures() override;
   size_t totalSize() override;
 
   size_t objectSize() const override { return sizeof *this; }

@@ -33,8 +33,8 @@ MA 02110-1301, USA.
 #include "MyOpenGLView.h"
 #include "OOGraphicsResetManager.h"
 #include "OOMacroOpenGL.h"
-#include "OOTexture.h"
 #include "ShipEntity.h"
+#include "Texture.h"
 #include "Universe.h"
 #include "oofnd/objc/Assert.h"
 
@@ -57,17 +57,17 @@ MA 02110-1301, USA.
 
 // The texture, made on first use and given up by a graphics reset. The holder
 // is never deleted, so exit(0) frees no texture after the GL context has gone.
-static std::shared_ptr<OOTexture>& ShotTexture() {
-  static std::shared_ptr<OOTexture>& texture =
-      *new std::shared_ptr<OOTexture>();
+static std::shared_ptr<oo::Texture>& ShotTexture() {
+  static std::shared_ptr<oo::Texture>& texture =
+      *new std::shared_ptr<oo::Texture>();
   return texture;
 }
 
 // The texture, made on first use and given up by a graphics reset. The holder
 // is never deleted, so exit(0) frees no texture after the GL context has gone.
-static std::shared_ptr<OOTexture>& ShotTexture2() {
-  static std::shared_ptr<OOTexture>& texture =
-      *new std::shared_ptr<OOTexture>();
+static std::shared_ptr<oo::Texture>& ShotTexture2() {
+  static std::shared_ptr<oo::Texture>& texture =
+      *new std::shared_ptr<oo::Texture>();
   return texture;
 }
 
@@ -243,7 +243,7 @@ void oo::LaserShotEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   OOGLPushModelView();
 
   OOGLScaleModelView(make_vector(kLaserHalfWidth, kLaserHalfWidth, _range));
-  if (OOTexture* shot = texture1())
+  if (oo::Texture* shot = texture1())
     shot->apply();  // a message to nil did nothing
   GLfloat s = sinf(
       (UNIVERSE != nullptr ? static_cast<float>(UNIVERSE->getTime()) : 0.0));
@@ -272,7 +272,7 @@ void oo::LaserShotEntity::drawImmediate(bool /*immediate*/, bool translucent) {
                  static_cast<GLfloat>(0.9)));
   glDrawArrays(GL_QUADS, 0, 8);
 
-  if (OOTexture* shot = texture2())
+  if (oo::Texture* shot = texture2())
     shot->apply();  // a message to nil did nothing
   OOGLScaleModelView(make_vector(kLaserFlareWidth / kLaserCoreWidth,
                                  kLaserFlareWidth / kLaserCoreWidth, 1.0));
@@ -294,38 +294,40 @@ bool oo::LaserShotEntity::isEffect() { return true; }
 
 bool oo::LaserShotEntity::canCollide() { return false; }
 
-OOTexture* oo::LaserShotEntity::texture1() {
+oo::Texture* oo::LaserShotEntity::texture1() {
   return oo::LaserShotEntity::outerTexture();
 }
 
-OOTexture* oo::LaserShotEntity::texture2() {
+oo::Texture* oo::LaserShotEntity::texture2() {
   return oo::LaserShotEntity::innerTexture();
 }
 
 void oo::LaserShotEntity::setUpTexture() {
   if (ShotTexture() == nullptr) {
-    ShotTexture() = (OOTexture::textureWithName(
+    ShotTexture() = (oo::Texture::textureWithName(
         "oolite-laser-blur.png", "Textures",
-        OOTextureFlags::kMinFilterMipMap | OOTextureFlags::kMagFilterLinear |
-            OOTextureFlags::kAlphaMask | OOTextureFlags::kRepeatT,
+        oo::TextureFlags::kMinFilterMipMap |
+            oo::TextureFlags::kMagFilterLinear | oo::TextureFlags::kAlphaMask |
+            oo::TextureFlags::kRepeatT,
         kOOTextureDefaultAnisotropy / 2.0, 0.0));
     OOGraphicsResetManager::sharedManager()->registerCxxClient(
         new ShotTextureResetClient);
 
-    ShotTexture2() = (OOTexture::textureWithName(
+    ShotTexture2() = (oo::Texture::textureWithName(
         "oolite-laser-blur2.png", "Textures",
-        OOTextureFlags::kMinFilterMipMap | OOTextureFlags::kMagFilterLinear |
-            OOTextureFlags::kAlphaMask | OOTextureFlags::kRepeatT,
+        oo::TextureFlags::kMinFilterMipMap |
+            oo::TextureFlags::kMagFilterLinear | oo::TextureFlags::kAlphaMask |
+            oo::TextureFlags::kRepeatT,
         kOOTextureDefaultAnisotropy / 2.0, 0.0));
   }
 }
 
-OOTexture* oo::LaserShotEntity::innerTexture() {
+oo::Texture* oo::LaserShotEntity::innerTexture() {
   if (ShotTexture2() == nullptr) setUpTexture();
   return ShotTexture2().get();
 }
 
-OOTexture* oo::LaserShotEntity::outerTexture() {
+oo::Texture* oo::LaserShotEntity::outerTexture() {
   if (ShotTexture() == nullptr) setUpTexture();
   return ShotTexture().get();
 }

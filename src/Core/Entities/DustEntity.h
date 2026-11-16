@@ -35,11 +35,11 @@ MA 02110-1301, USA.
 #include "Entity.h"
 #include "OOGraphicsResetManager.h"
 #include "OOOpenGLExtensionManager.h"
-#include "OOTexture.h"
+#include "Texture.h"
 
 #if OO_SHADERS
-#include "OOShaderProgram.h"
-#include "OOShaderUniform.h"
+#include "ShaderProgram.h"
+#include "ShaderUniform.h"
 #endif
 
 #define DUST_SCALE 2000
@@ -69,7 +69,7 @@ class DustEntity : public Entity, public OOGraphicsResetClient {
   void update(OOTimeDelta delta_t) override;
 
 #if OO_SHADERS
-  OOShaderProgram* getShader();
+  oo::ShaderProgram* getShader();
   Vector offsetPlayerPosition();  // the dust shader's uOffsetPlayerPosition
 #endif
   Vector warpVector();  // the dust shader's uWarp
@@ -92,14 +92,14 @@ class DustEntity : public Entity, public OOGraphicsResetClient {
   Vector vertices[DUST_N_PARTICLES * 2] = {};
   GLushort indices[DUST_N_PARTICLES * 2] = {};
   GLfloat color_fv[4] = {};
-  std::shared_ptr<OOTexture> texture;
+  std::shared_ptr<oo::Texture> texture;
   bool hasPointSprites = {};
   bool drawDust = {};
 
 #if OO_SHADERS
   GLfloat warpinessAttr[DUST_N_PARTICLES * 2] = {};
-  std::shared_ptr<OOShaderProgram> shader;
-  std::vector<std::shared_ptr<OOShaderUniform>> uniforms;
+  std::shared_ptr<oo::ShaderProgram> shader;
+  std::vector<std::shared_ptr<oo::ShaderUniform>> uniforms;
   uint8_t shaderMode = {};
 #endif
 };

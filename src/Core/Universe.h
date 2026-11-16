@@ -47,17 +47,21 @@ MA 02110-1301, USA.
 #include "OOJSPropID.h"
 #include "OOMaths.h"
 #include "OOOpenGL.h"
-#include "OOShaderProgram.h"
 #include "OOSound.h"
 #include "OOSystemDescriptionManager.h"
 #include "OOTypes.h"
+#include "ShaderProgram.h"
 #include "StellarBody.h"
 #include "UniverseVirtualMembers.h"  // the test seams
 #include "legacy_random.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
-class OOMaterial;
+namespace oo {
+
+class Material;
+
+}  // namespace oo
 
 class Entity;
 
@@ -485,7 +489,7 @@ class Universe : public oo::Object {
   oo::PList speechArray;  // [original, replacement(, espeak replacement)] pairs
 #endif
 
-  std::vector<std::shared_ptr<::OOMaterial>> _preloadingPlanetMaterials;
+  std::vector<std::shared_ptr<::oo::Material>> _preloadingPlanetMaterials;
   bool doProcedurallyTexturedPlanets = false;
 
   GLfloat frustum[6][4] = {};
@@ -511,9 +515,9 @@ class Universe : public oo::Object {
   GLuint targetDepthBufferID = 0;
   GLuint targetFramebufferID = 0;
   GLuint passthroughFramebufferID = 0;
-  std::shared_ptr<OOShaderProgram> textureProgram = {};
-  std::shared_ptr<OOShaderProgram> blurProgram = {};
-  std::shared_ptr<OOShaderProgram> finalProgram = {};
+  std::shared_ptr<oo::ShaderProgram> textureProgram = {};
+  std::shared_ptr<oo::ShaderProgram> blurProgram = {};
+  std::shared_ptr<oo::ShaderProgram> finalProgram = {};
   GLuint quadTextureVBO = 0, quadTextureVAO = 0, quadTextureEBO = 0;
   GLint defaultDrawFBO = 0;
   GLuint pingpongFBO[2] = {};

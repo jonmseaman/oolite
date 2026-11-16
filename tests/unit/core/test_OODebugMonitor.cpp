@@ -229,7 +229,7 @@ std::string OONull::description() const	{ return "<null>"; }
 
 
 #include "OOScript.h"
-#include "OOTexture.h"
+#include "Texture.h"
 
 
 // OOJSScript (OOJSScript.h), which the code under test calls. The stand-in is a
@@ -342,9 +342,9 @@ std::optional<oo::Data> DataFromOXZFile(const std::string &path)
 // No textures, so the memory dump lists none; and no entity class is ever an
 // entity. The C++ OOTexture's static members, and the member the dump calls on
 // each texture (there are none: never reached).
-std::vector<std::shared_ptr<OOTexture>> OOTexture::cachedTexturesByAge()	{ return {}; }
-std::vector<std::shared_ptr<OOTexture>> OOTexture::allTextures()			{ return {}; }
-size_t OOTexture::dataSize()	{ std::abort(); }
+std::vector<std::shared_ptr<oo::Texture>> oo::Texture::cachedTexturesByAge()	{ return {}; }
+std::vector<std::shared_ptr<oo::Texture>> oo::Texture::allTextures()			{ return {}; }
+size_t oo::Texture::dataSize()	{ std::abort(); }
 
 
 // An entity with a drawable: the member the monitor's entity dump calls

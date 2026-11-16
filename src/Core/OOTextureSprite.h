@@ -31,7 +31,11 @@ MA 02110-1301, USA.
 #include "oofnd/Object.hpp"
 #include "oofnd/objc/Object.h"
 
-class OOTexture;
+namespace oo {
+
+class Texture;
+
+}  // namespace oo
 
 inline constexpr double OPEN_GL_SPRITE_MIN_WIDTH = 64.0;
 inline constexpr double OPEN_GL_SPRITE_MIN_HEIGHT = 64.0;
@@ -40,8 +44,8 @@ class OOTextureSprite : public oo::Object {
  public:
   // Null for a nil texture (-initWithTexture:... answered nil). The first is
   // the texture's original dimensions.
-  static std::shared_ptr<OOTextureSprite> initWithTexture(OOTexture* texture);
-  static std::shared_ptr<OOTextureSprite> initWithTexture(OOTexture* texture,
+  static std::shared_ptr<OOTextureSprite> initWithTexture(oo::Texture* texture);
+  static std::shared_ptr<OOTextureSprite> initWithTexture(oo::Texture* texture,
                                                           NSSize spriteSize);
 
   NSSize getSize();  // -size (the ivar keeps its name)
@@ -51,9 +55,9 @@ class OOTextureSprite : public oo::Object {
   void blitBackgroundCentredToX(float x, float y, float z, float a);
 
  private:
-  OOTextureSprite(OOTexture* inTexture,
+  OOTextureSprite(oo::Texture* inTexture,
                   NSSize spriteSize);  // initWithTexture() checks the texture
 
-  std::shared_ptr<OOTexture> texture;
+  std::shared_ptr<oo::Texture> texture;
   NSSize size = {};
 };

@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "OOAsyncWorkManager.h"
-#include "OOPNGTextureLoader.h"
+#include "PNGTextureLoader.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 
@@ -78,20 +78,20 @@ std::vector<char> ReadBytes(const std::string& path) {
 // known extension runs (and then answers nil, reading nothing).
 void SetUpLoaders() {
   {
-    (void)OOTextureLoader::loaderWithPath(std::string("unknown.type"), OOTextureFlags::kNone);
+    (void)oo::TextureLoader::loaderWithPath(std::string("unknown.type"), oo::TextureFlags::kNone);
   }
 }
 
 struct Result {
   bool ok = false;
-  OOPixMap pixMap = kOONullPixMap;
-  OOTextureDataFormat format = kOOPixMapInvalidFormat;
+  oo::PixMap pixMap = oo::kNullPixMap;
+  oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
   uint32_t originalWidth = 0, originalHeight = 0;
 };
 
-Result GetResult(OOTextureLoader* loader) {
+Result GetResult(oo::TextureLoader* loader) {
   Result result;
-  if (std::optional<OOTextureLoader::Result> loaded = loader->getResult()) {
+  if (std::optional<oo::TextureLoader::Result> loaded = loader->getResult()) {
     result.ok = true;
     result.pixMap = loaded->pixMap;
     result.format = loaded->format;
@@ -103,12 +103,12 @@ Result GetResult(OOTextureLoader* loader) {
 
 // The loaders made, kept for the test's life (each was autoreleased in its
 // case's pool).
-std::vector<std::shared_ptr<OOTextureLoader>> gKeptLoaders;
+std::vector<std::shared_ptr<oo::TextureLoader>> gKeptLoaders;
 
 // The factory's loader for a path, already queued.
-OOTextureLoader* Load(const std::string& path) {
-  const std::shared_ptr<OOTextureLoader> loader =
-      OOTextureLoader::loaderWithPath(path, OOTextureFlags::kMinFilterLinear);
+oo::TextureLoader* Load(const std::string& path) {
+  const std::shared_ptr<oo::TextureLoader> loader =
+      oo::TextureLoader::loaderWithPath(path, oo::TextureFlags::kMinFilterLinear);
   if (loader != nullptr) gKeptLoaders.push_back(loader);
   return loader.get();
 }
@@ -121,7 +121,7 @@ OO_TEST(theFactoryMakesOneForAPNG) {
   {
     const std::string path = WritePNG("made.png", 8, 8, PNG_FORMAT_RGBA);
     OO_CHECK(!path.empty());
-    OOTextureLoader* loader = Load(path);
+    oo::TextureLoader* loader = Load(path);
     OO_CHECK(loader != nullptr);
     OO_CHECK(loader->description().starts_with("<OOPNGTextureLoader 0x"));
     OO_CHECK(loader->path() == std::optional<std::string>(path));
@@ -129,16 +129,16 @@ OO_TEST(theFactoryMakesOneForAPNG) {
              std::optional<std::string>("made.png:0x0002"));
     Result result = GetResult(loader);
     OO_CHECK(result.ok && loader->isReady());
-    OOFreePixMap(&result.pixMap);
+    oo::FreePixMap(&result.pixMap);
 
     // The extension is matched without regard to case.
     const std::string upper = WritePNG("UPPER.PNG", 8, 8, PNG_FORMAT_RGBA);
-    OOTextureLoader* upperLoader = Load(upper);
+    oo::TextureLoader* upperLoader = Load(upper);
     OO_CHECK(upperLoader != nullptr &&
              upperLoader->description().starts_with("<OOPNGTextureLoader 0x"));
     Result upperResult = GetResult(upperLoader);
     OO_CHECK(upperResult.ok);
-    OOFreePixMap(&upperResult.pixMap);
+    oo::FreePixMap(&upperResult.pixMap);
   }
 }
 
@@ -148,14 +148,14 @@ OO_TEST(readsRGBA) {
   {
     Result result =
         GetResult(Load(WritePNG("rgba.png", 8, 8, PNG_FORMAT_RGBA)));
-    OO_CHECK(result.ok && result.format == kOOPixMapRGBA);
+    OO_CHECK(result.ok && result.format == oo::kPixMapRGBA);
     OO_CHECK(result.pixMap.width == 8 && result.pixMap.height == 8 &&
              result.pixMap.rowBytes == 32);
     OO_CHECK(result.originalWidth == 8 && result.originalHeight == 8);
     const uint8_t* pixels = (const uint8_t*)result.pixMap.pixels;
     OO_CHECK(pixels != NULL && pixels[0] == 1 && pixels[3] == 4 &&
              pixels[255] == 0);  // byte 256 of the file's image
-    OOFreePixMap(&result.pixMap);
+    oo::FreePixMap(&result.pixMap);
   }
 }
 
@@ -164,13 +164,13 @@ OO_TEST(readsRGBWithAnOpaqueAlpha) {
   SetUpLoaders();
   {
     Result result = GetResult(Load(WritePNG("rgb.png", 8, 8, PNG_FORMAT_RGB)));
-    OO_CHECK(result.ok && result.format == kOOPixMapRGBA);
+    OO_CHECK(result.ok && result.format == oo::kPixMapRGBA);
     OO_CHECK(result.pixMap.width == 8 && result.pixMap.rowBytes == 32);
     const uint8_t* pixels = (const uint8_t*)result.pixMap.pixels;
     OO_CHECK(pixels[0] == 1 && pixels[1] == 2 && pixels[2] == 3 &&
              pixels[3] == 0xFF);
     OO_CHECK(pixels[4] == 4 && pixels[7] == 0xFF);
-    OOFreePixMap(&result.pixMap);
+    oo::FreePixMap(&result.pixMap);
   }
 }
 
@@ -179,20 +179,20 @@ OO_TEST(readsGrayscale) {
   SetUpLoaders();
   {
     Result gray = GetResult(Load(WritePNG("gray.png", 8, 8, PNG_FORMAT_GRAY)));
-    OO_CHECK(gray.ok && gray.format == kOOPixMapGrayscale);
+    OO_CHECK(gray.ok && gray.format == oo::kPixMapGrayscale);
     OO_CHECK(gray.pixMap.width == 8 && gray.pixMap.height == 8 &&
              gray.pixMap.rowBytes == 8);
     OO_CHECK(((const uint8_t*)gray.pixMap.pixels)[0] == 1 &&
              ((const uint8_t*)gray.pixMap.pixels)[63] == 64);
-    OOFreePixMap(&gray.pixMap);
+    oo::FreePixMap(&gray.pixMap);
 
     Result grayAlpha =
         GetResult(Load(WritePNG("grayalpha.png", 8, 8, PNG_FORMAT_GA)));
-    OO_CHECK(grayAlpha.ok && grayAlpha.format == kOOPixMapGrayscaleAlpha);
+    OO_CHECK(grayAlpha.ok && grayAlpha.format == oo::kPixMapGrayscaleAlpha);
     OO_CHECK(grayAlpha.pixMap.width == 8 && grayAlpha.pixMap.rowBytes == 16);
     OO_CHECK(((const uint8_t*)grayAlpha.pixMap.pixels)[0] == 1 &&
              ((const uint8_t*)grayAlpha.pixMap.pixels)[1] == 2);
-    OOFreePixMap(&grayAlpha.pixMap);
+    oo::FreePixMap(&grayAlpha.pixMap);
   }
 }
 
@@ -202,10 +202,10 @@ OO_TEST(sixteenBitsAreStrippedToEight) {
   {
     Result result =
         GetResult(Load(WritePNG("deep.png", 8, 8, PNG_FORMAT_LINEAR_Y)));
-    OO_CHECK(result.ok && result.format == kOOPixMapGrayscale);
+    OO_CHECK(result.ok && result.format == oo::kPixMapGrayscale);
     OO_CHECK(result.pixMap.width == 8 && result.pixMap.height == 8 &&
              result.pixMap.rowBytes == 8);
-    OOFreePixMap(&result.pixMap);
+    oo::FreePixMap(&result.pixMap);
   }
 }
 
@@ -214,20 +214,20 @@ OO_TEST(failures) {
   SetUpLoaders();
   {
     // No file.
-    OOTextureLoader* missing =
+    oo::TextureLoader* missing =
         Load((ScratchDirectory() / "missing.png").generic_string());
     OO_CHECK(missing != nullptr);
     Result none = GetResult(missing);
-    OO_CHECK(!none.ok && none.format == kOOPixMapInvalidFormat &&
+    OO_CHECK(!none.ok && none.format == oo::kPixMapInvalidFormat &&
              missing->isReady());
 
     // Not a PNG: libpng's error is caught, and nothing is answered.
     const std::string garbage =
         (ScratchDirectory() / "garbage.png").generic_string();
     WriteBytes(garbage, std::vector<char>(64, 'x'));
-    OOTextureLoader* garbageLoader = Load(garbage);
+    oo::TextureLoader* garbageLoader = Load(garbage);
     Result notPNG = GetResult(garbageLoader);
-    OO_CHECK(!notPNG.ok && OOIsNullPixMap(notPNG.pixMap) &&
+    OO_CHECK(!notPNG.ok && oo::IsNullPixMap(notPNG.pixMap) &&
              garbageLoader->isReady());
 
     // A file cut short: the read beyond its end is an error, and the pixels
@@ -241,9 +241,9 @@ OO_TEST(failures) {
         truncated,
         std::vector<char>(whole.begin(),
                           whole.begin() + (std::ptrdiff_t)(whole.size() / 2)));
-    OOTextureLoader* truncatedLoader = Load(truncated);
+    oo::TextureLoader* truncatedLoader = Load(truncated);
     Result cutShort = GetResult(truncatedLoader);
-    OO_CHECK(!cutShort.ok && OOIsNullPixMap(cutShort.pixMap) &&
+    OO_CHECK(!cutShort.ok && oo::IsNullPixMap(cutShort.pixMap) &&
              truncatedLoader->isReady());
     OO_CHECK(truncatedLoader->description().ends_with(">{{" + truncated +
                                                       " -- failed}}"));
@@ -258,10 +258,10 @@ OO_TEST(cxxApi) {
   SetUpLoaders();
   {
     const std::string path = WritePNG("cxx.png", 8, 8, PNG_FORMAT_RGBA);
-    const std::shared_ptr<OOPNGTextureLoader> loader =
-        oo::makeShared<OOPNGTextureLoader>();
-    OO_CHECK(!loader->initWithPath(std::nullopt, OOTextureFlags::kNone));
-    OO_CHECK(loader->initWithPath(path, OOTextureFlags::kMinFilterLinear));
+    const std::shared_ptr<oo::PNGTextureLoader> loader =
+        oo::makeShared<oo::PNGTextureLoader>();
+    OO_CHECK(!loader->initWithPath(std::nullopt, oo::TextureFlags::kNone));
+    OO_CHECK(loader->initWithPath(path, oo::TextureFlags::kMinFilterLinear));
     OO_CHECK(loader->path() == std::optional<std::string>(path) &&
              loader->cacheKey() ==
                  std::optional<std::string>("cxx.png:0x0002"));
@@ -270,39 +270,39 @@ OO_TEST(cxxApi) {
     OO_CHECK(loader->description().starts_with("<OOPNGTextureLoader 0x"));
     OO_CHECK(OOAsyncWorkManager::sharedAsyncWorkManager()->addTask(
         loader.get(), OOAsyncWorkPriority::kMedium));
-    OOPixMap pixMap = kOONullPixMap;
-    OOTextureDataFormat format = kOOPixMapInvalidFormat;
-    std::optional<OOTextureLoader::Result> loaded = loader->getResult();
+    oo::PixMap pixMap = oo::kNullPixMap;
+    oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
+    std::optional<oo::TextureLoader::Result> loaded = loader->getResult();
     if (loaded) {
       pixMap = loaded->pixMap;
       format = loaded->format;
     }
     OO_CHECK(loaded.has_value() && loader->isReady());
-    OO_CHECK(format == kOOPixMapRGBA && pixMap.width == 8 &&
+    OO_CHECK(format == oo::kPixMapRGBA && pixMap.width == 8 &&
              ((const uint8_t*)pixMap.pixels)[0] == 1);
-    OOFreePixMap(&pixMap);
+    oo::FreePixMap(&pixMap);
 
     // The factory's loader is one.
-    std::shared_ptr<OOTextureLoader> made =
-        OOTextureLoader::loaderWithPath(path, OOTextureFlags::kMinFilterLinear);
-    OO_CHECK(dynamic_cast<OOPNGTextureLoader*>(made.get()) != nullptr);
+    std::shared_ptr<oo::TextureLoader> made =
+        oo::TextureLoader::loaderWithPath(path, oo::TextureFlags::kMinFilterLinear);
+    OO_CHECK(dynamic_cast<oo::PNGTextureLoader*>(made.get()) != nullptr);
     loaded = made->getResult();
     if (loaded) {
       pixMap = loaded->pixMap;
       format = loaded->format;
     }
     OO_CHECK(loaded.has_value());
-    OOFreePixMap(&pixMap);
+    oo::FreePixMap(&pixMap);
 
     // Reading on its own (as libpng's read callback does): the loader reads its
     // file first.
-    const std::shared_ptr<OOPNGTextureLoader> direct =
-        oo::makeShared<OOPNGTextureLoader>();
+    const std::shared_ptr<oo::PNGTextureLoader> direct =
+        oo::makeShared<oo::PNGTextureLoader>();
     OO_CHECK(
-        direct->initWithPath(WritePNG("direct.png", 8, 8, PNG_FORMAT_GA), OOTextureFlags::kNone));
+        direct->initWithPath(WritePNG("direct.png", 8, 8, PNG_FORMAT_GA), oo::TextureFlags::kNone));
     direct->loadTexture();
     OO_CHECK(direct->_data != nullptr &&
-             direct->_format == kOOPixMapGrayscaleAlpha &&
+             direct->_format == oo::kPixMapGrayscaleAlpha &&
              direct->_width == 8 && direct->_rowBytes == 16);
   }
 }

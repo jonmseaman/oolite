@@ -35,9 +35,9 @@ MA 02110-1301, USA.
 #include "LightParticleEntity.h"
 #include "MyOpenGLView.h"
 #include "OOMacroOpenGL.h"
-#include "OOTexture.h"
 #include "OOVector.h"  // make_vector
 #include "PlayerEntity.h"
+#include "Texture.h"
 #include "Universe.h"
 #include "oofnd/objc/Assert.h"
 
@@ -150,7 +150,7 @@ void oo::ParticleSystem::drawImmediate(bool /*immediate*/, bool translucent) {
   OOGL(glEnable(GL_TEXTURE_2D));
   OOGL(glEnable(GL_BLEND));
   OOGL(glBlendFunc(GL_SRC_ALPHA, GL_ONE));
-  if (OOTexture* particle = texture())
+  if (oo::Texture* particle = texture())
     particle->apply();  // a message to nil did nothing
 
   HPVector viewPosition =
@@ -240,13 +240,13 @@ void oo::ParticleSystem::drawImmediate(bool /*immediate*/, bool translucent) {
 
 bool oo::ParticleSystem::isEffect() { return true; }
 
-OOTexture* oo::ParticleSystem::texture() {
+oo::Texture* oo::ParticleSystem::texture() {
   return ::oo::LightParticleEntity::defaultParticleTexture();
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-std::vector<std::shared_ptr<OOTexture>> oo::ParticleSystem::allTextures() {
-  std::vector<std::shared_ptr<OOTexture>> result;
+std::vector<std::shared_ptr<oo::Texture>> oo::ParticleSystem::allTextures() {
+  std::vector<std::shared_ptr<oo::Texture>> result;
   result.emplace_back(
       oo::share(::oo::LightParticleEntity::defaultParticleTexture()));
   return result;

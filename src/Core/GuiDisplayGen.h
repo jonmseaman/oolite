@@ -226,7 +226,12 @@ inline constexpr const char* kGuiDockingSummaryColor = "docking_summary_color";
 inline constexpr const char* kGuiDockingContinueColor =
     "docking_continue_color";
 
-class OOTexture;
+namespace oo {
+
+class Texture;
+
+}  // namespace oo
+
 class OOColor;
 class HeadUpDisplay;
 class OOSound;

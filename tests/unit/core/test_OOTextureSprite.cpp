@@ -24,7 +24,7 @@
 
 #include "OOOpenGLExtensionManager.h"
 #include "OORegExpMatcher.h"
-#include "OOTexture.h"
+#include "Texture.h"
 #include "OOTextureSprite.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
@@ -67,7 +67,7 @@ void OOLogOutdent(void) {}
 // The sprite's texture: its original dimensions, and how often it was applied.
 // The stand-in is C++: TestTexture, and the root's own members (a texture
 // needs them).
-class TestTexture final : public OOTexture {
+class TestTexture final : public oo::Texture {
  public:
   NSSize originalDimensions() override { return _dimensions; }
   void apply() override { _applied++; }
@@ -76,36 +76,41 @@ class TestTexture final : public OOTexture {
   unsigned _applied = 0;
 };
 
-OOTexture::OOTexture() {}
-OOTexture::~OOTexture() {}
-void OOTexture::apply() {}
-void OOTexture::ensureFinishedLoading() {}
-bool OOTexture::isFinishedLoading() { return true; }
-std::optional<std::string> OOTexture::cacheKey() { return std::nullopt; }
-NSSize OOTexture::dimensions() { return NSSize{}; }
-NSSize OOTexture::originalDimensions() { return dimensions(); }
-bool OOTexture::isMipMapped() { return false; }
-OOPixMap OOTexture::copyPixMapRepresentation() { return OOPixMap{}; }
-bool OOTexture::isRectangleTexture() { return false; }
-bool OOTexture::isCubeMap() { return false; }
-NSSize OOTexture::texCoordsScale() { return NSSize{1.0, 1.0}; }
-GLint OOTexture::glTextureName() { return 0; }
+oo::Texture::Texture() {}
+namespace oo {
+
+Texture::~Texture() {}
+
+}  // namespace oo
+
+void oo::Texture::apply() {}
+void oo::Texture::ensureFinishedLoading() {}
+bool oo::Texture::isFinishedLoading() { return true; }
+std::optional<std::string> oo::Texture::cacheKey() { return std::nullopt; }
+NSSize oo::Texture::dimensions() { return NSSize{}; }
+NSSize oo::Texture::originalDimensions() { return dimensions(); }
+bool oo::Texture::isMipMapped() { return false; }
+oo::PixMap oo::Texture::copyPixMapRepresentation() { return oo::PixMap{}; }
+bool oo::Texture::isRectangleTexture() { return false; }
+bool oo::Texture::isCubeMap() { return false; }
+NSSize oo::Texture::texCoordsScale() { return NSSize{1.0, 1.0}; }
+GLint oo::Texture::glTextureName() { return 0; }
 #ifndef NDEBUG
-std::optional<std::string> OOTexture::name() { return std::nullopt; }
+std::optional<std::string> oo::Texture::name() { return std::nullopt; }
 #endif
-std::optional<std::string> OOTexture::descriptionComponents() const {
+std::optional<std::string> oo::Texture::descriptionComponents() const {
   return std::nullopt;
 }
-std::optional<std::string> OOTexture::shortDescriptionComponents() const {
+std::optional<std::string> oo::Texture::shortDescriptionComponents() const {
   return std::nullopt;
 }
-std::string OOTexture::description() const {
+std::string oo::Texture::description() const {
   return oo::str::format("<OOTexture %s>",
                          oo::str::pointerDescription(this).c_str());
 }
-std::string OOTexture::shortDescription() const { return description(); }
-std::string OOTexture::className() const { return "OOTexture"; }
-void OOTexture::forceRebind() {}
+std::string oo::Texture::shortDescription() const { return description(); }
+std::string oo::Texture::className() const { return "OOTexture"; }
+void oo::Texture::forceRebind() {}
 
 // --- Helpers
 // ------------------------------------------------------------------------------------

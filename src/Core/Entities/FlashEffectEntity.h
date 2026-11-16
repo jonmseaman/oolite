@@ -49,7 +49,7 @@ class FlashEffectEntity : public LightParticleEntity {
   static void resetGraphicsState();
 
   void update(OOTimeDelta delta_t) override;
-  OOTexture* texture() override;
+  oo::Texture* texture() override;
 
  private:
   // The initialisers' bodies, run once right after construction.

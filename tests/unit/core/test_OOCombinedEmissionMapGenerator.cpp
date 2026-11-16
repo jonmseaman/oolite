@@ -26,9 +26,9 @@
 #include <vector>
 
 #include "OOColor.h"
-#include "OOCombinedEmissionMapGenerator.h"
-#include "OOConcreteTexture.h"
-#include "OOTextureInternal.h"
+#include "CombinedEmissionMapGenerator.h"
+#include "ConcreteTexture.h"
+#include "TextureInternal.h"
 #include "ResourceManager.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
@@ -41,9 +41,9 @@ uint32_t gDebugFlags = 0;
 
 // What an autoreleased texture is: the C++ texture, kept until the current
 // autorelease scope drains (oo::autorelease).
-static OOTexture* Autoreleased(const std::shared_ptr<OOTexture>& texture) {
+static oo::Texture* Autoreleased(const std::shared_ptr<oo::Texture>& texture) {
   if (texture == nullptr) return nullptr;
-  oo::autorelease(std::shared_ptr<OOTexture>(texture));
+  oo::autorelease(std::shared_ptr<oo::Texture>(texture));
   return texture.get();
 }
 
@@ -95,15 +95,15 @@ void SetUp() {
   }
   {
     oo::AutoreleaseScope pool;
-    (void)OOTextureLoader::loaderWithPath(std::string("unknown.type"), OOTextureFlags::kNone);
+    (void)oo::TextureLoader::loaderWithPath(std::string("unknown.type"), oo::TextureFlags::kNone);
   }
 }
 
 // The generators made, kept for the test's life (each was autoreleased in its
 // case's pool).
-std::vector<std::shared_ptr<OOTextureGenerator>> gKeptGenerators;
+std::vector<std::shared_ptr<oo::TextureGenerator>> gKeptGenerators;
 
-OOTextureGenerator* Kept(std::shared_ptr<OOTextureGenerator> generator) {
+oo::TextureGenerator* Kept(std::shared_ptr<oo::TextureGenerator> generator) {
   if (generator != nullptr) gKeptGenerators.push_back(generator);
   return generator.get();
 }
@@ -111,25 +111,25 @@ OOTextureGenerator* Kept(std::shared_ptr<OOTextureGenerator> generator) {
 // OOCombinedEmissionMapGenerator::generatorWithEmissionMapSpec(), kept (it was
 // autoreleased; null for null), as the facade initialiser
 // initWithEmissionMapSpec:... answered it.
-OOTextureGenerator* NewGenerator(const oo::PList& emission,
-                                 OOColor* emissionColor, OOTexture* diffuseMap,
+oo::TextureGenerator* NewGenerator(const oo::PList& emission,
+                                 OOColor* emissionColor, oo::Texture* diffuseMap,
                                  OOColor* diffuseColor,
                                  const oo::PList& illumination,
                                  OOColor* illuminationColor,
                                  const oo::PList& options) {
-  return Kept(OOCombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
+  return Kept(oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
       emission, emissionColor, diffuseMap, diffuseColor, illumination,
       illuminationColor, options));
 }
 
 // OOCombinedEmissionMapGenerator::generatorWithEmissionAndIlluminationMapSpec(),
 // likewise.
-OOTextureGenerator* NewCombinedGenerator(const oo::PList& map,
-                                         OOTexture* diffuseMap,
+oo::TextureGenerator* NewCombinedGenerator(const oo::PList& map,
+                                         oo::Texture* diffuseMap,
                                          OOColor* diffuseColor,
                                          OOColor* emissionColor,
                                          OOColor* illuminationColor) {
-  return Kept(OOCombinedEmissionMapGenerator::
+  return Kept(oo::CombinedEmissionMapGenerator::
                   generatorWithEmissionAndIlluminationMapSpec(
                       map, diffuseMap, diffuseColor, emissionColor,
                       illuminationColor, map));
@@ -138,22 +138,22 @@ OOTextureGenerator* NewCombinedGenerator(const oo::PList& map,
 // A map named by a string spec, as the generator keys it (it sets extra_shrink
 // only in a dictionary).
 std::string KeyOf(const char* name) {
-  return OOTextureCacheKeyForSpecifier(oo::PList(name));
+  return oo::TextureCacheKeyForSpecifier(oo::PList(name));
 }
 
 struct Baked {
   bool ok = false;
-  OOPixMap pixMap = kOONullPixMap;
-  OOTextureDataFormat format = kOOPixMapInvalidFormat;
+  oo::PixMap pixMap = oo::kNullPixMap;
+  oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
 
-  ~Baked() { OOFreePixMap(&pixMap); }
+  ~Baked() { oo::FreePixMap(&pixMap); }
 
   const uint8_t* pixel() const { return (const uint8_t*)pixMap.pixels; }
 };
 
-void Bake(OOTextureGenerator* generator, Baked& baked) {
+void Bake(oo::TextureGenerator* generator, Baked& baked) {
   OO_CHECK(generator->enqueue());
-  if (std::optional<OOTextureLoader::Result> loaded = generator->getResult()) {
+  if (std::optional<oo::TextureLoader::Result> loaded = generator->getResult()) {
     baked.ok = true;
     baked.pixMap = loaded->pixMap;
     baked.format = loaded->format;
@@ -161,8 +161,8 @@ void Bake(OOTextureGenerator* generator, Baked& baked) {
 }
 
 // The diffuse map: d.png, loaded.
-OOTexture* DiffuseMap() {
-  OOTexture* texture = Autoreleased(OOTexture::textureWithName(
+oo::Texture* DiffuseMap() {
+  oo::Texture* texture = Autoreleased(oo::Texture::textureWithName(
       std::string("d.png"), std::string("Textures")));
   texture->ensureFinishedLoading();
   return texture;
@@ -171,7 +171,7 @@ OOTexture* DiffuseMap() {
 void ClearCache() {
   {
     oo::AutoreleaseScope scope;
-    OOTexture::clearCache();
+    oo::Texture::clearCache();
   }
 }
 
@@ -197,19 +197,19 @@ OO_TEST(settingsFromTheOptionsSpecifier) {
                         {"min_filter", oo::PList("nearest")},
                         {"anisotropy", oo::PList(0.5)},
                         {"texture_LOD_bias", oo::PList(-0.25)}});
-    const std::optional<OOTextureSpecifier> interpreted =
-        OOInterpretTextureSpecifier(options, true);
+    const std::optional<oo::TextureSpecifier> interpreted =
+        oo::InterpretTextureSpecifier(options, true);
     OO_CHECK(interpreted.has_value());
-    const OOTextureFlags expected =
-        interpreted ? interpreted->options : OOTextureFlags::kNone;
+    const oo::TextureFlags expected =
+        interpreted ? interpreted->options : oo::TextureFlags::kNone;
     const float anisotropy = interpreted ? interpreted->anisotropy : 0;
     const float lodBias = interpreted ? interpreted->lodBias : 0;
-    OOTextureGenerator* generator = NewGenerator(
+    oo::TextureGenerator* generator = NewGenerator(
         oo::PList("e.png"), nullptr, nullptr, nullptr, oo::PList(), nullptr, options);
     OO_CHECK(generator != nullptr &&
-             (dynamic_cast<OOTextureGenerator*>(generator) != nullptr));
+             (dynamic_cast<oo::TextureGenerator*>(generator) != nullptr));
     OO_CHECK(generator->textureOptions() ==
-             OOApplyTextureOptionDefaults(expected));
+             oo::ApplyTextureOptionDefaults(expected));
     OO_CHECK(generator->anisotropy() == anisotropy &&
              generator->lodBias() == lodBias);
     OO_CHECK(generator->path() ==
@@ -239,7 +239,7 @@ OO_TEST(cacheKeys) {
     OO_CHECK(whiteKey == std::optional<std::string>("emission map;emission:{" +
                                                     KeyOf("e.png") + "};"));
 
-    OOTexture* diffuse = DiffuseMap();
+    oo::Texture* diffuse = DiffuseMap();
     const std::string diffuseKey = diffuse->cacheKey().value_or("");
     OO_CHECK(!diffuseKey.empty());
     // The illumination colour is the diffuse colour times the illumination
@@ -278,7 +278,7 @@ OO_TEST(bakesTheEmissionMap) {
                       OOColor::colorWithRed(0.5f, 1.0f, 0.25f, 1.0f).get(), nullptr,
                       nullptr, oo::PList(), nullptr, oo::PList("e.png")),
          baked);
-    OO_CHECK(baked.ok && baked.format == kOOPixMapRGBA &&
+    OO_CHECK(baked.ok && baked.format == oo::kPixMapRGBA &&
              baked.pixMap.width > 0 &&
              baked.pixMap.width == baked.pixMap.height);
     OO_CHECK(baked.pixel()[0] == 100 && baked.pixel()[1] == 200 &&
@@ -306,7 +306,7 @@ OO_TEST(bakesTheIlluminationMap) {
     Bake(NewGenerator(oo::PList("e.png"), nullptr, DiffuseMap(), nullptr,
                       oo::PList("i.png"), nullptr, oo::PList("e.png")),
          merged);
-    OO_CHECK(merged.ok && merged.format == kOOPixMapRGBA);
+    OO_CHECK(merged.ok && merged.format == oo::kPixMapRGBA);
     OO_CHECK(merged.pixel()[0] == 200 + lit);
 
     // One map: its alpha (200) is the illumination, x the diffuse map; its
@@ -314,7 +314,7 @@ OO_TEST(bakesTheIlluminationMap) {
     Baked combined;
     Bake(NewCombinedGenerator(oo::PList("c.png"), DiffuseMap(), nullptr, nullptr, nullptr),
          combined);
-    OO_CHECK(combined.ok && combined.format == kOOPixMapRGBA);
+    OO_CHECK(combined.ok && combined.format == oo::kPixMapRGBA);
     OO_CHECK(combined.pixel()[0] == 255);  // 200 + ~100, saturated
   }
   ClearCache();
@@ -325,7 +325,7 @@ OO_TEST(aMissingMap) {
   {
     oo::AutoreleaseScope pool;
     // Made (the spec names a map), but there is nothing to bake.
-    OOTextureGenerator* generator =
+    oo::TextureGenerator* generator =
         NewGenerator(oo::PList("missing.png"), nullptr, nullptr, nullptr, oo::PList(), nullptr,
                      oo::PList("missing.png"));
     OO_CHECK(generator != nullptr);
@@ -339,10 +339,10 @@ OO_TEST(aTextureOfTheGenerator) {
   SetUp();
   {
     oo::AutoreleaseScope pool;
-    OOTexture* texture = Autoreleased(OOTexture::textureWithGenerator(
+    oo::Texture* texture = Autoreleased(oo::Texture::textureWithGenerator(
         NewGenerator(oo::PList("e.png"), OOColor::redColor().get(), nullptr, nullptr,
                      oo::PList(), nullptr, oo::PList("e.png"))));
-    OO_CHECK((dynamic_cast<OOConcreteTexture*>(texture) != nullptr));
+    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(texture) != nullptr));
     texture->ensureFinishedLoading();
     OO_CHECK(texture->isFinishedLoading() && texture->dimensions().width > 0);
     OO_CHECK(texture->cacheKey() ==
@@ -386,16 +386,16 @@ OO_TEST(cxxApi) {
   SetUp();
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(!OOCombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
+    OO_CHECK(!oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
         oo::PList(), nullptr, nullptr, nullptr, oo::PList(), nullptr, oo::PList()));
-    OO_CHECK(!OOCombinedEmissionMapGenerator::
+    OO_CHECK(!oo::CombinedEmissionMapGenerator::
                  generatorWithEmissionAndIlluminationMapSpec(
                      oo::PList(), nullptr, nullptr, nullptr, nullptr, oo::PList()));
 
     const std::shared_ptr<OOColor> red = OOColor::colorWithRGBAComponents(
         (OORGBAComponents){1.0f, 0.0f, 0.0f, 1.0f});
-    const std::shared_ptr<OOCombinedEmissionMapGenerator> generator =
-        OOCombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
+    const std::shared_ptr<oo::CombinedEmissionMapGenerator> generator =
+        oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
             oo::PList("e.png"), red.get(), nullptr, nullptr, oo::PList(), nullptr,
             oo::PList("e.png"));
     OO_CHECK(generator &&
@@ -405,15 +405,15 @@ OO_TEST(cxxApi) {
                      red->rgbaDescription().value_or("") + ";"));
 
     // A generator the factory made is one.
-    OOTextureGenerator* made =
+    oo::TextureGenerator* made =
         NewGenerator(oo::PList("e.png"), nullptr, nullptr, nullptr, oo::PList(), nullptr,
                      oo::PList("e.png"));
-    OO_CHECK(dynamic_cast<OOCombinedEmissionMapGenerator*>(made) != nullptr);
+    OO_CHECK(dynamic_cast<oo::CombinedEmissionMapGenerator*>(made) != nullptr);
 
     // Baking through the C++ object.
     generator->loadTexture();
     OO_CHECK(generator->_data != nullptr &&
-             generator->_format == kOOPixMapRGBA &&
+             generator->_format == oo::kPixMapRGBA &&
              generator->_data->data()[0] == 200 &&
              generator->_data->data()[1] == 0);
   }

@@ -43,15 +43,15 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "ConcreteTexture.h"
 #include "JSConsole.h"
 #include "LogIndentScope.h"
-#include "OOConcreteTexture.h"
 #include "OODrawable.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
 #include "OOJSSpecialFunctions.h"
-#include "OOTexture.h"
 #include "ResourceManager.h"
+#include "Texture.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Encoding.hpp"
 #include "oofnd/FileSystem.hpp"
@@ -376,8 +376,8 @@ std::string SizeString(size_t size) {
 // Sets of objects by identity (the mutable sets of textures and entities
 // compared by identity).
 struct oo::DebugMonitor::EntityDumpState {
-  std::set<std::shared_ptr<OOTexture>> entityTextures;
-  std::set<std::shared_ptr<OOTexture>> visibleEntityTextures;
+  std::set<std::shared_ptr<oo::Texture>> entityTextures;
+  std::set<std::shared_ptr<oo::Texture>> visibleEntityTextures;
   std::map<Entity*, oo::EntityHold>
       seenEntities;  // each held, as its object was retained
   unsigned seenCount = 0;
@@ -407,7 +407,7 @@ void oo::DebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
       parentVisible &&
       entity->isVisible();  // the virtual member -isVisible forwarded to
 
-  for (const std::shared_ptr<OOTexture>& texture : entity->allTextures()) {
+  for (const std::shared_ptr<oo::Texture>& texture : entity->allTextures()) {
     state->entityTextures.insert(texture);
     if (visible) state->visibleEntityTextures.insert(texture);
   }
@@ -469,11 +469,11 @@ void oo::DebugMonitor::dumpMemoryStatistics() {
 
   //	Get texture retain counts before the entity dumper starts messing with
   // them.
-  const std::vector<std::shared_ptr<OOTexture>> allTextures =
-      OOTexture::allTextures();
-  std::map<OOTexture*, std::size_t> textureRefCounts;
+  const std::vector<std::shared_ptr<oo::Texture>> allTextures =
+      oo::Texture::allTextures();
+  std::map<oo::Texture*, std::size_t> textureRefCounts;
 
-  for (const std::shared_ptr<OOTexture>& tex : allTextures) {
+  for (const std::shared_ptr<oo::Texture>& tex : allTextures) {
     // We subtract one because allTextures retains the textures.
     textureRefCounts[tex.get()] = static_cast<std::size_t>(tex.use_count() - 1);
   }
@@ -510,10 +510,10 @@ void oo::DebugMonitor::dumpMemoryStatistics() {
   /*	Sort textures so that textures in the "recent cache" come first by age,
           followed by others.
   */
-  std::vector<std::shared_ptr<OOTexture>> textures =
-      OOTexture::cachedTexturesByAge();
+  std::vector<std::shared_ptr<oo::Texture>> textures =
+      oo::Texture::cachedTexturesByAge();
 
-  for (const std::shared_ptr<OOTexture>& tex : allTextures) {
+  for (const std::shared_ptr<oo::Texture>& tex : allTextures) {
     if (std::find(textures.begin(), textures.end(), tex) == textures.end()) {
       textures.push_back(tex);
     }
@@ -527,8 +527,8 @@ void oo::DebugMonitor::dumpMemoryStatistics() {
   {
     const oo::LogIndentScope texturesIndent;
 
-    for (const std::shared_ptr<OOTexture>& texRef : textures) {
-      OOTexture* tex = texRef.get();
+    for (const std::shared_ptr<oo::Texture>& texRef : textures) {
+      oo::Texture* tex = texRef.get();
       size_t objSize = sizeof *tex;  // the texture root's size
       size_t dataSize = tex->dataSize();
 

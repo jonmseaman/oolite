@@ -1,0 +1,73 @@
+/*
+
+OOPNGTextureLoader.h
+
+It's a texture loader. Which loads PNGs.
+
+
+Copyright (C) 2007-2013 Jens Ayton
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
+#pragma once
+
+// png.h first, in a block of its own: which header comes first decides whether
+// MinGW's or the UCRT's printf family is used by the files that include this
+// one first.
+#include <cstddef>
+#include <optional>
+#include <vector>
+
+#include "Texture.h"
+#include "TextureLoader.h"
+#include "oofnd/Data.hpp"
+#include "png.h"
+
+/*	A leaf over OOTextureLoader. Only the loaders' factory
+   (OOTextureLoader::loaderWithPath) makes one and queues it on the work
+   manager.
+*/
+namespace oo {
+
+class PNGTextureLoader : public TextureLoader {
+ public:
+  ~PNGTextureLoader() override;  // was -dealloc
+
+  void loadTexture() override;
+
+  // Internal: for libpng's read callback (was the private -readBytes:count:).
+  void readBytes(png_bytep bytes, png_size_t count);
+
+ private:
+  void doLoadTexture();
+
+  png_structp png = {};
+  png_infop pngInfo = {};
+  png_infop pngEndInfo = {};
+  std::optional<oo::Data> fileData;
+  size_t length = {};
+  size_t offset = {};
+  // The row pointers into _data while libpng reads. A member, not a local: a
+  // libpng error longjmps back into doLoadTexture().
+  std::vector<png_bytep> rows;
+};
+
+}  // namespace oo

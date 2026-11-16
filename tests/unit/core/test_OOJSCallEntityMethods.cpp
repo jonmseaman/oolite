@@ -29,7 +29,7 @@
 
 #include "EntityCalledByName.h"
 #include "OOJSCallEntityMethods.h"
-#include "OOShaderUniformMethodType.h"
+#include "ShaderUniformMethodType.h"
 #include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -49,7 +49,7 @@ const std::set<std::string> kExcluded = {
 
 struct OracleRow {
   OOJSCallEntityMethodForm form;
-  OOShaderUniformType type;  // a Typed row's
+  oo::ShaderUniformType type;  // a Typed row's
 };
 
 // The matcher's classification of a by-name row's method (its declared result
@@ -61,19 +61,19 @@ std::optional<OracleRow> Oracle(const oo::EntityByNameRow& row) {
     case oo::EntityByNameArgument::kNone:
       if (voidResult)
         return OracleRow{OOJSCallEntityMethodForm::kVoidVoid,
-                         kOOShaderUniformTypeInvalid};
+                         oo::kShaderUniformTypeInvalid};
       if (plistResult)
         return OracleRow{OOJSCallEntityMethodForm::kPListVoid,
-                         kOOShaderUniformTypeInvalid};
+                         oo::kShaderUniformTypeInvalid};
       return OracleRow{OOJSCallEntityMethodForm::kTyped,
                        oo::ShaderUniformTypeOf(row.result)};
     case oo::EntityByNameArgument::kString:
       if (voidResult)
         return OracleRow{OOJSCallEntityMethodForm::kVoidString,
-                         kOOShaderUniformTypeInvalid};
+                         oo::kShaderUniformTypeInvalid};
       if (plistResult)
         return OracleRow{OOJSCallEntityMethodForm::kPListString,
-                         kOOShaderUniformTypeInvalid};
+                         oo::kShaderUniformTypeInvalid};
       return std::nullopt;  // called with its argument missing
     case oo::EntityByNameArgument::kPList:
       return std::nullopt;  // an argument the templates do not take
@@ -174,10 +174,10 @@ OO_TEST(everyNameIsAnsweredByTheCxxEntity) {
         continue;
       }
       switch (oo::ShaderUniformTypeOf(row.type)) {
-        case kOOShaderUniformTypeInvalid:
-        case kOOShaderUniformTypeHPVector:
-        case kOOShaderUniformTypeMatrix:
-        case kOOShaderUniformTypePoint:
+        case oo::kShaderUniformTypeInvalid:
+        case oo::kShaderUniformTypeHPVector:
+        case oo::kShaderUniformTypeMatrix:
+        case oo::kShaderUniformTypePoint:
           break;  // callObjC() reads no result: a body is optional
         default:
           if (facade->typed == nullptr)

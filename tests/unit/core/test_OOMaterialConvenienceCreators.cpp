@@ -22,15 +22,15 @@
 #include <vector>
 
 #include "MyOpenGLView.h"
-#include "OOBasicMaterial.h"
-#include "OOCombinedEmissionMapGenerator.h"
-#include "OOMaterialConvenienceCreators.h"
-#include "OOMultiTextureMaterial.h"
+#include "BasicMaterial.h"
+#include "CombinedEmissionMapGenerator.h"
+#include "MaterialConvenienceCreators.h"
+#include "MultiTextureMaterial.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OORegExpMatcher.h"
-#include "OOShaderMaterial.h"
-#include "OOSingleTextureMaterial.h"
-#include "OOTexture.h"
+#include "ShaderMaterial.h"
+#include "SingleTextureMaterial.h"
+#include "Texture.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/String.hpp"
@@ -63,10 +63,15 @@ std::optional<Quaternion> ScanQuaternionFromString(const std::optional<std::stri
 }
 
 // The binding whitelist, which the game implements elsewhere: everything.
-bool OOUniformBindingPermitted(const std::string& /*propertyName*/,
+namespace oo {
+
+bool UniformBindingPermitted(const std::string& /*propertyName*/,
                                Entity* /*bindingTarget*/) {
   return true;
 }
+
+}  // namespace oo
+
 
 // The resource manager: the extension manager's two class methods, and shader
 // files from a table.
@@ -131,20 +136,20 @@ void OOCacheManager::setPList(const oo::PList& value, const std::string& key,
 // configuration loads unless "missing". The stand-in is C++: the root's static
 // members the creators call, TestTexture (what they answer), and the root's own
 // members.
-class TestTexture final : public OOTexture {
+class TestTexture final : public oo::Texture {
  public:
   oo::PList _configuration;
 };
 
-void OOTexture::applyNone() {}
+void oo::Texture::applyNone() {}
 
-std::shared_ptr<OOTexture> OOTexture::textureWithConfiguration(
+std::shared_ptr<oo::Texture> oo::Texture::textureWithConfiguration(
     const oo::PList& configuration) {
-  return textureWithConfiguration(configuration, OOTextureFlags::kNone);
+  return textureWithConfiguration(configuration, oo::TextureFlags::kNone);
 }
 
-std::shared_ptr<OOTexture> OOTexture::textureWithConfiguration(
-    const oo::PList& configuration, OOTextureFlags) {
+std::shared_ptr<oo::Texture> oo::Texture::textureWithConfiguration(
+    const oo::PList& configuration, oo::TextureFlags) {
   if (configuration.isNull() || configuration == oo::PList("missing"))
     return nullptr;
   std::shared_ptr<TestTexture> texture = oo::makeShared<TestTexture>();
@@ -152,115 +157,135 @@ std::shared_ptr<OOTexture> OOTexture::textureWithConfiguration(
   return texture;
 }
 
-std::shared_ptr<OOTexture> OOTexture::textureWithName(
+std::shared_ptr<oo::Texture> oo::Texture::textureWithName(
     const std::optional<std::string>& name, const std::optional<std::string>&) {
   if (!name.has_value() || *name == "missing") return nullptr;
   return textureWithConfiguration(oo::PList(*name));
 }
 
-std::shared_ptr<OOTexture> OOTexture::textureWithGenerator(
-    ::OOTextureGenerator* generator) {
+std::shared_ptr<oo::Texture> oo::Texture::textureWithGenerator(
+    ::oo::TextureGenerator* generator) {
   return generator != nullptr ? textureWithConfiguration(oo::PList("generated"))
                               : nullptr;
 }
-std::shared_ptr<OOTexture> OOTexture::nullTexture() {
+std::shared_ptr<oo::Texture> oo::Texture::nullTexture() {
   return textureWithConfiguration(oo::PList("null"));
 }
 
-OOTexture::OOTexture() {}
-OOTexture::~OOTexture() {}
-void OOTexture::apply() {}
-void OOTexture::ensureFinishedLoading() {}
-bool OOTexture::isFinishedLoading() { return true; }
-std::optional<std::string> OOTexture::cacheKey() { return std::nullopt; }
-NSSize OOTexture::dimensions() { return NSSize{}; }
-NSSize OOTexture::originalDimensions() { return dimensions(); }
-bool OOTexture::isMipMapped() { return false; }
-OOPixMap OOTexture::copyPixMapRepresentation() { return OOPixMap{}; }
-bool OOTexture::isRectangleTexture() { return false; }
-bool OOTexture::isCubeMap() { return false; }
-NSSize OOTexture::texCoordsScale() { return NSSize{1.0, 1.0}; }
-GLint OOTexture::glTextureName() { return 0; }
+oo::Texture::Texture() {}
+namespace oo {
+
+Texture::~Texture() {}
+
+}  // namespace oo
+
+void oo::Texture::apply() {}
+void oo::Texture::ensureFinishedLoading() {}
+bool oo::Texture::isFinishedLoading() { return true; }
+std::optional<std::string> oo::Texture::cacheKey() { return std::nullopt; }
+NSSize oo::Texture::dimensions() { return NSSize{}; }
+NSSize oo::Texture::originalDimensions() { return dimensions(); }
+bool oo::Texture::isMipMapped() { return false; }
+oo::PixMap oo::Texture::copyPixMapRepresentation() { return oo::PixMap{}; }
+bool oo::Texture::isRectangleTexture() { return false; }
+bool oo::Texture::isCubeMap() { return false; }
+NSSize oo::Texture::texCoordsScale() { return NSSize{1.0, 1.0}; }
+GLint oo::Texture::glTextureName() { return 0; }
 #ifndef NDEBUG
-std::optional<std::string> OOTexture::name() { return std::nullopt; }
+std::optional<std::string> oo::Texture::name() { return std::nullopt; }
 #endif
-std::optional<std::string> OOTexture::descriptionComponents() const {
+std::optional<std::string> oo::Texture::descriptionComponents() const {
   return std::nullopt;
 }
-std::optional<std::string> OOTexture::shortDescriptionComponents() const {
+std::optional<std::string> oo::Texture::shortDescriptionComponents() const {
   return std::nullopt;
 }
-std::string OOTexture::description() const {
+std::string oo::Texture::description() const {
   return oo::str::format("<OOTexture %s>",
                          oo::str::pointerDescription(this).c_str());
 }
-std::string OOTexture::shortDescription() const { return description(); }
-std::string OOTexture::className() const { return "OOTexture"; }
-void OOTexture::forceRebind() {}
+std::string oo::Texture::shortDescription() const { return description(); }
+std::string oo::Texture::className() const { return "OOTexture"; }
+void oo::Texture::forceRebind() {}
 
 /*	The emission-map generator. The factories answer null for nothing to
    bake; its own and its bases' other members are no-ops (no texture loader is
    linked). The material hands the C++ generator to the OOTexture stand-in,
    which only asks whether it is nil.
 */
-OOTextureLoader::OOTextureLoader() {}
-OOTextureLoader::~OOTextureLoader() {}
-std::optional<OOTextureLoader::Result> OOTextureLoader::getResult() {
+oo::TextureLoader::TextureLoader() {}
+namespace oo {
+
+TextureLoader::~TextureLoader() {}
+
+}  // namespace oo
+
+std::optional<oo::TextureLoader::Result> oo::TextureLoader::getResult() {
   return std::nullopt;
 }
-std::optional<std::string> OOTextureLoader::cacheKey() { return std::nullopt; }
-std::optional<std::string> OOTextureLoader::descriptionComponents() const {
+std::optional<std::string> oo::TextureLoader::cacheKey() { return std::nullopt; }
+std::optional<std::string> oo::TextureLoader::descriptionComponents() const {
   return std::nullopt;
 }
-std::optional<std::string> OOTextureLoader::shortDescriptionComponents() const {
+std::optional<std::string> oo::TextureLoader::shortDescriptionComponents() const {
   return std::nullopt;
 }
-void OOTextureLoader::loadTexture() {}
+void oo::TextureLoader::loadTexture() {}
 // The loader is the work manager's task (its vtable): never reached.
-void OOTextureLoader::performAsyncTask() { std::abort(); }
-void OOTextureLoader::completeAsyncTask() { std::abort(); }
-OOTextureFlags OOTextureGenerator::textureOptions() { return OOTextureFlags::kNone; }
-GLfloat OOTextureGenerator::anisotropy() { return 0; }
-GLfloat OOTextureGenerator::lodBias() { return 0; }
-std::optional<std::string> OOTextureGenerator::cacheKey() {
+void oo::TextureLoader::performAsyncTask() { std::abort(); }
+void oo::TextureLoader::completeAsyncTask() { std::abort(); }
+oo::TextureFlags oo::TextureGenerator::textureOptions() { return oo::TextureFlags::kNone; }
+GLfloat oo::TextureGenerator::anisotropy() { return 0; }
+GLfloat oo::TextureGenerator::lodBias() { return 0; }
+std::optional<std::string> oo::TextureGenerator::cacheKey() {
   return std::nullopt;
 }
-bool OOTextureGenerator::enqueue() { return false; }
-std::shared_ptr<OOCombinedEmissionMapGenerator>
-OOCombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
-    const oo::PList& emissionMapSpec, OOColor*, OOTexture*, OOColor*,
+bool oo::TextureGenerator::enqueue() { return false; }
+std::shared_ptr<oo::CombinedEmissionMapGenerator>
+oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
+    const oo::PList& emissionMapSpec, OOColor*, oo::Texture*, OOColor*,
     const oo::PList& illuminationMapSpec, OOColor*, const oo::PList&) {
   if (emissionMapSpec.isNull() && illuminationMapSpec.isNull()) return {};
-  return oo::makeShared<OOCombinedEmissionMapGenerator>();
+  return oo::makeShared<oo::CombinedEmissionMapGenerator>();
 }
-std::shared_ptr<OOCombinedEmissionMapGenerator>
-OOCombinedEmissionMapGenerator::generatorWithEmissionAndIlluminationMapSpec(
-    const oo::PList&, OOTexture*, OOColor*, OOColor*, OOColor*,
+std::shared_ptr<oo::CombinedEmissionMapGenerator>
+oo::CombinedEmissionMapGenerator::generatorWithEmissionAndIlluminationMapSpec(
+    const oo::PList&, oo::Texture*, OOColor*, OOColor*, OOColor*,
     const oo::PList&) {
-  return oo::makeShared<OOCombinedEmissionMapGenerator>();
+  return oo::makeShared<oo::CombinedEmissionMapGenerator>();
 }
-OOCombinedEmissionMapGenerator::~OOCombinedEmissionMapGenerator() {}
+namespace oo {
+
+CombinedEmissionMapGenerator::~CombinedEmissionMapGenerator() {}
+
+}  // namespace oo
+
 #ifndef NDEBUG
 std::optional<std::string>
-OOCombinedEmissionMapGenerator::descriptionComponents() const {
+oo::CombinedEmissionMapGenerator::descriptionComponents() const {
   return std::nullopt;
 }
 #endif
-OOTextureFlags OOCombinedEmissionMapGenerator::textureOptions() { return OOTextureFlags::kNone; }
-GLfloat OOCombinedEmissionMapGenerator::anisotropy() { return 0; }
-GLfloat OOCombinedEmissionMapGenerator::lodBias() { return 0; }
-std::optional<std::string> OOCombinedEmissionMapGenerator::cacheKey() {
+oo::TextureFlags oo::CombinedEmissionMapGenerator::textureOptions() { return oo::TextureFlags::kNone; }
+GLfloat oo::CombinedEmissionMapGenerator::anisotropy() { return 0; }
+GLfloat oo::CombinedEmissionMapGenerator::lodBias() { return 0; }
+std::optional<std::string> oo::CombinedEmissionMapGenerator::cacheKey() {
   return std::nullopt;
 }
-void OOCombinedEmissionMapGenerator::loadTexture() {}
+void oo::CombinedEmissionMapGenerator::loadTexture() {}
 
 // OOTexture.mm's specifier of a map value: the value itself, or the default
 // name, or none.
-oo::PList OOTextureSpecFromObject(
+namespace oo {
+
+oo::PList TextureSpecFromObject(
     const oo::PList& object, const std::optional<std::string>& defaultName) {
   if (!object.isNull()) return object;
   return defaultName.has_value() ? oo::PList(*defaultName) : oo::PList();
 }
+
+}  // namespace oo
+
 
 // The universe: the three settings the creators and the materials ask about.
 class Universe;
@@ -326,19 +351,19 @@ bool SetUp(bool useShaders, OOGraphicsDetail detail = OOGraphicsDetail::kMinimum
   return true;
 }
 
-std::shared_ptr<OOMaterial> Make(
+std::shared_ptr<oo::Material> Make(
     const char* name, oo::PList::Dict config, bool smooth = false,
     const std::optional<std::string>& cacheKey = std::nullopt) {
-  return OOMaterial::materialWithName(
+  return oo::Material::materialWithName(
       name != nullptr ? std::optional<std::string>(name) : std::nullopt,
       cacheKey, oo::PList(std::move(config)), oo::PList(), nullptr, smooth);
 }
 
 // The material's C++ class, exactly.
 template <typename T>
-bool IsExactly(const std::shared_ptr<OOMaterial>& material) {
+bool IsExactly(const std::shared_ptr<oo::Material>& material) {
   if (material == nullptr) return false;
-  const OOMaterial& object = *material.get();
+  const oo::Material& object = *material.get();
   return typeid(object) == typeid(T);
 }
 
@@ -351,26 +376,26 @@ OO_TEST(withoutShaders) {
   }
   {
     // A diffuse map (named, or the material's own name): one texture.
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(Make("hull.png", {})));
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {})));
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(
         Make("hull.png", {{"diffuse_map", oo::PList("d.png")}})));
     // With no name the single-texture initialiser fails (it needs one), so
     // basic.
-    OO_CHECK(IsExactly<OOBasicMaterial>(
+    OO_CHECK(IsExactly<oo::BasicMaterial>(
         Make(nullptr, {{"diffuse_map", oo::PList("d.png")}})));
     // No diffuse map: basic; one that fails to load: basic too.
-    OO_CHECK(IsExactly<OOBasicMaterial>(Make(nullptr, {})));
-    OO_CHECK(IsExactly<OOBasicMaterial>(Make("missing", {})));
+    OO_CHECK(IsExactly<oo::BasicMaterial>(Make(nullptr, {})));
+    OO_CHECK(IsExactly<oo::BasicMaterial>(Make("missing", {})));
     // Emission or illumination maps: multitexture, when the combiners are there
     // (they are).
-    OO_CHECK(IsExactly<OOMultiTextureMaterial>(
+    OO_CHECK(IsExactly<oo::MultiTextureMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}})));
-    OO_CHECK(IsExactly<OOMultiTextureMaterial>(
+    OO_CHECK(IsExactly<oo::MultiTextureMaterial>(
         Make("hull.png", {{"illumination_map", oo::PList("i.png")}})));
-    OO_CHECK(IsExactly<OOMultiTextureMaterial>(Make(
+    OO_CHECK(IsExactly<oo::MultiTextureMaterial>(Make(
         "hull.png", {{"emission_and_illumination_map", oo::PList("ei.png")}})));
     // A shader configuration without shaders: its fixed-function equivalent.
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(
         Make("hull.png", {{"vertex_shader", oo::PList("named")}})));
     OO_CHECK(Make("Named", {})->name() == std::optional<std::string>("Named"));
   }
@@ -382,16 +407,16 @@ OO_TEST(namedShaders) {
     return;
   }
   {
-    std::shared_ptr<OOMaterial> m =
+    std::shared_ptr<oo::Material> m =
         Make("hull.png", {{"vertex_shader", oo::PList("named")},
                           {"fragment_shader", oo::PList("named")}});
-    OO_CHECK(IsExactly<OOShaderMaterial>(m));
+    OO_CHECK(IsExactly<oo::ShaderMaterial>(m));
     OO_CHECK(gCacheWrites.empty());
 
     // A shader that fails, at low detail and not smoothed: the fixed-function
     // material.
     m = Make("hull.png", {{"vertex_shader", oo::PList("absent")}});
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(m));
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(m));
   }
 }
 
@@ -404,10 +429,10 @@ OO_TEST(synthesizedShaders) {
     // Full shader detail: the configuration is synthesized into a shader
     // material, and the synthesized configuration is cached under the cache
     // key, the name and the configuration.
-    std::shared_ptr<OOMaterial> m =
+    std::shared_ptr<oo::Material> m =
         Make("hull.png", {{"emission_map", oo::PList("e.png")}}, false,
              std::string("ship"));
-    OO_CHECK(IsExactly<OOShaderMaterial>(m));
+    OO_CHECK(IsExactly<oo::ShaderMaterial>(m));
     OO_CHECK(gCacheWrites.size() == 1 &&
              gCacheWrites[0].starts_with(
                  "synthesized shader materials|ship/hull.png/"));
@@ -447,13 +472,13 @@ OO_TEST(synthesizedShaders) {
 
     // Asked again: read from the cache, not written.
     gCacheWrites.clear();
-    OO_CHECK(IsExactly<OOShaderMaterial>(
+    OO_CHECK(IsExactly<oo::ShaderMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}}, false,
              std::string("ship"))));
     OO_CHECK(gCacheWrites.empty());
 
     // No cache key: synthesized, not cached.
-    OO_CHECK(IsExactly<OOShaderMaterial>(Make("hull.png", {})) &&
+    OO_CHECK(IsExactly<oo::ShaderMaterial>(Make("hull.png", {})) &&
              gCacheWrites.empty());
   }
 }
@@ -465,11 +490,11 @@ OO_TEST(synthesisTriggersAndLoops) {
   }
   {
     // Low detail: fixed function, unless smoothed or a map needs the shader.
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(Make("hull.png", {})));
-    OO_CHECK(IsExactly<OOShaderMaterial>(Make("hull.png", {}, true)));
-    OO_CHECK(IsExactly<OOShaderMaterial>(
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {})));
+    OO_CHECK(IsExactly<oo::ShaderMaterial>(Make("hull.png", {}, true)));
+    OO_CHECK(IsExactly<oo::ShaderMaterial>(
         Make("hull.png", {{"normal_map", oo::PList("n.png")}})));
-    OO_CHECK(IsExactly<OOShaderMaterial>(
+    OO_CHECK(IsExactly<oo::ShaderMaterial>(
         Make("hull.png", {{"specular_map", oo::PList("s.png")}})));
 
     /*	The synthesized shaders fail to build: no loop, and the fixed-function
@@ -479,12 +504,12 @@ OO_TEST(synthesisTriggersAndLoops) {
        single-texture, not multitexture.
     */
     gShaderFiles.erase("oolite-default-shader.fragment");
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(Make("hull.png", {}, true)));
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {}, true)));
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}}, true)));
     // Without the smoothing that forces the shader, at low detail, the emission
     // map still asks for the shader, and the result is the same.
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}})));
   }
 }
@@ -504,19 +529,19 @@ OO_TEST(fromDictionaries) {
                                    {"fragment_shader", oo::PList("named")}})}});
 
     auto make = [&](const char* name, const oo::PList& m, const oo::PList& s) {
-      return OOMaterial::materialWithName(std::string(name), std::nullopt, m, s,
+      return oo::Material::materialWithName(std::string(name), std::nullopt, m, s,
                                           oo::PList(), nullptr, false);
     };
 
     // With shaders, the shaders dictionary's entry; without, the materials
     // dictionary's.
-    OO_CHECK(IsExactly<OOShaderMaterial>(make("hull.png", materials, shaders)));
+    OO_CHECK(IsExactly<oo::ShaderMaterial>(make("hull.png", materials, shaders)));
     gUniverse->_useShaders = false;
-    std::shared_ptr<OOMaterial> m = make("hull.png", materials, shaders);
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(m));
+    std::shared_ptr<oo::Material> m = make("hull.png", materials, shaders);
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(m));
     // Neither: an empty configuration if the texture of that name loads, else
     // nothing.
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(
         make("other.png", materials, shaders)));
     OO_CHECK(make("missing", materials, shaders) == nullptr);
     OO_CHECK(make("missing", oo::PList(), oo::PList()) == nullptr);
@@ -532,9 +557,9 @@ OO_TEST(cxxStaticMembers) {
     return;
   }
   {
-    OO_CHECK(IsExactly<OOSingleTextureMaterial>(Make("hull.png", {})));
-    OO_CHECK(IsExactly<OOBasicMaterial>(Make(nullptr, {})));
-    OO_CHECK(IsExactly<OOMultiTextureMaterial>(
+    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {})));
+    OO_CHECK(IsExactly<oo::BasicMaterial>(Make(nullptr, {})));
+    OO_CHECK(IsExactly<oo::MultiTextureMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}})));
     OO_CHECK(Make("Named", {})->name() == std::optional<std::string>("Named"));
   }
@@ -544,7 +569,7 @@ OO_TEST(cxxStaticMembers) {
     return;
   }
   {
-    OO_CHECK(IsExactly<OOShaderMaterial>(
+    OO_CHECK(IsExactly<oo::ShaderMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}}, false,
              std::string("ship"))));
     OO_CHECK(gCacheWrites.size() == 1);
@@ -556,10 +581,10 @@ OO_TEST(cxxStaticMembers) {
         {"hull.png",
          oo::PList(oo::PList::Dict{{"vertex_shader", oo::PList("named")},
                                    {"fragment_shader", oo::PList("named")}})}});
-    OO_CHECK(IsExactly<OOShaderMaterial>(OOMaterial::materialWithName(
+    OO_CHECK(IsExactly<oo::ShaderMaterial>(oo::Material::materialWithName(
         std::string("hull.png"), std::nullopt, materials, shaders, oo::PList(),
         nullptr, false)));
-    OO_CHECK(OOMaterial::materialWithName(std::string("missing"), std::nullopt,
+    OO_CHECK(oo::Material::materialWithName(std::string("missing"), std::nullopt,
                                           oo::PList(), oo::PList(), oo::PList(),
                                           nullptr, false) == nullptr);
   }

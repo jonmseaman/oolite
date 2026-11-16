@@ -32,8 +32,8 @@ SOFTWARE.
 #include <memory>
 #include <utility>
 
+#include "MaterialState.h"
 #include "OOMacroOpenGL.h"
-#include "OOMaterialState.h"
 #include "OOOpenGL.h"
 
 #ifndef OODEBUGLDRAWING_DISABLE
@@ -133,8 +133,8 @@ OODebugWFState OODebugBeginWireframe(bool ignoreZ) {
   OO_ENTER_OPENGL();
 
   // The current material, held until OODebugEndWireframe().
-  OODebugWFState state = {.material = OOMaterialRetainCurrent()};
-  OOMaterialApplyNone();
+  OODebugWFState state = {.material = oo::MaterialRetainCurrent()};
+  oo::MaterialApplyNone();
 
   OOGL(glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT | GL_LINE_BIT |
                     GL_POINT_BIT | GL_CURRENT_BIT));
@@ -158,7 +158,7 @@ OODebugWFState OODebugBeginWireframe(bool ignoreZ) {
 void OODebugEndWireframe(OODebugWFState state) {
   OO_ENTER_OPENGL();
   OOGL(glPopAttrib());
-  OOMaterialApplyAndRelease(std::move(state.material));
+  oo::MaterialApplyAndRelease(std::move(state.material));
 }
 
 #endif

@@ -19,8 +19,8 @@
 #include <cstdlib>
 
 #include "OOAsyncWorkManager.h"
-#include "OOTexture.h"
-#include "OOTextureLoader.h"
+#include "Texture.h"
+#include "TextureLoader.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/objc/Exception.h"
@@ -34,7 +34,7 @@ static int gLoads = 0;
 
 // A loader whose pixels are a width x height image of the given format whose
 // bytes count up from 1, or none, or an exception.
-class TestLoader : public OOTextureLoader {
+class TestLoader : public oo::TextureLoader {
  public:
   void loadTexture() override {
     gLoads++;
@@ -42,8 +42,8 @@ class TestLoader : public OOTextureLoader {
       oo::RaiseException("TestLoaderException", "test loader raised");
     if (_testEmpty) return;
     const size_t size = (size_t)_testWidth * _testHeight *
-                        OOTextureComponentsForFormat(_testFormat);
-    OOPixelBuffer buffer = OOMakePixelBuffer(size);
+                        oo::TextureComponentsForFormat(_testFormat);
+    oo::PixelBuffer buffer = oo::MakePixelBuffer(size);
     uint8_t* bytes = buffer->data();
     for (size_t i = 0; i < size; i++) bytes[i] = (uint8_t)(i + 1);
     _data = buffer;
@@ -54,7 +54,7 @@ class TestLoader : public OOTextureLoader {
 
   // The root's state, as the subclasses read it (the one block the conversion
   // ports).
-  OOTextureFlags testOptions() { return _options; }
+  oo::TextureFlags testOptions() { return _options; }
   uint32_t testMaxSize() { return _maxSize; }
   uint32_t testShrinkThreshold() { return _shrinkThreshold; }
   bool testGenerateMipMaps() { return _generateMipMaps; }
@@ -66,7 +66,7 @@ class TestLoader : public OOTextureLoader {
   std::string testPath() { return _path; }
 
   uint32_t _testWidth = 0, _testHeight = 0;
-  OOTextureDataFormat _testFormat = {};
+  oo::TextureDataFormat _testFormat = {};
   bool _testEmpty = false, _testRaise = false;
 };
 
@@ -76,7 +76,7 @@ namespace {
 // known extension runs (and then answers nil, reading nothing).
 void SetUpLoaders() {
   {
-    (void)OOTextureLoader::loaderWithPath(std::string("unknown.type"), OOTextureFlags::kNone);
+    (void)oo::TextureLoader::loaderWithPath(std::string("unknown.type"), oo::TextureFlags::kNone);
   }
 }
 
@@ -84,8 +84,8 @@ void SetUpLoaders() {
 // case's pool).
 std::vector<std::shared_ptr<TestLoader>> gKeptLoaders;
 
-TestLoader* Loader(const char* path, OOTextureFlags options, uint32_t width,
-                   uint32_t height, OOTextureDataFormat format) {
+TestLoader* Loader(const char* path, oo::TextureFlags options, uint32_t width,
+                   uint32_t height, oo::TextureDataFormat format) {
   const std::shared_ptr<TestLoader> made = oo::makeShared<TestLoader>();
   TestLoader* loader =
       made->initWithPath(std::string(path), options) ? made.get() : nullptr;
@@ -98,7 +98,7 @@ TestLoader* Loader(const char* path, OOTextureFlags options, uint32_t width,
   return loader;
 }
 
-bool Queue(OOTextureLoader* loader) {
+bool Queue(oo::TextureLoader* loader) {
   // The work manager's task is the C++ loader.
   return OOAsyncWorkManager::sharedAsyncWorkManager()->addTask(
       loader, OOAsyncWorkPriority::kMedium);
@@ -106,14 +106,14 @@ bool Queue(OOTextureLoader* loader) {
 
 struct Result {
   bool ok = false;
-  OOPixMap pixMap = kOONullPixMap;
-  OOTextureDataFormat format = kOOPixMapInvalidFormat;
+  oo::PixMap pixMap = oo::kNullPixMap;
+  oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
   uint32_t originalWidth = 0, originalHeight = 0;
 };
 
-Result GetResult(OOTextureLoader* loader) {
+Result GetResult(oo::TextureLoader* loader) {
   Result result;
-  if (std::optional<OOTextureLoader::Result> loaded = loader->getResult()) {
+  if (std::optional<oo::TextureLoader::Result> loaded = loader->getResult()) {
     result.ok = true;
     result.pixMap = loaded->pixMap;
     result.format = loaded->format;
@@ -128,14 +128,14 @@ Result GetResult(OOTextureLoader* loader) {
 OO_TEST(factoryRefusals) {
   OO_CHECK(OOTestGLContext());
   {
-    OO_CHECK(OOTextureLoader::loaderWithPath(std::nullopt, OOTextureFlags::kNone) == nullptr);
-    OO_CHECK(OOTextureLoader::loaderWithPath(
-                 std::string("textures/unknown.type"), OOTextureFlags::kNone) == nullptr);
-    OO_CHECK(OOTextureLoader::loaderWithTextureSpecifier(
-                 oo::PList(3.0), OOTextureFlags::kNone, std::string("Textures")) == nullptr);
-    OO_CHECK(OOTextureLoader::loaderWithTextureSpecifier(
-                 oo::PList(), OOTextureFlags::kNone, std::string("Textures")) == nullptr);
-    OO_CHECK(!oo::makeShared<TestLoader>()->initWithPath(std::nullopt, OOTextureFlags::kNone));
+    OO_CHECK(oo::TextureLoader::loaderWithPath(std::nullopt, oo::TextureFlags::kNone) == nullptr);
+    OO_CHECK(oo::TextureLoader::loaderWithPath(
+                 std::string("textures/unknown.type"), oo::TextureFlags::kNone) == nullptr);
+    OO_CHECK(oo::TextureLoader::loaderWithTextureSpecifier(
+                 oo::PList(3.0), oo::TextureFlags::kNone, std::string("Textures")) == nullptr);
+    OO_CHECK(oo::TextureLoader::loaderWithTextureSpecifier(
+                 oo::PList(), oo::TextureFlags::kNone, std::string("Textures")) == nullptr);
+    OO_CHECK(!oo::makeShared<TestLoader>()->initWithPath(std::nullopt, oo::TextureFlags::kNone));
   }
 }
 
@@ -144,8 +144,8 @@ OO_TEST(optionsDecoded) {
   SetUpLoaders();
   {
     TestLoader* plain =
-        Loader("dir/plain.png", OOTextureFlags::kMinFilterLinear, 4, 4, kOOPixMapRGBA);
-    OO_CHECK(plain->testOptions() == OOTextureFlags::kMinFilterLinear);
+        Loader("dir/plain.png", oo::TextureFlags::kMinFilterLinear, 4, 4, oo::kPixMapRGBA);
+    OO_CHECK(plain->testOptions() == oo::TextureFlags::kMinFilterLinear);
     OO_CHECK(!plain->testGenerateMipMaps() && !plain->testAvoidShrinking() &&
              !plain->testNoScaling());
     OO_CHECK(plain->testShrinkThreshold() == 512 && plain->testMaxSize() >= 64);
@@ -156,25 +156,25 @@ OO_TEST(optionsDecoded) {
              std::optional<std::string>("plain.png:0x0002"));
     OO_CHECK(!plain->isReady());
 
-    OO_CHECK(Loader("a", OOTextureFlags::kMinFilterMipMap, 1, 1, kOOPixMapRGBA)
+    OO_CHECK(Loader("a", oo::TextureFlags::kMinFilterMipMap, 1, 1, oo::kPixMapRGBA)
                  ->testGenerateMipMaps());
-    TestLoader* noShrink = Loader("b", OOTextureFlags::kNoShrink, 1, 1, kOOPixMapRGBA);
+    TestLoader* noShrink = Loader("b", oo::TextureFlags::kNoShrink, 1, 1, oo::kPixMapRGBA);
     OO_CHECK(noShrink->testAvoidShrinking() &&
              noShrink->testShrinkThreshold() == UINT32_MAX);
-    TestLoader* never = Loader("c", OOTextureFlags::kNeverScale, 1, 1, kOOPixMapRGBA);
+    TestLoader* never = Loader("c", oo::TextureFlags::kNeverScale, 1, 1, oo::kPixMapRGBA);
     OO_CHECK(never->testNoScaling() &&
              never->testShrinkThreshold() == UINT32_MAX);
-    TestLoader* extra = Loader("d", OOTextureFlags::kExtraShrink, 1, 1, kOOPixMapRGBA);
+    TestLoader* extra = Loader("d", oo::TextureFlags::kExtraShrink, 1, 1, oo::kPixMapRGBA);
     OO_CHECK(extra->testShrinkThreshold() == 128 &&
              extra->testMaxSize() <= 256);
-    OO_CHECK(Loader("e", OOTextureFlags::kAllowCubeMap, 1, 1, kOOPixMapRGBA)
+    OO_CHECK(Loader("e", oo::TextureFlags::kAllowCubeMap, 1, 1, oo::kPixMapRGBA)
                  ->testAllowCubeMap());
     TestLoader* green =
-        Loader("f", OOTextureFlags::kExtractChannelG, 1, 1, kOOPixMapRGBA);
+        Loader("f", oo::TextureFlags::kExtractChannelG, 1, 1, oo::kPixMapRGBA);
     OO_CHECK(green->testExtractChannel() &&
              green->testExtractChannelIndex() == 1);
     TestLoader* alpha =
-        Loader("g", OOTextureFlags::kExtractChannelA, 1, 1, kOOPixMapRGBA);
+        Loader("g", oo::TextureFlags::kExtractChannelA, 1, 1, oo::kPixMapRGBA);
     OO_CHECK(alpha->testExtractChannel() &&
              alpha->testExtractChannelIndex() == 3);
   }
@@ -185,7 +185,7 @@ OO_TEST(descriptions) {
   SetUpLoaders();
   {
     TestLoader* loader =
-        Loader("dir/desc.png", OOTextureFlags::kMinFilterLinear, 4, 4, kOOPixMapRGBA);
+        Loader("dir/desc.png", oo::TextureFlags::kMinFilterLinear, 4, 4, oo::kPixMapRGBA);
     OO_CHECK(loader->description().starts_with("<TestLoader 0x"));
     OO_CHECK(loader->description().ends_with(">{{dir/desc.png -- loading}}"));
     OO_CHECK(loader->shortDescription().ends_with(">{desc.png}"));
@@ -194,7 +194,7 @@ OO_TEST(descriptions) {
     OO_CHECK(result.ok && loader->isReady());
     OO_CHECK(loader->description().ends_with(
         ">{{dir/desc.png -- failed}}"));  // the pixels were handed over
-    OOFreePixMap(&result.pixMap);
+    oo::FreePixMap(&result.pixMap);
   }
 }
 
@@ -204,43 +204,43 @@ OO_TEST(loadsScalesAndHandsOver) {
   {
     const int loads = gLoads;
     TestLoader* loader =
-        Loader("square.png", OOTextureFlags::kMinFilterLinear, 8, 8, kOOPixMapRGBA);
+        Loader("square.png", oo::TextureFlags::kMinFilterLinear, 8, 8, oo::kPixMapRGBA);
     OO_CHECK(Queue(loader));
     Result result = GetResult(loader);  // waits for the work thread
     OO_CHECK(gLoads == loads + 1);
-    OO_CHECK(result.ok && result.format == kOOPixMapRGBA);
+    OO_CHECK(result.ok && result.format == oo::kPixMapRGBA);
     OO_CHECK(result.originalWidth == 8 && result.originalHeight == 8);
     OO_CHECK(result.pixMap.width == 8 && result.pixMap.height == 8 &&
              result.pixMap.rowBytes == 32);  // a power of two: as loaded
     OO_CHECK(result.pixMap.pixels != NULL &&
              ((uint8_t*)result.pixMap.pixels)[0] == 1);
-    OOFreePixMap(&result.pixMap);
+    oo::FreePixMap(&result.pixMap);
 
     // The pixels were handed over: a second request has none.
     Result again = GetResult(loader);
-    OO_CHECK(!again.ok && again.format == kOOPixMapInvalidFormat &&
-             OOIsNullPixMap(again.pixMap));
+    OO_CHECK(!again.ok && again.format == oo::kPixMapInvalidFormat &&
+             oo::IsNullPixMap(again.pixMap));
 
     // A 4 x 2 image is scaled to 2 x 2 (a power of two near two thirds of each
     // side).
     TestLoader* wide =
-        Loader("wide.png", OOTextureFlags::kMinFilterLinear, 4, 2, kOOPixMapRGBA);
+        Loader("wide.png", oo::TextureFlags::kMinFilterLinear, 4, 2, oo::kPixMapRGBA);
     OO_CHECK(Queue(wide));
     Result scaled = GetResult(wide);
     OO_CHECK(scaled.ok && scaled.pixMap.width == 2 &&
              scaled.pixMap.height == 2);
     OO_CHECK(scaled.originalWidth == 4 && scaled.originalHeight == 2);
     OO_CHECK(((uint8_t*)scaled.pixMap.pixels)[0] == 3);
-    OOFreePixMap(&scaled.pixMap);
+    oo::FreePixMap(&scaled.pixMap);
 
     // Never scaled: as loaded.
     TestLoader* never =
-        Loader("never.png", OOTextureFlags::kNeverScale, 4, 2, kOOPixMapRGBA);
+        Loader("never.png", oo::TextureFlags::kNeverScale, 4, 2, oo::kPixMapRGBA);
     OO_CHECK(Queue(never));
     Result asLoaded = GetResult(never);
     OO_CHECK(asLoaded.ok && asLoaded.pixMap.width == 4 &&
              asLoaded.pixMap.height == 2);
-    OOFreePixMap(&asLoaded.pixMap);
+    oo::FreePixMap(&asLoaded.pixMap);
   }
 }
 
@@ -249,16 +249,16 @@ OO_TEST(extractsAChannel) {
   SetUpLoaders();
   {
     TestLoader* loader = Loader(
-        "green.png", OOTextureFlags::kMinFilterLinear | OOTextureFlags::kExtractChannelG, 8,
-        8, kOOPixMapRGBA);
+        "green.png", oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kExtractChannelG, 8,
+        8, oo::kPixMapRGBA);
     OO_CHECK(Queue(loader));
     Result result = GetResult(loader);
-    OO_CHECK(result.ok && result.format == kOOPixMapGrayscale);
+    OO_CHECK(result.ok && result.format == oo::kPixMapGrayscale);
     OO_CHECK(result.pixMap.width == 8 && result.pixMap.height == 8 &&
              result.pixMap.rowBytes == 8);
     OO_CHECK(((uint8_t*)result.pixMap.pixels)[0] ==
              2);  // the first pixel's green byte
-    OOFreePixMap(&result.pixMap);
+    oo::FreePixMap(&result.pixMap);
   }
 }
 
@@ -267,14 +267,14 @@ OO_TEST(mipMaps) {
   SetUpLoaders();
   {
     TestLoader* loader =
-        Loader("mip.png", OOTextureFlags::kMinFilterMipMap, 8, 8, kOOPixMapRGBA);
+        Loader("mip.png", oo::TextureFlags::kMinFilterMipMap, 8, 8, oo::kPixMapRGBA);
     OO_CHECK(Queue(loader));
     Result result = GetResult(loader);
     OO_CHECK(result.ok && result.pixMap.width == 8 &&
              result.pixMap.height == 8);
     OO_CHECK(((uint8_t*)result.pixMap.pixels)[0] ==
              1);  // the base level as loaded
-    OOFreePixMap(&result.pixMap);
+    oo::FreePixMap(&result.pixMap);
   }
 }
 
@@ -283,16 +283,16 @@ OO_TEST(failures) {
   SetUpLoaders();
   {
     TestLoader* empty =
-        Loader("empty.png", OOTextureFlags::kMinFilterLinear, 4, 4, kOOPixMapRGBA);
+        Loader("empty.png", oo::TextureFlags::kMinFilterLinear, 4, 4, oo::kPixMapRGBA);
     empty->_testEmpty = true;
     OO_CHECK(Queue(empty));
     Result none = GetResult(empty);
-    OO_CHECK(!none.ok && none.format == kOOPixMapInvalidFormat &&
+    OO_CHECK(!none.ok && none.format == oo::kPixMapInvalidFormat &&
              empty->isReady());
     OO_CHECK(empty->description().ends_with(">{{empty.png -- failed}}"));
 
     TestLoader* raising =
-        Loader("raise.png", OOTextureFlags::kMinFilterLinear, 4, 4, kOOPixMapRGBA);
+        Loader("raise.png", oo::TextureFlags::kMinFilterLinear, 4, 4, oo::kPixMapRGBA);
     raising->_testRaise = true;
     OO_CHECK(Queue(raising));
     Result raised =
@@ -306,17 +306,17 @@ OO_TEST(failures) {
 
 // A converted loader, as OOPNGTextureLoader will be one: a C++ subclass that
 // fills the pixels.
-class TestCxxLoader final : public OOTextureLoader {
+class TestCxxLoader final : public oo::TextureLoader {
  public:
   void loadTexture() override {
     loads++;
-    OOPixelBuffer buffer = OOMakePixelBuffer(8 * 8 * 4);
+    oo::PixelBuffer buffer = oo::MakePixelBuffer(8 * 8 * 4);
     uint8_t* bytes = buffer->data();
     for (unsigned i = 0; i < 8 * 8 * 4; i++) bytes[i] = (uint8_t)(i + 1);
     _data = buffer;
     _width = 8;
     _height = 8;
-    _format = kOOPixMapRGBA;
+    _format = oo::kPixMapRGBA;
   }
 
   std::optional<std::string> descriptionComponents() const override {
@@ -330,15 +330,15 @@ OO_TEST(cxxApi) {
   OO_CHECK(OOTestGLContext());
   SetUpLoaders();
   {
-    OO_CHECK(!OOTextureLoader::loaderWithPath(std::nullopt, OOTextureFlags::kNone));
-    OO_CHECK(!OOTextureLoader::loaderWithPath(std::string("unknown.type"), OOTextureFlags::kNone));
-    OO_CHECK(!OOTextureLoader::loaderWithTextureSpecifier(
-        oo::PList(3.0), OOTextureFlags::kNone, std::string("Textures")));
+    OO_CHECK(!oo::TextureLoader::loaderWithPath(std::nullopt, oo::TextureFlags::kNone));
+    OO_CHECK(!oo::TextureLoader::loaderWithPath(std::string("unknown.type"), oo::TextureFlags::kNone));
+    OO_CHECK(!oo::TextureLoader::loaderWithTextureSpecifier(
+        oo::PList(3.0), oo::TextureFlags::kNone, std::string("Textures")));
 
     const std::shared_ptr<TestCxxLoader> loader = oo::makeShared<TestCxxLoader>();
-    OO_CHECK(!loader->initWithPath(std::nullopt, OOTextureFlags::kNone));
+    OO_CHECK(!loader->initWithPath(std::nullopt, oo::TextureFlags::kNone));
     OO_CHECK(loader->initWithPath(std::string("dir/cxx.png"),
-                                  OOTextureFlags::kMinFilterLinear));
+                                  oo::TextureFlags::kMinFilterLinear));
     OO_CHECK(loader->path() == std::optional<std::string>("dir/cxx.png") &&
              loader->_shrinkThreshold == 512);
     OO_CHECK(loader->cacheKey() ==
@@ -348,10 +348,10 @@ OO_TEST(cxxApi) {
 
     // Queued, loaded on a work thread, handed over on this one.
     OO_CHECK(Queue(loader.get()));
-    OOPixMap pixMap = kOONullPixMap;
-    OOTextureDataFormat format = kOOPixMapInvalidFormat;
+    oo::PixMap pixMap = oo::kNullPixMap;
+    oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
     uint32_t width = 0, height = 0;
-    const std::optional<OOTextureLoader::Result> loaded = loader->getResult();
+    const std::optional<oo::TextureLoader::Result> loaded = loader->getResult();
     OO_CHECK(loaded.has_value());
     if (loaded) {
       pixMap = loaded->pixMap;
@@ -360,11 +360,11 @@ OO_TEST(cxxApi) {
       height = loaded->originalHeight;
     }
     OO_CHECK(loader->loads == 1 && loader->isReady() &&
-             format == kOOPixMapRGBA);
+             format == oo::kPixMapRGBA);
     OO_CHECK(pixMap.width == 8 && pixMap.height == 8 && width == 8 &&
              height == 8);
     OO_CHECK(((uint8_t*)pixMap.pixels)[0] == 1);
-    OOFreePixMap(&pixMap);
+    oo::FreePixMap(&pixMap);
 
     // The C++ loader's overrides and the root's defaults, as callers
     // reach them.

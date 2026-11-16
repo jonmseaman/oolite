@@ -24,7 +24,7 @@
 #include "EntityHold.h"
 #include "OOFoundation.h"
 #include "OOMaths.h"
-#include "OOShaderUniformMethodType.h"
+#include "ShaderUniformMethodType.h"
 #include "OOTypes.h"
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
@@ -121,50 +121,50 @@ static_assert(kValueType<std::optional<std::string>> == VT::kOptionalString);
 static_assert(kValueType<ShipEntity*> == VT::kOther);
 static_assert(kValueType<OOHUDBeaconIcon*> == VT::kOther);
 static_assert(kValueType<std::vector<oo::EntityHold>*> == VT::kOther);
-static_assert(kValueType<std::vector<std::shared_ptr<OOTexture>>> ==
+static_assert(kValueType<std::vector<std::shared_ptr<oo::Texture>>> ==
               VT::kOther);
 
 namespace {
 
 // The uniform type the old template table gave the type's encoding.
 template <class T>
-OOShaderUniformType TypeOf() {
+oo::ShaderUniformType TypeOf() {
   return oo::ShaderUniformTypeOf(kValueType<T>);
 }
 
 }  // namespace
 
 OO_TEST(shaderUniformTypes) {
-  OO_CHECK(TypeOf<bool>() == kOOShaderUniformTypeChar);  // bool was "c"
-  OO_CHECK(TypeOf<signed char>() == kOOShaderUniformTypeChar);
-  OO_CHECK(TypeOf<unsigned char>() == kOOShaderUniformTypeUnsignedChar);
-  OO_CHECK(TypeOf<short>() == kOOShaderUniformTypeShort);
-  OO_CHECK(TypeOf<unsigned short>() == kOOShaderUniformTypeUnsignedShort);
-  OO_CHECK(TypeOf<int>() == kOOShaderUniformTypeInt);
-  OO_CHECK(TypeOf<oo::CompassMode>() == kOOShaderUniformTypeInt);
-  OO_CHECK(TypeOf<unsigned>() == kOOShaderUniformTypeUnsignedInt);
-  OO_CHECK(TypeOf<long>() == kOOShaderUniformTypeLong);
-  OO_CHECK(TypeOf<unsigned long>() == kOOShaderUniformTypeUnsignedLong);
-  OO_CHECK(TypeOf<float>() == kOOShaderUniformTypeFloat);
-  OO_CHECK(TypeOf<double>() == kOOShaderUniformTypeDouble);
-  OO_CHECK(TypeOf<Vector>() == kOOShaderUniformTypeVector);
-  OO_CHECK(TypeOf<HPVector>() == kOOShaderUniformTypeHPVector);
-  OO_CHECK(TypeOf<Quaternion>() == kOOShaderUniformTypeQuaternion);
-  OO_CHECK(TypeOf<OOMatrix>() == kOOShaderUniformTypeMatrix);
-  OO_CHECK(TypeOf<NSPoint>() == kOOShaderUniformTypePoint);
-  OO_CHECK(TypeOf<OOColor*>() == kOOShaderUniformTypeColor);
-  OO_CHECK(TypeOf<oo::ObjectResult>() == kOOShaderUniformTypeObject);
+  OO_CHECK(TypeOf<bool>() == oo::kShaderUniformTypeChar);  // bool was "c"
+  OO_CHECK(TypeOf<signed char>() == oo::kShaderUniformTypeChar);
+  OO_CHECK(TypeOf<unsigned char>() == oo::kShaderUniformTypeUnsignedChar);
+  OO_CHECK(TypeOf<short>() == oo::kShaderUniformTypeShort);
+  OO_CHECK(TypeOf<unsigned short>() == oo::kShaderUniformTypeUnsignedShort);
+  OO_CHECK(TypeOf<int>() == oo::kShaderUniformTypeInt);
+  OO_CHECK(TypeOf<oo::CompassMode>() == oo::kShaderUniformTypeInt);
+  OO_CHECK(TypeOf<unsigned>() == oo::kShaderUniformTypeUnsignedInt);
+  OO_CHECK(TypeOf<long>() == oo::kShaderUniformTypeLong);
+  OO_CHECK(TypeOf<unsigned long>() == oo::kShaderUniformTypeUnsignedLong);
+  OO_CHECK(TypeOf<float>() == oo::kShaderUniformTypeFloat);
+  OO_CHECK(TypeOf<double>() == oo::kShaderUniformTypeDouble);
+  OO_CHECK(TypeOf<Vector>() == oo::kShaderUniformTypeVector);
+  OO_CHECK(TypeOf<HPVector>() == oo::kShaderUniformTypeHPVector);
+  OO_CHECK(TypeOf<Quaternion>() == oo::kShaderUniformTypeQuaternion);
+  OO_CHECK(TypeOf<OOMatrix>() == oo::kShaderUniformTypeMatrix);
+  OO_CHECK(TypeOf<NSPoint>() == oo::kShaderUniformTypePoint);
+  OO_CHECK(TypeOf<OOColor*>() == oo::kShaderUniformTypeColor);
+  OO_CHECK(TypeOf<oo::ObjectResult>() == oo::kShaderUniformTypeObject);
 
   // No template matched these encodings.
-  OO_CHECK(TypeOf<void>() == kOOShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<long long>() == kOOShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<unsigned long long>() == kOOShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<NSRect>() == kOOShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<BoundingBox>() == kOOShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<oo::PList>() == kOOShaderUniformTypeInvalid);
+  OO_CHECK(TypeOf<void>() == oo::kShaderUniformTypeInvalid);
+  OO_CHECK(TypeOf<long long>() == oo::kShaderUniformTypeInvalid);
+  OO_CHECK(TypeOf<unsigned long long>() == oo::kShaderUniformTypeInvalid);
+  OO_CHECK(TypeOf<NSRect>() == oo::kShaderUniformTypeInvalid);
+  OO_CHECK(TypeOf<BoundingBox>() == oo::kShaderUniformTypeInvalid);
+  OO_CHECK(TypeOf<oo::PList>() == oo::kShaderUniformTypeInvalid);
   OO_CHECK(TypeOf<std::optional<std::string>>() ==
-           kOOShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<ShipEntity*>() == kOOShaderUniformTypeInvalid);
+           oo::kShaderUniformTypeInvalid);
+  OO_CHECK(TypeOf<ShipEntity*>() == oo::kShaderUniformTypeInvalid);
 }
 
 OO_TEST(valueTypeNames) {
