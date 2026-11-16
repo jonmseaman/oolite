@@ -62,7 +62,7 @@ std::optional<std::string> OODrawable::descriptionComponents() const {
 // The C++ class's name and the drawable's own address, with the description
 // components if any.
 std::string OODrawable::description() const {
-  const std::string name = OODemangle(typeid(*this).name());
+  const std::string name = oo::DescriptionClassName(typeid(*this).name());
   std::string result =
       std::format("<{} {}>", name, oo::str::pointerDescription(this));
   if (const std::optional<std::string> components = descriptionComponents())

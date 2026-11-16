@@ -30,7 +30,7 @@ MA 02110-1301, USA.
 
 #include <string>
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -38,11 +38,16 @@ MA 02110-1301, USA.
    it; the verifier makes it from its name (kCxxStages in OOOXPVerifier.cpp) and
    holds it.
 */
-class OOCheckRequiresPListVerifierStage : public OOFileHandlingVerifierStage {
+namespace oo {
+
+class CheckRequiresPListVerifierStage : public FileHandlingVerifierStage {
  public:
   std::optional<std::string> name() override;
   bool shouldRun() override;
   void run() override;
 };
+
+}  // namespace oo
+
 
 #endif

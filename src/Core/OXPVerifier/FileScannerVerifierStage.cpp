@@ -47,7 +47,7 @@ SOFTWARE.
         hierarchy into account.
 */
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 
 #include <format>
 #include <functional>
@@ -93,13 +93,13 @@ bool CheckNameConflict(
 
 }  // namespace
 
-const char* const OOFileScannerVerifierStage::kName = kFileScannerStageName;
+const char* const oo::FileScannerVerifierStage::kName = kFileScannerStageName;
 
-std::optional<std::string> OOFileScannerVerifierStage::name() {
+std::optional<std::string> oo::FileScannerVerifierStage::name() {
   return kFileScannerStageName;
 }
 
-void OOFileScannerVerifierStage::run() {
+void oo::FileScannerVerifierStage::run() {
   _usedFiles.clear();
   _caseWarnings.clear();
   _badPLists.clear();
@@ -116,26 +116,26 @@ void OOFileScannerVerifierStage::run() {
 
 // The verifier holds the C++ stages.
 std::optional<std::string>
-OOFileScannerVerifierStage::nameForDependencyForVerifier(
-    OOOXPVerifier* verifier) {
-  OOOXPVerifierStage* stage = verifier->stageWithName(kFileScannerStageName);
+oo::FileScannerVerifierStage::nameForDependencyForVerifier(
+    oo::OXPVerifier* verifier) {
+  oo::OXPVerifierStage* stage = verifier->stageWithName(kFileScannerStageName);
   if (stage == nullptr) {
-    const std::shared_ptr<OOFileScannerVerifierStage> newStage =
-        oo::makeShared<OOFileScannerVerifierStage>();
+    const std::shared_ptr<oo::FileScannerVerifierStage> newStage =
+        oo::makeShared<oo::FileScannerVerifierStage>();
     verifier->registerStage(newStage.get());
   }
 
   return kFileScannerStageName;
 }
 
-bool OOFileScannerVerifierStage::fileExists(
+bool oo::FileScannerVerifierStage::fileExists(
     const std::optional<std::string>& file,
     const std::optional<std::string>& folder,
     const std::optional<std::string>& context, bool checkBuiltIn) {
   return pathForFile(file, folder, context, checkBuiltIn).has_value();
 }
 
-std::optional<std::string> OOFileScannerVerifierStage::pathForFile(
+std::optional<std::string> oo::FileScannerVerifierStage::pathForFile(
     const std::optional<std::string>& file,
     const std::optional<std::string>& folder,
     const std::optional<std::string>& context, bool checkBuiltIn) {
@@ -213,7 +213,7 @@ std::optional<std::string> OOFileScannerVerifierStage::pathForFile(
   return std::nullopt;
 }
 
-oo::Data OOFileScannerVerifierStage::dataForFile(
+oo::Data oo::FileScannerVerifierStage::dataForFile(
     const std::optional<std::string>& file,
     const std::optional<std::string>& folder,
     const std::optional<std::string>& context, bool checkBuiltIn) {
@@ -225,7 +225,7 @@ oo::Data OOFileScannerVerifierStage::dataForFile(
   return data ? std::move(*data) : oo::Data();
 }
 
-oo::PList OOFileScannerVerifierStage::plistNamed(
+oo::PList oo::FileScannerVerifierStage::plistNamed(
     const std::optional<std::string>& file,
     const std::optional<std::string>& folder,
     const std::optional<std::string>& context, bool checkBuiltIn) {
@@ -283,7 +283,7 @@ oo::PList OOFileScannerVerifierStage::plistNamed(
   return plist;
 }
 
-std::optional<std::string> OOFileScannerVerifierStage::displayNameForFile(
+std::optional<std::string> oo::FileScannerVerifierStage::displayNameForFile(
     const std::optional<std::string>& file,
     const std::optional<std::string>& folder) {
   if (file.has_value() && folder.has_value())
@@ -292,7 +292,7 @@ std::optional<std::string> OOFileScannerVerifierStage::displayNameForFile(
 }
 
 std::optional<std::vector<std::string>>
-OOFileScannerVerifierStage::filesInFolder(
+oo::FileScannerVerifierStage::filesInFolder(
     const std::optional<std::string>& folder) {
   if (!folder.has_value()) return std::nullopt;
   const auto listing = _directoryListings.find(oo::str::lowercase(*folder));
@@ -306,7 +306,7 @@ OOFileScannerVerifierStage::filesInFolder(
 
 // Private (was the OOPrivate category).
 
-std::optional<std::string> OOFileScannerVerifierStage::realNameOf(
+std::optional<std::string> oo::FileScannerVerifierStage::realNameOf(
     const std::string& lcName, const std::string& lcDirName) {
   const auto listing = _directoryListings.find(lcDirName);
   if (listing == _directoryListings.end()) return std::nullopt;
@@ -315,7 +315,7 @@ std::optional<std::string> OOFileScannerVerifierStage::realNameOf(
   return entry->second;
 }
 
-void OOFileScannerVerifierStage::scanForFiles() {
+void oo::FileScannerVerifierStage::scanForFiles() {
   std::string path, lcName, existing, existingType;
   std::map<std::string, std::map<std::string, std::string, std::less<>>,
            std::less<>>
@@ -403,7 +403,7 @@ void OOFileScannerVerifierStage::scanForFiles() {
   _directoryCases = std::move(directoryCases);
 }
 
-void OOFileScannerVerifierStage::checkRootFolders() {
+void oo::FileScannerVerifierStage::checkRootFolders() {
   std::string lcName;
 
   for (const std::string& name : StringsFromArray(
@@ -422,7 +422,7 @@ void OOFileScannerVerifierStage::checkRootFolders() {
   }
 }
 
-void OOFileScannerVerifierStage::checkConfigFiles() {
+void oo::FileScannerVerifierStage::checkConfigFiles() {
   std::string lcName;
   std::optional<std::string> realFileName;
   bool inConfigDir;
@@ -451,7 +451,7 @@ void OOFileScannerVerifierStage::checkConfigFiles() {
   }
 }
 
-void OOFileScannerVerifierStage::checkKnownFiles() {
+void oo::FileScannerVerifierStage::checkKnownFiles() {
   std::string lcDirectory, lcName;
   std::optional<std::string> realFileName;
   bool inDirectory;
@@ -496,7 +496,7 @@ void OOFileScannerVerifierStage::checkKnownFiles() {
 }
 
 std::optional<std::map<std::string, std::string, std::less<>>>
-OOFileScannerVerifierStage::lowercaseMap(std::span<const std::string> array) {
+oo::FileScannerVerifierStage::lowercaseMap(std::span<const std::string> array) {
   std::map<std::string, std::string, std::less<>> result;
 
   for (const std::string& canonical : array) {
@@ -507,7 +507,7 @@ OOFileScannerVerifierStage::lowercaseMap(std::span<const std::string> array) {
 }
 
 std::optional<std::map<std::string, std::string, std::less<>>>
-OOFileScannerVerifierStage::scanDirectory(const std::string& path) {
+oo::FileScannerVerifierStage::scanDirectory(const std::string& path) {
   std::map<std::string, std::string, std::less<>> result;
   std::string lcName, dirName, relativeName;
 
@@ -565,7 +565,7 @@ OOFileScannerVerifierStage::scanDirectory(const std::string& path) {
   return result;
 }
 
-void OOFileScannerVerifierStage::checkPListFormat(
+void oo::FileScannerVerifierStage::checkPListFormat(
     oo::PListFormat format, const std::optional<std::string>& file,
     const std::optional<std::string>& folder) {
   std::string weirdnessKey;
@@ -606,7 +606,7 @@ void OOFileScannerVerifierStage::checkPListFormat(
   }
 }
 
-std::vector<std::string> OOFileScannerVerifierStage::constructReadMeNames() {
+std::vector<std::string> oo::FileScannerVerifierStage::constructReadMeNames() {
   std::vector<std::string> result;
   std::size_t i, j, stemCount, extCount;
   std::string stem, extension;
@@ -640,26 +640,26 @@ std::vector<std::string> OOFileScannerVerifierStage::constructReadMeNames() {
 
 // OOListUnusedFilesStage.
 
-std::optional<std::string> OOListUnusedFilesStage::name() {
+std::optional<std::string> oo::ListUnusedFilesStage::name() {
   return kUnusedListerStageName;
 }
 
-std::optional<std::vector<std::string>> OOListUnusedFilesStage::dependencies() {
+std::optional<std::vector<std::string>> oo::ListUnusedFilesStage::dependencies() {
   return std::vector<std::string>{kFileScannerStageName};
 }
 
-void OOListUnusedFilesStage::run() {
+void oo::ListUnusedFilesStage::run() {
   OO_LOG("verifyOXP.unusedFiles.unimplemented", "{}",
          "TODO: implement unused files check.");
 }
 
 // The verifier holds the C++ stages.
-std::string OOListUnusedFilesStage::nameForReverseDependencyForVerifier(
-    OOOXPVerifier* verifier) {
-  OOOXPVerifierStage* stage = verifier->stageWithName(kUnusedListerStageName);
+std::string oo::ListUnusedFilesStage::nameForReverseDependencyForVerifier(
+    oo::OXPVerifier* verifier) {
+  oo::OXPVerifierStage* stage = verifier->stageWithName(kUnusedListerStageName);
   if (stage == nullptr) {
-    const std::shared_ptr<OOListUnusedFilesStage> newStage =
-        oo::makeShared<OOListUnusedFilesStage>();
+    const std::shared_ptr<oo::ListUnusedFilesStage> newStage =
+        oo::makeShared<oo::ListUnusedFilesStage>();
     verifier->registerStage(newStage.get());
   }
 
@@ -669,15 +669,15 @@ std::string OOListUnusedFilesStage::nameForReverseDependencyForVerifier(
 // OOFileHandlingVerifierStage.
 
 std::optional<std::vector<std::string>>
-OOFileHandlingVerifierStage::dependencies() {
+oo::FileHandlingVerifierStage::dependencies() {
   return std::vector<std::string>{
-      *OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier())};
+      *oo::FileScannerVerifierStage::nameForDependencyForVerifier(verifier())};
 }
 
 std::optional<std::vector<std::string>>
-OOFileHandlingVerifierStage::dependents() {
+oo::FileHandlingVerifierStage::dependents() {
   return std::vector<std::string>{
-      OOListUnusedFilesStage::nameForReverseDependencyForVerifier(verifier())};
+      oo::ListUnusedFilesStage::nameForReverseDependencyForVerifier(verifier())};
 }
 
 namespace {

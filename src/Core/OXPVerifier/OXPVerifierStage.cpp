@@ -27,7 +27,7 @@ SOFTWARE.
 
 */
 
-#include "OOOXPVerifierStage.h"
+#include "OXPVerifierStage.h"
 
 #include <assert.h>
 
@@ -48,8 +48,8 @@ SOFTWARE.
 // Adding a stage to a set of stages: identity, no duplicates, null ignored.
 namespace {
 
-void AddStage(std::vector<std::shared_ptr<OOOXPVerifierStage>>& stages,
-              OOOXPVerifierStage* stage) {
+void AddStage(std::vector<std::shared_ptr<oo::OXPVerifierStage>>& stages,
+              oo::OXPVerifierStage* stage) {
   if (stage == nullptr) return;
   if (std::ranges::find(stages, stage, [](const auto& owner) {
         return owner.get();
@@ -62,56 +62,56 @@ void AddStage(std::vector<std::shared_ptr<OOOXPVerifierStage>>& stages,
 // OOObject's -description wraps this as "<Class 0x...>{"name"}", which is what
 // this class's own -description printed. name() is a subclass's override, so it
 // cannot be const.
-std::optional<std::string> OOOXPVerifierStage::descriptionComponents() const {
+std::optional<std::string> oo::OXPVerifierStage::descriptionComponents() const {
   return "\"" +
-         const_cast<OOOXPVerifierStage*>(this)->name().value_or("(null)") +
+         const_cast<oo::OXPVerifierStage*>(this)->name().value_or("(null)") +
          "\"";
 }
 
 // "<Class 0x...>{name}", the stage's description.
-std::string OOOXPVerifierStage::description() const {
+std::string oo::OXPVerifierStage::description() const {
   return std::format("<{} {}>{{", className(),
                      oo::str::pointerDescription(this)) +
          descriptionComponents().value_or("") + "}";
 }
 
 // The C++ class's name (demangled, "cxx::" dropped).
-std::string OOOXPVerifierStage::className() const {
-  std::string result = OODemangle(typeid(*this).name());
+std::string oo::OXPVerifierStage::className() const {
+  std::string result = oo::DescriptionClassName(typeid(*this).name());
   if (result.starts_with("cxx::")) result.erase(0, 5);
   return result;
 }
 
 // The C++ verifier, borrowed: the verifier keeps its stages and outlives them
 // while they run.
-OOOXPVerifier* OOOXPVerifierStage::verifier() { return _verifier; }
+oo::OXPVerifier* oo::OXPVerifierStage::verifier() { return _verifier; }
 
-bool OOOXPVerifierStage::completed() { return _hasRun; }
+bool oo::OXPVerifierStage::completed() { return _hasRun; }
 
-std::optional<std::string> OOOXPVerifierStage::name() {
+std::optional<std::string> oo::OXPVerifierStage::name() {
   OOLogGenericSubclassResponsibility();
   return std::nullopt;
 }
 
-std::optional<std::vector<std::string>> OOOXPVerifierStage::dependencies() {
+std::optional<std::vector<std::string>> oo::OXPVerifierStage::dependencies() {
   return std::nullopt;
 }
 
-std::optional<std::vector<std::string>> OOOXPVerifierStage::dependents() {
+std::optional<std::vector<std::string>> oo::OXPVerifierStage::dependents() {
   return std::nullopt;
 }
 
-bool OOOXPVerifierStage::shouldRun() { return true; }
+bool oo::OXPVerifierStage::shouldRun() { return true; }
 
-void OOOXPVerifierStage::run() { OOLogGenericSubclassResponsibility(); }
+void oo::OXPVerifierStage::run() { OOLogGenericSubclassResponsibility(); }
 
 // Internal (was the OOInternal category).
 
-void OOOXPVerifierStage::setVerifier(OOOXPVerifier* verifier) {
+void oo::OXPVerifierStage::setVerifier(oo::OXPVerifier* verifier) {
   _verifier = verifier;  // Not retained.
 }
 
-bool OOOXPVerifierStage::isDependentOf(OOOXPVerifierStage* stage) {
+bool oo::OXPVerifierStage::isDependentOf(oo::OXPVerifierStage* stage) {
   if (stage == nullptr) return false;
 
   // Direct dependency check.
@@ -128,16 +128,16 @@ bool OOOXPVerifierStage::isDependentOf(OOOXPVerifierStage* stage) {
   return false;
 }
 
-void OOOXPVerifierStage::registerDependency(OOOXPVerifierStage* dependency) {
+void oo::OXPVerifierStage::registerDependency(oo::OXPVerifierStage* dependency) {
   AddStage(_dependencies, dependency);
   AddStage(_incompleteDependencies, dependency);
 
   if (dependency != nullptr) dependency->registerDepedent(this);
 }
 
-bool OOOXPVerifierStage::canRun() { return _canRun; }
+bool oo::OXPVerifierStage::canRun() { return _canRun; }
 
-void OOOXPVerifierStage::performRun() {
+void oo::OXPVerifierStage::performRun() {
   assert(_canRun && !_hasRun);
 
   oo::log::pushIndent();
@@ -163,7 +163,7 @@ void OOOXPVerifierStage::performRun() {
   notifyDependents();
 }
 
-void OOOXPVerifierStage::noteSkipped() {
+void oo::OXPVerifierStage::noteSkipped() {
   assert(_canRun && !_hasRun);
 
   _hasRun = true;
@@ -171,29 +171,29 @@ void OOOXPVerifierStage::noteSkipped() {
   notifyDependents();
 }
 
-void OOOXPVerifierStage::dependencyRegistrationComplete() {
+void oo::OXPVerifierStage::dependencyRegistrationComplete() {
   _canRun = _incompleteDependencies.empty();
 }
 
-std::vector<std::shared_ptr<OOOXPVerifierStage>>
-OOOXPVerifierStage::resolvedDependencies() {
+std::vector<std::shared_ptr<oo::OXPVerifierStage>>
+oo::OXPVerifierStage::resolvedDependencies() {
   return _dependencies;
 }
 
-std::vector<std::shared_ptr<OOOXPVerifierStage>>
-OOOXPVerifierStage::resolvedDependents() {
+std::vector<std::shared_ptr<oo::OXPVerifierStage>>
+oo::OXPVerifierStage::resolvedDependents() {
   return _dependents;
 }
 
 // Private (was the OOPrivate category).
 
-void OOOXPVerifierStage::registerDepedent(OOOXPVerifierStage* dependent) {
+void oo::OXPVerifierStage::registerDepedent(oo::OXPVerifierStage* dependent) {
   assert(!isDependentOf(dependent));
 
   AddStage(_dependents, dependent);
 }
 
-void OOOXPVerifierStage::dependencyCompleted(OOOXPVerifierStage* dependency) {
+void oo::OXPVerifierStage::dependencyCompleted(oo::OXPVerifierStage* dependency) {
   const auto where =
       std::ranges::find(_incompleteDependencies, dependency,
                         [](const auto& owner) { return owner.get(); });
@@ -204,8 +204,8 @@ void OOOXPVerifierStage::dependencyCompleted(OOOXPVerifierStage* dependency) {
 
 // -makeObjectsPerformSelector:withObject: over the dependents: each is told
 // once, in the order they registered.
-void OOOXPVerifierStage::notifyDependents() {
-  const std::vector<std::shared_ptr<OOOXPVerifierStage>> dependents =
+void oo::OXPVerifierStage::notifyDependents() {
+  const std::vector<std::shared_ptr<oo::OXPVerifierStage>> dependents =
       _dependents;
   for (const auto& dependent : dependents) {
     dependent->dependencyCompleted(this);

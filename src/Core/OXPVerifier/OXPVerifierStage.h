@@ -32,7 +32,7 @@ SOFTWARE.
 
 #pragma once
 
-#include "OOOXPVerifier.h"
+#include "OXPVerifier.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -48,9 +48,11 @@ SOFTWARE.
    sets are vectors of retained stages (identity, no duplicates), in
    registration order.
 */
-class OOOXPVerifierStage : public oo::Object {
+namespace oo {
+
+class OXPVerifierStage : public oo::Object {
  public:
-  OOOXPVerifier* verifier();
+  OXPVerifier* verifier();
   bool completed();
 
   // Subclass responsibilities:
@@ -103,9 +105,9 @@ class OOOXPVerifierStage : public oo::Object {
   /*	Internal: the interface between OOOXPVerifierStage and OOOXPVerifier
      Nothing else calls these.
   */
-  void setVerifier(OOOXPVerifier* verifier);
-  bool isDependentOf(OOOXPVerifierStage* stage);
-  void registerDependency(OOOXPVerifierStage* dependency);
+  void setVerifier(OXPVerifier* verifier);
+  bool isDependentOf(OXPVerifierStage* stage);
+  void registerDependency(OXPVerifierStage* dependency);
   void dependencyRegistrationComplete();
 
   bool canRun();
@@ -115,19 +117,22 @@ class OOOXPVerifierStage : public oo::Object {
 
   // These return sets of stages set up by registerDependency(), wheras
   // dependencies()/dependents() return sets of names.
-  std::vector<std::shared_ptr<OOOXPVerifierStage>> resolvedDependencies();
-  std::vector<std::shared_ptr<OOOXPVerifierStage>> resolvedDependents();
+  std::vector<std::shared_ptr<OXPVerifierStage>> resolvedDependencies();
+  std::vector<std::shared_ptr<OXPVerifierStage>> resolvedDependents();
 
  private:
-  void registerDepedent(OOOXPVerifierStage* dependent);
-  void dependencyCompleted(OOOXPVerifierStage* dependency);
+  void registerDepedent(OXPVerifierStage* dependent);
+  void dependencyCompleted(OXPVerifierStage* dependency);
   void notifyDependents();
 
-  OOOXPVerifier* _verifier = {};  // Not retained.
-  std::vector<std::shared_ptr<OOOXPVerifierStage>> _dependencies = {};
-  std::vector<std::shared_ptr<OOOXPVerifierStage>> _incompleteDependencies = {};
-  std::vector<std::shared_ptr<OOOXPVerifierStage>> _dependents = {};
+  OXPVerifier* _verifier = {};  // Not retained.
+  std::vector<std::shared_ptr<OXPVerifierStage>> _dependencies = {};
+  std::vector<std::shared_ptr<OXPVerifierStage>> _incompleteDependencies = {};
+  std::vector<std::shared_ptr<OXPVerifierStage>> _dependents = {};
   bool _canRun = {}, _hasRun = {};
 };
+
+}  // namespace oo
+
 
 #endif

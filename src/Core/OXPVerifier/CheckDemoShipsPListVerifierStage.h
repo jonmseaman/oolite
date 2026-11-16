@@ -1,8 +1,9 @@
 /*
 
-OOCheckPListSyntaxVerifierStage.h
+OOCheckDemoShipsPListVerifierStage.h
 
-OOOXPVerifierStage which checks that plists have correct syntax
+OOOXPVerifierStage which checks that demoships.plist only contains ships
+defined in shipdata.plist.
 
 
 Oolite
@@ -29,7 +30,7 @@ MA 02110-1301, USA.
 
 #include <string>
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -37,11 +38,21 @@ MA 02110-1301, USA.
    it; the verifier makes it from its name (kCxxStages in OOOXPVerifier.cpp) and
    holds it.
 */
-class OOCheckPListSyntaxVerifierStage : public OOFileHandlingVerifierStage {
+namespace oo {
+
+class CheckDemoShipsPListVerifierStage : public FileHandlingVerifierStage {
  public:
   std::optional<std::string> name() override;
   bool shouldRun() override;
   void run() override;
+
+ private:
+  // demoshipsPList is an Array, shipdataPList a Dict.
+  void runCheckWithDemoShips(const oo::PList& demoshipsPList,
+                             const oo::PList& shipdataPList);
 };
+
+}  // namespace oo
+
 
 #endif

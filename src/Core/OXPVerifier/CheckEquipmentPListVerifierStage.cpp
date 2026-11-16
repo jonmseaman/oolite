@@ -23,7 +23,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOCheckEquipmentPListVerifierStage.h"
+#include "CheckEquipmentPListVerifierStage.h"
 
 #include <cstdint>
 #include <format>
@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 
 #if OO_OXP_VERIFIER_ENABLED
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 #include "Universe.h"
 
 static const char* const kStageName = "Checking equipment.plist";
@@ -49,26 +49,26 @@ std::optional<std::string> StringAt(const oo::PList& array, std::size_t index) {
 
 }  // namespace
 
-std::optional<std::string> OOCheckEquipmentPListVerifierStage::name() {
+std::optional<std::string> oo::CheckEquipmentPListVerifierStage::name() {
   return kStageName;
 }
 
-bool OOCheckEquipmentPListVerifierStage::shouldRun() {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+bool oo::CheckEquipmentPListVerifierStage::shouldRun() {
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   return fileScanner != nullptr &&
          fileScanner->fileExists("equipment.plist", "Config", std::nullopt,
                                  false);
 }
 
-void OOCheckEquipmentPListVerifierStage::run() {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+void oo::CheckEquipmentPListVerifierStage::run() {
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
   oo::PList equipmentPList;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
 
   if (fileScanner != nullptr)
     equipmentPList = fileScanner->plistNamed("equipment.plist", "Config",
@@ -86,7 +86,7 @@ void OOCheckEquipmentPListVerifierStage::run() {
   runCheckWithEquipment(equipmentPList);
 }
 
-void OOCheckEquipmentPListVerifierStage::runCheckWithEquipment(
+void oo::CheckEquipmentPListVerifierStage::runCheckWithEquipment(
     const oo::PList& equipmentPList) {
   unsigned entryIndex = 0;
   std::size_t elemCount;

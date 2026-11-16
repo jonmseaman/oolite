@@ -60,7 +60,12 @@ SOFTWARE.
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/OOObject.h"
 
-class OOOXPVerifierStage;  // OOOXPVerifierStage.h, which imports this header
+namespace oo {
+
+class OXPVerifierStage;
+
+}  // namespace oo
+  // OOOXPVerifierStage.h, which imports this header
 
 struct OOOXPVerifierTestAccess;  // tests only
 
@@ -70,7 +75,9 @@ struct OOOXPVerifierTestAccess;  // tests only
    vector in registration order (they were a set). A stage is kept as the C++
    stage itself (std::shared_ptr<::OOOXPVerifierStage>).
 */
-class OOOXPVerifier : public oo::Object {
+namespace oo {
+
+class OXPVerifier : public oo::Object {
  public:
   /*	Look for command-line arguments requesting OXP verification. If any are
           found, run the verification and return true. Otherwise, return false.
@@ -85,13 +92,13 @@ class OOOXPVerifier : public oo::Object {
      - in their -initWithVerifier: methods, or when -dependencies or -dependents
      are called. Registration at later points is not permitted.
   */
-  void registerStage(::OOOXPVerifierStage* stage);
+  void registerStage(::oo::OXPVerifierStage* stage);
 
   //	All other methods are for use by verifier stages.
   std::optional<std::string> oxpPath();
   std::optional<std::string> oxpDisplayName();
 
-  ::OOOXPVerifierStage* stageWithName(
+  ::oo::OXPVerifierStage* stageWithName(
       const std::string& name);  // null: none (borrowed: the verifier keeps it)
 
   // Read from verifyOXP.plist
@@ -110,11 +117,11 @@ class OOOXPVerifier : public oo::Object {
                                 // nullopt (was nil) if not an array
 
  private:
-  OOOXPVerifier() = default;
+  OXPVerifier() = default;
 
   // -initWithPath:, which could fail (verifyOXP.plist unreadable):
   // createWithPath() runs it on a new object and answers null then.
-  static std::shared_ptr<OOOXPVerifier> createWithPath(
+  static std::shared_ptr<OXPVerifier> createWithPath(
       const std::optional<std::string>& path);
   bool initWithPath(const std::optional<std::string>& path);  // nullopt: nil
   void run();
@@ -126,9 +133,9 @@ class OOOXPVerifier : public oo::Object {
   void runStages();
 
   bool setUpDependencies(std::span<const std::string> dependencies,
-                         ::OOOXPVerifierStage* stage);
+                         ::oo::OXPVerifierStage* stage);
   void setUpDependents(std::span<const std::string> dependents,
-                       ::OOOXPVerifierStage* stage);
+                       ::oo::OXPVerifierStage* stage);
 
   void dumpDebugGraphviz();
 
@@ -138,7 +145,7 @@ class OOOXPVerifier : public oo::Object {
      OOOXPVerifierTestAccess.
   */
   friend struct ::OOOXPVerifierTestAccess;
-  static std::shared_ptr<::OOOXPVerifierStage> (*sTestStageMaker)(
+  static std::shared_ptr<::oo::OXPVerifierStage> (*sTestStageMaker)(
       const std::string& name);
 
   oo::PList _verifierPList = {};
@@ -146,14 +153,17 @@ class OOOXPVerifier : public oo::Object {
   std::string _basePath = {};
   std::string _displayName = {};
 
-  std::map<std::string, std::shared_ptr<::OOOXPVerifierStage>, std::less<>>
+  std::map<std::string, std::shared_ptr<::oo::OXPVerifierStage>, std::less<>>
       _stagesByName;  // no `= {}`: GCC instantiates ~Ref<T> at a default member
                       // initializer, and T is incomplete here
-  std::vector<std::shared_ptr<::OOOXPVerifierStage>>
+  std::vector<std::shared_ptr<::oo::OXPVerifierStage>>
       _waitingStages;  // no `= {}`: GCC instantiates ~Ref<T> at a default
                        // member initializer, and T is incomplete here
 
   bool _openForRegistration = {};
 };
+
+}  // namespace oo
+
 
 #endif

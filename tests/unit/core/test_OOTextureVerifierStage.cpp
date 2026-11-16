@@ -22,11 +22,11 @@
 #include <fstream>
 #include <sstream>
 
-#include "OOOXPVerifierStage.h"
+#include "OXPVerifierStage.h"
 #include "OOPixMap.h"
 #include "OOTexture.h"
 #include "OOTextureLoader.h"
-#include "OOTextureVerifierStage.h"
+#include "TextureVerifierStage.h"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
@@ -120,7 +120,7 @@ std::shared_ptr<OOTextureLoader> OOTextureLoader::loaderWithPath(
 }
 
 // A texture-handling stage, as the ship data and model stages are.
-class TestTextureUser : public OOTextureHandlingStage {
+class TestTextureUser : public oo::TextureHandlingStage {
  public:
   std::optional<std::string> name() override { return "Using textures"; }
 };
@@ -170,9 +170,9 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 
 // The scanner, registered with the verifier and run over its OXP, as the
 // verifier runs it first.
-void RunScanner(OOOXPVerifier* verifier) {
-  OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
+void RunScanner(oo::OXPVerifier* verifier) {
+  oo::FileScannerVerifierStage::nameForDependencyForVerifier(verifier);
+  verifier->stageWithName(oo::FileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -185,12 +185,12 @@ const std::vector<std::string> kTextureUserDependents = {
 
 // An OXP with the given files (path, contents), and its verifier with the
 // scanner run over it.
-OOOXPVerifier* MakeVerifier(
+oo::OXPVerifier* MakeVerifier(
     std::initializer_list<std::pair<const char*, const char*>> files) {
   std::filesystem::remove_all(kBase);
   std::filesystem::create_directories(kBase);
   for (const auto& [name, contents] : files) WriteFile(kBase / name, contents);
-  OOOXPVerifier* verifier =
+  oo::OXPVerifier* verifier =
       OOOXPVerifierTestAccess::Make(kBase.generic_string(), kConfiguration);
   RunScanner(verifier);
   StartLog();
@@ -201,12 +201,12 @@ OOOXPVerifier* MakeVerifier(
 
 OO_TEST(nameAndNeighbours) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({});
-    OO_CHECK(OOTextureVerifierStage::nameForReverseDependencyForVerifier(
+    oo::OXPVerifier* verifier = MakeVerifier({});
+    OO_CHECK(oo::TextureVerifierStage::nameForReverseDependencyForVerifier(
                  verifier) == "Testing textures and images");
 
-    const std::shared_ptr<OOTextureVerifierStage> stage =
-        oo::makeShared<OOTextureVerifierStage>();
+    const std::shared_ptr<oo::TextureVerifierStage> stage =
+        oo::makeShared<oo::TextureVerifierStage>();
     stage->setVerifier(verifier);
     OO_CHECK(stage->name() ==
              std::optional<std::string>("Testing textures and images"));
@@ -224,8 +224,8 @@ OO_TEST(nameAndNeighbours) {
 
 OO_TEST(stagesNameTextures) {
   {
-    const std::shared_ptr<OOTextureVerifierStage> stage =
-        oo::makeShared<OOTextureVerifierStage>();
+    const std::shared_ptr<oo::TextureVerifierStage> stage =
+        oo::makeShared<oo::TextureVerifierStage>();
     stage->setVerifier(MakeVerifier({{"Textures/hull.png", "8x8"}}));
 
     stage->textureNamed("", "nowhere");
@@ -248,8 +248,8 @@ OO_TEST(stagesNameTextures) {
 
 OO_TEST(runLoadsTexturesAndImages) {
   {
-    const std::shared_ptr<OOTextureVerifierStage> stage =
-        oo::makeShared<OOTextureVerifierStage>();
+    const std::shared_ptr<oo::TextureVerifierStage> stage =
+        oo::makeShared<oo::TextureVerifierStage>();
     stage->setVerifier(MakeVerifier({
         {"Textures/pot.png", "64x32"},
         {"Textures/npot.png", "100x30"},
@@ -310,7 +310,7 @@ OO_TEST(runLoadsTexturesAndImages) {
 
 OO_TEST(textureHandlingStage) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({});
+    oo::OXPVerifier* verifier = MakeVerifier({});
     const std::shared_ptr<TestTextureUser> user = oo::makeShared<TestTextureUser>();
     user->setVerifier(verifier);
     OO_CHECK(user->name() == std::optional<std::string>("Using textures"));
@@ -327,22 +327,22 @@ OO_TEST(textureHandlingStage) {
                                        "Testing textures and images",
                                        "Extra dependent"}));
 
-    OOOXPVerifierStage* stage = user.get();
-    OO_CHECK(dynamic_cast<OOTextureHandlingStage*>(stage) != nullptr &&
-             dynamic_cast<OOFileHandlingVerifierStage*>(stage) != nullptr);
+    oo::OXPVerifierStage* stage = user.get();
+    OO_CHECK(dynamic_cast<oo::TextureHandlingStage*>(stage) != nullptr &&
+             dynamic_cast<oo::FileHandlingVerifierStage*>(stage) != nullptr);
   }
 }
 
 // A converted texture-handling stage: a C++ subclass of the intermediate class.
 // Global, as the ship data and model stages are.
-class TestCxxTextureUser : public OOTextureHandlingStage {
+class TestCxxTextureUser : public oo::TextureHandlingStage {
  public:
   std::optional<std::string> name() override { return "Using textures in C++"; }
 };
 
 OO_TEST(cxxTextureUserBehindTheFacade) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({});
+    oo::OXPVerifier* verifier = MakeVerifier({});
     const std::shared_ptr<TestCxxTextureUser> user = oo::makeShared<TestCxxTextureUser>();
     user->setVerifier(verifier);
     OO_CHECK(user->dependents() == kTextureUserDependents);
@@ -358,17 +358,17 @@ OO_TEST(cxxTextureUserBehindTheFacade) {
 // stage's name answers it once it is registered.
 OO_TEST(textureStageFacade) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({{"Images/a.png", "8x8"}});
-    const std::shared_ptr<OOTextureVerifierStage> stage =
-        oo::makeShared<OOTextureVerifierStage>();
+    oo::OXPVerifier* verifier = MakeVerifier({{"Images/a.png", "8x8"}});
+    const std::shared_ptr<oo::TextureVerifierStage> stage =
+        oo::makeShared<oo::TextureVerifierStage>();
     OO_CHECK(stage->description().starts_with("<OOTextureVerifierStage 0x"));
 
     OO_CHECK(verifier->stageWithName(
-                 OOTextureVerifierStage::nameForReverseDependencyForVerifier(
+                 oo::TextureVerifierStage::nameForReverseDependencyForVerifier(
                      verifier)) == nullptr);
     verifier->registerStage(stage.get());
     OO_CHECK(verifier->stageWithName(
-                 OOTextureVerifierStage::nameForReverseDependencyForVerifier(
+                 oo::TextureVerifierStage::nameForReverseDependencyForVerifier(
                      verifier)) == stage.get());
     OO_CHECK(stage->name() ==
              std::optional<std::string>("Testing textures and images"));

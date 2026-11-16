@@ -16,8 +16,8 @@
 #include <filesystem>
 #include <fstream>
 
-#include "OOCheckEquipmentPListVerifierStage.h"
-#include "OOOXPVerifierStage.h"
+#include "CheckEquipmentPListVerifierStage.h"
+#include "OXPVerifierStage.h"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
@@ -78,9 +78,9 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 
 // The scanner, registered with the verifier and run over its OXP, as the
 // verifier runs it first.
-void RunScanner(OOOXPVerifier* verifier) {
-  OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
+void RunScanner(oo::OXPVerifier* verifier) {
+  oo::FileScannerVerifierStage::nameForDependencyForVerifier(verifier);
+  verifier->stageWithName(oo::FileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -92,13 +92,13 @@ const std::filesystem::path kBase =
 
 // An OXP with the given Config files (name, contents), and its verifier with
 // the scanner run over it.
-OOOXPVerifier* MakeVerifier(
+oo::OXPVerifier* MakeVerifier(
     std::initializer_list<std::pair<const char*, const char*>> files) {
   std::filesystem::remove_all(kBase);
   std::filesystem::create_directories(kBase);
   for (const auto& [name, contents] : files)
     WriteFile(kBase / "Config" / name, contents);
-  OOOXPVerifier* verifier =
+  oo::OXPVerifier* verifier =
       OOOXPVerifierTestAccess::Make(kBase.generic_string(), kConfiguration);
   RunScanner(verifier);
   StartLog();
@@ -109,8 +109,8 @@ OOOXPVerifier* MakeVerifier(
 
 OO_TEST(nameAndNeighbours) {
   {
-    const std::shared_ptr<OOCheckEquipmentPListVerifierStage> stage =
-        oo::makeShared<OOCheckEquipmentPListVerifierStage>();
+    const std::shared_ptr<oo::CheckEquipmentPListVerifierStage> stage =
+        oo::makeShared<oo::CheckEquipmentPListVerifierStage>();
     stage->setVerifier(MakeVerifier({}));
     OO_CHECK(stage->name() ==
              std::optional<std::string>("Checking equipment.plist"));
@@ -132,8 +132,8 @@ OO_TEST(nameAndNeighbours) {
 
 OO_TEST(checksEachEntry) {
   {
-    const std::shared_ptr<OOCheckEquipmentPListVerifierStage> stage =
-        oo::makeShared<OOCheckEquipmentPListVerifierStage>();
+    const std::shared_ptr<oo::CheckEquipmentPListVerifierStage> stage =
+        oo::makeShared<oo::CheckEquipmentPListVerifierStage>();
     stage->setVerifier(MakeVerifier(
         {{"equipment.plist",
           "("
@@ -189,9 +189,9 @@ OO_TEST(checksEachEntry) {
 // describes itself with its class's name.
 OO_TEST(facade) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({});
-    const std::shared_ptr<OOCheckEquipmentPListVerifierStage> stage =
-        oo::makeShared<OOCheckEquipmentPListVerifierStage>();
+    oo::OXPVerifier* verifier = MakeVerifier({});
+    const std::shared_ptr<oo::CheckEquipmentPListVerifierStage> stage =
+        oo::makeShared<oo::CheckEquipmentPListVerifierStage>();
     OO_CHECK(stage->description().starts_with(
         "<OOCheckEquipmentPListVerifierStage 0x"));
 

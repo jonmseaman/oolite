@@ -64,7 +64,7 @@ std::optional<std::string> OOMaterial::descriptionComponents() const {
 }
 
 std::string OOMaterial::description() const {
-  const std::string name = OODemangle(typeid(*this).name());
+  const std::string name = oo::DescriptionClassName(typeid(*this).name());
   std::string result =
       std::format("<{} {}>", name, oo::str::pointerDescription(this));
   if (const std::optional<std::string> components = descriptionComponents())

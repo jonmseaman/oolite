@@ -32,7 +32,7 @@ SOFTWARE.
         see "verifier design.txt".
 */
 
-#include "OOOXPVerifier.h"
+#include "OXPVerifier.h"
 
 #include <format>
 #include <map>
@@ -61,18 +61,18 @@ SOFTWARE.
 
 #include "GameController.h"
 #include "LogIndentScope.h"
-#include "OOAIStateMachineVerifierStage.h"
+#include "AIStateMachineVerifierStage.h"
 #include "OOCacheManager.h"
-#include "OOCheckDemoShipsPListVerifierStage.h"
-#include "OOCheckEquipmentPListVerifierStage.h"
-#include "OOCheckJSSyntaxVerifierStage.h"
-#include "OOCheckPListSyntaxVerifierStage.h"
-#include "OOCheckRequiresPListVerifierStage.h"
-#include "OOCheckShipDataPListVerifierStage.h"
+#include "CheckDemoShipsPListVerifierStage.h"
+#include "CheckEquipmentPListVerifierStage.h"
+#include "CheckJSSyntaxVerifierStage.h"
+#include "CheckPListSyntaxVerifierStage.h"
+#include "CheckRequiresPListVerifierStage.h"
+#include "CheckShipDataPListVerifierStage.h"
 #include "OODebugStandards.h"
 #include "OOLoggingExtended.h"
-#include "OOOXPVerifierStage.h"
-#include "OOTextureVerifierStage.h"
+#include "OXPVerifierStage.h"
+#include "TextureVerifierStage.h"
 #include "ResourceManager.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
@@ -127,47 +127,47 @@ std::string ExpandTildeInPath(const std::string& path) {
 */
 struct CxxStage {
   std::string_view name;
-  std::shared_ptr<OOOXPVerifierStage> (*make)();
+  std::shared_ptr<oo::OXPVerifierStage> (*make)();
 };
 
 constexpr CxxStage kCxxStages[] = {
     {"OOAIStateMachineVerifierStage",
-     []() -> std::shared_ptr<OOOXPVerifierStage> {
-       return oo::makeShared<OOAIStateMachineVerifierStage>();
+     []() -> std::shared_ptr<oo::OXPVerifierStage> {
+       return oo::makeShared<oo::AIStateMachineVerifierStage>();
      }},
     {"OOCheckJSSyntaxVerifierStage",
-     []() -> std::shared_ptr<OOOXPVerifierStage> {
-       return oo::makeShared<OOCheckJSSyntaxVerifierStage>();
+     []() -> std::shared_ptr<oo::OXPVerifierStage> {
+       return oo::makeShared<oo::CheckJSSyntaxVerifierStage>();
      }},
     {"OOCheckPListSyntaxVerifierStage",
-     []() -> std::shared_ptr<OOOXPVerifierStage> {
-       return oo::makeShared<OOCheckPListSyntaxVerifierStage>();
+     []() -> std::shared_ptr<oo::OXPVerifierStage> {
+       return oo::makeShared<oo::CheckPListSyntaxVerifierStage>();
      }},
     {"OOCheckDemoShipsPListVerifierStage",
-     []() -> std::shared_ptr<OOOXPVerifierStage> {
-       return oo::makeShared<OOCheckDemoShipsPListVerifierStage>();
+     []() -> std::shared_ptr<oo::OXPVerifierStage> {
+       return oo::makeShared<oo::CheckDemoShipsPListVerifierStage>();
      }},
     {"OOCheckRequiresPListVerifierStage",
-     []() -> std::shared_ptr<OOOXPVerifierStage> {
-       return oo::makeShared<OOCheckRequiresPListVerifierStage>();
+     []() -> std::shared_ptr<oo::OXPVerifierStage> {
+       return oo::makeShared<oo::CheckRequiresPListVerifierStage>();
      }},
     {"OOCheckEquipmentPListVerifierStage",
-     []() -> std::shared_ptr<OOOXPVerifierStage> {
-       return oo::makeShared<OOCheckEquipmentPListVerifierStage>();
+     []() -> std::shared_ptr<oo::OXPVerifierStage> {
+       return oo::makeShared<oo::CheckEquipmentPListVerifierStage>();
      }},
     {"OOTextureVerifierStage",
-     []() -> std::shared_ptr<OOOXPVerifierStage> {
-       return oo::makeShared<OOTextureVerifierStage>();
+     []() -> std::shared_ptr<oo::OXPVerifierStage> {
+       return oo::makeShared<oo::TextureVerifierStage>();
      }},
     {"OOCheckShipDataPListVerifierStage",
-     []() -> std::shared_ptr<OOOXPVerifierStage> {
-       return oo::makeShared<OOCheckShipDataPListVerifierStage>();
+     []() -> std::shared_ptr<oo::OXPVerifierStage> {
+       return oo::makeShared<oo::CheckShipDataPListVerifierStage>();
      }},
 };
 
 }  // namespace
 
-std::shared_ptr<::OOOXPVerifierStage> (*OOOXPVerifier::sTestStageMaker)(
+std::shared_ptr<::oo::OXPVerifierStage> (*oo::OXPVerifier::sTestStageMaker)(
     const std::string& name) = nullptr;
 
 /**
@@ -177,10 +177,10 @@ std::shared_ptr<::OOOXPVerifierStage> (*OOOXPVerifier::sTestStageMaker)(
  *
  * @return true or false
  */
-bool OOOXPVerifier::runVerificationIfRequested() {
+bool oo::OXPVerifier::runVerificationIfRequested() {
   std::optional<std::string> foundPath;
   bool exists, isDirectory;
-  std::shared_ptr<OOOXPVerifier> verifier;
+  std::shared_ptr<oo::OXPVerifier> verifier;
 
   const std::vector<std::string>& arguments = oo::process::arguments();
 
@@ -229,9 +229,9 @@ bool OOOXPVerifier::runVerificationIfRequested() {
   return true;
 }
 
-void OOOXPVerifier::registerStage(::OOOXPVerifierStage* stage) {
+void oo::OXPVerifier::registerStage(::oo::OXPVerifierStage* stage) {
   std::optional<std::string> name;
-  ::OOOXPVerifierStage* existing = nullptr;
+  ::oo::OXPVerifierStage* existing = nullptr;
 
   // Sanity checking
   if (stage == nullptr) return;
@@ -276,33 +276,33 @@ void OOOXPVerifier::registerStage(::OOOXPVerifierStage* stage) {
   _waitingStages.push_back(oo::share(stage));
 }
 
-std::optional<std::string> OOOXPVerifier::oxpPath() { return _basePath; }
+std::optional<std::string> oo::OXPVerifier::oxpPath() { return _basePath; }
 
-std::optional<std::string> OOOXPVerifier::oxpDisplayName() {
+std::optional<std::string> oo::OXPVerifier::oxpDisplayName() {
   return _displayName;
 }
 
-::OOOXPVerifierStage* OOOXPVerifier::stageWithName(const std::string& name) {
+::oo::OXPVerifierStage* oo::OXPVerifier::stageWithName(const std::string& name) {
   const auto found = _stagesByName.find(name);
   return found != _stagesByName.end() ? found->second.get() : nullptr;
 }
 
-oo::PList OOOXPVerifier::configurationValueForKey(const std::string& key) {
+oo::PList oo::OXPVerifier::configurationValueForKey(const std::string& key) {
   const oo::PList* value = _verifierPList.find(key);
   return value != nullptr ? *value : oo::PList();
 }
 
-oo::PList OOOXPVerifier::configurationArrayForKey(const std::string& key) {
+oo::PList oo::OXPVerifier::configurationArrayForKey(const std::string& key) {
   const oo::PList* array = _verifierPList.get<oo::PList::Array>(key);
   return array != nullptr ? *array : oo::PList();
 }
 
-oo::PList OOOXPVerifier::configurationDictionaryForKey(const std::string& key) {
+oo::PList oo::OXPVerifier::configurationDictionaryForKey(const std::string& key) {
   const oo::PList* dictionary = _verifierPList.get<oo::PList::Dict>(key);
   return dictionary != nullptr ? *dictionary : oo::PList();
 }
 
-std::optional<std::string> OOOXPVerifier::configurationStringForKey(
+std::optional<std::string> oo::OXPVerifier::configurationStringForKey(
     const std::string& key) {
   const oo::PList* value = _verifierPList.find(key);
   if (value == nullptr || !(value->isString() || value->isNumber()))
@@ -310,7 +310,7 @@ std::optional<std::string> OOOXPVerifier::configurationStringForKey(
   return _verifierPList.get<std::string>(key);
 }
 
-std::optional<std::vector<std::string>> OOOXPVerifier::configurationSetForKey(
+std::optional<std::vector<std::string>> oo::OXPVerifier::configurationSetForKey(
     const std::string& key) {
   const oo::PList* array = _verifierPList.get<oo::PList::Array>(key);
   if (array == nullptr) return std::nullopt;
@@ -325,15 +325,15 @@ std::optional<std::vector<std::string>> OOOXPVerifier::configurationSetForKey(
 
 // Private
 
-std::shared_ptr<OOOXPVerifier> OOOXPVerifier::createWithPath(
+std::shared_ptr<oo::OXPVerifier> oo::OXPVerifier::createWithPath(
     const std::optional<std::string>& path) {
-  std::shared_ptr<OOOXPVerifier> verifier =
-      std::shared_ptr<OOOXPVerifier>(new OOOXPVerifier(), oo::Dispose{});
+  std::shared_ptr<oo::OXPVerifier> verifier =
+      std::shared_ptr<oo::OXPVerifier>(new oo::OXPVerifier(), oo::Dispose{});
   if (!verifier->initWithPath(path)) return nullptr;
   return verifier;
 }
 
-bool OOOXPVerifier::initWithPath(const std::optional<std::string>& path) {
+bool oo::OXPVerifier::initWithPath(const std::optional<std::string>& path) {
   OOSetStandardsForOXPVerifierMode();
 
   // Any plist format; missing, unreadable or not a dictionary is no
@@ -370,7 +370,7 @@ bool OOOXPVerifier::initWithPath(const std::optional<std::string>& path) {
   return true;
 }
 
-void OOOXPVerifier::run() {
+void oo::OXPVerifier::run() {
   NoteVerificationStage(_displayName, "");
 
   setUpLogOverrides();
@@ -400,7 +400,7 @@ void OOOXPVerifier::run() {
   OpenLogFile();
 }
 
-void OOOXPVerifier::setUpLogOverrides() {
+void oo::OXPVerifier::setUpLogOverrides() {
   OOLogSetShowMessageClassTemporary(
       _verifierPList.get<bool>("logShowMessageClassOverride", false));
 
@@ -426,7 +426,7 @@ void OOOXPVerifier::setUpLogOverrides() {
   }
 }
 
-void OOOXPVerifier::registerBaseStages() {
+void oo::OXPVerifier::registerBaseStages() {
   {
     // Load stages specified as array of class names in verifyOXP.plist
     std::vector<std::string> stages =
@@ -452,7 +452,7 @@ void OOOXPVerifier::registerBaseStages() {
       }
 
       if (sTestStageMaker != nullptr) {
-        const std::shared_ptr<::OOOXPVerifierStage> testStage =
+        const std::shared_ptr<::oo::OXPVerifierStage> testStage =
             sTestStageMaker(stageName);
         if (testStage.get() != nullptr) {
           registerStage(testStage.get());
@@ -470,10 +470,10 @@ void OOOXPVerifier::registerBaseStages() {
   }
 }
 
-void OOOXPVerifier::buildDependencyGraph() {
-  ::OOOXPVerifierStage* stage = nullptr;
+void oo::OXPVerifier::buildDependencyGraph() {
+  ::oo::OXPVerifierStage* stage = nullptr;
   std::optional<std::string> name;
-  std::map<::OOOXPVerifierStage*, std::vector<std::string>> dependenciesByStage,
+  std::map<::oo::OXPVerifierStage*, std::vector<std::string>> dependenciesByStage,
       dependentsByStage;
 
   {
@@ -487,7 +487,7 @@ void OOOXPVerifier::buildDependencyGraph() {
               added.
       */
       if (_waitingStages.empty()) break;
-      const std::shared_ptr<::OOOXPVerifierStage> waiting =
+      const std::shared_ptr<::oo::OXPVerifierStage> waiting =
           _waitingStages.front();
       _waitingStages.erase(_waitingStages.begin());
       stage = waiting.get();
@@ -572,8 +572,8 @@ void OOOXPVerifier::buildDependencyGraph() {
   }
 }
 
-void OOOXPVerifier::runStages() {
-  ::OOOXPVerifierStage* stageToRun = nullptr;
+void oo::OXPVerifier::runStages() {
+  ::oo::OXPVerifierStage* stageToRun = nullptr;
   std::optional<std::string> stageName;
 
   // Loop while there are still stages to run.
@@ -637,9 +637,9 @@ void OOOXPVerifier::runStages() {
   _waitingStages.clear();
 }
 
-bool OOOXPVerifier::setUpDependencies(std::span<const std::string> dependencies,
-                                      ::OOOXPVerifierStage* stage) {
-  ::OOOXPVerifierStage* depStage = nullptr;
+bool oo::OXPVerifier::setUpDependencies(std::span<const std::string> dependencies,
+                                      ::oo::OXPVerifierStage* stage) {
+  ::oo::OXPVerifierStage* depStage = nullptr;
 
   // Iterate over dependencies, connecting them up.
   for (const std::string& depName : dependencies) {
@@ -665,9 +665,9 @@ bool OOOXPVerifier::setUpDependencies(std::span<const std::string> dependencies,
   return true;
 }
 
-void OOOXPVerifier::setUpDependents(std::span<const std::string> dependents,
-                                    ::OOOXPVerifierStage* stage) {
-  ::OOOXPVerifierStage* depStage = nullptr;
+void oo::OXPVerifier::setUpDependents(std::span<const std::string> dependents,
+                                    ::oo::OXPVerifierStage* stage) {
+  ::oo::OXPVerifierStage* depStage = nullptr;
 
   // Iterate over dependents, connecting them up.
   for (const std::string& depName : dependents) {
@@ -692,7 +692,7 @@ void OOOXPVerifier::setUpDependents(std::span<const std::string> dependents,
   }
 }
 
-void OOOXPVerifier::dumpDebugGraphviz() {
+void oo::OXPVerifier::dumpDebugGraphviz() {
   using oo::str::FormatArg;
 
   // The templates are data (verifyOXP.plist), so they are formatted at run
@@ -707,7 +707,7 @@ void OOOXPVerifier::dumpDebugGraphviz() {
   */
   std::string arcTemplate = graphVizTemplate.get<std::string>("node");
   for (const auto& entry : _stagesByName) {
-    ::OOOXPVerifierStage* stage = entry.second.get();
+    ::oo::OXPVerifierStage* stage = entry.second.get();
     graphViz += oo::str::formatRuntime(
         arcTemplate, {FormatArg::pointer(stage), stage->className(),
                       stage->name().value_or("(null)")});  // was [stage class]
@@ -721,8 +721,8 @@ void OOOXPVerifier::dumpDebugGraphviz() {
   const std::string startTemplate =
       graphVizTemplate.get<std::string>("startArc");
   for (const auto& entry : _stagesByName) {
-    ::OOOXPVerifierStage* stage = entry.second.get();
-    const std::vector<std::shared_ptr<OOOXPVerifierStage>> deps =
+    ::oo::OXPVerifierStage* stage = entry.second.get();
+    const std::vector<std::shared_ptr<oo::OXPVerifierStage>> deps =
         stage->resolvedDependencies();
     if (!deps.empty()) {
       for (const auto& dep : deps) {
@@ -744,8 +744,8 @@ void OOOXPVerifier::dumpDebugGraphviz() {
   arcTemplate = graphVizTemplate.get<std::string>("backwardArc");
   const std::string endTemplate = graphVizTemplate.get<std::string>("endArc");
   for (const auto& entry : _stagesByName) {
-    ::OOOXPVerifierStage* stage = entry.second.get();
-    const std::vector<std::shared_ptr<OOOXPVerifierStage>> deps =
+    ::oo::OXPVerifierStage* stage = entry.second.get();
+    const std::vector<std::shared_ptr<oo::OXPVerifierStage>> deps =
         stage->resolvedDependents();
     if (!deps.empty()) {
       for (const auto& dep : deps) {

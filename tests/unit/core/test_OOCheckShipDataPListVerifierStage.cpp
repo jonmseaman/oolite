@@ -20,10 +20,10 @@
 #include <filesystem>
 #include <fstream>
 
-#include "OOAIStateMachineVerifierStage.h"
-#include "OOCheckShipDataPListVerifierStage.h"
-#include "OOOXPVerifierStage.h"
-#include "OOPListSchemaVerifier.h"
+#include "AIStateMachineVerifierStage.h"
+#include "CheckShipDataPListVerifierStage.h"
+#include "OXPVerifierStage.h"
+#include "PListSchemaVerifier.h"
 #include "OOPixMap.h"
 #include "OOTextureLoader.h"
 #include "oo_test.hpp"
@@ -97,32 +97,32 @@ int gSchemaVerifiers = 0;
 
 }  // namespace
 
-std::shared_ptr<OOPListSchemaVerifier> OOPListSchemaVerifier::verifierWithSchema(
+std::shared_ptr<oo::PListSchemaVerifier> oo::PListSchemaVerifier::verifierWithSchema(
     const oo::PList& schema) {
   if (schema.isNull()) return nullptr;
-  return std::shared_ptr<OOPListSchemaVerifier>(new OOPListSchemaVerifier(schema), oo::Dispose{});
+  return std::shared_ptr<oo::PListSchemaVerifier>(new oo::PListSchemaVerifier(schema), oo::Dispose{});
 }
 
-OOPListSchemaVerifier::OOPListSchemaVerifier(const oo::PList& schema) {
+oo::PListSchemaVerifier::PListSchemaVerifier(const oo::PList& schema) {
   _schema = schema;
   gSchemaVerifiers++;
 }
 
-void OOPListSchemaVerifier::setDelegate(
-    OOPListSchemaVerifierDelegate* delegate) {
+void oo::PListSchemaVerifier::setDelegate(
+    oo::PListSchemaVerifierDelegate* delegate) {
   _delegate = delegate;
 }  // Not retained, as the real verifier's.
-OOPListSchemaVerifierDelegate* OOPListSchemaVerifier::delegate() {
+oo::PListSchemaVerifierDelegate* oo::PListSchemaVerifier::delegate() {
   return _delegate;
 }
 
-bool OOPListSchemaVerifier::verifyPropertyList(const oo::PList& plist,
+bool oo::PListSchemaVerifier::verifyPropertyList(const oo::PList& plist,
                                                const std::string& name) {
   for (const auto& [key, value] : *plist.getIf<oo::PList::Dict>()) {
     const oo::PList keyPath = *oo::parsePropertyListData("(\"" + key + "\")");
     if (value.getIf<std::string>() != nullptr &&
         *value.getIf<std::string>() == "BAD") {
-      OOPListSchemaVerifierError error;
+      oo::PListSchemaVerifierError error;
       error.failureReason = "a test failure";
       error.userInfo =
           *oo::parsePropertyListData("{ keyPath = (\"" + key + "\"); }");
@@ -132,7 +132,7 @@ bool OOPListSchemaVerifier::verifyPropertyList(const oo::PList& plist,
     }
     if (value.getIf<std::string>() != nullptr &&
         *value.getIf<std::string>() == "DELEGATED") {
-      std::optional<OOPListSchemaVerifierError> error;
+      std::optional<oo::PListSchemaVerifierError> error;
       if (_delegate != nullptr)
         _delegate->verifierTestProperty(this, plist, name, value, keyPath,
                                         oo::PList(std::string("aTestType")),
@@ -142,7 +142,7 @@ bool OOPListSchemaVerifier::verifyPropertyList(const oo::PList& plist,
   return true;
 }
 
-std::optional<std::string> OOPListSchemaVerifier::descriptionForKeyPath(
+std::optional<std::string> oo::PListSchemaVerifier::descriptionForKeyPath(
     const oo::PList& keyPath) {
   std::string result;
   for (const oo::PList& component : *keyPath.getIf<oo::PList::Array>()) {
@@ -193,9 +193,9 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 
 // The scanner, registered with the verifier and run over its OXP, as the
 // verifier runs it first.
-void RunScanner(OOOXPVerifier* verifier) {
-  OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
+void RunScanner(oo::OXPVerifier* verifier) {
+  oo::FileScannerVerifierStage::nameForDependencyForVerifier(verifier);
+  verifier->stageWithName(oo::FileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -207,12 +207,12 @@ const std::filesystem::path kBase =
 
 // An OXP with the given files (path, contents), and its verifier with the
 // scanner run over it.
-OOOXPVerifier* MakeVerifier(
+oo::OXPVerifier* MakeVerifier(
     std::initializer_list<std::pair<const char*, const char*>> files) {
   std::filesystem::remove_all(kBase);
   std::filesystem::create_directories(kBase);
   for (const auto& [name, contents] : files) WriteFile(kBase / name, contents);
-  OOOXPVerifier* verifier =
+  oo::OXPVerifier* verifier =
       OOOXPVerifierTestAccess::Make(kBase.generic_string(), kConfiguration);
   RunScanner(verifier);
   StartLog();
@@ -241,9 +241,9 @@ std::vector<std::string> LinesForShip(const std::string& ship) {
 
 OO_TEST(nameAndNeighbours) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({});
-    const std::shared_ptr<OOCheckShipDataPListVerifierStage> stage =
-        oo::makeShared<OOCheckShipDataPListVerifierStage>();
+    oo::OXPVerifier* verifier = MakeVerifier({});
+    const std::shared_ptr<oo::CheckShipDataPListVerifierStage> stage =
+        oo::makeShared<oo::CheckShipDataPListVerifierStage>();
     stage->setVerifier(verifier);
     OO_CHECK(stage->name() ==
              std::optional<std::string>("Checking shipdata.plist"));
@@ -273,7 +273,7 @@ OO_TEST(nameAndNeighbours) {
 
 OO_TEST(checksEachShip) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({
+    oo::OXPVerifier* verifier = MakeVerifier({
         {"Models/ship.dat", "model"},
         {"AIs/shipAI.plist", "{}"},
         {"Config/shipdata.plist",
@@ -296,11 +296,11 @@ OO_TEST(checksEachShip) {
          "	notDict = 7;"
          "}"},
     });
-    const std::shared_ptr<OOAIStateMachineVerifierStage> aiStage =
-        oo::makeShared<OOAIStateMachineVerifierStage>();
+    const std::shared_ptr<oo::AIStateMachineVerifierStage> aiStage =
+        oo::makeShared<oo::AIStateMachineVerifierStage>();
     verifier->registerStage(aiStage.get());
-    const std::shared_ptr<OOCheckShipDataPListVerifierStage> stage =
-        oo::makeShared<OOCheckShipDataPListVerifierStage>();
+    const std::shared_ptr<oo::CheckShipDataPListVerifierStage> stage =
+        oo::makeShared<oo::CheckShipDataPListVerifierStage>();
     stage->setVerifier(verifier);
     stage->dependents();  // registers the model stage, as the verifier's
                           // dependency pass does
@@ -356,9 +356,9 @@ OO_TEST(checksEachShip) {
 // describes itself with its class's name.
 OO_TEST(facade) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({});
-    const std::shared_ptr<OOCheckShipDataPListVerifierStage> stage =
-        oo::makeShared<OOCheckShipDataPListVerifierStage>();
+    oo::OXPVerifier* verifier = MakeVerifier({});
+    const std::shared_ptr<oo::CheckShipDataPListVerifierStage> stage =
+        oo::makeShared<oo::CheckShipDataPListVerifierStage>();
     OO_CHECK(stage->description().starts_with(
         "<OOCheckShipDataPListVerifierStage 0x"));
 

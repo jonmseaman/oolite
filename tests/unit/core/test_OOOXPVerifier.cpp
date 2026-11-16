@@ -36,8 +36,8 @@
 #include <string>
 #include <vector>
 
-#include "OOOXPVerifier.h"
-#include "OOOXPVerifierStage.h"
+#include "OXPVerifier.h"
+#include "OXPVerifierStage.h"
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
@@ -54,8 +54,8 @@ uint32_t gDebugFlags = 0;
 */
 struct OOOXPVerifierTestAccess {
   static void SetStageMaker(
-      std::shared_ptr<OOOXPVerifierStage> (*maker)(const std::string& name)) {
-    OOOXPVerifier::sTestStageMaker = maker;
+      std::shared_ptr<oo::OXPVerifierStage> (*maker)(const std::string& name)) {
+    oo::OXPVerifier::sTestStageMaker = maker;
   }
 };
 
@@ -66,7 +66,7 @@ namespace stdfs = std::filesystem;
 stdfs::path sRoot;
 std::vector<std::string> gEvents;
 
-std::shared_ptr<OOOXPVerifierStage> MakeTestStage(
+std::shared_ptr<oo::OXPVerifierStage> MakeTestStage(
     const std::string& name);  // with the test's stages, below
 
 // What a stage read from the verifier during its run.
@@ -139,7 +139,7 @@ bool RunWithArguments(std::vector<std::string> arguments) {
     argv.push_back(argument.c_str());
   oo::process::setArguments(static_cast<int>(argv.size()), argv.data());
   gEvents.clear();
-  return OOOXPVerifier::runVerificationIfRequested();
+  return oo::OXPVerifier::runVerificationIfRequested();
 }
 
 }  // namespace
@@ -148,7 +148,7 @@ bool RunWithArguments(std::vector<std::string> arguments) {
 // ------------------------------------------------------------------------ C++
 // subclasses of OOOXPVerifierStage.
 
-class OOTestStage : public OOOXPVerifierStage {
+class OOTestStage : public oo::OXPVerifierStage {
  public:
   std::optional<std::string> name() override { return std::nullopt; }
   void run() override { gEvents.push_back("run " + name().value_or("(null)")); }
@@ -222,7 +222,7 @@ class OOTestStageNameless : public OOTestStage {};
 TEST_STAGE(OOTestStageA, "A")
 void run() override {
   OOTestStage::run();
-  OOOXPVerifier* verifier = this->verifier();
+  oo::OXPVerifier* verifier = this->verifier();
   gView.seen = (verifier != nullptr);
   gView.path = verifier->oxpPath();
   gView.displayName = verifier->oxpDisplayName();
@@ -279,12 +279,12 @@ void run() override {
 namespace {
 
 template <class Stage>
-std::shared_ptr<OOOXPVerifierStage> Make() {
-  return std::shared_ptr<OOOXPVerifierStage>(oo::makeShared<Stage>());
+std::shared_ptr<oo::OXPVerifierStage> Make() {
+  return std::shared_ptr<oo::OXPVerifierStage>(oo::makeShared<Stage>());
 }
 
-std::shared_ptr<OOOXPVerifierStage> MakeTestStage(const std::string& name) {
-  static const std::map<std::string, std::shared_ptr<OOOXPVerifierStage> (*)()> makers =
+std::shared_ptr<oo::OXPVerifierStage> MakeTestStage(const std::string& name) {
+  static const std::map<std::string, std::shared_ptr<oo::OXPVerifierStage> (*)()> makers =
       {
           {"OOTestStageA", Make<OOTestStageA>},
           {"OOTestStageB", Make<OOTestStageB>},

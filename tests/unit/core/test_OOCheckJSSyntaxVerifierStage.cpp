@@ -16,8 +16,8 @@
 #include <filesystem>
 #include <fstream>
 
-#include "OOCheckJSSyntaxVerifierStage.h"
-#include "OOOXPVerifierStage.h"
+#include "CheckJSSyntaxVerifierStage.h"
+#include "OXPVerifierStage.h"
 #include "oo_test.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
@@ -120,9 +120,9 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 
 // The scanner, registered with the verifier and run over its OXP, as the
 // verifier runs it first.
-void RunScanner(OOOXPVerifier* verifier) {
-  OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
+void RunScanner(oo::OXPVerifier* verifier) {
+  oo::FileScannerVerifierStage::nameForDependencyForVerifier(verifier);
+  verifier->stageWithName(oo::FileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -133,11 +133,11 @@ const std::filesystem::path kBase =
 
 // An OXP with the given files (relative paths), and its verifier with the
 // scanner run over it.
-OOOXPVerifier* MakeVerifier(std::initializer_list<const char*> files) {
+oo::OXPVerifier* MakeVerifier(std::initializer_list<const char*> files) {
   std::filesystem::remove_all(kBase);
   std::filesystem::create_directories(kBase);
   for (const char* file : files) WriteFile(kBase / file, "// script");
-  OOOXPVerifier* verifier =
+  oo::OXPVerifier* verifier =
       OOOXPVerifierTestAccess::Make(kBase.generic_string(), kConfiguration);
   RunScanner(verifier);
   gShowErrorLocations = 0;
@@ -149,8 +149,8 @@ OOOXPVerifier* MakeVerifier(std::initializer_list<const char*> files) {
 
 OO_TEST(nameAndNeighbours) {
   {
-    const std::shared_ptr<OOCheckJSSyntaxVerifierStage> stage =
-        oo::makeShared<OOCheckJSSyntaxVerifierStage>();
+    const std::shared_ptr<oo::CheckJSSyntaxVerifierStage> stage =
+        oo::makeShared<oo::CheckJSSyntaxVerifierStage>();
     stage->setVerifier(MakeVerifier({}));
     OO_CHECK(stage->name() ==
              std::optional<std::string>("Checking JS Script file syntax"));
@@ -161,8 +161,8 @@ OO_TEST(nameAndNeighbours) {
 
 OO_TEST(runsWhenThereAreScripts) {
   {
-    const std::shared_ptr<OOCheckJSSyntaxVerifierStage> stage =
-        oo::makeShared<OOCheckJSSyntaxVerifierStage>();
+    const std::shared_ptr<oo::CheckJSSyntaxVerifierStage> stage =
+        oo::makeShared<oo::CheckJSSyntaxVerifierStage>();
     stage->setVerifier(MakeVerifier({"Config/shipdata.plist"}));
     OO_CHECK(!stage->shouldRun());
     stage->run();
@@ -183,8 +183,8 @@ OO_TEST(runsWhenThereAreScripts) {
 
 OO_TEST(compilesEachScript) {
   {
-    const std::shared_ptr<OOCheckJSSyntaxVerifierStage> stage =
-        oo::makeShared<OOCheckJSSyntaxVerifierStage>();
+    const std::shared_ptr<oo::CheckJSSyntaxVerifierStage> stage =
+        oo::makeShared<oo::CheckJSSyntaxVerifierStage>();
     stage->setVerifier(MakeVerifier({"Scripts/b.js", "Scripts/A.JS",
                                      "Scripts/c.es", "Scripts/notes.txt",
                                      "Scripts/noext", "Config/script.js"}));
@@ -214,9 +214,9 @@ OO_TEST(compilesEachScript) {
 // describes itself with its class's name.
 OO_TEST(facade) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({"Config/script.js"});
-    const std::shared_ptr<OOCheckJSSyntaxVerifierStage> stage =
-        oo::makeShared<OOCheckJSSyntaxVerifierStage>();
+    oo::OXPVerifier* verifier = MakeVerifier({"Config/script.js"});
+    const std::shared_ptr<oo::CheckJSSyntaxVerifierStage> stage =
+        oo::makeShared<oo::CheckJSSyntaxVerifierStage>();
     OO_CHECK(
         stage->description().starts_with("<OOCheckJSSyntaxVerifierStage 0x"));
 

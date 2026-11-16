@@ -15,8 +15,8 @@
 #include <filesystem>
 #include <fstream>
 
-#include "OOModelVerifierStage.h"
-#include "OOOXPVerifierStage.h"
+#include "ModelVerifierStage.h"
+#include "OXPVerifierStage.h"
 #include "OOPixMap.h"
 #include "OOTextureLoader.h"
 #include "oo_test.hpp"
@@ -89,9 +89,9 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 
 // The scanner, registered with the verifier and run over its OXP, as the
 // verifier runs it first.
-void RunScanner(OOOXPVerifier* verifier) {
-  OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
+void RunScanner(oo::OXPVerifier* verifier) {
+  oo::FileScannerVerifierStage::nameForDependencyForVerifier(verifier);
+  verifier->stageWithName(oo::FileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -102,12 +102,12 @@ const std::filesystem::path kBase =
 
 // An OXP with the given files (path, contents), and its verifier with the
 // scanner run over it.
-OOOXPVerifier* MakeVerifier(
+oo::OXPVerifier* MakeVerifier(
     std::initializer_list<std::pair<const char*, const char*>> files) {
   std::filesystem::remove_all(kBase);
   std::filesystem::create_directories(kBase);
   for (const auto& [name, contents] : files) WriteFile(kBase / name, contents);
-  OOOXPVerifier* verifier =
+  oo::OXPVerifier* verifier =
       OOOXPVerifierTestAccess::Make(kBase.generic_string(), kConfiguration);
   RunScanner(verifier);
   StartLog();
@@ -118,18 +118,18 @@ OOOXPVerifier* MakeVerifier(
 
 OO_TEST(nameRegistersTheStage) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({});
+    oo::OXPVerifier* verifier = MakeVerifier({});
     OO_CHECK(verifier->stageWithName("Testing models") == nullptr);
-    OO_CHECK(verifier->stageWithName(OOModelVerifierStage::kName) == nullptr);
-    OO_CHECK(OOModelVerifierStage::nameForReverseDependencyForVerifier(
+    OO_CHECK(verifier->stageWithName(oo::ModelVerifierStage::kName) == nullptr);
+    OO_CHECK(oo::ModelVerifierStage::nameForReverseDependencyForVerifier(
                  verifier) == "Testing models");
-    OOOXPVerifierStage* registered =
-        verifier->stageWithName(OOModelVerifierStage::kName);
+    oo::OXPVerifierStage* registered =
+        verifier->stageWithName(oo::ModelVerifierStage::kName);
     OO_CHECK(registered != nullptr &&
              verifier->stageWithName("Testing models") == registered);
-    OO_CHECK(OOModelVerifierStage::nameForReverseDependencyForVerifier(
+    OO_CHECK(oo::ModelVerifierStage::nameForReverseDependencyForVerifier(
                  verifier) == "Testing models");
-    OO_CHECK(verifier->stageWithName(OOModelVerifierStage::kName) ==
+    OO_CHECK(verifier->stageWithName(oo::ModelVerifierStage::kName) ==
              registered);  // once
 
     OO_CHECK(registered->name() ==
@@ -145,9 +145,9 @@ OO_TEST(nameRegistersTheStage) {
 
 OO_TEST(stagesNameModels) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({{"Models/ship.dat", "model"}});
-    const std::shared_ptr<OOModelVerifierStage> stage =
-        oo::makeShared<OOModelVerifierStage>();
+    oo::OXPVerifier* verifier = MakeVerifier({{"Models/ship.dat", "model"}});
+    const std::shared_ptr<oo::ModelVerifierStage> stage =
+        oo::makeShared<oo::ModelVerifierStage>();
     stage->setVerifier(verifier);
     const oo::PList materials = *oo::parsePropertyListData("{ a = b; }");
 
@@ -201,15 +201,15 @@ OO_TEST(stagesNameModels) {
 // name for the ship data stage.
 OO_TEST(facade) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({{"Models/ship.dat", "model"}});
-    OOModelVerifierStage::nameForReverseDependencyForVerifier(verifier);
-    OOModelVerifierStage* stage = static_cast<OOModelVerifierStage*>(
-        verifier->stageWithName(OOModelVerifierStage::kName));
+    oo::OXPVerifier* verifier = MakeVerifier({{"Models/ship.dat", "model"}});
+    oo::ModelVerifierStage::nameForReverseDependencyForVerifier(verifier);
+    oo::ModelVerifierStage* stage = static_cast<oo::ModelVerifierStage*>(
+        verifier->stageWithName(oo::ModelVerifierStage::kName));
     OO_CHECK(stage != nullptr);
     OO_CHECK(stage->description().starts_with("<OOModelVerifierStage 0x"));
 
     OO_CHECK(stage->name() ==
-             std::optional<std::string>(OOModelVerifierStage::kName));
+             std::optional<std::string>(oo::ModelVerifierStage::kName));
     OO_CHECK(stage->dependents() ==
              (std::vector<std::string>{"Checking for unused files",
                                        "Testing textures and images"}));

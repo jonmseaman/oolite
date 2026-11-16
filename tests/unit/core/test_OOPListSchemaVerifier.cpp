@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "OODescription.h"
-#include "OOPListSchemaVerifier.h"
+#include "PListSchemaVerifier.h"
 #include "OOStringParsing.h"
 #include "oo_test.hpp"
 #include "oofnd/PListParsing.hpp"
@@ -50,13 +50,13 @@ oo::PList Parse(const char* text) {
 }
 
 std::string KeyPathText(const oo::PList& keyPath) {
-  return OOPListSchemaVerifier::descriptionForKeyPath(keyPath).value_or(
+  return oo::PListSchemaVerifier::descriptionForKeyPath(keyPath).value_or(
       "(nullopt)");
 }
 
 // One failure as the delegate saw it: "<code> <key path> | <reason> | <expected
 // type>".
-std::string FailureText(const OOPListSchemaVerifierError& error,
+std::string FailureText(const oo::PListSchemaVerifierError& error,
                         const oo::PList& localSchema) {
   const oo::PList* keyPath = error.userInfo.find(kPListKeyPathErrorKey);
   return std::to_string(error.code) + " " +
@@ -71,11 +71,11 @@ std::string FailureText(const OOPListSchemaVerifierError& error,
 // `delegatedAnswer`, or raise. (Reference counted, so the test can check the
 // verifier does not retain it.)
 class TestSchemaDelegate : public oo::Object,
-                           public OOPListSchemaVerifierDelegate {
+                           public oo::PListSchemaVerifierDelegate {
  public:
   std::vector<std::string> failures;
   std::vector<std::string> delegated;  // "<name> <type key> <key path> <value>"
-  std::vector<OOPListSchemaVerifier*>
+  std::vector<oo::PListSchemaVerifier*>
       verifiers;  // the verifier each call was handed
   bool delegatedAnswer = false;
   bool delegatedRaises = false;
@@ -83,10 +83,10 @@ class TestSchemaDelegate : public oo::Object,
   bool continueAfterFailure = false;
 
   bool verifierTestProperty(
-      OOPListSchemaVerifier* verifier, const oo::PList& rootPList,
+      oo::PListSchemaVerifier* verifier, const oo::PList& rootPList,
       const std::string& name, const oo::PList& subPList,
       const oo::PList& keyPath, const oo::PList& typeKey,
-      std::optional<OOPListSchemaVerifierError>* outError) override {
+      std::optional<oo::PListSchemaVerifierError>* outError) override {
     (void)rootPList;
     verifiers.push_back(verifier);
     delegated.push_back(name + " " + oo::DescriptionOf(typeKey) + " " +
@@ -95,16 +95,16 @@ class TestSchemaDelegate : public oo::Object,
     if (delegatedRaises)
       OORaiseException(OOGenericException, "delegate refuses %s", name.c_str());
     if (delegatedError && outError != nullptr)
-      *outError = OOPListSchemaVerifierError{
+      *outError = oo::PListSchemaVerifierError{
           "test.domain", 42, std::string("delegate's own error"), oo::PList()};
     return delegatedAnswer;
   }
 
-  bool verifierFailedForProperty(OOPListSchemaVerifier* verifier,
+  bool verifierFailedForProperty(oo::PListSchemaVerifier* verifier,
                                  const oo::PList& rootPList,
                                  const std::string& name,
                                  const oo::PList& subPList,
-                                 const OOPListSchemaVerifierError& error,
+                                 const oo::PListSchemaVerifierError& error,
                                  const oo::PList& localSchema) override {
     (void)rootPList;
     (void)subPList;
@@ -136,18 +136,18 @@ oo::PList GoodShip() {
 }  // namespace
 
 OO_TEST(nullSchemaGivesNil) {
-  OO_CHECK(OOPListSchemaVerifier::verifierWithSchema(oo::PList()) == nullptr);
-  const std::shared_ptr<OOPListSchemaVerifier> allocated =
-      OOPListSchemaVerifier::initWithSchema(oo::PList());
+  OO_CHECK(oo::PListSchemaVerifier::verifierWithSchema(oo::PList()) == nullptr);
+  const std::shared_ptr<oo::PListSchemaVerifier> allocated =
+      oo::PListSchemaVerifier::initWithSchema(oo::PList());
   OO_CHECK(allocated == nullptr);
-  OO_CHECK(OOPListSchemaVerifier::verifierWithSchema(Parse("string")) !=
+  OO_CHECK(oo::PListSchemaVerifier::verifierWithSchema(Parse("string")) !=
            nullptr);
 }
 
 OO_TEST(keepsItsDelegate) {
   {
-    const std::shared_ptr<OOPListSchemaVerifier> verifier =
-        OOPListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
+    const std::shared_ptr<oo::PListSchemaVerifier> verifier =
+        oo::PListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
     OO_CHECK(verifier->delegate() == nullptr);
     const std::shared_ptr<TestSchemaDelegate> delegate =
         oo::makeShared<TestSchemaDelegate>();
@@ -161,8 +161,8 @@ OO_TEST(keepsItsDelegate) {
 
 OO_TEST(acceptsAValidPropertyList) {
   {
-    const std::shared_ptr<OOPListSchemaVerifier> verifier =
-        OOPListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
+    const std::shared_ptr<oo::PListSchemaVerifier> verifier =
+        oo::PListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
     const std::shared_ptr<TestSchemaDelegate> delegate =
         oo::makeShared<TestSchemaDelegate>();
     verifier->setDelegate(delegate.get());
@@ -174,8 +174,8 @@ OO_TEST(acceptsAValidPropertyList) {
 
 OO_TEST(reportsEachFailureToTheDelegate) {
   {
-    const std::shared_ptr<OOPListSchemaVerifier> verifier =
-        OOPListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
+    const std::shared_ptr<oo::PListSchemaVerifier> verifier =
+        oo::PListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
     const std::shared_ptr<TestSchemaDelegate> delegate =
         oo::makeShared<TestSchemaDelegate>();
     delegate->continueAfterFailure = true;
@@ -204,15 +204,15 @@ OO_TEST(reportsEachFailureToTheDelegate) {
         "minimum = \"0.5\"; type = float; }",
     };
     OO_CHECK(delegate->failures == expected);
-    for (OOPListSchemaVerifier* seen : delegate->verifiers)
+    for (oo::PListSchemaVerifier* seen : delegate->verifiers)
       OO_CHECK(seen == verifier.get());
   }
 }
 
 OO_TEST(stopsWhenTheDelegateSaysSo) {
   {
-    const std::shared_ptr<OOPListSchemaVerifier> verifier =
-        OOPListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
+    const std::shared_ptr<oo::PListSchemaVerifier> verifier =
+        oo::PListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
     const std::shared_ptr<TestSchemaDelegate> delegate =
         oo::makeShared<TestSchemaDelegate>();
     delegate->continueAfterFailure = false;
@@ -241,19 +241,19 @@ OO_TEST(reportsABadSchema) {
         oo::makeShared<TestSchemaDelegate>();
     delegate->continueAfterFailure = true;
 
-    const std::shared_ptr<OOPListSchemaVerifier> undefinedMacro =
-        OOPListSchemaVerifier::verifierWithSchema(
+    const std::shared_ptr<oo::PListSchemaVerifier> undefinedMacro =
+        oo::PListSchemaVerifier::verifierWithSchema(
             Parse("{ type = $nothing; }"));
     undefinedMacro->setDelegate(delegate.get());
     OO_CHECK(!undefinedMacro->verifyPropertyList(oo::PList("x"), "macro"));
 
-    const std::shared_ptr<OOPListSchemaVerifier> unknownType =
-        OOPListSchemaVerifier::verifierWithSchema(Parse("{ type = gizmo; }"));
+    const std::shared_ptr<oo::PListSchemaVerifier> unknownType =
+        oo::PListSchemaVerifier::verifierWithSchema(Parse("{ type = gizmo; }"));
     unknownType->setDelegate(delegate.get());
     OO_CHECK(!unknownType->verifyPropertyList(oo::PList("x"), "unknown"));
 
-    const std::shared_ptr<OOPListSchemaVerifier> noType =
-        OOPListSchemaVerifier::verifierWithSchema(Parse("{ minimum = 1; }"));
+    const std::shared_ptr<oo::PListSchemaVerifier> noType =
+        oo::PListSchemaVerifier::verifierWithSchema(Parse("{ minimum = 1; }"));
     noType->setDelegate(delegate.get());
     OO_CHECK(!noType->verifyPropertyList(oo::PList("x"), "untyped"));
 
@@ -271,8 +271,8 @@ OO_TEST(reportsABadSchema) {
 
 OO_TEST(asksTheDelegateAboutDelegatedTypes) {
   {
-    const std::shared_ptr<OOPListSchemaVerifier> verifier =
-        OOPListSchemaVerifier::verifierWithSchema(
+    const std::shared_ptr<oo::PListSchemaVerifier> verifier =
+        oo::PListSchemaVerifier::verifierWithSchema(
             Parse("{ type = array; valueType = { type = delegatedType; "
                   "baseType = string; key = shipKey; }; }"));
     const std::shared_ptr<TestSchemaDelegate> delegate =
@@ -322,7 +322,7 @@ OO_TEST(asksTheDelegateAboutDelegatedTypes) {
     };
     OO_CHECK(delegate->delegated == expectedDelegated);
     OO_CHECK(delegate->failures == expectedFailures);
-    for (OOPListSchemaVerifier* seen : delegate->verifiers)
+    for (oo::PListSchemaVerifier* seen : delegate->verifiers)
       OO_CHECK(seen == verifier.get());
   }
 }
@@ -330,8 +330,8 @@ OO_TEST(asksTheDelegateAboutDelegatedTypes) {
 OO_TEST(aDelegateThatHandlesNothing) {
   {
     // Delegated types pass; a failure stops verification.
-    const std::shared_ptr<OOPListSchemaVerifier> verifier =
-        OOPListSchemaVerifier::verifierWithSchema(
+    const std::shared_ptr<oo::PListSchemaVerifier> verifier =
+        oo::PListSchemaVerifier::verifierWithSchema(
             Parse("{ type = array; valueType = { type = delegatedType; "
                   "baseType = string; key = shipKey; }; }"));
     verifier->setDelegate(nullptr);
@@ -340,8 +340,8 @@ OO_TEST(aDelegateThatHandlesNothing) {
         "mute"));
     OO_CHECK(!verifier->verifyPropertyList(oo::PList(4), "mute"));
 
-    const std::shared_ptr<OOPListSchemaVerifier> orphan =
-        OOPListSchemaVerifier::verifierWithSchema(Parse("string"));
+    const std::shared_ptr<oo::PListSchemaVerifier> orphan =
+        oo::PListSchemaVerifier::verifierWithSchema(Parse("string"));
     OO_CHECK(!orphan->verifyPropertyList(oo::PList(4), "orphan"));
     OO_CHECK(orphan->verifyPropertyList(oo::PList("four"), "orphan"));
   }
@@ -368,11 +368,11 @@ OO_TEST(describesKeyPaths) {
 // The C++ verifier hands its delegate itself.
 OO_TEST(delegateIsHandedTheVerifier) {
   {
-    OO_CHECK(OOPListSchemaVerifier::verifierWithSchema(oo::PList()).get() ==
+    OO_CHECK(oo::PListSchemaVerifier::verifierWithSchema(oo::PList()).get() ==
              nullptr);
 
-    std::shared_ptr<OOPListSchemaVerifier> made =
-        OOPListSchemaVerifier::verifierWithSchema(Parse("string"));
+    std::shared_ptr<oo::PListSchemaVerifier> made =
+        oo::PListSchemaVerifier::verifierWithSchema(Parse("string"));
     const std::shared_ptr<TestSchemaDelegate> delegate =
         oo::makeShared<TestSchemaDelegate>();
     made->setDelegate(delegate.get());
@@ -382,7 +382,7 @@ OO_TEST(delegateIsHandedTheVerifier) {
     OO_CHECK_EQ(delegate->verifiers.size(), 1u);
     OO_CHECK(!delegate->verifiers.empty() &&
              delegate->verifiers[0] == made.get());
-    OO_CHECK_EQ(OOPListSchemaVerifier::descriptionForKeyPath(
+    OO_CHECK_EQ(oo::PListSchemaVerifier::descriptionForKeyPath(
                     oo::PList(oo::PList::Array{oo::PList("a"), oo::PList(3)}))
                     .value_or(""),
                 "a[3]");

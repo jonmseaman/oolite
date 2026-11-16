@@ -409,7 +409,7 @@ namespace {
 
 // The C++ class's name.
 std::string ClassName(const OOTexture& texture) {
-  std::string result = OODemangle(typeid(texture).name());
+  std::string result = oo::DescriptionClassName(typeid(texture).name());
   return result;
 }
 

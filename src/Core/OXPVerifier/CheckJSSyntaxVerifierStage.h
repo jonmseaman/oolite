@@ -1,8 +1,8 @@
 /*
 
-OOCheckEquipmentPListVerifierStage.h
+OOCheckJSSyntaxVerifierStage.h
 
-OOOXPVerifierStage which verifies equipment.plist.
+OOOXPVerifierStage which checks that JS scripts compile
 
 
 Oolite
@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 
 #include <string>
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -37,15 +37,16 @@ MA 02110-1301, USA.
    it; the verifier makes it from its name (kCxxStages in OOOXPVerifier.cpp) and
    holds it.
 */
-class OOCheckEquipmentPListVerifierStage : public OOFileHandlingVerifierStage {
+namespace oo {
+
+class CheckJSSyntaxVerifierStage : public FileHandlingVerifierStage {
  public:
   std::optional<std::string> name() override;
   bool shouldRun() override;
   void run() override;
-
- private:
-  // equipmentPList is an Array.
-  void runCheckWithEquipment(const oo::PList& equipmentPList);
 };
+
+}  // namespace oo
+
 
 #endif

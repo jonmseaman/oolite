@@ -102,7 +102,7 @@ Entity* oo::EntityInitAgain(Entity* entity) {
 // ---------------------------------------------------------------------------------
 
 std::string oo::EntityClassName(Entity* entity) {
-  std::string result = OODemangle(typeid(*entity).name());
+  std::string result = oo::DescriptionClassName(typeid(*entity).name());
   if (result.starts_with("cxx::")) result.erase(0, 5);
   return result;
 }

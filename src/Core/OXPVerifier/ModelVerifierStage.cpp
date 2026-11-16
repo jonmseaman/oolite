@@ -23,7 +23,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOModelVerifierStage.h"
+#include "ModelVerifierStage.h"
 
 #include <format>
 #include <memory>
@@ -32,34 +32,34 @@ MA 02110-1301, USA.
 
 #if OO_OXP_VERIFIER_ENABLED
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 #include "oofnd/Log.hpp"
 
 static const char* const kStageName = "Testing models";
 
-const char* const OOModelVerifierStage::kName = kStageName;
+const char* const oo::ModelVerifierStage::kName = kStageName;
 
-std::string OOModelVerifierStage::nameForReverseDependencyForVerifier(
-    OOOXPVerifier* verifier) {
-  OOOXPVerifierStage* stage = verifier->stageWithName(kStageName);
+std::string oo::ModelVerifierStage::nameForReverseDependencyForVerifier(
+    oo::OXPVerifier* verifier) {
+  oo::OXPVerifierStage* stage = verifier->stageWithName(kStageName);
   if (stage == nullptr) {
-    const std::shared_ptr<OOModelVerifierStage> newStage =
-        oo::makeShared<OOModelVerifierStage>();
+    const std::shared_ptr<oo::ModelVerifierStage> newStage =
+        oo::makeShared<oo::ModelVerifierStage>();
     verifier->registerStage(newStage.get());
   }
 
   return kStageName;
 }
 
-std::optional<std::string> OOModelVerifierStage::name() { return kStageName; }
+std::optional<std::string> oo::ModelVerifierStage::name() { return kStageName; }
 
-bool OOModelVerifierStage::shouldRun() { return !_modelsToCheck.empty(); }
+bool oo::ModelVerifierStage::shouldRun() { return !_modelsToCheck.empty(); }
 
-void OOModelVerifierStage::run() {
+void oo::ModelVerifierStage::run() {
   OO_LOG("verifyOXP.models.unimplemented", "{}",
          "TODO: implement model verifier.");
 
-  for (const OOModelVerifierEntry& info : _modelsToCheck) {
+  for (const oo::ModelVerifierEntry& info : _modelsToCheck) {
     {
       checkModel(info.name, info.context, info.materials, info.shaders);
     }
@@ -67,11 +67,11 @@ void OOModelVerifierStage::run() {
   _modelsToCheck.clear();
 }
 
-bool OOModelVerifierStage::modelNamed(
+bool oo::ModelVerifierStage::modelNamed(
     const std::string& name, const std::optional<std::string>& entryName,
     const std::string& fileName, const oo::PList& materials,
     const oo::PList& shaders) {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
   std::string context;
 
   if (name.empty()) return false;
@@ -81,14 +81,14 @@ bool OOModelVerifierStage::modelNamed(
   else
     context = fileName;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   if (fileScanner == nullptr ||
       !fileScanner->fileExists(name, "Models", context, true)) {
     return false;
   }
 
-  OOModelVerifierEntry info{name, context, materials, shaders};
+  oo::ModelVerifierEntry info{name, context, materials, shaders};
   if (std::find(_modelsToCheck.begin(), _modelsToCheck.end(), info) ==
       _modelsToCheck.end()) {
     _modelsToCheck.push_back(std::move(info));
@@ -97,7 +97,7 @@ bool OOModelVerifierStage::modelNamed(
   return true;
 }
 
-void OOModelVerifierStage::checkModel(const std::string& name,
+void oo::ModelVerifierStage::checkModel(const std::string& name,
                                       const std::string& context,
                                       const oo::PList&, const oo::PList&) {
   OO_LOG("verifyOXP.verbose.model.unimp",
