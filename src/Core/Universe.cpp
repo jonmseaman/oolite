@@ -42,18 +42,21 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "AI.h"
+#include "BreakPatternEntity.h"
 #include "CollisionRegion.h"
 #include "DebugStandards.h"
 #include "DebugSupport.h"
 #include "DockEntity.h"
 #include "DustEntity.h"
+#include "ExplosionCloudEntity.h"
+#include "FlashEffectEntity.h"
 #include "GameController.h"
 #include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
+#include "LightParticleEntity.h"
 #include "LogIndentScope.h"
 #include "MyOpenGLView.h"
 #include "OOAsyncWorkManager.h"
-#include "OOBreakPatternEntity.h"
 #include "OOCPUInfo.h"
 #include "OOCacheManager.h"
 #include "OOCharacter.h"
@@ -63,13 +66,10 @@ MA 02110-1301, USA.
 #include "OODescription.h"
 #include "OOEntityFilterPredicate.h"
 #include "OOEquipmentType.h"
-#include "OOExplosionCloudEntity.h"
-#include "OOFlashEffectEntity.h"
 #include "OOGraphicsResetManager.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSPopulatorDefinition.h"
 #include "OOJoystickManager.h"
-#include "OOLightParticleEntity.h"
 #include "OOLoggingExtended.h"
 #include "OOMaterial.h"
 #include "OOMusicController.h"
@@ -77,28 +77,28 @@ MA 02110-1301, USA.
 #include "OOOpenGLExtensionManager.h"
 #include "OOOpenGLMatrixManager.h"
 #include "OOPListGameTypes.h"  // used by every build, not only OO_LOCALIZATION_TOOLS ones
-#include "OOPlanetEntity.h"
 #include "OOProbabilitySet.h"
-#include "OORingEffectEntity.h"
 #include "OOShaderProgram.h"
 #include "OOShipGroup.h"
 #include "OOShipLibraryDescriptions.h"
 #include "OOShipRegistry.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"  // IWYU pragma: keep: used only by code some build options compile
-#include "OOSunEntity.h"
 #include "OOSystemDescriptionManager.h"
 #include "OOTexture.h"
 #include "OOVersion.h"  // IWYU pragma: keep; OO_VERSION_FULL in DEV_RELEASE builds
-#include "OOVisualEffectEntity.h"
-#include "OOWaypointEntity.h"
+#include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "ProxyPlayerEntity.h"
 #include "ResourceManager.h"
+#include "RingEffectEntity.h"
 #include "ShipEntityAI.h"
 #include "SkyEntity.h"
 #include "SpeechSynthesizer.h"
 #include "StationEntity.h"
+#include "SunEntity.h"
+#include "VisualEffectEntity.h"
+#include "WaypointEntity.h"
 #include "WormholeEntity.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Date.hpp"
@@ -137,8 +137,13 @@ constexpr std::string_view kOOLogUniversePopulateWitchspace =
     "universe.populate.witchspace";
 #ifndef NDEBUG  // read only by the #ifndef NDEBUG list checks below (unused,
                 // and so a warning, in deployment builds)
-constexpr std::string_view kOOLogEntityVerificationError =
+namespace oo {
+
+constexpr std::string_view kLogEntityVerificationError =
     "entity.linkedList.verify.error";
+
+}  // namespace oo
+
 constexpr std::string_view kOOLogEntityVerificationRebuild =
     "entity.linkedList.verify.rebuild";
 #endif
@@ -401,8 +406,8 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView) {
   // [self preloadSounds];	// Must be after setUpSettings.
 
   // Preload particle effect textures:
-  ::OOLightParticleEntity::setUpTexture();
-  ::OOFlashEffectEntity::setUpTexture();
+  ::oo::LightParticleEntity::setUpTexture();
+  ::oo::FlashEffectEntity::setUpTexture();
 
   // set up cargopod templates
   setUpCargoPods();
@@ -651,7 +656,7 @@ static bool MaintainLinkedLists(Universe* uni) {
     }
     if ((checkEnt) || (n > 0)) {
 #ifndef NDEBUG
-      OO_LOG(kOOLogEntityVerificationError, "Broken x_next {} list ({}) ***",
+      OO_LOG(oo::kLogEntityVerificationError, "Broken x_next {} list ({}) ***",
              oo::EntityDescription(uni->x_list_start), n);
 #endif
       result = false;
@@ -662,7 +667,7 @@ static bool MaintainLinkedLists(Universe* uni) {
     while ((n--) && (checkEnt)) checkEnt = checkEnt->x_previous;
     if ((checkEnt) || (n > 0)) {
 #ifndef NDEBUG
-      OO_LOG(kOOLogEntityVerificationError,
+      OO_LOG(oo::kLogEntityVerificationError,
              "Broken x_previous {} list ({}) ***",
              oo::EntityDescription(uni->x_list_start), n);
 #endif
@@ -689,7 +694,7 @@ static bool MaintainLinkedLists(Universe* uni) {
     }
     if ((checkEnt) || (n > 0)) {
 #ifndef NDEBUG
-      OO_LOG(kOOLogEntityVerificationError,
+      OO_LOG(oo::kLogEntityVerificationError,
              "Broken *** broken y_next {} list ({}) ***",
              oo::EntityDescription(uni->y_list_start), n);
 #endif
@@ -701,7 +706,7 @@ static bool MaintainLinkedLists(Universe* uni) {
     while ((n--) && (checkEnt)) checkEnt = checkEnt->y_previous;
     if ((checkEnt) || (n > 0)) {
 #ifndef NDEBUG
-      OO_LOG(kOOLogEntityVerificationError,
+      OO_LOG(oo::kLogEntityVerificationError,
              "Broken y_previous {} list ({}) ***",
              oo::EntityDescription(uni->y_list_start), n);
 #endif
@@ -728,7 +733,7 @@ static bool MaintainLinkedLists(Universe* uni) {
     }
     if ((checkEnt) || (n > 0)) {
 #ifndef NDEBUG
-      OO_LOG(kOOLogEntityVerificationError, "Broken z_next {} list ({}) ***",
+      OO_LOG(oo::kLogEntityVerificationError, "Broken z_next {} list ({}) ***",
              oo::EntityDescription(uni->z_list_start), n);
 #endif
       result = false;
@@ -739,7 +744,7 @@ static bool MaintainLinkedLists(Universe* uni) {
     while ((n--) && (checkEnt)) checkEnt = checkEnt->z_previous;
     if ((checkEnt) || (n > 0)) {
 #ifndef NDEBUG
-      OO_LOG(kOOLogEntityVerificationError,
+      OO_LOG(oo::kLogEntityVerificationError,
              "Broken z_previous {} list ({}) ***",
              oo::EntityDescription(uni->z_list_start), n);
 #endif
@@ -1667,7 +1672,7 @@ void Universe::setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2) {
   oo::log::outdentIf(kOOLogUniversePopulateWitchspace);
 }
 
-::OOPlanetEntity* Universe::setUpPlanet() {
+::oo::PlanetEntity* Universe::setUpPlanet() {
   // set the system seed for random number generation
   Random_Seed systemSeed =
       (systemManager != nullptr ? systemManager->getRandomSeedForCurrentSystem()
@@ -1682,12 +1687,12 @@ void Universe::setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2) {
   if (!planetDict.isDict()) planetDict = oo::PList(oo::PList::Dict{});
   (*planetDict.getIf<oo::PList::Dict>())["mainForLocalSystem"] =
       oo::PList(true);
-  ::OOPlanetEntity* a_planet = nullptr;
+  ::oo::PlanetEntity* a_planet = nullptr;
   std::shared_ptr<Entity> planetHold;  // where +alloc's +1 was
   {
     // A new planet, held.
-    std::shared_ptr<::OOPlanetEntity> planetRef =
-        oo::makeShared<::OOPlanetEntity>();
+    std::shared_ptr<::oo::PlanetEntity> planetRef =
+        oo::makeShared<::oo::PlanetEntity>();
     planetHold = oo::Hold(oo::MadeEntity(planetRef));
     planetRef->initFromDictionary(planetDict,
                                   planetDict.get<bool>("has_atmosphere", true),
@@ -1732,9 +1737,9 @@ void Universe::setUpSpace() {
   std::shared_ptr<::ShipEntity>
       stationObject;  // the station's object, retained
   ::StationEntity* a_station;
-  ::OOSunEntity* a_sun;
+  ::oo::SunEntity* a_sun;
   std::shared_ptr<Entity> sunHold;  // where +alloc's +1 was
-  ::OOPlanetEntity* a_planet;
+  ::oo::PlanetEntity* a_planet;
 
   HPVector stationPos;
 
@@ -1964,7 +1969,7 @@ void Universe::setUpSpace() {
 #endif
   {
     // A new sun, held.
-    std::shared_ptr<OOSunEntity> sunRef = oo::makeShared<OOSunEntity>();
+    std::shared_ptr<oo::SunEntity> sunRef = oo::makeShared<oo::SunEntity>();
     sunHold = oo::Hold(oo::MadeEntity(sunRef));  // alloc retains!
     sunRef->initSunWithColor(bgcolor.get(), sun_dict);
     a_sun = sunRef.get();
@@ -2209,8 +2214,8 @@ void Universe::setPopulatorSetting(const std::string& key,
 
 bool Universe::deterministicPopulation() { return deterministic_population; }
 
-void Universe::populateSystemFromDictionariesWithSun(::OOSunEntity* sun,
-                                                     ::OOPlanetEntity* planet) {
+void Universe::populateSystemFromDictionariesWithSun(
+    ::oo::SunEntity* sun, ::oo::PlanetEntity* planet) {
   Random_Seed systemSeed =
       (systemManager != nullptr ? systemManager->getRandomSeedForCurrentSystem()
                                 : Random_Seed());
@@ -2298,8 +2303,8 @@ void Universe::populateSystemFromDictionariesWithSun(::OOSunEntity* sun,
  * Can be called with nil sun or planet, but if so the calling function
  * must make sure the location code is WITCHPOINT.
  */
-HPVector Universe::locationByCode(const std::string& code, ::OOSunEntity* sun,
-                                  ::OOPlanetEntity* planet) {
+HPVector Universe::locationByCode(const std::string& code, ::oo::SunEntity* sun,
+                                  ::oo::PlanetEntity* planet) {
   HPVector result = kZeroHPVector;
   if (code == "WITCHPOINT" || sun == nullptr || planet == nullptr ||
       (sun != nullptr ? sun->goneNova() : false)) {
@@ -2504,7 +2509,7 @@ void Universe::setLighting() {
 
   */
 
-  ::OOSunEntity* the_sun = sun();
+  ::oo::SunEntity* the_sun = sun();
   ::SkyEntity* the_sky = nullptr;
   GLfloat sun_pos[] = {
       0.0, 0.0, 0.0,
@@ -2691,8 +2696,8 @@ HPVector Universe::coordinatesForPosition(HPVector pos,
   const std::string l_sys = oo::str::lowercase(system);
   if (oo::str::length(l_sys) != 3)  // UTF-16 units, as -length counted
     return kZeroHPVector;
-  ::OOPlanetEntity* the_planet = planet();
-  ::OOSunEntity* the_sun = sun();
+  ::oo::PlanetEntity* the_planet = planet();
+  ::oo::SunEntity* the_sun = sun();
   if (the_planet == nullptr || the_sun == nullptr || l_sys == "abs") {
     if (my_scalar) *my_scalar = 1.0;
     return pos;
@@ -2810,8 +2815,8 @@ HPVector Universe::legacyPositionFrom(HPVector pos, const std::string& system) {
   const std::string l_sys = oo::str::lowercase(system);
   if (oo::str::length(l_sys) != 3)  // UTF-16 units, as -length counted
     return kZeroHPVector;
-  ::OOPlanetEntity* the_planet = planet();
-  ::OOSunEntity* the_sun = sun();
+  ::oo::PlanetEntity* the_planet = planet();
+  ::oo::SunEntity* the_sun = sun();
   if (the_planet == nullptr || the_sun == nullptr || l_sys == "abs") {
     return pos;
   }
@@ -3469,23 +3474,23 @@ std::vector<oo::EntityHold> Universe::addShipsToRoute(const std::string& route,
     entity = planet();
     if (entity == nullptr) return {};
     point1 = entity->getPosition();
-    radius = OOStellarBodyRadius(entity);
+    radius = oo::StellarBodyRadius(entity);
   } else if (route == "ws" || route == "sw") {
     point0 = getWitchspaceExitPosition();
     entity = sun();
     if (entity == nullptr) return {};
     point1 = entity->getPosition();
-    radius = OOStellarBodyRadius(entity);
+    radius = oo::StellarBodyRadius(entity);
   } else if (route == "sp" || route == "ps") {
     entity = sun();
     if (entity == nullptr) return {};
     point0 = entity->getPosition();
-    double radius0 = OOStellarBodyRadius(entity);
+    double radius0 = oo::StellarBodyRadius(entity);
 
     entity = planet();
     if (entity == nullptr) return {};
     point1 = entity->getPosition();
-    radius = OOStellarBodyRadius(entity);
+    radius = oo::StellarBodyRadius(entity);
 
     // shorten the route by scanner range & sun radius, otherwise ships could be
     // created inside it.
@@ -3569,9 +3574,9 @@ void Universe::addWitchspaceJumpEffectForShip(::ShipEntity* ship) {
           oo::EntityStatus::kEnteringWitchspace &&
       (PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) !=
           oo::EntityStatus::kExitingWitchspace) {
-    addEntity(oo::MadeEntity(OORingEffectEntity::ringFromEntity(ship)));
+    addEntity(oo::MadeEntity(oo::RingEffectEntity::ringFromEntity(ship)));
     addEntity(
-        oo::MadeEntity(OORingEffectEntity::shrinkingRingFromEntity(ship)));
+        oo::MadeEntity(oo::RingEffectEntity::shrinkingRingFromEntity(ship)));
   }
 }
 
@@ -3592,7 +3597,7 @@ GLfloat Universe::safeWitchspaceExitDistance() {
 
 void Universe::setUpBreakPattern(HPVector pos, Quaternion q, bool forDocking) {
   int i;
-  std::shared_ptr<OOBreakPatternEntity> ring;
+  std::shared_ptr<oo::BreakPatternEntity> ring;
   oo::PList colorDesc;
   std::shared_ptr<OOColor> color;
 
@@ -3636,7 +3641,7 @@ void Universe::setUpBreakPattern(HPVector pos, Quaternion q, bool forDocking) {
                   oo::DescriptionOf(colorDesc));
   }
 
-  unsigned sides = kOOBreakPatternMaxSides;
+  unsigned sides = oo::kBreakPatternMaxSides;
   GLfloat startAngle = 0;
   GLfloat aspectRatio = 1;
 
@@ -3654,8 +3659,8 @@ void Universe::setUpBreakPattern(HPVector pos, Quaternion q, bool forDocking) {
   }
 
   for (i = 1; i < 11; i++) {
-    ring = OOBreakPatternEntity::breakPatternWithPolygonSides(sides, startAngle,
-                                                              aspectRatio);
+    ring = oo::BreakPatternEntity::breakPatternWithPolygonSides(
+        sides, startAngle, aspectRatio);
     if (!forDocking) {
       ring->setInnerColor(col1.get(), col2.get());
     }
@@ -4147,17 +4152,17 @@ void Universe::selectIntro2Next() {
       IsFriendlyStationPredicate, static_cast<Entity*>(ship)));
 }
 
-::OOPlanetEntity* Universe::planet() {
+::oo::PlanetEntity* Universe::planet() {
   if (cachedPlanet == nullptr && allPlanets.size() > 0) {
-    cachedPlanet = static_cast<::OOPlanetEntity*>(
+    cachedPlanet = static_cast<::oo::PlanetEntity*>(
         allPlanets[0].get());  // the list holds only planets
   }
   return cachedPlanet;
 }
 
-::OOSunEntity* Universe::sun() {
+::oo::SunEntity* Universe::sun() {
   if (cachedSun == nullptr) {
-    cachedSun = static_cast<OOSunEntity*>(
+    cachedSun = static_cast<oo::SunEntity*>(
         findOneEntityMatchingPredicate(IsSunPredicate, nullptr));  // -isSun
   }
   return cachedSun;
@@ -4287,8 +4292,8 @@ void Universe::defineWaypoint(const oo::PList& definition,
     waypoints.erase(key);
   }
   if (!definition.isNull()) {
-    waypoint =
-        oo::MadeEntity(::OOWaypointEntity::waypointWithDictionary(definition));
+    waypoint = oo::MadeEntity(
+        ::oo::WaypointEntity::waypointWithDictionary(definition));
     if (waypoint != nullptr) {
       addEntity(waypoint);
       waypoints[key] = oo::Hold(waypoint);
@@ -4939,7 +4944,7 @@ oo::PList Universe::gameSettings() {
   oo::PList::Dict result;
 
   result["speechOn"] = oo::PList::signedInteger(oo::ToUnderlying(
-      PLAYER != nullptr ? PLAYER->getIsSpeechOn() : OOSpeechSettings{}));
+      PLAYER != nullptr ? PLAYER->getIsSpeechOn() : oo::SpeechSettings{}));
   result["autosave"] = oo::PList(autoSave);
   result["wireframeGraphics"] = oo::PList(wireframeGraphics);
   result["procedurallyTexturedPlanets"] =
@@ -6434,8 +6439,8 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
     const oo::PList settings =
         (UNIVERSE != nullptr ? UNIVERSE->explosionSetting(std::string(key))
                              : oo::PList());
-    std::shared_ptr<::OOExplosionCloudEntity> burst =
-        ::OOExplosionCloudEntity::explosionCloudFromEntity(target, settings);
+    std::shared_ptr<::oo::ExplosionCloudEntity> burst =
+        ::oo::ExplosionCloudEntity::explosionCloudFromEntity(target, settings);
     if (burst != nullptr) burst->setPosition(pos);
     addEntity(oo::MadeEntity(burst));
     if ((target != nullptr ? target->getEnergy() : 0.0f) * randf() < damage) {
@@ -6452,7 +6457,7 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
       }
     }
   } else {
-    addEntity(oo::MadeEntity(::OOFlashEffectEntity::laserFlashWithPosition(
+    addEntity(oo::MadeEntity(::oo::FlashEffectEntity::laserFlashWithPosition(
         pos, (target != nullptr ? target->getVelocity() : Vector{}), color)));
   }
 }
@@ -7255,8 +7260,8 @@ void Universe::speakWithSubstitutions(const std::optional<std::string>& text) {
   // speech synthesis
 
   ::PlayerEntity* player = PLAYER;
-  if ((player != nullptr ? player->getIsSpeechOn() : OOSpeechSettings{}) >
-      OOSpeechSettings::kOff) {
+  if ((player != nullptr ? player->getIsSpeechOn() : oo::SpeechSettings{}) >
+      oo::SpeechSettings::kOff) {
     std::optional<std::string> systemSaid;
     std::optional<std::string> h_systemSaid;
 
@@ -7311,8 +7316,8 @@ void Universe::addMessage(const std::optional<std::string>& text,
                           OOTimeDelta count, bool forceDisplay) {
   if (!SameMessage(currentMessage, text) || forceDisplay ||
       universal_time >= messageRepeatTime) {
-    if ((PLAYER != nullptr ? PLAYER->getIsSpeechOn() : OOSpeechSettings{}) ==
-        OOSpeechSettings::kAll) {
+    if ((PLAYER != nullptr ? PLAYER->getIsSpeechOn() : oo::SpeechSettings{}) ==
+        oo::SpeechSettings::kAll) {
       speakWithSubstitutions(text);
     }
 
@@ -7348,8 +7353,9 @@ void Universe::addCommsMessage(const std::optional<std::string>& text,
     ::PlayerEntity* player = PLAYER;
 
     if (!logOnly) {
-      if ((player != nullptr ? player->getIsSpeechOn() : OOSpeechSettings{}) >=
-          OOSpeechSettings::kComms) {
+      if ((player != nullptr
+               ? player->getIsSpeechOn()
+               : oo::SpeechSettings{}) >= oo::SpeechSettings::kComms) {
         // EMMSTRAN: should say "Incoming message from ..." when prefixed with
         // sender name.
         const std::string format =
@@ -8513,7 +8519,7 @@ void Universe::setSystemDataForGalaxy(
                    ? systemManager->getPropertiesForCurrentSystem()
                    : oo::PList());
 
-    ::OOSunEntity* the_sun = sun();
+    ::oo::SunEntity* the_sun = sun();
     /* KEY_ECONOMY used to be here, but resetting the main station
      * market while the player is in the system is likely to cause
      * more trouble than it's worth. Let them leave and come back
@@ -9514,9 +9520,9 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
                                       kOOValidWeaponFacings) &
           kOOValidWeaponFacings;
 
-      OOWeaponType fwdWeapon = OOWeaponTypeFromEquipmentIdentifierSloppy(
+      oo::WeaponType fwdWeapon = oo::WeaponTypeFromEquipmentIdentifierSloppy(
           fwdWeaponString.value_or(""));
-      OOWeaponType aftWeapon = OOWeaponTypeFromEquipmentIdentifierSloppy(
+      oo::WeaponType aftWeapon = oo::WeaponTypeFromEquipmentIdentifierSloppy(
           aftWeaponString.value_or(""));
       // port and starboard weapons are not modified in the shipyard
       //  apply fwd and aft weapons to the ship
@@ -9683,8 +9689,8 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
           }
 
           if (oo::str::hasPrefix(*equipmentKey, "EQ_WEAPON")) {
-            OOWeaponType new_weapon =
-                OOWeaponTypeFromEquipmentIdentifierSloppy(*equipmentKey);
+            oo::WeaponType new_weapon =
+                oo::WeaponTypeFromEquipmentIdentifierSloppy(*equipmentKey);
             // fit best weapon forward
             if (OOWeaponFacingIsIn(availableFacings,
                                    OOWeaponFacing::kForward) &&
@@ -9888,17 +9894,17 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
 
   OOCreditsQuantity scrap_value = 351;  // translates to 250 cr.
 
-  auto weaponTypeForKey = [&dict](std::string_view key) -> OOWeaponType {
+  auto weaponTypeForKey = [&dict](std::string_view key) -> oo::WeaponType {
     // nil for a missing key
     const std::optional<std::string> identifier = OptionalStringIn(dict, key);
     return identifier.has_value()
                ? OOEquipmentType::equipmentTypeWithIdentifier(*identifier).get()
                : nullptr;
   };
-  OOWeaponType ship_fwd_weapon = weaponTypeForKey("forward_weapon");
-  OOWeaponType ship_aft_weapon = weaponTypeForKey("aft_weapon");
-  OOWeaponType ship_port_weapon = weaponTypeForKey("port_weapon");
-  OOWeaponType ship_starboard_weapon = weaponTypeForKey("starboard_weapon");
+  oo::WeaponType ship_fwd_weapon = weaponTypeForKey("forward_weapon");
+  oo::WeaponType ship_aft_weapon = weaponTypeForKey("aft_weapon");
+  oo::WeaponType ship_port_weapon = weaponTypeForKey("port_weapon");
+  oo::WeaponType ship_starboard_weapon = weaponTypeForKey("starboard_weapon");
   unsigned ship_missiles = dict.get<unsigned int>("missiles");
   unsigned ship_max_passengers = dict.get<unsigned int>("max_passengers");
   std::vector<std::string> ship_extra_equipment;
@@ -9976,7 +9982,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
   // work out weapon values
   if (ship_fwd_weapon) {
     weapon_key =
-        OOEquipmentIdentifierFromWeaponType(ship_fwd_weapon).value_or("");
+        oo::EquipmentIdentifierFromWeaponType(ship_fwd_weapon).value_or("");
     ship_main_weapons_value =
         (UNIVERSE != nullptr ? UNIVERSE->getEquipmentPriceForKey(weapon_key)
                              : 0) /
@@ -9984,7 +9990,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
   }
   if (ship_aft_weapon) {
     weapon_key =
-        OOEquipmentIdentifierFromWeaponType(ship_aft_weapon).value_or("");
+        oo::EquipmentIdentifierFromWeaponType(ship_aft_weapon).value_or("");
     if (base_weapon_key.has_value()) {
       // aft weapon was defined as a base weapon
       ship_main_weapons_value +=
@@ -10000,15 +10006,15 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
   }
   if (ship_port_weapon) {
     weapon_key =
-        OOEquipmentIdentifierFromWeaponType(ship_port_weapon).value_or("");
+        oo::EquipmentIdentifierFromWeaponType(ship_port_weapon).value_or("");
     ship_other_weapons_value +=
         (UNIVERSE != nullptr ? UNIVERSE->getEquipmentPriceForKey(weapon_key)
                              : 0) /
         10;
   }
   if (ship_starboard_weapon) {
-    weapon_key =
-        OOEquipmentIdentifierFromWeaponType(ship_starboard_weapon).value_or("");
+    weapon_key = oo::EquipmentIdentifierFromWeaponType(ship_starboard_weapon)
+                     .value_or("");
     ship_other_weapons_value +=
         (UNIVERSE != nullptr ? UNIVERSE->getEquipmentPriceForKey(weapon_key)
                              : 0) /
@@ -10221,7 +10227,7 @@ HPVector Universe::getSunSkimStartPositionForShip(::ShipEntity* ship) {
            "***** No ship set in Universe getSunSkimStartPositionForShip:");
     return kZeroHPVector;
   }
-  ::OOSunEntity* the_sun = sun();
+  ::oo::SunEntity* the_sun = sun();
   // get vector from sun position to ship
   if (!the_sun) {
     OO_LOG(kOOLogInconsistentState, "{}",
@@ -10252,7 +10258,7 @@ HPVector Universe::getSunSkimStartPositionForShip(::ShipEntity* ship) {
 
 // FIXME: should use vector functions
 HPVector Universe::getSunSkimEndPositionForShip(::ShipEntity* ship) {
-  ::OOSunEntity* the_sun = sun();
+  ::oo::SunEntity* the_sun = sun();
   if (!ship) {
     OO_LOG(kOOLogParameterError, "{}",
            "***** No ship set in Universe getSunSkimEndPositionForShip:");
@@ -10961,7 +10967,7 @@ bool Universe::doRemoveEntity(Entity* entity) {
   // remove from the definitive list
   if (oo::FindHold(entities, entity) != entities.end()) {
     // FIXME: better approach needed for core break patterns - CIM
-    if (dynamic_cast<OOBreakPatternEntity*>(entity) != nullptr) {
+    if (dynamic_cast<oo::BreakPatternEntity*>(entity) != nullptr) {
       breakPatternCounter--;
     }
 

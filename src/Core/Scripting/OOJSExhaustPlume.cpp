@@ -27,7 +27,7 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
-#include "OOExhaustPlumeEntity.h"
+#include "ExhaustPlumeEntity.h"
 #include "OOJSEntity.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
@@ -36,7 +36,7 @@ MA 02110-1301, USA.
 static JSClassID sExhaustPlumeClassID;
 
 static bool JSExhaustPlumeGetExhaustPlumeEntity(
-    JSContext* context, JSValueConst jsobj, OOExhaustPlumeEntity** outEntity);
+    JSContext* context, JSValueConst jsobj, oo::ExhaustPlumeEntity** outEntity);
 
 static JSValue ExhaustPlumeGetProperty(OOJS_GETTER_ARGS);
 static JSValue ExhaustPlumeSetProperty(OOJS_SETTER_ARGS);
@@ -88,7 +88,8 @@ void InitOOJSExhaustPlume(JSContext* context, JSValueConst global) {
 JSClassID JSExhaustPlumeClassID() { return sExhaustPlumeClassID; }
 
 static bool JSExhaustPlumeGetExhaustPlumeEntity(
-    JSContext* context, JSValueConst jsobj, OOExhaustPlumeEntity** outEntity) {
+    JSContext* context, JSValueConst jsobj,
+    oo::ExhaustPlumeEntity** outEntity) {
   OOJS_PROFILE_SCOPE();
 
   bool result;
@@ -101,7 +102,8 @@ static bool JSExhaustPlumeGetExhaustPlumeEntity(
   if (!result) return false;
 
   // A plume is the C++ OOExhaustPlumeEntity.
-  OOExhaustPlumeEntity* exhaust = dynamic_cast<OOExhaustPlumeEntity*>(entity);
+  oo::ExhaustPlumeEntity* exhaust =
+      dynamic_cast<oo::ExhaustPlumeEntity*>(entity);
   if (exhaust == nullptr) return false;
 
   *outEntity = exhaust;
@@ -119,7 +121,7 @@ bool OOJSExhaustPlumeIsVisibleToScripts() { return true; }
 static JSValue ExhaustPlumeGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOExhaustPlumeEntity* entity = nullptr;
+  oo::ExhaustPlumeEntity* entity = nullptr;
 
   if (!JSExhaustPlumeGetExhaustPlumeEntity(context, thisObj, &entity))
     return OOJSNativeFailure(context);
@@ -147,7 +149,7 @@ static JSValue ExhaustPlumeGetProperty(OOJS_GETTER_ARGS) {
 static JSValue ExhaustPlumeSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOExhaustPlumeEntity* entity = nullptr;
+  oo::ExhaustPlumeEntity* entity = nullptr;
   Vector vValue;
 
   if (!JSExhaustPlumeGetExhaustPlumeEntity(context, thisObj, &entity))
@@ -193,7 +195,7 @@ static JSValue ExhaustPlumeRemove(JSContext* context, JSValueConst oojsThis,
                                   int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
-  OOExhaustPlumeEntity* thisEnt = nullptr;
+  oo::ExhaustPlumeEntity* thisEnt = nullptr;
   GET_THIS_EXHAUSTPLUME(thisEnt);
 
   ShipEntity* parent = oo::ToShip(thisEnt->owner());  // the C++ member

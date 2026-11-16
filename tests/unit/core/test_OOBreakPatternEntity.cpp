@@ -16,7 +16,7 @@
 
 #include <cmath>
 
-#include "OOBreakPatternEntity.h"
+#include "BreakPatternEntity.h"
 #include "OOColor.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
@@ -64,18 +64,18 @@ class TestUniverse : public Universe {
 // ---------------------------------------------------
 
 struct OOBreakPatternEntityTestAccess {
-  static std::size_t VertexCount(const std::shared_ptr<OOBreakPatternEntity>& r) {
-    OOBreakPatternEntity* e = r.get();
+  static std::size_t VertexCount(const std::shared_ptr<oo::BreakPatternEntity>& r) {
+    oo::BreakPatternEntity* e = r.get();
     return e->_vertexCount;
   }
-  static Vector VertexPosition(const std::shared_ptr<OOBreakPatternEntity>& r,
+  static Vector VertexPosition(const std::shared_ptr<oo::BreakPatternEntity>& r,
                                std::size_t i) {
-    OOBreakPatternEntity* e = r.get();
+    oo::BreakPatternEntity* e = r.get();
     return e->_vertexPosition[i];
   }
-  static const GLfloat* VertexColor(const std::shared_ptr<OOBreakPatternEntity>& r,
+  static const GLfloat* VertexColor(const std::shared_ptr<oo::BreakPatternEntity>& r,
                                     std::size_t i) {
-    OOBreakPatternEntity* e = r.get();
+    oo::BreakPatternEntity* e = r.get();
     return e->_vertexColor[i];
   }
 };
@@ -100,7 +100,7 @@ void SetUp() {
 
 bool Near(float a, float b) { return fabs(a - b) < 1e-4; }
 
-bool ColorIs(const std::shared_ptr<OOBreakPatternEntity>& e, std::size_t i, GLfloat r,
+bool ColorIs(const std::shared_ptr<oo::BreakPatternEntity>& e, std::size_t i, GLfloat r,
              GLfloat g, GLfloat b, GLfloat a) {
   const GLfloat* c = Access::VertexColor(e, i);
   return c[0] == r && c[1] == g && c[2] == b && c[3] == a;
@@ -111,8 +111,8 @@ bool ColorIs(const std::shared_ptr<OOBreakPatternEntity>& e, std::size_t i, GLfl
 OO_TEST(polygon) {
   {
     SetUp();
-    std::shared_ptr<OOBreakPatternEntity> ring =
-        OOBreakPatternEntity::breakPatternWithPolygonSides(4, 0.0f, 2.0f);
+    std::shared_ptr<oo::BreakPatternEntity> ring =
+        oo::BreakPatternEntity::breakPatternWithPolygonSides(4, 0.0f, 2.0f);
     OO_CHECK(ring != nullptr);
     OO_CHECK(Access::VertexCount(ring) == 10);
 
@@ -130,25 +130,25 @@ OO_TEST(polygon) {
 
     // Sides are clamped to 3...128.
     OO_CHECK(
-        Access::VertexCount(OOBreakPatternEntity::breakPatternWithPolygonSides(
+        Access::VertexCount(oo::BreakPatternEntity::breakPatternWithPolygonSides(
             1, 0.0f, 1.0f)) == 8);
     OO_CHECK(
-        Access::VertexCount(OOBreakPatternEntity::breakPatternWithPolygonSides(
-            1000, 0.0f, 1.0f)) == kOOBreakPatternMaxVertices);
+        Access::VertexCount(oo::BreakPatternEntity::breakPatternWithPolygonSides(
+            1000, 0.0f, 1.0f)) == oo::kBreakPatternMaxVertices);
   }
 }
 
 OO_TEST(flagsAndColors) {
   {
     SetUp();
-    std::shared_ptr<OOBreakPatternEntity> ring =
-        OOBreakPatternEntity::breakPatternWithPolygonSides(3, 45.0f, 1.0f);
+    std::shared_ptr<oo::BreakPatternEntity> ring =
+        oo::BreakPatternEntity::breakPatternWithPolygonSides(3, 45.0f, 1.0f);
     OO_CHECK(ring->status() == oo::EntityStatus::kEffect &&
              ring->scanClass == oo::ScanClass::kNoDraw);
     OO_CHECK(ring->isImmuneToBreakPatternHide && !ring->canCollide());
     std::shared_ptr<Entity> other = oo::makeShared<Entity>();
-    OO_CHECK(dynamic_cast<OOBreakPatternEntity*>(ring.get()) != nullptr &&
-             dynamic_cast<OOBreakPatternEntity*>(other.get()) == nullptr);
+    OO_CHECK(dynamic_cast<oo::BreakPatternEntity*>(ring.get()) != nullptr &&
+             dynamic_cast<oo::BreakPatternEntity*>(other.get()) == nullptr);
 
     // Default: red inside, blue outside.
     OO_CHECK(ColorIs(ring, 0, 1.0f, 0.0f, 0.0f, 0.5f) &&
@@ -171,8 +171,8 @@ OO_TEST(flagsAndColors) {
 OO_TEST(lifetime) {
   {
     SetUp();
-    std::shared_ptr<OOBreakPatternEntity> ring =
-        OOBreakPatternEntity::breakPatternWithPolygonSides(4, 0.0f, 1.0f);
+    std::shared_ptr<oo::BreakPatternEntity> ring =
+        oo::BreakPatternEntity::breakPatternWithPolygonSides(4, 0.0f, 1.0f);
     Entity* facade = oo::MadeEntity(ring);  // what removeEntity: is sent
     ring->setStatus(oo::EntityStatus::kEffect);
     ring->setVelocity(make_vector(0, 0, 10));

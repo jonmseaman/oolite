@@ -22,7 +22,7 @@
 #include "OOColor.h"
 #include "OORoleSet.h"
 #include "OOCharacter.h"
-#include "OOFlasherEntity.h"
+#include "FlasherEntity.h"
 #include "AI.h"
 #include "PlayerEntity.h"
 #include "ShipEntityLoadRestore.h"
@@ -815,7 +815,7 @@ OO_TEST(updateDemoShip)
 
 
 // A flasher whose update() only counts: a subentity that is not a ship.
-class CountingFlasher : public OOFlasherEntity
+class CountingFlasher : public oo::FlasherEntity
 {
 public:
 	int		_updates = 0;
@@ -929,8 +929,8 @@ OO_TEST(weaponMountsAndLists)
 		OO_CHECK((ship != nullptr ? ship->setUpFromDictionary(oo::PList(oo::PList::Dict{ { "weapon_facings", oo::PList(oo::ToUnderlying(OOWeaponFacing::kForward | OOWeaponFacing::kAft)) } })) : false));
 		OO_CHECK((ship != nullptr ? ship->weaponFacings() : OOWeaponFacingSet{}) == oo::ToUnderlying(OOWeaponFacing::kForward | OOWeaponFacing::kAft));
 		// No weapon data is loaded: every mount is empty, and a facing the ship lacks has nothing.
-		OO_CHECK(isWeaponNone((ship != nullptr ? ship->weaponTypeIDForFacing(OOWeaponFacing::kForward, true) : OOWeaponType{})));
-		OO_CHECK((ship != nullptr ? ship->weaponTypeIDForFacing(OOWeaponFacing::kPort, false) : OOWeaponType{}) == nullptr);
+		OO_CHECK(isWeaponNone((ship != nullptr ? ship->weaponTypeIDForFacing(OOWeaponFacing::kForward, true) : oo::WeaponType{})));
+		OO_CHECK((ship != nullptr ? ship->weaponTypeIDForFacing(OOWeaponFacing::kPort, false) : oo::WeaponType{}) == nullptr);
 		OO_CHECK((ship != nullptr ? ship->weaponTypeForFacing(OOWeaponFacing::kStarboard, false) : (OOEquipmentType *)nullptr) == nullptr);
 		OO_CHECK((ship != nullptr ? ship->missilesList() : std::vector<std::shared_ptr<OOEquipmentType>>()).empty());
 		const oo::PList passengers = (ship != nullptr ? ship->passengerListForScripting() : oo::PList());
@@ -3055,11 +3055,11 @@ OO_TEST(slice34AlertConditionAndEvents)
 		SetUp();
 		TestShip *ship = MakeLateSliceShip("alert");
 		SetEnergy31(ship, 100, 100);
-		OO_CHECK((ship != nullptr ? ship->alertCondition() : OOAlertCondition{}) == OOAlertCondition::kYellow);		// NPCs are never green
+		OO_CHECK((ship != nullptr ? ship->alertCondition() : oo::AlertCondition{}) == oo::AlertCondition::kYellow);		// NPCs are never green
 		SetEnergy31(ship, 20, 100);
-		OO_CHECK((ship != nullptr ? ship->alertCondition() : OOAlertCondition{}) == OOAlertCondition::kRed);		// low on energy
+		OO_CHECK((ship != nullptr ? ship->alertCondition() : oo::AlertCondition{}) == oo::AlertCondition::kRed);		// low on energy
 		if (ship != nullptr)  ship->setStatus(oo::EntityStatus::kDocked);
-		OO_CHECK((ship != nullptr ? ship->alertCondition() : OOAlertCondition{}) == OOAlertCondition::kDocked);
+		OO_CHECK((ship != nullptr ? ship->alertCondition() : oo::AlertCondition{}) == oo::AlertCondition::kDocked);
 		if (ship != nullptr)  ship->setStatus(oo::EntityStatus::kInFlight);
 
 		// The ship is its own shader entity when it is not a subentity.
@@ -3121,7 +3121,7 @@ OO_TEST(loadRestoreFromNothing)
 		// Null restores no ship, with or without fallback and a context, as nil did.
 		OO_CHECK(ShipEntity::shipRestoredFromDictionary(oo::PList(), false, nullptr) == nullptr);
 		OO_CHECK(ShipEntity::shipRestoredFromDictionary(oo::PList(), true, nullptr) == nullptr);
-		OOShipSaveContext context;
+		oo::ShipSaveContext context;
 		OO_CHECK(ShipEntity::shipRestoredFromDictionary(oo::PList(), true, &context) == nullptr);
 		OO_CHECK(context.nextGroupID == 0 && context.groups.empty() && context.groupsByID.empty());
 	}

@@ -41,7 +41,12 @@ inline constexpr int COLLISION_MAX_ENTITIES = 128;
 inline constexpr double MINIMUM_SHADOWING_ENTITY_RADIUS = 75.0;
 
 class Entity;
-class OOSunEntity;
+
+namespace oo {
+
+class SunEntity;
+
+}  // namespace oo
 
 class CollisionRegion : public oo::Object {
  public:
@@ -117,4 +122,4 @@ struct Occlusion {
 /* Given a region centred at e1pos with a radius of e1rad, the occlusion of
  * the_sun by e2. */
 Occlusion shadowAtPointOcclusion(HPVector e1pos, GLfloat e1rad, Entity* e2,
-                                 OOSunEntity* the_sun);
+                                 oo::SunEntity* the_sun);

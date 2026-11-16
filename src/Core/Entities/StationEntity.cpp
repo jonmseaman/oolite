@@ -47,11 +47,11 @@
 #include "OOJSStation.h"
 #include "OOLegacyScriptWhitelist.h"
 #include "OOPListGameTypes.h"
-#include "OOPlanetEntity.h"
-#include "OOQuiriumCascadeEntity.h"
 #include "OOShipGroup.h"
 #include "OOStringParsing.h"
+#include "PlanetEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
+#include "QuiriumCascadeEntity.h"
 #include "ShipEntityAI.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -73,7 +73,9 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value) {
 
 }  // namespace
 
-oo::PList OOMakeDockingInstructions(
+namespace oo {
+
+oo::PList MakeDockingInstructions(
     StationEntity* station, HPVector coords, float speed, float range,
     const std::optional<std::string>& ai_message,
     const std::optional<std::string>& comms_message, bool match_rotation,
@@ -99,6 +101,8 @@ oo::PList OOMakeDockingInstructions(
   }
   return oo::PList(std::move(acc));
 }
+
+}  // namespace oo
 
 // NPC launchers. Several are called by name for a station's part.
 
@@ -951,7 +955,7 @@ void StationEntity::setInterfaceDefinition(
   return localMarket.get();
 }
 
-void StationEntity::setPlanet(::OOPlanetEntity* planet_entity) {
+void StationEntity::setPlanet(::oo::PlanetEntity* planet_entity) {
   if (planet_entity)
     planet = (planet_entity != nullptr ? planet_entity->getUniversalID()
                                        : OOUniversalID{});
@@ -959,9 +963,9 @@ void StationEntity::setPlanet(::OOPlanetEntity* planet_entity) {
     planet = NO_TARGET;
 }
 
-::OOPlanetEntity* StationEntity::getPlanet() {
+::oo::PlanetEntity* StationEntity::getPlanet() {
   // Null for any other entity (and for none, as nil).
-  return dynamic_cast<::OOPlanetEntity*>(
+  return dynamic_cast<::oo::PlanetEntity*>(
       (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(planet) : nullptr));
 }
 
@@ -996,7 +1000,7 @@ bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
 
   isShip = true;
   isStation = true;
-  alertLevel = OOStationAlertLevel::kGreen;
+  alertLevel = oo::StationAlertLevel::kGreen;
 
   port_radius = dict.get<oo::NonNegative<double>>("port_radius", 500.0);
 
@@ -1311,15 +1315,15 @@ void StationEntity::dumpSelfState() {
   ShipEntity::dumpSelfState();
 
   switch (alertLevel) {
-    case OOStationAlertLevel::kGreen:
+    case oo::StationAlertLevel::kGreen:
       alertString = "green";
       break;
 
-    case OOStationAlertLevel::kYellow:
+    case oo::StationAlertLevel::kYellow:
       alertString = "yellow";
       break;
 
-    case OOStationAlertLevel::kRed:
+    case oo::StationAlertLevel::kRed:
       alertString = "red";
       break;
   }
@@ -1526,7 +1530,7 @@ oo::PList StationEntity::dockingInstructionsForShip(::ShipEntity* ship) {
       (ship != nullptr ? ship->legalStatus() : int{}) > 50) {
     // note: non-player fugitives dock as normal
     // refuse docking to the fugitive player
-    return OOMakeDockingInstructions(
+    return oo::MakeDockingInstructions(
         this, (ship != nullptr ? ship->getPosition() : HPVector{}), 0, 100,
         "DOCKING_REFUSED", "[station-docking-refused-to-fugitive]", false, -1);
   }
@@ -1614,7 +1618,7 @@ oo::PList StationEntity::dockingInstructionsForShip(::ShipEntity* ship) {
       docking = "TRY_AGAIN_LATER";
     }
     // no docks accept this ship (or the player is blocking them)
-    return OOMakeDockingInstructions(
+    return oo::MakeDockingInstructions(
         this, (ship != nullptr ? ship->getPosition() : HPVector{}), 200, 100,
         docking, std::nullopt, false, -1);
   }
@@ -1644,7 +1648,7 @@ oo::PList StationEntity::holdPositionInstructionForShip(::ShipEntity* ship) {
     _shipsOnHold.add(ship);
   }
 
-  return OOMakeDockingInstructions(
+  return oo::MakeDockingInstructions(
       this, (ship != nullptr ? ship->getPosition() : HPVector{}), 0, 100,
       "HOLD_POSITION", std::nullopt, false, -1);
 }
@@ -2116,8 +2120,8 @@ bool StationEntity::collideWithShip(::ShipEntity* other) {
 bool StationEntity::hasHostileTarget() {
   return ShipEntity::hasHostileTarget() ||
          (primaryTarget() != nullptr &&
-          ((alertLevel == OOStationAlertLevel::kYellow) ||
-           (alertLevel == OOStationAlertLevel::kRed)));
+          ((alertLevel == oo::StationAlertLevel::kYellow) ||
+           (alertLevel == oo::StationAlertLevel::kRed)));
 }
 
 void StationEntity::takeEnergyDamage(double amount, Entity* entPart,
@@ -2143,7 +2147,7 @@ void StationEntity::takeEnergyDamage(double amount, Entity* entPart,
   if (this == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr) &&
       !isFriend) {
     //...get angry
-    bool isEnergyMine = OOEntityIsCascadeWeapon(entPart);
+    bool isEnergyMine = oo::EntityIsCascadeWeapon(entPart);
 
     // JSAIs might ignore friendly fire from conventional weapons
     if (hasNewAI() || isEnergyMine) {
@@ -2203,16 +2207,17 @@ void StationEntity::setAllegiance(
   allegiance = newAllegiance;
 }
 
-OOStationAlertLevel StationEntity::getAlertLevel() { return alertLevel; }
+oo::StationAlertLevel StationEntity::getAlertLevel() { return alertLevel; }
 
-void StationEntity::setAlertLevel(OOStationAlertLevel level,
+void StationEntity::setAlertLevel(oo::StationAlertLevel level,
                                   bool signallingScript) {
   ShipEntity* self = this;
-  if (level < OOStationAlertLevel::kGreen) level = OOStationAlertLevel::kGreen;
-  if (level > OOStationAlertLevel::kRed) level = OOStationAlertLevel::kRed;
+  if (level < oo::StationAlertLevel::kGreen)
+    level = oo::StationAlertLevel::kGreen;
+  if (level > oo::StationAlertLevel::kRed) level = oo::StationAlertLevel::kRed;
 
   if (alertLevel != level) {
-    OOStationAlertLevel oldLevel = alertLevel;
+    oo::StationAlertLevel oldLevel = alertLevel;
     alertLevel = level;
     if (signallingScript) {
       self->doScriptEvent(
@@ -2221,17 +2226,17 @@ void StationEntity::setAlertLevel(OOStationAlertLevel level,
                                  oo::PList(static_cast<int>(oldLevel))});
     }
     switch (level) {
-      case OOStationAlertLevel::kGreen:
+      case oo::StationAlertLevel::kGreen:
         if (shipAI != nullptr)
           shipAI->reactToMessage("GREEN_ALERT", std::nullopt);
         break;
 
-      case OOStationAlertLevel::kYellow:
+      case oo::StationAlertLevel::kYellow:
         if (shipAI != nullptr)
           shipAI->reactToMessage("YELLOW_ALERT", std::nullopt);
         break;
 
-      case OOStationAlertLevel::kRed:
+      case oo::StationAlertLevel::kRed:
         if (shipAI != nullptr)
           shipAI->reactToMessage("RED_ALERT", std::nullopt);
         break;
@@ -2244,14 +2249,14 @@ void StationEntity::setAlertLevel(OOStationAlertLevel level,
 // Exposed to AI
 void StationEntity::increaseAlertLevel() {
   setAlertLevel(
-      static_cast<OOStationAlertLevel>(oo::ToUnderlying(getAlertLevel()) + 1),
+      static_cast<oo::StationAlertLevel>(oo::ToUnderlying(getAlertLevel()) + 1),
       true);
 }
 
 // Exposed to AI
 void StationEntity::decreaseAlertLevel() {
   setAlertLevel(
-      static_cast<OOStationAlertLevel>(oo::ToUnderlying(getAlertLevel()) - 1),
+      static_cast<oo::StationAlertLevel>(oo::ToUnderlying(getAlertLevel()) - 1),
       true);
 }
 

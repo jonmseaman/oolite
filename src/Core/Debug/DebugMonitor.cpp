@@ -396,8 +396,8 @@ void oo::DebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
       oo::EntityObjectSize(entity);  // its object's size, as the root's debug
                                      // size method answered it
   size_t drawableSize = 0;
-  OOEntityWithDrawable* withDrawable =
-      dynamic_cast<OOEntityWithDrawable*>(entity);
+  oo::EntityWithDrawable* withDrawable =
+      dynamic_cast<oo::EntityWithDrawable*>(entity);
   if (withDrawable != nullptr) {
     OODrawable* drawable = withDrawable->getDrawable();
     drawableSize = (drawable != nullptr) ? drawable->totalSize() : 0;

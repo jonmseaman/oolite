@@ -28,7 +28,7 @@
 #include "EntityManualRefs.h"  // the tests' manual entity references
 #include "OOJSShipGroup.h"
 #include "OOShipGroup.h"
-#include "OOWaypointEntity.h"
+#include "WaypointEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -55,12 +55,12 @@ std::vector<std::string> sLog;  // what the recording waypoint saw, in order
 }  // namespace
 
 // A waypoint that logs its removal and its destruction.
-class RecordingWaypoint : public OOWaypointEntity {
+class RecordingWaypoint : public oo::WaypointEntity {
  public:
   ~RecordingWaypoint() override { sLog.push_back("destroyed"); }
   void wasRemovedFromUniverse() override {
     sLog.push_back("removed");
-    OOWaypointEntity::wasRemovedFromUniverse();
+    oo::WaypointEntity::wasRemovedFromUniverse();
   }
 };
 

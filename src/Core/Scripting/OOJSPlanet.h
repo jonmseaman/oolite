@@ -34,7 +34,11 @@ MA 02110-1301, USA.
 
 #include "OOFoundation.h"
 
-class OOPlanetEntity;
+namespace oo {
+
+class PlanetEntity;
+
+}  // namespace oo
 
 void InitOOJSPlanet(JSContext* context, JSValueConst global);
 
@@ -44,5 +48,5 @@ JSClassID JSPlanetClassID();
    reaches through the root Entity's virtual members: the C++ planet's overrides
    call these. Its JS class is JSPlanetClassID().
 */
-bool OOJSPlanetIsVisibleToScripts(OOPlanetEntity* planet);
-std::optional<std::string> OOJSPlanetJSClassName(OOPlanetEntity* planet);
+bool OOJSPlanetIsVisibleToScripts(oo::PlanetEntity* planet);
+std::optional<std::string> OOJSPlanetJSClassName(oo::PlanetEntity* planet);

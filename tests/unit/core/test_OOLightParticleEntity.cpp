@@ -21,7 +21,7 @@
 #include <cmath>
 
 #include "OOColor.h"
-#include "OOLightParticleEntity.h"
+#include "LightParticleEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -60,7 +60,7 @@ class TestUniverse : public Universe {
 
 // A subclass, as OOFlashEffectEntity is: counts its draws and answers its own
 // texture. (Global, so its description names it.)
-class TestParticle : public OOLightParticleEntity {
+class TestParticle : public oo::LightParticleEntity {
  public:
   int _draws = 0;
   OOTexture* _texture = nullptr;
@@ -79,7 +79,7 @@ namespace {
 // --- Ivars the game reads directly, and nothing else
 // ------------------------------------------------
 
-const GLfloat* ColorComponents(OOLightParticleEntity* e) {
+const GLfloat* ColorComponents(oo::LightParticleEntity* e) {
   return e->_colorComponents;
 }
 GLfloat NoDrawDistance(Entity* e) { return e->no_draw_distance; }
@@ -101,7 +101,7 @@ void SetUp() {
   gOOPlayer = player;
 }
 
-bool ComponentsAre(OOLightParticleEntity* e, GLfloat r, GLfloat g, GLfloat b,
+bool ComponentsAre(oo::LightParticleEntity* e, GLfloat r, GLfloat g, GLfloat b,
                    GLfloat a) {
   const GLfloat* c = ColorComponents(e);
   return c[0] == r && c[1] == g && c[2] == b && c[3] == a;
@@ -127,10 +127,10 @@ OO_TEST(initWithDiameter) {
   {
     SetUp();
     Entity* object = nullptr;
-    OOLightParticleEntity* particle =
-        NewParticle<OOLightParticleEntity>(8.0f, &object);
+    oo::LightParticleEntity* particle =
+        NewParticle<oo::LightParticleEntity>(8.0f, &object);
     OO_CHECK(particle != nullptr &&
-             typeid(*particle) == typeid(OOLightParticleEntity));
+             typeid(*particle) == typeid(oo::LightParticleEntity));
     OO_CHECK(particle->diameter() == 8.0f);
     OO_CHECK(object->getScanClass() == oo::ScanClass::kNoDraw &&
              object->status() == oo::EntityStatus::kEffect);
@@ -156,7 +156,7 @@ OO_TEST(initWithDiameter) {
 OO_TEST(colorAndDiameter) {
   {
     SetUp();
-    OOLightParticleEntity* particle = NewParticle<OOLightParticleEntity>(1.0f);
+    oo::LightParticleEntity* particle = NewParticle<oo::LightParticleEntity>(1.0f);
     particle->setColor(OOColor::colorWithRed(0.25f, 0.5f, 0.75f, 0.5f).get());
     OO_CHECK(ComponentsAre(particle, 0.25f, 0.5f, 0.75f, 0.5f));
     particle->setColor(OOColor::colorWithRed(1.0f, 0.0f, 0.5f, 1.0f).get(),
@@ -204,7 +204,7 @@ OO_TEST(drawSubEntity) {
     // The base's own draw does nothing in the opaque pass, or beyond the draw
     // distance.
     Entity* plain = nullptr;
-    (void)NewParticle<OOLightParticleEntity>(1.0f, &plain);
+    (void)NewParticle<oo::LightParticleEntity>(1.0f, &plain);
     plain->drawImmediate(false, false);
     SetCamZeroDistance(plain, NoDrawDistance(plain));
     plain->drawImmediate(false, true);
@@ -241,7 +241,7 @@ OO_TEST(description) {
 // --- A C++ subclass -----
 
 // A converted subclass, as OOSparkEntity is.
-class TestCxxParticle : public OOLightParticleEntity {};
+class TestCxxParticle : public oo::LightParticleEntity {};
 
 OO_TEST(cxxSubclassFacade) {
   {

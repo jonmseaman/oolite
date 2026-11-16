@@ -43,7 +43,7 @@ struct PlayerEntityTestAccess {
   static std::optional<std::string>& save_path(PlayerEntity* player) {
     return player->save_path;
   }
-  static OOAlertCondition& lastScriptAlertCondition(PlayerEntity* player) {
+  static oo::AlertCondition& lastScriptAlertCondition(PlayerEntity* player) {
     return player->lastScriptAlertCondition;
   }
 };
@@ -309,10 +309,10 @@ OO_TEST(playerAlertChangeSendsAlertConditionChanged) {
   {
     SetUp();
     EventPlayer* player = NewTestEntity<EventPlayer>();
-    const OOAlertCondition stale = (OOAlertCondition)99;
+    const oo::AlertCondition stale = (oo::AlertCondition)99;
     PlayerEntityTestAccess::lastScriptAlertCondition(player) = stale;
     player->updateAlertCondition();
-    const OOAlertCondition now =
+    const oo::AlertCondition now =
         PlayerEntityTestAccess::lastScriptAlertCondition(player);
     OO_CHECK(now != stale);
     std::vector<Event> events = EventsNamed(OOJSID("alertConditionChanged"));
@@ -337,21 +337,21 @@ OO_TEST(stationAlertChangeSendsAlertConditionChanged) {
   {
     SetUp();
     EventStation* station = NewTestEntity<EventStation>();
-    station->setAlertLevel(OOStationAlertLevel::kGreen, false);  // no event
+    station->setAlertLevel(oo::StationAlertLevel::kGreen, false);  // no event
     OO_CHECK(sEvents.empty());
-    station->setAlertLevel(OOStationAlertLevel::kRed, true);
+    station->setAlertLevel(oo::StationAlertLevel::kRed, true);
     std::vector<Event> events = EventsNamed(OOJSID("alertConditionChanged"));
     OO_CHECK_EQ(events.size(), (size_t)1);
     if (events.size() == 1 && events[0].arguments.size() == 2) {
       OO_CHECK(events[0].arguments[0] ==
-               oo::PList((int)OOStationAlertLevel::kRed));
+               oo::PList((int)oo::StationAlertLevel::kRed));
       OO_CHECK(events[0].arguments[1] ==
-               oo::PList((int)OOStationAlertLevel::kGreen));
+               oo::PList((int)oo::StationAlertLevel::kGreen));
     } else {
       OO_CHECK(false);  // two arguments, the new and the old level
     }
     // No change, no event.
-    station->setAlertLevel(OOStationAlertLevel::kRed, true);
+    station->setAlertLevel(oo::StationAlertLevel::kRed, true);
     OO_CHECK_EQ(EventsNamed(OOJSID("alertConditionChanged")).size(), (size_t)1);
     oo::ReleaseEntity(station);
   }

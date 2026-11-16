@@ -15,7 +15,7 @@
 #include <cmath>
 
 #include "OOColor.h"
-#include "OOSparkEntity.h"
+#include "SparkEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -64,13 +64,13 @@ namespace {
 
 Entity* MakeSpark(HPVector position, Vector velocity, OOTimeDelta duration,
                   float size, OOColor* color) {
-  return oo::MadeEntity(OOSparkEntity::sparkWithPosition(
+  return oo::MadeEntity(oo::SparkEntity::sparkWithPosition(
       position, velocity, duration, size, color));
 }
 
 // The object is the root Entity; its C++ part is the particle.
-OOLightParticleEntity* Particle(Entity* e) {
-  return static_cast<OOLightParticleEntity*>(e);
+oo::LightParticleEntity* Particle(Entity* e) {
+  return static_cast<oo::LightParticleEntity*>(e);
 }
 const GLfloat* ColorComponents(Entity* e) {
   return Particle(e)->_colorComponents;

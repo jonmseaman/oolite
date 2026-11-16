@@ -41,9 +41,9 @@ MA 02110-1301, USA.
 #include "EntityOOJavaScriptExtensions.h"
 #include "HeadUpDisplay.h"
 #include "OOJSDock.h"
-#include "OOPlanetEntity.h"
 #include "OOShipGroup.h"
 #include "OOStringExpander.h"
+#include "PlanetEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "ShipEntityAI.h"
 #include "StationEntity.h"
@@ -79,9 +79,9 @@ oo::PList DockingInstructions(StationEntity* station, HPVector coords,
                               float speed, float range,
                               std::string_view ai_message, bool match_rotation,
                               int docking_stage) {
-  return OOMakeDockingInstructions(station, coords, speed, range,
-                                   std::string(ai_message), std::nullopt,
-                                   match_rotation, docking_stage);
+  return oo::MakeDockingInstructions(station, coords, speed, range,
+                                     std::string(ai_message), std::nullopt,
+                                     match_rotation, docking_stage);
 }
 
 // -oo_stringForKey:'s value: a string, a number's -stringValue, anything else
@@ -1312,7 +1312,7 @@ bool DockEntity::dockingCorridorIsEmpty() {
     // Ignore cargopods or other small debris.
     if (oo::EntityIsShip(uni_entities[i]) &&
         ((station == nullptr ||
-          station->getAlertLevel() < OOStationAlertLevel::kRed) ||
+          station->getAlertLevel() < oo::StationAlertLevel::kRed) ||
          !oo::EntityIsPlayer(uni_entities[i])) &&
         uni_entities[i]->getMass() > 1000) {
       my_entities[static_cast<std::size_t>(ship_count++)] =

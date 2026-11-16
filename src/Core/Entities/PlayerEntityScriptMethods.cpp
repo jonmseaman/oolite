@@ -88,7 +88,7 @@ double PlayerEntity::creditBalance() {
 }
 
 void PlayerEntity::setCreditBalance(double value) {
-  credits = OODeciCreditsFromDouble(value * 10.0);
+  credits = oo::DeciCreditsFromDouble(value * 10.0);
 }
 
 std::optional<std::string> PlayerEntity::dockedStationName() {
@@ -600,12 +600,16 @@ std::optional<std::string> PlayerEntity::keyCodeDescriptionShort(
   }
 }
 
-Vector OOGalacticCoordinatesFromInternal(NSPoint internalCoordinates) {
+namespace oo {
+
+Vector GalacticCoordinatesFromInternal(NSPoint internalCoordinates) {
   return Vector{static_cast<float>(internalCoordinates.x) * 0.4f,
                 static_cast<float>(internalCoordinates.y) * 0.2f, 0.0f};
 }
 
-NSPoint OOInternalCoordinatesFromGalactic(Vector galacticCoordinates) {
+NSPoint InternalCoordinatesFromGalactic(Vector galacticCoordinates) {
   return NSPoint{static_cast<float>(galacticCoordinates.x) * 2.5f,
                  static_cast<float>(galacticCoordinates.y) * 5.0f};
 }
+
+}  // namespace oo

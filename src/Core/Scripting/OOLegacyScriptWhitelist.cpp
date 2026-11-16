@@ -72,7 +72,7 @@ static oo::PList SanitizeConditionalStatement(const oo::PList& statement,
 static oo::PList SanitizeActionStatement(const std::string& statement,
                                          SanStackElement* stack,
                                          bool allowAIMethods);
-static OOOperationType ClassifyLHSConditionSelector(
+static oo::OperationType ClassifyLHSConditionSelector(
     const std::string& selectorString,
     std::optional<std::string>* outSanitizedMethod);
 static std::optional<std::string> SanitizeQueryMethod(
@@ -201,11 +201,11 @@ static oo::PList SanitizeCondition(const std::string& condition,
                                    SanStackElement* stack) {
   std::vector<std::string> tokens;
   std::size_t i, tokenCount;
-  OOOperationType opType;
+  oo::OperationType opType;
   std::string selectorString;
   std::optional<std::string> sanitizedSelectorString;
   std::string comparatorString;
-  OOComparisonType comparatorValue;
+  oo::ComparisonType comparatorValue;
   oo::PList::Array rhs;
   std::optional<std::string> rhsSelector;
   std::optional<std::string> stringSegment;
@@ -224,7 +224,7 @@ static oo::PList SanitizeCondition(const std::string& condition,
   selectorString = tokens[0];
   opType =
       ClassifyLHSConditionSelector(selectorString, &sanitizedSelectorString);
-  if (opType >= OOOperationType::kInvalid) {
+  if (opType >= oo::OperationType::kInvalid) {
     OO_LOG("script.unpermittedMethod",
            "***** SCRIPT ERROR: in {} (\"{}\"), method \"{}\" not allowed.",
            StringFromStack(stack), condition, selectorString);
@@ -235,18 +235,18 @@ static oo::PList SanitizeCondition(const std::string& condition,
   if (tokenCount > 1) {
     comparatorString = tokens[1];
     if (comparatorString == "equal") {
-      comparatorValue = OOComparisonType::kEqual;
+      comparatorValue = oo::ComparisonType::kEqual;
     } else if (comparatorString == "notequal") {
-      comparatorValue = OOComparisonType::kNotEqual;
+      comparatorValue = oo::ComparisonType::kNotEqual;
     } else if (comparatorString == "lessthan") {
-      comparatorValue = OOComparisonType::kLessThan;
+      comparatorValue = oo::ComparisonType::kLessThan;
     } else if (comparatorString == "greaterthan" ||
                comparatorString == "morethan") {
-      comparatorValue = OOComparisonType::kGreaterThan;
+      comparatorValue = oo::ComparisonType::kGreaterThan;
     } else if (comparatorString == "oneof") {
-      comparatorValue = OOComparisonType::kOneOf;
+      comparatorValue = oo::ComparisonType::kOneOf;
     } else if (comparatorString == "undefined") {
-      comparatorValue = OOComparisonType::kUndefined;
+      comparatorValue = oo::ComparisonType::kUndefined;
     } else {
       OO_LOG("script.debug.syntax.badComparison",
              "***** SCRIPT ERROR: in {} (\"{}\"), unknown comparison operator "
@@ -268,18 +268,18 @@ static oo::PList SanitizeCondition(const std::string& condition,
   }
 
   // Check for invalid opType/comparator combinations.
-  if (opType == OOOperationType::kNumber &&
-      comparatorValue == OOComparisonType::kUndefined) {
+  if (opType == oo::OperationType::kNumber &&
+      comparatorValue == oo::ComparisonType::kUndefined) {
     OO_LOG("script.debug.syntax.invalidOperator",
            "***** SCRIPT ERROR: in {} (\"{}\"), comparison operator \"{}\" is "
            "not valid for {}.",
            StringFromStack(stack), condition, "undefined", "numbers");
     return oo::PList();
-  } else if (opType == OOOperationType::kBool) {
+  } else if (opType == oo::OperationType::kBool) {
     switch (comparatorValue) {
       // Valid comparators
-      case OOComparisonType::kEqual:
-      case OOComparisonType::kNotEqual:
+      case oo::ComparisonType::kEqual:
+      case oo::ComparisonType::kNotEqual:
         break;
 
       default:
@@ -287,7 +287,7 @@ static oo::PList SanitizeCondition(const std::string& condition,
                "***** SCRIPT ERROR: in {} (\"{}\"), comparison operator \"{}\" "
                "is not valid for {}.",
                StringFromStack(stack), condition,
-               OOComparisonTypeToString(comparatorValue), "booleans");
+               oo::ComparisonTypeToString(comparatorValue), "booleans");
         return oo::PList();
     }
   }
@@ -462,7 +462,7 @@ static oo::PList SanitizeActionStatement(const std::string& statement,
 }  // namespace
 
 namespace {
-static OOOperationType ClassifyLHSConditionSelector(
+static oo::OperationType ClassifyLHSConditionSelector(
     const std::string& selectorString,
     std::optional<std::string>* outSanitizedSelector) {
   assert(outSanitizedSelector != nullptr);
@@ -471,30 +471,30 @@ static OOOperationType ClassifyLHSConditionSelector(
 
   // Allow arbitrary mission_foo or local_foo pseudo-selectors.
   if (oo::str::hasPrefix(selectorString, "mission_"))
-    return OOOperationType::kMissionVar;
+    return oo::OperationType::kMissionVar;
   if (oo::str::hasPrefix(selectorString, "local_"))
-    return OOOperationType::kLocalVar;
+    return oo::OperationType::kLocalVar;
 
   // If it's a real method, check against whitelist.
   *outSanitizedSelector = SanitizeQueryMethod(selectorString);
   if (!*outSanitizedSelector) {
-    return OOOperationType::kInvalid;
+    return oo::OperationType::kInvalid;
   }
 
   // If it's a real method, and in the whitelist, classify by suffix.
   if (oo::str::hasSuffix(selectorString, "_string"))
-    return OOOperationType::kString;
+    return oo::OperationType::kString;
   if (oo::str::hasSuffix(selectorString, "_number"))
-    return OOOperationType::kNumber;
+    return oo::OperationType::kNumber;
   if (oo::str::hasSuffix(selectorString, "_bool"))
-    return OOOperationType::kBool;
+    return oo::OperationType::kBool;
 
   // If we got here, something's wrong.
   OO_LOG("script.sanitize.unclassifiedSelector",
          "***** ERROR: Whitelisted query method \"{}\" has no type suffix, "
          "treating as invalid.",
          selectorString);
-  return OOOperationType::kInvalid;
+  return oo::OperationType::kInvalid;
 }
 }  // namespace
 
@@ -629,7 +629,7 @@ static oo::PList AlwaysFalseConditions() {
   if (!alwaysFalse.isNull()) {
     alwaysFalse = oo::PList(
         oo::PList::Array{oo::PList(oo::PList::Array{oo::PList::unsignedInteger(
-            oo::ToUnderlying(OOOperationType::kFalse))})});
+            oo::ToUnderlying(oo::OperationType::kFalse))})});
   }
 
   return alwaysFalse;
@@ -644,7 +644,7 @@ static bool IsAlwaysFalseConditions(const oo::PList& conditions) {
   oo::PList firstCondition =
       (first != nullptr && first->isArray()) ? *first : oo::PList();
   return firstCondition.at<unsigned int>(0) ==
-         oo::ToUnderlying(OOOperationType::kFalse);
+         oo::ToUnderlying(oo::OperationType::kFalse);
 }
 }  // namespace
 

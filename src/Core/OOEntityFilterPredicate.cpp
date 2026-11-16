@@ -32,8 +32,8 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "Entity.h"
-#include "OOPlanetEntity.h"
 #include "OORoleSet.h"
+#include "PlanetEntity.h"
 #include "ShipEntity.h"
 
 bool YESPredicate(Entity* /*entity*/, void* /*parameter*/) { return true; }
@@ -116,9 +116,9 @@ bool IsStationPredicate(Entity* entity, void* /*parameter*/) {
 
 bool IsPlanetPredicate(Entity* entity, void* /*parameter*/) {
   if (!(entity != nullptr && entity->isPlanet())) return false;
-  OOStellarBodyType type = OOStellarBodyPlanetType(entity);
-  return (type == OOStellarBodyType::kNormalPlanet ||
-          type == OOStellarBodyType::kMoon);
+  oo::StellarBodyType type = oo::StellarBodyPlanetType(entity);
+  return (type == oo::StellarBodyType::kNormalPlanet ||
+          type == oo::StellarBodyType::kMoon);
 }
 
 bool IsSunPredicate(Entity* entity, void* /*parameter*/) {

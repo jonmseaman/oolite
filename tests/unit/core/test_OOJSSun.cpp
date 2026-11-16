@@ -37,7 +37,9 @@ public:
 /*	A sun whose radius is 99 raises from radius(), one whose radius is 98 throws a C++ exception, so
 	the test sees what an exception under a native becomes.
 */
-class OOSunEntity : public Entity
+namespace oo {
+
+class SunEntity : public Entity
 {
 public:
 	double radius();
@@ -57,6 +59,9 @@ public:
 	double _novaTime = 0;
 	int _novaCalls = 0;
 };
+
+}  // namespace oo
+
 
 
 // What an entity's JS object holds: a weak reference to the C++ entity.
@@ -103,18 +108,18 @@ std::optional<std::string> Entity::jsClassName()  { return std::string("Entity")
 bool Entity::isVisibleToScripts()  { return false; }
 
 
-std::optional<std::string> OOSunEntity::name()  { return _name; }
-bool OOSunEntity::willGoNova()  { return _willGoNova; }
-bool OOSunEntity::goneNova()  { return _goneNova; }
+std::optional<std::string> oo::SunEntity::name()  { return _name; }
+bool oo::SunEntity::willGoNova()  { return _willGoNova; }
+bool oo::SunEntity::goneNova()  { return _goneNova; }
 
-double OOSunEntity::radius()
+double oo::SunEntity::radius()
 {
 	if (_radius == 99)  oo::RaiseException(oo::InvalidArgumentException, "radius %s", "boom");
 	if (_radius == 98)  throw std::runtime_error("cxx boom");
 	return _radius;
 }
 
-void OOSunEntity::setGoingNova(bool yesno, double interval)
+void oo::SunEntity::setGoingNova(bool yesno, double interval)
 {
 	_willGoNova = yesno;
 	_novaTime = interval;
@@ -123,9 +128,9 @@ void OOSunEntity::setGoingNova(bool yesno, double interval)
 
 
 // The binding's category, as the C++ class's overrides answer it.
-JSClassID OOSunEntity::jsClassID()  { return ::JSSunClassID(); }
-std::optional<std::string> OOSunEntity::jsClassName()  { return ::OOJSSunJSClassName(); }
-bool OOSunEntity::isVisibleToScripts()  { return ::OOJSSunIsVisibleToScripts(); }
+JSClassID oo::SunEntity::jsClassID()  { return ::JSSunClassID(); }
+std::optional<std::string> oo::SunEntity::jsClassName()  { return ::OOJSSunJSClassName(); }
+bool oo::SunEntity::isVisibleToScripts()  { return ::OOJSSunIsVisibleToScripts(); }
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
@@ -310,7 +315,7 @@ JSRuntime *sRuntime;
 JSContext *sContext;
 JSValue sGlobal;
 TestEntityObject *sSunObject = nullptr;	// the sun's object, which the JS object holds
-OOSunEntity *sSun = nullptr;	// its C++ part
+oo::SunEntity *sSun = nullptr;	// its C++ part
 
 
 // A JS object of the class (its prototype is the class's), with a holder of the entity's C++ part
@@ -355,8 +360,8 @@ void SetUpContext()
 	InitOOJSSun(sContext, sGlobal);
 
 	sSunObject = oo::test::NewRetained<TestEntityObject>();	// kept for the life of the test
-	sSunObject->_cxxEntity = oo::makeShared<OOSunEntity>();
-	sSun = static_cast<OOSunEntity *>(sSunObject->_cxxEntity.get());
+	sSunObject->_cxxEntity = oo::makeShared<oo::SunEntity>();
+	sSun = static_cast<oo::SunEntity *>(sSunObject->_cxxEntity.get());
 	sSun->_radius = 250000.5;
 	sSun->_name = "Lave";
 	Define("sun", JSValueForEntity(sSunObject));

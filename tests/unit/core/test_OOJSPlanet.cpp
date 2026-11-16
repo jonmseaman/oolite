@@ -17,7 +17,7 @@
 #include "EntityManualRefs.h"  // the tests' manual references
 #include "OOColor.h"
 #include "OOJSEngineCore.h"
-#include "OOStellarBody.h"
+#include "StellarBody.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Exception.h"
@@ -46,10 +46,12 @@ public:
 /*	A planet whose radius is 99 raises from radius(), one whose radius is 98 throws a C++ exception,
 	so the test sees what an exception under a native becomes.
 */
-class OOPlanetEntity : public Entity
+namespace oo {
+
+class PlanetEntity : public Entity
 {
 public:
-	OOStellarBodyType planetType();
+	StellarBodyType planetType();
 	double radius();
 	std::optional<std::string> name();
 	void setName(const std::optional<std::string> &name);
@@ -74,7 +76,7 @@ public:
 	std::optional<std::string> jsClassName() override;
 	bool isVisibleToScripts() override;
 
-	OOStellarBodyType _type = (OOStellarBodyType)0;
+	StellarBodyType _type = (StellarBodyType)0;
 	double _radius = 0;
 	std::optional<std::string> _name;
 	std::shared_ptr<OOColor> _airColor;
@@ -87,6 +89,9 @@ public:
 	Vector _terminatorThresholdVector = {};
 	int _textureLoads = 0;
 };
+
+}  // namespace oo
+
 
 
 // The root's facade: the planet's object (the C++ part first, where oo::ToCxx
@@ -120,7 +125,7 @@ class Universe : public oo::Object
 public:
 	OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
 
-	OOPlanetEntity *_planet;
+	oo::PlanetEntity *_planet;
 
 
 };
@@ -128,7 +133,7 @@ public:
 class FakeUniverse : public Universe
 {
 public:
-	::OOPlanetEntity *planet() override	{ return _planet; }
+	::oo::PlanetEntity *planet() override	{ return _planet; }
 };
 
 #include "OOJSPlanet.h"
@@ -163,28 +168,28 @@ std::optional<std::string> Entity::jsClassName()  { return std::string("Entity")
 bool Entity::isVisibleToScripts()  { return false; }
 // The orientation the object's -normalOrientation and -setOrientation: answered and set.
 Quaternion Entity::normalOrientation()  { return TestObjectOf(this)->_orientation; }
-void OOPlanetEntity::setOrientation(Quaternion quat)  { TestObjectOf(this)->_orientation = quat; }
+void oo::PlanetEntity::setOrientation(Quaternion quat)  { TestObjectOf(this)->_orientation = quat; }
 
 
-OOStellarBodyType OOPlanetEntity::planetType()  { return _type; }
-std::optional<std::string> OOPlanetEntity::name()  { return _name; }
-void OOPlanetEntity::setName(const std::optional<std::string> &name)  { _name = name; }
-OOColor *OOPlanetEntity::airColor()  { return _airColor.get(); }
-void OOPlanetEntity::setAirColor(OOColor *newColor)  { _airColor = oo::share(newColor); }
-OOColor *OOPlanetEntity::illuminationColor()  { return _illuminationColor.get(); }
-void OOPlanetEntity::setIlluminationColor(OOColor *newColor)  { _illuminationColor = oo::share(newColor); }
-float OOPlanetEntity::airColorMixRatio()  { return _airColorMixRatio; }
-void OOPlanetEntity::setAirColorMixRatio(float newRatio)  { _airColorMixRatio = newRatio; }
-float OOPlanetEntity::airDensity()  { return _airDensity; }
-void OOPlanetEntity::setAirDensity(float newDensity)  { _airDensity = newDensity; }
-bool OOPlanetEntity::hasAtmosphere()  { return _hasAtmosphere; }
-std::optional<std::string> OOPlanetEntity::textureFileName()  { return _texture; }
-double OOPlanetEntity::rotationalVelocity()  { return _rotationalVelocity; }
-void OOPlanetEntity::setRotationalVelocity(double v)  { _rotationalVelocity = v; }
-Vector OOPlanetEntity::terminatorThresholdVector()  { return _terminatorThresholdVector; }
-void OOPlanetEntity::setTerminatorThresholdVector(Vector v)  { _terminatorThresholdVector = v; }
+oo::StellarBodyType oo::PlanetEntity::planetType()  { return _type; }
+std::optional<std::string> oo::PlanetEntity::name()  { return _name; }
+void oo::PlanetEntity::setName(const std::optional<std::string> &name)  { _name = name; }
+OOColor *oo::PlanetEntity::airColor()  { return _airColor.get(); }
+void oo::PlanetEntity::setAirColor(OOColor *newColor)  { _airColor = oo::share(newColor); }
+OOColor *oo::PlanetEntity::illuminationColor()  { return _illuminationColor.get(); }
+void oo::PlanetEntity::setIlluminationColor(OOColor *newColor)  { _illuminationColor = oo::share(newColor); }
+float oo::PlanetEntity::airColorMixRatio()  { return _airColorMixRatio; }
+void oo::PlanetEntity::setAirColorMixRatio(float newRatio)  { _airColorMixRatio = newRatio; }
+float oo::PlanetEntity::airDensity()  { return _airDensity; }
+void oo::PlanetEntity::setAirDensity(float newDensity)  { _airDensity = newDensity; }
+bool oo::PlanetEntity::hasAtmosphere()  { return _hasAtmosphere; }
+std::optional<std::string> oo::PlanetEntity::textureFileName()  { return _texture; }
+double oo::PlanetEntity::rotationalVelocity()  { return _rotationalVelocity; }
+void oo::PlanetEntity::setRotationalVelocity(double v)  { _rotationalVelocity = v; }
+Vector oo::PlanetEntity::terminatorThresholdVector()  { return _terminatorThresholdVector; }
+void oo::PlanetEntity::setTerminatorThresholdVector(Vector v)  { _terminatorThresholdVector = v; }
 
-bool OOPlanetEntity::setUpPlanetFromTexture(const std::optional<std::string> &fileName)
+bool oo::PlanetEntity::setUpPlanetFromTexture(const std::optional<std::string> &fileName)
 {
 	_textureLoads++;
 	if (!fileName.has_value() || *fileName == "missing.png")  return false;
@@ -192,7 +197,7 @@ bool OOPlanetEntity::setUpPlanetFromTexture(const std::optional<std::string> &fi
 	return true;
 }
 
-double OOPlanetEntity::radius()
+double oo::PlanetEntity::radius()
 {
 	if (_radius == 99)  oo::RaiseException(oo::InvalidArgumentException, "radius %s", "boom");
 	if (_radius == 98)  throw std::runtime_error("cxx boom");
@@ -201,15 +206,15 @@ double OOPlanetEntity::radius()
 
 
 // The binding's category, as the C++ class's overrides answer it.
-JSClassID OOPlanetEntity::jsClassID()  { return ::JSPlanetClassID(); }
-std::optional<std::string> OOPlanetEntity::jsClassName()  { return ::OOJSPlanetJSClassName(this); }
-bool OOPlanetEntity::isVisibleToScripts()  { return ::OOJSPlanetIsVisibleToScripts(this); }
+JSClassID oo::PlanetEntity::jsClassID()  { return ::JSPlanetClassID(); }
+std::optional<std::string> oo::PlanetEntity::jsClassName()  { return ::OOJSPlanetJSClassName(this); }
+bool oo::PlanetEntity::isVisibleToScripts()  { return ::OOJSPlanetIsVisibleToScripts(this); }
 
 
 // A new C++ planet and its object (as in the game); the object owns it.
-OOPlanetEntity *NewPlanet()
+oo::PlanetEntity *NewPlanet()
 {
-	std::shared_ptr<OOPlanetEntity> planet = oo::makeShared<OOPlanetEntity>();
+	std::shared_ptr<oo::PlanetEntity> planet = oo::makeShared<oo::PlanetEntity>();
 	TestEntityObject *object = oo::test::NewRetained<TestEntityObject>();
 	object->_cxxEntity = planet;
 	planet->_object = object;
@@ -478,8 +483,8 @@ namespace {
 JSRuntime *sRuntime;
 JSContext *sContext;
 JSValue sGlobal = JS_UNDEFINED;	// owned for the life of the test
-OOPlanetEntity *sPlanet = nullptr;
-OOPlanetEntity *sMoon = nullptr;
+oo::PlanetEntity *sPlanet = nullptr;
+oo::PlanetEntity *sMoon = nullptr;
 FakeUniverse *sUniverse = nullptr;
 
 
@@ -527,7 +532,7 @@ void SetUpContext()
 	InitOOJSPlanet(sContext, sGlobal);
 
 	sPlanet = NewPlanet();	// its object is kept for the life of the test
-	sPlanet->_type = OOStellarBodyType::kNormalPlanet;
+	sPlanet->_type = oo::StellarBodyType::kNormalPlanet;
 	sPlanet->_radius = 5000;
 	sPlanet->_name = "Lave";
 	sPlanet->_airColor = OOColor::colorWithRed(0.5f, 0.25f, 1, 1);
@@ -539,7 +544,7 @@ void SetUpContext()
 	sPlanet->_terminatorThresholdVector = make_vector(0.25, 1, 2);
 	TestObjectOf(sPlanet)->_orientation = make_quaternion(1, 0, 0, 0);
 	sMoon = NewPlanet();
-	sMoon->_type = OOStellarBodyType::kMoon;
+	sMoon->_type = oo::StellarBodyType::kMoon;
 	sMoon->_radius = 1000;
 	sUniverse = new FakeUniverse();
 	sUniverse->_planet = sPlanet;
@@ -606,12 +611,12 @@ OO_TEST(category)
 	OO_CHECK(TestObjectOf(sPlanet)->isVisibleToScripts());
 	OO_CHECK(TestObjectOf(sMoon)->oo_jsClassName() == std::optional<std::string>("Moon"));
 	OO_CHECK(TestObjectOf(sMoon)->isVisibleToScripts());
-	OOPlanetEntity *mini = NewPlanet();
+	oo::PlanetEntity *mini = NewPlanet();
 	oo::test::Autorelease(TestObjectOf(mini));
-	mini->_type = OOStellarBodyType::kMiniature;
+	mini->_type = oo::StellarBodyType::kMiniature;
 	OO_CHECK(TestObjectOf(mini)->oo_jsClassName() == std::optional<std::string>("Unknown"));
 	OO_CHECK(!TestObjectOf(mini)->isVisibleToScripts());
-	mini->_type = OOStellarBodyType::kSun;
+	mini->_type = oo::StellarBodyType::kSun;
 	OO_CHECK(!TestObjectOf(mini)->isVisibleToScripts());
 }
 

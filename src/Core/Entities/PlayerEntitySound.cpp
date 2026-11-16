@@ -82,14 +82,18 @@ bool IsPlaying(const std::shared_ptr<::OOSoundSource>& source) {
 }  // namespace
 
 // Weapon identifier -> sound key (empty: no sound key, as @"" was).
-using OOWeaponSoundMap = std::map<std::string, std::string, std::less<>>;
+namespace oo {
+
+using WeaponSoundMap = std::map<std::string, std::string, std::less<>>;
+
+}  // namespace oo
 
 namespace {
-OOWeaponSoundMap weaponShotMiss;
-OOWeaponSoundMap weaponShotHit;
-OOWeaponSoundMap weaponShieldHit;
-OOWeaponSoundMap weaponUnshieldedHit;
-OOWeaponSoundMap weaponLaunched;
+oo::WeaponSoundMap weaponShotMiss;
+oo::WeaponSoundMap weaponShotHit;
+oo::WeaponSoundMap weaponShieldHit;
+oo::WeaponSoundMap weaponUnshieldedHit;
+oo::WeaponSoundMap weaponLaunched;
 }  // namespace
 
 static const Vector kInterfaceBeepPosition = {0.0f, -0.2f, 0.5f};
@@ -105,7 +109,7 @@ namespace {
 
 // The sound key for a weapon, or fallback when the weapon has none (the
 // dictionary lookup gave nil).
-std::string WeaponSoundKey(const OOWeaponSoundMap& sounds,
+std::string WeaponSoundKey(const oo::WeaponSoundMap& sounds,
                            const std::string& weaponIdentifier,
                            const std::string& fallback) {
   const auto found = sounds.find(weaponIdentifier);
@@ -155,11 +159,11 @@ void PlayerEntity::setUpSound() {
 // weapons/missiles/mines defined.
 
 void PlayerEntity::setUpWeaponSounds() {
-  OOWeaponSoundMap shotMissSounds;
-  OOWeaponSoundMap shotHitSounds;
-  OOWeaponSoundMap shieldHitSounds;
-  OOWeaponSoundMap unshieldedHitSounds;
-  OOWeaponSoundMap weaponLaunchedSounds;
+  oo::WeaponSoundMap shotMissSounds;
+  oo::WeaponSoundMap shotHitSounds;
+  oo::WeaponSoundMap shieldHitSounds;
+  oo::WeaponSoundMap unshieldedHitSounds;
+  oo::WeaponSoundMap weaponLaunchedSounds;
 
   // special case: turrets aren't defined with a "EQ_WEAPON" prefix, and plasma
   // shots don't have a matching equipment item, so add a unique entry here.
@@ -171,7 +175,7 @@ void PlayerEntity::setUpWeaponSounds() {
   // grab a local copy of the sound identifiers for weapons to make the process
   // of looking up a sound ref as fast as possible a missing sound identifier is
   // stored as an empty key
-  auto assignSound = [](OOWeaponSoundMap& sounds, ::OOEquipmentType* eqType,
+  auto assignSound = [](oo::WeaponSoundMap& sounds, ::OOEquipmentType* eqType,
                         std::string soundName) {
     sounds[(eqType != nullptr ? eqType->identifier()
                               : std::optional<std::string>())

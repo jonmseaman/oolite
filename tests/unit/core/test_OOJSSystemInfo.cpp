@@ -311,10 +311,15 @@ OORouteType StringToRouteType(const std::string &string)
 
 
 // Galactic coordinates: x / 4, y / 2 here, so system s is at (s, s).
-Vector OOGalacticCoordinatesFromInternal(
+namespace oo {
+
+Vector GalacticCoordinatesFromInternal(
     NSPoint internalCoordinates) {
   return make_vector(internalCoordinates.x / 4, internalCoordinates.y / 2, 0);
 }
+
+}  // namespace oo
+
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------

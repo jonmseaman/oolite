@@ -34,8 +34,8 @@
 #include "OOOpenGL.h"
 #include "OOPlanetData.h"
 #include "OOSingleTextureMaterial.h"
-#include "OOStellarBody.h"
 #include "OOTexture.h"  // allTextures() destroys std::shared_ptr<OOTexture>s
+#include "StellarBody.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 

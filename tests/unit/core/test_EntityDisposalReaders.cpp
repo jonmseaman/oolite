@@ -22,7 +22,7 @@
 */
 
 #include "EntityManualRefs.h"  // the tests' manual entity references
-#include "OOWaypointEntity.h"
+#include "WaypointEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -67,7 +67,7 @@ Universe* SetUp() {
 // A beacon waypoint, as the universe makes one, retained by the caller (+1).
 Entity* RetainedWaypoint(const std::string& code) {
   oo::AutoreleaseScope scope;
-  return oo::RetainEntity(oo::MadeEntity(OOWaypointEntity::waypointWithDictionary(
+  return oo::RetainEntity(oo::MadeEntity(oo::WaypointEntity::waypointWithDictionary(
       oo::PList(oo::PList::Dict{{"beaconCode", oo::PList(code)}}))));
 }
 

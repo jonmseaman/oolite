@@ -21,7 +21,7 @@
 
 #include "GuiDisplayGen.h"
 #include "OOColor.h"
-#include "OOEntityHold.h"
+#include "EntityHold.h"
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include "OOShaderUniformMethodType.h"
@@ -79,24 +79,24 @@ static_assert(kValueType<OOWeaponFacingSet> == VT::kUChar);
 
 // Every game enum was encoded "i", whatever its underlying type.
 static_assert(kValueType<OOAegisStatus> == VT::kInt);
-static_assert(kValueType<OOAlertCondition> == VT::kInt);
+static_assert(kValueType<oo::AlertCondition> == VT::kInt);
 static_assert(kValueType<oo::Behaviour> == VT::kInt);
 static_assert(kValueType<OOCargoType> == VT::kInt);
 static_assert(kValueType<oo::CompassMode> == VT::kInt);
 static_assert(kValueType<OODockingClearanceStatus> == VT::kInt);
 static_assert(kValueType<OOEnergyUnitType> == VT::kInt);
 static_assert(kValueType<oo::EntityStatus> == VT::kInt);
-static_assert(kValueType<OOFuelScoopStatus> == VT::kInt);
+static_assert(kValueType<oo::FuelScoopStatus> == VT::kInt);
 static_assert(kValueType<OOGUIBackgroundSpecial> == VT::kInt);
 static_assert(kValueType<oo::GUIScreenID> == VT::kInt);
 static_assert(kValueType<oo::GalacticHyperspaceBehaviour> == VT::kInt);
 static_assert(kValueType<oo::LongRangeChartMode> == VT::kInt);
-static_assert(kValueType<OOMissileStatus> == VT::kInt);
-static_assert(kValueType<OOPlayerFleeingStatus> == VT::kInt);
+static_assert(kValueType<oo::MissileStatus> == VT::kInt);
+static_assert(kValueType<oo::PlayerFleeingStatus> == VT::kInt);
 static_assert(kValueType<OORouteType> == VT::kInt);
 static_assert(kValueType<oo::ScanClass> == VT::kInt);
-static_assert(kValueType<OOSpeechSettings> == VT::kInt);
-static_assert(kValueType<OOStationAlertLevel> == VT::kInt);
+static_assert(kValueType<oo::SpeechSettings> == VT::kInt);
+static_assert(kValueType<oo::StationAlertLevel> == VT::kInt);
 static_assert(kValueType<OOWeaponFacing> == VT::kInt);  // a uint8_t enum
 
 // Structures, the colour, objects.

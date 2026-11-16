@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 #include "OOJSEntity.h"
 #include "OOJSQuaternion.h"
 #include "OOJavaScriptEngine.h"
-#include "OOWaypointEntity.h"
+#include "WaypointEntity.h"
 
 /*
         The class is a static JSClassDef registered with OOJSRegisterClass(),
@@ -46,7 +46,7 @@ static JSClassID sWaypointClassID;
 
 static bool JSWaypointGetWaypointEntity(JSContext* context,
                                         JSValueConst waypointObj,
-                                        OOWaypointEntity** outEntity);
+                                        oo::WaypointEntity** outEntity);
 
 static JSValue WaypointGetProperty(OOJS_GETTER_ARGS);
 static JSValue WaypointSetProperty(OOJS_SETTER_ARGS);
@@ -102,7 +102,7 @@ JSClassID JSWaypointClassID() { return sWaypointClassID; }
 
 static bool JSWaypointGetWaypointEntity(JSContext* context,
                                         JSValueConst waypointObj,
-                                        OOWaypointEntity** outEntity) {
+                                        oo::WaypointEntity** outEntity) {
   OOJS_PROFILE_SCOPE();
 
   bool result;
@@ -116,7 +116,7 @@ static bool JSWaypointGetWaypointEntity(JSContext* context,
 
   // A waypoint is the C++ OOWaypointEntity (a nil or other entity is not). The
   // natives call its members.
-  OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(entity);
+  oo::WaypointEntity* waypoint = dynamic_cast<oo::WaypointEntity*>(entity);
   if (waypoint == nullptr) return false;
 
   *outEntity = waypoint;
@@ -134,7 +134,7 @@ bool OOJSWaypointIsVisibleToScripts() { return true; }
 static JSValue WaypointGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOWaypointEntity* waypoint = nullptr;
+  oo::WaypointEntity* waypoint = nullptr;
   oo::PList result;  // null: nil
   std::optional<std::string> text;
   Quaternion q = kIdentityQuaternion;
@@ -180,7 +180,7 @@ static JSValue WaypointGetProperty(OOJS_GETTER_ARGS) {
 static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOWaypointEntity* waypoint = nullptr;
+  oo::WaypointEntity* waypoint = nullptr;
   double fValue;
   std::optional<std::string> sValue;
   Quaternion qValue;

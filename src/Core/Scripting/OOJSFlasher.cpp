@@ -28,17 +28,17 @@ MA 02110-1301, USA.
 #include <utility>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "FlasherEntity.h"
 #include "OOColor.h"
-#include "OOFlasherEntity.h"
 #include "OOJSEntity.h"
 #include "OOJavaScriptEngine.h"
-#include "OOVisualEffectEntity.h"
 #include "ShipEntity.h"
+#include "VisualEffectEntity.h"
 
 static JSClassID sFlasherClassID;
 
 static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
-                                      OOFlasherEntity** outEntity);
+                                      oo::FlasherEntity** outEntity);
 
 static JSValue FlasherGetProperty(OOJS_GETTER_ARGS);
 static JSValue FlasherSetProperty(OOJS_SETTER_ARGS);
@@ -119,7 +119,7 @@ void InitOOJSFlasher(JSContext* context, JSValueConst global) {
 JSClassID JSFlasherClassID() { return sFlasherClassID; }
 
 static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
-                                      OOFlasherEntity** outEntity) {
+                                      oo::FlasherEntity** outEntity) {
   OOJS_PROFILE_SCOPE();
 
   bool result;
@@ -132,7 +132,7 @@ static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
   if (!result) return false;
 
   // A flasher is an OOFlasherEntity.
-  OOFlasherEntity* flasher = dynamic_cast<OOFlasherEntity*>(entity);
+  oo::FlasherEntity* flasher = dynamic_cast<oo::FlasherEntity*>(entity);
   if (flasher == nullptr) return false;
 
   *outEntity = flasher;
@@ -150,7 +150,7 @@ bool OOJSFlasherIsVisibleToScripts() { return true; }
 static JSValue FlasherGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOFlasherEntity* entity = nullptr;
+  oo::FlasherEntity* entity = nullptr;
   oo::PList result;  // null: nil
 
   if (!JSFlasherGetFlasherEntity(context, thisObj, &entity))
@@ -194,7 +194,7 @@ static JSValue FlasherGetProperty(OOJS_GETTER_ARGS) {
 static JSValue FlasherSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOFlasherEntity* entity = nullptr;
+  oo::FlasherEntity* entity = nullptr;
   double fValue;
   int bValue;
   std::shared_ptr<OOColor> colorForScript;
@@ -282,7 +282,7 @@ static JSValue FlasherRemove(JSContext* context, JSValueConst oojsThis,
                              int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
-  OOFlasherEntity* thisEnt = nullptr;
+  oo::FlasherEntity* thisEnt = nullptr;
   GET_THIS_FLASHER(thisEnt);
 
   Entity* parent = thisEnt->owner();  // the C++ member
@@ -290,7 +290,7 @@ static JSValue FlasherRemove(JSContext* context, JSValueConst oojsThis,
     if (oo::ToShip(parent) != nullptr)
       oo::ToShip(parent)->removeFlasher(thisEnt);
   } else {
-    if (OOVisualEffectEntity* effect = oo::ToEffect(parent))
+    if (oo::VisualEffectEntity* effect = oo::ToEffect(parent))
       effect->removeSubEntity(thisEnt);  // the C++ flasher
   }
 

@@ -13,7 +13,7 @@
 	tools/check-core-tests.sh
 */
 
-#include "OOQuiriumCascadeEntity.h"
+#include "QuiriumCascadeEntity.h"
 #include "PlayerEntity.h"	// PLAYER is C++
 #include "Universe.h"
 
@@ -91,7 +91,7 @@ namespace {
 
 // --- How a cascade is made, and nothing else --------------------------------------------------------
 
-Entity *MakeCascade(ShipEntity *ship)	{ return oo::MadeEntity(OOQuiriumCascadeEntity::quiriumCascadeFromShip(ship)); }
+Entity *MakeCascade(ShipEntity *ship)	{ return oo::MadeEntity(oo::QuiriumCascadeEntity::quiriumCascadeFromShip(ship)); }
 
 // --------------------------------------------------------------------------------------------------
 
@@ -133,8 +133,8 @@ OO_TEST(fromShip)
 		OO_CHECK(HPvector_equal(cascade->getPosition(), make_HPvector(5, 6, 7)));
 		OO_CHECK(cascade->status() == oo::EntityStatus::kEffect && cascade->getScanClass() == oo::ScanClass::kMine);
 		OO_CHECK(cascade->owner() == shipOwner);
-		OO_CHECK(cascade->isEffect() && OOEntityIsCascadeWeapon(cascade));	// -isCascadeWeapon
-		OO_CHECK(!OOEntityIsCascadeWeapon(ship));
+		OO_CHECK(cascade->isEffect() && oo::EntityIsCascadeWeapon(cascade));	// -isCascadeWeapon
+		OO_CHECK(!oo::EntityIsCascadeWeapon(ship));
 		OO_CHECK(!cascade->canCollide() && cascade->checkCloseCollisionWith(nullptr) && cascade->checkCloseCollisionWith(ship));
 		OO_CHECK(oo::EntityDescription(cascade).starts_with("<OOQuiriumCascadeEntity 0x"));
 		OO_CHECK(oo::EntityDescription(cascade).ends_with("{0.000000 seconds passed of 20.000000}"));

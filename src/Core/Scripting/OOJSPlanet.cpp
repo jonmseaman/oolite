@@ -34,7 +34,7 @@ MA 02110-1301, USA.
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOPlanetEntity.h"
+#include "PlanetEntity.h"
 #include "oofnd/objc/Assert.h"
 
 static JSClassID sPlanetClassID;
@@ -116,11 +116,11 @@ static const JSCFunctionListEntry sPlanetProperties[] = {
 // C++ entity, read by OOJSEntityGetEntityOfClass for the Planet class); null
 // for a stale entity.
 static bool JSPlanetGetPlanetEntity(JSContext* context, JSValueConst inObject,
-                                    OOPlanetEntity** outObject) {
+                                    oo::PlanetEntity** outObject) {
   Entity* entity = nullptr;
   if (!OOJSEntityGetEntityOfClass(context, inObject, sPlanetClassID, &entity))
     return false;
-  *outObject = dynamic_cast<OOPlanetEntity*>(entity);
+  *outObject = dynamic_cast<oo::PlanetEntity*>(entity);
   return true;
 }
 
@@ -143,20 +143,20 @@ JSClassID JSPlanetClassID() { return sPlanetClassID; }
 
 // The bodies of OOPlanetEntity (OOJavaScriptExtensions), called by the C++
 // planet's overrides.
-bool OOJSPlanetIsVisibleToScripts(OOPlanetEntity* planet) {
-  OOStellarBodyType type =
+bool OOJSPlanetIsVisibleToScripts(oo::PlanetEntity* planet) {
+  oo::StellarBodyType type =
       (planet != nullptr ? planet->planetType()
-                         : static_cast<OOStellarBodyType>(0));
-  return type == OOStellarBodyType::kNormalPlanet ||
-         type == OOStellarBodyType::kMoon;
+                         : static_cast<oo::StellarBodyType>(0));
+  return type == oo::StellarBodyType::kNormalPlanet ||
+         type == oo::StellarBodyType::kMoon;
 }
 
-std::optional<std::string> OOJSPlanetJSClassName(OOPlanetEntity* planet) {
+std::optional<std::string> OOJSPlanetJSClassName(oo::PlanetEntity* planet) {
   switch ((planet != nullptr ? planet->planetType()
-                             : static_cast<OOStellarBodyType>(0))) {
-    case OOStellarBodyType::kNormalPlanet:
+                             : static_cast<oo::StellarBodyType>(0))) {
+    case oo::StellarBodyType::kNormalPlanet:
       return std::string("Planet");
-    case OOStellarBodyType::kMoon:
+    case oo::StellarBodyType::kMoon:
       return std::string("Moon");
     default:
       return std::string("Unknown");
@@ -166,7 +166,7 @@ std::optional<std::string> OOJSPlanetJSClassName(OOPlanetEntity* planet) {
 static JSValue PlanetGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOPlanetEntity* planet = nullptr;
+  oo::PlanetEntity* planet = nullptr;
   if (!JSPlanetGetPlanetEntity(context, thisObj, &planet))
     return OOJSNativeFailure(context);
 
@@ -248,7 +248,7 @@ static JSValue PlanetGetProperty(OOJS_GETTER_ARGS) {
 static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  OOPlanetEntity* planet = nullptr;
+  oo::PlanetEntity* planet = nullptr;
   std::optional<std::string> sValue;
   Quaternion qValue;
   Vector vValue;
@@ -336,7 +336,7 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
         quaternion_normalize(&qValue);
         // The C++ member, qualified: the final overrider (OOPlanetEntity has no
         // subclass), so the binding test stands in for it; nothing for none.
-        if (planet != nullptr) planet->OOPlanetEntity::setOrientation(qValue);
+        if (planet != nullptr) planet->oo::PlanetEntity::setOrientation(qValue);
         return JS_UNDEFINED;
       }
       break;

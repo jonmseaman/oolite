@@ -29,7 +29,7 @@
 
 #include "OOALSound.h"
 #include "OOCommodityMarket.h"
-#include "OOEntityHold.h"  // the cargo list
+#include "EntityHold.h"  // the cargo list
 #include "OOMaths.h"
 #include "OOSoundSource.h"
 #include "OOTexture.h"

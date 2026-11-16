@@ -23,9 +23,9 @@
 #include "DockEntity.h"
 #include "Entity.h"
 #include "OOCallByName.h"
-#include "OOEntityCalledByName.h"
-#include "OOVisualEffectEntity.h"
-#include "OOWaypointEntity.h"
+#include "EntityCalledByName.h"
+#include "VisualEffectEntity.h"
+#include "WaypointEntity.h"
 #include "PlayerEntity.h"
 #include "ProxyPlayerEntity.h"
 #include "ShipEntity.h"
@@ -65,8 +65,8 @@ const std::vector<Sample>& Samples() {
       result.push_back(Make<DockEntity>("dock"));
       result.push_back(Make<PlayerEntity>("player"));
       result.push_back(Make<ProxyPlayerEntity>("proxy"));
-      result.push_back(Make<OOVisualEffectEntity>("effect"));
-      result.push_back(Make<OOWaypointEntity>("waypoint"));
+      result.push_back(Make<oo::VisualEffectEntity>("effect"));
+      result.push_back(Make<oo::WaypointEntity>("waypoint"));
     }
     return result;
   }();
@@ -79,7 +79,7 @@ const std::vector<Sample>& Samples() {
 // table's own checks stay.
 OO_TEST(rowsAreTheFacadesMethodsWithTheirTypes) {
   std::set<std::string> names;
-  for (const OOEntityByNameRow& row : oo::EntityByNameRows()) {
+  for (const oo::EntityByNameRow& row : oo::EntityByNameRows()) {
     OO_CHECK(names.insert(row.name).second);  // no name twice
     OO_CHECK(oo::EntityByNameRowNamed(row.name) == &row);
   }
@@ -91,7 +91,7 @@ OO_TEST(rowsAreTheFacadesMethodsWithTheirTypes) {
 OO_TEST(appliesToIsTheFacadesAnswer) {
   {
     std::string different;
-    for (const OOEntityByNameRow& row : oo::EntityByNameRows()) {
+    for (const oo::EntityByNameRow& row : oo::EntityByNameRows()) {
       for (const Sample& sample : Samples()) {
         if (oo::EntityRespondsToName(sample.entity, row.name) !=
             oo::EntityByNameRowApplies(row, sample.entity)) {
@@ -227,9 +227,9 @@ OO_TEST(callAnswersAsTheSelectorPath) {
 // type: an integer, a float, a vector, an object.
 OO_TEST(typedCallAnswersAsTheMethod) {
   {
-    for (const OOEntityByNameRow& row : oo::EntityByNameRows()) {
+    for (const oo::EntityByNameRow& row : oo::EntityByNameRows()) {
       OO_CHECK((row.typed != nullptr) ==
-               (row.argument == OOEntityByNameArgument::kNone));
+               (row.argument == oo::EntityByNameArgument::kNone));
     }
 
     // Each result is compared with the ship's C++ member the method's body
@@ -244,7 +244,7 @@ OO_TEST(typedCallAnswersAsTheMethod) {
         {"isCloaked", shipPart->isCloaked()},
     };
     for (const auto& [name, expected] : flags) {
-      OOEntityByNameValue value;
+      oo::EntityByNameValue value;
       OO_CHECK(oo::CallEntityByNameTyped(ship.entity, name, value));
       OO_CHECK_EQ(value.integer, static_cast<long long>(expected));
     }
@@ -252,26 +252,26 @@ OO_TEST(typedCallAnswersAsTheMethod) {
         {"maxThrust", shipPart->maxThrust()},
         {"heatInsulation", shipPart->heatInsulation()}};
     for (const auto& [name, expected] : reals) {
-      OOEntityByNameValue value;
+      oo::EntityByNameValue value;
       OO_CHECK(oo::CallEntityByNameTyped(ship.entity, name, value));
       OO_CHECK_EQ(value.real, static_cast<double>(expected));
     }
     {
-      OOEntityByNameValue value;
+      oo::EntityByNameValue value;
       OO_CHECK(oo::CallEntityByNameTyped(ship.entity, "forwardVector", value));
       const Vector v = shipPart->forwardVector();
       OO_CHECK(value.vector.x == v.x && value.vector.y == v.y &&
                value.vector.z == v.z);
     }
     {
-      OOEntityByNameValue value;
+      oo::EntityByNameValue value;
       OO_CHECK(
           oo::CallEntityByNameTyped(ship.entity, "primaryAggressor", value));
       OO_CHECK(value.entity == shipPart->primaryAggressor());  // the C++ entity
     }
 
     // Not tabled, not the entity's, or taking an argument: nothing is called.
-    OOEntityByNameValue value;
+    oo::EntityByNameValue value;
     OO_CHECK(!oo::CallEntityByNameTyped(ship.entity, "noSuchSelector", value));
     OO_CHECK(!oo::CallEntityByNameTyped(Samples()[6].entity, "isHulk", value));
     OO_CHECK(!oo::CallEntityByNameTyped(Samples()[3].entity,

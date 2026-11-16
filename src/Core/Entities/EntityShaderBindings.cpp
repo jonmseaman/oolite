@@ -37,14 +37,14 @@ MA 02110-1301, USA.
 #include <utility>
 
 #include "Entity.h"
-#include "OOPlanetEntity.h"
 #include "OOShaderUniformMethodType.h"  // the shader binding member table
-#include "OOVisualEffectEntity.h"
-#include "OOWaypointEntity.h"
+#include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "ProxyPlayerEntity.h"
 #include "ShipEntity.h"
 #include "ValueType.h"
+#include "VisualEffectEntity.h"
+#include "WaypointEntity.h"
 
 // -unsignedIntValue of the number a system-data query returned (nil: 0).
 static unsigned UnsignedIntValueOf(const oo::PList& value) {
@@ -106,8 +106,8 @@ ShipEntity* ShipPart(Entity* entity) {
   return dynamic_cast<ShipEntity*>(entity);
 }
 
-OOVisualEffectEntity* EffectPart(Entity* entity) {
-  return dynamic_cast<OOVisualEffectEntity*>(entity);
+oo::VisualEffectEntity* EffectPart(Entity* entity) {
+  return dynamic_cast<oo::VisualEffectEntity*>(entity);
 }
 
 PlayerEntity* PlayerEntityPart(Entity* entity) {
@@ -272,15 +272,15 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      }},
     {"isBeacon", oo::kValueType<bool>,
      [](Entity* part) -> bool {
-       return dynamic_cast<OOWaypointEntity*>(part) != nullptr ||
+       return dynamic_cast<oo::WaypointEntity*>(part) != nullptr ||
               ShipPart(part) != nullptr || EffectPart(part) != nullptr;
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> bool {
          if (ShipEntity* ship = ShipPart(part)) return ship->isBeacon();
-         if (OOVisualEffectEntity* effect = EffectPart(part))
+         if (oo::VisualEffectEntity* effect = EffectPart(part))
            return effect->isBeacon();
-         OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(part);
+         oo::WaypointEntity* waypoint = dynamic_cast<oo::WaypointEntity*>(part);
          return waypoint != nullptr ? waypoint->isBeacon() : false;
        }());
      }},
@@ -302,16 +302,16 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      }},
     {"isJammingScanning", oo::kValueType<bool>,
      [](Entity* part) -> bool {
-       return dynamic_cast<OOWaypointEntity*>(part) != nullptr ||
+       return dynamic_cast<oo::WaypointEntity*>(part) != nullptr ||
               ShipPart(part) != nullptr || EffectPart(part) != nullptr;
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> bool {
          if (ShipEntity* ship = ShipPart(part))
            return ship->isJammingScanning();
-         if (OOVisualEffectEntity* effect = EffectPart(part))
+         if (oo::VisualEffectEntity* effect = EffectPart(part))
            return effect->isJammingScanning();
-         OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(part);
+         oo::WaypointEntity* waypoint = dynamic_cast<oo::WaypointEntity*>(part);
          return waypoint != nullptr ? waypoint->isJammingScanning() : false;
        }());
      }},
@@ -449,7 +449,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
-         if (OOVisualEffectEntity* effect = EffectPart(part))
+         if (oo::VisualEffectEntity* effect = EffectPart(part))
            return effect->hullHeatLevel();
          ShipEntity* ship = ShipPart(part);
          return ship != nullptr ? ship->hullHeatLevel() : GLfloat{};
@@ -608,30 +608,30 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->dialAftShield() : GLfloat{};
        }());
      }},
-    {"dialMissileStatus", oo::kValueType<OOMissileStatus>,
+    {"dialMissileStatus", oo::kValueType<oo::MissileStatus>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
      [](Entity* part, OOShaderBindingValue& out) {
-       StoreShaderBindingValue(out, [part]() -> OOMissileStatus {
+       StoreShaderBindingValue(out, [part]() -> oo::MissileStatus {
          if (ProxyPlayerEntity* proxy = ProxyPart(part))
            return proxy->dialMissileStatus();
          PlayerEntity* player = PlayerEntityPart(part);
          return player != nullptr ? player->dialMissileStatus()
-                                  : OOMissileStatus{};
+                                  : oo::MissileStatus{};
        }());
      }},
-    {"dialFuelScoopStatus", oo::kValueType<OOFuelScoopStatus>,
+    {"dialFuelScoopStatus", oo::kValueType<oo::FuelScoopStatus>,
      [](Entity* part) -> bool {
        return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
      },
      [](Entity* part, OOShaderBindingValue& out) {
-       StoreShaderBindingValue(out, [part]() -> OOFuelScoopStatus {
+       StoreShaderBindingValue(out, [part]() -> oo::FuelScoopStatus {
          if (ProxyPlayerEntity* proxy = ProxyPart(part))
            return proxy->dialFuelScoopStatus();
          PlayerEntity* player = PlayerEntityPart(part);
          return player != nullptr ? player->dialFuelScoopStatus()
-                                  : OOFuelScoopStatus{};
+                                  : oo::FuelScoopStatus{};
        }());
      }},
     {"compassMode", oo::kValueType<oo::CompassMode>,
@@ -659,12 +659,12 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->dialIdentEngaged() : false;
        }());
      }},
-    {"alertCondition", oo::kValueType<OOAlertCondition>,
+    {"alertCondition", oo::kValueType<oo::AlertCondition>,
      [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
      [](Entity* part, OOShaderBindingValue& out) {
-       StoreShaderBindingValue(out, [part]() -> OOAlertCondition {
+       StoreShaderBindingValue(out, [part]() -> oo::AlertCondition {
          ShipEntity* ship = ShipPart(part);
-         return ship != nullptr ? ship->alertCondition() : OOAlertCondition{};
+         return ship != nullptr ? ship->alertCondition() : oo::AlertCondition{};
        }());
      }},
     {"trumbleCount", oo::kValueType<std::size_t>,
@@ -684,52 +684,52 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
     // The planet's five:
     {"airColorAsVector", oo::kValueType<Vector>,
      [](Entity* part) -> bool {
-       return dynamic_cast<OOPlanetEntity*>(part) != nullptr;
+       return dynamic_cast<oo::PlanetEntity*>(part) != nullptr;
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
-         OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(part);
+         oo::PlanetEntity* planet = dynamic_cast<oo::PlanetEntity*>(part);
          return planet != nullptr ? planet->airColorAsVector() : kZeroVector;
        }());
      }},
     {"illuminationColorAsVector", oo::kValueType<Vector>,
      [](Entity* part) -> bool {
-       return dynamic_cast<OOPlanetEntity*>(part) != nullptr;
+       return dynamic_cast<oo::PlanetEntity*>(part) != nullptr;
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
-         OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(part);
+         oo::PlanetEntity* planet = dynamic_cast<oo::PlanetEntity*>(part);
          return planet != nullptr ? planet->illuminationColorAsVector()
                                   : kZeroVector;
        }());
      }},
     {"airColorMixRatio", oo::kValueType<float>,
      [](Entity* part) -> bool {
-       return dynamic_cast<OOPlanetEntity*>(part) != nullptr;
+       return dynamic_cast<oo::PlanetEntity*>(part) != nullptr;
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> float {
-         OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(part);
+         oo::PlanetEntity* planet = dynamic_cast<oo::PlanetEntity*>(part);
          return planet != nullptr ? planet->airColorMixRatio() : 0.0f;
        }());
      }},
     {"airDensity", oo::kValueType<float>,
      [](Entity* part) -> bool {
-       return dynamic_cast<OOPlanetEntity*>(part) != nullptr;
+       return dynamic_cast<oo::PlanetEntity*>(part) != nullptr;
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> float {
-         OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(part);
+         oo::PlanetEntity* planet = dynamic_cast<oo::PlanetEntity*>(part);
          return planet != nullptr ? planet->airDensity() : 0.0f;
        }());
      }},
     {"terminatorThresholdVector", oo::kValueType<Vector>,
      [](Entity* part) -> bool {
-       return dynamic_cast<OOPlanetEntity*>(part) != nullptr;
+       return dynamic_cast<oo::PlanetEntity*>(part) != nullptr;
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
-         OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(part);
+         oo::PlanetEntity* planet = dynamic_cast<oo::PlanetEntity*>(part);
          return planet != nullptr ? planet->terminatorThresholdVector()
                                   : kZeroVector;
        }());
@@ -756,7 +756,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
-         if (OOVisualEffectEntity* effect = EffectPart(part))
+         if (oo::VisualEffectEntity* effect = EffectPart(part))
            return effect->forwardVector();
          ShipEntity* ship = ShipPart(part);
          return ship != nullptr ? ship->forwardVector() : kZeroVector;
@@ -768,7 +768,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
-         if (OOVisualEffectEntity* effect = EffectPart(part))
+         if (oo::VisualEffectEntity* effect = EffectPart(part))
            return effect->upVector();
          ShipEntity* ship = ShipPart(part);
          return ship != nullptr ? ship->upVector() : kZeroVector;
@@ -780,7 +780,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
-         if (OOVisualEffectEntity* effect = EffectPart(part))
+         if (oo::VisualEffectEntity* effect = EffectPart(part))
            return effect->rightVector();
          ShipEntity* ship = ShipPart(part);
          return ship != nullptr ? ship->rightVector() : kZeroVector;
@@ -844,7 +844,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
-         OOVisualEffectEntity* effect = EffectPart(part);
+         oo::VisualEffectEntity* effect = EffectPart(part);
          return effect != nullptr ? effect->shaderFloat1() : GLfloat{};
        }());
      }},
@@ -852,21 +852,21 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
-         OOVisualEffectEntity* effect = EffectPart(part);
+         oo::VisualEffectEntity* effect = EffectPart(part);
          return effect != nullptr ? effect->shaderFloat2() : GLfloat{};
        }());
      }},
     {"shaderInt1", oo::kValueType<int>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> int {
-         OOVisualEffectEntity* effect = EffectPart(part);
+         oo::VisualEffectEntity* effect = EffectPart(part);
          return effect != nullptr ? effect->shaderInt1() : 0;
        }());
      }},
     {"shaderInt2", oo::kValueType<int>, [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> int {
-         OOVisualEffectEntity* effect = EffectPart(part);
+         oo::VisualEffectEntity* effect = EffectPart(part);
          return effect != nullptr ? effect->shaderInt2() : 0;
        }());
      }},
@@ -874,7 +874,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
-         OOVisualEffectEntity* effect = EffectPart(part);
+         oo::VisualEffectEntity* effect = EffectPart(part);
          return effect != nullptr ? effect->shaderVector1() : kZeroVector;
        }());
      }},
@@ -882,7 +882,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      [](Entity*) -> bool { return true; },
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
-         OOVisualEffectEntity* effect = EffectPart(part);
+         oo::VisualEffectEntity* effect = EffectPart(part);
          return effect != nullptr ? effect->shaderVector2() : kZeroVector;
        }());
      }},

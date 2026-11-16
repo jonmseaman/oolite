@@ -31,7 +31,12 @@ MA 02110-1301, USA.
 
 class AI;  // AI.h
 class Universe;
-class OOPlanetEntity;
+
+namespace oo {
+
+class PlanetEntity;
+
+}  // namespace oo
 
 /* The category ShipEntity (AI): its methods are members of ShipEntity. This
  * header stays for the files that include it.

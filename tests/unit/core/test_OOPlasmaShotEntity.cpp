@@ -23,8 +23,8 @@
 #include <vector>
 
 #include "OOColor.h"
-#include "OOPlasmaBurstEntity.h"
-#include "OOPlasmaShotEntity.h"
+#include "PlasmaBurstEntity.h"
+#include "PlasmaShotEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -136,12 +136,12 @@ void SetUp(OOTimeAbsolute time) {
 
 Entity* Shot(HPVector position, Vector velocity, float energy,
              OOTimeDelta duration, OOColor* color) {
-  return oo::MadeEntity(OOPlasmaShotEntity::shotWithPosition(
+  return oo::MadeEntity(oo::PlasmaShotEntity::shotWithPosition(
       position, velocity, energy, duration, color));
 }
 
-OOLightParticleEntity* Particle(Entity* shot) {
-  return static_cast<OOLightParticleEntity*>(shot);
+oo::LightParticleEntity* Particle(Entity* shot) {
+  return static_cast<oo::LightParticleEntity*>(shot);
 }
 const GLfloat* ColorComponents(Entity* shot) {
   return Particle(shot)->_colorComponents;
@@ -173,7 +173,7 @@ OO_TEST(shotIsMade) {
     SetUp(10.0);
     Entity* shot = RedShot();
     OO_CHECK(shot != nullptr &&
-             dynamic_cast<OOLightParticleEntity*>(shot) != nullptr);
+             dynamic_cast<oo::LightParticleEntity*>(shot) != nullptr);
     OO_CHECK(HPvector_equal(shot->getPosition(), make_HPvector(1, 2, 3)));
     Vector v = shot->getVelocity();
     OO_CHECK(v.x == 4 && v.y == 5 && v.z == 6);
@@ -243,7 +243,7 @@ OO_TEST(hitDamagesAndBursts) {
     OO_CHECK(sUniverse->_removed == shot);
     Entity* burst = sUniverse->_added;
     OO_CHECK(burst != nullptr && burst != shot &&
-             dynamic_cast<OOPlasmaBurstEntity*>(burst) !=
+             dynamic_cast<oo::PlasmaBurstEntity*>(burst) !=
                  nullptr);  // a C++ entity
     OO_CHECK(HPvector_equal(burst->getPosition(), shot->getPosition()));
   }

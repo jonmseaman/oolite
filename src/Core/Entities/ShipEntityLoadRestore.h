@@ -39,7 +39,9 @@ MA 02110-1301, USA.
         the save/restore context, which was a mutable dictionary keyed by group
         pointers, is this struct. Both selectors are unique.
 */
-struct OOShipSaveContext {
+namespace oo {
+
+struct ShipSaveContext {
   std::map<OOShipGroup*, unsigned>
       groupIDs;  // not retained, as the pointer-box keys were not
   unsigned nextGroupID = 0;
@@ -47,6 +49,8 @@ struct OOShipSaveContext {
       groups;  // keeps the groups alive while they have IDs
   std::map<std::size_t, std::shared_ptr<OOShipGroup>> groupsByID;
 };
+
+}  // namespace oo
 
 /*	The ShipEntity (LoadRestore) members are declared in ShipEntity.h and
         defined in ShipEntityLoadRestore.cpp. This header stays for the files

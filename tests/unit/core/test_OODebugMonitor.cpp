@@ -28,7 +28,7 @@
 #include <string_view>
 #include <utility>
 #include <vector>
-#include "OOEntityHold.h"	// the universe's entity list holds C++ entities
+#include "EntityHold.h"	// the universe's entity list holds C++ entities
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "oo_test.hpp"
@@ -351,13 +351,18 @@ size_t OOTexture::dataSize()	{ std::abort(); }
 // (declared as OOEntityWithDrawable.h declares it). The test dumps no entity,
 // so none is reached.
 class OODrawable;
-class OOEntityWithDrawable : public Entity
+namespace oo {
+
+class EntityWithDrawable : public Entity
 {
 public:
 	OODrawable *getDrawable();
 };
 
-OODrawable *OOEntityWithDrawable::getDrawable()  { std::abort(); }
+}  // namespace oo
+
+
+OODrawable *oo::EntityWithDrawable::getDrawable()  { std::abort(); }
 
 
 // MARK: The debugger

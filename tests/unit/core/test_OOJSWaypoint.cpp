@@ -44,7 +44,9 @@ public:
    from size(), one whose size is 98 throws a C++ exception, so the test sees
    what an exception under a native becomes.
 */
-class OOWaypointEntity : public Entity
+namespace oo {
+
+class WaypointEntity : public Entity
 {
 public:
 	JSClassID jsClassID() override;
@@ -63,6 +65,9 @@ public:
 	bool _oriented = false;
 	OOScalar _size = 0;
 };
+
+}  // namespace oo
+
 
 // The root's object, which holds the waypoint's C++ part (oo::ToCxx reads it) and answers the
 // beacon selectors for it (the game's Entity (OOWaypointBeacon)).
@@ -162,13 +167,13 @@ bool Entity::isVisibleToScripts()  { return false; }
 
 // The binding's category, as the C++ class's overrides call it
 // (OOWaypointEntity.mm).
-JSClassID OOWaypointEntity::jsClassID()  { return ::JSWaypointClassID(); }
-std::optional<std::string> OOWaypointEntity::jsClassName()  { return ::OOJSWaypointJSClassName(); }
-bool OOWaypointEntity::isVisibleToScripts()  { return ::OOJSWaypointIsVisibleToScripts(); }
+JSClassID oo::WaypointEntity::jsClassID()  { return ::JSWaypointClassID(); }
+std::optional<std::string> oo::WaypointEntity::jsClassName()  { return ::OOJSWaypointJSClassName(); }
+bool oo::WaypointEntity::isVisibleToScripts()  { return ::OOJSWaypointIsVisibleToScripts(); }
 
-bool OOWaypointEntity::getOriented()  { return _oriented; }
-void OOWaypointEntity::setSize(OOScalar newSize)  { _size = newSize; }
-OOScalar OOWaypointEntity::size()
+bool oo::WaypointEntity::getOriented()  { return _oriented; }
+void oo::WaypointEntity::setSize(OOScalar newSize)  { _size = newSize; }
+OOScalar oo::WaypointEntity::size()
 {
 	if (_size == 99)  oo::RaiseException(oo::InvalidArgumentException, "size %s", "boom");
 	if (_size == 98)  throw std::runtime_error("cxx boom");
@@ -388,11 +393,11 @@ std::map<Entity *, TestEntityObject *> sObjects;
 
 
 // The waypoint's beacon and orientation, on its object's fields.
-std::optional<std::string> OOWaypointEntity::beaconCode()  { return TestObjectOf(this)->_beaconCode; }
-void OOWaypointEntity::setBeaconCode(const std::optional<std::string> &bcode)  { TestObjectOf(this)->_beaconCode = bcode; }
-std::optional<std::string> OOWaypointEntity::beaconLabel()  { return TestObjectOf(this)->_beaconLabel; }
-void OOWaypointEntity::setBeaconLabel(const std::optional<std::string> &blabel)  { TestObjectOf(this)->_beaconLabel = blabel; }
-bool OOWaypointEntity::isBeacon()  { const std::optional<std::string> &code = TestObjectOf(this)->_beaconCode; return code.has_value() && !code->empty(); }
+std::optional<std::string> oo::WaypointEntity::beaconCode()  { return TestObjectOf(this)->_beaconCode; }
+void oo::WaypointEntity::setBeaconCode(const std::optional<std::string> &bcode)  { TestObjectOf(this)->_beaconCode = bcode; }
+std::optional<std::string> oo::WaypointEntity::beaconLabel()  { return TestObjectOf(this)->_beaconLabel; }
+void oo::WaypointEntity::setBeaconLabel(const std::optional<std::string> &blabel)  { TestObjectOf(this)->_beaconLabel = blabel; }
+bool oo::WaypointEntity::isBeacon()  { const std::optional<std::string> &code = TestObjectOf(this)->_beaconCode; return code.has_value() && !code->empty(); }
 Quaternion Entity::getOrientation()  { return TestObjectOf(this)->_orientation; }
 void Entity::setNormalOrientation(Quaternion quat)  { TestObjectOf(this)->_orientation = quat; }
 
@@ -405,7 +410,7 @@ JSRuntime *sRuntime = nullptr;
 JSContext *sContext = nullptr;
 JSValue sGlobal = JS_UNDEFINED;	// held for the life of the test
 TestEntityObject *sWaypoint = nullptr;			// the waypoint's object
-OOWaypointEntity *sWaypointPart = nullptr;	// its C++ part
+oo::WaypointEntity *sWaypointPart = nullptr;	// its C++ part
 FakeGame *sGame = nullptr;
 
 
@@ -456,8 +461,8 @@ void SetUpContext()
 	gOOPlayer = new PlayerEntity;	// never deleted
 	gOOPlayer->_game = sGame;
 	sWaypoint = oo::test::NewRetained<TestEntityObject>();	// kept for the life of the test
-	sWaypoint->_cxxEntity = oo::makeShared<OOWaypointEntity>();
-	sWaypointPart = static_cast<OOWaypointEntity *>(sWaypoint->_cxxEntity.get());
+	sWaypoint->_cxxEntity = oo::makeShared<oo::WaypointEntity>();
+	sWaypointPart = static_cast<oo::WaypointEntity *>(sWaypoint->_cxxEntity.get());
 	sWaypoint->_beaconLabel = "Label";
 	sWaypoint->_orientation = make_quaternion(0, 1, 0, 0);
 	sWaypointPart->_oriented = true;

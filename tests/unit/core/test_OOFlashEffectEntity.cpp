@@ -26,7 +26,7 @@
 #include <string>
 
 #include "OOColor.h"
-#include "OOFlashEffectEntity.h"
+#include "FlashEffectEntity.h"
 #include "OOTexture.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
@@ -107,10 +107,10 @@ void SetUp(OOTimeAbsolute time) {
 // ------------------------------
 
 const GLfloat* ColorComponents(Entity* e) {
-  return static_cast<OOLightParticleEntity*>(e)->_colorComponents;
+  return static_cast<oo::LightParticleEntity*>(e)->_colorComponents;
 }
 float Diameter(Entity* e) {
-  return static_cast<OOLightParticleEntity*>(e)->_diameter;
+  return static_cast<oo::LightParticleEntity*>(e)->_diameter;
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -118,11 +118,11 @@ float Diameter(Entity* e) {
 bool Near(double a, double b) { return std::fabs(a - b) < 1e-4; }
 
 // The flash's object, as the ship and the universe hand it to Objective-C.
-Entity* FlashObject(const std::shared_ptr<OOFlashEffectEntity>& flash) {
+Entity* FlashObject(const std::shared_ptr<oo::FlashEffectEntity>& flash) {
   return oo::MadeEntity(flash);
 }
-OOFlashEffectEntity* Part(Entity* flash) {
-  return dynamic_cast<OOFlashEffectEntity*>(flash);
+oo::FlashEffectEntity* Part(Entity* flash) {
+  return dynamic_cast<oo::FlashEffectEntity*>(flash);
 }
 
 Entity* Exploding() {
@@ -139,7 +139,7 @@ OO_TEST(explosionFlash) {
   {
     SetUp(5.0);
     Entity* flash =
-        FlashObject(OOFlashEffectEntity::explosionFlashFromEntity(Exploding()));
+        FlashObject(oo::FlashEffectEntity::explosionFlashFromEntity(Exploding()));
     OO_CHECK(flash != nullptr && Part(flash) != nullptr);
     OO_CHECK(HPvector_equal(flash->getPosition(), make_HPvector(10, 20, 30)));
     Vector v = flash->getVelocity();
@@ -178,7 +178,7 @@ OO_TEST(bigExplosionGrowsFaster) {
     Entity* big = Exploding();
     big->setCollisionRadius(10.0f);
     Entity* flash =
-        FlashObject(OOFlashEffectEntity::explosionFlashFromEntity(big));
+        FlashObject(oo::FlashEffectEntity::explosionFlashFromEntity(big));
     OO_CHECK(Part(flash)->diameter() == 10.0f);
     sUniverse->_time = 0.1;
     flash->update(0.1);
@@ -189,7 +189,7 @@ OO_TEST(bigExplosionGrowsFaster) {
 OO_TEST(laserFlash) {
   {
     SetUp(1.0);
-    Entity* flash = FlashObject(OOFlashEffectEntity::laserFlashWithPosition(
+    Entity* flash = FlashObject(oo::FlashEffectEntity::laserFlashWithPosition(
         make_HPvector(-1, -2, -3), make_vector(4, 5, 6),
         OOColor::colorWithRed(1.0f, 0.5f, 0.25f, 0.125f).get()));
     OO_CHECK(flash != nullptr && Part(flash) != nullptr);
@@ -221,7 +221,7 @@ OO_TEST(laserFlash) {
 OO_TEST(nilColourKeepsWhite) {
   {
     SetUp(0.0);
-    Entity* flash = FlashObject(OOFlashEffectEntity::laserFlashWithPosition(
+    Entity* flash = FlashObject(oo::FlashEffectEntity::laserFlashWithPosition(
         kZeroHPVector, kZeroVector, nullptr));
     const GLfloat* c = ColorComponents(flash);
     OO_CHECK(c[0] == 1.0f && c[1] == 1.0f && c[2] == 1.0f && c[3] == 1.0f);
@@ -232,7 +232,7 @@ OO_TEST(texture) {
   {
     SetUp(0.0);
     Entity* flash =
-        FlashObject(OOFlashEffectEntity::explosionFlashFromEntity(Exploding()));
+        FlashObject(oo::FlashEffectEntity::explosionFlashFromEntity(Exploding()));
     sTextureName.reset();
     OO_CHECK(Part(flash)->texture() == sTexture);
     OO_CHECK(sTextureName ==
@@ -240,7 +240,7 @@ OO_TEST(texture) {
     sTextureName.reset();
     OO_CHECK(Part(flash)->texture() == sTexture &&
              !sTextureName.has_value());  // loaded once
-    OOFlashEffectEntity::setUpTexture();
+    oo::FlashEffectEntity::setUpTexture();
     OO_CHECK(!sTextureName.has_value());
   }
 }
@@ -249,9 +249,9 @@ OO_TEST(facade) {
   {
     SetUp(0.0);
     Entity* flash =
-        FlashObject(OOFlashEffectEntity::explosionFlashFromEntity(Exploding()));
+        FlashObject(oo::FlashEffectEntity::explosionFlashFromEntity(Exploding()));
     // A C++ entity.
-    OO_CHECK(dynamic_cast<OOFlashEffectEntity*>(flash) != nullptr);
+    OO_CHECK(dynamic_cast<oo::FlashEffectEntity*>(flash) != nullptr);
     OO_CHECK(flash == flash);
   }
 }

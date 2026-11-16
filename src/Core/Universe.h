@@ -37,20 +37,20 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <vector>
 
+#include "EntityWithDrawable.h"
 #include "OOCharacter.h"  // the character pool is std::shared_ptr
 #include "OOColor.h"
 #include "OOCommodities.h"
 #include "OOCommodityMarket.h"  // the universe keeps its market (std::shared_ptr)
-#include "OOEntityWithDrawable.h"
 #include "OOFoundation.h"
 #include "OOJSPropID.h"
 #include "OOMaths.h"
 #include "OOOpenGL.h"
 #include "OOShaderProgram.h"
 #include "OOSound.h"
-#include "OOStellarBody.h"
 #include "OOSystemDescriptionManager.h"
 #include "OOTypes.h"
+#include "StellarBody.h"
 #include "UniverseVirtualMembers.h"  // the test seams
 #include "legacy_random.h"
 #include "oofnd/Object.hpp"
@@ -65,16 +65,34 @@ class Exception;
 }  // namespace oo
 class GameController;
 class MyOpenGLView;
-class OOVisualEffectEntity;
+
+namespace oo {
+
+class VisualEffectEntity;
+
+}  // namespace oo
+
 class ShipEntity;
 class DockEntity;
 class StationEntity;
-class OOWaypointEntity;
+
+namespace oo {
+
+class WaypointEntity;
+
+}  // namespace oo
+
 class PlayerEntity;
 #include "OOScript.h"  // std::shared_ptr<OOScript> members and results
 class WormholeEntity;
-class OOSunEntity;
-class OOPlanetEntity;
+
+namespace oo {
+
+class SunEntity;
+class PlanetEntity;
+
+}  // namespace oo
+
 #include "GuiDisplayGen.h"  // the universe keeps its GUIs (std::shared_ptr)
 class CollisionRegion;
 
@@ -410,8 +428,8 @@ class Universe : public oo::Object {
   ::ShipEntity* demo_ship = nullptr;
 
   ::StationEntity* cachedStation = nullptr;
-  ::OOPlanetEntity* cachedPlanet = nullptr;
-  ::OOSunEntity* cachedSun = nullptr;
+  ::oo::PlanetEntity* cachedPlanet = nullptr;
+  ::oo::SunEntity* cachedSun = nullptr;
   std::vector<oo::EntityHold> allPlanets;  // the planets (their objects held)
   std::vector<oo::EntityHold>
       allStations;  // the stations (their objects held), each once, in the
@@ -504,7 +522,7 @@ class Universe : public oo::Object {
   void setUpUniverseFromMisjump();
   void setUpWitchspace();
   void setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2);
-  ::OOPlanetEntity* setUpPlanet();
+  ::oo::PlanetEntity* setUpPlanet();
 
   // SetUpSpace, populating normal space, the system populator.
   void setUpSpace();
@@ -514,8 +532,8 @@ class Universe : public oo::Object {
   // (UniverseVirtualMembers.h) setPopulatorSetting(): virtual, in
   // OO_UNIVERSE_VIRTUAL_MEMBERS (UniverseVirtualMembers.h)
   bool deterministicPopulation();
-  void populateSystemFromDictionariesWithSun(::OOSunEntity* sun,
-                                             ::OOPlanetEntity* planet);
+  void populateSystemFromDictionariesWithSun(::oo::SunEntity* sun,
+                                             ::oo::PlanetEntity* planet);
 
   // Locations by code, lighting, adding ships by role, coordinate
   // systems. locationByCode(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS

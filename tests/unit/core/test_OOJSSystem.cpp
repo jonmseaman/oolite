@@ -20,7 +20,7 @@
 #include "OOJavaScriptEngine.h"
 #include "Universe.h"
 #include "PlayerEntity.h"
-#include "OOSunEntity.h"
+#include "SunEntity.h"
 #include "StationEntity.h"
 #include "OOJSPopulatorDefinition.h"
 #include "OOShipGroup.h"
@@ -129,15 +129,15 @@ public:
 	void addShipsAt(const std::string & roles_number_system_x_y_z) override	{ _log.push_back("addShipsAt " + roles_number_system_x_y_z); }
 	void addShipsAtPrecisely(const std::string & roles_number_system_x_y_z) override	{ _log.push_back("addShipsAtPrecisely " + roles_number_system_x_y_z); }
 	void addShipsWithinRadius(const std::string & roles_number_system_x_y_z_r) override	{ _log.push_back("addShipsWithinRadius " + roles_number_system_x_y_z_r); }
-	::OOPlanetEntity * addPlanetEntity(const std::string & planetKey) override
+	::oo::PlanetEntity * addPlanetEntity(const std::string & planetKey) override
 	{
 		_log.push_back("addPlanet " + planetKey);
-		return static_cast<OOPlanetEntity *>(_planetToAdd);	// the C++ planet
+		return static_cast<oo::PlanetEntity *>(_planetToAdd);	// the C++ planet
 	}
-	::OOPlanetEntity * addMoonEntity(const std::string & moonKey) override
+	::oo::PlanetEntity * addMoonEntity(const std::string & moonKey) override
 	{
 		_log.push_back("addMoon " + moonKey);
-		return static_cast<OOPlanetEntity *>(_planetToAdd);	// the C++ planet
+		return static_cast<oo::PlanetEntity *>(_planetToAdd);	// the C++ planet
 	}
 };
 
@@ -202,8 +202,8 @@ public:
 
 	bool inInterstellarSpace() override	{ return _interstellar; }
 	::StationEntity *station() override	{ return static_cast<StationEntity *>(_station); }
-	::OOPlanetEntity *planet() override	{ return static_cast<OOPlanetEntity *>(_planet); }
-	::OOSunEntity *sun() override	{ return static_cast<OOSunEntity *>(_sun); }
+	::oo::PlanetEntity *planet() override	{ return static_cast<oo::PlanetEntity *>(_planet); }
+	::oo::SunEntity *sun() override	{ return static_cast<oo::SunEntity *>(_sun); }
 	std::vector<oo::EntityHold> planets() override	{ return Held(_planets); }
 	std::vector<oo::EntityHold> stations() override
 	{
@@ -265,7 +265,7 @@ public:
 		_log.push_back(oo::str::format("countScanClass %d %g %s", static_cast<int>(scanClass), range, Describe(entity).c_str()));
 		return 5;
 	}
-	HPVector locationByCode(const std::string &code, ::OOSunEntity *sun, ::OOPlanetEntity *planet) override
+	HPVector locationByCode(const std::string &code, ::oo::SunEntity *sun, ::oo::PlanetEntity *planet) override
 	{
 		_log.push_back(oo::str::format("location %s %s %s", code.c_str(), Describe(sun).c_str(), Describe(planet).c_str()));
 		return make_HPvector(1, 2, 3);

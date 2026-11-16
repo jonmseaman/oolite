@@ -1,0 +1,62 @@
+/*
+
+OOStellarBody.h
+
+Protocol shared by suns and planets (which used to be the same class).
+
+
+Oolite
+Copyright (C) 2004-2013 Giles C Williams and contributors
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301, USA.
+
+*/
+
+#pragma once
+
+#include "OOFoundation.h"
+#include "OOMaths.h"
+#include "OOTypes.h"
+#include "oofnd/objc/Object.h"
+
+namespace oo {
+
+enum class StellarBodyType : int {
+  kSun,
+  kNormalPlanet,  // Terrestrial planet with atmosphere and oceans
+  kMoon,          // Rocky/airless planet
+  kMiniature      // Display proxy for a "normal" planet
+};
+
+}  // namespace oo
+
+inline constexpr double ATMOSPHERE_DEPTH = 500.0;
+inline constexpr double PLANET_MINIATURE_FACTOR = 0.00185;
+inline constexpr int MAX_SUBDIVIDE = 6;
+
+/*	The radius and planet type of a stellar body: the sun and the
+        planet are asked directly; any other body by
+        selector. Null answers 0. Defined in OOSunEntity.cpp.
+*/
+class Entity;
+
+namespace oo {
+
+double StellarBodyRadius(Entity* body);  // of the C++ entity
+StellarBodyType StellarBodyPlanetType(Entity* body);
+
+}  // namespace oo
+   // the same

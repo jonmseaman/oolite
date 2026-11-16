@@ -913,7 +913,7 @@ static JSValue SystemInfoGetProperty(OOJS_GETTER_ARGS) {
     case kCoordinates:
       if (sameGalaxy && !savedInterstellarInfo) {
         OOJS_RETURN_VECTOR(
-            OOGalacticCoordinatesFromInternal(CoordinatesOf(info)));
+            oo::GalacticCoordinatesFromInternal(CoordinatesOf(info)));
       } else {
         OOJSReportError(
             context, "Cannot read systemInfo values for %s.",

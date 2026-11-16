@@ -48,7 +48,11 @@ MA 02110-1301, USA.
 
 // PlayerEntity.h defines it; this header does not include PlayerEntity.h (it
 // would close an include cycle).
-enum class OOMissileStatus : std::int32_t;
+namespace oo {
+
+enum class MissileStatus : std::int32_t;
+
+}  // namespace oo
 
 struct OOHUDWidget;  // HeadUpDisplay.cpp
 
@@ -417,7 +421,7 @@ class HeadUpDisplay : public oo::Object {
 
   // Crosshairs
   std::unique_ptr<OOCrosshairs> _crosshairs;
-  OOWeaponType _lastWeaponType = {};
+  oo::WeaponType _lastWeaponType = {};
   GLfloat _lastOverallAlpha = {};
   bool _lastWeaponsOnline = {};
   oo::PList _crosshairOverrides;  // null for none
@@ -463,14 +467,14 @@ class HeadUpDisplay : public oo::Object {
   void drawSecondaryTargetReticle(const oo::PList& info);
 
   void drawIconForMissile(::ShipEntity* missile, bool selected,
-                          OOMissileStatus status, int x, int y, GLfloat width,
+                          oo::MissileStatus status, int x, int y, GLfloat width,
                           GLfloat height, GLfloat alpha);
   void drawIconForEmptyPylonAtX(int x, int y, GLfloat width, GLfloat height,
                                 GLfloat alpha);
   void drawDirectionCue(const oo::PList& info);
 
   oo::PList crosshairDefinitionForWeaponType(
-      OOWeaponType weapon);  // a null PList for none
+      oo::WeaponType weapon);  // a null PList for none
 
   void resetGui(::GuiDisplayGen* gui, const oo::PList& gui_info);
   void resetGuiPosition(::GuiDisplayGen* gui, const oo::PList& gui_info);
@@ -537,7 +541,11 @@ void OOHUDResetTextEngine();
 
 #include "WormholeEntity.h"  // WORMHOLE_SCANINFO (a send below)
 
-class OOVisualEffectEntity;
+namespace oo {
+
+class VisualEffectEntity;
+
+}  // namespace oo
 
 /*	Free functions that forward one call each to other classes' members
         (HeadUpDisplay.cpp).
@@ -570,8 +578,8 @@ bool HeadUpDisplayShipIsCloaked(ShipEntity* ship);
 bool HeadUpDisplayShipIsHostileToPlayer(ShipEntity* ship);
 GLfloat* HeadUpDisplayShipScannerDisplayColor(ShipEntity* ship, bool isHostile,
                                               bool flash);
-GLfloat* HeadUpDisplayVisualEffectScannerDisplayColor(OOVisualEffectEntity* vis,
-                                                      bool flash);
+GLfloat* HeadUpDisplayVisualEffectScannerDisplayColor(
+    oo::VisualEffectEntity* vis, bool flash);
 WORMHOLE_SCANINFO HeadUpDisplayWormholeScanInfo(WormholeEntity* wormhole);
 double HeadUpDisplayWormholeEstimatedArrivalTime(WormholeEntity* wormhole);
 double HeadUpDisplayWormholeExpiryTime(WormholeEntity* wormhole);

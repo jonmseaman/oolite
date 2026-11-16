@@ -42,12 +42,12 @@ OOJSSystem.m (QuickJS-ng)
 
 #include "DebugStandards.h"
 #include "Entity.h"
+#include "EntityHold.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "EntityPListForeign.h"
 #include "OOConstToJSString.h"
 #include "OODescription.h"
 #include "OOEntityFilterPredicate.h"
-#include "OOEntityHold.h"
 #include "OOFoundation.h"
 #include "OOHPVector.h"
 #include "OOJSEngineNativeWrappers.h"
@@ -60,16 +60,16 @@ OOJSSystem.m (QuickJS-ng)
 #include "OOJSSystemInfo.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOPlanetEntity.h"
 #include "OOQuaternion.h"
 #include "OOShipGroup.h"
-#include "OOSunEntity.h"  // the sun is C++
 #include "OOSystemDescriptionManager.h"
 #include "OOTypes.h"
 #include "OOVector.h"
+#include "PlanetEntity.h"
 #include "ScanClass.h"
 #include "ShipEntity.h"
 #include "StationEntity.h"  // IWYU pragma: keep: converting StationEntity* to Entity* needs the complete type
+#include "SunEntity.h"      // the sun is C++
 #include "Universe.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
@@ -756,7 +756,7 @@ static JSValue SystemAddPlanet(JSContext* context, JSValueConst /*oojsThis*/,
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> key;
-  OOPlanetEntity* planet = nullptr;
+  oo::PlanetEntity* planet = nullptr;
 
   if (argc > 0) key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!key.has_value()) [[unlikely]] {
@@ -767,7 +767,7 @@ static JSValue SystemAddPlanet(JSContext* context, JSValueConst /*oojsThis*/,
 
   OOJS_BEGIN_FULL_NATIVE(context)
   planet = (player != nullptr ? player->addPlanetEntity(*key)
-                              : static_cast<OOPlanetEntity*>(nullptr));
+                              : static_cast<oo::PlanetEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
 
   OOJS_RETURN(
@@ -783,7 +783,7 @@ static JSValue SystemAddMoon(JSContext* context, JSValueConst /*oojsThis*/,
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> key;
-  OOPlanetEntity* planet = nullptr;
+  oo::PlanetEntity* planet = nullptr;
 
   if (argc > 0) key = OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!key.has_value()) [[unlikely]] {
@@ -794,7 +794,7 @@ static JSValue SystemAddMoon(JSContext* context, JSValueConst /*oojsThis*/,
 
   OOJS_BEGIN_FULL_NATIVE(context)
   planet = (player != nullptr ? player->addMoonEntity(*key)
-                              : static_cast<OOPlanetEntity*>(nullptr));
+                              : static_cast<oo::PlanetEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
 
   OOJS_RETURN(
@@ -1130,8 +1130,9 @@ static JSValue SystemLocationFromCode(JSContext* context,
                            OOJS_ARGV, std::nullopt, "location code");
     return OOJSNativeFailure(context);
   }
-  OOSunEntity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
-  OOPlanetEntity* planet = (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr);
+  oo::SunEntity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
+  oo::PlanetEntity* planet =
+      (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr);
   HPVector position = kZeroHPVector;
   if (sun == nullptr || planet == nullptr) {
     position = (UNIVERSE != nullptr

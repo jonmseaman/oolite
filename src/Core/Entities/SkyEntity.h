@@ -30,12 +30,12 @@ MA 02110-1301, USA.
 #include <optional>
 #include <string>
 
-#include "OOEntityWithDrawable.h"
+#include "EntityWithDrawable.h"
 #include "oofnd/PList.hpp"
 
 // The universe makes it with oo::makeShared<SkyEntity>() and finds it by
 // dynamic_cast.
-class SkyEntity : public OOEntityWithDrawable {
+class SkyEntity : public oo::EntityWithDrawable {
  public:
   /*	-initWithColors::andSystemInfo:'s body after [super init] (the
      constructor ran Entity's), run on a new sky once its object is made.

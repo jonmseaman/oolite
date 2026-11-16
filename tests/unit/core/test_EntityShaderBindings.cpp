@@ -31,7 +31,7 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 
 // The values under test, as the uniforms reach them: the binding for a name.
-#include "OOEntityCalledByName.h"  // the by-name table's names
+#include "EntityCalledByName.h"  // the by-name table's names
 #include "OOShaderUniformMethodType.h"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 

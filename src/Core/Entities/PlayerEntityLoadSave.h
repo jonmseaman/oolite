@@ -58,9 +58,13 @@ inline constexpr int SAVE_OVERWRITE_NO_ROW = 9;
 // OO_USE_CUSTOM_LOAD_SAVE) are in PlayerEntity.h, whose member declarations of
 // this file's categories they condition.
 
-OOCreditsQuantity OODeciCreditsFromDouble(double doubleDeciCredits);
+namespace oo {
+
+OOCreditsQuantity DeciCreditsFromDouble(double doubleDeciCredits);
 
 /*	Value is either a real or something that can be duck-typed to an integer
    as oo::plist_get::unsignedLongLongFrom() reads it (nullptr: 0).
 */
-OOCreditsQuantity OODeciCreditsFromPList(const oo::PList* value);
+OOCreditsQuantity DeciCreditsFromPList(const oo::PList* value);
+
+}  // namespace oo

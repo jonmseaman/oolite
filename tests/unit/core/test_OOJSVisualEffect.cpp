@@ -25,7 +25,7 @@
 #include "OOTypes.h"  // IWYU pragma: keep
 #include <quickjs.h>
 #include "OODescription.h"
-#include "OOEntityHold.h"	// the sub-entity lists
+#include "EntityHold.h"	// the sub-entity lists
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
@@ -124,7 +124,9 @@ public:
 typedef TestEntityObject OOVisualEffectSubEntity;	// the object conforming to OOSubEntity
 typedef TestEntityObject OOVisualEffectBeaconEntity;	// the object conforming to OOBeaconEntity
 
-class OOVisualEffectEntity : public Entity
+namespace oo {
+
+class VisualEffectEntity : public Entity
 {
 public:
 	std::optional<std::string> effectKey();
@@ -199,6 +201,9 @@ public:
 	std::optional<std::string> _beaconLabel;
 };
 
+}  // namespace oo
+
+
 // The universe's beacon list and the player's compass: what the binding tells them.
 #include "UniverseStandIn.h"
 
@@ -222,7 +227,7 @@ public:
 
 	// The C++ entity (the effect's object holds this part).
 	void setNextBeacon(Entity *beacon) override  { _added++; (void)beacon; }
-	void clearBeacon(Entity *beacon) override  { _cleared++; static_cast<OOVisualEffectEntity *>(beacon)->_beaconCode = std::nullopt; }
+	void clearBeacon(Entity *beacon) override  { _cleared++; static_cast<oo::VisualEffectEntity *>(beacon)->_beaconCode = std::nullopt; }
 	TestEntityObject *nextBeacon()  { return _nextBeacon; }
 	void setCompassMode(oo::CompassMode mode)  { _compassMode = static_cast<int>(mode); }
 };
@@ -251,7 +256,7 @@ void InitOOJSVisualEffect(JSContext* context, JSValueConst global);
 JSClassID JSVisualEffectClassID(void);
 std::optional<std::string> OOJSVisualEffectJSClassName(void);
 bool OOJSVisualEffectIsVisibleToScripts(void);
-std::vector<oo::EntityHold> OOJSVisualEffectSubEntitiesForScript(OOVisualEffectEntity *effect);	// what -subEntitiesForScript answered
+std::vector<oo::EntityHold> OOJSVisualEffectSubEntitiesForScript(oo::VisualEffectEntity *effect);	// what -subEntitiesForScript answered
 #include "OOJSEngineCore.h"
 
 
@@ -310,7 +315,7 @@ namespace {
 TestEntityObject *NewEffectObject()
 {
 	TestEntityObject *object = oo::autorelease(oo::makeShared<TestEntityObject>());
-	object->_cxxEntity = oo::makeShared<OOVisualEffectEntity>();
+	object->_cxxEntity = oo::makeShared<oo::VisualEffectEntity>();
 	object->_cxxEntity->_object = object;
 	return object;
 }
@@ -369,63 +374,63 @@ oo::PList ResourceManager::materialDefaults()
 
 
 
-std::optional<std::string> OOVisualEffectEntity::effectKey()  { return _effectKey; }
-bool OOVisualEffectEntity::isBreakPattern()  { return _isBreakPattern; }
-void OOVisualEffectEntity::setIsBreakPattern(bool bp)  { _isBreakPattern = bp; }
-Vector OOVisualEffectEntity::forwardVector()  { return make_vector(0, 0, 1); }
-Vector OOVisualEffectEntity::rightVector()  { return make_vector(1, 0, 0); }
-Vector OOVisualEffectEntity::upVector()  { return make_vector(0, 1, 0); }
-GLfloat OOVisualEffectEntity::scaleX()  { return _scaleX; }
-void OOVisualEffectEntity::setScaleX(GLfloat factor)  { _scaleX = factor; }
-GLfloat OOVisualEffectEntity::scaleY()  { return _scaleY; }
-void OOVisualEffectEntity::setScaleY(GLfloat factor)  { _scaleY = factor; }
-GLfloat OOVisualEffectEntity::scaleZ()  { return _scaleZ; }
-void OOVisualEffectEntity::setScaleZ(GLfloat factor)  { _scaleZ = factor; }
-OOColor *OOVisualEffectEntity::scannerDisplayColor1()  { return _color1.get(); }
-OOColor *OOVisualEffectEntity::scannerDisplayColor2()  { return _color2.get(); }
-void OOVisualEffectEntity::setScannerDisplayColor1(OOColor *color)  { _color1 = oo::share(color); }
-void OOVisualEffectEntity::setScannerDisplayColor2(OOColor *color)  { _color2 = oo::share(color); }
-void OOVisualEffectEntity::setHullHeatLevel(GLfloat value)  { _hullHeatLevel = value; }
-GLfloat OOVisualEffectEntity::shaderFloat1()  { return _shaderFloat1; }
-void OOVisualEffectEntity::setShaderFloat1(GLfloat value)  { _shaderFloat1 = value; }
-GLfloat OOVisualEffectEntity::shaderFloat2()  { return _shaderFloat2; }
-void OOVisualEffectEntity::setShaderFloat2(GLfloat value)  { _shaderFloat2 = value; }
-int OOVisualEffectEntity::shaderInt1()  { return _shaderInt1; }
-void OOVisualEffectEntity::setShaderInt1(int value)  { _shaderInt1 = value; }
-int OOVisualEffectEntity::shaderInt2()  { return _shaderInt2; }
-void OOVisualEffectEntity::setShaderInt2(int value)  { _shaderInt2 = value; }
-Vector OOVisualEffectEntity::shaderVector1()  { return _shaderVector1; }
-void OOVisualEffectEntity::setShaderVector1(Vector value)  { _shaderVector1 = value; }
-Vector OOVisualEffectEntity::shaderVector2()  { return _shaderVector2; }
-void OOVisualEffectEntity::setShaderVector2(Vector value)  { _shaderVector2 = value; }
-std::optional<std::vector<oo::EntityHold>> OOVisualEffectEntity::visualEffectSubEntityEnumerator()  { return _subs; }
-::OOScript *OOVisualEffectEntity::script()  { return _script; }
-oo::PList OOVisualEffectEntity::scriptInfo()  { return _scriptInfo; }
-oo::PList OOVisualEffectEntity::effectInfoDictionary()  { return _effectInfo; }
-::OOMesh *OOVisualEffectEntity::mesh()  { return _mesh.get(); }
-void OOVisualEffectEntity::setMesh(::OOMesh *mesh)  { _mesh = oo::share(mesh); }
-void OOVisualEffectEntity::removeSubEntity(OOVisualEffectSubEntity *sub)  { _removedSub = sub; }
-void OOVisualEffectEntity::removeSubEntity(Entity *sub)  { _removedSub = TestObjectOf(sub); }	// its object, as the binding passed it
-void OOVisualEffectEntity::remove()  { _removed++; }
-std::optional<std::string> OOVisualEffectEntity::beaconCode()  { return _beaconCode; }
-void OOVisualEffectEntity::setBeaconCode(const std::optional<std::string> &bcode)  { _beaconCode = bcode; }
-std::optional<std::string> OOVisualEffectEntity::beaconLabel()  { return _beaconLabel; }
-void OOVisualEffectEntity::setBeaconLabel(const std::optional<std::string> &blabel)  { _beaconLabel = blabel; }
-bool OOVisualEffectEntity::isBeacon()  { return _beaconCode.has_value() && !_beaconCode->empty(); }
+std::optional<std::string> oo::VisualEffectEntity::effectKey()  { return _effectKey; }
+bool oo::VisualEffectEntity::isBreakPattern()  { return _isBreakPattern; }
+void oo::VisualEffectEntity::setIsBreakPattern(bool bp)  { _isBreakPattern = bp; }
+Vector oo::VisualEffectEntity::forwardVector()  { return make_vector(0, 0, 1); }
+Vector oo::VisualEffectEntity::rightVector()  { return make_vector(1, 0, 0); }
+Vector oo::VisualEffectEntity::upVector()  { return make_vector(0, 1, 0); }
+GLfloat oo::VisualEffectEntity::scaleX()  { return _scaleX; }
+void oo::VisualEffectEntity::setScaleX(GLfloat factor)  { _scaleX = factor; }
+GLfloat oo::VisualEffectEntity::scaleY()  { return _scaleY; }
+void oo::VisualEffectEntity::setScaleY(GLfloat factor)  { _scaleY = factor; }
+GLfloat oo::VisualEffectEntity::scaleZ()  { return _scaleZ; }
+void oo::VisualEffectEntity::setScaleZ(GLfloat factor)  { _scaleZ = factor; }
+OOColor *oo::VisualEffectEntity::scannerDisplayColor1()  { return _color1.get(); }
+OOColor *oo::VisualEffectEntity::scannerDisplayColor2()  { return _color2.get(); }
+void oo::VisualEffectEntity::setScannerDisplayColor1(OOColor *color)  { _color1 = oo::share(color); }
+void oo::VisualEffectEntity::setScannerDisplayColor2(OOColor *color)  { _color2 = oo::share(color); }
+void oo::VisualEffectEntity::setHullHeatLevel(GLfloat value)  { _hullHeatLevel = value; }
+GLfloat oo::VisualEffectEntity::shaderFloat1()  { return _shaderFloat1; }
+void oo::VisualEffectEntity::setShaderFloat1(GLfloat value)  { _shaderFloat1 = value; }
+GLfloat oo::VisualEffectEntity::shaderFloat2()  { return _shaderFloat2; }
+void oo::VisualEffectEntity::setShaderFloat2(GLfloat value)  { _shaderFloat2 = value; }
+int oo::VisualEffectEntity::shaderInt1()  { return _shaderInt1; }
+void oo::VisualEffectEntity::setShaderInt1(int value)  { _shaderInt1 = value; }
+int oo::VisualEffectEntity::shaderInt2()  { return _shaderInt2; }
+void oo::VisualEffectEntity::setShaderInt2(int value)  { _shaderInt2 = value; }
+Vector oo::VisualEffectEntity::shaderVector1()  { return _shaderVector1; }
+void oo::VisualEffectEntity::setShaderVector1(Vector value)  { _shaderVector1 = value; }
+Vector oo::VisualEffectEntity::shaderVector2()  { return _shaderVector2; }
+void oo::VisualEffectEntity::setShaderVector2(Vector value)  { _shaderVector2 = value; }
+std::optional<std::vector<oo::EntityHold>> oo::VisualEffectEntity::visualEffectSubEntityEnumerator()  { return _subs; }
+::OOScript *oo::VisualEffectEntity::script()  { return _script; }
+oo::PList oo::VisualEffectEntity::scriptInfo()  { return _scriptInfo; }
+oo::PList oo::VisualEffectEntity::effectInfoDictionary()  { return _effectInfo; }
+::OOMesh *oo::VisualEffectEntity::mesh()  { return _mesh.get(); }
+void oo::VisualEffectEntity::setMesh(::OOMesh *mesh)  { _mesh = oo::share(mesh); }
+void oo::VisualEffectEntity::removeSubEntity(OOVisualEffectSubEntity *sub)  { _removedSub = sub; }
+void oo::VisualEffectEntity::removeSubEntity(Entity *sub)  { _removedSub = TestObjectOf(sub); }	// its object, as the binding passed it
+void oo::VisualEffectEntity::remove()  { _removed++; }
+std::optional<std::string> oo::VisualEffectEntity::beaconCode()  { return _beaconCode; }
+void oo::VisualEffectEntity::setBeaconCode(const std::optional<std::string> &bcode)  { _beaconCode = bcode; }
+std::optional<std::string> oo::VisualEffectEntity::beaconLabel()  { return _beaconLabel; }
+void oo::VisualEffectEntity::setBeaconLabel(const std::optional<std::string> &blabel)  { _beaconLabel = blabel; }
+bool oo::VisualEffectEntity::isBeacon()  { return _beaconCode.has_value() && !_beaconCode->empty(); }
 
-GLfloat OOVisualEffectEntity::hullHeatLevel()
+GLfloat oo::VisualEffectEntity::hullHeatLevel()
 {
 	if (_hullHeatLevel == 99)  oo::RaiseException(oo::InvalidArgumentException, "heat %s", "boom");
 	if (_hullHeatLevel == 98)  throw std::runtime_error("cxx boom");
 	return _hullHeatLevel;
 }
 
-void OOVisualEffectEntity::clearSubEntities()
+void oo::VisualEffectEntity::clearSubEntities()
 {
 	_subs = std::nullopt;
 }
 
-bool OOVisualEffectEntity::setUpSubEntities()
+bool oo::VisualEffectEntity::setUpSubEntities()
 {
 	std::vector<oo::EntityHold> subs;
 	for (int i = 0; i < _subsAfterSetUp; i++)  subs.emplace_back(oo::Hold(NewEffectObject()->_cxxEntity.get()));
@@ -436,9 +441,9 @@ bool OOVisualEffectEntity::setUpSubEntities()
 
 // The JS questions the engine asks the object, which the effect's C++ class's
 // overrides answer.
-JSClassID OOVisualEffectEntity::jsClassID()  { return ::JSVisualEffectClassID(); }
-std::optional<std::string> OOVisualEffectEntity::jsClassName()  { return ::OOJSVisualEffectJSClassName(); }
-bool OOVisualEffectEntity::isVisibleToScripts()  { return ::OOJSVisualEffectIsVisibleToScripts(); }
+JSClassID oo::VisualEffectEntity::jsClassID()  { return ::JSVisualEffectClassID(); }
+std::optional<std::string> oo::VisualEffectEntity::jsClassName()  { return ::OOJSVisualEffectJSClassName(); }
+bool oo::VisualEffectEntity::isVisibleToScripts()  { return ::OOJSVisualEffectIsVisibleToScripts(); }
 
 
 
@@ -565,7 +570,7 @@ JSValue OOJSValueFromPList(JSContext *context, const oo::PList &plist)
     // oo::EntityClassName() names it.
 		if (object->_cxxEntity != nullptr)
 		{
-			if (dynamic_cast<OOVisualEffectEntity *>(object->_cxxEntity.get()) != nullptr)  name = "[OOVisualEffectEntity]";
+			if (dynamic_cast<oo::VisualEffectEntity *>(object->_cxxEntity.get()) != nullptr)  name = "[OOVisualEffectEntity]";
 		}
 		return JS_NewStringLen(context, name.data(), name.size());
 	}
@@ -748,9 +753,9 @@ JSRuntime *sRuntime = nullptr;
 JSContext *sContext = nullptr;
 JSValue sGlobal = JS_UNDEFINED;	// held for the life of the test
 TestEntityObject *sEffect = nullptr;	// an effect's object and its C++ part
-OOVisualEffectEntity *sEffectPart = nullptr;
+oo::VisualEffectEntity *sEffectPart = nullptr;
 TestEntityObject *sSub = nullptr;
-OOVisualEffectEntity *sSubPart = nullptr;
+oo::VisualEffectEntity *sSubPart = nullptr;
 FakeGame *sGame = nullptr;
 
 
@@ -800,7 +805,7 @@ void SetUpContext()
 	gOOPlayer->_game = sGame;
 	sEffect = NewEffectObject();
 	oo::test::Retain(sEffect);
-	sEffectPart = static_cast<OOVisualEffectEntity *>(sEffect->_cxxEntity.get());
+	sEffectPart = static_cast<oo::VisualEffectEntity *>(sEffect->_cxxEntity.get());
 	sEffectPart->_beaconLabel = "Label";
 	sEffectPart->_effectKey = "test-effect";
 	sEffectPart->_scaleX = 1;
@@ -820,7 +825,7 @@ void SetUpContext()
 	sEffectPart->_effectInfo = oo::PList(std::move(effectInfo));
 	sSub = NewEffectObject();
 	oo::test::Retain(sSub);
-	sSubPart = static_cast<OOVisualEffectEntity *>(sSub->_cxxEntity.get());
+	sSubPart = static_cast<oo::VisualEffectEntity *>(sSub->_cxxEntity.get());
 	sSubPart->_isSubEntity = true;
 	sSubPart->_owner = sEffect;
 	Define("effect", JSValueForEntity(sEffect));

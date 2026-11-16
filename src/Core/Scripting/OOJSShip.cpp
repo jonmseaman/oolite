@@ -169,7 +169,7 @@ static JSValue ShipGetSafeCourseToDestination(OOJS_NATIVE_ARGS);
 static JSValue ShipCheckScanner(OOJS_NATIVE_ARGS);
 static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS);
 static JSValue ShipDamageAssessment(OOJS_NATIVE_ARGS);
-static double ShipThreatAssessmentWeapon(OOWeaponType wt);
+static double ShipThreatAssessmentWeapon(oo::WeaponType wt);
 
 static JSValue ShipSetCargoType(OOJS_NATIVE_ARGS);
 static JSValue ShipSetCrew(OOJS_NATIVE_ARGS);
@@ -1222,7 +1222,8 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
         return OOJSValueFromBOOL(
             (static_cast<PlayerEntity*>(entity) != nullptr
                  ? static_cast<PlayerEntity*>(entity)->fleeingStatus()
-                 : OOPlayerFleeingStatus{}) >= OOPlayerFleeingStatus::kCargo);
+                 : oo::PlayerFleeingStatus{}) >=
+            oo::PlayerFleeingStatus::kCargo);
       } else {
         return OOJSValueFromBOOL(
             ship->getBehaviour() == oo::Behaviour::kFleeTarget ||
@@ -4384,7 +4385,7 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
     }
 
     // check lasers
-    OOWeaponType wt =
+    oo::WeaponType wt =
         ship->weaponTypeIDForFacing(OOWeaponFacing::kForward, false);
     /* Not affected by multiple mounts here: they're either just a
      * split of the power, or only more dangerous until they
@@ -4440,7 +4441,8 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
   } else if (ship->getIsPlayer() &&
              (static_cast<PlayerEntity*>(thisEnt) != nullptr
                   ? static_cast<PlayerEntity*>(thisEnt)->fleeingStatus()
-                  : OOPlayerFleeingStatus{}) >= OOPlayerFleeingStatus::kCargo) {
+                  : oo::PlayerFleeingStatus{}) >=
+                 oo::PlayerFleeingStatus::kCargo) {
     assessment *= 0.2;
   }
 
@@ -4452,7 +4454,7 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
   OOJS_RETURN_DOUBLE(assessment);
 }
 
-static double ShipThreatAssessmentWeapon(OOWeaponType wt) {
+static double ShipThreatAssessmentWeapon(oo::WeaponType wt) {
   if (wt == nullptr) {
     return -1.0;
   }

@@ -31,11 +31,16 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOEntityHold.h"
+#include "EntityHold.h"
 #include "OOFoundation.h"
 
 class Entity;
-class OOVisualEffectEntity;
+
+namespace oo {
+
+class VisualEffectEntity;
+
+}  // namespace oo
 
 void InitOOJSVisualEffect(JSContext* context, JSValueConst global);
 
@@ -49,4 +54,4 @@ JSClassID JSVisualEffectClassID();
 std::optional<std::string> OOJSVisualEffectJSClassName();
 bool OOJSVisualEffectIsVisibleToScripts();
 std::vector<oo::EntityHold> OOJSVisualEffectSubEntitiesForScript(
-    OOVisualEffectEntity* effect);
+    oo::VisualEffectEntity* effect);

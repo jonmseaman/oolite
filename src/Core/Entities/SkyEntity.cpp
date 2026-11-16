@@ -211,7 +211,7 @@ GLfloat SkyEntity::cameraRangeBack() { return MAX_CLEAR_DEPTH; }
 void SkyEntity::drawImmediate(bool immediate, bool translucent) {
   if ((UNIVERSE != nullptr ? UNIVERSE->breakPatternHide() : false)) return;
 
-  OOEntityWithDrawable::drawImmediate(immediate, translucent);
+  oo::EntityWithDrawable::drawImmediate(immediate, translucent);
 
   OOCheckOpenGLErrors([&]() -> std::string {
     return "SkyEntity after drawing " + oo::EntityDescription(this);

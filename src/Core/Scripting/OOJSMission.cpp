@@ -774,7 +774,7 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
     if (const std::optional<Vector> converted =
             JSValueToVector(context, value)) {
       vValue = *converted;
-      NSPoint coords = OOInternalCoordinatesFromGalactic(vValue);
+      NSPoint coords = oo::InternalCoordinatesFromGalactic(vValue);
       if (player != nullptr) player->setCustomChartCentre(coords);
     } else {
       if (player != nullptr)
