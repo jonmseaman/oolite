@@ -35,6 +35,9 @@ tests/__pycache__
 /third_party/quickjs-*/
 /third_party/packagecache/
 /third_party/.wraplock
+# A stray fetch into meson's default subproject_dir; the build uses third_party/.
+/subprojects/
 
 # Node packages (tools/oxp-upgrade, eslint)
 node_modules/
+/package-lock.json
