@@ -219,7 +219,7 @@ bool OOShaderMaterial::initWithName(const std::optional<std::string>& name,
 
 				bool canFallBack = !modifiedMacros.get<bool>("OO_REDUCED_COMPLEXITY");
 #ifdef OO_DEBUG_MONITOR_ENABLED
-				if (OODebugFlagIsOn(OODebugFlags::kNoShaderFallback))  canFallBack = false;
+				if (oo::DebugFlagIsOn(oo::DebugFlags::kNoShaderFallback))  canFallBack = false;
 #endif
 				if (canFallBack) {
 					OO_LOG_WARN("shader.load.fullModeFailed", "Could not build shader {}/{} in full complexity mode, trying simple mode.", vsName.value_or("(null)"), fsName.value_or("(null)"));

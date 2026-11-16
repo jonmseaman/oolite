@@ -19,7 +19,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "OODebugStandards.h"
+#include "DebugStandards.h"
 #include "OOJSClock.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
@@ -123,7 +123,12 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-void OOStandardsDeprecated(const std::string&) { sDeprecations++; }
+namespace oo {
+
+void StandardsDeprecated(const std::string&) { sDeprecations++; }
+
+}  // namespace oo
+
 
 // The formatter, as far as the clock sees it: what it was asked for.
 std::string ClockToString(double clock, bool adjusting) {

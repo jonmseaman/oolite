@@ -28,7 +28,7 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-#include "OOJSConsole.h"
+#include "JSConsole.h"
 
 #include <stdint.h>
 
@@ -46,8 +46,8 @@ SOFTWARE.
 #include "Entity.h"                        // an entity's -inspect
 #include "EntityOOJavaScriptExtensions.h"  // IWYU pragma: keep: used only in OO_DEBUG builds
 #include "OOConstToString.h"
-#include "OODebugFlags.h"
-#include "OODebugMonitor.h"
+#include "DebugFlags.h"
+#include "DebugMonitor.h"
 #include "OOJSCall.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSEntity.h"
@@ -201,7 +201,7 @@ enum class ConsoleProperty : std::int16_t {
 // A flag's JS property name as the C string a property entry holds.
 // OOEnumName's names are string literals, so the view's data is
 // null-terminated.
-static constexpr const char* DebugFlagPropertyName(OODebugFlags flag) {
+static constexpr const char* DebugFlagPropertyName(oo::DebugFlags flag) {
   return OOEnumName(flag).data();
 }
 
@@ -243,7 +243,7 @@ static const JSCFunctionListEntry sConsoleProperties[] = {
 
 // Each flag's name is its OOEnumName, as console.DEBUG_* always was.
 #define DEBUG_FLAG_DECL(flag, magic)                          \
-  OOJS_PROPERTY_RO(DebugFlagPropertyName(OODebugFlags::flag), \
+  OOJS_PROPERTY_RO(DebugFlagPropertyName(oo::DebugFlags::flag), \
                    ConsoleGetProperty, magic)
     DEBUG_FLAG_DECL(kLinkedLists, ConsoleProperty::kDebugLinkedLists),
     DEBUG_FLAG_DECL(kCollisions, ConsoleProperty::kDebugCollisions),
@@ -321,13 +321,13 @@ namespace {
 
 // The monitor of a Console or ConsoleSettings object; null for any other object
 // (or a prototype).
-OODebugMonitor* MonitorFromJSObject(JSValueConst object) {
+oo::DebugMonitor* MonitorFromJSObject(JSValueConst object) {
   if (!JS_IsObject(object)) return nullptr;
   const JSClassID classID = JS_GetClassID(object);
   if (classID == 0 ||
       (classID != sConsoleClassID && classID != sConsoleSettingsClassID))
     return nullptr;
-  return static_cast<OODebugMonitor*>(
+  return static_cast<oo::DebugMonitor*>(
       OOJSCxxPrivateFromOpaque(JS_GetOpaque(object, classID)));
 }
 
@@ -349,9 +349,9 @@ void ReportNotTheMonitor(JSContext* context, JSValueConst object,
 
 // The monitor the private slot holds; null, with the internal error reported,
 // for any other object.
-OODebugMonitor* MonitorForConsoleObject(JSContext* context, JSValueConst object,
+oo::DebugMonitor* MonitorForConsoleObject(JSContext* context, JSValueConst object,
                                         const char* function) {
-  OODebugMonitor* monitor = MonitorFromJSObject(object);
+  oo::DebugMonitor* monitor = MonitorFromJSObject(object);
   if (monitor == nullptr) ReportNotTheMonitor(context, object, function);
   return monitor;
 }
@@ -359,14 +359,14 @@ OODebugMonitor* MonitorForConsoleObject(JSContext* context, JSValueConst object,
 // The console objects' converter: the monitor as an Object node
 // (oo::PListForeign), whose JS value is the console object; null for none.
 oo::PList ConsoleConverter(JSContext* /*context*/, JSValueConst object) {
-  OODebugMonitor* monitor = MonitorFromJSObject(object);
+  oo::DebugMonitor* monitor = MonitorFromJSObject(object);
   if (monitor == nullptr) return oo::PList();
   return oo::PList(oo::PList::Object(oo::share(monitor)));
 }
 
 }  // namespace
 
-JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor) {
+JSValue DebugMonitorToJSConsole(JSContext* context, oo::DebugMonitor* monitor) {
   OOJS_PROFILE_SCOPE();
 
   // The classes belong to the context, so are set up again after every reset.
@@ -450,7 +450,7 @@ static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
 
     case kIgnoreDroppedPackets:
       return OOJSValueFromBOOL(
-          OODebugMonitor::sharedDebugMonitor()->TCPIgnoresDroppedPackets());
+          oo::DebugMonitor::sharedDebugMonitor()->TCPIgnoresDroppedPackets());
 
     case kShowErrorLocations:
       return OOJSValueFromBOOL(
@@ -485,7 +485,7 @@ static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
 #define DEBUG_FLAG_CASE(flag, magic) \
   case magic:                        \
     return JS_NewInt32(              \
-        context, static_cast<int32_t>(oo::ToUnderlying(OODebugFlags::flag)));
+        context, static_cast<int32_t>(oo::ToUnderlying(oo::DebugFlags::flag)));
       DEBUG_FLAG_CASE(kLinkedLists, kDebugLinkedLists);
       DEBUG_FLAG_CASE(kCollisions, kDebugCollisions);
       DEBUG_FLAG_CASE(kDocking, kDebugDocking);
@@ -543,7 +543,7 @@ static JSValue ConsoleSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kIgnoreDroppedPackets:
-      OODebugMonitor::sharedDebugMonitor()->setTCPIgnoresDroppedPackets(
+      oo::DebugMonitor::sharedDebugMonitor()->setTCPIgnoresDroppedPackets(
           OOJSValueToBOOL(context, value));
       break;
 
@@ -575,9 +575,9 @@ static JSValue ConsoleSetProperty(OOJS_SETTER_ARGS) {
 
 namespace {
 
-[[maybe_unused]] bool DoWeDefineAllDebugFlags(OODebugFlags flags);
+[[maybe_unused]] bool DoWeDefineAllDebugFlags(oo::DebugFlags flags);
 
-bool DoWeDefineAllDebugFlags(OODebugFlags flags) {
+bool DoWeDefineAllDebugFlags(oo::DebugFlags flags) {
   /*	This function doesn't do anything, but will generate a warning
           (Enumeration value 'kFoo' not handled in switch) if a debug flag
           is added without updating it. The point is that if you get such a
@@ -587,20 +587,20 @@ bool DoWeDefineAllDebugFlags(OODebugFlags flags) {
           -- Ahruman 2010-04-11
   */
   switch (flags) {
-    case OODebugFlags::kLinkedLists:
-    case OODebugFlags::kCollisions:
-    case OODebugFlags::kDocking:
-    case OODebugFlags::kOctreeLogging:
-    case OODebugFlags::kBoundingBoxes:
-    case OODebugFlags::kOctreeDraw:
-    case OODebugFlags::kDrawNormals:
-    case OODebugFlags::kNoDust:
-    case OODebugFlags::kNoShaderFallback:
-    case OODebugFlags::kShaderValidation:
-    case OODebugFlags::kMisc:
+    case oo::DebugFlags::kLinkedLists:
+    case oo::DebugFlags::kCollisions:
+    case oo::DebugFlags::kDocking:
+    case oo::DebugFlags::kOctreeLogging:
+    case oo::DebugFlags::kBoundingBoxes:
+    case oo::DebugFlags::kOctreeDraw:
+    case oo::DebugFlags::kDrawNormals:
+    case oo::DebugFlags::kNoDust:
+    case oo::DebugFlags::kNoShaderFallback:
+    case oo::DebugFlags::kShaderValidation:
+    case oo::DebugFlags::kMisc:
       return true;
-    case OODebugFlags::kNone:
-    case OODebugFlags::kAll:
+    case oo::DebugFlags::kNone:
+    case oo::DebugFlags::kAll:
       return false;
   }
 
@@ -658,7 +658,7 @@ static JSValue ConsoleSettingsGetProperty(JSContext* context,
     return result;
   }
 
-  OODebugMonitor* monitor =
+  oo::DebugMonitor* monitor =
       MonitorForConsoleObject(context, object, __PRETTY_FUNCTION__);
   if (monitor == nullptr) return OOJSNativeFailure(context);
 
@@ -674,7 +674,7 @@ static int SetSetting(JSContext* context, JSValueConst object, JSAtom propID,
   std::optional<std::string> key = SettingKeyForPropertyID(context, propID);
   if (!key.has_value() || IsSettingsPrototype(object)) return true;
 
-  OODebugMonitor* monitor =
+  oo::DebugMonitor* monitor =
       MonitorForConsoleObject(context, object, __PRETTY_FUNCTION__);
   if (monitor == nullptr) return -1;
 
@@ -729,7 +729,7 @@ static int ConsoleSettingsDeleteProperty(JSContext* context,
     std::optional<std::string> key = SettingKeyForPropertyID(context, propID);
     if (!key.has_value() || IsSettingsPrototype(object)) return false;
 
-    OODebugMonitor* monitor =
+    oo::DebugMonitor* monitor =
         MonitorForConsoleObject(context, object, __PRETTY_FUNCTION__);
     if (monitor == nullptr) return -1;
 
@@ -750,7 +750,7 @@ static JSValue ConsoleConsoleMessage(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_ENTER(context)
 
-  OODebugMonitor* monitor = nullptr;  // the monitor the private slot holds
+  oo::DebugMonitor* monitor = nullptr;  // the monitor the private slot holds
   std::optional<std::string> colorKey, message;
   double location, length;
 
@@ -803,7 +803,7 @@ static JSValue ConsoleClearConsole(JSContext* context, JSValueConst oojsThis,
                                    int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
-  OODebugMonitor* monitor =
+  oo::DebugMonitor* monitor =
       MonitorForConsoleObject(context, OOJS_THIS, __PRETTY_FUNCTION__);
   if (monitor == nullptr) return OOJSNativeFailure(context);
 
@@ -869,51 +869,51 @@ enum class MonitorMethodForm {
 struct MonitorMethod {
   const char* name;
   MonitorMethodForm form;
-  void (*voidVoid)(OODebugMonitor*);
-  void (*voidString)(OODebugMonitor*, const std::string&);
-  oo::PList (*pListString)(OODebugMonitor*, const std::string&);
-  std::int64_t (*scalar)(OODebugMonitor*);
+  void (*voidVoid)(oo::DebugMonitor*);
+  void (*voidString)(oo::DebugMonitor*, const std::string&);
+  oo::PList (*pListString)(oo::DebugMonitor*, const std::string&);
+  std::int64_t (*scalar)(oo::DebugMonitor*);
   oo::ValueType type;  // a kScalar row: the return type's kind, else kVoid
 };
 
 const MonitorMethod kMonitorMethods[] = {
     {"performJSConsoleCommand:", MonitorMethodForm::kVoidString, nullptr,
-     [](OODebugMonitor* m, const std::string& s) {
+     [](oo::DebugMonitor* m, const std::string& s) {
        m->performJSConsoleCommand(s);
      },
      nullptr, nullptr, oo::ValueType::kVoid},
     {"configurationValueForKey:", MonitorMethodForm::kPListString, nullptr,
      nullptr,
-     [](OODebugMonitor* m, const std::string& s) {
+     [](oo::DebugMonitor* m, const std::string& s) {
        return m->configurationValueForKey(s);
      },
      nullptr, oo::ValueType::kVoid},
     {"clearJSConsole", MonitorMethodForm::kVoidVoid,
-     [](OODebugMonitor* m) { m->clearJSConsole(); }, nullptr, nullptr, nullptr,
+     [](oo::DebugMonitor* m) { m->clearJSConsole(); }, nullptr, nullptr, nullptr,
      oo::ValueType::kVoid},
     {"showJSConsole", MonitorMethodForm::kVoidVoid,
-     [](OODebugMonitor* m) { m->showJSConsole(); }, nullptr, nullptr, nullptr,
+     [](oo::DebugMonitor* m) { m->showJSConsole(); }, nullptr, nullptr, nullptr,
      oo::ValueType::kVoid},
     {"dumpMemoryStatistics", MonitorMethodForm::kVoidVoid,
-     [](OODebugMonitor* m) { m->dumpMemoryStatistics(); }, nullptr, nullptr,
+     [](oo::DebugMonitor* m) { m->dumpMemoryStatistics(); }, nullptr, nullptr,
      nullptr, oo::ValueType::kVoid},
 #if OOLITE_SDL
     {"applicationWillTerminate", MonitorMethodForm::kVoidVoid,
-     [](OODebugMonitor* m) { m->applicationWillTerminate(); }, nullptr, nullptr,
+     [](oo::DebugMonitor* m) { m->applicationWillTerminate(); }, nullptr, nullptr,
      nullptr, oo::ValueType::kVoid},
 #endif
     {"debuggerConnected", MonitorMethodForm::kScalar, nullptr, nullptr, nullptr,
-     [](OODebugMonitor* m) -> std::int64_t { return m->debuggerConnected(); },
+     [](oo::DebugMonitor* m) -> std::int64_t { return m->debuggerConnected(); },
      oo::kValueType<bool>},
     {"TCPIgnoresDroppedPackets", MonitorMethodForm::kScalar, nullptr, nullptr,
      nullptr,
-     [](OODebugMonitor* m) -> std::int64_t {
+     [](oo::DebugMonitor* m) -> std::int64_t {
        return m->TCPIgnoresDroppedPackets();
      },
      oo::kValueType<bool>},
     {"usingPlugInController", MonitorMethodForm::kScalar, nullptr, nullptr,
      nullptr,
-     [](OODebugMonitor* m) -> std::int64_t {
+     [](oo::DebugMonitor* m) -> std::int64_t {
        return m->usingPlugInController();
      },
      oo::kValueType<bool>},
@@ -921,7 +921,7 @@ const MonitorMethod kMonitorMethods[] = {
      nullptr, nullptr, oo::ValueType::kVoid},  // a std::vector result
     {"dumpJSMemoryStatistics", MonitorMethodForm::kScalar, nullptr, nullptr,
      nullptr,
-     [](OODebugMonitor* m) -> std::int64_t {
+     [](oo::DebugMonitor* m) -> std::int64_t {
        return static_cast<std::int64_t>(m->dumpJSMemoryStatistics());
      },
      oo::kValueType<size_t>},
@@ -931,7 +931,7 @@ const MonitorMethod kMonitorMethods[] = {
    table above. *outResult (initialised by the caller) is owned by the caller
    when set; on failure an error has been reported.
 */
-bool CallMonitorMethod(JSContext* context, OODebugMonitor* monitor, int argc,
+bool CallMonitorMethod(JSContext* context, oo::DebugMonitor* monitor, int argc,
                        JSValueConst* argv, JSValue* outResult) {
   const std::string className;  // none
   if (argc == 0) {
@@ -1034,7 +1034,7 @@ static JSValue ConsoleCallObjCMethod(OOJS_NATIVE_ARGS) {
   bool OK;
 
   // The console objects hold the C++ monitor: its table, not a selector.
-  if (OODebugMonitor* monitor = MonitorFromJSObject(OOJS_THIS)) {
+  if (oo::DebugMonitor* monitor = MonitorFromJSObject(OOJS_THIS)) {
     OOJSPauseTimeLimiter();
     OK = CallMonitorMethod(context, monitor, argc, OOJS_ARGV, &result);
     OOJSResumeTimeLimiter();
@@ -1236,7 +1236,7 @@ static JSValue ConsoleWriteMemoryStats(JSContext* context,
   OOJS_NATIVE_ENTER(context)
 
   OOJS_BEGIN_FULL_NATIVE(context)
-  OODebugMonitor::sharedDebugMonitor()->dumpMemoryStatistics();
+  oo::DebugMonitor::sharedDebugMonitor()->dumpMemoryStatistics();
   OOJS_END_FULL_NATIVE
 
   OOJS_RETURN_VOID;
@@ -1252,7 +1252,7 @@ static JSValue ConsoleWriteJSMemoryStats(JSContext* context,
   OOJS_NATIVE_ENTER(context)
 
   OOJS_BEGIN_FULL_NATIVE(context)
-  OODebugMonitor::sharedDebugMonitor()->dumpJSMemoryStatistics();
+  oo::DebugMonitor::sharedDebugMonitor()->dumpJSMemoryStatistics();
   OOJS_END_FULL_NATIVE
 
   OOJS_RETURN_VOID;
@@ -1431,7 +1431,7 @@ bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
     thisObj = JS_DupValue(context, argv[1]);
   } else {
     JSValue debugConsole =
-        OODebugMonitor::sharedDebugMonitor()->jsValueInContext(context);
+        oo::DebugMonitor::sharedDebugMonitor()->jsValueInContext(context);
     thisObj = JS_GetPropertyStr(context, debugConsole, "script");
     JS_FreeValue(context, debugConsole);
   }

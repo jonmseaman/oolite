@@ -42,6 +42,8 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "AI.h"
+#include "DebugFlags.h"
+#include "DebugStandards.h"
 #include "DockEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
@@ -52,9 +54,7 @@ MA 02110-1301, USA.
 #include "OOColor.h"
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
-#include "OODebugFlags.h"
 #include "OODebugGLDrawing.h"
-#include "OODebugStandards.h"
 #include "OODescription.h"
 #include "OOECMBlastEntity.h"
 #include "OOEntityFilterPredicate.h"
@@ -6364,7 +6364,7 @@ void ShipEntity::drawImmediate(bool immediate, bool translucent) {
   // with the matrices.
   if (translucent) {
     drawDebugStuff();
-  } else if (OODebugFlagIsOn(OODebugFlags::kBoundingBoxes) &&
+  } else if (oo::DebugFlagIsOn(oo::DebugFlags::kBoundingBoxes) &&
              !getIsSubEntity()) {
     OODebugDrawBoundingBox(getBoundingBox());
     OODebugDrawColoredBoundingBox(totalBoundingBox,
@@ -6458,7 +6458,7 @@ void ShipEntity::drawSubEntityImmediate(bool immediate, bool translucent) {
   drawImmediate(immediate, translucent);
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  if (OODebugFlagIsOn(OODebugFlags::kBoundingBoxes)) {
+  if (oo::DebugFlagIsOn(oo::DebugFlags::kBoundingBoxes)) {
     OODebugDrawBoundingBox(getBoundingBox());
   }
 #endif
@@ -7689,40 +7689,40 @@ void ShipEntity::setShipScript(const std::optional<std::string>& script_name) {
   if (script == nullptr) {
     actions = ArrayForKey(shipinfoDictionary, "launch_actions");
     if (actions) {
-      OOStandardsDeprecated(
+      oo::StandardsDeprecated(
           std::format("The launch_actions ship key is deprecated on {}.",
                       getDisplayName().value_or("(null)")));
-      if (!OOEnforceStandards()) {
+      if (!oo::EnforceStandards()) {
         properties["legacy_launchActions"] = *actions;
       }
     }
 
     actions = ArrayForKey(shipinfoDictionary, "script_actions");
     if (actions) {
-      OOStandardsDeprecated(
+      oo::StandardsDeprecated(
           std::format("The script_actions ship key is deprecated on {}.",
                       getDisplayName().value_or("(null)")));
-      if (!OOEnforceStandards()) {
+      if (!oo::EnforceStandards()) {
         properties["legacy_scriptActions"] = *actions;
       }
     }
 
     actions = ArrayForKey(shipinfoDictionary, "death_actions");
     if (actions) {
-      OOStandardsDeprecated(
+      oo::StandardsDeprecated(
           std::format("The death_actions ship key is deprecated on {}.",
                       getDisplayName().value_or("(null)")));
-      if (!OOEnforceStandards()) {
+      if (!oo::EnforceStandards()) {
         properties["legacy_deathActions"] = *actions;
       }
     }
 
     actions = ArrayForKey(shipinfoDictionary, "setup_actions");
     if (actions) {
-      OOStandardsDeprecated(
+      oo::StandardsDeprecated(
           std::format("The setup_actions ship key is deprecated on {}.",
                       getDisplayName().value_or("(null)")));
-      if (!OOEnforceStandards()) {
+      if (!oo::EnforceStandards()) {
         properties["legacy_setupActions"] = *actions;
       }
     }
@@ -8377,7 +8377,7 @@ void ShipEntity::dealEnergyDamage(GLfloat baseDamage, GLfloat range,
 // dealEnergyDamage preferred
 // Exposed to AI
 void ShipEntity::dealEnergyDamageWithinDesiredRange() {
-  OOStandardsDeprecated(
+  oo::StandardsDeprecated(
       std::format("dealEnergyDamageWithinDesiredRange is deprecated for {}",
                   oo::EntityDescription(this)));
   // not over scannerRange

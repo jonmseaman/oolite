@@ -74,3 +74,18 @@ template <oo::FlagEnum E>
 constexpr E& operator^=(E& a, E b) noexcept {
   return a = a ^ b;
 }
+
+// Flag enums declared in namespace oo find the operators here: through
+// argument-dependent lookup from anywhere, and past any other operator of the
+// same name that namespace oo declares.
+namespace oo {
+
+using ::operator|;
+using ::operator&;
+using ::operator^;
+using ::operator~;
+using ::operator|=;
+using ::operator&=;
+using ::operator^=;
+
+}  // namespace oo

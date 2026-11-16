@@ -39,49 +39,54 @@ SOFTWARE.
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
-class OODebugMonitor;
+namespace oo {
+
+class DebugMonitor;
 
 // Interface for debugger. Reference counted: the monitor keeps its debugger
 // (std::shared_ptr).
 
-class OODebuggerInterface : public oo::Object {
+class DebuggerInterface : public oo::Object {
  public:
   // Configuration and console text use oo::PList / std::string.
 
   // Sent to establish connection. *message: error text when the connect fails.
-  virtual bool connectDebugMonitor(OODebugMonitor* debugMonitor,
+  virtual bool connectDebugMonitor(DebugMonitor* debugMonitor,
                                    std::optional<std::string>* message) = 0;
 
   // Sent to close connection. message: nullopt when none.
   virtual void disconnectDebugMonitor(
-      OODebugMonitor* debugMonitor,
+      DebugMonitor* debugMonitor,
       const std::optional<std::string>& message) = 0;
 
   // Sent to print to the JavaScript console.
   // colorKey is intended to be used to look up a foreground/background colour
   // pair in the configuration. EmphasisRange is to specify a bold section of
   // text.
-  virtual void debugMonitor(OODebugMonitor* debugMonitor,
+  virtual void debugMonitor(DebugMonitor* debugMonitor,
                             const std::string& output,
                             const std::optional<std::string>& colorKey,
                             NSRange emphasisRange) = 0;
 
   // Sent to clear the JavaScript console.
-  virtual void debugMonitorClearConsole(OODebugMonitor* debugMonitor) = 0;
+  virtual void debugMonitorClearConsole(DebugMonitor* debugMonitor) = 0;
 
   // Sent to show the console, for instance in response to a warning or error
   // message.
-  virtual void debugMonitorShowConsole(OODebugMonitor* debugMonitor) = 0;
+  virtual void debugMonitorShowConsole(DebugMonitor* debugMonitor) = 0;
 
   // Sent once when the debugger is connected.
-  virtual void debugMonitor(OODebugMonitor* debugMonitor,
+  virtual void debugMonitor(DebugMonitor* debugMonitor,
                             const oo::PList& configuration) = 0;
 
   // Sent when configuration changes. newValue null = was nil.
-  virtual void debugMonitor(OODebugMonitor* debugMonitor,
+  virtual void debugMonitor(DebugMonitor* debugMonitor,
                             const oo::PList& newValue,
                             const std::string& key) = 0;
 
   // What the monitor's log lines print for the debugger (<ClassName 0x...>).
   virtual std::string description() const = 0;
 };
+
+}  // namespace oo
+

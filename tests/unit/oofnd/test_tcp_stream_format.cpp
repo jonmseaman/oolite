@@ -16,7 +16,7 @@
 #include <cstdarg>
 #include <string>
 
-#include "../../../src/Core/Debug/OOTCPStreamDecoderFormat.hpp"
+#include "../../../src/Core/Debug/TCPStreamDecoderFormat.hpp"
 #include "oo_test.hpp"
 
 namespace {

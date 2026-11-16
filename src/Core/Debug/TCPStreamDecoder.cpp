@@ -29,7 +29,7 @@ SOFTWARE.
 
 // A plain C++ unit: the protocol header spells OOALSTR as a handle.
 #define OO_PLAIN_CPP_UNIT 1
-#include "OOTCPStreamDecoder.h"
+#include "TCPStreamDecoder.h"
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -40,38 +40,45 @@ SOFTWARE.
 #include <new>
 #include <utility>
 
-#include "OODebugTCPConsoleProtocol.h"
+#include "DebugTCPConsoleProtocol.h"
 
 #ifdef OO_LOG_DEBUG_PROTOCOL_PACKETS
-extern void LogOOTCPStreamDecoderPacket(OOALDictionaryRef packet);
+extern void LogOOTCPStreamDecoderPacket(oo::ALDictionaryRef packet);
 #else
 #define LogOOTCPStreamDecoderPacket(packet) \
   do {                                      \
   } while (0)
 #endif
 
-struct OOTCPStreamDecoder {
+namespace oo {
+
+struct TCPStreamDecoder {
   uint8_t header[4];
   uint32_t headerSpaceUsed;
-  OOALMutableDataRef nextPacketData;
+  ALMutableDataRef nextPacketData;
   uint32_t nextSize;
 
-  OOTCPStreamDecoderPacketCallback Packet;
-  OOTCPStreamDecoderErrorCallback Error;
-  OOTCPStreamDecoderFinalizeCallback Finalize;
+  TCPStreamDecoderPacketCallback Packet;
+  TCPStreamDecoderErrorCallback Error;
+  TCPStreamDecoderFinalizeCallback Finalize;
 };
 
-static void Error(OOTCPStreamDecoderRef decoder, OOALStringRef format, ...);
-static void PacketReady(OOTCPStreamDecoderRef decoder);
+}  // namespace oo
 
-OOTCPStreamDecoderRef OOTCPStreamDecoderCreate(
-    OOTCPStreamDecoderPacketCallback packetCB,
-    OOTCPStreamDecoderErrorCallback errorCB,
-    OOTCPStreamDecoderFinalizeCallback finalizeCB) {
+
+static void Error(oo::TCPStreamDecoderRef decoder, oo::ALStringRef format, ...);
+static void PacketReady(oo::TCPStreamDecoderRef decoder);
+
+namespace oo {
+
+TCPStreamDecoderRef TCPStreamDecoderCreate(
+    TCPStreamDecoderPacketCallback packetCB,
+    TCPStreamDecoderErrorCallback errorCB,
+    TCPStreamDecoderFinalizeCallback finalizeCB) {
   if (packetCB == nullptr) return nullptr;
 
   // The caller owns the handle until OOTCPStreamDecoderDestroy().
-  OOTCPStreamDecoderRef decoder = new (std::nothrow) OOTCPStreamDecoder{};
+  TCPStreamDecoderRef decoder = new (std::nothrow) TCPStreamDecoder{};
   if (decoder == nullptr) return nullptr;
 
   decoder->headerSpaceUsed = 0;
@@ -84,9 +91,9 @@ OOTCPStreamDecoderRef OOTCPStreamDecoderCreate(
   return decoder;
 }
 
-void OOTCPStreamDecoderDestroy(OOTCPStreamDecoderRef decoder) {
+void TCPStreamDecoderDestroy(TCPStreamDecoderRef decoder) {
   if (decoder == nullptr) return;
-  const std::unique_ptr<OOTCPStreamDecoder> owned(
+  const std::unique_ptr<TCPStreamDecoder> owned(
       decoder);  // deleted on return
 
   if (decoder->Finalize != nullptr) {
@@ -94,25 +101,25 @@ void OOTCPStreamDecoderDestroy(OOTCPStreamDecoderRef decoder) {
   }
 
   if (decoder->nextPacketData != nullptr) {
-    OOALRelease(decoder->nextPacketData);
+    ALRelease(decoder->nextPacketData);
     decoder->nextPacketData = nullptr;
   }
 }
 
-void OOTCPStreamDecoderReceiveData(OOTCPStreamDecoderRef decoder,
-                                   OOALDataRef data) {
+void TCPStreamDecoderReceiveData(TCPStreamDecoderRef decoder,
+                                   ALDataRef data) {
   if (decoder == nullptr || data == nullptr) return;
 
-  OOTCPStreamDecoderReceiveBytes(decoder, OOALDataGetBytePtr(data),
-                                 OOALDataGetLength(data));
+  TCPStreamDecoderReceiveBytes(decoder, ALDataGetBytePtr(data),
+                                 ALDataGetLength(data));
 }
 
-void OOTCPStreamDecoderReceiveBytes(OOTCPStreamDecoderRef decoder,
+void TCPStreamDecoderReceiveBytes(TCPStreamDecoderRef decoder,
                                     const void* inBytes, size_t length) {
   const unsigned char* bytes = nullptr;
   size_t remaining;
   size_t bytesToAdd;
-  OOALAutoreleasePoolRef pool = nullptr;
+  ALAutoreleasePoolRef pool = nullptr;
 
   if (decoder == nullptr) return;
 
@@ -131,7 +138,7 @@ void OOTCPStreamDecoderReceiveBytes(OOTCPStreamDecoderRef decoder,
       bytesToAdd = remaining;
       if (decoder->nextSize < bytesToAdd) bytesToAdd = decoder->nextSize;
 
-      OOALMutableDataAppendBytes(decoder->nextPacketData, bytes, bytesToAdd);
+      ALMutableDataAppendBytes(decoder->nextPacketData, bytes, bytesToAdd);
 
       remaining -= bytesToAdd;
       decoder->nextSize -= bytesToAdd;
@@ -139,12 +146,12 @@ void OOTCPStreamDecoderReceiveBytes(OOTCPStreamDecoderRef decoder,
 
       if (decoder->nextSize == 0) {
         // Packet is ready.
-        pool = OOALCreateAutoreleasePool();
+        pool = ALCreateAutoreleasePool();
         PacketReady(decoder);
-        OOALDestroyAutoreleasePool(pool);
+        ALDestroyAutoreleasePool(pool);
         pool = nullptr;
 
-        OOALRelease(decoder->nextPacketData);
+        ALRelease(decoder->nextPacketData);
         decoder->nextPacketData = nullptr;
       }
     } else if (decoder->headerSpaceUsed < 4) {
@@ -159,7 +166,7 @@ void OOTCPStreamDecoderReceiveBytes(OOTCPStreamDecoderRef decoder,
 
       decoder->headerSpaceUsed = 0;
       if (decoder->nextSize != 0) {
-        decoder->nextPacketData = OOALDataCreateMutable(decoder->nextSize);
+        decoder->nextPacketData = ALDataCreateMutable(decoder->nextSize);
       }
     } else {
       Error(decoder,
@@ -173,12 +180,15 @@ void OOTCPStreamDecoderReceiveBytes(OOTCPStreamDecoderRef decoder,
   }
 }
 
-static void PacketReady(OOTCPStreamDecoderRef decoder) {
-  OOALDictionaryRef packet = nullptr;
-  OOALStringRef errorString = nullptr;
-  OOALStringRef packetType = nullptr;
+}  // namespace oo
 
-  packet = OOALPropertyListFromData(decoder->nextPacketData, &errorString);
+
+static void PacketReady(oo::TCPStreamDecoderRef decoder) {
+  oo::ALDictionaryRef packet = nullptr;
+  oo::ALStringRef errorString = nullptr;
+  oo::ALStringRef packetType = nullptr;
+
+  packet = oo::ALPropertyListFromData(decoder->nextPacketData, &errorString);
 
   // Ensure that it's a property list.
   if (packet == nullptr) {
@@ -186,50 +196,50 @@ static void PacketReady(OOTCPStreamDecoderRef decoder) {
           OOALSTR("Protocol error: packet is not property list (property list "
                   "error: %@)."),
           errorString);
-    OOALRelease(errorString);
+    oo::ALRelease(errorString);
     return;
   }
 
   // Ensure that it's a dictionary.
-  if (!OOALIsDictionary(packet)) {
+  if (!oo::ALIsDictionary(packet)) {
     Error(decoder, OOALSTR("Protocol error: packet is a %@, not a dictionary."),
-          OOTypeDescription(packet));
+          oo::TypeDescription(packet));
     return;
   }
 
   LogOOTCPStreamDecoderPacket(packet);
 
   // Get packet type (and ensure that there is one).
-  packetType = OOALDictionaryGetValue(packet, kOOTCPPacketType);
+  packetType = oo::ALDictionaryGetValue(packet, kOOTCPPacketType);
   if (packetType == nullptr) {
     Error(decoder, OOALSTR("Protocol error: packet contains no packet type."));
     return;
   }
 
-  if (!OOALIsString(packetType)) {
+  if (!oo::ALIsString(packetType)) {
     Error(decoder,
           OOALSTR("Protocol error: packet type is a %@, not a string."),
-          OOTypeDescription(packetType));
+          oo::TypeDescription(packetType));
     return;
   }
 
   decoder->Packet(packetType, packet);
 }
 
-static void Error(OOTCPStreamDecoderRef decoder, OOALStringRef format, ...) {
+static void Error(oo::TCPStreamDecoderRef decoder, oo::ALStringRef format, ...) {
   va_list args;
-  OOALStringRef string = nullptr;
+  oo::ALStringRef string = nullptr;
 
   if (decoder == nullptr || decoder->Error == nullptr || format == nullptr)
     return;
 
   va_start(args, format);
-  string = OOALStringCreateWithFormatAndArguments(format, args);
+  string = oo::ALStringCreateWithFormatAndArguments(format, args);
   va_end(args);
 
   if (string != nullptr) {
     decoder->Error(string);
-    OOALRelease(string);
+    oo::ALRelease(string);
   }
 }
 

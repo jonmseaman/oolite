@@ -49,8 +49,8 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "DebugFlags.h"
 #include "OOCacheManager.h"
-#include "OODebugFlags.h"
 #include "OOMultiTextureMaterial.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOShaderMaterial.h"
@@ -326,7 +326,7 @@ std::shared_ptr<OOMaterial> OOMaterial::materialWithName(
     // Use default shader if smoothing is on, or shader detail is full,
     // DEBUG_NO_SHADER_FALLBACK is set, or material uses an effect map.
     if (result == nullptr &&
-        (smooth || OODebugFlagIsOn(OODebugFlags::kNoShaderFallback) ||
+        (smooth || oo::DebugFlagIsOn(oo::DebugFlags::kNoShaderFallback) ||
          (UNIVERSE != nullptr
               ? UNIVERSE->getDetailLevel()
               : OOGraphicsDetail{}) >= OOGraphicsDetail::kShaders ||

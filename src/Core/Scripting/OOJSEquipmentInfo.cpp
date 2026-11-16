@@ -36,7 +36,7 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "OODebugStandards.h"
+#include "DebugStandards.h"
 #include "OOEquipmentType.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
@@ -556,10 +556,10 @@ static JSValue EquipmentInfoSetProperty(OOJS_SETTER_ARGS) {
       }
       break;
     case kEffectiveTechLevel:
-      OOStandardsDeprecated(std::format(
+      oo::StandardsDeprecated(std::format(
           "TL99 for variable tech level is deprecated for {}",
           Ask(type, &OOEquipmentType::identifier).value_or("(null)")));
-      if (!OOEnforceStandards() &&
+      if (!oo::EnforceStandards() &&
           Ask(type, &OOEquipmentType::techLevel) == kOOVariableTechLevel) {
         if (JS_IsNull(value)) {
           // reset mission variable

@@ -45,7 +45,7 @@ MA 02110-1301, USA.
 #endif
 #include <unordered_map>
 
-#include "OODebugStandards.h"
+#include "DebugStandards.h"
 #include "OOJSPrivateObject.h"
 #include "OOManifestProperties.h"
 #include "OOPListParsing.h"
@@ -793,9 +793,9 @@ static JSValue CompileScriptWithName(
    * that here. */
   if (utf8Contents->find("\"use strict\";") == std::string::npos &&
       utf8Contents->find("'use strict';") == std::string::npos) {
-    OOStandardsDeprecated("Script " + path.value_or("(null)") +
-                          " does not \"use strict\";");  // "%@" of the path
-    if (OOEnforceStandards()) {
+    oo::StandardsDeprecated("Script " + path.value_or("(null)") +
+                            " does not \"use strict\";");  // "%@" of the path
+    if (oo::EnforceStandards()) {
       // prepend it anyway (before wrapping: see OOJSWrapScriptSource())
       // TODO: some time after 1.82, make this required
       utf8Contents = "\"use strict\";\n" + *utf8Contents;

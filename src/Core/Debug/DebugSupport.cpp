@@ -27,23 +27,25 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-#include "OODebugSupport.h"
+#include "DebugSupport.h"
 
 #include <cstdint>
 #include <memory>
 #include <string>
 
-#include "OODebugMonitor.h"
-#include "OODebugTCPConsoleClient.h"
+#include "DebugMonitor.h"
+#include "DebugTCPConsoleClient.h"
 #include "OOJavaScriptEngine.h"
 #include "ResourceManager.h"
 
-void OOInitDebugSupport() {
+namespace oo {
+
+void InitDebugSupport() {
   std::optional<std::string> debugOXPPath;
   oo::PList debugSettings;
   std::optional<std::string> consoleHost;
   std::uint16_t consolePort = 0;
-  std::shared_ptr<OODebuggerInterface> debugger;
+  std::shared_ptr<DebuggerInterface> debugger;
   bool activateDebugConsole = false;
 
   // Load debug settings.
@@ -73,8 +75,8 @@ void OOInitDebugSupport() {
     {
       // The client; null when it cannot connect.
       debugger =
-          OODebugTCPConsoleClient::clientWithAddress(consoleHost, consolePort);
-      OODebugMonitor::sharedDebugMonitor()->setUsingPlugInController(false);
+          DebugTCPConsoleClient::clientWithAddress(consoleHost, consolePort);
+      DebugMonitor::sharedDebugMonitor()->setUsingPlugInController(false);
     }
 
     activateDebugConsole = (debugger != nullptr);
@@ -86,9 +88,12 @@ void OOInitDebugSupport() {
 
   if (activateDebugConsole) {
     // Set up monitor and register debugger, if any.
-    OODebugMonitor::sharedDebugMonitor()->setDebugger(debugger.get());
+    DebugMonitor::sharedDebugMonitor()->setDebugger(debugger.get());
     OOJavaScriptEngine::sharedEngine()->enableDebuggerStatement();
   }
 }
+
+}  // namespace oo
+
 
 #endif /* OO_DEBUG_MONITOR_ENABLED */

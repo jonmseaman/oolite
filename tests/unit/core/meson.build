@@ -198,11 +198,11 @@ core_tests = {
     'test_OOBreakPatternEntity': ['*'],
     'test_OOParticleSystem': ['*'],
     'test_OORingEffectEntity': ['*'],
-    'test_OODebugMonitor': ['Core/Debug/OODebugMonitor.cpp', 'Core/OOColor.cpp'],
-    'test_OOJSConsole': ['Core/Debug/OOJSConsole.cpp', 'Core/Scripting/OOJSEngineTimeManagement.cpp', 'Core/OOProfilingStopwatch.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSClasses.cpp'],
-    'test_OODebugTCPConsoleClient': ['Core/Debug/OODebugTCPConsoleClient.cpp', 'Core/Debug/OOTCPStreamDecoder.cpp', 'Core/Debug/OOTCPStreamDecoderAbstractionLayer.cpp'],
-    'test_OODebugSupport': ['Core/Debug/OODebugSupport.cpp'],
-    'test_OODebugStandards': ['Core/Debug/OODebugStandards.cpp'],
+    'test_OODebugMonitor': ['Core/Debug/DebugMonitor.cpp', 'Core/OOColor.cpp'],
+    'test_OOJSConsole': ['Core/Debug/JSConsole.cpp', 'Core/Scripting/OOJSEngineTimeManagement.cpp', 'Core/OOProfilingStopwatch.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSClasses.cpp'],
+    'test_OODebugTCPConsoleClient': ['Core/Debug/DebugTCPConsoleClient.cpp', 'Core/Debug/TCPStreamDecoder.cpp', 'Core/Debug/TCPStreamDecoderAbstractionLayer.cpp'],
+    'test_OODebugSupport': ['Core/Debug/DebugSupport.cpp'],
+    'test_OODebugStandards': ['Core/Debug/DebugStandards.cpp'],
     'test_OOOXZManager': ['*'],
 }
 

@@ -37,9 +37,9 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "DebugStandards.h"
 #include "OOCacheManager.h"
 #include "OOColor.h"
-#include "OODebugStandards.h"
 #include "OOLegacyScriptWhitelist.h"
 #include "OOScript.h"
 #include "PlayerEntityLegacyScriptEngine.h"  // (was imported before the Conveniences category)
@@ -346,9 +346,9 @@ bool OOEquipmentType::initWithInfo(const oo::PList& info) {
                "conditions", _identifier);
       }
       if (legacyConditions) {
-        OOStandardsDeprecated(std::format(
+        oo::StandardsDeprecated(std::format(
             "The conditions key is deprecated for equipment {}", _name));
-        if (!OOEnforceStandards()) {
+        if (!oo::EnforceStandards()) {
           _conditions = OOSanitizeLegacyScriptConditions(
               legacyConditions, std::format("<equipment type \"{}\">", _name));
         }
@@ -665,9 +665,9 @@ OOTechLevelID OOEquipmentType::effectiveTechLevel() {
 
   tl = techLevel();
   if (tl == kOOVariableTechLevel) {
-    OOStandardsDeprecated(
+    oo::StandardsDeprecated(
         std::format("TL99 is deprecated for {}", _identifier));
-    if (!OOEnforceStandards()) {
+    if (!oo::EnforceStandards()) {
       const oo::PList missionValue =
           (PLAYER != nullptr
                ? PLAYER->missionVariableForKey("mission_TL_FOR_" + _identifier)

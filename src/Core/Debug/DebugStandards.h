@@ -33,17 +33,22 @@ SOFTWARE.
 #include "OOFoundation.h"
 
 // Warn/exit if deprecated functionality used
-void OOStandardsDeprecated(const std::string& message);
+namespace oo {
+
+void StandardsDeprecated(const std::string& message);
 
 // Warn/exit if an OXP error is detected
-void OOStandardsError(const std::string& message);
+void StandardsError(const std::string& message);
 
 // Return true if in standard enforcing mode
 // Always false in release builds
 // This will *not* exit in "exit on error" mode
-bool OOEnforceStandards();
+bool EnforceStandards();
 
-void OOSetStandardsForOXPVerifierMode();
+void SetStandardsForOXPVerifierMode();
+
+}  // namespace oo
+
 
 /*	TRANSITIONAL: the Foundation-typed API forwarding to the cxx_ functions
    above, so unmigrated callers compile unchanged. Callers move to the cxx_

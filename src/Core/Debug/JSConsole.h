@@ -32,10 +32,15 @@ SOFTWARE.
 #pragma once
 
 #include "OOFoundation.h"
-class OODebugMonitor;
+namespace oo {
+
+class DebugMonitor;
+
+}  // namespace oo
+
 
 #include <quickjs.h>
 
 // Create the JS console object for the debug monitor. The caller owns the
 // result.
-JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor);
+JSValue DebugMonitorToJSConsole(JSContext* context, oo::DebugMonitor* monitor);

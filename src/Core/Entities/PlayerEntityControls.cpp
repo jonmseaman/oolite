@@ -42,6 +42,9 @@ MA 02110-1301, USA.
 
 #include "AI.h"
 #include "CompassMode.h"
+#include "DebugFlags.h"
+#include "DebugMonitor.h"
+#include "DebugSupport.h"
 #include "DockEntity.h"
 #include "Entity.h"
 #include "EntityHelpers.h"
@@ -56,9 +59,6 @@ MA 02110-1301, USA.
 #include "OOCommodityMarket.h"
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
-#include "OODebugFlags.h"
-#include "OODebugMonitor.h"
-#include "OODebugSupport.h"
 #include "OODescription.h"
 #include "OOEnumFlags.h"
 #include "OOEquipmentType.h"
@@ -2022,7 +2022,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           (gameView != nullptr ? gameView->getAllowingStringInput()
                                : StringInput{}) == StringInput::kNo) {
         // look for the 'd' key
-        gDebugFlags = oo::ToUnderlying(OODebugFlags::kAll);
+        gDebugFlags = oo::ToUnderlying(oo::DebugFlags::kAll);
         if (UNIVERSE != nullptr) UNIVERSE->addMessage("Full debug ON", 3);
       }
 
@@ -2030,25 +2030,25 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           (gameView != nullptr ? gameView->getAllowingStringInput()
                                : StringInput{}) == StringInput::kNo) {
         // look for the 'b' key
-        gDebugFlags |= oo::ToUnderlying(OODebugFlags::kCollisions);
+        gDebugFlags |= oo::ToUnderlying(oo::DebugFlags::kCollisions);
         if (UNIVERSE != nullptr) UNIVERSE->addMessage("Collision debug ON", 3);
       }
 
       if (checkKeyPress(n_key_debug_console_connect) &&
-          !::OODebugMonitor::sharedDebugMonitor()->usingPlugInController() &&
+          !::oo::DebugMonitor::sharedDebugMonitor()->usingPlugInController() &&
           (gameView != nullptr ? gameView->getAllowingStringInput()
                                : StringInput{}) == StringInput::kNo) {
         // look for the 'c' key
         // This code is executed only if we're not using the integrated plugin
         // controller
         if (!autopilot_key_pressed) {
-          if (!::OODebugMonitor::sharedDebugMonitor()->debuggerConnected()) {
-            OOInitDebugSupport();
-            if (::OODebugMonitor::sharedDebugMonitor()->debuggerConnected())
+          if (!::oo::DebugMonitor::sharedDebugMonitor()->debuggerConnected()) {
+            oo::InitDebugSupport();
+            if (::oo::DebugMonitor::sharedDebugMonitor()->debuggerConnected())
               if (UNIVERSE != nullptr)
                 UNIVERSE->addMessage("Connected to debug console.", 3);
           } else {
-            ::OODebugMonitor::sharedDebugMonitor()->setDebugger(nullptr);
+            ::oo::DebugMonitor::sharedDebugMonitor()->setDebugger(nullptr);
             if (UNIVERSE != nullptr)
               UNIVERSE->addMessage("Disconnected from debug console.", 3);
           }
@@ -2062,7 +2062,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           (gameView != nullptr ? gameView->getAllowingStringInput()
                                : StringInput{}) == StringInput::kNo) {
         // look for the 'x' key
-        gDebugFlags |= oo::ToUnderlying(OODebugFlags::kBoundingBoxes);
+        gDebugFlags |= oo::ToUnderlying(oo::DebugFlags::kBoundingBoxes);
         if (UNIVERSE != nullptr)
           UNIVERSE->addMessage("Bounding box debug ON", 3);
       }

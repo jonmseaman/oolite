@@ -39,11 +39,11 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "DebugStandards.h"
 #include "HeadUpDisplay.h"
 #include "MyOpenGLView.h"
 #include "OOALMusic.h"
 #include "OOCacheManager.h"
-#include "OODebugStandards.h"
 #include "OODescription.h"
 #include "OOLogOutputHandler.h"
 #include "OOManifestProperties.h"
@@ -832,8 +832,8 @@ void ResourceManager::checkPotentialPath(
       return;
     } else {
       if (extension == "oxp") {
-        OOStandardsError(std::format("OXP {} has no manifest.plist", path));
-        if (OOEnforceStandards()) {
+        oo::StandardsError(std::format("OXP {} has no manifest.plist", path));
+        if (oo::EnforceStandards()) {
           addErrorWithKey("oxp-lacks-manifest",
                           oo::str::lastPathComponent(path), "");
           return;
@@ -1941,8 +1941,8 @@ oo::PList ResourceManager::roleCategoriesDictionary() {
   /* If the old pirate-victim-roles files exist, merge them in */
   const oo::PList pirateVictims = arrayFromFilesNamed(
       "pirate-victim-roles.plist", std::string("Config"), true);
-  if (OOEnforceStandards() && pirateVictims.count() > 0) {
-    OOStandardsDeprecated("pirate-victim-roles.plist is still being used.");
+  if (oo::EnforceStandards() && pirateVictims.count() > 0) {
+    oo::StandardsDeprecated("pirate-victim-roles.plist is still being used.");
   }
   if (pirateVictims.isNull()) {
     // +dictionaryWithObject:forKey: with a nil object raised

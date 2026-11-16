@@ -37,13 +37,13 @@
 #include <vector>
 
 #include "AI.h"
+#include "DebugStandards.h"
 #include "DockEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
 #include "HeadUpDisplay.h"
 #include "LogIndentScope.h"
 #include "OOCharacter.h"
-#include "OODebugStandards.h"
 #include "OOJSStation.h"
 #include "OOLegacyScriptWhitelist.h"
 #include "OOPListGameTypes.h"
@@ -1005,8 +1005,8 @@ bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
   const std::optional<std::string> portDimensionsStr =
       OptionalStringValue(dict.find("port_dimensions"));  // -oo_stringForKey:
   if (portDimensionsStr) {
-    OOStandardsDeprecated("The port_dimensions key is deprecated");
-    if (!OOEnforceStandards()) {
+    oo::StandardsDeprecated("The port_dimensions key is deprecated");
+    if (!oo::EnforceStandards()) {
       const std::vector<std::string> tokens =
           oo::str::split(*portDimensionsStr, "x");
       if (tokens.size() == 3) {
@@ -1132,7 +1132,7 @@ bool StationEntity::setUpSubEntities() {
     return true;
   }
 
-  OOStandardsDeprecated(
+  oo::StandardsDeprecated(
       std::format("No docks set up for {}", oo::EntityDescription(self)));
   OO_LOG("ship.setup.docks", "No docks set up for {}, making virtual dock",
          oo::EntityDescription(self));

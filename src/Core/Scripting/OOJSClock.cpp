@@ -27,7 +27,7 @@ MA 02110-1301, USA.
 
 #include <string>
 
-#include "OODebugStandards.h"
+#include "DebugStandards.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "OOStringParsing.h"
@@ -182,7 +182,7 @@ static JSValue ClockGetProperty(OOJS_GETTER_ARGS) {
                                        // binding test stands in for it
 
     case kLegacyScriptTimer:
-      OOStandardsDeprecated("The legacy_scriptTimer property is deprecated");
+      oo::StandardsDeprecated("The legacy_scriptTimer property is deprecated");
       return JS_NewNumber(
           context, (player != nullptr ? player->scriptTimer() : OOTimeDelta{}));
 

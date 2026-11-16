@@ -37,9 +37,9 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "AI.h"
+#include "DebugFlags.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "HeadUpDisplay.h"
-#include "OODebugFlags.h"
 #include "OOJSDock.h"
 #include "OOPlanetEntity.h"
 #include "OOShipGroup.h"
@@ -990,7 +990,7 @@ bool DockEntity::shipIsInDockingCorridor(::ShipEntity* ship) {
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   if ((ship != nullptr ? ship->getIsPlayer() : false) &&
-      OODebugFlagIsOn(OODebugFlags::kDocking)) {
+      oo::DebugFlagIsOn(oo::DebugFlags::kDocking)) {
     bool inLane;
     float range;
     unsigned laneFlags = 0;

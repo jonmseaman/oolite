@@ -28,7 +28,7 @@
 
 #include "Entity.h"
 #include "EntityManualRefs.h"  // the tests' manual entity references
-#include "OODebugFlags.h"
+#include "DebugFlags.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -512,7 +512,7 @@ OO_TEST(linkedLists) {
 
     // Moving b to the far end of x re-sorts it, and the lists still check.
 #ifndef NDEBUG
-    gDebugFlags = oo::ToUnderlying(OODebugFlags::kLinkedLists);
+    gDebugFlags = oo::ToUnderlying(oo::DebugFlags::kLinkedLists);
     CaptureLog();
 #endif
     b->setPosition(make_HPvector(40, 10, 30));
