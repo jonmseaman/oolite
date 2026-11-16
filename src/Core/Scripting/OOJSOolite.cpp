@@ -219,7 +219,7 @@ static JSValue OoliteGetProperty(OOJS_GETTER_ARGS) {
       if ((gameView != nullptr ? gameView->hdrOutput() : false)) {
         toneMapperStr = OOStringFromHDRToneMapper(
             (gameView != nullptr ? gameView->hdrToneMapper()
-                                 : OOHDRToneMapper{}));
+                                 : oo::HDRToneMapper{}));
       }
 #endif
       if (toneMapperStr.has_value()) result = oo::PList(*toneMapperStr);
@@ -231,7 +231,7 @@ static JSValue OoliteGetProperty(OOJS_GETTER_ARGS) {
       if (!(gameView != nullptr ? gameView->hdrOutput() : false)) {
         toneMapperStr = OOStringFromSDRToneMapper(
             (gameView != nullptr ? gameView->sdrToneMapper()
-                                 : OOSDRToneMapper{}));
+                                 : oo::SDRToneMapper{}));
       }
       if (toneMapperStr.has_value()) result = oo::PList(*toneMapperStr);
       break;

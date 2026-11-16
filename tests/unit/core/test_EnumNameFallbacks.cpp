@@ -406,43 +406,43 @@ OO_TEST(OOGraphicsDetailFromString) {
 }
 
 OO_TEST(OOStringFromHDRToneMapper) {
-  OO_CHECK(OOStringFromHDRToneMapper(OOHDRToneMapper::kNone) == "OOHDR_TONEMAPPER_NONE");
-  OO_CHECK(OOStringFromHDRToneMapper(OOHDRToneMapper::kAcesApprox) == "OOHDR_TONEMAPPER_ACES_APPROX");
-  OO_CHECK(OOStringFromHDRToneMapper(OOHDRToneMapper::kDice) == "OOHDR_TONEMAPPER_DICE");
-  OO_CHECK(OOStringFromHDRToneMapper(OOHDRToneMapper::kUchimura) == "OOHDR_TONEMAPPER_UCHIMURA");
-  OO_CHECK(OOStringFromHDRToneMapper(OOHDRToneMapper::kReinhard) == "OOHDR_TONEMAPPER_REINHARD");
+  OO_CHECK(OOStringFromHDRToneMapper(oo::HDRToneMapper::kNone) == "OOHDR_TONEMAPPER_NONE");
+  OO_CHECK(OOStringFromHDRToneMapper(oo::HDRToneMapper::kAcesApprox) == "OOHDR_TONEMAPPER_ACES_APPROX");
+  OO_CHECK(OOStringFromHDRToneMapper(oo::HDRToneMapper::kDice) == "OOHDR_TONEMAPPER_DICE");
+  OO_CHECK(OOStringFromHDRToneMapper(oo::HDRToneMapper::kUchimura) == "OOHDR_TONEMAPPER_UCHIMURA");
+  OO_CHECK(OOStringFromHDRToneMapper(oo::HDRToneMapper::kReinhard) == "OOHDR_TONEMAPPER_REINHARD");
 }
 
 OO_TEST(OOHDRToneMapperFromString) {
-  OO_CHECK(OOHDRToneMapperFromString("OOHDR_TONEMAPPER_NONE") == OOHDRToneMapper::kNone);
-  OO_CHECK(OOHDRToneMapperFromString("OOHDR_TONEMAPPER_ACES_APPROX") == OOHDRToneMapper::kAcesApprox);
-  OO_CHECK(OOHDRToneMapperFromString("OOHDR_TONEMAPPER_DICE") == OOHDRToneMapper::kDice);
-  OO_CHECK(OOHDRToneMapperFromString("OOHDR_TONEMAPPER_UCHIMURA") == OOHDRToneMapper::kUchimura);
-  OO_CHECK(OOHDRToneMapperFromString("OOHDR_TONEMAPPER_REINHARD") == OOHDRToneMapper::kReinhard);
-  OO_CHECK(OOHDRToneMapperFromString("NOT_A_NAME") == OOHDRToneMapper::kAcesApprox);  // the fallback
-  OO_CHECK(OOHDRToneMapperFromString("") == OOHDRToneMapper::kAcesApprox);
+  OO_CHECK(OOHDRToneMapperFromString("OOHDR_TONEMAPPER_NONE") == oo::HDRToneMapper::kNone);
+  OO_CHECK(OOHDRToneMapperFromString("OOHDR_TONEMAPPER_ACES_APPROX") == oo::HDRToneMapper::kAcesApprox);
+  OO_CHECK(OOHDRToneMapperFromString("OOHDR_TONEMAPPER_DICE") == oo::HDRToneMapper::kDice);
+  OO_CHECK(OOHDRToneMapperFromString("OOHDR_TONEMAPPER_UCHIMURA") == oo::HDRToneMapper::kUchimura);
+  OO_CHECK(OOHDRToneMapperFromString("OOHDR_TONEMAPPER_REINHARD") == oo::HDRToneMapper::kReinhard);
+  OO_CHECK(OOHDRToneMapperFromString("NOT_A_NAME") == oo::HDRToneMapper::kAcesApprox);  // the fallback
+  OO_CHECK(OOHDRToneMapperFromString("") == oo::HDRToneMapper::kAcesApprox);
 }
 
 OO_TEST(OOStringFromSDRToneMapper) {
-  OO_CHECK(OOStringFromSDRToneMapper(OOSDRToneMapper::kNone) == "OOSDR_TONEMAPPER_NONE");
-  OO_CHECK(OOStringFromSDRToneMapper(OOSDRToneMapper::kAces) == "OOSDR_TONEMAPPER_ACES");
-  OO_CHECK(OOStringFromSDRToneMapper(OOSDRToneMapper::kAgX) == "OOSDR_TONEMAPPER_AgX");
-  OO_CHECK(OOStringFromSDRToneMapper(OOSDRToneMapper::kHejlDawson) == "OOSDR_TONEMAPPER_HEJLDAWSON");
-  OO_CHECK(OOStringFromSDRToneMapper(OOSDRToneMapper::kUC2) == "OOSDR_TONEMAPPER_UC2");
-  OO_CHECK(OOStringFromSDRToneMapper(OOSDRToneMapper::kUchimura) == "OOSDR_TONEMAPPER_UCHIMURA");
-  OO_CHECK(OOStringFromSDRToneMapper(OOSDRToneMapper::kReinhard) == "OOSDR_TONEMAPPER_REINHARD");
+  OO_CHECK(OOStringFromSDRToneMapper(oo::SDRToneMapper::kNone) == "OOSDR_TONEMAPPER_NONE");
+  OO_CHECK(OOStringFromSDRToneMapper(oo::SDRToneMapper::kAces) == "OOSDR_TONEMAPPER_ACES");
+  OO_CHECK(OOStringFromSDRToneMapper(oo::SDRToneMapper::kAgX) == "OOSDR_TONEMAPPER_AgX");
+  OO_CHECK(OOStringFromSDRToneMapper(oo::SDRToneMapper::kHejlDawson) == "OOSDR_TONEMAPPER_HEJLDAWSON");
+  OO_CHECK(OOStringFromSDRToneMapper(oo::SDRToneMapper::kUC2) == "OOSDR_TONEMAPPER_UC2");
+  OO_CHECK(OOStringFromSDRToneMapper(oo::SDRToneMapper::kUchimura) == "OOSDR_TONEMAPPER_UCHIMURA");
+  OO_CHECK(OOStringFromSDRToneMapper(oo::SDRToneMapper::kReinhard) == "OOSDR_TONEMAPPER_REINHARD");
 }
 
 OO_TEST(OOSDRToneMapperFromString) {
-  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_NONE") == OOSDRToneMapper::kNone);
-  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_ACES") == OOSDRToneMapper::kAces);
-  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_AgX") == OOSDRToneMapper::kAgX);
-  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_HEJLDAWSON") == OOSDRToneMapper::kHejlDawson);
-  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_UC2") == OOSDRToneMapper::kUC2);
-  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_UCHIMURA") == OOSDRToneMapper::kUchimura);
-  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_REINHARD") == OOSDRToneMapper::kReinhard);
-  OO_CHECK(OOSDRToneMapperFromString("NOT_A_NAME") == OOSDRToneMapper::kAces);  // the fallback
-  OO_CHECK(OOSDRToneMapperFromString("") == OOSDRToneMapper::kAces);
+  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_NONE") == oo::SDRToneMapper::kNone);
+  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_ACES") == oo::SDRToneMapper::kAces);
+  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_AgX") == oo::SDRToneMapper::kAgX);
+  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_HEJLDAWSON") == oo::SDRToneMapper::kHejlDawson);
+  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_UC2") == oo::SDRToneMapper::kUC2);
+  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_UCHIMURA") == oo::SDRToneMapper::kUchimura);
+  OO_CHECK(OOSDRToneMapperFromString("OOSDR_TONEMAPPER_REINHARD") == oo::SDRToneMapper::kReinhard);
+  OO_CHECK(OOSDRToneMapperFromString("NOT_A_NAME") == oo::SDRToneMapper::kAces);  // the fallback
+  OO_CHECK(OOSDRToneMapperFromString("") == oo::SDRToneMapper::kAces);
 }
 
 namespace {

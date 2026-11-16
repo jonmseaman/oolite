@@ -23,7 +23,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOSDLJoystickManager.h"
+#include "SDLJoystickManager.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -35,7 +35,7 @@ MA 02110-1301, USA.
 
 #include "oofnd/Log.hpp"
 
-OOSDLJoystickManager::OOSDLJoystickManager() {
+oo::SDLJoystickManager::SDLJoystickManager() {
   std::map<std::string, int, std::less<>> idMap;
 
   // Find and open the sticks. Make sure that we don't fail if more joysticks
@@ -68,7 +68,7 @@ OOSDLJoystickManager::OOSDLJoystickManager() {
   joystickIdMap = std::move(idMap);
 }
 
-std::ptrdiff_t OOSDLJoystickManager::getJoystickIndexFromId(
+std::ptrdiff_t oo::SDLJoystickManager::getJoystickIndexFromId(
     SDL_JoystickID joystickId) {
   const auto index =
       joystickIdMap.find(std::format("{}", static_cast<int>(joystickId)));
@@ -78,11 +78,11 @@ std::ptrdiff_t OOSDLJoystickManager::getJoystickIndexFromId(
   return -1;
 }
 
-std::size_t OOSDLJoystickManager::joystickCount() {
+std::size_t oo::SDLJoystickManager::joystickCount() {
   return static_cast<std::size_t>(stickCount);
 }
 
-std::optional<std::string> OOSDLJoystickManager::nameOfJoystick(
+std::optional<std::string> oo::SDLJoystickManager::nameOfJoystick(
     std::size_t stickNumber) {
   if (stickNumber >= static_cast<std::size_t>(stickCount))
     return std::string("(unknown joystick)");
@@ -92,12 +92,12 @@ std::optional<std::string> OOSDLJoystickManager::nameOfJoystick(
   return std::string(name);
 }
 
-int16_t OOSDLJoystickManager::getAxisWithStick(std::size_t stickNum,
+int16_t oo::SDLJoystickManager::getAxisWithStick(std::size_t stickNum,
                                                std::size_t axisNum) {
   return SDL_GetJoystickAxis(stick[stickNum], static_cast<int>(axisNum));
 }
 
-SDL_JoyAxisEvent OOSDLJoystickManager::makeJoyAxisEvent(
+SDL_JoyAxisEvent oo::SDLJoystickManager::makeJoyAxisEvent(
     SDL_JoyAxisEvent* sdlevt) {
   SDL_JoyAxisEvent evt;
   evt.type = sdlevt->type;
@@ -108,7 +108,7 @@ SDL_JoyAxisEvent OOSDLJoystickManager::makeJoyAxisEvent(
   return evt;
 }
 
-SDL_JoyButtonEvent OOSDLJoystickManager::makeJoyButtonEvent(
+SDL_JoyButtonEvent oo::SDLJoystickManager::makeJoyButtonEvent(
     SDL_JoyButtonEvent* sdlevt) {
   SDL_JoyButtonEvent evt;
   evt.type = sdlevt->type;
@@ -119,7 +119,7 @@ SDL_JoyButtonEvent OOSDLJoystickManager::makeJoyButtonEvent(
   return evt;
 }
 
-SDL_JoyHatEvent OOSDLJoystickManager::makeJoyHatEvent(SDL_JoyHatEvent* sdlevt) {
+SDL_JoyHatEvent oo::SDLJoystickManager::makeJoyHatEvent(SDL_JoyHatEvent* sdlevt) {
   SDL_JoyHatEvent evt;
   evt.type = sdlevt->type;
   evt.which =
@@ -129,7 +129,7 @@ SDL_JoyHatEvent OOSDLJoystickManager::makeJoyHatEvent(SDL_JoyHatEvent* sdlevt) {
   return evt;
 }
 
-bool OOSDLJoystickManager::handleSDLEvent(SDL_Event* evt) {
+bool oo::SDLJoystickManager::handleSDLEvent(SDL_Event* evt) {
   bool rc = false;
   switch (evt->type) {
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
@@ -180,7 +180,7 @@ bool OOSDLJoystickManager::handleSDLEvent(SDL_Event* evt) {
 
 // The decoders read and set OOJoystickManager's state, this object's own (see
 // OOSDLJoystickManager.h).
-void OOSDLJoystickManager::decodeAxisEvent(SDL_JoyAxisEvent* evt) {
+void oo::SDLJoystickManager::decodeAxisEvent(SDL_JoyAxisEvent* evt) {
   // Which axis moved? Does the value need to be made to fit a
   // certain function? Convert axis value to a double.
   double axisvalue = static_cast<double>(evt->value);
@@ -246,7 +246,7 @@ void OOSDLJoystickManager::decodeAxisEvent(SDL_JoyAxisEvent* evt) {
         -1.0 * axstate[static_cast<std::size_t>(function)];
 }
 
-void OOSDLJoystickManager::decodeButtonEvent(SDL_JoyButtonEvent* evt) {
+void oo::SDLJoystickManager::decodeButtonEvent(SDL_JoyButtonEvent* evt) {
   bool bs = false;
 
   // Is there a callback we need to make?
@@ -289,7 +289,7 @@ void OOSDLJoystickManager::decodeButtonEvent(SDL_JoyButtonEvent* evt) {
   }
 }
 
-void OOSDLJoystickManager::decodeHatEvent(SDL_JoyHatEvent* evt) {
+void oo::SDLJoystickManager::decodeHatEvent(SDL_JoyHatEvent* evt) {
   // HACK: handle this as a set of buttons
   int i;
   SDL_JoyButtonEvent btn;

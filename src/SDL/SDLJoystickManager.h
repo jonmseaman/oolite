@@ -56,9 +56,11 @@ MA 02110-1301, USA.
 #include "OOJoystickManager.h"
 #include "oofnd/Object.hpp"
 
-class OOSDLJoystickManager : public OOJoystickManager {
+namespace oo {
+
+class SDLJoystickManager : public OOJoystickManager {
  public:
-  OOSDLJoystickManager();  // opens the sticks SDL reports (at most MAX_STICKS)
+  SDLJoystickManager();  // opens the sticks SDL reports (at most MAX_STICKS)
 
   bool handleSDLEvent(SDL_Event* evt);
   std::optional<std::string> nameOfJoystick(
@@ -81,3 +83,6 @@ class OOSDLJoystickManager : public OOJoystickManager {
   SDL_Joystick* stick[MAX_STICKS] = {};
   int stickCount = {};
 };
+
+}  // namespace oo
+

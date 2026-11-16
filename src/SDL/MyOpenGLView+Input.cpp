@@ -13,9 +13,9 @@ Oolite
 
 #include "GameController.h"
 #include "MyOpenGLView.h"
-#include "OOSDLJoystickManager.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
+#include "SDLJoystickManager.h"
 #include "Universe.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
@@ -201,11 +201,11 @@ MouseWheelStatus MyOpenGLView::mouseWheelState() {
 }
 
 float MyOpenGLView::mouseWheelDelta() {
-  return _mouseWheelDelta / OOMOUSEWHEEL_DELTA;
+  return _mouseWheelDelta / oo::MOUSEWHEEL_DELTA;
 }
 
 void MyOpenGLView::setMouseWheelDelta(float newWheelDelta) {
-  _mouseWheelDelta = newWheelDelta * OOMOUSEWHEEL_DELTA;
+  _mouseWheelDelta = newWheelDelta * oo::MOUSEWHEEL_DELTA;
 }
 
 bool MyOpenGLView::isCommandQDown() { return false; }
@@ -243,7 +243,7 @@ void MyOpenGLView::pollControls() {
       case SDL_EVENT_GAMEPAD_BUTTON_UP:
       case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
       case SDL_EVENT_JOYSTICK_HAT_MOTION:
-        static_cast<OOSDLJoystickManager*>(
+        static_cast<oo::SDLJoystickManager*>(
             OOJoystickManager::sharedStickHandler())
             ->handleSDLEvent(
                 &event);  // the registered SDL handler (was a C cast)
@@ -930,7 +930,8 @@ void MyOpenGLView::pollControls() {
   }
   // check if enough time has passed since last use of the mousewheel and act
   // if needed
-  if (timeNow >= timeSinceLastMouseWheel + OOMOUSEWHEEL_EVENTS_DELAY_INTERVAL) {
+  if (timeNow >=
+      timeSinceLastMouseWheel + oo::MOUSEWHEEL_EVENTS_DELAY_INTERVAL) {
     _mouseWheelDelta = 0.0f;
   }
   if (resize_pending) {

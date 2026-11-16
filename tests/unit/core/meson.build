@@ -32,9 +32,9 @@ core_tests = {
     'test_OOSoundReferencePoint': ['Core/OOBasicSoundReferencePoint.cpp'],
     'test_OOColor': ['Core/OOColor.cpp'],
     'test_OOJoystickProfile': ['Core/OOJoystickProfile.cpp'],
-    'test_OOSDLJoystickManager': ['SDL/OOSDLJoystickManager.cpp', 'Core/OOJoystickManager.cpp', 'Core/OOJoystickProfile.cpp'],
+    'test_OOSDLJoystickManager': ['SDL/SDLJoystickManager.cpp', 'Core/OOJoystickManager.cpp', 'Core/OOJoystickProfile.cpp'],
     'test_OOJoystickDecoding': ['Core/OOJoystickProfile.cpp'],	# upstream #742's layout and dead zone
-    'test_OOJoystickManager': ['Core/OOJoystickManager.cpp', 'Core/OOJoystickProfile.cpp', 'SDL/OOSDLJoystickManager.cpp'],
+    'test_OOJoystickManager': ['Core/OOJoystickManager.cpp', 'Core/OOJoystickProfile.cpp', 'SDL/SDLJoystickManager.cpp'],
     'test_OORegExpMatcher': ['Core/OORegExpMatcher.cpp'],
     'test_OOFileScannerVerifierStage': ['Core/OXPVerifier/FileScannerVerifierStage.cpp', 'Core/OXPVerifier/OXPVerifierStage.cpp'],
     'test_OOAIStateMachineVerifierStage': ['Core/OXPVerifier/AIStateMachineVerifierStage.cpp', 'Core/OXPVerifier/FileScannerVerifierStage.cpp', 'Core/OXPVerifier/OXPVerifierStage.cpp'],

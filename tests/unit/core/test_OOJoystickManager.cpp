@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "OOJoystickManager.h"
-#include "OOSDLJoystickManager.h"
+#include "SDLJoystickManager.h"
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 
@@ -48,7 +48,7 @@ struct StickCallbackTarget {
 // whose axis 1 reads half way. It does not override listSticks() or the
 // setters, so the base's run on its answers. It is an SDL manager, which
 // decodes the events (upstream #742).
-class TestStickManager : public OOSDLJoystickManager {
+class TestStickManager : public oo::SDLJoystickManager {
  public:
   std::size_t joystickCount() override { return 2; }
 
@@ -72,7 +72,7 @@ class TestStickManager : public OOSDLJoystickManager {
 // The SDL manager, which decodes stick events into the base's tables (upstream
 // #742), answering for the hardware as the base does (no sticks, "Dummy
 // joystick", axes at 0), so the decoding cases see the base's tables only.
-class DecodingStickManager : public OOSDLJoystickManager {
+class DecodingStickManager : public oo::SDLJoystickManager {
  public:
   std::size_t joystickCount() override {
     return OOJoystickManager::joystickCount();

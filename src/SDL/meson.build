@@ -3,8 +3,8 @@
 oolite_sources += files(
     'MyOpenGLView.cpp',
     'MyOpenGLView+Input.cpp',
-    'OOSDLJoystickManager.cpp',
-    'OOSaveEXRSnapshot.cpp',
+    'SDLJoystickManager.cpp',
+    'SaveEXRSnapshot.cpp',
     'main.cpp',
 )
 
