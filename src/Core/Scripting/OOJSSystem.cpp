@@ -62,12 +62,12 @@ OOJSSystem.m (QuickJS-ng)
 #include "OOJavaScriptEngine.h"
 #include "OOPlanetEntity.h"
 #include "OOQuaternion.h"
-#include "OOScanClass.h"
 #include "OOShipGroup.h"
 #include "OOSunEntity.h"  // the sun is C++
 #include "OOSystemDescriptionManager.h"
 #include "OOTypes.h"
 #include "OOVector.h"
+#include "ScanClass.h"
 #include "ShipEntity.h"
 #include "StationEntity.h"  // IWYU pragma: keep: converting StationEntity* to Entity* needs the complete type
 #include "Universe.h"
@@ -976,13 +976,13 @@ static JSValue SystemCountEntitiesWithScanClass(JSContext* context,
                                                 JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
-  OOScanClass scanClass = OOScanClass::kNotSet;
+  oo::ScanClass scanClass = oo::ScanClass::kNotSet;
   Entity* relativeTo = nullptr;  // the C++ entity
   double range = -1;
   unsigned result;
 
   if (argc > 0) scanClass = OOScanClassFromJSValue(context, OOJS_ARGV[0]);
-  if (scanClass == OOScanClass::kNotSet) {
+  if (scanClass == oo::ScanClass::kNotSet) {
     OOJSReportBadArguments(context, "System", "countEntitiesWithScanClass",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (scan class)");
@@ -1014,13 +1014,13 @@ static JSValue SystemEntitiesWithScanClass(JSContext* context,
                                            JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
-  OOScanClass scanClass = OOScanClass::kNotSet;
+  oo::ScanClass scanClass = oo::ScanClass::kNotSet;
   Entity* relativeTo = nullptr;  // the C++ entity
   double range = -1;
   std::vector<oo::EntityHold> result;
 
   if (argc > 0) scanClass = OOScanClassFromJSValue(context, OOJS_ARGV[0]);
-  if (scanClass == OOScanClass::kNotSet) {
+  if (scanClass == oo::ScanClass::kNotSet) {
     OOJSReportBadArguments(context, "System", "countEntitiesWithScanClass",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
                            "string (scan class)");

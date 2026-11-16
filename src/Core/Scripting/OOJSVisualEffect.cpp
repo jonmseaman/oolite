@@ -413,9 +413,9 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
             // not virtual, so the binding test stands in for it
             if (PLAYER != nullptr)
               PLAYER->PlayerEntity::setCompassMode(
-                  OOCompassMode::kPlanet);  // qualified: the final overrider,
-                                            // so the binding test stands in for
-                                            // it
+                  oo::CompassMode::kPlanet);  // qualified: the final overrider,
+                                              // so the binding test stands in
+                                              // for it
           }
         }
       } else {

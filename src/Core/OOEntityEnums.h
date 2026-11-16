@@ -34,14 +34,14 @@ MA 02110-1301, USA.
 
 // From Entities/Entity.h.
 
-#include "OOEntityStatus.h"
-#include "OOScanClass.h"
+#include "EntityStatus.h"
+#include "ScanClass.h"
 
 // From Entities/PlayerEntity.h.
 
-#include "OOGUIScreenID.h"
-#include "OOGalacticHyperspaceBehaviour.h"
+#include "GUIScreenID.h"
+#include "GalacticHyperspaceBehaviour.h"
 
 // From Entities/ShipEntity.h.
 
-#include "OOShipDamageType.h"
+#include "ShipDamageType.h"

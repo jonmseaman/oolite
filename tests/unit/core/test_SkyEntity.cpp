@@ -148,7 +148,7 @@ OO_TEST(made) {
              dynamic_cast<OOEntityWithDrawable*>(sky) != nullptr);
     OO_CHECK(dynamic_cast<OOSkyDrawable*>(SkyPart(sky)->getDrawable()) !=
              nullptr);
-    OO_CHECK(sky->status() == OOEntityStatus::kEffect);
+    OO_CHECK(sky->status() == oo::EntityStatus::kEffect);
     OO_CHECK(sky->isSky() && sky->isVisible() && !sky->canCollide());
     OO_CHECK(sky->cameraRangeFront() == (GLfloat)MAX_CLEAR_DEPTH &&
              sky->cameraRangeBack() == (GLfloat)MAX_CLEAR_DEPTH);

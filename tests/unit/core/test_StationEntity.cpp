@@ -463,7 +463,7 @@ OO_TEST(slice2NoDocks)
 		if (station != nullptr)  station->clearDockingCorridor();
 		if (station != nullptr)  station->sanityCheckShipsOnApproach();
 		if (station != nullptr)  station->autoDockShipsOnHold();
-		OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) == OOEntityStatus::kInFlight && (station != nullptr ? station->status() : OOEntityStatus{}) == OOEntityStatus::kInFlight);
+		OO_CHECK((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight && (station != nullptr ? station->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
 	}
 }
 
@@ -689,7 +689,7 @@ OO_TEST(slice4LaunchersWithoutLaunchDock)
 
 		OO_CHECK(DefendersLaunched4(station) == defenders && ScavengersLaunched4(station) == scavengers && DockedShuttles4(station) == shuttles);
 		OO_CHECK((station != nullptr ? station->countOfShipsInLaunchQueueWithPrimaryRole("police") : unsigned{}) == 0 && (station != nullptr ? station->currentlyInLaunchingQueues() : unsigned{}) == 0);
-		OO_CHECK((station != nullptr ? station->status() : OOEntityStatus{}) == OOEntityStatus::kInFlight);
+		OO_CHECK((station != nullptr ? station->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
 	}
 }
 

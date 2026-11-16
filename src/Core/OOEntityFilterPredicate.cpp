@@ -100,10 +100,10 @@ bool NANDPredicate(Entity* entity, void* parameter) {
 /*	The predicates ask the C++ entity directly.
  */
 bool HasScanClassPredicate(Entity* entity, void* parameter) {
-  return *static_cast<const OOScanClass*>(parameter) ==
+  return *static_cast<const oo::ScanClass*>(parameter) ==
          (entity != nullptr
               ? entity->getScanClass()
-              : OOScanClass{});  // an OOScanClass, as the callers pass it
+              : oo::ScanClass{});  // an OOScanClass, as the callers pass it
 }
 
 bool IsShipPredicate(Entity* entity, void* /*parameter*/) {

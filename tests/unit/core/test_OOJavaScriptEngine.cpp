@@ -821,7 +821,7 @@ OO_TEST(entityPredicates)
 		OO_CHECK(!JSEntityIsDemoShipPredicate(nullptr, NULL));
 
 		TestScriptEntity *entity = static_cast<TestScriptEntity *>(oo::MadeEntity(oo::makeShared<TestScriptEntity>()));
-		entity->setStatus(OOEntityStatus::kInFlight);
+		entity->setStatus(oo::EntityStatus::kInFlight);
 		OO_CHECK(!JSEntityIsJavaScriptVisiblePredicate(entity, NULL));
 		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
 
@@ -836,7 +836,7 @@ OO_TEST(entityPredicates)
 		entity->isSubEntity = true;
 		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
 		entity->isSubEntity = false;
-		entity->setStatus(OOEntityStatus::kCockpitDisplay);
+		entity->setStatus(oo::EntityStatus::kCockpitDisplay);
 		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
 		OO_CHECK(JSEntityIsDemoShipPredicate(entity, NULL));
 		entity->isSubEntity = true;

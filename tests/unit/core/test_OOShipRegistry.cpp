@@ -42,9 +42,9 @@ PlayerEntity* gOOPlayer = nullptr;
 #include "OOEntityEnums.h"  // IWYU pragma: keep
 class Entity {
  public:
-  OOEntityStatus status();
+  oo::EntityStatus status();
 };
-OOEntityStatus Entity::status() { std::abort(); }
+oo::EntityStatus Entity::status() { std::abort(); }
 Universe* gSharedUniverse = nullptr;
 
 // UNIVERSE stays nil here, so the registry's guarded call never reaches it; the

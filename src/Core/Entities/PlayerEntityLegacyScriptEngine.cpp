@@ -383,14 +383,14 @@ void PlayerEntity::setScriptTargetToSelf() { setScriptTarget(this); }
 
 ::ShipEntity* PlayerEntity::scriptTarget() { return ::scriptTarget; }
 
-inline OOEntityStatus RecursiveRemapStatus(OOEntityStatus status) {
+inline oo::EntityStatus RecursiveRemapStatus(oo::EntityStatus status) {
   // Some player stutuses should only be seen once per "event".
   // This remaps them to something innocuous in case of recursion.
-  if (status == OOEntityStatus::kDocking ||
-      status == OOEntityStatus::kLaunching ||
-      status == OOEntityStatus::kEnteringWitchspace ||
-      status == OOEntityStatus::kExitingWitchspace) {
-    return OOEntityStatus::kInFlight;
+  if (status == oo::EntityStatus::kDocking ||
+      status == oo::EntityStatus::kLaunching ||
+      status == oo::EntityStatus::kEnteringWitchspace ||
+      status == oo::EntityStatus::kExitingWitchspace) {
+    return oo::EntityStatus::kInFlight;
   } else {
     return status;
   }
@@ -419,7 +419,7 @@ PlayerEntity::getWorldScriptsRequiringTickle() {
 
 void PlayerEntity::checkScript() {
   bool wasRunningScript = sRunningScript;
-  OOEntityStatus status, restoreStatus;
+  oo::EntityStatus status, restoreStatus;
 
   const std::vector<std::pair<std::string, std::shared_ptr<OOScript>>>
       tickleScripts = getWorldScriptsRequiringTickle();
@@ -1176,7 +1176,7 @@ oo::PList PlayerEntity::dockedStationName_string() {
   // the player isn't docked, [station
   // name] if it is, 'UNKNOWN' otherwise
   // (?)
-  if (status() != OOEntityStatus::kDocked) return oo::PList("NONE");
+  if (status() != oo::EntityStatus::kDocked) return oo::PList("NONE");
 
   return oo::PList(dockedStationName().value_or("UNKNOWN"));
 }
@@ -1467,7 +1467,7 @@ void PlayerEntity::removeAllCargo(bool forceRemoval) {
   // not removed. --Kaks 20091004
   if (::scriptTarget != this) return;
 
-  if (status() != OOEntityStatus::kDocked && !forceRemoval) {
+  if (status() != oo::EntityStatus::kDocked && !forceRemoval) {
     OO_LOG_WARN(kOOLogRemoveAllCargoNotDocked,
                 "{}removeAllCargo only works when docked.",
                 " in " + CurrentScriptDescription() + ", ");
@@ -1487,7 +1487,7 @@ void PlayerEntity::removeAllCargo(bool forceRemoval) {
     }
   }
 
-  if (forceRemoval && status() != OOEntityStatus::kDocked) {
+  if (forceRemoval && status() != oo::EntityStatus::kDocked) {
     std::ptrdiff_t i;
     for (i = static_cast<std::ptrdiff_t>(cargo.size() - 1); i >= 0; i--) {
       ::ShipEntity* canister =
@@ -2321,9 +2321,10 @@ void PlayerEntity::launchFromStation() {
   if ((UNIVERSE != nullptr ? UNIVERSE->getAutoSave() : false)) {
     if (UNIVERSE != nullptr) UNIVERSE->setAutoSaveNow(true);
   }
-  if (status() == OOEntityStatus::kDocking)
-    setStatus(OOEntityStatus::kDocked);  // needed here to prevent the normal
-                                         // update from continuing with docking.
+  if (status() == oo::EntityStatus::kDocking)
+    setStatus(
+        oo::EntityStatus::kDocked);  // needed here to prevent the normal
+                                     // update from continuing with docking.
   leaveDock(dockedStation());
 }
 
@@ -2356,11 +2357,11 @@ void PlayerEntity::sendAllShipsAway() {
     Entity* e1 = my_entities[static_cast<std::size_t>(i)];
     if (oo::EntityIsShip(e1)) {
       ::ShipEntity* se1 = oo::ToShip(e1);
-      OOScanClass e_class = e1->getScanClass();  // virtual
-      if (((e_class == OOScanClass::kNeutral) ||
-           (e_class == OOScanClass::kPolice) ||
-           (e_class == OOScanClass::kMilitary) ||
-           (e_class == OOScanClass::kThargoid)) &&
+      oo::ScanClass e_class = e1->getScanClass();  // virtual
+      if (((e_class == oo::ScanClass::kNeutral) ||
+           (e_class == oo::ScanClass::kPolice) ||
+           (e_class == oo::ScanClass::kMilitary) ||
+           (e_class == oo::ScanClass::kThargoid)) &&
           !((se1 != nullptr ? se1->getIsStation() : false) &&
             (se1 != nullptr ? se1->getMaxFlightSpeed() : 0.0f) ==
                 0) &&  // exclude only stations, not carriers.
@@ -2642,7 +2643,7 @@ void PlayerEntity::setGuiToMissionScreen() {
   // is only called by legacy scripts
   setMissionBackgroundSpecial("");
   // likewise exit screen target
-  setMissionExitScreen(OOGUIScreenID::kStatus);
+  setMissionExitScreen(oo::GUIScreenID::kStatus);
 
   setGuiToMissionScreenWithCallback(false);
 }
@@ -2673,7 +2674,7 @@ void PlayerEntity::refreshMissionScreenTextEntry() {
 
 void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
   std::size_t end_row = 21;
   if (getHud() != nullptr && getHud()->getAllowBigGui()) {
     end_row = 27;
@@ -2706,7 +2707,7 @@ void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
 
   missionTextRow = 1;
 
-  if (gui) gui_screen = OOGUIScreenID::kMission;
+  if (gui) gui_screen = oo::GUIScreenID::kMission;
 
   lastTextKey.reset();
 
@@ -2876,16 +2877,16 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     if (UNIVERSE != nullptr)
       UNIVERSE->setMainLightPosition(
           Vector{DEMO_LIGHT_POSITION});  // set light origin
-    if (ship != nullptr) ship->setScanClass(OOScanClass::kNoDraw);
+    if (ship != nullptr) ship->setScanClass(oo::ScanClass::kNoDraw);
     if (ship != nullptr) ship->switchAITo("nullAI.plist");
     if (UNIVERSE != nullptr)
       UNIVERSE->addEntity(
           ship.get());  // OOEntityStatus::kInFlight, AI state GLOBAL
-    if (ship != nullptr) ship->setStatus(OOEntityStatus::kCockpitDisplay);
+    if (ship != nullptr) ship->setStatus(oo::EntityStatus::kCockpitDisplay);
     if (ship != nullptr) ship->setRoll(0.0);
     if (ship != nullptr) ship->setPitch(0.0);
     if (ship != nullptr) ship->setVelocity(kZeroVector);
-    if (ship != nullptr) ship->setBehaviour(OOBehaviour::kStopStill);
+    if (ship != nullptr) ship->setBehaviour(oo::Behaviour::kStopStill);
 
     ship.reset();
     return true;
@@ -2926,16 +2927,16 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
       UNIVERSE->setMainLightPosition(
           Vector{DEMO_LIGHT_POSITION});  // set light origin
     if (doppelganger != nullptr)
-      doppelganger->setScanClass(OOScanClass::kNoDraw);
+      doppelganger->setScanClass(oo::ScanClass::kNoDraw);
     if (doppelganger != nullptr) doppelganger->switchAITo("nullAI.plist");
     if (UNIVERSE != nullptr) UNIVERSE->addEntity(doppelganger.get());
     if (doppelganger != nullptr)
-      doppelganger->setStatus(OOEntityStatus::kCockpitDisplay);
+      doppelganger->setStatus(oo::EntityStatus::kCockpitDisplay);
     if (doppelganger != nullptr) doppelganger->setRoll(0.0);
     if (doppelganger != nullptr) doppelganger->setPitch(0.0);
     if (doppelganger != nullptr) doppelganger->setVelocity(kZeroVector);
     if (doppelganger != nullptr)
-      doppelganger->setBehaviour(OOBehaviour::kStopStill);
+      doppelganger->setBehaviour(oo::Behaviour::kStopStill);
 
     doppelganger.reset();
     return true;
@@ -3127,10 +3128,10 @@ void PlayerEntity::targetNearestIncomingMissile() {
 void PlayerEntity::setGalacticHyperspaceBehaviourTo(
     const std::string& galacticHyperspaceBehaviourString) {
   // called by name
-  OOGalacticHyperspaceBehaviour ghBehaviour =
+  oo::GalacticHyperspaceBehaviour ghBehaviour =
       OOGalacticHyperspaceBehaviourFromString(
           galacticHyperspaceBehaviourString);
-  if (ghBehaviour == OOGalacticHyperspaceBehaviour::kUnknown) {
+  if (ghBehaviour == oo::GalacticHyperspaceBehaviour::kUnknown) {
     OO_LOG(
         "player.setGalacticHyperspaceBehaviour.invalidInput",
         "setGalacticHyperspaceBehaviourTo: called with unknown behaviour {}.",

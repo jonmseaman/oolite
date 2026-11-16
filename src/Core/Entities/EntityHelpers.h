@@ -108,8 +108,8 @@ inline bool EntityIsPlanet(Entity* entity) {
   return entity != nullptr && entity->isPlanet();
 }
 
-inline OOEntityStatus EntityStatus(Entity* entity) {
-  return entity != nullptr ? entity->status() : OOEntityStatus{};
+inline oo::EntityStatus EntityStatusOf(Entity* entity) {
+  return entity != nullptr ? entity->status() : oo::EntityStatus{};
 }
 
 // What the category SubEntityRelationship's -isShipWithSubEntityShip: answered:

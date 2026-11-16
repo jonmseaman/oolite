@@ -549,7 +549,7 @@ void HeadUpDisplayUniverseGUISetGLColorFromSetting(
 // The player, entities and universe as the reticles and waypoints read them
 // (hudDrawReticleOnTarget(), hudDrawWaypoint(),
 // hudRotateViewpointForVirtualDepth()).
-OOGUIScreenID HeadUpDisplayPlayerGuiScreen(PlayerEntity* player);
+oo::GUIScreenID HeadUpDisplayPlayerGuiScreen(PlayerEntity* player);
 HPVector HeadUpDisplayPlayerViewpointPosition(PlayerEntity* player);
 GLfloat HeadUpDisplayPlayerWeaponRange(PlayerEntity* player);
 std::optional<std::string> HeadUpDisplayPlayerDialTargetName(
@@ -578,6 +578,6 @@ double HeadUpDisplayWormholeExpiryTime(WormholeEntity* wormhole);
 OOTimeAbsolute HeadUpDisplayUniverseGetTime();
 const oo::PList*
 HeadUpDisplayUniverseDescriptions();  // MissileIconDefinition()
-OOViewID HeadUpDisplayUniverseViewDirection();
+oo::ViewID HeadUpDisplayUniverseViewDirection();
 Entity* HeadUpDisplayUniverseFirstEntityTargetedByPlayer();
 Entity* HeadUpDisplayUniverseFirstEntityTargetedByPlayerPrecisely();

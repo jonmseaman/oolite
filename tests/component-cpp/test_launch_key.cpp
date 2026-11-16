@@ -34,7 +34,7 @@ std::size_t Launches(const Game& game) {
 }
 
 bool LaunchIsOver(Game& game) {
-  return game.player()->status() == OOEntityStatus::kInFlight &&
+  return game.player()->status() == oo::EntityStatus::kInFlight &&
          game.universe()->breakPatternOver();
 }
 
@@ -76,7 +76,7 @@ OO_TEST(pressing_the_launch_key_again_launches_nothing) {
   const std::string launch = game.keyForControl("key_launch_ship");
   game.press(launch);
   game.simulate(5s);
-  OO_CHECK(game.player()->status() == OOEntityStatus::kInFlight);
+  OO_CHECK(game.player()->status() == oo::EntityStatus::kInFlight);
   OO_CHECK(game.universe()->breakPatternOver());
   OO_CHECK_EQ(game.evalString("player.ship.viewDirection"), std::string("VIEW_FORWARD"));
   OO_CHECK_EQ(Launches(game), 1u);

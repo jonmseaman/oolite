@@ -1333,10 +1333,10 @@ int GuiDisplayGen::drawGUI(GLfloat alpha, bool drawCursor) {
                   alpha);
 
     if (this == (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr)) {
-      if ((player != nullptr ? player->guiScreen() : OOGUIScreenID{}) ==
-              OOGUIScreenID::kShortRangeChart ||
-          (player != nullptr ? player->guiScreen() : OOGUIScreenID{}) ==
-              OOGUIScreenID::kLongRangeChart ||
+      if ((player != nullptr ? player->guiScreen() : oo::GUIScreenID{}) ==
+              oo::GUIScreenID::kShortRangeChart ||
+          (player != nullptr ? player->guiScreen() : oo::GUIScreenID{}) ==
+              oo::GUIScreenID::kLongRangeChart ||
           backgroundSpecial == OOGUIBackgroundSpecial::kShort ||
           backgroundSpecial == OOGUIBackgroundSpecial::kShortAnaQuickest ||
           backgroundSpecial == OOGUIBackgroundSpecial::kShortAnaShortest ||
@@ -1354,15 +1354,15 @@ int GuiDisplayGen::drawGUI(GLfloat alpha, bool drawCursor) {
                       static_cast<GLfloat>(y - 0.5f * size_in_pixels.height), z,
                       alpha, true);
       }
-      if ((player != nullptr ? player->guiScreen() : OOGUIScreenID{}) ==
-          OOGUIScreenID::kStatus) {
+      if ((player != nullptr ? player->guiScreen() : oo::GUIScreenID{}) ==
+          oo::GUIScreenID::kStatus) {
         drawEquipmentList(
             oo::PList((player != nullptr ? player->equipmentList()
                                          : std::vector<oo::PList>())),
             z);
       }
-      if ((player != nullptr ? player->guiScreen() : OOGUIScreenID{}) ==
-          OOGUIScreenID::kStickProfile) {
+      if ((player != nullptr ? player->guiScreen() : oo::GUIScreenID{}) ==
+          oo::GUIScreenID::kStickProfile) {
         if (player != nullptr)
           player->stickProfileGraphAxisProfile(alpha, make_vector(x, y, z),
                                                size_in_pixels);
@@ -1462,8 +1462,8 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
     row_alpha[i] = alpha;
 
     if (!(UNIVERSE != nullptr ? UNIVERSE->autoMessageLogBg() : false) &&
-        (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-            OOGUIScreenID::kMain)
+        (PLAYER != nullptr ? PLAYER->guiScreen() : oo::GUIScreenID{}) ==
+            oo::GUIScreenID::kMain)
       backgroundAlpha = alpha;
 
     if (rowFadeTime[i] > 0.0f &&
@@ -1487,10 +1487,10 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
   // don't draw it if docked, unless message_gui is permanent
   // don't draw it on the intro screens
   if (backgroundColor.get()) {
-    OOEntityStatus playerStatus =
-        (PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{});
-    if (playerStatus != OOEntityStatus::kStartGame &&
-        playerStatus != OOEntityStatus::kDead) {
+    oo::EntityStatus playerStatus =
+        (PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{});
+    if (playerStatus != oo::EntityStatus::kStartGame &&
+        playerStatus != oo::EntityStatus::kDead) {
       OOGL(glColor4f(backgroundColor->redComponent(),
                      backgroundColor->greenComponent(),
                      backgroundColor->blueComponent(),
@@ -1857,10 +1857,10 @@ void GuiDisplayGen::drawSystemMarker(const oo::PList& marker, GLfloat x,
 OOSystemID GuiDisplayGen::targetNextFoundSystem(int direction) {
   // +1 , 0 , -1
   OOSystemID sys = (PLAYER != nullptr ? PLAYER->targetSystemID() : 0);
-  if ((PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) !=
-          OOGUIScreenID::kShortRangeChart &&
-      (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) !=
-          OOGUIScreenID::kLongRangeChart)
+  if ((PLAYER != nullptr ? PLAYER->guiScreen() : oo::GUIScreenID{}) !=
+          oo::GUIScreenID::kShortRangeChart &&
+      (PLAYER != nullptr ? PLAYER->guiScreen() : oo::GUIScreenID{}) !=
+          oo::GUIScreenID::kLongRangeChart)
     return sys;
 
   bool* systemsFound =
@@ -2121,9 +2121,9 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                  (player != nullptr ? player->infoSystemID() : 0),
                  (player != nullptr ? player->galaxyNumber() : OOGalaxyID{}))
            : NSMakePoint(0, 0));
-  OOLongRangeChartMode chart_mode =
+  oo::LongRangeChartMode chart_mode =
       (player != nullptr ? player->getLongRangeChartMode()
-                         : OOLongRangeChartMode{});
+                         : oo::LongRangeChartMode{});
   OOGalaxyID galaxy_id =
       (player != nullptr ? player->galaxyNumber() : OOGalaxyID{});
   GLfloat r = 1.0, g = 1.0, b = 1.0;
@@ -2441,7 +2441,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
     star.y = static_cast<float>(sys_coordinates.y * vscale + voffset);
 
     noNova = !nearby_systems[i].nova;
-    OOCAssert(chart_mode <= OOLongRangeChartMode::kTechLevel,
+    OOCAssert(chart_mode <= oo::LongRangeChartMode::kTechLevel,
               "Long range chart mode %i out of range",
               static_cast<int>(chart_mode));
 
@@ -2464,7 +2464,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
       OOGL(glColor4f(r, g, b, alpha));
     } else {
       switch (chart_mode) {
-        case OOLongRangeChartMode::kEconomy:
+        case oo::LongRangeChartMode::kEconomy:
           if (noNova) [[likely]] {
             systemParameter = static_cast<std::size_t>(nearby_systems[i].eco);
             GLfloat ce1 = 1.0f - 0.125f * static_cast<float>(systemParameter);
@@ -2476,7 +2476,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
             OOGL(glColor4f(r, g, b, alpha));
           }
           break;
-        case OOLongRangeChartMode::kGovernment:
+        case oo::LongRangeChartMode::kGovernment:
           if (noNova) [[likely]] {
             systemParameter = static_cast<std::size_t>(nearby_systems[i].gov);
             setGLColorFromSetting(
@@ -2491,7 +2491,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
             OOGL(glColor4f(r, g, b, alpha));
           }
           break;
-        case OOLongRangeChartMode::kTechLevel:
+        case oo::LongRangeChartMode::kTechLevel:
           if (noNova) [[likely]] {
             systemParameter = static_cast<std::size_t>(nearby_systems[i].tec);
             r = static_cast<GLfloat>(0.6);
@@ -2502,8 +2502,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
           }
           OOGL(glColor4f(r, g, b, alpha));
           break;
-        case OOLongRangeChartMode::kUnknown:
-        case OOLongRangeChartMode::kSunColor:
+        case oo::LongRangeChartMode::kUnknown:
+        case oo::LongRangeChartMode::kSunColor:
           if (noNova) [[likely]] {
             r = g = b = 1.0;
             std::shared_ptr<OOColor> sunColor = OOColor::colorWithDescription(
@@ -2755,8 +2755,8 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
   } else {
     setArray({"", travelDistLine, travelTimeLine}, textRow);
   }
-  if ((PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-      OOGUIScreenID::kShortRangeChart) {
+  if ((PLAYER != nullptr ? PLAYER->guiScreen() : oo::GUIScreenID{}) ==
+      oo::GUIScreenID::kShortRangeChart) {
     if (jumps > 0) {
       setArray({"", OOExpandKey("short-range-chart-jumps", jumps)
                         .value_or(std::string())},

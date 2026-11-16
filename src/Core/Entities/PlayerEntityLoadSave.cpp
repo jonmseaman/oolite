@@ -210,7 +210,7 @@ void PlayerEntity::setGuiToScenarioScreen(int page) {
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     OOGUIRow start_row = GUI_ROW_SCENARIOS_START;
     OOGUIRow row = start_row;
-    bool guiChanged = (gui_screen != OOGUIScreenID::kNewGame);
+    bool guiChanged = (gui_screen != oo::GUIScreenID::kNewGame);
 
     gui->clearAndKeepBackground(!guiChanged);
     gui->setTitle(OO_DESC("oolite-newgame-title"));
@@ -255,7 +255,7 @@ void PlayerEntity::setGuiToScenarioScreen(int page) {
       ++row;
     }
 
-    gui_screen = OOGUIScreenID::kNewGame;
+    gui_screen = oo::GUIScreenID::kNewGame;
 
     gui->setSelectableRange(
         NSMakeRange(static_cast<std::size_t>(start_row - 2),
@@ -408,7 +408,7 @@ std::optional<std::string> PlayerEntity::commanderSelector() {
       joyButtonState[BUTTON_GUISELECT]) {
     switch (gui->getSelectedRow()) {
       case EXITROW:
-        if (status() == OOEntityStatus::kStartGame) {
+        if (status() == oo::EntityStatus::kStartGame) {
           setGuiToIntroFirstGo(true);
           return std::nullopt;
         }
@@ -856,10 +856,10 @@ bool PlayerEntity::loadPlayerFromFile(const std::string& fileToOpen,
       UNIVERSE->getGameView()->suppressKeysUntilKeyUp();
   }
   if (asNew) {
-    gui_screen = OOGUIScreenID::kNewGame;
+    gui_screen = oo::GUIScreenID::kNewGame;
   } else {
-    gui_screen =
-        OOGUIScreenID::kLoad;  // force evaluation of new gui screen on startup
+    gui_screen = oo::GUIScreenID::kLoad;  // force evaluation of new gui screen
+                                          // on startup
   }
   setGuiToStatusScreen();
   if (loadedOK)
@@ -941,7 +941,7 @@ void PlayerEntity::setGuiToLoadCommanderScreen() {
            : std::optional<std::string>())
           .value_or("");
 
-  gui_screen = OOGUIScreenID::kLoad;
+  gui_screen = oo::GUIScreenID::kLoad;
 
   gui->clear();
   gui->setTitle(OO_DESC("loadscreen-title"));
@@ -970,7 +970,7 @@ void PlayerEntity::setGuiToSaveCommanderScreen(const std::string& cdrName) {
           .value_or("");
 
   pollControls = false;
-  gui_screen = OOGUIScreenID::kSave;
+  gui_screen = oo::GUIScreenID::kSave;
 
   gui->clear();
   gui->setTitle(OO_DESC("savescreen-title"));
@@ -1001,7 +1001,7 @@ void PlayerEntity::setGuiToOverwriteScreen(const std::string& cdrName) {
   // Don't poll controls
   pollControls = false;
 
-  gui_screen = OOGUIScreenID::kSaveOverwrite;
+  gui_screen = oo::GUIScreenID::kSaveOverwrite;
 
   gui->clear();
   gui->setTitle(
@@ -1161,7 +1161,7 @@ void PlayerEntity::lsCommanders(
     rangeStart = STARTROW - 1;
   }
 
-  if (status() == OOEntityStatus::kStartGame) {
+  if (status() == oo::EntityStatus::kStartGame) {
     gui->setArray({OO_DESC("oolite-loadsave-exit"), " <----- "}, EXITROW);
     gui->setColor(OOColor::redColor().get(), EXITROW);
     gui->setKey(std::string(GUI_KEY_OK), EXITROW);

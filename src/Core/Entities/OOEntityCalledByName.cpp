@@ -482,7 +482,7 @@ Entity* Facade_rootShipEntity(Entity* entity) {
   return entity->rootShipEntity();
 }
 
-OOScanClass Facade_scanClass(Entity* entity) {
+oo::ScanClass Facade_scanClass(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->getScanClass();
 }
@@ -502,7 +502,7 @@ double Facade_speed(Entity* entity) {
   return entity->speed();
 }
 
-OOEntityStatus Facade_status(Entity* entity) {
+oo::EntityStatus Facade_status(Entity* entity) {
   if (entity == nullptr) return {};
   return entity->status();
 }

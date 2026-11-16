@@ -95,7 +95,7 @@ OO_TEST(init) {
     Entity* object = MakeDust(&dust);
     OO_CHECK(object != nullptr && dust != nullptr &&
              dynamic_cast<DustEntity*>(object) == dust);
-    OO_CHECK(dust->status() == OOEntityStatus::kActive);
+    OO_CHECK(dust->status() == oo::EntityStatus::kActive);
     OO_CHECK(dust->collisionRadius() == DUST_SCALE && !dust->canCollide());
     OO_CHECK(ColorIs(dust->dustColor(), 0.5f, 1.0f, 1.0f, 1.0f));
     OO_CHECK(oo::EntityClassName(dust) == "DustEntity");

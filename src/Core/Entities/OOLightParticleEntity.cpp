@@ -77,8 +77,8 @@ void OOLightParticleEntity::initWithDiameter(float diameter) {
     _colorComponents[2] = 1.0f;
     _colorComponents[3] = 1.0f;
 
-    setScanClass(OOScanClass::kNoDraw);
-    setStatus(OOEntityStatus::kEffect);
+    setScanClass(oo::ScanClass::kNoDraw);
+    setStatus(oo::EntityStatus::kEffect);
   }
 }
 
@@ -185,9 +185,9 @@ void OOLightParticleEntity::drawImmediate(bool /*immediate*/,
   OOGL(glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, components));
   OOGL(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND));
 
-  OOViewID viewDir =
-      (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{});
-  if (viewDir != OOViewID::kGUIDisplay)
+  oo::ViewID viewDir =
+      (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{});
+  if (viewDir != oo::ViewID::kGUIDisplay)
     OOGLMultModelView(
         (PLAYER != nullptr ? PLAYER->drawRotationMatrix() : OOMatrix{}));
   if (OOTexture* blob = texture())
@@ -202,8 +202,8 @@ void OOLightParticleEntity::drawImmediate(bool /*immediate*/,
 
   OOGLBEGIN(GL_QUADS);
   switch (viewDir) {
-    case OOViewID::kForward:
-    case OOViewID::kGUIDisplay:
+    case oo::ViewID::kForward:
+    case oo::ViewID::kGUIDisplay:
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-_diameter, -_diameter, -viewOffset);
 
@@ -217,7 +217,7 @@ void OOLightParticleEntity::drawImmediate(bool /*immediate*/,
       glVertex3f(-_diameter, _diameter, -viewOffset);
       break;
 
-    case OOViewID::kAft:
+    case oo::ViewID::kAft:
       glTexCoord2f(0.0, 1.0);
       glVertex3f(_diameter, -_diameter, viewOffset);
 
@@ -231,7 +231,7 @@ void OOLightParticleEntity::drawImmediate(bool /*immediate*/,
       glVertex3f(_diameter, _diameter, viewOffset);
       break;
 
-    case OOViewID::kStarboard:
+    case oo::ViewID::kStarboard:
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-viewOffset, -_diameter, _diameter);
 
@@ -245,7 +245,7 @@ void OOLightParticleEntity::drawImmediate(bool /*immediate*/,
       glVertex3f(-viewOffset, _diameter, _diameter);
       break;
 
-    case OOViewID::kPort:
+    case oo::ViewID::kPort:
       glTexCoord2f(0.0, 1.0);
       glVertex3f(viewOffset, -_diameter, -_diameter);
 
@@ -259,7 +259,7 @@ void OOLightParticleEntity::drawImmediate(bool /*immediate*/,
       glVertex3f(viewOffset, _diameter, -_diameter);
       break;
 
-    case OOViewID::kCustom: {
+    case oo::ViewID::kCustom: {
       ::PlayerEntity* player = PLAYER;
       Vector vi =
           (player != nullptr ? player->getCustomViewRightVector() : Vector{});

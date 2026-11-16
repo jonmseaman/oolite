@@ -117,7 +117,7 @@ class DockEntity : public ShipEntity {
   bool setUpShipFromDictionary(const oo::PList& dict) override;
   void update(OOTimeDelta delta_t) override;
   void noteTakingDamage(double amount, Entity* entity,
-                        OOShipDamageType type) override;
+                        oo::ShipDamageType type) override;
   void takeEnergyDamage(double amount, Entity* ent, Entity* other,
                         const std::string& weaponIdentifier) override;
   void drawImmediate(bool immediate, bool translucent) override;

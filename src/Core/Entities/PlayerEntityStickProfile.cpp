@@ -68,7 +68,7 @@ std::string Bars(char mark, int count) {
 }  // namespace
 
 void PlayerEntity::setGuiToStickProfileScreen(::GuiDisplayGen* gui) {
-  gui_screen = OOGUIScreenID::kStickProfile;
+  gui_screen = oo::GUIScreenID::kStickProfile;
   if (stickProfileScreen != nullptr)
     stickProfileScreen->startGui(gui);  // a nil screen ignored the message
   return;
@@ -596,8 +596,8 @@ void StickProfileScreen::showScreen() {
   if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
     UNIVERSE->getGameView()->suppressKeysUntilKeyUp();
   gui->setForegroundTextureKey(
-      std::string((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
-                          OOEntityStatus::kDocked
+      std::string((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) ==
+                          oo::EntityStatus::kDocked
                       ? "docked_overlay"
                       : "paused_overlay"));
   gui->setBackgroundTextureKey(std::string("settings"));

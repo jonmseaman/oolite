@@ -98,7 +98,7 @@ void OOLaserShotEntity::initLaserFromShip(::ShipEntity* srcEntity,
   OOCParameterAssert((srcEntity != nullptr ? srcEntity->getIsShip() : false) &&
                      (ship != nullptr ? ship->getIsShip() : false));
 
-  setStatus(OOEntityStatus::kEffect);
+  setStatus(oo::EntityStatus::kEffect);
 
   if (ship == srcEntity) {
     // main laser offset

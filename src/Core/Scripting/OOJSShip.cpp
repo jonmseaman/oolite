@@ -1209,7 +1209,7 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
 
     case kIsRock:
       return OOJSValueFromBOOL(ship->getScanClass() ==
-                               OOScanClass::kRock);  // hermits and asteroids!
+                               oo::ScanClass::kRock);  // hermits and asteroids!
 
     case kIsMinable:
       return OOJSValueFromBOOL(ship->isMinable());
@@ -1225,12 +1225,12 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
                  : OOPlayerFleeingStatus{}) >= OOPlayerFleeingStatus::kCargo);
       } else {
         return OOJSValueFromBOOL(
-            ship->getBehaviour() == OOBehaviour::kFleeTarget ||
-            ship->getBehaviour() == OOBehaviour::kFleeEvasiveAction);
+            ship->getBehaviour() == oo::Behaviour::kFleeTarget ||
+            ship->getBehaviour() == oo::Behaviour::kFleeEvasiveAction);
       }
 
     case kIsCargo:
-      return OOJSValueFromBOOL(ship->getScanClass() == OOScanClass::kCargo &&
+      return OOJSValueFromBOOL(ship->getScanClass() == oo::ScanClass::kCargo &&
                                ship->commodityAmount() > 0);
 
     case kIsDerelict:
@@ -1534,7 +1534,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
           if ((PLAYER != nullptr ? PLAYER->nextBeaconEntity() : nullptr) ==
               entity) {
             if (PLAYER != nullptr)
-              PLAYER->setCompassMode(OOCompassMode::kPlanet);
+              PLAYER->setCompassMode(oo::CompassMode::kPlanet);
           }
         }
       } else {
@@ -1607,7 +1607,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue < 0) iValue = 0;
         ship->setBounty(static_cast<OOCreditsQuantity>(iValue),
-                        OOLegalStatusReason::kByScript);
+                        oo::LegalStatusReason::kByScript);
         return JS_UNDEFINED;
       }
       break;
@@ -2483,14 +2483,14 @@ static JSValue ShipAddCargoEntity(OOJS_NATIVE_ARGS) {
                            "scoopable entity.");
     return OOJSNativeFailure(context);
   }
-  if (target == nullptr || target->getScanClass() != OOScanClass::kCargo) {
+  if (target == nullptr || target->getScanClass() != oo::ScanClass::kCargo) {
     // none: OOScanClass::kNoDraw, as a message to
     // nil
     OOJSReportWarningForCaller(context, "PlayerShip", "addCargoEntity",
                                "Scoopable entity not cargo.");
     return OOJSNativeFailure(context);
   }
-  if (target->status() != OOEntityStatus::kInFlight) {
+  if (target->status() != oo::EntityStatus::kInFlight) {
     OOJSReportWarningForCaller(context, "PlayerShip", "addCargoEntity",
                                "Scoopable entity not in flight.");
     return OOJSNativeFailure(context);
@@ -2514,7 +2514,7 @@ static JSValue ShipAddCargoEntity(OOJS_NATIVE_ARGS) {
   ship->scoopUpProcess(target, procEvents, procMessages);
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN_BOOL(target->status() == OOEntityStatus::kInHold);
+  OOJS_RETURN_BOOL(target->status() == oo::EntityStatus::kInHold);
 
   OOJS_NATIVE_EXIT
 }
@@ -3631,11 +3631,11 @@ JSValue RemoveOrExplodeShip(JSContext* context, JSValueConst oojsThis,
     if (UNIVERSE != nullptr) UNIVERSE->unMagicMainStation();
   }
 
-  if (ship->status() == OOEntityStatus::kDocked) [[unlikely]] {
+  if (ship->status() == oo::EntityStatus::kDocked) [[unlikely]] {
     /* If it's in the launch queue and hasn't yet been added to
      * the universe, set the status to DEAD (so it gets removed
      * from the launch queue) */
-    ship->setStatus(OOEntityStatus::kDead);
+    ship->setStatus(oo::EntityStatus::kDead);
     /* No shipDied event occurs in this place - it never really
      * existed. This case is just to prevent an error from the
      * usual code branch - removing ships while they're still
@@ -3891,8 +3891,8 @@ static JSValue ShipMarkTargetForFines(JSContext* context, JSValueConst oojsThis,
 
   ShipEntity* ship = oo::ToShip(thisEnt->primaryTarget());
   bool ok = false;
-  if ((ship != nullptr) && (ship->status() != OOEntityStatus::kDead) &&
-      (ship->status() != OOEntityStatus::kDocked)) {
+  if ((ship != nullptr) && (ship->status() != oo::EntityStatus::kDead) &&
+      (ship->status() != oo::EntityStatus::kDocked)) {
     ok = ship->markForFines();
   }
 
@@ -3905,8 +3905,8 @@ static JSValue ShipEnterWormhole(OOJS_NATIVE_ARGS) {
   ShipEntity* thisEnt = nullptr;
   Entity* hole = nullptr;
 
-  if ((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) !=
-      OOEntityStatus::kEnteringWitchspace) {
+  if ((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) !=
+      oo::EntityStatus::kEnteringWitchspace) {
     OOJSReportError(context,
                     "Cannot use this function while player's ship not "
                     "entering witchspace.");
@@ -4434,8 +4434,8 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
   }
 
   // mostly ignore fleeing ships as threats
-  if (ship->getBehaviour() == OOBehaviour::kFleeTarget ||
-      ship->getBehaviour() == OOBehaviour::kFleeEvasiveAction) {
+  if (ship->getBehaviour() == oo::Behaviour::kFleeTarget ||
+      ship->getBehaviour() == oo::Behaviour::kFleeEvasiveAction) {
     assessment *= 0.2;
   } else if (ship->getIsPlayer() &&
              (static_cast<PlayerEntity*>(thisEnt) != nullptr

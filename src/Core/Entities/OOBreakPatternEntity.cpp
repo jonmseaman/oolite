@@ -71,8 +71,8 @@ void OOBreakPatternEntity::initWithPolygonSides(std::size_t sides,
     GLfloat innerColor2[4] = {0.0f, 0.0f, 1.0f, 0.25f};
     setInnerColorComponents(innerColor1, innerColor2);
 
-    setStatus(OOEntityStatus::kEffect);
-    setScanClass(OOScanClass::kNoDraw);
+    setStatus(oo::EntityStatus::kEffect);
+    setScanClass(oo::ScanClass::kNoDraw);
 
     isImmuneToBreakPatternHide = true;
   }

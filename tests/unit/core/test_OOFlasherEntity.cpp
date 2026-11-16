@@ -130,8 +130,8 @@ OO_TEST(defaults) {
     OO_CHECK(flasher->frequency() == 2.0f && flasher->phase() == 0.0f &&
              flasher->fraction() == 0.5f);
     OO_CHECK(flasher->isActive());
-    OO_CHECK(flasher->status() == OOEntityStatus::kEffect &&
-             flasher->getScanClass() == OOScanClass::kNoDraw);
+    OO_CHECK(flasher->status() == oo::EntityStatus::kEffect &&
+             flasher->getScanClass() == oo::ScanClass::kNoDraw);
     // No colours: the current colour is nil, which left the components white.
     OO_CHECK(RGBIs(flasher, 1, 1, 1) && ColorComponents(flasher)[3] == 1.0f);
     OO_CHECK(flasher->isFlasher());

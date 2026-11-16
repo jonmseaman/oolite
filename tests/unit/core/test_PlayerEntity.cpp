@@ -256,7 +256,7 @@ OO_TEST(initIsTheShipMadeThePlayersWay)
 		OO_CHECK(player != nullptr);
 		OO_CHECK(sShipSetUps == 0 && sPlayerSetUps == 0 && sInitControls == 0);
 		OO_CHECK(!player->getIsShip() && !player->getIsPlayer());
-		OO_CHECK(player->status() == OOEntityStatus::kCockpitDisplay);
+		OO_CHECK(player->status() == oo::EntityStatus::kCockpitDisplay);
 		OO_CHECK(player->shipDataKey() == std::nullopt);
 		OO_CHECK(player->temperature() == 0 && player->weaponRechargeRate() == 0);
 		OO_CHECK(PlayerEntityTestAccess::maxFieldOfView(player) == 0);
@@ -277,7 +277,7 @@ OO_TEST(sharedPlayer)
 		OO_CHECK(player != nullptr && typeid(*player) == typeid(PlayerEntity));
 		OO_CHECK(gOOPlayer == player);
 		OO_CHECK(PlayerEntity::sharedPlayer() == player);
-		OO_CHECK(!player->getIsPlayer() && player->status() == OOEntityStatus::kCockpitDisplay);
+		OO_CHECK(!player->getIsPlayer() && player->status() == oo::EntityStatus::kCockpitDisplay);
 	}
 	gOOPlayer = nullptr;	// the next case makes its own; this one stays in the never-deleted holder
 }
@@ -303,11 +303,11 @@ OO_TEST(deferredInit)
 		OO_CHECK(sShipSetUps == 1 && sShipSetUpDict.isDict() && sShipSetUpDict.getIf<oo::PList::Dict>()->empty());
 		OO_CHECK(player->shipDataKey() == std::optional<std::string>(std::string(PLAYER_SHIP_DESC)));
 		OO_CHECK(player->getIsShip() && player->getIsPlayer());
-		OO_CHECK(player->status() == OOEntityStatus::kStartGame);
+		OO_CHECK(player->status() == oo::EntityStatus::kStartGame);
 		OO_CHECK(player->temperature() == SHIP_MIN_CABIN_TEMP && player->weaponRechargeRate() == 6.0f);
 		OO_CHECK(player->getFuel() == 5);	// what the bodies do not set stays
 		OO_CHECK(std::fabs(PlayerEntityTestAccess::maxFieldOfView(player) - MAX_FOV) < 1e-6);
-		OO_CHECK(player->getCompassMode() == OOCompassMode::kBasic);
+		OO_CHECK(player->getCompassMode() == oo::CompassMode::kBasic);
 		OO_CHECK(!PlayerEntityTestAccess::scoopsActive(player) && PlayerEntityTestAccess::target_memory_index(player) == 0);
 		OO_CHECK(!PlayerEntityTestAccess::save_path(player).has_value());
 		for (int i = 0; i < PLAYER_MAX_MISSILES; i++)  OO_CHECK(PlayerEntityTestAccess::missile_entity(player)[i] == nullptr);
@@ -582,13 +582,13 @@ OO_TEST(slice5SessionAndCollisions)
 		SetUp();
 		TestPlayer *player = MakePlayer();
 		OO_CHECK(player->sessionID() == (UNIVERSE != nullptr ? UNIVERSE->sessionID() : 0));
-		player->setStatus(OOEntityStatus::kInFlight);
+		player->setStatus(oo::EntityStatus::kInFlight);
 		OO_CHECK(player->canCollide());
-		player->setStatus(OOEntityStatus::kDocked);
+		player->setStatus(oo::EntityStatus::kDocked);
 		OO_CHECK(!player->canCollide());
-		player->setStatus(OOEntityStatus::kDead);
+		player->setStatus(oo::EntityStatus::kDead);
 		OO_CHECK(!player->canCollide());
-		player->setStatus(OOEntityStatus::kExitingWitchspace);
+		player->setStatus(oo::EntityStatus::kExitingWitchspace);
 		OO_CHECK(player->canCollide());
 	}
 }
@@ -655,11 +655,11 @@ OO_TEST(slice8FlightLimitsAndAutopilot)
 		OO_CHECK(player->max_flight_pitch == 1.5f && PlayerEntityTestAccess::pitch_delta(part) == 3.0f);
 		OO_CHECK(player->max_flight_roll == 2.0f && PlayerEntityTestAccess::roll_delta(part) == 4.0f);
 		OO_CHECK(player->max_flight_yaw == 0.5f && PlayerEntityTestAccess::yaw_delta(part) == 1.0f);
-		player->setStatus(OOEntityStatus::kInFlight);
+		player->setStatus(oo::EntityStatus::kInFlight);
 		player->disengageAutopilot();
-		OO_CHECK(!PlayerEntityTestAccess::autopilot_engaged(part) && player->status() == OOEntityStatus::kInFlight);
+		OO_CHECK(!PlayerEntityTestAccess::autopilot_engaged(part) && player->status() == oo::EntityStatus::kInFlight);
 		player->cancelDockingRequest(nullptr);
-		OO_CHECK(player->status() == OOEntityStatus::kInFlight);
+		OO_CHECK(player->status() == oo::EntityStatus::kInFlight);
 	}
 }
 
@@ -811,8 +811,8 @@ OO_TEST(slice12CompassIdentAndAlertFlags)
 		oo::AutoreleaseScope scope;
 		SetUp();
 		TestPlayer *player = MakePlayer();
-		player->setCompassMode(OOCompassMode::kTarget);
-		OO_CHECK(player->getCompassMode() == OOCompassMode::kTarget);
+		player->setCompassMode(oo::CompassMode::kTarget);
+		OO_CHECK(player->getCompassMode() == oo::CompassMode::kTarget);
 		player->setDialIdentEngaged((bool)3);
 		OO_CHECK(player->dialIdentEngaged());
 		player->max_missiles = 5;
@@ -888,7 +888,7 @@ public:
 	}
 
 
-	void markAsOffender(int offence_value, OOLegalStatusReason reason) override
+	void markAsOffender(int offence_value, oo::LegalStatusReason reason) override
 	{
 		sSent.count++; sSent.number = offence_value; sSent.text = OOStringFromLegalStatusReason(reason);
 	}
@@ -918,13 +918,13 @@ public:
 	}
 
 
-	void noteGUIDidChangeFrom(OOGUIScreenID fromScreen, OOGUIScreenID toScreen, bool refresh) override
+	void noteGUIDidChangeFrom(oo::GUIScreenID fromScreen, oo::GUIScreenID toScreen, bool refresh) override
 	{
 		sSent.count++; sSent.number = (int)fromScreen * 100 + (int)toScreen; sSent.flag = refresh;
 	}
 
 
-	void noteSwitchToView(OOViewID toView, OOViewID fromView) override
+	void noteSwitchToView(oo::ViewID toView, oo::ViewID fromView) override
 	{
 		sSent.count++; sSent.number = (int)fromView * 100 + (int)toView;
 	}
@@ -987,8 +987,8 @@ OO_TEST(slice14BountyAndRotateCargo)
 		RecordingPlayer *player = MakeRecordingPlayer();
 		player->setBounty(25);
 		OO_CHECK(sSent.count == 1 && sSent.amount == 25);
-		OO_CHECK(sSent.text == OOStringFromLegalStatusReason(OOLegalStatusReason::kUnknown));
-		player->setBounty(30, OOLegalStatusReason::kUnknown);
+		OO_CHECK(sSent.text == OOStringFromLegalStatusReason(oo::LegalStatusReason::kUnknown));
+		player->setBounty(30, oo::LegalStatusReason::kUnknown);
 		OO_CHECK(sSent.count == 2 && sSent.amount == 30);
 		player->rotateCargo();
 		OO_CHECK(player->cargo.empty());
@@ -1011,7 +1011,7 @@ OO_TEST(slice15LegalStatusOffenceAndScenario)
 		OO_CHECK(player->getBounty() == 64 && player->getLegalStatus() == 64);
 		player->markAsOffender(8);
 		OO_CHECK(sSent.count == 1 && sSent.number == 8);
-		OO_CHECK(sSent.text == OOStringFromLegalStatusReason(OOLegalStatusReason::kUnknown));
+		OO_CHECK(sSent.text == OOStringFromLegalStatusReason(oo::LegalStatusReason::kUnknown));
 		OO_CHECK(!player->endScenario("some-scenario"));
 		PlayerEntityTestAccess::scenarioKey(player) = std::string("other-scenario");
 		OO_CHECK(!player->endScenario("some-scenario"));
@@ -1127,10 +1127,10 @@ OO_TEST(slice21ChangeNotes)
 		SetUp();
 		RecordingPlayer *player = MakeRecordingPlayer();
 		sSent.flag = true;
-		player->noteGUIDidChangeFrom(OOGUIScreenID::kStatus, OOGUIScreenID::kMarket);
-		OO_CHECK(sSent.count == 1 && sSent.number == (int)OOGUIScreenID::kStatus * 100 + (int)OOGUIScreenID::kMarket && !sSent.flag);
-		player->noteViewDidChangeFrom(OOViewID::kAft, OOViewID::kForward);
-		OO_CHECK(sSent.count == 2 && sSent.number == (int)OOViewID::kAft * 100 + (int)OOViewID::kForward);
+		player->noteGUIDidChangeFrom(oo::GUIScreenID::kStatus, oo::GUIScreenID::kMarket);
+		OO_CHECK(sSent.count == 1 && sSent.number == (int)oo::GUIScreenID::kStatus * 100 + (int)oo::GUIScreenID::kMarket && !sSent.flag);
+		player->noteViewDidChangeFrom(oo::ViewID::kAft, oo::ViewID::kForward);
+		OO_CHECK(sSent.count == 2 && sSent.number == (int)oo::ViewID::kAft * 100 + (int)oo::ViewID::kForward);
 	}
 }
 
@@ -1186,8 +1186,8 @@ OO_TEST(slice24FlagsAndAddEquipment)
 		SetUp();
 		RecordingPlayer *player = MakeRecordingPlayer();
 		PlayerEntity *part = player;
-		PlayerEntityTestAccess::gui_screen(part) = OOGUIScreenID::kMarket;
-		OO_CHECK(player->guiScreen() == OOGUIScreenID::kMarket);
+		PlayerEntityTestAccess::gui_screen(part) = oo::GUIScreenID::kMarket;
+		OO_CHECK(player->guiScreen() == oo::GUIScreenID::kMarket);
 		PlayerEntityTestAccess::using_mining_laser(part) = true;
 		OO_CHECK(player->isMining());
 		PlayerEntityTestAccess::using_mining_laser(part) = false;
@@ -1288,14 +1288,14 @@ OO_TEST(slice27CustomViewHyperspaceAndNames)
 		OO_CHECK(NearV(player->getCustomViewUpVector(), vector_up_from_quaternion(kIdentityQuaternion)));
 		OO_CHECK(NearV(player->getCustomViewRightVector(), vector_right_from_quaternion(kIdentityQuaternion)));
 		OO_CHECK(!player->scriptsLoaded() && player->worldScriptNames().empty());
-		player->setGalacticHyperspaceBehaviour(OOGalacticHyperspaceBehaviour::kFixedCoordinates);
-		OO_CHECK(player->getGalacticHyperspaceBehaviour() == OOGalacticHyperspaceBehaviour::kFixedCoordinates);
-		player->setGalacticHyperspaceBehaviour(OOGalacticHyperspaceBehaviour::kUnknown);
-		OO_CHECK(player->getGalacticHyperspaceBehaviour() == OOGalacticHyperspaceBehaviour::kFixedCoordinates);
+		player->setGalacticHyperspaceBehaviour(oo::GalacticHyperspaceBehaviour::kFixedCoordinates);
+		OO_CHECK(player->getGalacticHyperspaceBehaviour() == oo::GalacticHyperspaceBehaviour::kFixedCoordinates);
+		player->setGalacticHyperspaceBehaviour(oo::GalacticHyperspaceBehaviour::kUnknown);
+		OO_CHECK(player->getGalacticHyperspaceBehaviour() == oo::GalacticHyperspaceBehaviour::kFixedCoordinates);
 		player->setGalacticHyperspaceFixedCoords(NSMakePoint(300.0, 12.4));
 		OO_CHECK(Near(player->getGalacticHyperspaceFixedCoords(), NSMakePoint(255, 12)));
-		player->setMissionExitScreen(OOGUIScreenID::kStatus);
-		OO_CHECK(player->missionExitScreen() == OOGUIScreenID::kStatus);
+		player->setMissionExitScreen(oo::GUIScreenID::kStatus);
+		OO_CHECK(player->missionExitScreen() == oo::GUIScreenID::kStatus);
 		player->setScoopOverride(true);
 		OO_CHECK(player->getScoopOverride() && sSent.count == 1);
 		player->setCommanderName(std::string("Jameson"));

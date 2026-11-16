@@ -101,11 +101,12 @@ OOSDRToneMapper OOSDRToneMapperFromString(const std::string& string);
 // The .tbl families whose types come from OOTypes.h; the
 // others are declared beside their enums in Entity.h, ShipEntity.h and
 // PlayerEntity.h.
-std::string OOStringFromCompassMode(OOCompassMode mode);
-OOCompassMode OOCompassModeFromString(const std::string& string);
-std::string OOStringFromLongRangeChartMode(OOLongRangeChartMode chartMode);
-OOLongRangeChartMode OOLongRangeChartModeFromString(const std::string& string);
-std::string OOStringFromLegalStatusReason(OOLegalStatusReason reason);
+std::string OOStringFromCompassMode(oo::CompassMode mode);
+oo::CompassMode OOCompassModeFromString(const std::string& string);
+std::string OOStringFromLongRangeChartMode(oo::LongRangeChartMode chartMode);
+oo::LongRangeChartMode OOLongRangeChartModeFromString(
+    const std::string& string);
+std::string OOStringFromLegalStatusReason(oo::LegalStatusReason reason);
 
 // Commodity display strings. A commodity is named by its
 // identifier string.

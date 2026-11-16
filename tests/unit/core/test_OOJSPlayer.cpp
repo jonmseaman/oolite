@@ -83,11 +83,11 @@ class TestEntityObject : public oo::Object
 public:
 	virtual const char *className() const  { return "Entity"; }	// its runtime name
 	bool isStation();
-	OOEntityStatus status();
+	oo::EntityStatus status();
 
 	std::shared_ptr<Entity> _cxxEntity;
 	bool _isStation = false;
-	OOEntityStatus _status = {};
+	oo::EntityStatus _status = {};
 };
 
 
@@ -102,7 +102,7 @@ class Entity : public oo::Object
 {
 public:
 	virtual ~Entity();
-	OOEntityStatus status();
+	oo::EntityStatus status();
 	bool getIsStation();	// what its object's -isStation forwarded to
 };
 
@@ -125,7 +125,7 @@ public:
 	double creditBalance();
 	void setCreditBalance(double value);
 	int getLegalStatus();
-	void setBounty(OOCreditsQuantity amount, OOLegalStatusReason reason);
+	void setBounty(OOCreditsQuantity amount, oo::LegalStatusReason reason);
 	OOAlertCondition getAlertCondition();
 	int getAlertFlags();
 	double escapePodRescueTime();
@@ -156,7 +156,7 @@ public:
 	unsigned _score = {};
 	double _credits = {};
 	int _legalStatus = {};
-	OOLegalStatusReason _bountyReason = {};
+	oo::LegalStatusReason _bountyReason = {};
 	OOAlertCondition _alertCondition = {};
 	int _alertFlags = {};
 	double _escapePodRescueTime = {};
@@ -170,7 +170,7 @@ public:
 	OOSpeechSettings _speech = {};
 	std::string _replacedWith;
 	uint16_t _personality = {};
-	OOEntityStatus _status = {};
+	oo::EntityStatus _status = {};
 	::ShipEntity *_dockTarget = {};
 	bool _dockTargetSet = {};
 	double _adjustTime = {};
@@ -270,7 +270,7 @@ oo::PList Dict(std::initializer_list<std::pair<const char *, oo::PList>> entries
 
 
 bool TestEntityObject::isStation()  { return _isStation; }
-OOEntityStatus TestEntityObject::status()  { return _status; }
+oo::EntityStatus TestEntityObject::status()  { return _status; }
 
 
 // The player's object (in the game the ship's facade over the C++ player),
@@ -294,7 +294,7 @@ public:
 #include "EntityHelpersStandIn.h"	// EntityHelpers.mm's, on the test's objects
 
 Entity::~Entity() = default;
-OOEntityStatus Entity::status()  { return static_cast<PlayerEntity *>(this)->_status; }
+oo::EntityStatus Entity::status()  { return static_cast<PlayerEntity *>(this)->_status; }
 
 // The object of each C++ part the script handed over (a station's), and the player's for any other
 // (the binding hands over the C++ entity, where it handed over the object).
@@ -320,7 +320,7 @@ void PlayerEntity::setScore(unsigned value)  { _score = value; }
 double PlayerEntity::creditBalance()  { return _credits; }
 void PlayerEntity::setCreditBalance(double value)  { _credits = value; }
 int PlayerEntity::getLegalStatus()  { return _legalStatus; }
-void PlayerEntity::setBounty(OOCreditsQuantity amount, OOLegalStatusReason reason)
+void PlayerEntity::setBounty(OOCreditsQuantity amount, oo::LegalStatusReason reason)
 {
 	_legalStatus = static_cast<int>(amount); _bountyReason = reason;
 }
@@ -638,7 +638,7 @@ void SetUpContext()
 	sPlayer->_parcelReputation = 70;
 	sPlayer->_dockingClearanceStatus = OODockingClearanceStatus::kGranted;
 	sPlayer->_roleWeights = { "trader", "pirate", "trader" };
-	sPlayer->_status = OOEntityStatus::kDocked;
+	sPlayer->_status = oo::EntityStatus::kDocked;
 	sPlayer->_targetSystem = -1;
 	sStation = oo::test::NewRetained<TestEntityObject>();
 	sStation->_cxxEntity = oo::makeShared<ShipEntity>();
@@ -764,7 +764,7 @@ OO_TEST(writeProperties)
 	sPlayer->_credits = 100.5;
 
 	OO_CHECK_EVAL("(function () { player.bounty = 60; return player.bounty + ':' + player.legalStatus; })()", "60:Fugitive");
-	OO_CHECK(sPlayer->_bountyReason == OOLegalStatusReason::kByScript);
+	OO_CHECK(sPlayer->_bountyReason == oo::LegalStatusReason::kByScript);
 	OO_CHECK_EVAL("(function () { player.bounty = -10; return player.bounty; })()", "0");
 	OO_CHECK_EVAL("(function () { player.bounty = 'x'; return 'set'; })()", "threw: bad property value");
 	sPlayer->_legalStatus = 30;
@@ -867,9 +867,9 @@ OO_TEST(replaceShip)
 	OO_CHECK_EQ(sPlayer->_personality, 32766);
 	Events();
 	OO_CHECK_EVAL("player.replaceShip()", "threw: bad arguments: Player.replaceShip(0) - / string (shipyard key)");
-	sPlayer->_status = OOEntityStatus::kInFlight;
+	sPlayer->_status = oo::EntityStatus::kInFlight;
 	OO_CHECK_EVAL("player.replaceShip('cobra3-player')", "threw: Player.replaceShip() only works while the player is docked.");
-	sPlayer->_status = OOEntityStatus::kDocked;
+	sPlayer->_status = oo::EntityStatus::kDocked;
 }
 
 

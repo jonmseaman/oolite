@@ -403,8 +403,8 @@ void GameController::tick(double dt) {
   // Headless, a step is a frame the game would have drawn.
   if (_options.headless) ++_presentation.framesRequested;
   if (UNIVERSE != nullptr) UNIVERSE->update(dt);
-  if ((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
-      OOEntityStatus::kRestartGame) [[unlikely]] {
+  if ((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) ==
+      oo::EntityStatus::kRestartGame) [[unlikely]] {
     if (UNIVERSE != nullptr) UNIVERSE->reinitAndShowDemo(true);
   }
   ::OOSound::update();
@@ -704,7 +704,7 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
     }
     PLAYER->launchFromStation();
     double launched = 0.0;
-    while (PLAYER->status() != OOEntityStatus::kInFlight) {
+    while (PLAYER->status() != oo::EntityStatus::kInFlight) {
       if (launched > kHeadlessLaunchLimitSeconds) {
         OORaiseException(OOInternalInconsistencyException,
                          "startHeadless: the player was not in flight after "

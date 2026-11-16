@@ -260,7 +260,7 @@ public:
 		_log.push_back(oo::str::format("countRole %s %g %s", role.c_str(), range, Describe(entity).c_str()));
 		return 4;
 	}
-	unsigned countShipsWithScanClass(OOScanClass scanClass, double range, Entity *entity) override
+	unsigned countShipsWithScanClass(oo::ScanClass scanClass, double range, Entity *entity) override
 	{
 		_log.push_back(oo::str::format("countScanClass %d %g %s", static_cast<int>(scanClass), range, Describe(entity).c_str()));
 		return 5;
@@ -388,13 +388,13 @@ void SetUp()
 
 	// The searchable entities, out of distance order; one is invisible.
 	Entity *farthest = MakeEntity(300, true);
-	farthest->setScanClass(OOScanClass::kBuoy);
+	farthest->setScanClass(oo::ScanClass::kBuoy);
 	Entity *nearest = MakeEntity(100, true);
-	nearest->setScanClass(OOScanClass::kNeutral);
+	nearest->setScanClass(oo::ScanClass::kNeutral);
 	Entity *hidden = MakeEntity(150, false);
-	hidden->setScanClass(OOScanClass::kNeutral);
+	hidden->setScanClass(oo::ScanClass::kNeutral);
 	Entity *middle = MakeEntity(200, true);
-	middle->setScanClass(OOScanClass::kNeutral);
+	middle->setScanClass(oo::ScanClass::kNeutral);
 	sUniverse->_entities = { oo::Hold(farthest), oo::Hold(nearest), oo::Hold(hidden), oo::Hold(middle) };
 
 	sUniverse->_ambient = 0.5f;
@@ -635,7 +635,7 @@ OO_TEST(counts)
 	OO_CHECK_EVAL("system.countShipsWithPrimaryRole('trader')", "3");
 	OO_CHECK_EVAL("system.countShipsWithRole('pirate', system.mainStation, 1000)", "4");
 	OO_CHECK_EVAL("system.countEntitiesWithScanClass('CLASS_BUOY', system.sun)", "5");
-	OO_CHECK_LOG(sUniverse->_log, oo::str::format("countPrimary trader -1 nil; countRole pirate 1000 10; countScanClass %d -1 30", static_cast<int>(OOScanClass::kBuoy)));
+	OO_CHECK_LOG(sUniverse->_log, oo::str::format("countPrimary trader -1 nil; countRole pirate 1000 10; countScanClass %d -1 30", static_cast<int>(oo::ScanClass::kBuoy)));
 
 	// Bad arguments: none, a bad reference entity, a bad range, an unknown scan class.
 	OO_CHECK(Eval("system.countShipsWithPrimaryRole()").rfind("threw: ", 0) == 0);

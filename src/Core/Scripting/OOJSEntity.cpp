@@ -309,7 +309,8 @@ static JSValue EntityGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewFloat64(context, cxxEntity->getMaxEnergy());
 
     case kIsValid:
-      return cxxEntity->status() == OOEntityStatus::kDead ? JS_FALSE : JS_TRUE;
+      return cxxEntity->status() == oo::EntityStatus::kDead ? JS_FALSE
+                                                            : JS_TRUE;
 
     case kIsInSpace:
       return OOJSValueFromBOOL(cxxEntity->isInSpace());
@@ -428,13 +429,13 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
 
     case kScanClass:
       if (cxxEntity->getIsShip() && !cxxEntity->getIsPlayer()) {
-        OOScanClass newClass = OOScanClassFromJSValue(context, value);
-        if (newClass == OOScanClass::kNotSet ||
-            newClass == OOScanClass::kNoDraw ||
-            newClass == OOScanClass::kTarget ||
-            newClass == OOScanClass::kWormhole ||
-            newClass == OOScanClass::kPlayer ||
-            newClass == OOScanClass::kVisualEffect) {
+        oo::ScanClass newClass = OOScanClassFromJSValue(context, value);
+        if (newClass == oo::ScanClass::kNotSet ||
+            newClass == oo::ScanClass::kNoDraw ||
+            newClass == oo::ScanClass::kTarget ||
+            newClass == oo::ScanClass::kWormhole ||
+            newClass == oo::ScanClass::kPlayer ||
+            newClass == oo::ScanClass::kVisualEffect) {
           OOJSReportError(context,
                           "entity.scanClass cannot be set to that value.");
           return JS_EXCEPTION;

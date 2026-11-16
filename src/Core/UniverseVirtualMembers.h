@@ -167,7 +167,7 @@ using EntityFilterPredicate = bool (*)(Entity* entity,
       double /*range*/,                                                        \
       Entity* /*entity*/) VALUE_BODY                                           \
   virtual unsigned countShipsWithScanClass(                                    \
-      OOScanClass /*scanClass*/,                                               \
+      oo::ScanClass /*scanClass*/,                                               \
       double /*range*/,                                                        \
       Entity* /*entity*/) VALUE_BODY                                           \
   virtual HPVector locationByCode(                                             \
@@ -204,7 +204,7 @@ using EntityFilterPredicate = bool (*)(Entity* entity,
       unsigned /*count*/,                                                      \
       double /*routeFraction*/,                                                \
       bool /*isGroup*/) VALUE_BODY                                             \
-  virtual OOViewID getViewDirection() VALUE_BODY                               \
+  virtual oo::ViewID getViewDirection() VALUE_BODY                               \
   virtual ::GuiDisplayGen* messageGUI() VALUE_BODY                             \
   virtual OOCreditsQuantity tradeInValueForCommanderDictionary(                \
       const oo::PList& /*dict*/) VALUE_BODY                                    \

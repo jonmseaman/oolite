@@ -170,7 +170,8 @@ static JSValue GlobalGetProperty(OOJS_GETTER_ARGS) {
 
     case kGuiScreen:
       return OOJSValueFromGUIScreenID(
-          context, (player != nullptr ? player->guiScreen() : OOGUIScreenID{}));
+          context,
+          (player != nullptr ? player->guiScreen() : oo::GUIScreenID{}));
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
     case kTimeAccelerationFactor:
@@ -453,7 +454,7 @@ static JSValue GlobalClearExtraGuiScreenKeys(JSContext* context,
     return JS_EXCEPTION;
   }
 
-  OOGUIScreenID gui = OOGUIScreenIDFromJSValue(context, OOJS_ARGV[1]);
+  oo::GUIScreenID gui = OOGUIScreenIDFromJSValue(context, OOJS_ARGV[1]);
   if (oo::ToUnderlying(gui) == 0) {
     OOJSReportBadArguments(context, std::nullopt, "clearExtraGuiScreenKeys", 0,
                            OOJS_ARGV, std::nullopt, "guiScreen invalid entry");
@@ -493,7 +494,7 @@ static JSValue GlobalSetExtraGuiScreenKeys(JSContext* context,
   JSValue callback = JS_UNDEFINED;
   JSValue value = JS_UNDEFINED;
   std::optional<std::string> key;
-  OOGUIScreenID gui;
+  oo::GUIScreenID gui;
   oo::PList keydefs;
   JSValue params = JS_UNDEFINED;
   PlayerEntity* player = OOPlayerForScripting();
@@ -537,15 +538,16 @@ static JSValue GlobalSetExtraGuiScreenKeys(JSContext* context,
   gui = OOGUIScreenIDFromJSValue(context, value);
   JS_FreeValue(context, value);
   // gui will be 0 for invalid screen id's as well as OOGUIScreenID::kMain
-  if (oo::ToUnderlying(gui) == 0 || gui == OOGUIScreenID::kLoad ||
-      gui == OOGUIScreenID::kSave || gui == OOGUIScreenID::kStickMapper ||
-      gui == OOGUIScreenID::kOXZManager || gui == OOGUIScreenID::kNewGame ||
-      gui == OOGUIScreenID::kSaveOverwrite || gui == OOGUIScreenID::kKeyboard ||
-      gui == OOGUIScreenID::kStickProfile ||
-      gui == OOGUIScreenID::kKeyboardConfirmClear ||
-      gui == OOGUIScreenID::kKeyboardConfig ||
-      gui == OOGUIScreenID::kKeyboardEntry ||
-      gui == OOGUIScreenID::kKeyboardLayout) {
+  if (oo::ToUnderlying(gui) == 0 || gui == oo::GUIScreenID::kLoad ||
+      gui == oo::GUIScreenID::kSave || gui == oo::GUIScreenID::kStickMapper ||
+      gui == oo::GUIScreenID::kOXZManager || gui == oo::GUIScreenID::kNewGame ||
+      gui == oo::GUIScreenID::kSaveOverwrite ||
+      gui == oo::GUIScreenID::kKeyboard ||
+      gui == oo::GUIScreenID::kStickProfile ||
+      gui == oo::GUIScreenID::kKeyboardConfirmClear ||
+      gui == oo::GUIScreenID::kKeyboardConfig ||
+      gui == oo::GUIScreenID::kKeyboardEntry ||
+      gui == oo::GUIScreenID::kKeyboardLayout) {
     JS_FreeValue(context, params);
     OOJSReportBadArguments(context, "global", "setExtraGuiScreenKeys", defArgc,
                            &OOJS_ARGV[1], std::nullopt,
@@ -653,8 +655,8 @@ static JSValue GlobalSetScreenBackground(JSContext* context,
     return JS_EXCEPTION;
   }
 
-  if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}) ==
-      OOViewID::kGUIDisplay) {
+  if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{}) ==
+      oo::ViewID::kGUIDisplay) {
     GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     oo::PList descriptor = gui->textureDescriptorFromJSValue(
         value, context, "setScreenBackground()");
@@ -662,8 +664,9 @@ static JSValue GlobalSetScreenBackground(JSContext* context,
     result = gui->setBackgroundTextureDescriptor(descriptor);
 
     // add some permanence to the override if we're in the equip ship screen
-    if (result && (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-                      OOGUIScreenID::kEquipShip) {
+    if (result &&
+        (PLAYER != nullptr ? PLAYER->guiScreen() : oo::GUIScreenID{}) ==
+            oo::GUIScreenID::kEquipShip) {
       if (PLAYER != nullptr)
         PLAYER->setEquipScreenBackgroundDescriptor(descriptor);
     }
@@ -758,8 +761,8 @@ static JSValue GlobalSetScreenOverlay(JSContext* context,
     return JS_EXCEPTION;
   }
 
-  if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}) ==
-      OOViewID::kGUIDisplay) {
+  if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{}) ==
+      oo::ViewID::kGUIDisplay) {
     GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     oo::PList descriptor =
         gui->textureDescriptorFromJSValue(value, context, "setScreenOverlay()");
@@ -960,14 +963,14 @@ static JSValue GlobalPauseGame(JSContext* context, JSValueConst /*oojsThis*/,
   PlayerEntity* player = PLAYER;
 
   if (player) {
-    OOGUIScreenID guiScreen =
-        (player != nullptr ? player->guiScreen() : OOGUIScreenID{});
+    oo::GUIScreenID guiScreen =
+        (player != nullptr ? player->guiScreen() : oo::GUIScreenID{});
 
-    if (guiScreen != OOGUIScreenID::kLongRangeChart &&
-        guiScreen != OOGUIScreenID::kMission &&
-        guiScreen != OOGUIScreenID::kReport &&
-        guiScreen != OOGUIScreenID::kKeyboardEntry &&
-        guiScreen != OOGUIScreenID::kSave) {
+    if (guiScreen != oo::GUIScreenID::kLongRangeChart &&
+        guiScreen != oo::GUIScreenID::kMission &&
+        guiScreen != oo::GUIScreenID::kReport &&
+        guiScreen != oo::GUIScreenID::kKeyboardEntry &&
+        guiScreen != oo::GUIScreenID::kSave) {
       if (UNIVERSE != nullptr) UNIVERSE->pauseGame();
       result = true;
     }

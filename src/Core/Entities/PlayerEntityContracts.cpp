@@ -1219,10 +1219,10 @@ std::vector<std::string> PlayerEntity::contractsListFromEntries(
                         page_offset, multi_page))
 
 void PlayerEntity::setGuiToManifestScreen() {
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
 
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  gui_screen = OOGUIScreenID::kManifest;
+  gui_screen = oo::GUIScreenID::kManifest;
   bool guiChanged = (oldScreen != gui_screen);
   if (guiChanged) {
     gui->setStatusPage(0);  // need to do this earlier than the rest
@@ -1427,7 +1427,7 @@ void PlayerEntity::setGuiToManifestScreen() {
 
   if (guiChanged) {
     gui->setForegroundTextureKey(std::optional<std::string>(
-        status() == OOEntityStatus::kDocked ? "docked_overlay" : "overlay"));
+        status() == oo::EntityStatus::kDocked ? "docked_overlay" : "overlay"));
     gui->setBackgroundTextureKey("manifest");
     noteGUIDidChangeFrom(oldScreen, gui_screen);
   }
@@ -1459,8 +1459,8 @@ void PlayerEntity::setManifestScreenRow(const oo::PList& object,
 void PlayerEntity::setGuiToDockingReportScreen() {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
 
-  OOGUIScreenID oldScreen = gui_screen;
-  gui_screen = OOGUIScreenID::kReport;
+  oo::GUIScreenID oldScreen = gui_screen;
+  gui_screen = oo::GUIScreenID::kReport;
   bool guiChanged = (oldScreen != gui_screen);
 
   OOGUIRow i, text_row = 1;
@@ -1610,10 +1610,10 @@ OOCreditsQuantity PlayerEntity::priceForShipKey(const std::string& key) {
 }
 
 void PlayerEntity::setGuiToShipyardScreen(std::size_t skip) {
-  OOGUIScreenID oldScreen = gui_screen;
+  oo::GUIScreenID oldScreen = gui_screen;
 
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-  gui_screen = OOGUIScreenID::kShipyard;
+  gui_screen = oo::GUIScreenID::kShipyard;
   bool guiChanged = (oldScreen != gui_screen);
 
   unsigned i;
@@ -2063,7 +2063,7 @@ bool PlayerEntity::buySelectedShip() {
   if (!setCommanderDataFromDictionary(commanderDataDictionary()))
     return false;  // gather up all the info
 
-  setStatus(OOEntityStatus::kDocked);
+  setStatus(oo::EntityStatus::kDocked);
   setEntityPersonalityInt(
       shipInfo.get<std::uint16_t>("personality"));  // SHIPYARD_KEY_PERSONALITY
 

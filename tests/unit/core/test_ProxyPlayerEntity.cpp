@@ -76,7 +76,7 @@ public:
 	GLfloat dialAftShield() override	{ return 0.75f; }
 	OOMissileStatus dialMissileStatus() override	{ return OOMissileStatus::kTargetLocked; }
 	OOFuelScoopStatus dialFuelScoopStatus() override	{ return OOFuelScoopStatus::kActive; }
-	OOCompassMode getCompassMode() override	{ return OOCompassMode::kStation; }
+	oo::CompassMode getCompassMode() override	{ return oo::CompassMode::kStation; }
 	bool dialIdentEngaged() override	{ return true; }
 	OOAlertCondition getAlertCondition() override	{ return OOAlertCondition::kRed; }
 	std::size_t getTrumbleCount() override	{ return 7; }
@@ -141,7 +141,7 @@ OO_TEST(initDefaults)
 		OO_CHECK(proxy != nullptr && proxy->getIsShip());
 		OO_CHECK(proxy->dialForwardShield() == 1.0f && proxy->dialAftShield() == 1.0f);
 		OO_CHECK(proxy->dialFuelScoopStatus() == OOFuelScoopStatus::kNotInstalled);
-		OO_CHECK(proxy->compassMode() == OOCompassMode::kBasic);
+		OO_CHECK(proxy->compassMode() == oo::CompassMode::kBasic);
 		OO_CHECK(proxy->tradeInFactor() == 95);
 		OO_CHECK(proxy->fuelLeakRate() == 0 && !proxy->massLocked() && !proxy->atHyperspeed());
 		OO_CHECK(proxy->dialMissileStatus() == OOMissileStatus::kSafe && !proxy->dialIdentEngaged());
@@ -173,8 +173,8 @@ OO_TEST(accessors)
 		OO_CHECK(proxy->dialMissileStatus() == OOMissileStatus::kArmed);
 		proxy->setDialFuelScoopStatus(OOFuelScoopStatus::kFullHold);
 		OO_CHECK(proxy->dialFuelScoopStatus() == OOFuelScoopStatus::kFullHold);
-		proxy->setCompassMode(OOCompassMode::kTarget);
-		OO_CHECK(proxy->compassMode() == OOCompassMode::kTarget);
+		proxy->setCompassMode(oo::CompassMode::kTarget);
+		OO_CHECK(proxy->compassMode() == oo::CompassMode::kTarget);
 		proxy->setDialIdentEngaged((bool)9);
 		OO_CHECK(proxy->dialIdentEngaged() == true);
 		proxy->setAlertCondition(OOAlertCondition::kYellow);
@@ -202,7 +202,7 @@ OO_TEST(copyValuesFromPlayer)
 		OO_CHECK(proxy->dialForwardShield() == 0.25f && proxy->dialAftShield() == 0.75f);
 		OO_CHECK(proxy->dialMissileStatus() == OOMissileStatus::kTargetLocked);
 		OO_CHECK(proxy->dialFuelScoopStatus() == OOFuelScoopStatus::kActive);
-		OO_CHECK(proxy->compassMode() == OOCompassMode::kStation);
+		OO_CHECK(proxy->compassMode() == oo::CompassMode::kStation);
 		OO_CHECK(proxy->dialIdentEngaged());
 		OO_CHECK(proxy->alertCondition() == OOAlertCondition::kRed);
 		OO_CHECK(proxy->trumbleCount() == 7);

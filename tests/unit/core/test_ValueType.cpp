@@ -80,21 +80,21 @@ static_assert(kValueType<OOWeaponFacingSet> == VT::kUChar);
 // Every game enum was encoded "i", whatever its underlying type.
 static_assert(kValueType<OOAegisStatus> == VT::kInt);
 static_assert(kValueType<OOAlertCondition> == VT::kInt);
-static_assert(kValueType<OOBehaviour> == VT::kInt);
+static_assert(kValueType<oo::Behaviour> == VT::kInt);
 static_assert(kValueType<OOCargoType> == VT::kInt);
-static_assert(kValueType<OOCompassMode> == VT::kInt);
+static_assert(kValueType<oo::CompassMode> == VT::kInt);
 static_assert(kValueType<OODockingClearanceStatus> == VT::kInt);
 static_assert(kValueType<OOEnergyUnitType> == VT::kInt);
-static_assert(kValueType<OOEntityStatus> == VT::kInt);
+static_assert(kValueType<oo::EntityStatus> == VT::kInt);
 static_assert(kValueType<OOFuelScoopStatus> == VT::kInt);
 static_assert(kValueType<OOGUIBackgroundSpecial> == VT::kInt);
-static_assert(kValueType<OOGUIScreenID> == VT::kInt);
-static_assert(kValueType<OOGalacticHyperspaceBehaviour> == VT::kInt);
-static_assert(kValueType<OOLongRangeChartMode> == VT::kInt);
+static_assert(kValueType<oo::GUIScreenID> == VT::kInt);
+static_assert(kValueType<oo::GalacticHyperspaceBehaviour> == VT::kInt);
+static_assert(kValueType<oo::LongRangeChartMode> == VT::kInt);
 static_assert(kValueType<OOMissileStatus> == VT::kInt);
 static_assert(kValueType<OOPlayerFleeingStatus> == VT::kInt);
 static_assert(kValueType<OORouteType> == VT::kInt);
-static_assert(kValueType<OOScanClass> == VT::kInt);
+static_assert(kValueType<oo::ScanClass> == VT::kInt);
 static_assert(kValueType<OOSpeechSettings> == VT::kInt);
 static_assert(kValueType<OOStationAlertLevel> == VT::kInt);
 static_assert(kValueType<OOWeaponFacing> == VT::kInt);  // a uint8_t enum
@@ -141,7 +141,7 @@ OO_TEST(shaderUniformTypes) {
   OO_CHECK(TypeOf<short>() == kOOShaderUniformTypeShort);
   OO_CHECK(TypeOf<unsigned short>() == kOOShaderUniformTypeUnsignedShort);
   OO_CHECK(TypeOf<int>() == kOOShaderUniformTypeInt);
-  OO_CHECK(TypeOf<OOCompassMode>() == kOOShaderUniformTypeInt);
+  OO_CHECK(TypeOf<oo::CompassMode>() == kOOShaderUniformTypeInt);
   OO_CHECK(TypeOf<unsigned>() == kOOShaderUniformTypeUnsignedInt);
   OO_CHECK(TypeOf<long>() == kOOShaderUniformTypeLong);
   OO_CHECK(TypeOf<unsigned long>() == kOOShaderUniformTypeUnsignedLong);

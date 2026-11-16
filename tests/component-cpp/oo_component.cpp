@@ -475,7 +475,7 @@ ShipHandle::ShipHandle(const std::shared_ptr<ShipEntity>& ship) : ship_(ship) {
 bool ShipHandle::alive() const {
   const std::shared_ptr<ShipEntity> ship = ship_.lock();
   if (ship == nullptr || UNIVERSE == nullptr) return false;
-  if (ship->status() == OOEntityStatus::kDead) return false;
+  if (ship->status() == oo::EntityStatus::kDead) return false;
   return UNIVERSE->entityForUniversalID(
              static_cast<OOUniversalID>(id_)) == ship.get();
 }
@@ -1359,8 +1359,8 @@ void Game::remove(ShipEntity* ship) {
   // the ship dies with no explosion, and the universe takes it out in its next
   // update, as for any ship that dies, so nothing is left pointing at it.
   if (ship == oo::ToShip(universe()->station())) universe()->unMagicMainStation();
-  if (ship->status() == OOEntityStatus::kDocked) {
-    ship->setStatus(OOEntityStatus::kDead);
+  if (ship->status() == oo::EntityStatus::kDocked) {
+    ship->setStatus(oo::EntityStatus::kDead);
   } else {
     ship->setSuppressExplosion(true);
     ship->setEnergy(1);
@@ -1381,7 +1381,7 @@ std::vector<ShipHandle> Game::shipsWithRole(std::string_view role) {
   std::vector<ShipHandle> ships;
   for (const oo::EntityHold& entity : universe()->entityList()) {
     ShipEntity* ship = dynamic_cast<ShipEntity*>(entity.get());
-    if (ship == nullptr || ship->status() == OOEntityStatus::kDead) continue;
+    if (ship == nullptr || ship->status() == oo::EntityStatus::kDead) continue;
     if (ship->getPrimaryRole().value_or("") == role) ships.emplace_back(oo::share(ship));
   }
   return ships;

@@ -76,11 +76,11 @@ void Entity::init() {
 
   no_draw_distance = 100000.0;  //  10 km
 
-  scanClass = OOScanClass::kNotSet;
+  scanClass = oo::ScanClass::kNotSet;
   Entity::setStatus(
-      OOEntityStatus::kCockpitDisplay);  // the base's own: ShipEntity's
-                                         // override does the same for this
-                                         // status
+      oo::EntityStatus::kCockpitDisplay);  // the base's own: ShipEntity's
+                                           // override does the same for this
+                                           // status
 
   spawnTime = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
 
@@ -665,13 +665,13 @@ GLfloat Entity::getDistanceTravelled() { return distanceTravelled; }
 
 void Entity::setDistanceTravelled(GLfloat value) { distanceTravelled = value; }
 
-void Entity::setStatus(OOEntityStatus stat) { _status = stat; }
+void Entity::setStatus(oo::EntityStatus stat) { _status = stat; }
 
-OOEntityStatus Entity::status() { return _status; }
+oo::EntityStatus Entity::status() { return _status; }
 
-void Entity::setScanClass(OOScanClass sClass) { scanClass = sClass; }
+void Entity::setScanClass(oo::ScanClass sClass) { scanClass = sClass; }
 
-OOScanClass Entity::getScanClass() { return scanClass; }
+oo::ScanClass Entity::getScanClass() { return scanClass; }
 
 void Entity::setEnergy(GLfloat amount) { energy = amount; }
 
@@ -734,7 +734,7 @@ std::vector<oo::EntityHold>* Entity::getCollidingEntities() {
 }
 
 void Entity::update(OOTimeDelta delta_t) {
-  if (_status != OOEntityStatus::kCockpitDisplay) {
+  if (_status != oo::EntityStatus::kCockpitDisplay) {
     if (getIsSubEntity()) {
       // A message to a nil owner answered 0.
       Entity* ownerEntity = owner();
@@ -760,7 +760,7 @@ void Entity::update(OOTimeDelta delta_t) {
     cameraRelativePosition = HPVectorToVector(position);
   }
 
-  if (status() != OOEntityStatus::kCockpitDisplay) {
+  if (status() != oo::EntityStatus::kCockpitDisplay) {
     applyVelocity(delta_t);
   }
 
@@ -921,14 +921,14 @@ bool Entity::isVisible() {
 
 bool Entity::isInSpace() {
   switch (status()) {
-    case OOEntityStatus::kInFlight:
-    case OOEntityStatus::kDocking:
-    case OOEntityStatus::kLaunching:
-    case OOEntityStatus::kAutopilotEngaged:
-    case OOEntityStatus::kWitchspaceCountdown:
-    case OOEntityStatus::kBeingScooped:
-    case OOEntityStatus::kEffect:
-    case OOEntityStatus::kActive:
+    case oo::EntityStatus::kInFlight:
+    case oo::EntityStatus::kDocking:
+    case oo::EntityStatus::kLaunching:
+    case oo::EntityStatus::kAutopilotEngaged:
+    case oo::EntityStatus::kWitchspaceCountdown:
+    case oo::EntityStatus::kBeingScooped:
+    case oo::EntityStatus::kEffect:
+    case oo::EntityStatus::kActive:
       return true;
     default:
       return false;

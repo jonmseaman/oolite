@@ -44,12 +44,12 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "EntityStatus.h"
 #include "GameController.h"
 #include "OOCacheManager.h"
 #include "OOColor.h"
 #include "OODebugStandards.h"
 #include "OODescription.h"
-#include "OOEntityStatus.h"
 #include "OOJSEngineCore.h"
 #include "OOJSPropID.h"
 #include "OOLegacyScriptWhitelist.h"
@@ -496,8 +496,8 @@ void OOShipRegistry::loadDemoShips() {
       const std::optional<std::string> conditions =
           StringForKey(&key, kOODemoShipConditions);
       if (conditions.has_value()) {
-        if ((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
-            OOEntityStatus::kStartGame) {
+        if ((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) ==
+            oo::EntityStatus::kStartGame) {
           // conditions always false here
           removeEntry(key);
         } else {

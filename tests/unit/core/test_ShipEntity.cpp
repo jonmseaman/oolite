@@ -137,7 +137,7 @@ namespace {
 // --- Ivars the game reads directly (ship->shot_time), and nothing else ----------------------------
 
 OOTimeDelta ShotTime(ShipEntity *s)		{ return s->shot_time; }
-OOBehaviour Behaviour(ShipEntity *s)	{ return s->behaviour; }
+oo::Behaviour Behaviour(ShipEntity *s)	{ return s->behaviour; }
 void SetSubEntity(Entity *e, bool value)	{ e->isSubEntity = value; }
 void SetFrustration(ShipEntity *s, GLfloat value)	{ s->frustration = value; }
 void SetPlanetForLanding(ShipEntity *s, OOUniversalID uid)	{ s->planetForLanding = uid; }
@@ -217,7 +217,7 @@ OO_TEST(initWithKeyAndDefinition)
 		OO_CHECK(ship->_setUps == 1 && ship->_setUpDict.get<double>("max_flight_speed", 0) == 250.0);
 		OO_CHECK((ship != nullptr ? ship->getIsShip() : false) && !(ship != nullptr ? ship->getIsStation() : false) && !(ship != nullptr ? ship->getIsPlayer() : false));
 		OO_CHECK((ship != nullptr ? ship->shipDataKey() : std::optional<std::string>()) == std::optional<std::string>("test-ship"));
-		OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) == OOEntityStatus::kInFlight);
+		OO_CHECK((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
 		OO_CHECK((ship != nullptr ? ship->zeroDistance() : 0.0) == (GLfloat)(SCANNER_MAX_RANGE2 * 2.0));
 		OO_CHECK((ship != nullptr ? ship->weaponRechargeRate() : 0.0f) == 6.0f);
 		OO_CHECK(ShotTime(ship) == INITIAL_SHOT_TIME);
@@ -226,7 +226,7 @@ OO_TEST(initWithKeyAndDefinition)
 		OO_CHECK((ship != nullptr ? ship->laserHeatLevelForward() : 0.0f) == 0 && (ship != nullptr ? ship->laserHeatLevelAft() : 0.0f) == 0 && (ship != nullptr ? ship->laserHeatLevelPort() : 0.0f) == 0 && (ship != nullptr ? ship->laserHeatLevelStarboard() : 0.0f) == 0);
 		OO_CHECK((ship != nullptr ? ship->entityPersonalityInt() : GLint{}) >= 0 && (ship != nullptr ? ship->entityPersonalityInt() : GLint{}) <= (GLint)ENTITY_PERSONALITY_MAX);
 		OO_CHECK((ship != nullptr ? ship->getMaxFlightSpeed() : 0.0f) == 0);	// the set-up did not set it
-		OO_CHECK(Behaviour(ship) == OOBehaviour::kIdle);
+		OO_CHECK(Behaviour(ship) == oo::Behaviour::kIdle);
 	}
 }
 
@@ -238,7 +238,7 @@ OO_TEST(initIsAnEmptyKey)
 		TestShip *ship = MakeShip<TestShip>(std::string{}, oo::PList());
 		OO_CHECK(ship != nullptr && ship->_setUps == 1 && ship->_setUpDict.isNull());
 		OO_CHECK((ship != nullptr ? ship->shipDataKey() : std::optional<std::string>()) == std::optional<std::string>(""));
-		OO_CHECK((ship != nullptr ? ship->getIsShip() : false) && (ship != nullptr ? ship->status() : OOEntityStatus{}) == OOEntityStatus::kInFlight);
+		OO_CHECK((ship != nullptr ? ship->getIsShip() : false) && (ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
 	}
 }
 
@@ -468,7 +468,7 @@ OO_TEST(setUpShipFromDictionaryNPC)
 		PlainShip *ship = MakeShip<PlainShip>("npc", definition);
 		OO_CHECK(ship != nullptr);
 		const ShipEntity *part = Part(ship);
-		OO_CHECK((ship != nullptr ? ship->getIsShip() : false) && (ship != nullptr ? ship->getScanClass() : OOScanClass{}) == OOScanClass::kPolice);
+		OO_CHECK((ship != nullptr ? ship->getIsShip() : false) && (ship != nullptr ? ship->getScanClass() : oo::ScanClass{}) == oo::ScanClass::kPolice);
 		OO_CHECK(part->scan_description == std::optional<std::string>("Cop"));
 		OO_CHECK((ship != nullptr ? ship->getEnergy() : 0.0f) == 300.0 && (ship != nullptr ? ship->getMaxEnergy() : 0.0f) == 300.0f);
 		OO_CHECK(part->weapon_damage == 12.0f && part->weapon_damage_override == 12.0f);
@@ -732,23 +732,23 @@ OO_TEST(scanClassAndCollisionFlags)
 	{
 		SetUp();
 		TestShip *ship = MakeShip<TestShip>("flags", Definition());
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kNeutral);
-		OO_CHECK((ship != nullptr ? ship->getScanClass() : OOScanClass{}) == OOScanClass::kNeutral);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kNeutral);
+		OO_CHECK((ship != nullptr ? ship->getScanClass() : oo::ScanClass{}) == oo::ScanClass::kNeutral);
 		MutablePart(ship)->cloaking_device_active = 1;
-		OO_CHECK((ship != nullptr ? ship->getScanClass() : OOScanClass{}) == OOScanClass::kNoDraw);
+		OO_CHECK((ship != nullptr ? ship->getScanClass() : oo::ScanClass{}) == oo::ScanClass::kNoDraw);
 		MutablePart(ship)->cloaking_device_active = 0;
 
 		OO_CHECK(!(ship != nullptr ? ship->suppressFlightNotifications() : false));
 		MutablePart(ship)->suppressAegisMessages = 1;
 		OO_CHECK((ship != nullptr ? ship->suppressFlightNotifications() : false));
 
-		OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) == OOEntityStatus::kInFlight && (ship != nullptr ? ship->canCollide() : false));
+		OO_CHECK((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight && (ship != nullptr ? ship->canCollide() : false));
 		MutablePart(ship)->isWreckage = 1;
 		OO_CHECK(!(ship != nullptr ? ship->canCollide() : false));
 		MutablePart(ship)->isWreckage = 0;
-		if (ship != nullptr)  ship->setStatus(OOEntityStatus::kDead);
+		if (ship != nullptr)  ship->setStatus(oo::EntityStatus::kDead);
 		OO_CHECK(!(ship != nullptr ? ship->canCollide() : false));
-		if (ship != nullptr)  ship->setStatus(OOEntityStatus::kInFlight);
+		if (ship != nullptr)  ship->setStatus(oo::EntityStatus::kInFlight);
 		OO_CHECK((ship != nullptr ? ship->canCollide() : false));
 	}
 }
@@ -850,9 +850,9 @@ OO_TEST(updateReachesNonShipSubentities)
 		CountingFlasher *flasher = static_cast<CountingFlasher *>(oo::MadeEntity(oo::makeShared<CountingFlasher>()));
 		OO_CHECK((ship != nullptr ? ship->setUpFromDictionary(oo::PList()) : false));
 		if (ship != nullptr)  ship->addSubEntity(flasher);
-		if (ship != nullptr)  ship->setStatus(OOEntityStatus::kLaunching);
+		if (ship != nullptr)  ship->setStatus(oo::EntityStatus::kLaunching);
 		if (ship != nullptr)  ship->update(0.1);
-		OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) == OOEntityStatus::kLaunching);
+		OO_CHECK((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kLaunching);
 		OO_CHECK(flasher->_updates == 1);
 		if (ship != nullptr)  ship->clearSubEntities();
 	}
@@ -1036,14 +1036,14 @@ OO_TEST(behaviourStopStillAndIdle)
 		OO_CHECK(Part(ship)->stick_roll == 0 && Part(ship)->stick_pitch == 0 && Part(ship)->stick_yaw == 0);
 		OO_CHECK(fabs(Part(ship)->flightRoll - 0.8f) < 1e-5f);
 
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kBuoy);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kBuoy);
 		MutablePart(ship)->flightRoll = 0.5f;
 		MutablePart(ship)->flightPitch = 0.25f;
 		if (ship != nullptr)  ship->behaviour_idle(0.1);
 		OO_CHECK(Part(ship)->stick_roll == 0.5f && Part(ship)->stick_pitch == 0.25f && Part(ship)->stick_yaw == 0);
 		OO_CHECK(Part(ship)->flightRoll == 0.5f && Part(ship)->flightPitch == 0.25f);
 
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kNeutral);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kNeutral);
 		if (ship != nullptr)  ship->behaviour_idle(0.1);
 		OO_CHECK(Part(ship)->stick_roll == 0 && Part(ship)->stick_pitch == 0);
 
@@ -1061,12 +1061,12 @@ OO_TEST(behavioursWithoutATarget)
 	{
 		SetUp();
 		TestShip *ship = MakeShip<TestShip>("hunter", Definition());
-		MutablePart(ship)->behaviour = OOBehaviour::kAttackSlowDogfight;
+		MutablePart(ship)->behaviour = oo::Behaviour::kAttackSlowDogfight;
 		if (ship != nullptr)  ship->behaviour_attack_slow_dogfight(0.1);
-		OO_CHECK(Part(ship)->behaviour == OOBehaviour::kIdle);
-		MutablePart(ship)->behaviour = OOBehaviour::kAttackBreakOffTarget;
+		OO_CHECK(Part(ship)->behaviour == oo::Behaviour::kIdle);
+		MutablePart(ship)->behaviour = oo::Behaviour::kAttackBreakOffTarget;
 		if (ship != nullptr)  ship->behaviour_attack_break_off_target(0.1);
-		OO_CHECK(Part(ship)->behaviour == OOBehaviour::kIdle);
+		OO_CHECK(Part(ship)->behaviour == oo::Behaviour::kIdle);
 	}
 }
 
@@ -1079,21 +1079,21 @@ OO_TEST(attackBehavioursWithoutATarget)
 	{
 		SetUp();
 		TestShip *ship = MakeShip<TestShip>("attacker", Definition());
-		MutablePart(ship)->behaviour = OOBehaviour::kAttackBroadside;
+		MutablePart(ship)->behaviour = oo::Behaviour::kAttackBroadside;
 		if (ship != nullptr)  ship->behaviour_attack_broadside(0.1);
-		OO_CHECK(Part(ship)->behaviour == OOBehaviour::kIdle);
-		MutablePart(ship)->behaviour = OOBehaviour::kAttackBroadsideLeft;
+		OO_CHECK(Part(ship)->behaviour == oo::Behaviour::kIdle);
+		MutablePart(ship)->behaviour = oo::Behaviour::kAttackBroadsideLeft;
 		if (ship != nullptr)  ship->behaviour_attack_broadside_left(0.1);
-		OO_CHECK(Part(ship)->behaviour == OOBehaviour::kIdle);
-		MutablePart(ship)->behaviour = OOBehaviour::kAttackBroadsideRight;
+		OO_CHECK(Part(ship)->behaviour == oo::Behaviour::kIdle);
+		MutablePart(ship)->behaviour = oo::Behaviour::kAttackBroadsideRight;
 		if (ship != nullptr)  ship->behaviour_attack_broadside_right(0.1);
-		OO_CHECK(Part(ship)->behaviour == OOBehaviour::kIdle);
-		MutablePart(ship)->behaviour = OOBehaviour::kCloseToBroadsideRange;
+		OO_CHECK(Part(ship)->behaviour == oo::Behaviour::kIdle);
+		MutablePart(ship)->behaviour = oo::Behaviour::kCloseToBroadsideRange;
 		if (ship != nullptr)  ship->behaviour_close_to_broadside_range(0.1);
-		OO_CHECK(Part(ship)->behaviour == OOBehaviour::kIdle);
-		MutablePart(ship)->behaviour = OOBehaviour::kCloseWithTarget;
+		OO_CHECK(Part(ship)->behaviour == oo::Behaviour::kIdle);
+		MutablePart(ship)->behaviour = oo::Behaviour::kCloseWithTarget;
 		if (ship != nullptr)  ship->behaviour_close_with_target(0.1);
-		OO_CHECK(Part(ship)->behaviour == OOBehaviour::kIdle);
+		OO_CHECK(Part(ship)->behaviour == oo::Behaviour::kIdle);
 	}
 }
 
@@ -1106,18 +1106,18 @@ OO_TEST(attackTargetChoiceAndBroadsideSides)
 	{
 		SetUp();
 		TestShip *ship = MakeShip<TestShip>("unarmed", Definition());
-		MutablePart(ship)->behaviour = OOBehaviour::kAttackTarget;
+		MutablePart(ship)->behaviour = oo::Behaviour::kAttackTarget;
 		MutablePart(ship)->frustration = 5.0f;
 		if (ship != nullptr)  ship->behaviour_attack_target(0.1);
-		OO_CHECK(Part(ship)->behaviour == OOBehaviour::kAttackFlyFromTarget);
+		OO_CHECK(Part(ship)->behaviour == oo::Behaviour::kAttackFlyFromTarget);
 		OO_CHECK(Part(ship)->frustration == 0.0f);
 
-		MutablePart(ship)->behaviour = OOBehaviour::kAttackBroadsideLeft;
+		MutablePart(ship)->behaviour = oo::Behaviour::kAttackBroadsideLeft;
 		if (ship != nullptr)  ship->behaviour_attack_broadside_target(0.1, true);
-		OO_CHECK(Part(ship)->behaviour == OOBehaviour::kIdle);
-		MutablePart(ship)->behaviour = OOBehaviour::kAttackBroadsideRight;
+		OO_CHECK(Part(ship)->behaviour == oo::Behaviour::kIdle);
+		MutablePart(ship)->behaviour = oo::Behaviour::kAttackBroadsideRight;
 		if (ship != nullptr)  ship->behaviour_attack_broadside_target(0.1, false);
-		OO_CHECK(Part(ship)->behaviour == OOBehaviour::kIdle);
+		OO_CHECK(Part(ship)->behaviour == oo::Behaviour::kIdle);
 	}
 }
 
@@ -1155,15 +1155,15 @@ OO_TEST(attackBehavioursWithoutATargetGoIdle)
 {
 	{
 		SetUp();
-		const struct { OOBehaviour behaviour; void (*run)(TestShip *); } cases[] =
+		const struct { oo::Behaviour behaviour; void (*run)(TestShip *); } cases[] =
 		{
-			{ OOBehaviour::kAttackSniper, [](TestShip *s) { if (s != nullptr)  s->behaviour_attack_sniper(0.1); } },
-			{ OOBehaviour::kAttackFlyToTargetSix, [](TestShip *s) { if (s != nullptr)  s->behaviour_fly_to_target_six(0.1); } },
-			{ OOBehaviour::kAttackMiningTarget, [](TestShip *s) { if (s != nullptr)  s->behaviour_attack_mining_target(0.1); } },
-			{ OOBehaviour::kAttackFlyToTarget, [](TestShip *s) { if (s != nullptr)  s->behaviour_attack_fly_to_target(0.1); } },
-			{ OOBehaviour::kAttackFlyFromTarget, [](TestShip *s) { if (s != nullptr)  s->behaviour_attack_fly_from_target(0.1); } },
-			{ OOBehaviour::kRunningDefense, [](TestShip *s) { if (s != nullptr)  s->behaviour_running_defense(0.1); } },
-			{ OOBehaviour::kFleeTarget, [](TestShip *s) { if (s != nullptr)  s->behaviour_flee_target(0.1); } },
+			{ oo::Behaviour::kAttackSniper, [](TestShip *s) { if (s != nullptr)  s->behaviour_attack_sniper(0.1); } },
+			{ oo::Behaviour::kAttackFlyToTargetSix, [](TestShip *s) { if (s != nullptr)  s->behaviour_fly_to_target_six(0.1); } },
+			{ oo::Behaviour::kAttackMiningTarget, [](TestShip *s) { if (s != nullptr)  s->behaviour_attack_mining_target(0.1); } },
+			{ oo::Behaviour::kAttackFlyToTarget, [](TestShip *s) { if (s != nullptr)  s->behaviour_attack_fly_to_target(0.1); } },
+			{ oo::Behaviour::kAttackFlyFromTarget, [](TestShip *s) { if (s != nullptr)  s->behaviour_attack_fly_from_target(0.1); } },
+			{ oo::Behaviour::kRunningDefense, [](TestShip *s) { if (s != nullptr)  s->behaviour_running_defense(0.1); } },
+			{ oo::Behaviour::kFleeTarget, [](TestShip *s) { if (s != nullptr)  s->behaviour_flee_target(0.1); } },
 		};
 		for (const auto &c : cases)
 		{
@@ -1171,7 +1171,7 @@ OO_TEST(attackBehavioursWithoutATargetGoIdle)
 			if (ship != nullptr)  ship->setBehaviour(c.behaviour);
 			SetFrustration(ship, 2);
 			c.run(ship);
-			OO_CHECK(Behaviour(ship) == OOBehaviour::kIdle && (ship != nullptr ? ship->getFrustration() : 0.0) == 0);
+			OO_CHECK(Behaviour(ship) == oo::Behaviour::kIdle && (ship != nullptr ? ship->getFrustration() : 0.0) == 0);
 		}
 
 		// The miner also slows to three eighths of its top speed.
@@ -1190,15 +1190,15 @@ OO_TEST(sniper)
 		SetUp();
 		TestShip *ship = FlyingShip("sniper");
 		TargetAt(ship, 1000);
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kAttackSniper);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kAttackSniper);
 		if (ship != nullptr)  ship->behaviour_attack_sniper(0.1);
-		OO_CHECK(Behaviour(ship) == OOBehaviour::kAttackTarget);
+		OO_CHECK(Behaviour(ship) == oo::Behaviour::kAttackTarget);
 
 		TestShip *distant = FlyingShip("distant sniper");
 		TargetAt(distant, 20000);
-		if (distant != nullptr)  distant->setBehaviour(OOBehaviour::kAttackSniper);
+		if (distant != nullptr)  distant->setBehaviour(oo::Behaviour::kAttackSniper);
 		if (distant != nullptr)  distant->behaviour_attack_sniper(0.1);
-		OO_CHECK(Behaviour(distant) == OOBehaviour::kAttackSniper && (distant != nullptr ? distant->desiredSpeed() : 0.0) == 200);
+		OO_CHECK(Behaviour(distant) == oo::Behaviour::kAttackSniper && (distant != nullptr ? distant->desiredSpeed() : 0.0) == 200);
 	}
 }
 
@@ -1213,22 +1213,22 @@ OO_TEST(attackApproaches)
 		SetUp();
 		TestShip *six = FlyingShip("six");
 		TargetAt(six, 2000);
-		if (six != nullptr)  six->setBehaviour(OOBehaviour::kAttackFlyToTargetSix);
+		if (six != nullptr)  six->setBehaviour(oo::Behaviour::kAttackFlyToTargetSix);
 		if (six != nullptr)  six->behaviour_fly_to_target_six(0.1);
-		OO_CHECK(Behaviour(six) == OOBehaviour::kAttackFlyToTarget && (six != nullptr ? six->desiredSpeed() : 0.0) == 200 * 0.4);
+		OO_CHECK(Behaviour(six) == oo::Behaviour::kAttackFlyToTarget && (six != nullptr ? six->desiredSpeed() : 0.0) == 200 * 0.4);
 
 		TestShip *miner = FlyingShip("miner");
 		TargetAt(miner, 2000);
-		if (miner != nullptr)  miner->setBehaviour(OOBehaviour::kAttackMiningTarget);
+		if (miner != nullptr)  miner->setBehaviour(oo::Behaviour::kAttackMiningTarget);
 		if (miner != nullptr)  miner->behaviour_attack_mining_target(0.1);
-		OO_CHECK(Behaviour(miner) == OOBehaviour::kAttackMiningTarget && (miner != nullptr ? miner->desiredSpeed() : 0.0) == 200 * 0.875);
+		OO_CHECK(Behaviour(miner) == oo::Behaviour::kAttackMiningTarget && (miner != nullptr ? miner->desiredSpeed() : 0.0) == 200 * 0.875);
 
 		TestShip *attacker = FlyingShip("attacker");
 		TargetAt(attacker, 1000);
 		if (attacker != nullptr)  attacker->setWeaponRange(30000);
-		if (attacker != nullptr)  attacker->setBehaviour(OOBehaviour::kAttackFlyToTarget);
+		if (attacker != nullptr)  attacker->setBehaviour(oo::Behaviour::kAttackFlyToTarget);
 		if (attacker != nullptr)  attacker->behaviour_attack_fly_to_target(0.1);
-		OO_CHECK(Behaviour(attacker) == OOBehaviour::kAttackTarget);
+		OO_CHECK(Behaviour(attacker) == oo::Behaviour::kAttackTarget);
 	}
 }
 
@@ -1245,32 +1245,32 @@ OO_TEST(destinationDecisions)
 		if (ship != nullptr)  ship->setDesiredSpeed(10);
 		SetFrustration(ship, 3);
 		if (ship != nullptr)  ship->behaviour_fly_range_from_destination(0.1);
-		OO_CHECK(Behaviour(ship) == OOBehaviour::kFlyFromDestination && (ship != nullptr ? ship->desiredSpeed() : 0.0) == 200 && (ship != nullptr ? ship->getFrustration() : 0.0) == 0);
+		OO_CHECK(Behaviour(ship) == oo::Behaviour::kFlyFromDestination && (ship != nullptr ? ship->desiredSpeed() : 0.0) == 200 && (ship != nullptr ? ship->getFrustration() : 0.0) == 0);
 
 		// Outside it: fly to the destination.
 		if (ship != nullptr)  ship->setDesiredRange(50);
 		if (ship != nullptr)  ship->behaviour_fly_range_from_destination(0.1);
-		OO_CHECK(Behaviour(ship) == OOBehaviour::kFlyToDestination);
+		OO_CHECK(Behaviour(ship) == oo::Behaviour::kFlyToDestination);
 
 		// Facing a destination stops the ship.
 		TestShip *facer = FlyingShip("facer");
 		if (facer != nullptr)  facer->setDestination(make_HPvector(0, 1000, 0));
 		if (facer != nullptr)  facer->setDesiredSpeed(50);
-		if (facer != nullptr)  facer->setBehaviour(OOBehaviour::kFaceDestination);
+		if (facer != nullptr)  facer->setBehaviour(oo::Behaviour::kFaceDestination);
 		if (facer != nullptr)  facer->behaviour_face_destination(0.1);
 		OO_CHECK((facer != nullptr ? facer->desiredSpeed() : 0.0) == 0);
 
 		// Landing with no planet to land on: idle, and the JS AI is woken to reconsider.
 		TestShip *lander = FlyingShip("lander");
 		SetPlanetForLanding(lander, NO_TARGET);
-		if (lander != nullptr)  lander->setBehaviour(OOBehaviour::kLandOnPlanet);
+		if (lander != nullptr)  lander->setBehaviour(oo::Behaviour::kLandOnPlanet);
 		if (lander != nullptr)  lander->behaviour_land_on_planet(0.1);
-		OO_CHECK(Behaviour(lander) == OOBehaviour::kIdle && (lander != nullptr ? lander->shipAIScriptWakeTime() : OOTimeAbsolute{}) == 1 && (lander != nullptr ? lander->desiredSpeed() : 0.0) == 0);
+		OO_CHECK(Behaviour(lander) == oo::Behaviour::kIdle && (lander != nullptr ? lander->shipAIScriptWakeTime() : OOTimeAbsolute{}) == 1 && (lander != nullptr ? lander->desiredSpeed() : 0.0) == 0);
 
 		// Forming up with no leader: top speed.
 		TestShip *escort = FlyingShip("escort");
 		if (escort != nullptr)  escort->setDestination(make_HPvector(0, 0, 3000));
-		if (escort != nullptr)  escort->setBehaviour(OOBehaviour::kFormationFormUp);
+		if (escort != nullptr)  escort->setBehaviour(oo::Behaviour::kFormationFormUp);
 		if (escort != nullptr)  escort->behaviour_formation_form_up(0.1);
 		OO_CHECK((escort != nullptr ? escort->desiredSpeed() : 0.0) == 200);
 	}
@@ -1288,47 +1288,47 @@ OO_TEST(destinationArrivals)
 		if (ship != nullptr)  ship->setDesiredRange(100);
 		if (ship != nullptr)  ship->setDesiredSpeed(50);
 		SetFrustration(ship, 3);
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kFlyToDestination);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kFlyToDestination);
 		if (ship != nullptr)  ship->behaviour_fly_to_destination(0.1);
-		OO_CHECK(Behaviour(ship) == OOBehaviour::kIdle && (ship != nullptr ? ship->desiredSpeed() : 0.0) == 0 && (ship != nullptr ? ship->getFrustration() : 0.0) == 0);
+		OO_CHECK(Behaviour(ship) == oo::Behaviour::kIdle && (ship != nullptr ? ship->desiredSpeed() : 0.0) == 0 && (ship != nullptr ? ship->getFrustration() : 0.0) == 0);
 
 		TestShip *leaving = FlyingShip("leaving");
 		if (leaving != nullptr)  leaving->setDestination(make_HPvector(0, 0, 1000));
 		if (leaving != nullptr)  leaving->setDesiredRange(100);
 		if (leaving != nullptr)  leaving->setDesiredSpeed(50);
-		if (leaving != nullptr)  leaving->setBehaviour(OOBehaviour::kFlyFromDestination);
+		if (leaving != nullptr)  leaving->setBehaviour(oo::Behaviour::kFlyFromDestination);
 		if (leaving != nullptr)  leaving->behaviour_fly_from_destination(0.1);
-		OO_CHECK(Behaviour(leaving) == OOBehaviour::kIdle && (leaving != nullptr ? leaving->desiredSpeed() : 0.0) == 0);
+		OO_CHECK(Behaviour(leaving) == oo::Behaviour::kIdle && (leaving != nullptr ? leaving->desiredSpeed() : 0.0) == 0);
 
 		// Clear of the obstacle: what the ship did before the alert resumes.
 		TestShip *avoider = FlyingShip("avoider");
 		if (avoider != nullptr)  avoider->setDestination(make_HPvector(0, 0, 1000));
 		if (avoider != nullptr)  avoider->setDesiredRange(100);
-		if (avoider != nullptr)  avoider->setBehaviour(OOBehaviour::kAvoidCollision);
+		if (avoider != nullptr)  avoider->setBehaviour(oo::Behaviour::kAvoidCollision);
 		SetFrustration(avoider, 3);
 		SetPreviousCondition(avoider, oo::PList(oo::PList::Dict{
-			{ "behaviour", oo::PList((double)OOBehaviour::kFlyToDestination) },
+			{ "behaviour", oo::PList((double)oo::Behaviour::kFlyToDestination) },
 			{ "desired_range", oo::PList(300.0) },
 			{ "desired_speed", oo::PList(12.0) } }));
 		if (avoider != nullptr)  avoider->behaviour_avoid_collision(0.1);
-		OO_CHECK(Behaviour(avoider) == OOBehaviour::kFlyToDestination && (avoider != nullptr ? avoider->desiredRange() : 0.0) == 300 && (avoider != nullptr ? avoider->desiredSpeed() : 0.0) == 12 && (avoider != nullptr ? avoider->getFrustration() : 0.0) == 0);
+		OO_CHECK(Behaviour(avoider) == oo::Behaviour::kFlyToDestination && (avoider != nullptr ? avoider->desiredRange() : 0.0) == 300 && (avoider != nullptr ? avoider->desiredSpeed() : 0.0) == 12 && (avoider != nullptr ? avoider->getFrustration() : 0.0) == 0);
 
 		// A turret with no mount and no targets does nothing.
 		TestShip *turret = FlyingShip("turret");
-		if (turret != nullptr)  turret->setBehaviour(OOBehaviour::kTrackAsTurret);
+		if (turret != nullptr)  turret->setBehaviour(oo::Behaviour::kTrackAsTurret);
 		if (turret != nullptr)  turret->behaviour_track_as_turret(0.1);
-		OO_CHECK(Behaviour(turret) == OOBehaviour::kTrackAsTurret);
+		OO_CHECK(Behaviour(turret) == oo::Behaviour::kTrackAsTurret);
 
 		// Reaching a navpoint moves on to the next; reaching the last one is the end of the route.
 		TestShip *nav = FlyingShip("navigator");
 		if (nav != nullptr)  nav->setDesiredRange(50);
-		if (nav != nullptr)  nav->setBehaviour(OOBehaviour::kFlyThruNavpoints);
+		if (nav != nullptr)  nav->setBehaviour(oo::Behaviour::kFlyThruNavpoints);
 		SetNavpoints(nav, { make_HPvector(0, 0, 10), make_HPvector(0, 0, 5000), make_HPvector(0, 5000, 5000) }, 0);
 		if (nav != nullptr)  nav->behaviour_fly_thru_navpoints(0.1);
-		OO_CHECK(NextNavpoint(nav) == 1 && Behaviour(nav) == OOBehaviour::kFlyThruNavpoints);
+		OO_CHECK(NextNavpoint(nav) == 1 && Behaviour(nav) == oo::Behaviour::kFlyThruNavpoints);
 		SetNavpoints(nav, { make_HPvector(0, 5000, 5000), make_HPvector(0, 0, 10) }, 1);
 		if (nav != nullptr)  nav->behaviour_fly_thru_navpoints(0.1);
-		OO_CHECK(NextNavpoint(nav) == 0 && Behaviour(nav) == OOBehaviour::kIdle);
+		OO_CHECK(NextNavpoint(nav) == 0 && Behaviour(nav) == oo::Behaviour::kIdle);
 	}
 }
 
@@ -1340,9 +1340,9 @@ OO_TEST(scriptedAIAndReactionTime)
 	{
 		SetUp();
 		TestShip *ship = FlyingShip("scripted");
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kScriptedAi);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kScriptedAi);
 		if (ship != nullptr)  ship->behaviour_scripted_ai(0.1);
-		OO_CHECK(Behaviour(ship) == OOBehaviour::kIdle);
+		OO_CHECK(Behaviour(ship) == oo::Behaviour::kIdle);
 
 		OO_CHECK((ship != nullptr ? ship->getReactionTime() : 0.0f) == 0);
 		if (ship != nullptr)  ship->setReactionTime(0.75f);
@@ -1402,13 +1402,13 @@ OO_TEST(scannerColours)
 		OO_CHECK(c[0] == 1 && c[1] == 0 && c[2] == 0 && c[3] == 1);
 		c = (ship != nullptr ? ship->scannerDisplayColorForShip(other, true, false, red.get(), nullptr, red.get(), blue.get()) : (GLfloat *)nullptr);	// hostile, not flashing: the second
 		OO_CHECK(c[0] == 0 && c[2] == 1);
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kCargo);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kCargo);
 		c = (ship != nullptr ? ship->scannerDisplayColorForShip(other, false, false, nullptr, nullptr, nullptr, nullptr) : (GLfloat *)nullptr);
 		OO_CHECK(c[0] == 0.9f && c[1] == 0.9f && c[2] == 0.9f && c[3] == 1);
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kPolice);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kPolice);
 		c = (ship != nullptr ? ship->scannerDisplayColorForShip(other, true, true, nullptr, nullptr, nullptr, nullptr) : (GLfloat *)nullptr);
 		OO_CHECK(c[0] == 1 && c[1] == 0 && c[2] == 0.5f);
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kNeutral);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kNeutral);
 		c = (ship != nullptr ? ship->scannerDisplayColorForShip(other, false, false, nullptr, nullptr, nullptr, nullptr) : (GLfloat *)nullptr);
 		OO_CHECK(c[0] == 1 && c[1] == 1 && c[2] == 0);
 	}
@@ -1490,30 +1490,30 @@ OO_TEST(avoidCollisionAndResume)
 		TestShip *ship = FlyingShip("careful");
 		TestShip *rock = FlyingShip("rock");
 		if (rock != nullptr)  rock->setPosition(make_HPvector(0, 0, 400));
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kFlyToDestination);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kFlyToDestination);
 		if (ship != nullptr)  ship->setDestination(make_HPvector(0, 0, 9000));
 		if (ship != nullptr)  ship->setDesiredRange(300);
 		if (ship != nullptr)  ship->setDesiredSpeed(12);
 
 		if (ship != nullptr)  ship->avoidCollision();		// no alert: nothing
-		OO_CHECK(Behaviour(ship) == OOBehaviour::kFlyToDestination);
+		OO_CHECK(Behaviour(ship) == oo::Behaviour::kFlyToDestination);
 
 		SetProximityAlert(ship, rock);
 		OO_CHECK((ship != nullptr ? ship->proximityAlert() : (Entity *)nullptr) == rock);
 		if (ship != nullptr)  ship->avoidCollision();
-		OO_CHECK(Behaviour(ship) == OOBehaviour::kAvoidCollision);
+		OO_CHECK(Behaviour(ship) == oo::Behaviour::kAvoidCollision);
 		OO_CHECK(HPvector_equal((ship != nullptr ? ship->destination() : HPVector{}), make_HPvector(0, 0, 200)));
 
 		if (ship != nullptr)  ship->resumePostProximityAlert();
-		OO_CHECK(Behaviour(ship) == OOBehaviour::kFlyToDestination && (ship != nullptr ? ship->desiredRange() : 0.0) == 300 && (ship != nullptr ? ship->desiredSpeed() : 0.0) == 12);
+		OO_CHECK(Behaviour(ship) == oo::Behaviour::kFlyToDestination && (ship != nullptr ? ship->desiredRange() : 0.0) == 300 && (ship != nullptr ? ship->desiredSpeed() : 0.0) == 12);
 		OO_CHECK(HPvector_equal((ship != nullptr ? ship->destination() : HPVector{}), make_HPvector(0, 0, 9000)));
 		OO_CHECK((ship != nullptr ? ship->proximityAlert() : (Entity *)nullptr) == nullptr);
 
 		// A missile does not avoid anything.
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kMissile);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kMissile);
 		SetProximityAlert(ship, rock);
 		if (ship != nullptr)  ship->avoidCollision();
-		OO_CHECK(Behaviour(ship) == OOBehaviour::kFlyToDestination);
+		OO_CHECK(Behaviour(ship) == oo::Behaviour::kFlyToDestination);
 
 		// Clearing the alert, and a light object never raises one.
 		if (ship != nullptr)  ship->setProximityAlert(nullptr);
@@ -1627,28 +1627,28 @@ OO_TEST(typesAndHostility)
 	{
 		SetUp();
 		TestShip *ship = FlyingShip("viper");
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kPolice);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kPolice);
 		OO_CHECK((ship != nullptr ? ship->isPolice() : false) && !(ship != nullptr ? ship->isThargoid() : false));
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kThargoid);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kThargoid);
 		OO_CHECK(!(ship != nullptr ? ship->isPolice() : false) && (ship != nullptr ? ship->isThargoid() : false));
 		OO_CHECK(!(ship != nullptr ? ship->isUnpiloted() : false) && !(ship != nullptr ? ship->isExplicitlyUnpiloted() : false));
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kCargo);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kCargo);
 		OO_CHECK((ship != nullptr ? ship->isUnpiloted() : false));
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kNeutral);
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kTrackAsTurret);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kNeutral);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kTrackAsTurret);
 		OO_CHECK((ship != nullptr ? ship->isTurret() : false));
 
 		// Hostile: a ship target and an attacking behaviour (or one it will resume after an alert).
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kAttackTarget);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kAttackTarget);
 		OO_CHECK(!(ship != nullptr ? ship->hasHostileTarget() : false));		// no target
 		TestShip *target = TargetAt(ship, 1000);
 		OO_CHECK((ship != nullptr ? ship->hasHostileTarget() : false) && (ship != nullptr ? ship->isHostileTo(target) : false) && !(ship != nullptr ? ship->isHostileTo(ship) : false));
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kFlyToDestination);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kFlyToDestination);
 		OO_CHECK(!(ship != nullptr ? ship->hasHostileTarget() : false));
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kAvoidCollision);
-		SetPreviousCondition(ship, oo::PList(oo::PList::Dict{ { "behaviour", oo::PList((double)OOBehaviour::kAttackSniper) } }));
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kAvoidCollision);
+		SetPreviousCondition(ship, oo::PList(oo::PList::Dict{ { "behaviour", oo::PList((double)oo::Behaviour::kAttackSniper) } }));
 		OO_CHECK((ship != nullptr ? ship->hasHostileTarget() : false));
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kIdle);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kIdle);
 		if (ship != nullptr)  ship->setPrimaryRole("missile");
 		OO_CHECK((ship != nullptr ? ship->hasHostileTarget() : false));		// a missile's target always is
 
@@ -1715,10 +1715,10 @@ OO_TEST(aegisSystemsAndStatus)
 		if (ship != nullptr)  ship->setDestinationSystem(42);
 		OO_CHECK((ship != nullptr ? ship->homeSystem() : 0) == 7 && (ship != nullptr ? ship->destinationSystem() : 0) == 42);
 
-		if (ship != nullptr)  ship->setStatus(OOEntityStatus::kLaunching);
-		OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) == OOEntityStatus::kLaunching && LaunchTime(ship) == (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0));
-		if (ship != nullptr)  ship->setStatus(OOEntityStatus::kInFlight);
-		OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) == OOEntityStatus::kInFlight);
+		if (ship != nullptr)  ship->setStatus(oo::EntityStatus::kLaunching);
+		OO_CHECK((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kLaunching && LaunchTime(ship) == (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0));
+		if (ship != nullptr)  ship->setStatus(oo::EntityStatus::kInFlight);
+		OO_CHECK((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
 		if (ship != nullptr)  ship->setLaunchDelay(2.5);
 		OO_CHECK(LaunchDelay(ship) == 2.5);
 	}
@@ -1808,22 +1808,22 @@ OO_TEST(bountyAndLegalStatus)
 		TestShip *ship = FlyingShip("offender");
 		if (ship != nullptr)  ship->setBounty(40);
 		OO_CHECK((ship != nullptr ? ship->getBounty() : 0) == 40 && (ship != nullptr ? ship->legalStatus() : int{}) == 40);
-		if (ship != nullptr)  ship->setBounty(60, OOLegalStatusReason::kByScript);
+		if (ship != nullptr)  ship->setBounty(60, oo::LegalStatusReason::kByScript);
 		OO_CHECK((ship != nullptr ? ship->getBounty() : 0) == 60);
 		if (ship != nullptr)  ship->setBounty(5, "setup");
 		OO_CHECK((ship != nullptr ? ship->getBounty() : 0) == 5);
 
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kPolice);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kPolice);
 		if (ship != nullptr)  ship->setBounty(30);		// police never have bounties
 		OO_CHECK((ship != nullptr ? ship->getBounty() : 0) == 5);
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kThargoid);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kThargoid);
 		if (ship != nullptr)  ship->setBounty(30);		// nor do Thargoids, but by script or set-up
 		OO_CHECK((ship != nullptr ? ship->getBounty() : 0) == 5);
-		if (ship != nullptr)  ship->setBounty(30, OOLegalStatusReason::kSetup);
+		if (ship != nullptr)  ship->setBounty(30, oo::LegalStatusReason::kSetup);
 		OO_CHECK((ship != nullptr ? ship->getBounty() : 0) == 30);
 		if (ship != nullptr)  ship->setCollisionRadius(20);
 		OO_CHECK((ship != nullptr ? ship->legalStatus() : int{}) == 100);	// a Thargoid's is five times its radius
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kRock);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kRock);
 		OO_CHECK((ship != nullptr ? ship->legalStatus() : int{}) == 0);
 	}
 }
@@ -2068,9 +2068,9 @@ OO_TEST(slice24RememberedShips)
 		OO_CHECK((ship != nullptr ? ship->thankedShip() : (Entity *)nullptr) == other && (ship != nullptr ? ship->rememberedShip() : (Entity *)nullptr) == other && (ship != nullptr ? ship->targetStation() : (Entity *)nullptr) == other);
 
 		// A ship that is no longer a valid target is forgotten, and stays forgotten.
-		if (other != nullptr)  other->setStatus(OOEntityStatus::kDocked);
+		if (other != nullptr)  other->setStatus(oo::EntityStatus::kDocked);
 		OO_CHECK((ship != nullptr ? ship->thankedShip() : (Entity *)nullptr) == nullptr && (ship != nullptr ? ship->rememberedShip() : (Entity *)nullptr) == nullptr && (ship != nullptr ? ship->targetStation() : (Entity *)nullptr) == nullptr);
-		if (other != nullptr)  other->setStatus(OOEntityStatus::kInFlight);
+		if (other != nullptr)  other->setStatus(oo::EntityStatus::kInFlight);
 		OO_CHECK((ship != nullptr ? ship->thankedShip() : (Entity *)nullptr) == nullptr && (ship != nullptr ? ship->rememberedShip() : (Entity *)nullptr) == nullptr && (ship != nullptr ? ship->targetStation() : (Entity *)nullptr) == nullptr);
 
 		if (ship != nullptr)  ship->setThankedShip(other);
@@ -2096,13 +2096,13 @@ OO_TEST(slice24IsValidTarget)
 		OO_CHECK(!(ship != nullptr ? ship->isValidTarget(nullptr) : false));
 		OO_CHECK((ship != nullptr ? ship->isValidTarget(other) : false));
 		OO_CHECK(!(ship != nullptr ? ship->isValidTarget(plain) : false));		// neither a ship nor a wormhole
-		const OOEntityStatus invalid[] = { OOEntityStatus::kEnteringWitchspace, OOEntityStatus::kInHold, OOEntityStatus::kDocked, OOEntityStatus::kDead };
-		for (OOEntityStatus s : invalid)
+		const oo::EntityStatus invalid[] = { oo::EntityStatus::kEnteringWitchspace, oo::EntityStatus::kInHold, oo::EntityStatus::kDocked, oo::EntityStatus::kDead };
+		for (oo::EntityStatus s : invalid)
 		{
 			if (other != nullptr)  other->setStatus(s);
 			OO_CHECK(!(ship != nullptr ? ship->isValidTarget(other) : false));
 		}
-		if (other != nullptr)  other->setStatus(OOEntityStatus::kActive);
+		if (other != nullptr)  other->setStatus(oo::EntityStatus::kActive);
 		OO_CHECK((ship != nullptr ? ship->isValidTarget(other) : false));
 	}
 }
@@ -2132,12 +2132,12 @@ OO_TEST(slice24PrimaryTarget)
 		SetPosition24(other, kZeroHPVector);
 
 		// An invalid target: the unchecked getter keeps it, the checked one drops it.
-		if (other != nullptr)  other->setStatus(OOEntityStatus::kDead);
+		if (other != nullptr)  other->setStatus(oo::EntityStatus::kDead);
 		OO_CHECK(!(ship != nullptr ? ship->canStillTrackPrimaryTarget() : false));
 		OO_CHECK((ship != nullptr ? ship->primaryTargetWithoutValidityCheck() : (Entity *)nullptr) == other);
 		OO_CHECK((ship != nullptr ? ship->primaryTarget() : (Entity *)nullptr) == nullptr);
 		OO_CHECK((ship != nullptr ? ship->primaryTargetWithoutValidityCheck() : (Entity *)nullptr) == nullptr);
-		if (other != nullptr)  other->setStatus(OOEntityStatus::kInFlight);
+		if (other != nullptr)  other->setStatus(oo::EntityStatus::kInFlight);
 
 		// -removeTarget:nil drops the target without the lost-target events.
 		if (ship != nullptr)  ship->addTarget(other);
@@ -2165,11 +2165,11 @@ OO_TEST(slice24NoteLostTarget)
 		OO_CHECK((ship != nullptr ? ship->primaryTarget() : (Entity *)nullptr) == nullptr);
 
 		if (ship != nullptr)  ship->addTarget(other);
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kAttackTarget);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kAttackTarget);
 		SetFrustration24(ship, 5);
 		if (ship != nullptr)  ship->noteLostTargetAndGoIdle();
 		OO_CHECK((ship != nullptr ? ship->primaryTarget() : (Entity *)nullptr) == nullptr);
-		OO_CHECK((ship != nullptr ? ship->getBehaviour() : OOBehaviour{}) == OOBehaviour::kIdle && Frustration24(ship) == 0);
+		OO_CHECK((ship != nullptr ? ship->getBehaviour() : oo::Behaviour{}) == oo::Behaviour::kIdle && Frustration24(ship) == 0);
 	}
 }
 
@@ -2183,17 +2183,17 @@ OO_TEST(slice24IsFriendlyTo)
 		OO_CHECK((ship != nullptr ? ship->isFriendlyTo(ship) : false));
 		OO_CHECK(!(ship != nullptr ? ship->isFriendlyTo(other) : false));
 
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kPolice);
-		if (other != nullptr)  other->setScanClass(OOScanClass::kPolice);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kPolice);
+		if (other != nullptr)  other->setScanClass(oo::ScanClass::kPolice);
 		OO_CHECK((ship != nullptr ? ship->isFriendlyTo(other) : false));
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kThargoid);
-		if (other != nullptr)  other->setScanClass(OOScanClass::kThargoid);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kThargoid);
+		if (other != nullptr)  other->setScanClass(oo::ScanClass::kThargoid);
 		OO_CHECK((ship != nullptr ? ship->isFriendlyTo(other) : false));
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kMilitary);
-		if (other != nullptr)  other->setScanClass(OOScanClass::kMilitary);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kMilitary);
+		if (other != nullptr)  other->setScanClass(oo::ScanClass::kMilitary);
 		OO_CHECK((ship != nullptr ? ship->isFriendlyTo(other) : false));
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kNeutral);
-		if (other != nullptr)  other->setScanClass(OOScanClass::kNeutral);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kNeutral);
+		if (other != nullptr)  other->setScanClass(oo::ScanClass::kNeutral);
 		OO_CHECK(!(ship != nullptr ? ship->isFriendlyTo(other) : false));
 
 		std::shared_ptr<OOShipGroup> group = OOShipGroup::groupWithName(std::nullopt);	// held here
@@ -2212,10 +2212,10 @@ OO_TEST(slice24BehaviourAndDestination)
 		SetUp();
 		TestShip *ship = MakeLateSliceShip("navigator");
 		SetFrustration24(ship, 3);
-		if (ship != nullptr)  ship->setBehaviour((ship != nullptr ? ship->getBehaviour() : OOBehaviour{}));		// no change: frustration stays
+		if (ship != nullptr)  ship->setBehaviour((ship != nullptr ? ship->getBehaviour() : oo::Behaviour{}));		// no change: frustration stays
 		OO_CHECK(Frustration24(ship) == 3);
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kFleeTarget);	// a change is a good thing
-		OO_CHECK((ship != nullptr ? ship->getBehaviour() : OOBehaviour{}) == OOBehaviour::kFleeTarget && Frustration24(ship) == 0);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kFleeTarget);	// a change is a good thing
+		OO_CHECK((ship != nullptr ? ship->getBehaviour() : oo::Behaviour{}) == oo::Behaviour::kFleeTarget && Frustration24(ship) == 0);
 
 		SetDestination24(ship, make_HPvector(1, 2, 3));
 		OO_CHECK(Near24((ship != nullptr ? ship->destination() : HPVector{}), make_HPvector(1, 2, 3)));
@@ -2327,18 +2327,18 @@ OO_TEST(slice25NoTargetGoesIdle)
 		SetUp();
 		TestShip *ship = MakeLateSliceShip("aimless");
 
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kAttackTarget);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kAttackTarget);
 		SetFrustration25(ship, 2);
 		if (ship != nullptr)  ship->evasiveAction(0.1);
-		OO_CHECK((ship != nullptr ? ship->getBehaviour() : OOBehaviour{}) == OOBehaviour::kIdle && Frustration25(ship) == 0);
+		OO_CHECK((ship != nullptr ? ship->getBehaviour() : oo::Behaviour{}) == oo::Behaviour::kIdle && Frustration25(ship) == 0);
 
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kAttackTarget);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kAttackTarget);
 		OO_CHECK((ship != nullptr ? ship->trackPrimaryTarget(0.1, false) : 0.0) == 0.0);
-		OO_CHECK((ship != nullptr ? ship->getBehaviour() : OOBehaviour{}) == OOBehaviour::kIdle);
+		OO_CHECK((ship != nullptr ? ship->getBehaviour() : oo::Behaviour{}) == oo::Behaviour::kIdle);
 
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kAttackTarget);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kAttackTarget);
 		OO_CHECK((ship != nullptr ? ship->trackSideTarget(0.1, true) : 0.0) == 0.0);
-		OO_CHECK((ship != nullptr ? ship->getBehaviour() : OOBehaviour{}) == OOBehaviour::kIdle);
+		OO_CHECK((ship != nullptr ? ship->getBehaviour() : oo::Behaviour{}) == oo::Behaviour::kIdle);
 	}
 }
 
@@ -2354,14 +2354,14 @@ OO_TEST(slice25TargetOutOfRangeGoesIdle)
 		SetPosition24(other, make_HPvector(0, 0, 1000));
 
 		if (ship != nullptr)  ship->addTarget(other);
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kAttackTarget);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kAttackTarget);
 		OO_CHECK((ship != nullptr ? ship->trackPrimaryTarget(0.1, false) : 0.0) == 0.0);
-		OO_CHECK((ship != nullptr ? ship->getBehaviour() : OOBehaviour{}) == OOBehaviour::kIdle && (ship != nullptr ? ship->primaryTarget() : (Entity *)nullptr) == nullptr);
+		OO_CHECK((ship != nullptr ? ship->getBehaviour() : oo::Behaviour{}) == oo::Behaviour::kIdle && (ship != nullptr ? ship->primaryTarget() : (Entity *)nullptr) == nullptr);
 
 		if (ship != nullptr)  ship->addTarget(other);
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kAttackTarget);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kAttackTarget);
 		OO_CHECK((ship != nullptr ? ship->trackSideTarget(0.1, false) : 0.0) == 0.0);
-		OO_CHECK((ship != nullptr ? ship->getBehaviour() : OOBehaviour{}) == OOBehaviour::kIdle && (ship != nullptr ? ship->primaryTarget() : (Entity *)nullptr) == nullptr);
+		OO_CHECK((ship != nullptr ? ship->getBehaviour() : oo::Behaviour{}) == oo::Behaviour::kIdle && (ship != nullptr ? ship->primaryTarget() : (Entity *)nullptr) == nullptr);
 	}
 }
 
@@ -2474,7 +2474,7 @@ OO_TEST(slice26DefenseTargets)
 		OO_CHECK((ship != nullptr ? ship->allDefenseTargets() : std::vector<oo::EntityHold>()).size() == 2 && (ship != nullptr ? ship->defenseTargets() : std::vector<oo::EntityHold>()).size() == 2);
 
 		// A dead one is dropped by the validation.
-		if (a != nullptr)  a->setStatus(OOEntityStatus::kDead);
+		if (a != nullptr)  a->setStatus(oo::EntityStatus::kDead);
 		if (ship != nullptr)  ship->validateDefenseTargets();
 		OO_CHECK(!(ship != nullptr ? ship->isDefenseTarget(a) : false) && (ship != nullptr ? ship->isDefenseTarget(b) : false) && (ship != nullptr ? ship->defenseTargetCount() : 0) == 1);
 
@@ -2765,7 +2765,7 @@ OO_TEST(slice30ScoopingAndCollisions)
 		OO_CHECK(!(ship != nullptr ? ship->canScoop(other) : false));		// no cargo scoop
 		if (ship != nullptr)  ship->suppressTargetLost();		// does nothing
 		if (ship != nullptr)  ship->manageCollisions();		// nothing colliding: nothing happens
-		OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) == OOEntityStatus::kInFlight);
+		OO_CHECK((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
 	}
 }
 
@@ -2799,12 +2799,12 @@ OO_TEST(slice31DamageThatDoesNothing)
 		OO_CHECK(Energy31(ship) == 100);
 
 		// No scrapes while launching.
-		if (other != nullptr)  other->setStatus(OOEntityStatus::kLaunching);
+		if (other != nullptr)  other->setStatus(oo::EntityStatus::kLaunching);
 		if (ship != nullptr)  ship->takeScrapeDamage(10, other);
 		OO_CHECK(Energy31(ship) == 100);
 
 		// The dead take nothing.
-		if (ship != nullptr)  ship->setStatus(OOEntityStatus::kDead);
+		if (ship != nullptr)  ship->setStatus(oo::EntityStatus::kDead);
 		if (ship != nullptr)  ship->takeEnergyDamage(10, other, other, "");
 		if (ship != nullptr)  ship->takeScrapeDamage(10, other);
 		if (ship != nullptr)  ship->takeHeatDamage(10);
@@ -2904,7 +2904,7 @@ OO_TEST(slice32EscortFormation)
 		OO_CHECK(Near24((ship != nullptr ? ship->coordinatesForEscortPosition(1000) : HPVector{}), make_HPvector(5, 6, 7)));
 
 		// Escorts must share the scan class.
-		if (other != nullptr)  other->setScanClass(OOScanClass::kPolice);
+		if (other != nullptr)  other->setScanClass(oo::ScanClass::kPolice);
 		OO_CHECK(!(ship != nullptr ? ship->canAcceptEscort(other) : false));
 	}
 }
@@ -2915,9 +2915,9 @@ OO_TEST(slice32PoliceAreNotOffenders)
 	{
 		SetUp();
 		TestShip *ship = MakeLateSliceShip("copper");
-		if (ship != nullptr)  ship->setScanClass(OOScanClass::kPolice);
+		if (ship != nullptr)  ship->setScanClass(oo::ScanClass::kPolice);
 		if (ship != nullptr)  ship->markAsOffender(64);
-		if (ship != nullptr)  ship->markAsOffender(64, OOLegalStatusReason::kByScript);
+		if (ship != nullptr)  ship->markAsOffender(64, oo::LegalStatusReason::kByScript);
 		OO_CHECK((ship != nullptr ? ship->getBounty() : 0) == 0);
 	}
 }
@@ -2964,9 +2964,9 @@ OO_TEST(slice33SmallAccessors)
 		OO_CHECK(!(ship != nullptr ? ship->getTrackCloseContacts() : false));
 
 		// Mining needs the behaviour and a mining laser.
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kAttackMiningTarget);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kAttackMiningTarget);
 		OO_CHECK(!(ship != nullptr ? ship->isMining() : false));
-		if (ship != nullptr)  ship->setBehaviour(OOBehaviour::kIdle);
+		if (ship != nullptr)  ship->setBehaviour(oo::Behaviour::kIdle);
 		OO_CHECK(!(ship != nullptr ? ship->isMining() : false));
 
 		if (ship != nullptr)  ship->spawn("just-one-token");		// bad syntax: logged, nothing spawned
@@ -3058,9 +3058,9 @@ OO_TEST(slice34AlertConditionAndEvents)
 		OO_CHECK((ship != nullptr ? ship->alertCondition() : OOAlertCondition{}) == OOAlertCondition::kYellow);		// NPCs are never green
 		SetEnergy31(ship, 20, 100);
 		OO_CHECK((ship != nullptr ? ship->alertCondition() : OOAlertCondition{}) == OOAlertCondition::kRed);		// low on energy
-		if (ship != nullptr)  ship->setStatus(OOEntityStatus::kDocked);
+		if (ship != nullptr)  ship->setStatus(oo::EntityStatus::kDocked);
 		OO_CHECK((ship != nullptr ? ship->alertCondition() : OOAlertCondition{}) == OOAlertCondition::kDocked);
-		if (ship != nullptr)  ship->setStatus(OOEntityStatus::kInFlight);
+		if (ship != nullptr)  ship->setStatus(oo::EntityStatus::kInFlight);
 
 		// The ship is its own shader entity when it is not a subentity.
 		OO_CHECK((ship != nullptr ? ship->entityForShaderProperties() : (Entity *)nullptr) == ship);
@@ -3075,7 +3075,7 @@ OO_TEST(slice34AlertConditionAndEvents)
 		if (ship != nullptr)  ship->sendAIMessage("NOTHING");
 		if (ship != nullptr)  ship->reactToAIMessage("NOTHING", std::nullopt);
 		if (ship != nullptr)  ship->doNothing();
-		OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) == OOEntityStatus::kInFlight);
+		OO_CHECK((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
 	}
 }
 
@@ -3103,7 +3103,7 @@ OO_TEST(scriptMethodsEjectAndSpawnNothing)
 		OO_CHECK((ship != nullptr ? ship->ejectShipOfRole(std::nullopt) : (::ShipEntity *)nullptr) == nullptr);
 		// A count of zero spawns nothing and answers an empty list.
 		OO_CHECK((ship != nullptr ? ship->spawnShipsWithRole("trader", 0) : std::vector<oo::EntityHold>()).empty());
-		OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) == OOEntityStatus::kInFlight);
+		OO_CHECK((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
 	}
 }
 

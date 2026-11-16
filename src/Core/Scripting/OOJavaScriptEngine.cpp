@@ -1736,8 +1736,8 @@ bool OOJavaScriptEngineIsPlanet(Entity* entity) {
   return entity != nullptr && entity->isPlanet();
 }
 
-OOEntityStatus OOJavaScriptEngineStatus(Entity* entity) {
-  return entity != nullptr ? entity->status() : OOEntityStatus{};
+oo::EntityStatus OOJavaScriptEngineStatus(Entity* entity) {
+  return entity != nullptr ? entity->status() : oo::EntityStatus{};
 }
 
 }  // namespace
@@ -1757,7 +1757,7 @@ bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
   if (!OOJavaScriptEngineIsVisibleToScripts(entity)) return false;
   if (OOJavaScriptEngineIsShip(entity)) {
     if (OOJavaScriptEngineIsSubEntity(entity)) return false;
-    if (OOJavaScriptEngineStatus(entity) == OOEntityStatus::kCockpitDisplay)
+    if (OOJavaScriptEngineStatus(entity) == oo::EntityStatus::kCockpitDisplay)
       return false;  // Demo ship
     return true;
   } else if (OOJavaScriptEngineIsPlanet(entity)) {
@@ -1781,7 +1781,8 @@ bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
 bool JSEntityIsDemoShipPredicate(Entity* entity, void* /*parameter*/) {
   return (OOJavaScriptEngineIsVisibleToScripts(entity) &&
           OOJavaScriptEngineIsShip(entity) &&
-          OOJavaScriptEngineStatus(entity) == OOEntityStatus::kCockpitDisplay &&
+          OOJavaScriptEngineStatus(entity) ==
+              oo::EntityStatus::kCockpitDisplay &&
           !OOJavaScriptEngineIsSubEntity(entity));
 }
 

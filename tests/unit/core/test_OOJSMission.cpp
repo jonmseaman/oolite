@@ -58,7 +58,7 @@ public:
 class Entity : public oo::Object, public OOJSPrivateObject	// the game's root's bases (its JS glue)
 {
 public:
-	OOEntityStatus status();
+	oo::EntityStatus status();
 	JSValue jsValueInContext(JSContext *context) override;
 	void clearJSSelf(JSValueConst selfVal) override;
 };
@@ -78,8 +78,8 @@ public:
 	void setScriptTarget(::ShipEntity *ship);
 	oo::PList getMissionDestinations();
 	std::optional<std::string> missionScreenID();
-	OOGUIScreenID missionExitScreen();
-	void setMissionExitScreen(OOGUIScreenID screen);
+	oo::GUIScreenID missionExitScreen();
+	void setMissionExitScreen(oo::GUIScreenID screen);
 	void addMissionDestinationMarker(const oo::PList &marker);
 	oo::PList defaultMarker(OOSystemID system);
 	bool removeMissionDestinationMarker(const oo::PList &marker);
@@ -112,10 +112,10 @@ public:
 	void setMissionChoice(const std::optional<std::string> &newChoice, const std::optional<std::string> &keyPress, bool withEvent);
 
 	std::vector<std::string> _calls;
-	OOEntityStatus _status = {};
+	oo::EntityStatus _status = {};
 	oo::PList::Dict _destinations;
 	std::optional<std::string> _screenID;
-	OOGUIScreenID _exitScreen = {};
+	oo::GUIScreenID _exitScreen = {};
 	oo::PList _choice;
 	oo::PList _keyPress;
 	bool _removeFails = {};
@@ -269,7 +269,7 @@ JSValue TestEntityObject::oo_jsValueInContext(JSContext *context)
 
 void PlayerEntity::setScriptTarget(::ShipEntity *ship)  { (void)ship; }
 void ShipEntity::setEntityPersonalityInt(uint16_t value)  { _personality = value; }
-OOEntityStatus Entity::status()  { return static_cast<PlayerEntity *>(this)->_status; }
+oo::EntityStatus Entity::status()  { return static_cast<PlayerEntity *>(this)->_status; }
 oo::PList PlayerEntity::getMissionDestinations()  { return oo::PList(_destinations); }
 std::optional<std::string> PlayerEntity::missionScreenID()
 {
@@ -277,8 +277,8 @@ std::optional<std::string> PlayerEntity::missionScreenID()
 	if (_throwCxx)  throw std::runtime_error("cxx boom");
 	return _screenID;
 }
-OOGUIScreenID PlayerEntity::missionExitScreen()  { return _exitScreen; }
-void PlayerEntity::setMissionExitScreen(OOGUIScreenID screen)
+oo::GUIScreenID PlayerEntity::missionExitScreen()  { return _exitScreen; }
+void PlayerEntity::setMissionExitScreen(oo::GUIScreenID screen)
 {
 	_exitScreen = screen; _calls.push_back(oo::str::format("exitScreen(%d)", static_cast<int>(screen)));
 }
@@ -825,8 +825,8 @@ void SetUpContext()
 
 	// Kept for the life of the test.
 	sPlayer = new PlayerEntity;
-	sPlayer->_status = OOEntityStatus::kDocked;
-	sPlayer->_exitScreen = OOGUIScreenID::kStatus;
+	sPlayer->_status = oo::EntityStatus::kDocked;
+	sPlayer->_exitScreen = oo::GUIScreenID::kStatus;
 	gOOPlayer = sPlayer;
 	sUniverse = new StandInUniverse();
 	sUniverse->_gui = oo::test::NewRetained<GuiDisplayGen>();	// kept for the life of the test
@@ -908,7 +908,7 @@ OO_TEST(properties)
 	OO_CHECK_EVAL("(function () { mission.exitScreen = 'GUI_SCREEN_MARKET'; return mission.exitScreen; })()", "GUI_SCREEN_MARKET");
 	OO_CHECK_EVAL("(function () { mission.exitScreen = 'nonsense'; return mission.exitScreen; })()", "GUI_SCREEN_MAIN");	// the default
 	sPlayer->_calls.clear();
-	sPlayer->_exitScreen = OOGUIScreenID::kStatus;
+	sPlayer->_exitScreen = oo::GUIScreenID::kStatus;
 	OO_CHECK_EVAL("(function () { mission.screenID = 'x'; return mission.screenID; })()", "null");	// read-only
 }
 
@@ -1045,12 +1045,12 @@ OO_TEST(runScreenOtherSettings)
 	sUniverse->_calls.clear();
 
 	// In flight: interruptible, and no model by role.
-	sPlayer->_status = OOEntityStatus::kInFlight;
+	sPlayer->_status = oo::EntityStatus::kInFlight;
 	OO_CHECK_EVAL("mission.runScreen({model: 'cobra', allowInterrupt: false})", "true");
 	OO_CHECK_EQ(sLastWarning, std::string("Mission.runScreen: model cannot be displayed while in flight."));
 	OO_CHECK_CALLS(sUniverse->_calls, "removeDemoShips");
 	OO_CHECK(Take(sPlayer->_calls).find("allowInterrupt") != std::string::npos);
-	sPlayer->_status = OOEntityStatus::kDocked;
+	sPlayer->_status = oo::EntityStatus::kDocked;
 
 	// The callback with a this of its own; an exception in it is logged and ignored.
 	OO_CHECK_EVAL("mission.runScreen({}, function () { this.called = true; }, theScript)", "true");
@@ -1074,10 +1074,10 @@ OO_TEST(runScreenErrors)
 	OO_CHECK_EVAL("mission.runScreen()", "threw: bad arguments: mission.runScreen(0) - / parameter object");
 	OO_CHECK_EVAL("mission.runScreen({}, 'not a function')", "threw: bad arguments: mission.runScreen(1) - / function");
 	OO_CHECK_CALLS(sPlayer->_calls, "");
-	sPlayer->_status = OOEntityStatus::kStartGame;
+	sPlayer->_status = oo::EntityStatus::kStartGame;
 	OO_CHECK_EVAL("mission.runScreen({title: 'x'})", "false");	// not during the intro
 	OO_CHECK_CALLS(sPlayer->_calls, "");
-	sPlayer->_status = OOEntityStatus::kDocked;
+	sPlayer->_status = oo::EntityStatus::kDocked;
 	OO_CHECK_EQ(sLimiterPauses, 0);
 }
 
@@ -1088,12 +1088,12 @@ OO_TEST(runShipLibrary)
 	sPlayer->_calls.clear();
 	OO_CHECK_EVAL("mission.runShipLibrary()", "true");
 	OO_CHECK_CALLS(sPlayer->_calls, "introFirstGo(NO)");
-	sPlayer->_status = OOEntityStatus::kInFlight;
+	sPlayer->_status = oo::EntityStatus::kInFlight;
 	sLastWarning.clear();
 	OO_CHECK_EVAL("mission.runShipLibrary()", "false");
 	OO_CHECK_EQ(sLastWarning, std::string("Mission.runShipLibrary: must be docked."));
 	OO_CHECK_CALLS(sPlayer->_calls, "");
-	sPlayer->_status = OOEntityStatus::kDocked;
+	sPlayer->_status = oo::EntityStatus::kDocked;
 }
 
 

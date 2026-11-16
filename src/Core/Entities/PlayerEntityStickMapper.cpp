@@ -156,7 +156,7 @@ void PlayerEntity::setGuiToStickMapperScreen(unsigned skip,
   tabStop[2] = 400;
   gui->setTabStops(tabStop);
 
-  gui_screen = OOGUIScreenID::kStickMapper;
+  gui_screen = oo::GUIScreenID::kStickMapper;
   gui->clear();
   gui->setTitle(OO_DESC("stickmapper-header"));
 
@@ -207,7 +207,7 @@ void PlayerEntity::setGuiToStickMapperScreen(unsigned skip,
   }
   if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
     UNIVERSE->getGameView()->suppressKeysUntilKeyUp();
-  gui->setForegroundTextureKey(std::string(status() == OOEntityStatus::kDocked
+  gui->setForegroundTextureKey(std::string(status() == oo::EntityStatus::kDocked
                                                ? "docked_overlay"
                                                : "paused_overlay"));
   gui->setBackgroundTextureKey(std::string("settings"));
@@ -298,7 +298,7 @@ void PlayerEntity::updateFunction(const oo::PList& hwDict) {
   waitingForStickCallback = false;
 
   // Right time and the right place?
-  if (gui_screen != OOGUIScreenID::kStickMapper) {
+  if (gui_screen != oo::GUIScreenID::kStickMapper) {
     OO_LOG("joystick.configure.error",
            "{} called when not on stick mapper screen.", __PRETTY_FUNCTION__);
     return;

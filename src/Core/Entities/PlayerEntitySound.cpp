@@ -249,7 +249,7 @@ void PlayerEntity::destroySound() {
 
 void PlayerEntity::playInterfaceBeep(const std::string& beepKey) {
 #if OOLITE_WINDOWS
-  if (status() == OOEntityStatus::kStartGame) {
+  if (status() == oo::EntityStatus::kStartGame) {
     return;
   }
 #endif

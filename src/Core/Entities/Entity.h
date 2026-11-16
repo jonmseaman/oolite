@@ -215,9 +215,9 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
   void setDistanceTravelled(GLfloat value);
 
   // setStatus(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS (EntityVirtualMembers.h)
-  OOEntityStatus status();
+  oo::EntityStatus status();
 
-  void setScanClass(OOScanClass sClass);
+  void setScanClass(oo::ScanClass sClass);
   // getScanClass(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
   // (EntityVirtualMembers.h)
 
@@ -345,7 +345,7 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
                     isImmuneToBreakPatternHide : 1 = 0,
                     isExplicitlyNotMainStation : 1 = 0, isVisualEffect : 1 = 0;
 
-  OOScanClass scanClass = {};
+  oo::ScanClass scanClass = {};
 
   GLfloat zero_distance = {};
   GLfloat cam_zero_distance = {};
@@ -407,7 +407,7 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
   std::size_t _sessionID = {};
 
   std::weak_ptr<Entity> _owner;  // the owner's C++ part
-  OOEntityStatus _status = {};
+  oo::EntityStatus _status = {};
 };
 
 namespace cxx {
@@ -429,11 +429,11 @@ class OOSubEntityInterface {
 // C++ forms, defined in OOConstToString.cpp: std::string results (never nil),
 // const std::string & parameters (nil arrived as "" and matched nothing: the
 // defaults).
-std::string OOStringFromEntityStatus(OOEntityStatus status);
-OOEntityStatus OOEntityStatusFromString(const std::string& string);
+std::string OOStringFromEntityStatus(oo::EntityStatus status);
+oo::EntityStatus OOEntityStatusFromString(const std::string& string);
 
-std::string OOStringFromScanClass(OOScanClass scanClass);
-OOScanClass OOScanClassFromString(const std::string& string);
+std::string OOStringFromScanClass(oo::ScanClass scanClass);
+oo::ScanClass OOScanClassFromString(const std::string& string);
 
 /*	The entities' shader binding member table (EntityShaderBindings.cpp):
    the binding a uniform bound to the property name on this entity makes,

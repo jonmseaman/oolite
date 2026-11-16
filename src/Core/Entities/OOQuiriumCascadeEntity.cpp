@@ -47,8 +47,8 @@ bool OOQuiriumCascadeEntity::initQuiriumCascadeFromShip(::ShipEntity* ship) {
   {
     setPosition((ship != nullptr ? ship->getPosition() : HPVector{}));
 
-    setStatus(OOEntityStatus::kEffect);
-    scanClass = OOScanClass::kMine;
+    setStatus(oo::EntityStatus::kEffect);
+    scanClass = oo::ScanClass::kMine;
 
     setOwner(ship != nullptr ? oo::LiveOwner(ship)
                              : nullptr);  // [ship owner]'s C++ entity

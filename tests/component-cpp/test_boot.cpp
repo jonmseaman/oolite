@@ -63,7 +63,7 @@ OO_TEST(the_system_is_empty) {
 
 OO_TEST(the_player_is_in_flight) {
   Game game = Game::current();
-  OO_CHECK(game.player()->status() == OOEntityStatus::kInFlight);
+  OO_CHECK(game.player()->status() == oo::EntityStatus::kInFlight);
   OO_CHECK_EQ(game.eval("player.ship.docked ? 1 : 0"), 0.0);
 }
 

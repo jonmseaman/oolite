@@ -303,7 +303,7 @@ class Universe : public oo::Object {
   GLfloat sun_diffuse[4] = {};
   GLfloat sun_specular[4] = {};
 
-  OOViewID viewDirection = {};
+  oo::ViewID viewDirection = {};
 
   OOMatrix viewMatrix = {};
 
@@ -769,7 +769,7 @@ class Universe : public oo::Object {
 
   // Setting the view direction, GUI view mode, custom sounds, screen
   // textures, messages and comms, delayed messages, repopulating.
-  void setViewDirection(OOViewID vd);
+  void setViewDirection(oo::ViewID vd);
   void enterGUIViewModeWithMouseInteraction(bool mouseInteraction);
   std::optional<std::string> soundNameForCustomSoundKey(
       const std::string& soundKey);

@@ -180,7 +180,7 @@ inline constexpr auto MAX_LANDING_SPEED2 =
   0.995  // cos(5 degrees) is close enough in most cases for navigation
 inline constexpr auto MAX_COS2 = (MAX_COS * MAX_COS);
 
-#include "OOBehaviour.h"
+#include "Behaviour.h"
 
 /*typedef enum
 {
@@ -354,7 +354,7 @@ class ShipEntity : public OOEntityWithDrawable,
   std::vector<Vector> getStarboardWeaponOffset();
   bool getIsFrangible();
   bool suppressFlightNotifications();
-  OOScanClass getScanClass() override;
+  oo::ScanClass getScanClass() override;
   bool canCollide() override;
   bool checkCloseCollisionWith(Entity* other) override;
   BoundingBox findSubentityBoundingBox();
@@ -648,7 +648,7 @@ class ShipEntity : public OOEntityWithDrawable,
   OOSystemID destinationSystem();
   void setHomeSystem(OOSystemID s);
   void setDestinationSystem(OOSystemID s);
-  void setStatus(OOEntityStatus stat) override;
+  void setStatus(oo::EntityStatus stat) override;
   void setLaunchDelay(double delay);
   std::optional<std::vector<std::shared_ptr<OOCharacter>>> getCrew();
   void setCrew(const std::optional<std::vector<std::shared_ptr<OOCharacter>>>&
@@ -677,7 +677,8 @@ class ShipEntity : public OOEntityWithDrawable,
   void setThrust(double amount);
   void setThrustForDemo(float factor);
   virtual void setBounty(OOCreditsQuantity amount);
-  virtual void setBounty(OOCreditsQuantity amount, OOLegalStatusReason reason);
+  virtual void setBounty(OOCreditsQuantity amount,
+                         oo::LegalStatusReason reason);
   virtual void setBounty(OOCreditsQuantity amount, const std::string& reason);
   virtual OOCreditsQuantity getBounty();
   virtual int legalStatus();
@@ -744,11 +745,11 @@ class ShipEntity : public OOEntityWithDrawable,
   bool getIsHulk();
   void setHulk(bool isNowHulk);
   virtual void noteTakingDamage(double amount, Entity* entity,
-                                OOShipDamageType type);
-  void noteKilledBy(Entity* whom, OOShipDamageType type);
+                                oo::ShipDamageType type);
+  void noteKilledBy(Entity* whom, oo::ShipDamageType type);
 
   // destruction, rescaling, cargo debris, explosions, energy blast.
-  virtual void getDestroyedBy(Entity* whom, OOShipDamageType type);
+  virtual void getDestroyedBy(Entity* whom, oo::ShipDamageType type);
   void rescaleBy(GLfloat factor) override;
   void rescaleBy(GLfloat factor, bool writeToCache) override;
   void releaseCargoPodsDebris();
@@ -814,8 +815,8 @@ class ShipEntity : public OOEntityWithDrawable,
   virtual void noteLostTarget();
   void noteLostTargetAndGoIdle();
   void noteTargetDestroyed(::ShipEntity* target);
-  OOBehaviour getBehaviour();
-  void setBehaviour(OOBehaviour cond);
+  oo::Behaviour getBehaviour();
+  void setBehaviour(oo::Behaviour cond);
   HPVector destination();
   HPVector getCoordinates();
   void setCoordinate(HPVector coord);
@@ -937,7 +938,7 @@ class ShipEntity : public OOEntityWithDrawable,
   // nearest stations.
   bool witchspaceLeavingEffects();
   virtual void markAsOffender(int offence_value);
-  virtual void markAsOffender(int offence_value, OOLegalStatusReason reason);
+  virtual void markAsOffender(int offence_value, oo::LegalStatusReason reason);
   void switchLightsOn();
   void switchLightsOff();
   bool lightsActive();
@@ -1228,7 +1229,7 @@ class ShipEntity : public OOEntityWithDrawable,
   GLfloat stick_roll = {};     // stick roll
   GLfloat stick_pitch = {};    // stick pitch
   GLfloat stick_yaw = {};      // stick yaw
-  OOBehaviour behaviour = {};  // ship's behavioural state
+  oo::Behaviour behaviour = {};  // ship's behavioural state
 
   BoundingBox totalBoundingBox = {};  // records ship configuration
 
@@ -1484,7 +1485,7 @@ class ShipEntity : public OOEntityWithDrawable,
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   // DEBUGGING
-  OOBehaviour debugLastBehaviour = {};
+  oo::Behaviour debugLastBehaviour = {};
 #endif
 
   uint16_t entity_personality =
@@ -1635,8 +1636,8 @@ GLfloat getWeaponRangeFromType(OOWeaponType weapon_type);
 bool isWeaponNone(OOWeaponType weapon);
 
 // C++ forms, defined in OOConstToString.cpp.
-std::string OOStringFromBehaviour(OOBehaviour behaviour);
-std::string OOStringFromShipDamageType(OOShipDamageType type);
+std::string OOStringFromBehaviour(oo::Behaviour behaviour);
+std::string OOStringFromShipDamageType(oo::ShipDamageType type);
 
 // Weapon identifiers and alert-condition names; nullopt where the old form gave
 // nil.

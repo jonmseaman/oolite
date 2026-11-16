@@ -465,7 +465,7 @@ Row Try(Game& game, const Definition& d, std::uint32_t seed, bool* clean) {
   player->setSpeed(0.0);
   game.eval("player.ship.energy = player.ship.maxEnergy");
   Row r = d.kind == "ship" ? TryShip(game, d, seed, clean) : TryEquipment(game, d, seed);
-  if (player->status() != OOEntityStatus::kInFlight) {
+  if (player->status() != oo::EntityStatus::kInFlight) {
     *clean = false;  // the next try would not start where this one did
     r.outcome = "failed";
     r.evidence = std::format("the player was {} after it",

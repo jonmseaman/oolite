@@ -41,35 +41,35 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "AI.h"
+#include "CompassMode.h"
 #include "DockEntity.h"
 #include "Entity.h"
 #include "EntityHelpers.h"
 #include "EntityPListForeign.h"
+#include "EntityStatus.h"
+#include "GUIScreenID.h"
 #include "GameController.h"
 #include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
+#include "LongRangeChartMode.h"
 #include "MyOpenGLView.h"
 #include "OOCommodityMarket.h"
-#include "OOCompassMode.h"
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
 #include "OODebugFlags.h"
 #include "OODebugMonitor.h"
 #include "OODebugSupport.h"
 #include "OODescription.h"
-#include "OOEntityStatus.h"
 #include "OOEnumFlags.h"
 #include "OOEquipmentType.h"
 #include "OOFastArithmetic.h"
 #include "OOFoundation.h"
 #include "OOFullScreenController.h"
-#include "OOGUIScreenID.h"
 #include "OOJSEngineCore.h"
 #include "OOJSGuiScreenKeyDefinition.h"
 #include "OOJSPropID.h"
 #include "OOJoystickManager.h"
 #include "OOLoggingExtended.h"
-#include "OOLongRangeChartMode.h"
 #include "OOMathsBase.h"
 #include "OOMouseInteractionMode.h"
 #include "OOMusicController.h"
@@ -81,7 +81,6 @@ MA 02110-1301, USA.
 #include "OOSystemDescriptionManager.h"
 #include "OOTypes.h"
 #include "OOVector.h"
-#include "OOViewID.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityContracts.h"
 #include "PlayerEntityKeyMapper.h"
@@ -93,6 +92,7 @@ MA 02110-1301, USA.
 #include "SpeechSynthesizer.h"
 #include "StationEntity.h"
 #include "Universe.h"
+#include "ViewID.h"
 #include "legacy_random.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
@@ -203,9 +203,9 @@ static NSPoint centre_at_mouse_click;
 static std::size_t searchStringLength;
 static double timeLastKeyPress;
 // static OOGUIRow			oldSelection;
-static OOViewID saved_view_direction;
+static oo::ViewID saved_view_direction;
 static double saved_script_time;
-static OOGUIScreenID saved_gui_screen;
+static oo::GUIScreenID saved_gui_screen;
 static OOWeaponFacing saved_weapon_facing;
 static int pressedArrow = 0;
 static bool mouse_x_axis_map_to_yaw = false;
@@ -735,28 +735,28 @@ void PlayerEntity::getPollControls(double delta_t) {
       exceptionContext = "pollApplicationControls";
       pollApplicationControls();  // quit command-f etc.
       switch (status()) {
-        case OOEntityStatus::kWitchspaceCountdown:
-        case OOEntityStatus::kInFlight:
+        case oo::EntityStatus::kWitchspaceCountdown:
+        case oo::EntityStatus::kInFlight:
           exceptionContext = "pollFlightControls";
           pollFlightControls(delta_t);
           break;
 
-        case OOEntityStatus::kDead:
+        case oo::EntityStatus::kDead:
           exceptionContext = "pollGameOverControls";
           pollGameOverControls(delta_t);
           break;
 
-        case OOEntityStatus::kAutopilotEngaged:
+        case oo::EntityStatus::kAutopilotEngaged:
           exceptionContext = "pollAutopilotControls";
           pollAutopilotControls(delta_t);
           break;
 
-        case OOEntityStatus::kDocked:
+        case oo::EntityStatus::kDocked:
           exceptionContext = "pollDockedControls";
           pollDockedControls(delta_t);
           break;
 
-        case OOEntityStatus::kStartGame:
+        case oo::EntityStatus::kStartGame:
           exceptionContext = "pollDemoControls";
           pollDemoControls(delta_t);
           break;
@@ -904,8 +904,8 @@ void PlayerEntity::targetNewSystem(int direction) {
 }
 
 void PlayerEntity::switchToMainView() {
-  OOGUIScreenID oldScreen = gui_screen;
-  gui_screen = OOGUIScreenID::kMain;
+  oo::GUIScreenID oldScreen = gui_screen;
+  gui_screen = oo::GUIScreenID::kMain;
   if (showDemoShips) {
     setShowDemoShips(false);
     if (UNIVERSE != nullptr) UNIVERSE->removeDemoShips();
@@ -921,7 +921,7 @@ void PlayerEntity::switchToMainView() {
   noteGUIDidChangeFrom(oldScreen, gui_screen);
 }
 
-void PlayerEntity::noteSwitchToView(OOViewID toView, OOViewID fromView) {
+void PlayerEntity::noteSwitchToView(oo::ViewID toView, oo::ViewID fromView) {
   switchToThisView(toView, fromView, false,
                    true);  // no extra processing needed!
 }
@@ -940,7 +940,7 @@ void PlayerEntity::beginWitchspaceCountdown(int spin_time) {
         witchspaceCountdown = spin_time;
       }
     }
-    setStatus(OOEntityStatus::kWitchspaceCountdown);
+    setStatus(oo::EntityStatus::kWitchspaceCountdown);
     playStandardHyperspace();
     // say it!
     if (UNIVERSE != nullptr) UNIVERSE->clearPreviousMessage();
@@ -972,8 +972,8 @@ void PlayerEntity::beginWitchspaceCountdown() {
 }
 
 void PlayerEntity::cancelWitchspaceCountdown() {
-  if (status() == OOEntityStatus::kWitchspaceCountdown) {
-    setStatus(OOEntityStatus::kInFlight);
+  if (status() == oo::EntityStatus::kWitchspaceCountdown) {
+    setStatus(oo::EntityStatus::kInFlight);
     playHyperspaceAborted();
   }
   // say it!
@@ -992,11 +992,11 @@ void PlayerEntity::pollApplicationControls() {
   ::GameController* gameController =
       (UNIVERSE != nullptr ? UNIVERSE->gameController() : nullptr);
 
-  bool onTextEntryScreen = (gui_screen == OOGUIScreenID::kLongRangeChart) ||
-                           (gui_screen == OOGUIScreenID::kMission) ||
-                           (gui_screen == OOGUIScreenID::kSave) ||
-                           (gui_screen == OOGUIScreenID::kOXZManager ||
-                            (gui_screen == OOGUIScreenID::kKeyboardEntry));
+  bool onTextEntryScreen = (gui_screen == oo::GUIScreenID::kLongRangeChart) ||
+                           (gui_screen == oo::GUIScreenID::kMission) ||
+                           (gui_screen == oo::GUIScreenID::kSave) ||
+                           (gui_screen == oo::GUIScreenID::kOXZManager ||
+                            (gui_screen == oo::GUIScreenID::kKeyboardEntry));
 
   try {
     //  command-key controls
@@ -1022,7 +1022,7 @@ void PlayerEntity::pollApplicationControls() {
     }
 
     // handle pressing Q or [esc] in error-handling mode
-    if (status() == OOEntityStatus::kHandlingError) {
+    if (status() == oo::EntityStatus::kHandlingError) {
       exceptionContext = "error handling mode";
       if ((gameView != nullptr ? gameView->isDown(113) : false) ||
           (gameView != nullptr ? gameView->isDown(81) : false) ||
@@ -1037,10 +1037,10 @@ void PlayerEntity::pollApplicationControls() {
     if ((gameController != nullptr ? gameController->isGamePaused() : false)) {
       // What's the status?
       switch (status()) {
-        case OOEntityStatus::kWitchspaceCountdown:
-        case OOEntityStatus::kInFlight:
-        case OOEntityStatus::kAutopilotEngaged:
-        case OOEntityStatus::kDocked:
+        case oo::EntityStatus::kWitchspaceCountdown:
+        case oo::EntityStatus::kInFlight:
+        case oo::EntityStatus::kAutopilotEngaged:
+        case oo::EntityStatus::kDocked:
           // Pause is handled inside their pollControls, no need to unpause.
           break;
 
@@ -1185,7 +1185,7 @@ void PlayerEntity::pollApplicationControls() {
       if (!hide_hud_pressed) {
         ::HeadUpDisplay* theHUD = getHud();
         theHUD->setHidden(!theHUD->isHidden());
-        if (gui_screen == OOGUIScreenID::kStatus) {
+        if (gui_screen == oo::GUIScreenID::kStatus) {
           // ensure refresh of status page screen if looking at it
           setGuiToStatusScreen();
         }
@@ -1219,9 +1219,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                        : false);
     double speed_delta = SHIP_THRUST_FACTOR * thrust;
 
-    if (!paused && gui_screen == OOGUIScreenID::kMission) {
+    if (!paused && gui_screen == oo::GUIScreenID::kMission) {
       exceptionContext = "mission screen";
-      OOViewID view = OOViewID::kNone;
+      oo::ViewID view = oo::ViewID::kNone;
 
       NSPoint virtualView = NSZeroPoint;
       double view_threshold = 0.5;
@@ -1239,22 +1239,22 @@ void PlayerEntity::pollFlightControls(double delta_t) {
       if (checkKeyPress(n_key_view_forward) ||
           (virtualView.y < -view_threshold) ||
           joyButtonState[BUTTON_VIEWFORWARD]) {
-        view = OOViewID::kForward;
+        view = oo::ViewID::kForward;
       }
       if (checkKeyPress(n_key_view_aft) | (virtualView.y > view_threshold) ||
           joyButtonState[BUTTON_VIEWAFT]) {
-        view = OOViewID::kAft;
+        view = oo::ViewID::kAft;
       }
       if (checkKeyPress(n_key_view_port) || (virtualView.x < -view_threshold) ||
           joyButtonState[BUTTON_VIEWPORT]) {
-        view = OOViewID::kPort;
+        view = oo::ViewID::kPort;
       }
       if (checkKeyPress(n_key_view_starboard) ||
           (virtualView.x > view_threshold) ||
           joyButtonState[BUTTON_VIEWSTARBOARD]) {
-        view = OOViewID::kStarboard;
+        view = oo::ViewID::kStarboard;
       }
-      if (view == OOViewID::kNone) {
+      if (view == oo::ViewID::kNone) {
         // still in mission screen, process the input.
         pollDemoControls(delta_t);
       } else {
@@ -1320,7 +1320,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                     ? gameView->mouseWheelState()
                     : MouseWheelStatus::kNeutral) == MouseWheelStatus::kUp) &&
               ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection()
-                                    : OOViewID{}) <= OOViewID::kStarboard ||
+                                    : oo::ViewID{}) <= oo::ViewID::kStarboard ||
                !(gameView != nullptr ? gameView->isCapsLockOn() : false)))) &&
             (flightSpeed < maxFlightSpeed) && (!afterburner_engaged)) {
           flightSpeed += static_cast<GLfloat>(speed_delta * delta_t *
@@ -1334,7 +1334,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                     ? gameView->mouseWheelState()
                     : MouseWheelStatus::kNeutral) == MouseWheelStatus::kDown) &&
               ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection()
-                                    : OOViewID{}) <= OOViewID::kStarboard ||
+                                    : oo::ViewID{}) <= oo::ViewID::kStarboard ||
                !(gameView != nullptr ? gameView->isCapsLockOn() : false)))) &&
             (!afterburner_engaged)) {
           flightSpeed -= static_cast<GLfloat>(speed_delta * delta_t *
@@ -1392,7 +1392,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
               ((gameView != nullptr ? gameView->isDown(gvMouseLeftButton)
                                     : false)) &&
               ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection()
-                                    : OOViewID{}) <= OOViewID::kStarboard ||
+                                    : oo::ViewID{}) <= oo::ViewID::kStarboard ||
                !(gameView != nullptr ? gameView->isCapsLockOn() : false))) ||
              joyButtonState[BUTTON_FIRE]) &&
             (shot_time > weapon_recharge_rate)) {
@@ -1830,7 +1830,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             hasHyperspaceMotor()) {
           // look for the 'h' key
           if (!hyperspace_pressed) {
-            if (status() == OOEntityStatus::kWitchspaceCountdown) {
+            if (status() == oo::EntityStatus::kWitchspaceCountdown) {
               cancelWitchspaceCountdown();
               if (galactic_witchjump) {
                 galactic_witchjump = false;
@@ -1858,7 +1858,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             (hasEquipmentItemProviding("EQ_GAL_DRIVE"))) {
           // look for the 'g' key
           if (!galhyperspace_pressed) {
-            if (status() == OOEntityStatus::kWitchspaceCountdown) {
+            if (status() == oo::EntityStatus::kWitchspaceCountdown) {
               cancelWitchspaceCountdown();
               if (galactic_witchjump) {
                 galactic_witchjump = false;
@@ -1879,7 +1879,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
               else
                 witchspaceCountdown = DEFAULT_HYPERSPACE_SPIN_TIME;
 
-              setStatus(OOEntityStatus::kWitchspaceCountdown);
+              setStatus(oo::EntityStatus::kWitchspaceCountdown);
               playGalacticHyperspace();
               // say it!
               if (UNIVERSE != nullptr)
@@ -1959,7 +1959,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
       // check options menu request
       exceptionContext = "options menu";
       if ((checkKeyPress(n_key_gui_screen_options)) &&
-          (gui_screen != OOGUIScreenID::kOptions) &&
+          (gui_screen != oo::GUIScreenID::kOptions) &&
           (gameView != nullptr ? gameView->getAllowingStringInput()
                                : StringInput{}) == StringInput::kNo) {
         if (gameView != nullptr) gameView->clearKeys();
@@ -1970,15 +1970,15 @@ void PlayerEntity::pollFlightControls(double delta_t) {
       pollCustomViewControls();  // allow custom views during pause
 #endif
 
-      if (gui_screen == OOGUIScreenID::kOptions ||
-          gui_screen == OOGUIScreenID::kGameOptions ||
-          gui_screen == OOGUIScreenID::kStickMapper ||
-          gui_screen == OOGUIScreenID::kStickProfile ||
-          gui_screen == OOGUIScreenID::kKeyboard ||
-          gui_screen == OOGUIScreenID::kKeyboardConfirmClear ||
-          gui_screen == OOGUIScreenID::kKeyboardConfig ||
-          gui_screen == OOGUIScreenID::kKeyboardEntry ||
-          gui_screen == OOGUIScreenID::kKeyboardLayout) {
+      if (gui_screen == oo::GUIScreenID::kOptions ||
+          gui_screen == oo::GUIScreenID::kGameOptions ||
+          gui_screen == oo::GUIScreenID::kStickMapper ||
+          gui_screen == oo::GUIScreenID::kStickProfile ||
+          gui_screen == oo::GUIScreenID::kKeyboard ||
+          gui_screen == oo::GUIScreenID::kKeyboardConfirmClear ||
+          gui_screen == oo::GUIScreenID::kKeyboardConfig ||
+          gui_screen == oo::GUIScreenID::kKeyboardEntry ||
+          gui_screen == oo::GUIScreenID::kKeyboardLayout) {
         if ((UNIVERSE != nullptr ? UNIVERSE->pauseMessageVisible() : false))
           UNIVERSE->messageGUI()->leaveLastLine();
         else
@@ -2077,7 +2077,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
 
       if ((checkKeyPress(n_key_gui_arrow_left) ||
            checkKeyPress(n_key_gui_arrow_right)) &&
-          gui_screen != OOGUIScreenID::kGameOptions &&
+          gui_screen != oo::GUIScreenID::kGameOptions &&
           (UNIVERSE != nullptr ? UNIVERSE->getDisplayFPS() : false) &&
           (gameView != nullptr ? gameView->getAllowingStringInput()
                                : StringInput{}) == StringInput::kNo) {
@@ -2118,8 +2118,8 @@ void PlayerEntity::pollFlightControls(double delta_t) {
     exceptionContext = "pause";
     // Pause game 'p'
     if ((checkKeyPress(n_key_pausebutton) || joyButtonState[BUTTON_PAUSE]) &&
-        gui_screen != OOGUIScreenID::kLongRangeChart &&
-        gui_screen != OOGUIScreenID::kMission &&
+        gui_screen != oo::GUIScreenID::kLongRangeChart &&
+        gui_screen != oo::GUIScreenID::kMission &&
         (gameView != nullptr ? gameView->getAllowingStringInput()
                              : StringInput{}) == StringInput::kNo) {
       // look for the 'p' key
@@ -2131,28 +2131,28 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           // backgrounds. No gui switching events will be triggered while still
           // paused.
           switch (saved_gui_screen) {
-            case OOGUIScreenID::kStatus:
+            case oo::GUIScreenID::kStatus:
               setGuiToStatusScreen();
               break;
-            case OOGUIScreenID::kLongRangeChart:
+            case oo::GUIScreenID::kLongRangeChart:
               setGuiToLongRangeChartScreen();
               break;
-            case OOGUIScreenID::kShortRangeChart:
+            case oo::GUIScreenID::kShortRangeChart:
               setGuiToShortRangeChartScreen();
               break;
-            case OOGUIScreenID::kManifest:
+            case oo::GUIScreenID::kManifest:
               setGuiToManifestScreen();
               break;
-            case OOGUIScreenID::kMarket:
+            case oo::GUIScreenID::kMarket:
               setGuiToMarketScreen();
               break;
-            case OOGUIScreenID::kMarketInfo:
+            case oo::GUIScreenID::kMarketInfo:
               setGuiToMarketInfoScreen();
               break;
-            case OOGUIScreenID::kSystemData:
+            case oo::GUIScreenID::kSystemData:
               // Do not reset planet rotation if we are already in the system
               // info screen!
-              if (gui_screen != OOGUIScreenID::kSystemData)
+              if (gui_screen != oo::GUIScreenID::kSystemData)
                 setGuiToSystemDataScreen();
               break;
             default:
@@ -2167,7 +2167,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           currentWeaponFacing = saved_weapon_facing;
           // make sure the light comes from the right direction after resuming
           // from pause!
-          if (saved_gui_screen == OOGUIScreenID::kSystemData) {
+          if (saved_gui_screen == oo::GUIScreenID::kSystemData) {
             if (UNIVERSE != nullptr)
               UNIVERSE->setMainLightPosition(_sysInfoLight);
           }
@@ -2176,7 +2176,8 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             UNIVERSE->gameController()->setGamePaused(false);
         } else {
           saved_view_direction =
-              (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{});
+              (UNIVERSE != nullptr ? UNIVERSE->getViewDirection()
+                                   : oo::ViewID{});
           saved_script_time = script_time;
           saved_gui_screen = gui_screen;
           saved_weapon_facing = currentWeaponFacing;
@@ -2212,19 +2213,19 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
   GUI_ROW_INIT(gui);
 
   // deal with string inputs as necessary
-  if (gui_screen == OOGUIScreenID::kLongRangeChart) {
+  if (gui_screen == oo::GUIScreenID::kLongRangeChart) {
     if (gameView != nullptr) gameView->setStringInput(StringInput::kAlpha);
-  } else if (gui_screen == OOGUIScreenID::kSave) {
+  } else if (gui_screen == oo::GUIScreenID::kSave) {
     if (gameView != nullptr) gameView->setStringInput(StringInput::kLoadSave);
-  } else if (gui_screen == OOGUIScreenID::kMission && _missionTextEntry) {
+  } else if (gui_screen == oo::GUIScreenID::kMission && _missionTextEntry) {
     if (gameView != nullptr) gameView->setStringInput(StringInput::kAll);
-  } else if (gui_screen == OOGUIScreenID::kKeyboardEntry) {
+  } else if (gui_screen == oo::GUIScreenID::kKeyboardEntry) {
     if (gameView != nullptr) gameView->setStringInput(StringInput::kAll);
   }
 #if 0
 	// at the moment this function is never called for OOGUIScreenID::kOXZManager
 	// but putting this here in case we do later
-	else if (gui_screen == OOGUIScreenID::kOXZManager && ::OOOXZManager::sharedManager()->isAcceptingTextInput()) {
+	else if (gui_screen == oo::GUIScreenID::kOXZManager && ::OOOXZManager::sharedManager()->isAcceptingTextInput()) {
 		if (gameView != nullptr) gameView->setStringInput(StringInput::kAll);
 	}
 #endif
@@ -2238,9 +2239,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
   }
 
   switch (gui_screen) {
-    case OOGUIScreenID::kLongRangeChart:
+    case oo::GUIScreenID::kLongRangeChart:
 
-      if (status() != OOEntityStatus::kWitchspaceCountdown) {
+      if (status() != oo::EntityStatus::kWitchspaceCountdown) {
         if (oo::str::length((gameView != nullptr ? gameView->getTypedString()
                                                  : std::optional<std::string>())
                                 .value_or("")) > 0) {
@@ -2285,16 +2286,16 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       }
       [[fallthrough]];
 
-    case OOGUIScreenID::kShortRangeChart:
+    case oo::GUIScreenID::kShortRangeChart:
 
       if (checkKeyPress(n_key_chart_highlight)) {
         if (!queryPressed) {
-          OOLongRangeChartMode mode = getLongRangeChartMode();
-          if (mode != OOLongRangeChartMode::kTechLevel) {
-            setLongRangeChartMode(
-                static_cast<OOLongRangeChartMode>(oo::ToUnderlying(mode) + 1));
+          oo::LongRangeChartMode mode = getLongRangeChartMode();
+          if (mode != oo::LongRangeChartMode::kTechLevel) {
+            setLongRangeChartMode(static_cast<oo::LongRangeChartMode>(
+                oo::ToUnderlying(mode) + 1));
           } else {
-            setLongRangeChartMode(OOLongRangeChartMode::kSunColor);
+            setLongRangeChartMode(oo::LongRangeChartMode::kSunColor);
           }
           doScriptEvent(OOJSID("chartHighlightModeChanged"),
                         {oo::PList(OOStringFromLongRangeChartMode(
@@ -2315,7 +2316,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
         chartInfoPressed = false;
       }
 
-      if (status() != OOEntityStatus::kWitchspaceCountdown) {
+      if (status() != oo::EntityStatus::kWitchspaceCountdown) {
         if (hasEquipmentItemProviding("EQ_ADVANCED_NAVIGATIONAL_ARRAY")) {
           if (checkKeyPress(n_key_advanced_nav_array_next) ||
               checkKeyPress(n_key_advanced_nav_array_previous)) {
@@ -2361,9 +2362,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
                                  : false)) {
           if (gameView != nullptr) gameView->clearMouse();
           mouse_left_down = false;
-          noteGUIWillChangeTo(OOGUIScreenID::kSystemData);
+          noteGUIWillChangeTo(oo::GUIScreenID::kSystemData);
           showingLongRangeChart =
-              (gui_screen == OOGUIScreenID::kLongRangeChart);
+              (gui_screen == oo::GUIScreenID::kLongRangeChart);
           setGuiToSystemDataScreen();
           break;
         }
@@ -2408,7 +2409,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             target_chart_centre = chart_centre_coordinates;
             dragging = true;
           }
-          if (gui_screen == OOGUIScreenID::kLongRangeChart)
+          if (gui_screen == oo::GUIScreenID::kLongRangeChart)
             if (gameView != nullptr) gameView->resetTypedString();
           mouse_left_down = true;
         } else if (mouse_left_down == true) {
@@ -2458,7 +2459,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             (gameView != nullptr
                  ? gameView->mouseWheelState()
                  : MouseWheelStatus::kNeutral) == MouseWheelStatus::kUp) {
-          if (gui_screen == OOGUIScreenID::kLongRangeChart) {
+          if (gui_screen == oo::GUIScreenID::kLongRangeChart) {
             target_chart_zoom = CHART_MAX_ZOOM;
             setGuiToShortRangeChartScreen();
           }
@@ -2625,7 +2626,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       }
       break;
 
-    case OOGUIScreenID::kSystemData:
+    case oo::GUIScreenID::kSystemData:
       if (checkKeyPress(n_key_system_next_system)) {
         if (!next_planet_info_pressed) {
           nextInfoSystem();
@@ -2661,7 +2662,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       break;
 
       // DJS: Farm off load/save screen options to LoadSave.m
-    case OOGUIScreenID::kLoad: {
+    case oo::GUIScreenID::kLoad: {
       const std::optional<std::string> commanderFile = commanderSelector();
       if (commanderFile) {
         // also release the demo ship here (see showShipyardModel and
@@ -2673,35 +2674,35 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       break;
     }
 
-    case OOGUIScreenID::kSave:
+    case oo::GUIScreenID::kSave:
       pollGuiScreenControlsWithFKeyAlias(false);
       /* Only F1 works for launch on this screen, not '1' or
        * whatever it has been bound to */
       if (checkKeyPress(n_key_launch_ship, true)) handleUndockControl();
-      if (gui_screen == OOGUIScreenID::kSave) {
+      if (gui_screen == oo::GUIScreenID::kSave) {
         saveCommanderInputHandler();
       } else {
         pollControls = true;
       }
       break;
 
-    case OOGUIScreenID::kSaveOverwrite:
+    case oo::GUIScreenID::kSaveOverwrite:
       overwriteCommanderInputHandler();
       break;
 
-    case OOGUIScreenID::kStickMapper:
+    case oo::GUIScreenID::kStickMapper:
       handleStickMapperScreenKeys();
       break;
 
-    case OOGUIScreenID::kStickProfile:
+    case oo::GUIScreenID::kStickProfile:
       stickProfileInputHandler(gui, gameView);
       break;
 
-    case OOGUIScreenID::kGameOptions:
+    case oo::GUIScreenID::kGameOptions:
       handleGameOptionsScreenKeys();
       break;
 
-    case OOGUIScreenID::kKeyboard:
+    case oo::GUIScreenID::kKeyboard:
       handleKeyMapperScreenKeys();
       // if ([gameView isDown:' '])
       //{
@@ -2709,23 +2710,23 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       // }
       break;
 
-    case OOGUIScreenID::kKeyboardConfirmClear:
+    case oo::GUIScreenID::kKeyboardConfirmClear:
       handleKeyMapperConfirmClearKeys(gui, gameView);
       break;
 
-    case OOGUIScreenID::kKeyboardConfig:
+    case oo::GUIScreenID::kKeyboardConfig:
       handleKeyConfigKeys(gui, gameView);
       break;
 
-    case OOGUIScreenID::kKeyboardEntry:
+    case oo::GUIScreenID::kKeyboardEntry:
       handleKeyConfigEntryKeys(gui, gameView);
       break;
 
-    case OOGUIScreenID::kKeyboardLayout:
+    case oo::GUIScreenID::kKeyboardLayout:
       handleKeyboardLayoutKeys();
       break;
 
-    case OOGUIScreenID::kShipLibrary:
+    case oo::GUIScreenID::kShipLibrary:
       if ((gameView != nullptr ? gameView->isDown(' ') : false)) {
         //  '<space>'
         // viewed in game, return to interfaces as that's where it's accessed
@@ -2766,7 +2767,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
                               joyButtonState[BUTTON_GUIRIGHT]));
 
       break;
-    case OOGUIScreenID::kOptions:
+    case oo::GUIScreenID::kOptions:
       handleGUIUpDownArrowKeys();
       OOGUIRow guiSelectedRow;
       guiSelectedRow = gui->getSelectedRow();
@@ -2858,7 +2859,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
 
       break;
 
-    case OOGUIScreenID::kEquipShip:
+    case oo::GUIScreenID::kEquipShip:
       if (handleGUIUpDownArrowKeys()) {
         std::optional<std::string> itemText =
             gui->selectedRowText();  // nil compares unequal, as -isEqual: on
@@ -2965,7 +2966,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       }
       break;
 
-    case OOGUIScreenID::kInterfaces:
+    case oo::GUIScreenID::kInterfaces:
       if (handleGUIUpDownArrowKeys()) {
         showInformationForSelectedInterface();
       }
@@ -3028,11 +3029,11 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       }
       break;
 
-    case OOGUIScreenID::kMarketInfo:
+    case oo::GUIScreenID::kMarketInfo:
       pollMarketScreenControls();
       break;
 
-    case OOGUIScreenID::kMarket:
+    case oo::GUIScreenID::kMarket:
       pollMarketScreenControls();
 
       if (checkKeyPress(n_key_market_filter_cycle) ||
@@ -3067,7 +3068,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
 
       break;
 
-    case OOGUIScreenID::kReport:
+    case oo::GUIScreenID::kReport:
       if ((gameView != nullptr ? gameView->isDown(32) : false)) {
         // spacebar
         if (!spacePressed) {
@@ -3088,7 +3089,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
         spacePressed = false;
       }
       break;
-    case OOGUIScreenID::kStatus:
+    case oo::GUIScreenID::kStatus:
       handleGUIUpDownArrowKeys();
       if (checkKeyPress(n_key_gui_arrow_left) ||
           checkKeyPress(n_key_gui_page_up) || joyButtonState[BUTTON_GUILEFT] ||
@@ -3157,7 +3158,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       }
 
       break;
-    case OOGUIScreenID::kManifest:
+    case oo::GUIScreenID::kManifest:
       handleGUIUpDownArrowKeys();
       if (checkKeyPress(n_key_gui_arrow_left) ||
           checkKeyPress(n_key_gui_page_up) || joyButtonState[BUTTON_GUILEFT] ||
@@ -3224,7 +3225,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
 
       break;
 
-    case OOGUIScreenID::kShipyard:
+    case oo::GUIScreenID::kShipyard:
       if (handleGUIUpDownArrowKeys()) {
         showShipyardInfoForSelection();
       }
@@ -3419,7 +3420,7 @@ void PlayerEntity::pollMarketScreenControls() {
   const bool* joyButtonState =
       OOJoystickManager::sharedStickHandler()->getAllButtonStates();
 
-  if (gui_screen == OOGUIScreenID::kMarket) {
+  if (gui_screen == oo::GUIScreenID::kMarket) {
     handleGUIUpDownArrowKeys();
     marketSelectedCommodity = gui->selectedRowKey();
 
@@ -3549,7 +3550,7 @@ void PlayerEntity::pollMarketScreenControls() {
                 marketSelectedCommodity.value_or(std::string()),
                 (gameView != nullptr ? gameView->isShiftDown() : false))) {
           playBuyCommodity();
-          if (gui_screen == OOGUIScreenID::kMarket) {
+          if (gui_screen == oo::GUIScreenID::kMarket) {
             setGuiToMarketScreen();
           } else {
             setGuiToMarketInfoScreen();
@@ -3577,7 +3578,7 @@ void PlayerEntity::pollMarketScreenControls() {
                 marketSelectedCommodity.value_or(std::string()),
                 (gameView != nullptr ? gameView->isShiftDown() : false))) {
           playSellCommodity();
-          if (gui_screen == OOGUIScreenID::kMarket) {
+          if (gui_screen == oo::GUIScreenID::kMarket) {
             setGuiToMarketScreen();
           } else {
             setGuiToMarketInfoScreen();
@@ -3596,7 +3597,7 @@ void PlayerEntity::pollMarketScreenControls() {
         wait_for_key_up = true;
       }
     }
-    if ((gui_screen == OOGUIScreenID::kMarket &&
+    if ((gui_screen == oo::GUIScreenID::kMarket &&
          (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                               : false)) ||
         (checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT])) {
@@ -3623,7 +3624,7 @@ void PlayerEntity::pollMarketScreenControls() {
                    tryBuyingCommodity(item.value_or(""), true)) {
           // buy as much as possible (with Shift)
           playBuyCommodity();
-          if (gui_screen == OOGUIScreenID::kMarket) {
+          if (gui_screen == oo::GUIScreenID::kMarket) {
             setGuiToMarketScreen();
           } else {
             setGuiToMarketInfoScreen();
@@ -3632,7 +3633,7 @@ void PlayerEntity::pollMarketScreenControls() {
                    trySellingCommodity(item.value_or(""), true)) {
           // sell all you can
           playSellCommodity();
-          if (gui_screen == OOGUIScreenID::kMarket) {
+          if (gui_screen == oo::GUIScreenID::kMarket) {
             setGuiToMarketScreen();
           } else {
             setGuiToMarketInfoScreen();
@@ -3640,7 +3641,7 @@ void PlayerEntity::pollMarketScreenControls() {
         } else if (isdocked && tryBuyingCommodity(item.value_or(""), true)) {
           // buy as much as possible
           playBuyCommodity();
-          if (gui_screen == OOGUIScreenID::kMarket) {
+          if (gui_screen == oo::GUIScreenID::kMarket) {
             setGuiToMarketScreen();
           } else {
             setGuiToMarketInfoScreen();
@@ -4503,11 +4504,11 @@ void PlayerEntity::pollCustomViewControls() {
 
   if (checkKeyPress(n_key_custom_view) || joyButtonState[BUTTON_EXTVIEWCYCLE]) {
     if (!customView_pressed && !_customViews.empty() &&
-        gui_screen != OOGUIScreenID::kLongRangeChart &&
+        gui_screen != oo::GUIScreenID::kLongRangeChart &&
         (gameView != nullptr ? gameView->getAllowingStringInput()
                              : StringInput{}) == StringInput::kNo) {
-      if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}) ==
-          OOViewID::kCustom) {
+      if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{}) ==
+          oo::ViewID::kCustom) {
         // already in custom view mode
         // rotate the custom views
         _customViewIndex = (_customViewIndex + 1) % _customViews.size();
@@ -4520,7 +4521,7 @@ void PlayerEntity::pollCustomViewControls() {
           (customView.isDict() ? customView : oo::PList()),
           true);  // null unless a Dict
 
-      switchToThisView(OOViewID::kCustom,
+      switchToThisView(oo::ViewID::kCustom,
                        false);  // weapon facing must not change,
                                 // we just want an external view
     }
@@ -4530,8 +4531,8 @@ void PlayerEntity::pollCustomViewControls() {
   }
   double this_time =
       oo::date::monotonicSeconds();  // intervals only (last_time)
-  if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}) >
-          OOViewID::kStarboard &&
+  if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{}) >
+          oo::ViewID::kStarboard &&
       (gameView != nullptr ? gameView->isCapsLockOn() : false)) {
     bool ctrl_down = (gameView != nullptr ? gameView->isCtrlDown() : false);
     float customViewZoomSpeed =
@@ -4708,23 +4709,23 @@ void PlayerEntity::pollViewControls() {
   if ((checkKeyPress(n_key_view_forward)) ||
       (virtualView.y < -view_threshold) || joyButtonState[BUTTON_VIEWFORWARD] ||
       (((checkKeyPress(n_key_hyperspace) &&
-         gui_screen != OOGUIScreenID::kLongRangeChart) ||
+         gui_screen != oo::GUIScreenID::kLongRangeChart) ||
         joyButtonState[BUTTON_HYPERDRIVE]) &&
        (UNIVERSE != nullptr ? UNIVERSE->getDisplayGUI() : false))) {
-    switchToThisView(OOViewID::kForward);
+    switchToThisView(oo::ViewID::kForward);
   }
   if ((checkKeyPress(n_key_view_aft)) || (virtualView.y > view_threshold) ||
       joyButtonState[BUTTON_VIEWAFT]) {
-    switchToThisView(OOViewID::kAft);
+    switchToThisView(oo::ViewID::kAft);
   }
   if ((checkKeyPress(n_key_view_port)) || (virtualView.x < -view_threshold) ||
       joyButtonState[BUTTON_VIEWPORT]) {
-    switchToThisView(OOViewID::kPort);
+    switchToThisView(oo::ViewID::kPort);
   }
   if ((checkKeyPress(n_key_view_starboard)) ||
       (virtualView.x > view_threshold) ||
       joyButtonState[BUTTON_VIEWSTARBOARD]) {
-    switchToThisView(OOViewID::kStarboard);
+    switchToThisView(oo::ViewID::kStarboard);
   }
 
   pollCustomViewControls();
@@ -4771,7 +4772,7 @@ void PlayerEntity::pollViewControls() {
         joyButtonState[BUTTON_COMPASSMODE_PREV]) {
       // look for the '|' key
       if ((!prev_compass_mode_pressed) &&
-          (compassMode != OOCompassMode::kBasic))
+          (compassMode != oo::CompassMode::kBasic))
         setPrevCompassMode();
       prev_compass_mode_pressed = true;
     } else {
@@ -4782,7 +4783,7 @@ void PlayerEntity::pollViewControls() {
         joyButtonState[BUTTON_COMPASSMODE]) {
       // look for the '\' key
       if ((!next_compass_mode_pressed) &&
-          (compassMode != OOCompassMode::kBasic))
+          (compassMode != oo::CompassMode::kBasic))
         setNextCompassMode();
       next_compass_mode_pressed = true;
     } else {
@@ -4889,8 +4890,8 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t) {
   double pitch_dampner = PITCH_DAMPING_FACTOR * delta_t;
   double yaw_dampner = YAW_DAMPING_FACTOR * delta_t;
   bool capsLockCustomView =
-      (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}) ==
-          OOViewID::kCustom &&
+      (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{}) ==
+          oo::ViewID::kCustom &&
       (gameView != nullptr ? gameView->isCapsLockOn() : false);
 
   bool isCtrlDown = (gameView != nullptr ? gameView->isCtrlDown() : false);
@@ -5071,14 +5072,14 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias) {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   ::MyOpenGLView* gameView =
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
-  bool docked_okay = (status() == OOEntityStatus::kDocked);
+  bool docked_okay = (status() == oo::EntityStatus::kDocked);
 
   //  text displays
   if (checkKeyPress(n_key_gui_screen_status, !fKeyAlias)) {
     if (!switching_status_screens) {
       switching_status_screens = true;
-      if (gui_screen == OOGUIScreenID::kStatus) {
-        noteGUIWillChangeTo(OOGUIScreenID::kManifest);
+      if (gui_screen == oo::GUIScreenID::kStatus) {
+        noteGUIWillChangeTo(oo::GUIScreenID::kManifest);
         setGuiToManifestScreen();
       } else {
         setGuiToStatusScreen();
@@ -5095,18 +5096,18 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias) {
     if (!switching_chart_screens) {
       switching_chart_screens = true;
       // handles http://aegidian.org/bb/viewtopic.php?p=233189#p233189
-      if (status() == OOEntityStatus::kWitchspaceCountdown &&
-          gui_screen == OOGUIScreenID::kShortRangeChart) [[unlikely]] {
+      if (status() == oo::EntityStatus::kWitchspaceCountdown &&
+          gui_screen == oo::GUIScreenID::kShortRangeChart) [[unlikely]] {
         // don't switch to LRC if countdown in progress
         switching_chart_screens = false;
-      } else if (gui_screen == OOGUIScreenID::kShortRangeChart ||
-                 (gui_screen == OOGUIScreenID::kSystemData &&
+      } else if (gui_screen == oo::GUIScreenID::kShortRangeChart ||
+                 (gui_screen == oo::GUIScreenID::kSystemData &&
                   showingLongRangeChart)) {
         if (target_chart_zoom != CHART_MAX_ZOOM) {
           saved_chart_zoom = target_chart_zoom;
         }
         target_chart_zoom = CHART_MAX_ZOOM;
-        noteGUIWillChangeTo(OOGUIScreenID::kLongRangeChart);
+        noteGUIWillChangeTo(oo::GUIScreenID::kLongRangeChart);
         setGuiToLongRangeChartScreen();
       } else {
         if (target_chart_zoom == CHART_MAX_ZOOM) {
@@ -5114,7 +5115,7 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias) {
         }
         // target_chart_centre = cursor_coordinates = [[UNIVERSE systemManager]
         // getCoordinatesForSystem:target_system_id inGalaxy:galaxy_number];
-        noteGUIWillChangeTo(OOGUIScreenID::kShortRangeChart);
+        noteGUIWillChangeTo(oo::GUIScreenID::kShortRangeChart);
         setGuiToShortRangeChartScreen();
       }
     }
@@ -5123,30 +5124,30 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias) {
   }
 
   if (checkKeyPress(n_key_gui_system_data, !fKeyAlias)) {
-    if (gui_screen != OOGUIScreenID::kSystemData) {
-      showingLongRangeChart = (gui_screen == OOGUIScreenID::kLongRangeChart);
-      noteGUIWillChangeTo(OOGUIScreenID::kSystemData);
+    if (gui_screen != oo::GUIScreenID::kSystemData) {
+      showingLongRangeChart = (gui_screen == oo::GUIScreenID::kLongRangeChart);
+      noteGUIWillChangeTo(oo::GUIScreenID::kSystemData);
       setGuiToSystemDataScreen();
     }
   }
 
   if (checkKeyPress(n_key_gui_market, !fKeyAlias)) {
-    if (gui_screen != OOGUIScreenID::kMarket) {
+    if (gui_screen != oo::GUIScreenID::kMarket) {
       if (gameView != nullptr) gameView->clearKeys();
       gui->setNoSelectedRow();
-      noteGUIWillChangeTo(OOGUIScreenID::kMarket);
+      noteGUIWillChangeTo(oo::GUIScreenID::kMarket);
       setGuiToMarketScreen();
     } else {
       if (gameView != nullptr) gameView->clearKeys();
       gui->setNoSelectedRow();
-      noteGUIWillChangeTo(OOGUIScreenID::kMarketInfo);
+      noteGUIWillChangeTo(oo::GUIScreenID::kMarketInfo);
       setGuiToMarketInfoScreen();
     }
   }
 
   if (docked_okay) {
     if ((checkKeyPress(n_key_gui_screen_options, !fKeyAlias)) &&
-        (gui_screen != OOGUIScreenID::kOptions)) {
+        (gui_screen != oo::GUIScreenID::kOptions)) {
       if (gameView != nullptr) gameView->clearKeys();
       setGuiToLoadSaveScreen();
     }
@@ -5154,20 +5155,20 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias) {
     if (checkKeyPress(n_key_gui_screen_equipship, !fKeyAlias)) {
       if (!switching_equipship_screens) {
         if (dockedStation() == nullptr) setDockedAtMainStation();
-        OOGUIScreenID oldScreen = gui_screen;
+        oo::GUIScreenID oldScreen = gui_screen;
 
-        if ((gui_screen == OOGUIScreenID::kEquipShip) &&
+        if ((gui_screen == oo::GUIScreenID::kEquipShip) &&
             (dockedStation() != nullptr ? dockedStation()->hasShipyard()
                                         : false)) {
           if (gameView != nullptr) gameView->clearKeys();
-          noteGUIWillChangeTo(OOGUIScreenID::kShipyard);
+          noteGUIWillChangeTo(oo::GUIScreenID::kShipyard);
           gui->setNoSelectedRow();
           setGuiToShipyardScreen(0);
           gui->setSelectedRow(GUI_ROW_SHIPYARD_START);
           showShipyardInfoForSelection();
         } else {
           if (gameView != nullptr) gameView->clearKeys();
-          noteGUIWillChangeTo(OOGUIScreenID::kEquipShip);
+          noteGUIWillChangeTo(oo::GUIScreenID::kEquipShip);
           gui->setNoSelectedRow();
           setGuiToEquipShipScreen(0);
           gui->setSelectedRow(GUI_ROW_EQUIPMENT_START);
@@ -5214,11 +5215,11 @@ static bool autopilot_pause;
 
 void PlayerEntity::pollAutopilotControls(double delta_t) {
   // don't do anything if we're configuring the keyboard
-  if (gui_screen == OOGUIScreenID::kKeyboardEntry ||
-      gui_screen == OOGUIScreenID::kKeyboardConfig ||
-      gui_screen == OOGUIScreenID::kKeyboardLayout ||
-      gui_screen == OOGUIScreenID::kKeyboard ||
-      gui_screen == OOGUIScreenID::kKeyboardConfirmClear)
+  if (gui_screen == oo::GUIScreenID::kKeyboardEntry ||
+      gui_screen == oo::GUIScreenID::kKeyboardConfig ||
+      gui_screen == oo::GUIScreenID::kKeyboardLayout ||
+      gui_screen == oo::GUIScreenID::kKeyboard ||
+      gui_screen == oo::GUIScreenID::kKeyboardConfirmClear)
     return;
 
   const bool* joyButtonState =
@@ -5267,9 +5268,9 @@ void PlayerEntity::pollAutopilotControls(double delta_t) {
     }
     // look for the pause game, 'p' key
     if ((checkKeyPress(n_key_pausebutton) || joyButtonState[BUTTON_PAUSE]) &&
-        gui_screen != OOGUIScreenID::kShortRangeChart &&
-        gui_screen != OOGUIScreenID::kMission &&
-        gui_screen != OOGUIScreenID::kKeyboardEntry) {
+        gui_screen != oo::GUIScreenID::kShortRangeChart &&
+        gui_screen != oo::GUIScreenID::kMission &&
+        gui_screen != oo::GUIScreenID::kKeyboardEntry) {
       if (!autopilot_pause) {
         playing_music = OOMusicController::sharedController()->isPlaying();
         if (playing_music)
@@ -5312,12 +5313,12 @@ void PlayerEntity::pollDockedControls(double delta_t) {
     // Pause game, 'p' key
     exceptionContext = "pause key";
     if ((checkKeyPress(n_key_pausebutton) || joyButtonState[BUTTON_PAUSE]) &&
-        (gui_screen != OOGUIScreenID::kLongRangeChart &&
-         gui_screen != OOGUIScreenID::kReport &&
-         gui_screen != OOGUIScreenID::kSave &&
-         gui_screen != OOGUIScreenID::kKeyboardEntry)) {
+        (gui_screen != oo::GUIScreenID::kLongRangeChart &&
+         gui_screen != oo::GUIScreenID::kReport &&
+         gui_screen != oo::GUIScreenID::kSave &&
+         gui_screen != oo::GUIScreenID::kKeyboardEntry)) {
       bool isMissionScreenWithTextEntry =
-          gui_screen == OOGUIScreenID::kMission && _missionTextEntry;
+          gui_screen == oo::GUIScreenID::kMission && _missionTextEntry;
       if (!pause_pressed) {
         if ((gameController != nullptr ? gameController->isGamePaused()
                                        : false)) {
@@ -5351,8 +5352,9 @@ void PlayerEntity::pollDockedControls(double delta_t) {
     if (pollControls) {
       exceptionContext = "undock";
       if (checkKeyPress(n_key_launch_ship)) {
-        if ((gui_screen != OOGUIScreenID::kMission || _missionAllowInterrupt) &&
-            gui_screen != OOGUIScreenID::kKeyboardEntry) [[likely]] {
+        if ((gui_screen != oo::GUIScreenID::kMission ||
+             _missionAllowInterrupt) &&
+            gui_screen != oo::GUIScreenID::kKeyboardEntry) [[likely]] {
           handleUndockControl();
         }
       }
@@ -5361,11 +5363,11 @@ void PlayerEntity::pollDockedControls(double delta_t) {
     //  text displays
     // mission screens
     exceptionContext = "GUI keys";
-    if (gui_screen == OOGUIScreenID::kMission ||
-        gui_screen == OOGUIScreenID::kKeyboardEntry) {
+    if (gui_screen == oo::GUIScreenID::kMission ||
+        gui_screen == oo::GUIScreenID::kKeyboardEntry) {
       pollDemoControls(delta_t);  // don't switch away from mission screens
     } else {
-      if (gui_screen != OOGUIScreenID::kReport)
+      if (gui_screen != oo::GUIScreenID::kReport)
         pollGuiScreenControls();  // don't switch away from report screens
     }
 
@@ -5411,7 +5413,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
       OOJoystickManager::sharedStickHandler()->getAllButtonStates();
 
   switch (gui_screen) {
-    case OOGUIScreenID::kIntro1:
+    case oo::GUIScreenID::kIntro1:
       handleGUIUpDownArrowKeys();
 
       int row_zero;
@@ -5481,11 +5483,11 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
       OOJoystickManager::sharedStickHandler()->clearStickStates();
       break;
 
-    case OOGUIScreenID::kGameOptions:
+    case oo::GUIScreenID::kGameOptions:
       handleGameOptionsScreenKeys();
       break;
 
-    case OOGUIScreenID::kKeyboard:
+    case oo::GUIScreenID::kKeyboard:
       // if ([gameView isDown:' '])	//  '<space>'
       //{
       //	[self setGuiToIntroFirstGo:YES];
@@ -5493,31 +5495,31 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
       handleKeyMapperScreenKeys();
       break;
 
-    case OOGUIScreenID::kKeyboardConfirmClear:
+    case oo::GUIScreenID::kKeyboardConfirmClear:
       handleKeyMapperConfirmClearKeys(gui, gameView);
       break;
 
-    case OOGUIScreenID::kKeyboardConfig:
+    case oo::GUIScreenID::kKeyboardConfig:
       handleKeyConfigKeys(gui, gameView);
       break;
 
-    case OOGUIScreenID::kKeyboardEntry:
+    case oo::GUIScreenID::kKeyboardEntry:
       handleKeyConfigEntryKeys(gui, gameView);
       break;
 
-    case OOGUIScreenID::kKeyboardLayout:
+    case oo::GUIScreenID::kKeyboardLayout:
       handleKeyboardLayoutKeys();
       break;
 
-    case OOGUIScreenID::kStickMapper:
+    case oo::GUIScreenID::kStickMapper:
       handleStickMapperScreenKeys();
       break;
 
-    case OOGUIScreenID::kStickProfile:
+    case oo::GUIScreenID::kStickProfile:
       stickProfileInputHandler(gui, gameView);
       break;
 
-    case OOGUIScreenID::kShipLibrary:
+    case oo::GUIScreenID::kShipLibrary:
       if ((gameView != nullptr ? gameView->isDown(' ') : false)) {
         //  '<space>'
         // viewed from start screen, return to it
@@ -5558,7 +5560,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
 
       break;
 
-    case OOGUIScreenID::kNewGame:
+    case oo::GUIScreenID::kNewGame:
       if (handleGUIUpDownArrowKeys()) {
         showScenarioDetails();
       }
@@ -5614,7 +5616,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
       }
       break;
 
-    case OOGUIScreenID::kOXZManager:
+    case oo::GUIScreenID::kOXZManager:
       // release locks on music on this screen
       OOMusicController::sharedController()->stopThemeMusic();
       if (!oxzmanager->isRestarting()) [[likely]] {
@@ -5704,7 +5706,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
       }
       break;
 
-    case OOGUIScreenID::kMission:
+    case oo::GUIScreenID::kMission:
       if (getHud() != nullptr && getHud()->getAllowBigGui()) {
         end_row = 27;
       }
@@ -5790,7 +5792,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
       break;
 
       // DJS: Farm off load/save screen options to LoadSave.m
-    case OOGUIScreenID::kLoad: {
+    case oo::GUIScreenID::kLoad: {
       const std::optional<std::string> commanderFile = commanderSelector();
       if (commanderFile) {
         // also release the demo ship here (see showShipyardModel and
@@ -5809,13 +5811,13 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
 
 void PlayerEntity::pollMissionInterruptControls() {
   if (_missionAllowInterrupt) {
-    if (gui_screen == OOGUIScreenID::kMission && _missionTextEntry) {
+    if (gui_screen == oo::GUIScreenID::kMission && _missionTextEntry) {
       pollGuiScreenControlsWithFKeyAlias(false);
     } else {
       pollGuiScreenControls();
     }
-    if (gui_screen != OOGUIScreenID::kMission) {
-      if (gui_screen != OOGUIScreenID::kSystemData) {
+    if (gui_screen != oo::GUIScreenID::kMission) {
+      if (gui_screen != oo::GUIScreenID::kSystemData) {
         if (UNIVERSE != nullptr) UNIVERSE->removeDemoShips();
       }
       endMissionScreenAndNoteOpportunity();
@@ -5830,13 +5832,14 @@ void PlayerEntity::handleMissionCallback() {
   setGuiToMissionEndScreen();  // need this to find out if we call a new mission
                                // screen inside callback.
 
-  if (status() != OOEntityStatus::kDocked) switchToThisView(OOViewID::kForward);
+  if (status() != oo::EntityStatus::kDocked)
+    switchToThisView(oo::ViewID::kForward);
 
   if (_missionWithCallback) {
     doMissionCallback();
   }
 
-  if (status() != OOEntityStatus::kDocked) {
+  if (status() != oo::EntityStatus::kDocked) {
     // did we launch inside callback? /
     // are we in flight?
     // TODO: This is no longer doing anything because of an 'isDocked' check
@@ -5844,7 +5847,7 @@ void PlayerEntity::handleMissionCallback() {
     doWorldEventUntilMissionScreen(
         OOJSID("missionScreenEnded"));  // no opportunity events.
   } else {
-    if (gui_screen != OOGUIScreenID::kMission) {
+    if (gui_screen != oo::GUIScreenID::kMission) {
       // did we call a new mission
       // screen inside callback?
       // note that this might not be the same end screen as last time...
@@ -5860,24 +5863,24 @@ void PlayerEntity::setGuiToMissionEndScreen() {
   ::MyOpenGLView* gameView =
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
   if (gameView != nullptr) gameView->clearKeys();
-  if (status() != OOEntityStatus::kDocked) {
+  if (status() != oo::EntityStatus::kDocked) {
     // this setting is only applied when not docked
     setGuiToStatusScreen();
     return;
   }
   switch (_missionExitScreen) {
-    case OOGUIScreenID::kManifest:
-      noteGUIWillChangeTo(OOGUIScreenID::kManifest);
+    case oo::GUIScreenID::kManifest:
+      noteGUIWillChangeTo(oo::GUIScreenID::kManifest);
       setGuiToManifestScreen();
       break;
-    case OOGUIScreenID::kEquipShip:
-      noteGUIWillChangeTo(OOGUIScreenID::kEquipShip);
+    case oo::GUIScreenID::kEquipShip:
+      noteGUIWillChangeTo(oo::GUIScreenID::kEquipShip);
       setGuiToEquipShipScreen(0);
       break;
-    case OOGUIScreenID::kShipyard:
+    case oo::GUIScreenID::kShipyard:
       if ((dockedStation() != nullptr ? dockedStation()->hasShipyard()
                                       : false)) {
-        noteGUIWillChangeTo(OOGUIScreenID::kShipyard);
+        noteGUIWillChangeTo(oo::GUIScreenID::kShipyard);
         setGuiToShipyardScreen(0);
         UNIVERSE->getGui()->setSelectedRow(GUI_ROW_SHIPYARD_START);
         showShipyardInfoForSelection();
@@ -5886,47 +5889,47 @@ void PlayerEntity::setGuiToMissionEndScreen() {
         setGuiToStatusScreen();
       }
       break;
-    case OOGUIScreenID::kLongRangeChart:
+    case oo::GUIScreenID::kLongRangeChart:
       setGuiToLongRangeChartScreen();
       break;
-    case OOGUIScreenID::kShortRangeChart:
+    case oo::GUIScreenID::kShortRangeChart:
       setGuiToShortRangeChartScreen();
       break;
-    case OOGUIScreenID::kSystemData:
-      noteGUIWillChangeTo(OOGUIScreenID::kSystemData);
+    case oo::GUIScreenID::kSystemData:
+      noteGUIWillChangeTo(oo::GUIScreenID::kSystemData);
       setGuiToSystemDataScreen();
       break;
-    case OOGUIScreenID::kMarket:
-      noteGUIWillChangeTo(OOGUIScreenID::kMarket);
+    case oo::GUIScreenID::kMarket:
+      noteGUIWillChangeTo(oo::GUIScreenID::kMarket);
       setGuiToMarketScreen();
       break;
-    case OOGUIScreenID::kMarketInfo:
-      noteGUIWillChangeTo(OOGUIScreenID::kMarketInfo);
+    case oo::GUIScreenID::kMarketInfo:
+      noteGUIWillChangeTo(oo::GUIScreenID::kMarketInfo);
       setGuiToMarketInfoScreen();
       break;
-    case OOGUIScreenID::kInterfaces:
+    case oo::GUIScreenID::kInterfaces:
       setGuiToInterfacesScreen(0);
       break;
-    case OOGUIScreenID::kStatus:
+    case oo::GUIScreenID::kStatus:
     default:  // invalid screen specifications
       setGuiToStatusScreen();
   }
 }
 
-void PlayerEntity::switchToThisView(OOViewID viewDirection) {
+void PlayerEntity::switchToThisView(oo::ViewID viewDirection) {
   switchToThisView(viewDirection, true);
 }
 
-void PlayerEntity::switchToThisView(OOViewID viewDirection,
+void PlayerEntity::switchToThisView(oo::ViewID viewDirection,
                                     bool processWeaponFacing) {
   switchToThisView(
       viewDirection,
-      (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}),
+      (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : oo::ViewID{}),
       processWeaponFacing, false);
 }
 
-void PlayerEntity::switchToThisView(OOViewID viewDirection,
-                                    OOViewID oldViewDirection,
+void PlayerEntity::switchToThisView(oo::ViewID viewDirection,
+                                    oo::ViewID oldViewDirection,
                                     bool processWeaponFacing, bool justNotify) {
   if (!justNotify) {
     if ((UNIVERSE != nullptr ? UNIVERSE->getDisplayGUI() : false))
@@ -5936,19 +5939,19 @@ void PlayerEntity::switchToThisView(OOViewID viewDirection,
   if (processWeaponFacing) {
     OOWeaponFacing facing = OOWeaponFacing::kNone;
     switch (viewDirection) {
-      case OOViewID::kForward:
+      case oo::ViewID::kForward:
         facing = OOWeaponFacing::kForward;
         break;
 
-      case OOViewID::kAft:
+      case oo::ViewID::kAft:
         facing = OOWeaponFacing::kAft;
         break;
 
-      case OOViewID::kPort:
+      case oo::ViewID::kPort:
         facing = OOWeaponFacing::kPort;
         break;
 
-      case OOViewID::kStarboard:
+      case oo::ViewID::kStarboard:
         facing = OOWeaponFacing::kStarboard;
         break;
 
@@ -5967,7 +5970,7 @@ void PlayerEntity::switchToThisView(OOViewID viewDirection,
     }
   }
   if ((oldViewDirection != viewDirection ||
-       viewDirection == OOViewID::kCustom) &&
+       viewDirection == oo::ViewID::kCustom) &&
       !(UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr
             ? UNIVERSE->gameController()->isGamePaused()
             : false)) {
@@ -6103,7 +6106,7 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking) {
     ship_clock_adjust += 1200.0;  // 20 minutes penalty to enter dock
     ident_engaged = false;
     safeAllMissiles();
-    if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(OOViewID::kForward);
+    if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(oo::ViewID::kForward);
     enterDock(ts);
   } else {
     // Standard docking - engage autopilot
