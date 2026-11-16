@@ -55,8 +55,8 @@ SOFTWARE.
 #include "OOPointMaths.h"
 #include "oofnd/Defaults.hpp"  // IWYU pragma: keep: used only without NDEBUG
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"  // oo::Finally
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"  // oo::Finally
 
 #ifndef APIENTRY
 #define APIENTRY
@@ -774,8 +774,8 @@ void SVGDumpAppendBaseContour(TessPolygonData* data,
   // Close and add a circle at the first vertex. (SVG has support for end
   // markers, but this isn’t reliable across implementations.)
   if (points.empty())
-    OORaiseException(
-        OORangeException,
+    oo::RaiseException(
+        oo::RangeException,
         "SVGDumpAppendBaseContour: empty contour");  // -objectAtIndex:0
                                                      // raised here
   NSPoint p = points[0];

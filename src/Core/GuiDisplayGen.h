@@ -46,7 +46,7 @@ MA 02110-1301, USA.
 #include "OOTypes.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 inline constexpr int GUI_DEFAULT_COLUMNS = 6;
 inline constexpr int GUI_DEFAULT_ROWS = 30;

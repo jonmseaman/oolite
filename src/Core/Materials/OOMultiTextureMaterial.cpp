@@ -36,7 +36,7 @@ SOFTWARE.
 #include "OOMaterialSpecifier.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOTexture.h"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 #if OO_MULTITEXTURE
 

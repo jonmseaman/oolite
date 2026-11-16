@@ -21,7 +21,7 @@
 #include "SpeechSynthesizer.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
-#include "oofnd/objc/OOException.h"  // -handleOoliteException:
+#include "oofnd/objc/Exception.h"  // -handleOoliteException:
 
 extern PlayerEntity* gOOPlayer;  // the early cases run before the later ones
                                  // stand-in player is installed

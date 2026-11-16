@@ -83,7 +83,7 @@ oo::PList OOPropertyListFromFile(const std::string& path) {
 
   // Load file, if it exists...
   oo::PListFileLoad load = oo::loadPListFile(
-      path, [](const std::string& p) { return OODataFromOXZFile(p); });
+      path, [](const std::string& p) { return oo::DataFromOXZFile(p); });
   if (load.isJSON5) {
     if (UNIVERSE != nullptr) {
       OO_LOG("plist.information", "Parsing {} as JSON5.", load.source);

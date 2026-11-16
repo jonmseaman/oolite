@@ -43,7 +43,7 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PListGet.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 constexpr std::string_view kKeyShipKey = "ship_key";
 constexpr std::string_view kKeyShipdataOverrides = "shipdata_overrides";

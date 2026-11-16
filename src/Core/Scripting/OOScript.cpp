@@ -90,11 +90,11 @@ OOScript::worldScriptsAtPath(const std::string& path) {
   // Second, try to load a JavaScript.
   if (!result.has_value()) {
     filePath = oo::str::appendingPathComponent(path, "script.js");
-    if (OOOxzFileExistsAtPath(filePath)) {
+    if (oo::OxzFileExistsAtPath(filePath)) {
       foundScript = true;
     } else {
       filePath = oo::str::appendingPathComponent(path, "script.es");
-      if (OOOxzFileExistsAtPath(filePath)) foundScript = true;
+      if (oo::OxzFileExistsAtPath(filePath)) foundScript = true;
     }
     if (foundScript) {
       OO_LOG("script.load.javaScript", "Trying to load JavaScript script {}",
@@ -118,7 +118,7 @@ OOScript::worldScriptsAtPath(const std::string& path) {
   // Third, try to load a plist script.
   if (!result.has_value()) {
     filePath = oo::str::appendingPathComponent(path, "script.plist");
-    if (OOOxzFileExistsAtPath(filePath)) {
+    if (oo::OxzFileExistsAtPath(filePath)) {
       oo::StandardsDeprecated(
           std::format("Legacy script {} is deprecated", filePath));
       if (!oo::EnforceStandards()) {
@@ -183,7 +183,7 @@ std::vector<std::shared_ptr<OOScript>> OOScript::scriptsFromList(
 std::optional<std::vector<std::shared_ptr<OOScript>>>
 OOScript::scriptsFromFileAtPath(const std::string& filePath) {
   // OXZ-aware exists is false for directories
-  if (!OOOxzFileExistsAtPath(filePath)) return std::nullopt;
+  if (!oo::OxzFileExistsAtPath(filePath)) return std::nullopt;
 
   std::string extension = oo::str::lowercase(oo::str::pathExtension(filePath));
 

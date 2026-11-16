@@ -37,7 +37,7 @@ MA 02110-1301, USA.
 #include "OOMaths.h"
 #include "ValueType.h"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 class Entity;
 class OOColor;

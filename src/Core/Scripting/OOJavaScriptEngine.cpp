@@ -87,8 +87,8 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 #if OOLITE_WINDOWS
 #include <windows.h>  // IWYU pragma: keep (QueryPerformanceCounter)
 #endif
@@ -552,7 +552,7 @@ static void LoadCompatibilityScript(JSContext* context) {
   std::optional<std::string> source;
   // +stringWithContentsOfUnicodeFile: (it read through .oxz archives)
   if (path.has_value()) {
-    if (const std::optional<oo::Data> bytes = OODataFromOXZFile(*path))
+    if (const std::optional<oo::Data> bytes = oo::DataFromOXZFile(*path))
       source = oo::str::decodeUnicodeText(bytes->stringView());
   }
   if (!source.has_value()) {
@@ -1133,8 +1133,8 @@ JSAtom OOJSInternAtomPRIVATE(const char* name) {
 
   JSAtom atom = JS_NewAtom(OOJSAcquireContext(), name);
   if (atom == JS_ATOM_NULL) [[unlikely]] {
-    OORaiseException(OOGenericException,
-                     "Failed to initialize JS ID cache for \"%s\".", name);
+    oo::RaiseException(oo::GenericException,
+                       "Failed to initialize JS ID cache for \"%s\".", name);
   }
   return atom;
 }

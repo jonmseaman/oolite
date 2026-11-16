@@ -43,7 +43,7 @@ SOFTWARE.
 #include <vector>
 
 #include "oofnd/Log.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 #endif
 
 /*	The SpiderMonkey version of this file implemented the time limiter

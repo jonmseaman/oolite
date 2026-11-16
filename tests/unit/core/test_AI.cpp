@@ -33,7 +33,7 @@
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Log.hpp"
-#include "oofnd/objc/OOException.h"  // oo::Exception
+#include "oofnd/objc/Exception.h"  // oo::Exception
 
 // --- Collaborators the game would provide
 // ----------------------------------------------------

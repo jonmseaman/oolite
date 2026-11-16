@@ -43,10 +43,10 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "JSConsole.h"
 #include "LogIndentScope.h"
 #include "OOConcreteTexture.h"
 #include "OODrawable.h"
-#include "JSConsole.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
 #include "OOJSSpecialFunctions.h"
@@ -60,7 +60,7 @@ SOFTWARE.
 #include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 namespace {
 
@@ -750,7 +750,7 @@ std::optional<std::vector<std::string>> oo::DebugMonitor::loadSourceFile(
     const std::string& filePath) {
   // The Unicode-file reading of the file's bytes (read from inside an OXZ too,
   // as before).
-  const std::optional<oo::Data> data = OODataFromOXZFile(filePath);
+  const std::optional<oo::Data> data = oo::DataFromOXZFile(filePath);
   if (!data.has_value()) return std::nullopt;
   const std::string contents = oo::str::decodeUnicodeText(data->stringView());
 

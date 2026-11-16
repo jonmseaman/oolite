@@ -66,8 +66,8 @@ MA 02110-1301, USA.
 #include "oofnd/Log.hpp"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 // If set, collision octree depth varies depending on the size of the mesh.
 #define ADAPTIVE_OCTREE_DEPTH 1
@@ -163,8 +163,8 @@ static bool IsLegacyNormalMode(OOMeshNormalMode mode) {
   }
 
 #ifndef NDEBUG
-  OORaiseException(OOInvalidArgumentException, "Unexpected normal mode in %s",
-                   __PRETTY_FUNCTION__);
+  oo::RaiseException(oo::InvalidArgumentException,
+                     "Unexpected normal mode in %s", __PRETTY_FUNCTION__);
 #endif
   return false;
 }
@@ -182,8 +182,8 @@ static bool IsPerVertexNormalMode(OOMeshNormalMode mode) {
   }
 
 #ifndef NDEBUG
-  OORaiseException(OOInvalidArgumentException, "Unexpected normal mode in %s",
-                   __PRETTY_FUNCTION__);
+  oo::RaiseException(oo::InvalidArgumentException,
+                     "Unexpected normal mode in %s", __PRETTY_FUNCTION__);
 #endif
   return false;
 }

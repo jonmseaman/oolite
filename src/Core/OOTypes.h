@@ -41,7 +41,7 @@ MA 02110-1301, USA.
 */
 #include <limits.h>
 
-#include "oofnd/objc/OOFoundationTypes.h"
+#include "oofnd/objc/FoundationTypes.h"
 #endif
 
 enum class OORouteType : std::int32_t { kNone, kJumps, kTime };

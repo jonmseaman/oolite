@@ -50,11 +50,11 @@
 #include "oofnd/Log.hpp"
 #include "oofnd/Object.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOFoundationTypes.h"
+#include "oofnd/objc/FoundationTypes.h"
 #ifdef OO_DEBUG_MONITOR_ENABLED
 #include "OOTextureGenerator.h"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 #endif
 
 #if OOLITE_BIG_ENDIAN
@@ -490,8 +490,8 @@ void OOConcreteTexture::uploadTexture() {
     }
 #endif
     else {
-      OORaiseException(OOInternalInconsistencyException,
-                       "Unhandled texture target 0x%X.", texTarget);
+      oo::RaiseException(oo::InternalInconsistencyException,
+                         "Unhandled texture target 0x%X.", texTarget);
     }
 
     _valid = true;

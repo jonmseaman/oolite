@@ -18,7 +18,7 @@
 
 #include "OOFoundation.h"
 #include "OOJSEngineCore.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 
@@ -101,7 +101,7 @@ void OOSoundSource::setGain(float gain)  { sRecords[this]._gain = gain; }
 float OOSoundSource::gain()
 {
 	const float gain = sRecords[this]._gain;
-	if (gain == 0.99f)  OORaiseException(OOInvalidArgumentException, "gain %s", "boom");
+	if (gain == 0.99f)  oo::RaiseException(oo::InvalidArgumentException, "gain %s", "boom");
 	if (gain == 0.98f)  throw std::runtime_error("cxx boom");
 	return gain;
 }

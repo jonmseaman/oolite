@@ -54,7 +54,7 @@ MA 02110-1301, USA.
 #include <string>
 #include <utility>
 
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 namespace {
 constexpr const char* kCacheKeyVersion = "version";

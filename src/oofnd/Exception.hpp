@@ -55,17 +55,21 @@
 
 // Exception names. The text is Foundation's, so a name that reaches a log reads
 // as it did.
-extern const char* const OOGenericException;
-extern const char* const OOInvalidArgumentException;
-extern const char* const OORangeException;
-extern const char* const OOInternalInconsistencyException;
-extern const char* const OOMallocException;
+namespace oo {
+
+extern const char* const GenericException;
+extern const char* const InvalidArgumentException;
+extern const char* const RangeException;
+extern const char* const InternalInconsistencyException;
+extern const char* const MallocException;
 
 /*	+[OOException raise:name format:...] as a function: throws oo::Exception
    with the name and the printf-formatted reason. Never returns.
 */
-void OORaiseException(const char* name, const char* format, ...)
+void RaiseException(const char* name, const char* format, ...)
     OO_PRINTF_FORMAT(2, 3) __attribute__((noreturn));
+
+}  // namespace oo
 
 namespace oo {
 

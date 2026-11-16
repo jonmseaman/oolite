@@ -33,7 +33,7 @@ SOFTWARE.
 
 #include "OOCPUInfoEndian.h"
 #include "OOPixMap.h"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 namespace {
 void ExtractChannel_4(OOPixMap* ioPixMap, uint8_t channelIndex);

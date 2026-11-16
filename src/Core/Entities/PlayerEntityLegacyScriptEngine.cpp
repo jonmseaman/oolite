@@ -64,7 +64,7 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/PListWriting.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 constexpr std::string_view kOOLogScriptAddShipsFailed =
     "script.addShips.failed";

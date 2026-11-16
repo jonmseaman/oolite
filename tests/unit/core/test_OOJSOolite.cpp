@@ -14,7 +14,7 @@
 */
 
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/Object.hpp"
 #include "oofnd/String.hpp"
@@ -146,7 +146,7 @@ void MyOpenGLView::setSDRToneMapper(oo::SDRToneMapper newToneMapper)  { _sdrTone
 
 oo::PList Universe::gameSettings()
 {
-	if (_raise)  OORaiseException(OOInvalidArgumentException, "settings %s", "boom");
+	if (_raise)  oo::RaiseException(oo::InvalidArgumentException, "settings %s", "boom");
 	if (_throwCxx)  throw std::runtime_error("cxx boom");
 	return Dict({ { "detailLevel", oo::PList("DETAIL_LEVEL_SHADERS") }, { "musicMode", oo::PList("MUSIC_ON") } });
 }

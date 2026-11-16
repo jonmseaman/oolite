@@ -45,7 +45,7 @@ MA 02110-1301, USA.
 #include "oofnd/Data.hpp"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 class OOSystemDescriptionManager;  // OOSystemDescriptionManager.h
 class OOSound;
 class OOMusic;

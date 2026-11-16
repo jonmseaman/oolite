@@ -2459,7 +2459,7 @@ std::string OOOXZManager::extractOXZ(std::size_t item) {
 
         const std::string entryPath =
             oo::str::appendingPathComponent(*oxzfile, componentName);
-        std::optional<oo::Data> tmp = OODataFromOXZFile(entryPath);
+        std::optional<oo::Data> tmp = oo::DataFromOXZFile(entryPath);
         if (!tmp.has_value()) {
           OO_LOG("oxz.manager.error",
                  "Sub file {} could not be extracted from the OXZ",

@@ -57,8 +57,8 @@ SOFTWARE.
 #include "OOSingleTextureMaterial.h"
 #include "OOTexture.h"
 #include "Universe.h"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 #if !USE_NEW_SHADER_SYNTHESIZER
 namespace {
@@ -374,8 +374,8 @@ std::shared_ptr<OOMaterial> OOMaterial::materialWithName(
 // as -oo_dictionaryForKey: sent to it did; the script gets a native exception.
 static void RaiseUnlessDictionary(const oo::PList& value, const char* what) {
   if (!value.isNull() && !value.isDict()) {
-    OORaiseException(OOInvalidArgumentException, "%s is not a dictionary",
-                     what);
+    oo::RaiseException(oo::InvalidArgumentException, "%s is not a dictionary",
+                       what);
   }
 }
 

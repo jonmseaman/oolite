@@ -50,7 +50,7 @@ SOFTWARE.
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 #define PLIST_VERIFIER_DEBUG_DUMP_ENABLED 1
 
@@ -662,8 +662,8 @@ bool HasSubString(const std::string& string, const std::string& sub) {
 std::u16string SubstringToIndex(const std::u16string& units,
                                 std::uint64_t index) {
   if (index > units.size()) {
-    OORaiseException(
-        OORangeException,
+    oo::RaiseException(
+        oo::RangeException,
         "in substringWithRange:, range { 0, %llu } extends beyond size (%llu)",
         index, static_cast<std::uint64_t>(units.size()));
   }

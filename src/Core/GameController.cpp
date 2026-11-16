@@ -67,7 +67,7 @@ MA 02110-1301, USA.
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/Thread.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #if OOLITE_SDL
 #include <SDL3/SDL_init.h>
 
@@ -246,9 +246,10 @@ GameController* GameController::sharedController() {
 
 GameController::GameController() {
   if (sSharedController != nullptr) {
-    OORaiseException(OOInternalInconsistencyException,
-                     "%s: expected only one GameController to exist at a time.",
-                     __PRETTY_FUNCTION__);
+    oo::RaiseException(
+        oo::InternalInconsistencyException,
+        "%s: expected only one GameController to exist at a time.",
+        __PRETTY_FUNCTION__);
   }
 
   {
@@ -634,14 +635,14 @@ constexpr double kHeadlessLaunchLimitSeconds = 60.0;
 
 void GameController::startHeadless(const OOHeadlessOptions& options) {
   if (!options.headless) {
-    OORaiseException(OOInvalidArgumentException, "%s",
-                     "startHeadless: options.headless is false");
+    oo::RaiseException(oo::InvalidArgumentException, "%s",
+                       "startHeadless: options.headless is false");
   }
   options.validate();
   if (_universe != nullptr || UNIVERSE != nullptr) {
-    OORaiseException(OOInternalInconsistencyException, "%s",
-                     "startHeadless: a universe already exists in this "
-                     "process; a headless game is one per process");
+    oo::RaiseException(oo::InternalInconsistencyException, "%s",
+                       "startHeadless: a universe already exists in this "
+                       "process; a headless game is one per process");
   }
 
   _options = options;
@@ -682,9 +683,9 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
     _gameView = oo::makeShared<::MyOpenGLView>();
     if (!_gameView->initHeadless()) {
       _gameView.reset();
-      OORaiseException(OOInternalInconsistencyException, "%s",
-                       "startHeadless: SDL could not start for the input "
-                       "view");
+      oo::RaiseException(oo::InternalInconsistencyException, "%s",
+                         "startHeadless: SDL could not start for the input "
+                         "view");
     }
     _gameView->setGameController(this);
     setUpDisplayModes();  // as the windowed start: the options screen lists
@@ -697,19 +698,19 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
     setPlayerFileToLoad(kHeadlessScenarioSave);
     loadPlayerIfRequired();
     if (PLAYER == nullptr || !PLAYER->isDocked()) {
-      OORaiseException(OOInternalInconsistencyException,
-                       "startHeadless: the player is not docked after "
-                       "loading %s",
-                       kHeadlessScenarioSave);
+      oo::RaiseException(oo::InternalInconsistencyException,
+                         "startHeadless: the player is not docked after "
+                         "loading %s",
+                         kHeadlessScenarioSave);
     }
     PLAYER->launchFromStation();
     double launched = 0.0;
     while (PLAYER->status() != oo::EntityStatus::kInFlight) {
       if (launched > kHeadlessLaunchLimitSeconds) {
-        OORaiseException(OOInternalInconsistencyException,
-                         "startHeadless: the player was not in flight after "
-                         "%.0f s of game time",
-                         kHeadlessLaunchLimitSeconds);
+        oo::RaiseException(oo::InternalInconsistencyException,
+                           "startHeadless: the player was not in flight after "
+                           "%.0f s of game time",
+                           kHeadlessLaunchLimitSeconds);
       }
       tick(options.step);
       fireDueDeferredCalls();

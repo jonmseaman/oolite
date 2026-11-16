@@ -17,7 +17,7 @@
 
 #include "OOAsyncWorkManager.h"
 #include "oo_test.hpp"
-#include "oofnd/objc/OOException.h"  // oo::Exception
+#include "oofnd/objc/Exception.h"  // oo::Exception
 
 class TestTask : public OOAsyncWorkTask {
  public:
@@ -27,7 +27,7 @@ class TestTask : public OOAsyncWorkTask {
     performedOnCallingThread = (std::this_thread::get_id() == callingThread);
     performed = true;
     if (shouldThrow)
-      throw oo::Exception(OOGenericException,
+      throw oo::Exception(oo::GenericException,
                           "");  // the managers swallow the game's exception
   }
 

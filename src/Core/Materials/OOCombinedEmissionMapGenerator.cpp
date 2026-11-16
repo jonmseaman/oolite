@@ -39,7 +39,7 @@ SOFTWARE.
 #include "OOTextureLoader.h"
 #include "OOTextureScaling.h"
 #include "oofnd/Log.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 #define DUMP_COMBINER 0
 

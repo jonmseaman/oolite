@@ -23,7 +23,7 @@
 #include "OOStringExpander.h"
 #include "OOTypes.h"
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "OODescription.h"
@@ -166,7 +166,7 @@ void Universe::pauseGame()	{ _paused++; }
 void Universe::quitGame()	{ _quit++; }
 oo::PList Universe::getMissiontext()
 {
-	if (_raise)  OORaiseException(OOInvalidArgumentException, "missiontext %s", "boom");
+	if (_raise)  oo::RaiseException(oo::InvalidArgumentException, "missiontext %s", "boom");
 	if (_throwCxx)  throw std::runtime_error("cxx boom");
 	oo::PList::Dict text;
 	text["greeting"] = oo::PList(std::string("Hello [name]"));

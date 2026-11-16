@@ -84,7 +84,7 @@ SOFTWARE.
 #include "oofnd/Process.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 namespace {
 void SwitchLogFile(const std::string& name);

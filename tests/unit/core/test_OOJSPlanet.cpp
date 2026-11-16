@@ -20,7 +20,7 @@
 #include "OOStellarBody.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 
 // MARK: The classes, as far as the binding sees them ----------------------------------------------
@@ -194,7 +194,7 @@ bool OOPlanetEntity::setUpPlanetFromTexture(const std::optional<std::string> &fi
 
 double OOPlanetEntity::radius()
 {
-	if (_radius == 99)  OORaiseException(OOInvalidArgumentException, "radius %s", "boom");
+	if (_radius == 99)  oo::RaiseException(oo::InvalidArgumentException, "radius %s", "boom");
 	if (_radius == 98)  throw std::runtime_error("cxx boom");
 	return _radius;
 }

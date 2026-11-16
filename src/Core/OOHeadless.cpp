@@ -40,12 +40,12 @@ constexpr double kNanosecondsPerSecond = 1e9;
 
 void OOHeadlessOptions::validate() const {
   if (headless && !seed.has_value()) {
-    OORaiseException(OOInvalidArgumentException, "%s",
-                     "headless true requires seed to be given");
+    oo::RaiseException(oo::InvalidArgumentException, "%s",
+                       "headless true requires seed to be given");
   }
   if (headless && addOns == AddOns::kAll) {
-    OORaiseException(OOInvalidArgumentException, "%s",
-                     "addOns is never all when headless is true");
+    oo::RaiseException(oo::InvalidArgumentException, "%s",
+                       "addOns is never all when headless is true");
   }
 }
 

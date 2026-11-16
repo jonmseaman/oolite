@@ -20,7 +20,7 @@
 
 #include "oo_test.hpp"
 #include "oofnd/Exception.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 namespace {
 

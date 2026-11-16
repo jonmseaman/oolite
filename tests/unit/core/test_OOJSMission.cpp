@@ -20,7 +20,7 @@
 #include "OOMaths.h"
 #include "OOTypes.h"
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
@@ -273,7 +273,7 @@ oo::EntityStatus Entity::status()  { return static_cast<PlayerEntity *>(this)->_
 oo::PList PlayerEntity::getMissionDestinations()  { return oo::PList(_destinations); }
 std::optional<std::string> PlayerEntity::missionScreenID()
 {
-	if (_raise)  OORaiseException(OOInvalidArgumentException, "screen %s", "boom");
+	if (_raise)  oo::RaiseException(oo::InvalidArgumentException, "screen %s", "boom");
 	if (_throwCxx)  throw std::runtime_error("cxx boom");
 	return _screenID;
 }
@@ -471,7 +471,7 @@ OOJavaScriptEngine *OOJavaScriptEngine::sharedEngine()  { return sEngine; }
 bool OOJavaScriptEngine::callJSFunction(JSValueConst function, JSValueConst jsThis, int argc, JSValueConst *argv, JSValue *outResult)
 {
 	_calls++;
-	if (_raise)  OORaiseException(OOInvalidArgumentException, "callback %s", "boom");
+	if (_raise)  oo::RaiseException(oo::InvalidArgumentException, "callback %s", "boom");
 	JSValue result = JS_Call(sContext, function, jsThis, argc, argv);
 	if (JS_IsException(result))
 	{

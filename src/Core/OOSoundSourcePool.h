@@ -44,7 +44,7 @@ SOFTWARE.
 #include "OOMaths.h"
 #include "OOTypes.h"
 #include "oofnd/Object.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 struct OOSoundSourcePoolElement;  // OOSoundSourcePool.cpp
 

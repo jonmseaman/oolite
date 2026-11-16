@@ -50,7 +50,7 @@ MA 02110-1301, USA.
 #include "StationEntity.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 /*
         Station is registered as a Ship subclass and object converter with
@@ -1140,9 +1140,9 @@ static std::optional<std::string> StringAtIndex(const oo::PList& array,
 // (GNUstep 1.31.1's text), and the calling script saw it as "Native exception:
 // <reason>".
 static void RaiseNilValueForKey(std::string_view key) {
-  OORaiseException(OOInvalidArgumentException,
-                   "Tried to add nil value for key '%s' to dictionary",
-                   std::string(key).c_str());
+  oo::RaiseException(oo::InvalidArgumentException,
+                     "Tried to add nil value for key '%s' to dictionary",
+                     std::string(key).c_str());
 }
 
 // A string value for -setObject:forKey:, which raised on nil.

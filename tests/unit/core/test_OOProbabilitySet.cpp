@@ -31,7 +31,7 @@
 #include "legacy_random.h"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 namespace {
 
@@ -320,7 +320,7 @@ OO_TEST(nonZeroCountWithoutArraysRaises) {
       name = kept->name();
     }
     OO_CHECK(name != nullptr &&
-             std::strcmp(name, OOInvalidArgumentException) == 0);
+             std::strcmp(name, oo::InvalidArgumentException) == 0);
   }
 }
 

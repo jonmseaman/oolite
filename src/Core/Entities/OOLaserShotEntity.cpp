@@ -36,7 +36,7 @@ MA 02110-1301, USA.
 #include "OOTexture.h"
 #include "ShipEntity.h"
 #include "Universe.h"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 #define kLaserDuration (0.09)  // seconds
 

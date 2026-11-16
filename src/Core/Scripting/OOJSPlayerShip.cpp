@@ -56,8 +56,8 @@ MA 02110-1301, USA.
 #include "oofnd/Notification.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 static JSClassID sPlayerShipClassID;
 
@@ -1876,9 +1876,9 @@ static JSValue PlayerShipSetCustomView(JSContext* context,
         OOStringFromJSValue(context, OOJS_ARGV[2]);
     // -setObject:forKey: raised on a nil facing (GNUstep 1.31.1's text).
     if (!facing.has_value())
-      OORaiseException(OOInvalidArgumentException,
-                       "Tried to add nil value for key '%s' to dictionary",
-                       "weapon_facing");
+      oo::RaiseException(oo::InvalidArgumentException,
+                         "Tried to add nil value for key '%s' to dictionary",
+                         "weapon_facing");
     viewData["weapon_facing"] = *facing;
   }
 

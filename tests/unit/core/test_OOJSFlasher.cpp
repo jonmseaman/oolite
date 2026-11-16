@@ -21,7 +21,7 @@
 
 #include "OOColor.h"
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
@@ -182,7 +182,7 @@ void OOFlasherEntity::setPhase(float phase)  { _phase = phase; }
 
 float OOFlasherEntity::frequency()
 {
-	if (_frequency == 99)  OORaiseException(OOInvalidArgumentException, "frequency %s", "boom");
+	if (_frequency == 99)  oo::RaiseException(oo::InvalidArgumentException, "frequency %s", "boom");
 	if (_frequency == 98)  throw std::runtime_error("cxx boom");
 	return _frequency;
 }

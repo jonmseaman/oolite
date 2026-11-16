@@ -68,7 +68,7 @@ SOFTWARE.
 #include "oofnd/Object.hpp"
 #include "oofnd/PListDescription.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 namespace {
 
@@ -121,8 +121,8 @@ oo::PList QuaternionPList(Quaternion value) {
 // read it: an empty token list raised.
 std::string FirstToken(const std::vector<std::string>& tokens) {
   if (tokens.empty()) {
-    OORaiseException(OORangeException,
-                     "Index 0 is out of range 0 (in 'objectAtIndex:')");
+    oo::RaiseException(oo::RangeException,
+                       "Index 0 is out of range 0 (in 'objectAtIndex:')");
   }
   return tokens[0];
 }
@@ -222,28 +222,29 @@ void OOShipRegistry::init() {
       // Don't accept nil or empty
       loadShipData();
       if (_shipData.count() == 0) {
-        OORaiseException("OOShipRegistryLoadFailure",
-                         "Could not load any ship data.");
+        oo::RaiseException("OOShipRegistryLoadFailure",
+                           "Could not load any ship data.");
       }
       if (_playerShips.empty()) {
-        OORaiseException("OOShipRegistryLoadFailure",
-                         "Could not load any player ships.");
+        oo::RaiseException("OOShipRegistryLoadFailure",
+                           "Could not load any player ships.");
       }
     }
 
     loadDemoShipConditions();
     loadDemoShips();  // testing only
     if (_demoShips.count() == 0) {
-      OORaiseException("OOShipRegistryLoadFailure",
-                       "Could not load or synthesize any demo ships.");
+      oo::RaiseException("OOShipRegistryLoadFailure",
+                         "Could not load or synthesize any demo ships.");
     }
 
     loadCachedRoleProbabilitySets();
     if (!_probabilitySets.has_value()) {
       buildRoleProbabilitySets();
       if (_probabilitySets->empty()) {
-        OORaiseException("OOShipRegistryLoadFailure",
-                         "Could not load or synthesize role probability sets.");
+        oo::RaiseException(
+            "OOShipRegistryLoadFailure",
+            "Could not load or synthesize role probability sets.");
       }
     }
   }
@@ -567,9 +568,9 @@ void OOShipRegistry::loadDemoShips() {
         _shipData.find(demoEntry.get<std::string>("ship")), kOODemoShipName);
     if (!name.has_value()) {
       // -setObject:nil forKey: raised
-      OORaiseException(OOInvalidArgumentException,
-                       "Tried to add nil value for key '%s' to dictionary",
-                       kOODemoShipName);
+      oo::RaiseException(oo::InvalidArgumentException,
+                         "Tried to add nil value for key '%s' to dictionary",
+                         kOODemoShipName);
     }
     demoEntryValues[kOODemoShipName] = *name;
     // set "class" object to standard ship if not otherwise set
@@ -1125,8 +1126,8 @@ bool OOShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData) {
               // Oops, reference to non-existent subent.
               if (!subentityKey.has_value()) {
                 // -addObject:nil raised
-                OORaiseException(OOInvalidArgumentException,
-                                 "Tried to add nil to set");
+                oo::RaiseException(oo::InvalidArgumentException,
+                                   "Tried to add nil to set");
               }
               badSubentities.insert(*subentityKey);
             } else {

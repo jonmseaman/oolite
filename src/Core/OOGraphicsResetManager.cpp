@@ -33,7 +33,7 @@ SOFTWARE.
 #include "OOOpenGLExtensionManager.h"
 #include "OOTexture.h"
 #include "oofnd/Log.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 namespace {
 

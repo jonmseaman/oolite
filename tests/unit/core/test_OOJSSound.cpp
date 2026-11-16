@@ -17,7 +17,7 @@
 */
 
 #include "OOJSEngineCore.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 
@@ -49,7 +49,7 @@ class TestSound final : public OOSound
 public:
 	std::optional<std::string> name() override
 	{
-		if (_name == "raise")  OORaiseException(OOInvalidArgumentException, "name %s", "boom");
+		if (_name == "raise")  oo::RaiseException(oo::InvalidArgumentException, "name %s", "boom");
 		if (_name == "throw")  throw std::runtime_error("cxx boom");
 		return _name;
 	}

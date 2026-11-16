@@ -24,7 +24,7 @@
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/Object.hpp"
 #include "oofnd/String.hpp"
@@ -188,7 +188,7 @@ void TestEntityObject::setScanClass(oo::ScanClass sClass)  { _scanClass = sClass
 
 float TestEntityObject::mass()
 {
-	if (_mass == 99)  OORaiseException(OOInvalidArgumentException, "mass %s", "boom");
+	if (_mass == 99)  oo::RaiseException(oo::InvalidArgumentException, "mass %s", "boom");
 	if (_mass == 98)  throw std::runtime_error("cxx boom");
 	return _mass;
 }

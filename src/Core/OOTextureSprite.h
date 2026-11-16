@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "OOOpenGL.h"
 #include "oofnd/Object.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 class OOTexture;
 

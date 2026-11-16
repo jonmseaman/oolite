@@ -60,7 +60,7 @@ MA 02110-1301, USA.
 #include "oofnd/PListWriting.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "unzip.h"
 
 namespace {
@@ -257,8 +257,8 @@ void ReplaceArrayElement(oo::PList& array, std::size_t index,
                          const oo::PList& value) {
   oo::PList::Array& elements = *array.getIf<oo::PList::Array>();
   if (index >= elements.size()) {
-    OORaiseException(
-        OORangeException,
+    oo::RaiseException(
+        oo::RangeException,
         "Index %zu is out of range %zu (in 'replaceObjectAtIndex:withObject:')",
         static_cast<std::size_t>(index),
         static_cast<std::size_t>(elements.size()));
@@ -1946,8 +1946,8 @@ oo::PList ResourceManager::roleCategoriesDictionary() {
   }
   if (pirateVictims.isNull()) {
     // +dictionaryWithObject:forKey: with a nil object raised
-    OORaiseException(OOInvalidArgumentException,
-                     "Tried to init dictionary with nil value");
+    oo::RaiseException(oo::InvalidArgumentException,
+                       "Tried to init dictionary with nil value");
   }
   oo::PList::Dict pirateVictimCategory;
   pirateVictimCategory.emplace("oolite-pirate-victim", pirateVictims);
@@ -2113,11 +2113,11 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
             ? oo::str::appendingPathComponent(path, *folderName)
             : path,
         fileName);
-    result = oo::existingPListPath(filePath, OOOxzFileExistsAtPath);
+    result = oo::existingPListPath(filePath, oo::OxzFileExistsAtPath);
     if (result.has_value()) break;
 
     filePath = oo::str::appendingPathComponent(path, fileName);
-    result = oo::existingPListPath(filePath, OOOxzFileExistsAtPath);
+    result = oo::existingPListPath(filePath, oo::OxzFileExistsAtPath);
     if (result.has_value()) break;
   }
 
@@ -2210,7 +2210,7 @@ std::optional<std::string> ResourceManager::stringFromFilesNamed(
       pathForFileNamed(fileName, folderName, true);
   if (path.has_value()) {
     // The file's bytes, read through the OXZ reader, then decoded.
-    const std::optional<oo::Data> data = OODataFromOXZFile(*path);
+    const std::optional<oo::Data> data = oo::DataFromOXZFile(*path);
     if (data.has_value())
       result = oo::str::decodeUnicodeText(data->stringView());
   }

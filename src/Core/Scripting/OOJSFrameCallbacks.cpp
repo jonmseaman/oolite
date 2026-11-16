@@ -37,7 +37,7 @@ SOFTWARE.
 
 #include "oofnd/Date.hpp"
 #include "oofnd/Log.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 /*
         By default, tracking IDs are scrambled to discourage people from trying

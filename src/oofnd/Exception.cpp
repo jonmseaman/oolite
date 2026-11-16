@@ -9,12 +9,16 @@
 #include <cstdio>
 #include <string>
 
-const char* const OOGenericException = "NSGenericException";
-const char* const OOInvalidArgumentException = "NSInvalidArgumentException";
-const char* const OORangeException = "NSRangeException";
-const char* const OOInternalInconsistencyException =
+namespace oo {
+
+const char* const GenericException = "NSGenericException";
+const char* const InvalidArgumentException = "NSInvalidArgumentException";
+const char* const RangeException = "NSRangeException";
+const char* const InternalInconsistencyException =
     "NSInternalInconsistencyException";
-const char* const OOMallocException = "NSMallocException";
+const char* const MallocException = "NSMallocException";
+
+}  // namespace oo
 
 namespace {
 
@@ -35,7 +39,9 @@ std::string FormatReason(const char* format, va_list args) {
 
 }  // namespace
 
-void OORaiseException(const char* name, const char* format, ...) {
+namespace oo {
+
+void RaiseException(const char* name, const char* format, ...) {
   std::string reason;
   if (format != nullptr) {
     va_list args;
@@ -45,6 +51,8 @@ void OORaiseException(const char* name, const char* format, ...) {
   }
   throw oo::Exception(name, reason.c_str());
 }
+
+}  // namespace oo
 
 namespace oo {
 

@@ -35,7 +35,7 @@ SOFTWARE.
 #include <vector>
 
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 

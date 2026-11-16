@@ -14,7 +14,7 @@
 */
 
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 
@@ -58,7 +58,7 @@ public:
 oo::PList PlayerEntity::missionVariables()  { return oo::PList(_missionVariables); }
 oo::PList PlayerEntity::missionVariableForKey(const std::string &key)
 {
-	if (key == "mission_boom")  OORaiseException(OOInvalidArgumentException, "variable %s", "boom");
+	if (key == "mission_boom")  oo::RaiseException(oo::InvalidArgumentException, "variable %s", "boom");
 	if (key == "mission_cxxboom")  throw std::runtime_error("cxx boom");
 	auto it = _missionVariables.find(key);
 	return it != _missionVariables.end() ? it->second : oo::PList();

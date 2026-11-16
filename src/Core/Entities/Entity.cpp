@@ -41,7 +41,7 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"  // oo::CurrentOOException
+#include "oofnd/objc/Exception.h"  // oo::CurrentOOException
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 uint32_t gLiveEntityCount = 0;

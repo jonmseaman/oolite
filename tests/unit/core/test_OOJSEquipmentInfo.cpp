@@ -20,7 +20,7 @@
 #include "OOEquipmentType.h"
 #include "OOColor.h"
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include <cstddef>
@@ -206,7 +206,7 @@ GLfloat PlayerEntity::fuelChargeRate()  { return _fuelChargeRate; }
 double PlayerEntity::renovationCosts()  { return _renovationCosts; }
 OOCreditsQuantity PlayerEntity::adjustPriceByScriptForEqKey(const std::string &eqKey, OOCreditsQuantity price)
 {
-	if (eqKey == "EQ_SCOOPER")  OORaiseException(OOInvalidArgumentException, "price %s", "boom");
+	if (eqKey == "EQ_SCOOPER")  oo::RaiseException(oo::InvalidArgumentException, "price %s", "boom");
 	if (eqKey == "EQ_MISSILE" && _throwCxx)  throw std::runtime_error("cxx boom");
 	return price * 2;
 }

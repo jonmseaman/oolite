@@ -41,7 +41,7 @@ MA 02110-1301, USA.
 #include "OOVisualEffectEntity.h"
 #include "ResourceManager.h"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 /*
         The class is a static JSClassDef registered with OOJSRegisterClass(),

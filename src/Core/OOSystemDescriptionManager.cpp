@@ -39,7 +39,7 @@ MA 02110-1301, USA.
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 namespace {
 
