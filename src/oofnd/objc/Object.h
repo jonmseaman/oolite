@@ -5,4 +5,8 @@
 
 #pragma once
 
-struct OOZone;
+namespace oo {
+
+struct Zone;
+
+}  // namespace oo

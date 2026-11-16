@@ -785,7 +785,7 @@ size_t Octree::totalSize() {
 constexpr int kMinimumBuilderCapacity = 16 << 10;
 
 // Extract top of state stack.
-inline oo::OctreeBuilder::OOOctreeBuildState* oo::OctreeBuilder::State(
+inline oo::OctreeBuilder::OctreeBuildState* oo::OctreeBuilder::State(
     oo::OctreeBuilder* self) {
   return &self->_stateStack[self->_level];
 }
