@@ -28,7 +28,7 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOTextureVerifierStage.h"
+#include "TextureVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -48,17 +48,19 @@ MA 02110-1301, USA.
    calls these members, and the verifier holds it. The ship data stage finds it
    by name through the verifier's stage lookup.
 */
-struct OOModelVerifierEntry {
+namespace oo {
+
+struct ModelVerifierEntry {
   std::string name;
   std::string context;
   oo::PList materials;
   oo::PList shaders;
 
-  friend bool operator==(const OOModelVerifierEntry&,
-                         const OOModelVerifierEntry&) = default;
+  friend bool operator==(const ModelVerifierEntry&,
+                         const ModelVerifierEntry&) = default;
 };
 
-class OOModelVerifierStage : public OOTextureHandlingStage {
+class ModelVerifierStage : public TextureHandlingStage {
  public:
   // The stage's name, as name() returns it (the ship data stage looks the stage
   // up by it).
@@ -66,8 +68,7 @@ class OOModelVerifierStage : public OOTextureHandlingStage {
 
   // Returns name to be used in dependents() by other stages; also registers
   // stage.
-  static std::string nameForReverseDependencyForVerifier(
-      OOOXPVerifier* verifier);
+  static std::string nameForReverseDependencyForVerifier(OXPVerifier* verifier);
 
   std::optional<std::string> name() override;
   bool shouldRun() override;
@@ -87,7 +88,9 @@ class OOModelVerifierStage : public OOTextureHandlingStage {
   void checkModel(const std::string& name, const std::string& context,
                   const oo::PList& materials, const oo::PList& shaders);
 
-  std::vector<OOModelVerifierEntry> _modelsToCheck = {};
+  std::vector<ModelVerifierEntry> _modelsToCheck = {};
 };
+
+}  // namespace oo
 
 #endif

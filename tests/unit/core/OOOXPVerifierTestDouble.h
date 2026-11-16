@@ -22,8 +22,8 @@
 #include <string>
 #include <vector>
 
-#include "OOOXPVerifier.h"
-#include "OOOXPVerifierStage.h"
+#include "OXPVerifier.h"
+#include "OXPVerifierStage.h"
 #include "oofnd/PListParsing.hpp"
 
 static int gRegistrations = 0;
@@ -37,10 +37,10 @@ static int gRegistrations = 0;
 struct OOOXPVerifierTestAccess {
   // The verifier of the OXP at path, configured by the verifyOXP.plist text
   // configuration.
-  static OOOXPVerifier* Make(const std::string& path,
+  static oo::OXPVerifier* Make(const std::string& path,
                              const char* configuration) {
-    static auto* kept = new std::vector<std::shared_ptr<OOOXPVerifier>>;
-    const std::shared_ptr<OOOXPVerifier> verifier = std::shared_ptr<OOOXPVerifier>(new OOOXPVerifier(), oo::Dispose{});
+    static auto* kept = new std::vector<std::shared_ptr<oo::OXPVerifier>>;
+    const std::shared_ptr<oo::OXPVerifier> verifier = std::shared_ptr<oo::OXPVerifier>(new oo::OXPVerifier(), oo::Dispose{});
     verifier->_basePath = path;
     verifier->_verifierPList = *oo::parsePropertyListData(configuration);
     verifier->_openForRegistration = true;
@@ -57,38 +57,38 @@ struct OOOXPVerifierTestAccess {
    method had (the ivars it read are the class's own members now); nothing else
    of the class is defined, so nothing else may be called.
 */
-void OOOXPVerifier::registerStage(::OOOXPVerifierStage* stage) {
+void oo::OXPVerifier::registerStage(::oo::OXPVerifierStage* stage) {
   _stagesByName[*stage->name()] = oo::share(stage);
   stage->setVerifier(this);
   gRegistrations++;
 }
 
-std::optional<std::string> OOOXPVerifier::oxpPath() { return _basePath; }
-std::optional<std::string> OOOXPVerifier::oxpDisplayName() {
+std::optional<std::string> oo::OXPVerifier::oxpPath() { return _basePath; }
+std::optional<std::string> oo::OXPVerifier::oxpDisplayName() {
   return "Test.oxp";
 }
 
-::OOOXPVerifierStage* OOOXPVerifier::stageWithName(const std::string& name) {
+::oo::OXPVerifierStage* oo::OXPVerifier::stageWithName(const std::string& name) {
   const auto found = _stagesByName.find(name);
   return found != _stagesByName.end() ? found->second.get() : nullptr;
 }
 
-oo::PList OOOXPVerifier::configurationValueForKey(const std::string& key) {
+oo::PList oo::OXPVerifier::configurationValueForKey(const std::string& key) {
   const oo::PList* value = _verifierPList.find(key);
   return value != nullptr ? *value : oo::PList();
 }
 
-oo::PList OOOXPVerifier::configurationArrayForKey(const std::string& key) {
+oo::PList oo::OXPVerifier::configurationArrayForKey(const std::string& key) {
   const oo::PList* array = _verifierPList.get<oo::PList::Array>(key);
   return array != nullptr ? *array : oo::PList();
 }
 
-oo::PList OOOXPVerifier::configurationDictionaryForKey(const std::string& key) {
+oo::PList oo::OXPVerifier::configurationDictionaryForKey(const std::string& key) {
   const oo::PList* dictionary = _verifierPList.get<oo::PList::Dict>(key);
   return dictionary != nullptr ? *dictionary : oo::PList();
 }
 
-std::optional<std::string> OOOXPVerifier::configurationStringForKey(
+std::optional<std::string> oo::OXPVerifier::configurationStringForKey(
     const std::string& key) {
   const oo::PList* value = _verifierPList.find(key);
   if (value == nullptr || !(value->isString() || value->isNumber()))
@@ -96,7 +96,7 @@ std::optional<std::string> OOOXPVerifier::configurationStringForKey(
   return _verifierPList.get<std::string>(key);
 }
 
-std::optional<std::vector<std::string>> OOOXPVerifier::configurationSetForKey(
+std::optional<std::vector<std::string>> oo::OXPVerifier::configurationSetForKey(
     const std::string& key) {
   const oo::PList* array = _verifierPList.get<oo::PList::Array>(key);
   if (array == nullptr) return std::nullopt;

@@ -16,7 +16,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 #include "OOLogging.h"
 #include "oo_test.hpp"
 
@@ -45,7 +45,7 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
 }
 
 // A file-handling stage, as the leaf stages are.
-class TestFileStage : public OOFileHandlingVerifierStage {
+class TestFileStage : public oo::FileHandlingVerifierStage {
  public:
   std::optional<std::string> name() override { return "Testing files"; }
 };
@@ -65,7 +65,7 @@ class TestSuperCallingFileStage : public TestFileStage {
 // A converted file-handling stage: a C++ subclass of the intermediate class.
 // Global, as a leaf stage is once converted, so Objective-C sees it as an
 // OOOXPVerifierStage.
-class TestCxxFileStage : public OOFileHandlingVerifierStage {
+class TestCxxFileStage : public oo::FileHandlingVerifierStage {
  public:
   std::optional<std::string> name() override { return "Testing files in C++"; }
   void run() override { runs++; }
@@ -109,7 +109,7 @@ std::string MakeOXP() {
   return base.generic_string();
 }
 
-OOOXPVerifier* MakeVerifier(const std::string& path) {
+oo::OXPVerifier* MakeVerifier(const std::string& path) {
   return OOOXPVerifierTestAccess::Make(path, kConfiguration);
 }
 
@@ -117,16 +117,16 @@ const std::vector<std::string> kScannerName = {"Scanning files"};
 const std::vector<std::string> kUnusedName = {"Checking for unused files"};
 
 // The registered scanner, as the stages find it.
-OOFileScannerVerifierStage* ScannerOf(OOOXPVerifier* verifier) {
-  return dynamic_cast<OOFileScannerVerifierStage*>(
-      verifier->stageWithName(OOFileScannerVerifierStage::kName));
+oo::FileScannerVerifierStage* ScannerOf(oo::OXPVerifier* verifier) {
+  return dynamic_cast<oo::FileScannerVerifierStage*>(
+      verifier->stageWithName(oo::FileScannerVerifierStage::kName));
 }
 
 }  // namespace
 
 OO_TEST(fileHandlingStageNamesAndRegistersItsNeighbours) {
   {
-    OOOXPVerifier* verifier = MakeVerifier("");
+    oo::OXPVerifier* verifier = MakeVerifier("");
     const std::shared_ptr<TestFileStage> stage = oo::makeShared<TestFileStage>();
     stage->setVerifier(verifier);
     const int before = OOOXPVerifierTestAccess::Registrations();
@@ -163,10 +163,10 @@ OO_TEST(superDependentsReachTheIntermediateClass) {
 OO_TEST(scannerFindsFiles) {
   {
     const std::string base = MakeOXP();
-    OOOXPVerifier* verifier = MakeVerifier(base);
-    OO_CHECK(OOFileScannerVerifierStage::nameForDependencyForVerifier(
+    oo::OXPVerifier* verifier = MakeVerifier(base);
+    OO_CHECK(oo::FileScannerVerifierStage::nameForDependencyForVerifier(
                  verifier) == std::optional<std::string>("Scanning files"));
-    OOFileScannerVerifierStage* scanner = ScannerOf(verifier);
+    oo::FileScannerVerifierStage* scanner = ScannerOf(verifier);
     OO_CHECK(scanner != nullptr && scanner->verifier() == verifier);
     OO_CHECK(scanner->name() == std::optional<std::string>("Scanning files"));
     OO_CHECK(
@@ -244,7 +244,7 @@ OO_TEST(scannerFindsFiles) {
 
 OO_TEST(cxxFileStageBehindTheFacade) {
   {
-    OOOXPVerifier* verifier = MakeVerifier("");
+    oo::OXPVerifier* verifier = MakeVerifier("");
     const std::shared_ptr<TestCxxFileStage> stage = oo::makeShared<TestCxxFileStage>();
     stage->setVerifier(verifier);
     OO_CHECK(stage->dependencies() == kScannerName);
@@ -265,15 +265,15 @@ OO_TEST(cxxFileStageBehindTheFacade) {
 OO_TEST(scannerFacade) {
   {
     const std::string base = MakeOXP();
-    OOOXPVerifier* verifier = MakeVerifier(base);
-    OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-    OOFileScannerVerifierStage* cxxScanner = ScannerOf(verifier);
+    oo::OXPVerifier* verifier = MakeVerifier(base);
+    oo::FileScannerVerifierStage::nameForDependencyForVerifier(verifier);
+    oo::FileScannerVerifierStage* cxxScanner = ScannerOf(verifier);
     OO_CHECK(cxxScanner != nullptr);
 
     // The C++ members answer.
     cxxScanner->run();
     OO_CHECK(cxxScanner->name() ==
-             std::optional<std::string>(OOFileScannerVerifierStage::kName));
+             std::optional<std::string>(oo::FileScannerVerifierStage::kName));
     OO_CHECK(
         cxxScanner->pathForFile("foo.png", "Textures", std::nullopt, false) ==
         std::optional<std::string>(base + "/textures/Foo.PNG"));

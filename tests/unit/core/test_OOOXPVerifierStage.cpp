@@ -13,7 +13,7 @@
 */
 
 #include "OOLogging.h"
-#include "OOOXPVerifierStage.h"
+#include "OXPVerifierStage.h"
 #include "oo_test.hpp"
 #include "oofnd/objc/OOException.h"
 
@@ -34,14 +34,14 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
    OOOXPVerifier.mm is not linked.
 */
 struct OOOXPVerifierTestAccess {
-  static std::shared_ptr<OOOXPVerifier> Make() {
-    return std::shared_ptr<OOOXPVerifier>(new OOOXPVerifier(), oo::Dispose{});
+  static std::shared_ptr<oo::OXPVerifier> Make() {
+    return std::shared_ptr<oo::OXPVerifier>(new oo::OXPVerifier(), oo::Dispose{});
   }
 };
 
 /*	A stage that overrides the subclass responsibilities.
  */
-class TestObjCStage : public OOOXPVerifierStage {
+class TestObjCStage : public oo::OXPVerifierStage {
  public:
   std::optional<std::string> name() override { return _testName; }
   std::optional<std::vector<std::string>> dependencies() override {
@@ -73,7 +73,7 @@ class TestSuperCallingStage : public TestObjCStage {
 
 // A converted stage: a C++ subclass that overrides the virtual members. Global,
 // as a game class is, so that its description names it as the game's would.
-class TestCxxStage : public OOOXPVerifierStage {
+class TestCxxStage : public oo::OXPVerifierStage {
  public:
   explicit TestCxxStage(std::string testName)
       : _testName(std::move(testName)) {}
@@ -100,11 +100,11 @@ std::shared_ptr<TestObjCStage> MakeStage(const char* name) {
   return stage;
 }
 
-bool Holds(const std::vector<std::shared_ptr<OOOXPVerifierStage>>& stages,
-           std::initializer_list<OOOXPVerifierStage*> expected) {
+bool Holds(const std::vector<std::shared_ptr<oo::OXPVerifierStage>>& stages,
+           std::initializer_list<oo::OXPVerifierStage*> expected) {
   if (stages.size() != expected.size()) return false;
   std::size_t i = 0;
-  for (OOOXPVerifierStage* stage : expected) {
+  for (oo::OXPVerifierStage* stage : expected) {
     if (stages[i++].get() != stage) return false;
   }
   return true;
@@ -114,7 +114,7 @@ bool Holds(const std::vector<std::shared_ptr<OOOXPVerifierStage>>& stages,
 
 OO_TEST(baseDefaults) {
   {
-    const std::shared_ptr<OOOXPVerifierStage> stage = oo::makeShared<OOOXPVerifierStage>();
+    const std::shared_ptr<oo::OXPVerifierStage> stage = oo::makeShared<oo::OXPVerifierStage>();
     const int before = gSubclassResponsibilities;
     OO_CHECK(!stage->name()
                   .has_value());  // subclass responsibility: logs, answers nil
@@ -136,8 +136,8 @@ OO_TEST(baseDefaults) {
 
 OO_TEST(verifierIsNotRetained) {
   {
-    const std::shared_ptr<OOOXPVerifier> object = OOOXPVerifierTestAccess::Make();
-    OOOXPVerifier* verifier = object.get();
+    const std::shared_ptr<oo::OXPVerifier> object = OOOXPVerifierTestAccess::Make();
+    oo::OXPVerifier* verifier = object.get();
     const std::shared_ptr<TestObjCStage> stage = MakeStage("Stage");
     const long before = object->weak_from_this().use_count();
     stage->setVerifier(verifier);
@@ -213,7 +213,7 @@ OO_TEST(description) {
     const std::string text = MakeStage("Checking things")->description();
     OO_CHECK(text.starts_with("<TestObjCStage 0x"));
     OO_CHECK(text.ends_with(">{\"Checking things\"}"));
-    OO_CHECK(oo::makeShared<OOOXPVerifierStage>()->description().ends_with(
+    OO_CHECK(oo::makeShared<oo::OXPVerifierStage>()->description().ends_with(
         ">{\"(null)\"}"));
   }
 }
@@ -243,7 +243,7 @@ OO_TEST(cxxStageBehindTheFacade) {
 OO_TEST(objCStageBehindACxxPointer) {
   {
     const std::shared_ptr<TestObjCStage> objCStage = MakeStage("ObjC");
-    OOOXPVerifierStage* part = objCStage.get();
+    oo::OXPVerifierStage* part = objCStage.get();
     OO_CHECK(part != nullptr);
 
     // Virtual calls through the base reach the subclass's overrides.
@@ -258,7 +258,7 @@ OO_TEST(objCStageBehindACxxPointer) {
     const std::shared_ptr<TestSuperCallingStage> superCalling =
         oo::makeShared<TestSuperCallingStage>();
     OO_CHECK(
-        static_cast<OOOXPVerifierStage*>(superCalling.get())->dependents() ==
+        static_cast<oo::OXPVerifierStage*>(superCalling.get())->dependents() ==
         std::vector<std::string>{"Listing unused files"});
   }
 }

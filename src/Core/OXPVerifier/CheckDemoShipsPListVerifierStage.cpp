@@ -23,37 +23,37 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOCheckDemoShipsPListVerifierStage.h"
+#include "CheckDemoShipsPListVerifierStage.h"
 
 #include <string>
 
 #if OO_OXP_VERIFIER_ENABLED
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 
 static const char* const kStageName = "Checking demoships.plist";
 
-std::optional<std::string> OOCheckDemoShipsPListVerifierStage::name() {
+std::optional<std::string> oo::CheckDemoShipsPListVerifierStage::name() {
   return kStageName;
 }
 
-bool OOCheckDemoShipsPListVerifierStage::shouldRun() {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+bool oo::CheckDemoShipsPListVerifierStage::shouldRun() {
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   return fileScanner != nullptr &&
          fileScanner->fileExists("demoships.plist", "Config", std::nullopt,
                                  false);
 }
 
-void OOCheckDemoShipsPListVerifierStage::run() {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+void oo::CheckDemoShipsPListVerifierStage::run() {
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
   oo::PList demoshipsPList;
   oo::PList shipdataPList;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   if (fileScanner == nullptr) return;  // a nil scanner found no plist
 
   demoshipsPList =
@@ -83,7 +83,7 @@ void OOCheckDemoShipsPListVerifierStage::run() {
   runCheckWithDemoShips(demoshipsPList, shipdataPList);
 }
 
-void OOCheckDemoShipsPListVerifierStage::runCheckWithDemoShips(
+void oo::CheckDemoShipsPListVerifierStage::runCheckWithDemoShips(
     const oo::PList& demoshipsPList, const oo::PList& shipdataPList) {
   for (const oo::PList& entry : *demoshipsPList.getIf<oo::PList::Array>()) {
     // An entry that is not a string is no key of shipdata.plist; print the

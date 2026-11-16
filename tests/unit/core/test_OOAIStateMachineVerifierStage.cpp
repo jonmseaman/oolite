@@ -18,9 +18,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "OOAIStateMachineVerifierStage.h"
+#include "AIStateMachineVerifierStage.h"
 #include "OOLogging.h"
-#include "OOOXPVerifierStage.h"
+#include "OXPVerifierStage.h"
 #include "OOPListParsing.h"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
@@ -98,7 +98,7 @@ std::string MakeOXP() {
   return base.generic_string();
 }
 
-OOOXPVerifier* MakeVerifier(const std::string& path) {
+oo::OXPVerifier* MakeVerifier(const std::string& path) {
   return OOOXPVerifierTestAccess::Make(path, kConfiguration);
 }
 
@@ -123,9 +123,9 @@ int LogLinesContaining(std::string_view text) {
 
 // The scanner, registered with the verifier and run over its OXP, as the
 // verifier runs it first.
-void RunScanner(OOOXPVerifier* verifier) {
-  OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
+void RunScanner(oo::OXPVerifier* verifier) {
+  oo::FileScannerVerifierStage::nameForDependencyForVerifier(verifier);
+  verifier->stageWithName(oo::FileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -135,12 +135,12 @@ const std::vector<std::string> kUnusedName = {"Checking for unused files"};
 
 OO_TEST(nameAndNeighbours) {
   {
-    OOOXPVerifier* verifier = MakeVerifier("");
-    OO_CHECK(OOAIStateMachineVerifierStage::nameForReverseDependencyForVerifier(
+    oo::OXPVerifier* verifier = MakeVerifier("");
+    OO_CHECK(oo::AIStateMachineVerifierStage::nameForReverseDependencyForVerifier(
                  verifier) == "Validating AIs");
 
-    const std::shared_ptr<OOAIStateMachineVerifierStage> stage =
-        oo::makeShared<OOAIStateMachineVerifierStage>();
+    const std::shared_ptr<oo::AIStateMachineVerifierStage> stage =
+        oo::makeShared<oo::AIStateMachineVerifierStage>();
     stage->setVerifier(verifier);
     OO_CHECK(stage->name() == std::optional<std::string>("Validating AIs"));
     OO_CHECK(stage->dependencies() == kScannerName);
@@ -152,10 +152,10 @@ OO_TEST(nameAndNeighbours) {
 OO_TEST(shipsNameAIs) {
   {
     const std::string base = MakeOXP();
-    OOOXPVerifier* verifier = MakeVerifier(base);
+    oo::OXPVerifier* verifier = MakeVerifier(base);
     RunScanner(verifier);
-    const std::shared_ptr<OOAIStateMachineVerifierStage> stage =
-        oo::makeShared<OOAIStateMachineVerifierStage>();
+    const std::shared_ptr<oo::AIStateMachineVerifierStage> stage =
+        oo::makeShared<oo::AIStateMachineVerifierStage>();
     stage->setVerifier(verifier);
     StartLog();
 
@@ -189,10 +189,10 @@ OO_TEST(shipsNameAIs) {
 OO_TEST(runChecksEachAIAgainstTheWhitelist) {
   {
     const std::string base = MakeOXP();
-    OOOXPVerifier* verifier = MakeVerifier(base);
+    oo::OXPVerifier* verifier = MakeVerifier(base);
     RunScanner(verifier);
-    const std::shared_ptr<OOAIStateMachineVerifierStage> stage =
-        oo::makeShared<OOAIStateMachineVerifierStage>();
+    const std::shared_ptr<oo::AIStateMachineVerifierStage> stage =
+        oo::makeShared<oo::AIStateMachineVerifierStage>();
     stage->setVerifier(verifier);
     for (const char* name :
          {"oneAI.plist", "goodAI.plist", "badAI.plist", "listAI.plist",
@@ -268,16 +268,16 @@ OO_TEST(runChecksEachAIAgainstTheWhitelist) {
 OO_TEST(facade) {
   {
     const std::string base = MakeOXP();
-    OOOXPVerifier* verifier = MakeVerifier(base);
+    oo::OXPVerifier* verifier = MakeVerifier(base);
     RunScanner(verifier);
-    const std::shared_ptr<OOAIStateMachineVerifierStage> stage =
-        oo::makeShared<OOAIStateMachineVerifierStage>();
+    const std::shared_ptr<oo::AIStateMachineVerifierStage> stage =
+        oo::makeShared<oo::AIStateMachineVerifierStage>();
 
     // Registered as the verifier registers it, found again by name, as the ship
     // data stage finds it.
     verifier->registerStage(stage.get());
     OO_CHECK(verifier->stageWithName("Validating AIs") == stage.get());
-    OO_CHECK(static_cast<OOAIStateMachineVerifierStage*>(
+    OO_CHECK(static_cast<oo::AIStateMachineVerifierStage*>(
                  verifier->stageWithName("Validating AIs")) == stage.get());
 
     // The stage answers as its facade did.

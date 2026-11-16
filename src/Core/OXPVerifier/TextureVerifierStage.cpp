@@ -23,7 +23,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOTextureVerifierStage.h"
+#include "TextureVerifierStage.h"
 
 #include <memory>
 #include <optional>
@@ -32,30 +32,32 @@ MA 02110-1301, USA.
 
 #if OO_OXP_VERIFIER_ENABLED
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 #include "OOTexture.h"
 #include "OOTextureLoader.h"
 #include "oofnd/Log.hpp"
 
 static const char* const kStageName = "Testing textures and images";
 
-std::string OOTextureVerifierStage::nameForReverseDependencyForVerifier(
-    OOOXPVerifier*) {
+std::string oo::TextureVerifierStage::nameForReverseDependencyForVerifier(
+    oo::OXPVerifier*) {
   return kStageName;
 }
 
-std::optional<std::string> OOTextureVerifierStage::name() { return kStageName; }
+std::optional<std::string> oo::TextureVerifierStage::name() {
+  return kStageName;
+}
 
-bool OOTextureVerifierStage::shouldRun() {
-  OOFileScannerVerifierStage* fileScanner =
-      static_cast<OOFileScannerVerifierStage*>(
-          verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+bool oo::TextureVerifierStage::shouldRun() {
+  oo::FileScannerVerifierStage* fileScanner =
+      static_cast<oo::FileScannerVerifierStage*>(
+          verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   return !_usedTextures.empty() ||
          (fileScanner != nullptr &&
           fileScanner->filesInFolder("Images").has_value());
 }
 
-void OOTextureVerifierStage::run() {
+void oo::TextureVerifierStage::run() {
   for (const std::string& name : _usedTextures) {
     {
       checkTextureNamed(name, "Textures");
@@ -65,9 +67,9 @@ void OOTextureVerifierStage::run() {
 
   // All "images" are considered used, since we don't have a reasonable way to
   // look for images referenced in JavaScript scripts.
-  OOFileScannerVerifierStage* fileScanner =
-      static_cast<OOFileScannerVerifierStage*>(
-          verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  oo::FileScannerVerifierStage* fileScanner =
+      static_cast<oo::FileScannerVerifierStage*>(
+          verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   if (fileScanner == nullptr) return;  // a nil scanner listed no images
   for (const std::string& name : fileScanner->filesInFolder("Images").value_or(
            std::vector<std::string>{})) {
@@ -75,9 +77,9 @@ void OOTextureVerifierStage::run() {
   }
 }
 
-void OOTextureVerifierStage::textureNamed(const std::string& name,
-                                          const std::string& context) {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+void oo::TextureVerifierStage::textureNamed(const std::string& name,
+                                            const std::string& context) {
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
 
   if (name.empty()) return;
   const auto where =
@@ -85,8 +87,8 @@ void OOTextureVerifierStage::textureNamed(const std::string& name,
   if (where != _usedTextures.end() && *where == name) return;
   _usedTextures.insert(where, name);
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   if (fileScanner == nullptr ||
       !fileScanner->fileExists(name, "Textures", context, true)) {
     OO_LOG("verifyOXP.texture.notFound",
@@ -96,18 +98,18 @@ void OOTextureVerifierStage::textureNamed(const std::string& name,
   }
 }
 
-void OOTextureVerifierStage::checkTextureNamed(const std::string& name,
-                                               const std::string& folder) {
+void oo::TextureVerifierStage::checkTextureNamed(const std::string& name,
+                                                 const std::string& folder) {
   std::shared_ptr<OOTextureLoader> loader;
   std::optional<std::string> path;
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
   std::optional<std::string> displayName;
   OOPixMapDimension rWidth, rHeight;
   bool success;
   OOPixMap pixmap;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   if (fileScanner != nullptr)
     path = fileScanner->pathForFile(name, folder, std::nullopt, false);
 
@@ -154,12 +156,12 @@ void OOTextureVerifierStage::checkTextureNamed(const std::string& name,
 
 // OOTextureHandlingStage.
 
-std::optional<std::vector<std::string>> OOTextureHandlingStage::dependents() {
+std::optional<std::vector<std::string>> oo::TextureHandlingStage::dependents() {
   std::vector<std::string> result =
-      OOFileHandlingVerifierStage::dependents().value_or(
+      oo::FileHandlingVerifierStage::dependents().value_or(
           std::vector<std::string>());
   const std::string reverse =
-      OOTextureVerifierStage::nameForReverseDependencyForVerifier(verifier());
+      oo::TextureVerifierStage::nameForReverseDependencyForVerifier(verifier());
   if (std::find(result.begin(), result.end(), reverse) == result.end())
     result.push_back(reverse);
   return result;

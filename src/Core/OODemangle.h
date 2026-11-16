@@ -43,3 +43,16 @@ inline std::string OODemangle(const char* mangled) {
   return (status == 0 && demangled != nullptr) ? std::string(demangled.get())
                                                : std::string(mangled);
 }
+
+namespace oo {
+
+// The class name a description prints: demangled, with a class that lost its OO
+// prefix to namespace oo (oo::Foo, once OOFoo) written the old way, so the
+// "<OOFoo 0x...>" text stays the same.
+inline std::string DescriptionClassName(const char* mangled) {
+  std::string name = OODemangle(mangled);
+  if (name.starts_with("oo::")) name = "OO" + name.substr(4);
+  return name;
+}
+
+}  // namespace oo

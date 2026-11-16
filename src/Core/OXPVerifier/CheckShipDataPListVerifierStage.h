@@ -27,7 +27,7 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOTextureVerifierStage.h"
+#include "TextureVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -36,10 +36,12 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOPListSchemaVerifier.h"  // the delegate interface
+#include "PListSchemaVerifier.h"  // the delegate interface
 #include "oofnd/PList.hpp"
 
-class OOAIStateMachineVerifierStage;
+namespace oo {
+
+class AIStateMachineVerifierStage;
 
 /*	shipdata.plist and the entry being checked are oo::PList; the key and
    role sets are sorted std::vectors of strings.
@@ -49,8 +51,8 @@ class OOAIStateMachineVerifierStage;
    holds it. It is the schema verifier's delegate, through the C++ interface
    OOPListSchemaVerifierDelegate.
 */
-class OOCheckShipDataPListVerifierStage : public OOTextureHandlingStage,
-                                          public OOPListSchemaVerifierDelegate {
+class CheckShipDataPListVerifierStage : public TextureHandlingStage,
+                                        public PListSchemaVerifierDelegate {
  public:
   std::optional<std::string> name() override;
   std::optional<std::vector<std::string>> dependents() override;
@@ -63,15 +65,15 @@ class OOCheckShipDataPListVerifierStage : public OOTextureHandlingStage,
      distinguishing keyword.
   */
   bool verifierTestProperty(
-      OOPListSchemaVerifier* verifier, const oo::PList& rootPList,
+      PListSchemaVerifier* verifier, const oo::PList& rootPList,
       const std::string& name, const oo::PList& subPList,
       const oo::PList& keyPath, const oo::PList& typeKey,
-      std::optional<OOPListSchemaVerifierError>* outError) override;
-  bool verifierFailedForProperty(OOPListSchemaVerifier* verifier,
+      std::optional<PListSchemaVerifierError>* outError) override;
+  bool verifierFailedForProperty(PListSchemaVerifier* verifier,
                                  const oo::PList& rootPList,
                                  const std::string& name,
                                  const oo::PList& subPList,
-                                 const OOPListSchemaVerifierError& error,
+                                 const PListSchemaVerifierError& error,
                                  const oo::PList& localSchema) override;
 
  private:
@@ -94,9 +96,8 @@ class OOCheckShipDataPListVerifierStage : public OOTextureHandlingStage,
   std::vector<std::string> _ooliteShipNames = {};
   std::vector<std::string> _basicKeys = {}, _stationKeys = {}, _playerKeys = {},
                            _allKeys = {};
-  std::shared_ptr<OOPListSchemaVerifier> _schemaVerifier =
-      {};  // Made by run().
-  OOAIStateMachineVerifierStage* _aiVerifierStage =
+  std::shared_ptr<PListSchemaVerifier> _schemaVerifier = {};  // Made by run().
+  AIStateMachineVerifierStage* _aiVerifierStage =
       {};  // Not retained (the verifier holds it).
 
   // Info about ship currently being checked.
@@ -106,5 +107,7 @@ class OOCheckShipDataPListVerifierStage : public OOTextureHandlingStage,
   bool _isStation = {}, _isPlayer = {}, _isTemplate = {},
        _havePrintedMessage = {};
 };
+
+}  // namespace oo
 
 #endif

@@ -165,7 +165,7 @@ std::optional<std::string> OOSound::descriptionComponents() const {
 
 // The C++ class's name, without a namespace, its address and its components.
 std::string OOSound::description() const {
-  std::string name = OODemangle(typeid(*this).name());
+  std::string name = oo::DescriptionClassName(typeid(*this).name());
   const std::size_t colons = name.rfind("::");
   if (colons != std::string::npos) name.erase(0, colons + 2);
 

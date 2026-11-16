@@ -32,9 +32,9 @@ MA 02110-1301, USA.
 #include "OOJSFrameCallbacks.h"
 #include "OOLogOutputHandler.h"
 #include "OOLoggingExtended.h"
-#include "OOOXPVerifier.h"
 #include "OOOXZManager.h"
 #include "OOOpenALController.h"
+#include "OXPVerifier.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "legacy_random.h"
@@ -537,7 +537,7 @@ void GameController::applicationDidFinishLaunching() {
 
 #if OO_OXP_VERIFIER_ENABLED
 
-    if (OOOXPVerifier::runVerificationIfRequested()) {
+    if (oo::OXPVerifier::runVerificationIfRequested()) {
       exitAppWithContext("OXP verifier run");
     } else {
       beginSplashScreen();

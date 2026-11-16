@@ -23,7 +23,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOCheckJSSyntaxVerifierStage.h"
+#include "CheckJSSyntaxVerifierStage.h"
 
 #include <memory>
 #include <string>
@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 
 #if OO_OXP_VERIFIER_ENABLED
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 #include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
 #include "oofnd/String.hpp"
@@ -47,15 +47,15 @@ bool Contains(const std::vector<std::string>& strings,
 
 }  // namespace
 
-std::optional<std::string> OOCheckJSSyntaxVerifierStage::name() {
+std::optional<std::string> oo::CheckJSSyntaxVerifierStage::name() {
   return kStageName;
 }
 
-bool OOCheckJSSyntaxVerifierStage::shouldRun() {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+bool oo::CheckJSSyntaxVerifierStage::shouldRun() {
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   if (fileScanner == nullptr) return false;  // a nil scanner listed no files
   return (!fileScanner->filesInFolder("Scripts")
                .value_or(std::vector<std::string>{})
@@ -65,14 +65,14 @@ bool OOCheckJSSyntaxVerifierStage::shouldRun() {
                    "script.js"));
 }
 
-void OOCheckJSSyntaxVerifierStage::run() {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+void oo::CheckJSSyntaxVerifierStage::run() {
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
   std::vector<std::string> scriptFiles;
   bool scriptsFolder = false;
   bool configScript = false;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   if (fileScanner == nullptr) return;  // a nil scanner listed no files
   scriptsFolder = fileScanner->filesInFolder("Scripts").has_value();
   scriptFiles = fileScanner->filesInFolder("Scripts").value_or(

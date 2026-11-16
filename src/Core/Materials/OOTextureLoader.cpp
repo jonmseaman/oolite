@@ -226,7 +226,7 @@ std::optional<std::string> OOTextureLoader::shortDescriptionComponents() const {
 namespace {
 
 std::string DemangledName(const std::type_info& type) {
-  std::string result = OODemangle(type.name());
+  std::string result = oo::DescriptionClassName(type.name());
   return result;
 }
 

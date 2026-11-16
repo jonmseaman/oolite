@@ -23,7 +23,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOAIStateMachineVerifierStage.h"
+#include "AIStateMachineVerifierStage.h"
 
 #include <format>
 #include <string>
@@ -74,13 +74,13 @@ std::vector<std::string> SortedCaseInsensitively(
 
 }  // namespace
 
-std::optional<std::string> OOAIStateMachineVerifierStage::name() {
+std::optional<std::string> oo::AIStateMachineVerifierStage::name() {
   return kStageName;
 }
 
-bool OOAIStateMachineVerifierStage::shouldRun() { return !_usedAIs.empty(); }
+bool oo::AIStateMachineVerifierStage::shouldRun() { return !_usedAIs.empty(); }
 
-void OOAIStateMachineVerifierStage::run() {
+void oo::AIStateMachineVerifierStage::run() {
   // Build whitelist. Note that we merge in aliases since the distinction
   // doesn't matter when just validating.
   const oo::PList whitelist = ResourceManager::whitelistDictionary();
@@ -105,19 +105,20 @@ void OOAIStateMachineVerifierStage::run() {
   _whitelist.clear();
 }
 
-std::string OOAIStateMachineVerifierStage::nameForReverseDependencyForVerifier(
-    OOOXPVerifier*) {
+std::string
+oo::AIStateMachineVerifierStage::nameForReverseDependencyForVerifier(
+    oo::OXPVerifier*) {
   return kStageName;
 }
 
-void OOAIStateMachineVerifierStage::stateMachineNamed(
+void oo::AIStateMachineVerifierStage::stateMachineNamed(
     const std::string& name, const std::string& shipName) {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
 
   if (!AddString(_usedAIs, name)) return;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   if (fileScanner == nullptr ||
       !fileScanner->fileExists(
           name, "AIs", std::format("shipdata.plist entry \"{}\"", shipName),
@@ -129,7 +130,7 @@ void OOAIStateMachineVerifierStage::stateMachineNamed(
   }
 }
 
-void OOAIStateMachineVerifierStage::validateAI(const std::string& aiName) {
+void oo::AIStateMachineVerifierStage::validateAI(const std::string& aiName) {
   std::optional<std::string> path;
   oo::PList aiStateMachine;
   std::vector<std::string> badSelectors;  // sorted, no duplicates
@@ -140,9 +141,9 @@ void OOAIStateMachineVerifierStage::validateAI(const std::string& aiName) {
   oo::log::indentIf("verifyOXP.verbose.validateAI");
 
   // Attempt to load AI.
-  OOFileScannerVerifierStage* fileScanner =
-      static_cast<OOFileScannerVerifierStage*>(
-          verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  oo::FileScannerVerifierStage* fileScanner =
+      static_cast<oo::FileScannerVerifierStage*>(
+          verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   if (fileScanner != nullptr)
     path = fileScanner->pathForFile(aiName, "AIs", "AI list", false);
   if (!path.has_value()) return;

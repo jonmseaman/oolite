@@ -24,7 +24,7 @@ SOFTWARE.
 
 */
 
-#include "OOPListSchemaVerifier.h"
+#include "PListSchemaVerifier.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -59,11 +59,11 @@ SOFTWARE.
 constexpr int kMaximumLengthForStringInErrorMessage = 100;
 
 // Internal error codes, after the public ones.
-constexpr OOPListSchemaVerifierErrorCode kStartOfPrivateErrorCodes =
-    OOPListSchemaVerifierErrorCode::kLastErrorCode;
-constexpr OOPListSchemaVerifierErrorCode
+constexpr oo::PListSchemaVerifierErrorCode kStartOfPrivateErrorCodes =
+    oo::PListSchemaVerifierErrorCode::kLastErrorCode;
+constexpr oo::PListSchemaVerifierErrorCode
     kPListErrorFailedAndErrorHasBeenReported =
-        static_cast<OOPListSchemaVerifierErrorCode>(
+        static_cast<oo::PListSchemaVerifierErrorCode>(
             static_cast<std::int32_t>(kStartOfPrivateErrorCodes) + 1);
 
 #if PLIST_VERIFIER_DEBUG_DUMP_ENABLED
@@ -107,8 +107,12 @@ static bool sDebugDump = false;
   } while (0)
 #endif
 
-const char* const kOOPListSchemaVerifierErrorDomain =
+namespace oo {
+
+const char* const kPListSchemaVerifierErrorDomain =
     "org.aegidian.oolite.OOPListSchemaVerifier.ErrorDomain";
+
+}  // namespace oo
 
 const char* const kPListKeyPathErrorKey =
     "org.aegidian.oolite.OOPListSchemaVerifier plist key path";
@@ -190,14 +194,15 @@ using StringTest = bool (*)(const std::string& string, const std::string& test);
 
 SchemaType StringToSchemaType(
     const std::string& string,
-    std::optional<OOPListSchemaVerifierError>* outError);
+    std::optional<oo::PListSchemaVerifierError>* outError);
 std::string ApplyStringFilter(
     const std::string& string, const oo::PList& filterSpec,
-    BackLinkChain keyPath, std::optional<OOPListSchemaVerifierError>* outError);
+    BackLinkChain keyPath,
+    std::optional<oo::PListSchemaVerifierError>* outError);
 bool ApplyStringTest(const std::string& string, const oo::PList& test,
                      StringTest stringTest, const char* testDescription,
                      BackLinkChain keyPath,
-                     std::optional<OOPListSchemaVerifierError>* outError);
+                     std::optional<oo::PListSchemaVerifierError>* outError);
 
 oo::PList KeyPathToArray(BackLinkChain keyPath);
 std::string KeyPathToString(BackLinkChain keyPath);
@@ -218,25 +223,25 @@ namespace {
 
 // The formats are printf formats (oo::str::vformat); an object's text is %s of
 // oo::DescriptionOf(x).
-OOPListSchemaVerifierError Error(OOPListSchemaVerifierErrorCode errorCode,
-                                 BackLinkChain* keyPath, const char* format,
-                                 ...);
-OOPListSchemaVerifierError ErrorWithProperty(
-    OOPListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
+oo::PListSchemaVerifierError Error(oo::PListSchemaVerifierErrorCode errorCode,
+                                   BackLinkChain* keyPath, const char* format,
+                                   ...);
+oo::PListSchemaVerifierError ErrorWithProperty(
+    oo::PListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
     const std::string& propKey, const oo::PList& propValue, const char* format,
     ...);
-OOPListSchemaVerifierError ErrorWithDictionary(
-    OOPListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
+oo::PListSchemaVerifierError ErrorWithDictionary(
+    oo::PListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
     const oo::PList& dict, const char* format, ...);
-OOPListSchemaVerifierError ErrorWithDictionaryAndArguments(
-    OOPListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
+oo::PListSchemaVerifierError ErrorWithDictionaryAndArguments(
+    oo::PListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
     const oo::PList& dict, const char* format, va_list arguments);
 
-OOPListSchemaVerifierError ErrorTypeMismatch(const char* expectedClassName,
-                                             const oo::PList& actual,
-                                             BackLinkChain keyPath);
-OOPListSchemaVerifierError ErrorFailureAlreadyReported();
-bool IsFailureAlreadyReportedError(const OOPListSchemaVerifierError& error);
+oo::PListSchemaVerifierError ErrorTypeMismatch(const char* expectedClassName,
+                                               const oo::PList& actual,
+                                               BackLinkChain keyPath);
+oo::PListSchemaVerifierError ErrorFailureAlreadyReported();
+bool IsFailureAlreadyReportedError(const oo::PListSchemaVerifierError& error);
 
 }  // namespace
 
@@ -245,15 +250,15 @@ namespace {
 // +descriptionForKeyPath: of an error's kPListKeyPathErrorKey (what the retired
 // error category's key-path description returned; "root" when there is none).
 std::optional<std::string> KeyPathDescriptionOfError(
-    const OOPListSchemaVerifierError& error) {
+    const oo::PListSchemaVerifierError& error) {
   const oo::PList* keyPath = error.userInfo.find(kPListKeyPathErrorKey);
-  return OOPListSchemaVerifier::descriptionForKeyPath(
+  return oo::PListSchemaVerifier::descriptionForKeyPath(
       (keyPath != nullptr) ? *keyPath : oo::PList());
 }
 
 // A nested error (the delegate's underlying error, a oneOf option's error) as a
 // userInfo value.
-oo::PList PListFromError(const OOPListSchemaVerifierError& error) {
+oo::PList PListFromError(const oo::PListSchemaVerifierError& error) {
   oo::PList::Dict result{{"domain", oo::PList(error.domain)},
                          {"code", oo::PList(error.code)},
                          {"userInfo", error.userInfo}};
@@ -271,8 +276,8 @@ oo::PList PListFromError(const OOPListSchemaVerifierError& error) {
 // Each verifier takes the value, the resolved schema type and the name as C++
 // values.
 #define VERIFY_PROTO(T)                                               \
-  static std::optional<OOPListSchemaVerifierError> Verify_##T(        \
-      OOPListSchemaVerifier* verifier, const oo::PList& value,        \
+  static std::optional<oo::PListSchemaVerifierError> Verify_##T(      \
+      oo::PListSchemaVerifier* verifier, const oo::PList& value,      \
       const oo::PList& params, const oo::PList& rootPList,            \
       const std::string& name, BackLinkChain keyPath, bool tentative, \
       bool* outStop)
@@ -294,12 +299,12 @@ VERIFY_PROTO(Quaternion);
 VERIFY_PROTO(DelegatedType);
 }  // namespace
 
-std::shared_ptr<OOPListSchemaVerifier>
-OOPListSchemaVerifier::verifierWithSchema(const oo::PList& schema) {
+std::shared_ptr<oo::PListSchemaVerifier>
+oo::PListSchemaVerifier::verifierWithSchema(const oo::PList& schema) {
   return initWithSchema(schema);
 }
 
-OOPListSchemaVerifier::OOPListSchemaVerifier(const oo::PList& schema) {
+oo::PListSchemaVerifier::PListSchemaVerifier(const oo::PList& schema) {
   _schema = schema;
   const oo::PList* definitions = _schema.get<oo::PList::Dict>("$definitions");
   _definitions = (definitions != nullptr) ? *definitions : oo::PList();
@@ -311,11 +316,11 @@ OOPListSchemaVerifier::OOPListSchemaVerifier(const oo::PList& schema) {
     oo::log::logger().setDisplay("verifyOXP.verbose.plistDebugDump", true);
 }
 
-std::shared_ptr<OOPListSchemaVerifier> OOPListSchemaVerifier::initWithSchema(
-    const oo::PList& schema) {
-  std::shared_ptr<OOPListSchemaVerifier> verifier =
-      std::shared_ptr<OOPListSchemaVerifier>(new OOPListSchemaVerifier(schema),
-                                             oo::Dispose{});
+std::shared_ptr<oo::PListSchemaVerifier>
+oo::PListSchemaVerifier::initWithSchema(const oo::PList& schema) {
+  std::shared_ptr<oo::PListSchemaVerifier> verifier =
+      std::shared_ptr<oo::PListSchemaVerifier>(
+          new oo::PListSchemaVerifier(schema), oo::Dispose{});
   if (!verifier->_schema) {
     return nullptr;
   }
@@ -323,20 +328,20 @@ std::shared_ptr<OOPListSchemaVerifier> OOPListSchemaVerifier::initWithSchema(
   return verifier;
 }
 
-void OOPListSchemaVerifier::setDelegate(
-    OOPListSchemaVerifierDelegate* delegate) {
+void oo::PListSchemaVerifier::setDelegate(
+    oo::PListSchemaVerifierDelegate* delegate) {
   if (_delegate != delegate) {
     _delegate = delegate;
     _badDelegateWarning = false;
   }
 }
 
-OOPListSchemaVerifierDelegate* OOPListSchemaVerifier::delegate() {
+oo::PListSchemaVerifierDelegate* oo::PListSchemaVerifier::delegate() {
   return _delegate;
 }
 
-bool OOPListSchemaVerifier::verifyPropertyList(const oo::PList& plist,
-                                               const std::string& name) {
+bool oo::PListSchemaVerifier::verifyPropertyList(const oo::PList& plist,
+                                                 const std::string& name) {
   bool OK;
   bool stop = false;
 
@@ -346,7 +351,7 @@ bool OOPListSchemaVerifier::verifyPropertyList(const oo::PList& plist,
   return OK;
 }
 
-std::optional<std::string> OOPListSchemaVerifier::descriptionForKeyPath(
+std::optional<std::string> oo::PListSchemaVerifier::descriptionForKeyPath(
     const oo::PList& keyPath) {
   std::string result;
   bool first = true;
@@ -374,12 +379,12 @@ std::optional<std::string> OOPListSchemaVerifier::descriptionForKeyPath(
   return result;
 }
 
-bool OOPListSchemaVerifier::delegateVerifierWithPropertyList(
+bool oo::PListSchemaVerifier::delegateVerifierWithPropertyList(
     const oo::PList& rootPList, const std::string& name,
     const oo::PList& subPList, BackLinkChain keyPath, const oo::PList& typeKey,
-    std::optional<OOPListSchemaVerifierError>* outError) {
+    std::optional<oo::PListSchemaVerifierError>* outError) {
   bool result;
-  std::optional<OOPListSchemaVerifierError> error;
+  std::optional<oo::PListSchemaVerifierError> error;
 
   // A C++ delegate answers both members; no delegate is what a delegate that
   // did not answer the selector (or nil) was.
@@ -406,7 +411,7 @@ bool OOPListSchemaVerifier::delegateVerifierWithPropertyList(
         // Note: Generates an error if delegate returned NO (meaning stop) or if
         // delegate produced an error but did not request a stop.
         *outError = ErrorWithProperty(
-            OOPListSchemaVerifierErrorCode::kDelegatedTypeError, &keyPath,
+            oo::PListSchemaVerifierErrorCode::kDelegatedTypeError, &keyPath,
             kUnderlyingErrorErrorKey,
             error.has_value() ? PListFromError(*error) : oo::PList(),
             "Value at %s does not match delegated type \"%s\".",
@@ -429,9 +434,9 @@ bool OOPListSchemaVerifier::delegateVerifierWithPropertyList(
   return result;
 }
 
-bool OOPListSchemaVerifier::delegateVerifierWithPropertyList(
+bool oo::PListSchemaVerifier::delegateVerifierWithPropertyList(
     const oo::PList& rootPList, const std::string& name,
-    const oo::PList& subPList, const OOPListSchemaVerifierError& error,
+    const oo::PList& subPList, const oo::PListSchemaVerifierError& error,
     const oo::PList& localSchema) {
   bool result;
 
@@ -461,13 +466,13 @@ bool OOPListSchemaVerifier::delegateVerifierWithPropertyList(
   return result;
 }
 
-bool OOPListSchemaVerifier::verifyPList(
+bool oo::PListSchemaVerifier::verifyPList(
     const oo::PList& rootPList, const std::string& name,
     const oo::PList& subProperty, const oo::PList& subSchema,
     BackLinkChain keyPath, bool tentative,
-    std::optional<OOPListSchemaVerifierError>* outError, bool* outStop) {
+    std::optional<oo::PListSchemaVerifierError>* outError, bool* outStop) {
   SchemaType type = SchemaType::kTypeUnknown;
-  std::optional<OOPListSchemaVerifierError> error;
+  std::optional<oo::PListSchemaVerifierError> error;
   oo::PList resolvedSpecifier;
 
   assert(outStop != nullptr);
@@ -514,7 +519,7 @@ bool OOPListSchemaVerifier::verifyPList(
     const auto exception = oo::CurrentOOException();
     if (!exception) throw;  // not an OOException: it goes on up, as before
     error =
-        Error(OOPListSchemaVerifierErrorCode::kInternal, &keyPath,
+        Error(oo::PListSchemaVerifierErrorCode::kInternal, &keyPath,
               "Uncaught exception %s: %s in plist verifier for \"%s\" at %s.",
               exception->name(), exception->reason(), name.c_str(),
               KeyPathToString(keyPath).c_str());
@@ -536,9 +541,9 @@ bool OOPListSchemaVerifier::verifyPList(
   return !error.has_value();
 }
 
-oo::PList OOPListSchemaVerifier::resolveSchemaType(
+oo::PList oo::PListSchemaVerifier::resolveSchemaType(
     const oo::PList& specifier, BackLinkChain keyPath,
-    std::optional<OOPListSchemaVerifierError>* outError) {
+    std::optional<oo::PListSchemaVerifierError>* outError) {
   oo::PList current = specifier;
   bool haveTypeValue = false;
 
@@ -558,7 +563,8 @@ oo::PList OOPListSchemaVerifier::resolveSchemaType(
           const oo::PList* definition = _definitions.find(typeString);
           if (definition == nullptr) {
             *outError = ErrorWithProperty(
-                OOPListSchemaVerifierErrorCode::kSchemaUndefiniedMacroReference,
+                oo::PListSchemaVerifierErrorCode::
+                    kSchemaUndefiniedMacroReference,
                 &keyPath, kUndefinedMacroErrorKey, oo::PList(typeString),
                 "Bad schema: reference to undefined macro \"%s\".",
                 StringForErrorReport(typeString).c_str());
@@ -583,7 +589,7 @@ oo::PList OOPListSchemaVerifier::resolveSchemaType(
       haveTypeValue ? "not string or dictionary" : "no type specified";
 
   *outError =
-      Error(OOPListSchemaVerifierErrorCode::kSchemaBadTypeSpecifier, &keyPath,
+      Error(oo::PListSchemaVerifierErrorCode::kSchemaBadTypeSpecifier, &keyPath,
             "Bad schema: invalid type specifier for path %s (%s).",
             KeyPathToString(keyPath).c_str(), complaint);
   return oo::PList();
@@ -593,7 +599,7 @@ namespace {
 
 SchemaType StringToSchemaType(
     const std::string& string,
-    std::optional<OOPListSchemaVerifierError>* outError) {
+    std::optional<oo::PListSchemaVerifierError>* outError) {
   static const std::map<std::string, SchemaType, std::less<>> typeMap = {
       {"string", SchemaType::kTypeString},
       {"array", SchemaType::kTypeArray},
@@ -617,14 +623,14 @@ SchemaType StringToSchemaType(
   if (result == SchemaType::kTypeUnknown && outError != nullptr) {
     if (oo::str::hasPrefix(string, "$")) {
       *outError = ErrorWithProperty(
-          OOPListSchemaVerifierErrorCode::kSchemaUnknownType, nullptr,
+          oo::PListSchemaVerifierErrorCode::kSchemaUnknownType, nullptr,
           kUnknownTypeErrorKey, oo::PList(string),
           "Bad schema: unresolved macro reference \"%s\".", string.c_str());
     } else {
-      *outError =
-          ErrorWithProperty(OOPListSchemaVerifierErrorCode::kSchemaUnknownType,
-                            nullptr, kUnknownTypeErrorKey, oo::PList(string),
-                            "Bad schema: unknown type \"%s\".", string.c_str());
+      *outError = ErrorWithProperty(
+          oo::PListSchemaVerifierErrorCode::kSchemaUnknownType, nullptr,
+          kUnknownTypeErrorKey, oo::PList(string),
+          "Bad schema: unknown type \"%s\".", string.c_str());
     }
   }
 
@@ -668,7 +674,7 @@ std::u16string SubstringToIndex(const std::u16string& units,
 std::string ApplyStringFilter(
     const std::string& string, const oo::PList& filterSpec,
     BackLinkChain keyPath,
-    std::optional<OOPListSchemaVerifierError>* outError) {
+    std::optional<oo::PListSchemaVerifierError>* outError) {
   std::u16string result = oo::utf8ToUtf16(string);
   oo::PList::Array filters;
 
@@ -683,7 +689,7 @@ std::string ApplyStringFilter(
     filters = *array;
   } else {
     *outError =
-        Error(OOPListSchemaVerifierErrorCode::kSchemaUnknownFilter, &keyPath,
+        Error(oo::PListSchemaVerifierErrorCode::kSchemaUnknownFilter, &keyPath,
               "Bad schema: \"filter\" must be a string or an array.");
     return string;
   }
@@ -738,15 +744,15 @@ std::string ApplyStringFilter(
         }
       } else {
         *outError = ErrorWithProperty(
-            OOPListSchemaVerifierErrorCode::kSchemaUnknownFilter, &keyPath,
+            oo::PListSchemaVerifierErrorCode::kSchemaUnknownFilter, &keyPath,
             kUnnownFilterErrorKey, filterValue,
             "Bad schema: unknown string filter specifier \"%s\".",
             filter->c_str());
       }
     } else {
       *outError =
-          Error(OOPListSchemaVerifierErrorCode::kSchemaUnknownFilter, &keyPath,
-                "Bad schema: filter specifier is not a string.");
+          Error(oo::PListSchemaVerifierErrorCode::kSchemaUnknownFilter,
+                &keyPath, "Bad schema: filter specifier is not a string.");
     }
   }
 
@@ -756,7 +762,7 @@ std::string ApplyStringFilter(
 bool ApplyStringTest(const std::string& string, const oo::PList& test,
                      StringTest stringTest, const char* testDescription,
                      BackLinkChain keyPath,
-                     std::optional<OOPListSchemaVerifierError>* outError) {
+                     std::optional<oo::PListSchemaVerifierError>* outError) {
   oo::PList::Array tests;
 
   assert(outError != nullptr);
@@ -769,7 +775,7 @@ bool ApplyStringTest(const std::string& string, const oo::PList& test,
     tests = *array;
   } else {
     *outError = Error(
-        OOPListSchemaVerifierErrorCode::kSchemaBadComparator, &keyPath,
+        oo::PListSchemaVerifierErrorCode::kSchemaBadComparator, &keyPath,
         "Bad schema: %s requirement specification is not a string or array.",
         testDescription);
     return false;
@@ -779,9 +785,9 @@ bool ApplyStringTest(const std::string& string, const oo::PList& test,
     if (const std::string* subString = subTest.getIf<std::string>()) {
       if (stringTest(string, *subString)) return true;
     } else {
-      *outError =
-          Error(OOPListSchemaVerifierErrorCode::kSchemaBadComparator, &keyPath,
-                "Bad schema: required %s is not a string.", testDescription);
+      *outError = Error(oo::PListSchemaVerifierErrorCode::kSchemaBadComparator,
+                        &keyPath, "Bad schema: required %s is not a string.",
+                        testDescription);
       return false;
     }
   }
@@ -809,7 +815,7 @@ oo::PList KeyPathToArray(BackLinkChain keyPath) {
 }
 
 std::string KeyPathToString(BackLinkChain keyPath) {
-  return OOPListSchemaVerifier::descriptionForKeyPath(KeyPathToArray(keyPath))
+  return oo::PListSchemaVerifier::descriptionForKeyPath(KeyPathToArray(keyPath))
       .value_or("(null)");  // %@ of nil
 }
 
@@ -926,8 +932,8 @@ std::string StringOrArrayForErrorReport(const oo::PList& value,
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_String(
-    OOPListSchemaVerifier* /*verifier*/, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_String(
+    oo::PListSchemaVerifier* /*verifier*/, const oo::PList& value,
     const oo::PList& params, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
@@ -935,7 +941,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_String(
   const oo::PList* testValue = nullptr;
   std::size_t length;
   std::size_t lengthConstraint;
-  std::optional<OOPListSchemaVerifierError> error;
+  std::optional<oo::PListSchemaVerifierError> error;
 
   REQUIRE_PLIST_TYPE(isString, "string");
   const std::string& stringValue = *value.getIf<std::string>();
@@ -959,7 +965,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_String(
             "prefix", keyPath, &error)) {
       if (!error.has_value())
         error = ErrorWithProperty(
-            OOPListSchemaVerifierErrorCode::kStringPrefixMissing, &keyPath,
+            oo::PListSchemaVerifierErrorCode::kStringPrefixMissing, &keyPath,
             kMissingSubStringErrorKey, *testValue,
             "String \"%s\" does not have required %s %s.",
             StringForErrorReport(stringValue).c_str(), "prefix",
@@ -978,7 +984,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_String(
             "suffix", keyPath, &error)) {
       if (!error.has_value())
         error = ErrorWithProperty(
-            OOPListSchemaVerifierErrorCode::kStringSuffixMissing, &keyPath,
+            oo::PListSchemaVerifierErrorCode::kStringSuffixMissing, &keyPath,
             kMissingSubStringErrorKey, *testValue,
             "String \"%s\" does not have required %s %s.",
             StringForErrorReport(stringValue).c_str(), "suffix",
@@ -993,7 +999,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_String(
                          keyPath, &error)) {
       if (!error.has_value())
         error = ErrorWithProperty(
-            OOPListSchemaVerifierErrorCode::kStringSubstringMissing, &keyPath,
+            oo::PListSchemaVerifierErrorCode::kStringSubstringMissing, &keyPath,
             kMissingSubStringErrorKey, *testValue,
             "String \"%s\" does not have required %s %s.",
             StringForErrorReport(stringValue).c_str(), "substring",
@@ -1007,7 +1013,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_String(
   lengthConstraint = params.get<std::size_t>("minLength");
   if (length < lengthConstraint) {
     return Error(
-        OOPListSchemaVerifierErrorCode::kMinimumConstraintNotMet, &keyPath,
+        oo::PListSchemaVerifierErrorCode::kMinimumConstraintNotMet, &keyPath,
         "String \"%s\" is too short (%u bytes, minimum is %u).",
         StringForErrorReport(filteredString).c_str(), length, lengthConstraint);
   }
@@ -1015,7 +1021,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_String(
   lengthConstraint = params.get<std::size_t>("maxLength", SIZE_MAX);
   if (lengthConstraint < length) {
     return Error(
-        OOPListSchemaVerifierErrorCode::kMaximumConstraintNotMet, &keyPath,
+        oo::PListSchemaVerifierErrorCode::kMaximumConstraintNotMet, &keyPath,
         "String \"%s\" is too long (%u bytes, maximum is %u).",
         StringForErrorReport(filteredString).c_str(), length, lengthConstraint);
   }
@@ -1028,8 +1034,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_String(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_Array(
-    OOPListSchemaVerifier* verifier, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_Array(
+    oo::PListSchemaVerifier* verifier, const oo::PList& value,
     const oo::PList& params, const oo::PList& rootPList,
     const std::string& name, BackLinkChain keyPath, bool tentative,
     bool* outStop) {
@@ -1047,14 +1053,14 @@ static std::optional<OOPListSchemaVerifierError> Verify_Array(
   count = elements.size();
   constraint = params.get<std::size_t>("minCount", 0);
   if (count < constraint) {
-    return Error(OOPListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
                  &keyPath, "Array has too few members (%u, minimum is %u).",
                  count, constraint);
   }
 
   constraint = params.get<std::size_t>("maxCount", SIZE_MAX);
   if (constraint < count) {
-    return Error(OOPListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
                  &keyPath, "Array has too many members (%u, maximum is %u).",
                  count, constraint);
   }
@@ -1085,8 +1091,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_Array(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_Dictionary(
-    OOPListSchemaVerifier* verifier, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_Dictionary(
+    oo::PListSchemaVerifier* verifier, const oo::PList& value,
     const oo::PList& params, const oo::PList& rootPList,
     const std::string& name, BackLinkChain keyPath, bool tentative,
     bool* outStop) {
@@ -1107,13 +1113,13 @@ static std::optional<OOPListSchemaVerifierError> Verify_Dictionary(
   count = members.size();
   constraint = params.get<std::size_t>("minCount", 0);
   if (count < constraint) {
-    return Error(OOPListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
                  &keyPath, "Dictionary has too few pairs (%u, minimum is %u).",
                  count, constraint);
   }
   constraint = params.get<std::size_t>("maxCount", SIZE_MAX);
   if (constraint < count) {
-    return Error(OOPListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
                  &keyPath, "Dictionary has too manu pairs (%u, maximum is %u).",
                  count, constraint);
   }
@@ -1160,8 +1166,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_Dictionary(
       // Report error now rather than returning it, since there may be several
       // unknown keys.
       if (!tentative) {
-        const OOPListSchemaVerifierError error = ErrorWithProperty(
-            OOPListSchemaVerifierErrorCode::kDictionaryUnknownKey, &keyPath,
+        const oo::PListSchemaVerifierError error = ErrorWithProperty(
+            oo::PListSchemaVerifierErrorCode::kDictionaryUnknownKey, &keyPath,
             kUnknownKeyErrorKey, oo::PList(key),
             "Unpermitted key \"%s\" in dictionary.",
             StringForErrorReport(key).c_str());
@@ -1188,7 +1194,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_Dictionary(
     const std::vector<std::string> missing(requiredKeys.begin(),
                                            requiredKeys.end());
     return ErrorWithProperty(
-        OOPListSchemaVerifierErrorCode::kDictionaryMissingRequiredKeys,
+        oo::PListSchemaVerifierErrorCode::kDictionaryMissingRequiredKeys,
         &keyPath, kMissingRequiredKeysErrorKey,
         oo::PList(oo::PList::Array(missing.begin(), missing.end())),
         "Required keys %s missing from dictionary.",
@@ -1207,8 +1213,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_Dictionary(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_Integer(
-    OOPListSchemaVerifier* /*verifier*/, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_Integer(
+    oo::PListSchemaVerifier* /*verifier*/, const oo::PList& value,
     const oo::PList& params, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
@@ -1229,14 +1235,14 @@ static std::optional<OOPListSchemaVerifierError> Verify_Integer(
   // Check constraints.
   constraint = params.get<std::int64_t>("minimum", LLONG_MIN);
   if (numericValue < constraint) {
-    return Error(OOPListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
                  &keyPath, "Number is too small (%lli, minimum is %lli).",
                  numericValue, constraint);
   }
 
   constraint = params.get<std::int64_t>("maximum", LLONG_MAX);
   if (constraint < numericValue) {
-    return Error(OOPListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
                  &keyPath, "Number is too large (%lli, maximum is %lli).",
                  numericValue, constraint);
   }
@@ -1248,8 +1254,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_Integer(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_PositiveInteger(
-    OOPListSchemaVerifier* /*verifier*/, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_PositiveInteger(
+    oo::PListSchemaVerifier* /*verifier*/, const oo::PList& value,
     const oo::PList& params, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
@@ -1269,14 +1275,14 @@ static std::optional<OOPListSchemaVerifierError> Verify_PositiveInteger(
   // Check constraints.
   constraint = params.get<std::uint64_t>("minimum", 0);
   if (numericValue < constraint) {
-    return Error(OOPListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
                  &keyPath, "Number is too small (%zu, minimum is %zu).",
                  numericValue, constraint);
   }
 
   constraint = params.get<std::uint64_t>("maximum", ULLONG_MAX);
   if (constraint < numericValue) {
-    return Error(OOPListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
                  &keyPath, "Number is too large (%zu, maximum is %zu).",
                  numericValue, constraint);
   }
@@ -1288,8 +1294,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_PositiveInteger(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_Float(
-    OOPListSchemaVerifier* /*verifier*/, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_Float(
+    oo::PListSchemaVerifier* /*verifier*/, const oo::PList& value,
     const oo::PList& params, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
@@ -1310,14 +1316,14 @@ static std::optional<OOPListSchemaVerifierError> Verify_Float(
   // Check constraints.
   constraint = params.get<double>("minimum", -INFINITY);
   if (numericValue < constraint) {
-    return Error(OOPListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
                  &keyPath, "Number is too small (%g, minimum is %g).",
                  numericValue, constraint);
   }
 
   constraint = params.get<double>("maximum", INFINITY);
   if (constraint < numericValue) {
-    return Error(OOPListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
                  &keyPath, "Number is too large (%g, maximum is %g).",
                  numericValue, constraint);
   }
@@ -1329,8 +1335,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_Float(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_PositiveFloat(
-    OOPListSchemaVerifier* /*verifier*/, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_PositiveFloat(
+    oo::PListSchemaVerifier* /*verifier*/, const oo::PList& value,
     const oo::PList& params, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
@@ -1349,21 +1355,21 @@ static std::optional<OOPListSchemaVerifierError> Verify_PositiveFloat(
   }
 
   if (numericValue < 0) {
-    return Error(OOPListSchemaVerifierErrorCode::kNumberIsNegative, &keyPath,
+    return Error(oo::PListSchemaVerifierErrorCode::kNumberIsNegative, &keyPath,
                  "Expected non-negative number, found %g.", numericValue);
   }
 
   // Check constraints.
   constraint = params.get<double>("minimum", 0);
   if (numericValue < constraint) {
-    return Error(OOPListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
                  &keyPath, "Number is too small (%g, minimum is %g).",
                  numericValue, constraint);
   }
 
   constraint = params.get<double>("maximum", INFINITY);
   if (constraint < numericValue) {
-    return Error(OOPListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
+    return Error(oo::PListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
                  &keyPath, "Number is too large (%g, maximum is %g).",
                  numericValue, constraint);
   }
@@ -1375,14 +1381,14 @@ static std::optional<OOPListSchemaVerifierError> Verify_PositiveFloat(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_OneOf(
-    OOPListSchemaVerifier* verifier, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_OneOf(
+    oo::PListSchemaVerifier* verifier, const oo::PList& value,
     const oo::PList& params, const oo::PList& rootPList,
     const std::string& name, BackLinkChain keyPath, bool /*tentative*/,
     bool* outStop) {
   const oo::PList* options = nullptr;
   bool OK = false, stop = false;
-  std::optional<OOPListSchemaVerifierError> error;
+  std::optional<oo::PListSchemaVerifierError> error;
   oo::PList::Dict errors;
 
   DebugDump("{}", "* oneOf");
@@ -1390,7 +1396,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_OneOf(
   options = params.get<oo::PList::Array>("options");
   if (options == nullptr) {
     *outStop = true;
-    return Error(OOPListSchemaVerifierErrorCode::kSchemaNoOneOfOptions,
+    return Error(oo::PListSchemaVerifierErrorCode::kSchemaNoOneOfOptions,
                  &keyPath, "Bad schema: no options specified for oneOf type.");
   }
 
@@ -1409,7 +1415,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_OneOf(
 
   if (!OK) {
     DebugDump("{}", "! No match.");
-    return ErrorWithProperty(OOPListSchemaVerifierErrorCode::kOneOfNoMatch,
+    return ErrorWithProperty(oo::PListSchemaVerifierErrorCode::kOneOfNoMatch,
                              &keyPath, kErrorsByOptionErrorKey,
                              oo::PList(std::move(errors)),
                              "No matching type rule could be found.");
@@ -1423,14 +1429,14 @@ static std::optional<OOPListSchemaVerifierError> Verify_OneOf(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_Enumeration(
-    OOPListSchemaVerifier* /*verifier*/, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_Enumeration(
+    oo::PListSchemaVerifier* /*verifier*/, const oo::PList& value,
     const oo::PList& params, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* outStop) {
   const oo::PList* values = nullptr;
   std::string filteredString;
-  std::optional<OOPListSchemaVerifierError> error;
+  std::optional<oo::PListSchemaVerifierError> error;
 
   DebugDump("{}", "* enumeration");
 
@@ -1443,7 +1449,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_Enumeration(
 
   if (values == nullptr) {
     *outStop = true;
-    return Error(OOPListSchemaVerifierErrorCode::kSchemaNoEnumerationValues,
+    return Error(oo::PListSchemaVerifierErrorCode::kSchemaNoEnumerationValues,
                  &keyPath, "Bad schema: no options specified for oneOf type.");
   }
 
@@ -1459,7 +1465,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_Enumeration(
       return std::nullopt;
   }
 
-  return Error(OOPListSchemaVerifierErrorCode::kEnumerationBadValue, &keyPath,
+  return Error(oo::PListSchemaVerifierErrorCode::kEnumerationBadValue, &keyPath,
                "Value \"%s\" not recognized, should be one of %s.",
                StringForErrorReport(stringValue).c_str(),
                ArrayForErrorReport(*values).c_str());
@@ -1469,8 +1475,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_Enumeration(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_Boolean(
-    OOPListSchemaVerifier* /*verifier*/, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_Boolean(
+    oo::PListSchemaVerifier* /*verifier*/, const oo::PList& value,
     const oo::PList& /*params*/, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
@@ -1489,8 +1495,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_Boolean(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_FuzzyBoolean(
-    OOPListSchemaVerifier* /*verifier*/, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_FuzzyBoolean(
+    oo::PListSchemaVerifier* /*verifier*/, const oo::PList& value,
     const oo::PList& /*params*/, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
@@ -1511,8 +1517,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_FuzzyBoolean(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_Vector(
-    OOPListSchemaVerifier* /*verifier*/, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_Vector(
+    oo::PListSchemaVerifier* /*verifier*/, const oo::PList& value,
     const oo::PList& /*params*/, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
@@ -1532,8 +1538,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_Vector(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_Quaternion(
-    OOPListSchemaVerifier* /*verifier*/, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_Quaternion(
+    oo::PListSchemaVerifier* /*verifier*/, const oo::PList& value,
     const oo::PList& /*params*/, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
@@ -1553,14 +1559,14 @@ static std::optional<OOPListSchemaVerifierError> Verify_Quaternion(
 
 namespace {
 
-static std::optional<OOPListSchemaVerifierError> Verify_DelegatedType(
-    OOPListSchemaVerifier* verifier, const oo::PList& value,
+static std::optional<oo::PListSchemaVerifierError> Verify_DelegatedType(
+    oo::PListSchemaVerifier* verifier, const oo::PList& value,
     const oo::PList& params, const oo::PList& rootPList,
     const std::string& name, BackLinkChain keyPath, bool tentative,
     bool* outStop) {
   const oo::PList* baseType = nullptr;
   bool stop = false;
-  std::optional<OOPListSchemaVerifierError> error;
+  std::optional<oo::PListSchemaVerifierError> error;
 
   const oo::PList* keyValue = params.find("key");
   const oo::PList key = (keyValue != nullptr) ? *keyValue : oo::PList();
@@ -1585,10 +1591,10 @@ static std::optional<OOPListSchemaVerifierError> Verify_DelegatedType(
 
 namespace {
 
-OOPListSchemaVerifierError Error(OOPListSchemaVerifierErrorCode errorCode,
-                                 BackLinkChain* keyPath, const char* format,
-                                 ...) {
-  OOPListSchemaVerifierError result;
+oo::PListSchemaVerifierError Error(oo::PListSchemaVerifierErrorCode errorCode,
+                                   BackLinkChain* keyPath, const char* format,
+                                   ...) {
+  oo::PListSchemaVerifierError result;
   va_list args;
 
   va_start(args, format);
@@ -1599,11 +1605,11 @@ OOPListSchemaVerifierError Error(OOPListSchemaVerifierErrorCode errorCode,
   return result;
 }
 
-OOPListSchemaVerifierError ErrorWithProperty(
-    OOPListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
+oo::PListSchemaVerifierError ErrorWithProperty(
+    oo::PListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
     const std::string& propKey, const oo::PList& propValue, const char* format,
     ...) {
-  OOPListSchemaVerifierError result;
+  oo::PListSchemaVerifierError result;
   va_list args;
   oo::PList dict;
 
@@ -1618,10 +1624,10 @@ OOPListSchemaVerifierError ErrorWithProperty(
   return result;
 }
 
-OOPListSchemaVerifierError ErrorWithDictionary(
-    OOPListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
+oo::PListSchemaVerifierError ErrorWithDictionary(
+    oo::PListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
     const oo::PList& dict, const char* format, ...) {
-  OOPListSchemaVerifierError result;
+  oo::PListSchemaVerifierError result;
   va_list args;
 
   va_start(args, format);
@@ -1632,8 +1638,8 @@ OOPListSchemaVerifierError ErrorWithDictionary(
   return result;
 }
 
-OOPListSchemaVerifierError ErrorWithDictionaryAndArguments(
-    OOPListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
+oo::PListSchemaVerifierError ErrorWithDictionaryAndArguments(
+    oo::PListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
     const oo::PList& dict, const char* format, va_list arguments) {
   oo::PList::Dict userInfo;
 
@@ -1643,14 +1649,14 @@ OOPListSchemaVerifierError ErrorWithDictionaryAndArguments(
     userInfo[kPListKeyPathErrorKey] = KeyPathToArray(*keyPath);
   }
 
-  return OOPListSchemaVerifierError{
-      kOOPListSchemaVerifierErrorDomain, oo::ToUnderlying(errorCode),
+  return oo::PListSchemaVerifierError{
+      oo::kPListSchemaVerifierErrorDomain, oo::ToUnderlying(errorCode),
       oo::str::vformat(format, arguments), oo::PList(std::move(userInfo))};
 }
 
-OOPListSchemaVerifierError ErrorTypeMismatch(const char* expectedClassName,
-                                             const oo::PList& actual,
-                                             BackLinkChain keyPath) {
+oo::PListSchemaVerifierError ErrorTypeMismatch(const char* expectedClassName,
+                                               const oo::PList& actual,
+                                               BackLinkChain keyPath) {
   oo::PList::Dict dict;
   std::string className;
 
@@ -1688,21 +1694,21 @@ OOPListSchemaVerifierError ErrorTypeMismatch(const char* expectedClassName,
       break;  // any other object
   }
 
-  return ErrorWithDictionary(OOPListSchemaVerifierErrorCode::kTypeMismatch,
+  return ErrorWithDictionary(oo::PListSchemaVerifierErrorCode::kTypeMismatch,
                              &keyPath, oo::PList(std::move(dict)),
                              "Expected %s, found %s.", expectedClassName,
                              className.c_str());
 }
 
-OOPListSchemaVerifierError ErrorFailureAlreadyReported() {
-  return OOPListSchemaVerifierError{
-      kOOPListSchemaVerifierErrorDomain,
+oo::PListSchemaVerifierError ErrorFailureAlreadyReported() {
+  return oo::PListSchemaVerifierError{
+      oo::kPListSchemaVerifierErrorDomain,
       oo::ToUnderlying(kPListErrorFailedAndErrorHasBeenReported), std::nullopt,
       oo::PList()};
 }
 
-bool IsFailureAlreadyReportedError(const OOPListSchemaVerifierError& error) {
-  return error.domain == kOOPListSchemaVerifierErrorDomain &&
+bool IsFailureAlreadyReportedError(const oo::PListSchemaVerifierError& error) {
+  return error.domain == oo::kPListSchemaVerifierErrorDomain &&
          error.code ==
              oo::ToUnderlying(kPListErrorFailedAndErrorHasBeenReported);
 }

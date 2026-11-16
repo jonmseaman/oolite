@@ -23,14 +23,14 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOCheckPListSyntaxVerifierStage.h"
+#include "CheckPListSyntaxVerifierStage.h"
 
 #include <string>
 #include <vector>
 
 #if OO_OXP_VERIFIER_ENABLED
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 
 static const char* const kStageName = "Checking plist well-formedness";
 
@@ -57,17 +57,17 @@ bool Contains(const std::vector<std::string>& strings,
 
 }  // namespace
 
-std::optional<std::string> OOCheckPListSyntaxVerifierStage::name() {
+std::optional<std::string> oo::CheckPListSyntaxVerifierStage::name() {
   return kStageName;
 }
 
-bool OOCheckPListSyntaxVerifierStage::shouldRun() { return true; }
+bool oo::CheckPListSyntaxVerifierStage::shouldRun() { return true; }
 
-void OOCheckPListSyntaxVerifierStage::run() {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+void oo::CheckPListSyntaxVerifierStage::run() {
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
 
   const oo::PList knownFiles =
       verifier()->configurationDictionaryForKey("knownFiles");

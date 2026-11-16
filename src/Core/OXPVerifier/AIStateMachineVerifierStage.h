@@ -27,7 +27,7 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -43,11 +43,12 @@ MA 02110-1301, USA.
    OOCheckShipDataPListVerifierStage, calls these members, and the verifier
    holds it and makes it from its name through a table.
 */
-class OOAIStateMachineVerifierStage : public OOFileHandlingVerifierStage {
+namespace oo {
+
+class AIStateMachineVerifierStage : public FileHandlingVerifierStage {
  public:
   // Returns name to be used in dependents() by other stages.
-  static std::string nameForReverseDependencyForVerifier(
-      OOOXPVerifier* verifier);
+  static std::string nameForReverseDependencyForVerifier(OXPVerifier* verifier);
 
   // The caller only reports an AI it has a name for (it tested the name against
   // nil).
@@ -63,5 +64,7 @@ class OOAIStateMachineVerifierStage : public OOFileHandlingVerifierStage {
   std::vector<std::string> _whitelist = {};  // sorted, no duplicates
   std::vector<std::string> _usedAIs = {};    // sorted, no duplicates
 };
+
+}  // namespace oo
 
 #endif

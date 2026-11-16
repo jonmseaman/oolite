@@ -28,7 +28,7 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -48,11 +48,12 @@ MA 02110-1301, USA.
    kCxxStages in OOOXPVerifier.cpp). OOTextureHandlingStage is an intermediate
    class that the ship data and model stages subclass.
 */
-class OOTextureVerifierStage : public OOFileHandlingVerifierStage {
+namespace oo {
+
+class TextureVerifierStage : public FileHandlingVerifierStage {
  public:
   // Returns name to be used in dependents() by other stages.
-  static std::string nameForReverseDependencyForVerifier(
-      OOOXPVerifier* verifier);
+  static std::string nameForReverseDependencyForVerifier(OXPVerifier* verifier);
 
   std::optional<std::string> name() override;
   bool shouldRun() override;
@@ -76,9 +77,11 @@ class OOTextureVerifierStage : public OOFileHandlingVerifierStage {
 
 // Convenience base class for stages that need to run before
 // OOTextureHandlingStage.
-class OOTextureHandlingStage : public OOFileHandlingVerifierStage {
+class TextureHandlingStage : public FileHandlingVerifierStage {
  public:
   std::optional<std::vector<std::string>> dependents() override;
 };
+
+}  // namespace oo
 
 #endif

@@ -18,8 +18,8 @@
 #include <filesystem>
 #include <fstream>
 
-#include "OOCheckRequiresPListVerifierStage.h"
-#include "OOOXPVerifierStage.h"
+#include "CheckRequiresPListVerifierStage.h"
+#include "OXPVerifierStage.h"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
@@ -81,9 +81,9 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 
 // The scanner, registered with the verifier and run over its OXP, as the
 // verifier runs it first.
-void RunScanner(OOOXPVerifier* verifier) {
-  OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
+void RunScanner(oo::OXPVerifier* verifier) {
+  oo::FileScannerVerifierStage::nameForDependencyForVerifier(verifier);
+  verifier->stageWithName(oo::FileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -95,13 +95,13 @@ const std::filesystem::path kBase =
 
 // An OXP with the given Config files (name, contents), and its verifier with
 // the scanner run over it.
-OOOXPVerifier* MakeVerifier(
+oo::OXPVerifier* MakeVerifier(
     std::initializer_list<std::pair<const char*, const char*>> files) {
   std::filesystem::remove_all(kBase);
   std::filesystem::create_directories(kBase);
   for (const auto& [name, contents] : files)
     WriteFile(kBase / "Config" / name, contents);
-  OOOXPVerifier* verifier =
+  oo::OXPVerifier* verifier =
       OOOXPVerifierTestAccess::Make(kBase.generic_string(), kConfiguration);
   RunScanner(verifier);
   StartLog();
@@ -128,8 +128,8 @@ void RunWith(const char* requiresPList, const char* ooliteVersion) {
                   .c_str());
   }
 
-  const std::shared_ptr<OOCheckRequiresPListVerifierStage> stage =
-      oo::makeShared<OOCheckRequiresPListVerifierStage>();
+  const std::shared_ptr<oo::CheckRequiresPListVerifierStage> stage =
+      oo::makeShared<oo::CheckRequiresPListVerifierStage>();
   stage->setVerifier(MakeVerifier({{"requires.plist", requiresPList}}));
   std::filesystem::current_path(game);
   stage->run();
@@ -141,8 +141,8 @@ void RunWith(const char* requiresPList, const char* ooliteVersion) {
 
 OO_TEST(nameAndNeighbours) {
   {
-    const std::shared_ptr<OOCheckRequiresPListVerifierStage> stage =
-        oo::makeShared<OOCheckRequiresPListVerifierStage>();
+    const std::shared_ptr<oo::CheckRequiresPListVerifierStage> stage =
+        oo::makeShared<oo::CheckRequiresPListVerifierStage>();
     stage->setVerifier(MakeVerifier({}));
     OO_CHECK(stage->name() ==
              std::optional<std::string>("Checking requires.plist"));
@@ -233,9 +233,9 @@ OO_TEST(versions) {
 // describes itself with its class's name.
 OO_TEST(facade) {
   {
-    OOOXPVerifier* verifier = MakeVerifier({});
-    const std::shared_ptr<OOCheckRequiresPListVerifierStage> stage =
-        oo::makeShared<OOCheckRequiresPListVerifierStage>();
+    oo::OXPVerifier* verifier = MakeVerifier({});
+    const std::shared_ptr<oo::CheckRequiresPListVerifierStage> stage =
+        oo::makeShared<oo::CheckRequiresPListVerifierStage>();
     OO_CHECK(stage->description().starts_with(
         "<OOCheckRequiresPListVerifierStage 0x"));
 

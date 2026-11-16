@@ -23,7 +23,7 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOCheckRequiresPListVerifierStage.h"
+#include "CheckRequiresPListVerifierStage.h"
 
 #include <string>
 #include <utility>
@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 
 #if OO_OXP_VERIFIER_ENABLED
 
-#include "OOFileScannerVerifierStage.h"
+#include "FileScannerVerifierStage.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/ResourcePaths.hpp"
@@ -78,22 +78,22 @@ std::optional<std::string> OoliteInfoString(std::string_view key) {
 
 }  // namespace
 
-std::optional<std::string> OOCheckRequiresPListVerifierStage::name() {
+std::optional<std::string> oo::CheckRequiresPListVerifierStage::name() {
   return kStageName;
 }
 
-bool OOCheckRequiresPListVerifierStage::shouldRun() {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+bool oo::CheckRequiresPListVerifierStage::shouldRun() {
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   return fileScanner != nullptr &&
          fileScanner->fileExists("requires.plist", "Config", std::nullopt,
                                  false);
 }
 
-void OOCheckRequiresPListVerifierStage::run() {
-  OOFileScannerVerifierStage* fileScanner = nullptr;
+void oo::CheckRequiresPListVerifierStage::run() {
+  oo::FileScannerVerifierStage* fileScanner = nullptr;
   oo::PList requiresPList;
   std::vector<std::string> knownKeys;
   std::string unknownKeys;
@@ -103,8 +103,8 @@ void OOCheckRequiresPListVerifierStage::run() {
                             // answered nil
   std::optional<std::vector<unsigned>> versionComponents, maxVersionComponents;
 
-  fileScanner = static_cast<OOFileScannerVerifierStage*>(
-      verifier()->stageWithName(OOFileScannerVerifierStage::kName));
+  fileScanner = static_cast<oo::FileScannerVerifierStage*>(
+      verifier()->stageWithName(oo::FileScannerVerifierStage::kName));
   if (fileScanner != nullptr)
     requiresPList = fileScanner->plistNamed("requires.plist", "Config",
                                             std::nullopt, false);

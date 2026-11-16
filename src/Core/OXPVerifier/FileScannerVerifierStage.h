@@ -31,7 +31,7 @@ SOFTWARE.
 
 #pragma once
 
-#include "OOOXPVerifierStage.h"
+#include "OXPVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -55,7 +55,9 @@ SOFTWARE.
    which answers the C++ stage.
 */
 
-class OOFileScannerVerifierStage : public OOOXPVerifierStage {
+namespace oo {
+
+class FileScannerVerifierStage : public OXPVerifierStage {
  public:
   // The stage's name, as name() returns it (the stages look the scanner up by
   // it).
@@ -64,7 +66,7 @@ class OOFileScannerVerifierStage : public OOOXPVerifierStage {
   // Returns name to be used in dependencies() by other stages; also registers
   // stage.
   static std::optional<std::string> nameForDependencyForVerifier(
-      OOOXPVerifier* verifier);
+      OXPVerifier* verifier);
 
   std::optional<std::string> name() override;
   void run() override;
@@ -164,12 +166,11 @@ class OOFileScannerVerifierStage : public OOOXPVerifierStage {
 /*	A C++ subclass of OOOXPVerifierStage that overrides its virtual members.
    Nothing outside this file names it, and the verifier holds it.
 */
-class OOListUnusedFilesStage : public OOOXPVerifierStage {
+class ListUnusedFilesStage : public OXPVerifierStage {
  public:
   // Returns name to be used in dependents() by other stages; also registers
   // stage.
-  static std::string nameForReverseDependencyForVerifier(
-      OOOXPVerifier* verifier);
+  static std::string nameForReverseDependencyForVerifier(OXPVerifier* verifier);
 
   std::optional<std::string> name() override;
   std::optional<std::vector<std::string>> dependencies() override;
@@ -178,10 +179,12 @@ class OOListUnusedFilesStage : public OOOXPVerifierStage {
 
 // Convenience base class for stages that require OOFileScannerVerifierStage and
 // OOListUnusedFilesStage.
-class OOFileHandlingVerifierStage : public OOOXPVerifierStage {
+class FileHandlingVerifierStage : public OXPVerifierStage {
  public:
   std::optional<std::vector<std::string>> dependencies() override;
   std::optional<std::vector<std::string>> dependents() override;
 };
+
+}  // namespace oo
 
 #endif
