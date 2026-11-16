@@ -92,7 +92,8 @@ std::optional<std::string> oo::CheckShipDataPListVerifierStage::name() {
 std::optional<std::vector<std::string>>
 oo::CheckShipDataPListVerifierStage::dependents() {
   std::vector<std::string> result =
-      oo::TextureHandlingStage::dependents().value_or(std::vector<std::string>());
+      oo::TextureHandlingStage::dependents().value_or(
+          std::vector<std::string>());
   for (const std::string& name :
        {oo::ModelVerifierStage::nameForReverseDependencyForVerifier(verifier()),
         oo::AIStateMachineVerifierStage::nameForReverseDependencyForVerifier(

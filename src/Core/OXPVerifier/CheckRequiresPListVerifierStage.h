@@ -49,5 +49,4 @@ class CheckRequiresPListVerifierStage : public FileHandlingVerifierStage {
 
 }  // namespace oo
 
-
 #endif

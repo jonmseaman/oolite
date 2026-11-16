@@ -259,8 +259,8 @@ std::shared_ptr<oo::DebugTCPConsoleClient>
 oo::DebugTCPConsoleClient::clientWithAddress(
     const std::optional<std::string>& address, uint16_t port) {
   std::shared_ptr<oo::DebugTCPConsoleClient> client =
-      std::shared_ptr<oo::DebugTCPConsoleClient>(new oo::DebugTCPConsoleClient(),
-                                               oo::Dispose{});
+      std::shared_ptr<oo::DebugTCPConsoleClient>(
+          new oo::DebugTCPConsoleClient(), oo::Dispose{});
   if (!client->initWithAddress(address, port))
     return std::shared_ptr<oo::DebugTCPConsoleClient>();
   return client;
@@ -356,7 +356,6 @@ DebugTCPConsoleClient::~DebugTCPConsoleClient() {
 
 }  // namespace oo
 
-
 bool oo::DebugTCPConsoleClient::connectDebugMonitor(
     oo::DebugMonitor* debugMonitor, std::optional<std::string>* message) {
   if (_status == oo::TCPClientConnectionStatus::kConnectionRefused) {
@@ -414,14 +413,14 @@ void oo::DebugTCPConsoleClient::debugMonitorShowConsole(
 }
 
 void oo::DebugTCPConsoleClient::debugMonitor(oo::DebugMonitor* /*debugMonitor*/,
-                                           const oo::PList& configuration) {
+                                             const oo::PList& configuration) {
   sendPacket(ProtocolName(kOOTCPPacket_NoteConfiguration), configuration,
              ProtocolName(kOOTCPConfiguration));
 }
 
 void oo::DebugTCPConsoleClient::debugMonitor(oo::DebugMonitor* /*debugMonitor*/,
-                                           const oo::PList& newValue,
-                                           const std::string& key) {
+                                             const oo::PList& newValue,
+                                             const std::string& key) {
   if (newValue) {
     oo::PList::Dict change;
     change[key] = newValue;
@@ -450,7 +449,7 @@ void oo::DebugTCPConsoleClient::closeConnection() {
 }
 
 bool oo::DebugTCPConsoleClient::openSocketToHost(const std::string& address,
-                                               uint16_t port) {
+                                                 uint16_t port) {
   struct addrinfo hints, *found = nullptr;
   struct sockaddr_in host;
   Socket s;
@@ -557,7 +556,7 @@ bool oo::DebugTCPConsoleClient::hasPendingErrorEvent() {
 uintptr_t oo::DebugTCPConsoleClient::socket() { return _socket; }
 
 void oo::DebugTCPConsoleClient::addToWaitSets(fd_set* readSet, fd_set* writeSet,
-                                            fd_set* exceptSet) {
+                                              fd_set* exceptSet) {
   if (_socket == kNoSocket) return;
   Socket s = static_cast<Socket>(_socket);
   if (_inStatus == kStreamStatusOpening || _outStatus == kStreamStatusOpening) {
@@ -571,8 +570,9 @@ void oo::DebugTCPConsoleClient::addToWaitSets(fd_set* readSet, fd_set* writeSet,
   }
 }
 
-void oo::DebugTCPConsoleClient::handleWaitResultRead(bool readable, bool writable,
-                                                   bool exceptional) {
+void oo::DebugTCPConsoleClient::handleWaitResultRead(bool readable,
+                                                     bool writable,
+                                                     bool exceptional) {
   if (_inStatus == kStreamStatusOpening || _outStatus == kStreamStatusOpening) {
     if (!writable && !exceptional) return;
 
@@ -742,7 +742,7 @@ void oo::DebugTCPConsoleClient::sendDictionary(const oo::PList& dictionary) {
 }
 
 void oo::DebugTCPConsoleClient::sendPacket(const std::string& packetType,
-                                         const oo::PList& parameters) {
+                                           const oo::PList& parameters) {
   // A copy of the parameters with the packet type set (was dictionary copy with
   // one added entry); no parameters: the type alone.
   oo::PList::Dict dict;
@@ -754,8 +754,8 @@ void oo::DebugTCPConsoleClient::sendPacket(const std::string& packetType,
 }
 
 void oo::DebugTCPConsoleClient::sendPacket(const std::string& packetType,
-                                         const oo::PList& value,
-                                         const std::string& paramKey) {
+                                           const oo::PList& value,
+                                           const std::string& paramKey) {
   // A null value or an empty key gives the type-only packet, as
   // +dictionaryWithObjectsAndKeys: did by stopping at the nil.
   oo::PList::Dict dict;
@@ -778,7 +778,7 @@ void oo::DebugTCPConsoleClient::readData() {
     // has taken them, as the no-copy data object was.
     auto data = oo::ALDataCreateMutable(static_cast<size_t>(length));
     oo::ALMutableDataAppendBytes(data, buffer.data(),
-                               static_cast<size_t>(length));
+                                 static_cast<size_t>(length));
     oo::TCPStreamDecoderReceiveData(_decoder, data);
     oo::ALRelease(data);
     length = receive(buffer);
@@ -786,7 +786,7 @@ void oo::DebugTCPConsoleClient::readData() {
 }
 
 void oo::DebugTCPConsoleClient::dispatchPacket(const oo::PList& packet,
-                                             const std::string& packetType) {
+                                               const std::string& packetType) {
   if (packet.isNull()) return;
 
   // The packet type names are OODebugTCPConsoleProtocol.h's constants, read as
@@ -1038,9 +1038,8 @@ void DebugTCPConsoleServiceInput(double timeout) {
 
 }  // namespace oo
 
-
 void oo::DebugTCPConsoleClient::DecoderPacket(oo::ALObjectRef packetType,
-                                            oo::ALObjectRef packet) {
+                                              oo::ALObjectRef packet) {
   // The decoder's handles hold property lists
   // (OOTCPStreamDecoderAbstractionLayer). A type that is not a string was
   // nil, and no packet was dispatched.

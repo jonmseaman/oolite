@@ -65,7 +65,6 @@ struct TCPStreamDecoder {
 
 }  // namespace oo
 
-
 static void Error(oo::TCPStreamDecoderRef decoder, oo::ALStringRef format, ...);
 static void PacketReady(oo::TCPStreamDecoderRef decoder);
 
@@ -93,8 +92,7 @@ TCPStreamDecoderRef TCPStreamDecoderCreate(
 
 void TCPStreamDecoderDestroy(TCPStreamDecoderRef decoder) {
   if (decoder == nullptr) return;
-  const std::unique_ptr<TCPStreamDecoder> owned(
-      decoder);  // deleted on return
+  const std::unique_ptr<TCPStreamDecoder> owned(decoder);  // deleted on return
 
   if (decoder->Finalize != nullptr) {
     decoder->Finalize();
@@ -106,16 +104,15 @@ void TCPStreamDecoderDestroy(TCPStreamDecoderRef decoder) {
   }
 }
 
-void TCPStreamDecoderReceiveData(TCPStreamDecoderRef decoder,
-                                   ALDataRef data) {
+void TCPStreamDecoderReceiveData(TCPStreamDecoderRef decoder, ALDataRef data) {
   if (decoder == nullptr || data == nullptr) return;
 
   TCPStreamDecoderReceiveBytes(decoder, ALDataGetBytePtr(data),
-                                 ALDataGetLength(data));
+                               ALDataGetLength(data));
 }
 
 void TCPStreamDecoderReceiveBytes(TCPStreamDecoderRef decoder,
-                                    const void* inBytes, size_t length) {
+                                  const void* inBytes, size_t length) {
   const unsigned char* bytes = nullptr;
   size_t remaining;
   size_t bytesToAdd;
@@ -182,7 +179,6 @@ void TCPStreamDecoderReceiveBytes(TCPStreamDecoderRef decoder,
 
 }  // namespace oo
 
-
 static void PacketReady(oo::TCPStreamDecoderRef decoder) {
   oo::ALDictionaryRef packet = nullptr;
   oo::ALStringRef errorString = nullptr;
@@ -226,7 +222,8 @@ static void PacketReady(oo::TCPStreamDecoderRef decoder) {
   decoder->Packet(packetType, packet);
 }
 
-static void Error(oo::TCPStreamDecoderRef decoder, oo::ALStringRef format, ...) {
+static void Error(oo::TCPStreamDecoderRef decoder, oo::ALStringRef format,
+                  ...) {
   va_list args;
   oo::ALStringRef string = nullptr;
 

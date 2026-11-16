@@ -52,7 +52,7 @@ class AIStateMachineVerifierStage;
    OOPListSchemaVerifierDelegate.
 */
 class CheckShipDataPListVerifierStage : public TextureHandlingStage,
-                                          public PListSchemaVerifierDelegate {
+                                        public PListSchemaVerifierDelegate {
  public:
   std::optional<std::string> name() override;
   std::optional<std::vector<std::string>> dependents() override;
@@ -96,8 +96,7 @@ class CheckShipDataPListVerifierStage : public TextureHandlingStage,
   std::vector<std::string> _ooliteShipNames = {};
   std::vector<std::string> _basicKeys = {}, _stationKeys = {}, _playerKeys = {},
                            _allKeys = {};
-  std::shared_ptr<PListSchemaVerifier> _schemaVerifier =
-      {};  // Made by run().
+  std::shared_ptr<PListSchemaVerifier> _schemaVerifier = {};  // Made by run().
   AIStateMachineVerifierStage* _aiVerifierStage =
       {};  // Not retained (the verifier holds it).
 
@@ -110,6 +109,5 @@ class CheckShipDataPListVerifierStage : public TextureHandlingStage,
 };
 
 }  // namespace oo
-
 
 #endif

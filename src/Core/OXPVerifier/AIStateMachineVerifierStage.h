@@ -48,8 +48,7 @@ namespace oo {
 class AIStateMachineVerifierStage : public FileHandlingVerifierStage {
  public:
   // Returns name to be used in dependents() by other stages.
-  static std::string nameForReverseDependencyForVerifier(
-      OXPVerifier* verifier);
+  static std::string nameForReverseDependencyForVerifier(OXPVerifier* verifier);
 
   // The caller only reports an AI it has a name for (it tested the name against
   // nil).
@@ -67,6 +66,5 @@ class AIStateMachineVerifierStage : public FileHandlingVerifierStage {
 };
 
 }  // namespace oo
-
 
 #endif

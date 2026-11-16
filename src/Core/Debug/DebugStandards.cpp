@@ -50,7 +50,6 @@ void SetStandardsForOXPVerifierMode() {}
 
 }  // namespace oo
 
-
 #else
 
 namespace oo {
@@ -58,7 +57,6 @@ namespace oo {
 void StandardsSetup();
 
 }  // namespace oo
-
 
 namespace {
 
@@ -86,7 +84,6 @@ enum class StandardsEnforcement : int {
 };
 
 }  // namespace oo
-
 
 // Deployment builds stay quiet unless an OXP developer opts in with
 // enforce-oxp-standards.
@@ -118,7 +115,6 @@ void StandardsSetup() {
 }
 
 }  // namespace oo
-
 
 namespace {
 
@@ -159,6 +155,5 @@ void SetStandardsForOXPVerifierMode() {
 }
 
 }  // namespace oo
-
 
 #endif

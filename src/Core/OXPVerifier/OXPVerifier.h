@@ -65,7 +65,7 @@ namespace oo {
 class OXPVerifierStage;
 
 }  // namespace oo
-  // OOOXPVerifierStage.h, which imports this header
+   // OOOXPVerifierStage.h, which imports this header
 
 struct OOOXPVerifierTestAccess;  // tests only
 
@@ -164,6 +164,5 @@ class OXPVerifier : public oo::Object {
 };
 
 }  // namespace oo
-
 
 #endif

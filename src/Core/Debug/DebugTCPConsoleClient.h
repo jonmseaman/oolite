@@ -63,17 +63,20 @@ enum class TCPClientConnectionStatus : int {
 
 }  // namespace oo
 
-static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kNotConnected) ==
-              0);
+static_assert(
+    std::to_underlying(oo::TCPClientConnectionStatus::kNotConnected) == 0);
 static_assert(std::to_underlying(
-                  oo::TCPClientConnectionStatus::kStartedConnectionStage1) == 1);
+                  oo::TCPClientConnectionStatus::kStartedConnectionStage1) ==
+              1);
 static_assert(std::to_underlying(
-                  oo::TCPClientConnectionStatus::kStartedConnectionStage2) == 2);
-static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kConnected) == 3);
+                  oo::TCPClientConnectionStatus::kStartedConnectionStage2) ==
+              2);
+static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kConnected) ==
+              3);
 static_assert(
     std::to_underlying(oo::TCPClientConnectionStatus::kConnectionRefused) == 4);
-static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kDisconnected) ==
-              5);
+static_assert(
+    std::to_underlying(oo::TCPClientConnectionStatus::kDisconnected) == 5);
 
 /*	The frame loop's side of the console socket: what the run loop did for
    the console's streams. OODebugTCPConsoleIsWaitingForInput() is true while a
@@ -196,4 +199,3 @@ class DebugTCPConsoleClient : public DebuggerInterface {
 };
 
 }  // namespace oo
-

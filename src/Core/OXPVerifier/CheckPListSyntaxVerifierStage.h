@@ -48,5 +48,4 @@ class CheckPListSyntaxVerifierStage : public FileHandlingVerifierStage {
 
 }  // namespace oo
 
-
 #endif

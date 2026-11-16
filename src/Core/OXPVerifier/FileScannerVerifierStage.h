@@ -170,8 +170,7 @@ class ListUnusedFilesStage : public OXPVerifierStage {
  public:
   // Returns name to be used in dependents() by other stages; also registers
   // stage.
-  static std::string nameForReverseDependencyForVerifier(
-      OXPVerifier* verifier);
+  static std::string nameForReverseDependencyForVerifier(OXPVerifier* verifier);
 
   std::optional<std::string> name() override;
   std::optional<std::vector<std::string>> dependencies() override;
@@ -187,6 +186,5 @@ class FileHandlingVerifierStage : public OXPVerifierStage {
 };
 
 }  // namespace oo
-
 
 #endif

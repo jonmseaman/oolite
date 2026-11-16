@@ -114,7 +114,6 @@ const char* const kPListSchemaVerifierErrorDomain =
 
 }  // namespace oo
 
-
 const char* const kPListKeyPathErrorKey =
     "org.aegidian.oolite.OOPListSchemaVerifier plist key path";
 const char* const kSchemaKeyPathErrorKey =
@@ -198,7 +197,8 @@ SchemaType StringToSchemaType(
     std::optional<oo::PListSchemaVerifierError>* outError);
 std::string ApplyStringFilter(
     const std::string& string, const oo::PList& filterSpec,
-    BackLinkChain keyPath, std::optional<oo::PListSchemaVerifierError>* outError);
+    BackLinkChain keyPath,
+    std::optional<oo::PListSchemaVerifierError>* outError);
 bool ApplyStringTest(const std::string& string, const oo::PList& test,
                      StringTest stringTest, const char* testDescription,
                      BackLinkChain keyPath,
@@ -224,8 +224,8 @@ namespace {
 // The formats are printf formats (oo::str::vformat); an object's text is %s of
 // oo::DescriptionOf(x).
 oo::PListSchemaVerifierError Error(oo::PListSchemaVerifierErrorCode errorCode,
-                                 BackLinkChain* keyPath, const char* format,
-                                 ...);
+                                   BackLinkChain* keyPath, const char* format,
+                                   ...);
 oo::PListSchemaVerifierError ErrorWithProperty(
     oo::PListSchemaVerifierErrorCode errorCode, BackLinkChain* keyPath,
     const std::string& propKey, const oo::PList& propValue, const char* format,
@@ -238,8 +238,8 @@ oo::PListSchemaVerifierError ErrorWithDictionaryAndArguments(
     const oo::PList& dict, const char* format, va_list arguments);
 
 oo::PListSchemaVerifierError ErrorTypeMismatch(const char* expectedClassName,
-                                             const oo::PList& actual,
-                                             BackLinkChain keyPath);
+                                               const oo::PList& actual,
+                                               BackLinkChain keyPath);
 oo::PListSchemaVerifierError ErrorFailureAlreadyReported();
 bool IsFailureAlreadyReportedError(const oo::PListSchemaVerifierError& error);
 
@@ -276,8 +276,8 @@ oo::PList PListFromError(const oo::PListSchemaVerifierError& error) {
 // Each verifier takes the value, the resolved schema type and the name as C++
 // values.
 #define VERIFY_PROTO(T)                                               \
-  static std::optional<oo::PListSchemaVerifierError> Verify_##T(        \
-      oo::PListSchemaVerifier* verifier, const oo::PList& value,        \
+  static std::optional<oo::PListSchemaVerifierError> Verify_##T(      \
+      oo::PListSchemaVerifier* verifier, const oo::PList& value,      \
       const oo::PList& params, const oo::PList& rootPList,            \
       const std::string& name, BackLinkChain keyPath, bool tentative, \
       bool* outStop)
@@ -316,11 +316,11 @@ oo::PListSchemaVerifier::PListSchemaVerifier(const oo::PList& schema) {
     oo::log::logger().setDisplay("verifyOXP.verbose.plistDebugDump", true);
 }
 
-std::shared_ptr<oo::PListSchemaVerifier> oo::PListSchemaVerifier::initWithSchema(
-    const oo::PList& schema) {
+std::shared_ptr<oo::PListSchemaVerifier>
+oo::PListSchemaVerifier::initWithSchema(const oo::PList& schema) {
   std::shared_ptr<oo::PListSchemaVerifier> verifier =
-      std::shared_ptr<oo::PListSchemaVerifier>(new oo::PListSchemaVerifier(schema),
-                                             oo::Dispose{});
+      std::shared_ptr<oo::PListSchemaVerifier>(
+          new oo::PListSchemaVerifier(schema), oo::Dispose{});
   if (!verifier->_schema) {
     return nullptr;
   }
@@ -341,7 +341,7 @@ oo::PListSchemaVerifierDelegate* oo::PListSchemaVerifier::delegate() {
 }
 
 bool oo::PListSchemaVerifier::verifyPropertyList(const oo::PList& plist,
-                                               const std::string& name) {
+                                                 const std::string& name) {
   bool OK;
   bool stop = false;
 
@@ -563,7 +563,8 @@ oo::PList oo::PListSchemaVerifier::resolveSchemaType(
           const oo::PList* definition = _definitions.find(typeString);
           if (definition == nullptr) {
             *outError = ErrorWithProperty(
-                oo::PListSchemaVerifierErrorCode::kSchemaUndefiniedMacroReference,
+                oo::PListSchemaVerifierErrorCode::
+                    kSchemaUndefiniedMacroReference,
                 &keyPath, kUndefinedMacroErrorKey, oo::PList(typeString),
                 "Bad schema: reference to undefined macro \"%s\".",
                 StringForErrorReport(typeString).c_str());
@@ -626,10 +627,10 @@ SchemaType StringToSchemaType(
           kUnknownTypeErrorKey, oo::PList(string),
           "Bad schema: unresolved macro reference \"%s\".", string.c_str());
     } else {
-      *outError =
-          ErrorWithProperty(oo::PListSchemaVerifierErrorCode::kSchemaUnknownType,
-                            nullptr, kUnknownTypeErrorKey, oo::PList(string),
-                            "Bad schema: unknown type \"%s\".", string.c_str());
+      *outError = ErrorWithProperty(
+          oo::PListSchemaVerifierErrorCode::kSchemaUnknownType, nullptr,
+          kUnknownTypeErrorKey, oo::PList(string),
+          "Bad schema: unknown type \"%s\".", string.c_str());
     }
   }
 
@@ -750,8 +751,8 @@ std::string ApplyStringFilter(
       }
     } else {
       *outError =
-          Error(oo::PListSchemaVerifierErrorCode::kSchemaUnknownFilter, &keyPath,
-                "Bad schema: filter specifier is not a string.");
+          Error(oo::PListSchemaVerifierErrorCode::kSchemaUnknownFilter,
+                &keyPath, "Bad schema: filter specifier is not a string.");
     }
   }
 
@@ -784,9 +785,9 @@ bool ApplyStringTest(const std::string& string, const oo::PList& test,
     if (const std::string* subString = subTest.getIf<std::string>()) {
       if (stringTest(string, *subString)) return true;
     } else {
-      *outError =
-          Error(oo::PListSchemaVerifierErrorCode::kSchemaBadComparator, &keyPath,
-                "Bad schema: required %s is not a string.", testDescription);
+      *outError = Error(oo::PListSchemaVerifierErrorCode::kSchemaBadComparator,
+                        &keyPath, "Bad schema: required %s is not a string.",
+                        testDescription);
       return false;
     }
   }
@@ -1591,8 +1592,8 @@ static std::optional<oo::PListSchemaVerifierError> Verify_DelegatedType(
 namespace {
 
 oo::PListSchemaVerifierError Error(oo::PListSchemaVerifierErrorCode errorCode,
-                                 BackLinkChain* keyPath, const char* format,
-                                 ...) {
+                                   BackLinkChain* keyPath, const char* format,
+                                   ...) {
   oo::PListSchemaVerifierError result;
   va_list args;
 
@@ -1654,8 +1655,8 @@ oo::PListSchemaVerifierError ErrorWithDictionaryAndArguments(
 }
 
 oo::PListSchemaVerifierError ErrorTypeMismatch(const char* expectedClassName,
-                                             const oo::PList& actual,
-                                             BackLinkChain keyPath) {
+                                               const oo::PList& actual,
+                                               BackLinkChain keyPath) {
   oo::PList::Dict dict;
   std::string className;
 

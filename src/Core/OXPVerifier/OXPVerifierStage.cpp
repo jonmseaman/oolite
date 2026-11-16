@@ -128,7 +128,8 @@ bool oo::OXPVerifierStage::isDependentOf(oo::OXPVerifierStage* stage) {
   return false;
 }
 
-void oo::OXPVerifierStage::registerDependency(oo::OXPVerifierStage* dependency) {
+void oo::OXPVerifierStage::registerDependency(
+    oo::OXPVerifierStage* dependency) {
   AddStage(_dependencies, dependency);
   AddStage(_incompleteDependencies, dependency);
 
@@ -193,7 +194,8 @@ void oo::OXPVerifierStage::registerDepedent(oo::OXPVerifierStage* dependent) {
   AddStage(_dependents, dependent);
 }
 
-void oo::OXPVerifierStage::dependencyCompleted(oo::OXPVerifierStage* dependency) {
+void oo::OXPVerifierStage::dependencyCompleted(
+    oo::OXPVerifierStage* dependency) {
   const auto where =
       std::ranges::find(_incompleteDependencies, dependency,
                         [](const auto& owner) { return owner.get(); });

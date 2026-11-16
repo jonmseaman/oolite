@@ -48,5 +48,4 @@ class CheckJSSyntaxVerifierStage : public FileHandlingVerifierStage {
 
 }  // namespace oo
 
-
 #endif

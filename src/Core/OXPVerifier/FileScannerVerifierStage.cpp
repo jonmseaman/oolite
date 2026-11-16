@@ -644,7 +644,8 @@ std::optional<std::string> oo::ListUnusedFilesStage::name() {
   return kUnusedListerStageName;
 }
 
-std::optional<std::vector<std::string>> oo::ListUnusedFilesStage::dependencies() {
+std::optional<std::vector<std::string>>
+oo::ListUnusedFilesStage::dependencies() {
   return std::vector<std::string>{kFileScannerStageName};
 }
 
@@ -677,7 +678,8 @@ oo::FileHandlingVerifierStage::dependencies() {
 std::optional<std::vector<std::string>>
 oo::FileHandlingVerifierStage::dependents() {
   return std::vector<std::string>{
-      oo::ListUnusedFilesStage::nameForReverseDependencyForVerifier(verifier())};
+      oo::ListUnusedFilesStage::nameForReverseDependencyForVerifier(
+          verifier())};
 }
 
 namespace {

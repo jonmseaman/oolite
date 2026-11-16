@@ -54,5 +54,4 @@ class CheckDemoShipsPListVerifierStage : public FileHandlingVerifierStage {
 
 }  // namespace oo
 
-
 #endif

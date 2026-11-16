@@ -41,7 +41,7 @@ std::string FormatV(const char* format, va_list args) {
 namespace oo {
 
 void AssertFailedInFunction(const std::source_location& where,
-                              const char* format, ...) {
+                            const char* format, ...) {
   va_list args;
   va_start(args, format);
   const std::string message = FormatV(format, args);
@@ -54,4 +54,3 @@ void AssertFailedInFunction(const std::source_location& where,
 }
 
 }  // namespace oo
-

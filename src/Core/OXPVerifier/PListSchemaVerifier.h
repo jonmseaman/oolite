@@ -69,7 +69,6 @@ struct PListSchemaVerifierError {
 
 }  // namespace oo
 
-
 /*	The key path the verification core hands down, one link per level.
    Defined in OOPListSchemaVerifier.cpp, the only file that uses it; the
    verification core's members below take it.
@@ -103,11 +102,12 @@ class PListSchemaVerifierDelegate {
   */
   // name: a string; localSchema: the schema type specifier (a string or a
   // dictionary).
-  virtual bool verifierFailedForProperty(
-      PListSchemaVerifier* verifier, const oo::PList& rootPList,
-      const std::string& name, const oo::PList& subPList,
-      const PListSchemaVerifierError& error,
-      const oo::PList& localSchema) = 0;
+  virtual bool verifierFailedForProperty(PListSchemaVerifier* verifier,
+                                         const oo::PList& rootPList,
+                                         const std::string& name,
+                                         const oo::PList& subPList,
+                                         const PListSchemaVerifierError& error,
+                                         const oo::PList& localSchema) = 0;
 
  protected:
   ~PListSchemaVerifierDelegate() = default;
@@ -176,7 +176,6 @@ class PListSchemaVerifier : public oo::Object {
 extern const char* const kPListSchemaVerifierErrorDomain;
 
 }  // namespace oo
-
 
 extern const char* const
     kPListKeyPathErrorKey;  // Array specifying key path in plist.
@@ -294,8 +293,8 @@ static_assert(std::to_underlying(
 static_assert(std::to_underlying(
                   oo::PListSchemaVerifierErrorCode::kMaximumConstraintNotMet) ==
               4);
-static_assert(
-    std::to_underlying(oo::PListSchemaVerifierErrorCode::kNumberIsNegative) == 5);
+static_assert(std::to_underlying(
+                  oo::PListSchemaVerifierErrorCode::kNumberIsNegative) == 5);
 static_assert(std::to_underlying(
                   oo::PListSchemaVerifierErrorCode::kStringPrefixMissing) == 6);
 static_assert(std::to_underlying(
@@ -304,18 +303,22 @@ static_assert(std::to_underlying(
                   oo::PListSchemaVerifierErrorCode::kStringSubstringMissing) ==
               8);
 static_assert(std::to_underlying(
-                  oo::PListSchemaVerifierErrorCode::kDictionaryUnknownKey) == 9);
+                  oo::PListSchemaVerifierErrorCode::kDictionaryUnknownKey) ==
+              9);
 static_assert(
     std::to_underlying(
-        oo::PListSchemaVerifierErrorCode::kDictionaryMissingRequiredKeys) == 10);
+        oo::PListSchemaVerifierErrorCode::kDictionaryMissingRequiredKeys) ==
+    10);
 static_assert(std::to_underlying(
-                  oo::PListSchemaVerifierErrorCode::kEnumerationBadValue) == 11);
+                  oo::PListSchemaVerifierErrorCode::kEnumerationBadValue) ==
+              11);
 static_assert(
     std::to_underlying(oo::PListSchemaVerifierErrorCode::kOneOfNoMatch) == 12);
 static_assert(std::to_underlying(
                   oo::PListSchemaVerifierErrorCode::kDelegatedTypeError) == 13);
 static_assert(std::to_underlying(
-                  oo::PListSchemaVerifierErrorCode::kStartOfSchemaErrors) == 100);
+                  oo::PListSchemaVerifierErrorCode::kStartOfSchemaErrors) ==
+              100);
 static_assert(std::to_underlying(
                   oo::PListSchemaVerifierErrorCode::kSchemaBadTypeSpecifier) ==
               101);
@@ -325,18 +328,20 @@ static_assert(
     102);
 static_assert(std::to_underlying(
                   oo::PListSchemaVerifierErrorCode::kSchemaUnknownType) == 103);
+static_assert(std::to_underlying(
+                  oo::PListSchemaVerifierErrorCode::kSchemaNoOneOfOptions) ==
+              104);
 static_assert(
-    std::to_underlying(oo::PListSchemaVerifierErrorCode::kSchemaNoOneOfOptions) ==
-    104);
+    std::to_underlying(
+        oo::PListSchemaVerifierErrorCode::kSchemaNoEnumerationValues) == 105);
 static_assert(std::to_underlying(
-                  oo::PListSchemaVerifierErrorCode::kSchemaNoEnumerationValues) ==
-              105);
+                  oo::PListSchemaVerifierErrorCode::kSchemaUnknownFilter) ==
+              106);
 static_assert(std::to_underlying(
-                  oo::PListSchemaVerifierErrorCode::kSchemaUnknownFilter) == 106);
+                  oo::PListSchemaVerifierErrorCode::kSchemaBadComparator) ==
+              107);
 static_assert(std::to_underlying(
-                  oo::PListSchemaVerifierErrorCode::kSchemaBadComparator) == 107);
-static_assert(
-    std::to_underlying(oo::PListSchemaVerifierErrorCode::kLastErrorCode) == 108);
+                  oo::PListSchemaVerifierErrorCode::kLastErrorCode) == 108);
 
 namespace oo {
 
@@ -346,6 +351,5 @@ inline bool PlistErrorIsSchemaError(PListSchemaVerifierErrorCode error) {
 }
 
 }  // namespace oo
-
 
 #endif  // OO_OXP_VERIFIER_ENABLED

@@ -44,7 +44,9 @@ std::string oo::TextureVerifierStage::nameForReverseDependencyForVerifier(
   return kStageName;
 }
 
-std::optional<std::string> oo::TextureVerifierStage::name() { return kStageName; }
+std::optional<std::string> oo::TextureVerifierStage::name() {
+  return kStageName;
+}
 
 bool oo::TextureVerifierStage::shouldRun() {
   oo::FileScannerVerifierStage* fileScanner =
@@ -76,7 +78,7 @@ void oo::TextureVerifierStage::run() {
 }
 
 void oo::TextureVerifierStage::textureNamed(const std::string& name,
-                                          const std::string& context) {
+                                            const std::string& context) {
   oo::FileScannerVerifierStage* fileScanner = nullptr;
 
   if (name.empty()) return;
@@ -97,7 +99,7 @@ void oo::TextureVerifierStage::textureNamed(const std::string& name,
 }
 
 void oo::TextureVerifierStage::checkTextureNamed(const std::string& name,
-                                               const std::string& folder) {
+                                                 const std::string& folder) {
   std::shared_ptr<OOTextureLoader> loader;
   std::optional<std::string> path;
   oo::FileScannerVerifierStage* fileScanner = nullptr;

@@ -41,7 +41,6 @@ struct ALAutoreleasePool {
 
 }  // namespace oo
 
-
 namespace {
 
 // The innermost pools, innermost last (per thread, as autorelease pools are).
@@ -73,8 +72,7 @@ ALStringRef ALGetConstantString(const char* string);
 
 ALStringRef ALGetConstantString(const char* string) {
   // Never destroyed (Google style: no non-trivial static destructors).
-  static auto& sStrings =
-      *new std::map<const char*, std::unique_ptr<ALObject>>;
+  static auto& sStrings = *new std::map<const char*, std::unique_ptr<ALObject>>;
 
   std::unique_ptr<ALObject>& value = sStrings[string];
   if (value == nullptr) {
@@ -105,7 +103,7 @@ ALStringRef TypeDescription(ALObjectRef object) {
 bool ALIsString(ALObjectRef object) { return object->value.isString(); }
 
 ALStringRef ALStringCreateWithFormatAndArguments(ALStringRef format,
-                                                     va_list args) {
+                                                 va_list args) {
   return NewObject(
       oo::PList(OOTCPStreamDecoderFormat::FormatWithArguments<ALObjectRef>(
           ::DescriptionOf(format), args, ::DescriptionOf)));
@@ -113,8 +111,7 @@ ALStringRef ALStringCreateWithFormatAndArguments(ALStringRef format,
 
 bool ALIsDictionary(ALObjectRef object) { return object->value.isDict(); }
 
-ALObjectRef ALDictionaryGetValue(ALDictionaryRef dictionary,
-                                     ALObjectRef key) {
+ALObjectRef ALDictionaryGetValue(ALDictionaryRef dictionary, ALObjectRef key) {
   const std::string* keyString = key->value.getIf<std::string>();
   if (keyString == nullptr) return nullptr;
   const oo::PList* value = dictionary->value.find(*keyString);
@@ -134,7 +131,7 @@ ALMutableDataRef ALDataCreateMutable(size_t capacity) {
 }
 
 void ALMutableDataAppendBytes(ALMutableDataRef data, const void* bytes,
-                                size_t length) {
+                              size_t length) {
   data->value.getIf<oo::PList::Data>()->append(bytes, length);
 }
 
@@ -157,8 +154,7 @@ void ALDestroyAutoreleasePool(ALAutoreleasePoolRef pool) {
   delete pool;
 }
 
-ALObjectRef ALPropertyListFromData(ALMutableDataRef data,
-                                       ALStringRef* errStr) {
+ALObjectRef ALPropertyListFromData(ALMutableDataRef data, ALStringRef* errStr) {
   const oo::Data& bytes = *data->value.getIf<oo::PList::Data>();
   std::expected<oo::PList, oo::PListError> parsed =
       oo::parsePropertyList(std::string_view(
@@ -181,6 +177,5 @@ ALObjectRef ALPropertyListFromData(ALMutableDataRef data,
 const oo::PList& ALObjectPList(ALObjectRef object) { return object->value; }
 
 }  // namespace oo
-
 
 #endif /* OO_DEBUG_MONITOR_ENABLED */

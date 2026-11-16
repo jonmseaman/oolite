@@ -282,7 +282,8 @@ std::optional<std::string> oo::OXPVerifier::oxpDisplayName() {
   return _displayName;
 }
 
-::oo::OXPVerifierStage* oo::OXPVerifier::stageWithName(const std::string& name) {
+::oo::OXPVerifierStage* oo::OXPVerifier::stageWithName(
+    const std::string& name) {
   const auto found = _stagesByName.find(name);
   return found != _stagesByName.end() ? found->second.get() : nullptr;
 }
@@ -297,7 +298,8 @@ oo::PList oo::OXPVerifier::configurationArrayForKey(const std::string& key) {
   return array != nullptr ? *array : oo::PList();
 }
 
-oo::PList oo::OXPVerifier::configurationDictionaryForKey(const std::string& key) {
+oo::PList oo::OXPVerifier::configurationDictionaryForKey(
+    const std::string& key) {
   const oo::PList* dictionary = _verifierPList.get<oo::PList::Dict>(key);
   return dictionary != nullptr ? *dictionary : oo::PList();
 }
@@ -473,8 +475,8 @@ void oo::OXPVerifier::registerBaseStages() {
 void oo::OXPVerifier::buildDependencyGraph() {
   ::oo::OXPVerifierStage* stage = nullptr;
   std::optional<std::string> name;
-  std::map<::oo::OXPVerifierStage*, std::vector<std::string>> dependenciesByStage,
-      dependentsByStage;
+  std::map<::oo::OXPVerifierStage*, std::vector<std::string>>
+      dependenciesByStage, dependentsByStage;
 
   {
     /*	Iterate over all stages, getting dependency and dependent sets.
@@ -637,8 +639,8 @@ void oo::OXPVerifier::runStages() {
   _waitingStages.clear();
 }
 
-bool oo::OXPVerifier::setUpDependencies(std::span<const std::string> dependencies,
-                                      ::oo::OXPVerifierStage* stage) {
+bool oo::OXPVerifier::setUpDependencies(
+    std::span<const std::string> dependencies, ::oo::OXPVerifierStage* stage) {
   ::oo::OXPVerifierStage* depStage = nullptr;
 
   // Iterate over dependencies, connecting them up.
@@ -666,7 +668,7 @@ bool oo::OXPVerifier::setUpDependencies(std::span<const std::string> dependencie
 }
 
 void oo::OXPVerifier::setUpDependents(std::span<const std::string> dependents,
-                                    ::oo::OXPVerifierStage* stage) {
+                                      ::oo::OXPVerifierStage* stage) {
   ::oo::OXPVerifierStage* depStage = nullptr;
 
   // Iterate over dependents, connecting them up.

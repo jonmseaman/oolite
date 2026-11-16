@@ -41,18 +41,17 @@
 namespace oo {
 
 void AssertFailedInFunction(const std::source_location& where,
-                              const char* format, ...) OO_PRINTF_FORMAT(2, 3)
+                            const char* format, ...) OO_PRINTF_FORMAT(2, 3)
     __attribute__((noreturn));
 
 }  // namespace oo
 
-
 // Not conditional on NDEBUG: see the head of this file.
-#define OOCAssert(condition, ...)                                 \
-  do {                                                            \
-    if (!(condition))                                             \
+#define OOCAssert(condition, ...)                                   \
+  do {                                                              \
+    if (!(condition))                                               \
       oo::AssertFailedInFunction(::std::source_location::current(), \
-                               __VA_ARGS__);                      \
+                                 __VA_ARGS__);                      \
   } while (0)
 
 #define OOCParameterAssert(condition) \

@@ -52,5 +52,4 @@ class CheckEquipmentPListVerifierStage : public FileHandlingVerifierStage {
 
 }  // namespace oo
 
-
 #endif

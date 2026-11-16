@@ -85,4 +85,3 @@ class SDLJoystickManager : public OOJoystickManager {
 };
 
 }  // namespace oo
-

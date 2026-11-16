@@ -44,7 +44,8 @@ namespace oo {
 inline constexpr std::uint16_t kTCPConsolePort = 0x002173;
 
 }  // namespace oo
- /* = 8563 */
+
+/* = 8563 */
 
 /*	PROTOCOL OVERVIEW
 
@@ -316,8 +317,8 @@ inline constexpr std::uint32_t kTCPProtocolVersionPListFormat = 1;
 // OOTCP_ENCODE_VERSION shifted the format, not the major number, into the
 // major byte; kept, so 1:1.0 is still 0x00010100 and old clients still connect.
 constexpr std::uint32_t TCPEncodeVersion(std::uint32_t format,
-                                           std::uint32_t /*major*/,
-                                           std::uint32_t minor) {
+                                         std::uint32_t /*major*/,
+                                         std::uint32_t minor) {
   return ((format << 16) & kTCPProtocolVersionFormatMask) |
          ((format << 8) & kTCPProtocolVersionMajorMask) |
          (minor & kTCPProtocolVersionMinorMask);

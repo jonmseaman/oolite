@@ -98,8 +98,8 @@ bool oo::ModelVerifierStage::modelNamed(
 }
 
 void oo::ModelVerifierStage::checkModel(const std::string& name,
-                                      const std::string& context,
-                                      const oo::PList&, const oo::PList&) {
+                                        const std::string& context,
+                                        const oo::PList&, const oo::PList&) {
   OO_LOG("verifyOXP.verbose.model.unimp",
          "- Pretending to verify model {} referenced in {}.", name, context);
   // FIXME: this should check DAT files.

@@ -134,5 +134,4 @@ class OXPVerifierStage : public oo::Object {
 
 }  // namespace oo
 
-
 #endif

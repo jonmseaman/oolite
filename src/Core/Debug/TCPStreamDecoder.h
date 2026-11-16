@@ -53,10 +53,8 @@ TCPStreamDecoderRef TCPStreamDecoderCreate(
     TCPStreamDecoderFinalizeCallback finalizeCB);
 void TCPStreamDecoderDestroy(TCPStreamDecoderRef decoder);
 
-void TCPStreamDecoderReceiveData(TCPStreamDecoderRef decoder,
-                                   ALDataRef data);
+void TCPStreamDecoderReceiveData(TCPStreamDecoderRef decoder, ALDataRef data);
 void TCPStreamDecoderReceiveBytes(TCPStreamDecoderRef decoder,
-                                    const void* bytes, size_t length);
+                                  const void* bytes, size_t length);
 
 }  // namespace oo
-

@@ -93,7 +93,7 @@ std::optional<std::string> oo::SDLJoystickManager::nameOfJoystick(
 }
 
 int16_t oo::SDLJoystickManager::getAxisWithStick(std::size_t stickNum,
-                                               std::size_t axisNum) {
+                                                 std::size_t axisNum) {
   return SDL_GetJoystickAxis(stick[stickNum], static_cast<int>(axisNum));
 }
 
@@ -119,7 +119,8 @@ SDL_JoyButtonEvent oo::SDLJoystickManager::makeJoyButtonEvent(
   return evt;
 }
 
-SDL_JoyHatEvent oo::SDLJoystickManager::makeJoyHatEvent(SDL_JoyHatEvent* sdlevt) {
+SDL_JoyHatEvent oo::SDLJoystickManager::makeJoyHatEvent(
+    SDL_JoyHatEvent* sdlevt) {
   SDL_JoyHatEvent evt;
   evt.type = sdlevt->type;
   evt.which =

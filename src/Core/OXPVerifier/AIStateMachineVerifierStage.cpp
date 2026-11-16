@@ -105,7 +105,8 @@ void oo::AIStateMachineVerifierStage::run() {
   _whitelist.clear();
 }
 
-std::string oo::AIStateMachineVerifierStage::nameForReverseDependencyForVerifier(
+std::string
+oo::AIStateMachineVerifierStage::nameForReverseDependencyForVerifier(
     oo::OXPVerifier*) {
   return kStageName;
 }

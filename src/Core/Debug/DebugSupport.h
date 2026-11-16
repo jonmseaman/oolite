@@ -37,7 +37,6 @@ void InitDebugSupport();
 
 }  // namespace oo
 
-
 #else
 
 #define OOInitDebugSupport() \

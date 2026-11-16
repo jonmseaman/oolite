@@ -83,7 +83,6 @@ constexpr std::string_view
 
 }  // namespace oo
 
-
 // Was -init; [super init] could not fail, so its guarded statements stand in a
 // plain block.
 void oo::DebugMonitor::init() {
@@ -106,8 +105,8 @@ void oo::DebugMonitor::init() {
     setUpDebugConsoleScript();
 
     oo::NotificationCenter::defaultCenter().addObserver(
-        this, oo::kDebugMonitorApplicationWillTerminateNotificationName, nullptr,
-        [this](const oo::Notification& notification) {
+        this, oo::kDebugMonitorApplicationWillTerminateNotificationName,
+        nullptr, [this](const oo::Notification& notification) {
           applicationWillTerminate(notification);
         });
 
@@ -134,8 +133,8 @@ oo::DebugMonitor* oo::DebugMonitor::sharedDebugMonitor() {
     // Recorded before init(), as +allocWithZone: recorded it before -init ran.
     static std::shared_ptr<oo::DebugMonitor>* sSingletonHolder =
         nullptr;  // never deleted
-    sSingletonHolder =
-        new std::shared_ptr<oo::DebugMonitor>(oo::makeShared<oo::DebugMonitor>());
+    sSingletonHolder = new std::shared_ptr<oo::DebugMonitor>(
+        oo::makeShared<oo::DebugMonitor>());
     sSingleton = sSingletonHolder->get();
     sSingleton->init();
   }
@@ -258,8 +257,8 @@ oo::PList oo::DebugMonitor::configurationValueForKey(const std::string& key) {
   return *result;
 }
 
-std::int64_t oo::DebugMonitor::configurationIntValueForKey(const std::string& key,
-                                                         std::int64_t value) {
+std::int64_t oo::DebugMonitor::configurationIntValueForKey(
+    const std::string& key, std::int64_t value) {
   // -longLongValue of the stored NSString or NSNumber; anything else gives the
   // default.
   const oo::PList object = configurationValueForKey(key);
@@ -282,7 +281,7 @@ std::int64_t oo::DebugMonitor::configurationIntValueForKey(const std::string& ke
 }
 
 void oo::DebugMonitor::setConfigurationValue(const oo::PList& value,
-                                           const std::string& key) {
+                                             const std::string& key) {
   if (key.empty()) return;
 
   const std::string& keyString = key;
@@ -387,7 +386,7 @@ struct oo::DebugMonitor::EntityDumpState {
 };
 
 void oo::DebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
-                                bool parentVisible) {
+                                  bool parentVisible) {
   if (entity == nullptr || state->seenEntities.count(entity) != 0) return;
   state->seenEntities.emplace(entity, oo::Hold(entity));
 
@@ -617,10 +616,12 @@ void oo::DebugMonitor::setUsingPlugInController(bool flag) {
   _usingPlugInController = flag;
 }
 
-bool oo::DebugMonitor::usingPlugInController() { return _usingPlugInController; }
+bool oo::DebugMonitor::usingPlugInController() {
+  return _usingPlugInController;
+}
 
 std::string oo::DebugMonitor::sourceCodeForFile(const std::string& filePath,
-                                              unsigned line) {
+                                                unsigned line) {
   const std::string& path = filePath;
   auto cached = _sourceFiles.find(path);
 
@@ -640,7 +641,8 @@ std::string oo::DebugMonitor::sourceCodeForFile(const std::string& filePath,
 }
 
 void oo::DebugMonitor::disconnectDebugger(
-    oo::DebuggerInterface* debugger, const std::optional<std::string>& message) {
+    oo::DebuggerInterface* debugger,
+    const std::optional<std::string>& message) {
   if (debugger == nullptr) return;
 
   if (debugger == _debugger.get()) {
@@ -776,7 +778,7 @@ oo::PList oo::DebugMonitor::normalizeConfigDictionary(
 }
 
 oo::PList oo::DebugMonitor::normalizeConfigValue(const oo::PList& value,
-                                               const std::string& key) {
+                                                 const std::string& key) {
   std::shared_ptr<OOColor> color;
   bool boolValue;
 
@@ -802,11 +804,11 @@ oo::PList oo::DebugMonitor::normalizeConfigValue(const oo::PList& value,
 }
 
 void oo::DebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
-                              JSContext* /*context*/,
-                              const std::string& severity,
-                              const std::optional<std::string>& filePath,
-                              unsigned line, unsigned stackSkip,
-                              bool showLocation, const std::string& message) {
+                                JSContext* /*context*/,
+                                const std::string& severity,
+                                const std::optional<std::string>& filePath,
+                                unsigned line, unsigned stackSkip,
+                                bool showLocation, const std::string& message) {
   std::string colorKey;
   std::string prefix;
   std::optional<std::string> scriptLine;

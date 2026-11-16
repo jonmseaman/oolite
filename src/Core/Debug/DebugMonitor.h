@@ -70,8 +70,8 @@ class OOJavaScriptEngine;
 namespace oo {
 
 class DebugMonitor : public oo::PListForeign,
-                       public ::OOJavaScriptEngineMonitor,
-                       public ::OOJSPrivateObject {
+                     public ::OOJavaScriptEngineMonitor,
+                     public ::OOJSPrivateObject {
  public:
   static DebugMonitor* sharedDebugMonitor();
   bool setDebugger(DebuggerInterface* debugger);
@@ -196,4 +196,3 @@ class DebugMonitor : public oo::PListForeign,
 };
 
 }  // namespace oo
-

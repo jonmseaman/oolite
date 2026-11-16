@@ -95,5 +95,4 @@ void InitDebugSupport() {
 
 }  // namespace oo
 
-
 #endif /* OO_DEBUG_MONITOR_ENABLED */

@@ -49,7 +49,6 @@ void SetStandardsForOXPVerifierMode();
 
 }  // namespace oo
 
-
 /*	TRANSITIONAL: the Foundation-typed API forwarding to the cxx_ functions
    above, so unmigrated callers compile unchanged. Callers move to the cxx_
    API; the bridge then goes.

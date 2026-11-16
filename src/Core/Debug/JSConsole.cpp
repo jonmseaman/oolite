@@ -43,11 +43,11 @@ SOFTWARE.
 #include <string_view>
 #include <utility>
 
+#include "DebugFlags.h"
+#include "DebugMonitor.h"
 #include "Entity.h"                        // an entity's -inspect
 #include "EntityOOJavaScriptExtensions.h"  // IWYU pragma: keep: used only in OO_DEBUG builds
 #include "OOConstToString.h"
-#include "DebugFlags.h"
-#include "DebugMonitor.h"
 #include "OOJSCall.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSEntity.h"
@@ -242,7 +242,7 @@ static const JSCFunctionListEntry sConsoleProperties[] = {
                      ConsoleProperty::kGlFragmentShaderTextureUnitCount),
 
 // Each flag's name is its OOEnumName, as console.DEBUG_* always was.
-#define DEBUG_FLAG_DECL(flag, magic)                          \
+#define DEBUG_FLAG_DECL(flag, magic)                            \
   OOJS_PROPERTY_RO(DebugFlagPropertyName(oo::DebugFlags::flag), \
                    ConsoleGetProperty, magic)
     DEBUG_FLAG_DECL(kLinkedLists, ConsoleProperty::kDebugLinkedLists),
@@ -349,8 +349,9 @@ void ReportNotTheMonitor(JSContext* context, JSValueConst object,
 
 // The monitor the private slot holds; null, with the internal error reported,
 // for any other object.
-oo::DebugMonitor* MonitorForConsoleObject(JSContext* context, JSValueConst object,
-                                        const char* function) {
+oo::DebugMonitor* MonitorForConsoleObject(JSContext* context,
+                                          JSValueConst object,
+                                          const char* function) {
   oo::DebugMonitor* monitor = MonitorFromJSObject(object);
   if (monitor == nullptr) ReportNotTheMonitor(context, object, function);
   return monitor;
@@ -482,10 +483,10 @@ static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
           context,
           OOOpenGLExtensionManager::sharedManager()->textureImageUnitCount());
 
-#define DEBUG_FLAG_CASE(flag, magic) \
-  case magic:                        \
-    return JS_NewInt32(              \
-        context, static_cast<int32_t>(oo::ToUnderlying(oo::DebugFlags::flag)));
+#define DEBUG_FLAG_CASE(flag, magic)                  \
+  case magic:                                         \
+    return JS_NewInt32(context, static_cast<int32_t>( \
+                                    oo::ToUnderlying(oo::DebugFlags::flag)));
       DEBUG_FLAG_CASE(kLinkedLists, kDebugLinkedLists);
       DEBUG_FLAG_CASE(kCollisions, kDebugCollisions);
       DEBUG_FLAG_CASE(kDocking, kDebugDocking);
@@ -889,8 +890,8 @@ const MonitorMethod kMonitorMethods[] = {
      },
      nullptr, oo::ValueType::kVoid},
     {"clearJSConsole", MonitorMethodForm::kVoidVoid,
-     [](oo::DebugMonitor* m) { m->clearJSConsole(); }, nullptr, nullptr, nullptr,
-     oo::ValueType::kVoid},
+     [](oo::DebugMonitor* m) { m->clearJSConsole(); }, nullptr, nullptr,
+     nullptr, oo::ValueType::kVoid},
     {"showJSConsole", MonitorMethodForm::kVoidVoid,
      [](oo::DebugMonitor* m) { m->showJSConsole(); }, nullptr, nullptr, nullptr,
      oo::ValueType::kVoid},
@@ -899,8 +900,8 @@ const MonitorMethod kMonitorMethods[] = {
      nullptr, oo::ValueType::kVoid},
 #if OOLITE_SDL
     {"applicationWillTerminate", MonitorMethodForm::kVoidVoid,
-     [](oo::DebugMonitor* m) { m->applicationWillTerminate(); }, nullptr, nullptr,
-     nullptr, oo::ValueType::kVoid},
+     [](oo::DebugMonitor* m) { m->applicationWillTerminate(); }, nullptr,
+     nullptr, nullptr, oo::ValueType::kVoid},
 #endif
     {"debuggerConnected", MonitorMethodForm::kScalar, nullptr, nullptr, nullptr,
      [](oo::DebugMonitor* m) -> std::int64_t { return m->debuggerConnected(); },

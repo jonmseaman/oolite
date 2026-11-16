@@ -32,12 +32,12 @@ SOFTWARE.
 #pragma once
 
 #include "OOFoundation.h"
+
 namespace oo {
 
 class DebugMonitor;
 
 }  // namespace oo
-
 
 #include <quickjs.h>
 

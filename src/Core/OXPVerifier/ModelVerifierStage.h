@@ -68,8 +68,7 @@ class ModelVerifierStage : public TextureHandlingStage {
 
   // Returns name to be used in dependents() by other stages; also registers
   // stage.
-  static std::string nameForReverseDependencyForVerifier(
-      OXPVerifier* verifier);
+  static std::string nameForReverseDependencyForVerifier(OXPVerifier* verifier);
 
   std::optional<std::string> name() override;
   bool shouldRun() override;
@@ -93,6 +92,5 @@ class ModelVerifierStage : public TextureHandlingStage {
 };
 
 }  // namespace oo
-
 
 #endif
