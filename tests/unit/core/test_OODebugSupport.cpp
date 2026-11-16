@@ -176,7 +176,7 @@ void Reset(oo::PList::Dict configuration, bool beacon) {
 OO_TEST(nothingWithoutTheDebugOXP) {
   {
     Reset({}, false);
-    oo::InitDebugSupport();
+    OOInitDebugSupport();
     OO_CHECK(sRecord.clientsMade.empty());
     OO_CHECK(sRecord.usingPlugInController.empty());
     OO_CHECK(sRecord.debuggersSet.empty());
@@ -188,7 +188,7 @@ OO_TEST(nothingWithoutTheDebugOXP) {
 OO_TEST(alwaysLoadWithoutTheDebugOXP) {
   {
     Reset({{"always-load-debug-console", oo::PList(kTrue)}}, false);
-    oo::InitDebugSupport();
+    OOInitDebugSupport();
     OO_CHECK(sRecord.clientsMade.empty());
     OO_CHECK(sRecord.debuggersSet.size() == 1 &&
              sRecord.debuggersSet[0] == nullptr);
@@ -203,7 +203,7 @@ OO_TEST(theTCPConsoleClient) {
     Reset({{"console-host", oo::PList(std::string("console.example"))},
            {"console-port", oo::PList(8564)}},
           true);
-    oo::InitDebugSupport();
+    OOInitDebugSupport();
     OO_CHECK(sRecord.clientsMade.size() == 1);
     if (sRecord.clientsMade.size() == 1) {
       OO_CHECK(sRecord.clientsMade[0].first ==
@@ -223,20 +223,20 @@ OO_TEST(theTCPConsoleClient) {
 OO_TEST(theHostSetting) {
   {
     Reset({}, true);
-    oo::InitDebugSupport();
+    OOInitDebugSupport();
     OO_CHECK(sRecord.clientsMade.size() == 1 &&
              !sRecord.clientsMade[0].first.has_value() &&
              sRecord.clientsMade[0].second == 0);
 
     Reset({{"console-host", oo::PList(42)}}, true);
-    oo::InitDebugSupport();
+    OOInitDebugSupport();
     OO_CHECK(sRecord.clientsMade.size() == 1 &&
              sRecord.clientsMade[0].first == std::optional<std::string>("42"));
 
     Reset({{"console-host",
             oo::PList(oo::PList::Array{oo::PList(std::string("x"))})}},
           true);
-    oo::InitDebugSupport();
+    OOInitDebugSupport();
     OO_CHECK(sRecord.clientsMade.size() == 1 &&
              !sRecord.clientsMade[0].first.has_value());
   }
@@ -248,7 +248,7 @@ OO_TEST(theClientFails) {
   {
     Reset({{"console-host", oo::PList(std::string("127.0.0.1"))}}, true);
     sRecord.clientFails = true;
-    oo::InitDebugSupport();
+    OOInitDebugSupport();
     OO_CHECK(sRecord.clientsMade.size() == 1);
     OO_CHECK(sRecord.usingPlugInController == std::vector<bool>{false});
     OO_CHECK(sRecord.debuggersSet.empty());
@@ -256,7 +256,7 @@ OO_TEST(theClientFails) {
 
     Reset({{"always-load-debug-console", oo::PList(kTrue)}}, true);
     sRecord.clientFails = true;
-    oo::InitDebugSupport();
+    OOInitDebugSupport();
     OO_CHECK(sRecord.debuggersSet.size() == 1 &&
              sRecord.debuggersSet[0] == nullptr);
     OO_CHECK(sRecord.debuggerStatementsEnabled == 1);

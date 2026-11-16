@@ -348,8 +348,8 @@ void oo::CombinedEmissionMapGenerator::loadTexture() {
   unsigned texID = ++sTexID, dumpCount = 0;
 
 #define DUMP(pm, label) \
-  oo::DumpPixMap(       \
-      pm, std::format("lightmap {}.{} - {}", texID, ++dumpCount, label));
+  OODumpPixMap(pm,      \
+               std::format("lightmap {}.{} - {}", texID, ++dumpCount, label));
 #else
 #define DUMP(pm, label) \
   do {                  \

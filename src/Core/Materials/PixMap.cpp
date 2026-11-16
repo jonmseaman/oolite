@@ -174,33 +174,31 @@ bool ExpandPixMap(PixMap* ioPixMap, size_t desiredSize) {
 #include "MyOpenGLView.h"
 #include "Universe.h"
 
-namespace oo {
-
-void DumpPixMap(PixMap pixMap, const std::string& name) {
-  if (!IsValidPixMap(pixMap)) return;
+void OODumpPixMap(oo::PixMap pixMap, const std::string& name) {
+  if (!oo::IsValidPixMap(pixMap)) return;
 
   MyOpenGLView* gameView =
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
 
   switch (pixMap.format) {
-    case kPixMapInvalidFormat:
+    case oo::kPixMapInvalidFormat:
       break;
 
-    case kPixMapGrayscale:
+    case oo::kPixMapGrayscale:
       if (gameView != nullptr)
         gameView->dumpGrayToFileNamed(
             name, static_cast<uint8_t*>(pixMap.pixels), pixMap.width,
             pixMap.height, pixMap.rowBytes);
       break;
 
-    case kPixMapGrayscaleAlpha:
+    case oo::kPixMapGrayscaleAlpha:
       if (gameView != nullptr)
         gameView->dumpGrayAlphaToFileNamed(
             name, static_cast<uint8_t*>(pixMap.pixels), pixMap.width,
             pixMap.height, pixMap.rowBytes);
       break;
 
-    case kPixMapRGBA:
+    case oo::kPixMapRGBA:
       if (gameView != nullptr)
         gameView->dumpRGBAToRGBFileNamed(name + " rgb", name + " alpha",
                                          static_cast<uint8_t*>(pixMap.pixels),
@@ -209,8 +207,6 @@ void DumpPixMap(PixMap pixMap, const std::string& name) {
       break;
   }
 }
-
-}  // namespace oo
 
 #endif
 

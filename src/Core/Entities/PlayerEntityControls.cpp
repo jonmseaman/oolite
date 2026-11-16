@@ -2040,7 +2040,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
         // controller
         if (!autopilot_key_pressed) {
           if (!::oo::DebugMonitor::sharedDebugMonitor()->debuggerConnected()) {
-            oo::InitDebugSupport();
+            OOInitDebugSupport();
             if (::oo::DebugMonitor::sharedDebugMonitor()->debuggerConnected())
               if (UNIVERSE != nullptr)
                 UNIVERSE->addMessage("Connected to debug console.", 3);

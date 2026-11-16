@@ -429,7 +429,7 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView) {
 
   ::GameController::sharedController()->logProgress(
       OO_DESC("initializing-debug-support"));
-  oo::InitDebugSupport();
+  OOInitDebugSupport();
 
   ::GameController::sharedController()->logProgress(OO_DESC("running-scripts"));
   if (player != nullptr) player->completeSetUp();
