@@ -34,7 +34,7 @@
 #include "legacy_random.h"
 #include "oo_test.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
@@ -227,7 +227,7 @@ void OOJSResumeTimeLimiter(void) { sLimiterPauses--; }
 */
 HPVector Universe::legacyPositionFrom(HPVector pos, const std::string& system) {
   if (system == "throw-objc")
-    OORaiseException(OOInvalidArgumentException, "legacy %s", "boom");
+    oo::RaiseException(oo::InvalidArgumentException, "legacy %s", "boom");
   if (system == "throw-cxx") throw std::runtime_error("cxx boom");
   return make_HPvector(pos.x + 1, pos.y + 2, pos.z + 3);
 }
@@ -235,7 +235,7 @@ HPVector Universe::legacyPositionFrom(HPVector pos, const std::string& system) {
 HPVector Universe::coordinatesFromCoordinateSystemString(
     const std::string& text) {
   if (text.rfind("throw-objc", 0) == 0)
-    OORaiseException(OOInvalidArgumentException, "coords %s", "boom");
+    oo::RaiseException(oo::InvalidArgumentException, "coords %s", "boom");
   return make_HPvector(static_cast<OOHPScalar>(text.size()), 0, 0);
 }
 

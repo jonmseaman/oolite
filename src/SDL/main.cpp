@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Process.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 // gnustep-base's GSConfig.h gave these (used by the -help text below).
 #ifndef STRINGIFY

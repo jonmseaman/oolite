@@ -36,7 +36,7 @@ SOFTWARE.
 #include "OOFoundation.h"
 #include "OOOpenGL.h"
 #include "OOOpenGLExtensionManager.h"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 #if OO_SHADERS
 

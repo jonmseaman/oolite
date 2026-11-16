@@ -31,5 +31,5 @@ oofnd_dep = declare_dependency(include_directories: oofnd_inc, dependencies: oof
 # Objective-C). Test consumers: tests/unit/oofnd/test_objc_assert.cpp.
 oofnd_objc_dep = declare_dependency(
     include_directories: oofnd_inc,
-    sources: files('Exception.cpp', 'objc/OOAssert.cpp'),
+    sources: files('Exception.cpp', 'objc/Assert.cpp'),
 )

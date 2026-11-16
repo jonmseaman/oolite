@@ -33,8 +33,8 @@ SOFTWARE.
 #include "OOCPUInfo.h"
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"  // IWYU pragma: keep: used only without NDEBUG
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"  // IWYU pragma: keep: used only without NDEBUG
 
 #define DUMP_MIP_MAPS 0
 #define DUMP_SCALE 0
@@ -156,9 +156,9 @@ inline void SqueezeVertically(OOPixMap pixMap, OOPixMapDimension dstHeight) {
   }
 
 #ifndef NDEBUG
-  OORaiseException(OOInternalInconsistencyException,
-                   "Unsupported pixmap format in scaler: %s",
-                   OOPixMapFormatName(pixMap.format).c_str());
+  oo::RaiseException(oo::InternalInconsistencyException,
+                     "Unsupported pixmap format in scaler: %s",
+                     OOPixMapFormatName(pixMap.format).c_str());
 #else
   abort();
 #endif
@@ -185,9 +185,9 @@ inline void StretchHorizontally(OOPixMap srcPx, OOPixMap dstPx) {
   }
 
 #ifndef NDEBUG
-  OORaiseException(OOInternalInconsistencyException,
-                   "Unsupported pixmap format in scaler: %s",
-                   OOPixMapFormatName(srcPx.format).c_str());
+  oo::RaiseException(oo::InternalInconsistencyException,
+                     "Unsupported pixmap format in scaler: %s",
+                     OOPixMapFormatName(srcPx.format).c_str());
 #else
   abort();
 #endif
@@ -212,9 +212,9 @@ inline void SqueezeHorizontally(OOPixMap pixMap, OOPixMapDimension dstHeight) {
   }
 
 #ifndef NDEBUG
-  OORaiseException(OOInternalInconsistencyException,
-                   "Unsupported pixmap format in scaler: %s",
-                   OOPixMapFormatName(pixMap.format).c_str());
+  oo::RaiseException(oo::InternalInconsistencyException,
+                     "Unsupported pixmap format in scaler: %s",
+                     OOPixMapFormatName(pixMap.format).c_str());
 #else
   abort();
 #endif

@@ -100,8 +100,8 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
-#include "oofnd/objc/OOFoundationTypes.h"
+#include "oofnd/objc/Exception.h"
+#include "oofnd/objc/FoundationTypes.h"
 constexpr double CUSTOM_VIEW_ROTATE_SPEED = 1.0;
 constexpr double CUSTOM_VIEW_ZOOM_SPEED = 5.0;
 constexpr double CUSTOM_VIEW_SPEED_REDUCTION_FACTOR = 0.3;

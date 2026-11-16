@@ -43,7 +43,7 @@
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -118,7 +118,7 @@ class TestTarget final : public oo::Object {
   }
   void raise(oo::Object* ) {
     _calls.push_back("raise");
-    OORaiseException(OOGenericException, "%s", "deferred call failure");
+    oo::RaiseException(oo::GenericException, "%s", "deferred call failure");
   }
 
   std::vector<std::string> _calls;
@@ -236,7 +236,7 @@ OO_TEST(secondControllerRaises) {
       new GameController();
     } catch (const oo::Exception& exception) {
       raised =
-          (std::string(exception.name()) == OOInternalInconsistencyException);
+          (std::string(exception.name()) == oo::InternalInconsistencyException);
     }
     OO_CHECK(raised);
     OO_CHECK(::GameController::sharedController() == shared);
@@ -560,7 +560,7 @@ OO_TEST(deferredCalls) {
     OOScheduleDeferredCall(
         [&order, leaked]() {
           order.push_back("raise");
-          OORaiseException(OOGenericException, "%s", "deferred call failure");
+          oo::RaiseException(oo::GenericException, "%s", "deferred call failure");
         },
         0.0);
     std::this_thread::sleep_for(std::chrono::milliseconds(5));

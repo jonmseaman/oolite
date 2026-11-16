@@ -64,7 +64,7 @@ MA 02110-1301, USA.
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/Thread.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #if OOLITE_SDL
 #include <SDL3/SDL_init.h>
 
@@ -222,9 +222,10 @@ GameController* GameController::sharedController() {
 
 GameController::GameController() {
   if (sSharedController != nullptr) {
-    OORaiseException(OOInternalInconsistencyException,
-                     "%s: expected only one GameController to exist at a time.",
-                     __PRETTY_FUNCTION__);
+    oo::RaiseException(
+        oo::InternalInconsistencyException,
+        "%s: expected only one GameController to exist at a time.",
+        __PRETTY_FUNCTION__);
   }
 
   {

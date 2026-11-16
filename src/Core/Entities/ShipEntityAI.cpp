@@ -80,7 +80,7 @@
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOFoundationTypes.h"
+#include "oofnd/objc/FoundationTypes.h"
 
 namespace {
 

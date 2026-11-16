@@ -29,7 +29,7 @@
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include <algorithm>  // IWYU pragma: keep
 #include <chrono>  // IWYU pragma: keep
 #include <condition_variable>  // IWYU pragma: keep
@@ -415,7 +415,7 @@ bool OOVisualEffectEntity::isBeacon()  { return _beaconCode.has_value() && !_bea
 
 GLfloat OOVisualEffectEntity::hullHeatLevel()
 {
-	if (_hullHeatLevel == 99)  OORaiseException(OOInvalidArgumentException, "heat %s", "boom");
+	if (_hullHeatLevel == 99)  oo::RaiseException(oo::InvalidArgumentException, "heat %s", "boom");
 	if (_hullHeatLevel == 98)  throw std::runtime_error("cxx boom");
 	return _hullHeatLevel;
 }

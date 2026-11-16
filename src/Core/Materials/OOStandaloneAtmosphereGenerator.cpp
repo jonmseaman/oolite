@@ -49,7 +49,7 @@
 #include "OOStandaloneAtmosphereGenerator.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 #ifndef TEXGEN_TEST_RIG
 #include "OOTexture.h"

@@ -20,7 +20,7 @@
 
 #include "OOShipGroup.h"
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include <cstddef>
@@ -120,7 +120,7 @@ OOShipGroup *ShipEntity::escortGroup()  { return _escortGroup.get(); }
 
 bool ShipEntity::acceptAsEscort(::ShipEntity *other_ship)
 {
-	if (other_ship->_name == "boom")  OORaiseException(OOInvalidArgumentException, "escort %s", "boom");
+	if (other_ship->_name == "boom")  oo::RaiseException(oo::InvalidArgumentException, "escort %s", "boom");
 	if (!_acceptsEscorts)  return false;
 	_accepted++;
 	return true;

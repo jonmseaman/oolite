@@ -66,7 +66,7 @@ oo::PList OOPropertyListFromFile(const std::string& path) {
   oo::PList result;
 
   // Load file, if it exists...
-  const std::optional<oo::Data> data = OODataFromOXZFile(path);
+  const std::optional<oo::Data> data = oo::DataFromOXZFile(path);
   if (data.has_value()) {
     // ...and parse it
     result = OOPropertyListFromData(data, path);

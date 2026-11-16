@@ -46,7 +46,7 @@ SOFTWARE.
 #include "oofnd/Log.hpp"
 #include "oofnd/Process.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 /*	OpenGL version required, currently 1.1 or later (basic stuff like
         glBindTexture(), glDrawArrays()). We probably have implicit requirements
@@ -345,7 +345,7 @@ void OOOpenGLExtensionManager::reset() {
            "***** Oolite requires OpenGL version {}.{} or later.",
            static_cast<unsigned>(kMinMajorVersion),
            static_cast<unsigned>(kMinMinorVersion));
-    OORaiseException(
+    oo::RaiseException(
         "OoliteOpenGLTooOldException",
         "Oolite requires at least OpenGL %u.%u. You have %u.%u (\"%s\").",
         kMinMajorVersion, kMinMinorVersion, major, minor, versionString);

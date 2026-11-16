@@ -26,7 +26,7 @@
 #include "OOStringParsing.h"
 #include "oo_test.hpp"
 #include "oofnd/PListParsing.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 // Link stubs: OOPListGameTypes.mm reaches OOStringParsing.mm's scanners for
 // vector and quaternion values, whose object links the game. No schema here
@@ -93,7 +93,7 @@ class TestSchemaDelegate : public oo::Object,
                         KeyPathText(keyPath) + " " +
                         oo::DescriptionOf(subPList));
     if (delegatedRaises)
-      OORaiseException(OOGenericException, "delegate refuses %s", name.c_str());
+      oo::RaiseException(oo::GenericException, "delegate refuses %s", name.c_str());
     if (delegatedError && outError != nullptr)
       *outError = oo::PListSchemaVerifierError{
           "test.domain", 42, std::string("delegate's own error"), oo::PList()};

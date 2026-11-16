@@ -18,7 +18,7 @@
 #include "OOJSEntity.h"
 #include "Universe.h"
 #include "legacy_random.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
 
@@ -201,7 +201,7 @@ public:
 
 Quaternion FakeEntity::orientation()
 {
-	if (_orientation.w == -1)  OORaiseException(OOInvalidArgumentException, "orientation %s", "boom");
+	if (_orientation.w == -1)  oo::RaiseException(oo::InvalidArgumentException, "orientation %s", "boom");
 	if (_orientation.w == -2)  throw std::runtime_error("cxx boom");
 	return _orientation;
 }

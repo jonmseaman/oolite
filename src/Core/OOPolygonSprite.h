@@ -44,7 +44,7 @@ SOFTWARE.
 #include "OOOpenGLExtensionManager.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 /*	A HUD compass icon of a beacon: the interface OOHUDBeaconIcon. The
    polygon sprite and the beacon code icon (OOHUDBeaconCodeIcon,

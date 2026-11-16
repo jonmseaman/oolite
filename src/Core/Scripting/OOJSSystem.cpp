@@ -74,7 +74,7 @@ OOJSSystem.m (QuickJS-ng)
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOFoundationTypes.h"
+#include "oofnd/objc/FoundationTypes.h"
 static JSClassID sSystemClassID;
 
 // Support functions for entity search methods.

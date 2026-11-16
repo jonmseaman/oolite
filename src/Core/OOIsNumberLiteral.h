@@ -36,7 +36,7 @@
    is needed, and OOFoundation.h imports Foundation, which does not compile
    in a plain C++ unit.
 */
-#include "oofnd/objc/OOFoundationTypes.h"  // bool
+#include "oofnd/objc/FoundationTypes.h"  // bool
 #endif
 
 #include <string>

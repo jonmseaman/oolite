@@ -55,7 +55,7 @@ MA 02110-1301, USA.
 #include "WormholeEntity.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 class MyOpenGLView;
 class ShipEntity;

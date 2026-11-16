@@ -48,7 +48,7 @@ SOFTWARE.
 #include "OOFunctionAttributes.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 /*	A schema verifier error: what the
    Foundation error object carried. domain is kOOPListSchemaVerifierErrorDomain,

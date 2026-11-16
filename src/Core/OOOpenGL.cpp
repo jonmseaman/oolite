@@ -38,7 +38,7 @@ MA 02110-1301, USA.
 #include "OOOpenGLExtensionManager.h"  // IWYU pragma: keep: used only without NDEBUG
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 #ifndef NDEBUG
 static const char* const kOOLogOpenGLStateDump = "rendering.opengl.stateDump";

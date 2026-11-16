@@ -29,7 +29,7 @@ SOFTWARE.
 
 #include "OOCPUInfo.h"  // IWYU pragma: keep: used only without OO_DEBUG
 #include "oofnd/Thread.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 // OOFoundation.h defines true/false as macros; the standard headers want the
 // keywords (oofnd/Data.hpp).
@@ -47,7 +47,7 @@ SOFTWARE.
 
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Defaults.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 namespace {
 
@@ -291,8 +291,8 @@ void OOAsyncWorkManager::completePendingTasks() {
 
 void OOAsyncWorkManager::waitForTaskToComplete(OOAsyncWorkTask* /*task*/) {
   OOLogGenericSubclassResponsibility();
-  OORaiseException(OOInternalInconsistencyException, "%s called.",
-                   __PRETTY_FUNCTION__);
+  oo::RaiseException(oo::InternalInconsistencyException, "%s called.",
+                     __PRETTY_FUNCTION__);
 }
 
 namespace {

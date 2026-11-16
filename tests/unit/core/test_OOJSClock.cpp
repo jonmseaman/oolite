@@ -27,7 +27,7 @@
 #include "Universe.h"
 #include "oo_test.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
@@ -157,7 +157,7 @@ FakePlayer* sPlayer = nullptr;
 
 double PlayerEntity::clockTime() {
   if (sPlayer->_clockTime == -1)
-    OORaiseException(OOInvalidArgumentException, "clock %s", "boom");
+    oo::RaiseException(oo::InvalidArgumentException, "clock %s", "boom");
   if (sPlayer->_clockTime == -2) throw std::runtime_error("cxx boom");
   return sPlayer->_clockTime;
 }

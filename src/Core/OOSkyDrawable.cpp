@@ -42,7 +42,7 @@ SOFTWARE.
 #include "OOTexture.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 constexpr auto SKY_ELEMENT_SCALE_FACTOR = (BILLBOARD_DEPTH / 500.0f);
 constexpr float NEBULA_SHUFFLE_FACTOR = 0.005f;
@@ -435,8 +435,8 @@ void OOSkyDrawable::loadStarTextures() {
       sStarTextures = sStarTexturesHolder->get();
     }
     if (sStarTextures == nullptr) {
-      OORaiseException(kOoliteExceptionDataNotFound,
-                       "No star textures could be loaded.");
+      oo::RaiseException(kOoliteExceptionDataNotFound,
+                         "No star textures could be loaded.");
     }
   }
 
@@ -460,8 +460,8 @@ void OOSkyDrawable::loadNebulaTextures() {
       sNebulaTextures = sNebulaTexturesHolder->get();
     }
     if (sNebulaTextures == nullptr) {
-      OORaiseException(kOoliteExceptionDataNotFound,
-                       "No nebula textures could be loaded.");
+      oo::RaiseException(kOoliteExceptionDataNotFound,
+                         "No nebula textures could be loaded.");
     }
   }
 

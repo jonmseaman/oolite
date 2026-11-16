@@ -50,7 +50,7 @@
 #include "StationEntity.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 // Name of modifier key used to issue commands. See also
 // IsCommandModifierKeyDown().
@@ -188,9 +188,9 @@ void PlayerEntity::quicksavePlayer() {
     OO_LOG("quickSave.failed.noName", "{}",
            "ERROR no file name returned by [[gameView gameController] "
            "playerFileToLoad]");
-    OORaiseException("OoliteGameNotSavedException",
-                     "ERROR no file name returned by [[gameView "
-                     "gameController] playerFileToLoad]");
+    oo::RaiseException("OoliteGameNotSavedException",
+                       "ERROR no file name returned by [[gameView "
+                       "gameController] playerFileToLoad]");
   }
 
   doScriptEvent(OOJSID("playerWillSaveGame"), {oo::PList("QUICK_SAVE")});
@@ -908,9 +908,9 @@ void PlayerEntity::writePlayerToPath(const std::string& path) {
     if (UNIVERSE != nullptr) UNIVERSE->setAutoSaveNow(false);
   } else {
     OO_LOG("save.failed", "***** SAVE ERROR: {}", errDesc);
-    OORaiseException("OoliteException",
-                     "Attempt to save game to file '%s' failed: %s",
-                     path.c_str(), errDesc.c_str());
+    oo::RaiseException("OoliteException",
+                       "Attempt to save game to file '%s' failed: %s",
+                       path.c_str(), errDesc.c_str());
   }
   if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
     UNIVERSE->getGameView()->suppressKeysUntilKeyUp();

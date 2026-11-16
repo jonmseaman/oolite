@@ -98,8 +98,8 @@ MA 02110-1301, USA.
 #include "oofnd/Process.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 static constexpr std::string_view PLAYER_DEFAULT_NAME = "Jameson";
 
@@ -685,9 +685,9 @@ void PlayerEntity::createCargoPodWithType(const std::string& type,
     OO_LOG_ERR("player.loadCargoPods.noContainer", "{}",
                "couldn't create a container in [PlayerEntity loadCargoPods]");
     // throw an exception here...
-    OORaiseException(kOoliteExceptionFatal,
-                     "[PlayerEntity loadCargoPods] failed to create a "
-                     "container for cargo with role 'cargopod'");
+    oo::RaiseException(kOoliteExceptionFatal,
+                       "[PlayerEntity loadCargoPods] failed to create a "
+                       "container for cargo with role 'cargopod'");
   }
 }
 

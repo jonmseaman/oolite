@@ -34,7 +34,7 @@ SOFTWARE.
 #include "OOJavaScriptEngine.h"
 #include "oofnd/String.hpp"
 #include "oofnd/Thread.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 // Pseudo-singleton: a single instance exists at a given time, but can be
 // released.

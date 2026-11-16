@@ -12,7 +12,7 @@
 	Run: tests/run.sh unit
 */
 
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
@@ -113,7 +113,7 @@ bool DockEntity::shipIsInDockingQueue(::ShipEntity *ship)  { return ship == _que
 
 std::size_t DockEntity::countOfShipsInDockingQueue()
 {
-	if (_dockingQueue == 99)  OORaiseException(OOInvalidArgumentException, "queue %s", "boom");
+	if (_dockingQueue == 99)  oo::RaiseException(oo::InvalidArgumentException, "queue %s", "boom");
 	if (_dockingQueue == 98)  throw std::runtime_error("cxx boom");
 	return _dockingQueue;
 }

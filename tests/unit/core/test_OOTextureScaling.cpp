@@ -22,7 +22,7 @@
 #include "OOTextureScaling.h"
 #include "Universe.h"
 #include "oo_test.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 // Link stubs: the scaler's object and OOPixMap.mm reach these, and the test
 // does not link the game.
@@ -315,7 +315,7 @@ OO_TEST(raiseExceptionThrowsTheSameException) {
   std::string reason;
   std::optional<oo::Exception> kept;  // what the autorelease pool kept alive
   try {
-    OORaiseException(OOInternalInconsistencyException,
+    oo::RaiseException(oo::InternalInconsistencyException,
                      "Unsupported pixmap format in scaler: %s",
                      OOPixMapFormatName(kOOPixMapInvalidFormat).c_str());
   } catch (const oo::Exception& e)
@@ -325,13 +325,13 @@ OO_TEST(raiseExceptionThrowsTheSameException) {
     reason = kept->reason();
   }
   OO_CHECK(name != nullptr &&
-           std::strcmp(name, OOInternalInconsistencyException) == 0);
+           std::strcmp(name, oo::InternalInconsistencyException) == 0);
   OO_CHECK_EQ(reason, std::string("Unsupported pixmap format in scaler: ") +
                           OOPixMapFormatName(kOOPixMapInvalidFormat));
 
   std::string messageReason;
   try {
-    OORaiseException(OOInternalInconsistencyException,
+    oo::RaiseException(oo::InternalInconsistencyException,
                      "Unsupported pixmap format in scaler: %s",
                      OOPixMapFormatName(kOOPixMapInvalidFormat)
                          .c_str());

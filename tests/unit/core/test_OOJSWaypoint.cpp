@@ -17,7 +17,7 @@
 
 #include "OOMaths.h"
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
@@ -170,7 +170,7 @@ bool OOWaypointEntity::getOriented()  { return _oriented; }
 void OOWaypointEntity::setSize(OOScalar newSize)  { _size = newSize; }
 OOScalar OOWaypointEntity::size()
 {
-	if (_size == 99)  OORaiseException(OOInvalidArgumentException, "size %s", "boom");
+	if (_size == 99)  oo::RaiseException(oo::InvalidArgumentException, "size %s", "boom");
 	if (_size == 98)  throw std::runtime_error("cxx boom");
 	return _size;
 }

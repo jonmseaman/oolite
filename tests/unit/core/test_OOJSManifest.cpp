@@ -23,7 +23,7 @@
 #include "OOCommodityMarket.h"
 #include "OOStringExpander.h"
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 
@@ -137,7 +137,7 @@ oo::PList PlayerEntity::cargoListForScripting()
 }
 OOCargoQuantity PlayerEntity::cargoQuantityForType(const std::string &type)
 {
-	if (type == "furs")  OORaiseException(OOInvalidArgumentException, "cargo %s", "boom");
+	if (type == "furs")  oo::RaiseException(oo::InvalidArgumentException, "cargo %s", "boom");
 	if (type == "gems" && _throwCxx)  throw std::runtime_error("cxx boom");
 	return _cargo[type];
 }

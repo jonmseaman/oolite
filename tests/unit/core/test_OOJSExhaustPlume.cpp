@@ -20,7 +20,7 @@
 #include "OOFoundation.h"
 #include "OOMaths.h"  // IWYU pragma: keep
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
@@ -116,7 +116,7 @@ bool Entity::isVisibleToScripts()  { return false; }
 
 Vector OOExhaustPlumeEntity::scale()
 {
-	if (_scale.x == -1)  OORaiseException(OOInvalidArgumentException, "scale %s", "boom");
+	if (_scale.x == -1)  oo::RaiseException(oo::InvalidArgumentException, "scale %s", "boom");
 	if (_scale.x == -2)  throw std::runtime_error("cxx boom");
 	return _scale;
 }

@@ -52,8 +52,8 @@ MA 02110-1301, USA.
 #include "oofnd/Encoding.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 namespace {
 struct RunningStack {
@@ -694,7 +694,8 @@ static void AddStackToArrayReversed(
     // text). A weak push whose script has gone was a dead weak reference proxy,
     // not nil: it is a null entry.
     if (stack->scriptless)
-      OORaiseException(OOInvalidArgumentException, "Tried to add nil to array");
+      oo::RaiseException(oo::InvalidArgumentException,
+                         "Tried to add nil to array");
     array.emplace_back(stack->current.lock());
   }
 }
@@ -714,7 +715,7 @@ static bool RunScriptWithName(JSContext* context,
 
   // decodeUnicodeText (it read through .oxz archives)
   if (path.has_value()) {
-    if (const std::optional<oo::Data> bytes = OODataFromOXZFile(*path))
+    if (const std::optional<oo::Data> bytes = oo::DataFromOXZFile(*path))
       utf8Contents = oo::str::decodeUnicodeText(bytes->stringView());
   }
   if (!utf8Contents.has_value()) {
@@ -1081,8 +1082,8 @@ static std::optional<std::string> StringForKey(const oo::PList& dictionary,
 static std::string ValueForKey(const std::optional<std::string>& value,
                                std::string_view key) {
   if (!value.has_value())
-    OORaiseException(OOInvalidArgumentException,
-                     "Tried to add nil value for key '%s' to dictionary",
-                     std::string(key).c_str());
+    oo::RaiseException(oo::InvalidArgumentException,
+                       "Tried to add nil value for key '%s' to dictionary",
+                       std::string(key).c_str());
   return *value;
 }

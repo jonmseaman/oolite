@@ -52,7 +52,7 @@
 #include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"  // IWYU pragma: keep: used only without NDEBUG
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 #ifndef TEXGEN_TEST_RIG
 #include "OOTexture.h"

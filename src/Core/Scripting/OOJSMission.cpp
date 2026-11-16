@@ -42,7 +42,7 @@ MA 02110-1301, USA.
 #include "OOStringExpander.h"
 #include "PlayerEntityScriptMethods.h"
 #include "oofnd/Notification.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 static JSValue MissionGetProperty(OOJS_GETTER_ARGS);
 static JSValue MissionSetProperty(OOJS_SETTER_ARGS);
@@ -126,8 +126,8 @@ static oo::PList MarkerFromJSObject(JSContext* context, JSValueConst value,
                                     const char* method) {
   oo::PList marker = OOJSPListFromJSObject(context, value);
   if (!marker.isNull() && !marker.isDict()) {
-    OORaiseException(OOInvalidArgumentException,
-                     "Mission.%s: the marker is not a dictionary", method);
+    oo::RaiseException(oo::InvalidArgumentException,
+                       "Mission.%s: the marker is not a dictionary", method);
   }
   return marker;
 }

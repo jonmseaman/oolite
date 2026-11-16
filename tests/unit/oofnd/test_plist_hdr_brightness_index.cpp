@@ -32,7 +32,7 @@
 #include "oo_test.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/PListOldStyle.hpp"
-#include "oofnd/objc/OOFoundationTypes.h"
+#include "oofnd/objc/FoundationTypes.h"
 
 namespace {
 

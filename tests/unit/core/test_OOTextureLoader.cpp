@@ -23,7 +23,7 @@
 #include "OOTextureLoader.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -39,7 +39,7 @@ class TestLoader : public OOTextureLoader {
   void loadTexture() override {
     gLoads++;
     if (_testRaise)
-      OORaiseException("TestLoaderException", "test loader raised");
+      oo::RaiseException("TestLoaderException", "test loader raised");
     if (_testEmpty) return;
     const size_t size = (size_t)_testWidth * _testHeight *
                         OOTextureComponentsForFormat(_testFormat);

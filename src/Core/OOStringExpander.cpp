@@ -46,8 +46,8 @@ MA 02110-1301, USA.
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PrintfFormat.h"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 /*	The expansion engine works on UTF-16 code units, held in std::u16string;
    an empty optional stands for nil. Text enters and leaves as UTF-8 (WTF-8,
@@ -1468,8 +1468,8 @@ OOUnits Digram(const std::optional<std::string>& digrams, const OOUnits& units,
     // messaging the string did; answers nothing (nothing appended) for no
     // <digrams> (a message to nil).
     if (digrams.has_value()) {
-      OORaiseException(
-          OORangeException,
+      oo::RaiseException(
+          oo::RangeException,
           "in substringWithRange:, range { %zu, 2 } extends beyond size (%zu)",
           static_cast<std::size_t>(location),
           static_cast<std::size_t>(units.size()));

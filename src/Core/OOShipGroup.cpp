@@ -41,8 +41,8 @@ MA 02110-1301, USA.
 
 #include "ShipEntity.h"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 constexpr int kMinSize = 4;
 constexpr int kMaxFreeSpace = 128;
@@ -351,8 +351,8 @@ std::size_t OOShipGroup::updateCount() { return _updateCount; }
   bool cleanupNeeded = false;
 
   if (enumerator->_updateCount != group->_updateCount) {
-    OORaiseException(
-        OOGenericException,
+    oo::RaiseException(
+        oo::GenericException,
         "Collection <OOShipGroup: %p> was mutated while being enumerated.",
         static_cast<void*>(group));
   }

@@ -28,7 +28,7 @@
 #include "OOMaths.h"
 #include "OOTypes.h"
 #include <quickjs.h>
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "OODescription.h"
@@ -187,7 +187,7 @@ std::vector<std::string> Universe::systemDataKeysForGalaxy(OOGalaxyID gnum, OOSy
 }
 NSPoint Universe::coordinatesForSystem(OOSystemID s)
 {
-	if (s == 99)  OORaiseException(OOInvalidArgumentException, "coordinates %s", "boom");
+	if (s == 99)  oo::RaiseException(oo::InvalidArgumentException, "coordinates %s", "boom");
 	if (s == 98)  throw std::runtime_error("cxx boom");
 	return NSMakePoint(s * 4, s * 2);
 }

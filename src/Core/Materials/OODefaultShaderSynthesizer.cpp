@@ -44,8 +44,8 @@ SOFTWARE.
 #include "OOTexture.h"
 #include "ResourceManager.h"
 #include "oofnd/Log.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 namespace {
 
@@ -354,7 +354,7 @@ std::string KeyFromTextureSpec(const oo::PList& spec) {
       OOInterpretTextureSpecifier(spec, true);
   if (!interpreted.has_value()) {
     // OOInterpretTextureSpecifier() will have logged something.
-    OORaiseException(OOGenericException, "Invalid texture specifier");
+    oo::RaiseException(oo::GenericException, "Invalid texture specifier");
   }
   const std::string& texName = interpreted->name;
   const OOTextureFlags texOptions = interpreted->options;
@@ -381,7 +381,7 @@ std::size_t OODefaultShaderSynthesizer::assignIDForTexture(
       OOInterpretTextureSpecifier(spec, true);
   if (!interpreted.has_value()) {
     // OOInterpretTextureSpecifier() will have logged something.
-    OORaiseException(OOGenericException, "Invalid texture specifier");
+    oo::RaiseException(oo::GenericException, "Invalid texture specifier");
   }
   const std::string& texName = interpreted->name;
   const OOTextureFlags texOptions = interpreted->options;
@@ -396,7 +396,7 @@ std::size_t OODefaultShaderSynthesizer::assignIDForTexture(
                "supported with the default shaders.",
                materialKey().value_or("(null)"),
                entityName().value_or("(null)"));
-    OORaiseException(OOGenericException, "Invalid material");
+    oo::RaiseException(oo::GenericException, "Invalid material");
   }
 
   std::string key =
@@ -518,7 +518,7 @@ void OODefaultShaderSynthesizer::performStage(std::string_view name,
   if (_stagesInProgress.count(name) != 0) {
     OO_LOG_ERR("material.synthesis.error.recursion",
                "Shader synthesis recursion for stage {}.", name);
-    OORaiseException(OOInternalInconsistencyException, "stage recursion");
+    oo::RaiseException(oo::InternalInconsistencyException, "stage recursion");
   }
 
   _stagesInProgress.insert(name);

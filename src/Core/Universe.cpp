@@ -110,8 +110,8 @@ MA 02110-1301, USA.
 #include "oofnd/Process.hpp"  // IWYU pragma: keep: used only with OO_LOCALIZATION_TOOLS
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 #if OO_LOCALIZATION_TOOLS
 #include <cstring>
@@ -236,8 +236,8 @@ int ScriptValueInt(const oo::PList& value) {
 // exception.
 void RemoveFirstWormhole(std::vector<oo::EntityHold>& wormholes) {
   if (wormholes.empty()) {
-    OORaiseException(OORangeException,
-                     "Index 0 is out of range 0 (in 'removeObjectAtIndex:')");
+    oo::RaiseException(oo::RangeException,
+                       "Index 0 is out of range 0 (in 'removeObjectAtIndex:')");
   }
   wormholes.erase(wormholes.begin());
 }
@@ -277,9 +277,9 @@ std::unique_ptr<Universe> Universe::newUniverse(::MyOpenGLView* inGameView) {
 
   if (gSharedUniverse != nullptr) {
     universe.reset();
-    OORaiseException(OOInternalInconsistencyException,
-                     "%s: expected only one Universe to exist at a time.",
-                     "-[Universe(OOObjCBridge) initWithGameView:]");
+    oo::RaiseException(oo::InternalInconsistencyException,
+                       "%s: expected only one Universe to exist at a time.",
+                       "-[Universe(OOObjCBridge) initWithGameView:]");
   }
 
   OO_DEBUG_PROGRESS("Universe initWithGameView:");
@@ -1021,8 +1021,8 @@ namespace {
 */
 void RemoveKeyAt(std::vector<std::string>& keys, unsigned index) {
   if (index >= keys.size()) {
-    OORaiseException(
-        OORangeException,
+    oo::RaiseException(
+        oo::RangeException,
         "Index %zu is out of range %zu (in 'removeObjectAtIndex:')",
         static_cast<std::size_t>(index), static_cast<std::size_t>(keys.size()));
   }

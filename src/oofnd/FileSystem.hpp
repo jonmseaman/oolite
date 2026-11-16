@@ -443,11 +443,15 @@ inline bool synchronizeFile(std::FILE* file) noexcept {
    that cannot be read (with the same log lines). Defined in Core
         (OODataFromOXZFile.cpp); uses MiniZip for .oxz segments.
 */
-std::optional<oo::Data> OODataFromOXZFile(const std::string& path);
+namespace oo {
+
+std::optional<oo::Data> DataFromOXZFile(const std::string& path);
 
 /*	True when the path names an existing non-directory file, including a
    path that crosses a .oxz zip component. Same answers as the
    file manager's -oo_oxzFileExistsAtPath:. Defined in Core
    (OODataFromOXZFile.cpp).
 */
-bool OOOxzFileExistsAtPath(const std::string& path);
+bool OxzFileExistsAtPath(const std::string& path);
+
+}  // namespace oo

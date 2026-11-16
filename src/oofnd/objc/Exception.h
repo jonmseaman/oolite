@@ -8,4 +8,4 @@
 #pragma once
 
 #include "oofnd/Exception.hpp"  // IWYU pragma: export
-#include "oofnd/objc/OOObject.h"  // IWYU pragma: export: what includers of this header have always got with it
+#include "oofnd/objc/Object.h"  // IWYU pragma: export: what includers of this header have always got with it

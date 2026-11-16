@@ -38,7 +38,9 @@ SOFTWARE.
 
 constexpr int ZIP_BUFFER_SIZE = 8192;
 
-std::optional<oo::Data> OODataFromOXZFile(const std::string& path) {
+namespace oo {
+
+std::optional<oo::Data> DataFromOXZFile(const std::string& path) {
   const std::vector<std::string> components = oo::str::pathComponents(path);
   std::size_t i, cl = components.size();
   for (i = 0; i < cl; i++) {
@@ -146,7 +148,7 @@ std::optional<oo::Data> OODataFromOXZFile(const std::string& path) {
   return tmp;
 }
 
-bool OOOxzFileExistsAtPath(const std::string& path) {
+bool OxzFileExistsAtPath(const std::string& path) {
   const std::vector<std::string> components = oo::str::pathComponents(path);
   std::size_t i, cl = components.size();
   for (i = 0; i < cl; i++) {
@@ -189,3 +191,5 @@ bool OOOxzFileExistsAtPath(const std::string& path) {
   unzClose(uf);
   return result;
 }
+
+}  // namespace oo

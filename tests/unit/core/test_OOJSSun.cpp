@@ -13,7 +13,7 @@
 	answers the engine. Run: tests/run.sh unit
 */
 
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
@@ -109,7 +109,7 @@ bool OOSunEntity::goneNova()  { return _goneNova; }
 
 double OOSunEntity::radius()
 {
-	if (_radius == 99)  OORaiseException(OOInvalidArgumentException, "radius %s", "boom");
+	if (_radius == 99)  oo::RaiseException(oo::InvalidArgumentException, "radius %s", "boom");
 	if (_radius == 98)  throw std::runtime_error("cxx boom");
 	return _radius;
 }

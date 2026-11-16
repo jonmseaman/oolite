@@ -65,8 +65,8 @@ MA 02110-1301, USA.
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 constexpr double ONE_SIXTEENTH = 0.0625;
 constexpr double ONE_SIXTYFOURTH = 0.015625;
@@ -121,8 +121,8 @@ const OOHUDWidget* sCurrentDrawItem;
 */
 void GetCurrentCachedInfo(struct CachedInfo* cached) {
   if (!sCurrentDrawItem->hasCache) [[unlikely]] {
-    OORaiseException(OORangeException,
-                     "Index 1 is out of range 0 (in 'objectAtIndex:')");
+    oo::RaiseException(oo::RangeException,
+                       "Index 1 is out of range 0 (in 'objectAtIndex:')");
   }
   *cached = sCurrentDrawItem->cache;
 }
@@ -230,10 +230,10 @@ std::optional<std::string> OptionalStringAt(const oo::PList& array,
 OOColor* ReticleColorAt(const std::vector<std::shared_ptr<OOColor>>& colors,
                         std::size_t index) {
   if (index >= colors.size()) [[unlikely]] {
-    OORaiseException(OORangeException,
-                     "Index %zu is out of range %zu (in 'objectAtIndex:')",
-                     static_cast<std::size_t>(index),
-                     static_cast<std::size_t>(colors.size()));
+    oo::RaiseException(oo::RangeException,
+                       "Index %zu is out of range %zu (in 'objectAtIndex:')",
+                       static_cast<std::size_t>(index),
+                       static_cast<std::size_t>(colors.size()));
   }
   return colors[index].get();
 }

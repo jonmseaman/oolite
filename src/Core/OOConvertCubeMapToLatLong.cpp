@@ -34,7 +34,7 @@ SOFTWARE.
 #include <vector>
 
 #include "OOTextureScaling.h"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 #define kPiF (3.14159265358979323846264338327950288f)
 

@@ -64,7 +64,7 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "WormholeEntity.h"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 namespace {
 

@@ -51,8 +51,8 @@ MA 02110-1301, USA.
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"
 
 inline bool RowInRange(OOGUIRow row, NSRange range) {
   return (static_cast<int>(range.location) <= row &&
@@ -889,7 +889,7 @@ void GuiDisplayGen::insertItemsFromArray(const oo::PList& items,
   std::size_t n_items = items.count();
   if ((!item_keys.isNull()) && (item_keys.count() != n_items)) {
     // throw exception
-    OORaiseException(
+    oo::RaiseException(
         "ArrayLengthMismatchException",
         "The array sent as 'item_keys' to insertItemsFromArray::: must contain "
         "the same number of objects as the array 'items'");

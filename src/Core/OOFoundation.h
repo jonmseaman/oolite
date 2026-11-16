@@ -62,7 +62,7 @@ MA 02110-1301, USA.
 #include <algorithm>  // IWYU pragma: export
 #include <utility>
 
-#include "oofnd/objc/OOFoundationTypes.h"  // IWYU pragma: export
+#include "oofnd/objc/FoundationTypes.h"  // IWYU pragma: export
 
 #define OOLITE_SDL 1
 
@@ -109,8 +109,8 @@ static_assert(sizeof(void*) == 8, "Oolite builds for 64-bit targets only");
 #define OOLITE_ESPEAK 0
 #endif
 
-#include "OOLogging.h"            // IWYU pragma: export
-#include "oofnd/objc/OOObject.h"  // IWYU pragma: export
+#include "OOLogging.h"          // IWYU pragma: export
+#include "oofnd/objc/Object.h"  // IWYU pragma: export
 
 /*	The description family (-descriptionComponents & co.,
  * oo::DescriptionOf), Foundation-free.

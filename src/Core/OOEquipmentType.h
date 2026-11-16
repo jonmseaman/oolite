@@ -51,7 +51,7 @@ SOFTWARE.
 #include "Scripting/OOJSPrivateObject.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 class OOEquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
  public:

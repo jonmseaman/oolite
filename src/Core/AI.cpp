@@ -46,7 +46,7 @@ MA 02110-1301, USA.
 #include "oofnd/Log.hpp"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 constexpr int kRecursionLimiter = 32;  // reactToMethod: recursion
 constexpr int kStackLimiter = 32;      // setAITo: stack overflow
@@ -268,8 +268,8 @@ void AI::preserveCurrentStateMachine() {
   if (aiStack.size() >= kStackLimiter) {
     reportStackOverflow();
 
-    OORaiseException("OoliteException", "AI stack overflow for %s",
-                     oo::EntityDescription(owner()).c_str());
+    oo::RaiseException("OoliteException", "AI stack overflow for %s",
+                       oo::EntityDescription(owner()).c_str());
   }
 
   const oo::PList* script = stateMachine.find("jsScript");

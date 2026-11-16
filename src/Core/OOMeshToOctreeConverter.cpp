@@ -24,7 +24,7 @@ MA 02110-1301, USA.
 
 #include "OOMeshToOctreeConverter.h"
 
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 /*
         DESIGN NOTES

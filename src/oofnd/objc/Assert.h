@@ -30,7 +30,7 @@
    not.
 */
 #ifndef OO_PLAIN_CPP_UNIT
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #endif
 #include <source_location>
 
@@ -38,16 +38,20 @@
 
 // Log and raise; never return. Called by the macros below, not directly.
 // <where> is the failing assertion's call site.
-void OOAssertFailedInFunction(const std::source_location& where,
-                              const char* format, ...) OO_PRINTF_FORMAT(2, 3)
+namespace oo {
+
+void AssertFailedInFunction(const std::source_location& where,
+                            const char* format, ...) OO_PRINTF_FORMAT(2, 3)
     __attribute__((noreturn));
 
+}  // namespace oo
+
 // Not conditional on NDEBUG: see the head of this file.
-#define OOCAssert(condition, ...)                                 \
-  do {                                                            \
-    if (!(condition))                                             \
-      OOAssertFailedInFunction(::std::source_location::current(), \
-                               __VA_ARGS__);                      \
+#define OOCAssert(condition, ...)                                   \
+  do {                                                              \
+    if (!(condition))                                               \
+      oo::AssertFailedInFunction(::std::source_location::current(), \
+                                 __VA_ARGS__);                      \
   } while (0)
 
 #define OOCParameterAssert(condition) \

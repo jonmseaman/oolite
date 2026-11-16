@@ -40,7 +40,7 @@
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
 
-#include "oofnd/objc/OOException.h"	// oo::Exception
+#include "oofnd/objc/Exception.h"	// oo::Exception
 #include "oo_test.hpp"
 
 #include <cstdio>

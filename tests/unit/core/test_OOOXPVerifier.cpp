@@ -42,7 +42,7 @@
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Process.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -247,7 +247,7 @@ void run() override {
 TEST_STAGE(OOTestStageG, "G")
 void run() override {
   OOTestStage::run();
-  OORaiseException("OOTestException", "%s", "G fails");
+  oo::RaiseException("OOTestException", "%s", "G fails");
 }
 }
 ;

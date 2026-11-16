@@ -19,7 +19,7 @@
 #include <string>
 
 #include "oo_test.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 #ifdef NDEBUG
 #error test_objc_assert.mm tests the live macros; it must not be built with NDEBUG

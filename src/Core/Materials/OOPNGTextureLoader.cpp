@@ -55,7 +55,7 @@ void PNGRead(png_structp png, png_bytep bytes, png_size_t size);
 
 void OOPNGTextureLoader::loadTexture() {
   // Get data from file
-  fileData = OODataFromOXZFile(_path);
+  fileData = oo::DataFromOXZFile(_path);
   if (!fileData.has_value()) return;
   length = fileData->length();
 

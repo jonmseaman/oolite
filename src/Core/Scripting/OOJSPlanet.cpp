@@ -35,7 +35,7 @@ MA 02110-1301, USA.
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOPlanetEntity.h"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 static JSClassID sPlanetClassID;
 

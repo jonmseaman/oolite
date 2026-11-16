@@ -65,7 +65,7 @@ A leaf of Entity. The class is global.
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListGet.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 #define OO_TERMINATOR_THRESHOLD_VECTOR_DEFAULT                   \
   (make_vector(                                                  \

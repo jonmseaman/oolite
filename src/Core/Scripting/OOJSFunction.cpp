@@ -33,7 +33,7 @@ MA 02110-1301, USA.
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
 #include "oofnd/Notification.hpp"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 /*	OOJSFunction. The initialisers are static factories answering null for
    their input; the part of -initWithFunction:context: that cannot fail is the

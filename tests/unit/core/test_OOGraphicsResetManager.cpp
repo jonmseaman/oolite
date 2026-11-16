@@ -22,7 +22,7 @@
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 // --- Stubs
 // --------------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ struct OOTestResetClient : oo::Object, OOGraphicsResetClient {
     sOrder.push_back(tag);
     if (victim != nullptr)
       OOGraphicsResetManager::sharedManager()->unregisterCxxClient(victim);
-    if (raises) OORaiseException("OOTestException", "client %d raised", tag);
+    if (raises) oo::RaiseException("OOTestException", "client %d raised", tag);
   }
 };
 

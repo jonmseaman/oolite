@@ -41,7 +41,7 @@ SOFTWARE.
 #include "OOOpenGL.h"
 #include "OOTextureFlags.h"
 #include "oofnd/Object.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 class OOTexture;
 

@@ -39,7 +39,7 @@ MA 02110-1301, USA.
 #include "OOVector.h"  // make_vector
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 //	Testing toy: cause particle systems to stop after half a second.
 #define FREEZE_PARTICLES 0

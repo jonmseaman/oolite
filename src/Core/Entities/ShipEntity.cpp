@@ -96,8 +96,8 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"  // oo::Finally, oo::CurrentOOException
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Exception.h"  // oo::Finally, oo::CurrentOOException
 
 #define USEMASC 1
 

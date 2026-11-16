@@ -45,7 +45,7 @@ SOFTWARE.
 #include "OOFoundation.h"
 #include "OOFunctionAttributes.h"
 #include "oofnd/Object.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 inline constexpr auto OOAL_STREAM_CHUNK_SIZE = (sizeof(char) * 409600);
 

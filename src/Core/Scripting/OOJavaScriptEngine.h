@@ -37,8 +37,8 @@ MA 02110-1301, USA.
 #include "OOTypes.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/Object.h"
 
 #if !OOJS_POC_HARNESS
 #include "PlayerEntity.h"

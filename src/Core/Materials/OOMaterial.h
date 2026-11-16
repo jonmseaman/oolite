@@ -40,7 +40,7 @@ SOFTWARE.
 #include "OOFoundation.h"
 #include "OOOpenGL.h"
 #include "OOOpenGLExtensionManager.h"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 class Entity;  // Entity.h: the shader binding target
 
 #include <cstddef>

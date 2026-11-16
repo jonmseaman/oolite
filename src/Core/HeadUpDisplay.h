@@ -44,7 +44,7 @@ MA 02110-1301, USA.
 #include "ShipEntity.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOObject.h"
+#include "oofnd/objc/Object.h"
 
 // PlayerEntity.h defines it; this header does not include PlayerEntity.h (it
 // would close an include cycle).

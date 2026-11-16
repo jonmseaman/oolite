@@ -59,7 +59,7 @@ sets that will then be immutablized.
 
 #include "legacy_random.h"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 namespace {
 
@@ -209,8 +209,8 @@ std::shared_ptr<OOProbabilitySet> OOProbabilitySet::probabilitySetWithObjects(
   // If count is not zero and one of the paramters is nil, we've got us a
   // programming error.
   if (objects == nullptr || weights == nullptr) {
-    OORaiseException(
-        OOInvalidArgumentException,
+    oo::RaiseException(
+        oo::InvalidArgumentException,
         "Attempt to create %s with non-zero count but nil objects or weights.",
         "OOProbabilitySet");
     abort();  // unreachable: +raise:format: does not return (the analyser
@@ -563,8 +563,8 @@ void OOConcreteMutableProbabilitySet::initWithObjects(const oo::PList* objects,
 
   // Validate parameters.
   if (count != 0 && (objects == nullptr || weights == nullptr)) {
-    OORaiseException(
-        OOInvalidArgumentException,
+    oo::RaiseException(
+        oo::InvalidArgumentException,
         "Attempt to create %s with non-zero count but nil objects or weights.",
         "OOMutableProbabilitySet");
     abort();  // unreachable: +raise:format: does not return (the analyser

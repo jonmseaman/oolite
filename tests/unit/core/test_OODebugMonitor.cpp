@@ -38,7 +38,7 @@
 #include "oofnd/Log.hpp"
 #include "oofnd/Notification.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -326,12 +326,17 @@ void OOJSResumeTimeLimiter(void)							{ sTimeLimiterResumes++; }
 
 
 // The source files the console shows: plain files (OODataFromOXZFile reads through an .oxz too).
-std::optional<oo::Data> OODataFromOXZFile(const std::string &path)
+namespace oo {
+
+std::optional<oo::Data> DataFromOXZFile(const std::string &path)
 {
 	const oo::fs::Result<oo::Data> data = oo::fs::readFile(oo::fs::pathFromUTF8(path));
 	if (!data.has_value())  return std::nullopt;
 	return *data;
 }
+
+}  // namespace oo
+
 
 
 // No textures, so the memory dump lists none; and no entity class is ever an
@@ -384,7 +389,7 @@ public:
 	{
 		(void)debugMonitor;
 		_connects++;
-		if (_raise)  OORaiseException("TestException", "%s", "no thanks");
+		if (_raise)  oo::RaiseException("TestException", "%s", "no thanks");
 		if (_refuse)
 		{
 			*message = "refused";

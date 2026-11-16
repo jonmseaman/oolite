@@ -85,8 +85,8 @@ MA 02110-1301, USA.
 #include "OOTypes.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOFoundationTypes.h"
+#include "oofnd/objc/Assert.h"
+#include "oofnd/objc/FoundationTypes.h"
 
 // Number of entries in a JSCFunctionListEntry (or other) array.
 #define OOJS_COUNT(array) (std::size(array))

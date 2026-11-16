@@ -30,7 +30,7 @@ MA 02110-1301, USA.
 #include <exception>
 
 #include "OOJavaScriptEngine.h"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 /*	The game's exception (oo::Exception) is reported by its reason. Any
         other object is "Unidentified native exception", as anything else

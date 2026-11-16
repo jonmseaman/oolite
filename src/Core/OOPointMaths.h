@@ -3,7 +3,7 @@
 #include <tgmath.h>
 
 #include "OOFunctionAttributes.h"
-#include "oofnd/objc/OOFoundationTypes.h"  // NSPoint
+#include "oofnd/objc/FoundationTypes.h"  // NSPoint
 
 // Utilities for working with NSPoints as 2D vectors.
 inline NSPoint PtAdd(NSPoint a, NSPoint b) {

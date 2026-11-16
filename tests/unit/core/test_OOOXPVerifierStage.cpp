@@ -15,7 +15,7 @@
 #include "OOLogging.h"
 #include "OXPVerifierStage.h"
 #include "oo_test.hpp"
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked. The one function of it that the base calls is defined here instead,
@@ -50,7 +50,7 @@ class TestObjCStage : public oo::OXPVerifierStage {
 
   void run() override {
     _runs++;
-    if (_raise) OORaiseException("TestException", "%s", "raised by the test");
+    if (_raise) oo::RaiseException("TestException", "%s", "raised by the test");
   }
 
   std::string _testName;

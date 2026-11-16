@@ -36,7 +36,7 @@ MA 02110-1301, USA.
 #include "OOOpenGL.h"
 #include "OOOpenGLExtensionManager.h"  // IWYU pragma: keep: the OpenGL feature macros its #if lines test
 #include "oofnd/Log.hpp"  // IWYU pragma: keep: used only with OO_GL_STATE_VERIFICATION
-#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/Assert.h"
 
 /*	DESIGN NOTES
 

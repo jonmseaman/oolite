@@ -25,7 +25,7 @@
 #include "OOShipRegistry.h"
 #include "OOTypes.h"
 #include "OOEntityEnums.h"  // IWYU pragma: keep
-#include "oofnd/objc/OOException.h"
+#include "oofnd/objc/Exception.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "OODescription.h"  // IWYU pragma: keep
@@ -431,7 +431,7 @@ void StationEntity::setAlertLevel(OOStationAlertLevel level, bool signallingScri
 
 OOTechLevelID StationEntity::getEquivalentTechLevel()
 {
-	if (_techLevel == 99)  OORaiseException(OOInvalidArgumentException, "techlevel %s", "boom");
+	if (_techLevel == 99)  oo::RaiseException(oo::InvalidArgumentException, "techlevel %s", "boom");
 	if (_techLevel == 98)  throw std::runtime_error("cxx boom");
 	return _techLevel;
 }
