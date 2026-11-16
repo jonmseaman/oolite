@@ -28,7 +28,7 @@
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "OOProbabilisticTextureManager.h"
-#include "OOTexture.h"
+#include "Texture.h"
 #include "OOTypes.h"
 #include "oo_test.hpp"
 #include "oofnd/String.hpp"
@@ -53,7 +53,7 @@ oo::PList ResourceManager::arrayFromFilesNamed(
 
 // Every texture loads, but for "missing.png". The stand-in is C++: the factory the manager
 // calls, the root's own members (a texture needs them), and TestTexture, which the factory answers.
-class TestTexture final : public OOTexture {
+class TestTexture final : public oo::Texture {
  public:
   void ensureFinishedLoading() override { _loaded++; }
 
@@ -61,9 +61,9 @@ class TestTexture final : public OOTexture {
   unsigned _loaded = 0;
 };
 
-std::shared_ptr<OOTexture> OOTexture::textureWithName(
+std::shared_ptr<oo::Texture> oo::Texture::textureWithName(
     const std::optional<std::string>& name,
-    const std::optional<std::string>& directory, OOTextureFlags options,
+    const std::optional<std::string>& directory, oo::TextureFlags options,
     GLfloat anisotropy, GLfloat lodBias) {
   char args[128];
   std::snprintf(args, sizeof args, " options=%#x anisotropy=%g lodBias=%g",
@@ -76,36 +76,41 @@ std::shared_ptr<OOTexture> OOTexture::textureWithName(
   return texture;
 }
 
-OOTexture::OOTexture() {}
-OOTexture::~OOTexture() {}
-void OOTexture::apply() {}
-void OOTexture::ensureFinishedLoading() {}
-bool OOTexture::isFinishedLoading() { return true; }
-std::optional<std::string> OOTexture::cacheKey() { return std::nullopt; }
-NSSize OOTexture::dimensions() { return NSSize{}; }
-NSSize OOTexture::originalDimensions() { return dimensions(); }
-bool OOTexture::isMipMapped() { return false; }
-OOPixMap OOTexture::copyPixMapRepresentation() { return OOPixMap{}; }
-bool OOTexture::isRectangleTexture() { return false; }
-bool OOTexture::isCubeMap() { return false; }
-NSSize OOTexture::texCoordsScale() { return NSSize{1.0, 1.0}; }
-GLint OOTexture::glTextureName() { return 0; }
+oo::Texture::Texture() {}
+namespace oo {
+
+Texture::~Texture() {}
+
+}  // namespace oo
+
+void oo::Texture::apply() {}
+void oo::Texture::ensureFinishedLoading() {}
+bool oo::Texture::isFinishedLoading() { return true; }
+std::optional<std::string> oo::Texture::cacheKey() { return std::nullopt; }
+NSSize oo::Texture::dimensions() { return NSSize{}; }
+NSSize oo::Texture::originalDimensions() { return dimensions(); }
+bool oo::Texture::isMipMapped() { return false; }
+oo::PixMap oo::Texture::copyPixMapRepresentation() { return oo::PixMap{}; }
+bool oo::Texture::isRectangleTexture() { return false; }
+bool oo::Texture::isCubeMap() { return false; }
+NSSize oo::Texture::texCoordsScale() { return NSSize{1.0, 1.0}; }
+GLint oo::Texture::glTextureName() { return 0; }
 #ifndef NDEBUG
-std::optional<std::string> OOTexture::name() { return std::nullopt; }
+std::optional<std::string> oo::Texture::name() { return std::nullopt; }
 #endif
-std::optional<std::string> OOTexture::descriptionComponents() const {
+std::optional<std::string> oo::Texture::descriptionComponents() const {
   return std::nullopt;
 }
-std::optional<std::string> OOTexture::shortDescriptionComponents() const {
+std::optional<std::string> oo::Texture::shortDescriptionComponents() const {
   return std::nullopt;
 }
-std::string OOTexture::description() const {
+std::string oo::Texture::description() const {
   return oo::str::format("<OOTexture %s>",
                          oo::str::pointerDescription(this).c_str());
 }
-std::string OOTexture::shortDescription() const { return description(); }
-std::string OOTexture::className() const { return "OOTexture"; }
-void OOTexture::forceRebind() {}
+std::string oo::Texture::shortDescription() const { return description(); }
+std::string oo::Texture::className() const { return "OOTexture"; }
+void oo::Texture::forceRebind() {}
 
 static OOGalaxyID gGalaxy = 0;
 
@@ -172,7 +177,7 @@ bool SameSeed(RANROTSeed a, RANROTSeed b) {
 }
 
 std::shared_ptr<OOProbabilisticTextureManager> Manager(RANROTSeed seed) {
-  return OOProbabilisticTextureManager::createWithPListName("test.plist", static_cast<OOTextureFlags>(0x803),
+  return OOProbabilisticTextureManager::createWithPListName("test.plist", static_cast<oo::TextureFlags>(0x803),
                                                             0.5f, -0.25f, seed);
 }
 
@@ -236,7 +241,7 @@ OO_TEST(seed) {
     RANROTSeed global = MakeRanrotSeed(77);
     RANROTSetFullSeed(global);
     std::shared_ptr<OOProbabilisticTextureManager> manager =
-        OOProbabilisticTextureManager::createWithPListName("test.plist", OOTextureFlags::kNone, 0,
+        OOProbabilisticTextureManager::createWithPListName("test.plist", oo::TextureFlags::kNone, 0,
                                                            0);
     OO_CHECK(SameSeed(manager->seed(), global));  // copied from the global seed
     OO_CHECK(SameSeed(RANROTGetFullSeed(), global));  // and that is left alone

@@ -13,7 +13,7 @@
    dynamic_cast of the C++ texture. Run: tests/run.sh unit
 */
 
-#include "OONullTexture.h"
+#include "NullTexture.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 
@@ -38,28 +38,28 @@ GLint BoundTexture() {
 
 OO_TEST(oneSharedInstance) {
   {
-    OOTexture* shared = OOTexture::nullTexture().get();
-    OO_CHECK(shared != nullptr && shared == OOTexture::nullTexture().get());
-    OO_CHECK(shared == OOTexture::nullTexture().get());
-    OO_CHECK(dynamic_cast<OONullTexture*>(shared) != nullptr);
+    oo::Texture* shared = oo::Texture::nullTexture().get();
+    OO_CHECK(shared != nullptr && shared == oo::Texture::nullTexture().get());
+    OO_CHECK(shared == oo::Texture::nullTexture().get());
+    OO_CHECK(dynamic_cast<oo::NullTexture*>(shared) != nullptr);
   }
   // It outlives the pools it was handed out in.
   {
-    OO_CHECK(OOTexture::nullTexture().get() ==
-             OONullTexture::sharedNullTexture());
+    OO_CHECK(oo::Texture::nullTexture().get() ==
+             oo::NullTexture::sharedNullTexture());
   }
 }
 
 OO_TEST(answersAsAnEmptyTexture) {
   {
-    OOTexture* none = OOTexture::nullTexture().get();
+    oo::Texture* none = oo::Texture::nullTexture().get();
     OO_CHECK(SameSize(none->dimensions(), 0, 0) &&
              SameSize(none->originalDimensions(), 0, 0));
     OO_CHECK(!none->isMipMapped());
     OO_CHECK(none->isFinishedLoading() && !none->cacheKey().has_value());
     OO_CHECK(!none->isRectangleTexture() && !none->isCubeMap());
     OO_CHECK(SameSize(none->texCoordsScale(), 1, 1));
-    OO_CHECK(OOIsNullPixMap(none->copyPixMapRepresentation()));
+    OO_CHECK(oo::IsNullPixMap(none->copyPixMapRepresentation()));
     none->ensureFinishedLoading();
     none->forceRebind();  // nothing to rebind
 #ifndef NDEBUG
@@ -77,7 +77,7 @@ OO_TEST(applyingBindsNoTexture) {
     glGenTextures(1, &name);
     glBindTexture(GL_TEXTURE_2D, name);
     OO_CHECK(BoundTexture() == (GLint)name);
-    OOTexture::nullTexture()->apply();
+    oo::Texture::nullTexture()->apply();
     OO_CHECK(BoundTexture() == 0);
     glDeleteTextures(1, &name);
   }
@@ -86,9 +86,9 @@ OO_TEST(applyingBindsNoTexture) {
 OO_TEST(graphicsResetLeavesItAlone) {
   OO_CHECK(OOTestGLContext());
   {
-    OOTexture* shared = OOTexture::nullTexture().get();
-    OOTexture::rebindAllTextures();
-    OO_CHECK(OOTexture::nullTexture().get() == shared);
+    oo::Texture* shared = oo::Texture::nullTexture().get();
+    oo::Texture::rebindAllTextures();
+    OO_CHECK(oo::Texture::nullTexture().get() == shared);
     OO_CHECK(SameSize(shared->dimensions(), 0, 0));
   }
 }
@@ -98,11 +98,11 @@ OO_TEST(graphicsResetLeavesItAlone) {
 
 OO_TEST(cxxApi) {
   OO_CHECK(OOTestGLContext());
-  OONullTexture* none = OONullTexture::sharedNullTexture();
-  OO_CHECK(none != nullptr && none == OONullTexture::sharedNullTexture());
+  oo::NullTexture* none = oo::NullTexture::sharedNullTexture();
+  OO_CHECK(none != nullptr && none == oo::NullTexture::sharedNullTexture());
 
   // Through the root's virtual members, as the materials call a texture.
-  OOTexture* texture = none;
+  oo::Texture* texture = none;
   OO_CHECK(SameSize(texture->dimensions(), 0, 0) &&
            SameSize(texture->originalDimensions(), 0, 0));
   OO_CHECK(!texture->isMipMapped() && texture->isFinishedLoading() &&

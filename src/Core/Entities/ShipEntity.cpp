@@ -70,7 +70,6 @@ MA 02110-1301, USA.
 #include "OOPListGameTypes.h"
 #include "OOPolygonSprite.h"
 #include "OORoleSet.h"
-#include "OOShaderMaterial.h"
 #include "OOShipGroup.h"
 #include "OOShipRegistry.h"
 #include "OOStringExpander.h"
@@ -85,6 +84,7 @@ MA 02110-1301, USA.
 #include "QuiriumCascadeEntity.h"
 #include "ResourceManager.h"
 #include "RingEffectEntity.h"
+#include "ShaderMaterial.h"
 #include "ShipEntityAI.h"
 #include "SparkEntity.h"
 #include "StationEntity.h"
@@ -14157,8 +14157,10 @@ oo::PList DefaultShipShaderMacros() {
 
 // is this the right place for this function now? - CIM
 // The target is the C++ entity; every entity's object was a kind of Entity.
-bool OOUniformBindingPermitted(const std::string& propertyName,
-                               Entity* bindingTarget) {
+namespace oo {
+
+bool UniformBindingPermitted(const std::string& propertyName,
+                             Entity* bindingTarget) {
   // the whitelists, read once (membership only)
   static const oo::PList wlDict = ResourceManager::whitelistDictionary();
   static const std::set<std::string> entityWhitelist =
@@ -14189,6 +14191,8 @@ bool OOUniformBindingPermitted(const std::string& propertyName,
 
   return false;
 }
+
+}  // namespace oo
 
 GLfloat getWeaponRangeFromType(oo::WeaponType weapon_type) {
   // [nil weaponRange] answered 0.

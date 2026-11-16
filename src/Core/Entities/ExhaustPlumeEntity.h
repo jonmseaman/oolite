@@ -31,8 +31,8 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOTexture.h"
 #include "ShipEntity.h"
+#include "Texture.h"
 
 struct Frame {
   double timeframe;  // universal time for this frame
@@ -67,10 +67,10 @@ class ExhaustPlumeEntity : public Entity, public cxx::OOSubEntityInterface {
   Vector scale();
   void setScale(Vector scale);
 
-  OOTexture* texture();
+  oo::Texture* texture();
 
   static void setUpTexture();
-  static OOTexture* plumeTexture();
+  static oo::Texture* plumeTexture();
   // What the graphics reset client (OOExhaustPlumeEntity.cpp) runs.
   static void resetGraphicsState();
 

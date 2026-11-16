@@ -63,7 +63,13 @@ class GuiDisplayGen;
 #include "HeadUpDisplay.h"  // the player keeps its HUD (std::shared_ptr)
 class OOSound;
 class OOSoundSource;
-class OOTexture;
+
+namespace oo {
+
+class Texture;
+
+}  // namespace oo
+
 #include "OOJSGuiScreenKeyDefinition.h"  // extraGuiScreenKeys keeps it (std::shared_ptr)
 #include "OOScript.h"      // std::shared_ptr<OOScript> members and results
 class StickProfileScreen;  // PlayerEntityStickProfile.h

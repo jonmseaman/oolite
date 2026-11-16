@@ -23,7 +23,7 @@
 #include "OOJSEntity.h"
 #include "OOJSPlanet.h"
 #include "OOColor.h"
-#include "OOTexture.h"
+#include "Texture.h"
 #include "Universe.h"
 
 #include "oo_test.hpp"
@@ -94,7 +94,7 @@ std::vector<std::string> sTexturesAsked;
 
 // OOTexture::configurationFactory, the test-only loader hook: records the name,
 // finds nothing.
-std::shared_ptr<OOTexture> NoTexture(const oo::PList &configuration)
+std::shared_ptr<oo::Texture> NoTexture(const oo::PList &configuration)
 {
 	sTexturesAsked.push_back(configuration.get<std::string>("name", "?"));
 	return nullptr;
@@ -108,7 +108,7 @@ void SetUp()
 		sUniverse = new TestUniverse();	// never released
 		new (&sUniverse->_systemData) oo::PList();
 		sPlayer = NewTestPlayer<TestPlayer>();
-		OOTexture::configurationFactory = &NoTexture;
+		oo::Texture::configurationFactory = &NoTexture;
 	}
 	sUniverse->_systemData = oo::PList(oo::PList::Dict{ { "air_density", oo::PList(0.4) }, { "planet_name", oo::PList("Lave") } });
 	sUniverse->_time = 0;

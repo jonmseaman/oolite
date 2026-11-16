@@ -28,7 +28,7 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "OODrawable.h"
-#include "OOTexture.h"  // allTextures() destroys std::shared_ptr<OOTexture>s
+#include "Texture.h"  // allTextures() destroys std::shared_ptr<OOTexture>s
 #include "Universe.h"
 
 // The drawable is a member, released with the entity.
@@ -120,9 +120,10 @@ void oo::EntityWithDrawable::drawImmediate(bool /*immediate*/,
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-std::vector<std::shared_ptr<OOTexture>> oo::EntityWithDrawable::allTextures() {
+std::vector<std::shared_ptr<oo::Texture>>
+oo::EntityWithDrawable::allTextures() {
   OODrawable* cxxDrawable = getDrawable();
   return cxxDrawable != nullptr ? cxxDrawable->allTextures()
-                                : std::vector<std::shared_ptr<OOTexture>>();
+                                : std::vector<std::shared_ptr<oo::Texture>>();
 }
 #endif

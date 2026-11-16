@@ -59,7 +59,7 @@ SOFTWARE.
 #include "oofnd/AutoreleaseScope.hpp"  // IWYU pragma: keep: used only with OOJS_PROFILE
 #include "oofnd/PList.hpp"
 #if OO_DEBUG
-#include "OOShaderUniformMethodType.h"  // callObjC()'s scalar results on the console
+#include "ShaderUniformMethodType.h"  // callObjC()'s scalar results on the console
 #include "ValueType.h"
 #endif
 
@@ -989,17 +989,17 @@ bool CallMonitorMethod(JSContext* context, oo::DebugMonitor* monitor, int argc,
 
     case MonitorMethodForm::kScalar:
       switch (oo::ShaderUniformTypeOf(method->type)) {
-        case kOOShaderUniformTypeChar:
-        case kOOShaderUniformTypeUnsignedChar:
-        case kOOShaderUniformTypeShort:
-        case kOOShaderUniformTypeUnsignedShort:
-        case kOOShaderUniformTypeInt:
-        case kOOShaderUniformTypeUnsignedInt:
-        case kOOShaderUniformTypeLong:
+        case oo::kShaderUniformTypeChar:
+        case oo::kShaderUniformTypeUnsignedChar:
+        case oo::kShaderUniformTypeShort:
+        case oo::kShaderUniformTypeUnsignedShort:
+        case oo::kShaderUniformTypeInt:
+        case oo::kShaderUniformTypeUnsignedInt:
+        case oo::kShaderUniformTypeLong:
           result = oo::PList::signedInteger(method->scalar(monitor));
           break;
 
-        case kOOShaderUniformTypeUnsignedLong:
+        case oo::kShaderUniformTypeUnsignedLong:
           result = oo::PList::unsignedInteger(
               static_cast<std::uint64_t>(method->scalar(monitor)));
           break;

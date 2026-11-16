@@ -32,7 +32,7 @@ extern PlayerEntity* gOOPlayer;
 
 // The values under test, as the uniforms reach them: the binding for a name.
 #include "EntityCalledByName.h"  // the by-name table's names
-#include "OOShaderUniformMethodType.h"
+#include "ShaderUniformMethodType.h"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // PLAYER: answers what the category asks for, with the test's values.
@@ -90,24 +90,24 @@ Entity* AnEntity() { return oo::MadeEntity(oo::makeShared<Entity>()); }
 
 // The binding a uniform bound to the name on the entity makes (the member
 // table).
-OOShaderMemberBinding Binding(Entity* entity, const char* name) {
-  OOShaderMemberBinding binding = {};
+oo::ShaderMemberBinding Binding(Entity* entity, const char* name) {
+  oo::ShaderMemberBinding binding = {};
   if (!EntityShaderMemberBindingFor(entity, name, &binding)) binding = {};
   return binding;
 }
 
 // What a uniform bound to the name reads: an integer or a float.
 long long BoundInt(Entity* entity, const char* name) {
-  OOShaderBindingValue value = {};
-  const OOShaderMemberBinding binding = Binding(entity, name);
+  oo::ShaderBindingValue value = {};
+  const oo::ShaderMemberBinding binding = Binding(entity, name);
   if (binding.get != nullptr)
     binding.get(binding.target, value);  // the entity's C++ part
   return value.i;
 }
 
 double BoundFloat(Entity* entity, const char* name) {
-  OOShaderBindingValue value = {};
-  const OOShaderMemberBinding binding = Binding(entity, name);
+  oo::ShaderBindingValue value = {};
+  const oo::ShaderMemberBinding binding = Binding(entity, name);
   if (binding.get != nullptr)
     binding.get(binding.target, value);  // the entity's C++ part
   return value.f;
@@ -176,21 +176,21 @@ OO_TEST(uniformTypes) {
     // The uniform's type is the method's return type: a float for the clock
     // ('f'), unsigned ints ('I') for the rest.
     Entity* entity = AnEntity();
-    OO_CHECK(Binding(entity, "clock").type == kOOShaderUniformTypeFloat);
+    OO_CHECK(Binding(entity, "clock").type == oo::kShaderUniformTypeFloat);
     OO_CHECK(Binding(entity, "pseudoFixedD100").type ==
-             kOOShaderUniformTypeUnsignedInt);
+             oo::kShaderUniformTypeUnsignedInt);
     OO_CHECK(Binding(entity, "pseudoFixedD256").type ==
-             kOOShaderUniformTypeUnsignedInt);
+             oo::kShaderUniformTypeUnsignedInt);
     OO_CHECK(Binding(entity, "systemGovernment").type ==
-             kOOShaderUniformTypeUnsignedInt);
+             oo::kShaderUniformTypeUnsignedInt);
     OO_CHECK(Binding(entity, "systemEconomy").type ==
-             kOOShaderUniformTypeUnsignedInt);
+             oo::kShaderUniformTypeUnsignedInt);
     OO_CHECK(Binding(entity, "systemTechLevel").type ==
-             kOOShaderUniformTypeUnsignedInt);
+             oo::kShaderUniformTypeUnsignedInt);
     OO_CHECK(Binding(entity, "systemPopulation").type ==
-             kOOShaderUniformTypeUnsignedInt);
+             oo::kShaderUniformTypeUnsignedInt);
     OO_CHECK(Binding(entity, "systemProductivity").type ==
-             kOOShaderUniformTypeUnsignedInt);
+             oo::kShaderUniformTypeUnsignedInt);
   }
 }
 
@@ -306,7 +306,7 @@ OO_TEST(everyPermittedNameBindsAsBySelector) {
     int rows = 0;
     for (Entity* object : objects) {
       for (const char* name : kNames) {
-        OOShaderMemberBinding binding = {};
+        oo::ShaderMemberBinding binding = {};
         const bool byRow = EntityShaderMemberBindingFor(object, name, &binding);
         if (byRow) {
           OO_CHECK(binding.target == object);
@@ -319,10 +319,10 @@ OO_TEST(everyPermittedNameBindsAsBySelector) {
     OO_CHECK(Binding(AnEntity(), "airColorAsVector").get ==
              nullptr);  // a planet's only
     OO_CHECK(Binding(AnEntity(), "cameraRelativePosition").type ==
-             kOOShaderUniformTypeVector);
+             oo::kShaderUniformTypeVector);
     OO_CHECK(Binding(AnEntity(), "fogUniform").type ==
-             kOOShaderUniformTypeColor);
-    OO_CHECK(Binding(sPlayer, "tradeInFactor").type == kOOShaderUniformTypeInt);
+             oo::kShaderUniformTypeColor);
+    OO_CHECK(Binding(sPlayer, "tradeInFactor").type == oo::kShaderUniformTypeInt);
     OO_CHECK(BoundInt(sPlayer, "tradeInFactor") == sPlayer->tradeInFactor());
   }
 }

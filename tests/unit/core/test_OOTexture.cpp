@@ -26,11 +26,11 @@
 #include <vector>
 #include "EntityManualRefs.h"  // the tests' manual references
 
-#include "OOConcreteTexture.h"
-#include "OONullTexture.h"
-#include "OOTexture.h"
-#include "OOTextureGenerator.h"
-#include "OOTextureInternal.h"
+#include "ConcreteTexture.h"
+#include "NullTexture.h"
+#include "Texture.h"
+#include "TextureGenerator.h"
+#include "TextureInternal.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -44,7 +44,7 @@ static int gTestDeallocs = 0;
 
 // A texture as OOConcreteTexture is one: it caches itself under its key, and
 // uncaches itself.
-class TestTexture final : public OOTexture {
+class TestTexture final : public oo::Texture {
  public:
   explicit TestTexture(std::optional<std::string> key) : _key(std::move(key)) {}
   // Made, then cached under its key (an owner is needed first, as the game's
@@ -80,19 +80,19 @@ class TestTexture final : public OOTexture {
 };
 
 // A texture that overrides nothing: the root's own answers.
-class BareTexture final : public OOTexture {};
+class BareTexture final : public oo::Texture {};
 
 // What an autoreleased texture is: the C++ texture, kept until the current
 // autorelease scope drains (oo::autorelease).
-static OOTexture* Autoreleased(const std::shared_ptr<OOTexture>& texture) {
+static oo::Texture* Autoreleased(const std::shared_ptr<oo::Texture>& texture) {
   if (texture == nullptr) return nullptr;
-  oo::autorelease(std::shared_ptr<OOTexture>(texture));
+  oo::autorelease(std::shared_ptr<oo::Texture>(texture));
   return texture.get();
 }
 
 // A generator that is never queued: enqueue() answers what the test says, and
 // counts.
-class TestGenerator : public OOTextureGenerator {
+class TestGenerator : public oo::TextureGenerator {
  public:
   std::optional<std::string> cacheKey() override { return _key; }
   bool enqueue() override {
@@ -118,7 +118,7 @@ std::vector<std::shared_ptr<TestGenerator>> gKeptGenerators;
 TestGenerator* MakeGenerator(const std::optional<std::string>& key,
                              bool accept) {
   const std::shared_ptr<TestGenerator> made = oo::makeShared<TestGenerator>();
-  if (!made->initWithPath(std::string("test generator"), OOTextureFlags::kNone)) return nullptr;
+  if (!made->initWithPath(std::string("test generator"), oo::TextureFlags::kNone)) return nullptr;
   gKeptGenerators.push_back(made);
   TestGenerator* generator = made.get();
   generator->_key = key;
@@ -131,7 +131,7 @@ TestGenerator* MakeGenerator(const std::optional<std::string>& key,
 void ClearCache() {
   {
     oo::AutoreleaseScope scope;
-    OOTexture::clearCache();
+    oo::Texture::clearCache();
   }
 }
 
@@ -140,8 +140,8 @@ bool SameSize(NSSize size, double width, double height) {
 }
 
 #ifndef NDEBUG
-bool Contains(const std::vector<std::shared_ptr<OOTexture>>& textures,
-              OOTexture* texture) {
+bool Contains(const std::vector<std::shared_ptr<oo::Texture>>& textures,
+              oo::Texture* texture) {
   return std::ranges::find(textures, texture, [](const auto& owner) {
            return owner.get();
          }) != textures.end();
@@ -153,12 +153,12 @@ bool Contains(const std::vector<std::shared_ptr<OOTexture>>& textures,
 OO_TEST(rootDefaults) {
   {
     oo::AutoreleaseScope pool;
-    OOTexture* bare = Autoreleased(oo::makeShared<BareTexture>());
+    oo::Texture* bare = Autoreleased(oo::makeShared<BareTexture>());
     OO_CHECK(bare->isFinishedLoading());
     OO_CHECK(!bare->cacheKey().has_value());
     OO_CHECK(!bare->isRectangleTexture() && !bare->isCubeMap());
     OO_CHECK(SameSize(bare->texCoordsScale(), 1, 1));
-    OO_CHECK(OOIsNullPixMap(bare->copyPixMapRepresentation()));
+    OO_CHECK(oo::IsNullPixMap(bare->copyPixMapRepresentation()));
     bare->ensureFinishedLoading();
 
     // The subclass responsibilities log and answer zero.
@@ -200,28 +200,28 @@ OO_TEST(cachesKeepAndForget) {
   ClearCache();
   const int deallocs = gTestDeallocs;
   TestTexture* texture = nullptr;
-  OOTexture* bare = nullptr;
+  oo::Texture* bare = nullptr;
   {
     oo::AutoreleaseScope pool;
     texture = MakeTexture(std::string("test:cache"));
     bare = oo::test::NewRetained<BareTexture>();
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:cache")) ==
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cache")) ==
              texture);
-    OO_CHECK(OOTexture::existingTextureForKey(std::nullopt) == nullptr);
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:none")) == nullptr);
+    OO_CHECK(oo::Texture::existingTextureForKey(std::nullopt) == nullptr);
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:none")) == nullptr);
   }
 
   // The recent textures keep it alive; the live textures find it.
   OO_CHECK(gTestDeallocs == deallocs);
-  OO_CHECK(OOTexture::existingTextureForKey(std::string("test:cache")) ==
+  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cache")) ==
            texture);
 #ifndef NDEBUG
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(Contains(OOTexture::cachedTexturesByAge(), texture));
-    OO_CHECK(!Contains(OOTexture::cachedTexturesByAge(),
+    OO_CHECK(Contains(oo::Texture::cachedTexturesByAge(), texture));
+    OO_CHECK(!Contains(oo::Texture::cachedTexturesByAge(),
                        bare));  // no key: not cached
-    const std::vector<std::shared_ptr<OOTexture>> all = OOTexture::allTextures();
+    const std::vector<std::shared_ptr<oo::Texture>> all = oo::Texture::allTextures();
     OO_CHECK(Contains(all, texture) && Contains(all, bare));
   }
 #endif
@@ -229,19 +229,19 @@ OO_TEST(cachesKeepAndForget) {
   // Clearing forgets both caches, and releases what only they kept.
   {
     oo::AutoreleaseScope scope;
-    OOTexture::clearCache();
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:cache")) ==
+    oo::Texture::clearCache();
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cache")) ==
              nullptr);
   }
   OO_CHECK(gTestDeallocs == deallocs + 1);
 #ifndef NDEBUG
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(OOTexture::cachedTexturesByAge().empty());
-    const std::vector<std::shared_ptr<OOTexture>> all = OOTexture::allTextures();
+    OO_CHECK(oo::Texture::cachedTexturesByAge().empty());
+    const std::vector<std::shared_ptr<oo::Texture>> all = oo::Texture::allTextures();
     OO_CHECK(Contains(all, bare));
     OO_CHECK(
-        std::none_of(all.begin(), all.end(), [](const std::shared_ptr<OOTexture>& t) {
+        std::none_of(all.begin(), all.end(), [](const std::shared_ptr<oo::Texture>& t) {
           return dynamic_cast<TestTexture*>(t.get()) != nullptr;
         }));
   }
@@ -255,54 +255,54 @@ OO_TEST(rebindAllTextures) {
     oo::AutoreleaseScope pool;
     TestTexture* cached = MakeTexture(std::string("test:rebind"));
     TestTexture* plain = MakeTexture(std::nullopt);
-    OOTexture::rebindAllTextures();
+    oo::Texture::rebindAllTextures();
     OO_CHECK(cached->_rebinds == 1 && plain->_rebinds == 1);
 
     // The recent textures are dropped; the live textures still find it while it
     // lives.
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:rebind")) ==
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:rebind")) ==
              cached);
 #ifndef NDEBUG
-    OO_CHECK(OOTexture::cachedTexturesByAge().empty());
+    OO_CHECK(oo::Texture::cachedTexturesByAge().empty());
 #endif
   }
   OO_CHECK(gTestDeallocs == deallocs + 2);
-  OO_CHECK(OOTexture::existingTextureForKey(std::string("test:rebind")) == nullptr);
+  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:rebind")) == nullptr);
 }
 
 OO_TEST(namedTextureFromTheCache) {
   OO_CHECK(OOTestGLContext());
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(OOTexture::textureWithName(std::nullopt, std::string("Textures"))
+    OO_CHECK(oo::Texture::textureWithName(std::nullopt, std::string("Textures"))
                  .get() == nullptr);
 
     // Linear filtering: no anisotropy and no LOD bias in the key, whatever the
     // extensions.
-    const std::string key = OOGenerateTextureCacheKey(
+    const std::string key = oo::GenerateTextureCacheKey(
         std::string("Textures"), "test.png",
-        OOTextureFlags::kMinFilterLinear | OOTextureFlags::kMagFilterLinear, 0.5f, -0.25f);
+        oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear, 0.5f, -0.25f);
     OO_CHECK(key == "Textures/test.png:0x0006/0/0");
     TestTexture* texture = MakeTexture(key);
 
-    OO_CHECK(OOTexture::textureWithName(
+    OO_CHECK(oo::Texture::textureWithName(
                  std::string("test.png"), std::string("Textures"),
-                 OOTextureFlags::kMinFilterLinear | OOTextureFlags::kMagFilterLinear |
-                     OOTextureFlags::kNoFNFMessage,
+                 oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear |
+                     oo::TextureFlags::kNoFNFMessage,
                  kOOTextureDefaultAnisotropy, kOOTextureDefaultLODBias)
                  .get() == texture);
-    OO_CHECK(OOTexture::textureWithConfiguration(oo::PList(oo::PList::Dict{
+    OO_CHECK(oo::Texture::textureWithConfiguration(oo::PList(oo::PList::Dict{
                  {"name", oo::PList("test.png")},
                  {"min_filter", oo::PList("linear")}})).get() == texture);
-    OO_CHECK(OOTexture::textureWithConfiguration(
+    OO_CHECK(oo::Texture::textureWithConfiguration(
                  oo::PList(oo::PList::Dict{{"name", oo::PList("test.png")}}),
-                 OOTextureFlags::kMinFilterLinear).get() == texture);
+                 oo::TextureFlags::kMinFilterLinear).get() == texture);
 
     // A specifier that names no texture.
-    OO_CHECK(OOTexture::textureWithConfiguration(oo::PList(
+    OO_CHECK(oo::Texture::textureWithConfiguration(oo::PList(
                  oo::PList::Dict{{"min_filter", oo::PList("linear")}})) == nullptr);
-    OO_CHECK(OOTexture::textureWithConfiguration(oo::PList(3.0)).get() == nullptr);
-    OO_CHECK(OOTexture::textureWithConfiguration(oo::PList()).get() == nullptr);
+    OO_CHECK(oo::Texture::textureWithConfiguration(oo::PList(3.0)).get() == nullptr);
+    OO_CHECK(oo::Texture::textureWithConfiguration(oo::PList()).get() == nullptr);
     ClearCache();
   }
 }
@@ -311,33 +311,33 @@ OO_TEST(texturesFromGenerators) {
   {
     oo::AutoreleaseScope pool;
     ClearCache();
-    OO_CHECK(OOTexture::textureWithGenerator(nullptr).get() == nullptr);
+    OO_CHECK(oo::Texture::textureWithGenerator(nullptr).get() == nullptr);
     TestGenerator* refusing = MakeGenerator(std::string("test:refused"), false);
-    OO_CHECK(OOTexture::textureWithGenerator(refusing).get() == nullptr &&
+    OO_CHECK(oo::Texture::textureWithGenerator(refusing).get() == nullptr &&
              refusing->_enqueues == 1);
 
     TestGenerator* generator = MakeGenerator(std::string("test:gen"), true);
-    OOTexture* first = Autoreleased(OOTexture::textureWithGenerator(generator));
-    OO_CHECK((dynamic_cast<OOConcreteTexture*>(first) != nullptr) &&
+    oo::Texture* first = Autoreleased(oo::Texture::textureWithGenerator(generator));
+    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(first) != nullptr) &&
              generator->_enqueues == 1);
     OO_CHECK(first->cacheKey() == std::optional<std::string>("test:gen"));
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:gen")) ==
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gen")) ==
              first);
 
     // Cached: the same texture, not queued again; unless the caller forces a
     // new one.
-    OO_CHECK(OOTexture::textureWithGenerator(generator).get() == first &&
+    OO_CHECK(oo::Texture::textureWithGenerator(generator).get() == first &&
              generator->_enqueues == 1);
-    OOTexture* second =
-        Autoreleased(OOTexture::textureWithGenerator(generator, true));
+    oo::Texture* second =
+        Autoreleased(oo::Texture::textureWithGenerator(generator, true));
     OO_CHECK(second != nullptr && second != first && generator->_enqueues == 2);
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:gen")) ==
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gen")) ==
              second);
 
     // No key: never cached.
     TestGenerator* uncached = MakeGenerator(std::nullopt, true);
-    OOTexture* a = Autoreleased(OOTexture::textureWithGenerator(uncached));
-    OOTexture* b = Autoreleased(OOTexture::textureWithGenerator(uncached));
+    oo::Texture* a = Autoreleased(oo::Texture::textureWithGenerator(uncached));
+    oo::Texture* b = Autoreleased(oo::Texture::textureWithGenerator(uncached));
     OO_CHECK(a != nullptr && b != nullptr && a != b && uncached->_enqueues == 2);
   }
 
@@ -345,7 +345,7 @@ OO_TEST(texturesFromGenerators) {
      the pool drained) uncached its key from the live textures, although the
      second texture had it by then.
   */
-  OO_CHECK(OOTexture::existingTextureForKey(std::string("test:gen")) == nullptr);
+  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gen")) == nullptr);
   ClearCache();
 }
 
@@ -353,9 +353,9 @@ OO_TEST(nullTexture) {
   OO_CHECK(OOTestGLContext());
   {
     oo::AutoreleaseScope pool;
-    OOTexture* none = OOTexture::nullTexture().get();
-    OO_CHECK(dynamic_cast<OONullTexture*>(none) != nullptr &&
-             none == OOTexture::nullTexture().get());
+    oo::Texture* none = oo::Texture::nullTexture().get();
+    OO_CHECK(dynamic_cast<oo::NullTexture*>(none) != nullptr &&
+             none == oo::Texture::nullTexture().get());
     OO_CHECK(SameSize(none->dimensions(), 0, 0) && !none->isMipMapped());
 #ifndef NDEBUG
     OO_CHECK(none->name() == std::optional<std::string>("<null texture>"));
@@ -382,7 +382,7 @@ OO_TEST(applyNone) {
   GLint bound = -1;
   glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound);
   OO_CHECK(bound == (GLint)name);
-  OOTexture::applyNone();
+  oo::Texture::applyNone();
   glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound);
   OO_CHECK(bound == 0);
   glDeleteTextures(1, &name);
@@ -393,7 +393,7 @@ OO_TEST(applyNone) {
 
 // A converted texture, as OOConcreteTexture is one: a C++ subclass, cached
 // under its key. Global, so it prints its name as a global class's.
-class TestCxxTexture final : public OOTexture {
+class TestCxxTexture final : public oo::Texture {
  public:
   explicit TestCxxTexture(std::optional<std::string> key)
       : _key(std::move(key)) {}
@@ -429,33 +429,33 @@ OO_TEST(cxxApi) {
     oo::AutoreleaseScope pool;
     // The factories answer the C++ texture, retained.
     OO_CHECK(
-        !OOTexture::textureWithName(std::nullopt, std::string("Textures")));
-    const std::shared_ptr<OOTexture> none = OOTexture::nullTexture();
-    OO_CHECK(dynamic_cast<OONullTexture*>(none.get()) != nullptr &&
-             none.get() == OOTexture::nullTexture().get());
+        !oo::Texture::textureWithName(std::nullopt, std::string("Textures")));
+    const std::shared_ptr<oo::Texture> none = oo::Texture::nullTexture();
+    OO_CHECK(dynamic_cast<oo::NullTexture*>(none.get()) != nullptr &&
+             none.get() == oo::Texture::nullTexture().get());
     TestGenerator* generator = MakeGenerator(std::string("test:cxxgen"), true);
-    const std::shared_ptr<OOTexture> generated =
-        OOTexture::textureWithGenerator(generator);
-    OO_CHECK((dynamic_cast<OOConcreteTexture*>(generated.get()) != nullptr));
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:cxxgen")) ==
+    const std::shared_ptr<oo::Texture> generated =
+        oo::Texture::textureWithGenerator(generator);
+    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(generated.get()) != nullptr));
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cxxgen")) ==
              generated.get());
-    OO_CHECK(OOTexture::textureWithGenerator(generator, false).get() ==
+    OO_CHECK(oo::Texture::textureWithGenerator(generator, false).get() ==
                  generated.get() &&
              generator->_enqueues == 1);
-    OO_CHECK(!OOTexture::textureWithConfiguration(oo::PList(3.0)));
-    OO_CHECK(OOTexture::existingTextureForKey(std::nullopt) == nullptr);
+    OO_CHECK(!oo::Texture::textureWithConfiguration(oo::PList(3.0)));
+    OO_CHECK(oo::Texture::existingTextureForKey(std::nullopt) == nullptr);
     ClearCache();
   }
 
   // The root's own answers.
-  const std::shared_ptr<OOTexture> root = oo::makeShared<OOTexture>();
+  const std::shared_ptr<oo::Texture> root = oo::makeShared<oo::Texture>();
   OO_CHECK(root->isFinishedLoading() && !root->cacheKey().has_value());
   OO_CHECK(SameSize(root->dimensions(), 0, 0) &&
            SameSize(root->originalDimensions(), 0, 0));
   OO_CHECK(SameSize(root->texCoordsScale(), 1, 1) && !root->isMipMapped() &&
            root->glTextureName() == 0);
   OO_CHECK(!root->isRectangleTexture() && !root->isCubeMap() &&
-           OOIsNullPixMap(root->copyPixMapRepresentation()));
+           oo::IsNullPixMap(root->copyPixMapRepresentation()));
   OO_CHECK(!root->descriptionComponents().has_value());
   root->apply();
   root->ensureFinishedLoading();
@@ -471,7 +471,7 @@ OO_TEST(cxxTextureBehindTheFacade) {
     oo::AutoreleaseScope pool;
     const std::shared_ptr<TestCxxTexture> texture =
         TestCxxTexture::make(std::string("test:cxx"));
-    OOTexture* facade = texture.get();  // what the callers hold
+    oo::Texture* facade = texture.get();  // what the callers hold
 
     // The callers' calls reach the C++ overrides, and the root's defaults.
     OO_CHECK(SameSize(facade->dimensions(), 16, 2) &&
@@ -489,19 +489,19 @@ OO_TEST(cxxTextureBehindTheFacade) {
              text.ends_with(">{cxx}"));
 
     // The caches hold it by key; a graphics reset reaches it.
-    OO_CHECK(OOTexture::existingTextureForKey(std::string("test:cxx")) ==
+    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cxx")) ==
              facade);
-    OOTexture::rebindAllTextures();
+    oo::Texture::rebindAllTextures();
     OO_CHECK(texture->rebinds == 1);
 #ifndef NDEBUG
     {
       oo::AutoreleaseScope pool;
-      OO_CHECK(Contains(OOTexture::allTextures(), facade));
+      OO_CHECK(Contains(oo::Texture::allTextures(), facade));
     }
 #endif
   }
   ClearCache();
-  OO_CHECK(OOTexture::existingTextureForKey(std::string("test:cxx")) ==
+  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cxx")) ==
            nullptr);  // destroyed: uncached
   OO_CHECK(gTestDeallocs == deallocs);
 }
@@ -528,16 +528,16 @@ OO_TEST(clearCacheReleasesAtTheNearestScopesDrain) {
     const std::size_t outerPending = outer.pendingCount();
     {
       oo::AutoreleaseScope nearest;
-      OOTexture::clearCache();
+      oo::Texture::clearCache();
       OO_CHECK(nearest.pendingCount() ==
                1);  // the old cache, waiting for the drain
       OO_CHECK(outer.pendingCount() == outerPending);
       OO_CHECK(gTestDeallocs == deallocs);  // no earlier than the drain
-      OO_CHECK(OOTexture::existingTextureForKey(std::string("test:drain")) ==
+      OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:drain")) ==
                nullptr);  // forgotten at once
 
       // With no recent textures left, a second clear hands nothing over.
-      OOTexture::clearCache();
+      oo::Texture::clearCache();
       OO_CHECK(nearest.pendingCount() == 1);
     }
     OO_CHECK(gTestDeallocs ==

@@ -920,7 +920,7 @@ std::optional<std::string> Entity::descriptionForObjDump() {
                      isVisible() ? "yes" : "no");
 }
 
-std::vector<std::shared_ptr<OOTexture>> Entity::allTextures() { return {}; }
+std::vector<std::shared_ptr<oo::Texture>> Entity::allTextures() { return {}; }
 #endif
 
 bool Entity::isVisible() {

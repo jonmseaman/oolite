@@ -32,8 +32,8 @@ MA 02110-1301, USA.
 #include "OOColor.h"
 #include "OOGraphicsResetManager.h"
 #include "OOMacroOpenGL.h"
-#include "OOTexture.h"
 #include "PlayerEntity.h"
+#include "Texture.h"
 #include "Universe.h"
 
 constexpr double PARTICLE_DISTANCE_SCALE_LOW = 12.0;
@@ -41,9 +41,9 @@ constexpr double PARTICLE_DISTANCE_SCALE_HIGH = 36.0;
 
 // The texture, made on first use and given up by a graphics reset. The holder
 // is never deleted, so exit(0) frees no texture after the GL context has gone.
-static std::shared_ptr<OOTexture>& BlobTexture() {
-  static std::shared_ptr<OOTexture>& texture =
-      *new std::shared_ptr<OOTexture>();
+static std::shared_ptr<oo::Texture>& BlobTexture() {
+  static std::shared_ptr<oo::Texture>& texture =
+      *new std::shared_ptr<oo::Texture>();
   return texture;
 }
 
@@ -190,7 +190,7 @@ void oo::LightParticleEntity::drawImmediate(bool /*immediate*/,
   if (viewDir != oo::ViewID::kGUIDisplay)
     OOGLMultModelView(
         (PLAYER != nullptr ? PLAYER->drawRotationMatrix() : OOMatrix{}));
-  if (OOTexture* blob = texture())
+  if (oo::Texture* blob = texture())
     blob->apply();  // a message to nil did nothing
 
   /*	NOTE: nominal diameter is actual radius, because of the black border
@@ -308,23 +308,23 @@ void oo::LightParticleEntity::drawImmediate(bool /*immediate*/,
   OOVerifyOpenGLState();
 }
 
-OOTexture* oo::LightParticleEntity::texture() {
+oo::Texture* oo::LightParticleEntity::texture() {
   return oo::LightParticleEntity::defaultParticleTexture();
 }
 
 void oo::LightParticleEntity::setUpTexture() {
   if (BlobTexture() == nullptr) {
-    BlobTexture() = (OOTexture::textureWithName(
+    BlobTexture() = (oo::Texture::textureWithName(
         "oolite-particle-blur.png", "Textures",
-        OOTextureFlags::kMinFilterMipMap | OOTextureFlags::kMagFilterLinear |
-            OOTextureFlags::kAlphaMask,
+        oo::TextureFlags::kMinFilterMipMap |
+            oo::TextureFlags::kMagFilterLinear | oo::TextureFlags::kAlphaMask,
         kOOTextureDefaultAnisotropy / 2.0, 0.0));
     OOGraphicsResetManager::sharedManager()->registerCxxClient(
         new BlobTextureResetClient);
   }
 }
 
-OOTexture* oo::LightParticleEntity::defaultParticleTexture() {
+oo::Texture* oo::LightParticleEntity::defaultParticleTexture() {
   if (BlobTexture() == nullptr) setUpTexture();
   return BlobTexture().get();
 }
@@ -336,8 +336,9 @@ bool oo::LightParticleEntity::isEffect() { return true; }
 bool oo::LightParticleEntity::canCollide() { return false; }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-std::vector<std::shared_ptr<OOTexture>> oo::LightParticleEntity::allTextures() {
-  std::vector<std::shared_ptr<OOTexture>> result;
+std::vector<std::shared_ptr<oo::Texture>>
+oo::LightParticleEntity::allTextures() {
+  std::vector<std::shared_ptr<oo::Texture>> result;
   result.emplace_back(oo::share(texture()));
   return result;
 }

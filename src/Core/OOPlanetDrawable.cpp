@@ -33,9 +33,9 @@
 #include "OOMacroOpenGL.h"
 #include "OOOpenGL.h"
 #include "OOPlanetData.h"
-#include "OOSingleTextureMaterial.h"
-#include "OOTexture.h"  // allTextures() destroys std::shared_ptr<OOTexture>s
+#include "SingleTextureMaterial.h"
 #include "StellarBody.h"
+#include "Texture.h"  // allTextures() destroys std::shared_ptr<OOTexture>s
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 
@@ -97,15 +97,15 @@ std::shared_ptr<OOPlanetDrawable> OOPlanetDrawable::copy() {
   return copy;
 }
 
-OOMaterial* OOPlanetDrawable::material() { return _material.get(); }
+oo::Material* OOPlanetDrawable::material() { return _material.get(); }
 
-void OOPlanetDrawable::setMaterial(OOMaterial* material) {
-  OOMaterialAutorelease(std::move(_material));  // [_material autorelease]
+void OOPlanetDrawable::setMaterial(oo::Material* material) {
+  oo::MaterialAutorelease(std::move(_material));  // [_material autorelease]
   _material = oo::share(material);
 }
 
 std::optional<std::string> OOPlanetDrawable::textureName() {
-  OOMaterial* material = _material.get();
+  oo::Material* material = _material.get();
   return material != nullptr ? material->name() : std::nullopt;
 }
 
@@ -119,7 +119,7 @@ void OOPlanetDrawable::setTextureName(const std::string& textureName) {
                                    {"cube_map", oo::PList("yes")}})}});
     // [_material release], then [[OOSingleTextureMaterial alloc]
     // initWithName:configuration:]: the factory's material (null for none).
-    _material = OOSingleTextureMaterial::materialWithName(textureName, spec);
+    _material = oo::SingleTextureMaterial::materialWithName(textureName, spec);
   }
 }
 
@@ -198,7 +198,7 @@ void OOPlanetDrawable::renderTranslucentPartsOnOpaquePass() {
 
 void OOPlanetDrawable::renderCommonParts() {
   const OOPlanetDataLevel* data = &kPlanetData[_lod];
-  OOMaterial* material =
+  oo::Material* material =
       _material.get();  // messages to nil did nothing and answered NO
 
   OO_ENTER_OPENGL();
@@ -266,7 +266,7 @@ void OOPlanetDrawable::renderCommonParts() {
   if (oo::DebugFlagIsOn(oo::DebugFlags::kDrawNormals)) debugDrawNormals();
 #endif
 
-  OOMaterial::applyNone();
+  oo::Material::applyNone();
   OOGL(glPopAttrib());
 
   OOGL(glDisableClientState(GL_TEXTURE_COORD_ARRAY));
@@ -289,7 +289,7 @@ BoundingBox OOPlanetDrawable::boundingBox() {
 }
 
 void OOPlanetDrawable::setBindingTarget(Entity* target) {
-  if (OOMaterial* material = _material.get())
+  if (oo::Material* material = _material.get())
     material->setBindingTarget(target);
 }
 
@@ -359,10 +359,10 @@ void OOPlanetDrawable::debugDrawNormals() {
 #endif
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-std::vector<std::shared_ptr<OOTexture>> OOPlanetDrawable::allTextures() {
-  OOMaterial* material = this->material();
+std::vector<std::shared_ptr<oo::Texture>> OOPlanetDrawable::allTextures() {
+  oo::Material* material = this->material();
   return material != nullptr ? material->allTextures()
-                             : std::vector<std::shared_ptr<OOTexture>>();
+                             : std::vector<std::shared_ptr<oo::Texture>>();
 }
 
 #endif

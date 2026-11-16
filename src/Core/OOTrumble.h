@@ -37,7 +37,13 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 
 class AI;  // AI.h
-class OOTexture;
+
+namespace oo {
+
+class Texture;
+
+}  // namespace oo
+
 class PlayerEntity;
 class OOSound;
 
@@ -193,7 +199,7 @@ class OOTrumble : public oo::Object {
   trumble_eyes eyeFrame = {};     // which eye position - determines what part
                                   // of the texture to display
   //
-  std::shared_ptr<OOTexture> texture;
+  std::shared_ptr<oo::Texture> texture;
   //
   GLfloat saved_float1 = {}, saved_float2 = {};
   //

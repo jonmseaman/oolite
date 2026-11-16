@@ -24,8 +24,8 @@
 #include "CheckShipDataPListVerifierStage.h"
 #include "OXPVerifierStage.h"
 #include "PListSchemaVerifier.h"
-#include "OOPixMap.h"
-#include "OOTextureLoader.h"
+#include "PixMap.h"
+#include "TextureLoader.h"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListParsing.hpp"
@@ -75,11 +75,16 @@ oo::PList ResourceManager::whitelistDictionary() { return oo::PList(); }
 
 // The texture stage (linked for the intermediate class) loads through these; no
 // ship here names a texture.
-void OOFreePixMap(OOPixMap* ioPixMap) { *ioPixMap = OOPixMap{}; }
+namespace oo {
+
+void FreePixMap(PixMap* ioPixMap) { *ioPixMap = PixMap{}; }
+
+}  // namespace oo
+
 
 // The loader factory, as the stand-in answers it (nil).
-std::shared_ptr<OOTextureLoader> OOTextureLoader::loaderWithPath(
-    const std::optional<std::string>& /*path*/, OOTextureFlags /*options*/) {
+std::shared_ptr<oo::TextureLoader> oo::TextureLoader::loaderWithPath(
+    const std::optional<std::string>& /*path*/, oo::TextureFlags /*options*/) {
   return nullptr;
 }
 

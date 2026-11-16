@@ -32,7 +32,7 @@ static unsigned sRebinds = 0;
 static std::vector<int>
     sOrder;  // client tags, in the order they were told, texture rebinds as 0
 
-#include "OOTexture.h"
+#include "Texture.h"
 #include "ResourceManager.h"
 
 // C++ definitions of the ResourceManager statics the code under test calls,
@@ -70,7 +70,7 @@ extern const char* const kOOLogException;
 const char* const kOOLogException = "exception";
 
 // The C++ OOTexture's static member.
-void OOTexture::rebindAllTextures() {
+void oo::Texture::rebindAllTextures() {
   sRebinds++;
   sOrder.push_back(0);
 }

@@ -38,23 +38,24 @@ SOFTWARE.
 
 #define kPiF (3.14159265358979323846264338327950288f)
 
-OOPixMap OOConvertCubeMapToLatLong(OOPixMap sourcePixMap,
-                                   OOPixMapDimension height,
-                                   bool leaveSpaceForMipMaps) {
-  if (!OOIsValidPixMap(sourcePixMap) || sourcePixMap.format != kOOPixMapRGBA ||
+oo::PixMap OOConvertCubeMapToLatLong(oo::PixMap sourcePixMap,
+                                     oo::PixMapDimension height,
+                                     bool leaveSpaceForMipMaps) {
+  if (!oo::IsValidPixMap(sourcePixMap) ||
+      sourcePixMap.format != oo::kPixMapRGBA ||
       sourcePixMap.height != sourcePixMap.width * 6) {
-    return kOONullPixMap;
+    return oo::kNullPixMap;
   }
 
   OOCParameterAssert(height > 0);
 
   height *= 2;
-  OOPixMapDimension width = height * 2;
-  OOPixMap outPixMap =
-      OOAllocatePixMap(width, height, static_cast<OOPixMapFormat>(4), 0, 0);
-  if (!OOIsValidPixMap(outPixMap)) return kOONullPixMap;
+  oo::PixMapDimension width = height * 2;
+  oo::PixMap outPixMap =
+      oo::AllocatePixMap(width, height, static_cast<oo::PixMapFormat>(4), 0, 0);
+  if (!oo::IsValidPixMap(outPixMap)) return oo::kNullPixMap;
 
-  OOPixMapDimension x, y;
+  oo::PixMapDimension x, y;
   uint32_t* pixel = static_cast<uint32_t*>(outPixMap.pixels);
   float fheight = static_cast<float>(height);
   float rheight = 1.0f / fheight;
@@ -94,7 +95,7 @@ OOPixMap OOConvertCubeMapToLatLong(OOPixMap sourcePixMap,
       float az = fabs(cz);
 
       // Y offset of start of this face in image.
-      OOPixMapDimension yOffset;
+      oo::PixMapDimension yOffset;
 
       // Coordinates within selected face.
       float faceX, faceY, r;
@@ -134,10 +135,10 @@ OOPixMap OOConvertCubeMapToLatLong(OOPixMap sourcePixMap,
 
       // Scale coordinates.
       r = 1.0f / r;
-      OOPixMapDimension ix =
-          static_cast<OOPixMapDimension>((faceX * r + 1.0f) * halfSize);
-      OOPixMapDimension iy =
-          static_cast<OOPixMapDimension>((faceY * r + 1.0f) * halfSize);
+      oo::PixMapDimension ix =
+          static_cast<oo::PixMapDimension>((faceX * r + 1.0f) * halfSize);
+      oo::PixMapDimension iy =
+          static_cast<oo::PixMapDimension>((faceY * r + 1.0f) * halfSize);
 
 #ifndef NDEBUG
       assert(ix < sourcePixMap.width && iy < sourcePixMap.width);

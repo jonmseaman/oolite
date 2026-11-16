@@ -44,8 +44,13 @@ MA 02110-1301, USA.
    (nullopt where they were nil).
 */
 
-class OOMaterial;
-class OOTexture;
+namespace oo {
+
+class Material;
+class Texture;
+
+}  // namespace oo
+
 class ShipEntity;
 class OOPlanetDrawable;  // this class is its one caller
 
@@ -87,9 +92,9 @@ class PlanetEntity : public Entity, public ::OOGraphicsResetClient {
       const std::optional<std::string>& fileName);  // nullopt: none
 
   // The drawables' materials, as the drawables keep them.
-  OOMaterial* material();
-  OOMaterial* atmosphereMaterial();
-  OOMaterial* atmosphereShaderMaterial();
+  oo::Material* material();
+  oo::Material* atmosphereMaterial();
+  oo::Material* atmosphereShaderMaterial();
 
   bool isFinishedLoading();
 

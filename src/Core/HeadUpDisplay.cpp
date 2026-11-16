@@ -52,7 +52,6 @@ MA 02110-1301, USA.
 #include "OOPolygonSprite.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
-#include "OOTexture.h"
 #include "OOTextureSprite.h"
 #include "OOTrumble.h"
 #include "PlanetEntity.h"
@@ -60,6 +59,7 @@ MA 02110-1301, USA.
 #include "QuiriumCascadeEntity.h"
 #include "ResourceManager.h"
 #include "SunEntity.h"
+#include "Texture.h"
 #include "Universe.h"
 #include "VisualEffectEntity.h"
 #include "oofnd/Log.hpp"
@@ -288,9 +288,9 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
 
 // The text engine's font texture, made by the first text drawn. The holder is
 // never deleted, so exit(0) frees no texture after the GL context has gone.
-static std::shared_ptr<OOTexture>& FontTexture() {
-  static std::shared_ptr<OOTexture>& texture =
-      *new std::shared_ptr<OOTexture>();
+static std::shared_ptr<oo::Texture>& FontTexture() {
+  static std::shared_ptr<oo::Texture>& texture =
+      *new std::shared_ptr<oo::Texture>();
   return texture;
 }
 
@@ -305,9 +305,9 @@ static std::unique_ptr<OOEncodingConverter>& EncodingConverter() {
 
 static std::string distance_unit;
 
-constexpr OOTextureFlags kFontTextureOptions =
-    OOTextureFlags::kMinFilterMipMap | OOTextureFlags::kMagFilterLinear |
-    OOTextureFlags::kNoShrink | OOTextureFlags::kAlphaMask;
+constexpr oo::TextureFlags kFontTextureOptions =
+    oo::TextureFlags::kMinFilterMipMap | oo::TextureFlags::kMagFilterLinear |
+    oo::TextureFlags::kNoShrink | oo::TextureFlags::kAlphaMask;
 
 static const GLfloat red_color[4] = {1.0, 0.0, 0.0, 1.0};
 static const GLfloat redplus_color[4] = {1.0, 0.0, 0.5, 1.0};
@@ -767,7 +767,7 @@ std::optional<std::string> HeadUpDisplay::getDeferredHudName() {
 
 void HeadUpDisplay::addLegend(const oo::PList& info) {
   std::optional<std::string> imageName;
-  std::shared_ptr<OOTexture> texture;
+  std::shared_ptr<oo::Texture> texture;
   NSSize imageSize;
   std::shared_ptr<OOTextureSprite> legendSprite;
   struct CachedInfo cache;
@@ -777,9 +777,9 @@ void HeadUpDisplay::addLegend(const oo::PList& info) {
 
   imageName = OptionalStringIn(info, kImageKey);
   if (imageName.has_value()) {
-    texture = OOTexture::textureWithName(
+    texture = oo::Texture::textureWithName(
         imageName, std::string("Images"),
-        OOTextureFlags::kDefaultOptions | OOTextureFlags::kNoShrink,
+        oo::TextureFlags::kDefaultOptions | oo::TextureFlags::kNoShrink,
         kOOTextureDefaultAnisotropy, kOOTextureDefaultLODBias);
     if (texture == nullptr) {
       OO_LOG_ERR(kOOLogFileNotFound,
@@ -1822,7 +1822,7 @@ void HeadUpDisplay::drawScannerZoomIndicator(const oo::PList& info) {
                     siz);
   OOGLEND();
 
-  OOTexture::applyNone();
+  oo::Texture::applyNone();
   OOGL(glDisable(GL_TEXTURE_2D));
 }
 
@@ -2312,9 +2312,9 @@ void HeadUpDisplay::drawCustomImage(const oo::PList& info) {
     return;
   }
 
-  std::shared_ptr<OOTexture> texture = OOTexture::textureWithName(
+  std::shared_ptr<oo::Texture> texture = oo::Texture::textureWithName(
       textureFile, std::string("Images"),
-      OOTextureFlags::kDefaultOptions | OOTextureFlags::kNoShrink,
+      oo::TextureFlags::kDefaultOptions | oo::TextureFlags::kNoShrink,
       kOOTextureDefaultAnisotropy, kOOTextureDefaultLODBias);
   if (texture == nullptr) {
     OO_LOG_ERR(kOOLogFileNotFound,
@@ -4390,7 +4390,7 @@ static void InitTextEngine() {
       "oolite-font.plist", std::string("Config"), false);
 
   texName = fontSpec.get<std::string>("texture", "oolite-font.png");
-  FontTexture() = OOTexture::textureWithName(
+  FontTexture() = oo::Texture::textureWithName(
       texName, std::string("Textures"), kFontTextureOptions, 0.0f,
       -0.75f);  // retained, as -retain kept it
 
@@ -4421,7 +4421,7 @@ oo::Data ConvertedString(const std::string& text) {
 
 void OOHUDResetTextEngine() {
   // DESTROY(): cleared before the release
-  const std::shared_ptr<OOTexture> fontTexture = std::move(FontTexture());
+  const std::shared_ptr<oo::Texture> fontTexture = std::move(FontTexture());
   // DESTROY(): cleared before the release
   const std::unique_ptr<OOEncodingConverter> encodingConverter =
       std::move(EncodingConverter());
@@ -4555,7 +4555,7 @@ void OODrawStringQuadsAligned(const std::string& text, GLfloat x, GLfloat y,
 void OOStopDrawingStrings() {
   OOGLEND();
 
-  OOTexture::applyNone();
+  oo::Texture::applyNone();
   OOGL(glDisable(GL_TEXTURE_2D));
 
   OOVerifyOpenGLState();
@@ -4655,7 +4655,7 @@ void OODrawPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y,
 
   (void)cx;  // Suppress "value not used" analyzer issue.
 
-  OOTexture::applyNone();
+  oo::Texture::applyNone();
   OOGL(glDisable(GL_TEXTURE_2D));
 
   OOVerifyOpenGLState();

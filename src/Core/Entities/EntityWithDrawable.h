@@ -43,7 +43,7 @@ class EntityWithDrawable : public Entity {
   void drawImmediate(bool immediate, bool translucent) override;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  std::vector<std::shared_ptr<OOTexture>> allTextures() override;
+  std::vector<std::shared_ptr<oo::Texture>> allTextures() override;
 #endif
 
  private:

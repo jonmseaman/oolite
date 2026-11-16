@@ -31,7 +31,7 @@ SOFTWARE.
 #include <vector>
 
 #include "OOOpenGLExtensionManager.h"
-#include "OOTexture.h"
+#include "Texture.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/objc/Exception.h"
 
@@ -75,7 +75,7 @@ void OOGraphicsResetManager::resetGraphicsState() {
   oo::log::indentIf("rendering.reset.start");
 
   OOOpenGLExtensionManager::sharedManager()->reset();
-  OOTexture::rebindAllTextures();
+  oo::Texture::rebindAllTextures();
 
   // A copy, so a client may register or unregister during the reset (one
   // unregistered by an earlier client is skipped). Unordered, as the Foundation

@@ -26,7 +26,7 @@
 
 #include "ExplosionCloudEntity.h"
 #include "ParticleSystem.h"
-#include "OOTexture.h"
+#include "Texture.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "legacy_random.h"
@@ -87,12 +87,12 @@ TestUniverse* sUniverse = nullptr;
 // The texture loader's stand-in.
 std::optional<std::string> sTextureName;
 bool sTextureFound = true;
-OOTexture* sTexture = nullptr;  // never released
+oo::Texture* sTexture = nullptr;  // never released
 
 // OOTexture::nameFactory, the test-only loader hook.
-std::shared_ptr<OOTexture> LoadTexture(const std::optional<std::string>& name,
+std::shared_ptr<oo::Texture> LoadTexture(const std::optional<std::string>& name,
                                const std::optional<std::string>&,
-                               OOTextureFlags, GLfloat, GLfloat) {
+                               oo::TextureFlags, GLfloat, GLfloat) {
   sTextureName = name;
   return oo::share(sTextureFound ? sTexture : nullptr);
 }
@@ -100,8 +100,8 @@ std::shared_ptr<OOTexture> LoadTexture(const std::optional<std::string>& name,
 void SetUp() {
   if (sUniverse == nullptr) {
     sUniverse = new TestUniverse();                 // never released
-    sTexture = oo::test::NewRetained<OOTexture>();  // never released
-    OOTexture::nameFactory = &LoadTexture;
+    sTexture = oo::test::NewRetained<oo::Texture>();  // never released
+    oo::Texture::nameFactory = &LoadTexture;
   }
   sUniverse->_removed = nullptr;
   gSharedUniverse = sUniverse;

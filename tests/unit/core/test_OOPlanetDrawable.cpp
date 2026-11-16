@@ -19,7 +19,7 @@
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "MyOpenGLView.h"  // the game view is C++
-#include "OOBasicMaterial.h"
+#include "BasicMaterial.h"
 #include "OOPlanetData.h"
 #include "OOPlanetDrawable.h"
 #include "Universe.h"
@@ -73,11 +73,11 @@ const float kGranularity = (float)(kOOPlanetDataLevels - 1);
 float Level(float lod) { return roundf(lod * kGranularity) / kGranularity; }
 
 // A material kept until the pool drains.
-OOMaterial* NamedMaterial(const char* name) {
-  std::shared_ptr<OOMaterial> material =
-      OOBasicMaterial::materialWithName(std::string(name), oo::PList());
-  OOMaterial* result = material.get();
-  OOMaterialAutorelease(std::move(material));
+oo::Material* NamedMaterial(const char* name) {
+  std::shared_ptr<oo::Material> material =
+      oo::BasicMaterial::materialWithName(std::string(name), oo::PList());
+  oo::Material* result = material.get();
+  oo::MaterialAutorelease(std::move(material));
   return result;
 }
 
@@ -104,8 +104,8 @@ bool HasTranslucentParts(const Planet& d) { return d->hasTranslucentParts(); }
 GLfloat CollisionRadius(const Planet& d) { return d->collisionRadius(); }
 GLfloat MaxDrawDistance(const Planet& d) { return d->maxDrawDistance(); }
 BoundingBox Bounds(const Planet& d) { return d->boundingBox(); }
-OOMaterial* Material(const Planet& d) { return d->material(); }
-void SetMaterial(const Planet& d, OOMaterial* material) {
+oo::Material* Material(const Planet& d) { return d->material(); }
+void SetMaterial(const Planet& d, oo::Material* material) {
   d->setMaterial(material);
 }
 std::optional<std::string> TextureName(const Planet& d) {
@@ -223,7 +223,7 @@ OO_TEST(material) {
   {
     SetUp();
     Planet planet = NewPlanet();
-    OOMaterial* material = NamedMaterial("rock");
+    oo::Material* material = NamedMaterial("rock");
     SetMaterial(planet, material);
     OO_CHECK(Material(planet) == material);
     OO_CHECK(TextureName(planet) == std::optional<std::string>("rock"));
@@ -242,7 +242,7 @@ OO_TEST(copy) {
   {
     SetUp();
     Planet atmosphere = AtmosphereWithRadius(321.0f);
-    OOMaterial* material = NamedMaterial("air");
+    oo::Material* material = NamedMaterial("air");
     SetMaterial(atmosphere, material);
     SetLevelOfDetail(atmosphere, 0.2f);
 

@@ -34,7 +34,7 @@
 #include <string>
 
 #include "Entity.h"
-#include "OOBasicMaterial.h"
+#include "BasicMaterial.h"
 #include "OOCacheManager.h"
 #include "OOGraphicsResetManager.h"
 #include "OOMesh.h"
@@ -275,14 +275,14 @@ OO_TEST(caches) {
 OO_TEST(placeholderMaterial) {
   SetUp();
   {
-    const std::shared_ptr<OOMaterial> placeholder = OOMesh::placeholderMaterial();
+    const std::shared_ptr<oo::Material> placeholder = OOMesh::placeholderMaterial();
     OO_CHECK(placeholder != nullptr);
-    OO_CHECK(dynamic_cast<OOBasicMaterial*>(placeholder.get()) != nullptr);
+    OO_CHECK(dynamic_cast<oo::BasicMaterial*>(placeholder.get()) != nullptr);
     OO_CHECK_EQ(placeholder->name().value_or("<none>"), "/placeholder/");
     OO_CHECK(OOMesh::placeholderMaterial() == placeholder);
   }
   {
-    const std::shared_ptr<OOMaterial> again = OOMesh::placeholderMaterial();
+    const std::shared_ptr<oo::Material> again = OOMesh::placeholderMaterial();
     OO_CHECK(again != nullptr);
     OO_CHECK_EQ(again->name().value_or("<none>"), "/placeholder/");
   }

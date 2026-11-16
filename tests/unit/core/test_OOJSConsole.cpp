@@ -353,7 +353,7 @@ Entity *oo::WithObject(Entity *entity)  { if (entity != nullptr)  std::abort(); 
 // them; a call is a test bug.
 
 #if OO_DEBUG
-#include "OOShaderUniformMethodType.h"
+#include "ShaderUniformMethodType.h"
 
 class Entity;
 

@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "OOLogging.h"
-#include "OOMaterial.h"
+#include "Material.h"
 #include "oo_test.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
@@ -39,12 +39,12 @@ void OOLogGenericParameterErrorForFunction(const char* inFunction) {
 }
 
 // Every unapplyWithNext() sent to a test material, in order: (material, next).
-static std::vector<std::pair<OOMaterial*, OOMaterial*>> gUnapplied;
+static std::vector<std::pair<oo::Material*, oo::Material*>> gUnapplied;
 static int gDeallocs = 0;
 
 // A C++ subclass of the root, named so that its
 // description is unchanged.
-class TestObjCMaterial : public OOMaterial {
+class TestObjCMaterial : public oo::Material {
  public:
   ~TestObjCMaterial() override {
     willDealloc();
@@ -58,9 +58,9 @@ class TestObjCMaterial : public OOMaterial {
     return _applies;
   }
 
-  void unapplyWithNext(OOMaterial* next) override {
+  void unapplyWithNext(oo::Material* next) override {
     gUnapplied.emplace_back(this, next);
-    OOMaterial::unapplyWithNext(next);
+    oo::Material::unapplyWithNext(next);
   }
 
   std::string _testName;
@@ -84,7 +84,7 @@ class TestSuperCallingMaterial : public TestObjCMaterial {
 // would.
 static int gCxxDestroyed = 0;
 
-class TestCxxMaterial : public OOMaterial {
+class TestCxxMaterial : public oo::Material {
  public:
   explicit TestCxxMaterial(std::string testName)
       : _testName(std::move(testName)) {}
@@ -96,12 +96,12 @@ class TestCxxMaterial : public OOMaterial {
     doApplies++;
     return true;
   }
-  void unapplyWithNext(OOMaterial* next) override {
+  void unapplyWithNext(oo::Material* next) override {
     unappliedNext.push_back(next);
   }
 
   int doApplies = 0;
-  std::vector<OOMaterial*> unappliedNext;
+  std::vector<oo::Material*> unappliedNext;
 
  private:
   std::string _testName;
@@ -117,9 +117,9 @@ std::shared_ptr<TestObjCMaterial> MakeMaterial(const char* name, bool applies = 
 }
 
 bool Unapplied(
-    std::initializer_list<std::pair<OOMaterial*, OOMaterial*>> expected) {
+    std::initializer_list<std::pair<oo::Material*, oo::Material*>> expected) {
   const bool result =
-      std::vector<std::pair<OOMaterial*, OOMaterial*>>(expected) == gUnapplied;
+      std::vector<std::pair<oo::Material*, oo::Material*>>(expected) == gUnapplied;
   gUnapplied.clear();
   return result;
 }
@@ -128,7 +128,7 @@ bool Unapplied(
 
 OO_TEST(rootDefaults) {
   {
-    const std::shared_ptr<OOMaterial> material = oo::makeShared<OOMaterial>();
+    const std::shared_ptr<oo::Material> material = oo::makeShared<oo::Material>();
     const int parameterErrors = gParameterErrors,
               responsibilities = gSubclassResponsibilities;
     OO_CHECK(
@@ -147,12 +147,12 @@ OO_TEST(rootDefaults) {
 #ifndef NDEBUG
     OO_CHECK(material->allTextures().empty());
 #endif
-    OOMaterial::setUp();
+    oo::Material::setUp();
 
     // The root cannot apply: doApply() answers false, so there is still no
     // current material.
     material->apply();
-    OO_CHECK(OOMaterial::current() == nullptr);
+    OO_CHECK(oo::Material::current() == nullptr);
   }
 }
 
@@ -161,25 +161,25 @@ OO_TEST(applyMakesCurrent) {
     const std::shared_ptr<TestObjCMaterial> a = MakeMaterial("A"),
                                     b = MakeMaterial("B");
     gUnapplied.clear();
-    OO_CHECK(OOMaterial::current() == nullptr);
+    OO_CHECK(oo::Material::current() == nullptr);
 
     a->apply();
-    OO_CHECK(OOMaterial::current().get() == a.get() && a->_doApplies == 1);
+    OO_CHECK(oo::Material::current().get() == a.get() && a->_doApplies == 1);
     OO_CHECK(Unapplied({}));
 
     b->apply();  // the previous material is told what comes next
-    OO_CHECK(OOMaterial::current().get() == b.get());
+    OO_CHECK(oo::Material::current().get() == b.get());
     OO_CHECK(Unapplied({{a.get(), b.get()}}));
 
     b->apply();  // again: told itself
-    OO_CHECK(OOMaterial::current().get() == b.get() && b->_doApplies == 2);
+    OO_CHECK(oo::Material::current().get() == b.get() && b->_doApplies == 2);
     OO_CHECK(Unapplied({{b.get(), b.get()}}));
 
-    OOMaterial::applyNone();
-    OO_CHECK(OOMaterial::current() == nullptr);
+    oo::Material::applyNone();
+    OO_CHECK(oo::Material::current() == nullptr);
     OO_CHECK(Unapplied({{b.get(), nullptr}}));
 
-    OOMaterial::applyNone();  // nothing current: nothing told
+    oo::Material::applyNone();  // nothing current: nothing told
     OO_CHECK(Unapplied({}));
   }
 }
@@ -191,9 +191,9 @@ OO_TEST(failedApplyLeavesNone) {
     a->apply();
     gUnapplied.clear();
     failing->apply();
-    OO_CHECK(OOMaterial::current() == nullptr && failing->_doApplies == 1);
+    OO_CHECK(oo::Material::current() == nullptr && failing->_doApplies == 1);
     OO_CHECK(Unapplied({{a.get(), failing.get()}}));
-    OOMaterial::applyNone();
+    oo::Material::applyNone();
     OO_CHECK(Unapplied({}));
   }
 }
@@ -209,10 +209,10 @@ OO_TEST(currentIsRetained) {
   // The maker's reference is gone; being current keeps it.
   OO_CHECK(gDeallocs == deallocs);
   {
-    OO_CHECK(OOMaterial::current().get() == material);
-    OO_CHECK(OOMaterial::current()->description().ends_with(">{\"Kept\"}"));
+    OO_CHECK(oo::Material::current().get() == material);
+    OO_CHECK(oo::Material::current()->description().ends_with(">{\"Kept\"}"));
     gUnapplied.clear();
-    OOMaterial::applyNone();
+    oo::Material::applyNone();
     OO_CHECK(Unapplied({{material, nullptr}}));
   }
   OO_CHECK(gDeallocs == deallocs + 1);
@@ -230,7 +230,7 @@ OO_TEST(willDeallocWhileCurrent) {
     // object was being deallocated).
     material->willDealloc();
     OO_CHECK(Unapplied({{material.get(), nullptr}}));
-    OO_CHECK(OOMaterial::current() == nullptr);
+    OO_CHECK(oo::Material::current() == nullptr);
     OO_CHECK(material.use_count() == retained);
     // The reference being current held stays in the holder willDealloc() moved
     // it to (never deleted; there is no manual release to give it back).
@@ -259,7 +259,7 @@ OO_TEST(description) {
     OO_CHECK(text.starts_with("<TestObjCMaterial 0x"));
     OO_CHECK(text.ends_with(">{\"Hull\"}"));
     OO_CHECK(
-        oo::makeShared<OOMaterial>()->description().ends_with(">{\"(null)\"}"));
+        oo::makeShared<oo::Material>()->description().ends_with(">{\"(null)\"}"));
   }
 }
 
@@ -275,10 +275,10 @@ OO_TEST(cxxMaterial) {
 
     material->apply();
     OO_CHECK(material->doApplies == 1);
-    OO_CHECK(OOMaterial::current().get() == material.get());
-    OOMaterial::applyNone();
-    OO_CHECK(material->unappliedNext == std::vector<OOMaterial*>{nullptr});
-    OO_CHECK(OOMaterial::current() == nullptr);
+    OO_CHECK(oo::Material::current().get() == material.get());
+    oo::Material::applyNone();
+    OO_CHECK(material->unappliedNext == std::vector<oo::Material*>{nullptr});
+    OO_CHECK(oo::Material::current() == nullptr);
 
     // Described with the C++ class's name, as [self class] named it.
     const std::string text = material->description();
@@ -298,9 +298,9 @@ OO_TEST(currentRetainsACxxMaterial) {
   }
   OO_CHECK(gCxxDestroyed == destroyed);
   {
-    OO_CHECK(OOMaterial::current()->name() ==
+    OO_CHECK(oo::Material::current()->name() ==
              std::optional<std::string>("Cxx"));
-    OOMaterial::applyNone();
+    oo::Material::applyNone();
   }
   OO_CHECK(gCxxDestroyed == destroyed + 1);
 }

@@ -39,11 +39,15 @@ SOFTWARE.
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include "OOOpenGL.h"
-#include "OOTextureFlags.h"
+#include "TextureFlags.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/objc/Object.h"
 
-class OOTexture;
+namespace oo {
+
+class Texture;
+
+}  // namespace oo
 
 class OOProbabilisticTextureManager : public oo::Object {
  public:
@@ -60,16 +64,16 @@ class OOProbabilisticTextureManager : public oo::Object {
           Null where no texture loads (-initWithPListName:... answered nil).
   */
   static std::shared_ptr<OOProbabilisticTextureManager> createWithPListName(
-      const std::string& plistName, OOTextureFlags options, GLfloat anisotropy,
-      GLfloat lodBias);
+      const std::string& plistName, oo::TextureFlags options,
+      GLfloat anisotropy, GLfloat lodBias);
 
   static std::shared_ptr<OOProbabilisticTextureManager> createWithPListName(
-      const std::string& plistName, OOTextureFlags options, GLfloat anisotropy,
-      GLfloat lodBias, RANROTSeed seed);
+      const std::string& plistName, oo::TextureFlags options,
+      GLfloat anisotropy, GLfloat lodBias, RANROTSeed seed);
 
   /*	Select a texture, weighted-randomly.
    */
-  OOTexture* selectTexture();
+  oo::Texture* selectTexture();
 
   unsigned textureCount();
 
@@ -87,11 +91,11 @@ class OOProbabilisticTextureManager : public oo::Object {
   OOProbabilisticTextureManager() =
       default;  // createWithPListName() runs initWithPListName()
 
-  bool initWithPListName(const std::string& plistName, OOTextureFlags options,
+  bool initWithPListName(const std::string& plistName, oo::TextureFlags options,
                          GLfloat anisotropy, GLfloat lodBias, RANROTSeed seed);
 
   unsigned _count = {};
-  std::vector<std::shared_ptr<OOTexture>> _textures;  // the first _count used
+  std::vector<std::shared_ptr<oo::Texture>> _textures;  // the first _count used
   std::vector<float> _prob;  // cumulative probability, per texture
   std::vector<int> _galaxy;  // the texture's galaxy, or -1 for all
   float _probMax = {};

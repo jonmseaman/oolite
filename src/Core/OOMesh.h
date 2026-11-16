@@ -55,7 +55,12 @@ class Entity;  // Entity.h: the shader binding target
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
-class OOMaterial;
+namespace oo {
+
+class Material;
+
+}  // namespace oo
+
 struct VertexFaceRef;  // OOMesh.cpp: the faces that use one vertex, while
                        // loading
 class OOMeshBuffer;  // OOMesh.cpp: one refcounted buffer (an oo::Data), shared
@@ -114,7 +119,7 @@ class OOMesh : public OODrawable, public OOGraphicsResetClient {
       const oo::PList& macros, Entity* object, float factor,
       bool cacheWriteable);
 
-  static std::shared_ptr<OOMaterial> placeholderMaterial();
+  static std::shared_ptr<oo::Material> placeholderMaterial();
 
   OOMesh();
   OOMesh(const OOMesh&) = default;  // -mutableCopyWithZone:'s copy: every
@@ -141,7 +146,7 @@ class OOMesh : public OODrawable, public OOGraphicsResetClient {
   std::optional<std::string> descriptionComponents() const override;
 #ifdef OO_DEBUG_MONITOR_ENABLED
   void dumpSelfState() override;
-  std::vector<std::shared_ptr<OOTexture>> allTextures() override;
+  std::vector<std::shared_ptr<oo::Texture>> allTextures() override;
   size_t totalSize() override;
 
   size_t objectSize() const override { return sizeof *this; }
@@ -194,7 +199,7 @@ class OOMesh : public OODrawable, public OOGraphicsResetClient {
 
   NSRange triangle_range[kOOMeshMaxMaterials] = {};
   std::string materialKeys[kOOMeshMaxMaterials];
-  std::shared_ptr<OOMaterial> materials[kOOMeshMaxMaterials];  // shared
+  std::shared_ptr<oo::Material> materials[kOOMeshMaxMaterials];  // shared
   GLuint displayList0 = {};
 
   // (named like the overridden getters, which a C++ member cannot be)

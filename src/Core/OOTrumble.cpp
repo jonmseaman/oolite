@@ -34,9 +34,9 @@ MA 02110-1301, USA.
 
 #include "OOMaths.h"
 #include "OOStringParsing.h"
-#include "OOTexture.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
+#include "Texture.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"
 
@@ -193,9 +193,9 @@ void OOTrumble::setupForPlayer(::PlayerEntity* p1,
   animationTime = 0.0;
   animationDuration = 1.5 + randf() * 3.0;  // time until next animation
   //
-  texture = OOTexture::textureWithName(
+  texture = oo::Texture::textureWithName(
       "trumblekit.png", "Textures",
-      OOTextureFlags::kDefaultOptions | OOTextureFlags::kNoShrink, 0.0f,
+      oo::TextureFlags::kDefaultOptions | oo::TextureFlags::kNoShrink, 0.0f,
       kOOTextureDefaultLODBias);
 
   InitTrumbleSounds();

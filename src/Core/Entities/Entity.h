@@ -54,7 +54,7 @@ MA 02110-1301, USA.
 
 class Entity;
 class Universe;
-#include "OOTexture.h"  // allTextures() answers std::shared_ptr<OOTexture>, which needs the class
+#include "Texture.h"  // allTextures() answers std::shared_ptr<OOTexture>, which needs the class
 
 namespace oo {
 
@@ -451,9 +451,15 @@ oo::ScanClass ScanClassFromString(const std::string& string);
    apply to this entity, or its type is not bindable (as the selector path
    failed).
 */
-struct OOShaderMemberBinding;  // OOShaderUniformMethodType.h
+namespace oo {
+
+struct ShaderMemberBinding;
+
+}  // namespace oo
+   // OOShaderUniformMethodType.h
+
 bool EntityShaderMemberBindingFor(Entity* entity, std::string_view property,
-                                  OOShaderMemberBinding* outBinding);
+                                  oo::ShaderMemberBinding* outBinding);
 
 #include "oofnd/PList.hpp"
 

@@ -35,11 +35,11 @@ SOFTWARE.
 #include <string>
 #include <string_view>
 
-#include "OOTexture.h"
-#include "OOTextureFlags.h"
 #include "OOTypes.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
+#include "Texture.h"
+#include "TextureFlags.h"
 #include "legacy_random.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/Object.hpp"
@@ -61,7 +61,7 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
 
 std::shared_ptr<OOProbabilisticTextureManager>
 OOProbabilisticTextureManager::createWithPListName(const std::string& plistName,
-                                                   OOTextureFlags options,
+                                                   oo::TextureFlags options,
                                                    GLfloat anisotropy,
                                                    GLfloat lodBias) {
   return createWithPListName(plistName, options, anisotropy, lodBias,
@@ -71,7 +71,7 @@ OOProbabilisticTextureManager::createWithPListName(const std::string& plistName,
 // -initWithPListName:...seed: on a new object; null where it answered nil.
 std::shared_ptr<OOProbabilisticTextureManager>
 OOProbabilisticTextureManager::createWithPListName(const std::string& plistName,
-                                                   OOTextureFlags options,
+                                                   oo::TextureFlags options,
                                                    GLfloat anisotropy,
                                                    GLfloat lodBias,
                                                    RANROTSeed seed) {
@@ -85,7 +85,7 @@ OOProbabilisticTextureManager::createWithPListName(const std::string& plistName,
 }
 
 bool OOProbabilisticTextureManager::initWithPListName(
-    const std::string& plistName, OOTextureFlags options, GLfloat anisotropy,
+    const std::string& plistName, oo::TextureFlags options, GLfloat anisotropy,
     GLfloat lodBias, RANROTSeed seed) {
   bool OK = true;
   oo::PList config;
@@ -93,7 +93,7 @@ bool OOProbabilisticTextureManager::initWithPListName(
   const oo::PList* entry = nullptr;
   std::optional<std::string> name;
   float probability = 0.0f;  // set wherever name is (GCC -Wmaybe-uninitialized)
-  std::shared_ptr<OOTexture> texture;
+  std::shared_ptr<oo::Texture> texture;
   int galID = -1;
   const oo::PList* object = nullptr;
 
@@ -133,8 +133,8 @@ bool OOProbabilisticTextureManager::initWithPListName(
       }
 
       if (name.has_value() && 0.0f < probability) {
-        texture = OOTexture::textureWithName(name, "Textures", options,
-                                             anisotropy, lodBias);
+        texture = oo::Texture::textureWithName(name, "Textures", options,
+                                               anisotropy, lodBias);
         if (texture != nullptr) {
           _textures[_count] = texture;
           _prob[_count] =
@@ -172,7 +172,7 @@ OOProbabilisticTextureManager::descriptionComponents() const {
                      _probMax);
 }
 
-OOTexture* OOProbabilisticTextureManager::selectTexture() {
+oo::Texture* OOProbabilisticTextureManager::selectTexture() {
   float selection;
   unsigned i;
   int hold = -1;

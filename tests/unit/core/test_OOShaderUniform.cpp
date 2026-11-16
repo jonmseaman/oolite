@@ -20,8 +20,8 @@
 
 #include "OOColor.h"
 #include "OORegExpMatcher.h"
-#include "OOShaderUniform.h"
-#include "OOShaderUniformMethodType.h"
+#include "ShaderUniform.h"
+#include "ShaderUniformMethodType.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -65,12 +65,17 @@ OOShaderSetting OOShaderSettingFromString(const std::string& string) {
 // OOShaderProgram stand-in: definitions of the members the uniform uses.
 static GLhandleARB gStandInProgram = 0;
 
-OOShaderProgram::~OOShaderProgram() {}
-GLhandleARB OOShaderProgram::program() { return _program; }
-std::shared_ptr<OOShaderProgram> OOShaderProgram::shaderProgramWithVertexShaderName(
+namespace oo {
+
+ShaderProgram::~ShaderProgram() {}
+
+}  // namespace oo
+
+GLhandleARB oo::ShaderProgram::program() { return _program; }
+std::shared_ptr<oo::ShaderProgram> oo::ShaderProgram::shaderProgramWithVertexShaderName(
     const std::string&, const std::string&, const std::optional<std::string>&,
     const oo::PList&) {
-  std::shared_ptr<OOShaderProgram> made = std::shared_ptr<OOShaderProgram>(new OOShaderProgram(), oo::Dispose{});
+  std::shared_ptr<oo::ShaderProgram> made = std::shared_ptr<oo::ShaderProgram>(new oo::ShaderProgram(), oo::Dispose{});
   made->_program = gStandInProgram;
   return made;
 }
@@ -83,8 +88,8 @@ typedef void(APIENTRY* GetUniformiv)(GLhandleARB, GLint, GLint*);
 GLhandleARB gProgram = 0;
 GetUniformfv gGetUniformfv = nullptr;
 GetUniformiv gGetUniformiv = nullptr;
-OOShaderProgram* gShaderProgram = nullptr;
-std::shared_ptr<OOShaderProgram> gShaderProgramHeld;
+oo::ShaderProgram* gShaderProgram = nullptr;
+std::shared_ptr<oo::ShaderProgram> gShaderProgramHeld;
 
 // A program with one uniform of each kind, each used so that the linker keeps
 // it.
@@ -121,7 +126,7 @@ bool SetUpProgram() {
   glUseProgramObjectARB(gProgram);
 
   gStandInProgram = gProgram;
-  gShaderProgramHeld = OOShaderProgram::shaderProgramWithVertexShaderName(
+  gShaderProgramHeld = oo::ShaderProgram::shaderProgramWithVertexShaderName(
       "", "", std::nullopt, oo::PList());
   gShaderProgram = gShaderProgramHeld.get();
   return glGetUniformLocationARB(gProgram, "uFloat") != -1;
@@ -163,7 +168,7 @@ void Reset() {
 
 // The uniform's description, as its description() prints it (nil:
 // "(null)").
-std::string Description(const std::shared_ptr<OOShaderUniform>& uniform) {
+std::string Description(const std::shared_ptr<oo::ShaderUniform>& uniform) {
   return uniform->description().value_or("(null)");
 }
 
@@ -175,11 +180,11 @@ OO_TEST(initialisersThatFail) {
     return;
   }
   {
-    OO_CHECK(OOShaderUniform::initWithName("uFloat", nullptr, GLfloat(1)) ==
+    OO_CHECK(oo::ShaderUniform::initWithName("uFloat", nullptr, GLfloat(1)) ==
              nullptr);
-    OO_CHECK(OOShaderUniform::initWithName("uMissing", gShaderProgram,
+    OO_CHECK(oo::ShaderUniform::initWithName("uMissing", gShaderProgram,
                                            GLfloat(1)) == nullptr);
-    OO_CHECK(OOShaderUniform::initWithName("uVector", gShaderProgram,
+    OO_CHECK(oo::ShaderUniform::initWithName("uVector", gShaderProgram,
                                            static_cast<OOColor*>(nullptr)) ==
              nullptr);
   }
@@ -192,14 +197,14 @@ OO_TEST(constants) {
   }
   {
     Reset();
-    OOShaderUniform::initWithName("uInt", gShaderProgram, GLint(3))->apply();
-    OOShaderUniform::initWithName("uFloat", gShaderProgram, 0.75f)->apply();
+    oo::ShaderUniform::initWithName("uInt", gShaderProgram, GLint(3))->apply();
+    oo::ShaderUniform::initWithName("uFloat", gShaderProgram, 0.75f)->apply();
     OO_CHECK(Int("uInt") == 3 && Near(Floats("uFloat", 1), {0.75f}));
 
     GLfloat v[4] = {1, 2, 3, 4};
-    OOShaderUniform::initWithName("uVector", gShaderProgram, v)->apply();
+    oo::ShaderUniform::initWithName("uVector", gShaderProgram, v)->apply();
     OO_CHECK(Near(Floats("uVector", 4), {1, 2, 3, 4}));
-    OOShaderUniform::initWithName(
+    oo::ShaderUniform::initWithName(
         "uVector", gShaderProgram,
         OOColor::colorWithRed(0.1f, 0.2f, 0.3f, 0.4f).get())
         ->apply();
@@ -207,9 +212,9 @@ OO_TEST(constants) {
 
     // A quaternion as a vector is x, y, z, w; as a matrix it is its rotation.
     Quaternion q = {0.5f, 0.5f, 0.5f, 0.5f};
-    OOShaderUniform::initWithName("uVector", gShaderProgram, q, false)->apply();
+    oo::ShaderUniform::initWithName("uVector", gShaderProgram, q, false)->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0.5f, 0.5f, 0.5f, 0.5f}));
-    OOShaderUniform::initWithName("uMatrix", gShaderProgram, q, true)->apply();
+    oo::ShaderUniform::initWithName("uMatrix", gShaderProgram, q, true)->apply();
     const OOMatrix rotation = OOMatrixForQuaternionRotation(q);
     const std::vector<GLfloat> m = Floats("uMatrix", 16);
     bool same = true;
@@ -218,7 +223,7 @@ OO_TEST(constants) {
              std::fabs(m[i] - OOMatrixValuesForOpenGL(rotation)[i]) < 1e-5f;
     OO_CHECK(same);
 
-    OOShaderUniform::initWithName("uMatrix", gShaderProgram,
+    oo::ShaderUniform::initWithName("uMatrix", gShaderProgram,
                                   OOMatrixForScale(2, 3, 4))
         ->apply();
     OO_CHECK(Near(Floats("uMatrix", 16),
@@ -236,8 +241,8 @@ OO_TEST(constantIgnoresABindingTarget) {
   {
     oo::AutoreleaseScope pool;
     Reset();
-    const std::shared_ptr<OOShaderUniform> constant =
-        OOShaderUniform::initWithName("uFloat", gShaderProgram, 0.25f);
+    const std::shared_ptr<oo::ShaderUniform> constant =
+        oo::ShaderUniform::initWithName("uFloat", gShaderProgram, 0.25f);
     constant->setEntityBindingTarget(nullptr);
     constant->apply();
     OO_CHECK(Near(Floats("uFloat", 1), {0.25f}));
@@ -253,17 +258,17 @@ OO_TEST(description) {
     const std::string location =
         std::to_string(glGetUniformLocationARB(gProgram, "uInt"));
     const std::string text = Description(
-        OOShaderUniform::initWithName("uInt", gShaderProgram, GLint(1)));
+        oo::ShaderUniform::initWithName("uInt", gShaderProgram, GLint(1)));
     OO_CHECK(text.starts_with("<OOShaderUniform 0x") &&
              text.ends_with(">{" + location + ": int uInt = 1;}"));
     OO_CHECK(Description(
-                 OOShaderUniform::initWithName("uFloat", gShaderProgram, 0.5f))
+                 oo::ShaderUniform::initWithName("uFloat", gShaderProgram, 0.5f))
                  .ends_with(": float uFloat = 0.5;}"));
     GLfloat v[4] = {1, 2, 3, 4};
     OO_CHECK(
-        Description(OOShaderUniform::initWithName("uVector", gShaderProgram, v))
+        Description(oo::ShaderUniform::initWithName("uVector", gShaderProgram, v))
             .ends_with(": vec4 uVector = (1, 2, 3);}"));
-    OO_CHECK(Description(OOShaderUniform::initWithName(
+    OO_CHECK(Description(oo::ShaderUniform::initWithName(
                              "uMatrix", gShaderProgram, kIdentityMatrix))
                  .ends_with(": matrix uMatrix = " +
                             OOMatrixDescription(kIdentityMatrix) + ";}"));
@@ -281,7 +286,7 @@ class CxxTarget : public oo::Object {
   Vector vector = kZeroVector;
 };
 
-void CxxTargetVector(oo::Object* target, OOShaderBindingValue& outValue) {
+void CxxTargetVector(oo::Object* target, oo::ShaderBindingValue& outValue) {
   outValue.v = static_cast<CxxTarget*>(target)->vector;
 }
 
@@ -293,34 +298,34 @@ OO_TEST(cxxTargetBindings) {
     return;
   }
   {
-    OO_CHECK(OOShaderUniform::initWithName("uVector", nullptr, nullptr, "vector",
-                                           kOOShaderUniformTypeVector,
-                                           CxxTargetVector, OOUniformConvertOptions::kNone) == nullptr);
-    OO_CHECK(OOShaderUniform::initWithName("uMissing", gShaderProgram, nullptr,
-                                           "vector", kOOShaderUniformTypeVector,
-                                           CxxTargetVector, OOUniformConvertOptions::kNone) == nullptr);
-    OO_CHECK(OOShaderUniform::initWithName("uVector", gShaderProgram, nullptr,
-                                           "vector", kOOShaderUniformTypeVector,
-                                           nullptr, OOUniformConvertOptions::kNone) == nullptr);
-    OO_CHECK(OOShaderUniform::initWithName(
+    OO_CHECK(oo::ShaderUniform::initWithName("uVector", nullptr, nullptr, "vector",
+                                           oo::kShaderUniformTypeVector,
+                                           CxxTargetVector, oo::UniformConvertOptions::kNone) == nullptr);
+    OO_CHECK(oo::ShaderUniform::initWithName("uMissing", gShaderProgram, nullptr,
+                                           "vector", oo::kShaderUniformTypeVector,
+                                           CxxTargetVector, oo::UniformConvertOptions::kNone) == nullptr);
+    OO_CHECK(oo::ShaderUniform::initWithName("uVector", gShaderProgram, nullptr,
+                                           "vector", oo::kShaderUniformTypeVector,
+                                           nullptr, oo::UniformConvertOptions::kNone) == nullptr);
+    OO_CHECK(oo::ShaderUniform::initWithName(
                  "uVector", gShaderProgram, nullptr, "vector",
-                 kOOShaderUniformTypeInvalid, CxxTargetVector, OOUniformConvertOptions::kNone) == nullptr);
+                 oo::kShaderUniformTypeInvalid, CxxTargetVector, oo::UniformConvertOptions::kNone) == nullptr);
 
     Reset();
     std::shared_ptr<CxxTarget> target = oo::makeShared<CxxTarget>();
     target->vector = make_vector(3, 0, 4);
-    std::shared_ptr<OOShaderUniform> u = OOShaderUniform::initWithName(
+    std::shared_ptr<oo::ShaderUniform> u = oo::ShaderUniform::initWithName(
         "uVector", gShaderProgram, target.get(), "vector",
-        kOOShaderUniformTypeVector, CxxTargetVector, OOUniformConvertOptions::kNone);
+        oo::kShaderUniformTypeVector, CxxTargetVector, oo::UniformConvertOptions::kNone);
     OO_CHECK(u != nullptr);
     u->apply();
     OO_CHECK(Near(Floats("uVector", 4), {3, 0, 4, 1}));
     target->vector = make_vector(0, 2, 10);
     u->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0, 2, 10, 1}));
-    OOShaderUniform::initWithName("uVector", gShaderProgram, target.get(),
-                                  "vector", kOOShaderUniformTypeVector,
-                                  CxxTargetVector, OOUniformConvertOptions::kNormalize)
+    oo::ShaderUniform::initWithName("uVector", gShaderProgram, target.get(),
+                                  "vector", oo::kShaderUniformTypeVector,
+                                  CxxTargetVector, oo::UniformConvertOptions::kNormalize)
         ->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0, 0.196116f, 0.980581f, 1}));
     OO_CHECK(Description(u).find(": vec4 uVector = [<0x") !=
@@ -336,9 +341,9 @@ OO_TEST(cxxTargetBindings) {
     OO_CHECK(Description(u).ends_with(": vec4 uVector = 0;}"));
 
     // No target: nothing set.
-    OOShaderUniform::initWithName("uVector", gShaderProgram, nullptr, "vector",
-                                  kOOShaderUniformTypeVector, CxxTargetVector,
-                                  OOUniformConvertOptions::kNone)
+    oo::ShaderUniform::initWithName("uVector", gShaderProgram, nullptr, "vector",
+                                  oo::kShaderUniformTypeVector, CxxTargetVector,
+                                  oo::UniformConvertOptions::kNone)
         ->apply();
     OO_CHECK(Near(Floats("uVector", 4), {9, 9, 9, 9}));
   }
@@ -359,42 +364,42 @@ ConvertTarget* Target(oo::Object* target) {
   return static_cast<ConvertTarget*>(target);
 }
 
-void IntValue(oo::Object* t, OOShaderBindingValue& v) {
+void IntValue(oo::Object* t, oo::ShaderBindingValue& v) {
   v.i = Target(t)->_int;
 }
-void ByteValue(oo::Object*, OOShaderBindingValue& v) { v.i = 7; }
-void FloatValue(oo::Object* t, OOShaderBindingValue& v) {
+void ByteValue(oo::Object*, oo::ShaderBindingValue& v) { v.i = 7; }
+void FloatValue(oo::Object* t, oo::ShaderBindingValue& v) {
   v.f = Target(t)->_float;
 }
-void DoubleValue(oo::Object*, OOShaderBindingValue& v) { v.f = 2.5; }
-void VectorValue(oo::Object*, OOShaderBindingValue& v) {
+void DoubleValue(oo::Object*, oo::ShaderBindingValue& v) { v.f = 2.5; }
+void VectorValue(oo::Object*, oo::ShaderBindingValue& v) {
   v.v = make_vector(3, 0, 4);
 }
-void HPVectorValue(oo::Object*, OOShaderBindingValue& v) {
+void HPVectorValue(oo::Object*, oo::ShaderBindingValue& v) {
   v.hpv = make_HPvector(0, 6, 8);
 }
-void QuaternionValue(oo::Object*, OOShaderBindingValue& v) {
+void QuaternionValue(oo::Object*, oo::ShaderBindingValue& v) {
   Quaternion q = {0.5f, 0.5f, 0.5f, 0.5f};
   v.q = q;
 }
-void MatrixValue(oo::Object*, OOShaderBindingValue& v) {
+void MatrixValue(oo::Object*, oo::ShaderBindingValue& v) {
   v.m = OOMatrixForScale(2, 3, 4);
 }
-void PointValue(oo::Object*, OOShaderBindingValue& v) {
+void PointValue(oo::Object*, oo::ShaderBindingValue& v) {
   v.p = NSMakePoint(1.5, -2.5);
 }
-void ColorValue(oo::Object*, OOShaderBindingValue& v) {
+void ColorValue(oo::Object*, oo::ShaderBindingValue& v) {
   static std::shared_ptr<OOColor> color =
       OOColor::colorWithRed(0.25f, 0.5f, 0.75f, 1.0f);
   v.color = color.get();
 }
-void NotAColor(oo::Object*, OOShaderBindingValue&) {}
+void NotAColor(oo::Object*, oo::ShaderBindingValue&) {}
 
-std::shared_ptr<OOShaderUniform> BoundCxx(const char* uniform, ConvertTarget* target,
-                                  OOShaderUniformType type,
-                                  OOShaderCxxBindingGetter get,
-                                  OOUniformConvertOptions options = {}) {
-  return OOShaderUniform::initWithName(uniform, gShaderProgram, target,
+std::shared_ptr<oo::ShaderUniform> BoundCxx(const char* uniform, ConvertTarget* target,
+                                  oo::ShaderUniformType type,
+                                  oo::ShaderCxxBindingGetter get,
+                                  oo::UniformConvertOptions options = {}) {
+  return oo::ShaderUniform::initWithName(uniform, gShaderProgram, target,
                                        "property", type, get, options);
 }
 
@@ -415,66 +420,66 @@ OO_TEST(cxxTargetConvertOptions) {
 
     // Each supported value kind, applied on every apply from the target's
     // current value.
-    const std::shared_ptr<OOShaderUniform> u =
-        BoundCxx("uInt", target, kOOShaderUniformTypeInt, IntValue);
+    const std::shared_ptr<oo::ShaderUniform> u =
+        BoundCxx("uInt", target, oo::kShaderUniformTypeInt, IntValue);
     u->apply();
     OO_CHECK(Int("uInt") == 5);
     target->_int = 6;
     u->apply();
     OO_CHECK(Int("uInt") == 6);
-    BoundCxx("uInt", target, kOOShaderUniformTypeInt, IntValue,
-             OOUniformConvertOptions::kClamp)
+    BoundCxx("uInt", target, oo::kShaderUniformTypeInt, IntValue,
+             oo::UniformConvertOptions::kClamp)
         ->apply();  // clamped: non-zero is 1
     OO_CHECK(Int("uInt") == 1);
-    BoundCxx("uInt", target, kOOShaderUniformTypeUnsignedChar, ByteValue)
+    BoundCxx("uInt", target, oo::kShaderUniformTypeUnsignedChar, ByteValue)
         ->apply();
     OO_CHECK(Int("uInt") == 7);
 
-    BoundCxx("uFloat", target, kOOShaderUniformTypeFloat, FloatValue)->apply();
+    BoundCxx("uFloat", target, oo::kShaderUniformTypeFloat, FloatValue)->apply();
     OO_CHECK(Near(Floats("uFloat", 1), {1.75f}));
-    BoundCxx("uFloat", target, kOOShaderUniformTypeFloat, FloatValue,
-             OOUniformConvertOptions::kClamp)
+    BoundCxx("uFloat", target, oo::kShaderUniformTypeFloat, FloatValue,
+             oo::UniformConvertOptions::kClamp)
         ->apply();
     OO_CHECK(Near(Floats("uFloat", 1), {1.0f}));
-    BoundCxx("uFloat", target, kOOShaderUniformTypeDouble, DoubleValue)
+    BoundCxx("uFloat", target, oo::kShaderUniformTypeDouble, DoubleValue)
         ->apply();
     OO_CHECK(Near(Floats("uFloat", 1), {2.5f}));
 
-    BoundCxx("uVector", target, kOOShaderUniformTypeVector, VectorValue)
+    BoundCxx("uVector", target, oo::kShaderUniformTypeVector, VectorValue)
         ->apply();
     OO_CHECK(Near(Floats("uVector", 4), {3, 0, 4, 1}));
-    BoundCxx("uVector", target, kOOShaderUniformTypeVector, VectorValue,
-             OOUniformConvertOptions::kNormalize)
+    BoundCxx("uVector", target, oo::kShaderUniformTypeVector, VectorValue,
+             oo::UniformConvertOptions::kNormalize)
         ->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0.6f, 0, 0.8f, 1}));
-    BoundCxx("uVector", target, kOOShaderUniformTypeHPVector, HPVectorValue,
-             OOUniformConvertOptions::kNormalize)
+    BoundCxx("uVector", target, oo::kShaderUniformTypeHPVector, HPVectorValue,
+             oo::UniformConvertOptions::kNormalize)
         ->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0, 0.6f, 0.8f, 1}));
-    BoundCxx("uVector", target, kOOShaderUniformTypeQuaternion, QuaternionValue)
+    BoundCxx("uVector", target, oo::kShaderUniformTypeQuaternion, QuaternionValue)
         ->apply();  // not to matrix: x, y, z, w
     OO_CHECK(Near(Floats("uVector", 4), {0.5f, 0.5f, 0.5f, 0.5f}));
-    BoundCxx("uVector", target, kOOShaderUniformTypeColor, ColorValue)->apply();
+    BoundCxx("uVector", target, oo::kShaderUniformTypeColor, ColorValue)->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0.25f, 0.5f, 0.75f, 1}));
-    BoundCxx("uVector", target, kOOShaderUniformTypeVector, VectorValue)
+    BoundCxx("uVector", target, oo::kShaderUniformTypeVector, VectorValue)
         ->apply();
-    BoundCxx("uVector", target, kOOShaderUniformTypeObject, NotAColor)
+    BoundCxx("uVector", target, oo::kShaderUniformTypeObject, NotAColor)
         ->apply();  // an object that is not a colour: nothing set
     OO_CHECK(Near(Floats("uVector", 4), {3, 0, 4, 1}));
 
-    BoundCxx("uMatrix", target, kOOShaderUniformTypeMatrix, MatrixValue)
+    BoundCxx("uMatrix", target, oo::kShaderUniformTypeMatrix, MatrixValue)
         ->apply();
     OO_CHECK(Near(Floats("uMatrix", 16),
                   {2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1}));
-    BoundCxx("uMatrix", target, kOOShaderUniformTypeQuaternion, QuaternionValue,
-             OOUniformConvertOptions::kToMatrix)
+    BoundCxx("uMatrix", target, oo::kShaderUniformTypeQuaternion, QuaternionValue,
+             oo::UniformConvertOptions::kToMatrix)
         ->apply();
     const Quaternion q = {0.5f, 0.5f, 0.5f, 0.5f};
     const OOMatrix rotation = OOMatrixForQuaternionRotation(q);
     OO_CHECK(std::fabs(Floats("uMatrix", 16)[1] -
                        OOMatrixValuesForOpenGL(rotation)[1]) < 1e-5f);
 
-    BoundCxx("uPoint", target, kOOShaderUniformTypePoint, PointValue)->apply();
+    BoundCxx("uPoint", target, oo::kShaderUniformTypePoint, PointValue)->apply();
     OO_CHECK(Near(Floats("uPoint", 2), {1.5f, -2.5f}));
     OO_CHECK(glGetError() == GL_NO_ERROR);
   }
@@ -489,26 +494,26 @@ OO_TEST(cxxAPI) {
     return;
   }
   {
-    OO_CHECK(OOShaderUniform::initWithName("uFloat", nullptr, 1.0f) == nullptr);
-    OO_CHECK(OOShaderUniform::initWithName("uMissing", gShaderProgram, 1.0f) ==
+    OO_CHECK(oo::ShaderUniform::initWithName("uFloat", nullptr, 1.0f) == nullptr);
+    OO_CHECK(oo::ShaderUniform::initWithName("uMissing", gShaderProgram, 1.0f) ==
              nullptr);
-    OO_CHECK(OOShaderUniform::initWithName("uVector", gShaderProgram,
+    OO_CHECK(oo::ShaderUniform::initWithName("uVector", gShaderProgram,
                                            static_cast<OOColor*>(nullptr)) ==
              nullptr);
 
     Reset();
-    OOShaderUniform::initWithName("uInt", gShaderProgram, GLint(4))->apply();
-    OOShaderUniform::initWithName("uFloat", gShaderProgram, 0.5f)->apply();
+    oo::ShaderUniform::initWithName("uInt", gShaderProgram, GLint(4))->apply();
+    oo::ShaderUniform::initWithName("uFloat", gShaderProgram, 0.5f)->apply();
     OO_CHECK(Int("uInt") == 4 && Near(Floats("uFloat", 1), {0.5f}));
-    OOShaderUniform::initWithName(
+    oo::ShaderUniform::initWithName(
         "uVector", gShaderProgram,
         OOColor::colorWithRed(0.1f, 0.2f, 0.3f, 0.4f).get())
         ->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0.1f, 0.2f, 0.3f, 0.4f}));
     const Quaternion q = {0.5f, 0.5f, 0.5f, 0.5f};
-    OOShaderUniform::initWithName("uVector", gShaderProgram, q, false)->apply();
+    oo::ShaderUniform::initWithName("uVector", gShaderProgram, q, false)->apply();
     OO_CHECK(Near(Floats("uVector", 4), {0.5f, 0.5f, 0.5f, 0.5f}));
-    OOShaderUniform::initWithName("uMatrix", gShaderProgram,
+    oo::ShaderUniform::initWithName("uMatrix", gShaderProgram,
                                   OOMatrixForScale(2, 3, 4))
         ->apply();
     OO_CHECK(Near(Floats("uMatrix", 16),
@@ -522,8 +527,8 @@ OO_TEST(descriptionPrintsTheUniform) {
     OO_CHECK(false);
     return;
   }
-  const std::shared_ptr<OOShaderUniform> u =
-      OOShaderUniform::initWithName("uInt", gShaderProgram, GLint(2));
+  const std::shared_ptr<oo::ShaderUniform> u =
+      oo::ShaderUniform::initWithName("uInt", gShaderProgram, GLint(2));
   OO_CHECK(Description(u).starts_with(
       "<OOShaderUniform " + oo::str::pointerDescription(u.get()) + ">{"));
 }

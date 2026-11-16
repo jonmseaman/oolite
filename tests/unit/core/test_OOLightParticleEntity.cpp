@@ -63,13 +63,13 @@ class TestUniverse : public Universe {
 class TestParticle : public oo::LightParticleEntity {
  public:
   int _draws = 0;
-  OOTexture* _texture = nullptr;
+  oo::Texture* _texture = nullptr;
 
   void drawImmediate(bool /*immediate*/, bool /*translucent*/) override {
     _draws++;
   }
 
-  OOTexture* texture() override { return _texture; }
+  oo::Texture* texture() override { return _texture; }
 };
 
 // An owner whose camera distance the test sets: a plain entity.
@@ -217,11 +217,11 @@ OO_TEST(texturesListTheSubclassTexture) {
     SetUp();
     Entity* object = nullptr;
     TestParticle* particle = NewParticle<TestParticle>(1.0f, &object);
-    const std::shared_ptr<OOTexture> kept =
-        oo::makeShared<OOTexture>();  // a C++ texture; only retained and compared
-    OOTexture* texture = kept.get();
+    const std::shared_ptr<oo::Texture> kept =
+        oo::makeShared<oo::Texture>();  // a C++ texture; only retained and compared
+    oo::Texture* texture = kept.get();
     particle->_texture = texture;
-    const std::vector<std::shared_ptr<OOTexture>> textures = object->allTextures();
+    const std::vector<std::shared_ptr<oo::Texture>> textures = object->allTextures();
     OO_CHECK(textures.size() == 1 && textures[0].get() == texture);
   }
 }

@@ -30,8 +30,8 @@ MA 02110-1301, USA.
 #include <memory>
 #include <string>
 
-#include "OOTexture.h"
 #include "PlayerEntity.h"
+#include "Texture.h"
 #include "Universe.h"
 #include "oofnd/PListGet.hpp"
 
@@ -97,11 +97,11 @@ bool oo::ExplosionCloudEntity::initExplosionCloudWithEntity(
   std::string textureFile = _settings.get<std::string>(
       kExplosionTexture, "oolite-particle-cloud2.png");
 
-  _texture = OOTexture::textureWithName(textureFile, std::string("Textures"),
-                                        OOTextureFlags::kMinFilterMipMap |
-                                            OOTextureFlags::kMagFilterLinear |
-                                            OOTextureFlags::kAlphaMask,
-                                        kOOTextureDefaultAnisotropy, 0.0);
+  _texture = oo::Texture::textureWithName(
+      textureFile, std::string("Textures"),
+      oo::TextureFlags::kMinFilterMipMap | oo::TextureFlags::kMagFilterLinear |
+          oo::TextureFlags::kAlphaMask,
+      kOOTextureDefaultAnisotropy, 0.0);
   if (_texture == nullptr) {
     return false;
   }
@@ -262,4 +262,4 @@ void oo::ExplosionCloudEntity::update(OOTimeDelta delta_t) {
   }
 }
 
-OOTexture* oo::ExplosionCloudEntity::texture() { return _texture.get(); }
+oo::Texture* oo::ExplosionCloudEntity::texture() { return _texture.get(); }

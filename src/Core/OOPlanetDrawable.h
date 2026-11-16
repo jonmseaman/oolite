@@ -35,8 +35,8 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
+#include "Material.h"
 #include "OODrawable.h"
-#include "OOMaterial.h"
 #include "OOMaths.h"
 #include "oofnd/Object.hpp"
 
@@ -56,8 +56,8 @@ class OOPlanetDrawable : public OODrawable {
   // material, kind, radius, transform and level of detail.
   std::shared_ptr<OOPlanetDrawable> copy();
 
-  OOMaterial* material();
-  void setMaterial(OOMaterial* material);
+  oo::Material* material();
+  void setMaterial(oo::Material* material);
 
   // The material's name (nullopt when it has none, as nil was).
   std::optional<std::string> textureName();
@@ -88,7 +88,7 @@ class OOPlanetDrawable : public OODrawable {
   void setBindingTarget(Entity* target) override;
   void dumpSelfState() override;
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  std::vector<std::shared_ptr<OOTexture>> allTextures() override;
+  std::vector<std::shared_ptr<oo::Texture>> allTextures() override;
 #endif
 
  private:
@@ -98,7 +98,7 @@ class OOPlanetDrawable : public OODrawable {
 #endif
   void renderCommonParts();
 
-  std::shared_ptr<OOMaterial> _material;
+  std::shared_ptr<oo::Material> _material;
   bool _isAtmosphere = false;
   float _radius = {};
   OOMatrix _transform = {};

@@ -31,7 +31,11 @@ MA 02110-1301, USA.
 
 #include "Entity.h"
 
-class OOTexture;
+namespace oo {
+
+class Texture;
+
+}  // namespace oo
 
 // A particle is made in C++.
 namespace oo {
@@ -55,10 +59,10 @@ class LightParticleEntity : public Entity {
      nominal size of the particle (with a black border for anti-aliasing
      purposes).
   */
-  virtual OOTexture* texture();
+  virtual oo::Texture* texture();
 
   static void setUpTexture();
-  static OOTexture* defaultParticleTexture();
+  static oo::Texture* defaultParticleTexture();
   // Called by the texture's file-local graphics reset client.
   static void resetGraphicsState();
 
@@ -69,7 +73,7 @@ class LightParticleEntity : public Entity {
   bool canCollide() override;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  std::vector<std::shared_ptr<OOTexture>> allTextures() override;
+  std::vector<std::shared_ptr<oo::Texture>> allTextures() override;
 #endif
 
   // Public, as the tests read them.

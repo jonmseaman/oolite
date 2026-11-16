@@ -48,10 +48,10 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "BasicMaterial.h"
 #include "DebugFlags.h"
 #include "DebugStandards.h"
 #include "Entity.h"  // for NO_DRAW_DISTANCE_FACTOR.
-#include "OOBasicMaterial.h"
 #include "OOCacheManager.h"
 #include "OODebugGLDrawing.h"
 #include "OOGraphicsResetManager.h"
@@ -59,9 +59,9 @@ MA 02110-1301, USA.
 #include "OOMacroOpenGL.h"
 #include "OOMeshToOctreeConverter.h"
 #include "OOOpenGLExtensionManager.h"
-#include "OOShaderMaterial.h"
 #include "Octree.h"
 #include "ResourceManager.h"
+#include "ShaderMaterial.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/Scanner.hpp"
@@ -212,8 +212,8 @@ std::shared_ptr<OOMesh> OOMesh::meshWithName(
   return mesh;
 }
 
-std::shared_ptr<OOMaterial> OOMesh::placeholderMaterial() {
-  static OOBasicMaterial* placeholderMaterial =
+std::shared_ptr<oo::Material> OOMesh::placeholderMaterial() {
+  static oo::BasicMaterial* placeholderMaterial =
       nullptr;  // never released, as before
 
   if (placeholderMaterial == nullptr) {
@@ -222,10 +222,10 @@ std::shared_ptr<OOMaterial> OOMesh::placeholderMaterial() {
     const oo::PList materialDefaults = ResourceManager::materialDefaults();
     const oo::PList* noTextures = materialDefaults.find("no-textures-material");
     // Never released: a heap std::shared_ptr that is never deleted.
-    static std::shared_ptr<OOBasicMaterial>* placeholderMaterialHolder =
+    static std::shared_ptr<oo::BasicMaterial>* placeholderMaterialHolder =
         nullptr;  // never deleted
-    placeholderMaterialHolder =
-        new std::shared_ptr<OOBasicMaterial>(OOBasicMaterial::materialWithName(
+    placeholderMaterialHolder = new std::shared_ptr<oo::BasicMaterial>(
+        oo::BasicMaterial::materialWithName(
             std::string("/placeholder/"),
             (noTextures != nullptr ? *noTextures : oo::PList())));
     placeholderMaterial = placeholderMaterialHolder->get();
@@ -254,7 +254,7 @@ OOMesh::~OOMesh() {
 
   for (i = 0; i != kOOMeshMaxMaterials; ++i) {
     // DESTROY(): cleared before the release
-    const std::shared_ptr<OOMaterial> material = std::move(materials[i]);
+    const std::shared_ptr<oo::Material> material = std::move(materials[i]);
   }
 
   OOGraphicsResetManager::sharedManager()->unregisterCxxClient(this);
@@ -461,7 +461,7 @@ void OOMesh::renderOpaqueParts() {
   }
 #endif
 
-  OOMaterial::applyNone();
+  oo::Material::applyNone();
   OOCheckOpenGLErrors(
       [&]() -> std::string { return "OOMesh after drawing " + description(); });
 
@@ -497,14 +497,14 @@ void OOMesh::renderOpaqueParts() {
 
 void OOMesh::rebindMaterials() {
   OOMeshMaterialCount i;
-  std::shared_ptr<OOMaterial> material;
+  std::shared_ptr<oo::Material> material;
 
   if (materialCount != 0) {
     for (i = 0; i != materialCount; ++i) {
-      std::shared_ptr<OOMaterial> oldMaterial = materials[i];
+      std::shared_ptr<oo::Material> oldMaterial = materials[i];
 
       if (materialKeys[i] != "_oo_placeholder_material") {
-        material = OOMaterial::materialWithName(
+        material = oo::Material::materialWithName(
             materialKeys[i], _cacheKey, _materialDict, _shadersDict,
             _shaderMacros,
             _shaderBindingTarget.lock().get(),  // Windows DEP fix.
@@ -702,7 +702,7 @@ void OOMesh::setBindingTarget(Entity* target) {
 
   for (i = 0; i != kOOMeshMaxMaterials; ++i) {
     // A nil material did nothing.
-    if (OOMaterial* material = materials[i].get())
+    if (oo::Material* material = materials[i].get())
       material->setBindingTarget(target);
   }
 }
@@ -720,15 +720,15 @@ void OOMesh::dumpSelfState() {
 #endif
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-std::vector<std::shared_ptr<OOTexture>> OOMesh::allTextures() {
+std::vector<std::shared_ptr<oo::Texture>> OOMesh::allTextures() {
   // Every material's textures; duplicates are dropped.
-  std::vector<std::shared_ptr<OOTexture>> result;
+  std::vector<std::shared_ptr<oo::Texture>> result;
   OOMeshMaterialCount i;
   for (i = 0; i != materialCount; i++) {
     // A nil material answered no textures.
-    OOMaterial* material = materials[i].get();
+    oo::Material* material = materials[i].get();
     if (material == nullptr) continue;
-    for (const std::shared_ptr<OOTexture>& texture : material->allTextures())
+    for (const std::shared_ptr<oo::Texture>& texture : material->allTextures())
       result.push_back(texture);
   }
 

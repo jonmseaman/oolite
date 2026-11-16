@@ -31,7 +31,7 @@ SOFTWARE.
 
 #pragma once
 
-#include "OOPixMap.h"
+#include "PixMap.h"
 
 /*	Assumes 8 bits per sample, interleaved.
         dstPixels must have space for dstWidth * dstHeight pixels (no row
@@ -40,11 +40,12 @@ SOFTWARE.
         IMPORTANT: srcPixMap's pixels may be changed in place; use the result,
         not srcPixMap, afterwards.
 */
-OOPixMap OOScalePixMap(OOPixMap srcPixMap, OOPixMapDimension dstWidth,
-                       OOPixMapDimension dstHeight, bool leaveSpaceForMipMaps);
+oo::PixMap OOScalePixMap(oo::PixMap srcPixMap, oo::PixMapDimension dstWidth,
+                         oo::PixMapDimension dstHeight,
+                         bool leaveSpaceForMipMaps);
 
 /*	Assumes 8 bits per sample, interleaved.
         Buffer must have space for (4 * width * height) / 3 pixels.
 */
-bool OOGenerateMipMaps(void* textureBytes, OOPixMapDimension width,
-                       OOPixMapDimension height, OOPixMapFormat format);
+bool OOGenerateMipMaps(void* textureBytes, oo::PixMapDimension width,
+                       oo::PixMapDimension height, oo::PixMapFormat format);

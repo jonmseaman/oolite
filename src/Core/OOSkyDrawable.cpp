@@ -39,7 +39,7 @@ SOFTWARE.
 #include "OOGraphicsResetManager.h"
 #include "OOMacroOpenGL.h"
 #include "OOProbabilisticTextureManager.h"
-#include "OOTexture.h"
+#include "Texture.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/objc/Exception.h"
@@ -67,7 +67,7 @@ bool sInited = false;
 struct OOSkyQuadDesc {
   Vector corners[4];
   std::shared_ptr<OOColor> color;
-  OOTexture* texture;
+  oo::Texture* texture;
 };
 
 constexpr std::uint8_t kSkyQuadSetPositionEntriesPerVertex = 3;
@@ -85,7 +85,7 @@ class OOSkyQuadSet : public oo::Object {
 
   // Null where -initWithQuadsWithTexture:inArray:count: answered nil.
   static std::unique_ptr<OOSkyQuadSet> initWithQuadsWithTexture(
-      OOTexture* texture, std::span<const OOSkyQuadDesc> quads);
+      oo::Texture* texture, std::span<const OOSkyQuadDesc> quads);
 
   ~OOSkyQuadSet() override;
 
@@ -96,11 +96,11 @@ class OOSkyQuadSet : public oo::Object {
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   size_t totalSize();
-  OOTexture* texture();
+  oo::Texture* texture();
 #endif
 
  private:
-  std::shared_ptr<OOTexture> _texture;
+  std::shared_ptr<oo::Texture> _texture;
   unsigned _count = {};
   std::vector<GLfloat> _positions;  // 3 entries per vertex, 12 per quad
   std::vector<GLfloat> _texCoords;  // 2 entries per vertex, 8 per quad
@@ -214,8 +214,8 @@ bool OOSkyDrawable::hasOpaqueParts() { return true; }
 GLfloat OOSkyDrawable::maxDrawDistance() { return INFINITY; }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-std::vector<std::shared_ptr<OOTexture>> OOSkyDrawable::allTextures() {
-  std::vector<std::shared_ptr<OOTexture>> result;
+std::vector<std::shared_ptr<oo::Texture>> OOSkyDrawable::allTextures() {
+  std::vector<std::shared_ptr<oo::Texture>> result;
   result.reserve(_quadSets.size());
 
   for (const std::unique_ptr<OOSkyQuadSet>& quadSet : _quadSets) {
@@ -424,8 +424,9 @@ void OOSkyDrawable::loadStarTextures() {
     std::shared_ptr<OOProbabilisticTextureManager> stars =
         OOProbabilisticTextureManager::createWithPListName(
             "startextures.plist",
-            OOTextureFlags::kMinFilterMipMap |
-                OOTextureFlags::kMagFilterLinear | OOTextureFlags::kAlphaMask,
+            oo::TextureFlags::kMinFilterMipMap |
+                oo::TextureFlags::kMagFilterLinear |
+                oo::TextureFlags::kAlphaMask,
             0.0f, -0.0f);
     if (stars != nullptr) {
       static std::shared_ptr<OOProbabilisticTextureManager>*
@@ -449,8 +450,8 @@ void OOSkyDrawable::loadNebulaTextures() {
     std::shared_ptr<OOProbabilisticTextureManager> nebulae =
         OOProbabilisticTextureManager::createWithPListName(
             "nebulatextures.plist",
-            OOTextureFlags::kDefaultOptions | OOTextureFlags::kAlphaMask, 0.0f,
-            0.0f);
+            oo::TextureFlags::kDefaultOptions | oo::TextureFlags::kAlphaMask,
+            0.0f, 0.0f);
     if (nebulae != nullptr) {
       static std::shared_ptr<OOProbabilisticTextureManager>*
           sNebulaTexturesHolder = nullptr;  // never deleted
@@ -487,9 +488,9 @@ void OOSkyDrawable::resetGraphicsState() {
 void OOSkyQuadSet::addQuads(
     std::span<const OOSkyQuadDesc> quads,
     std::vector<std::unique_ptr<OOSkyQuadSet>>& ioArray) {
-  std::vector<std::shared_ptr<OOTexture>>
+  std::vector<std::shared_ptr<oo::Texture>>
       seenTextures;  // by identity (textures do not override -isEqual:)
-  OOTexture* texture = nullptr;
+  oo::Texture* texture = nullptr;
   std::unique_ptr<OOSkyQuadSet> quadSet;
 
   // Iterate over all quads.
@@ -512,7 +513,7 @@ void OOSkyQuadSet::addQuads(
 }
 
 std::unique_ptr<OOSkyQuadSet> OOSkyQuadSet::initWithQuadsWithTexture(
-    OOTexture* texture, std::span<const OOSkyQuadDesc> quads) {
+    oo::Texture* texture, std::span<const OOSkyQuadDesc> quads) {
   bool OK = true;
   unsigned j, vertexCount;
   GLfloat* pos;
@@ -657,7 +658,7 @@ size_t OOSkyQuadSet::totalSize() {
              (sizeof _positions[0] + sizeof _texCoords[0] + sizeof _colors[0]);
 }
 
-OOTexture* OOSkyQuadSet::texture() { return _texture.get(); }
+oo::Texture* OOSkyQuadSet::texture() { return _texture.get(); }
 #endif
 
 namespace {

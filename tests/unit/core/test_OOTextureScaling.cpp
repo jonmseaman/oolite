@@ -63,27 +63,27 @@ namespace {
 
 // A malloc'd pixmap (OOScalePixMap frees its source) filled with a fixed
 // pattern.
-OOPixMap MakePatterned(OOPixMapDimension width, OOPixMapDimension height,
-                       OOPixMapFormat format) {
-  OOPixMap pixMap = OOAllocatePixMap(width, height, format, 0, 0);
+oo::PixMap MakePatterned(oo::PixMapDimension width, oo::PixMapDimension height,
+                       oo::PixMapFormat format) {
+  oo::PixMap pixMap = oo::AllocatePixMap(width, height, format, 0, 0);
   uint8_t* bytes = static_cast<uint8_t*>(pixMap.pixels);
   for (size_t i = 0; i < pixMap.rowBytes * height; i++)
     bytes[i] = static_cast<uint8_t>((i * 37 + 13) & 0xFF);
   return pixMap;
 }
 
-OOPixMap MakeUniform(OOPixMapDimension width, OOPixMapDimension height,
-                     OOPixMapFormat format, uint8_t value) {
-  OOPixMap pixMap = OOAllocatePixMap(width, height, format, 0, 0);
+oo::PixMap MakeUniform(oo::PixMapDimension width, oo::PixMapDimension height,
+                     oo::PixMapFormat format, uint8_t value) {
+  oo::PixMap pixMap = oo::AllocatePixMap(width, height, format, 0, 0);
   std::memset(pixMap.pixels, value, pixMap.rowBytes * height);
   return pixMap;
 }
 
-std::vector<int> Bytes(OOPixMap pixMap) {
+std::vector<int> Bytes(oo::PixMap pixMap) {
   std::vector<int> result;
   const uint8_t* bytes = static_cast<const uint8_t*>(pixMap.pixels);
-  for (OOPixMapDimension y = 0; y < pixMap.height; y++) {
-    for (size_t x = 0; x < pixMap.width * OOPixMapBytesPerPixel(pixMap); x++)
+  for (oo::PixMapDimension y = 0; y < pixMap.height; y++) {
+    for (size_t x = 0; x < pixMap.width * oo::PixMapBytesPerPixel(pixMap); x++)
       result.push_back(bytes[y * pixMap.rowBytes + x]);
   }
   return result;
@@ -91,13 +91,13 @@ std::vector<int> Bytes(OOPixMap pixMap) {
 
 // Checks the result's shape and bytes; on a mismatch prints the bytes it got,
 // so a pin can be read.
-bool Pinned(const char* what, OOPixMap pixMap, OOPixMapDimension width,
-            OOPixMapDimension height, std::vector<int> expected) {
+bool Pinned(const char* what, oo::PixMap pixMap, oo::PixMapDimension width,
+            oo::PixMapDimension height, std::vector<int> expected) {
   bool ok = OO_CHECK(pixMap.pixels != nullptr);
   ok = OO_CHECK_EQ(pixMap.width, width) && ok;
   ok = OO_CHECK_EQ(pixMap.height, height) && ok;
   ok = OO_CHECK_EQ(pixMap.rowBytes, static_cast<size_t>(width) *
-                                        OOPixMapBytesPerPixel(pixMap)) &&
+                                        oo::PixMapBytesPerPixel(pixMap)) &&
        ok;
   if (pixMap.pixels == nullptr) return false;
   std::vector<int> actual = Bytes(pixMap);
@@ -111,75 +111,75 @@ bool Pinned(const char* what, OOPixMap pixMap, OOPixMapDimension width,
   return ok;
 }
 
-bool AllEqual(OOPixMap pixMap, uint8_t value) {
+bool AllEqual(oo::PixMap pixMap, uint8_t value) {
   for (int byte : Bytes(pixMap))
     if (byte != value) return false;
   return true;
 }
 
-const OOPixMapFormat kFormats[] = {kOOPixMapRGBA, kOOPixMapGrayscale,
-                                   kOOPixMapGrayscaleAlpha};
+const oo::PixMapFormat kFormats[] = {oo::kPixMapRGBA, oo::kPixMapGrayscale,
+                                   oo::kPixMapGrayscaleAlpha};
 
 }  // namespace
 
 // SqueezeVertically(): 2x4 -> 2x2, in place, for each format.
 OO_TEST(squeezesVertically) {
-  OOPixMap rgba = OOScalePixMap(MakePatterned(2, 4, kOOPixMapRGBA), 2, 2, false);
+  oo::PixMap rgba = OOScalePixMap(MakePatterned(2, 4, oo::kPixMapRGBA), 2, 2, false);
   Pinned("rgba", rgba, 2, 2,
          {33, 70, 107, 144, 181, 218, 127, 36, 113, 150, 187, 224, 133, 42, 79,
           116});
-  OOFreePixMap(&rgba);
+  oo::FreePixMap(&rgba);
 
-  OOPixMap gray =
-      OOScalePixMap(MakePatterned(2, 4, kOOPixMapGrayscale), 2, 2, false);
+  oo::PixMap gray =
+      OOScalePixMap(MakePatterned(2, 4, oo::kPixMapGrayscale), 2, 2, false);
   Pinned("gray", gray, 2, 2, {50, 87, 198, 107});
-  OOFreePixMap(&gray);
+  oo::FreePixMap(&gray);
 
-  OOPixMap grayAlpha =
-      OOScalePixMap(MakePatterned(2, 4, kOOPixMapGrayscaleAlpha), 2, 2, false);
+  oo::PixMap grayAlpha =
+      OOScalePixMap(MakePatterned(2, 4, oo::kPixMapGrayscaleAlpha), 2, 2, false);
   Pinned("grayAlpha", grayAlpha, 2, 2, {87, 124, 161, 70, 127, 164, 73, 110});
-  OOFreePixMap(&grayAlpha);
+  oo::FreePixMap(&grayAlpha);
 }
 
 // StretchHorizontally(): 2x2 -> 4x2, into a new buffer, for each format.
 OO_TEST(stretchesHorizontally) {
-  OOPixMap rgba = OOScalePixMap(MakePatterned(2, 2, kOOPixMapRGBA), 4, 2, false);
+  oo::PixMap rgba = OOScalePixMap(MakePatterned(2, 2, oo::kPixMapRGBA), 4, 2, false);
   Pinned("rgba", rgba, 4, 2,
          {13,  50,  87,  124, 13, 50, 87,  124, 161, 198, 235,
           16,  161, 198, 235, 16, 53, 90,  127, 164, 53,  90,
           127, 164, 201, 238, 19, 56, 201, 238, 19,  56});
-  OOFreePixMap(&rgba);
+  oo::FreePixMap(&rgba);
 
-  OOPixMap gray =
-      OOScalePixMap(MakePatterned(2, 2, kOOPixMapGrayscale), 4, 2, false);
+  oo::PixMap gray =
+      OOScalePixMap(MakePatterned(2, 2, oo::kPixMapGrayscale), 4, 2, false);
   Pinned("gray", gray, 4, 2, {13, 13, 50, 50, 87, 87, 124, 124});
-  OOFreePixMap(&gray);
+  oo::FreePixMap(&gray);
 
-  OOPixMap grayAlpha =
-      OOScalePixMap(MakePatterned(2, 2, kOOPixMapGrayscaleAlpha), 4, 2, false);
+  oo::PixMap grayAlpha =
+      OOScalePixMap(MakePatterned(2, 2, oo::kPixMapGrayscaleAlpha), 4, 2, false);
   Pinned(
       "grayAlpha", grayAlpha, 4, 2,
       {13, 50, 13, 50, 87, 124, 87, 124, 161, 198, 161, 198, 235, 16, 235, 16});
-  OOFreePixMap(&grayAlpha);
+  oo::FreePixMap(&grayAlpha);
 }
 
 // SqueezeHorizontally(): 4x2 -> 2x2, in place, for each format.
 OO_TEST(squeezesHorizontally) {
-  OOPixMap rgba = OOScalePixMap(MakePatterned(4, 2, kOOPixMapRGBA), 2, 2, false);
+  oo::PixMap rgba = OOScalePixMap(MakePatterned(4, 2, oo::kPixMapRGBA), 2, 2, false);
   Pinned("rgba", rgba, 2, 2,
          {87, 124, 161, 70, 127, 164, 73, 110, 167, 76, 113, 150, 79, 116, 153,
           190});
-  OOFreePixMap(&rgba);
+  oo::FreePixMap(&rgba);
 
-  OOPixMap gray =
-      OOScalePixMap(MakePatterned(4, 2, kOOPixMapGrayscale), 2, 2, false);
+  oo::PixMap gray =
+      OOScalePixMap(MakePatterned(4, 2, oo::kPixMapGrayscale), 2, 2, false);
   Pinned("gray", gray, 2, 2, {31, 105, 179, 125});
-  OOFreePixMap(&gray);
+  oo::FreePixMap(&gray);
 
-  OOPixMap grayAlpha =
-      OOScalePixMap(MakePatterned(4, 2, kOOPixMapGrayscaleAlpha), 2, 2, false);
+  oo::PixMap grayAlpha =
+      OOScalePixMap(MakePatterned(4, 2, oo::kPixMapGrayscaleAlpha), 2, 2, false);
   Pinned("grayAlpha", grayAlpha, 2, 2, {50, 87, 198, 107, 90, 127, 110, 147});
-  OOFreePixMap(&grayAlpha);
+  oo::FreePixMap(&grayAlpha);
 }
 
 // StretchVertically() (2x3 -> 2x4 and 2x2 -> 2x4, into a new buffer;
@@ -192,63 +192,63 @@ OO_TEST(squeezesHorizontally) {
 // its last row from one row past the source buffer (an ASan
 // heap-buffer-overflow READ), as 3x1 -> 4x1 read one pixel past it at weight 0.
 OO_TEST(stretchesVerticallyAndKeepsTheEdges) {
-  OOPixMap rgba = OOScalePixMap(MakePatterned(2, 3, kOOPixMapRGBA), 2, 4, false);
+  oo::PixMap rgba = OOScalePixMap(MakePatterned(2, 3, oo::kPixMapRGBA), 2, 4, false);
   Pinned("rgba 2x3 -> 2x4", rgba, 2, 4,
          {13,  50,  87,  124, 161, 198, 235, 16,  33,  70,  107,
           144, 181, 218, 127, 36,  63,  100, 137, 174, 211, 184,
           29,  66,  93,  130, 167, 204, 241, 22,  59,  96});
-  OOFreePixMap(&rgba);
+  oo::FreePixMap(&rgba);
 
-  OOPixMap gray =
-      OOScalePixMap(MakePatterned(2, 3, kOOPixMapGrayscale), 2, 4, false);
+  oo::PixMap gray =
+      OOScalePixMap(MakePatterned(2, 3, oo::kPixMapGrayscale), 2, 4, false);
   Pinned("gray 2x3 -> 2x4", gray, 2, 4, {13, 50, 50, 87, 105, 142, 161, 198});
-  OOFreePixMap(&gray);
+  oo::FreePixMap(&gray);
 
-  OOPixMap grayAlpha =
-      OOScalePixMap(MakePatterned(2, 3, kOOPixMapGrayscaleAlpha), 2, 4, false);
+  oo::PixMap grayAlpha =
+      OOScalePixMap(MakePatterned(2, 3, oo::kPixMapGrayscaleAlpha), 2, 4, false);
   Pinned(
       "grayAlpha 2x3 -> 2x4", grayAlpha, 2, 4,
       {13, 50, 87, 124, 87, 124, 161, 70, 134, 171, 208, 53, 53, 90, 127, 164});
-  OOFreePixMap(&grayAlpha);
+  oo::FreePixMap(&grayAlpha);
 
-  OOPixMap rgbaDouble =
-      OOScalePixMap(MakePatterned(2, 2, kOOPixMapRGBA), 2, 4, false);
+  oo::PixMap rgbaDouble =
+      OOScalePixMap(MakePatterned(2, 2, oo::kPixMapRGBA), 2, 4, false);
   Pinned("rgba 2x2 -> 2x4", rgbaDouble, 2, 4,
          {13,  50,  87,  124, 161, 198, 235, 16,  13,  50,  87,
           124, 161, 198, 235, 16,  53,  90,  127, 164, 201, 238,
           19,  56,  53,  90,  127, 164, 201, 238, 19,  56});
-  OOFreePixMap(&rgbaDouble);
+  oo::FreePixMap(&rgbaDouble);
 
-  OOPixMap grayDouble =
-      OOScalePixMap(MakePatterned(2, 2, kOOPixMapGrayscale), 2, 4, false);
+  oo::PixMap grayDouble =
+      OOScalePixMap(MakePatterned(2, 2, oo::kPixMapGrayscale), 2, 4, false);
   Pinned("gray 2x2 -> 2x4", grayDouble, 2, 4,
          {13, 50, 13, 50, 87, 124, 87, 124});
-  OOFreePixMap(&grayDouble);
+  oo::FreePixMap(&grayDouble);
 
-  OOPixMap grayAlphaDouble =
-      OOScalePixMap(MakePatterned(2, 2, kOOPixMapGrayscaleAlpha), 2, 4, false);
+  oo::PixMap grayAlphaDouble =
+      OOScalePixMap(MakePatterned(2, 2, oo::kPixMapGrayscaleAlpha), 2, 4, false);
   Pinned(
       "grayAlpha 2x2 -> 2x4", grayAlphaDouble, 2, 4,
       {13, 50, 87, 124, 13, 50, 87, 124, 161, 198, 235, 16, 161, 198, 235, 16});
-  OOFreePixMap(&grayAlphaDouble);
+  oo::FreePixMap(&grayAlphaDouble);
 
-  OOPixMap rgbaRow =
-      OOScalePixMap(MakePatterned(3, 1, kOOPixMapRGBA), 4, 1, false);
+  oo::PixMap rgbaRow =
+      OOScalePixMap(MakePatterned(3, 1, oo::kPixMapRGBA), 4, 1, false);
   Pinned(
       "rgba 3x1 -> 4x1", rgbaRow, 4, 1,
       {13, 50, 87, 124, 87, 124, 161, 70, 134, 171, 208, 53, 53, 90, 127, 164});
-  OOFreePixMap(&rgbaRow);
+  oo::FreePixMap(&rgbaRow);
 
-  OOPixMap grayRow =
-      OOScalePixMap(MakePatterned(3, 1, kOOPixMapGrayscale), 4, 1, false);
+  oo::PixMap grayRow =
+      OOScalePixMap(MakePatterned(3, 1, oo::kPixMapGrayscale), 4, 1, false);
   Pinned("gray 3x1 -> 4x1", grayRow, 4, 1, {13, 31, 59, 87});
-  OOFreePixMap(&grayRow);
+  oo::FreePixMap(&grayRow);
 
-  OOPixMap grayAlphaRow =
-      OOScalePixMap(MakePatterned(3, 1, kOOPixMapGrayscaleAlpha), 4, 1, false);
+  oo::PixMap grayAlphaRow =
+      OOScalePixMap(MakePatterned(3, 1, oo::kPixMapGrayscaleAlpha), 4, 1, false);
   Pinned("grayAlpha 3x1 -> 4x1", grayAlphaRow, 4, 1,
          {13, 50, 50, 87, 105, 142, 161, 198});
-  OOFreePixMap(&grayAlphaRow);
+  oo::FreePixMap(&grayAlphaRow);
 }
 
 // A uniform image stays uniform through every wrapper, in both directions at
@@ -256,21 +256,21 @@ OO_TEST(stretchesVerticallyAndKeepsTheEdges) {
 // its last row comes out at about 3/8 of the value, a defect of the plain-C
 // SqueezeVertically1() that this test does not touch.
 OO_TEST(keepsUniformImagesUniform) {
-  for (OOPixMapFormat format : kFormats) {
-    const OOPixMapDimension height = (format == kOOPixMapGrayscale) ? 4 : 5;
-    OOPixMap squeezed =
+  for (oo::PixMapFormat format : kFormats) {
+    const oo::PixMapDimension height = (format == oo::kPixMapGrayscale) ? 4 : 5;
+    oo::PixMap squeezed =
         OOScalePixMap(MakeUniform(8, 8, format, 0x5A), 3, height, false);
     OO_CHECK(squeezed.pixels != nullptr && squeezed.width == 3 &&
              squeezed.height == height);
     OO_CHECK(AllEqual(squeezed, 0x5A));
-    OOFreePixMap(&squeezed);
+    oo::FreePixMap(&squeezed);
 
-    OOPixMap stretched =
+    oo::PixMap stretched =
         OOScalePixMap(MakeUniform(3, 8, format, 0xC3), 7, height, false);
     OO_CHECK(stretched.pixels != nullptr && stretched.width == 7 &&
              stretched.height == height);
     OO_CHECK(AllEqual(stretched, 0xC3));
-    OOFreePixMap(&stretched);
+    oo::FreePixMap(&stretched);
   }
 }
 
@@ -282,26 +282,26 @@ OO_TEST(keepsUniformImagesUniform) {
 OO_TEST(squeezesGrayscaleVerticallyByANonIntegerFactorUniformly) {
   for (uint8_t value :
        {static_cast<uint8_t>(0x5A), static_cast<uint8_t>(0xC3)}) {
-    OOPixMap tall =
-        OOScalePixMap(MakeUniform(8, 8, kOOPixMapGrayscale, value), 8, 5, false);
+    oo::PixMap tall =
+        OOScalePixMap(MakeUniform(8, 8, oo::kPixMapGrayscale, value), 8, 5, false);
     Pinned("gray 8x8 -> 8x5", tall, 8, 5, std::vector<int>(8 * 5, value));
-    OOFreePixMap(&tall);
+    oo::FreePixMap(&tall);
 
-    OOPixMap both =
-        OOScalePixMap(MakeUniform(8, 8, kOOPixMapGrayscale, value), 3, 5, false);
+    oo::PixMap both =
+        OOScalePixMap(MakeUniform(8, 8, oo::kPixMapGrayscale, value), 3, 5, false);
     Pinned("gray 8x8 -> 3x5", both, 3, 5, std::vector<int>(3 * 5, value));
-    OOFreePixMap(&both);
+    oo::FreePixMap(&both);
   }
 }
 
 // A pixmap with no valid format is refused before any wrapper runs: a null
 // pixmap and one parameter-error log line, as before.
 OO_TEST(refusesAnInvalidPixMap) {
-  OOPixelBuffer invalidBytes = OOMakePixelBuffer(16);
-  OOPixMap invalid = {invalidBytes->data(), 2, 2, kOOPixMapInvalidFormat, 8, 16,
+  oo::PixelBuffer invalidBytes = oo::MakePixelBuffer(16);
+  oo::PixMap invalid = {invalidBytes->data(), 2, 2, oo::kPixMapInvalidFormat, 8, 16,
                       invalidBytes};
   int before = sParameterErrors;
-  OOPixMap result = OOScalePixMap(invalid, 1, 1, false);
+  oo::PixMap result = OOScalePixMap(invalid, 1, 1, false);
   OO_CHECK(result.pixels == nullptr);
   OO_CHECK_EQ(sParameterErrors, before + 1);
 }
@@ -317,7 +317,7 @@ OO_TEST(raiseExceptionThrowsTheSameException) {
   try {
     oo::RaiseException(oo::InternalInconsistencyException,
                      "Unsupported pixmap format in scaler: %s",
-                     OOPixMapFormatName(kOOPixMapInvalidFormat).c_str());
+                     oo::PixMapFormatName(oo::kPixMapInvalidFormat).c_str());
   } catch (const oo::Exception& e)
   {
     kept = e;
@@ -327,13 +327,13 @@ OO_TEST(raiseExceptionThrowsTheSameException) {
   OO_CHECK(name != nullptr &&
            std::strcmp(name, oo::InternalInconsistencyException) == 0);
   OO_CHECK_EQ(reason, std::string("Unsupported pixmap format in scaler: ") +
-                          OOPixMapFormatName(kOOPixMapInvalidFormat));
+                          oo::PixMapFormatName(oo::kPixMapInvalidFormat));
 
   std::string messageReason;
   try {
     oo::RaiseException(oo::InternalInconsistencyException,
                      "Unsupported pixmap format in scaler: %s",
-                     OOPixMapFormatName(kOOPixMapInvalidFormat)
+                     oo::PixMapFormatName(oo::kPixMapInvalidFormat)
                          .c_str());
   } catch (const oo::Exception& e)   // was @catch (OOException *e)
   {

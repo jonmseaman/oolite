@@ -27,7 +27,7 @@
 #include <string_view>
 #include <vector>
 
-#include "OODefaultShaderSynthesizer.h"
+#include "DefaultShaderSynthesizer.h"
 #include "OODescription.h"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
@@ -103,8 +103,8 @@ Synthesized Synthesize(oo::PList::Dict configuration,
   result.vertex = "unwritten";
   result.fragment = "unwritten";
   StartLog();
-  if (std::optional<OOSynthesizedShader> synthesized =
-          OOSynthesizeMaterialShader(oo::PList(std::move(configuration)),
+  if (std::optional<oo::SynthesizedShader> synthesized =
+          oo::SynthesizeMaterialShader(oo::PList(std::move(configuration)),
                                      materialKey, std::string("test entity"))) {
     result.ok = true;
     result.vertex = synthesized->vertexShader;
@@ -1511,8 +1511,8 @@ OO_TEST(cxxSynthesizerAnswersAsTheEntryPoint) {
       Synthesize({{"specular", Color(1, 1, 1)}, {"shininess", oo::PList(20)}},
                  std::string("hull.png"));
   {
-    std::shared_ptr<OODefaultShaderSynthesizer> synthesizer =
-        oo::makeShared<OODefaultShaderSynthesizer>(
+    std::shared_ptr<oo::DefaultShaderSynthesizer> synthesizer =
+        oo::makeShared<oo::DefaultShaderSynthesizer>(
             oo::PList(oo::PList::Dict{{"specular", Color(1, 1, 1)},
                                       {"shininess", oo::PList(20)}}),
             std::string("hull.png"), std::string("test entity"));

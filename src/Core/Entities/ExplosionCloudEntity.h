@@ -48,7 +48,7 @@ class ExplosionCloudEntity : public ParticleSystem {
       Entity* entity, float size, const oo::PList& settings);
 
   void update(OOTimeDelta delta_t) override;
-  OOTexture* texture() override;
+  oo::Texture* texture() override;
 
  private:
   bool initExplosionCloudWithEntity(Entity* entity, float size,
@@ -58,7 +58,7 @@ class ExplosionCloudEntity : public ParticleSystem {
   OOTimeDelta _cloudDuration = {};
   float _alpha = {};
   float _brightnessMult = {};
-  std::shared_ptr<OOTexture> _texture;
+  std::shared_ptr<oo::Texture> _texture;
   oo::PList _settings;
 };
 

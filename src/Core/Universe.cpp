@@ -55,6 +55,7 @@ MA 02110-1301, USA.
 #include "HeadUpDisplay.h"
 #include "LightParticleEntity.h"
 #include "LogIndentScope.h"
+#include "Material.h"
 #include "MyOpenGLView.h"
 #include "OOAsyncWorkManager.h"
 #include "OOCPUInfo.h"
@@ -71,32 +72,31 @@ MA 02110-1301, USA.
 #include "OOJSPopulatorDefinition.h"
 #include "OOJoystickManager.h"
 #include "OOLoggingExtended.h"
-#include "OOMaterial.h"
 #include "OOMusicController.h"
 #include "OOOpenGL.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOOpenGLMatrixManager.h"
 #include "OOPListGameTypes.h"  // used by every build, not only OO_LOCALIZATION_TOOLS ones
 #include "OOProbabilitySet.h"
-#include "OOShaderProgram.h"
 #include "OOShipGroup.h"
 #include "OOShipLibraryDescriptions.h"
 #include "OOShipRegistry.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"  // IWYU pragma: keep: used only by code some build options compile
 #include "OOSystemDescriptionManager.h"
-#include "OOTexture.h"
 #include "OOVersion.h"  // IWYU pragma: keep; OO_VERSION_FULL in DEV_RELEASE builds
 #include "PlanetEntity.h"
 #include "PlayerEntity.h"
 #include "ProxyPlayerEntity.h"
 #include "ResourceManager.h"
 #include "RingEffectEntity.h"
+#include "ShaderProgram.h"
 #include "ShipEntityAI.h"
 #include "SkyEntity.h"
 #include "SpeechSynthesizer.h"
 #include "StationEntity.h"
 #include "SunEntity.h"
+#include "Texture.h"
 #include "VisualEffectEntity.h"
 #include "WaypointEntity.h"
 #include "WormholeEntity.h"
@@ -330,7 +330,7 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView) {
   initTargetFramebufferWithViewSize(
       (gameView != nullptr ? gameView->backingViewSize() : NSSize{}));
 
-  ::OOMaterial::setUp();
+  ::oo::Material::setUp();
 
   // Preload cache
   OOCacheManager::sharedCache();
@@ -10715,7 +10715,7 @@ bool Universe::reinitAndShowDemo(bool showDemo) {
   }
 
   removeAllEntitiesExceptPlayer();
-  OOTexture::clearCache();
+  oo::Texture::clearCache();
 
   _sessionID++;  // Must be after removing old entities and before adding new
                  // ones.
@@ -11521,17 +11521,17 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
   // shader for drawing a textured quad on the passthrough framebuffer and
   // preparing it for bloom using MRT
   if (!OOOpenGLExtensionManager::sharedManager()->shadersForceDisabled()) {
-    textureProgram = OOShaderProgram::shaderProgramWithVertexShaderName(
+    textureProgram = oo::ShaderProgram::shaderProgramWithVertexShaderName(
         "oolite-texture.vertex", "oolite-texture.fragment", "#version 330\n",
         oo::PList(oo::PList::Dict{}));
     // shader for blurring the over-threshold brightness image generated from
     // the previous step using Gaussian filter
-    blurProgram = OOShaderProgram::shaderProgramWithVertexShaderName(
+    blurProgram = oo::ShaderProgram::shaderProgramWithVertexShaderName(
         "oolite-blur.vertex", "oolite-blur.fragment", "#version 330\n",
         oo::PList(oo::PList::Dict{}));
     // shader for applying bloom and any necessary post-proc fx, tonemapping and
     // gamma correction
-    finalProgram = OOShaderProgram::shaderProgramWithVertexShaderName(
+    finalProgram = oo::ShaderProgram::shaderProgramWithVertexShaderName(
         "oolite-final.vertex",
 #if OOLITE_WINDOWS
         (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr

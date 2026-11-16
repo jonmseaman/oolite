@@ -71,7 +71,9 @@ std::string OODrawable::description() const {
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-std::vector<std::shared_ptr<OOTexture>> OODrawable::allTextures() { return {}; }
+std::vector<std::shared_ptr<oo::Texture>> OODrawable::allTextures() {
+  return {};
+}
 
 // The object's own size.
 size_t OODrawable::totalSize() { return objectSize(); }
