@@ -39,7 +39,13 @@ SOFTWARE.
 #include "OOFoundation.h"
 #endif
 
-inline constexpr std::uint16_t kOOTCPConsolePort = 0x002173; /* = 8563 */
+namespace oo {
+
+inline constexpr std::uint16_t kTCPConsolePort = 0x002173;
+
+}  // namespace oo
+
+/* = 8563 */
 
 /*	PROTOCOL OVERVIEW
 
@@ -299,36 +305,41 @@ inline constexpr std::uint16_t kOOTCPConsolePort = 0x002173; /* = 8563 */
         minor version will be changed when new non-critical packets are added.
 */
 
-inline constexpr std::uint32_t kOOTCPProtocolVersionFormatMask = 0x00FF0000;
-inline constexpr std::uint32_t kOOTCPProtocolVersionMajorMask = 0x0000FF00;
-inline constexpr std::uint32_t kOOTCPProtocolVersionMinorMask = 0x000000FF;
+namespace oo {
 
-inline constexpr std::uint32_t kOOTCPProtocolVersionPListFormat = 1;
+inline constexpr std::uint32_t kTCPProtocolVersionFormatMask = 0x00FF0000;
+inline constexpr std::uint32_t kTCPProtocolVersionMajorMask = 0x0000FF00;
+inline constexpr std::uint32_t kTCPProtocolVersionMinorMask = 0x000000FF;
+
+inline constexpr std::uint32_t kTCPProtocolVersionPListFormat = 1;
 
 // A version number from its format, major and minor numbers. Upstream's
 // OOTCP_ENCODE_VERSION shifted the format, not the major number, into the
 // major byte; kept, so 1:1.0 is still 0x00010100 and old clients still connect.
-constexpr std::uint32_t OOTCPEncodeVersion(std::uint32_t format,
-                                           std::uint32_t /*major*/,
-                                           std::uint32_t minor) {
-  return ((format << 16) & kOOTCPProtocolVersionFormatMask) |
-         ((format << 8) & kOOTCPProtocolVersionMajorMask) |
-         (minor & kOOTCPProtocolVersionMinorMask);
+constexpr std::uint32_t TCPEncodeVersion(std::uint32_t format,
+                                         std::uint32_t /*major*/,
+                                         std::uint32_t minor) {
+  return ((format << 16) & kTCPProtocolVersionFormatMask) |
+         ((format << 8) & kTCPProtocolVersionMajorMask) |
+         (minor & kTCPProtocolVersionMinorMask);
 }
 
-constexpr std::uint32_t OOTCPVersionFormat(std::uint32_t version) {
-  return (version & kOOTCPProtocolVersionFormatMask) >> 16;
+constexpr std::uint32_t TCPVersionFormat(std::uint32_t version) {
+  return (version & kTCPProtocolVersionFormatMask) >> 16;
 }
 
-constexpr std::uint32_t OOTCPVersionMajor(std::uint32_t version) {
-  return (version & kOOTCPProtocolVersionMajorMask) >> 8;
+constexpr std::uint32_t TCPVersionMajor(std::uint32_t version) {
+  return (version & kTCPProtocolVersionMajorMask) >> 8;
 }
 
-constexpr std::uint32_t OOTCPVersionMinor(std::uint32_t version) {
-  return version & kOOTCPProtocolVersionMinorMask;
+constexpr std::uint32_t TCPVersionMinor(std::uint32_t version) {
+  return version & kTCPProtocolVersionMinorMask;
 }
 
 // 1:1.0, first version.
-inline constexpr std::uint32_t kOOTCPProtocolVersion_1_1_0 =
-    OOTCPEncodeVersion(kOOTCPProtocolVersionPListFormat, 1, 0);
-static_assert(kOOTCPProtocolVersion_1_1_0 == 0x00010100);
+inline constexpr std::uint32_t kTCPProtocolVersion_1_1_0 =
+    TCPEncodeVersion(kTCPProtocolVersionPListFormat, 1, 0);
+
+}  // namespace oo
+
+static_assert(oo::kTCPProtocolVersion_1_1_0 == 0x00010100);

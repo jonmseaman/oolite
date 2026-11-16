@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "OODebugStandards.h"
+#include "DebugStandards.h"
 #include "OODemangle.h"
 #include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
@@ -119,9 +119,9 @@ OOScript::worldScriptsAtPath(const std::string& path) {
   if (!result.has_value()) {
     filePath = oo::str::appendingPathComponent(path, "script.plist");
     if (OOOxzFileExistsAtPath(filePath)) {
-      OOStandardsDeprecated(
+      oo::StandardsDeprecated(
           std::format("Legacy script {} is deprecated", filePath));
-      if (!OOEnforceStandards()) {
+      if (!oo::EnforceStandards()) {
         foundScript = true;
         OO_LOG("script.load.pList", "Trying to load property list script {}",
                filePath);
@@ -195,9 +195,9 @@ OOScript::scriptsFromFileAtPath(const std::string& filePath) {
       result = std::vector<std::shared_ptr<OOScript>>{script};
     return result;
   } else if (extension == "plist") {
-    OOStandardsDeprecated(
+    oo::StandardsDeprecated(
         std::format("Legacy script {} is deprecated", filePath));
-    if (OOEnforceStandards()) {
+    if (oo::EnforceStandards()) {
       return std::nullopt;
     }
     return ::OOPListScript::scriptsInPListFile(filePath);

@@ -189,9 +189,14 @@ oo::PList PlayerEntity::missionVariableForKey(const std::string& /*key*/) {
 
 PlayerEntity* gOOPlayer = nullptr;
 
-void OOStandardsDeprecated(const std::string& /*message*/) {}
+namespace oo {
 
-bool OOEnforceStandards(void) { return false; }
+void StandardsDeprecated(const std::string& /*message*/) {}
+
+bool EnforceStandards(void) { return false; }
+
+}  // namespace oo
+
 
 oo::PList OOSanitizeLegacyScriptConditions(
     const oo::PList& conditions,

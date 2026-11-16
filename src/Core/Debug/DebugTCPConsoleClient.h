@@ -37,9 +37,9 @@ SOFTWARE.
 #include <string>
 #include <utility>
 
-#include "OODebuggerInterface.h"
+#include "DebuggerInterface.h"
 #include "OOFoundation.h"
-#include "OOTCPStreamDecoderAbstractionLayer.h"
+#include "TCPStreamDecoderAbstractionLayer.h"
 #include "oofnd/PList.hpp"
 
 #if OOLITE_WINDOWS
@@ -48,9 +48,11 @@ struct fd_set;  // winsock2.h's, which the .cpp includes
 #include <sys/select.h>
 #endif
 
-struct OOTCPStreamDecoder;
+namespace oo {
 
-enum class OOTCPClientConnectionStatus : int {
+struct TCPStreamDecoder;
+
+enum class TCPClientConnectionStatus : int {
   kNotConnected,
   kStartedConnectionStage1,
   kStartedConnectionStage2,
@@ -58,17 +60,23 @@ enum class OOTCPClientConnectionStatus : int {
   kConnectionRefused,
   kDisconnected,
 };
-static_assert(std::to_underlying(OOTCPClientConnectionStatus::kNotConnected) ==
-              0);
-static_assert(std::to_underlying(
-                  OOTCPClientConnectionStatus::kStartedConnectionStage1) == 1);
-static_assert(std::to_underlying(
-                  OOTCPClientConnectionStatus::kStartedConnectionStage2) == 2);
-static_assert(std::to_underlying(OOTCPClientConnectionStatus::kConnected) == 3);
+
+}  // namespace oo
+
 static_assert(
-    std::to_underlying(OOTCPClientConnectionStatus::kConnectionRefused) == 4);
-static_assert(std::to_underlying(OOTCPClientConnectionStatus::kDisconnected) ==
-              5);
+    std::to_underlying(oo::TCPClientConnectionStatus::kNotConnected) == 0);
+static_assert(std::to_underlying(
+                  oo::TCPClientConnectionStatus::kStartedConnectionStage1) ==
+              1);
+static_assert(std::to_underlying(
+                  oo::TCPClientConnectionStatus::kStartedConnectionStage2) ==
+              2);
+static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kConnected) ==
+              3);
+static_assert(
+    std::to_underlying(oo::TCPClientConnectionStatus::kConnectionRefused) == 4);
+static_assert(
+    std::to_underlying(oo::TCPClientConnectionStatus::kDisconnected) == 5);
 
 /*	The frame loop's side of the console socket: what the run loop did for
    the console's streams. OODebugTCPConsoleIsWaitingForInput() is true while a
@@ -76,10 +84,12 @@ static_assert(std::to_underlying(OOTCPClientConnectionStatus::kDisconnected) ==
    OODebugTCPConsoleServiceInput() waits up to timeout seconds (< 0: no limit)
    for that, then handles what arrived, as one run-loop wait did.
 */
-bool OODebugTCPConsoleIsWaitingForInput();
-void OODebugTCPConsoleServiceInput(double timeout);
+namespace oo {
 
-class OODebugMonitor;
+bool DebugTCPConsoleIsWaitingForInput();
+void DebugTCPConsoleServiceInput(double timeout);
+
+class DebugMonitor;
 
 /*	The connection is one non-blocking TCP socket, where it was a
         Foundation host lookup and an input/output stream pair on the run loop.
@@ -91,46 +101,46 @@ class OODebugMonitor;
         The debug monitor reaches the client through the C++
    OODebuggerInterface, which the client implements.
 */
-class OODebugTCPConsoleClient : public OODebuggerInterface {
+class DebugTCPConsoleClient : public DebuggerInterface {
  public:
   // [[OODebugTCPConsoleClient alloc] initWithAddress:port:]; null when the
   // connection fails.
-  static std::shared_ptr<OODebugTCPConsoleClient> clientWithAddress(
+  static std::shared_ptr<DebugTCPConsoleClient> clientWithAddress(
       const std::optional<std::string>& address,  // Pass nullopt for localhost
       uint16_t port);                             // Pass 0 for default port
 
-  ~OODebugTCPConsoleClient() override;
+  ~DebugTCPConsoleClient() override;
 
   // The debugger interface (OODebuggerInterface).
-  bool connectDebugMonitor(OODebugMonitor* debugMonitor,
+  bool connectDebugMonitor(DebugMonitor* debugMonitor,
                            std::optional<std::string>* message) override;
   void disconnectDebugMonitor(
-      OODebugMonitor* debugMonitor,
+      DebugMonitor* debugMonitor,
       const std::optional<std::string>& message) override;
-  void debugMonitor(OODebugMonitor* debugMonitor, const std::string& output,
+  void debugMonitor(DebugMonitor* debugMonitor, const std::string& output,
                     const std::optional<std::string>& colorKey,
                     NSRange emphasisRange) override;
-  void debugMonitorClearConsole(OODebugMonitor* debugMonitor) override;
-  void debugMonitorShowConsole(OODebugMonitor* debugMonitor) override;
-  void debugMonitor(OODebugMonitor* debugMonitor,
+  void debugMonitorClearConsole(DebugMonitor* debugMonitor) override;
+  void debugMonitorShowConsole(DebugMonitor* debugMonitor) override;
+  void debugMonitor(DebugMonitor* debugMonitor,
                     const oo::PList& configuration) override;
-  void debugMonitor(OODebugMonitor* debugMonitor, const oo::PList& newValue,
+  void debugMonitor(DebugMonitor* debugMonitor, const oo::PList& newValue,
                     const std::string& key) override;
   std::string description() const override;  // <OODebugTCPConsoleClient 0x...>
 
  private:
   // The frame loop's functions below read the clients' sockets.
-  friend bool ::OODebugTCPConsoleIsWaitingForInput();
-  friend void ::OODebugTCPConsoleServiceInput(double timeout);
+  friend bool ::oo::DebugTCPConsoleIsWaitingForInput();
+  friend void ::oo::DebugTCPConsoleServiceInput(double timeout);
 
-  OODebugTCPConsoleClient() = default;
+  DebugTCPConsoleClient() = default;
   bool initWithAddress(const std::optional<std::string>& address,
                        uint16_t port);
 
   // The decoder's callbacks; its string and dictionary handles are
   // OOALObjectRef.
-  void DecoderPacket(OOALObjectRef packetType, OOALObjectRef packet);
-  void DecoderError(OOALObjectRef errorDesc);
+  void DecoderPacket(ALObjectRef packetType, ALObjectRef packet);
+  void DecoderError(ALObjectRef errorDesc);
 
   void closeConnection();
 
@@ -183,7 +193,9 @@ class OODebugTCPConsoleClient : public OODebuggerInterface {
   int _inError = {}, _outError = {};
   int _pendingErrorCode = {};
   bool _errorEventPending = {};
-  OOTCPClientConnectionStatus _status = {};
-  OODebugMonitor* _monitor = {};
-  ::OOTCPStreamDecoder* _decoder = {};
+  TCPClientConnectionStatus _status = {};
+  DebugMonitor* _monitor = {};
+  ::oo::TCPStreamDecoder* _decoder = {};
 };
+
+}  // namespace oo

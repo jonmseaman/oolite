@@ -527,16 +527,21 @@ std::string sLastWarning;
 std::vector<std::string> sWarnings;
 }  // namespace
 
-void OOStandardsDeprecated(const std::string &message)
+namespace oo {
+
+void StandardsDeprecated(const std::string &message)
 {
 	(void)message;
 	sDeprecations++;
 }
 
-bool OOEnforceStandards(void)
+bool EnforceStandards(void)
 {
 	return sEnforceStandards;
 }
+
+}  // namespace oo
+
 
 
 void OOJSReportErrorWithArguments(JSContext *context, const char *format, va_list args)

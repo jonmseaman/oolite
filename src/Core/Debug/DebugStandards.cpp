@@ -27,7 +27,7 @@ SOFTWARE.
 
 */
 
-#include "OODebugStandards.h"
+#include "DebugStandards.h"
 
 #include <string>
 
@@ -38,21 +38,29 @@ SOFTWARE.
 
 #ifndef OO_DEBUG_MONITOR_ENABLED
 // in release mode, stubs
-void OOStandardsDeprecated(const std::string& message) {}
+namespace oo {
 
-void OOStandardsError(const std::string& message) {}
+void StandardsDeprecated(const std::string& message) {}
 
-bool OOEnforceStandards() { return false; }
+void StandardsError(const std::string& message) {}
 
-void OOSetStandardsForOXPVerifierMode() {}
+bool EnforceStandards() { return false; }
+
+void SetStandardsForOXPVerifierMode() {}
+
+}  // namespace oo
 
 #else
 
-void OOStandardsSetup();
+namespace oo {
+
+void StandardsSetup();
+
+}  // namespace oo
 
 namespace {
 
-void OOStandardsInternal(const std::string& type, const std::string& message);
+void StandardsInternal(const std::string& type, const std::string& message);
 
 }  // namespace
 
@@ -62,7 +70,9 @@ bool sSetup = false;
 
 }  // namespace
 
-enum class OOStandardsEnforcement : int {
+namespace oo {
+
+enum class StandardsEnforcement : int {
   // do nothing (equivalent to release build)
   kOff = 0,
   // warn in log but otherwise do nothing
@@ -73,17 +83,21 @@ enum class OOStandardsEnforcement : int {
   kQuit
 };
 
+}  // namespace oo
+
 // Deployment builds stay quiet unless an OXP developer opts in with
 // enforce-oxp-standards.
 #ifdef NDEBUG
-#define STANDARDS_ENFORCEMENT_DEFAULT OOStandardsEnforcement::kOff
+#define STANDARDS_ENFORCEMENT_DEFAULT oo::StandardsEnforcement::kOff
 #else
-#define STANDARDS_ENFORCEMENT_DEFAULT OOStandardsEnforcement::kWarn
+#define STANDARDS_ENFORCEMENT_DEFAULT oo::StandardsEnforcement::kWarn
 #endif
 
-static OOStandardsEnforcement sEnforcement = STANDARDS_ENFORCEMENT_DEFAULT;
+static oo::StandardsEnforcement sEnforcement = STANDARDS_ENFORCEMENT_DEFAULT;
 
-void OOStandardsSetup() {
+namespace oo {
+
+void StandardsSetup() {
   if (sSetup) {
     return;
   }
@@ -92,25 +106,27 @@ void OOStandardsSetup() {
   int s =
       oo::PListGet<int>::from(enforce.isNull() ? nullptr : &enforce,
                               oo::ToUnderlying(STANDARDS_ENFORCEMENT_DEFAULT));
-  if (s < oo::ToUnderlying(OOStandardsEnforcement::kOff)) {
-    s = oo::ToUnderlying(OOStandardsEnforcement::kOff);
-  } else if (s > oo::ToUnderlying(OOStandardsEnforcement::kQuit)) {
-    s = oo::ToUnderlying(OOStandardsEnforcement::kQuit);
+  if (s < oo::ToUnderlying(StandardsEnforcement::kOff)) {
+    s = oo::ToUnderlying(StandardsEnforcement::kOff);
+  } else if (s > oo::ToUnderlying(StandardsEnforcement::kQuit)) {
+    s = oo::ToUnderlying(StandardsEnforcement::kQuit);
   }
-  sEnforcement = static_cast<OOStandardsEnforcement>(s);
+  sEnforcement = static_cast<StandardsEnforcement>(s);
 }
+
+}  // namespace oo
 
 namespace {
 
-void OOStandardsInternal(const std::string& type, const std::string& message) {
-  OOStandardsSetup();
-  if (sEnforcement == OOStandardsEnforcement::kOff) {
+void StandardsInternal(const std::string& type, const std::string& message) {
+  oo::StandardsSetup();
+  if (sEnforcement == oo::StandardsEnforcement::kOff) {
     return;
   }
 
   OO_LOG(type, "{}", message);
 
-  if (sEnforcement == OOStandardsEnforcement::kQuit) {
+  if (sEnforcement == oo::StandardsEnforcement::kQuit) {
     ::GameController::sharedController()->exitAppWithContext(type);
     // exit
   }
@@ -118,22 +134,26 @@ void OOStandardsInternal(const std::string& type, const std::string& message) {
 
 }  // namespace
 
-void OOStandardsDeprecated(const std::string& message) {
-  OOStandardsInternal("oxp-standards.deprecated", message);
+namespace oo {
+
+void StandardsDeprecated(const std::string& message) {
+  StandardsInternal("oxp-standards.deprecated", message);
 }
 
-void OOStandardsError(const std::string& message) {
-  OOStandardsInternal("oxp-standards.error", message);
+void StandardsError(const std::string& message) {
+  StandardsInternal("oxp-standards.error", message);
 }
 
-bool OOEnforceStandards() {
-  OOStandardsSetup();
-  return sEnforcement >= OOStandardsEnforcement::kEnforce;
+bool EnforceStandards() {
+  StandardsSetup();
+  return sEnforcement >= StandardsEnforcement::kEnforce;
 }
 
-void OOSetStandardsForOXPVerifierMode() {
-  sEnforcement = OOStandardsEnforcement::kWarn;
+void SetStandardsForOXPVerifierMode() {
+  sEnforcement = StandardsEnforcement::kWarn;
   sSetup = true;
 }
+
+}  // namespace oo
 
 #endif

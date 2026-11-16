@@ -43,6 +43,8 @@ MA 02110-1301, USA.
 
 #include "AI.h"
 #include "CollisionRegion.h"
+#include "DebugStandards.h"
+#include "DebugSupport.h"
 #include "DockEntity.h"
 #include "DustEntity.h"
 #include "GameController.h"
@@ -58,8 +60,6 @@ MA 02110-1301, USA.
 #include "OOColor.h"
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
-#include "OODebugStandards.h"
-#include "OODebugSupport.h"
 #include "OODescription.h"
 #include "OOEntityFilterPredicate.h"
 #include "OOEquipmentType.h"
@@ -424,7 +424,7 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView) {
 
   ::GameController::sharedController()->logProgress(
       OO_DESC("initializing-debug-support"));
-  OOInitDebugSupport();
+  oo::InitDebugSupport();
 
   ::GameController::sharedController()->logProgress(OO_DESC("running-scripts"));
   if (player != nullptr) player->completeSetUp();
@@ -1652,10 +1652,10 @@ void Universe::setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2) {
   const oo::PList* script_actions =
       systeminfo.get<oo::PList::Array>("script_actions");
   if (script_actions != nullptr) {
-    OOStandardsDeprecated(
+    oo::StandardsDeprecated(
         std::format("The script_actions system info key is deprecated for {}.",
                     override_key));
-    if (!OOEnforceStandards()) {
+    if (!oo::EnforceStandards()) {
       if (player != nullptr)
         player->runUnsanitizedScriptActions(
             *script_actions, false, "<witchspace script_actions>", nullptr);
@@ -2174,10 +2174,10 @@ void Universe::populateNormalSpace() {
   const oo::PList* script_actions =
       systeminfo.get<oo::PList::Array>("script_actions");
   if (script_actions != nullptr) {
-    OOStandardsDeprecated(
+    oo::StandardsDeprecated(
         std::format("The script_actions system info key is deprecated for {}.",
                     TextOrNull(getSystemName(systemID))));
-    if (!OOEnforceStandards()) {
+    if (!oo::EnforceStandards()) {
       OO_DEBUG_PUSH_PROGRESS("setUpSpace - legacy script_actions");
       if (PLAYER != nullptr)
         PLAYER->runUnsanitizedScriptActions(*script_actions, false,
@@ -3116,7 +3116,7 @@ bool Universe::addShips(int howMany, const std::string& desc,
 bool Universe::spawnShip(const std::string& shipdesc) {
   // no need to do any more than log - enforcing modes wouldn't even have
   // loaded the legacy script
-  OOStandardsDeprecated(std::format(
+  oo::StandardsDeprecated(std::format(
       "'spawn' via legacy script is deprecated as a way of adding ships for {}",
       shipdesc));
 

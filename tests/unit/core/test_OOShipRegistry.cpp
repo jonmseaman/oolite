@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "OOCacheManager.h"
-#include "OODebugStandards.h"
+#include "DebugStandards.h"
 #include "OODescription.h"
 #include "OOJSEngineCore.h"
 #include "OOJSPropID.h"
@@ -72,13 +72,18 @@ std::optional<HPVector> ScanHPVectorFromString(const std::optional<std::string>&
 std::optional<Quaternion> ScanQuaternionFromString(const std::optional<std::string>&) {
   std::abort();
 }
-void OOStandardsDeprecated(const std::string&) { std::abort(); }
-void OOStandardsError(const std::string&) { std::abort(); }
+namespace oo {
+
+void StandardsDeprecated(const std::string&) { std::abort(); }
+void StandardsError(const std::string&) { std::abort(); }
 
 // Fakes the registry does call: standards are not enforced (the default), and
 // the ship library's category names are a fixed table (the real one expands
 // descriptions.plist through Universe).
-bool OOEnforceStandards(void) { return false; }
+bool EnforceStandards(void) { return false; }
+
+}  // namespace oo
+
 std::string OOShipLibraryCategoryPlural(const std::string& category) {
   if (category == "ship") return "Ships";
   if (category == "station") return "Stations";

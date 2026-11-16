@@ -32,26 +32,29 @@ SOFTWARE.
 
 #include <functional>
 
-#include "OOTCPStreamDecoderAbstractionLayer.h"
+#include "TCPStreamDecoderAbstractionLayer.h"
 
-struct OOTCPStreamDecoder;
-using OOTCPStreamDecoderRef = OOTCPStreamDecoder*;
+namespace oo {
+
+struct TCPStreamDecoder;
+using TCPStreamDecoderRef = TCPStreamDecoder*;
 
 // The callbacks carry their own context (a lambda's captures), so there is no
 // void* to pass back. The error and finalize callbacks may be empty.
-using OOTCPStreamDecoderPacketCallback =
-    std::function<void(OOALStringRef packetType, OOALDictionaryRef packet)>;
-using OOTCPStreamDecoderErrorCallback =
-    std::function<void(OOALStringRef errorDesc)>;
-using OOTCPStreamDecoderFinalizeCallback = std::function<void()>;
+using TCPStreamDecoderPacketCallback =
+    std::function<void(ALStringRef packetType, ALDictionaryRef packet)>;
+using TCPStreamDecoderErrorCallback =
+    std::function<void(ALStringRef errorDesc)>;
+using TCPStreamDecoderFinalizeCallback = std::function<void()>;
 
-OOTCPStreamDecoderRef OOTCPStreamDecoderCreate(
-    OOTCPStreamDecoderPacketCallback packetCB,
-    OOTCPStreamDecoderErrorCallback errorCB,
-    OOTCPStreamDecoderFinalizeCallback finalizeCB);
-void OOTCPStreamDecoderDestroy(OOTCPStreamDecoderRef decoder);
+TCPStreamDecoderRef TCPStreamDecoderCreate(
+    TCPStreamDecoderPacketCallback packetCB,
+    TCPStreamDecoderErrorCallback errorCB,
+    TCPStreamDecoderFinalizeCallback finalizeCB);
+void TCPStreamDecoderDestroy(TCPStreamDecoderRef decoder);
 
-void OOTCPStreamDecoderReceiveData(OOTCPStreamDecoderRef decoder,
-                                   OOALDataRef data);
-void OOTCPStreamDecoderReceiveBytes(OOTCPStreamDecoderRef decoder,
-                                    const void* bytes, size_t length);
+void TCPStreamDecoderReceiveData(TCPStreamDecoderRef decoder, ALDataRef data);
+void TCPStreamDecoderReceiveBytes(TCPStreamDecoderRef decoder,
+                                  const void* bytes, size_t length);
+
+}  // namespace oo

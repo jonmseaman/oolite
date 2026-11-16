@@ -226,16 +226,21 @@ void PlayerEntity::setMissionVariable(const oo::PList &value, const std::string 
 PlayerEntity *gOOPlayer = nullptr;
 
 
-void OOStandardsDeprecated(const std::string &message)
+namespace oo {
+
+void StandardsDeprecated(const std::string &message)
 {
 	(void)message;
 	gDeprecations++;
 }
 
-bool OOEnforceStandards(void)
+bool EnforceStandards(void)
 {
 	return gEnforceStandards;
 }
+
+}  // namespace oo
+
 
 oo::PList OOSanitizeLegacyScriptConditions(const oo::PList &conditions, const std::optional<std::string> &context)
 {

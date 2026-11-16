@@ -40,8 +40,8 @@ SOFTWARE.
 #include <typeinfo>
 #include <utility>
 
+#include "DebugStandards.h"
 #include "OOConvertCubeMapToLatLong.h"
-#include "OODebugStandards.h"
 #include "OODemangle.h"
 #include "OOPNGTextureLoader.h"
 #include "OOPixMapChannelOperations.h"
@@ -126,7 +126,7 @@ std::shared_ptr<OOTextureLoader> OOTextureLoader::loaderWithTextureSpecifier(
     if (!oo::Any(options & OOTextureFlags::kNoFNFMessage)) {
       OO_LOG_WARN(kOOLogFileNotFound, "Could not find texture file \"{}\".",
                   name);
-      OOStandardsError("Texture file not found");
+      oo::StandardsError("Texture file not found");
     }
     return nullptr;
   }

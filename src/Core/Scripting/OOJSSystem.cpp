@@ -40,11 +40,11 @@ OOJSSystem.m (QuickJS-ng)
 #include <utility>
 #include <vector>
 
+#include "DebugStandards.h"
 #include "Entity.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "EntityPListForeign.h"
 #include "OOConstToJSString.h"
-#include "OODebugStandards.h"
 #include "OODescription.h"
 #include "OOEntityFilterPredicate.h"
 #include "OOEntityHold.h"
@@ -1187,7 +1187,7 @@ static JSValue SystemAddGroupToRoute(JSContext* context,
 static JSValue SystemLegacyAddShips(JSContext* context,
                                     JSValueConst /*oojsThis*/, int argc,
                                     JSValueConst* oojsArgv) {
-  OOStandardsDeprecated("system.legacy_addShips() is deprecated");
+  oo::StandardsDeprecated("system.legacy_addShips() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
@@ -1217,7 +1217,7 @@ static JSValue SystemLegacyAddShips(JSContext* context,
 static JSValue SystemLegacyAddSystemShips(JSContext* context,
                                           JSValueConst /*oojsThis*/, int argc,
                                           JSValueConst* oojsArgv) {
-  OOStandardsDeprecated("system.legacy_addSystemShips() is deprecated");
+  oo::StandardsDeprecated("system.legacy_addSystemShips() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
   double position;
@@ -1251,7 +1251,7 @@ static JSValue SystemLegacyAddSystemShips(JSContext* context,
 static JSValue SystemLegacyAddShipsAt(JSContext* context,
                                       JSValueConst /*oojsThis*/, int argc,
                                       JSValueConst* oojsArgv) {
-  OOStandardsDeprecated("system.legacy_addShipsAt() is deprecated");
+  oo::StandardsDeprecated("system.legacy_addShipsAt() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1291,7 +1291,7 @@ static JSValue SystemLegacyAddShipsAtPrecisely(JSContext* context,
                                                JSValueConst /*oojsThis*/,
                                                int argc,
                                                JSValueConst* oojsArgv) {
-  OOStandardsDeprecated("system.legacy_addShipsAtPrecisely() is deprecated");
+  oo::StandardsDeprecated("system.legacy_addShipsAtPrecisely() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1331,7 +1331,7 @@ static JSValue SystemLegacyAddShipsWithinRadius(JSContext* context,
                                                 JSValueConst /*oojsThis*/,
                                                 int argc,
                                                 JSValueConst* oojsArgv) {
-  OOStandardsDeprecated("system.legacy_addShipsWithinRadius() is deprecated");
+  oo::StandardsDeprecated("system.legacy_addShipsWithinRadius() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1373,7 +1373,7 @@ static JSValue SystemLegacyAddShipsWithinRadius(JSContext* context,
 static JSValue SystemLegacySpawnShip(JSContext* context,
                                      JSValueConst /*oojsThis*/, int argc,
                                      JSValueConst* oojsArgv) {
-  OOStandardsDeprecated("system.legacy_spawnShip() is deprecated");
+  oo::StandardsDeprecated("system.legacy_spawnShip() is deprecated");
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;

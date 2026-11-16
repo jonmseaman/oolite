@@ -48,12 +48,12 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "DebugFlags.h"
+#include "DebugStandards.h"
 #include "Entity.h"  // for NO_DRAW_DISTANCE_FACTOR.
 #include "OOBasicMaterial.h"
 #include "OOCacheManager.h"
-#include "OODebugFlags.h"
 #include "OODebugGLDrawing.h"
-#include "OODebugStandards.h"
 #include "OOGraphicsResetManager.h"
 #include "OOJavaScriptEngine.h"
 #include "OOMacroOpenGL.h"
@@ -483,8 +483,8 @@ void OOMesh::renderOpaqueParts() {
 #endif
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  if (OODebugFlagIsOn(OODebugFlags::kDrawNormals)) debugDrawNormals();
-  if (OODebugFlagIsOn(OODebugFlags::kOctreeDraw)) {
+  if (oo::DebugFlagIsOn(oo::DebugFlags::kDrawNormals)) debugDrawNormals();
+  if (oo::DebugFlagIsOn(oo::DebugFlags::kOctreeDraw)) {
     if (Octree* cxxOctree = getOctree().get()) cxxOctree->drawOctree();
   }  // a nil octree did nothing
 #endif
@@ -1022,7 +1022,7 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
         // Model not found
         OO_LOG(kOOLogMeshDataNotFound, "***** ERROR: could not find {}",
                filename);
-        OOStandardsError("Model file not found");
+        oo::StandardsError("Model file not found");
         return false;
       }
 

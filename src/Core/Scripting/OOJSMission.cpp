@@ -31,9 +31,9 @@ MA 02110-1301, USA.
 #include <string>
 #include <utility>
 
+#include "DebugStandards.h"
 #include "GuiDisplayGen.h"
 #include "OOConstToJSString.h"
-#include "OODebugStandards.h"
 #include "OOJSPlayer.h"
 #include "OOJSScript.h"
 #include "OOJSVector.h"
@@ -367,9 +367,9 @@ static JSValue MissionMarkSystem(JSContext* context, JSValueConst /*oojsThis*/,
 
   for (i = 0; i < argc; i++) {
     if (ValueToInt32NoError(context, OOJS_ARGV[i], &dest)) {
-      OOStandardsDeprecated(
+      oo::StandardsDeprecated(
           "Use of numbers for mission.markSystem is deprecated");
-      if (!OOEnforceStandards()) {
+      if (!oo::EnforceStandards()) {
         if (player != nullptr)
           player->addMissionDestinationMarker(
               (player != nullptr
@@ -417,9 +417,9 @@ static JSValue MissionUnmarkSystem(JSContext* context,
   bool result = true;
   for (i = 0; i < argc; i++) {
     if (ValueToInt32NoError(context, OOJS_ARGV[i], &dest)) {
-      OOStandardsDeprecated(
+      oo::StandardsDeprecated(
           "Use of numbers for mission.unmarkSystem is deprecated");
-      if (!OOEnforceStandards()) {
+      if (!oo::EnforceStandards()) {
         if (!(player != nullptr
                   ? player->removeMissionDestinationMarker(
                         (player != nullptr ? player->defaultMarker(

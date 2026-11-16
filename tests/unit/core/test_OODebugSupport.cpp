@@ -25,9 +25,9 @@
 #include <vector>
 #include "EntityManualRefs.h"  // the tests' manual references
 
-#include "OODebugMonitor.h"
-#include "OODebugSupport.h"
-#include "OODebugTCPConsoleClient.h"
+#include "DebugMonitor.h"
+#include "DebugSupport.h"
+#include "DebugTCPConsoleClient.h"
 #include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 
@@ -95,61 +95,66 @@ void OOJavaScriptEngine::enableDebuggerStatement() {
 // client's debugger interface members are never reached (the monitor is a
 // stand-in). The engine-monitor members, which give the C++ monitor its vtable
 // (they are virtual); never reached here.
-void OODebugMonitor::jsEngine(::OOJavaScriptEngine*, JSContext*,
+void oo::DebugMonitor::jsEngine(::OOJavaScriptEngine*, JSContext*,
                               const std::string&,
                               const std::optional<std::string>&, unsigned,
                               unsigned, bool, const std::string&) {}
-void OODebugMonitor::jsEngine(::OOJavaScriptEngine*, JSContext*,
+void oo::DebugMonitor::jsEngine(::OOJavaScriptEngine*, JSContext*,
                               const std::string&,
                               const std::optional<std::string>&) {}
 // The monitor's JS glue and description, also virtual; never reached here.
-JSValue OODebugMonitor::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
-void OODebugMonitor::clearJSSelf(JSValueConst) {}
-std::string OODebugMonitor::className() const { return "OODebugMonitor"; }
-std::string OODebugMonitor::description() const { return "<OODebugMonitor>"; }
+JSValue oo::DebugMonitor::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
+void oo::DebugMonitor::clearJSSelf(JSValueConst) {}
+std::string oo::DebugMonitor::className() const { return "OODebugMonitor"; }
+std::string oo::DebugMonitor::description() const { return "<OODebugMonitor>"; }
 
-OODebugMonitor* OODebugMonitor::sharedDebugMonitor() {
-  static OODebugMonitor* monitor = nullptr;
-  if (monitor == nullptr) monitor = oo::test::NewRetained<OODebugMonitor>();
+oo::DebugMonitor* oo::DebugMonitor::sharedDebugMonitor() {
+  static oo::DebugMonitor* monitor = nullptr;
+  if (monitor == nullptr) monitor = oo::test::NewRetained<oo::DebugMonitor>();
   return monitor;
 }
 
-bool OODebugMonitor::setDebugger(OODebuggerInterface* debugger) {
+bool oo::DebugMonitor::setDebugger(oo::DebuggerInterface* debugger) {
   sRecord.debuggersSet.push_back(debugger);
   return debugger != nullptr;
 }
 
-void OODebugMonitor::setUsingPlugInController(bool flag) {
+void oo::DebugMonitor::setUsingPlugInController(bool flag) {
   sRecord.usingPlugInController.push_back(flag);
 }
 
-std::shared_ptr<OODebugTCPConsoleClient> OODebugTCPConsoleClient::clientWithAddress(
+std::shared_ptr<oo::DebugTCPConsoleClient> oo::DebugTCPConsoleClient::clientWithAddress(
     const std::optional<std::string>& address, uint16_t port) {
   sRecord.clientsMade.emplace_back(address, port);
-  if (sRecord.clientFails) return std::shared_ptr<OODebugTCPConsoleClient>();
-  std::shared_ptr<OODebugTCPConsoleClient> client =
-      std::shared_ptr<OODebugTCPConsoleClient>(new OODebugTCPConsoleClient(), oo::Dispose{});
+  if (sRecord.clientFails) return std::shared_ptr<oo::DebugTCPConsoleClient>();
+  std::shared_ptr<oo::DebugTCPConsoleClient> client =
+      std::shared_ptr<oo::DebugTCPConsoleClient>(new oo::DebugTCPConsoleClient(), oo::Dispose{});
   sRecord.lastClient = client.get();
   return client;
 }
 
-OODebugTCPConsoleClient::~OODebugTCPConsoleClient() {}
+namespace oo {
 
-bool OODebugTCPConsoleClient::connectDebugMonitor(OODebugMonitor*,
+DebugTCPConsoleClient::~DebugTCPConsoleClient() {}
+
+}  // namespace oo
+
+
+bool oo::DebugTCPConsoleClient::connectDebugMonitor(oo::DebugMonitor*,
                                                   std::optional<std::string>*) {
   return true;
 }
-void OODebugTCPConsoleClient::disconnectDebugMonitor(
-    OODebugMonitor*, const std::optional<std::string>&) {}
-void OODebugTCPConsoleClient::debugMonitor(OODebugMonitor*, const std::string&,
+void oo::DebugTCPConsoleClient::disconnectDebugMonitor(
+    oo::DebugMonitor*, const std::optional<std::string>&) {}
+void oo::DebugTCPConsoleClient::debugMonitor(oo::DebugMonitor*, const std::string&,
                                            const std::optional<std::string>&,
                                            NSRange) {}
-void OODebugTCPConsoleClient::debugMonitorClearConsole(OODebugMonitor*) {}
-void OODebugTCPConsoleClient::debugMonitorShowConsole(OODebugMonitor*) {}
-void OODebugTCPConsoleClient::debugMonitor(OODebugMonitor*, const oo::PList&) {}
-void OODebugTCPConsoleClient::debugMonitor(OODebugMonitor*, const oo::PList&,
+void oo::DebugTCPConsoleClient::debugMonitorClearConsole(oo::DebugMonitor*) {}
+void oo::DebugTCPConsoleClient::debugMonitorShowConsole(oo::DebugMonitor*) {}
+void oo::DebugTCPConsoleClient::debugMonitor(oo::DebugMonitor*, const oo::PList&) {}
+void oo::DebugTCPConsoleClient::debugMonitor(oo::DebugMonitor*, const oo::PList&,
                                            const std::string&) {}
-std::string OODebugTCPConsoleClient::description() const {
+std::string oo::DebugTCPConsoleClient::description() const {
   return "<OODebugTCPConsoleClient>";
 }
 
@@ -171,7 +176,7 @@ void Reset(oo::PList::Dict configuration, bool beacon) {
 OO_TEST(nothingWithoutTheDebugOXP) {
   {
     Reset({}, false);
-    OOInitDebugSupport();
+    oo::InitDebugSupport();
     OO_CHECK(sRecord.clientsMade.empty());
     OO_CHECK(sRecord.usingPlugInController.empty());
     OO_CHECK(sRecord.debuggersSet.empty());
@@ -183,7 +188,7 @@ OO_TEST(nothingWithoutTheDebugOXP) {
 OO_TEST(alwaysLoadWithoutTheDebugOXP) {
   {
     Reset({{"always-load-debug-console", oo::PList(kTrue)}}, false);
-    OOInitDebugSupport();
+    oo::InitDebugSupport();
     OO_CHECK(sRecord.clientsMade.empty());
     OO_CHECK(sRecord.debuggersSet.size() == 1 &&
              sRecord.debuggersSet[0] == nullptr);
@@ -198,7 +203,7 @@ OO_TEST(theTCPConsoleClient) {
     Reset({{"console-host", oo::PList(std::string("console.example"))},
            {"console-port", oo::PList(8564)}},
           true);
-    OOInitDebugSupport();
+    oo::InitDebugSupport();
     OO_CHECK(sRecord.clientsMade.size() == 1);
     if (sRecord.clientsMade.size() == 1) {
       OO_CHECK(sRecord.clientsMade[0].first ==
@@ -218,20 +223,20 @@ OO_TEST(theTCPConsoleClient) {
 OO_TEST(theHostSetting) {
   {
     Reset({}, true);
-    OOInitDebugSupport();
+    oo::InitDebugSupport();
     OO_CHECK(sRecord.clientsMade.size() == 1 &&
              !sRecord.clientsMade[0].first.has_value() &&
              sRecord.clientsMade[0].second == 0);
 
     Reset({{"console-host", oo::PList(42)}}, true);
-    OOInitDebugSupport();
+    oo::InitDebugSupport();
     OO_CHECK(sRecord.clientsMade.size() == 1 &&
              sRecord.clientsMade[0].first == std::optional<std::string>("42"));
 
     Reset({{"console-host",
             oo::PList(oo::PList::Array{oo::PList(std::string("x"))})}},
           true);
-    OOInitDebugSupport();
+    oo::InitDebugSupport();
     OO_CHECK(sRecord.clientsMade.size() == 1 &&
              !sRecord.clientsMade[0].first.has_value());
   }
@@ -243,7 +248,7 @@ OO_TEST(theClientFails) {
   {
     Reset({{"console-host", oo::PList(std::string("127.0.0.1"))}}, true);
     sRecord.clientFails = true;
-    OOInitDebugSupport();
+    oo::InitDebugSupport();
     OO_CHECK(sRecord.clientsMade.size() == 1);
     OO_CHECK(sRecord.usingPlugInController == std::vector<bool>{false});
     OO_CHECK(sRecord.debuggersSet.empty());
@@ -251,7 +256,7 @@ OO_TEST(theClientFails) {
 
     Reset({{"always-load-debug-console", oo::PList(kTrue)}}, true);
     sRecord.clientFails = true;
-    OOInitDebugSupport();
+    oo::InitDebugSupport();
     OO_CHECK(sRecord.debuggersSet.size() == 1 &&
              sRecord.debuggersSet[0] == nullptr);
     OO_CHECK(sRecord.debuggerStatementsEnabled == 1);

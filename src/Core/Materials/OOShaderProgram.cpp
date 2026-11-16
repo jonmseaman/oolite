@@ -45,8 +45,8 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "DebugFlags.h"
 #include "MyOpenGLView.h"
-#include "OODebugFlags.h"
 #include "OOMacroOpenGL.h"
 #include "OOShaderProgram.h"
 #include "ResourceManager.h"
@@ -316,7 +316,7 @@ bool ValidateShaderObject(GLhandleARB object,
   }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  if (0 && OODebugFlagIsOn(OODebugFlags::kShaderValidation)) {
+  if (0 && oo::DebugFlagIsOn(oo::DebugFlags::kShaderValidation)) {
     OOGL(glValidateProgramARB(object));
     OOGL(glGetObjectParameterivARB(object, GL_OBJECT_VALIDATE_STATUS_ARB,
                                    &status));

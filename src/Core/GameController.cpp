@@ -39,7 +39,7 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "legacy_random.h"
 #ifdef OO_DEBUG_MONITOR_ENABLED
-#include "OODebugTCPConsoleClient.h"
+#include "DebugTCPConsoleClient.h"
 #endif
 #ifndef NDEBUG
 #include "OOJavaScriptEngine.h"
@@ -72,7 +72,7 @@ MA 02110-1301, USA.
 #endif
 
 #if (OOLITE_SDL && defined(OO_DEBUG_MONITOR_ENABLED))
-#include "OODebugMonitor.h"
+#include "DebugMonitor.h"
 #endif
 
 namespace {
@@ -289,7 +289,7 @@ void GameController::setEcoQoS(bool efficiencyModeRequested) {
      call (measured: 15-60 s a frame; 0.04 s once the class was put back to
      normal). Stay at normal priority while a console is connected.
   */
-  if (efficiencyModeRequested && OODebugTCPConsoleIsWaitingForInput()) return;
+  if (efficiencyModeRequested && oo::DebugTCPConsoleIsWaitingForInput()) return;
 #endif
   if (oo::Defaults::standard().object("ecoqos").isNull()
           ? true
@@ -484,7 +484,7 @@ void GameController::runFrameLoop() {
       OOOXZManager::sharedManager()->processDownloadEvents();
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-      if (OODebugTCPConsoleIsWaitingForInput()) {
+      if (oo::DebugTCPConsoleIsWaitingForInput()) {
         /*	The debug console's socket is not on the run loop: wait on the
            socket as the run loop waited on the console's streams, handling
            what arrives before the next deadline.
@@ -496,7 +496,7 @@ void GameController::runFrameLoop() {
                         .count();
           if (timeout < 0.0) timeout = 0.0;
         }
-        OODebugTCPConsoleServiceInput(timeout);
+        oo::DebugTCPConsoleServiceInput(timeout);
       } else
 #endif
       {
@@ -687,7 +687,7 @@ void GameController::endSplashScreen() {
 void GameController::exitAppWithContext(const std::string& context) {
   OO_LOG("exit.context", "Exiting: {}.", context);
 #if (OOLITE_SDL && defined(OO_DEBUG_MONITOR_ENABLED))
-  ::OODebugMonitor::sharedDebugMonitor()->applicationWillTerminate();
+  ::oo::DebugMonitor::sharedDebugMonitor()->applicationWillTerminate();
 #endif
 #if OOLITE_WINDOWS
   // This should not be required normally but we have to ensure that

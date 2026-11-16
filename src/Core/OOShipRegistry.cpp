@@ -44,11 +44,11 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "DebugStandards.h"
 #include "EntityStatus.h"
 #include "GameController.h"
 #include "OOCacheManager.h"
 #include "OOColor.h"
-#include "OODebugStandards.h"
 #include "OODescription.h"
 #include "OOJSEngineCore.h"
 #include "OOJSPropID.h"
@@ -720,7 +720,7 @@ bool OOShipRegistry::applyLikeShips(oo::PList& ioData,
                    CaseInsensitiveSortedList(std::move(
                        reportedBadShips)));  // FIXME: distinguish shipdata and
                                              // effectdata
-        OOStandardsError("Likely missing a dependency in a manifest.plist");
+        oo::StandardsError("Likely missing a dependency in a manifest.plist");
       }
       break;
     }
@@ -922,7 +922,7 @@ bool OOShipRegistry::removeUnusableEntries(oo::PList& ioData, bool shipMode) {
                  "the shipdata.plist entry \"{}\" specifies no {}.", shipKey,
                  "roles");
       remove = true;
-      OOStandardsError("Error in shipdata.plist");
+      oo::StandardsError("Error in shipdata.plist");
     } else {
       const std::string modelName =
           StringForKey(&shipEntry, "model").value_or("");
@@ -930,7 +930,7 @@ bool OOShipRegistry::removeUnusableEntries(oo::PList& ioData, bool shipMode) {
         OO_LOG_ERR("shipData.load.error",
                    "the shipdata.plist entry \"{}\" specifies no {}.", shipKey,
                    "model");
-        OOStandardsError("Error in shipdata.plist");
+        oo::StandardsError("Error in shipdata.plist");
         remove = true;
       } else if (!modelName.empty() &&
                  !ResourceManager::pathForFileNamed(modelName, "Models")
@@ -939,7 +939,7 @@ bool OOShipRegistry::removeUnusableEntries(oo::PList& ioData, bool shipMode) {
                    "the shipdata.plist entry \"{}\" specifies non-existent "
                    "model \"{}\".",
                    shipKey, modelName);
-        OOStandardsError("Error in shipdata.plist");
+        oo::StandardsError("Error in shipdata.plist");
         remove = true;
       }
     }
@@ -999,9 +999,9 @@ bool OOShipRegistry::sanitizeConditions(oo::PList& ioData) {
       continue;
 
     if (!conditions.isNull()) {
-      OOStandardsDeprecated(std::format(
+      oo::StandardsDeprecated(std::format(
           "The 'conditions' key is deprecated in shipdata entry {}", key));
-      if (!OOEnforceStandards()) {
+      if (!oo::EnforceStandards()) {
         if (conditions.isArray()) {
           conditions = sanitize(
               conditions, std::format("<shipdata.plist entry \"{}\">", key));
@@ -1026,11 +1026,11 @@ bool OOShipRegistry::sanitizeConditions(oo::PList& ioData) {
           hasShipyard,
           std::format("<shipdata.plist entry \"{}\" hasShipyard conditions>",
                       key));
-      OOStandardsDeprecated(
+      oo::StandardsDeprecated(
           std::format("Use of legacy script conditions in the 'has_shipyard' "
                       "key is deprecated in shipyard entry {}",
                       key));
-      if (!OOEnforceStandards()) {
+      if (!oo::EnforceStandards()) {
         if (!hasShipyard.isNull()) {
           entry["has_shipyard"] = std::move(hasShipyard);
         } else {
@@ -1041,9 +1041,9 @@ bool OOShipRegistry::sanitizeConditions(oo::PList& ioData) {
     }
 
     if (!shipyardConditions.isNull()) {
-      OOStandardsDeprecated(std::format(
+      oo::StandardsDeprecated(std::format(
           "The 'conditions' key is deprecated in shipyard entry {}", key));
-      if (!OOEnforceStandards()) {
+      if (!oo::EnforceStandards()) {
         oo::PList mutableShipyard =
             valueOrNull(shipEntry.get<oo::PList::Dict>("_oo_shipyard"));
 
@@ -1111,7 +1111,7 @@ bool OOShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData) {
 
         // If entry is broken, we need to kill this ship.
         if (canonical.fatal) {
-          OOStandardsError("Bad subentity definition found");
+          oo::StandardsError("Bad subentity definition found");
           remove = true;
         } else if (!subentityDict.isNull()) {
           // Tag subentities.
@@ -1157,7 +1157,7 @@ bool OOShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData) {
               "shipData.load.error",
               "the shipdata.plist entry \"{}\" has unresolved subentit{} {}.",
               shipKey, (badCount == 1) ? "y" : "ies", badSubentitiesList);
-          OOStandardsError("Bad subentity definition found");
+          oo::StandardsError("Bad subentity definition found");
         }
         remove = true;
       }
@@ -1216,9 +1216,9 @@ OOShipRegistry::canonicalizeSubentityDeclaration(const oo::PList& declaration,
 
   if (declaration.isString()) {
     // Update old-style string-based declaration.
-    OOStandardsDeprecated(std::format(
+    oo::StandardsDeprecated(std::format(
         "Old style sub-entity declarations are deprecated in {}", shipKey));
-    if (!OOEnforceStandards()) {
+    if (!oo::EnforceStandards()) {
       result = translateOldStyleSubentityDeclaration(
           *declaration.getIf<std::string>(), shipKey, shipData);
     }

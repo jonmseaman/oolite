@@ -40,8 +40,8 @@
 #include "oofnd/Log.hpp"
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
+#include "DebugFlags.h"
 #include "Entity.h"
-#include "OODebugFlags.h"
 #include "OODebugGLDrawing.h"
 #endif
 
@@ -263,7 +263,7 @@ void OOPlanetDrawable::renderCommonParts() {
 
   OOGLPopModelView();
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  if (OODebugFlagIsOn(OODebugFlags::kDrawNormals)) debugDrawNormals();
+  if (oo::DebugFlagIsOn(oo::DebugFlags::kDrawNormals)) debugDrawNormals();
 #endif
 
   OOMaterial::applyNone();

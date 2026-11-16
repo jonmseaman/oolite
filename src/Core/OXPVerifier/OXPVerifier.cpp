@@ -66,10 +66,10 @@ SOFTWARE.
 #include "CheckPListSyntaxVerifierStage.h"
 #include "CheckRequiresPListVerifierStage.h"
 #include "CheckShipDataPListVerifierStage.h"
+#include "DebugStandards.h"
 #include "GameController.h"
 #include "LogIndentScope.h"
 #include "OOCacheManager.h"
-#include "OODebugStandards.h"
 #include "OOLoggingExtended.h"
 #include "OXPVerifierStage.h"
 #include "ResourceManager.h"
@@ -335,7 +335,7 @@ std::shared_ptr<oo::OXPVerifier> oo::OXPVerifier::createWithPath(
 }
 
 bool oo::OXPVerifier::initWithPath(const std::optional<std::string>& path) {
-  OOSetStandardsForOXPVerifierMode();
+  oo::SetStandardsForOXPVerifierMode();
 
   // Any plist format; missing, unreadable or not a dictionary is no
   // configuration, as -dictionaryWithContentsOfFile: returned nil for them.

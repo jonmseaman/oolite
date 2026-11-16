@@ -598,8 +598,13 @@ void OOCacheManager::setPList(const oo::PList &, const std::string &, const std:
 std::shared_ptr<OOScript> OOScript::jsScriptFromFileNamed(const std::string &, const oo::PList &)  { std::abort(); }
 void OOScriptAutorelease(std::shared_ptr<OOScript>)  { std::abort(); }
 
-void OOStandardsDeprecated(const std::string&) { std::abort(); }
-bool OOEnforceStandards(void) { std::abort(); }
+namespace oo {
+
+void StandardsDeprecated(const std::string&) { std::abort(); }
+bool EnforceStandards(void) { std::abort(); }
+
+}  // namespace oo
+
 oo::PList OOSanitizeLegacyScriptConditions(const oo::PList&,
                                            const std::optional<std::string>&) {
   std::abort();

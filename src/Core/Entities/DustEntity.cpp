@@ -24,8 +24,8 @@ MA 02110-1301, USA.
 
 #include "DustEntity.h"
 
+#include "DebugFlags.h"
 #include "MyOpenGLView.h"
-#include "OODebugFlags.h"
 #include "OOGraphicsResetManager.h"
 #include "OOMacroOpenGL.h"
 #include "OOMaths.h"
@@ -258,7 +258,7 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   assert(player != nullptr);
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  if (OODebugFlagIsOn(OODebugFlags::kNoDust)) return;
+  if (oo::DebugFlagIsOn(oo::DebugFlags::kNoDust)) return;
 #endif
 
 #if OO_SHADERS

@@ -1,13 +1,11 @@
 /*
 
-OOJSConsole.h
+OODebugStandards.h
 
-JavaScript object representing the JavaScript console.
+OXP strictness warnings for errors and deprecated content
 
 
-Oolite Debug Support
-
-Copyright (C) 2007-2013 Jens Ayton
+Copyright (C) 2014
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,14 +26,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-
 #pragma once
 
+#include <string>
+
 #include "OOFoundation.h"
-class OODebugMonitor;
 
-#include <quickjs.h>
+// Warn/exit if deprecated functionality used
+namespace oo {
 
-// Create the JS console object for the debug monitor. The caller owns the
-// result.
-JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor);
+void StandardsDeprecated(const std::string& message);
+
+// Warn/exit if an OXP error is detected
+void StandardsError(const std::string& message);
+
+// Return true if in standard enforcing mode
+// Always false in release builds
+// This will *not* exit in "exit on error" mode
+bool EnforceStandards();
+
+void SetStandardsForOXPVerifierMode();
+
+}  // namespace oo
+
+/*	TRANSITIONAL: the Foundation-typed API forwarding to the cxx_ functions
+   above, so unmigrated callers compile unchanged. Callers move to the cxx_
+   API; the bridge then goes.
+*/

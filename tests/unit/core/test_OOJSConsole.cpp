@@ -17,11 +17,11 @@
 */
 
 #include "OOFoundation.h"
-#include "OOJSConsole.h"
-#include "OODebugMonitor.h"
+#include "JSConsole.h"
+#include "DebugMonitor.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOJSEngineCore.h"
-#include "OODebugFlags.h"
+#include "DebugFlags.h"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
 
@@ -56,62 +56,62 @@ MonitorRecord sMonitor;
 }	// namespace
 
 
-OODebugMonitor *OODebugMonitor::sharedDebugMonitor()
+oo::DebugMonitor *oo::DebugMonitor::sharedDebugMonitor()
 {
-	static OODebugMonitor *monitor = nullptr;
-	if (monitor == nullptr)  monitor = oo::test::NewRetained<OODebugMonitor>();
+	static oo::DebugMonitor *monitor = nullptr;
+	if (monitor == nullptr)  monitor = oo::test::NewRetained<oo::DebugMonitor>();
 	return monitor;
 }
 
-bool OODebugMonitor::setDebugger(OODebuggerInterface *)  { return false; }
-void OODebugMonitor::disconnectDebugger(OODebuggerInterface *, const std::optional<std::string> &)  {}
-void OODebugMonitor::performJSConsoleCommand(const std::string &)  {}
+bool oo::DebugMonitor::setDebugger(oo::DebuggerInterface *)  { return false; }
+void oo::DebugMonitor::disconnectDebugger(oo::DebuggerInterface *, const std::optional<std::string> &)  {}
+void oo::DebugMonitor::performJSConsoleCommand(const std::string &)  {}
 
-void OODebugMonitor::appendJSConsoleLine(const std::string &string, const std::optional<std::string> &colorKey, NSRange emphasisRange)
+void oo::DebugMonitor::appendJSConsoleLine(const std::string &string, const std::optional<std::string> &colorKey, NSRange emphasisRange)
 {
 	sMonitor.lines.push_back(colorKey.value_or("(none)") + "|" + string + "|" + std::to_string(emphasisRange.location) + "," + std::to_string(emphasisRange.length));
 }
 
-void OODebugMonitor::appendJSConsoleLine(const std::string &string, const std::optional<std::string> &colorKey)
+void oo::DebugMonitor::appendJSConsoleLine(const std::string &string, const std::optional<std::string> &colorKey)
 {
 	appendJSConsoleLine(string, colorKey, NSMakeRange(0, 0));
 }
 
-void OODebugMonitor::clearJSConsole()  { sMonitor.clears++; }
-void OODebugMonitor::showJSConsole()  {}
+void oo::DebugMonitor::clearJSConsole()  { sMonitor.clears++; }
+void oo::DebugMonitor::showJSConsole()  {}
 
-oo::PList OODebugMonitor::configurationValueForKey(const std::string &key)
+oo::PList oo::DebugMonitor::configurationValueForKey(const std::string &key)
 {
 	auto found = sMonitor.configuration.find(key);
 	return (found != sMonitor.configuration.end()) ? found->second : oo::PList();
 }
 
-long long OODebugMonitor::configurationIntValueForKey(const std::string &, long long value)  { return value; }
+long long oo::DebugMonitor::configurationIntValueForKey(const std::string &, long long value)  { return value; }
 
-void OODebugMonitor::setConfigurationValue(const oo::PList &value, const std::string &key)
+void oo::DebugMonitor::setConfigurationValue(const oo::PList &value, const std::string &key)
 {
 	sMonitor.configurationSets.emplace_back(key, value);
 }
 
-std::vector<std::string> OODebugMonitor::configurationKeys()  { return {}; }
-bool OODebugMonitor::debuggerConnected()  { return false; }
-void OODebugMonitor::dumpMemoryStatistics()  { sMonitor.memoryDumps++; }
-size_t OODebugMonitor::dumpJSMemoryStatistics()  { sMonitor.jsMemoryDumps++; return 0; }
-void OODebugMonitor::setTCPIgnoresDroppedPackets(bool flag)  { sMonitor.ignoresDroppedPackets = flag; }
-bool OODebugMonitor::TCPIgnoresDroppedPackets()  { return sMonitor.ignoresDroppedPackets; }
-void OODebugMonitor::setUsingPlugInController(bool)  {}
-bool OODebugMonitor::usingPlugInController()  { return false; }
-std::string OODebugMonitor::sourceCodeForFile(const std::string &, unsigned)  { return std::string(); }
+std::vector<std::string> oo::DebugMonitor::configurationKeys()  { return {}; }
+bool oo::DebugMonitor::debuggerConnected()  { return false; }
+void oo::DebugMonitor::dumpMemoryStatistics()  { sMonitor.memoryDumps++; }
+size_t oo::DebugMonitor::dumpJSMemoryStatistics()  { sMonitor.jsMemoryDumps++; return 0; }
+void oo::DebugMonitor::setTCPIgnoresDroppedPackets(bool flag)  { sMonitor.ignoresDroppedPackets = flag; }
+bool oo::DebugMonitor::TCPIgnoresDroppedPackets()  { return sMonitor.ignoresDroppedPackets; }
+void oo::DebugMonitor::setUsingPlugInController(bool)  {}
+bool oo::DebugMonitor::usingPlugInController()  { return false; }
+std::string oo::DebugMonitor::sourceCodeForFile(const std::string &, unsigned)  { return std::string(); }
 #if OOLITE_SDL
-void OODebugMonitor::applicationWillTerminate()  {}
+void oo::DebugMonitor::applicationWillTerminate()  {}
 #endif
-void OODebugMonitor::jsEngine(OOJavaScriptEngine *, JSContext *, const std::string &, const std::optional<std::string> &, unsigned, unsigned, bool, const std::string &)  {}
-void OODebugMonitor::jsEngine(OOJavaScriptEngine *, JSContext *, const std::string &, const std::optional<std::string> &)  {}
+void oo::DebugMonitor::jsEngine(OOJavaScriptEngine *, JSContext *, const std::string &, const std::optional<std::string> &, unsigned, unsigned, bool, const std::string &)  {}
+void oo::DebugMonitor::jsEngine(OOJavaScriptEngine *, JSContext *, const std::string &, const std::optional<std::string> &)  {}
 // The monitor's JS glue and description: its JS value is defined below, with the console object it
 // answers.
-void OODebugMonitor::clearJSSelf(JSValueConst)  {}
-std::string OODebugMonitor::className() const  { return "OODebugMonitor"; }
-std::string OODebugMonitor::description() const  { return "<OODebugMonitor>"; }
+void oo::DebugMonitor::clearJSSelf(JSValueConst)  {}
+std::string oo::DebugMonitor::className() const  { return "OODebugMonitor"; }
+std::string oo::DebugMonitor::description() const  { return "<OODebugMonitor>"; }
 
 
 // MARK: What the rest of the game provides ---------------------------------------------------------
@@ -266,7 +266,7 @@ JSValue sGlobal = JS_UNDEFINED;
 
 // The monitor's JS value is the console object (as the monitor's
 // jsValueInContext() makes it), owned by the caller; undefined before it is made.
-JSValue OODebugMonitor::jsValueInContext(JSContext *context)
+JSValue oo::DebugMonitor::jsValueInContext(JSContext *context)
 {
 	return JS_DupValue(context, sConsoleObject);
 }
@@ -565,7 +565,7 @@ void SetUpContext()
 	sPlainEntity = oo::test::NewRetained<TestEntityObject>();
 	sInspectableEntity = oo::test::NewRetained<InspectableEntity>();
 
-	sConsoleObject = DebugMonitorToJSConsole(sContext, OODebugMonitor::sharedDebugMonitor());
+	sConsoleObject = DebugMonitorToJSConsole(sContext, oo::DebugMonitor::sharedDebugMonitor());
 	// The global holds the console; sConsoleObject borrows it.
 	JS_SetPropertyStr(sContext, sGlobal, "console", sConsoleObject);
 }
@@ -607,8 +607,8 @@ OO_TEST(theConsoleObjects)
 	OO_CHECK_EVAL("typeof console", "object");
 	OO_CHECK_EVAL("typeof console.settings", "object");
 	OO_CHECK_EVAL("Object.getPrototypeOf(console) === Object.getPrototypeOf(console.settings)", "false");
-	OO_CHECK_EVAL("console.DEBUG_LINKED_LISTS", std::to_string(oo::ToUnderlying(OODebugFlags::kLinkedLists)).c_str());
-	OO_CHECK_EVAL("console.DEBUG_SHADER_VALIDATION", std::to_string(oo::ToUnderlying(OODebugFlags::kShaderValidation)).c_str());
+	OO_CHECK_EVAL("console.DEBUG_LINKED_LISTS", std::to_string(oo::ToUnderlying(oo::DebugFlags::kLinkedLists)).c_str());
+	OO_CHECK_EVAL("console.DEBUG_SHADER_VALIDATION", std::to_string(oo::ToUnderlying(oo::DebugFlags::kShaderValidation)).c_str());
 }
 
 

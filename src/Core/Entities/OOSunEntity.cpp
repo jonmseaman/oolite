@@ -33,9 +33,9 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "AI.h"
+#include "DebugFlags.h"
 #include "MyOpenGLView.h"
 #include "OOColor.h"
-#include "OODebugFlags.h"
 #include "OOJSSun.h"
 #include "OOMacroOpenGL.h"
 #include "OOPlanetEntity.h"
@@ -231,7 +231,7 @@ bool OOSunEntity::canCollide() { return true; }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 bool OOSunEntity::checkCloseCollisionWith(Entity* other) {
-  if (OODebugFlagIsOn(OODebugFlags::kCollisions)) {
+  if (oo::DebugFlagIsOn(oo::DebugFlags::kCollisions)) {
     OO_LOG("sun.collide", "{}", "SUN Collision!");
   }
 

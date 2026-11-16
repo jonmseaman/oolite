@@ -51,7 +51,7 @@ SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "OODebuggerInterface.h"
+#include "DebuggerInterface.h"
 #include "OOFoundation.h"
 #include "OOJSPrivateObject.h"          // the console's JS glue
 #include "OOJavaScriptEngineMonitor.h"  // the engine's monitor, a C++ interface
@@ -67,17 +67,19 @@ class OOJavaScriptEngine;
    monitor (the C++ OOJavaScriptEngineMonitor), the console's JS objects hold it
    in their private slot and the console script is handed it as an Object node.
 */
-class OODebugMonitor : public oo::PListForeign,
-                       public ::OOJavaScriptEngineMonitor,
-                       public ::OOJSPrivateObject {
+namespace oo {
+
+class DebugMonitor : public oo::PListForeign,
+                     public ::OOJavaScriptEngineMonitor,
+                     public ::OOJSPrivateObject {
  public:
-  static OODebugMonitor* sharedDebugMonitor();
-  bool setDebugger(OODebuggerInterface* debugger);
+  static DebugMonitor* sharedDebugMonitor();
+  bool setDebugger(DebuggerInterface* debugger);
 
   // Note: disconnectDebugger() will cause a disconnectDebugMonitor:message:
   // message to be sent to the debugger. The debugger should not send
   // disconnectDebugger:message: in response to disconnectDebugMonitor:message:.
-  void disconnectDebugger(OODebuggerInterface* debugger,
+  void disconnectDebugger(DebuggerInterface* debugger,
                           const std::optional<std::string>& message);
 
   // *** JavaScript console support.
@@ -172,7 +174,7 @@ class OODebugMonitor : public oo::PListForeign,
   std::optional<std::vector<std::string>> loadSourceFile(
       const std::string& filePath);  // nullopt: can't be read
 
-  std::shared_ptr<OODebuggerInterface> _debugger;  // a C++ interface
+  std::shared_ptr<DebuggerInterface> _debugger;  // a C++ interface
 
   // JavaScript console support.
   std::shared_ptr<OOScript> _script;  // the console script (an OOJSScript)
@@ -192,3 +194,5 @@ class OODebugMonitor : public oo::PListForeign,
   bool _TCPIgnoresDroppedPackets = {};
   bool _usingPlugInController = {};
 };
+
+}  // namespace oo

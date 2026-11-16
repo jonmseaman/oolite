@@ -31,7 +31,11 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-void OOInitDebugSupport();
+namespace oo {
+
+void InitDebugSupport();
+
+}  // namespace oo
 
 #else
 

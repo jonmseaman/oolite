@@ -28,7 +28,7 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-#include "OODebugMonitor.h"
+#include "DebugMonitor.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -43,10 +43,10 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "JSConsole.h"
 #include "LogIndentScope.h"
 #include "OOConcreteTexture.h"
 #include "OODrawable.h"
-#include "OOJSConsole.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
 #include "OOJSSpecialFunctions.h"
@@ -65,7 +65,7 @@ SOFTWARE.
 namespace {
 
 // The one monitor, never released (sharedDebugMonitor()).
-OODebugMonitor* sSingleton = nullptr;
+oo::DebugMonitor* sSingleton = nullptr;
 
 }  // namespace
 
@@ -75,13 +75,17 @@ OODebugMonitor* sSingleton = nullptr;
    X it was AppKit's notification, which oo::NotificationCenter does not
    receive (that build is not maintained).
 */
+namespace oo {
+
 constexpr std::string_view
-    kOODebugMonitorApplicationWillTerminateNotificationName =
+    kDebugMonitorApplicationWillTerminateNotificationName =
         "ApplicationWillTerminate";
+
+}  // namespace oo
 
 // Was -init; [super init] could not fail, so its guarded statements stand in a
 // plain block.
-void OODebugMonitor::init() {
+void oo::DebugMonitor::init() {
   {
     _configFromOXPs =
         normalizeConfigDictionary(ResourceManager::dictionaryFromFilesNamed(
@@ -101,8 +105,8 @@ void OODebugMonitor::init() {
     setUpDebugConsoleScript();
 
     oo::NotificationCenter::defaultCenter().addObserver(
-        this, kOODebugMonitorApplicationWillTerminateNotificationName, nullptr,
-        [this](const oo::Notification& notification) {
+        this, oo::kDebugMonitorApplicationWillTerminateNotificationName,
+        nullptr, [this](const oo::Notification& notification) {
           applicationWillTerminate(notification);
         });
 
@@ -122,15 +126,15 @@ void OODebugMonitor::init() {
    -release do nothing, and the one monitor is never released.
 */
 
-OODebugMonitor* OODebugMonitor::sharedDebugMonitor() {
+oo::DebugMonitor* oo::DebugMonitor::sharedDebugMonitor() {
   // NOTE: assumes single-threaded access. The debug monitor is not, on the
   // whole, thread safe.
   if (sSingleton == nullptr) {
     // Recorded before init(), as +allocWithZone: recorded it before -init ran.
-    static std::shared_ptr<OODebugMonitor>* sSingletonHolder =
+    static std::shared_ptr<oo::DebugMonitor>* sSingletonHolder =
         nullptr;  // never deleted
-    sSingletonHolder =
-        new std::shared_ptr<OODebugMonitor>(oo::makeShared<OODebugMonitor>());
+    sSingletonHolder = new std::shared_ptr<oo::DebugMonitor>(
+        oo::makeShared<oo::DebugMonitor>());
     sSingleton = sSingletonHolder->get();
     sSingleton->init();
   }
@@ -138,7 +142,7 @@ OODebugMonitor* OODebugMonitor::sharedDebugMonitor() {
   return sSingleton;
 }
 
-bool OODebugMonitor::setDebugger(OODebuggerInterface* newDebugger) {
+bool oo::DebugMonitor::setDebugger(oo::DebuggerInterface* newDebugger) {
   std::optional<std::string> error;  // -connectDebugMonitor:errorMessage:
 
   if (newDebugger != _debugger.get()) {
@@ -176,7 +180,7 @@ bool OODebugMonitor::setDebugger(OODebuggerInterface* newDebugger) {
   return _debugger.get() == newDebugger;
 }
 
-void OODebugMonitor::performJSConsoleCommand(const std::string& command) {
+void oo::DebugMonitor::performJSConsoleCommand(const std::string& command) {
   JSContext* context = OOJSAcquireContext();
   OOJSVal commandVal = OOJSValueFromPList(context, oo::PList(command));
   OOJSStartTimeLimiterWithTimeLimit(kOOJSLongTimeLimit);
@@ -188,7 +192,7 @@ void OODebugMonitor::performJSConsoleCommand(const std::string& command) {
   OOJSRelinquishContext(context);
 }
 
-void OODebugMonitor::appendJSConsoleLine(
+void oo::DebugMonitor::appendJSConsoleLine(
     const std::string& string, const std::optional<std::string>& colorKey,
     NSRange emphasisRange) {
   OOJSPauseTimeLimiter();
@@ -206,12 +210,12 @@ void OODebugMonitor::appendJSConsoleLine(
   OOJSResumeTimeLimiter();
 }
 
-void OODebugMonitor::appendJSConsoleLine(
+void oo::DebugMonitor::appendJSConsoleLine(
     const std::string& string, const std::optional<std::string>& colorKey) {
   appendJSConsoleLine(string, colorKey, NSMakeRange(0, 0));
 }
 
-void OODebugMonitor::clearJSConsole() {
+void oo::DebugMonitor::clearJSConsole() {
   OOJSPauseTimeLimiter();
   try {
     if (_debugger != nullptr) _debugger->debugMonitorClearConsole(this);
@@ -225,7 +229,7 @@ void OODebugMonitor::clearJSConsole() {
   OOJSResumeTimeLimiter();
 }
 
-void OODebugMonitor::showJSConsole() {
+void oo::DebugMonitor::showJSConsole() {
   OOJSPauseTimeLimiter();
   try {
     if (_debugger != nullptr) _debugger->debugMonitorShowConsole(this);
@@ -239,7 +243,7 @@ void OODebugMonitor::showJSConsole() {
   OOJSResumeTimeLimiter();
 }
 
-oo::PList OODebugMonitor::configurationValueForKey(const std::string& key) {
+oo::PList oo::DebugMonitor::configurationValueForKey(const std::string& key) {
   // The override, else (when it is missing or null) the OXPs' value; an OONull
   // in either reads as null (an OONull override hides the OXPs' value). Any
   // Object node but the null's reads as nil.
@@ -253,8 +257,8 @@ oo::PList OODebugMonitor::configurationValueForKey(const std::string& key) {
   return *result;
 }
 
-std::int64_t OODebugMonitor::configurationIntValueForKey(const std::string& key,
-                                                         std::int64_t value) {
+std::int64_t oo::DebugMonitor::configurationIntValueForKey(
+    const std::string& key, std::int64_t value) {
   // -longLongValue of the stored NSString or NSNumber; anything else gives the
   // default.
   const oo::PList object = configurationValueForKey(key);
@@ -276,8 +280,8 @@ std::int64_t OODebugMonitor::configurationIntValueForKey(const std::string& key,
   }
 }
 
-void OODebugMonitor::setConfigurationValue(const oo::PList& value,
-                                           const std::string& key) {
+void oo::DebugMonitor::setConfigurationValue(const oo::PList& value,
+                                             const std::string& key) {
   if (key.empty()) return;
 
   const std::string& keyString = key;
@@ -314,7 +318,7 @@ void OODebugMonitor::setConfigurationValue(const oo::PList& value,
   }
 }
 
-std::vector<std::string> OODebugMonitor::configurationKeys() {
+std::vector<std::string> oo::DebugMonitor::configurationKeys() {
   std::set<std::string> keys;
 
   for (const oo::PList* config : {&_configFromOXPs, &_configOverrides}) {
@@ -331,9 +335,9 @@ std::vector<std::string> OODebugMonitor::configurationKeys() {
   return result;
 }
 
-bool OODebugMonitor::debuggerConnected() { return _debugger != nullptr; }
+bool oo::DebugMonitor::debuggerConnected() { return _debugger != nullptr; }
 
-void OODebugMonitor::writeMemStat(const std::string& line) {
+void oo::DebugMonitor::writeMemStat(const std::string& line) {
   OO_LOG("debug.memStats", "{}", line);
   appendJSConsoleLine(line, "command-result");
 }
@@ -371,7 +375,7 @@ std::string SizeString(size_t size) {
 
 // Sets of objects by identity (the mutable sets of textures and entities
 // compared by identity).
-struct OODebugMonitor::EntityDumpState {
+struct oo::DebugMonitor::EntityDumpState {
   std::set<std::shared_ptr<OOTexture>> entityTextures;
   std::set<std::shared_ptr<OOTexture>> visibleEntityTextures;
   std::map<Entity*, oo::EntityHold>
@@ -381,8 +385,8 @@ struct OODebugMonitor::EntityDumpState {
   size_t totalDrawableSize = 0;
 };
 
-void OODebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
-                                bool parentVisible) {
+void oo::DebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
+                                  bool parentVisible) {
   if (entity == nullptr || state->seenEntities.count(entity) != 0) return;
   state->seenEntities.emplace(entity, oo::Hold(entity));
 
@@ -459,7 +463,7 @@ void OODebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
   }
 }
 
-void OODebugMonitor::dumpMemoryStatistics() {
+void oo::DebugMonitor::dumpMemoryStatistics() {
   OO_LOG("debug.memStats", "{}", "Memory statistics:");
   const oo::LogIndentScope indent;
 
@@ -574,7 +578,7 @@ void OODebugMonitor::dumpMemoryStatistics() {
   writeMemStat(std::format("Total: {}", SizeString(totalSize)));
 }
 
-size_t OODebugMonitor::dumpJSMemoryStatistics() {
+size_t oo::DebugMonitor::dumpJSMemoryStatistics() {
   JSContext* context = OOJSAcquireContext();
 
   JSRuntime* runtime = JS_GetRuntime(context);
@@ -595,7 +599,7 @@ size_t OODebugMonitor::dumpJSMemoryStatistics() {
   return jsSize;
 }
 
-void OODebugMonitor::setTCPIgnoresDroppedPackets(bool flag) {
+void oo::DebugMonitor::setTCPIgnoresDroppedPackets(bool flag) {
   if (_TCPIgnoresDroppedPackets != flag) {
     OO_LOG("debugMonitor.TCPSettings", "The TCP console will {} TCP packets.",
            (flag ? "try to stay connected, ignoring dropped"
@@ -604,18 +608,20 @@ void OODebugMonitor::setTCPIgnoresDroppedPackets(bool flag) {
   _TCPIgnoresDroppedPackets = flag;
 }
 
-bool OODebugMonitor::TCPIgnoresDroppedPackets() {
+bool oo::DebugMonitor::TCPIgnoresDroppedPackets() {
   return _TCPIgnoresDroppedPackets;
 }
 
-void OODebugMonitor::setUsingPlugInController(bool flag) {
+void oo::DebugMonitor::setUsingPlugInController(bool flag) {
   _usingPlugInController = flag;
 }
 
-bool OODebugMonitor::usingPlugInController() { return _usingPlugInController; }
+bool oo::DebugMonitor::usingPlugInController() {
+  return _usingPlugInController;
+}
 
-std::string OODebugMonitor::sourceCodeForFile(const std::string& filePath,
-                                              unsigned line) {
+std::string oo::DebugMonitor::sourceCodeForFile(const std::string& filePath,
+                                                unsigned line) {
   const std::string& path = filePath;
   auto cached = _sourceFiles.find(path);
 
@@ -634,8 +640,9 @@ std::string OODebugMonitor::sourceCodeForFile(const std::string& filePath,
   return linesForFile[line - 1];
 }
 
-void OODebugMonitor::disconnectDebugger(
-    OODebuggerInterface* debugger, const std::optional<std::string>& message) {
+void oo::DebugMonitor::disconnectDebugger(
+    oo::DebuggerInterface* debugger,
+    const std::optional<std::string>& message) {
   if (debugger == nullptr) return;
 
   if (debugger == _debugger.get()) {
@@ -649,13 +656,13 @@ void OODebugMonitor::disconnectDebugger(
 }
 
 #if OOLITE_SDL
-void OODebugMonitor::applicationWillTerminate() {
+void oo::DebugMonitor::applicationWillTerminate() {
   oo::NotificationCenter::defaultCenter().post(
-      kOODebugMonitorApplicationWillTerminateNotificationName, nullptr);
+      oo::kDebugMonitorApplicationWillTerminateNotificationName, nullptr);
 }
 #endif
 
-void OODebugMonitor::applicationWillTerminate(
+void oo::DebugMonitor::applicationWillTerminate(
     const oo::Notification& /*notification*/) {
   if (_configOverrides) {
     oo::Defaults::standard().setObject("debug-settings-override",
@@ -665,7 +672,7 @@ void OODebugMonitor::applicationWillTerminate(
   disconnectDebuggerWithMessage("Oolite is terminating.");
 }
 
-void OODebugMonitor::setUpDebugConsoleScript() {
+void oo::DebugMonitor::setUpDebugConsoleScript() {
   JSContext* context = OOJSAcquireContext();
   /*	The path to the console script is saved in this here static variable
           so that we can reload it when resetting into strict mode.
@@ -704,7 +711,7 @@ void OODebugMonitor::setUpDebugConsoleScript() {
   OOJSRelinquishContext(context);
 }
 
-void OODebugMonitor::javaScriptEngineWillReset(
+void oo::DebugMonitor::javaScriptEngineWillReset(
     const oo::Notification& /*notification*/) {
   _script = nullptr;
   if (JS_IsObject(_jsSelf)) {
@@ -713,7 +720,7 @@ void OODebugMonitor::javaScriptEngineWillReset(
   _jsSelf = JS_UNDEFINED;
 }
 
-void OODebugMonitor::disconnectDebuggerWithMessage(
+void oo::DebugMonitor::disconnectDebuggerWithMessage(
     const std::optional<std::string>& message) {
   try {
     if (_debugger != nullptr) _debugger->disconnectDebugMonitor(this, message);
@@ -728,7 +735,7 @@ void OODebugMonitor::disconnectDebuggerWithMessage(
   _debugger = nullptr;  // cleared, then released, as before
 }
 
-oo::PList OODebugMonitor::mergedConfiguration() {
+oo::PList oo::DebugMonitor::mergedConfiguration() {
   oo::PList::Dict result;
 
   if (const oo::PList::Dict* entries = _configFromOXPs.getIf<oo::PList::Dict>())
@@ -741,7 +748,7 @@ oo::PList OODebugMonitor::mergedConfiguration() {
   return oo::PList(std::move(result));
 }
 
-std::optional<std::vector<std::string>> OODebugMonitor::loadSourceFile(
+std::optional<std::vector<std::string>> oo::DebugMonitor::loadSourceFile(
     const std::string& filePath) {
   // The Unicode-file reading of the file's bytes (read from inside an OXZ too,
   // as before).
@@ -755,7 +762,7 @@ FIXME: this works with CRLF and LF, but not CR.
   return oo::str::split(contents, "\n");
 }
 
-oo::PList OODebugMonitor::normalizeConfigDictionary(
+oo::PList oo::DebugMonitor::normalizeConfigDictionary(
     const oo::PList& dictionary) {
   oo::PList::Dict result;
 
@@ -770,8 +777,8 @@ oo::PList OODebugMonitor::normalizeConfigDictionary(
   return oo::PList(std::move(result));
 }
 
-oo::PList OODebugMonitor::normalizeConfigValue(const oo::PList& value,
-                                               const std::string& key) {
+oo::PList oo::DebugMonitor::normalizeConfigValue(const oo::PList& value,
+                                                 const std::string& key) {
   std::shared_ptr<OOColor> color;
   bool boolValue;
 
@@ -796,12 +803,12 @@ oo::PList OODebugMonitor::normalizeConfigValue(const oo::PList& value,
   return value;
 }
 
-void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
-                              JSContext* /*context*/,
-                              const std::string& severity,
-                              const std::optional<std::string>& filePath,
-                              unsigned line, unsigned stackSkip,
-                              bool showLocation, const std::string& message) {
+void oo::DebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
+                                JSContext* /*context*/,
+                                const std::string& severity,
+                                const std::optional<std::string>& filePath,
+                                unsigned line, unsigned stackSkip,
+                                bool showLocation, const std::string& message) {
   std::string colorKey;
   std::string prefix;
   std::optional<std::string> scriptLine;
@@ -864,7 +871,7 @@ void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
   }
 }
 
-void OODebugMonitor::jsEngine(
+void oo::DebugMonitor::jsEngine(
     ::OOJavaScriptEngine* /*engine*/, JSContext* /*context*/,
     const std::string& message,
     const std::optional<std::string>& /*messageClass*/) {
@@ -876,20 +883,20 @@ void OODebugMonitor::jsEngine(
   }
 }
 
-JSValue OODebugMonitor::jsValueInContext(JSContext* context) {
+JSValue oo::DebugMonitor::jsValueInContext(JSContext* context) {
   if (!JS_IsObject(_jsSelf)) {
     _jsSelf = DebugMonitorToJSConsole(context, this);
   }
   return JS_DupValue(context, _jsSelf);
 }
 
-void OODebugMonitor::clearJSSelf(JSValueConst /*selfVal*/) {
+void oo::DebugMonitor::clearJSSelf(JSValueConst /*selfVal*/) {
   // The console object is kept (owned) until the engine resets.
 }
 
-std::string OODebugMonitor::className() const { return "OODebugMonitor"; }
+std::string oo::DebugMonitor::className() const { return "OODebugMonitor"; }
 
-std::string OODebugMonitor::description() const {
+std::string oo::DebugMonitor::description() const {
   return std::format("<OODebugMonitor {}>", oo::str::pointerDescription(this));
 }
 
