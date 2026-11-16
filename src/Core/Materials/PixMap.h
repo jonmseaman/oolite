@@ -153,12 +153,7 @@ bool ExpandPixMap(PixMap* ioPixMap, size_t desiredSize);
 }  // namespace oo
 
 #ifndef NDEBUG
-namespace oo {
-
-void DumpPixMap(PixMap pixMap, const std::string& name);
-
-}  // namespace oo
-
+void OODumpPixMap(oo::PixMap pixMap, const std::string& name);
 #else
 #define OODumpPixMap(p, n) \
   do {                     \

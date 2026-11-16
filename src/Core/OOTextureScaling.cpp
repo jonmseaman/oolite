@@ -263,13 +263,13 @@ static void DumpMipMap(void* data, oo::PixMapDimension width,
 #if DUMP_SCALE
 #define DUMP_SCALE_PREPARE() \
   int32_t dumpID = sPreviousDumpID.fetch_add(1) + 1, dumpCount = 0;
-#define DUMP_SCALE_DUMP(PM, stage)                                             \
-  do {                                                                         \
-    oo::PixMap* pm = &(PM);                                                    \
-    oo::DumpPixMap(*pm, std::format("scaling dump ID {} stage {}-{} {}x{}",    \
-                                    static_cast<unsigned>(dumpID),             \
-                                    static_cast<unsigned>(dumpCount++), stage, \
-                                    pm->width, pm->height));                   \
+#define DUMP_SCALE_DUMP(PM, stage)                                           \
+  do {                                                                       \
+    oo::PixMap* pm = &(PM);                                                  \
+    OODumpPixMap(*pm, std::format("scaling dump ID {} stage {}-{} {}x{}",    \
+                                  static_cast<unsigned>(dumpID),             \
+                                  static_cast<unsigned>(dumpCount++), stage, \
+                                  pm->width, pm->height));                   \
   } while (0)  // stage: a C string
 #else
 #define DUMP_SCALE_PREPARE()
@@ -884,7 +884,7 @@ static void DumpMipMap(void* data, oo::PixMapDimension width,
                        oo::PixMapDimension height, oo::PixMapFormat format,
                        int32_t ID, uint32_t level) {
   oo::PixMap pixMap = oo::MakePixMap(data, width, height, format, 0, 0);
-  oo::DumpPixMap(
+  OODumpPixMap(
       pixMap,
       std::format("mipmap dump ID {} lv{} {} {}x{}", static_cast<unsigned>(ID),
                   level, oo::PixMapFormatName(format), width, height));

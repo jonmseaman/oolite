@@ -405,7 +405,7 @@ void oo::ConcreteTexture::setUpTexture() {
                                this->name().value_or("(null)") + "\"";
       OO_LOG("texture.trace.dump", "Dumped traced texture {} to '{}.png'",
              description(), name);
-      oo::DumpPixMap(pm, name);
+      OODumpPixMap(pm, name);
     }
 #endif
 

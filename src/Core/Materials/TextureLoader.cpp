@@ -433,7 +433,7 @@ void oo::TextureLoader::applySettings() {
     std::string dumpName = oo::str::lastPathComponent(_path);
     const std::string::size_type dot = dumpName.rfind('.');
     if (dot != std::string::npos && dot != 0) dumpName.erase(dot);
-    oo::DumpPixMap(pixMap, std::format("converted cube map {}", dumpName));
+    OODumpPixMap(pixMap, std::format("converted cube map {}", dumpName));
 #endif
   }
 
