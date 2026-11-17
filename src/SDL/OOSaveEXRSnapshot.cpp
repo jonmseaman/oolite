@@ -1,11 +1,11 @@
-#include <cstddef>
-#include <cstdint>
 #include <cstdio>
 
 int SaveEXRSnapshot(const char* outfilename, int width, int height,
                     const float* rgb);
 
 #ifdef WIN32
+#include <cstddef>
+#include <cstdint>
 #include <ctime>
 #include <string>
 #include <string_view>
