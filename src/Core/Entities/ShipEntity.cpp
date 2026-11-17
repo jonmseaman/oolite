@@ -411,13 +411,13 @@ static constexpr std::string_view kBoulderRole = "boulder";
 static GLfloat cargo_color[4] = {static_cast<GLfloat>(0.9),
                                  static_cast<GLfloat>(0.9),
                                  static_cast<GLfloat>(0.9), 1.0};  // gray
-static GLfloat hostile_color[4] = {1.0, 0.25, 0.0, 1.0};  // red/orange
-static GLfloat neutral_color[4] = {1.0, 1.0, 0.0, 1.0};   // yellow
-static GLfloat friendly_color[4] = {0.0, 1.0, 0.0, 1.0};  // green
-static GLfloat missile_color[4] = {0.0, 1.0, 1.0, 1.0};   // cyan
-static GLfloat police_color1[4] = {0.5, 0.0, 1.0, 1.0};   // purpley-blue
-static GLfloat police_color2[4] = {1.0, 0.0, 0.5, 1.0};   // purpley-red
-static GLfloat jammed_color[4] = {0.0, 0.0, 0.0, 0.0};    // clear black
+static GLfloat hostile_color[4] = {1.0, 0.25, 0.0, 1.0};           // red/orange
+static GLfloat neutral_color[4] = {1.0, 1.0, 0.0, 1.0};            // yellow
+static GLfloat friendly_color[4] = {0.0, 1.0, 0.0, 1.0};           // green
+static GLfloat missile_color[4] = {0.0, 1.0, 1.0, 1.0};            // cyan
+static GLfloat police_color1[4] = {0.5, 0.0, 1.0, 1.0};  // purpley-blue
+static GLfloat police_color2[4] = {1.0, 0.0, 0.5, 1.0};  // purpley-red
+static GLfloat jammed_color[4] = {0.0, 0.0, 0.0, 0.0};   // clear black
 static GLfloat mascem_color1[4] = {
     static_cast<GLfloat>(0.3), static_cast<GLfloat>(0.3),
     static_cast<GLfloat>(0.3), 1.0};  // dark gray
@@ -6076,7 +6076,7 @@ void ShipEntity::behaviour_fly_thru_navpoints(double delta_t) {
 
   bool in_cone = (r0 > 0.5 * r1);
 
-  if (!in_cone)               // are we in the approach cone ?
+  if (!in_cone)  // are we in the approach cone ?
     r1 = static_cast<GLfloat>(25.0 * flightSpeed);  // aim a few km out!
   else
     r1 *= static_cast<GLfloat>(2.0);
@@ -11954,8 +11954,8 @@ OOCargoType ShipEntity::dumpItem(::ShipEntity* cargoObj) {
   double jetto_pitch = 0;
 
   // default launching position
-  start.x = 0.0;                      // in the middle
-  start.y = 0.0;                      //
+  start.x = 0.0;  // in the middle
+  start.y = 0.0;  //
   start.z = static_cast<OOScalar>(boundingBox.min.z -
                                   jcr);  // 1m behind of bounding box
 

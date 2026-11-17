@@ -45,8 +45,10 @@ inline constexpr std::string_view CARGO_KEY_DESCRIPTION = "cargo_description";
 
 inline constexpr std::string_view CONTRACT_KEY_START = "start";
 inline constexpr std::string_view CONTRACT_KEY_DESTINATION = "destination";
-inline constexpr std::string_view kContractKeyDestinationName = "destination_name";
-inline constexpr std::string_view kContractKeyLongDescription = "long_description";
+inline constexpr std::string_view kContractKeyDestinationName =
+    "destination_name";
+inline constexpr std::string_view kContractKeyLongDescription =
+    "long_description";
 inline constexpr std::string_view CONTRACT_KEY_DEPARTURE_TIME =
     "departure_time";
 inline constexpr std::string_view CONTRACT_KEY_ARRIVAL_TIME = "arrival_time";

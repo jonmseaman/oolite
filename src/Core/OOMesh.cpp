@@ -371,7 +371,8 @@ void OOMesh::renderOpaqueParts() {
         _textureUnitCount);
 
     for (unit = 0; unit < _textureUnitCount; unit++) {
-      OOGL(glClientActiveTextureARB(static_cast<GLenum>(GL_TEXTURE0_ARB + unit)));
+      OOGL(glClientActiveTextureARB(
+          static_cast<GLenum>(GL_TEXTURE0_ARB + unit)));
       OOGL(glEnableClientState(GL_TEXTURE_COORD_ARRAY));
     }
   }
@@ -400,8 +401,10 @@ void OOMesh::renderOpaqueParts() {
 #if OO_MULTITEXTURE
         for (unit = 0; unit < _textureUnitCount; unit++) {
           if (_textureUnitCount > 1) {
-            OOGL(glClientActiveTextureARB(static_cast<GLenum>(GL_TEXTURE0_ARB + unit)));
-            OOGL(glActiveTextureARB(static_cast<GLenum>(GL_TEXTURE0_ARB + unit)));
+            OOGL(glClientActiveTextureARB(
+                static_cast<GLenum>(GL_TEXTURE0_ARB + unit)));
+            OOGL(glActiveTextureARB(
+                static_cast<GLenum>(GL_TEXTURE0_ARB + unit)));
           }
 #endif
           if (!wantsNormalsAsTextureCoordinates) {
@@ -467,7 +470,8 @@ void OOMesh::renderOpaqueParts() {
     OOGL(glDisableClientState(GL_TEXTURE_COORD_ARRAY));
   } else {
     for (unit = 0; unit < _textureUnitCount; unit++) {
-      OOGL(glClientActiveTextureARB(static_cast<GLenum>(GL_TEXTURE0_ARB + unit)));
+      OOGL(glClientActiveTextureARB(
+          static_cast<GLenum>(GL_TEXTURE0_ARB + unit)));
       OOGL(glDisableClientState(GL_TEXTURE_COORD_ARRAY));
     }
 

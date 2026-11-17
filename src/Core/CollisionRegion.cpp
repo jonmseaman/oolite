@@ -507,7 +507,7 @@ Occlusion shadowAtPointOcclusion(HPVector e1pos, GLfloat e1rad, Entity* e2,
   v_e2 = vector_normal_or_xbasis(v_e2);
 
   float phi = acos(dot_product(
-      v_sun, v_e2));  // angle between sun and e2 from e1's viewpoint
+      v_sun, v_e2));           // angle between sun and e2 from e1's viewpoint
   value = (phi / theta_diff);  // 1 means just occluded, < 1 means in shadow
 
   if (phi > theta_diff) {
