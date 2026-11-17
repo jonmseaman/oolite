@@ -65,6 +65,8 @@ oo::PList PropertyListFromData(const std::optional<oo::Data>& data,
   return result;
 }
 
+}  // namespace oo
+
 namespace {
 
 // Whether this is the first time the JSON5 file `source` has been read in place
@@ -80,6 +82,8 @@ bool FirstShadowingBy(const std::string& source) {
 
 // A <name>.json5 beside <name>.plist is read instead of it, and a .json5 path
 // is read as JSON5 (oofnd/PListFile.hpp).
+namespace oo {
+
 oo::PList PropertyListFromFile(const std::string& path) {
   oo::PList result;
 
@@ -104,7 +108,7 @@ oo::PList PropertyListFromFile(const std::string& path) {
     result = std::move(load.plist);
   } else if (load.plistData.has_value()) {
     // ...and parse it
-    result = OOPropertyListFromData(load.plistData, path);
+    result = PropertyListFromData(load.plistData, path);
   }
   // Non-existent file is not an error.
 
