@@ -1,13 +1,13 @@
 #include <cstdio>
-#include <ctime>
-#include <string>
-#include <vector>
 
 int SaveEXRSnapshot(const char* outfilename, int width, int height,
                     const float* rgb);
 
 #ifdef WIN32
+#include <ctime>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "tinyexr.h"
 
