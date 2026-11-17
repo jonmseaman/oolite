@@ -4495,8 +4495,7 @@ std::shared_ptr<Entity> Universe::newVisualEffectWithName(
   } catch (...) {
     const auto exception = oo::CurrentOOException();
     if (!exception) throw;  // not an OOException: it goes on up, as before
-    if (std::string_view(exception->name()) ==
-        kOoliteExceptionDataNotFound) {
+    if (std::string_view(exception->name()) == kOoliteExceptionDataNotFound) {
       OO_LOG(kOOLogException,
              "***** Oolite Exception : '{}' in [Universe "
              "newVisualEffectWithName: {} ] *****",
@@ -4561,8 +4560,7 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithName(
   } catch (...) {
     const auto exception = oo::CurrentOOException();
     if (!exception) throw;  // not an OOException: it goes on up, as before
-    if (std::string_view(exception->name()) ==
-        kOoliteExceptionDataNotFound) {
+    if (std::string_view(exception->name()) == kOoliteExceptionDataNotFound) {
       OO_LOG(kOOLogException,
              "***** Oolite Exception : '{}' in [Universe newShipWithName: {} ] "
              "*****",
@@ -4601,8 +4599,7 @@ std::shared_ptr<::ShipEntity> Universe::newDockWithName(
   } catch (...) {
     const auto exception = oo::CurrentOOException();
     if (!exception) throw;  // not an OOException: it goes on up, as before
-    if (std::string_view(exception->name()) ==
-        kOoliteExceptionDataNotFound) {
+    if (std::string_view(exception->name()) == kOoliteExceptionDataNotFound) {
       OO_LOG(kOOLogException,
              "***** Oolite Exception : '{}' in [Universe newDockWithName: {} ] "
              "*****",
@@ -6127,8 +6124,8 @@ bool Universe::isVectorClearFromEntity(Entity* e1, double dist, HPVector p2) {
   int i;
   int ent_count = static_cast<int>(n_entities);
   std::vector<Entity*> my_entities(
-      static_cast<std::size_t>(ent_count));     // each one's object retained
-  std::vector<oo::EntityHold> my_holds;         // each one's object, held
+      static_cast<std::size_t>(ent_count));  // each one's object retained
+  std::vector<oo::EntityHold> my_holds;      // each one's object, held
   for (i = 0; i < ent_count; i++)
     my_entities[static_cast<std::size_t>(i)] =
         oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
@@ -6197,8 +6194,8 @@ Entity* Universe::hazardOnRouteFromEntity(Entity* e1, double dist,
   int i;
   int ent_count = static_cast<int>(n_entities);
   std::vector<Entity*> my_entities(
-      static_cast<std::size_t>(ent_count));     // each one's object retained
-  std::vector<oo::EntityHold> my_holds;         // each one's object, held
+      static_cast<std::size_t>(ent_count));  // each one's object retained
+  std::vector<oo::EntityHold> my_holds;      // each one's object, held
   for (i = 0; i < ent_count; i++)
     my_entities[static_cast<std::size_t>(i)] =
         oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
@@ -6260,8 +6257,8 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
   int i;
   int ent_count = static_cast<int>(n_entities);
   std::vector<Entity*> my_entities(
-      static_cast<std::size_t>(ent_count));     // each one's object retained
-  std::vector<oo::EntityHold> my_holds;         // each one's object, held
+      static_cast<std::size_t>(ent_count));  // each one's object retained
+  std::vector<oo::EntityHold> my_holds;      // each one's object, held
   for (i = 0; i < ent_count; i++)
     my_entities[static_cast<std::size_t>(i)] =
         oo::HoldIn(my_holds, sortedEntities[i]);  // retained
@@ -6607,8 +6604,8 @@ Entity* Universe::firstEntityTargetedByPlayer() {
   int ent_count = static_cast<int>(n_entities);
   int ship_count = 0;
   std::vector<Entity*> my_entities(
-      static_cast<std::size_t>(ent_count));     // each one's object retained
-  std::vector<oo::EntityHold> my_holds;         // each one's object, held
+      static_cast<std::size_t>(ent_count));  // each one's object retained
+  std::vector<oo::EntityHold> my_holds;      // each one's object, held
 
   for (i = 0; i < ent_count; i++) {
     if ((oo::EntityIsShip(sortedEntities[i]) &&

@@ -1744,7 +1744,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
             glVertex3f(x1 - 3, y2 + 3, z1);
             OOGLEND();
           }
-          OOGLBEGIN(GL_QUADS);  // lollipop tail
+          OOGLBEGIN(GL_QUADS);                     // lollipop tail
           col[3] *= static_cast<GLfloat>(0.3333);  // one third the alpha
           glColor4fv(col);
           glVertex3f(x1, y1, z1);

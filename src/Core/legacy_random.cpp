@@ -33,7 +33,6 @@ MA 02110-1301, USA.
 #include <format>
 #include <random>
 
-
 static RNG_Seed rnd_seed;
 
 // TODO: Why is this based on a static? Should change to

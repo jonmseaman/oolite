@@ -110,12 +110,14 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
       OOStringFromWeaponType(forward_weapon_type).value_or("");
   updatedShipInfo[std::string(kKeyAftWeapon)] =
       OOStringFromWeaponType(aft_weapon_type).value_or("");
-  updatedShipInfo[std::string(kKeyScanClass)] = OOStringFromScanClass(scanClass);
+  updatedShipInfo[std::string(kKeyScanClass)] =
+      OOStringFromScanClass(scanClass);
 
   std::vector<std::string> deletes;
   simplifyShipdata(updatedShipInfo, &deletes);
 
-  result[std::string(kKeyShipdataOverrides)] = oo::PList(std::move(updatedShipInfo));
+  result[std::string(kKeyShipdataOverrides)] =
+      oo::PList(std::move(updatedShipInfo));
   if (!deletes.empty())
     result[std::string(kKeyShipdataDeletes)] = ArrayFromStrings(deletes);
 
@@ -123,7 +125,8 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
     result[std::string(kKeyPosition)] = OOPListFromHPVector(getPosition());
   }
   if (!quaternion_equal(normalOrientation(), kIdentityQuaternion)) {
-    result[std::string(kKeyOrientation)] = OOPListFromQuaternion(normalOrientation());
+    result[std::string(kKeyOrientation)] =
+        OOPListFromQuaternion(normalOrientation());
   }
 
   // -oo_setFloat:forKey: stored a double.
