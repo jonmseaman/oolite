@@ -20,6 +20,7 @@ endif
 subdir('meson')
 subdir('Core')
 subdir('SDL')
+subdir('platform')
 
 appname = 'oolite'
 exe_rpath = host_os == 'darwin' ? '@executable_path' : '$ORIGIN'

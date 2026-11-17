@@ -13,4 +13,3 @@ oolite_includes += include_directories('.')
 
 # Enter child subdirectories
 subdir('EXRSnapshotSupport')
-subdir('OOResourcesWin')
