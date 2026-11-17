@@ -32,6 +32,7 @@ SOFTWARE.
 #include <memory>
 #include <new>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "oofnd/Date.hpp"
@@ -175,7 +176,7 @@ void InitOOJSFrameCallbacks(JSContext* context, JSValueConst global) {
   if (sIDSeed.has_value()) {
     sNextID = *sIDSeed;
   } else {
-    sNextID = oo::date::timeIntervalSinceReferenceDate();
+    sNextID = static_cast<uint32_t>(oo::date::timeIntervalSinceReferenceDate());
   }
 #endif
 }

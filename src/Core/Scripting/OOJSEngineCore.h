@@ -484,7 +484,7 @@ void OOJSStopTimeLimiter();
    engine's own behaviour.
 */
 void OOJSSetHeadlessScripting(std::optional<std::uint32_t> mathRandomSeed,
-                              OOTimeDelta defaultTimeLimit);
+                              oo::TimeDelta defaultTimeLimit);
 // How many numbers the seeded Math.random has handed out since it was set.
 std::uint64_t OOJSSeededMathRandomDraws();
 void OOJSPauseTimeLimiter();

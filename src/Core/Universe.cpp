@@ -285,7 +285,7 @@ Universe::Universe() {}
 Universe::~Universe() { dealloc(); }
 
 std::unique_ptr<Universe> Universe::newUniverse(
-    ::MyOpenGLView* inGameView, const OOHeadlessOptions& options) {
+    ::MyOpenGLView* inGameView, const oo::HeadlessOptions& options) {
   /*	The universe first: one refused below is destroyed at once, and its
      teardown runs the whole body.
   */
@@ -308,7 +308,7 @@ std::unique_ptr<Universe> Universe::newUniverse(
    and checked that it is the only one. The body is the method's.
 */
 void Universe::initWithGameView(::MyOpenGLView* inGameView,
-                                const OOHeadlessOptions& options) {
+                                const oo::HeadlessOptions& options) {
   _doingStartUp = true;
   _options = options;
 
@@ -317,14 +317,15 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView,
     ranrot_srand(*options.seed);
     oo::InitReallyRandom(*options.seed);
   } else {
-    oo::InitReallyRandom(oo::date::timeIntervalSinceReferenceDate() * 1e9);
+    oo::InitReallyRandom(static_cast<uint64_t>(
+        oo::date::timeIntervalSinceReferenceDate() * 1e9));
   }
 
   oo::Defaults& prefs = oo::Defaults::standard();
 
   // prefs value no longer used - per save game but startup needs to
   // be non-strict (a game made with no add-ons stays strict)
-  useAddOns = std::string(options.addOns == OOHeadlessOptions::AddOns::kNone
+  useAddOns = std::string(options.addOns == oo::HeadlessOptions::AddOns::kNone
                               ? SCENARIO_OXP_DEFINITION_NONE
                               : SCENARIO_OXP_DEFINITION_ALL);
 
@@ -2551,7 +2552,7 @@ void Universe::setLighting() {
 
   // Headless: the values below are still worked out, but nothing is told to
   // a GL that is not there.
-  const bool graphics = OOGraphicsAvailable();
+  const bool graphics = oo::GraphicsAvailable();
 
   if (the_sun) {
     if (the_sun != nullptr) the_sun->getDiffuseComponents(sun_diffuse);
@@ -5051,7 +5052,7 @@ oo::PList Universe::gameSettings() {
 
 void Universe::useGUILightSource(bool GUILight) {
   if (GUILight != demo_light_on) {
-    if (!OOGraphicsAvailable()) {
+    if (!oo::GraphicsAvailable()) {
       // Headless: nothing to switch.
     } else if (!useShaders()) {
       if (GUILight) {
@@ -7464,8 +7465,8 @@ void Universe::showGUIMessage(const std::optional<std::string>& text,
 
 void Universe::repopulateSystem() {
   if (!_options.populate) return;  // a game made empty stays empty
-  if (EXPECT_NOT((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) ==
-                 oo::EntityStatus::kStartGame)) {
+  if ((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) ==
+      oo::EntityStatus::kStartGame) [[unlikely]] {
     return;  // no need to be adding ships as this is not a "real" game
   }
   JSContext* context = OOJSAcquireContext();
@@ -11402,7 +11403,7 @@ int Universe::prevColorblindMode(int index) {
 int Universe::colorblindMode() { return _colorblindMode; }
 
 void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
-  if (!OOGraphicsAvailable()) return;  // headless: no framebuffer to make
+  if (!oo::GraphicsAvailable()) return;  // headless: no framebuffer to make
   // liberate us from the 0.0 to 1.0 rgb range!
   OOGL(glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE));
   OOGL(glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE));
@@ -11638,7 +11639,7 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
 }
 
 void Universe::deleteOpenGLObjects() {
-  if (!OOGraphicsAvailable()) return;  // headless: none were made
+  if (!oo::GraphicsAvailable()) return;  // headless: none were made
 #if OO_MSAA_COLOR_RENDERBUFFER
   OOGL(glDeleteRenderbuffers(1, &msaaTextureID));
 #else
@@ -11855,9 +11856,10 @@ bool Universe::setUseAddOns(const std::string& newUse, bool saveGame) {
 bool Universe::setUseAddOns(const std::string& requestedUse, bool saveGame,
                             bool force) {
   // A game made with no add-ons reads none, whatever a scenario asks for.
-  const std::string newUse = _options.addOns == OOHeadlessOptions::AddOns::kNone
-                                 ? std::string(SCENARIO_OXP_DEFINITION_NONE)
-                                 : requestedUse;
+  const std::string newUse =
+      _options.addOns == oo::HeadlessOptions::AddOns::kNone
+          ? std::string(SCENARIO_OXP_DEFINITION_NONE)
+          : requestedUse;
   if (!force && newUse == useAddOns) {
     return true;
   }

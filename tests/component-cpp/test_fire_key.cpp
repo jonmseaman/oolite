@@ -21,7 +21,7 @@ using oo::component::ShipWithKey;
 OO_TEST(holding_the_fire_key_fires_the_forward_laser) {
   Game game = Game::inFlightWithKeys(20260910);
   game.player()->setSpeed(0.0);
-  OO_CHECK(game.player()->setWeaponMount(OOWeaponFacing::kForward,
+  OO_CHECK(game.player()->setWeaponMount(oo::WeaponFacing::kForward,
                                          oo::component::hasArgument("--without-weapon")
                                              ? "EQ_WEAPON_NONE"
                                              : "EQ_WEAPON_PULSE_LASER"));

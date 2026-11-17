@@ -26,7 +26,7 @@ OO_TEST(a_ship_fires_its_forward_laser_and_hits_what_is_ahead) {
       game.add(ShipWithKey("adder").near(game.player(), 20'000.0));
   OO_CHECK(shooter.alive());
   shooter->setAITo("nullAI.plist");  // it sits still: this is about the gun, not the pilot
-  OO_CHECK(shooter->setWeaponMount(OOWeaponFacing::kForward,
+  OO_CHECK(shooter->setWeaponMount(oo::WeaponFacing::kForward,
                                    oo::component::hasArgument("--without-weapon")
                                        ? "EQ_WEAPON_NONE"
                                        : "EQ_WEAPON_PULSE_LASER"));

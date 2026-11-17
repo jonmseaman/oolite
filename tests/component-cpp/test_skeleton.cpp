@@ -21,7 +21,7 @@
 #include <string>
 
 #include "GameController.h"
-#include "OOHeadless.h"
+#include "Headless.h"
 #include "oo_test.hpp"
 #include "oofnd/Exception.hpp"
 
@@ -90,7 +90,7 @@ OO_TEST(caps_lock_n_lookup_is_printed) {
 
 namespace {
 // The reason validate() raised with, or "" if it did not raise.
-std::string ValidationFailure(const OOHeadlessOptions& options) {
+std::string ValidationFailure(const oo::HeadlessOptions& options) {
   try {
     options.validate();
   } catch (const oo::Exception& exception) {
@@ -101,10 +101,10 @@ std::string ValidationFailure(const OOHeadlessOptions& options) {
 }  // namespace
 
 OO_TEST(default_options_are_the_windowed_game) {
-  const OOHeadlessOptions options;
+  const oo::HeadlessOptions options;
   OO_CHECK(!options.headless);
   OO_CHECK(!options.seed.has_value());
-  OO_CHECK(options.addOns == OOHeadlessOptions::AddOns::kAll);
+  OO_CHECK(options.addOns == oo::HeadlessOptions::AddOns::kAll);
   OO_CHECK(options.populate);
   OO_CHECK(!options.startInFlight);
   OO_CHECK(!options.inputView);
@@ -113,9 +113,9 @@ OO_TEST(default_options_are_the_windowed_game) {
 }
 
 OO_TEST(headless_without_a_seed_is_rejected) {
-  OOHeadlessOptions options;
+  oo::HeadlessOptions options;
   options.headless = true;
-  options.addOns = OOHeadlessOptions::AddOns::kNone;
+  options.addOns = oo::HeadlessOptions::AddOns::kNone;
   OO_CHECK_EQ(ValidationFailure(options),
               std::string("headless true requires seed to be given"));
   options.seed = 20260910;
@@ -123,7 +123,7 @@ OO_TEST(headless_without_a_seed_is_rejected) {
 }
 
 OO_TEST(headless_with_all_addons_is_rejected) {
-  OOHeadlessOptions options;
+  oo::HeadlessOptions options;
   options.headless = true;
   options.seed = 20260910;
   OO_CHECK_EQ(ValidationFailure(options),
@@ -131,10 +131,10 @@ OO_TEST(headless_with_all_addons_is_rejected) {
 }
 
 OO_TEST(the_manual_clock_moves_only_when_advanced) {
-  OOGameClock clock = OOGameClock::manual(20260910);
+  oo::GameClock clock = oo::GameClock::manual(20260910);
   OO_CHECK(clock.isManual());
   OO_CHECK_EQ(clock.monotonicSeconds(), 0.0);
-  const double startOfDay = OOGameClock::manualTimeOfDayStart(20260910);
+  const double startOfDay = oo::GameClock::manualTimeOfDayStart(20260910);
   OO_CHECK_EQ(clock.timeOfDay(), startOfDay);
   OO_CHECK(startOfDay >= 0.0 && startOfDay < 86400.0);
   OO_CHECK_EQ(clock.monotonicSeconds(), 0.0);  // reading does not move it
@@ -146,7 +146,7 @@ OO_TEST(the_manual_clock_moves_only_when_advanced) {
   OO_CHECK(clock.timeOfDay() - (startOfDay + 0.75) < 1e-6 &&
            (startOfDay + 0.75) - clock.timeOfDay() < 1e-6);
   // The system clock is not moved by advance.
-  OOGameClock system = OOGameClock::system();
+  oo::GameClock system = oo::GameClock::system();
   OO_CHECK(!system.isManual());
   const double before = system.monotonicSeconds();
   system.advance(1000.0);

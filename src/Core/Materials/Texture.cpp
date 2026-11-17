@@ -144,7 +144,8 @@ std::shared_ptr<oo::Texture> oo::Texture::loadTextureWithName(
   std::optional<std::string> path;
   bool noFNF;
 
-  if (EXPECT_NOT(!name.has_value())) return nullptr;
+  if (!name.has_value()) [[unlikely]]
+    return nullptr;
   if (!oo::GraphicsAvailable()) {
     // Headless: the file is still looked for, so a missing one is still
     // reported, but nothing is decoded or uploaded; the null texture stands
@@ -157,7 +158,8 @@ std::shared_ptr<oo::Texture> oo::Texture::loadTextureWithName(
     }
     return nullTexture();
   }
-  if (EXPECT_NOT(!sCheckedExtensions)) checkExtensions();
+  if (!sCheckedExtensions) [[unlikely]]
+    checkExtensions();
 
   if (!gOOTextureInfo.anisotropyAvailable ||
       (options & oo::TextureFlags::kMinFilterMask) !=
@@ -521,7 +523,7 @@ void oo::Texture::checkExtensions() {
   OO_ENTER_OPENGL();
 
   sCheckedExtensions = true;
-  if (!OOGraphicsAvailable()) return;  // headless: nothing is supported
+  if (!oo::GraphicsAvailable()) return;  // headless: nothing is supported
 
   oo::OpenGLExtensionManager* extMgr =
       oo::OpenGLExtensionManager::sharedManager();

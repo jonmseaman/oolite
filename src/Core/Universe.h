@@ -255,15 +255,16 @@ class Universe : public oo::Object {
   */
   static std::unique_ptr<Universe> newUniverse(
       ::MyOpenGLView* inGameView,
-      const OOHeadlessOptions& options = OOHeadlessOptions());
+      const oo::HeadlessOptions& options = oo::HeadlessOptions());
 
   // The set-up of a new universe. Default options: the windowed game's.
-  void initWithGameView(::MyOpenGLView* inGameView,
-                        const OOHeadlessOptions& options = OOHeadlessOptions());
+  void initWithGameView(
+      ::MyOpenGLView* inGameView,
+      const oo::HeadlessOptions& options = oo::HeadlessOptions());
 
   // The options the universe was made with: which add-ons it reads, whether
   // it populates, its seed.
-  const OOHeadlessOptions& headlessOptions() const { return _options; }
+  const oo::HeadlessOptions& headlessOptions() const { return _options; }
 
   // The teardown body, run by the destructor.
   void dealloc();
@@ -461,7 +462,7 @@ class Universe : public oo::Object {
       closeSystems;  // the current system's neighbours; nullopt until cached
 
   std::string useAddOns;
-  OOHeadlessOptions _options;  // as made; the windowed game's by default
+  oo::HeadlessOptions _options;  // as made; the windowed game's by default
 
   bool no_update = false;
 

@@ -66,7 +66,7 @@ inline void StartTutorial(oo::component::Game& game) {
   // screen, and the tutorial's post-launch step.
   OO_CHECK(game.simulateUntil(
       [&] {
-        return game.player()->status() == OOEntityStatus::kInFlight &&
+        return game.player()->status() == oo::EntityStatus::kInFlight &&
                game.screen() == "GUI_SCREEN_MAIN" && Progress(game) == (Stage{0, 2});
       },
       60s));

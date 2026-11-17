@@ -394,7 +394,8 @@ void MyOpenGLView::pollControls() {
       }
       case SDL_EVENT_KEY_DOWN:
         kbd_event = reinterpret_cast<SDL_KeyboardEvent*>(&event);
-        key_id = keyLookup(kbd_event->scancode, kbd_event->mod);
+        key_id =
+            static_cast<Uint16>(keyLookup(kbd_event->scancode, kbd_event->mod));
         scan_code = kbd_event->scancode;
 
         // char *keychar = SDL_GetKeyName(kbd_event->keysym.sym);
@@ -694,7 +695,8 @@ void MyOpenGLView::pollControls() {
 
         // all the work should have been down on the keydown event, so all we
         // need to do is get the unicode value from the array
-        key_id = scan_code < NUM_KEYS ? scancode2Unicode[scan_code] : 0;
+        key_id = static_cast<Uint16>(
+            scan_code < NUM_KEYS ? scancode2Unicode[scan_code] : 0);
 
         // deal with modifiers first
         switch (kbd_event->key) {

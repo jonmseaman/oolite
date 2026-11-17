@@ -41,7 +41,7 @@
 #include <string_view>
 #include <vector>
 
-#include "OOHPVector.h"
+#include "HPVector.h"
 
 // <windows.h> (through the game's headers) defines near and far as empty
 // macros for 16-bit pointers; ShipWithKey::near is the interface's name.
@@ -52,11 +52,21 @@
 class Entity;
 class GameController;
 class MyOpenGLView;
-struct OOHeadlessOptions;
+namespace oo {
+
+struct HeadlessOptions;
+
+}  // namespace oo
+
 class PlayerEntity;
 class ShipEntity;
 class Universe;
-struct OOPresentationRecord;
+namespace oo {
+
+struct PresentationRecord;
+
+}  // namespace oo
+
 
 namespace oo::component {
 class ShipHandle;
@@ -354,7 +364,7 @@ class Game {
   // The errors from entry <mark> on (mark: an earlier events().size()).
   std::vector<Event> errorsSince(std::size_t mark) const;
   // What the game would have drawn and played.
-  const OOPresentationRecord& presentation() const;
+  const oo::PresentationRecord& presentation() const;
   // The log lines so far that contain text: the windowed step "no ERROR
   // appears in the log" is logLinesContaining("ERROR").empty().
   std::vector<std::string> logLinesContaining(std::string_view text) const;
@@ -386,8 +396,8 @@ class Game {
 
  private:
   Game() = default;
-  static bool start(const OOHeadlessOptions& options, const Settings& settings = {});
-  static Game clearedScenario(const OOHeadlessOptions& options, const Settings& settings);
+  static bool start(const oo::HeadlessOptions& options, const Settings& settings = {});
+  static Game clearedScenario(const oo::HeadlessOptions& options, const Settings& settings);
 };
 
 // The program's arguments after the name, for options such as --digest-out,

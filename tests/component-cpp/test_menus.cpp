@@ -18,7 +18,7 @@
 
 #include "GameController.h"
 #include "MyOpenGLView.h"
-#include "OOLogOutputHandler.h"
+#include "LogOutputHandler.h"
 #include "oofnd/ResourcePaths.hpp"
 #include "oo_component.hpp"
 #include "oo_test.hpp"
@@ -275,7 +275,7 @@ OO_TEST(every_user_directory_is_under_the_scratch_directory) {
   for (const auto& extra : paths.additionalAddOnsDirectories()) {
     resolved.emplace_back("additional add-ons", extra);
   }
-  if (const auto logs = OOLogHandlerGetLogBasePath()) {
+  if (const auto logs = oo::LogHandlerGetLogBasePath()) {
     resolved.emplace_back("log base", std::filesystem::path(*logs));
   }
   if (const auto saves = game.controller()->playerFileDirectory()) {

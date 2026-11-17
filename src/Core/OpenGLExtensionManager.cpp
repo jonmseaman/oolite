@@ -282,7 +282,7 @@ std::optional<std::string> OptionalGLString(const GLubyte* string) {
 }  // namespace
 
 namespace {
-bool sHeadless = false;  // oo::OpenGLExtensionManager::setHeadless
+bool sHeadless = false;  // OOOpenGLExtensionManager::setHeadless
 }  // namespace
 
 void oo::OpenGLExtensionManager::setHeadless(bool headless) {
@@ -291,9 +291,13 @@ void oo::OpenGLExtensionManager::setHeadless(bool headless) {
 
 bool oo::OpenGLExtensionManager::isHeadless() { return sHeadless; }
 
-// Declared in Headless.h; defined here, beside the state it reads, so that
+// Declared in OOHeadless.h; defined here, beside the state it reads, so that
 // whatever links the manager links this too.
-bool oo::GraphicsAvailable() { return !sHeadless; }
+namespace oo {
+
+bool GraphicsAvailable() { return !sHeadless; }
+
+}  // namespace oo
 
 void oo::OpenGLExtensionManager::reset() {
   const GLubyte *versionString = nullptr, *curr = nullptr;
@@ -306,8 +310,8 @@ void oo::OpenGLExtensionManager::reset() {
     major = minor = release_ = 0;
 #if OO_SHADERS
     shadersAvailable = false;
-    defaultShaderSetting = OOShaderSetting::kNotSupported;
-    maximumShaderSetting = OOShaderSetting::kNotSupported;
+    defaultShaderSetting = oo::ShaderSetting::kNotSupported;
+    maximumShaderSetting = oo::ShaderSetting::kNotSupported;
     textureImageUnitCount_ = 0;
 #endif
 #if OO_USE_VBO

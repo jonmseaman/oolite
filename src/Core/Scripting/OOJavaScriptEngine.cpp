@@ -634,7 +634,7 @@ bool OOJSValueToInt32(JSContext* context, JSValueConst value,
 //===========================================================================
 
 // A headless game's Math.random and default limit (OOJSSetHeadlessScripting).
-static std::optional<OOSeededRandom> sSeededMathRandom;
+static std::optional<oo::SeededRandom> sSeededMathRandom;
 static std::uint64_t sSeededMathRandomDraws;
 static double sHeadlessTimeLimit;
 
@@ -648,7 +648,7 @@ static JSValue SeededMathRandom(JSContext* context, JSValueConst thisValue,
 }
 
 void OOJSSetHeadlessScripting(std::optional<std::uint32_t> mathRandomSeed,
-                              OOTimeDelta defaultTimeLimit) {
+                              oo::TimeDelta defaultTimeLimit) {
   if (mathRandomSeed.has_value()) {
     sSeededMathRandom.emplace(*mathRandomSeed);
   } else {

@@ -228,12 +228,12 @@ bool NextDeferredCallDeadline(
 
 }  // namespace
 
-const OOGameClock& GameController::currentClock() {
-  static const OOGameClock systemClock;
+const oo::GameClock& GameController::currentClock() {
+  static const oo::GameClock systemClock;
   return sSharedController != nullptr ? sSharedController->_clock : systemClock;
 }
 
-OOGameObserver* GameController::currentObserver() {
+oo::GameObserver* GameController::currentObserver() {
   return sSharedController != nullptr ? sSharedController->_observer : nullptr;
 }
 
@@ -417,11 +417,11 @@ void GameController::tick(double dt) {
   // Headless, a step is a frame the game would have drawn.
   if (_options.headless) ++_presentation.framesRequested;
   if (UNIVERSE != nullptr) UNIVERSE->update(dt);
-  if (EXPECT_NOT((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
-                 OOEntityStatus::kRestartGame)) {
+  if ((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) ==
+      oo::EntityStatus::kRestartGame) [[unlikely]] {
     if (UNIVERSE != nullptr) UNIVERSE->reinitAndShowDemo(true);
   }
-  ::OOSound::update();
+  ::oo::Sound::update();
   if (!gameIsPaused) {
     OOJSFrameCallbacksInvoke(dt);
   }
@@ -646,20 +646,20 @@ constexpr const char* kHeadlessScenarioSave =
 constexpr double kHeadlessLaunchLimitSeconds = 60.0;
 }  // namespace
 
-void GameController::startHeadless(const OOHeadlessOptions& options) {
+void GameController::startHeadless(const oo::HeadlessOptions& options) {
   if (!options.headless) {
-    OORaiseException(OOInvalidArgumentException, "%s",
-                     "startHeadless: options.headless is false");
+    oo::RaiseException(oo::InvalidArgumentException, "%s",
+                       "startHeadless: options.headless is false");
   }
   options.validate();
   if (_universe != nullptr || UNIVERSE != nullptr) {
-    OORaiseException(OOInternalInconsistencyException, "%s",
-                     "startHeadless: a universe already exists in this "
-                     "process; a headless game is one per process");
+    oo::RaiseException(oo::InternalInconsistencyException, "%s",
+                       "startHeadless: a universe already exists in this "
+                       "process; a headless game is one per process");
   }
 
   _options = options;
-  _clock = OOGameClock::manual(*options.seed);
+  _clock = oo::GameClock::manual(*options.seed);
   last_timeInterval = _clock.monotonicSeconds();
   ranrot_srand(*options.seed);
 
@@ -675,7 +675,7 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
     oo::process::setArguments(static_cast<int>(argv.size()), argv.data());
   }
 
-  OOOpenGLExtensionManager::setHeadless(true);  // before its first use
+  oo::OpenGLExtensionManager::setHeadless(true);  // before its first use
   // The windowed start makes the script engine while the view sets up GL (the
   // extension manager's per-GPU look-up uses a regular expression, which needs
   // it); a headless start has no view, so it makes the engine here, at the
@@ -685,20 +685,20 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
   OOJavaScriptEngine::sharedEngine();
   // Each sound asked for, with the game time, in the presentation record. With
   // no device no sound would load, so sounds are names without data.
-  OOSound::setNamedWithoutDevice(true);
-  OOSoundSource::setPlayObserver([](OOSound* sound) {
+  oo::Sound::setNamedWithoutDevice(true);
+  oo::SoundSource::setPlayObserver([](oo::Sound* sound) {
     GameController* controller = sharedController();
     controller->_presentation.soundsRequested.push_back(
-        OOSoundRequest{UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
-                       sound != nullptr ? sound->name().value_or("") : ""});
+        oo::SoundRequest{UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
+                         sound != nullptr ? sound->name().value_or("") : ""});
   });
   if (options.inputView) {
     _gameView = oo::makeShared<::MyOpenGLView>();
     if (!_gameView->initHeadless()) {
       _gameView.reset();
-      OORaiseException(OOInternalInconsistencyException, "%s",
-                       "startHeadless: SDL could not start for the input "
-                       "view");
+      oo::RaiseException(oo::InternalInconsistencyException, "%s",
+                         "startHeadless: SDL could not start for the input "
+                         "view");
     }
     _gameView->setGameController(this);
     setUpDisplayModes();  // as the windowed start: the options screen lists
@@ -711,19 +711,19 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
     setPlayerFileToLoad(kHeadlessScenarioSave);
     loadPlayerIfRequired();
     if (PLAYER == nullptr || !PLAYER->isDocked()) {
-      OORaiseException(OOInternalInconsistencyException,
-                       "startHeadless: the player is not docked after "
-                       "loading %s",
-                       kHeadlessScenarioSave);
+      oo::RaiseException(oo::InternalInconsistencyException,
+                         "startHeadless: the player is not docked after "
+                         "loading %s",
+                         kHeadlessScenarioSave);
     }
     PLAYER->launchFromStation();
     double launched = 0.0;
-    while (PLAYER->status() != OOEntityStatus::kInFlight) {
+    while (PLAYER->status() != oo::EntityStatus::kInFlight) {
       if (launched > kHeadlessLaunchLimitSeconds) {
-        OORaiseException(OOInternalInconsistencyException,
-                         "startHeadless: the player was not in flight after "
-                         "%.0f s of game time",
-                         kHeadlessLaunchLimitSeconds);
+        oo::RaiseException(oo::InternalInconsistencyException,
+                           "startHeadless: the player was not in flight after "
+                           "%.0f s of game time",
+                           kHeadlessLaunchLimitSeconds);
       }
       tick(options.step);
       fireDueDeferredCalls();

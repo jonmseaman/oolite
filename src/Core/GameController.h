@@ -106,15 +106,15 @@ class GameController : public oo::Object {
 
   // What the simulation reads as "now": the system clock, unless a headless
   // game installed a manual one.
-  const OOGameClock& clock() const { return _clock; }
+  const oo::GameClock& clock() const { return _clock; }
 
   /*	For the game's code that must not make a controller as a side effect (a
      controller's constructor reseeds RANROT, which a unit test with no
      controller would notice): the shared controller's clock and observer if
      it exists, else the system clock and none.
   */
-  static const OOGameClock& currentClock();
-  static OOGameObserver* currentObserver();
+  static const oo::GameClock& currentClock();
+  static oo::GameObserver* currentObserver();
   void startAnimationTimer();
   void stopAnimationTimer();
 
@@ -133,6 +133,20 @@ class GameController : public oo::Object {
 
   // Start-up, splash and progress messages, exit, player file.
   void applicationDidFinishLaunching();
+
+  /*	A game with no window: the steps of applicationDidFinishLaunching in its
+     order, without the splash, the display modes, the expansion manager, the
+     window, the sound device or the frame loop. The manual clock replaces the
+     system's; every generator is seeded from options.seed. With
+     options.startInFlight the standard scenario is loaded and the player
+     launched, ticking at options.step until in flight. Returns when the game
+     is ready for its first tick(); the caller steps it. Raises, with a
+     message, if the options are inconsistent or a universe already exists.
+     Call it on sharedController(), the controller the game's code reaches.
+  */
+  void startHeadless(const oo::HeadlessOptions& options);
+
+  const oo::HeadlessOptions& headlessOptions() const { return _options; }
 
   // Told of each ship and world script event before the scripts run; null,
   // the default, in the windowed game. Not owned.
@@ -208,11 +222,11 @@ class GameController : public oo::Object {
       _gameView;                          // was gameView, named like its getter
   std::unique_ptr<::Universe> _universe;  // the game's universe (UNIVERSE)
 
-  OOGameClock _clock;  // the system clock unless a headless game set one
+  oo::GameClock _clock;  // the system clock unless a headless game set one
   std::optional<std::string> _exitRequested;
-  OOHeadlessOptions _options;  // the windowed game's unless startHeadless
-  OOGameObserver* _observer = nullptr;  // not owned; null when windowed
-  OOPresentationRecord _presentation;   // a headless game's only
+  oo::HeadlessOptions _options;  // the windowed game's unless startHeadless
+  oo::GameObserver* _observer = nullptr;  // not owned; null when windowed
+  oo::PresentationRecord _presentation;   // a headless game's only
   double last_timeInterval = {};
   double delta_t = {};
 

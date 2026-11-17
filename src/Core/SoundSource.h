@@ -86,7 +86,7 @@ class SoundSource : public oo::Object, public ::oo::SoundChannelDelegate {
   // Told of each sound a source is asked to play, before the mixer is asked
   // for a channel (so with no sound device too). Null, the default: nothing.
   // A headless game records the requests (OOPresentationRecord).
-  using PlayObserver = void (*)(OOSound* sound);
+  using PlayObserver = void (*)(Sound* sound);
   static void setPlayObserver(PlayObserver observer);
 
   // Conveniences:

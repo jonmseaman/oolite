@@ -23,10 +23,11 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOHeadless.h"
+#include "Headless.h"
 
 #include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 
 #include "oofnd/Date.hpp"
@@ -37,38 +38,38 @@ constexpr double kSecondsPerDay = 86400.0;
 constexpr double kNanosecondsPerSecond = 1e9;
 }  // namespace
 
-void OOHeadlessOptions::validate() const {
+void oo::HeadlessOptions::validate() const {
   if (headless && !seed.has_value()) {
-    OORaiseException(OOInvalidArgumentException, "%s",
-                     "headless true requires seed to be given");
+    oo::RaiseException(oo::InvalidArgumentException, "%s",
+                       "headless true requires seed to be given");
   }
   if (headless && addOns == AddOns::kAll) {
-    OORaiseException(OOInvalidArgumentException, "%s",
-                     "addOns is never all when headless is true");
+    oo::RaiseException(oo::InvalidArgumentException, "%s",
+                       "addOns is never all when headless is true");
   }
 }
 
-OOGameClock OOGameClock::system() { return OOGameClock(); }
+oo::GameClock oo::GameClock::system() { return oo::GameClock(); }
 
-OOGameClock OOGameClock::manual(std::uint32_t seed) {
-  OOGameClock clock;
+oo::GameClock oo::GameClock::manual(std::uint32_t seed) {
+  oo::GameClock clock;
   clock._manual = true;
   clock._timeOfDayStart = manualTimeOfDayStart(seed);
   return clock;
 }
 
-double OOGameClock::manualTimeOfDayStart(std::uint32_t seed) {
+double oo::GameClock::manualTimeOfDayStart(std::uint32_t seed) {
   return static_cast<double>(seed % 86400U);
 }
 
-double OOGameClock::monotonicSeconds() const {
+double oo::GameClock::monotonicSeconds() const {
   if (_manual) {
     return static_cast<double>(_elapsedNanoseconds) / kNanosecondsPerSecond;
   }
   return oo::date::monotonicSeconds();
 }
 
-double OOGameClock::timeOfDay() const {
+double oo::GameClock::timeOfDay() const {
   if (_manual) {
     const double t = _timeOfDayStart + monotonicSeconds();
     return t - kSecondsPerDay * static_cast<double>(static_cast<std::uint64_t>(
@@ -76,23 +77,23 @@ double OOGameClock::timeOfDay() const {
   }
   // Local time of day, as the ship clock's start has always read it.
   const oo::date::Clock::time_point now = oo::date::Clock::now();
-  long long secondOfDay =
-      (static_cast<long long>(
+  std::int64_t secondOfDay =
+      (static_cast<std::int64_t>(
            std::chrono::floor<std::chrono::seconds>(now.time_since_epoch())
                .count()) +
-       static_cast<long long>(oo::date::localUTCOffsetMinutes(now)) * 60) %
+       static_cast<std::int64_t>(oo::date::localUTCOffsetMinutes(now)) * 60) %
       86400;
   if (secondOfDay < 0) secondOfDay += 86400;
   return static_cast<double>(secondOfDay);
 }
 
-void OOGameClock::advance(double dt) {
+void oo::GameClock::advance(double dt) {
   if (_manual) {
     _elapsedNanoseconds += std::llround(dt * kNanosecondsPerSecond);
   }
 }
 
-double OOSeededRandom::nextDouble() {
+double oo::SeededRandom::nextDouble() {
   // SplitMix64 (Steele, Lea and Flood, 2014).
   _state += 0x9e3779b97f4a7c15ULL;
   std::uint64_t z = _state;

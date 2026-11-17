@@ -40,9 +40,9 @@
 #include <string_view>
 #include <vector>
 
-#include "OOEquipmentType.h"
-#include "OOPListParsing.h"
-#include "OOShipRegistry.h"
+#include "EquipmentType.h"
+#include "PListParsing.h"
+#include "ShipRegistry.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
 #include "ShipEntity.h"
@@ -175,7 +175,7 @@ std::uint32_t SeedFor(std::uint32_t base, const std::string& kind, const std::st
 // The overlay's shipdata.plist (a test fixture, not expansion content).
 oo::PList OverlayShips(const std::string& overlay) {
   if (overlay.empty()) return oo::PList();
-  return OOPropertyListFromFile((fs::path(overlay) / "shipdata.plist").string());
+  return oo::PropertyListFromFile((fs::path(overlay) / "shipdata.plist").string());
 }
 
 // The ship keys of the merged core data plus the overlay's, sorted.
@@ -189,7 +189,7 @@ std::vector<Definition> ShipDefinitions(const std::string& overlay) {
       for (const auto& [key, value] : *d) raw[key] = value;
     }
   }
-  OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
+  oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
   std::vector<Definition> ships;
   for (const auto& [key, value] : raw) {
     Definition d{"ship", key, "candidate", {}, 0};
@@ -244,7 +244,7 @@ bool Fitted(Game& game, const std::string& key) {
 // What the item's own data says it needs before it can be awarded, done:
 // fuel not full (or full), the items it requires. Answers why a need cannot be
 // met, or "".
-std::string Prepare(Game& game, OOEquipmentType* type) {
+std::string Prepare(Game& game, oo::EquipmentType* type) {
   if (type == nullptr) return "not an equipment type";
   if (!type->isAvailableToPlayer()) {
     return "not available to the player, and the census fits equipment to the player's ship";
@@ -266,7 +266,7 @@ std::string Prepare(Game& game, OOEquipmentType* type) {
 
 // Awards the item as the game's scripts do: a primary weapon onto the forward
 // mount, anything else through awardEquipment.
-bool Award(Game& game, OOEquipmentType* type, const std::string& key) {
+bool Award(Game& game, oo::EquipmentType* type, const std::string& key) {
   if (type != nullptr && type->isPrimaryWeapon()) {
     game.eval(std::format("player.ship.forwardWeapon = {}", JsQuote(key)));
     return game.evalBool(std::format(
@@ -290,7 +290,7 @@ Row TryEquipment(Game& game, const Definition& d, std::uint32_t baseSeed) {
   const std::string forward = game.evalString(
       "player.ship.forwardWeapon ? player.ship.forwardWeapon.equipmentKey : 'EQ_WEAPON_NONE'");
 
-  std::shared_ptr<OOEquipmentType> type = OOEquipmentType::equipmentTypeWithIdentifier(d.key);
+  std::shared_ptr<oo::EquipmentType> type = oo::EquipmentType::equipmentTypeWithIdentifier(d.key);
   // The standard save's ship already carries some items, and an item cannot
   // be awarded twice: take it off for the try and put it back afterwards.
   const bool hadIt = Fitted(game, d.key) && !(type != nullptr && type->isPrimaryWeapon());
@@ -312,7 +312,7 @@ Row TryEquipment(Game& game, const Definition& d, std::uint32_t baseSeed) {
       PlayerEntity* player = game.player();
       const std::size_t index = player->eqScriptIndexForKey(d.key);
       if (index < player->primedEquipmentCount()) {
-        player->activatePrimableEquipment(index, OOPrimedEquipmentMode::kActivated);
+        player->activatePrimableEquipment(index, oo::PrimedEquipmentMode::kActivated);
       }
     }
     game.simulate(GameTime{kEquipmentSpanSeconds});
@@ -426,7 +426,7 @@ std::vector<Definition> Definitions(Game& game, const Options& o) {
             [](const Definition& a, const Definition& b) { return a.key < b.key; });
   for (Definition& d : items) {
     // Applied and gone: awarded (its needs met first), and then not fitted.
-    std::shared_ptr<OOEquipmentType> type = OOEquipmentType::equipmentTypeWithIdentifier(d.key);
+    std::shared_ptr<oo::EquipmentType> type = oo::EquipmentType::equipmentTypeWithIdentifier(d.key);
     const std::string forward = game.evalString(
         "player.ship.forwardWeapon ? player.ship.forwardWeapon.equipmentKey : 'EQ_WEAPON_NONE'");
     const bool hadIt = Fitted(game, d.key) && !(type != nullptr && type->isPrimaryWeapon());
@@ -445,7 +445,7 @@ void ApplyOverlay(const std::string& overlay) {
   const oo::PList extra = OverlayShips(overlay);
   if (const oo::PList::Dict* d = extra.getIf<oo::PList::Dict>()) {
     for (const auto& [key, value] : *d) {
-      OOShipRegistry::sharedRegistry()->setShipInfoForKey(key, value);
+      oo::ShipRegistry::sharedRegistry()->setShipInfoForKey(key, value);
     }
   }
 }
@@ -465,11 +465,11 @@ Row Try(Game& game, const Definition& d, std::uint32_t seed, bool* clean) {
   player->setSpeed(0.0);
   game.eval("player.ship.energy = player.ship.maxEnergy");
   Row r = d.kind == "ship" ? TryShip(game, d, seed, clean) : TryEquipment(game, d, seed);
-  if (player->status() != OOEntityStatus::kInFlight) {
+  if (player->status() != oo::EntityStatus::kInFlight) {
     *clean = false;  // the next try would not start where this one did
     r.outcome = "failed";
     r.evidence = std::format("the player was {} after it",
-                             OOStringFromEntityStatus(player->status()));
+                             oo::StringFromEntityStatus(player->status()));
   }
   return r;
 }

@@ -519,7 +519,7 @@ bool MyOpenGLView::initHeadless() {
   initKeyMappingData();
   scancode2Unicode[55] = gvPrintScreenKey;  // as init()
 
-  matrixManager = oo::makeShared<OOOpenGLMatrixManager>();
+  matrixManager = oo::makeShared<oo::OpenGLMatrixManager>();
 
   OO_LOG("sdl.init", "{}", "initialising SDL (headless)");
   SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "dummy");
@@ -541,9 +541,9 @@ bool MyOpenGLView::initHeadless() {
   viewSize = currentWindowSize;
   bounds.size = currentWindowSize;
 
-  OOJoystickManager::setStickHandlerFactory(
-      []() -> std::shared_ptr<OOJoystickManager> {
-        return oo::makeShared<OOSDLJoystickManager>();
+  oo::JoystickManager::setStickHandlerFactory(
+      []() -> std::shared_ptr<oo::JoystickManager> {
+        return oo::makeShared<oo::SDLJoystickManager>();
       });
 
   grabMouseStatus = false;
@@ -700,7 +700,7 @@ void MyOpenGLView::setUpBasicOpenGLStateWithSize() {
 void MyOpenGLView::initialiseGLWithSize(NSSize v_size) {
   // A headless view (initHeadless) has no window and makes none: the size is
   // noted, as a resize would note it.
-  if (!OOGraphicsAvailable()) {
+  if (!oo::GraphicsAvailable()) {
     viewSize = v_size;
     return;
   }
@@ -1270,7 +1270,7 @@ bool MyOpenGLView::pollShiftKey() {
 
 bool MyOpenGLView::snapShot(const std::optional<std::string>& filename) {
   // A headless view has no framebuffer to read: no snapshot is taken.
-  if (!OOGraphicsAvailable()) return false;
+  if (!oo::GraphicsAvailable()) return false;
   bool snapShotOK = true;
   SDL_Surface* tmpSurface;
 

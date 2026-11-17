@@ -44,7 +44,9 @@ class ShipEntity;
 
 // How a game is started. A default-constructed value is the windowed game,
 // exactly as today.
-struct OOHeadlessOptions {
+namespace oo {
+
+struct HeadlessOptions {
   enum class AddOns : std::uint8_t { kAll, kNone };
 
   bool headless = false;              // no window, no GL, no sound device
@@ -67,14 +69,14 @@ struct OOHeadlessOptions {
 // reads the machine's; a manual clock starts at 0 and moves only when the
 // game's step advances it, so a headless game never depends on how fast the
 // machine is.
-class OOGameClock {
+class GameClock {
  public:
-  OOGameClock() = default;  // the system clock
+  GameClock() = default;  // the system clock
 
-  static OOGameClock system();
+  static GameClock system();
   // Monotonic seconds start at 0; the time of day starts at a value derived
   // from the seed (manualTimeOfDayStart) and advances with them.
-  static OOGameClock manual(std::uint32_t seed);
+  static GameClock manual(std::uint32_t seed);
 
   // The time of day a manual clock seeded so starts at, in [0, 86400).
   static double manualTimeOfDayStart(std::uint32_t seed);
@@ -98,31 +100,31 @@ class OOGameClock {
 
 // Told of each script event as it is dispatched, before the scripts run, on
 // the main thread. It must not change game state. The windowed game has none.
-class OOGameObserver {
+class GameObserver {
  public:
-  virtual ~OOGameObserver() = default;
+  virtual ~GameObserver() = default;
   virtual void shipEvent(double time, ShipEntity* ship,
                          std::string_view name) = 0;
   virtual void worldEvent(double time, std::string_view name) = 0;
 };
 
 // What a game with no window and no sound device would have shown and played.
-struct OOSoundRequest {
+struct SoundRequest {
   double time = 0.0;  // game time, s
   std::string name;
 };
 
-struct OOPresentationRecord {
+struct PresentationRecord {
   std::uint64_t framesRequested = 0;
-  std::vector<OOSoundRequest> soundsRequested;
+  std::vector<SoundRequest> soundsRequested;
 };
 
 // The generator a headless game's Math.random draws from: SplitMix64 over the
 // seed, each draw a double in [0, 1) from the top 53 bits. Defined here so a
 // test can compute the same sequence.
-class OOSeededRandom {
+class SeededRandom {
  public:
-  explicit OOSeededRandom(std::uint32_t seed) : _state(seed) {}
+  explicit SeededRandom(std::uint32_t seed) : _state(seed) {}
 
   double nextDouble();
 
@@ -132,4 +134,6 @@ class OOSeededRandom {
 
 // False in a headless game: no gl* function may be called while it is false.
 // (Defined in OOOpenGLExtensionManager.cpp, which holds the state.)
-bool OOGraphicsAvailable();
+bool GraphicsAvailable();
+
+}  // namespace oo

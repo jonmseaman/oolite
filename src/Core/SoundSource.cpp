@@ -38,7 +38,7 @@ SOFTWARE.
 #include "oofnd/String.hpp"
 
 namespace {
-OOSoundSource::PlayObserver sPlayObserver = nullptr;
+oo::SoundSource::PlayObserver sPlayObserver = nullptr;
 
 // The sources that are playing, each once, retained (a Foundation mutable set
 // before; sources compare by identity). Created lazily and dropped by +stopAll,

@@ -105,14 +105,13 @@ oo::Sound::Sound() {
    the concrete sound it makes. The decoder is released at the end of the
    scope, as [decoder release] did.
 */
-
 namespace {
-bool sNamedWithoutDevice = false;  // oo::Sound::setNamedWithoutDevice
+bool sNamedWithoutDevice = false;  // OOSound::setNamedWithoutDevice
 
 // What a headless game loads in place of a sound: a name and no data.
-class OONamedSilentSound final : public oo::Sound {
+class NamedSilentSound final : public oo::Sound {
  public:
-  explicit OONamedSilentSound(std::string name) : _name(std::move(name)) {}
+  explicit NamedSilentSound(std::string name) : _name(std::move(name)) {}
 
   std::optional<std::string> name() override { return _name; }
 
@@ -131,7 +130,7 @@ std::shared_ptr<oo::Sound> oo::Sound::initWithContentsOfFile(
     const std::optional<std::string>& path) {
   if (!sIsSoundOK) {
     if (sNamedWithoutDevice && path.has_value()) {
-      return oo::makeShared<OONamedSilentSound>(
+      return oo::makeShared<NamedSilentSound>(
           oo::str::lastPathComponent(*path));
     }
     return nullptr;
