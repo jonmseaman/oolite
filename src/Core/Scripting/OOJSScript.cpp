@@ -814,7 +814,8 @@ static bool RunScriptWithName(JSContext* context,
         match. As before, the whole cache is cleared when the Oolite version or
         the search paths change (see OOCacheManager and ResourceManager).
 */
-static constexpr std::string_view kCompiledScriptCache = "compiled QuickJS scripts";
+static constexpr std::string_view kCompiledScriptCache =
+    "compiled QuickJS scripts";
 static constexpr std::string_view kCompiledScriptKeyHash = "source hash";
 static constexpr std::string_view kCompiledScriptKeyEngine = "engine";
 static constexpr std::string_view kCompiledScriptKeyFormat = "format";
@@ -845,8 +846,8 @@ static const oo::PList* EntryMember(const oo::PList::Dict& entry,
 // entry.
 static JSValue CachedCompiledScript(JSContext* context, const std::string& path,
                                     std::string_view source) {
-  const oo::PList cached =
-      OOCacheManager::sharedCache()->pListForKey(path, std::string(kCompiledScriptCache));
+  const oo::PList cached = OOCacheManager::sharedCache()->pListForKey(
+      path, std::string(kCompiledScriptCache));
   const oo::PList::Dict* entry = cached.getIf<oo::PList::Dict>();
   if (entry == nullptr) return JS_UNDEFINED;
 

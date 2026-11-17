@@ -13679,7 +13679,7 @@ GLfloat PlayerEntity::fuelChargeRate() {
   if (ship_trade_in_factor <= 90 && ship_trade_in_factor >= 75) [[likely]] {
     const int tradeInHundreds =
         ship_trade_in_factor /
-        100;                        // integer division kept: upstream behaviour
+        100;  // integer division kept: upstream behaviour
     rate *=
         static_cast<GLfloat>(2.0 - tradeInHundreds);  // between 1.1x and 1.25x
     // fuelPrices: shipDataKey repair status ship_trade_in_factor rate (retired

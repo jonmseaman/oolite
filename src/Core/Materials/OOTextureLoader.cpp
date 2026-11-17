@@ -355,7 +355,7 @@ void OOTextureLoader::generateMipMapsForCubeMap() {
   size_t srcSideSize =
       _width * _width * components;  // Space for one side without mip-maps.
   size_t newSideSize =
-      srcSideSize * 4 / 3;                 // Space for one side with mip-maps.
+      srcSideSize * 4 / 3;  // Space for one side with mip-maps.
   newSideSize = (newSideSize + 15) &
                 static_cast<size_t>(~15);  // Round up to multiple of 16 bytes.
   size_t newSize = newSideSize * 6;        // Space for all six sides.

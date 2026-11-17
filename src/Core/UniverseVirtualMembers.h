@@ -56,7 +56,7 @@ class OOSunEntity;
 class GuiDisplayGen;
 class Entity;
 using EntityFilterPredicate = bool (*)(Entity* entity,
-                                      void* parameter);  // the C++ entity
+                                       void* parameter);  // the C++ entity
 
 /*	VOID_BODY ends each member answering nothing, VALUE_BODY each member
    answering a value: ";" and ";" in the class, "{}" and "{ return {}; }" in a

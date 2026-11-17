@@ -902,8 +902,10 @@ oo::PList PlayerEntity::makeStickGuiDict(const std::string& what, int allowable,
       units.size() > 50 ? oo::utf16ToUtf8(units.substr(0, 28)) + "..." : what;
   guiDict[std::string(KEY_ALLOWABLE)] =
       oo::PList::signedInteger(allowable);  // +numberWithInt:
-  if (axisfn >= 0) guiDict[std::string(KEY_AXISFN)] = oo::PList::signedInteger(axisfn);
-  if (butfn >= 0) guiDict[std::string(KEY_BUTTONFN)] = oo::PList::signedInteger(butfn);
+  if (axisfn >= 0)
+    guiDict[std::string(KEY_AXISFN)] = oo::PList::signedInteger(axisfn);
+  if (butfn >= 0)
+    guiDict[std::string(KEY_BUTTONFN)] = oo::PList::signedInteger(butfn);
   return oo::PList(std::move(guiDict));
 }
 

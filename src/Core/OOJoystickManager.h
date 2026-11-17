@@ -323,7 +323,7 @@ inline constexpr std::string_view STICK_ISAXIS =
 inline constexpr std::string_view STICK_NUMBER =
     "stickNum";  // Stick number 0 to 4
 inline constexpr std::string_view STICK_AXBUT =
-    "stickAxBt";                    // Axis or button number
+    "stickAxBt";  // Axis or button number
 inline constexpr std::string_view kStickFunction =
     "stickFunc";  // Function of axis/button
 inline constexpr std::string_view STICK_ROLL_AXIS_PROFILE_SETTING =

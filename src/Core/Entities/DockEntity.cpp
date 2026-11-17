@@ -1300,10 +1300,10 @@ bool DockEntity::dockingCorridorIsEmpty() {
   bool isEmpty = true;
   int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
-      UNIVERSE->sortedEntities;                 // grab the public sorted list
+      UNIVERSE->sortedEntities;  // grab the public sorted list
   std::vector<Entity*> my_entities(
-      static_cast<std::size_t>(ent_count));     // each one's object retained
-  std::vector<oo::EntityHold> my_holds;         // each one's object, held
+      static_cast<std::size_t>(ent_count));  // each one's object retained
+  std::vector<oo::EntityHold> my_holds;      // each one's object, held
   int i;
   int ship_count = 0;
 
@@ -1371,10 +1371,10 @@ void DockEntity::clearDockingCorridor() {
   bool isClear = true;
   int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
-      UNIVERSE->sortedEntities;                 // grab the public sorted list
+      UNIVERSE->sortedEntities;  // grab the public sorted list
   std::vector<Entity*> my_entities(
-      static_cast<std::size_t>(ent_count));     // each one's object retained
-  std::vector<oo::EntityHold> my_holds;         // each one's object, held
+      static_cast<std::size_t>(ent_count));  // each one's object retained
+  std::vector<oo::EntityHold> my_holds;      // each one's object, held
   int i;
   int ship_count = 0;
 

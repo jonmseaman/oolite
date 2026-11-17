@@ -61,13 +61,13 @@ void OOWaypointEntity::initWithDictionary(const oo::PList& info) {
   // A nil dictionary read zero-filled values and nil strings (messaging nil),
   // not the defaults.
   oriented = true;
-  position = info ? OOHPVectorFromPList(info.find(kWaypointKeyPosition),
-                                        kZeroHPVector)
-                  : kZeroHPVector;
-  Quaternion q =
-      info ? OOQuaternionFromPList(info.find(kWaypointKeyOrientation),
-                                   kIdentityQuaternion)
-           : Quaternion{0, 0, 0, 0};
+  position =
+      info ? OOHPVectorFromPList(info.find(kWaypointKeyPosition), kZeroHPVector)
+           : kZeroHPVector;
+  Quaternion q = info
+                     ? OOQuaternionFromPList(info.find(kWaypointKeyOrientation),
+                                             kIdentityQuaternion)
+                     : Quaternion{0, 0, 0, 0};
   setOrientation(q);
   setSize(info.get<oo::NonNegative<float>>(kWaypointKeySize, 1000.0));
   setBeaconCode(info ? std::optional<std::string>(

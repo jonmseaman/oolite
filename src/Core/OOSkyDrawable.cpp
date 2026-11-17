@@ -525,8 +525,8 @@ std::unique_ptr<OOSkyQuadSet> OOSkyQuadSet::initWithQuadsWithTexture(
   int skyColorCorrection = static_cast<int>(
       oo::Defaults::standard().integerForKey("sky-color-correction"));
 
-// Hejl / Burgess-Dawson filmic tone mapping
-// this algorithm has gamma correction already embedded
+  // Hejl / Burgess-Dawson filmic tone mapping
+  // this algorithm has gamma correction already embedded
   auto skyColorTonemapComponent = [&](GLfloat skyColorComponent) {
     x = static_cast<GLfloat>(std::max(0.0, skyColorComponent - 0.004));
     *col++ = static_cast<GLfloat>((x * (6.2 * x + 0.5)) /
