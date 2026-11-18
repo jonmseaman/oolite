@@ -22,11 +22,13 @@ MA 02110-1301, USA.
 
 */
 
+#include "FeatureConfig.h"
 #include "GameController.h"
 #include "OOLoggingExtended.h"
 #include "OOVersion.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Process.hpp"
+#include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
 
@@ -207,6 +209,12 @@ int main(int argc, char* argv[]) {
   std::optional<oo::AutoreleaseScope> pool;
   pool.emplace();
   OOLoggingInit();
+
+  // Runtime feature switches, from the game's own Resources (cwd is now the
+  // game's folder). Read once, before any other thread starts.
+  oo::install_feature_config(oo::FeatureConfig::FromFile(
+      oo::ResourcePaths::current().builtInResourcesDirectory() / "Config" /
+      "features.plist"));
 
   try {
     // dajt: allocate and set the NSApplication delegate manually because not

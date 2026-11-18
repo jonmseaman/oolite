@@ -933,11 +933,6 @@ void PlayerEntity::beginWitchspaceCountdown(int spin_time) {
     if (spin_time == 0) {
       witchspaceCountdown = hyperspaceMotorSpinTime;
     } else {
-#ifndef OO_DUMP_PLANETINFO
-      if (spin_time < 5) {
-        witchspaceCountdown = 5;
-      } else
-#endif
       {
         witchspaceCountdown = spin_time;
       }

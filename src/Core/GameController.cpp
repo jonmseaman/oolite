@@ -246,6 +246,7 @@ GameController::GameController() {
     const char* seedEnv = getenv("OO_RANDOM_SEED");
     if (seedEnv != nullptr && *seedEnv != '\0') {
       ranrot_srand(static_cast<uint32_t>(strtoul(seedEnv, nullptr, 10)));
+      //ranrot_srand(12345l);
       OO_LOG("rand.seed", "RANROT seeded from OO_RANDOM_SEED={}", seedEnv);
     } else {
       ranrot_srand(static_cast<uint32_t>(

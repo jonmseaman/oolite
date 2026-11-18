@@ -34,6 +34,7 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "FeatureConfig.h"
 #include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
 #include "OOConstToJSString.h"
@@ -1242,18 +1243,18 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
          * flight are not as severe and do not allow the 7LY limit to
          * be broken. Nevertheless, it is not allowed. - CIM */
         // (except when compiled in debugging mode)
-#ifndef OO_DUMP_PLANETINFO
-        if (EXPECT_NOT(
-                (player != nullptr ? player->status() : OOEntityStatus{}) !=
-                    OOEntityStatus::kDocked &&
-                (player != nullptr ? player->status() : OOEntityStatus{}) !=
-                    OOEntityStatus::kLaunching)) {
-          OOJSReportError(context,
-                          "player.ship.targetSystem is read-only unless "
-                          "called when docked.");
-          return OOJSNativeFailure(context);
+        if (oo::features().IsDumpPlanetInfoEnabled()) {
+          if (EXPECT_NOT(
+            (player != nullptr ? player->status() : OOEntityStatus{}) !=
+            OOEntityStatus::kDocked &&
+            (player != nullptr ? player->status() : OOEntityStatus{}) !=
+            OOEntityStatus::kLaunching)) {
+            OOJSReportError(context,
+                            "player.ship.targetSystem is read-only unless "
+                            "called when docked.");
+            return OOJSNativeFailure(context);
+          }
         }
-#endif
 
         if (OOJSValueToInt32(context, value, &iValue)) {
           if (iValue >= 0 && iValue < OO_SYSTEMS_PER_GALAXY) {
@@ -1873,10 +1874,6 @@ static JSValue PlayerShipBeginHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   bool begun = false;
   if (argc < 1) {
     witchspaceSpinUpTime = 0;
-#ifdef OO_DUMP_PLANETINFO
-    // quick intersystem jumps for debugging
-    witchspaceSpinUpTime = 1;
-#endif
   } else {
     if (!OOJSValueToInt32(context, OOJS_ARGV[0], &spin_time) || spin_time < 5 ||
         spin_time > 60) {

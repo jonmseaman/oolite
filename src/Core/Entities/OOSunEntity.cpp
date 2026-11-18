@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #include <format>
 
 #include "AI.h"
+#include "FeatureConfig.h"
 #include "MyOpenGLView.h"
 #include "OOColor.h"
 #include "OODebugFlags.h"
@@ -154,9 +155,9 @@ void OOSunEntity::initSunWithColor(OOColor* sun_color, const oo::PList& dict) {
     corona_speed_factor =
         OOClamp_0_1_f(corona_speed_factor) * 2.0 + randf() * randf();
   }
-#ifdef OO_DUMP_PLANETINFO
-  OO_LOG("planetinfo.record", "corona_shimmer = {:f}", corona_speed_factor);
-#endif
+  if (oo::features().IsDumpPlanetInfoEnabled()) {
+    OO_LOG("planetinfo.record", "corona_shimmer = {:f}", corona_speed_factor);
+  }
 
   corona_stage = 0.0;
   for (i = 0; i < SUN_CORONA_SAMPLES; i++) rvalue[i] = randf();
