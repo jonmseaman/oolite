@@ -41,6 +41,7 @@ A leaf of Entity. The class is global.
 #define NEW_ATMOSPHERE 1
 
 #include "AI.h"
+#include "FeatureConfig.h"
 #include "OOCharacter.h"
 #include "OOEntityFilterPredicate.h"
 #include "OOGraphicsResetManager.h"
@@ -379,7 +380,7 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
   quaternion_rotate_about_axis(&_atmosphereOrientation, kBasisYVector,
                                _atmosphereRotationalVelocity * deltaT);
 
-#ifdef OO_DUMP_PLANETINFO
+  if (oo::features().IsDumpPlanetInfoEnabled()) {
 #define CPROP(PROP)                                                     \
   OO_LOG("planetinfo.record", #PROP " = {};",                           \
          (ColorForKey(planetInfo, #PROP) != nullptr                     \
@@ -388,20 +389,20 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
              .value_or("(null)"));
 #define FPROP(PROP) \
   OO_LOG("planetinfo.record", #PROP " = {:f};", planetInfo.get<float>(#PROP));
-  CPROP(air_color);
-  CPROP(illumination_color);
-  FPROP(air_color_mix_ratio);
-  FPROP(cloud_alpha);
-  CPROP(cloud_color);
-  FPROP(cloud_fraction);
-  CPROP(land_color);
-  FPROP(land_fraction);
-  CPROP(polar_cloud_color);
-  CPROP(polar_land_color);
-  CPROP(polar_sea_color);
-  CPROP(sea_color);
-  OO_LOG("planetinfo.record", "rotation_speed = {:f}", _rotationalVelocity);
-#endif
+    CPROP(air_color);
+    CPROP(illumination_color);
+    FPROP(air_color_mix_ratio);
+    FPROP(cloud_alpha);
+    CPROP(cloud_color);
+    FPROP(cloud_fraction);
+    CPROP(land_color);
+    FPROP(land_fraction);
+    CPROP(polar_cloud_color);
+    CPROP(polar_land_color);
+    CPROP(polar_sea_color);
+    CPROP(sea_color);
+    OO_LOG("planetinfo.record", "rotation_speed = {:f}", _rotationalVelocity);
+  }
 
   setStatus(OOEntityStatus::kActive);
 
