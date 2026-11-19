@@ -48,8 +48,7 @@ struct OOHeadlessOptions {
   enum class AddOns : std::uint8_t { kAll, kNone };
 
   bool headless = false;              // no window, no GL, no sound device
-  std::optional<std::uint32_t> seed;  // every generator; unset: the clock or
-                                      // OO_RANDOM_SEED, as today
+  std::optional<std::uint32_t> seed;  // every generator; unset: the clock
   AddOns addOns = AddOns::kAll;       // kNone: the built-in Resources only
   bool populate = true;               // fill the system with traffic
   bool startInFlight = false;    // the player in flight in the empty system
