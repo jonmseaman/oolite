@@ -743,7 +743,7 @@ static const char* sPreviousFunction = "<none yet>";
 static unsigned sPreviousLine;
 static bool sGLFunctionTracking = true;
 
-void GLNoteCurrentFunction(const char* function, unsigned line) {
+void OOGLNoteCurrentFunction(const char* function, unsigned line) {
   if (sGLFunctionTracking) {
     if (function != sLatestFunction) {
       sPreviousFunction = sLatestFunction;
@@ -764,7 +764,7 @@ static void SetFunctionTracking(bool value) { sGLFunctionTracking = value; }
 #else
 
 namespace {
-void GLNoteCurrentFunction(const char* /*function*/, unsigned /*line*/) {}
+void OOGLNoteCurrentFunction(const char* /*function*/, unsigned /*line*/) {}
 
 void SetFunctionTracking(bool /*value*/) {}
 }  // namespace
@@ -778,7 +778,7 @@ void SetOpenGLState_(OpenGLStateID state, const char* function, unsigned line) {
       static_cast<unsigned>(state) <
       static_cast<unsigned>(oo::ToUnderlying(OpenGLStateID::kInternalUseOnly)));
 
-  GLNoteCurrentFunction(function, line);
+  OOGLNoteCurrentFunction(function, line);
   SetFunctionTracking(false);
 
   VerifyOpenGLStateInternal("OOSetOpenGLState", function, line);
@@ -794,7 +794,7 @@ void SetOpenGLState_(OpenGLStateID state, const char* function, unsigned line) {
 }
 
 void VerifyOpenGLState_(const char* function, unsigned line) {
-  GLNoteCurrentFunction(function, line);
+  OOGLNoteCurrentFunction(function, line);
   SetFunctionTracking(false);
 
   VerifyOpenGLStateInternal("OOVerifyOpenGLState", function, line);
