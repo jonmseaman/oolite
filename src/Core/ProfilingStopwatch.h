@@ -101,19 +101,20 @@ using HighResTimeValue = DWORD;
 #include <profileapi.h>
 
 #define OO_PROFILING_STOPWATCH_PERFORMANCE_COUNTER 1
-typedef int64_t OOHighResTimeValue;
 
-OOINLINE OOHighResTimeValue OOGetHighResTime(void) {
+namespace oo {
+
+using HighResTimeValue = int64_t;
+
+}  // namespace oo
+
+inline oo::HighResTimeValue OOGetHighResTime(void) {
   LARGE_INTEGER counter;
   QueryPerformanceCounter(&counter);
   return counter.QuadPart;
 }
 
-#define OODisposeHighResTime(time) \
-  do {                             \
-    (void)time;                    \
-  } while (0)
-#define OOCopyHighResTime(time) ((OOHighResTimeValue)time)
+#define OOCopyHighResTime(time) (static_cast<oo::HighResTimeValue>(time))
 #endif
 
 #else

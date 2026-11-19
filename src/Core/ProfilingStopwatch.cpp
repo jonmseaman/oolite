@@ -116,7 +116,7 @@ TimeDelta HighResTimeDeltaInSeconds(HighResTimeValue startTime,
 #elif OO_PROFILING_STOPWATCH_PERFORMANCE_COUNTER
   static double conversion = 0.0;
 
-  if (EXPECT_NOT(conversion == 0.0)) {
+  if (conversion == 0.0) [[unlikely]] {
     LARGE_INTEGER frequency;
     if (QueryPerformanceFrequency(&frequency) && frequency.QuadPart != 0) {
       conversion = 1.0 / static_cast<double>(frequency.QuadPart);
