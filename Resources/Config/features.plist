@@ -1,0 +1,6 @@
+{
+	// Runtime feature switches, read once at startup (oo::FeatureConfig).
+	// Read only from the game's own Resources: expansions can't change these.
+
+	"dump-planet-info" = NO;	// log each system's planetinfo as it is set up
+}
