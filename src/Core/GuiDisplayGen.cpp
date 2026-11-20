@@ -48,11 +48,11 @@ MA 02110-1301, USA.
 #include "Texture.h"
 #include "TextureSprite.h"
 #include "Universe.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 inline bool RowInRange(oo::GUIRow row, NSRange range) {
   return (static_cast<int>(range.location) <= row &&

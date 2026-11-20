@@ -28,8 +28,8 @@ SOFTWARE.
 #include "AsyncWorkManager.h"
 
 #include "CPUInfo.h"  // IWYU pragma: keep: used only without OO_DEBUG
+#include "oofnd/Exception.hpp"
 #include "oofnd/Thread.hpp"
-#include "oofnd/objc/Exception.h"
 
 // OOFoundation.h defines true/false as macros; the standard headers want the
 // keywords (oofnd/Data.hpp).

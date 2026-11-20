@@ -18,7 +18,7 @@
 #include "OOJSEntity.h"
 #include "Universe.h"
 #include "legacy_random.h"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
 

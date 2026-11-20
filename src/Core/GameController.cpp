@@ -61,13 +61,13 @@ MA 02110-1301, USA.
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Process.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/Thread.hpp"
-#include "oofnd/objc/Exception.h"
 #if OOLITE_SDL
 #include <SDL3/SDL_init.h>
 

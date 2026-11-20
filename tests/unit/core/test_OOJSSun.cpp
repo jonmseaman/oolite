@@ -13,7 +13,7 @@
 	answers the engine. Run: tests/run.sh unit
 */
 
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references

@@ -53,6 +53,7 @@ MA 02110-1301, USA.
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Encoding.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/PListFile.hpp"
@@ -60,7 +61,6 @@ MA 02110-1301, USA.
 #include "oofnd/PListWriting.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 #include "unzip.h"
 
 namespace {

@@ -22,7 +22,7 @@
 #include "TextureScaling.h"
 #include "Universe.h"
 #include "oo_test.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 
 // Link stubs: the scaler's object and OOPixMap.mm reach these, and the test
 // does not link the game.

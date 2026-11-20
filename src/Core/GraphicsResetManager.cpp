@@ -32,8 +32,8 @@ SOFTWARE.
 
 #include "OpenGLExtensionManager.h"
 #include "Texture.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
-#include "oofnd/objc/Exception.h"
 
 namespace {
 

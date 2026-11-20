@@ -43,10 +43,10 @@ MA 02110-1301, USA.
 #include "ShipEntity.h"
 #include "ShipEntityAI.h"
 #include "oofnd/AutoreleaseScope.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 
 constexpr int kRecursionLimiter = 32;  // reactToMethod: recursion
 constexpr int kStackLimiter = 32;      // setAITo: stack overflow

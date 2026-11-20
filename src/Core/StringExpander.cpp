@@ -44,10 +44,10 @@ MA 02110-1301, USA.
 #include "StringParsing.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/PrintfFormat.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 /*	The expansion engine works on UTF-16 code units, held in std::u16string;
    an empty optional stands for nil. Text enters and leaves as UTF-8 (WTF-8,

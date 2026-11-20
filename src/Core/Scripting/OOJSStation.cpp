@@ -48,9 +48,9 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "ShipRegistry.h"
 #include "StationEntity.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 
 /*
         Station is registered as a Ship subclass and object converter with

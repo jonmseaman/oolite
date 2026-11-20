@@ -22,7 +22,7 @@
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 
 // --- Stubs
 // --------------------------------------------------------------------------------------

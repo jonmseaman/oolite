@@ -48,9 +48,9 @@
 #include "StringExpander.h"
 #include "StringParsing.h"
 #include "XMLExtensions.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 
 // Name of modifier key used to issue commands. See also
 // IsCommandModifierKeyDown().

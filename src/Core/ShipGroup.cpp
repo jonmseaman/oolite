@@ -40,9 +40,9 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "ShipEntity.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 constexpr int kMinSize = 4;
 constexpr int kMaxFreeSpace = 128;

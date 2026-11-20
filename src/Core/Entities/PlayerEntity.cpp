@@ -91,6 +91,7 @@ MA 02110-1301, USA.
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"
@@ -99,7 +100,6 @@ MA 02110-1301, USA.
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 static constexpr std::string_view PLAYER_DEFAULT_NAME = "Jameson";
 

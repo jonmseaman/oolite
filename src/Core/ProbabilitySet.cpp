@@ -58,8 +58,8 @@ sets that will then be immutablized.
 #include <vector>
 
 #include "legacy_random.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/Exception.h"
 
 namespace {
 

@@ -62,11 +62,11 @@ MA 02110-1301, USA.
 #include "Trumble.h"
 #include "Universe.h"
 #include "VisualEffectEntity.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 constexpr double ONE_SIXTEENTH = 0.0625;
 constexpr double ONE_SIXTYFOURTH = 0.015625;

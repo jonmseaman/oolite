@@ -29,9 +29,9 @@ MA 02110-1301, USA.
 #include "LoggingExtended.h"
 #include "OOVersion.h"
 #include "oofnd/AutoreleaseScope.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Process.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 
 // gnustep-base's GSConfig.h gave these (used by the -help text below).
 #ifndef STRINGIFY

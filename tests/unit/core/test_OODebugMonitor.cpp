@@ -38,7 +38,7 @@
 #include "oofnd/Log.hpp"
 #include "oofnd/Notification.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 
 #include <cstdlib>
 #include <filesystem>

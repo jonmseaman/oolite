@@ -48,9 +48,9 @@ SOFTWARE.
 
 #include "PListGameTypes.h"
 #include "oofnd/Defaults.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 
 #define PLIST_VERIFIER_DEBUG_DUMP_ENABLED 1
 

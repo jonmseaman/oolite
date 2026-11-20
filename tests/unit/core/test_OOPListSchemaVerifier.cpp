@@ -26,7 +26,7 @@
 #include "StringParsing.h"
 #include "oo_test.hpp"
 #include "oofnd/PListParsing.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 
 // Link stubs: OOPListGameTypes.mm reaches OOStringParsing.mm's scanners for
 // vector and quaternion values, whose object links the game. No schema here

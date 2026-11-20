@@ -44,10 +44,10 @@ SOFTWARE.
 #include "Headless.h"
 #include "RegExpMatcher.h"
 #include "ResourceManager.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Process.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 
 /*	OpenGL version required, currently 1.1 or later (basic stuff like
         glBindTexture(), glDrawArrays()). We probably have implicit requirements

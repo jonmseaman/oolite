@@ -29,8 +29,8 @@
 */
 #include <source_location>
 
+#include "oofnd/Exception.hpp"
 #include "oofnd/PrintfFormat.h"
-#include "oofnd/objc/Exception.h"
 
 // Log and raise; never return. Called by the macros below, not directly.
 // <where> is the failing assertion's call site.

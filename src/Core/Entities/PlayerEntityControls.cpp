@@ -96,11 +96,11 @@ MA 02110-1301, USA.
 #include "legacy_random.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 #include "oofnd/objc/FoundationTypes.h"
 constexpr double CUSTOM_VIEW_ROTATE_SPEED = 1.0;
 constexpr double CUSTOM_VIEW_ZOOM_SPEED = 5.0;
