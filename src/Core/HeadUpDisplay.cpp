@@ -105,8 +105,8 @@ using HUDDial = void (HeadUpDisplay::*)(const oo::PList& info);
 struct HUDWidget {
   oo::PList info;  // the hud.plist entry
   struct CachedInfo cache;
-  bool hasCache;   // NO only for an MFD whose info was not a dictionary (below)
-  HUDDial dial;    // dials only: the member the selector names (DialNamed())
+  bool hasCache;  // NO only for an MFD whose info was not a dictionary (below)
+  HUDDial dial;   // dials only: the member the selector names (DialNamed())
   std::string selectorString;  // dials only
   std::shared_ptr<TextureSprite>
       sprite;  // legends only: the image legend's sprite

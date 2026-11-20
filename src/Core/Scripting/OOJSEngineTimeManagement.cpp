@@ -109,7 +109,8 @@ static std::size_t sProfiledFunctionCapacity;
 namespace {
 static void FunctionCallHook(JSContext* context, JSValueConst function,
                              const void* code, JSValueConst thisObj, int argc,
-                             JSValueConst* argv, bool entering, void* opaque);
+                             JSValueConst* argv, bool entering,
+                             void* /*opaque*/);
 }  // namespace
 #endif
 
@@ -210,7 +211,7 @@ static void UpdateProfileForFrame(oo::HighResTimeValue now,
 
 #if OOJS_QUICKJS_CALL_HOOK
 static void CleanUpJSFrame(OOJSProfileStackFrame* frame) {
-  OODisposeHighResTime(frame->startTime);
+  oo::DisposeHighResTime(frame->startTime);
   free(frame);
 }
 
@@ -257,10 +258,12 @@ static void TraceEnterJSFunction(JSContext* context, JSValueConst thisObj,
 
 static void FunctionCallHook(JSContext* context, JSValueConst function,
                              const void* code, JSValueConst thisObj, int argc,
-                             JSValueConst* argv, bool entering, void* opaque) {
-  if (EXPECT(!sProfiling)) return;
+                             JSValueConst* argv, bool entering,
+                             void* /*opaque*/) {
+  if (!sProfiling) [[likely]]
+    return;
 
-  OOHighResTimeValue start = OOGetHighResTime();
+  oo::HighResTimeValue start = OOGetHighResTime();
   bool startOwnedByFrame = false;
 
   {
@@ -275,9 +278,8 @@ static void FunctionCallHook(JSContext* context, JSValueConst function,
         HoldProfiledFunction(context, function);
       }
 
-      if (EXPECT_NOT(sTracing)) {
-        // We use EXPECT_NOT here because profiles are time-critical and traces
-        // are not.
+      if (sTracing) [[unlikely]] {
+        // Profiles are time-critical and traces are not.
         TraceEnterJSFunction(context, thisObj, argc, argv, entry);
       }
 
@@ -286,13 +288,13 @@ static void FunctionCallHook(JSContext* context, JSValueConst function,
           malloc(sizeof(OOJSProfileStackFrame)));
       assert(frame != nullptr);
 
-      *frame = (OOJSProfileStackFrame){.back = sProfileStack,
-                                       .key = code,
-                                       .function = nullptr,
-                                       .startTime = start,
-                                       .subTime = 0.0,
-                                       .total = &sProfilerTotalJavaScriptTime,
-                                       .cleanup = CleanUpJSFrame};
+      *frame = OOJSProfileStackFrame{.back = sProfileStack,
+                                     .key = code,
+                                     .function = nullptr,
+                                     .startTime = start,
+                                     .subTime = 0.0,
+                                     .total = &sProfilerTotalJavaScriptTime,
+                                     .cleanup = CleanUpJSFrame};
 
       sProfileStack = frame;
       startOwnedByFrame = true;
@@ -305,12 +307,12 @@ static void FunctionCallHook(JSContext* context, JSValueConst function,
     }
   }
 
-  OOHighResTimeValue end = OOGetHighResTime();
-  double currentOverhead = OOHighResTimeDeltaInSeconds(start, end);
+  oo::HighResTimeValue end = OOGetHighResTime();
+  double currentOverhead = oo::HighResTimeDeltaInSeconds(start, end);
   sProfilerOverhead += currentOverhead;
   OOJSExcludeTimeFromLimiter(currentOverhead);
-  if (!startOwnedByFrame) OODisposeHighResTime(start);
-  OODisposeHighResTime(end);
+  if (!startOwnedByFrame) oo::DisposeHighResTime(start);
+  oo::DisposeHighResTime(end);
 }
 #endif
 }  // namespace

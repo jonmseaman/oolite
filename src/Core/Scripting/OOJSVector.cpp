@@ -170,19 +170,13 @@ void InitOOJSVector(JSContext* context, JSValueConst global) {
 }
 
 JSValue JSVectorWithVector(JSContext* context, Vector vector) {
-  OOJS_PROFILE_ENTER
-
+  OOJS_PROFILE_SCOPE();
   return JSVectorWithHPVector(context, vectorToHPVector(vector));
-
-  OOJS_PROFILE_EXIT
 }
 
 bool VectorToJSValue(JSContext* context, Vector vector, JSValue* outValue) {
-  OOJS_PROFILE_ENTER
-
+  OOJS_PROFILE_SCOPE();
   return HPVectorToJSValue(context, vectorToHPVector(vector), outValue);
-
-  OOJS_PROFILE_EXIT
 }
 
 JSValue JSVectorWithHPVector(JSContext* context, HPVector vector) {

@@ -86,10 +86,10 @@ SOFTWARE.
         If trace is set, all profileable functions will be logged. The actual
         profile will be of little use in this case because of logging overhead.
 
-        Natives bracketed by OOJS_NATIVE_ENTER()/OOJS_PROFILE_ENTER are
-        profiled, and so are JavaScript functions, through the function call
-        hook Oolite's QuickJS-ng patch adds (the equivalent of SpiderMonkey's
-        MOZ_TRACE_JSCALLS).
+        Natives bracketed by OOJS_NATIVE_ENTER() or opening with
+        OOJS_PROFILE_SCOPE() are profiled, and so are JavaScript functions,
+        through the function call hook Oolite's QuickJS-ng patch adds (the
+        equivalent of SpiderMonkey's MOZ_TRACE_JSCALLS).
 
         OOJSExcludeTimeFromLimiter()
         Extend the current time limit by the given time, unless the limiter is

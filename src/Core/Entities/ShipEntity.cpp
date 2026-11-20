@@ -5035,7 +5035,7 @@ void ShipEntity::behaviour_close_to_broadside_range(double delta_t) {
     if (proximityAlert() == primaryTarget()) {
       behaviour = oo::Behaviour::kAttackFlyToTarget;  // this behaviour will
                                                       // handle proximity_alert.
-      behaviour_attack_fly_from_target(delta_t);    // do it now.
+      behaviour_attack_fly_from_target(delta_t);      // do it now.
     } else {
       avoidCollision();
     }
@@ -5066,7 +5066,7 @@ void ShipEntity::behaviour_close_with_target(double delta_t) {
     if (proximityAlert() == primaryTarget()) {
       behaviour = oo::Behaviour::kAttackFlyToTarget;  // this behaviour will
                                                       // handle proximity_alert.
-      behaviour_attack_fly_from_target(delta_t);    // do it now.
+      behaviour_attack_fly_from_target(delta_t);      // do it now.
     } else {
       avoidCollision();
     }
@@ -5166,7 +5166,7 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t) {
     if (proximityAlert() == primaryTarget()) {
       behaviour = oo::Behaviour::kAttackFlyToTarget;  // this behaviour will
                                                       // handle proximity_alert.
-      behaviour_attack_fly_from_target(delta_t);    // do it now.
+      behaviour_attack_fly_from_target(delta_t);      // do it now.
     } else {
       avoidCollision();
     }
@@ -10672,7 +10672,7 @@ GLfloat ShipEntity::currentAimTolerance() {
                  oo::WeaponFacing::kStarboard) {  // everyone a bit worse with
                                                   // side
                                                   // lasers
-    if (accuracy < COMBAT_AI_ISNT_AWFUL) {      // especially these
+    if (accuracy < COMBAT_AI_ISNT_AWFUL) {        // especially these
       basic_aim *= static_cast<GLfloat>(1.3 + randf());
     } else {
       basic_aim *= static_cast<GLfloat>(1.3);

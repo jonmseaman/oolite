@@ -56,7 +56,7 @@ struct ShaderBindingValue;
 
 }  // namespace oo
    // OOShaderUniformMethodType.h
-class Entity;                 // Entity.h: the materials' binding target
+class Entity;  // Entity.h: the materials' binding target
 
 /*	A uniform bound to a C++ object's member: the getter reads the member
    into the field its type uses (OOShaderBindingValue), as a member table's row

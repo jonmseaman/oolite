@@ -126,10 +126,10 @@ struct StringExpansionContext {
   oo::MaybeUnits systemNameWithIan{};  // Cache for %I
   oo::MaybeUnits randomNameN{};        // Cache for %N
   oo::MaybeUnits randomNameR{};        // Cache for %R
-  oo::PList systemDescriptions{};    // Cache for system_description (an array),
+  oo::PList systemDescriptions{};  // Cache for system_description (an array),
                                    // used for numbered keys; null: not loaded.
-  std::size_t sysDescCount = 0;  // Count of systemDescriptions, valid after
-                                 // GetSystemDescriptions() called.
+  std::size_t sysDescCount = 0;    // Count of systemDescriptions, valid after
+                                   // GetSystemDescriptions() called.
 };
 
 }  // namespace
