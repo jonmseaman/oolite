@@ -34,7 +34,6 @@ MA 02110-1301, USA.
 #include "OpenGL.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/Object.h"
 
 inline constexpr double OCTREE_MIN_HALF_WIDTH = 1.0;
 

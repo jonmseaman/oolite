@@ -41,7 +41,6 @@ MA 02110-1301, USA.
 #include "MouseInteractionMode.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/Object.h"
 
 inline constexpr double MINIMUM_GAME_TICK = 0.25;
 // * reduced from 0.5s for tgape * //

@@ -36,7 +36,6 @@ SOFTWARE.
 #include "Foundation.h"
 #include "OpenGL.h"
 #include "OpenGLExtensionManager.h"
-#include "oofnd/objc/Object.h"
 
 #if OO_SHADERS
 

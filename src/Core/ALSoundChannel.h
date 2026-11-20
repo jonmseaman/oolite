@@ -43,7 +43,6 @@ SOFTWARE.
 #include "Maths.h"
 #include "OpenALController.h"
 #include "oofnd/Object.hpp"
-#include "oofnd/objc/Object.h"
 struct OOSoundChannelTestAccess;
 
 namespace oo {

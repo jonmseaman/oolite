@@ -30,7 +30,6 @@ MA 02110-1301, USA.
 #include "Foundation.h"
 #include "Maths.h"
 #include "Types.h"
-#include "oofnd/objc/Object.h"
 
 namespace oo {
 

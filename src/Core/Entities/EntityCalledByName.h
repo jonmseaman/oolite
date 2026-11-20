@@ -37,7 +37,6 @@ MA 02110-1301, USA.
 #include "Maths.h"
 #include "ValueType.h"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/Object.h"
 
 class Entity;
 

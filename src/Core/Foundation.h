@@ -109,8 +109,7 @@ static_assert(sizeof(void*) == 8, "Oolite builds for 64-bit targets only");
 #define OOLITE_ESPEAK 0
 #endif
 
-#include "Logging.h"            // IWYU pragma: export
-#include "oofnd/objc/Object.h"  // IWYU pragma: export
+#include "Logging.h"  // IWYU pragma: export
 
 /*	The description family (-descriptionComponents & co.,
  * oo::DescriptionOf), Foundation-free.
