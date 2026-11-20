@@ -1,8 +1,7 @@
 // clang-format off
 /*	oofnd/Exception.hpp
         oo::Exception: the game's exception as a C++ type, the thing
-   OORaiseException() throws. (oofnd/objc/OOException.h only includes this
-   header.)
+   OORaiseException() throws.
 
             OOException                                     oofnd
             ----------------------------------------------  ----------------------------------------

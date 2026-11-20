@@ -42,7 +42,7 @@
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Process.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG

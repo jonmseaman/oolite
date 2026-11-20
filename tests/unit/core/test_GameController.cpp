@@ -43,7 +43,7 @@
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.

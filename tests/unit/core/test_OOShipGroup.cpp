@@ -18,7 +18,7 @@
 
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 
 #include <algorithm>
 #include <string>

@@ -53,8 +53,8 @@
 #include "oofnd/objc/FoundationTypes.h"
 #ifdef OO_DEBUG_MONITOR_ENABLED
 #include "TextureGenerator.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 #endif
 
 #if OOLITE_BIG_ENDIAN

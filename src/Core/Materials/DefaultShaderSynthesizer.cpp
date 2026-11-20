@@ -43,9 +43,9 @@ SOFTWARE.
 #include "MaterialSpecifier.h"
 #include "ResourceManager.h"
 #include "Texture.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 namespace {
 

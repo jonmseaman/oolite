@@ -29,7 +29,7 @@
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 #include <algorithm>  // IWYU pragma: keep
 #include <chrono>  // IWYU pragma: keep
 #include <condition_variable>  // IWYU pragma: keep

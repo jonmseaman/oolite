@@ -17,7 +17,7 @@
 
 #include "Maths.h"
 #include <quickjs.h>
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references

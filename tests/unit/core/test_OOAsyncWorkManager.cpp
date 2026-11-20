@@ -17,7 +17,7 @@
 
 #include "AsyncWorkManager.h"
 #include "oo_test.hpp"
-#include "oofnd/objc/Exception.h"  // oo::Exception
+#include "oofnd/Exception.hpp"  // oo::Exception
 
 class TestTask : public oo::AsyncWorkTask {
  public:

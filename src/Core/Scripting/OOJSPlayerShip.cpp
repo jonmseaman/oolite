@@ -53,11 +53,11 @@ MA 02110-1301, USA.
 #include "StationEntity.h"
 #include "SystemDescriptionManager.h"
 #include "Universe.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Notification.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 static JSClassID sPlayerShipClassID;
 

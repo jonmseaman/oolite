@@ -53,10 +53,10 @@ SOFTWARE.
 #include "GraphicsResetManager.h"
 #include "MacroOpenGL.h"
 #include "PointMaths.h"
-#include "oofnd/Defaults.hpp"  // IWYU pragma: keep: used only without NDEBUG
+#include "oofnd/Defaults.hpp"   // IWYU pragma: keep: used only without NDEBUG
+#include "oofnd/Exception.hpp"  // oo::Finally
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"  // oo::Finally
 
 #ifndef APIENTRY
 #define APIENTRY

@@ -93,11 +93,11 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "WormholeEntity.h"
 #include "oofnd/AutoreleaseScope.hpp"
+#include "oofnd/Exception.hpp"  // oo::Finally, oo::CurrentOOException
 #include "oofnd/PList.hpp"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"  // oo::Finally, oo::CurrentOOException
 
 #define USEMASC 1
 

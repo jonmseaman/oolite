@@ -33,8 +33,8 @@ SOFTWARE.
 #include "CPUInfo.h"
 #include "FunctionAttributes.h"
 #include "Logging.h"
+#include "oofnd/Exception.hpp"  // IWYU pragma: keep: used only without NDEBUG
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"  // IWYU pragma: keep: used only without NDEBUG
 
 #define DUMP_MIP_MAPS 0
 #define DUMP_SCALE 0

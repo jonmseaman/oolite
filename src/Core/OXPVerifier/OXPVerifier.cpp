@@ -76,6 +76,7 @@ SOFTWARE.
 #include "TextureVerifierStage.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListFile.hpp"
@@ -84,7 +85,6 @@ SOFTWARE.
 #include "oofnd/Process.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 
 namespace {
 void SwitchLogFile(const std::string& name);

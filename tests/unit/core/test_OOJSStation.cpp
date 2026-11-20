@@ -25,7 +25,7 @@
 #include "ShipRegistry.h"
 #include "Types.h"
 #include "EntityEnums.h"  // IWYU pragma: keep
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "Description.h"  // IWYU pragma: keep

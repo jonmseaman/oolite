@@ -64,11 +64,11 @@ SOFTWARE.
 #include "ShipLibraryDescriptions.h"
 #include "Universe.h"
 #include "Vector.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Object.hpp"
 #include "oofnd/PListDescription.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 
 namespace {
 

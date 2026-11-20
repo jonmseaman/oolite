@@ -31,7 +31,7 @@
 #include "legacy_random.h"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 
 namespace {
 

@@ -42,7 +42,7 @@ SOFTWARE.
 #include "Texture.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 
 constexpr auto SKY_ELEMENT_SCALE_FACTOR = (BILLBOARD_DEPTH / 500.0f);
 constexpr float NEBULA_SHUFFLE_FACTOR = 0.005f;

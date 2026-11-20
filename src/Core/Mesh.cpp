@@ -63,11 +63,11 @@ MA 02110-1301, USA.
 #include "ResourceManager.h"
 #include "ShaderMaterial.h"
 #include "Universe.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 // If set, collision octree depth varies depending on the size of the mesh.
 #define ADAPTIVE_OCTREE_DEPTH 1

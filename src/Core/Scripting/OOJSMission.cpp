@@ -41,8 +41,8 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "PlayerEntityScriptMethods.h"
 #include "StringExpander.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Notification.hpp"
-#include "oofnd/objc/Exception.h"
 
 static JSValue MissionGetProperty(OOJS_GETTER_ARGS);
 static JSValue MissionSetProperty(OOJS_SETTER_ARGS);

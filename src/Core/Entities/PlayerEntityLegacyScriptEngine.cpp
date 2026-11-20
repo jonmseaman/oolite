@@ -60,11 +60,11 @@ MA 02110-1301, USA.
 #include "SystemDescriptionManager.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/PListWriting.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
 
 namespace oo {
 

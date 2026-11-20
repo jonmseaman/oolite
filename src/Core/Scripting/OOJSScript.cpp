@@ -50,10 +50,10 @@ MA 02110-1301, USA.
 #include "OOJSPrivateObject.h"
 #include "PListParsing.h"
 #include "oofnd/Encoding.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 namespace {
 struct RunningStack {

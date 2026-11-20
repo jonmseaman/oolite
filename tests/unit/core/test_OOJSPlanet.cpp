@@ -20,7 +20,7 @@
 #include "StellarBody.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 
 
 // MARK: The classes, as far as the binding sees them ----------------------------------------------

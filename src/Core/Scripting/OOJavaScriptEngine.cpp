@@ -81,6 +81,7 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Encoding.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Notification.hpp"
@@ -88,7 +89,6 @@ MA 02110-1301, USA.
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 #if OOLITE_WINDOWS
 #include <windows.h>  // IWYU pragma: keep (QueryPerformanceCounter)
 #endif

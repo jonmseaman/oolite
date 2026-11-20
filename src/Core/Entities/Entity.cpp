@@ -39,9 +39,9 @@ MA 02110-1301, USA.
 #include "PlayerEntity.h"
 #include "StationEntity.h"  // willDispose(): the station's and the dock's parts
 #include "Universe.h"
+#include "oofnd/Exception.hpp"  // oo::CurrentOOException
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"  // oo::CurrentOOException
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 uint32_t gLiveEntityCount = 0;

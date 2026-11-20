@@ -52,10 +52,10 @@ SOFTWARE.
 #include "TextureScaling.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
+#include "oofnd/Exception.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 #define DUMP_CONVERTED_CUBE_MAPS 0
 

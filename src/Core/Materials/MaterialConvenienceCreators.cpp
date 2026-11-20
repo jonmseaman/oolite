@@ -57,8 +57,8 @@ SOFTWARE.
 #include "SingleTextureMaterial.h"
 #include "Texture.h"
 #include "Universe.h"
+#include "oofnd/Exception.hpp"
 #include "oofnd/objc/Assert.h"
-#include "oofnd/objc/Exception.h"
 
 #if !USE_NEW_SHADER_SYNTHESIZER
 namespace {

@@ -34,7 +34,7 @@
 #include "legacy_random.h"
 #include "oo_test.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/Exception.h"
+#include "oofnd/Exception.hpp"
 
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
