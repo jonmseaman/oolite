@@ -31,18 +31,8 @@ MA 02110-1301, USA.
 #include <string_view>
 
 #include "EnumFlags.h"
-#include "FunctionAttributes.h"
-#ifndef OO_PLAIN_CPP_UNIT
 #include "Foundation.h"
-#else
-/*	A plain C or C++ translation unit (OOConstToJSString) needs only the C
-   types OOFoundation.h's floor gives (std::ptrdiff_t, std::size_t).
-   OOFoundation.h itself declares more.
-*/
-#include <limits.h>
-
-#include "oofnd/objc/FoundationTypes.h"
-#endif
+#include "FunctionAttributes.h"
 
 namespace oo {
 

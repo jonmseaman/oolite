@@ -28,10 +28,6 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#ifndef OO_PLAIN_CPP_UNIT
-#include "Foundation.h"
-#endif
-
 #include <assert.h>
 #include <limits.h>
 #include <stdbool.h>
@@ -39,17 +35,9 @@ MA 02110-1301, USA.
 #include <stdlib.h>
 #include <tgmath.h>
 
+#include "Foundation.h"
 #include "FunctionAttributes.h"
-
-#ifndef OO_PLAIN_CPP_UNIT
 #include "OpenGL.h"
-#else
-/*	A plain C or C++ translation unit (OOVoxel.c, for one) needs only the GL
-   types. OOOpenGL.h imports OOFoundation.h, i.e. Foundation, which does not
-   compile in a plain C++ unit.
-*/
-#include "OpenGLOnly.h"
-#endif
 
 namespace oo {
 

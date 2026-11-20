@@ -59,7 +59,6 @@ inline INLINE_CONST_FUNC uint64_t RoundUpToPowerOf2_64(uint64_t value) {
 
 }  // namespace oo
 
-#ifndef OO_PLAIN_CPP_UNIT
 namespace oo {
 
 inline INLINE_CONST_FUNC std::size_t RoundUpToPowerOf2_NS(std::size_t value) {
@@ -67,8 +66,6 @@ inline INLINE_CONST_FUNC std::size_t RoundUpToPowerOf2_NS(std::size_t value) {
 }
 
 }  // namespace oo
-
-#endif
 
 namespace oo {
 
