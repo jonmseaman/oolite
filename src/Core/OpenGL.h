@@ -36,10 +36,8 @@ MA 02110-1301, USA.
 #include <type_traits>
 #include <utility>
 
-#ifndef OO_PLAIN_CPP_UNIT
-#include "Foundation.h"
-#endif
 #include "EnumFlags.h"
+#include "Foundation.h"
 #include "OpenGLCheck.h"
 #include "OpenGLOnly.h"
 
@@ -178,8 +176,7 @@ void VerifyOpenGLState_(const char* function, unsigned line);
 
 }  // namespace oo
 
-#define OOSetOpenGLState(STATE) \
-  oo::SetOpenGLState_(STATE, __FUNCTION__, __LINE__)
+#define OOSetOpenGLState(STATE) oo::SetOpenGLState_(STATE, __FUNCTION__, __LINE__)
 #define OOVerifyOpenGLState() oo::VerifyOpenGLState_(__FUNCTION__, __LINE__)
 #else
 void OOSetOpenGLState(oo::OpenGLStateID state);
@@ -238,13 +235,8 @@ void GLDrawBallBillboard(GLfloat radius, GLfloat step, GLfloat z_distance);
 /*	GLDrawOval(), GLDrawFilledOval()
         Draw axis-alligned ellipses, as outline and fill respectively.
 */
-#ifndef OO_PLAIN_CPP_UNIT
-// plain C++ unit (OODebugGLDrawing.cpp) does
-// not see these
 void GLDrawOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz, GLfloat step);
-void GLDrawFilledOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
-                      GLfloat step);
-#endif
+void GLDrawFilledOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz, GLfloat step);
 
 /*	GLDrawPoints(), GLDrawFilledPoints()
         Draw array of points, as outline and fill respectively.
@@ -266,8 +258,7 @@ void GLDrawQuadStrip(std::span<const oo::GLVector> points);
 
 namespace oo {
 
-inline constexpr ShaderSetting kShaderSettingDefault =
-    ShaderSetting::kNotSupported;
+inline constexpr ShaderSetting kShaderSettingDefault = ShaderSetting::kNotSupported;
 
 }  // namespace oo
 

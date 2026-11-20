@@ -25,16 +25,12 @@
 #pragma once
 
 /*	There are no method forms (OOAssert, OOParameterAssert: self/_cmd): no
-   game code calls them. A game C++ unit gets OOException.h from here; a plain
-   C or C++ translation unit (OO_PLAIN_CPP_UNIT, e.g. OOConstToJSString) does
-   not.
+   game code calls them.
 */
-#ifndef OO_PLAIN_CPP_UNIT
-#include "oofnd/objc/Exception.h"
-#endif
 #include <source_location>
 
 #include "oofnd/PrintfFormat.h"
+#include "oofnd/objc/Exception.h"
 
 // Log and raise; never return. Called by the macros below, not directly.
 // <where> is the failing assertion's call site.

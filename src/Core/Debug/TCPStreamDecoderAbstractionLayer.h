@@ -38,14 +38,6 @@ ALStringRef ALGetConstantString(const char* string);
 }  // namespace oo
    // Should only be used with string literals!
 
-/*	Only the C decoder spells its protocol constants
-   (OODebugTCPConsoleProtocol.h) as handles; OODebugTCPConsoleClient uses plain
-   literals.
-*/
-#ifdef OO_PLAIN_CPP_UNIT
-#define OOALSTR(string) oo::ALGetConstantString("" string "")
-#endif
-
 namespace oo {
 
 void ALRelease(ALObjectRef object);

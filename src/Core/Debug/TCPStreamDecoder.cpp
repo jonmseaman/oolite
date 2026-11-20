@@ -27,8 +27,6 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-// A plain C++ unit: the protocol header spells OOALSTR as a handle.
-#define OO_PLAIN_CPP_UNIT 1
 #include "TCPStreamDecoder.h"
 
 #include <stdarg.h>
@@ -41,6 +39,10 @@ SOFTWARE.
 #include <utility>
 
 #include "DebugTCPConsoleProtocol.h"
+
+// The decoder spells the protocol's names (DebugTCPConsoleProtocol.h) as
+// string handles; DebugTCPConsoleClient.cpp spells them as UTF-8 literals.
+#define OOALSTR(string) oo::ALGetConstantString("" string "")
 
 #ifdef OO_LOG_DEBUG_PROTOCOL_PACKETS
 extern void LogOOTCPStreamDecoderPacket(oo::ALDictionaryRef packet);
