@@ -652,8 +652,7 @@ static int SystemInfoSetOnPrototypeChain(JSContext* context, JSValueConst obj,
 static int SystemInfoExoticGetOwnProperty(JSContext* context,
                                           JSPropertyDescriptor* desc,
                                           JSValueConst obj, JSAtom prop) {
-  OOJS_PROFILE_ENTER
-
+  OOJS_PROFILE_SCOPE();
   OOJS_EXOTIC_ENTER
 
   OOSystemInfo* info = SystemInfoForObject(obj);
@@ -712,16 +711,13 @@ static int SystemInfoExoticGetOwnProperty(JSContext* context,
   return true;
 
   OOJS_EXOTIC_EXIT(context, -1)
-
-  OOJS_PROFILE_EXIT
 }
 
 static int SystemInfoExoticGetOwnPropertyNames(JSContext* context,
                                                JSPropertyEnum** ptab,
                                                uint32_t* plen,
                                                JSValueConst obj) {
-  OOJS_PROFILE_ENTER
-
+  OOJS_PROFILE_SCOPE();
   OOJS_EXOTIC_ENTER
 
   *ptab = nullptr;
@@ -762,14 +758,11 @@ static int SystemInfoExoticGetOwnPropertyNames(JSContext* context,
   return 0;
 
   OOJS_EXOTIC_EXIT(context, -1)
-
-  OOJS_PROFILE_EXIT
 }
 
 static int SystemInfoExoticDeleteProperty(JSContext* context, JSValueConst obj,
                                           JSAtom prop) {
-  OOJS_PROFILE_ENTER
-
+  OOJS_PROFILE_SCOPE();
   OOJS_EXOTIC_ENTER
 
   // SpiderMonkey version: set the property to undefined (which removes it).
@@ -781,8 +774,6 @@ static int SystemInfoExoticDeleteProperty(JSContext* context, JSValueConst obj,
   return true;
 
   OOJS_EXOTIC_EXIT(context, -1)
-
-  OOJS_PROFILE_EXIT
 }
 
 static int SystemInfoExoticHasProperty(JSContext* context, JSValueConst obj,
@@ -816,8 +807,7 @@ static int SystemInfoExoticHasProperty(JSContext* context, JSValueConst obj,
 
 static JSValue SystemInfoExoticGetProperty(JSContext* context, JSValueConst obj,
                                            JSAtom prop, JSValueConst receiver) {
-  OOJS_PROFILE_ENTER
-
+  OOJS_PROFILE_SCOPE();
   OOJS_EXOTIC_ENTER
 
   // Prototype chain first: SpiderMonkey only used the hook for otherwise
@@ -868,15 +858,12 @@ static JSValue SystemInfoExoticGetProperty(JSContext* context, JSValueConst obj,
   return value;
 
   OOJS_EXOTIC_EXIT(context, JS_EXCEPTION)
-
-  OOJS_PROFILE_EXIT
 }
 
 static int SystemInfoExoticSetProperty(JSContext* context, JSValueConst obj,
                                        JSAtom prop, JSValueConst value,
                                        JSValueConst receiver, int flags) {
-  OOJS_PROFILE_ENTER
-
+  OOJS_PROFILE_SCOPE();
   OOJS_EXOTIC_ENTER
 
   bool handled;
@@ -903,8 +890,6 @@ static int SystemInfoExoticSetProperty(JSContext* context, JSValueConst obj,
   return true;
 
   OOJS_EXOTIC_EXIT(context, -1)
-
-  OOJS_PROFILE_EXIT
 }
 
 // *** Fixed properties ***

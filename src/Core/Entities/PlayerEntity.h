@@ -1792,7 +1792,7 @@ class PlayerEntity : public ShipEntity {
   double last_ecm_time = {};
 
   oo::GUIScreenID gui_screen = {};
-  std::uint16_t alertFlags = {};              // OOAlertFlags bits
+  std::uint16_t alertFlags = {};                // OOAlertFlags bits
   oo::AlertCondition alertConditionLevel = {};  // the ivar alertCondition
   oo::AlertCondition lastScriptAlertCondition = {};
   oo::PlayerFleeingStatus fleeing_status = {};

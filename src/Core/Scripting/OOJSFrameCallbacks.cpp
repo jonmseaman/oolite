@@ -176,8 +176,7 @@ void InitOOJSFrameCallbacks(JSContext* context, JSValueConst global) {
   if (sIDSeed.has_value()) {
     sNextID = *sIDSeed;
   } else {
-    sNextID =
-        static_cast<uint32_t>(oo::date::timeIntervalSinceReferenceDate());
+    sNextID = static_cast<uint32_t>(oo::date::timeIntervalSinceReferenceDate());
   }
 #endif
 }

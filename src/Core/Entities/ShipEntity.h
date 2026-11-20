@@ -59,10 +59,10 @@ class Mesh;
 
 #include "OOScript.h"  // std::shared_ptr<OOScript> members and results
 class WormholeEntity;
-#include "AI.h"               // shipAI is std::shared_ptr
-#include "Character.h"        // the crew is std::shared_ptr
-#include "Color.h"            // the colours are std::shared_ptr members
-#include "EquipmentType.h"    // OOWeaponType is a C++ pointer
+#include "AI.h"             // shipAI is std::shared_ptr
+#include "Character.h"      // the crew is std::shared_ptr
+#include "Color.h"          // the colours are std::shared_ptr members
+#include "EquipmentType.h"  // OOWeaponType is a C++ pointer
 #include "PolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is std::shared_ptr
 #include "ShipGroup.h"  // the groups are std::shared_ptr
 
@@ -74,6 +74,7 @@ class ExhaustPlumeEntity;
 }  // namespace oo
    // Universe.h's, for the members of
    // ShipEntityAI.cpp's scans.
+
 using EntityFilterPredicate = bool (*)(Entity* entity, void* parameter);
 
 inline constexpr int MAX_TARGETS = 24;
@@ -1251,9 +1252,9 @@ class ShipEntity : public oo::EntityWithDrawable,
   GLfloat desired_speed = {};  // speed at which to travel
   // next three used to set desired attitude, flightRoll etc. gradually catch up
   // to target
-  GLfloat stick_roll = {};     // stick roll
-  GLfloat stick_pitch = {};    // stick pitch
-  GLfloat stick_yaw = {};      // stick yaw
+  GLfloat stick_roll = {};       // stick roll
+  GLfloat stick_pitch = {};      // stick pitch
+  GLfloat stick_yaw = {};        // stick yaw
   oo::Behaviour behaviour = {};  // ship's behavioural state
 
   BoundingBox totalBoundingBox = {};  // records ship configuration
@@ -1369,7 +1370,7 @@ class ShipEntity : public oo::EntityWithDrawable,
       {};  // type of aft weapon (allows lasers, plasma cannon, others)
   oo::WeaponType port_weapon_type = {};       // type of port weapon
   oo::WeaponType starboard_weapon_type = {};  // type of starboard weapon
-  GLfloat weapon_damage = {};               // energy damage dealt by weapon
+  GLfloat weapon_damage = {};                 // energy damage dealt by weapon
   GLfloat weapon_damage_override =
       {};  // custom energy damage dealt by front laser, if applicable
   GLfloat weaponRange = {};  // range of the weapon (in meters)
@@ -1432,8 +1433,8 @@ class ShipEntity : public oo::EntityWithDrawable,
       previousCondition;  // restored after collision avoidance; null: none
 
   // derived variables
-  float weapon_recharge_rate = {};      // time between shots
-  int shot_counter = {};                // number of shots fired
+  float weapon_recharge_rate = {};        // time between shots
+  int shot_counter = {};                  // number of shots fired
   oo::TimeAbsolute cargo_dump_time = {};  // time cargo was last dumped
   oo::TimeAbsolute last_shot_time = {};   // time shot was last fired
 

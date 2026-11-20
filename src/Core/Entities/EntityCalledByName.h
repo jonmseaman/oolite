@@ -80,7 +80,7 @@ struct EntityByNameValue {
   double real = 0;
   Vector vector{};
   Quaternion quaternion{};
-  Entity* entity = nullptr;  // an entity result, borrowed: the C++ entity
+  Entity* entity = nullptr;    // an entity result, borrowed: the C++ entity
   oo::Color* color = nullptr;  // a colour result, borrowed (fogUniform)
   oo::PList plist;
 };
