@@ -29,17 +29,9 @@
 
 #pragma once
 
-#ifndef OO_PLAIN_CPP_UNIT
-#include "Foundation.h"
-#else
-/*	Plain C++ translation unit (OOIsNumberLiteral.cpp): only bool
-   is needed, and OOFoundation.h imports Foundation, which does not compile
-   in a plain C++ unit.
-*/
-#include "oofnd/objc/FoundationTypes.h"  // bool
-#endif
-
 #include <string>
+
+#include "Foundation.h"
 
 /*	Recognise C-style decimal integer or float literals, without type
    suffix. More formally, it tests against the following grammar:

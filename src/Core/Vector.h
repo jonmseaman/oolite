@@ -154,7 +154,6 @@ inline oo::Scalar triple_product(Vector first, Vector second,
 /* Given three points on a surface, returns the normal to the surface. */
 inline Vector normal_to_surface(Vector v1, Vector v2, Vector v3) CONST_FUNC;
 
-#ifndef OO_PLAIN_CPP_UNIT
 #include <string>
 #include <vector>
 
@@ -181,8 +180,6 @@ class NativeVector : public oo::PListForeign {
 };
 
 }  // namespace oo
-
-#endif
 
 /*	OpenGL conveniences. Need to be macros to work with OOMacroOpenGL. */
 #define GLVertexOOVector(v)       \
