@@ -31,19 +31,7 @@ SOFTWARE.
 #pragma once
 
 #ifndef OOSTOPWATCH_STANDALONE
-#ifndef OO_PLAIN_CPP_UNIT
 #include "Foundation.h"
-#else
-/*	A plain C++ translation unit (the JS bindings, through
-        OOJSEngineNativeWrappers.h) cannot parse OOFoundation.h's class
-   declarations. The one platform switch below that differs from its default on
-   this build is set as OOFoundation.h sets it, so OOHighResTimeValue is the
-   same type in both kinds of translation unit.
-*/
-#if defined(WIN32) && !defined(OOLITE_WINDOWS)
-#define OOLITE_WINDOWS 1
-#endif
-#endif
 #include "FunctionAttributes.h"
 #include "Types.h"
 #endif

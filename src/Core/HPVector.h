@@ -161,13 +161,10 @@ inline oo::HPScalar HPtriple_product(HPVector first, HPVector second,
 inline HPVector HPnormal_to_surface(HPVector v1, HPVector v2,
                                     HPVector v3) CONST_FUNC;
 
-#ifndef OO_PLAIN_CPP_UNIT
 #include <string>
 #include <vector>
 std::string HPVectorDescription(HPVector vector);        // "(x, y, z)"
 std::vector<double> ArrayFromHPVector(HPVector vector);  // { x, y, z }
-
-#endif
 
 /*	OpenGL conveniences. Need to be macros to work with OOMacroOpenGL. */
 #define GLVertexOOHPVector(v)     \

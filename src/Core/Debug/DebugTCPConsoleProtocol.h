@@ -33,11 +33,9 @@ SOFTWARE.
 
 #include <cstdint>
 
-// OODebugTCPConsoleClient defines OOALSTR as a plain literal before including
-// this; the C decoder gets it from OOTCPStreamDecoderAbstractionLayer.h.
-#if !defined(OOALSTR) && !defined(OO_PLAIN_CPP_UNIT)
-#include "Foundation.h"
-#endif
+// The name constants below expand OOALSTR(), which each includer defines:
+// DebugTCPConsoleClient.cpp as a UTF-8 literal, TCPStreamDecoder.cpp as a
+// string handle.
 
 namespace oo {
 

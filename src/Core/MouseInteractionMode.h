@@ -25,20 +25,12 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#ifndef OO_PLAIN_CPP_UNIT
-#include "Foundation.h"
-#else
-/*	Plain C++ translation unit (OOMouseInteractionMode.cpp): only
-   BOOL is needed, and OOFoundation.h imports Foundation, which does not compile
-   in a plain C++ unit.
-*/
-#include "oofnd/objc/FoundationTypes.h"  // bool
-#endif
 #include <cstdint>
 #include <string>
 #include <utility>
 
 #include "EnumFlags.h"
+#include "Foundation.h"
 
 /*
         OOMouseInteractionMode
