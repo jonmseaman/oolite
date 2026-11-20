@@ -45,7 +45,6 @@ SOFTWARE.
 #include "Foundation.h"
 #include "FunctionAttributes.h"
 #include "oofnd/Object.hpp"
-#include "oofnd/objc/Object.h"
 
 namespace oo {
 

@@ -35,7 +35,6 @@ SOFTWARE.
 #include "Foundation.h"
 #include "Maths.h"
 #include "OpenGL.h"
-#include "oofnd/objc/Object.h"
 class Entity;  // Entity.h: the shader binding target
 
 #include <cstddef>

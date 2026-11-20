@@ -303,12 +303,8 @@ std::optional<std::string> oo::Mesh::descriptionComponents() const {
       NormalModeDescription(static_cast<oo::MeshNormalMode>(_normalMode)));
 }
 
-std::shared_ptr<oo::Mesh> oo::Mesh::copyWithZone(oo::Zone* zone) {
-  // -zone is always nil (OOObject.h), so this is [self zone].
-  if (zone == nullptr)
-    return oo::share(this);  // OK because we're immutable seen from the outside
-  else
-    return mutableCopyWithZone(zone);
+std::shared_ptr<oo::Mesh> oo::Mesh::copyWithZone() {
+  return oo::share(this);  // OK because we're immutable seen from the outside
 }
 
 std::optional<std::string> oo::Mesh::modelName() { return baseFile; }
@@ -705,8 +701,7 @@ BoundingBox oo::Mesh::findSubentityBoundingBoxWithPosition(
 }
 
 std::shared_ptr<oo::Mesh> oo::Mesh::meshRescaledBy(GLfloat scaleFactor) {
-  std::shared_ptr<oo::Mesh> result =
-      mutableCopyWithZone(nullptr);  // [self mutableCopy]
+  std::shared_ptr<oo::Mesh> result = mutableCopyWithZone();
   result->rescaleByFactor(scaleFactor);
   return result;
 }
@@ -837,9 +832,9 @@ bool oo::Mesh::initWithName(const std::string& name,
   return loaded;
 }
 
-std::shared_ptr<oo::Mesh> oo::Mesh::mutableCopyWithZone(oo::Zone* /*zone*/) {
+std::shared_ptr<oo::Mesh> oo::Mesh::mutableCopyWithZone() {
   // A new mesh whose members are copied one by one (the copy constructor),
-  // so the buffers are shared. Zones are unused.
+  // so the buffers are shared.
   std::shared_ptr<oo::Mesh> result = oo::makeShared<oo::Mesh>(*this);
 
   // (The binding target is a weak reference, copied; the octree is a C++

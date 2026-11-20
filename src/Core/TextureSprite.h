@@ -29,7 +29,6 @@ MA 02110-1301, USA.
 #include "Foundation.h"
 #include "OpenGL.h"
 #include "oofnd/Object.hpp"
-#include "oofnd/objc/Object.h"
 
 namespace oo {
 
