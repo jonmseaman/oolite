@@ -628,9 +628,7 @@ void GameController::applicationDidFinishLaunching() {
 }
 
 namespace {
-// The save the windowed component tier loads for a scenario
-// (tests/component/steps/world_steps.py SCENARIO_SAVE), relative to the
-// application directory.
+// The save a headless scenario loads, relative to the application directory.
 constexpr const char* kHeadlessScenarioSave =
     "Resources/Scenarios/oolite-standard.oolite-save";
 // How much game time a headless launch may take before it is an error.
@@ -830,6 +828,16 @@ void GameController::exitAppWithContext(const std::string& context) {
     ChangeDisplaySettingsEx(nullptr, nullptr, nullptr, 0, nullptr);
   }
 #endif
+  shutDownForExit();
+  oo::LoggingTerminate();
+  SDL_Quit();
+  if (oo::OpenALController* controller =
+          oo::OpenALController::sharedController())
+    controller->shutdown();
+  exit(0);
+}
+
+void GameController::shutDownForExit() {
   // The work threads are owned by the never-destroyed manager, so they are
   // joined here, before anything they might use is torn down.
   oo::AsyncWorkManager::sharedAsyncWorkManager()->shutdown();
@@ -840,12 +848,6 @@ void GameController::exitAppWithContext(const std::string& context) {
   // alive.
   OOJavaScriptEngine::sharedEngine()->shutDown();
 #endif
-  oo::LoggingTerminate();
-  SDL_Quit();
-  if (oo::OpenALController* controller =
-          oo::OpenALController::sharedController())
-    controller->shutdown();
-  exit(0);
 }
 
 #else
