@@ -52,9 +52,7 @@
 # not help either. The remedy is therefore the same as --nosound, applied per caller:
 #   - the core unit suite: every test that opens the OpenAL device is also in meson suite
 #     'openal' (tests/unit/core/meson.build); a sanitized run passes --no-suite openal;
-#   - the component harness: tests/component/console.py appends OO_GAME_EXTRA_ARGS to the game's
-#     command line; a sanitized run sets OO_GAME_EXTRA_ARGS=--nosound, and the harness
-#     keeps the game's stderr so a report is not lost.
+#   - the component programs: a headless game opens no sound device.
 # The unsanitized runs still run every OpenAL test and launch the game with sound.
 
 # ucrtbase.dll owns the CRT onexit table. libopenal's DllMain-time registration allocates inside

@@ -2,21 +2,15 @@
 # Run Oolite's test tiers from this directory, inside a private virtualenv.
 #
 #     tests/run.sh unit        meson suites: oofnd, core, headers (needs ./mk.sh build dev)
-#     tests/run.sh component   both halves of the component tier: the C++ half, then the windowed
-#                              half; nonzero if either failed (the windowed half runs regardless)
-#     tests/run.sh component --cpp       the C++ half only: headless programs, meson suite
-#                                        component; needs no display and no virtualenv
-#     tests/run.sh component --windowed  the windowed half only: Gherkin scenarios over the
-#                                        debug console
+#     tests/run.sh component   headless C++ programs, meson suite component; needs no display
+#                              and no virtualenv (--cpp is accepted and means the same)
 #     tests/run.sh smoke       launch_snapshot.py via mk.sh
 #     tests/run.sh all         unit, component, then smoke, stopping at the first failure
 #     tests/run.sh venv        create/refresh the virtualenv only
 #
-# Extra arguments after the tier go to pytest (component). For the component tier, -k <name>
-# also picks the C++ programs whose meson test name contains <name>; with --cpp, a name that
-# matches no program is an error:
-#     tests/run.sh component -k s1
-#     tests/run.sh component --cpp -k skeleton
+# For the component tier, -k <name> picks the programs whose meson test name contains <name>; a
+# name that matches no program is an error:
+#     tests/run.sh component -k skeleton
 #
 # Environment: BUILD_TYPE (default dev), OO_VENV (default build/.venv-tests), OO_APP_DIR.
 # dev, not test: test links with LTO, and every core unit test re-runs LTO over the game's objects.
@@ -30,7 +24,7 @@ cd "$ROOT"
 BUILD_TYPE=${BUILD_TYPE:-dev}
 VENV=${OO_VENV:-build/.venv-tests}
 REQ_STAMP="$VENV/.requirements-stamp"
-REQ_FILES=(tests/component/requirements.txt)
+REQ_FILES=()  # no tier installs anything into the venv now
 
 find_python() {
     local p
@@ -58,6 +52,7 @@ ensure_venv() {
         echo "--> Creating virtualenv at $VENV"
         "$(find_python)" -m venv "$VENV"
     fi
+    [[ ${#REQ_FILES[@]} -gt 0 ]] || return 0
     local py
     py=$(venv_python)
     # Reinstall only when a requirements file is newer than the last successful install.
@@ -98,24 +93,16 @@ run_unit() {
     done
 }
 
-run_component_windowed() {
-    require_build
-    "$(venv_python)" -m pytest tests/component -x -q "$@"
-}
-
-# The C++ half. $1: "strict" (a -k that matches no program is an error) or "lenient" (it is
-# reported and the half passes: the windowed half may hold the match). The rest: the tier's
-# arguments, of which only -k <name> applies here.
-run_component_cpp() {
-    local mode=$1
-    shift
+# component [--cpp] [-k <name>]: a name that matches no program is an error.
+run_component() {
+    [[ "${1:-}" == --cpp ]] && shift
     require_build
     local filter="" have_filter=false
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -k) filter=${2:-}; have_filter=true; shift 2 || shift ;;
             -k*) filter=${1#-k}; have_filter=true; shift ;;
-            *) shift ;;
+            *) echo "tests/run.sh component: unknown argument '$1'" >&2; return 2 ;;
         esac
     done
     local dir="build/meson_${BUILD_TYPE}"
@@ -132,29 +119,10 @@ run_component_cpp() {
     done < <(meson test -C "$dir" --suite component --list 2> /dev/null | tr -d '\r' | grep ' - ')
     if [[ ${#names[@]} -eq 0 ]]; then
         echo "tests/run.sh: no C++ component program matches '$filter'" >&2
-        [[ "$mode" == lenient ]] && return 0
         return 1
     fi
     echo "--> meson test --suite component ${names[*]}"
     meson test -C "$dir" --suite component --print-errorlogs "${names[@]}"
-}
-
-# component [--cpp|--windowed] [args]: with no flag, the C++ half then the windowed half; the
-# windowed half runs even if the C++ half failed, and the tier fails if either did.
-run_component() {
-    case "${1:-}" in
-        --cpp) shift; run_component_cpp strict "$@"; return ;;
-        --windowed) shift; ensure_venv; run_component_windowed "$@"; return ;;
-    esac
-    local cpp_status=0 windowed_status=0
-    run_component_cpp lenient "$@" || cpp_status=$?
-    ensure_venv
-    run_component_windowed "$@" || windowed_status=$?
-    if [[ $cpp_status -ne 0 ]]; then
-        echo "tests/run.sh: the C++ half of the component tier failed" >&2
-        return "$cpp_status"
-    fi
-    return "$windowed_status"
 }
 
 run_smoke() {
@@ -170,9 +138,9 @@ case "$tier" in
     unit)      run_unit ;;  # no Python needed; meson drives it
     component) run_component "$@" ;;
     smoke)     run_smoke ;;
-    all)       ensure_venv; run_unit; run_component; run_smoke ;;
+    all)       run_unit; run_component; run_smoke ;;
     *)
-        sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+        sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         [[ -z "$tier" ]] || exit 2
         ;;
 esac

@@ -1,0 +1,1094 @@
+# A fixture, not a layout: tests/component/layouts/us.tsv with the n key (scancode 17)
+# giving m where it gave n, so that no key of this table gives n. The tutorial-by-key test
+# must fail under it, naming the press (spec 011 T044, FR-029, SC-007).
+# US QWERTY, SDL's built-in map (dummy video driver). Recorded with SDL 3.4.18, video driver dummy, Windows, by printing
+# SDL_GetKeyFromScancode(scancode, mods, false) for every scancode
+# (tests/component/record_layout.cpp).
+# scancode	mods	keycode	comment
+4	-	0x61	a
+4	shift	0x41	A
+4	caps	0x41	A
+4	shift+caps	0x61	a
+5	-	0x62	b
+5	shift	0x42	B
+5	caps	0x42	B
+5	shift+caps	0x62	b
+6	-	0x63	c
+6	shift	0x43	C
+6	caps	0x43	C
+6	shift+caps	0x63	c
+7	-	0x64	d
+7	shift	0x44	D
+7	caps	0x44	D
+7	shift+caps	0x64	d
+8	-	0x65	e
+8	shift	0x45	E
+8	caps	0x45	E
+8	shift+caps	0x65	e
+9	-	0x66	f
+9	shift	0x46	F
+9	caps	0x46	F
+9	shift+caps	0x66	f
+10	-	0x67	g
+10	shift	0x47	G
+10	caps	0x47	G
+10	shift+caps	0x67	g
+11	-	0x68	h
+11	shift	0x48	H
+11	caps	0x48	H
+11	shift+caps	0x68	h
+12	-	0x69	i
+12	shift	0x49	I
+12	caps	0x49	I
+12	shift+caps	0x69	i
+13	-	0x6a	j
+13	shift	0x4a	J
+13	caps	0x4a	J
+13	shift+caps	0x6a	j
+14	-	0x6b	k
+14	shift	0x4b	K
+14	caps	0x4b	K
+14	shift+caps	0x6b	k
+15	-	0x6c	l
+15	shift	0x4c	L
+15	caps	0x4c	L
+15	shift+caps	0x6c	l
+16	-	0x6d	m
+16	shift	0x4d	M
+16	caps	0x4d	M
+16	shift+caps	0x6d	m
+17	-	0x6d	m (was n)
+17	shift	0x4e	N
+17	caps	0x4e	N
+17	shift+caps	0x6d	m (was n)
+18	-	0x6f	o
+18	shift	0x4f	O
+18	caps	0x4f	O
+18	shift+caps	0x6f	o
+19	-	0x70	p
+19	shift	0x50	P
+19	caps	0x50	P
+19	shift+caps	0x70	p
+20	-	0x71	q
+20	shift	0x51	Q
+20	caps	0x51	Q
+20	shift+caps	0x71	q
+21	-	0x72	r
+21	shift	0x52	R
+21	caps	0x52	R
+21	shift+caps	0x72	r
+22	-	0x73	s
+22	shift	0x53	S
+22	caps	0x53	S
+22	shift+caps	0x73	s
+23	-	0x74	t
+23	shift	0x54	T
+23	caps	0x54	T
+23	shift+caps	0x74	t
+24	-	0x75	u
+24	shift	0x55	U
+24	caps	0x55	U
+24	shift+caps	0x75	u
+25	-	0x76	v
+25	shift	0x56	V
+25	caps	0x56	V
+25	shift+caps	0x76	v
+26	-	0x77	w
+26	shift	0x57	W
+26	caps	0x57	W
+26	shift+caps	0x77	w
+27	-	0x78	x
+27	shift	0x58	X
+27	caps	0x58	X
+27	shift+caps	0x78	x
+28	-	0x79	y
+28	shift	0x59	Y
+28	caps	0x59	Y
+28	shift+caps	0x79	y
+29	-	0x7a	z
+29	shift	0x5a	Z
+29	caps	0x5a	Z
+29	shift+caps	0x7a	z
+30	-	0x31	1
+30	shift	0x21	!
+30	caps	0x31	1
+30	shift+caps	0x21	!
+31	-	0x32	2
+31	shift	0x40	@
+31	caps	0x32	2
+31	shift+caps	0x40	@
+32	-	0x33	3
+32	shift	0x23	#
+32	caps	0x33	3
+32	shift+caps	0x23	#
+33	-	0x34	4
+33	shift	0x24	$
+33	caps	0x34	4
+33	shift+caps	0x24	$
+34	-	0x35	5
+34	shift	0x25	%
+34	caps	0x35	5
+34	shift+caps	0x25	%
+35	-	0x36	6
+35	shift	0x5e	^
+35	caps	0x36	6
+35	shift+caps	0x5e	^
+36	-	0x37	7
+36	shift	0x26	&
+36	caps	0x37	7
+36	shift+caps	0x26	&
+37	-	0x38	8
+37	shift	0x2a	*
+37	caps	0x38	8
+37	shift+caps	0x2a	*
+38	-	0x39	9
+38	shift	0x28	(
+38	caps	0x39	9
+38	shift+caps	0x28	(
+39	-	0x30	0
+39	shift	0x29	)
+39	caps	0x30	0
+39	shift+caps	0x29	)
+40	-	0xd	Return
+40	shift	0xd	Return
+40	caps	0xd	Return
+40	shift+caps	0xd	Return
+41	-	0x1b	Escape
+41	shift	0x1b	Escape
+41	caps	0x1b	Escape
+41	shift+caps	0x1b	Escape
+42	-	0x8	Backspace
+42	shift	0x8	Backspace
+42	caps	0x8	Backspace
+42	shift+caps	0x8	Backspace
+43	-	0x9	Tab
+43	shift	0x9	Tab
+43	caps	0x9	Tab
+43	shift+caps	0x9	Tab
+44	-	0x20	Space
+44	shift	0x20	Space
+44	caps	0x20	Space
+44	shift+caps	0x20	Space
+45	-	0x2d	-
+45	shift	0x5f	_
+45	caps	0x2d	-
+45	shift+caps	0x5f	_
+46	-	0x3d	=
+46	shift	0x2b	+
+46	caps	0x3d	=
+46	shift+caps	0x2b	+
+47	-	0x5b	[
+47	shift	0x7b	{
+47	caps	0x5b	[
+47	shift+caps	0x7b	{
+48	-	0x5d	]
+48	shift	0x7d	}
+48	caps	0x5d	]
+48	shift+caps	0x7d	}
+49	-	0x5c	\
+49	shift	0x7c	|
+49	caps	0x5c	\
+49	shift+caps	0x7c	|
+50	-	0x23	#
+50	shift	0x23	#
+50	caps	0x23	#
+50	shift+caps	0x23	#
+51	-	0x3b	;
+51	shift	0x3a	:
+51	caps	0x3b	;
+51	shift+caps	0x3a	:
+52	-	0x27	'
+52	shift	0x22	"
+52	caps	0x27	'
+52	shift+caps	0x22	"
+53	-	0x60	`
+53	shift	0x7e	~
+53	caps	0x60	`
+53	shift+caps	0x7e	~
+54	-	0x2c	,
+54	shift	0x3c	<
+54	caps	0x2c	,
+54	shift+caps	0x3c	<
+55	-	0x2e	.
+55	shift	0x3e	>
+55	caps	0x2e	.
+55	shift+caps	0x3e	>
+56	-	0x2f	/
+56	shift	0x3f	?
+56	caps	0x2f	/
+56	shift+caps	0x3f	?
+57	-	0x40000039	CapsLock
+57	shift	0x40000039	CapsLock
+57	caps	0x40000039	CapsLock
+57	shift+caps	0x40000039	CapsLock
+57	altgr	0x40000039	CapsLock
+58	-	0x4000003a	F1
+58	shift	0x4000003a	F1
+58	caps	0x4000003a	F1
+58	shift+caps	0x4000003a	F1
+58	altgr	0x4000003a	F1
+59	-	0x4000003b	F2
+59	shift	0x4000003b	F2
+59	caps	0x4000003b	F2
+59	shift+caps	0x4000003b	F2
+59	altgr	0x4000003b	F2
+60	-	0x4000003c	F3
+60	shift	0x4000003c	F3
+60	caps	0x4000003c	F3
+60	shift+caps	0x4000003c	F3
+60	altgr	0x4000003c	F3
+61	-	0x4000003d	F4
+61	shift	0x4000003d	F4
+61	caps	0x4000003d	F4
+61	shift+caps	0x4000003d	F4
+61	altgr	0x4000003d	F4
+62	-	0x4000003e	F5
+62	shift	0x4000003e	F5
+62	caps	0x4000003e	F5
+62	shift+caps	0x4000003e	F5
+62	altgr	0x4000003e	F5
+63	-	0x4000003f	F6
+63	shift	0x4000003f	F6
+63	caps	0x4000003f	F6
+63	shift+caps	0x4000003f	F6
+63	altgr	0x4000003f	F6
+64	-	0x40000040	F7
+64	shift	0x40000040	F7
+64	caps	0x40000040	F7
+64	shift+caps	0x40000040	F7
+64	altgr	0x40000040	F7
+65	-	0x40000041	F8
+65	shift	0x40000041	F8
+65	caps	0x40000041	F8
+65	shift+caps	0x40000041	F8
+65	altgr	0x40000041	F8
+66	-	0x40000042	F9
+66	shift	0x40000042	F9
+66	caps	0x40000042	F9
+66	shift+caps	0x40000042	F9
+66	altgr	0x40000042	F9
+67	-	0x40000043	F10
+67	shift	0x40000043	F10
+67	caps	0x40000043	F10
+67	shift+caps	0x40000043	F10
+67	altgr	0x40000043	F10
+68	-	0x40000044	F11
+68	shift	0x40000044	F11
+68	caps	0x40000044	F11
+68	shift+caps	0x40000044	F11
+68	altgr	0x40000044	F11
+69	-	0x40000045	F12
+69	shift	0x40000045	F12
+69	caps	0x40000045	F12
+69	shift+caps	0x40000045	F12
+69	altgr	0x40000045	F12
+70	-	0x40000046	PrintScreen
+70	shift	0x40000046	PrintScreen
+70	caps	0x40000046	PrintScreen
+70	shift+caps	0x40000046	PrintScreen
+70	altgr	0x40000046	PrintScreen
+71	-	0x40000047	ScrollLock
+71	shift	0x40000047	ScrollLock
+71	caps	0x40000047	ScrollLock
+71	shift+caps	0x40000047	ScrollLock
+71	altgr	0x40000047	ScrollLock
+72	-	0x40000048	Pause
+72	shift	0x40000048	Pause
+72	caps	0x40000048	Pause
+72	shift+caps	0x40000048	Pause
+72	altgr	0x40000048	Pause
+73	-	0x40000049	Insert
+73	shift	0x40000049	Insert
+73	caps	0x40000049	Insert
+73	shift+caps	0x40000049	Insert
+73	altgr	0x40000049	Insert
+74	-	0x4000004a	Home
+74	shift	0x4000004a	Home
+74	caps	0x4000004a	Home
+74	shift+caps	0x4000004a	Home
+74	altgr	0x4000004a	Home
+75	-	0x4000004b	PageUp
+75	shift	0x4000004b	PageUp
+75	caps	0x4000004b	PageUp
+75	shift+caps	0x4000004b	PageUp
+75	altgr	0x4000004b	PageUp
+76	-	0x7f	Delete
+76	shift	0x7f	Delete
+76	caps	0x7f	Delete
+76	shift+caps	0x7f	Delete
+76	altgr	0x7f	Delete
+77	-	0x4000004d	End
+77	shift	0x4000004d	End
+77	caps	0x4000004d	End
+77	shift+caps	0x4000004d	End
+77	altgr	0x4000004d	End
+78	-	0x4000004e	PageDown
+78	shift	0x4000004e	PageDown
+78	caps	0x4000004e	PageDown
+78	shift+caps	0x4000004e	PageDown
+78	altgr	0x4000004e	PageDown
+79	-	0x4000004f	Right
+79	shift	0x4000004f	Right
+79	caps	0x4000004f	Right
+79	shift+caps	0x4000004f	Right
+79	altgr	0x4000004f	Right
+80	-	0x40000050	Left
+80	shift	0x40000050	Left
+80	caps	0x40000050	Left
+80	shift+caps	0x40000050	Left
+80	altgr	0x40000050	Left
+81	-	0x40000051	Down
+81	shift	0x40000051	Down
+81	caps	0x40000051	Down
+81	shift+caps	0x40000051	Down
+81	altgr	0x40000051	Down
+82	-	0x40000052	Up
+82	shift	0x40000052	Up
+82	caps	0x40000052	Up
+82	shift+caps	0x40000052	Up
+82	altgr	0x40000052	Up
+83	-	0x40000053	Numlock
+83	shift	0x40000053	Numlock
+83	caps	0x40000053	Numlock
+83	shift+caps	0x40000053	Numlock
+83	altgr	0x40000053	Numlock
+84	-	0x40000054	Keypad /
+84	shift	0x40000054	Keypad /
+84	caps	0x40000054	Keypad /
+84	shift+caps	0x40000054	Keypad /
+84	altgr	0x40000054	Keypad /
+85	-	0x40000055	Keypad *
+85	shift	0x40000055	Keypad *
+85	caps	0x40000055	Keypad *
+85	shift+caps	0x40000055	Keypad *
+85	altgr	0x40000055	Keypad *
+86	-	0x40000056	Keypad -
+86	shift	0x40000056	Keypad -
+86	caps	0x40000056	Keypad -
+86	shift+caps	0x40000056	Keypad -
+86	altgr	0x40000056	Keypad -
+87	-	0x40000057	Keypad +
+87	shift	0x40000057	Keypad +
+87	caps	0x40000057	Keypad +
+87	shift+caps	0x40000057	Keypad +
+87	altgr	0x40000057	Keypad +
+88	-	0x40000058	Keypad Enter
+88	shift	0x40000058	Keypad Enter
+88	caps	0x40000058	Keypad Enter
+88	shift+caps	0x40000058	Keypad Enter
+88	altgr	0x40000058	Keypad Enter
+89	-	0x40000059	Keypad 1
+89	shift	0x40000059	Keypad 1
+89	caps	0x40000059	Keypad 1
+89	shift+caps	0x40000059	Keypad 1
+89	altgr	0x40000059	Keypad 1
+90	-	0x4000005a	Keypad 2
+90	shift	0x4000005a	Keypad 2
+90	caps	0x4000005a	Keypad 2
+90	shift+caps	0x4000005a	Keypad 2
+90	altgr	0x4000005a	Keypad 2
+91	-	0x4000005b	Keypad 3
+91	shift	0x4000005b	Keypad 3
+91	caps	0x4000005b	Keypad 3
+91	shift+caps	0x4000005b	Keypad 3
+91	altgr	0x4000005b	Keypad 3
+92	-	0x4000005c	Keypad 4
+92	shift	0x4000005c	Keypad 4
+92	caps	0x4000005c	Keypad 4
+92	shift+caps	0x4000005c	Keypad 4
+92	altgr	0x4000005c	Keypad 4
+93	-	0x4000005d	Keypad 5
+93	shift	0x4000005d	Keypad 5
+93	caps	0x4000005d	Keypad 5
+93	shift+caps	0x4000005d	Keypad 5
+93	altgr	0x4000005d	Keypad 5
+94	-	0x4000005e	Keypad 6
+94	shift	0x4000005e	Keypad 6
+94	caps	0x4000005e	Keypad 6
+94	shift+caps	0x4000005e	Keypad 6
+94	altgr	0x4000005e	Keypad 6
+95	-	0x4000005f	Keypad 7
+95	shift	0x4000005f	Keypad 7
+95	caps	0x4000005f	Keypad 7
+95	shift+caps	0x4000005f	Keypad 7
+95	altgr	0x4000005f	Keypad 7
+96	-	0x40000060	Keypad 8
+96	shift	0x40000060	Keypad 8
+96	caps	0x40000060	Keypad 8
+96	shift+caps	0x40000060	Keypad 8
+96	altgr	0x40000060	Keypad 8
+97	-	0x40000061	Keypad 9
+97	shift	0x40000061	Keypad 9
+97	caps	0x40000061	Keypad 9
+97	shift+caps	0x40000061	Keypad 9
+97	altgr	0x40000061	Keypad 9
+98	-	0x40000062	Keypad 0
+98	shift	0x40000062	Keypad 0
+98	caps	0x40000062	Keypad 0
+98	shift+caps	0x40000062	Keypad 0
+98	altgr	0x40000062	Keypad 0
+99	-	0x40000063	Keypad .
+99	shift	0x40000063	Keypad .
+99	caps	0x40000063	Keypad .
+99	shift+caps	0x40000063	Keypad .
+99	altgr	0x40000063	Keypad .
+101	-	0x40000065	Application
+101	shift	0x40000065	Application
+101	caps	0x40000065	Application
+101	shift+caps	0x40000065	Application
+101	altgr	0x40000065	Application
+102	-	0x40000066	Power
+102	shift	0x40000066	Power
+102	caps	0x40000066	Power
+102	shift+caps	0x40000066	Power
+102	altgr	0x40000066	Power
+103	-	0x40000067	Keypad =
+103	shift	0x40000067	Keypad =
+103	caps	0x40000067	Keypad =
+103	shift+caps	0x40000067	Keypad =
+103	altgr	0x40000067	Keypad =
+104	-	0x40000068	F13
+104	shift	0x40000068	F13
+104	caps	0x40000068	F13
+104	shift+caps	0x40000068	F13
+104	altgr	0x40000068	F13
+105	-	0x40000069	F14
+105	shift	0x40000069	F14
+105	caps	0x40000069	F14
+105	shift+caps	0x40000069	F14
+105	altgr	0x40000069	F14
+106	-	0x4000006a	F15
+106	shift	0x4000006a	F15
+106	caps	0x4000006a	F15
+106	shift+caps	0x4000006a	F15
+106	altgr	0x4000006a	F15
+107	-	0x4000006b	F16
+107	shift	0x4000006b	F16
+107	caps	0x4000006b	F16
+107	shift+caps	0x4000006b	F16
+107	altgr	0x4000006b	F16
+108	-	0x4000006c	F17
+108	shift	0x4000006c	F17
+108	caps	0x4000006c	F17
+108	shift+caps	0x4000006c	F17
+108	altgr	0x4000006c	F17
+109	-	0x4000006d	F18
+109	shift	0x4000006d	F18
+109	caps	0x4000006d	F18
+109	shift+caps	0x4000006d	F18
+109	altgr	0x4000006d	F18
+110	-	0x4000006e	F19
+110	shift	0x4000006e	F19
+110	caps	0x4000006e	F19
+110	shift+caps	0x4000006e	F19
+110	altgr	0x4000006e	F19
+111	-	0x4000006f	F20
+111	shift	0x4000006f	F20
+111	caps	0x4000006f	F20
+111	shift+caps	0x4000006f	F20
+111	altgr	0x4000006f	F20
+112	-	0x40000070	F21
+112	shift	0x40000070	F21
+112	caps	0x40000070	F21
+112	shift+caps	0x40000070	F21
+112	altgr	0x40000070	F21
+113	-	0x40000071	F22
+113	shift	0x40000071	F22
+113	caps	0x40000071	F22
+113	shift+caps	0x40000071	F22
+113	altgr	0x40000071	F22
+114	-	0x40000072	F23
+114	shift	0x40000072	F23
+114	caps	0x40000072	F23
+114	shift+caps	0x40000072	F23
+114	altgr	0x40000072	F23
+115	-	0x40000073	F24
+115	shift	0x40000073	F24
+115	caps	0x40000073	F24
+115	shift+caps	0x40000073	F24
+115	altgr	0x40000073	F24
+116	-	0x40000074	Execute
+116	shift	0x40000074	Execute
+116	caps	0x40000074	Execute
+116	shift+caps	0x40000074	Execute
+116	altgr	0x40000074	Execute
+117	-	0x40000075	Help
+117	shift	0x40000075	Help
+117	caps	0x40000075	Help
+117	shift+caps	0x40000075	Help
+117	altgr	0x40000075	Help
+118	-	0x40000076	Menu
+118	shift	0x40000076	Menu
+118	caps	0x40000076	Menu
+118	shift+caps	0x40000076	Menu
+118	altgr	0x40000076	Menu
+119	-	0x40000077	Select
+119	shift	0x40000077	Select
+119	caps	0x40000077	Select
+119	shift+caps	0x40000077	Select
+119	altgr	0x40000077	Select
+120	-	0x40000078	Stop
+120	shift	0x40000078	Stop
+120	caps	0x40000078	Stop
+120	shift+caps	0x40000078	Stop
+120	altgr	0x40000078	Stop
+121	-	0x40000079	Again
+121	shift	0x40000079	Again
+121	caps	0x40000079	Again
+121	shift+caps	0x40000079	Again
+121	altgr	0x40000079	Again
+122	-	0x4000007a	Undo
+122	shift	0x4000007a	Undo
+122	caps	0x4000007a	Undo
+122	shift+caps	0x4000007a	Undo
+122	altgr	0x4000007a	Undo
+123	-	0x4000007b	Cut
+123	shift	0x4000007b	Cut
+123	caps	0x4000007b	Cut
+123	shift+caps	0x4000007b	Cut
+123	altgr	0x4000007b	Cut
+124	-	0x4000007c	Copy
+124	shift	0x4000007c	Copy
+124	caps	0x4000007c	Copy
+124	shift+caps	0x4000007c	Copy
+124	altgr	0x4000007c	Copy
+125	-	0x4000007d	Paste
+125	shift	0x4000007d	Paste
+125	caps	0x4000007d	Paste
+125	shift+caps	0x4000007d	Paste
+125	altgr	0x4000007d	Paste
+126	-	0x4000007e	Find
+126	shift	0x4000007e	Find
+126	caps	0x4000007e	Find
+126	shift+caps	0x4000007e	Find
+126	altgr	0x4000007e	Find
+127	-	0x4000007f	Mute
+127	shift	0x4000007f	Mute
+127	caps	0x4000007f	Mute
+127	shift+caps	0x4000007f	Mute
+127	altgr	0x4000007f	Mute
+128	-	0x40000080	VolumeUp
+128	shift	0x40000080	VolumeUp
+128	caps	0x40000080	VolumeUp
+128	shift+caps	0x40000080	VolumeUp
+128	altgr	0x40000080	VolumeUp
+129	-	0x40000081	VolumeDown
+129	shift	0x40000081	VolumeDown
+129	caps	0x40000081	VolumeDown
+129	shift+caps	0x40000081	VolumeDown
+129	altgr	0x40000081	VolumeDown
+133	-	0x40000085	Keypad ,
+133	shift	0x40000085	Keypad ,
+133	caps	0x40000085	Keypad ,
+133	shift+caps	0x40000085	Keypad ,
+133	altgr	0x40000085	Keypad ,
+134	-	0x40000086	Keypad = (AS400)
+134	shift	0x40000086	Keypad = (AS400)
+134	caps	0x40000086	Keypad = (AS400)
+134	shift+caps	0x40000086	Keypad = (AS400)
+134	altgr	0x40000086	Keypad = (AS400)
+153	-	0x40000099	AltErase
+153	shift	0x40000099	AltErase
+153	caps	0x40000099	AltErase
+153	shift+caps	0x40000099	AltErase
+153	altgr	0x40000099	AltErase
+154	-	0x4000009a	SysReq
+154	shift	0x4000009a	SysReq
+154	caps	0x4000009a	SysReq
+154	shift+caps	0x4000009a	SysReq
+154	altgr	0x4000009a	SysReq
+155	-	0x4000009b	Cancel
+155	shift	0x4000009b	Cancel
+155	caps	0x4000009b	Cancel
+155	shift+caps	0x4000009b	Cancel
+155	altgr	0x4000009b	Cancel
+156	-	0x4000009c	Clear
+156	shift	0x4000009c	Clear
+156	caps	0x4000009c	Clear
+156	shift+caps	0x4000009c	Clear
+156	altgr	0x4000009c	Clear
+157	-	0x4000009d	Prior
+157	shift	0x4000009d	Prior
+157	caps	0x4000009d	Prior
+157	shift+caps	0x4000009d	Prior
+157	altgr	0x4000009d	Prior
+158	-	0x4000009e	Return
+158	shift	0x4000009e	Return
+158	caps	0x4000009e	Return
+158	shift+caps	0x4000009e	Return
+158	altgr	0x4000009e	Return
+159	-	0x4000009f	Separator
+159	shift	0x4000009f	Separator
+159	caps	0x4000009f	Separator
+159	shift+caps	0x4000009f	Separator
+159	altgr	0x4000009f	Separator
+160	-	0x400000a0	Out
+160	shift	0x400000a0	Out
+160	caps	0x400000a0	Out
+160	shift+caps	0x400000a0	Out
+160	altgr	0x400000a0	Out
+161	-	0x400000a1	Oper
+161	shift	0x400000a1	Oper
+161	caps	0x400000a1	Oper
+161	shift+caps	0x400000a1	Oper
+161	altgr	0x400000a1	Oper
+162	-	0x400000a2	Clear / Again
+162	shift	0x400000a2	Clear / Again
+162	caps	0x400000a2	Clear / Again
+162	shift+caps	0x400000a2	Clear / Again
+162	altgr	0x400000a2	Clear / Again
+163	-	0x400000a3	CrSel
+163	shift	0x400000a3	CrSel
+163	caps	0x400000a3	CrSel
+163	shift+caps	0x400000a3	CrSel
+163	altgr	0x400000a3	CrSel
+164	-	0x400000a4	ExSel
+164	shift	0x400000a4	ExSel
+164	caps	0x400000a4	ExSel
+164	shift+caps	0x400000a4	ExSel
+164	altgr	0x400000a4	ExSel
+165	-	0x400000a5	Front
+165	shift	0x400000a5	Front
+165	caps	0x400000a5	Front
+165	shift+caps	0x400000a5	Front
+165	altgr	0x400000a5	Front
+176	-	0x400000b0	Keypad 00
+176	shift	0x400000b0	Keypad 00
+176	caps	0x400000b0	Keypad 00
+176	shift+caps	0x400000b0	Keypad 00
+176	altgr	0x400000b0	Keypad 00
+177	-	0x400000b1	Keypad 000
+177	shift	0x400000b1	Keypad 000
+177	caps	0x400000b1	Keypad 000
+177	shift+caps	0x400000b1	Keypad 000
+177	altgr	0x400000b1	Keypad 000
+178	-	0x400000b2	ThousandsSeparator
+178	shift	0x400000b2	ThousandsSeparator
+178	caps	0x400000b2	ThousandsSeparator
+178	shift+caps	0x400000b2	ThousandsSeparator
+178	altgr	0x400000b2	ThousandsSeparator
+179	-	0x400000b3	DecimalSeparator
+179	shift	0x400000b3	DecimalSeparator
+179	caps	0x400000b3	DecimalSeparator
+179	shift+caps	0x400000b3	DecimalSeparator
+179	altgr	0x400000b3	DecimalSeparator
+180	-	0x400000b4	CurrencyUnit
+180	shift	0x400000b4	CurrencyUnit
+180	caps	0x400000b4	CurrencyUnit
+180	shift+caps	0x400000b4	CurrencyUnit
+180	altgr	0x400000b4	CurrencyUnit
+181	-	0x400000b5	CurrencySubUnit
+181	shift	0x400000b5	CurrencySubUnit
+181	caps	0x400000b5	CurrencySubUnit
+181	shift+caps	0x400000b5	CurrencySubUnit
+181	altgr	0x400000b5	CurrencySubUnit
+182	-	0x400000b6	Keypad (
+182	shift	0x400000b6	Keypad (
+182	caps	0x400000b6	Keypad (
+182	shift+caps	0x400000b6	Keypad (
+182	altgr	0x400000b6	Keypad (
+183	-	0x400000b7	Keypad )
+183	shift	0x400000b7	Keypad )
+183	caps	0x400000b7	Keypad )
+183	shift+caps	0x400000b7	Keypad )
+183	altgr	0x400000b7	Keypad )
+184	-	0x400000b8	Keypad {
+184	shift	0x400000b8	Keypad {
+184	caps	0x400000b8	Keypad {
+184	shift+caps	0x400000b8	Keypad {
+184	altgr	0x400000b8	Keypad {
+185	-	0x400000b9	Keypad }
+185	shift	0x400000b9	Keypad }
+185	caps	0x400000b9	Keypad }
+185	shift+caps	0x400000b9	Keypad }
+185	altgr	0x400000b9	Keypad }
+186	-	0x400000ba	Keypad Tab
+186	shift	0x400000ba	Keypad Tab
+186	caps	0x400000ba	Keypad Tab
+186	shift+caps	0x400000ba	Keypad Tab
+186	altgr	0x400000ba	Keypad Tab
+187	-	0x400000bb	Keypad Backspace
+187	shift	0x400000bb	Keypad Backspace
+187	caps	0x400000bb	Keypad Backspace
+187	shift+caps	0x400000bb	Keypad Backspace
+187	altgr	0x400000bb	Keypad Backspace
+188	-	0x400000bc	Keypad A
+188	shift	0x400000bc	Keypad A
+188	caps	0x400000bc	Keypad A
+188	shift+caps	0x400000bc	Keypad A
+188	altgr	0x400000bc	Keypad A
+189	-	0x400000bd	Keypad B
+189	shift	0x400000bd	Keypad B
+189	caps	0x400000bd	Keypad B
+189	shift+caps	0x400000bd	Keypad B
+189	altgr	0x400000bd	Keypad B
+190	-	0x400000be	Keypad C
+190	shift	0x400000be	Keypad C
+190	caps	0x400000be	Keypad C
+190	shift+caps	0x400000be	Keypad C
+190	altgr	0x400000be	Keypad C
+191	-	0x400000bf	Keypad D
+191	shift	0x400000bf	Keypad D
+191	caps	0x400000bf	Keypad D
+191	shift+caps	0x400000bf	Keypad D
+191	altgr	0x400000bf	Keypad D
+192	-	0x400000c0	Keypad E
+192	shift	0x400000c0	Keypad E
+192	caps	0x400000c0	Keypad E
+192	shift+caps	0x400000c0	Keypad E
+192	altgr	0x400000c0	Keypad E
+193	-	0x400000c1	Keypad F
+193	shift	0x400000c1	Keypad F
+193	caps	0x400000c1	Keypad F
+193	shift+caps	0x400000c1	Keypad F
+193	altgr	0x400000c1	Keypad F
+194	-	0x400000c2	Keypad XOR
+194	shift	0x400000c2	Keypad XOR
+194	caps	0x400000c2	Keypad XOR
+194	shift+caps	0x400000c2	Keypad XOR
+194	altgr	0x400000c2	Keypad XOR
+195	-	0x400000c3	Keypad ^
+195	shift	0x400000c3	Keypad ^
+195	caps	0x400000c3	Keypad ^
+195	shift+caps	0x400000c3	Keypad ^
+195	altgr	0x400000c3	Keypad ^
+196	-	0x400000c4	Keypad %
+196	shift	0x400000c4	Keypad %
+196	caps	0x400000c4	Keypad %
+196	shift+caps	0x400000c4	Keypad %
+196	altgr	0x400000c4	Keypad %
+197	-	0x400000c5	Keypad <
+197	shift	0x400000c5	Keypad <
+197	caps	0x400000c5	Keypad <
+197	shift+caps	0x400000c5	Keypad <
+197	altgr	0x400000c5	Keypad <
+198	-	0x400000c6	Keypad >
+198	shift	0x400000c6	Keypad >
+198	caps	0x400000c6	Keypad >
+198	shift+caps	0x400000c6	Keypad >
+198	altgr	0x400000c6	Keypad >
+199	-	0x400000c7	Keypad &
+199	shift	0x400000c7	Keypad &
+199	caps	0x400000c7	Keypad &
+199	shift+caps	0x400000c7	Keypad &
+199	altgr	0x400000c7	Keypad &
+200	-	0x400000c8	Keypad &&
+200	shift	0x400000c8	Keypad &&
+200	caps	0x400000c8	Keypad &&
+200	shift+caps	0x400000c8	Keypad &&
+200	altgr	0x400000c8	Keypad &&
+201	-	0x400000c9	Keypad |
+201	shift	0x400000c9	Keypad |
+201	caps	0x400000c9	Keypad |
+201	shift+caps	0x400000c9	Keypad |
+201	altgr	0x400000c9	Keypad |
+202	-	0x400000ca	Keypad ||
+202	shift	0x400000ca	Keypad ||
+202	caps	0x400000ca	Keypad ||
+202	shift+caps	0x400000ca	Keypad ||
+202	altgr	0x400000ca	Keypad ||
+203	-	0x400000cb	Keypad :
+203	shift	0x400000cb	Keypad :
+203	caps	0x400000cb	Keypad :
+203	shift+caps	0x400000cb	Keypad :
+203	altgr	0x400000cb	Keypad :
+204	-	0x400000cc	Keypad #
+204	shift	0x400000cc	Keypad #
+204	caps	0x400000cc	Keypad #
+204	shift+caps	0x400000cc	Keypad #
+204	altgr	0x400000cc	Keypad #
+205	-	0x400000cd	Keypad Space
+205	shift	0x400000cd	Keypad Space
+205	caps	0x400000cd	Keypad Space
+205	shift+caps	0x400000cd	Keypad Space
+205	altgr	0x400000cd	Keypad Space
+206	-	0x400000ce	Keypad @
+206	shift	0x400000ce	Keypad @
+206	caps	0x400000ce	Keypad @
+206	shift+caps	0x400000ce	Keypad @
+206	altgr	0x400000ce	Keypad @
+207	-	0x400000cf	Keypad !
+207	shift	0x400000cf	Keypad !
+207	caps	0x400000cf	Keypad !
+207	shift+caps	0x400000cf	Keypad !
+207	altgr	0x400000cf	Keypad !
+208	-	0x400000d0	Keypad MemStore
+208	shift	0x400000d0	Keypad MemStore
+208	caps	0x400000d0	Keypad MemStore
+208	shift+caps	0x400000d0	Keypad MemStore
+208	altgr	0x400000d0	Keypad MemStore
+209	-	0x400000d1	Keypad MemRecall
+209	shift	0x400000d1	Keypad MemRecall
+209	caps	0x400000d1	Keypad MemRecall
+209	shift+caps	0x400000d1	Keypad MemRecall
+209	altgr	0x400000d1	Keypad MemRecall
+210	-	0x400000d2	Keypad MemClear
+210	shift	0x400000d2	Keypad MemClear
+210	caps	0x400000d2	Keypad MemClear
+210	shift+caps	0x400000d2	Keypad MemClear
+210	altgr	0x400000d2	Keypad MemClear
+211	-	0x400000d3	Keypad MemAdd
+211	shift	0x400000d3	Keypad MemAdd
+211	caps	0x400000d3	Keypad MemAdd
+211	shift+caps	0x400000d3	Keypad MemAdd
+211	altgr	0x400000d3	Keypad MemAdd
+212	-	0x400000d4	Keypad MemSubtract
+212	shift	0x400000d4	Keypad MemSubtract
+212	caps	0x400000d4	Keypad MemSubtract
+212	shift+caps	0x400000d4	Keypad MemSubtract
+212	altgr	0x400000d4	Keypad MemSubtract
+213	-	0x400000d5	Keypad MemMultiply
+213	shift	0x400000d5	Keypad MemMultiply
+213	caps	0x400000d5	Keypad MemMultiply
+213	shift+caps	0x400000d5	Keypad MemMultiply
+213	altgr	0x400000d5	Keypad MemMultiply
+214	-	0x400000d6	Keypad MemDivide
+214	shift	0x400000d6	Keypad MemDivide
+214	caps	0x400000d6	Keypad MemDivide
+214	shift+caps	0x400000d6	Keypad MemDivide
+214	altgr	0x400000d6	Keypad MemDivide
+215	-	0x400000d7	Keypad +/-
+215	shift	0x400000d7	Keypad +/-
+215	caps	0x400000d7	Keypad +/-
+215	shift+caps	0x400000d7	Keypad +/-
+215	altgr	0x400000d7	Keypad +/-
+216	-	0x400000d8	Keypad Clear
+216	shift	0x400000d8	Keypad Clear
+216	caps	0x400000d8	Keypad Clear
+216	shift+caps	0x400000d8	Keypad Clear
+216	altgr	0x400000d8	Keypad Clear
+217	-	0x400000d9	Keypad ClearEntry
+217	shift	0x400000d9	Keypad ClearEntry
+217	caps	0x400000d9	Keypad ClearEntry
+217	shift+caps	0x400000d9	Keypad ClearEntry
+217	altgr	0x400000d9	Keypad ClearEntry
+218	-	0x400000da	Keypad Binary
+218	shift	0x400000da	Keypad Binary
+218	caps	0x400000da	Keypad Binary
+218	shift+caps	0x400000da	Keypad Binary
+218	altgr	0x400000da	Keypad Binary
+219	-	0x400000db	Keypad Octal
+219	shift	0x400000db	Keypad Octal
+219	caps	0x400000db	Keypad Octal
+219	shift+caps	0x400000db	Keypad Octal
+219	altgr	0x400000db	Keypad Octal
+220	-	0x400000dc	Keypad Decimal
+220	shift	0x400000dc	Keypad Decimal
+220	caps	0x400000dc	Keypad Decimal
+220	shift+caps	0x400000dc	Keypad Decimal
+220	altgr	0x400000dc	Keypad Decimal
+221	-	0x400000dd	Keypad Hexadecimal
+221	shift	0x400000dd	Keypad Hexadecimal
+221	caps	0x400000dd	Keypad Hexadecimal
+221	shift+caps	0x400000dd	Keypad Hexadecimal
+221	altgr	0x400000dd	Keypad Hexadecimal
+224	-	0x400000e0	Left Ctrl
+224	shift	0x400000e0	Left Ctrl
+224	caps	0x400000e0	Left Ctrl
+224	shift+caps	0x400000e0	Left Ctrl
+224	altgr	0x400000e0	Left Ctrl
+225	-	0x400000e1	Left Shift
+225	shift	0x400000e1	Left Shift
+225	caps	0x400000e1	Left Shift
+225	shift+caps	0x400000e1	Left Shift
+225	altgr	0x400000e1	Left Shift
+226	-	0x400000e2	Left Alt
+226	shift	0x400000e2	Left Alt
+226	caps	0x400000e2	Left Alt
+226	shift+caps	0x400000e2	Left Alt
+226	altgr	0x400000e2	Left Alt
+227	-	0x400000e3	Left GUI
+227	shift	0x400000e3	Left GUI
+227	caps	0x400000e3	Left GUI
+227	shift+caps	0x400000e3	Left GUI
+227	altgr	0x400000e3	Left GUI
+228	-	0x400000e4	Right Ctrl
+228	shift	0x400000e4	Right Ctrl
+228	caps	0x400000e4	Right Ctrl
+228	shift+caps	0x400000e4	Right Ctrl
+228	altgr	0x400000e4	Right Ctrl
+229	-	0x400000e5	Right Shift
+229	shift	0x400000e5	Right Shift
+229	caps	0x400000e5	Right Shift
+229	shift+caps	0x400000e5	Right Shift
+229	altgr	0x400000e5	Right Shift
+230	-	0x400000e6	Right Alt
+230	shift	0x400000e6	Right Alt
+230	caps	0x400000e6	Right Alt
+230	shift+caps	0x400000e6	Right Alt
+230	altgr	0x400000e6	Right Alt
+231	-	0x400000e7	Right GUI
+231	shift	0x400000e7	Right GUI
+231	caps	0x400000e7	Right GUI
+231	shift+caps	0x400000e7	Right GUI
+231	altgr	0x400000e7	Right GUI
+257	-	0x40000101	ModeSwitch
+257	shift	0x40000101	ModeSwitch
+257	caps	0x40000101	ModeSwitch
+257	shift+caps	0x40000101	ModeSwitch
+257	altgr	0x40000101	ModeSwitch
+258	-	0x40000102	Sleep
+258	shift	0x40000102	Sleep
+258	caps	0x40000102	Sleep
+258	shift+caps	0x40000102	Sleep
+258	altgr	0x40000102	Sleep
+259	-	0x40000103	Wake
+259	shift	0x40000103	Wake
+259	caps	0x40000103	Wake
+259	shift+caps	0x40000103	Wake
+259	altgr	0x40000103	Wake
+260	-	0x40000104	ChannelUp
+260	shift	0x40000104	ChannelUp
+260	caps	0x40000104	ChannelUp
+260	shift+caps	0x40000104	ChannelUp
+260	altgr	0x40000104	ChannelUp
+261	-	0x40000105	ChannelDown
+261	shift	0x40000105	ChannelDown
+261	caps	0x40000105	ChannelDown
+261	shift+caps	0x40000105	ChannelDown
+261	altgr	0x40000105	ChannelDown
+262	-	0x40000106	MediaPlay
+262	shift	0x40000106	MediaPlay
+262	caps	0x40000106	MediaPlay
+262	shift+caps	0x40000106	MediaPlay
+262	altgr	0x40000106	MediaPlay
+263	-	0x40000107	MediaPause
+263	shift	0x40000107	MediaPause
+263	caps	0x40000107	MediaPause
+263	shift+caps	0x40000107	MediaPause
+263	altgr	0x40000107	MediaPause
+264	-	0x40000108	MediaRecord
+264	shift	0x40000108	MediaRecord
+264	caps	0x40000108	MediaRecord
+264	shift+caps	0x40000108	MediaRecord
+264	altgr	0x40000108	MediaRecord
+265	-	0x40000109	MediaFastForward
+265	shift	0x40000109	MediaFastForward
+265	caps	0x40000109	MediaFastForward
+265	shift+caps	0x40000109	MediaFastForward
+265	altgr	0x40000109	MediaFastForward
+266	-	0x4000010a	MediaRewind
+266	shift	0x4000010a	MediaRewind
+266	caps	0x4000010a	MediaRewind
+266	shift+caps	0x4000010a	MediaRewind
+266	altgr	0x4000010a	MediaRewind
+267	-	0x4000010b	MediaTrackNext
+267	shift	0x4000010b	MediaTrackNext
+267	caps	0x4000010b	MediaTrackNext
+267	shift+caps	0x4000010b	MediaTrackNext
+267	altgr	0x4000010b	MediaTrackNext
+268	-	0x4000010c	MediaTrackPrevious
+268	shift	0x4000010c	MediaTrackPrevious
+268	caps	0x4000010c	MediaTrackPrevious
+268	shift+caps	0x4000010c	MediaTrackPrevious
+268	altgr	0x4000010c	MediaTrackPrevious
+269	-	0x4000010d	MediaStop
+269	shift	0x4000010d	MediaStop
+269	caps	0x4000010d	MediaStop
+269	shift+caps	0x4000010d	MediaStop
+269	altgr	0x4000010d	MediaStop
+270	-	0x4000010e	Eject
+270	shift	0x4000010e	Eject
+270	caps	0x4000010e	Eject
+270	shift+caps	0x4000010e	Eject
+270	altgr	0x4000010e	Eject
+271	-	0x4000010f	MediaPlayPause
+271	shift	0x4000010f	MediaPlayPause
+271	caps	0x4000010f	MediaPlayPause
+271	shift+caps	0x4000010f	MediaPlayPause
+271	altgr	0x4000010f	MediaPlayPause
+272	-	0x40000110	MediaSelect
+272	shift	0x40000110	MediaSelect
+272	caps	0x40000110	MediaSelect
+272	shift+caps	0x40000110	MediaSelect
+272	altgr	0x40000110	MediaSelect
+273	-	0x40000111	AC New
+273	shift	0x40000111	AC New
+273	caps	0x40000111	AC New
+273	shift+caps	0x40000111	AC New
+273	altgr	0x40000111	AC New
+274	-	0x40000112	AC Open
+274	shift	0x40000112	AC Open
+274	caps	0x40000112	AC Open
+274	shift+caps	0x40000112	AC Open
+274	altgr	0x40000112	AC Open
+275	-	0x40000113	AC Close
+275	shift	0x40000113	AC Close
+275	caps	0x40000113	AC Close
+275	shift+caps	0x40000113	AC Close
+275	altgr	0x40000113	AC Close
+276	-	0x40000114	AC Exit
+276	shift	0x40000114	AC Exit
+276	caps	0x40000114	AC Exit
+276	shift+caps	0x40000114	AC Exit
+276	altgr	0x40000114	AC Exit
+277	-	0x40000115	AC Save
+277	shift	0x40000115	AC Save
+277	caps	0x40000115	AC Save
+277	shift+caps	0x40000115	AC Save
+277	altgr	0x40000115	AC Save
+278	-	0x40000116	AC Print
+278	shift	0x40000116	AC Print
+278	caps	0x40000116	AC Print
+278	shift+caps	0x40000116	AC Print
+278	altgr	0x40000116	AC Print
+279	-	0x40000117	AC Properties
+279	shift	0x40000117	AC Properties
+279	caps	0x40000117	AC Properties
+279	shift+caps	0x40000117	AC Properties
+279	altgr	0x40000117	AC Properties
+280	-	0x40000118	AC Search
+280	shift	0x40000118	AC Search
+280	caps	0x40000118	AC Search
+280	shift+caps	0x40000118	AC Search
+280	altgr	0x40000118	AC Search
+281	-	0x40000119	AC Home
+281	shift	0x40000119	AC Home
+281	caps	0x40000119	AC Home
+281	shift+caps	0x40000119	AC Home
+281	altgr	0x40000119	AC Home
+282	-	0x4000011a	AC Back
+282	shift	0x4000011a	AC Back
+282	caps	0x4000011a	AC Back
+282	shift+caps	0x4000011a	AC Back
+282	altgr	0x4000011a	AC Back
+283	-	0x4000011b	AC Forward
+283	shift	0x4000011b	AC Forward
+283	caps	0x4000011b	AC Forward
+283	shift+caps	0x4000011b	AC Forward
+283	altgr	0x4000011b	AC Forward
+284	-	0x4000011c	AC Stop
+284	shift	0x4000011c	AC Stop
+284	caps	0x4000011c	AC Stop
+284	shift+caps	0x4000011c	AC Stop
+284	altgr	0x4000011c	AC Stop
+285	-	0x4000011d	AC Refresh
+285	shift	0x4000011d	AC Refresh
+285	caps	0x4000011d	AC Refresh
+285	shift+caps	0x4000011d	AC Refresh
+285	altgr	0x4000011d	AC Refresh
+286	-	0x4000011e	AC Bookmarks
+286	shift	0x4000011e	AC Bookmarks
+286	caps	0x4000011e	AC Bookmarks
+286	shift+caps	0x4000011e	AC Bookmarks
+286	altgr	0x4000011e	AC Bookmarks
+287	-	0x4000011f	SoftLeft
+287	shift	0x4000011f	SoftLeft
+287	caps	0x4000011f	SoftLeft
+287	shift+caps	0x4000011f	SoftLeft
+287	altgr	0x4000011f	SoftLeft
+288	-	0x40000120	SoftRight
+288	shift	0x40000120	SoftRight
+288	caps	0x40000120	SoftRight
+288	shift+caps	0x40000120	SoftRight
+288	altgr	0x40000120	SoftRight
+289	-	0x40000121	Call
+289	shift	0x40000121	Call
+289	caps	0x40000121	Call
+289	shift+caps	0x40000121	Call
+289	altgr	0x40000121	Call
+290	-	0x40000122	EndCall
+290	shift	0x40000122	EndCall
+290	caps	0x40000122	EndCall
+290	shift+caps	0x40000122	EndCall
+290	altgr	0x40000122	EndCall
