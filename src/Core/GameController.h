@@ -166,6 +166,11 @@ class GameController : public oo::Object {
   }
 
   void exitAppCommandQ();
+  // The part of the exit that does not end the process: joins the work
+  // threads, writes the defaults and, without NDEBUG, runs the JavaScript
+  // runtime's leak check. exitAppWithContext calls it; a headless test may,
+  // once, as the last thing its game does (the scripts are gone after it).
+  void shutDownForExit();
 
   // nullopt: no saved game to load (was nil).
   std::optional<std::string> playerFileToLoad();
