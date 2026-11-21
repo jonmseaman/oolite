@@ -17,12 +17,16 @@
    object; the launch flag; the game view it keeps (retained) and tells about
    itself; the mouse interaction modes and the view's notes of each change;
    pause and resume (the mode they save and restore, the player's script events,
-   and the process priority class EcoQoS sets on Windows); and the full-screen
+   and the process priority class EcoQoS sets on Windows, which a connected
+   debug console keeps at normal); and the full-screen
    members and the player-file paths. The cases call the C++ class, the view a
    C++ subclass of the game's. Run:
    meson test -C build/meson_test test_GameController
 */
 
+#if defined(_WIN32)
+#include <winsock2.h>  // before windows.h, which a game header brings in
+#endif
 #include <process.h>
 
 #include <chrono>
@@ -36,6 +40,7 @@
 
 #include "GameController.h"
 #include "MyOpenGLView.h"
+#include "OODebugTCPConsoleClient.h"
 #include "OOFullScreenController.h"
 #include "OOJSPropID.h"
 #include "OOJavaScriptEngine.h"
@@ -355,6 +360,40 @@ OO_TEST(pauseAndResume) {
     controller->setEcoQoS(true);
     OO_CHECK(GetPriorityClass(GetCurrentProcess()) == NORMAL_PRIORITY_CLASS);
     oo::Defaults::standard().removeObject("ecoqos");
+#endif
+
+#if OOLITE_WINDOWS && defined(OO_DEBUG_MONITOR_ENABLED)
+    // A debug console connected: a paused game stays at normal priority, or on
+    // a loaded machine it answers no console command for seconds.
+    {
+      WSADATA data;
+      OO_CHECK(WSAStartup(MAKEWORD(2, 2), &data) == 0);
+      SOCKET listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+      sockaddr_in address = {};
+      address.sin_family = AF_INET;
+      address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+      address.sin_port = 0;  // a free port
+      OO_CHECK(bind(listener, reinterpret_cast<sockaddr*>(&address),
+                    sizeof address) == 0);
+      OO_CHECK(listen(listener, 1) == 0);
+      int size = sizeof address;
+      OO_CHECK(getsockname(listener, reinterpret_cast<sockaddr*>(&address),
+                           &size) == 0);
+
+      std::shared_ptr<OODebugTCPConsoleClient> console =
+          OODebugTCPConsoleClient::clientWithAddress(std::string("127.0.0.1"),
+                                                     ntohs(address.sin_port));
+      OO_CHECK(console != nullptr);
+      OO_CHECK(OODebugTCPConsoleIsWaitingForInput());
+
+      controller->setGamePaused(true);
+      OO_CHECK(GetPriorityClass(GetCurrentProcess()) == NORMAL_PRIORITY_CLASS);
+      controller->setGamePaused(false);
+
+      console.reset();
+      closesocket(listener);
+      WSACleanup();
+    }
 #endif
   }
 }

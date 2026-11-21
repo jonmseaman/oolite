@@ -25,7 +25,7 @@ An RDP disconnect takes the desktop with it.
 
 On Windows the console-driven "headless" launchers are not headless either, because
 `SDL_VIDEODRIVER=offscreen` is deliberately left unset there (MSYS2's Mesa ships no EGL, so the
-offscreen driver cannot create a context - see `tests/component/console.py::_env`). Do not run
+offscreen driver cannot create a context). Do not run
 them while this tier is running.
 
 It also needs a built game: by default `oolite-dev/build/meson_test/oolite.app`, overridden
@@ -59,8 +59,8 @@ init and re-creates it at the end of startup (`Requested a new surface of ... wi
 resize applied before `startup.complete` is silently discarded and every early click is dropped.
 Readiness is therefore read from the game's own log line, never slept for.
 
-**3. Mesa's software `opengl32.dll` is fatal here.** The component tier stages llvmpipe beside
-the binary so a headless VM can render offscreen; with it present the game dies during `initGL`
+**3. Mesa's software `opengl32.dll` is fatal here.** `tests/run_test_fn.sh` stages llvmpipe
+beside the binary so a headless VM can render offscreen; with it present the game dies during `initGL`
 with `0x80070057` and never opens a window. The `game` fixture moves those DLLs aside for the
 duration and puts them back on teardown.
 
