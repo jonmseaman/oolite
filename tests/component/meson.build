@@ -69,6 +69,9 @@ component_programs = {
     'test_ship_attacks': {},
     'test_mining_laser': {},
     'test_fire_key': {},
+    # Script regressions the windowed half (tests/component-py) also pins, with the same base names.
+    'test_dictionary_arguments_reject_arrays': {},
+    'test_exit_runs_js_leak_check': {'verbose': true},
     # Every ship and equipment item in the core data, one outcome each (contracts/census.md).
     'component_census': {'test_name': 'census', 'timeout': 600, 'verbose': true},
 }

@@ -821,6 +821,15 @@ void GameController::exitAppWithContext(const std::string& context) {
     ChangeDisplaySettingsEx(NULL, NULL, NULL, 0, NULL);
   }
 #endif
+  shutDownForExit();
+  OOLoggingTerminate();
+  SDL_Quit();
+  if (OOOpenALController* controller = OOOpenALController::sharedController())
+    controller->shutdown();
+  exit(0);
+}
+
+void GameController::shutDownForExit() {
   // The work threads are owned by the never-destroyed manager, so they are
   // joined here, before anything they might use is torn down.
   OOAsyncWorkManager::sharedAsyncWorkManager()->shutdown();
@@ -831,11 +840,6 @@ void GameController::exitAppWithContext(const std::string& context) {
   // alive.
   OOJavaScriptEngine::sharedEngine()->shutDown();
 #endif
-  OOLoggingTerminate();
-  SDL_Quit();
-  if (OOOpenALController* controller = OOOpenALController::sharedController())
-    controller->shutdown();
-  exit(0);
 }
 
 #else
