@@ -1,8 +1,6 @@
 /*	tests/component/test_s2_pirate_attacks_target_registers_attacker.cpp
-        The headless counterpart of tests/component-py/features/s2_pirate_attacks_target_registers_attacker.feature
-   ("Ship-to-ship combat: A pirate attacks a trader; the setup runs cleanly"): the same seed, the same
-   spawns and the same assertions, each through the script of its windowed
-   step. Each check carries the line of the feature it ports.
+        Scenario S2 ("Ship-to-ship combat: A pirate attacks a trader; the setup runs cleanly").
+   Each check carries the scenario step it checks.
    Run: tests/run.sh component --cpp -k s2_
 */
 

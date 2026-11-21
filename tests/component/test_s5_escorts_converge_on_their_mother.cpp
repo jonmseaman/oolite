@@ -1,8 +1,6 @@
 /*	tests/component/test_s5_escorts_converge_on_their_mother.cpp
-        The headless counterpart of tests/component-py/features/s5_escorts_converge_on_their_mother.feature
-   ("Escorts converge on their mother: A mother ship and her escorts fly without error"): the same seed, the same
-   spawns and the same assertions, each through the script of its windowed
-   step. Each check carries the line of the feature it ports.
+        Scenario S5 ("Escorts converge on their mother: A mother ship and her escorts fly without error").
+   Each check carries the scenario step it checks.
    Run: tests/run.sh component --cpp -k s5_
 */
 

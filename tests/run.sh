@@ -2,21 +2,16 @@
 # Run Oolite's test tiers from this directory, inside a private virtualenv.
 #
 #     tests/run.sh unit        meson suites: oofnd, core, headers (needs ./mk.sh build dev)
-#     tests/run.sh component   the C++ half: headless programs, meson suite component; needs
-#                              no display and no virtualenv (--cpp is accepted and means the same)
-#     tests/run.sh component --windowed  the windowed half: Gherkin scenarios over the debug
-#                                        console
+#     tests/run.sh component   headless C++ programs, meson suite component; needs no display
+#                              and no virtualenv (--cpp is accepted and means the same)
 #     tests/run.sh gui         PyAutoGUI tier (real window; do not touch the mouse)
 #     tests/run.sh smoke       launch_snapshot.py via mk.sh
-#     tests/run.sh all         unit, both component halves, smoke, then gui, stopping at the
-#                              first failure
+#     tests/run.sh all         unit, component, smoke, then gui, stopping at the first failure
 #     tests/run.sh venv        create/refresh the virtualenv only
 #
-# Extra arguments after the tier go to pytest (component --windowed, gui). For the C++ half,
-# -k <name> picks the programs whose meson test name contains <name>; a name that matches no
-# program is an error:
+# Extra arguments after the tier go to pytest (gui). For the component tier, -k <name> picks the
+# programs whose meson test name contains <name>; a name that matches no program is an error:
 #     tests/run.sh component -k skeleton
-#     tests/run.sh component --windowed -k s1
 #
 # Environment: BUILD_TYPE (default dev), OO_VENV (default build/.venv-tests), OO_APP_DIR.
 # dev, not test: test links with LTO, and every core unit test re-runs LTO over the game's objects.
@@ -30,7 +25,7 @@ cd "$ROOT"
 BUILD_TYPE=${BUILD_TYPE:-dev}
 VENV=${OO_VENV:-build/.venv-tests}
 REQ_STAMP="$VENV/.requirements-stamp"
-REQ_FILES=(tests/component-py/requirements.txt tests/gui/requirements.txt)
+REQ_FILES=(tests/gui/requirements.txt)
 
 find_python() {
     local p
@@ -98,21 +93,16 @@ run_unit() {
     done
 }
 
-run_component_windowed() {
-    require_build
-    "$(venv_python)" -m pytest tests/component-py -x -q "$@"
-}
-
-# The C++ half. Of the arguments only -k <name> applies; a name that matches no program is an
-# error.
-run_component_cpp() {
+# component [--cpp] [-k <name>]: a name that matches no program is an error.
+run_component() {
+    [[ "${1:-}" == --cpp ]] && shift
     require_build
     local filter="" have_filter=false
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -k) filter=${2:-}; have_filter=true; shift 2 || shift ;;
             -k*) filter=${1#-k}; have_filter=true; shift ;;
-            *) shift ;;
+            *) echo "tests/run.sh component: unknown argument '$1'" >&2; return 2 ;;
         esac
     done
     local dir="build/meson_${BUILD_TYPE}"
@@ -135,15 +125,6 @@ run_component_cpp() {
     meson test -C "$dir" --suite component --print-errorlogs "${names[@]}"
 }
 
-# component [--cpp|--windowed] [args]: the C++ half unless --windowed is given.
-run_component() {
-    case "${1:-}" in
-        --windowed) shift; ensure_venv; run_component_windowed "$@"; return ;;
-        --cpp) shift ;;
-    esac
-    run_component_cpp "$@"
-}
-
 run_gui() {
     require_build
     # A missing pyautogui or a non-Windows host must fail, never skip silently.
@@ -164,7 +145,7 @@ case "$tier" in
     component) run_component "$@" ;;
     gui)       ensure_venv; run_gui "$@" ;;
     smoke)     run_smoke ;;
-    all)       ensure_venv; run_unit; run_component_cpp; run_component_windowed; run_smoke; run_gui ;;
+    all)       ensure_venv; run_unit; run_component; run_smoke; run_gui ;;
     *)
         sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         [[ -z "$tier" ]] || exit 2

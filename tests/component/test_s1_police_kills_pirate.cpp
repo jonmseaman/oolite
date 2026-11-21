@@ -1,9 +1,6 @@
 /*	tests/component/test_s1_police_kills_pirate.cpp
-        The headless counterpart of
-   tests/component-py/features/s1_police_kills_pirate.feature: the same seed, the
-   same spawns, the same assertions, each through the script of its windowed
-   step (oo_component, from tests/component-py/steps/world_steps.py). Each check
-   carries the line of the feature it ports.
+        Scenario S1: a police viper engages a lone pirate. Each check carries
+   the scenario step it checks, and each step is one oo_component call.
 
         This is the exemplar for C++ component tests: copy it to write a
    scenario. Its last line says how much faster than real time it ran.

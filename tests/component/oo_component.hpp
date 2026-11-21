@@ -64,9 +64,8 @@ class ShipHandle;
 
 namespace oo::component {
 
-// Game time. The windowed tier's "tick" is one AI think interval, 0.125 s
-// (tests/component-py/steps/world_steps.py TICK_SECONDS), so its "within 900
-// ticks" is ticks(900).
+// Game time. A scenario's "tick" is one AI think interval, 0.125 s, so its
+// "within 900 ticks" is ticks(900).
 using GameTime = std::chrono::duration<double>;
 constexpr GameTime ticks(int n) { return GameTime{n * 0.125}; }
 
@@ -113,7 +112,7 @@ class EventRecord {
 // What to spawn, said fluently and passed to one call; the call that takes it
 // does the work:
 //   game.spawn(ShipsWithRole("pirate").count(2).withinKm(10))
-// The windowed step "I spawn N ship(s) with role R [within K km]".
+// The scenario step "I spawn N ship(s) with role R [within K km]".
 class ShipsWithRole {
  public:
   explicit ShipsWithRole(std::string_view role) : role_(role) {}
@@ -228,7 +227,7 @@ class Settings {
 
 class Game {
  public:
-  // An empty system, the player in flight, no keys: the windowed step
+  // An empty system, the player in flight, no keys: the scenario step
   // "a universe seeded with <seed>". One per process; a second call fails the
   // test and returns the game that exists.
   static Game scenario(std::uint32_t seed);
@@ -309,14 +308,12 @@ class Game {
   void simulate(GameTime span);  // rounded up to whole steps
   bool simulateUntil(const std::function<bool()>& done, GameTime atMost);
   double time() const;  // the universe's game time, s
-  // The windowed step "the simulation runs for at most N ticks": steps for the
-  // span, stopping early (checked every half second of game time, as the
-  // windowed step polls) once every role spawned so far except police has no
-  // ship left.
+  // The scenario step "the simulation runs for at most N ticks": steps for
+  // the span, stopping early (checked every half second of game time) once
+  // every role spawned so far except police has no ship left.
   void simulateAtMost(GameTime span);
 
-  // The world, in the vocabulary of tests/component-py/steps/world_steps.py:
-  // each runs that step's own script.
+  // The world, in the scenarios' vocabulary: each runs that step's script.
   std::vector<ShipHandle> spawn(const ShipsWithRole& what);  // the ships added
   int countWithRole(std::string_view role);
   bool engages(std::string_view hunter, std::string_view quarry);
@@ -355,7 +352,7 @@ class Game {
   std::vector<Event> errorsSince(std::size_t mark) const;
   // What the game would have drawn and played.
   const OOPresentationRecord& presentation() const;
-  // The log lines so far that contain text: the windowed step "no ERROR
+  // The log lines so far that contain text: the scenario step "no ERROR
   // appears in the log" is logLinesContaining("ERROR").empty().
   std::vector<std::string> logLinesContaining(std::string_view text) const;
 

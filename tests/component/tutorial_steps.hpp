@@ -1,9 +1,7 @@
 /*	tests/component/tutorial_steps.hpp
         The tutorial by keys (spec 011 US3 scenario 3, FR-026), for a game made
    with Game::atStartScreen: the tutorial's progress as its own script counts
-   it, read with the expression the windowed walkthrough reads
-   (tests/component-py/steps/tutorial_steps.py, PROGRESS_JS), and the way in from
-   the start screen.
+   it, and the way in from the start screen.
 */
 
 #pragma once
@@ -62,7 +60,7 @@ inline void StartTutorial(oo::component::Game& game) {
       10s));
   OO_CHECK(Progress(game) == (Stage{0, 0}));
   OO_COMPONENT_PRESS_EXPECT(game, "enter", game.screen() != "GUI_SCREEN_MISSION");
-  // As the windowed step "the player is in flight": in flight, the main
+  // "The player is in flight": in flight, the main
   // screen, and the tutorial's post-launch step.
   OO_CHECK(game.simulateUntil(
       [&] {

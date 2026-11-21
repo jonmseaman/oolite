@@ -11,7 +11,7 @@
    calling script has returned, #580), then runs the exit's teardown itself.
    The scripts are gone after that, so this is the program's only case. A
    build with NDEBUG has no leak check, and the case then checks only the
-   quit. The C++ counterpart of tests/component-py/test_exit_runs_js_leak_check.py.
+   quit.
    Run: tests/run.sh component -k exit_runs_js_leak_check
 */
 

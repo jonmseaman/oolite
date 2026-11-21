@@ -53,7 +53,7 @@ component_programs = {
     # them changes the windowed game's keys, so they are checked both ways and left to Jon. See
     # specs/011-headless-component-tests/tasks.md, Records -> Findings -> Keys.
     'should_fail': ['key_fault_h1', 'key_fault_h2', 'key_fault_h3', 'key_fault_h4']},
-    # The C++ counterparts of tests/component-py/features, each with its original's base name.
+    # Scenarios S1-S8: a few ships, one seed, tolerant invariants.
     'test_s1_police_kills_pirate': {'verbose': true},
     'test_s2_pirate_attacks_target_registers_attacker': {'verbose': true},
     'test_s3_hostile_spawn_drives_ship_into_attack': {'verbose': true},
@@ -69,7 +69,7 @@ component_programs = {
     'test_ship_attacks': {},
     'test_mining_laser': {},
     'test_fire_key': {},
-    # Script regressions the windowed half (tests/component-py) also pins, with the same base names.
+    # Script regressions: arrays where a dictionary is read (spec 012), the exit's leak check (#768).
     'test_dictionary_arguments_reject_arrays': {},
     'test_exit_runs_js_leak_check': {'verbose': true},
     # Every ship and equipment item in the core data, one outcome each (contracts/census.md).

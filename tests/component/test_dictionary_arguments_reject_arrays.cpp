@@ -7,8 +7,7 @@
    error. The C++ build once read the array as an empty dictionary and
    returned normally. setShaders() reads its argument only while shaders are
    on, so with shaders off (as here, with no GL) it returns normally, as 1.93
-   does. The C++ counterpart of
-   tests/component-py/test_dictionary_arguments_reject_arrays.py.
+   does.
    Run: tests/run.sh component -k dictionary_arguments
 */
 

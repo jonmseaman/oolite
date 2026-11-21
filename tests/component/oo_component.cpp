@@ -67,8 +67,8 @@ namespace {
 
 namespace fs = std::filesystem;
 
-// The windowed steps' set-up (tests/component-py/steps/world_steps.py), copied
-// so the empty system means the same thing in both halves of the tier.
+// The scenario set-up: how long the launch settles, and how the system is
+// cleared down to the player.
 constexpr double kLaunchSettleSeconds = 2.0;  // "let the launch settle"
 constexpr int kClearAttempts = 10;            // CLEAR_ATTEMPTS
 constexpr double kClearRetrySeconds = 0.5;    // CLEAR_RETRY_SECONDS
@@ -110,9 +110,8 @@ bool ClassIs(std::string_view messageClass, std::string_view listed) {
           messageClass[listed.size()] == '.');
 }
 
-// The windowed steps' set-up for a role (world_steps.py): the pinned ship key
-// (ROLE_SHIP_KEY), the AI (ROLE_AI), the pirate's bounty (PIRATE_BOUNTY) and
-// the radius of an unpositioned spawn (SPAWN_RADIUS_M).
+// The set-up for a role: the pinned ship key, the AI, the pirate's bounty and
+// the radius of an unpositioned spawn.
 const std::map<std::string, std::string, std::less<>>& RoleShipKey() {
   static const std::map<std::string, std::string, std::less<>> keys = {
       {"police", "[viper]"},
@@ -133,9 +132,9 @@ const std::map<std::string, std::string, std::less<>>& RoleAI() {
 
 constexpr int kPirateBounty = 100;
 constexpr int kSpawnRadiusMetres = 5000;
-constexpr double kPollSeconds = 0.5;  // POLL_SECONDS
+constexpr double kPollSeconds = 0.5;
 
-// A string as a JavaScript literal (world_steps.py _js_string).
+// A string as a JavaScript literal.
 std::string JsString(std::string_view value) {
   std::string quoted = "\"";
   for (char c : value) {
@@ -1194,7 +1193,7 @@ Game Game::clearedScenario(const OOHeadlessOptions& options,
                            const Settings& settings) {
   if (!start(options, settings)) return Game();
 
-  // As the windowed step: let the launch settle, then clear the system down
+  // Let the launch settle, then clear the system down
   // to the player, repeating until one clear-then-count sees only the player.
   Game game;
   game.simulate(GameTime{kLaunchSettleSeconds});
@@ -1403,9 +1402,8 @@ std::vector<ShipHandle> Game::spawn(const ShipsWithRole& what) {
     before.insert(entity.get());
   }
 
-  // world_steps.py _spawn: "within K km" measures from the first ship spawned
-  // (debugConsole.__ooLocus there; undefined before any spawn), otherwise
-  // around the player.
+  // "Within K km" measures from the first ship spawned (undefined before any
+  // spawn), otherwise around the player.
   std::string at = "player.ship.position";
   int radius = kSpawnRadiusMetres;
   if (what.withinKm_.has_value()) {
@@ -1462,14 +1460,13 @@ std::vector<ShipHandle> Game::spawn(const ShipsWithRole& what) {
 }
 
 int Game::countWithRole(std::string_view role) {
-  // world_steps.py count_with_role.
   return static_cast<int>(
       eval(std::format("system.countShipsWithRole({})", JsString(role))));
 }
 
 bool Game::engages(std::string_view hunter, std::string_view quarry) {
-  // The expression of the windowed step "within N ticks a ship with role H
-  // engages a ship with role Q".
+  // The scenario step "within N ticks a ship with role H engages a ship with
+  // role Q".
   return eval(std::format(
              "(function(){{ var r = 0;"
              " system.allShips.forEach(function(s){{"
@@ -1481,7 +1478,7 @@ bool Game::engages(std::string_view hunter, std::string_view quarry) {
 }
 
 void Game::simulateAtMost(GameTime span) {
-  // world_steps.py run_simulation: every spawned role except police.
+  // Every spawned role except police.
   std::vector<std::string> watched;
   for (const std::string& role : TheState().spawnedRoles) {
     if (role != "police") watched.push_back(role);

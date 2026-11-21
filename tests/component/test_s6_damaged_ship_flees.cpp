@@ -1,8 +1,6 @@
 /*	tests/component/test_s6_damaged_ship_flees.cpp
-        The headless counterpart of tests/component-py/features/s6_damaged_ship_flees.feature
-   ("A damaged ship flees and range increases (smoke test): Setup runs cleanly and a spawned ship survives the scenario duration"): the same seed, the same
-   spawns and the same assertions, each through the script of its windowed
-   step. Each check carries the line of the feature it ports.
+        Scenario S6 ("A damaged ship flees and range increases (smoke test): Setup runs cleanly and a spawned ship survives the scenario duration").
+   Each check carries the scenario step it checks.
    Run: tests/run.sh component --cpp -k s6_
 */
 

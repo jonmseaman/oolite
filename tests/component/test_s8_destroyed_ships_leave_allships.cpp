@@ -1,8 +1,6 @@
 /*	tests/component/test_s8_destroyed_ships_leave_allships.cpp
-        The headless counterpart of tests/component-py/features/s8_destroyed_ships_leave_allships.feature
-   ("Entity lifetime: Setup with a pirate and police runs cleanly for 900 ticks"): the same seed, the same
-   spawns and the same assertions, each through the script of its windowed
-   step. Each check carries the line of the feature it ports.
+        Scenario S8 ("Entity lifetime: Setup with a pirate and police runs cleanly for 900 ticks").
+   Each check carries the scenario step it checks.
    Run: tests/run.sh component --cpp -k s8_
 */
 

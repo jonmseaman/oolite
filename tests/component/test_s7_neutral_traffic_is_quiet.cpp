@@ -1,8 +1,6 @@
 /*	tests/component/test_s7_neutral_traffic_is_quiet.cpp
-        The headless counterpart of tests/component-py/features/s7_neutral_traffic_is_quiet.feature
-   ("Neutral traffic is quiet: 8 neutral ships run for 900 ticks without incident"): the same seed, the same
-   spawns and the same assertions, each through the script of its windowed
-   step. Each check carries the line of the feature it ports.
+        Scenario S7 ("Neutral traffic is quiet: 8 neutral ships run for 900 ticks without incident").
+   Each check carries the scenario step it checks.
    Run: tests/run.sh component --cpp -k s7_
 */
 

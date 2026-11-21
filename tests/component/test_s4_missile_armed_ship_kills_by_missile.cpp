@@ -1,8 +1,6 @@
 /*	tests/component/test_s4_missile_armed_ship_kills_by_missile.cpp
-        The headless counterpart of tests/component-py/features/s4_missile_armed_ship_kills_by_missile.feature
-   ("Ship-to-ship combat: A missile-armed ship kills by missile (smoke)"): the same seed, the same
-   spawns and the same assertions, each through the script of its windowed
-   step. Each check carries the line of the feature it ports.
+        Scenario S4 ("Ship-to-ship combat: A missile-armed ship kills by missile (smoke)").
+   Each check carries the scenario step it checks.
    Run: tests/run.sh component --cpp -k s4_
 */
 

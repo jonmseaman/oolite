@@ -57,7 +57,7 @@ OO_TEST(the_universe_exists) {
 
 OO_TEST(the_system_is_empty) {
   Game game = Game::current();
-  // The windowed steps' measure: only the player is left among the ships.
+  // The scenarios' measure: only the player is left among the ships.
   OO_CHECK_EQ(game.eval("system.allShips.length"), 1.0);
 }
 

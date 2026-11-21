@@ -1,8 +1,6 @@
 /*	tests/component/test_s3_hostile_spawn_drives_ship_into_attack.cpp
-        The headless counterpart of tests/component-py/features/s3_hostile_spawn_drives_ship_into_attack.feature
-   ("Ship-to-ship combat: A hostile spawn drives a ship into ATTACK; the setup runs cleanly"): the same seed, the same
-   spawns and the same assertions, each through the script of its windowed
-   step. Each check carries the line of the feature it ports.
+        Scenario S3 ("Ship-to-ship combat: A hostile spawn drives a ship into ATTACK; the setup runs cleanly").
+   Each check carries the scenario step it checks.
    Run: tests/run.sh component --cpp -k s3_
 */
 

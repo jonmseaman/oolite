@@ -619,9 +619,7 @@ void GameController::applicationDidFinishLaunching() {
 }
 
 namespace {
-// The save the windowed component tier loads for a scenario
-// (tests/component-py/steps/world_steps.py SCENARIO_SAVE), relative to the
-// application directory.
+// The save a headless scenario loads, relative to the application directory.
 constexpr const char* kHeadlessScenarioSave =
     "Resources/Scenarios/oolite-standard.oolite-save";
 // How much game time a headless launch may take before it is an error.
