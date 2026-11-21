@@ -25,7 +25,7 @@ An RDP disconnect takes the desktop with it.
 
 On Windows the console-driven "headless" launchers are not headless either, because
 `SDL_VIDEODRIVER=offscreen` is deliberately left unset there (MSYS2's Mesa ships no EGL, so the
-offscreen driver cannot create a context - see `tests/component/console.py::_env`). Do not run
+offscreen driver cannot create a context - see `tests/component-py/console.py::_env`). Do not run
 them while this tier is running.
 
 It also needs a built game: by default `oolite-dev/build/meson_test/oolite.app`, overridden

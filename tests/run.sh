@@ -31,7 +31,7 @@ cd "$ROOT"
 BUILD_TYPE=${BUILD_TYPE:-dev}
 VENV=${OO_VENV:-build/.venv-tests}
 REQ_STAMP="$VENV/.requirements-stamp"
-REQ_FILES=(tests/component/requirements.txt tests/gui/requirements.txt)
+REQ_FILES=(tests/component-py/requirements.txt tests/gui/requirements.txt)
 
 find_python() {
     local p
@@ -101,7 +101,7 @@ run_unit() {
 
 run_component_windowed() {
     require_build
-    "$(venv_python)" -m pytest tests/component -x -q "$@"
+    "$(venv_python)" -m pytest tests/component-py -x -q "$@"
 }
 
 # The C++ half. $1: "strict" (a -k that matches no program is an error) or "lenient" (it is

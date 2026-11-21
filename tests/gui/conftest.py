@@ -758,7 +758,7 @@ def assert_splash_screen_is_off(log_text, log_path):
 class GameWindow:
     """One Oolite process, its window, and the input primitives the tests drive it with."""
 
-    # Mesa's software GL, staged beside the binary by the component tier (tests/component/
+    # Mesa's software GL, staged beside the binary by the component tier (tests/component-py/
     # conftest.py) so a headless VM can render offscreen. It is fatal here: with llvmpipe's
     # opengl32.dll in the app directory the game dies during initGL with 0x80070057 and never
     # opens a window. This tier wants the desktop's real driver, so the DLLs are moved aside

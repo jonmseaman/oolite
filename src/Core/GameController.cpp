@@ -620,7 +620,7 @@ void GameController::applicationDidFinishLaunching() {
 
 namespace {
 // The save the windowed component tier loads for a scenario
-// (tests/component/steps/world_steps.py SCENARIO_SAVE), relative to the
+// (tests/component-py/steps/world_steps.py SCENARIO_SAVE), relative to the
 // application directory.
 constexpr const char* kHeadlessScenarioSave =
     "Resources/Scenarios/oolite-standard.oolite-save";

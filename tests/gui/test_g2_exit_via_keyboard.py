@@ -151,7 +151,7 @@ CALIBRATION_PRESSES = SHIP_LIBRARY_ROW - FIRST_SELECTABLE_ROW
 
 # --- the screen witness (G5's instrument) -------------------------------------------------------
 #
-# Protocol constants, spelled as tests/component/console.py and G5 spell them.
+# Protocol constants, spelled as tests/component-py/console.py and G5 spell them.
 PACKET_TYPE_KEY = "packet type"
 MESSAGE_KEY = "message"
 REQUEST_CONNECTION = "Request Connection"
