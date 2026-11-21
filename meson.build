@@ -143,7 +143,7 @@ endif
 # start the real game. Built on every platform, by every flavour but deployment, like the unit
 # tests (the Flatpak leg builds a test-flavour tree of its own to run them).
 if not get_option('deployment_release')
-    subdir('tests/component-cpp')
+    subdir('tests/component')
 endif
 
 # tools/icosmesh generates src/Core/OOPlanetData.{cpp,h}. Plain C++, so on every platform.

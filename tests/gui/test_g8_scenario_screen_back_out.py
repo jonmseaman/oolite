@@ -169,7 +169,7 @@ EXPECTED_EXIT_CONTEXT = "Exit Game selected on start screen"
 
 # --- the screen witness (G5's instrument) -------------------------------------------------------
 #
-# Protocol constants, spelled as tests/component/console.py, G2 and G5 spell them.
+# Protocol constants, spelled as G2 and G5 spell them.
 PACKET_TYPE_KEY = "packet type"
 MESSAGE_KEY = "message"
 REQUEST_CONNECTION = "Request Connection"

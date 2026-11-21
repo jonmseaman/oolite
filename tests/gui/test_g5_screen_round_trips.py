@@ -28,8 +28,7 @@ shiplibrary.plist which is neither enabled by default nor produced by the other 
 is no honest log string for Game Options or the Expansion Manager, so a log-based G5 could only
 ever have been a proxy.
 
-So this file asks the GAME what screen it is on, over the debug console, exactly as the component
-tier does (tests/component/console.py) - ``guiScreen`` is
+So this file asks the GAME what screen it is on, over the debug console - ``guiScreen`` is
 ``PlayerEntityLegacyScriptEngine.m:920`` -> ``OOStringFromGUIScreenID(gui_screen)``, i.e. a direct
 read of the very instance variable each screen's setter assigns.
 
@@ -126,7 +125,7 @@ EXIT_TIMEOUT_SECONDS = 10
 
 # --- the debug-console peek --------------------------------------------------------------------
 #
-# Protocol constants, spelled the same way tests/component/console.py spells them.
+# Protocol constants, as src/Core/Debug/OODebugTCPConsoleProtocol.h spells them.
 PACKET_TYPE_KEY = "packet type"
 MESSAGE_KEY = "message"
 REQUEST_CONNECTION = "Request Connection"
