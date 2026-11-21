@@ -82,8 +82,8 @@ class GameController : public oo::Object {
 
   oo::MouseInteractionMode mouseInteractionMode();
   void setMouseInteractionMode(oo::MouseInteractionMode mode);
-  void setMouseInteractionModeForFlight();  // Chooses mouse control mode
-                                            // appropriately.
+  // Chooses mouse control mode appropriately.
+  void setMouseInteractionModeForFlight();
   void setMouseInteractionModeForUIWithMouseInteraction(bool interaction);
 
   ::MyOpenGLView* gameView();
