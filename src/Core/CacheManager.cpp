@@ -66,8 +66,8 @@ constexpr const char* kCacheKeyCaches = "caches";
 constexpr std::uint64_t kEndianTagValue = 0x0123456789ABCDEFULL;
 constexpr std::uint64_t kFormatVersionValue = 219;
 
-static oo::CacheManager* sSingleton =
-    nullptr;  // +1, never released (the retained singleton)
+// +1, never released (the retained singleton)
+static oo::CacheManager* sSingleton = nullptr;
 
 namespace {
 using CacheEntries = std::map<std::string, oo::PList, std::less<>>;
@@ -128,8 +128,8 @@ oo::CacheManager* oo::CacheManager::sharedCache() {
   // NOTE: assumes single-threaded access.
   if (sSingleton == nullptr) {
     // Recorded before -init's work ran, as +allocWithZone: recorded it.
-    static std::shared_ptr<oo::CacheManager>* sSingletonHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<oo::CacheManager>* sSingletonHolder = nullptr;
     sSingletonHolder = new std::shared_ptr<oo::CacheManager>(
         oo::makeShared<oo::CacheManager>());
     sSingleton = sSingletonHolder->get();
@@ -393,8 +393,8 @@ void oo::CacheManager::write() {
   oo::PList::Dict newCache;
   newCache.emplace(kCacheKeyVersion, oo::PList(*ooliteVersion));
   newCache.emplace(kCacheKeyFormatVersion,
-                   oo::PList::unsignedInteger(
-                       kFormatVersionValue));  // was +numberWithUnsignedInt:
+                   // was +numberWithUnsignedInt:
+                   oo::PList::unsignedInteger(kFormatVersionValue));
   newCache.emplace(kCacheKeyEndianTag,
                    oo::PList(oo::Data(&endianTagValue, sizeof endianTagValue)));
   newCache.emplace(kCacheKeyCaches, std::move(pListRep));

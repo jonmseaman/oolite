@@ -74,11 +74,12 @@ class SoundSourcePool : public oo::Object {
                         Vector position);  // expiryTime:0.1 +/- 0.5
   void playSoundWithKey(const std::string& key,
                         Vector position);  // expiryTime:0.1 +/- 0.5
+  // priority: 1.0, expiryTime:0.1 +/- 0.5
+  void playSoundWithKey(const std::string& key);
   void playSoundWithKey(
-      const std::string& key);  // priority: 1.0, expiryTime:0.1 +/- 0.5
-  void playSoundWithKey(const std::string& key,
-                        bool overlap);  // if overlap == NO it waits for key to
-                                        // finish before playing key again
+      const std::string& key,
+      // if overlap == NO it waits for key to finish before playing key again
+      bool overlap);
   void playSoundWithKey(const std::string& key, bool overlap, Vector position);
 
  private:
@@ -91,8 +92,8 @@ class SoundSourcePool : public oo::Object {
   uint8_t _reserved = {};
   TimeDelta _minRepeat = {};
   TimeAbsolute _nextRepeat = {};
-  std::optional<std::string> _lastKey;  // nullopt until a repeat-limited sound
-                                        // plays
+  // nullopt until a repeat-limited sound plays
+  std::optional<std::string> _lastKey;
 };
 
 }  // namespace oo

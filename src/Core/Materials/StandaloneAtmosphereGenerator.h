@@ -101,8 +101,8 @@ class StandaloneAtmosphereGenerator : public TextureGenerator {
   void loadTexture() override;
 
  private:
-  void dumpNoiseBuffer(
-      float* noise);  // defined where the .cpp's DEBUG_DUMP_RAW is set
+  // defined where the .cpp's DEBUG_DUMP_RAW is set
+  void dumpNoiseBuffer(float* noise);
 
   StandaloneAtmosphereGeneratorInfo _info = {};
   unsigned _planetScale = {};

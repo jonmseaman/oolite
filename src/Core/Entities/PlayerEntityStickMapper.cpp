@@ -394,8 +394,8 @@ void PlayerEntity::checkCustomEquipButtons(const oo::PList& stickFn, int idx) {
     if (i != idx) {
       const oo::PList original =
           customEquipActivation[static_cast<std::size_t>(i)];
-      oo::PList& custEquip = customEquipActivation[static_cast<std::size_t>(
-          i)];  // edited in place
+      // edited in place
+      oo::PList& custEquip = customEquipActivation[static_cast<std::size_t>(i)];
       oo::PList::Dict* custEquipDict = custEquip.getIf<oo::PList::Dict>();
       const oo::PList* bf = original.find(activateKey);
       if (IntegerIn(bf, stickNumberKey) ==
@@ -900,8 +900,8 @@ oo::PList PlayerEntity::makeStickGuiDict(const std::string& what, int allowable,
   const std::u16string units = oo::utf8ToUtf16(what);
   guiDict[std::string(KEY_GUIDESC)] =
       units.size() > 50 ? oo::utf16ToUtf8(units.substr(0, 28)) + "..." : what;
-  guiDict[std::string(KEY_ALLOWABLE)] =
-      oo::PList::signedInteger(allowable);  // +numberWithInt:
+  // +numberWithInt:
+  guiDict[std::string(KEY_ALLOWABLE)] = oo::PList::signedInteger(allowable);
   if (axisfn >= 0)
     guiDict[std::string(KEY_AXISFN)] = oo::PList::signedInteger(axisfn);
   if (butfn >= 0)

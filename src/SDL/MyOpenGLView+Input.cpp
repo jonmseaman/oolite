@@ -228,8 +228,8 @@ void MyOpenGLView::pollControls() {
       static_cast<float>(viewSize.width * _mouseVirtualStickSensitivityFactor);
   float mouseVirtualStickSensitivityY =
       static_cast<float>(viewSize.height * _mouseVirtualStickSensitivityFactor);
-  double timeNow =
-      oo::date::monotonicSeconds();  // same clock as MyOpenGLView.cpp's -init
+  // same clock as MyOpenGLView.cpp's -init
+  double timeNow = oo::date::monotonicSeconds();
   Uint16 key_id;
   SDL_Scancode scan_code;
   float inDelta;
@@ -246,8 +246,8 @@ void MyOpenGLView::pollControls() {
       case SDL_EVENT_JOYSTICK_HAT_MOTION:
         static_cast<oo::SDLJoystickManager*>(
             oo::JoystickManager::sharedStickHandler())
-            ->handleSDLEvent(
-                &event);  // the registered SDL handler (was a C cast)
+            // the registered SDL handler (was a C cast)
+            ->handleSDLEvent(&event);
         break;
 
       case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -266,8 +266,9 @@ void MyOpenGLView::pollControls() {
              recenter the pointer physically on screen. This goes together with
              a mouse motion event, so we use mouseWarped to simply ignore
              handling of motion events in this case. - Nikos 20110721
+            // Will set mouseWarped to YES
             */
-            resetMouse();  // Will set mouseWarped to YES
+            resetMouse();
             break;
             // mousewheel stuff
         }
@@ -649,11 +650,11 @@ void MyOpenGLView::pollControls() {
           // ctrl changes alpha characters to control codes (1-26)
           if (ctrl && key_id >= 1 && key_id <= 26) {
             if (shift)
-              key_id += 64;  // A-Z is from 65, offset by -1 for the scancode
-                             // start point
+              // A-Z is from 65, offset by -1 for the scancode start point
+              key_id += 64;
             else
-              key_id += 96;  // a-z is from 97, offset by -1 for the scancode
-                             // start point
+              // a-z is from 97, offset by -1 for the scancode start point
+              key_id += 96;
           } else {
             // SDL3 - the key_id should contain the correct unicode value, so we
             // shouldn't need to run the key mapping

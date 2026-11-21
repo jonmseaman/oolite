@@ -126,7 +126,8 @@ static const oo::OpenGLState
              /* FIXME: in shader mode, these should not be StateFlag::kMaybe,
               * but false for 0 and true for 1. On the other hand, in shader
               * mode these settings are supposed to be irrelevant. */
-             .LIGHT1 = StateFlag::kMaybe,  // FIXME: see above
+             // FIXME: see above
+             .LIGHT1 = StateFlag::kMaybe,
              .LIGHT2 = StateFlag::kFalse,
              .LIGHT3 = StateFlag::kFalse,
              .LIGHT4 = StateFlag::kFalse,
@@ -312,10 +313,9 @@ static oo::OpenGLStateID sCurrentStateID = oo::OpenGLStateID::kInternalUseOnly;
 namespace {
 static void SwitchOpenGLStateInternal(
     const oo::OpenGLState* sourceState,
-    const oo::OpenGLState*
-        targetState);  // no NONNULL_FUNC: the body asserts its arguments are
-                       // non-null, which GCC drops as always true under the
-                       // attribute (-Wnonnull-compare)
+    // no NONNULL_FUNC: the body asserts its arguments are non-null, which GCC
+    // drops as always true under the attribute (-Wnonnull-compare)
+    const oo::OpenGLState* targetState);
 }  // namespace
 
 /*	Accessors
@@ -694,9 +694,9 @@ static_assert(AggregateFieldCount<oo::OpenGLState>() ==
  */
 
 namespace {
-constexpr const char* kLogOpenGLVerifyDump =
-    "rendering.opengl.state";  // an OO_LOG message class
-}
+// an OO_LOG message class
+constexpr const char* kLogOpenGLVerifyDump = "rendering.opengl.state";
+}  // namespace
 
 /*
         VerifyOpenGLStateInternal(caller, nominalCaller, line)
@@ -722,10 +722,9 @@ static void GetCurrentOpenGLState(oo::OpenGLState* state) NONNULL_FUNC;
 namespace {
 static bool StatesEqual(
     const oo::OpenGLState* a,
-    const oo::OpenGLState*
-        b);  // no NONNULL_FUNC: the body asserts its arguments are non-null,
-             // which GCC drops as always true under the attribute
-             // (-Wnonnull-compare)
+    // no NONNULL_FUNC: the body asserts its arguments are non-null, which GCC
+    // drops as always true under the attribute (-Wnonnull-compare)
+    const oo::OpenGLState* b);
 }  // namespace
 
 #if OO_CHECK_GL_HEAVY

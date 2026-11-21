@@ -38,8 +38,8 @@ MA 02110-1301, USA.
 #include "Entity.h"
 #include "OOJavaScriptEngine.h"
 
-class ShipEntity;  // Entity extensions. The JS object's functions take the C++
-                   // entity (Entity's
+// Entity extensions. The JS object's functions take the C++ entity (Entity's
+class ShipEntity;
 // JS glue members call them; the engine asks those members).
 bool EntityJSIsVisibleToScripts();
 std::optional<std::string> EntityJSClassName();

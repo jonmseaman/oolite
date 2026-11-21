@@ -393,8 +393,9 @@ oo::PList OOJSDictionaryFromStringTable(JSContext* context, JSValueConst value);
    JS Ships. OOJSRegisterSubclass() records such a relationship, and
         OOJSIsSubclass() tests whether putativeSubclass is equal to superclass
         or a registered subclass of it, recursively.
+// QuickJS's limit.
 */
-inline constexpr JSClassID kOOJSMaxClassID = 1 << 16;  // QuickJS's limit.
+inline constexpr JSClassID kOOJSMaxClassID = 1 << 16;
 
 JSClassID OOJSRegisterClass(JSClassID* ioClassID, const JSClassDef* classDef);
 
@@ -527,8 +528,8 @@ class OOJSValue : public oo::PListForeign {
   void deleteJSValue();
 
   JSValue _val = JS_UNDEFINED;
-  const void* _resetSender = {};  // the engine, the sender of its reset
-                                  // notifications, while _val is held
+  // the engine, the sender of its reset notifications, while _val is held
+  const void* _resetSender = {};
 };
 
 // A held value as a PList::Object node ; null -> null PList.

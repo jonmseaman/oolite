@@ -47,8 +47,8 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 
 class ShipEntity;
-class Entity;  // the members are held as weak references to the ships' C++
-               // parts
+// the members are held as weak references to the ships' C++ parts
+class Entity;
 
 namespace oo {
 
@@ -118,9 +118,9 @@ class ShipGroup : public oo::PListForeign, public ::OOJSPrivateObject {
   std::vector<std::weak_ptr<Entity>> _members = {};
   std::weak_ptr<Entity> _leader = {};
   std::optional<std::string> _name = {};
-  JSValue _jsSelf =
-      JS_UNDEFINED;  // The JS ShipGroup object proxy for this group; not an
-                     // object until created (test with JS_IsObject()).
+  // The JS ShipGroup object proxy for this group; not an object until created
+  // (test with JS_IsObject()).
+  JSValue _jsSelf = JS_UNDEFINED;
 };
 
 /*	OOShipGroupCursor: steps through a group's live members in its internal

@@ -119,10 +119,11 @@ std::string StringFromLegalStatusReason(oo::LegalStatusReason reason);
 // identifier string.
 std::string CommodityDisplayNameForSymbolicName(
     const std::string& symbolicName);
+// an array
 std::string CommodityDisplayNameForCommodityArray(
-    const oo::PList& commodityDefinition);  // an array
-std::optional<std::string> DisplayStringForMassUnit(
-    oo::MassUnit unit);  // nullopt: no description (was nil)
+    const oo::PList& commodityDefinition);
+// nullopt: no description (was nil)
+std::optional<std::string> DisplayStringForMassUnit(oo::MassUnit unit);
 std::optional<std::string> DisplayStringForMassUnitForCommodity(
     const std::string& commodity);
 

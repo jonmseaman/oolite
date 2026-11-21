@@ -139,23 +139,23 @@ inline constexpr int OO_POSTFX_GRAYSCALE = OO_POSTFX_CLOAK + 1;
 inline constexpr int OO_POSTFX_OLDMOVIE = OO_POSTFX_GRAYSCALE + 1;
 inline constexpr int OO_POSTFX_CRT = OO_POSTFX_OLDMOVIE + 1;
 inline constexpr int OO_POSTFX_CRTBADSIGNAL = OO_POSTFX_CRT + 1;
-inline constexpr int OO_POSTFX_ENDOFLIST =
-    OO_POSTFX_CRTBADSIGNAL + 1;  // keep this for last
+// keep this for last
+inline constexpr int OO_POSTFX_ENDOFLIST = OO_POSTFX_CRTBADSIGNAL + 1;
 
 inline constexpr auto SHADERS_MIN = oo::ShaderSetting::kOff;
 
 inline constexpr int MAX_MESSAGES = 5;
 
-inline constexpr int PROXIMITY_WARN_DISTANCE =
-    4;  // Eric 2010-10-17: old value was 20.0
+// Eric 2010-10-17: old value was 20.0
+inline constexpr int PROXIMITY_WARN_DISTANCE = 4;
 #define PROXIMITY_WARN_DISTANCE2 \
   (PROXIMITY_WARN_DISTANCE * PROXIMITY_WARN_DISTANCE)
 inline constexpr double PROXIMITY_AVOID_DISTANCE_FACTOR = 10.0;
-#define SAFE_ADDITION_FACTOR2 \
-  800  // Eric 2010-10-17: used to be "2 * PROXIMITY_WARN_DISTANCE2"
+// Eric 2010-10-17: used to be "2 * PROXIMITY_WARN_DISTANCE2"
+#define SAFE_ADDITION_FACTOR2 800
 
-#define SUN_SKIM_RADIUS_FACTOR \
-  1.15470053838  // 2 sqrt(3) / 3. Why? I have no idea. -- Ahruman 2009-10-04
+// 2 sqrt(3) / 3. Why? I have no idea. -- Ahruman 2009-10-04
+#define SUN_SKIM_RADIUS_FACTOR 1.15470053838
 inline constexpr double SUN_SPARKS_RADIUS_FACTOR = 2.0;
 
 inline constexpr std::string_view KEY_TECHLEVEL = "techlevel";
@@ -307,9 +307,9 @@ class Universe : public oo::Object {
 
   // Formerly @public.
   // use a sorted list for drawing and other activities
-  Entity* sortedEntities[UNIVERSE_MAX_ENTITIES + 1] =
-      {};  // One extra for padding; see -doRemoveEntity:. The C++ parts,
-           // borrowed: entities owns their objects.
+  // One extra for padding; see -doRemoveEntity:. The C++ parts, borrowed:
+  // entities owns their objects.
+  Entity* sortedEntities[UNIVERSE_MAX_ENTITIES + 1] = {};
   unsigned n_entities = 0;
 
   int cursor_row = 0;
@@ -341,18 +341,17 @@ class Universe : public oo::Object {
 
   std::weak_ptr<Entity> _firstBeacon,  // the beacons' C++ parts
       _lastBeacon;
-  std::map<std::string, oo::EntityHold, std::less<>>
-      waypoints;  // by key: the waypoints (their objects held)
+  // by key: the waypoints (their objects held)
+  std::map<std::string, oo::EntityHold, std::less<>> waypoints;
 
   GLfloat skyClearColor[4] = {};
 
   std::optional<std::string> currentMessage;
   oo::TimeAbsolute messageRepeatTime = 0;
-  oo::TimeAbsolute countdown_messageRepeatTime =
-      0;  // Getafix(4/Aug/2010) - Quickfix countdown messages colliding with
-          // weapon overheat messages.
-          //                       For proper handling of message dispatching,
-          //                       code refactoring is needed.
+  // Getafix(4/Aug/2010) - Quickfix countdown messages colliding with weapon
+  // overheat messages. For proper handling of message dispatching, code
+  // refactoring is needed.
+  oo::TimeAbsolute countdown_messageRepeatTime = 0;
   std::shared_ptr<GuiDisplayGen> gui;
   std::shared_ptr<GuiDisplayGen> message_gui;
   std::shared_ptr<GuiDisplayGen> comm_log_gui;
@@ -398,43 +397,44 @@ class Universe : public oo::Object {
   std::shared_ptr<oo::Commodities> commodities;
   std::shared_ptr<oo::CommodityMarket> commodityMarket;
 
-  oo::PList _descriptions;  // holds descriptive text for lots of stuff, loaded
-                            // at initialisation (a dict; null until loaded)
-  unsigned _descriptionsGeneration =
-      0;  // changes whenever _descriptions is assigned (the bridged
-          // -descriptions caches per generation)
-  oo::PList customSounds;  // holds descriptive audio for lots of stuff, loaded
-                           // at initialisation
-  oo::PList characters;    // holds descriptons of characters
-  oo::PList _scenarios;    // game start scenarios (an array)
+  // holds descriptive text for lots of stuff, loaded at initialisation (a dict;
+  // null until loaded)
+  oo::PList _descriptions;
+  // changes whenever _descriptions is assigned (the bridged -descriptions
+  // caches per generation)
+  unsigned _descriptionsGeneration = 0;
+  // holds descriptive audio for lots of stuff, loaded at initialisation
+  oo::PList customSounds;
+  oo::PList characters;      // holds descriptons of characters
+  oo::PList _scenarios;      // game start scenarios (an array)
   oo::PList globalSettings;  // miscellaneous global game settings
   std::shared_ptr<oo::SystemDescriptionManager>
-      systemManager;        // planetinfo data manager
-  oo::PList missiontext;    // holds descriptive text for missions, loaded at
-                            // initialisation
-  oo::PList equipmentData;  // holds data on available equipment, loaded at
-                            // initialisation (an array)
+      systemManager;  // planetinfo data manager
+  // holds descriptive text for missions, loaded at initialisation
+  oo::PList missiontext;
+  // holds data on available equipment, loaded at initialisation (an array)
+  oo::PList equipmentData;
   oo::PList equipmentDataOutfitting;
   //	std::set<std::string>	pirateVictimRoles;		// Roles listed
   // in pirateVictimRoles.plist.
-  oo::PList roleCategories;  // Categories for roles from role-categories.plist,
-                             // extending the old pirate-victim-roles.plist
-                             // (category -> array of roles)
-  oo::PList autoAIMap;       // Default AIs for roles from autoAImap.plist.
-  oo::PList screenBackgrounds;  // holds filenames for various screens
-                                // backgrounds, loaded at initialisation
+  // Categories for roles from role-categories.plist, extending the old
+  // pirate-victim-roles.plist (category -> array of roles)
+  oo::PList roleCategories;
+  oo::PList autoAIMap;  // Default AIs for roles from autoAImap.plist.
+  // holds filenames for various screens backgrounds, loaded at initialisation
+  oo::PList screenBackgrounds;
   oo::PList explosionSettings;  // explosion settings from explosions.plist
 
-  std::map<std::string, oo::EntityHold, std::less<>>
-      cargoPods;  // template cargo pods, by commodity key
+  // template cargo pods, by commodity key
+  std::map<std::string, oo::EntityHold, std::less<>> cargoPods;
 
   oo::GalaxyID galaxyID = 0;
   oo::SystemID systemID = 0;
   oo::SystemID targetSystemID = 0;
 
   std::optional<std::string>
-      system_names[256];  // hold pregenerated universe info (nullopt where the
-                          // name was nil)
+      // hold pregenerated universe info (nullopt where the name was nil)
+      system_names[256];
   bool system_found[256] = {};  // holds matches for input strings
 
   int breakPatternCounter = 0;
@@ -446,20 +446,21 @@ class Universe : public oo::Object {
   ::oo::SunEntity* cachedSun = nullptr;
   std::vector<oo::EntityHold> allPlanets;  // the planets (their objects held)
   std::vector<oo::EntityHold>
-      allStations;  // the stations (their objects held), each once, in the
-                    // order added
+      // the stations (their objects held), each once, in the order added
+      allStations;
 
   float ambientLightLevel = 0;
 
   oo::PList
-      populatorSettings;  // key -> populator block (a mixed configuration: each
-                          // block's callbackObj is an Object node)
+      // key -> populator block (a mixed configuration: each block's callbackObj
+      // is an Object node)
+      populatorSettings;
   oo::TimeDelta next_repopulation = 0;
   std::optional<std::string> system_repopulator;
   bool deterministic_population = false;
 
-  std::optional<std::vector<oo::SystemID>>
-      closeSystems;  // the current system's neighbours; nullopt until cached
+  // the current system's neighbours; nullopt until cached
+  std::optional<std::vector<oo::SystemID>> closeSystems;
 
   std::string useAddOns;
   oo::HeadlessOptions _options;  // as made; the windowed game's by default
@@ -807,8 +808,8 @@ class Universe : public oo::Object {
                                oo::TimeDelta count);
   void addDelayedMessage(const std::optional<std::string>& text,
                          oo::TimeDelta count, double delay);
-  void addDelayedMessage(
-      const oo::PList& message);  // the deferred call's delivery
+  // the deferred call's delivery
+  void addDelayedMessage(const oo::PList& message);
   // addMessage(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
   void speakWithSubstitutions(const std::optional<std::string>& text);

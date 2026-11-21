@@ -139,8 +139,8 @@ constexpr std::string_view kActionTempPrefix = kActionsTempPrefix;
 
 namespace {
 std::optional<std::string>
-    sMissionStringValue;  // the variable a mission/local condition reads
-                          // (nullopt: unset)
+    // the variable a mission/local condition reads (nullopt: unset)
+    sMissionStringValue;
 }  // namespace
 
 namespace {
@@ -367,8 +367,8 @@ void PerformActionStatment(const oo::PList& statement, Entity* target) {
 }
 
 bool TestScriptConditions(const oo::PList& conditions) {
-  PlayerEntity* player = PLAYER;  // no player: every condition failed, as a
-                                  // message to nil answered
+  // no player: every condition failed, as a message to nil answered
+  PlayerEntity* player = PLAYER;
 
   if (const oo::PList::Array* conditionArray =
           conditions.getIf<oo::PList::Array>()) {
@@ -490,8 +490,8 @@ void PlayerEntity::runScriptActions(
   std::optional<std::string> oldMissionKey;
 
   {
-    oo::AutoreleaseScope pool;  // FIXME: does this actually make sense in the
-                                // context of non-missions?
+    // FIXME: does this actually make sense in the context of non-missions?
+    oo::AutoreleaseScope pool;
     oldMissionKey = sCurrentMissionKey;
     sCurrentMissionKey = contextName;
 
@@ -1190,8 +1190,8 @@ oo::PList PlayerEntity::dockedStationName_string() {
 
 oo::PList PlayerEntity::systemGovernment_string() {
   // called by name
-  int government = IntValueOf(
-      systemGovernment_number());  // 0 .. 7 (0 anarchic .. 7 most stable)
+  // 0 .. 7 (0 anarchic .. 7 most stable)
+  int government = IntValueOf(systemGovernment_number());
   return oo::PList(oo::DisplayStringFromGovernmentID(
                        static_cast<oo::GovernmentID>(government))
                        .value_or("UNKNOWN"));
@@ -1204,9 +1204,8 @@ oo::PList PlayerEntity::systemGovernment_number() {
 
 oo::PList PlayerEntity::systemEconomy_string() {
   // called by name
-  int economy =
-      IntValueOf(systemEconomy_number());  // 0 .. 7 (0 rich industrial .. 7
-                                           // poor agricultural)
+  // 0 .. 7 (0 rich industrial .. 7 poor agricultural)
+  int economy = IntValueOf(systemEconomy_number());
   return oo::PList(
       oo::DisplayStringFromEconomyID(static_cast<oo::EconomyID>(economy))
           .value_or("UNKNOWN"));
@@ -2115,16 +2114,16 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
   }
 
   gui->setText(std::string(),
-               static_cast<oo::GUIRow>(
-                   end_row));  // clears out the 'Press spacebar' message
-  gui->setKey(std::string(),
-              static_cast<oo::GUIRow>(
-                  end_row));  // clears the key to enable pollDemoControls to
-                              // check for a selection
+               // clears out the 'Press spacebar' message
+               static_cast<oo::GUIRow>(end_row));
+  gui->setKey(
+      std::string(),
+      // clears the key to enable pollDemoControls to check for a selection
+      static_cast<oo::GUIRow>(end_row));
   gui->setSelectableRange(NSMakeRange(0, 0));  // clears the selectable range
   if (UNIVERSE != nullptr)
-    UNIVERSE->enterGUIViewModeWithMouseInteraction(
-        true);  // enables mouse selection of the choices list items
+    // enables mouse selection of the choices list items
+    UNIVERSE->enterGUIViewModeWithMouseInteraction(true);
 
   oo::GUIRow choicesRow = static_cast<oo::GUIRow>(
       (end_row + 1) - static_cast<std::size_t>(keysCount));
@@ -2331,9 +2330,8 @@ void PlayerEntity::launchFromStation() {
     if (UNIVERSE != nullptr) UNIVERSE->setAutoSaveNow(true);
   }
   if (status() == oo::EntityStatus::kDocking)
-    setStatus(
-        oo::EntityStatus::kDocked);  // needed here to prevent the normal
-                                     // update from continuing with docking.
+    // needed here to prevent the normal update from continuing with docking.
+    setStatus(oo::EntityStatus::kDocked);
   leaveDock(dockedStation());
 }
 
@@ -2353,27 +2351,28 @@ void PlayerEntity::blowUpStation() {
 void PlayerEntity::sendAllShipsAway() {
   if (!UNIVERSE) return;
   int ent_count = static_cast<int>(UNIVERSE->n_entities);
-  Entity** uni_entities =
-      UNIVERSE->sortedEntities;  // grab the public sorted list
+  // grab the public sorted list
+  Entity** uni_entities = UNIVERSE->sortedEntities;
   std::vector<Entity*> my_entities(static_cast<std::size_t>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   int i;
   for (i = 0; i < ent_count; i++)
+    // retained
     my_entities[static_cast<std::size_t>(i)] =
-        oo::HoldIn(my_holds, uni_entities[i]);  //	retained
+        oo::HoldIn(my_holds, uni_entities[i]);
 
   for (i = 1; i < ent_count; i++) {
     Entity* e1 = my_entities[static_cast<std::size_t>(i)];
     if (oo::EntityIsShip(e1)) {
       ::ShipEntity* se1 = oo::ToShip(e1);
       oo::ScanClass e_class = e1->getScanClass();  // virtual
+      // exclude only stations, not carriers.
       if (((e_class == oo::ScanClass::kNeutral) ||
            (e_class == oo::ScanClass::kPolice) ||
            (e_class == oo::ScanClass::kMilitary) ||
            (e_class == oo::ScanClass::kThargoid)) &&
           !((se1 != nullptr ? se1->getIsStation() : false) &&
-            (se1 != nullptr ? se1->getMaxFlightSpeed() : 0.0f) ==
-                0) &&  // exclude only stations, not carriers.
+            (se1 != nullptr ? se1->getMaxFlightSpeed() : 0.0f) == 0) &&
           (se1 != nullptr ? se1->hasHyperspaceMotor() : false)) {
         // exclude non jumping ships. Escorts will
         // still be able to follow a mother.
@@ -2384,9 +2383,8 @@ void PlayerEntity::sendAllShipsAway() {
               static_cast<oo::FuelQuantity>(PLAYER_MAX_FUEL),
               (se1 != nullptr ? se1->fuelCapacity() : oo::FuelQuantity{})));
         if (se1 != nullptr)
-          se1->setAITo(
-              "exitingTraderAI.plist");  // lets them return to their previous
-                                         // state after the jump
+          // lets them return to their previous state after the jump
+          se1->setAITo("exitingTraderAI.plist");
         if (se1AI != nullptr) se1AI->setState("EXIT_SYSTEM");
         // The following should prevent all ships leaving at once (freezes
         // oolite on slower machines)
@@ -2395,9 +2393,9 @@ void PlayerEntity::sendAllShipsAway() {
               (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) + 3 +
               (ranrot_rand() & 15));
         if (se1 != nullptr)
-          se1->setPrimaryRole(
-              "oolite-none");  // prevents new ship from appearing at witchpoint
-                               // when this one leaves!
+          // prevents new ship from appearing at witchpoint when this one
+          // leaves!
+          se1->setPrimaryRole("oolite-none");
       }
     }
   }
@@ -2802,8 +2800,8 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
 
   const std::vector<std::string> i_info = oo::str::tokens(item);
   if (i_info.empty())
-    return false;  // (nil returned NO; an all-blank string raised on
-                   // -objectAtIndex:0)
+    // (nil returned NO; an all-blank string raised on -objectAtIndex:0)
+    return false;
   const std::string i_key = oo::str::lowercase(i_info[0]);
 
   // ("%@" of the token array: the same description)
@@ -2885,13 +2883,13 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     if (ship != nullptr) ship->setOrientation(model_q);
     if (ship != nullptr) ship->setPosition(vectorToHPVector(model_p0));
     if (UNIVERSE != nullptr)
-      UNIVERSE->setMainLightPosition(
-          Vector{DEMO_LIGHT_POSITION});  // set light origin
+      // set light origin
+      UNIVERSE->setMainLightPosition(Vector{DEMO_LIGHT_POSITION});
     if (ship != nullptr) ship->setScanClass(oo::ScanClass::kNoDraw);
     if (ship != nullptr) ship->switchAITo("nullAI.plist");
     if (UNIVERSE != nullptr)
-      UNIVERSE->addEntity(
-          ship.get());  // OOEntityStatus::kInFlight, AI state GLOBAL
+      // OOEntityStatus::kInFlight, AI state GLOBAL
+      UNIVERSE->addEntity(ship.get());
     if (ship != nullptr) ship->setStatus(oo::EntityStatus::kCockpitDisplay);
     if (ship != nullptr) ship->setRoll(0.0);
     if (ship != nullptr) ship->setPitch(0.0);
@@ -2934,8 +2932,8 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     if (doppelganger != nullptr)
       doppelganger->setPosition(vectorToHPVector(model_p0));
     if (UNIVERSE != nullptr)
-      UNIVERSE->setMainLightPosition(
-          Vector{DEMO_LIGHT_POSITION});  // set light origin
+      // set light origin
+      UNIVERSE->setMainLightPosition(Vector{DEMO_LIGHT_POSITION});
     if (doppelganger != nullptr)
       doppelganger->setScanClass(oo::ScanClass::kNoDraw);
     if (doppelganger != nullptr) doppelganger->switchAITo("nullAI.plist");

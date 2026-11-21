@@ -77,14 +77,15 @@ namespace oo {
 Vector RandomUnitVector();
 Vector VectorRandomSpatial(
     Scalar
-        maxLength);  // Random vector uniformly distributed in radius-maxLength
-                     // sphere. (Longer vectors are more common.)
+        // Random vector uniformly distributed in radius-maxLength sphere.
+        // (Longer vectors are more common.)
+        maxLength);
 Vector VectorRandomRadial(Scalar maxLength);
 
 }  // namespace oo
-   // Random vector with uniform distribution of
-   // direction and radius in radius-maxLength sphere.
-   // (Causes clustering at centre.)
+
+// Random vector with uniform distribution of direction and radius in
+// radius-maxLength sphere. (Causes clustering at centre.)
 
 // only needed in high-precision forms so far
 // Vector OORandomPositionInCylinder(Vector centre1, OOScalar exclusion1, Vector

@@ -141,8 +141,9 @@ constexpr std::string_view kLogUniversePopulateWitchspace =
 
 }  // namespace oo
 
-#ifndef NDEBUG  // read only by the #ifndef NDEBUG list checks below (unused,
-                // and so a warning, in deployment builds)
+// read only by the #ifndef NDEBUG list checks below (unused, and so a warning,
+// in deployment builds)
+#ifndef NDEBUG
 namespace oo {
 
 constexpr std::string_view kLogEntityVerificationError =
@@ -536,8 +537,8 @@ static bool demo_light_on = false;
 static GLfloat sun_off[4] = {0.0, 0.0, 0.0, 1.0};
 static GLfloat demo_light_position[4] = {DEMO_LIGHT_POSITION, 1.0};
 
-constexpr float DOCKED_AMBIENT_LEVEL =
-    0.2f;  // Was 0.05, 'temporarily' set to 0.2.
+// Was 0.05, 'temporarily' set to 0.2.
+constexpr float DOCKED_AMBIENT_LEVEL = 0.2f;
 constexpr float DOCKED_ILLUM_LEVEL = 0.7f;
 static GLfloat docked_light_ambient[4] = {
     DOCKED_AMBIENT_LEVEL, DOCKED_AMBIENT_LEVEL, DOCKED_AMBIENT_LEVEL, 1.0f};
@@ -627,15 +628,14 @@ std::vector<std::string> FieldsUpToNil(
 }
 
 bool IsCandidateMainStationPredicate(Entity* entity, void* /*parameter*/) {
-  return entity->getIsStation() &&
-         !entity->isExplicitlyNotMainStation;  // [entity isStation]
+  // [entity isStation]
+  return entity->getIsStation() && !entity->isExplicitlyNotMainStation;
 }
 
 bool IsFriendlyStationPredicate(Entity* entity, void* parameter) {
+  // the C++ entity // [entity isStation], -isHostileTo:
   return entity->getIsStation() &&
-         !oo::ToShip(entity)->isHostileTo(static_cast<Entity*>(
-             parameter));  // the C++ entity //
-                           // [entity isStation], -isHostileTo:
+         !oo::ToShip(entity)->isHostileTo(static_cast<Entity*>(parameter));
 }
 
 }  // namespace
@@ -778,9 +778,8 @@ static bool MaintainLinkedLists(Universe* uni) {
 #endif
         checkEnt = uni->z_list_start;
         OOCAssert(checkEnt != nullptr,
-                  "Expected z-list to be non-empty.");  // Previously an
-                                                        // implicit assumption.
-                                                        // -- Ahruman 2011-01-25
+                  // Previously an implicit assumption. -- Ahruman 2011-01-25
+                  "Expected z-list to be non-empty.");
         checkEnt->z_previous = nullptr;
         while (checkEnt->z_next) {
           last = checkEnt;
@@ -796,8 +795,8 @@ static bool MaintainLinkedLists(Universe* uni) {
     OO_LOG(oo::kLogEntityVerificationRebuild, "{}",
            "Rebuilding all linked lists from scratch");
 #endif
-    const std::vector<oo::EntityHold> allEntities =
-        uni->entities;  // a snapshot, as the enumeration was
+    // a snapshot, as the enumeration was
+    const std::vector<oo::EntityHold> allEntities = uni->entities;
     uni->x_list_start = nullptr;
     uni->y_list_start = nullptr;
     uni->z_list_start = nullptr;
@@ -833,8 +832,8 @@ std::optional<std::string> OptionalStringAt(
     std::size_t index);  // defined with the configuration readers below
 std::optional<std::string> OptionalStringIn(const oo::PList& dict,
                                             std::string_view key);
-std::string ExpandKey(
-    const std::string& key);  // defined with the shipyard helpers below
+// defined with the shipyard helpers below
+std::string ExpandKey(const std::string& key);
 
 // Both present and equal.
 bool SameMessage(const std::optional<std::string>& current,
@@ -1228,8 +1227,8 @@ std::string LookUpPluralDescriptionPRIV(const std::string& key,
   }
 
   if (conditions == nullptr) {
-    if (!tmp.has_value())  // this should mean that descriptions.plist is
-                           // from 1.73 or above.
+    // this should mean that descriptions.plist is from 1.73 or above.
+    if (!tmp.has_value())
       return LookUpDescriptionPRIV(
           std::format("{}%{}", key, static_cast<int>(count != 1)));
     // still using an older descriptions.plist
@@ -1372,8 +1371,8 @@ void Universe::carryPlayerOn(::StationEntity* /*carrier */,
                         "PLAYER WITCHSPACE");
 
   if (player != nullptr)
-    player->setRandom_factor(
-        (ranrot_rand() & 255));  // random factor for market values is reset
+    // random factor for market values is reset
+    player->setRandom_factor((ranrot_rand() & 255));
 
   // misjump on wormhole sets correct travel time if needed
   if (player != nullptr)
@@ -1450,11 +1449,12 @@ void Universe::setUpUniverseFromStation() {
     oo::SystemID sys = findSystemNumberAtCoords(
         coords, (player != nullptr ? player->galaxyNumber() : oo::GalaxyID{}),
         true);
-    bool interstel = (dockedStation != nullptr
-                          ? dockedStation->getInterstellarUndockingAllowed()
-                          : false);  // && (s_seed.d != coords.x || s_seed.b !=
-                                     // coords.y); - Nikos 20110623: Do we
-                                     // really need the commented out check?
+    bool interstel =
+        (dockedStation != nullptr
+             ? dockedStation->getInterstellarUndockingAllowed()
+             // && (s_seed.d != coords.x || s_seed.b != coords.y); - Nikos
+             // 20110623: Do we really need the commented out check?
+             : false);
     if (player != nullptr)
       player->setPreviousSystemID(
           (player != nullptr ? player->currentSystemID() : 0));
@@ -1477,13 +1477,14 @@ void Universe::setUpUniverseFromStation() {
       }
     } else {
       if (dockedStation == nullptr)
-        removeAllEntitiesExceptPlayer();  // get rid of witchspace sky etc. if
-                                          // still extant
+        // get rid of witchspace sky etc. if still extant
+        removeAllEntitiesExceptPlayer();
     }
 
     if (!dockedStation || !interstel) {
-      setUpSpace();  // launching from station that jumped from interstellar
-                     // space to normal space.
+      // launching from station that jumped from interstellar space to normal
+      // space.
+      setUpSpace();
       populateNormalSpace();
       if (dockedStation) {
         if ((dockedStation != nullptr ? dockedStation->getMaxFlightSpeed()
@@ -1498,8 +1499,9 @@ void Universe::setUpUniverseFromStation() {
           quaternion_set_random(&q1);
           if (abs(static_cast<int>(d1)) < 2750) {
             d1 += ((d1 > 0.0) ? 2750.0f
-                              : -2750.0f);  // no closer than 2750m. Carriers
-                                            // are bigger than player ships.
+                              // no closer than 2750m. Carriers are bigger than
+                              // player ships.
+                              : -2750.0f);
           }
           Vector v1 = vector_forward_from_quaternion(q1);
           pos.x += v1.x * d1;  // randomise exit position
@@ -1543,8 +1545,9 @@ void Universe::setUpUniverseFromWitchspace() {
   // check the player is still around!
   //
   if (entities.empty()) {
+    // alloc retains!
     /*- the player ship -*/
-    playerObject = ::PlayerEntity::newPlayerObject();  // alloc retains!
+    playerObject = ::PlayerEntity::newPlayerObject();
 
     addEntity(playerObject.get());
 
@@ -1588,8 +1591,9 @@ void Universe::setUpUniverseFromMisjump() {
   // check the player is still around!
   //
   if (entities.empty()) {
+    // alloc retains!
     /*- the player ship -*/
-    playerObject = ::PlayerEntity::newPlayerObject();  // alloc retains!
+    playerObject = ::PlayerEntity::newPlayerObject();
 
     addEntity(playerObject.get());
 
@@ -1635,8 +1639,8 @@ void Universe::setUpWitchspaceBetweenSystem(oo::SystemID s1, oo::SystemID s2) {
            : oo::PList());
 
   if (universeRegion != nullptr)
-    universeRegion->clearSubregions();  // none yet while the initial universe
-                                        // is set up (a nil message did nothing)
+    // none yet while the initial universe is set up (a nil message did nothing)
+    universeRegion->clearSubregions();
 
   // fixed entities (part of the graphics system really) come first...
 
@@ -1797,8 +1801,8 @@ void Universe::setUpSpace() {
 
   OO_DEBUG_PUSH_PROGRESS("setUpSpace - clearSubRegions, sky, dust");
   if (universeRegion != nullptr)
-    universeRegion->clearSubregions();  // none yet while the initial universe
-                                        // is set up (a nil message did nothing)
+    // none yet while the initial universe is set up (a nil message did nothing)
+    universeRegion->clearSubregions();
 
   // fixed entities (part of the graphics system really) come first...
   setSkyColorRed(0.0f, 0.0f, 0.0f, 0.0f);
@@ -1836,8 +1840,8 @@ void Universe::setUpSpace() {
   float h1 = randf();
   float h2 = static_cast<float>(h1 + 1.0 / (1.0 + (Ranrot() % 5)));
   while (h2 > 1.0) h2 -= static_cast<float>(1.0);
-  float s1 = randf();  // one draw per local, in the order Clang evaluates the
-                       // arguments
+  // one draw per local, in the order Clang evaluates the arguments
+  float s1 = randf();
   double b1 = 0.5 + randf() / 2.0;
   std::shared_ptr<oo::Color> col1 =
       oo::Color::colorWithHue(h1, s1, static_cast<float>(b1), 1.0);
@@ -1871,8 +1875,8 @@ void Universe::setUpSpace() {
   if (!dict_object.isNull()) {
     bgcolor = oo::Color::colorWithDescription(dict_object);
   } else {
-    double saturation = 0.75 * randf();  // one draw per local, in the order
-                                         // Clang evaluates the arguments
+    // one draw per local, in the order Clang evaluates the arguments
+    double saturation = 0.75 * randf();
     double brightness = 0.65 + randf() / 5.0;
     bgcolor = oo::Color::colorWithHue(h1, static_cast<float>(saturation),
                                       static_cast<float>(brightness), 1.0);
@@ -2123,15 +2127,14 @@ void Universe::setUpSpace() {
     if (a_station != nullptr) a_station->setScanClass(oo::ScanClass::kStation);
     //[a_station setPlanet:[self planet]];	// done inside addEntity.
     if (a_station != nullptr) a_station->setEquivalentTechLevel(techlevel);
-    addEntity(
-        stationObject.get());  // OOEntityStatus::kInFlight, AI state GLOBAL
+    // OOEntityStatus::kInFlight, AI state GLOBAL
+    addEntity(stationObject.get());
     if (a_station != nullptr)
-      a_station->setStatus(
-          oo::EntityStatus::kActive);  // For backward compatibility. Might not
-                                       // be needed.
+      // For backward compatibility. Might not be needed.
+      a_station->setStatus(oo::EntityStatus::kActive);
     if (a_station != nullptr)
-      a_station->setAllowsFastDocking(
-          true);  // Main stations always allow fast docking.
+      // Main stations always allow fast docking.
+      a_station->setAllowsFastDocking(true);
     if (a_station != nullptr)
       a_station->setAllegiance("galcop");  // Main station is galcop controlled
   }
@@ -2478,8 +2481,9 @@ HPVector Universe::locationByCode(const std::string& code, ::oo::SunEntity* sun,
           HPdistance((sun != nullptr ? sun->getPosition() : HPVector{}),
                      (planet != nullptr ? planet->getPosition() : HPVector{})),
           HPdistance((sun != nullptr ? sun->getPosition() : HPVector{}),
+                     // no more than 10 AU out
                      (planet != nullptr ? planet->getPosition() : HPVector{})) *
-              10.0);  // no more than 10 AU out
+              10.0);
       result = oo::ProjectHPVectorToPlane(
           result, kZeroHPVector,
           HPcross_product(
@@ -2498,8 +2502,9 @@ HPVector Universe::locationByCode(const std::string& code, ::oo::SunEntity* sun,
           HPdistance((sun != nullptr ? sun->getPosition() : HPVector{}),
                      (planet != nullptr ? planet->getPosition() : HPVector{})),
           HPdistance((sun != nullptr ? sun->getPosition() : HPVector{}),
+                     // no more than 10 AU out
                      (planet != nullptr ? planet->getPosition() : HPVector{})) *
-              10.0);  // no more than 10 AU out
+              10.0);
     } else {
       OO_LOG(oo::kLogUniversePopulateError,
              "Named populator region {} is not implemented, falling back to "
@@ -2598,8 +2603,8 @@ void Universe::setLighting() {
     if (::oo::Color* skyColor = the_sky->getSkyColor())
       skyColor->getRed(&r, &g, &b, &a);
     else
-      r = g = b = a = 0.0f;  // a nil colour wrote nothing; zero, as a message
-                             // to nil answers
+      // a nil colour wrote nothing; zero, as a message to nil answers
+      r = g = b = a = 0.0f;
     r = static_cast<GLfloat>(r * (1.0 - SUN_AMBIENT_INFLUENCE) +
                              sun_diffuse[0] * SUN_AMBIENT_INFLUENCE);
     g = static_cast<GLfloat>(g * (1.0 - SUN_AMBIENT_INFLUENCE) +
@@ -2645,8 +2650,8 @@ void Universe::setMainLightPosition(Vector sunPos) {
     launchPos.z += 2 * rfactor * (randf() - 0.5);
   }
 
-  std::shared_ptr<::ShipEntity> ship =
-      newShipWithRole(desc);  // retain count = 1
+  // retain count = 1
+  std::shared_ptr<::ShipEntity> ship = newShipWithRole(desc);
 
   if (ship) {
     if (ship != nullptr)
@@ -2798,10 +2803,10 @@ HPVector Universe::coordinatesForPosition(HPVector pos,
     default:
       return kZeroHPVector;
   }
-  HPVector k =
-      HPvector_normal_or_zbasis(HPvector_subtract(p1, p0));  // 'forward'
-  HPVector v = HPvector_normal_or_xbasis(HPvector_subtract(
-      p2, p0));  // temporary vector in plane of 'forward' and 'right'
+  // 'forward'
+  HPVector k = HPvector_normal_or_zbasis(HPvector_subtract(p1, p0));
+  // temporary vector in plane of 'forward' and 'right'
+  HPVector v = HPvector_normal_or_xbasis(HPvector_subtract(p2, p0));
 
   HPVector j = HPcross_product(k, v);  // 'up'
   HPVector i = HPcross_product(j, k);  // 'right'
@@ -2916,10 +2921,10 @@ HPVector Universe::legacyPositionFrom(HPVector pos, const std::string& system) {
     default:
       return kZeroHPVector;
   }
-  HPVector k =
-      HPvector_normal_or_zbasis(HPvector_subtract(p1, p0));  // 'z' axis in m
-  HPVector v = HPvector_normal_or_xbasis(HPvector_subtract(
-      p2, p0));  // temporary vector in plane of 'forward' and 'right'
+  // 'z' axis in m
+  HPVector k = HPvector_normal_or_zbasis(HPvector_subtract(p1, p0));
+  // temporary vector in plane of 'forward' and 'right'
+  HPVector v = HPvector_normal_or_xbasis(HPvector_subtract(p2, p0));
 
   HPVector j = HPcross_product(k, v);  // 'y' axis in m
   HPVector i = HPcross_product(j, k);  // 'x' axis in m
@@ -2954,8 +2959,8 @@ HPVector Universe::legacyPositionFrom(HPVector pos, const std::string& system) {
   HPVector result =
       make_HPvector(scale * (r_pos.x * i.x + r_pos.y * i.y + r_pos.z * i.z),
                     scale * (r_pos.x * j.x + r_pos.y * j.y + r_pos.z * j.z),
-                    scale * (r_pos.x * k.x + r_pos.y * k.y +
-                             r_pos.z * k.z));  // scale * dot_products
+                    // scale * dot_products
+                    scale * (r_pos.x * k.x + r_pos.y * k.y + r_pos.z * k.z));
 
   return result;
 }
@@ -3046,8 +3051,8 @@ bool Universe::addShipsAtPosition(int howMany, const std::string& desc,
         if (!limit_count) {
           // give up and expand the shell
           limit_count = 8;
-          distance_from_center +=
-              sqrt(safe_distance2);  // expand to the next distance
+          // expand to the next distance
+          distance_from_center += sqrt(safe_distance2);
         }
       }
     } while (!safe);
@@ -3281,8 +3286,9 @@ void Universe::witchspaceShipWithPrimaryRole(const std::string& role) {
       if (((ship != nullptr ? ship->pendingEscortCount() : uint8_t{}) > 0) &&
           ((Ranrot() % 7) < government)) {
         // remove escorts if we feel safe
+        // remove 2,4,6, or 8 escorts
         int nx = (ship != nullptr ? ship->pendingEscortCount() : uint8_t{}) -
-                 2 * (1 + (Ranrot() & 3));  // remove 2,4,6, or 8 escorts
+                 2 * (1 + (Ranrot() & 3));
         if (ship != nullptr)
           ship->setPendingEscortCount((nx > 0) ? static_cast<uint8_t>(nx) : 0);
       }
@@ -3292,8 +3298,8 @@ void Universe::witchspaceShipWithPrimaryRole(const std::string& role) {
       if (ship != nullptr)
         ship->setBounty(
             (Ranrot() & 7) + (Ranrot() & 7) + ((randf() < 0.05) ? 63 : 23),
-            oo::LegalStatusReason::kSetup);  // they already have a price on
-                                             // their heads
+            // they already have a price on their heads
+            oo::LegalStatusReason::kSetup);
     }
     if (!(ship != nullptr
               ? ship->getCrew()
@@ -3338,8 +3344,8 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
 
   // minimise the time between creating ship & assigning position.
 
-  const std::shared_ptr<Entity> created =
-      newVisualEffectWithName(key);  // owned until the universe holds it
+  // owned until the universe holds it
+  const std::shared_ptr<Entity> created = newVisualEffectWithName(key);
   Entity* vis = created.get();
   bool success = false;
   if (vis != nullptr) {
@@ -3408,9 +3414,8 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
           ship->setCargoFlag(
               (randf() < 0.66f
                    ? oo::CargoFlag::kFullPlentiful
-                   : oo::CargoFlag::kFullScarce));  // most of them will carry
-                                                    // the cargo produced
-                                                    // in-system.
+                   // most of them will carry the cargo produced in-system.
+                   : oo::CargoFlag::kFullScarce));
       }
 
       uint8_t pendingEscortCount =
@@ -3420,8 +3425,8 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
             currentSystemData().get<unsigned char>(KEY_GOVERNMENT);
         if ((Ranrot() % 7) < government) {
           // remove escorts if we feel safe
-          int nx = pendingEscortCount -
-                   2 * (1 + (Ranrot() & 3));  // remove 2,4,6, or 8 escorts
+          // remove 2,4,6, or 8 escorts
+          int nx = pendingEscortCount - 2 * (1 + (Ranrot() & 3));
           if (ship != nullptr)
             ship->setPendingEscortCount((nx > 0) ? static_cast<uint8_t>(nx)
                                                  : 0);
@@ -3431,9 +3436,8 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
 
     if (HPdistance(getWitchspaceExitPosition(), pos) > SCANNER_MAX_RANGE) {
       // nothing extra to do
-      success =
-          addEntity(ship.get());  // OOEntityStatus::kInFlight, AI state GLOBAL
-                                  // - ship is retained globally
+      // OOEntityStatus::kInFlight, AI state GLOBAL - ship is retained globally
+      success = addEntity(ship.get());
     } else {
       // witchspace incoming traders & pirates need extra settings.
       if (trader) {
@@ -3450,8 +3454,8 @@ Entity* Universe::addVisualEffectAt(HPVector pos, const std::string& key) {
         if (ship != nullptr)
           ship->setBounty(
               (Ranrot() & 7) + (Ranrot() & 7) + ((randf() < 0.05) ? 63 : 23),
-              oo::LegalStatusReason::kSetup);  // they already have a price on
-                                               // their heads
+              // they already have a price on their heads
+              oo::LegalStatusReason::kSetup);
       }
 
       // Status changes inside the following call: AI state GLOBAL, then
@@ -3563,8 +3567,8 @@ std::vector<oo::EntityHold> Universe::addShipsToRoute(const std::string& route,
     return addShipsAt(pos, role, count, (SCANNER_MAX_RANGE / 10.0f), true);
   } else {
     while (count--) {
-      ship = addShipAt(pos, role, 0);  // no radius because pos is already
-                                       // randomised with SCANNER_MAX_RANGE.
+      // no radius because pos is already randomised with SCANNER_MAX_RANGE.
+      ship = addShipAt(pos, role, 0);
       if (ship != nullptr) ships.push_back(oo::Hold(ship));
       if (count > 0)
         pos = fractionalPositionFrom(point0, point1, routeFraction);
@@ -3579,8 +3583,9 @@ bool Universe::roleIsPirateVictim(const std::string& role) {
 }
 
 bool Universe::role(const std::string& role, const std::string& category) {
-  const oo::PList* categoryInfo = roleCategories.get<oo::PList::Array>(
-      category);  // the category's roles, each once
+  // the category's roles, each once
+  const oo::PList* categoryInfo =
+      roleCategories.get<oo::PList::Array>(category);
   if (categoryInfo == nullptr) {
     return false;
   }
@@ -3647,23 +3652,23 @@ void Universe::setUpBreakPattern(HPVector pos, Quaternion q, bool forDocking) {
 
   setViewDirection(oo::ViewID::kForward);
 
-  q.w = -q.w;  // reverse the quaternion because this is from the player's
-               // viewpoint
+  // reverse the quaternion because this is from the player's viewpoint
+  q.w = -q.w;
 
   Vector v = vector_forward_from_quaternion(q);
   Vector vel = vector_multiply_scalar(v, -BREAK_PATTERN_RING_SPEED);
 
   // hyperspace colours
 
-  std::shared_ptr<oo::Color> col1 =
-      oo::Color::colorWithRed(1.0, 0.0, 0.0, 0.5);  // standard tunnel colour
+  // standard tunnel colour
+  std::shared_ptr<oo::Color> col1 = oo::Color::colorWithRed(1.0, 0.0, 0.0, 0.5);
+  // standard tunnel colour
   std::shared_ptr<oo::Color> col2 =
-      oo::Color::colorWithRed(0.0, 0.0, 1.0, 0.25);  // standard tunnel colour
+      oo::Color::colorWithRed(0.0, 0.0, 1.0, 0.25);
 
-  colorDesc =
-      PListForKeyIn(globalSettings,
-                    "hyperspace_tunnel_color_1");  // +colorWithDescription:
-                                                   // takes any description
+  colorDesc = PListForKeyIn(globalSettings,
+                            // +colorWithDescription: takes any description
+                            "hyperspace_tunnel_color_1");
   if (!colorDesc.isNull()) {
     color = oo::Color::colorWithDescription(colorDesc);
     if (color != nullptr)
@@ -3711,8 +3716,8 @@ void Universe::setUpBreakPattern(HPVector pos, Quaternion q, bool forDocking) {
 
     Vector offset = vector_multiply_scalar(
         v, static_cast<oo::Scalar>(i * BREAK_PATTERN_RING_SPACING));
-    ring->setPosition(
-        HPvector_add(pos, vectorToHPVector(offset)));  // ahead of the player
+    // ahead of the player
+    ring->setPosition(HPvector_add(pos, vectorToHPVector(offset)));
     ring->setOrientation(q);
     ring->setVelocity(vel);
     ring->setLifetime(i * BREAK_PATTERN_RING_SPACING);
@@ -3820,19 +3825,21 @@ void Universe::setupIntroFirstGo(bool justCobra) {
         const oo::PList& subList = (*demoClasses)[k];
         if (OptionalStringIn(DemoShipEntry(demo_ships, k, 0),
                              oo::kDemoShipClass) == "ship") {
+          // -indexOfObject:
           demo_ship_index = static_cast<std::size_t>(
               std::find(demoClasses->begin(), demoClasses->end(), subList) -
-              demoClasses->begin());  // -indexOfObject:
+              demoClasses->begin());
+          // an array: its first entry was found above
           const oo::PList::Array* shipEntries =
-              subList.getIf<oo::PList::Array>();  // an array: its first entry
-                                                  // was found above
+              subList.getIf<oo::PList::Array>();
           for (const oo::PList& shipEntry : *shipEntries) {
             if (OptionalStringIn(shipEntry, oo::kDemoShipKey) ==
                 "cobra3-trader") {
               demo_ship_subindex = static_cast<std::size_t>(
                   std::find(shipEntries->begin(), shipEntries->end(),
+                            // -indexOfObject:
                             shipEntry) -
-                  shipEntries->begin());  // -indexOfObject:
+                  shipEntries->begin());
               break;
             }
           }
@@ -3905,8 +3912,8 @@ void Universe::setLibraryTextForDemoShip() {
   tab_stops[1] = 170;
   tab_stops[2] = 340;
   if (gui == nullptr)
-    return;  // the messages to nil did nothing, and the rest only writes the
-             // GUI
+    // the messages to nil did nothing, and the rest only writes the GUI
+    return;
   gui->setTabStops(tab_stops);
 
   /*	[gui setText:[demo_ship displayName] forRow:19 align:GUI_ALIGN_CENTER];
@@ -4202,16 +4209,17 @@ void Universe::selectIntro2Next() {
 
 ::oo::PlanetEntity* Universe::planet() {
   if (cachedPlanet == nullptr && allPlanets.size() > 0) {
-    cachedPlanet = static_cast<::oo::PlanetEntity*>(
-        allPlanets[0].get());  // the list holds only planets
+    // the list holds only planets
+    cachedPlanet = static_cast<::oo::PlanetEntity*>(allPlanets[0].get());
   }
   return cachedPlanet;
 }
 
 ::oo::SunEntity* Universe::sun() {
   if (cachedSun == nullptr) {
+    // -isSun
     cachedSun = static_cast<oo::SunEntity*>(
-        findOneEntityMatchingPredicate(IsSunPredicate, nullptr));  // -isSun
+        findOneEntityMatchingPredicate(IsSunPredicate, nullptr));
   }
   return cachedSun;
 }
@@ -4260,8 +4268,8 @@ void Universe::resetBeacons() {
 }
 
 Entity* Universe::firstBeacon() {
-  return oo::LiveEntity(_firstBeacon);  // what the object's weak reference read
-                                        // (+0), its C++ entity
+  // what the object's weak reference read (+0), its C++ entity
+  return oo::LiveEntity(_firstBeacon);
 }
 
 void Universe::setFirstBeacon(Entity* beacon) {
@@ -4269,8 +4277,8 @@ void Universe::setFirstBeacon(Entity* beacon) {
     oo::SetPrevBeacon(beacon, nullptr);
     oo::SetNextBeacon(beacon, firstBeacon());
     oo::SetPrevBeacon(firstBeacon(), beacon);
-    _firstBeacon = std::weak_ptr<Entity>(
-        oo::share(beacon));  // oo::WeakEntityRef() of its object
+    // oo::WeakEntityRef() of its object
+    _firstBeacon = std::weak_ptr<Entity>(oo::share(beacon));
   }
 }
 
@@ -4315,8 +4323,8 @@ void Universe::clearBeacon(Entity* beacon) {
       oo::SetPrevBeacon(oo::NextBeacon(beacon), oo::PrevBeacon(beacon));
       oo::SetNextBeacon(oo::PrevBeacon(beacon), oo::NextBeacon(beacon));
     }
-    oo::SetBeaconCode(beacon, std::nullopt);  // not nil: nil built a
-                                              // std::string from a null char*
+    // not nil: nil built a std::string from a null char*
+    oo::SetBeaconCode(beacon, std::nullopt);
   }
 }
 
@@ -4433,8 +4441,8 @@ std::optional<std::string> Universe::randomShipKeyForRoleRespectingConditions(
   // Select a ship, check conditions and return it if possible.
   shipKey = registry->randomShipKeyForRole(role);
   if (!shipKey.has_value())
-    return std::nullopt;  // no ship has the role (a nil key passed the check
-                          // and was returned)
+    // no ship has the role (a nil key passed the check and was returned)
+    return std::nullopt;
   if (canInstantiateShip(*shipKey)) return shipKey;
 
   /*	If we got here, condition check failed.
@@ -4463,9 +4471,8 @@ std::optional<std::string> Universe::randomShipKeyForRoleRespectingConditions(
 
   while (pset != nullptr && pset->count() > 0) {
     // Select a ship, check conditions and return it if possible.
-    const oo::PList shipKeyObject =
-        pset->randomObject();  // a ship key (a string); null when no weight is
-                               // positive
+    // a ship key (a string); null when no weight is positive
+    const oo::PList shipKeyObject = pset->randomObject();
     const std::string* shipKeyString = shipKeyObject.getIf<std::string>();
     std::string candidate = (shipKeyString != nullptr)
                                 ? *shipKeyString
@@ -4520,8 +4527,8 @@ std::shared_ptr<::ShipEntity> Universe::newShipWithRole(
           if (role == "interceptor") {
             if (ship != nullptr) ship->setScanClass(oo::ScanClass::kPolice);
             if (ship != nullptr)
-              ship->setPrimaryRole("police");  // to make sure interceptors get
-                                               // the correct pilot later on.
+              // to make sure interceptors get the correct pilot later on.
+              ship->setPrimaryRole("police");
           }
         }
         if (role == "thargoid") {
@@ -4908,8 +4915,8 @@ oo::CargoQuantity Universe::getRandomAmountOfCommodity(
       return 1 + (Ranrot() % 6) + (Ranrot() % 6) + (Ranrot() % 6);
     case oo::MassUnit::kGrams:
       return 4 + (Ranrot() % 16) + (Ranrot() % 11) + (Ranrot() % 6);
-    case oo::MassUnit::kUnknown:  // not a unit: warned about below, as any
-                                  // other value was
+    // not a unit: warned about below, as any other value was
+    case oo::MassUnit::kUnknown:
       break;
   }
   OO_LOG("universe.commodityAmount.warning",
@@ -5075,8 +5082,8 @@ void Universe::useGUILightSource(bool GUILight) {
     // following line necessary.
 
     else
-      OOGL(glEnable(
-          GL_LIGHT1));  // make sure we have a light, even with shaders (!)
+      // make sure we have a light, even with shaders (!)
+      OOGL(glEnable(GL_LIGHT1));
 
     demo_light_on = GUILight;
   }
@@ -5295,8 +5302,8 @@ void Universe::drawUniverse() {
       Vector view_dir, view_up;
       oo::Matrix view_matrix;
       int ent_count = static_cast<int>(n_entities);
-      std::vector<Entity*> my_entities(static_cast<std::size_t>(
-          ent_count));  // each one's object retained and autoreleased
+      // each one's object retained and autoreleased
+      std::vector<Entity*> my_entities(static_cast<std::size_t>(ent_count));
       int draw_count = 0;
       ::PlayerEntity* player = PLAYER;
       Entity* drawthing = nullptr;
@@ -5323,8 +5330,9 @@ void Universe::drawUniverse() {
          * the player, and we just assume that the camera is
          * on/near the player. So long as everything uses
          * depth tests, we'll get away with it; it'll just
+         // ordered NEAREST -> FURTHEST AWAY
          * occasionally be inefficient. - CIM */
-        Entity* e = sortedEntities[i];  // ordered NEAREST -> FURTHEST AWAY
+        Entity* e = sortedEntities[i];
         if (e->isVisible()) {
           (void)oo::autorelease(oo::Hold(e));  // retained, autoreleased
           my_entities[static_cast<std::size_t>(draw_count++)] = e;
@@ -5335,8 +5343,8 @@ void Universe::drawUniverse() {
 
       oo::CheckOpenGLErrors("Universe before doing anything");
 
-      OOSetOpenGLState(
-          oo::OpenGLStateID::kOpaque);  // FIXME: should be redundant.
+      // FIXME: should be redundant.
+      OOSetOpenGLState(oo::OpenGLStateID::kOpaque);
 
       OOGL(glClear(GL_COLOR_BUFFER_BIT));
 
@@ -5382,8 +5390,9 @@ void Universe::drawUniverse() {
         float farPlane = vdist ? breakPlane : MAX_CLEAR_DEPTH;
         float ratio = static_cast<float>(
             (displayGUI ? 0.5
+                        // 0.5 is field of view ratio for GUIs
                         : (gameView != nullptr ? gameView->fov(true) : 0.0f)) *
-            nearPlane / distanceFactor);  // 0.5 is field of view ratio for GUIs
+            nearPlane / distanceFactor);
 
         oo::GLResetProjection();
         if ((displayGUI && 4 * aspect >= 3) ||
@@ -5405,9 +5414,9 @@ void Universe::drawUniverse() {
         oo::GLLookAt(kZeroVector, kBasisZVector, kBasisYVector);
 
         // HACK BUSTED
-        oo::GLMultModelView(
-            oo::MatrixForScale(-1.0, 1.0, 1.0));  // flip left and right
-        oo::GLPushModelView();                    // save this flat viewpoint
+        // flip left and right
+        oo::GLMultModelView(oo::MatrixForScale(-1.0, 1.0, 1.0));
+        oo::GLPushModelView();  // save this flat viewpoint
 
         /* OpenGL viewpoints:
          *
@@ -5633,8 +5642,8 @@ void Universe::drawUniverse() {
       oo::GLResetProjection();
       oo::GLFrustum(-0.5, 0.5, -aspect * 0.5, aspect * 0.5, 1.0,
                     MAX_CLEAR_DEPTH);
-      OOSetOpenGLState(
-          oo::OpenGLStateID::kOverlay);  // FIXME: should be redundant.
+      // FIXME: should be redundant.
+      OOSetOpenGLState(oo::OpenGLStateID::kOverlay);
       if (!displayGUI) [[likely]] {
         if (!bpHide && cachedSun) {
           if (cachedSun != nullptr) cachedSun->drawDirectVisionSunGlare();
@@ -5645,8 +5654,8 @@ void Universe::drawUniverse() {
       // actions when the HUD should be rendered separately from the 3d universe
       if (hudSeparateRenderPass) {
         oo::CheckOpenGLErrors("Universe after drawing entities");
-        OOSetOpenGLState(
-            oo::OpenGLStateID::kOverlay);  // FIXME: should be redundant.
+        // FIXME: should be redundant.
+        OOSetOpenGLState(oo::OpenGLStateID::kOverlay);
 
         prepareToRenderIntoDefaultFramebuffer();
         OOGL(glBindFramebuffer(GL_FRAMEBUFFER,
@@ -5668,9 +5677,10 @@ void Universe::drawUniverse() {
       oo::CheckOpenGLErrors("Universe after drawing entities");
       OO_LOG("universe.profile.draw", "{}", "Begin HUD");
 
+      // restore line size
       GLfloat lineWidth = static_cast<GLfloat>(
           (gameView != nullptr ? gameView->backingViewSize() : NSSize{}).width /
-          1024.0);  // restore line size
+          1024.0);
       if (lineWidth < 1.0) lineWidth = 1.0;
       if (lineWidth > 1.5)
         lineWidth = 1.5;  // don't overscale; think of ultra-wide screen setups
@@ -5689,11 +5699,10 @@ void Universe::drawUniverse() {
             *theHUD
                  ->getDeferredHudName();  // a copy: the switch releases the HUD
         if (player != nullptr) player->switchHudTo(deferredName);
-        theHUD =
-            (player != nullptr ? player->getHud()
-                               : static_cast<HeadUpDisplay*>(
-                                     nullptr));  // HUD has been changed, so
-                                                 // point to its new address
+        theHUD = (player != nullptr
+                      ? player->getHud()
+                      // HUD has been changed, so point to its new address
+                      : static_cast<HeadUpDisplay*>(nullptr));
       }
 
       // Hiding HUD: has been a regular - non-debug - feature as of r2749, about
@@ -5753,8 +5762,8 @@ void Universe::drawUniverse() {
     } catch (...) {
       const auto exception = oo::CurrentOOException();
       if (!exception) throw;  // not an OOException: it goes on up, as before
-      no_update =
-          false;  // make sure we don't get stuck in all subsequent frames.
+      // make sure we don't get stuck in all subsequent frames.
+      no_update = false;
 
       if (std::string_view(exception->name()).starts_with("Oolite")) {
         handleOoliteException(exception->object());
@@ -5817,8 +5826,8 @@ void Universe::drawMessage() {
   HeadUpDisplay* hud =
       (PLAYER != nullptr ? PLAYER->getHud()
                          : static_cast<HeadUpDisplay*>(nullptr));
-  float overallAlpha =
-      (hud != nullptr) ? hud->getOverallAlpha() : 0.0f;  // a nil HUD answered 0
+  // a nil HUD answered 0
+  float overallAlpha = (hud != nullptr) ? hud->getOverallAlpha() : 0.0f;
   if (displayGUI) {
     if ((gameController() != nullptr ? gameController()->mouseInteractionMode()
                                      : oo::MouseInteractionMode{}) ==
@@ -5846,8 +5855,8 @@ void Universe::drawWatermarkString(const std::string& watermarkString) {
   // position the watermark string on the top right hand corner of the game
   // window and right-align it
   const int halfGuiWidth = MAIN_GUI_PIXEL_WIDTH / 2,
-            halfGuiHeight =
-                MAIN_GUI_PIXEL_HEIGHT / 2;  // integer halves, as before
+            // integer halves, as before
+      halfGuiHeight = MAIN_GUI_PIXEL_HEIGHT / 2;
   oo::DrawString(
       watermarkString,
       static_cast<GLfloat>(halfGuiWidth - watermarkStringSize.width + 80),
@@ -5943,8 +5952,9 @@ bool Universe::addEntity(Entity* entity) {
             const oo::PList* definedRoll = shipInfo.find("station_roll");
 
             if (definedRoll != nullptr) {
-              stationRoll = oo::plist_get::realFrom<double>(
-                  definedRoll, stationRoll);  // OODoubleFromObject
+              // OODoubleFromObject
+              stationRoll =
+                  oo::plist_get::realFrom<double>(definedRoll, stationRoll);
             } else {
               stationRoll = currentSystemData().get<double>(
                   "station_roll", STANDARD_STATION_ROLL);
@@ -5957,8 +5967,8 @@ bool Universe::addEntity(Entity* entity) {
           if (oo::ToStation(se) != nullptr)
             oo::ToStation(se)->setPlanet(planet());
           if ((se != nullptr ? se->getMaxFlightSpeed() : 0.0f) > 0)
-            se->isExplicitlyNotMainStation =
-                true;  // we never want carriers to become main stations.
+            // we never want carriers to become main stations.
+            se->isExplicitlyNotMainStation = true;
         }
         // stations used to have OOEntityStatus::kActive, they're all
         // OOEntityStatus::kInFlight now.
@@ -6007,8 +6017,8 @@ bool Universe::addEntity(Entity* entity) {
     n_entities++;
 
     // add entity to linked lists
-    entity->addToLinkedLists();  // position and universe have been set - so we
-                                 // can do this
+    // position and universe have been set - so we can do this
+    entity->addToLinkedLists();
     if (entity->canCollide()) {
       // filter only collidables disappearing
       doLinkedListMaintenanceThisUpdate = true;
@@ -6090,9 +6100,8 @@ void Universe::removeAllEntitiesExceptPlayer() {
     }
   }
 
-  activeWormholes =
-      std::move(savedWormholes);  // will be cleared out by
-                                  // populateSpaceFromActiveWormholes
+  // will be cleared out by populateSpaceFromActiveWormholes
+  activeWormholes = std::move(savedWormholes);
 
   // maintain sorted list
   n_entities = 1;
@@ -6139,8 +6148,8 @@ void Universe::removeDemoShips() {
                    static_cast<GLfloat>(M_SQRT1_2), static_cast<GLfloat>(0.0),
                    static_cast<GLfloat>(0.0)};
 
-  std::shared_ptr<::ShipEntity> ship =
-      newShipWithRole(role);  // retain count = 1
+  // retain count = 1
+  std::shared_ptr<::ShipEntity> ship = newShipWithRole(role);
   if (ship) {
     double cr = (ship != nullptr ? ship->collisionRadius() : 0.0f);
     if (ship != nullptr) ship->setOrientation(q2);
@@ -6150,8 +6159,8 @@ void Universe::removeDemoShips() {
     if (ship != nullptr) ship->setPendingEscortCount(0);
 
     if (UNIVERSE != nullptr)
-      UNIVERSE->addEntity(
-          ship.get());  // OOEntityStatus::kInFlight, AI state GLOBAL
+      // OOEntityStatus::kInFlight, AI state GLOBAL
+      UNIVERSE->addEntity(ship.get());
 
     if (spinning) {
       if (ship != nullptr) ship->setDemoShip(1.0f);
@@ -6178,19 +6187,20 @@ bool Universe::isVectorClearFromEntity(Entity* e1, double dist, HPVector p2) {
   v1.y -= p1.y;
   v1.z -= p1.z;  // vector from entity to p2
 
-  double nearest =
-      sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z) - dist;  // length of vector
+  // length of vector
+  double nearest = sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z) - dist;
 
   if (nearest < 0.0) return true;  // within range already!
 
   int i;
   int ent_count = static_cast<int>(n_entities);
-  std::vector<Entity*> my_entities(
-      static_cast<std::size_t>(ent_count));  // each one's object retained
-  std::vector<oo::EntityHold> my_holds;      // each one's object, held
+  // each one's object retained
+  std::vector<Entity*> my_entities(static_cast<std::size_t>(ent_count));
+  std::vector<oo::EntityHold> my_holds;  // each one's object, held
   for (i = 0; i < ent_count; i++)
+    // retained
     my_entities[static_cast<std::size_t>(i)] =
-        oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
+        oo::HoldIn(my_holds, sortedEntities[i]);
 
   if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
       static_cast<bool>(v1.z))
@@ -6204,15 +6214,15 @@ bool Universe::isVectorClearFromEntity(Entity* e1, double dist, HPVector p2) {
       HPVector epos = e2->position;
       epos.x -= p1.x;
       epos.y -= p1.y;
-      epos.z -=
-          p1.z;  // epos now holds vector from p1 to this entities position
+      // epos now holds vector from p1 to this entities position
+      epos.z -= p1.z;
 
-      double d_forward = HPdot_product(
-          epos, f1);  // distance along f1 which is nearest to e2's position
+      // distance along f1 which is nearest to e2's position
+      double d_forward = HPdot_product(epos, f1);
 
       if ((d_forward > 0) && (d_forward < nearest)) {
-        double cr = 1.10 * (e2->collision_radius +
-                            e1->collision_radius);  //  10% safety margin
+        // 10% safety margin
+        double cr = 1.10 * (e2->collision_radius + e1->collision_radius);
         HPVector p0 = e1->position;
         p0.x += d_forward * f1.x;
         p0.y += d_forward * f1.y;
@@ -6255,12 +6265,13 @@ Entity* Universe::hazardOnRouteFromEntity(Entity* e1, double dist,
   Entity* result = nullptr;
   int i;
   int ent_count = static_cast<int>(n_entities);
-  std::vector<Entity*> my_entities(
-      static_cast<std::size_t>(ent_count));  // each one's object retained
-  std::vector<oo::EntityHold> my_holds;      // each one's object, held
+  // each one's object retained
+  std::vector<Entity*> my_entities(static_cast<std::size_t>(ent_count));
+  std::vector<oo::EntityHold> my_holds;  // each one's object, held
   for (i = 0; i < ent_count; i++)
+    // retained
     my_entities[static_cast<std::size_t>(i)] =
-        oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
+        oo::HoldIn(my_holds, sortedEntities[i]);
 
   if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
       static_cast<bool>(v1.z))
@@ -6274,15 +6285,15 @@ Entity* Universe::hazardOnRouteFromEntity(Entity* e1, double dist,
       HPVector epos = e2->position;
       epos.x -= p1.x;
       epos.y -= p1.y;
-      epos.z -=
-          p1.z;  // epos now holds vector from p1 to this entities position
+      // epos now holds vector from p1 to this entities position
+      epos.z -= p1.z;
 
-      double d_forward = HPdot_product(
-          epos, f1);  // distance along f1 which is nearest to e2's position
+      // distance along f1 which is nearest to e2's position
+      double d_forward = HPdot_product(epos, f1);
 
       if ((d_forward > 0) && (d_forward < nearest)) {
-        double cr = 1.10 * (e2->collision_radius +
-                            e1->collision_radius);  //  10% safety margin
+        // 10% safety margin
+        double cr = 1.10 * (e2->collision_radius + e1->collision_radius);
         HPVector p0 = e1->position;
         p0.x += d_forward * f1.x;
         p0.y += d_forward * f1.y;
@@ -6318,20 +6329,21 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
   HPVector result = p2;
   int i;
   int ent_count = static_cast<int>(n_entities);
-  std::vector<Entity*> my_entities(
-      static_cast<std::size_t>(ent_count));  // each one's object retained
-  std::vector<oo::EntityHold> my_holds;      // each one's object, held
+  // each one's object retained
+  std::vector<Entity*> my_entities(static_cast<std::size_t>(ent_count));
+  std::vector<oo::EntityHold> my_holds;  // each one's object, held
   for (i = 0; i < ent_count; i++)
+    // retained
     my_entities[static_cast<std::size_t>(i)] =
-        oo::HoldIn(my_holds, sortedEntities[i]);  // retained
+        oo::HoldIn(my_holds, sortedEntities[i]);
   HPVector p1 = e1->position;
   HPVector v1 = p2;
   v1.x -= p1.x;
   v1.y -= p1.y;
   v1.z -= p1.z;  // vector from entity to p2
 
-  double nearest =
-      sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z) - dist;  // length of vector
+  // length of vector
+  double nearest = sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z) - dist;
 
   if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
       static_cast<bool>(v1.z))
@@ -6348,8 +6360,8 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
       epos.z -= p1.z;
       double d_forward = HPdot_product(epos, f1);
       if ((d_forward > 0) && (d_forward < nearest)) {
-        double cr = 1.20 * (e2->collision_radius +
-                            e1->collision_radius);  //  20% safety margin
+        // 20% safety margin
+        double cr = 1.20 * (e2->collision_radius + e1->collision_radius);
 
         HPVector p0 = e1->position;
         p0.x += d_forward * f1.x;
@@ -6372,12 +6384,12 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
           if (dist2 == 0.0) {
             // ie. we're on a line through the object's center !
             // jitter the position somewhat!
-            result.x += (static_cast<int>(Ranrot() % 1024) - 512) /
-                        512.0;  //   -1.0 .. +1.0
-            result.y += (static_cast<int>(Ranrot() % 1024) - 512) /
-                        512.0;  //   -1.0 .. +1.0
-            result.z += (static_cast<int>(Ranrot() % 1024) - 512) /
-                        512.0;  //   -1.0 .. +1.0
+            // -1.0 .. +1.0
+            result.x += (static_cast<int>(Ranrot() % 1024) - 512) / 512.0;
+            // -1.0 .. +1.0
+            result.y += (static_cast<int>(Ranrot() % 1024) - 512) / 512.0;
+            // -1.0 .. +1.0
+            result.z += (static_cast<int>(Ranrot() % 1024) - 512) / 512.0;
           }
 
           HPVector nearest_point = p1;
@@ -6425,9 +6437,9 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
 
           // choose a point that's three parts backward and one part outward
 
+          // push 'out' by this amount
           result.x += 0.25 * (outward.x * current_distance) +
-                      0.75 * (backward.x *
-                              current_distance);  // push 'out' by this amount
+                      0.75 * (backward.x * current_distance);
           result.y += 0.25 * (outward.y * current_distance) +
                       0.75 * (backward.y * current_distance);
           result.z += 0.25 * (outward.z * current_distance) +
@@ -6453,8 +6465,9 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
         static_cast<GLfloat>(0.1f * (ship != nullptr ? ship->getMass() : 0.0f) *
                              (0.75 + 0.5 * randf()));
     GLfloat wreck_mass = (wreck != nullptr ? wreck->getMass() : 0.0f);
-    GLfloat scale_factor = powf(expected_mass / wreck_mass, 0.33333333f) *
-                           scale;  // cube root of volume ratio
+    // cube root of volume ratio
+    GLfloat scale_factor =
+        powf(expected_mass / wreck_mass, 0.33333333f) * scale;
     if (wreck != nullptr) wreck->rescaleBy(scale_factor, false);
 
     if (wreck != nullptr) wreck->setPosition(rpos);
@@ -6474,8 +6487,8 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
     if (wreck != nullptr) wreck->setIsWreckage(true);
 
     if (UNIVERSE != nullptr)
-      UNIVERSE->addEntity(
-          wreck.get());  // OOEntityStatus::kInFlight, AI state GLOBAL
+      // OOEntityStatus::kInFlight, AI state GLOBAL
+      UNIVERSE->addEntity(wreck.get());
     if (wreck != nullptr) wreck->performTumble();
     //	[wreck rescaleBy: 1.0/scale_factor];
   }
@@ -6599,9 +6612,9 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
     r1 = basis.right;
     f1 = basis.forward;
   }
-  HPVector p1 =
-      HPvector_add(p0, vectorToHPVector(vector_multiply_scalar(
-                           f1, static_cast<oo::Scalar>(nearest))));  // endpoint
+  // endpoint
+  HPVector p1 = HPvector_add(p0, vectorToHPVector(vector_multiply_scalar(
+                                     f1, static_cast<oo::Scalar>(nearest))));
 
   for (i = 0; i < ship_count; i++) {
     ::ShipEntity* e2 = my_entities[static_cast<std::size_t>(i)];
@@ -6613,9 +6626,10 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
     Vector rpos = HPVectorToVector(HPvector_subtract(e2->position, p0));
     Vector v_off = make_vector(dot_product(rpos, r1), dot_product(rpos, u1),
                                dot_product(rpos, f1));
-    if (v_off.z > 0.0 && v_off.z < nearest + cr &&  // ahead AND within range
-        v_off.x < cr && v_off.x > -cr && v_off.y < cr &&
-        v_off.y > -cr &&  // AND not off to one side or another
+    if (v_off.z > 0.0 &&
+        // ahead AND within range AND not off to one side or another
+        v_off.z < nearest + cr && v_off.x < cr && v_off.x > -cr &&
+        v_off.y < cr && v_off.y > -cr &&
         v_off.x * v_off.x + v_off.y * v_off.y < cr * cr) {
       // AND not off to both sides
       ::ShipEntity* entHit = nullptr;
@@ -6659,15 +6673,15 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
 Entity* Universe::firstEntityTargetedByPlayer() {
   ::PlayerEntity* player = PLAYER;
   Entity* hit_entity = nullptr;
-  oo::Scalar nearest2 = SCANNER_MAX_RANGE -
-                        100;  // 100m shorter than range at which target is lost
+  // 100m shorter than range at which target is lost
+  oo::Scalar nearest2 = SCANNER_MAX_RANGE - 100;
   nearest2 *= nearest2;
   int i;
   int ent_count = static_cast<int>(n_entities);
   int ship_count = 0;
-  std::vector<Entity*> my_entities(
-      static_cast<std::size_t>(ent_count));  // each one's object retained
-  std::vector<oo::EntityHold> my_holds;      // each one's object, held
+  // each one's object retained
+  std::vector<Entity*> my_entities(static_cast<std::size_t>(ent_count));
+  std::vector<oo::EntityHold> my_holds;  // each one's object, held
 
   for (i = 0; i < ent_count; i++) {
     if ((oo::EntityIsShip(sortedEntities[i]) &&
@@ -7029,8 +7043,8 @@ void Universe::findCollisionsAndShadows() {
   universeRegion->clearEntityList();
 
   for (i = 0; i < n_entities; i++) {
-    universeRegion->checkEntity(
-        sortedEntities[i]);  // sorts out which region it's in
+    // sorts out which region it's in
+    universeRegion->checkEntity(sortedEntities[i]);
   }
 
   if (!(gameController() != nullptr ? gameController()->isGamePaused()
@@ -7503,8 +7517,8 @@ void Universe::update(oo::TimeDelta inDeltaT) {
 
     // use a retained copy so this can't be changed under us.
     for (i = 0; i < ent_count; i++) {
-      my_entities[i] = oo::HoldIn(
-          my_holds, sortedEntities[i]);  // explicitly retain each one
+      // explicitly retain each one
+      my_entities[i] = oo::HoldIn(my_holds, sortedEntities[i]);
     }
 
     const char* volatile update_stage = "initialisation";
@@ -7584,10 +7598,8 @@ void Universe::update(oo::TimeDelta inDeltaT) {
                   if (demo_ship != nullptr)
                     demo_ship->setScanClass(oo::ScanClass::kNoDraw);
                   if (demo_ship != nullptr)
-                    demo_ship->setStatus(
-                        oo::EntityStatus::kCockpitDisplay);  // prevents it
-                                                             // getting escorts
-                                                             // on addition
+                    // prevents it getting escorts on addition
+                    demo_ship->setStatus(oo::EntityStatus::kCockpitDisplay);
                   if (demo_ship != nullptr) demo_ship->setDemoShip(1.0f);
                   if (demo_ship != nullptr)
                     demo_ship->setDemoStartTime(universal_time);
@@ -7601,8 +7613,9 @@ void Universe::update(oo::TimeDelta inDeltaT) {
                     if (demo_ship != nullptr)
                       demo_ship->setPositionX(0.0f, 0.0f, demo_start_z);
                     if (demo_ship != nullptr)
-                      demo_ship->setDestination(make_HPvector(
-                          0.0f, 0.0f, demo_start_z * 0.01f));  // ideal position
+                      // ideal position
+                      demo_ship->setDestination(
+                          make_HPvector(0.0f, 0.0f, demo_start_z * 0.01f));
                     if (demo_ship != nullptr)
                       demo_ship->setVelocity(kZeroVector);
                     if (demo_ship != nullptr)
@@ -7675,9 +7688,8 @@ void Universe::update(oo::TimeDelta inDeltaT) {
         int index = thing->zero_index;
         while (index > 0 &&
                z_distance < sortedEntities[index - 1]->zero_distance) {
-          sortedEntities[index] =
-              sortedEntities[index - 1];  // bubble up the list, usually by just
-                                          // one position
+          // bubble up the list, usually by just one position
+          sortedEntities[index] = sortedEntities[index - 1];
           sortedEntities[index - 1] = thing;
           thing->zero_index = index - 1;
           sortedEntities[index]->zero_index = index;
@@ -7833,8 +7845,9 @@ void Universe::filterSortedLists() {
   However, almost all of these extra pairs are dealt with by a simple distance
   check. I currently see no noticeable negative effect while playing, but this
   change might still give some trouble I missed.
+  // C++ parts
   */
-  Entity *e0, *next, *prev;  // C++ parts
+  Entity *e0, *next, *prev;
   oo::HPScalar start, finish, next_start, next_finish, prev_start, prev_finish;
 
   // using the z_list - set or clear collisionTestFilter and clear
@@ -7860,10 +7873,8 @@ void Universe::filterSortedLists() {
     start = e0->position.z - 2.0f * e0->collision_radius;
     finish = start + 4.0f * e0->collision_radius;
     next = e0->z_next;
-    while ((next) && (next->collisionTestFilter ==
-                      3))  // next has been eliminated from the list of possible
-                           // colliders - so skip it
-      next = next->z_next;
+    // next has been eliminated from the list of possible colliders - so skip it
+    while ((next) && (next->collisionTestFilter == 3)) next = next->z_next;
     if (next) {
       next_start = next->position.z - 2.0f * next->collision_radius;
       if (next_start < finish) {
@@ -7874,8 +7885,8 @@ void Universe::filterSortedLists() {
           if (next_finish > finish) finish = next_finish;
           e0 = next;
           next = e0->z_next;
-          while ((next) && (next->collisionTestFilter ==
-                            3))  // next has been eliminated - so skip it
+          // next has been eliminated - so skip it
+          while ((next) && (next->collisionTestFilter == 3))
             next = next->z_next;
           if (next)
             next_start = next->position.z - 2.0f * next->collision_radius;
@@ -7900,10 +7911,8 @@ void Universe::filterSortedLists() {
     start = e0->position.z + 2.0f * e0->collision_radius;
     finish = start - 4.0f * e0->collision_radius;
     prev = e0->z_previous;
-    while ((prev) && (prev->collisionTestFilter ==
-                      3))  // next has been eliminated from the list of possible
-                           // colliders - so skip it
-      prev = prev->z_previous;
+    // next has been eliminated from the list of possible colliders - so skip it
+    while ((prev) && (prev->collisionTestFilter == 3)) prev = prev->z_previous;
     if (prev) {
       prev_start = prev->position.z + 2.0f * prev->collision_radius;
       if (prev_start > finish) {
@@ -7914,8 +7923,8 @@ void Universe::filterSortedLists() {
           if (prev_finish < finish) finish = prev_finish;
           e0 = prev;
           prev = e0->z_previous;
-          while ((prev) && (prev->collisionTestFilter ==
-                            3))  // next has been eliminated - so skip it
+          // next has been eliminated - so skip it
+          while ((prev) && (prev->collisionTestFilter == 3))
             prev = prev->z_previous;
           if (prev)
             prev_start = prev->position.z + 2.0f * prev->collision_radius;
@@ -7942,10 +7951,8 @@ void Universe::filterSortedLists() {
     start = e0->position.y - 2.0f * e0->collision_radius;
     finish = start + 4.0f * e0->collision_radius;
     next = e0->y_next;
-    while ((next) && (next->collisionTestFilter ==
-                      3))  // next has been eliminated from the list of possible
-                           // colliders - so skip it
-      next = next->y_next;
+    // next has been eliminated from the list of possible colliders - so skip it
+    while ((next) && (next->collisionTestFilter == 3)) next = next->y_next;
     if (next) {
       next_start = next->position.y - 2.0f * next->collision_radius;
       if (next_start < finish) {
@@ -7956,8 +7963,8 @@ void Universe::filterSortedLists() {
           if (next_finish > finish) finish = next_finish;
           e0 = next;
           next = e0->y_next;
-          while ((next) && (next->collisionTestFilter ==
-                            3))  // next has been eliminated - so skip it
+          // next has been eliminated - so skip it
+          while ((next) && (next->collisionTestFilter == 3))
             next = next->y_next;
           if (next)
             next_start = next->position.y - 2.0f * next->collision_radius;
@@ -7982,10 +7989,8 @@ void Universe::filterSortedLists() {
     start = e0->position.y + 2.0f * e0->collision_radius;
     finish = start - 4.0f * e0->collision_radius;
     prev = e0->y_previous;
-    while ((prev) && (prev->collisionTestFilter ==
-                      3))  // next has been eliminated from the list of possible
-                           // colliders - so skip it
-      prev = prev->y_previous;
+    // next has been eliminated from the list of possible colliders - so skip it
+    while ((prev) && (prev->collisionTestFilter == 3)) prev = prev->y_previous;
     if (prev) {
       prev_start = prev->position.y + 2.0f * prev->collision_radius;
       if (prev_start > finish) {
@@ -7996,8 +8001,8 @@ void Universe::filterSortedLists() {
           if (prev_finish < finish) finish = prev_finish;
           e0 = prev;
           prev = e0->y_previous;
-          while ((prev) && (prev->collisionTestFilter ==
-                            3))  // next has been eliminated - so skip it
+          // next has been eliminated - so skip it
+          while ((prev) && (prev->collisionTestFilter == 3))
             prev = prev->y_previous;
           if (prev)
             prev_start = prev->position.y + 2.0f * prev->collision_radius;
@@ -8024,10 +8029,8 @@ void Universe::filterSortedLists() {
     start = e0->position.x - 2.0f * e0->collision_radius;
     finish = start + 4.0f * e0->collision_radius;
     next = e0->x_next;
-    while ((next) && (next->collisionTestFilter ==
-                      3))  // next has been eliminated from the list of possible
-                           // colliders - so skip it
-      next = next->x_next;
+    // next has been eliminated from the list of possible colliders - so skip it
+    while ((next) && (next->collisionTestFilter == 3)) next = next->x_next;
     if (next) {
       next_start = next->position.x - 2.0f * next->collision_radius;
       if (next_start < finish) {
@@ -8038,8 +8041,8 @@ void Universe::filterSortedLists() {
           if (next_finish > finish) finish = next_finish;
           e0 = next;
           next = e0->x_next;
-          while ((next) && (next->collisionTestFilter ==
-                            3))  // next has been eliminated - so skip it
+          // next has been eliminated - so skip it
+          while ((next) && (next->collisionTestFilter == 3))
             next = next->x_next;
           if (next)
             next_start = next->position.x - 2.0f * next->collision_radius;
@@ -8064,10 +8067,8 @@ void Universe::filterSortedLists() {
     start = e0->position.x + 2.0f * e0->collision_radius;
     finish = start - 4.0f * e0->collision_radius;
     prev = e0->x_previous;
-    while ((prev) && (prev->collisionTestFilter ==
-                      3))  // next has been eliminated from the list of possible
-                           // colliders - so skip it
-      prev = prev->x_previous;
+    // next has been eliminated from the list of possible colliders - so skip it
+    while ((prev) && (prev->collisionTestFilter == 3)) prev = prev->x_previous;
     if (prev) {
       prev_start = prev->position.x + 2.0f * prev->collision_radius;
       if (prev_start > finish) {
@@ -8078,8 +8079,8 @@ void Universe::filterSortedLists() {
           if (prev_finish < finish) finish = prev_finish;
           e0 = prev;
           prev = e0->x_previous;
-          while ((prev) && (prev->collisionTestFilter ==
-                            3))  // next has been eliminated - so skip it
+          // next has been eliminated - so skip it
+          while ((prev) && (prev->collisionTestFilter == 3))
             prev = prev->x_previous;
           if (prev)
             prev_start = prev->position.x + 2.0f * prev->collision_radius;
@@ -8106,10 +8107,8 @@ void Universe::filterSortedLists() {
     start = e0->position.y - 2.0f * e0->collision_radius;
     finish = start + 4.0f * e0->collision_radius;
     next = e0->y_next;
-    while ((next) && (next->collisionTestFilter ==
-                      3))  // next has been eliminated from the list of possible
-                           // colliders - so skip it
-      next = next->y_next;
+    // next has been eliminated from the list of possible colliders - so skip it
+    while ((next) && (next->collisionTestFilter == 3)) next = next->y_next;
     if (next) {
       next_start = next->position.y - 2.0f * next->collision_radius;
       if (next_start < finish) {
@@ -8120,8 +8119,8 @@ void Universe::filterSortedLists() {
           if (next_finish > finish) finish = next_finish;
           e0 = next;
           next = e0->y_next;
-          while ((next) && (next->collisionTestFilter ==
-                            3))  // next has been eliminated - so skip it
+          // next has been eliminated - so skip it
+          while ((next) && (next->collisionTestFilter == 3))
             next = next->y_next;
           if (next)
             next_start = next->position.y - 2.0f * next->collision_radius;
@@ -8145,10 +8144,8 @@ void Universe::filterSortedLists() {
     start = e0->position.y + 2.0f * e0->collision_radius;
     finish = start - 4.0f * e0->collision_radius;
     prev = e0->y_previous;
-    while ((prev) && (prev->collisionTestFilter ==
-                      3))  // next has been eliminated from the list of possible
-                           // colliders - so skip it
-      prev = prev->y_previous;
+    // next has been eliminated from the list of possible colliders - so skip it
+    while ((prev) && (prev->collisionTestFilter == 3)) prev = prev->y_previous;
     if (prev) {
       prev_start = prev->position.y + 2.0f * prev->collision_radius;
       if (prev_start > finish) {
@@ -8159,8 +8156,8 @@ void Universe::filterSortedLists() {
           if (prev_finish < finish) finish = prev_finish;
           e0 = prev;
           prev = e0->y_previous;
-          while ((prev) && (prev->collisionTestFilter ==
-                            3))  // next has been eliminated - so skip it
+          // next has been eliminated - so skip it
+          while ((prev) && (prev->collisionTestFilter == 3))
             prev = prev->y_previous;
           if (prev)
             prev_start = prev->position.y + 2.0f * prev->collision_radius;
@@ -8187,10 +8184,8 @@ void Universe::filterSortedLists() {
     start = e0->position.z - 2.0f * e0->collision_radius;
     finish = start + 4.0f * e0->collision_radius;
     next = e0->z_next;
-    while ((next) && (next->collisionTestFilter ==
-                      3))  // next has been eliminated from the list of possible
-                           // colliders - so skip it
-      next = next->z_next;
+    // next has been eliminated from the list of possible colliders - so skip it
+    while ((next) && (next->collisionTestFilter == 3)) next = next->z_next;
     if (next) {
       next_start = next->position.z - 2.0f * next->collision_radius;
       if (next_start < finish) {
@@ -8203,8 +8198,8 @@ void Universe::filterSortedLists() {
           if (next_finish > finish) finish = next_finish;
           e0 = next;
           next = e0->z_next;
-          while ((next) && (next->collisionTestFilter ==
-                            3))  // next has been eliminated - so skip it
+          // next has been eliminated - so skip it
+          while ((next) && (next->collisionTestFilter == 3))
             next = next->z_next;
           if (next)
             next_start = next->position.z - 2.0f * next->collision_radius;
@@ -8229,10 +8224,8 @@ void Universe::filterSortedLists() {
     start = e0->position.z + 2.0f * e0->collision_radius;
     finish = start - 4.0f * e0->collision_radius;
     prev = e0->z_previous;
-    while ((prev) && (prev->collisionTestFilter ==
-                      3))  // next has been eliminated from the list of possible
-                           // colliders - so skip it
-      prev = prev->z_previous;
+    // next has been eliminated from the list of possible colliders - so skip it
+    while ((prev) && (prev->collisionTestFilter == 3)) prev = prev->z_previous;
     if (prev) {
       prev_start = prev->position.z + 2.0f * prev->collision_radius;
       if (prev_start > finish) {
@@ -8269,8 +8262,8 @@ void Universe::filterSortedLists() {
           if (prev_finish < finish) finish = prev_finish;
           e0 = prev;
           prev = e0->z_previous;
-          while ((prev) && (prev->collisionTestFilter ==
-                            3))  // next has been eliminated - so skip it
+          // next has been eliminated - so skip it
+          while ((prev) && (prev->collisionTestFilter == 3))
             prev = prev->z_previous;
           if (prev)
             prev_start = prev->position.z + 2.0f * prev->collision_radius;
@@ -8633,8 +8626,8 @@ void Universe::setSystemDataForGalaxy(
                                       oo::str::hasPrefix(key, "corona_"))) {
       if (the_sun != nullptr) the_sun->changeSunProperty(key, sysInfo);
     } else if (key == "texture") {
-      const std::string* texture =
-          object.getIf<std::string>();  // a texture name (a script string)
+      // a texture name (a script string)
+      const std::string* texture = object.getIf<std::string>();
       if (planet() != nullptr)
         planet()->setUpPlanetFromTexture(
             (texture != nullptr) ? std::optional<std::string>(*texture)
@@ -8824,8 +8817,8 @@ int RouteElement::jumps() { return _jumps; }
 oo::PList Universe::nearbyDestinationsWithinRange(double range) {
   oo::PList::Array result;
 
-  range =
-      oo::Clamp_0_max_d(range, MAX_JUMP_RANGE);  // limit to systems within 7LY
+  // limit to systems within 7LY
+  range = oo::Clamp_0_max_d(range, MAX_JUMP_RANGE);
   NSPoint here =
       (PLAYER != nullptr ? PLAYER->getGalaxy_coordinates() : NSPoint{});
 
@@ -8858,8 +8851,8 @@ oo::SystemID Universe::findNeighbouringSystemToCoords(NSPoint coords,
   // make list of connected systems
   bool connected[256];
   for (i = 0; i < 256; i++) connected[i] = false;
-  connected[0] =
-      true;  // system zero is always connected (true for galaxies 0..7)
+  // system zero is always connected (true for galaxies 0..7)
+  connected[0] = true;
   for (n = 0; n < 3; n++) {
     // repeat three times for surety
     for (i = 0; i < 256; i++) {
@@ -8912,8 +8905,8 @@ oo::SystemID Universe::findConnectedSystemAtCoords(NSPoint coords,
   // make list of connected systems
   bool connected[256];
   for (i = 0; i < 256; i++) connected[i] = false;
-  connected[0] =
-      true;  // system zero is always connected (true for galaxies 0..7)
+  // system zero is always connected (true for galaxies 0..7)
+  connected[0] = true;
   for (n = 0; n < 3; n++) {
     // repeat three times for surety
     for (i = 0; i < 256; i++) {
@@ -9601,13 +9594,13 @@ oo::PList Universe::shipsForSaleForSystem(oo::SystemID s,
       // for testing condition scripts
       std::shared_ptr<::ShipEntity> testshipHold =
           ::ProxyPlayerEntity::newProxyObject(ship_key, shipDict);
-      ::ShipEntity* testship =
-          testshipHold.get();  // customise the ship (if chance = 1, then ship
-                               // will get all possible add
+      // customise the ship (if chance = 1, then ship will get all possible add
+      ::ShipEntity* testship = testshipHold.get();
       // ons)
       while ((randf() < chance) && (options.size())) {
-        chance *= chance;  // decrease the chance of a further customisation
-                           // (unless it is 1, which might be a bug)
+        // decrease the chance of a further customisation (unless it is 1, which
+        // might be a bug)
+        chance *= chance;
         int optionIndex = static_cast<int>(Ranrot() % options.size());
         const std::optional<std::string> equipmentKey =
             options[static_cast<std::size_t>(optionIndex)];
@@ -9620,10 +9613,9 @@ oo::PList Universe::shipsForSaleForSystem(oo::SystemID s,
         if (item != nullptr) {
           oo::TechLevelID eqTechLevel =
               (item != nullptr ? item->techLevel() : 0);
+          // all amounts are x/10 due to being represented in tenths of credits.
           oo::CreditsQuantity eqPrice =
-              (item != nullptr ? item->price() : 0) /
-              10;  // all amounts are x/10 due to being
-                   // represented in tenths of credits.
+              (item != nullptr ? item->price() : 0) / 10;
           std::optional<std::string> eqShortDesc =
               (item != nullptr ? item->name() : std::optional<std::string>());
 
@@ -9764,8 +9756,9 @@ oo::PList Universe::shipsForSaleForSystem(oo::SystemID s,
               // of credit
               price -=
                   (fwdWeaponString ? getEquipmentPriceForKey(*fwdWeaponString)
+                                   // 90% credits
                                    : 0) *
-                  90 / 1000;  // 90% credits
+                  90 / 1000;
               price += eqPrice;
               fwdWeaponString = equipmentKey;
               fwdWeapon = new_weapon;
@@ -9785,8 +9778,9 @@ oo::PList Universe::shipsForSaleForSystem(oo::SystemID s,
                                        : 0.0f))) {
                 price -=
                     (aftWeaponString ? getEquipmentPriceForKey(*aftWeaponString)
+                                     // 90% credits
                                      : 0) *
-                    90 / 1000;  // 90% credits
+                    90 / 1000;
                 price += eqPrice;
                 aftWeaponString = equipmentKey;
                 aftWeapon = new_weapon;
@@ -9882,8 +9876,8 @@ oo::PList Universe::shipsForSaleForSystem(oo::SystemID s,
       ship_info_dictionary[std::string(SHIPYARD_KEY_PERSONALITY)] =
           oo::PList(personality);
 
-      resultDictionary[shipID] = oo::PList(std::move(
-          ship_info_dictionary));  // should order them fairly randomly
+      // should order them fairly randomly
+      resultDictionary[shipID] = oo::PList(std::move(ship_info_dictionary));
     }
 
     // next contract
@@ -10059,8 +10053,9 @@ oo::CreditsQuantity Universe::tradeInValueForCommanderDictionary(
       // aft weapon was defined as a base weapon
       ship_main_weapons_value +=
           (UNIVERSE != nullptr ? UNIVERSE->getEquipmentPriceForKey(weapon_key)
+                               // take weapon downgrades into account
                                : 0) /
-          10;  // take weapon downgrades into account
+          10;
     } else {
       ship_other_weapons_value +=
           (UNIVERSE != nullptr ? UNIVERSE->getEquipmentPriceForKey(weapon_key)
@@ -10112,8 +10107,9 @@ oo::CreditsQuantity Universe::tradeInValueForCommanderDictionary(
         std::find(ship_extra_equipment.begin(), ship_extra_equipment.end(),
                   *eq_key) != ship_extra_equipment.end())
       std::erase(ship_extra_equipment, *eq_key);
-    else  // if the ship has less equipment than standard, deduct the missing
-          // equipent's price
+    // if the ship has less equipment than standard, deduct the missing
+    // equipent's price
+    else
       extra_equipment_value -= (priceOf(eq_key) / 10);
   }
 
@@ -10308,8 +10304,8 @@ HPVector Universe::getSunSkimStartPositionForShip(::ShipEntity* ship) {
     v1 = HPvector_normal(v1);
   else
     v1.z = 1.0;
-  double radius = SUN_SKIM_RADIUS_FACTOR * the_sun->collision_radius -
-                  250.0;  // 250 m inside the skim radius
+  // 250 m inside the skim radius
+  double radius = SUN_SKIM_RADIUS_FACTOR * the_sun->collision_radius - 250.0;
   v1.x *= radius;
   v1.y *= radius;
   v1.z *= radius;
@@ -10344,8 +10340,8 @@ HPVector Universe::getSunSkimEndPositionForShip(::ShipEntity* ship) {
     v1 = HPvector_normal(v1);
   else
     v1.z = 1.0;
-  double rx = randf() - 0.5;  // one draw per local, in the order Clang
-                              // evaluates the arguments
+  // one draw per local, in the order Clang evaluates the arguments
+  double rx = randf() - 0.5;
   double ry = randf() - 0.5;
   double rz = randf() - 0.5;
   HPVector v2 = make_HPvector(rx, ry, rz);  // random vector
@@ -10354,15 +10350,15 @@ HPVector Universe::getSunSkimEndPositionForShip(::ShipEntity* ship) {
     v2 = HPvector_normal(v2);
   else
     v2.x = 1.0;
-  HPVector v3 = HPcross_product(
-      v1, v2);  // random vector at 90 degrees to v1 and v2 (random Vector)
+  // random vector at 90 degrees to v1 and v2 (random Vector)
+  HPVector v3 = HPcross_product(v1, v2);
   if (static_cast<bool>(v3.x) || static_cast<bool>(v3.y) ||
       static_cast<bool>(v3.z))
     v3 = HPvector_normal(v3);
   else
     v3.y = 1.0;
-  double radius = SUN_SKIM_RADIUS_FACTOR * the_sun->collision_radius -
-                  250.0;  // 250 m inside the skim radius
+  // 250 m inside the skim radius
+  double radius = SUN_SKIM_RADIUS_FACTOR * the_sun->collision_radius - 250.0;
   v1.x *= radius;
   v1.y *= radius;
   v1.z *= radius;
@@ -10422,8 +10418,9 @@ void Universe::allShipsDoScriptEvent(
   std::vector<oo::EntityHold> ship_holds;  // my_ships[i]'s object, held
   for (i = 0; i < ent_count; i++) {
     if (sortedEntities[i]->isShip) {
-      my_ships[static_cast<std::size_t>(ship_count++)] = oo::ToShip(
-          oo::HoldIn(ship_holds, sortedEntities[i]));  // retained (its object)
+      // retained (its object)
+      my_ships[static_cast<std::size_t>(ship_count++)] =
+          oo::ToShip(oo::HoldIn(ship_holds, sortedEntities[i]));
     }
   }
 
@@ -10686,8 +10683,8 @@ void Universe::setUpSettings() {
       "global-settings.plist", std::string("Config"),
       oo::ResourceMergeMode::kSmart, true);
 
-  replacedSystemManager =
-      std::move(systemManager);  // [systemManager autorelease]
+  // [systemManager autorelease]
+  replacedSystemManager = std::move(systemManager);
   systemManager = ResourceManager::systemDescriptionManager();
 
   screenBackgrounds = ResourceManager::dictionaryFromFilesNamed(
@@ -10781,8 +10778,8 @@ bool Universe::reinitAndShowDemo(bool showDemo) {
   removeAllEntitiesExceptPlayer();
   oo::Texture::clearCache();
 
-  _sessionID++;  // Must be after removing old entities and before adding new
-                 // ones.
+  // Must be after removing old entities and before adding new ones.
+  _sessionID++;
 
   ResourceManager::setUseAddOns(useAddOns);  // also logs the paths
   // ResourceManager::loadScripts(); // initialised inside [player setUp]!
@@ -10879,8 +10876,8 @@ void Universe::setUpInitialUniverse() {
   OO_DEBUG_PUSH_PROGRESS("Wormhole and character reset");
   AutoreleaseAll(activeWormholes);  // the old list was autoreleased
   activeWormholes.reserve(16);
-  replacedCharacterPool =
-      std::move(characterPool);  // the old pool was autoreleased
+  // the old pool was autoreleased
+  replacedCharacterPool = std::move(characterPool);
   characterPool.clear();
   characterPool.reserve(256);
   OO_DEBUG_POP_PROGRESS();
@@ -10899,8 +10896,8 @@ void Universe::setUpInitialUniverse() {
                                : std::optional<std::string>())
                 .value_or(std::string())));  // the standard cobra at this point
   if (player != nullptr)
-    player->baseMass();  // bootstrap the base mass used in all fuel charge
-                         // calculations.
+    // bootstrap the base mass used in all fuel charge calculations.
+    player->baseMass();
   OO_DEBUG_POP_PROGRESS();
 
   // Player init above finishes initialising all standard player ship
@@ -11005,13 +11002,12 @@ bool Universe::doRemoveEntity(Entity* entity) {
                 it isn't aligned, and the end of it is only live in
                 degenerate cases.
                 -- Ahruman 2012-07-11
+        // copy entity[index + n] -> entity[index] (preserves sort order)
         */
-        sortedEntities[index] =
-            sortedEntities[index + n];  // copy entity[index + n] ->
-                                        // entity[index] (preserves sort order)
+        sortedEntities[index] = sortedEntities[index + n];
         if (sortedEntities[index]) {
-          sortedEntities[index]->zero_index =
-              index;  // give it its correct position
+          // give it its correct position
+          sortedEntities[index]->zero_index = index;
         }
         index++;
       }
@@ -11556,10 +11552,10 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
         static_cast<GLsizei>(viewSize.height), 0, GL_RGBA, GL_FLOAT, nullptr));
     OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    OOGL(glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-        GL_CLAMP_TO_EDGE));  // we clamp to the edge as the blur filter would
-                             // otherwise sample repeated texture values!
+    OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                         // we clamp to the edge as the blur filter would
+                         // otherwise sample repeated texture values!
+                         GL_CLAMP_TO_EDGE));
     OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
     OOGL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                 GL_TEXTURE_2D, pingpongColorbuffers[i], 0));

@@ -81,9 +81,9 @@ constexpr uint32_t kIDScrambleMask = 0;
 constexpr uint32_t kIDIncrement = 1;
 #else
 constexpr uint32_t kIDScrambleMask = 0x2315EB16;  // Just a random number.
-constexpr uint32_t kIDIncrement =
-    992699;  // A large prime number, to produce a non-obvious sequence which
-             // still uses all 2^32 values.
+// A large prime number, to produce a non-obvious sequence which still uses all
+// 2^32 values.
+constexpr uint32_t kIDIncrement = 992699;
 #endif
 
 struct CallbackEntry {
@@ -108,8 +108,8 @@ struct DeferredOperation {
 };
 
 namespace {
-static std::unique_ptr<std::vector<DeferredOperation>>
-    sDeferredOps;  // Deferred adds/removes while running.
+// Deferred adds/removes while running.
+static std::unique_ptr<std::vector<DeferredOperation>> sDeferredOps;
 }  // namespace
 
 static uint32_t sNextID;

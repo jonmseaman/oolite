@@ -63,8 +63,8 @@ class SDLJoystickManager : public oo::JoystickManager {
   SDLJoystickManager();  // opens the sticks SDL reports (at most MAX_STICKS)
 
   bool handleSDLEvent(SDL_Event* evt);
-  std::optional<std::string> nameOfJoystick(
-      std::size_t stickNumber) override;  // nullopt: the device has no name
+  // nullopt: the device has no name
+  std::optional<std::string> nameOfJoystick(std::size_t stickNumber) override;
   int16_t getAxisWithStick(std::size_t stickNum, std::size_t axisNum) override;
   SDL_JoyAxisEvent makeJoyAxisEvent(SDL_JoyAxisEvent* sdlevt);
   SDL_JoyButtonEvent makeJoyButtonEvent(SDL_JoyButtonEvent* sdlevt);
@@ -78,8 +78,8 @@ class SDLJoystickManager : public oo::JoystickManager {
   std::size_t joystickCount() override;
 
  private:
-  std::map<std::string, int, std::less<>> joystickIdMap =
-      {};  // "%d" of an SDL joystick id -> stick index
+  // "%d" of an SDL joystick id -> stick index
+  std::map<std::string, int, std::less<>> joystickIdMap = {};
   SDL_Joystick* stick[MAX_STICKS] = {};
   int stickCount = {};
 };

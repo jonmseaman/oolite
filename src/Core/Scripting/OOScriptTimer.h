@@ -81,8 +81,8 @@ class OOScriptTimer : public oo::PListForeign {
   virtual std::optional<std::string> oo_jsClassName() { return std::nullopt; }
 
   oo::TimeAbsolute nextTime();
-  bool setNextTime(
-      oo::TimeAbsolute nextTime);  // Only works when timer is not scheduled.
+  // Only works when timer is not scheduled.
+  bool setNextTime(oo::TimeAbsolute nextTime);
   oo::TimeDelta interval();
   void setInterval(oo::TimeDelta interval);
 

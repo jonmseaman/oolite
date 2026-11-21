@@ -44,8 +44,8 @@ namespace oo {
 using PixMapDimension = uint32_t;
 
 }  // namespace oo
-   // Note: dimensions are assumed to be less
-   // than 1048576 (2^20) pixels.
+
+// Note: dimensions are assumed to be less than 1048576 (2^20) pixels.
 
 #define OORoundUpToPowerOf2_PixMap oo::RoundUpToPowerOf2_32
 

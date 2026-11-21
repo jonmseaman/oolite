@@ -379,10 +379,11 @@ void oo::SkyDrawable::setUpNebulae(oo::Color* color1, oo::Color* color2,
                     nebulaAlpha * (0.5f + static_cast<float>(r1) / 32.0f))
               : nullptr;
 #endif
-      currQuad->texture = (sNebulaTextures != nullptr)
-                              ? sNebulaTextures->selectTexture()
-                              : nullptr;  // Not retained, since sStarTextures
-                                          // is never released.
+      currQuad->texture =
+          (sNebulaTextures != nullptr)
+              ? sNebulaTextures->selectTexture()
+              // Not retained, since sStarTextures is never released.
+              : nullptr;
 
       middle = vector_multiply_scalar(vk, BILLBOARD_DEPTH);
       offset = vector_multiply_scalar(vector_add(vi, vj),
@@ -443,8 +444,9 @@ void oo::SkyDrawable::loadStarTextures() {
                 oo::TextureFlags::kAlphaMask,
             0.0f, -0.0f);
     if (stars != nullptr) {
+      // never deleted
       static std::shared_ptr<oo::ProbabilisticTextureManager>*
-          sStarTexturesHolder = nullptr;  // never deleted
+          sStarTexturesHolder = nullptr;
       sStarTexturesHolder =
           new std::shared_ptr<oo::ProbabilisticTextureManager>(
               std::move(stars));
@@ -468,8 +470,9 @@ void oo::SkyDrawable::loadNebulaTextures() {
             oo::TextureFlags::kDefaultOptions | oo::TextureFlags::kAlphaMask,
             0.0f, 0.0f);
     if (nebulae != nullptr) {
+      // never deleted
       static std::shared_ptr<oo::ProbabilisticTextureManager>*
-          sNebulaTexturesHolder = nullptr;  // never deleted
+          sNebulaTexturesHolder = nullptr;
       sNebulaTexturesHolder =
           new std::shared_ptr<oo::ProbabilisticTextureManager>(
               std::move(nebulae));
@@ -503,8 +506,8 @@ void oo::SkyDrawable::resetGraphicsState() {
 void oo::SkyQuadSet::addQuads(
     std::span<const oo::SkyQuadDesc> quads,
     std::vector<std::unique_ptr<oo::SkyQuadSet>>& ioArray) {
-  std::vector<std::shared_ptr<oo::Texture>>
-      seenTextures;  // by identity (textures do not override -isEqual:)
+  // by identity (textures do not override -isEqual:)
+  std::vector<std::shared_ptr<oo::Texture>> seenTextures;
   oo::Texture* texture = nullptr;
   std::unique_ptr<oo::SkyQuadSet> quadSet;
 
@@ -549,8 +552,8 @@ std::unique_ptr<oo::SkyQuadSet> oo::SkyQuadSet::initWithQuadsWithTexture(
                                   (x * (6.2 * x + 1.7) + 0.06));
   };
 
-  std::unique_ptr<oo::SkyQuadSet> self =
-      std::make_unique<oo::SkyQuadSet>();  // [super init] could not fail
+  // [super init] could not fail
+  std::unique_ptr<oo::SkyQuadSet> self = std::make_unique<oo::SkyQuadSet>();
 
   if (OK) {
     // Count the quads in the array using this texture.
@@ -696,8 +699,8 @@ std::shared_ptr<oo::Color> SaturatedColorInRange(oo::Color* color1,
               : nullptr;
   if (color != nullptr) color->getHue(&hue, &saturation, &brightness, &alpha);
 
-  saturation = static_cast<float>(0.5 * saturation +
-                                  0.5);  // move saturation up a notch!
+  // move saturation up a notch!
+  saturation = static_cast<float>(0.5 * saturation + 0.5);
 
   /*	NOTE: this changes the hue, because getHue:... produces hue values
           in [0, 360], but colorWithCalibratedHue:... takes hue values in

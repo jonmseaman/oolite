@@ -287,7 +287,8 @@ using KeyCode = uint16_t;
 using UniversalID = uint16_t;
 
 }  // namespace oo
-   // Valid IDs range from 100 to 1000.
+
+// Valid IDs range from 100 to 1000.
 
 inline constexpr int UNIVERSE_MAX_ENTITIES = 2048;
 inline constexpr int NO_TARGET = 0;
@@ -298,8 +299,8 @@ inline constexpr int MAX_ENTITY_UID =
 namespace oo {
 
 inline constexpr int kVariableTechLevel = 99;
-using TechLevelID = std::size_t;  // 0..14, 99 is special. oo::kNotFound is
-                                  // used, so std::size_t required.
+// 0..14, 99 is special. oo::kNotFound is used, so std::size_t required.
+using TechLevelID = std::size_t;
 
 using GovernmentID = uint8_t;  // 0..7
 using EconomyID = uint8_t;     // 0..7

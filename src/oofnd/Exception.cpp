@@ -62,8 +62,8 @@ std::optional<CaughtOOException> CurrentOOException() {
   } catch (const Exception& exception) {
     return CaughtOOException(&exception);
   } catch (...) {
-    return std::nullopt;  // not the game's exception: not what @catch
-                          // (OOException *) caught
+    // not the game's exception: not what @catch (OOException *) caught
+    return std::nullopt;
   }
 }
 

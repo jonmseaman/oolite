@@ -28,9 +28,9 @@
 #define DEBUG_DUMP_RAW (1 && DEBUG_DUMP)
 
 #define POLAR_CAPS 1
-#define ALBEDO_FACTOR \
-  0.7f  // Overall darkening of everything, allowing better contrast for snow
-        // and specular highlights.
+// Overall darkening of everything, allowing better contrast for snow and
+// specular highlights.
+#define ALBEDO_FACTOR 0.7f
 
 #include <array>
 #include <bit>
@@ -127,8 +127,8 @@ namespace {
 
 FloatRGB FloatRGBFromDictColor(
     const oo::PList& dictionary,
-    const std::string&
-        key);  // dictionary: the planet info (colours are Object nodes)
+    // dictionary: the planet info (colours are Object nodes)
+    const std::string& key);
 
 }  // namespace
 
@@ -476,8 +476,8 @@ void oo::PlanetTextureGenerator::loadTexture() {
     // little ice. Most unfavourable: 0.0f, frozen planet. TODO: make it
     // dependent on ranrot / planetinfo key...
     SetMixConstants(&_info,
-                    1.0f - _info.polarFraction);  // no need to recalculate them
-                                                  // inside each loop!
+                    // no need to recalculate them inside each loop!
+                    1.0f - _info.polarFraction);
 
     // first pass, calculate q.
     _info.qBuffer.assign(static_cast<size_t>(_width * _height), 0.0f);
@@ -506,10 +506,9 @@ void oo::PlanetTextureGenerator::loadTexture() {
       nearPole *= nearPole;
 
       for (x = static_cast<int>(_width) - 1; x >= 0; x--) {
+        // no need to use GetQ, x and y are always within bounds.
         q = _info.qBuffer[static_cast<uint32_t>(y) * _width +
-                          static_cast<uint32_t>(
-                              x)];  // no need to use GetQ, x and y are
-                                    // always within bounds.
+                          static_cast<uint32_t>(x)];
         yN = GetQ(_info.qBuffer.data(), x, y - 1, _width, _height, widthMask,
                   heightMask);  // recalculates x & y if they go out of bounds.
         yS = GetQ(_info.qBuffer.data(), x, y + 1, _width, _height, widthMask,
@@ -543,10 +542,9 @@ void oo::PlanetTextureGenerator::loadTexture() {
                   of color is a measure of "seaishness" for the specular map,
                   so we can recycle that to avoid branching.
                   -- Ahruman
+          // equivalent to - but slightly faster than - previous implementation.
           */
-          shade +=
-              color.a - color.a * shade;  // equivalent to - but slightly faster
-                                          // than - previous implementation.
+          shade += color.a - color.a * shade;
         }
 
         *px++ = static_cast<uint8_t>(255.0f * color.r * shade);
@@ -746,15 +744,13 @@ static FloatRGBA PlanetMix(oo::PlanetTextureGeneratorInfo* info, float q,
   if (q > phi) {
     // (nearPole + q) / 2 > pole
     // thinner to thicker ice.
-    specular =
-        q > phi + 0.02f
-            ? 1.0f
-            : 0.2f + (q - phi) *
-                         40.0f;  // (q - phi) * 40 == ((q-phi) / 0.02) * 0.8
+    specular = q > phi + 0.02f ? 1.0f
+                               // (q - phi) * 40 == ((q-phi) / 0.02) * 0.8
+                               : 0.2f + (q - phi) * 40.0f;
     // diffuse = info->polarSeaColor;
     diffuse = Blend(specular, info->polarSeaColor, diffuse);
-    specular =
-        specular * 0.5f;  // softer contours under ice, but still contours.
+    // softer contours under ice, but still contours.
+    specular = specular * 0.5f;
   }
 #endif
 
@@ -1095,8 +1091,9 @@ static bool GenerateFBMNoise(oo::PlanetTextureGeneratorInfo* info) {
 
 static float QFactor(float* accbuffer, int x, int y, unsigned width,
                      float polar_y_value, float bias, float polar_y) {
+  // 0.0 -> 1.0
   float q = accbuffer[static_cast<unsigned int>(y) * width +
-                      static_cast<unsigned int>(x)];  // 0.0 -> 1.0
+                      static_cast<unsigned int>(x)];
   q += bias;
 
   // Polar Y smooth.
@@ -1131,12 +1128,10 @@ static void SetMixConstants(oo::PlanetTextureGeneratorInfo* info,
   info->mix_hi = 0.66667f * info->landFraction;
   info->mix_oh = 1.0f / info->mix_hi;
   info->mix_ih = 1.0f / (1.0f - info->mix_hi);
+  // landmasses make the polar cap proportionally bigger, but not too much
+  // bigger.
   info->mix_polarCap =
-      temperatureFraction *
-      (0.28f +
-       0.24f *
-           info->landFraction);  // landmasses make the polar cap proportionally
-                                 // bigger, but not too much bigger.
+      temperatureFraction * (0.28f + 0.24f * info->landFraction);
 }
 
 bool oo::PlanetNormalMapGenerator::initWithCacheKey(const std::string& cacheKey,

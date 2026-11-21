@@ -69,11 +69,11 @@ class OXPVerifierStage : public oo::Object {
      this stage cannot run. dependents() returns a set of names of stages that
      should not be run before this one. Unlike dependencies(), these are
      considered non-critical.
+  // nullopt: none (nil)
   */
-  virtual std::optional<std::vector<std::string>>
-  dependencies();  // nullopt: none (nil)
-  virtual std::optional<std::vector<std::string>>
-  dependents();  // stage names; nullopt: none (nil)
+  virtual std::optional<std::vector<std::string>> dependencies();
+  // stage names; nullopt: none (nil)
+  virtual std::optional<std::vector<std::string>> dependents();
 
   /*	This is called once by the verifier.
           When it is called, all the verifier stages listed in dependencies()

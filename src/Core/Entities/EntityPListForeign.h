@@ -44,15 +44,16 @@ class Entity;
 namespace oo {
 
 // The entity, where it has its object; else null.
-Entity* WithObject(Entity* entity);  // EntityHelpers.cpp (out of line: a narrow
-                                     // test's stand-in entity answers it)
+// EntityHelpers.cpp (out of line: a narrow test's stand-in entity answers it)
+Entity* WithObject(Entity* entity);
 
 /*	An entity carried through plist data as a PList::Object node: the
    node holds the entity, which keeps the entity alive, and answers
    it. Its class name is "Entity", its description the entity's
    (oo::EntityDescription()), its JS value the entity's (OOJSValueFromPList).
+// EntityHelpers.cpp
 */
-std::string EntityDescription(Entity* entity);  // EntityHelpers.cpp
+std::string EntityDescription(Entity* entity);
 
 class EntityPListForeign final : public PListForeign {
  public:

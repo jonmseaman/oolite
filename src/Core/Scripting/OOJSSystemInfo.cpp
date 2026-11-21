@@ -167,12 +167,12 @@ namespace {
 
 enum class SystemInfoProperty : std::int16_t {
   // Property IDs
-  kCoordinates,          // system coordinates (in LY), Vector3D (with z =
-                         // 0), read-only
-  kInternalCoordinates,  // system coordinates (unscaled), Vector3D
-                         // (with z = 0), read-only
-  kGalaxyID,             // galaxy number, integer, read-only
-  kSystemID              // system number, integer, read-only
+  // system coordinates (in LY), Vector3D (with z = 0), read-only
+  kCoordinates,
+  // system coordinates (unscaled), Vector3D (with z = 0), read-only
+  kInternalCoordinates,
+  kGalaxyID,  // galaxy number, integer, read-only
+  kSystemID   // system number, integer, read-only
 };
 
 }  // namespace
@@ -379,10 +379,10 @@ systemSeedForSystemNumber:_system];
 NSPoint OOSystemInfo::coordinates() {
   if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false) &&
       _system == -1) {
-    return (PLAYER != nullptr
-                ? PLAYER->PlayerEntity::getGalaxy_coordinates()
-                : NSPoint{});  // qualified: the final overrider, so the binding
-                               // test stands in for it
+    return (PLAYER != nullptr ? PLAYER->PlayerEntity::getGalaxy_coordinates()
+                              // qualified: the final overrider, so the binding
+                              // test stands in for it
+                              : NSPoint{});
   }
   return (UNIVERSE != nullptr ? UNIVERSE->coordinatesForSystem(_system)
                               : NSPoint{});
@@ -473,8 +473,8 @@ JSValue GetJSSystemInfoForSystem(JSContext* context, oo::GalaxyID galaxy,
   std::shared_ptr<OOSystemInfo> info;
   JSValue result;
   OOJS_BEGIN_FULL_NATIVE(context)
-  info = OOSystemInfo::initWithGalaxy(
-      galaxy, system);  // null for a galaxy or system out of range
+  // null for a galaxy or system out of range
+  info = OOSystemInfo::initWithGalaxy(galaxy, system);
   OOJS_END_FULL_NATIVE
 
   if (info == nullptr) [[unlikely]] {
@@ -514,8 +514,8 @@ static void SystemInfoFinalize(JSRuntime* runtime, JSValueConst thisObj) {
     sCachedSystemInfo = JS_UNDEFINED;
   }
 
-  OOJSCxxObjectWrapperFinalize(
-      runtime, thisObj);  // clearJSSelf(), the slot's release, the empty slot
+  // clearJSSelf(), the slot's release, the empty slot
+  OOJSCxxObjectWrapperFinalize(runtime, thisObj);
 }
 
 // *** Exotic property behaviour (replaces SpiderMonkey class hooks) ***
@@ -578,8 +578,8 @@ static bool SystemInfoGetSystemDataValue(JSContext* context, OOSystemInfo* info,
                           : propValue.doubleValue();
     *outValue = JS_NewNumber(context, number);
   } else {
-    *outValue = OOJSValueFromPList(
-        context, propValue);  // non-null: as its own glue gave
+    // non-null: as its own glue gave
+    *outValue = OOJSValueFromPList(context, propValue);
   }
   return true;
 }
@@ -909,9 +909,9 @@ static JSValue SystemInfoGetProperty(OOJS_GETTER_ARGS) {
       !(UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false) &&
       SystemOf(info) == -1;
   bool sameGalaxy = (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID()
-                                       : oo::GalaxyID{}) ==
-                    GalaxyOf(info);  // qualified: the final overrider, so the
-                                     // binding test stands in for it
+                                       // qualified: the final overrider, so the
+                                       // binding test stands in for it
+                                       : oo::GalaxyID{}) == GalaxyOf(info);
 
   switch (static_cast<SystemInfoProperty>(magic)) {
     using enum SystemInfoProperty;
@@ -1061,12 +1061,11 @@ static JSValue SystemInfoSamplePrice(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  bool sameGalaxy =
-      (GalaxyOf(thisInfo) ==
-       (PLAYER != nullptr
-            ? PLAYER->PlayerEntity::galaxyNumber()
-            : oo::GalaxyID{}));  // qualified: the final overrider, so the
-                                 // binding test stands in for it
+  bool sameGalaxy = (GalaxyOf(thisInfo) ==
+                     (PLAYER != nullptr ? PLAYER->PlayerEntity::galaxyNumber()
+                                        // qualified: the final overrider, so
+                                        // the binding test stands in for it
+                                        : oo::GalaxyID{}));
   if (!sameGalaxy) {
     OOJSReportErrorForCaller(
         context, "SystemInfo", "samplePrice",
@@ -1076,9 +1075,9 @@ static JSValue SystemInfoSamplePrice(OOJS_NATIVE_ARGS) {
 
   int economy = PropertyIntValue(ValueForKey(
       thisInfo,
-      std::string("economy")));  // one system-data read per local, in the order
-                                 // Clang evaluates the arguments: a description
-                                 // that is an array draws
+      // one system-data read per local, in the order Clang evaluates the
+      // arguments: a description that is an array draws
+      std::string("economy")));
   std::optional<std::string> commodityScript =
       ManifestString(ValueForKey(thisInfo, std::string("commodity_script")));
   oo::CreditsQuantity price = commodities->samplePriceForCommodity(
@@ -1099,9 +1098,10 @@ static JSValue SystemInfoSetPropertyMethod(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
 
   std::optional<std::string> property;
-  oo::PList value;     // null for a JavaScript null
-  oo::PList manifest;  // a string from JavaScript, or the running script's
-                       // manifest identifier as read
+  oo::PList value;  // null for a JavaScript null
+  // a string from JavaScript, or the running script's manifest identifier as
+  // read
+  oo::PList manifest;
 
   int32_t iValue;
 
@@ -1179,10 +1179,10 @@ static JSValue SystemInfoStaticFilteredSystems(JSContext* context,
     // Iterate over systems.
     bool OK = true;  // (the array was always made)
     oo::GalaxyID galaxy =
-        (PLAYER != nullptr
-             ? PLAYER->PlayerEntity::currentGalaxyID()
-             : oo::GalaxyID{});  // qualified: the final overrider, so the
-                                 // binding test stands in for it
+        (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID()
+                           // qualified: the final overrider, so the binding
+                           // test stands in for it
+                           : oo::GalaxyID{});
     oo::SystemID system;
     for (system = 0; system <= oo::kMaximumSystemID; system++) {
       // NOTE: this deliberately bypasses the cache, since iteration is
@@ -1236,9 +1236,10 @@ static JSValue SystemInfoStaticSetInterstellarProperty(
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> property;
-  oo::PList value;     // null for a JavaScript null
-  oo::PList manifest;  // a string from JavaScript, or the running script's
-                       // manifest identifier as read
+  oo::PList value;  // null for a JavaScript null
+  // a string from JavaScript, or the running script's manifest identifier as
+  // read
+  oo::PList manifest;
 
   int32_t iValue;
   oo::GalaxyID g;

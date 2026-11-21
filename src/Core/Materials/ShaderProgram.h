@@ -64,20 +64,20 @@ class ShaderProgram : public oo::Object {
       const std::optional<std::string>& fragmentShaderSource,
       const std::optional<std::string>& vertexShaderName,
       const std::optional<std::string>& fragmentShaderName,
-      const std::optional<std::string>&
-          prefixString,  // String prepended to program source (both vs and fs)
-      const oo::PList&
-          attributeBindings,  // Maps vertex attribute names to "locations".
+      // String prepended to program source (both vs and fs)
+      const std::optional<std::string>& prefixString,
+      // Maps vertex attribute names to "locations".
+      const oo::PList& attributeBindings,
       const std::optional<std::string>& cacheKey);
 
   // Loads a shader from a file, caching and sharing shader program instances.
   static std::shared_ptr<ShaderProgram> shaderProgramWithVertexShaderName(
       const std::string& vertexShaderName,
       const std::string& fragmentShaderName,
-      const std::optional<std::string>&
-          prefixString,  // String prepended to program source (both vs and fs)
-      const oo::PList&
-          attributeBindings);  // Maps vertex attribute names to "locations".
+      // String prepended to program source (both vs and fs)
+      const std::optional<std::string>& prefixString,
+      // Maps vertex attribute names to "locations".
+      const oo::PList& attributeBindings);
 
   void apply();
   static void applyNone();

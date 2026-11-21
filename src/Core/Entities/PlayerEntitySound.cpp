@@ -142,12 +142,12 @@ void PlayerEntity::setUpSound() {
       oo::SoundSourcePool::poolWithCount(kWarningPoolSize, 0.0);
   Sounds().weaponPool =
       oo::SoundSourcePool::poolWithCount(kWeaponPoolSize, 0.0);
-  Sounds().damagePool = oo::SoundSourcePool::poolWithCount(
-      kDamagePoolSize, 0.1);  // Repeat time limit is to avoid playing a scrape
-                              // sound every frame on glancing scrapes. This
-                              // does limit the number of laser hits that can
-                              // be played in a furrball, though; maybe lasers
-                              // and scrapes should use different pools.
+  // Repeat time limit is to avoid playing a scrape sound every frame on
+  // glancing scrapes. This does limit the number of laser hits that can be
+  // played in a furrball, though; maybe lasers and scrapes should use different
+  // pools.
+  Sounds().damagePool =
+      oo::SoundSourcePool::poolWithCount(kDamagePoolSize, 0.1);
   Sounds().miscPool = oo::SoundSourcePool::poolWithCount(kMiscPoolSize, 0.0);
 
   // Two sources with the same sound are used to simulate looping.

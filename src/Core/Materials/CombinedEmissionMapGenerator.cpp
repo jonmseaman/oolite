@@ -423,8 +423,8 @@ void oo::CombinedEmissionMapGenerator::loadTexture() {
       haveEmission = true;
       illuminationPx.pixels = nullptr;
     }
-    haveIllumination =
-        false;  // Either way, illumination is now baked into emission.
+    // Either way, illumination is now baked into emission.
+    haveIllumination = false;
   }
 
   (void)haveEmission;

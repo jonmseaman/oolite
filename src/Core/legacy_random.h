@@ -59,18 +59,18 @@ void clear_checksum();
 int16_t munge_checksum(std::int64_t value);
 
 // cunning price rounding routine:
-double cunningFee(double value,
-                  double precision);  // precision is the fraction below which
-                                      // numbers become insignificant.
+double cunningFee(
+    double value,
+    // precision is the fraction below which numbers become insignificant.
+    double precision);
 
 // an implementation of RANROT
 // pseudo random number generator
 void ranrot_srand(uint32_t seed);
 unsigned Ranrot();
-#define ranrot_rand() \
-  (static_cast<int>(  \
-      Ranrot()))  // Some uses perform arithmetic that does weird things if
-                  // result is unsigned -- DustEntity.m, for instance.
+// Some uses perform arithmetic that does weird things if result is unsigned --
+// DustEntity.m, for instance.
+#define ranrot_rand() (static_cast<int>(Ranrot()))
 float randf();
 float bellf(int n);
 
@@ -168,8 +168,8 @@ inline int rotate_byte_left(int x) { return ((x << 1) | (x >> 7)) & 255; }
 inline double distanceBetweenPlanetPositions(int x1, int y1, int x2, int y2) {
   int dx = x1 - x2;
   int dy = (y1 - y2) / 2;
-  int dist = static_cast<int>(sqrt(
-      dx * dx + dy * dy));  // N.b. Rounding error due to truncation is desired.
+  // N.b. Rounding error due to truncation is desired.
+  int dist = static_cast<int>(sqrt(dx * dx + dy * dy));
   return 0.4 * dist;
 }
 

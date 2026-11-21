@@ -58,8 +58,8 @@ oo::PList NormalizedColorComponents(oo::Color* color) {
 
 static JSClassDef sPlanetClass = {
     .class_name = "Planet",
-    .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+    // the slot holds an OOJSEntityHolder
+    .finalizer = OOJSCxxObjectWrapperFinalize,
 };
 
 namespace {
@@ -103,10 +103,9 @@ static const JSCFunctionListEntry sPlanetProperties[] = {
                      PlanetProperty::kRotationalVelocity),
     OOJS_PROPERTY_RW("texture", PlanetGetProperty, PlanetSetProperty,
                      PlanetProperty::kTexture),
-    OOJS_PROPERTY_RW(
-        "orientation", PlanetGetProperty, PlanetSetProperty,
-        PlanetProperty::kOrientation),  // Not documented since it's
-                                        // inherited from Entity
+    OOJS_PROPERTY_RW("orientation", PlanetGetProperty, PlanetSetProperty,
+                     // Not documented since it's inherited from Entity
+                     PlanetProperty::kOrientation),
     OOJS_PROPERTY_RW("terminatorThresholdVector", PlanetGetProperty,
                      PlanetSetProperty,
                      PlanetProperty::kTerminatorThresholdVector),

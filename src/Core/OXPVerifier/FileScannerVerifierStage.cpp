@@ -207,8 +207,8 @@ std::optional<std::string> oo::FileScannerVerifierStage::pathForFile(
   // If we get here, the file wasn't found in the OXP.
   // FIXME: should check case for built-in files.
   if (checkBuiltIn && file.has_value())
-    return ResourceManager::pathForFileNamed(
-        *file, folder);  // a nil name found no path
+    // a nil name found no path
+    return ResourceManager::pathForFileNamed(*file, folder);
 
   return std::nullopt;
 }

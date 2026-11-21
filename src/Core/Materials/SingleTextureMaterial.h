@@ -62,10 +62,9 @@ class SingleTextureMaterial : public BasicMaterial {
           The initialisers run once, right after construction, and answer false
      on failure.
   */
-  bool initWithName(
-      const std::optional<std::string>& name,
-      const oo::PList& configuration);  // shared with OOBasicMaterial and
-                                        // OOMultiTextureMaterial
+  bool initWithName(const std::optional<std::string>& name,
+                    // shared with OOBasicMaterial and OOMultiTextureMaterial
+                    const oo::PList& configuration);
 
   /*	Designated initializer. The name is nil-able (the initializer fails
      without one); the configuration is a material configuration dictionary

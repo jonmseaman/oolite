@@ -130,8 +130,9 @@ void oo::BasicMaterial::unapplyWithNext(oo::Material* next) {
   if (dynamic_cast<oo::BasicMaterial*>(next) == nullptr) {
     if (sDefaultMaterial == nullptr) [[unlikely]] {
       // Never released: a heap std::shared_ptr that is never deleted.
+      // never deleted
       static std::shared_ptr<oo::BasicMaterial>* sDefaultMaterialHolder =
-          nullptr;  // never deleted
+          nullptr;
       sDefaultMaterialHolder = new std::shared_ptr<oo::BasicMaterial>(
           materialWithName(std::string("<default material>")));
       sDefaultMaterial = sDefaultMaterialHolder->get();

@@ -57,6 +57,6 @@ class OOJavaScriptEngineMonitor {
                         const std::optional<std::string>& messageClass) = 0;
 
  protected:
-  ~OOJavaScriptEngineMonitor() =
-      default;  // never deleted through the interface
+  // never deleted through the interface
+  ~OOJavaScriptEngineMonitor() = default;
 };

@@ -165,8 +165,8 @@ class Trumble : public oo::Object {
 
   ::PlayerEntity* player = {};  // owning entity (not retained)
   //
-  uint16_t digram[2] =
-      {};  // seed for pseudo-randomly setting up Trumble (pair of characters)
+  // seed for pseudo-randomly setting up Trumble (pair of characters)
+  uint16_t digram[2] = {};
   //
   GLfloat colorBase[4] = {};    // color of Trumble
   GLfloat colorPoint1[4] = {};  // color of Trumble (variation 1)
@@ -175,8 +175,8 @@ class Trumble : public oo::Object {
   GLfloat* pointColor[6] = {};  // pointscheme
   //
   GLfloat hunger = {};  // behaviour modifier 0.0 (satiated) to 1.0 (starving)
-  GLfloat discomfort = {};  // behaviour modifier 0.0 (very happy) to 1.0
-                            // (extremely uncomfortable)
+  // behaviour modifier 0.0 (very happy) to 1.0 (extremely uncomfortable)
+  GLfloat discomfort = {};
   //
   GLfloat size = {};         // 0.0 -> max_size
   GLfloat max_size = {};     // 0.90 -> 1.25
@@ -188,10 +188,10 @@ class Trumble : public oo::Object {
   NSPoint position = {};  // x, y onscreen relative to center of screen
   NSPoint movement = {};  // +x, +y (screen units / sec)
   //
-  NSPoint eye_position =
-      {};  // current position of eyes relative to their starting position
-  NSPoint mouth_position =
-      {};  // current position of eyes relative to their starting position
+  // current position of eyes relative to their starting position
+  NSPoint eye_position = {};
+  // current position of eyes relative to their starting position
+  NSPoint mouth_position = {};
   //
   double animationTime = {};      // set to 0.0 at start of current animation
   double animationDuration = {};  // set to 0.0 at start of current animation
@@ -201,10 +201,10 @@ class Trumble : public oo::Object {
   //
   int animationStage = {};  // sub-sequence within animation
   //
-  trumble_mouth mouthFrame = {};  // which mouth position - determines what
-                                  // part of the texture to display
-  trumble_eyes eyeFrame = {};     // which eye position - determines what part
-                                  // of the texture to display
+  // which mouth position - determines what part of the texture to display
+  trumble_mouth mouthFrame = {};
+  // which eye position - determines what part of the texture to display
+  trumble_eyes eyeFrame = {};
   //
   std::shared_ptr<oo::Texture> texture;
   //

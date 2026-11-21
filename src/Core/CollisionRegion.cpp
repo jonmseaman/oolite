@@ -506,8 +506,8 @@ Occlusion shadowAtPointOcclusion(HPVector e1pos, GLfloat e1rad, Entity* e2,
   Vector v_e2 = HPVectorToVector(HPvector_subtract(p_e2, p_e1));
   v_e2 = vector_normal_or_xbasis(v_e2);
 
-  float phi = acos(dot_product(
-      v_sun, v_e2));           // angle between sun and e2 from e1's viewpoint
+  // angle between sun and e2 from e1's viewpoint
+  float phi = acos(dot_product(v_sun, v_e2));
   value = (phi / theta_diff);  // 1 means just occluded, < 1 means in shadow
 
   if (phi > theta_diff) {
@@ -548,8 +548,8 @@ void CollisionRegion::findShadowedEntities() {
   }
 
   unsigned ent_count = UNIVERSE->n_entities;
-  Entity** uni_entities =
-      UNIVERSE->sortedEntities;  // grab the public sorted list
+  // grab the public sorted list
+  Entity** uni_entities = UNIVERSE->sortedEntities;
   std::vector<Entity*> planets(ent_count);
   unsigned n_planets = 0;
   std::vector<Entity*> ships(ent_count);
@@ -568,8 +568,8 @@ void CollisionRegion::findShadowedEntities() {
         // and a list of shipentities large enough that they might cast a
         // noticeable shadow if we can't see it, it can't be shadowing anything
         // important
-        ships[n_ships++] = uni_entities[i];  //	don't bother retaining - nothing
-                                             // will happen to them!
+        // don't bother retaining - nothing will happen to them!
+        ships[n_ships++] = uni_entities[i];
       }
     }
   }

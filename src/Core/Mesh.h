@@ -61,16 +61,17 @@ class Material;
 
 }  // namespace oo
 
-struct VertexFaceRef;  // OOMesh.cpp: the faces that use one vertex, while
-                       // loading
+// OOMesh.cpp: the faces that use one vertex, while loading
+struct VertexFaceRef;
 
 namespace oo {
 
 class MeshBuffer;
 
 }  // namespace oo
-   // OOMesh.cpp: one refcounted buffer (an oo::Data), shared
-   // by a mesh and its mutable copies
+
+// OOMesh.cpp: one refcounted buffer (an oo::Data), shared by a mesh and its
+// mutable copies
 
 #define OOMESH_PROFILE 0
 #if OOMESH_PROFILE
@@ -134,8 +135,8 @@ class Mesh : public Drawable, public GraphicsResetClient {
   static std::shared_ptr<oo::Material> placeholderMaterial();
 
   Mesh();
-  Mesh(const Mesh&) = default;  // -mutableCopyWithZone:'s copy: every
-                                // member, the buffers shared
+  // -mutableCopyWithZone:'s copy: every member, the buffers shared
+  Mesh(const Mesh&) = default;
   ~Mesh() override;
 
   // The nullptr_t parameter keeps the old -copyWithZone:nil call shape.
@@ -144,8 +145,8 @@ class Mesh : public Drawable, public GraphicsResetClient {
 
   std::optional<std::string> modelName();
 
-  oo::PList getMaterials();  // null: none (-materials; the member materials is
-                             // the materials)
+  // null: none (-materials; the member materials is the materials)
+  oo::PList getMaterials();
   oo::PList shaders();
 
   size_t getVertexCount();  // -vertexCount
@@ -197,8 +198,9 @@ class Mesh : public Drawable, public GraphicsResetClient {
   MeshFaceCount faceCount = {};
 
   std::optional<std::string>
-      baseFile;  // "No Model" until loaded; nullopt after -rescaleByFactor: (no
-                 // octree cache)
+      // "No Model" until loaded; nullopt after -rescaleByFactor: (no octree
+      // cache)
+      baseFile;
   std::optional<std::string> baseFileOctreeCacheRef;
   bool _cacheWriteable = {};
 
@@ -222,15 +224,16 @@ class Mesh : public Drawable, public GraphicsResetClient {
 
   std::shared_ptr<Octree> octree;
 
+  // the buffers _vertices & co. point into, by key
   std::map<std::string, std::shared_ptr<MeshBuffer>, std::less<>>
-      _retainedObjects;  // the buffers _vertices & co. point into, by key
+      _retainedObjects;
 
   oo::PList _materialDict;  // mixed configurations; null = nil
   oo::PList _shadersDict;
   std::optional<std::string> _cacheKey;  // nil and @"" differ for OOMaterial
   oo::PList _shaderMacros;
-  std::weak_ptr<Entity> _shaderBindingTarget =
-      {};  // the entity, held weakly as its object's weak reference was
+  // the entity, held weakly as its object's weak reference was
+  std::weak_ptr<Entity> _shaderBindingTarget = {};
 
   Vector _lastPosition = {};
   Matrix _lastRotMatrix = {};

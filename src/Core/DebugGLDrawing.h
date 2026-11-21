@@ -50,12 +50,12 @@ class Material;
 namespace oo {
 
 struct DebugWFState {
-  std::shared_ptr<oo::Material> material;  // from OODebugBeginWireframe(),
-                                           // given up by OODebugEndWireframe()
+  // from OODebugBeginWireframe(), given up by OODebugEndWireframe()
+  std::shared_ptr<oo::Material> material;
 };
 
-DebugWFState DebugBeginWireframe(
-    bool ignoreZ);  // bool, not bool: the .cpp's bool is windows.h's int
+// bool, not bool: the .cpp's bool is windows.h's int
+DebugWFState DebugBeginWireframe(bool ignoreZ);
 void DebugEndWireframe(DebugWFState state);
 
 }  // namespace oo

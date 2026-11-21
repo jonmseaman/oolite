@@ -149,8 +149,8 @@ static JSValue ValueForMissionVariable(JSContext* context,
     // Currently there should only be strings,
     // but we may want to change this.
     if (oo::IsNumberLiteral(*string, true)) {
-      return JS_NewNumber(
-          context, oo::str::doubleValue(*string));  // as NSString's doubleValue
+      // as NSString's doubleValue
+      return JS_NewNumber(context, oo::str::doubleValue(*string));
     }
   }
 
@@ -213,8 +213,9 @@ static int MissionVariablesGetOwnPropertyNames(JSContext* context,
     uint32_t used = 0;
     for (std::string next : mvars) {
       if (!oo::str::hasPrefix(next, "mission_"))
-        continue;  // Skip mission instructions, which aren't visible through
-                   // missionVariables.
+        // Skip mission instructions, which aren't visible through
+        // missionVariables.
+        continue;
 
       next = next.substr(8);  // Cut off "mission_".
 

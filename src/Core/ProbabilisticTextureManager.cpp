@@ -177,9 +177,9 @@ oo::Texture* oo::ProbabilisticTextureManager::selectTexture() {
   float selection;
   unsigned i;
   int hold = -1;
-  int galID = (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID()
-                                 : 0);  // qualified: the final overrider, so
-                                        // the binding test stands in for it
+  // qualified: the final overrider, so the
+  // binding test stands in for it
+  int galID = (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID() : 0);
 
   selection = randfWithSeed(&_seed);
 

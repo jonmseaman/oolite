@@ -93,20 +93,20 @@ class OOJSTimer : public OOScriptTimer, public ::OOJSPrivateObject {
   void releaseJSValues();
 
   JSValue _function = JS_UNDEFINED;  // Owned; released on engine reset.
-  JSValue _jsThis = JS_UNDEFINED;  // The object that is 'this' in the function
-                                   // call. Owned; may be JS_NULL.
+  // The object that is 'this' in the function call. Owned; may be JS_NULL.
+  JSValue _jsThis = JS_UNDEFINED;
 
   std::weak_ptr<OOJSScript> _owningScript;  // a weak reference
   // The function's name, read once: the finalizer's description must not run JS
   // code. nullopt for an anonymous function.
   std::optional<std::string> _functionName;
 
-  JSValue _jsSelf =
-      JS_UNDEFINED;  // The JS Timer object proxy for this OOJSTimer. Not owned
-                     // (it owns us); cleared when finalized.
+  // The JS Timer object proxy for this OOJSTimer. Not owned (it owns us);
+  // cleared when finalized.
+  JSValue _jsSelf = JS_UNDEFINED;
 
-  bool _firing =
-      false;  // In the callback, during which the timer is still scheduled.
+  // In the callback, during which the timer is still scheduled.
+  bool _firing = false;
 };
 
 void InitOOJSTimer(JSContext* context, JSValueConst global);

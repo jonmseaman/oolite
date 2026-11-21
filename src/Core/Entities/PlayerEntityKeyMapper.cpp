@@ -53,11 +53,11 @@ static bool last_shift = false;
 
 namespace {
 
-oo::PList selected_entry;  // a copy of the chosen function entry; null: none
-                           // (was nil)
-oo::PList key_list;        // an Array of key-definition Dicts being edited
-oo::PList kdic_check;      // keyconfig2.plist's definitions; null until
-                           // -initCheckingDictionary
+// a copy of the chosen function entry; null: none (was nil)
+oo::PList selected_entry;
+oo::PList key_list;  // an Array of key-definition Dicts being edited
+// keyconfig2.plist's definitions; null until -initCheckingDictionary
+oo::PList kdic_check;
 std::vector<std::string>
     nav_keys;  // functions that can't be used with mod keys
 std::vector<std::string> camera_keys;  // functions that can't be used with ctrl
@@ -485,8 +485,8 @@ oo::PList PlayerEntity::getCustomEquipArray(const std::string& key_def) {
   for (i = 0; i < customEquipActivation.size(); i++) {
     const oo::PList equip = customEquipActivation[i];
     if (OptionalStringForKey(equip, CUSTOMEQUIP_EQUIPKEY) == eq) {
-      const oo::PList* array =
-          equip.get<oo::PList::Array>(key);  // -oo_arrayForKey:
+      // -oo_arrayForKey:
+      const oo::PList* array = equip.get<oo::PList::Array>(key);
       return array != nullptr ? *array : oo::PList();
     }
   }
@@ -560,8 +560,8 @@ void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow) {
 
     if (key_list.count() > i) {
       const oo::PList& def = *key_list.at(i);
-      k_int = static_cast<oo::KeyCode>(
-          def.get<std::int64_t>("key"));  // -integerValue
+      // -integerValue
+      k_int = static_cast<oo::KeyCode>(def.get<std::int64_t>("key"));
       if (k_int > 0) {
         keystring = keyCodeDescription(k_int);
         if (def.get<bool>("shift") == true)
@@ -747,8 +747,9 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen() {
   }
   const oo::PList* def = key_list.at(key_index);
   // if ([key isEqualToString:@"(not set)"]) key = @"";
+  // -integerValue
   oo::KeyCode k_int = static_cast<oo::KeyCode>(
-      def != nullptr ? def->get<std::int64_t>("key") : 0);  // -integerValue
+      def != nullptr ? def->get<std::int64_t>("key") : 0);
   if (gameView != nullptr) gameView->resetTypedString();
   if (gameView != nullptr)
     gameView->setTypedString(
@@ -865,8 +866,9 @@ void PlayerEntity::updateShiftKeyDefinition(const std::string& key,
   if (key == "shift") {
     // force the key into upper or lower case, to limit invalid key combos as
     // much as possible
-    std::ptrdiff_t k_int = static_cast<oo::KeyCode>(
-        key_def.get<std::int64_t>("key"));  // -integerValue
+    // -integerValue
+    std::ptrdiff_t k_int =
+        static_cast<oo::KeyCode>(key_def.get<std::int64_t>("key"));
     if (k_int > 0) {
       const std::optional<std::string> keystring =
           keyCodeDescription(static_cast<oo::KeyCode>(k_int));
@@ -953,10 +955,10 @@ void PlayerEntity::handleKeyMapperConfirmClearKeys(::GuiDisplayGen* gui,
       oo::str::lowercase(oo::PListGet<std::string>::from(noValue, "n")));
   unsigned char cYes, cNo;
 
-  cYes = (valueYes.empty() ? 0 : valueYes[0]) &
-         0x00ff;  // Use lower byte of unichar.
-  cNo = (valueNo.empty() ? 0 : valueNo[0]) &
-        0x00ff;  // Use lower byte of unichar.
+  // Use lower byte of unichar.
+  cYes = (valueYes.empty() ? 0 : valueYes[0]) & 0x00ff;
+  // Use lower byte of unichar.
+  cNo = (valueNo.empty() ? 0 : valueNo[0]) & 0x00ff;
 
   if ((selectKeyPress &&
        (gui->getSelectedRow() == GUI_ROW_KC_CONFIRMCLEAR_YES)) ||
@@ -1048,8 +1050,9 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
                                  : std::optional<std::string>());
           override = (definition && overrides.find(*definition) != nullptr
                           ? "Yes"
-                          : "");  // work out whether this assignment is
-                                  // overriding the setting in keyconfig2.plist
+                          // work out whether this assignment is overriding the
+                          // setting in keyconfig2.plist
+                          : "");
           validate =
               validateKey(definition.value_or(""),
                           KeyConfigEntry(keyconfig2_settings, definition));
@@ -1058,8 +1061,9 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui,
               getCustomEquipKeyDefType(definition.value_or(""));
           std::size_t idx = getCustomEquipIndex(definition.value_or(""));
           const oo::PList& equip = CustomEquipEntry(customEquipActivation, idx);
-          const oo::PList* keyArray = equip.get<oo::PList::Array>(
-              custom_keytype.value_or(""));  // -oo_arrayForKey:
+          // -oo_arrayForKey:
+          const oo::PList* keyArray =
+              equip.get<oo::PList::Array>(custom_keytype.value_or(""));
           assignment =
               (PLAYER != nullptr
                    ? PLAYER->getKeyBindingDescription(
@@ -1476,8 +1480,9 @@ std::vector<oo::PList> PlayerEntity::keyFunctionList() {
          i++) {
       const oo::PList equip =
           customEquipActivation[static_cast<std::size_t>(i)];
-      const std::string equipName = DescriptionOfString(OptionalStringForKey(
-          equip, CUSTOMEQUIP_EQUIPNAME));  // %@: "(null)" for nil
+      // %@: "(null)" for nil
+      const std::string equipName = DescriptionOfString(
+          OptionalStringForKey(equip, CUSTOMEQUIP_EQUIPNAME));
       const std::string equipKey = DescriptionOfString(
           OptionalStringForKey(equip, CUSTOMEQUIP_EQUIPKEY));
       funcList.push_back(makeKeyGuiDict(
@@ -1670,8 +1675,8 @@ void PlayerEntity::displayKeyboardLayoutList(::GuiDisplayGen* gui,
   gui->setArray({OO_DESC("oolite-keyconfig-kbd-layout")}, GUI_ROW_KC_HEADING);
 
   if (kbdLayouts.empty())
-    kbdLayouts =
-        keyboardLayoutList();  // never empty once built ("default" first)
+    // never empty once built ("default" first)
+    kbdLayouts = keyboardLayoutList();
 
   std::size_t i, n_functions = kbdLayouts.size();
   std::ptrdiff_t n_rows, start_row, previous = 0;
@@ -2097,8 +2102,8 @@ void PlayerEntity::saveKeySetting(const std::string& key) {
   } else {
     std::size_t idx = getCustomEquipIndex(key);
     if (oo::PList::Dict* fields = CustomEquipFields(customEquipActivation, idx))
-      (*fields)[getCustomEquipKeyDefType(key).value_or("")] =
-          key_list;  // in place
+      // in place
+      (*fields)[getCustomEquipKeyDefType(key).value_or("")] = key_list;
     defaults.setObject(KEYCONFIG_CUSTOMEQUIP, oo::PList(customEquipActivation));
   }
   // reload settings
@@ -2156,8 +2161,8 @@ void PlayerEntity::deleteAllKeySettings() {
           (eq.has_value()
                ? oo::EquipmentType::equipmentTypeWithIdentifier(*eq).get()
                : nullptr);
-      oo::PList::Dict* fields =
-          CustomEquipFields(customEquipActivation, i);  // edited in place
+      // edited in place
+      oo::PList::Dict* fields = CustomEquipFields(customEquipActivation, i);
       if (fields == nullptr) continue;
       if ((item != nullptr ? item->defaultActivateKey() : oo::PList()))
         fields->insert_or_assign(

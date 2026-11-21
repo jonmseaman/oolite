@@ -79,14 +79,15 @@ struct OOJSProfileStackFrame;
 
 struct OOJSProfileStackFrame {
   OOJSProfileStackFrame* back;  // Stack link
-  const void* key;  // Key to look up profile entries: the function name, or the
-                    // bytecode of a JS function.
+  // Key to look up profile entries: the function name, or the bytecode of a JS
+  // function.
+  const void* key;
   const char* function;            // Name of function.
   oo::HighResTimeValue startTime;  // Time frame was entered.
   oo::TimeDelta subTime;           // Time spent in subroutine calls.
   oo::TimeDelta* total;  // Pointer to accumulator for this type of frame.
-  void (*cleanup)(OOJSProfileStackFrame*);  // Cleanup function if needed (used
-                                            // for JS frames).
+  // Cleanup function if needed (used for JS frames).
+  void (*cleanup)(OOJSProfileStackFrame*);
 };
 
 void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function);

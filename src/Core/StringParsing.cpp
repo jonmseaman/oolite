@@ -162,8 +162,8 @@ Random_Seed RandomSeedFromString(
   int abcdef[] = {0, 0, 0, 0, 0, 0};
   int i = 0;
   std::string_view error;
-  oo::str::Scanner scanner(
-      abcdefString.value_or(""));  // a nil string scans as an empty one
+  // a nil string scans as an empty one
+  oo::str::Scanner scanner(abcdefString.value_or(""));
 
   while (!scanner.isAtEnd() && i < 6 && error.empty()) {
     if (!scanner.scanInt(&abcdef[i++])) error = "could not scan a int value.";
@@ -201,15 +201,15 @@ std::string PadStringToEms(const std::string& string, float padEms) {
   std::string result = string;
   float numEms = static_cast<float>(padEms - StringWidthInEm(result));
   if (numEms > 0) {
-    numEms /=
-        static_cast<float>(StringWidthInEm(" "));  // start with wide space
+    // start with wide space
+    numEms /= static_cast<float>(StringWidthInEm(" "));
     result = std::string(static_cast<std::size_t>(numEms), ' ') + result;
   }
   // most of the way there, so switch to narrow space
   numEms = static_cast<float>(padEms - StringWidthInEm(result));
   if (numEms > 0) {
-    numEms /=
-        static_cast<float>(StringWidthInEm("\037"));  // 037 is narrow space
+    // 037 is narrow space
+    numEms /= static_cast<float>(StringWidthInEm("\037"));
     result = std::string(static_cast<std::size_t>(numEms), '\037') + result;
   }
   return result;

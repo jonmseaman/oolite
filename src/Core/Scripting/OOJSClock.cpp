@@ -128,8 +128,9 @@ static JSValue ClockGetProperty(OOJS_GETTER_ARGS) {
   double clockTime;
 
   clockTime = (player != nullptr ? player->PlayerEntity::clockTime()
-                                 : 0.0);  // qualified: the final overrider, so
-                                          // the binding test stands in for it
+                                 // qualified: the final overrider, so the
+                                 // binding test stands in for it
+                                 : 0.0);
 
   /*	INT_TO_JSVAL() truncated its (double) argument to an integer;
      JS_NewInt32() does the same through the implicit conversion.
@@ -178,8 +179,9 @@ static JSValue ClockGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewNumber(
           context,
           (player != nullptr ? player->PlayerEntity::clockTimeAdjusted()
-                             : 0.0));  // qualified: the final overrider, so the
-                                       // binding test stands in for it
+                             // qualified: the final overrider, so the binding
+                             // test stands in for it
+                             : 0.0));
 
     case kLegacyScriptTimer:
       oo::StandardsDeprecated("The legacy_scriptTimer property is deprecated");

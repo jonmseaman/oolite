@@ -56,8 +56,8 @@ class AsyncCacheWriter;
 
 class CacheManager : public oo::Object {
  public:
-  static CacheManager*
-  sharedCache();  // the one instance, made on first use and never released
+  // the one instance, made on first use and never released
+  static CacheManager* sharedCache();
   ~CacheManager() override;
 
   oo::PList pListForKey(const std::string& key,
@@ -76,8 +76,8 @@ class CacheManager : public oo::Object {
   std::optional<std::string> cacheDirectoryPathCreatingIfNecessary(bool create);
 
   void flush();
-  void finishOngoingFlush();  // Wait for flush to complete. Does nothing if
-                              // async flushing is disabled.
+  // Wait for flush to complete. Does nothing if async flushing is disabled.
+  void finishOngoingFlush();
 
   // What "%@" printed between the braces of <OOCacheManager 0x...>{...}
   // (OODescription.h).
@@ -110,8 +110,8 @@ class CacheManager : public oo::Object {
   std::optional<std::map<
       std::string, std::map<std::string, oo::PList, std::less<>>, std::less<>>>
       _caches = {};
-  std::shared_ptr<AsyncCacheWriter> _scheduledWrite =
-      {};  // the pending write task
+  // the pending write task
+  std::shared_ptr<AsyncCacheWriter> _scheduledWrite = {};
   bool _permitWrites = {};
   bool _dirty = {};
 };

@@ -96,8 +96,9 @@ void oo::Trumble::setupForPlayer(::PlayerEntity* p1,
   //
   // GILES: It's the second one, we're just determining a pseudo random max_size
   // from the first digram
+  // inheritable
   max_size = static_cast<GLfloat>(
-      0.90 + 0.50 * ((r0 & 0x38) + ((r1 & 0x38) >> 3)) / 63.0);  // inheritable
+      0.90 + 0.50 * ((r0 & 0x38) + ((r1 & 0x38) >> 3)) / 63.0);
 
   // seed the random number generator
   //
@@ -170,11 +171,12 @@ void oo::Trumble::setupForPlayer(::PlayerEntity* p1,
   }
   //
   for (i = 0; i < 4; i++) {
+    // eyes - paler than average
     colorEyes[i] = static_cast<GLfloat>(
-        0.2 * (2.0 * pointColor[3][i] + 2.0 * pointColor[1][i] +
-               1.0));  // eyes - paler than average
-    colorBase[i] = static_cast<GLfloat>(
-        0.5 * (pointColor[2][i] + pointColor[3][i]));  // mouth
+        0.2 * (2.0 * pointColor[3][i] + 2.0 * pointColor[1][i] + 1.0));
+    // mouth
+    colorBase[i] =
+        static_cast<GLfloat>(0.5 * (pointColor[2][i] + pointColor[3][i]));
   }
   //
   size = static_cast<GLfloat>(0.5 * (1.0 + randf()));
@@ -206,10 +208,10 @@ void oo::Trumble::setupForPlayer(::PlayerEntity* p1,
 void oo::Trumble::spawnFrom(oo::Trumble* parentTrumble) {
   if (parentTrumble) {
     // mutate..
-    uint16_t mutation1 = ranrot_rand() & ranrot_rand() & ranrot_rand() &
-                         0xff;  // each bit has a 1/8 chance of being set
-    uint16_t mutation2 = ranrot_rand() & ranrot_rand() & ranrot_rand() &
-                         0xff;  // each bit has a 1/8 chance of being set
+    // each bit has a 1/8 chance of being set
+    uint16_t mutation1 = ranrot_rand() & ranrot_rand() & ranrot_rand() & 0xff;
+    // each bit has a 1/8 chance of being set
+    uint16_t mutation2 = ranrot_rand() & ranrot_rand() & ranrot_rand() & 0xff;
     uint16_t* parentdigram = parentTrumble->getDigram();
     uint16_t newdigram[2];
     newdigram[0] = parentdigram[0] ^ mutation1;
@@ -547,11 +549,10 @@ void oo::Trumble::updateTrumble(double delta_t) {
     ::ShipEntity* selectedCargopod = nullptr;
     float mostYummy = 0.0;
     std::vector<oo::EntityHold>* cargopods =
-        (player != nullptr ? player->getCargo()
-                           : static_cast<std::vector<oo::EntityHold>*>(
-                                 nullptr));  // the cargo pods (live:
-                                             // eaten ones are
-                                             // removed)
+        (player != nullptr
+             ? player->getCargo()
+             // the cargo pods (live: eaten ones are removed)
+             : static_cast<std::vector<oo::EntityHold>*>(nullptr));
     std::size_t i, n_pods = cargopods != nullptr ? cargopods->size() : 0;
     for (i = 0; i < n_pods; i++) {
       ::ShipEntity* cargopod = oo::ToShip((*cargopods)[i].get());
@@ -582,10 +583,9 @@ void oo::Trumble::updateTrumble(double delta_t) {
       if (discomfort < 0.0) discomfort = 0.0;
       if (trumbleAppetiteAccumulator > 10.0) {
         // eaten all of this cargo!
-        const std::string eatFormat =
-            OO_DESC("trumbles-eat-@");  // the format first, as Clang evaluates
-                                        // the arguments: a description that is
-                                        // an array draws
+        // the format first, as Clang evaluates the arguments: a description
+        // that is an array draws
+        const std::string eatFormat = OO_DESC("trumbles-eat-@");
         const std::string ms = oo::str::formatRuntime(
             eatFormat,
             {(UNIVERSE != nullptr ? UNIVERSE->displayNameForCommodity(
@@ -917,19 +917,20 @@ static oo::Sound* sTrumbleSqealSound;
 
 static void InitTrumbleSounds() {
   if (sTrumbleSoundSource == nullptr) {
+    // never deleted
     static std::shared_ptr<oo::SoundSource>* sTrumbleSoundSourceHolder =
-        nullptr;  // never deleted
+        nullptr;
     sTrumbleSoundSourceHolder =
         new std::shared_ptr<oo::SoundSource>(oo::makeShared<oo::SoundSource>());
     sTrumbleSoundSource = sTrumbleSoundSourceHolder->get();
     // Never released: heap std::shared_ptrs that are never deleted.
-    static std::shared_ptr<oo::Sound>* sTrumbleIdleSoundHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<oo::Sound>* sTrumbleIdleSoundHolder = nullptr;
     sTrumbleIdleSoundHolder = new std::shared_ptr<oo::Sound>(
         oo::share(oo::SoundWithCustomSoundKey("[trumble-idle]")));
     sTrumbleIdleSound = sTrumbleIdleSoundHolder->get();
-    static std::shared_ptr<oo::Sound>* sTrumbleSqealSoundHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<oo::Sound>* sTrumbleSqealSoundHolder = nullptr;
     sTrumbleSqealSoundHolder = new std::shared_ptr<oo::Sound>(
         oo::share(oo::SoundWithCustomSoundKey("[trumble-squeal]")));
     sTrumbleSqealSound = sTrumbleSqealSoundHolder->get();

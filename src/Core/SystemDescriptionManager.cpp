@@ -322,10 +322,11 @@ oo::PList oo::SystemDescriptionManager::getPropertiesForCurrentSystem() {
   if (s >= 0) {
     std::size_t index = static_cast<std::size_t>(
         ((PLAYER != nullptr ? PLAYER->PlayerEntity::galaxyNumber()
+                            // qualified: the final overrider, so the binding
+                            // test stands in for it
                             : oo::GalaxyID{}) *
          OO_SYSTEMS_PER_GALAXY) +
-        s);  // qualified: the final overrider, so the binding
-             // test stands in for it
+        s);
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
       OO_LOG("system.description.error",
              "'{}' is an invalid system index for the current system. This is "
@@ -525,9 +526,9 @@ oo::PList oo::SystemDescriptionManager::calculatePropertiesForSystemKey(
 
 void oo::SystemDescriptionManager::updateCacheEntry(std::size_t i) {
   OOCAssert(i < static_cast<std::size_t>(OO_SYSTEM_CACHE_LENGTH),
-            "Invalid cache entry number");  // (the cast: tier-a re-keyed a
-                                            // pre-existing widening finding
-                                            // when OOAssert became OOCAssert)
+            // (the cast: tier-a re-keyed a pre-existing widening finding when
+            // OOAssert became OOCAssert)
+            "Invalid cache entry number");
   const std::string key = std::format("{} {}", i / OO_SYSTEMS_PER_GALAXY,
                                       i % OO_SYSTEMS_PER_GALAXY);
   propertyCache[i] = calculatePropertiesForSystemKey(key);
@@ -536,9 +537,9 @@ void oo::SystemDescriptionManager::updateCacheEntry(std::size_t i) {
 void oo::SystemDescriptionManager::updateCacheEntry(
     std::size_t i, const std::string& property) {
   OOCAssert(i < static_cast<std::size_t>(OO_SYSTEM_CACHE_LENGTH),
-            "Invalid cache entry number");  // (the cast: tier-a re-keyed a
-                                            // pre-existing widening finding
-                                            // when OOAssert became OOCAssert)
+            // (the cast: tier-a re-keyed a pre-existing widening finding when
+            // OOAssert became OOCAssert)
+            "Invalid cache entry number");
   const std::string key = std::format("{} {}", i / OO_SYSTEMS_PER_GALAXY,
                                       i % OO_SYSTEMS_PER_GALAXY);
   oo::PList current = getProperty(property, key);
@@ -599,10 +600,11 @@ Random_Seed oo::SystemDescriptionManager::getRandomSeedForCurrentSystem() {
     oo::SystemID s = (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0);
     std::size_t index = static_cast<std::size_t>(
         ((PLAYER != nullptr ? PLAYER->PlayerEntity::galaxyNumber()
+                            // qualified: the final overrider, so the binding
+                            // test stands in for it
                             : oo::GalaxyID{}) *
          OO_SYSTEMS_PER_GALAXY) +
-        s);  // qualified: the final overrider, so the binding
-             // test stands in for it
+        s);
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
       OO_LOG("system.description.error",
              "'{}' is an invalid system index for the current system. This is "

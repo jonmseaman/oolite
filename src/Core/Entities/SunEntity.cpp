@@ -309,8 +309,8 @@ void oo::SunEntity::update(oo::TimeDelta delta_t) {
 
         // reset at the new size
         resetNova();
-        throw_sparks = true;  // keep throw_sparks at YES to indicate the higher
-                              // temperature
+        // keep throw_sparks at YES to indicate the higher temperature
+        throw_sparks = true;
       }
     }
   }
@@ -369,8 +369,9 @@ void oo::SunEntity::drawOpaqueParts() {
   /* At very long ranges the floating point inaccuracies make a
    * complete mess of the calculations, so if the sun is more than
    * 1E9 away, draw it closer but smaller. Painter's algorithm
+   // 1E9
    * should stop oddities with planets transiting it */
-  float large_distance_compensator = sqrt_zero_distance / 1000000000.0f;  // 1E9
+  float large_distance_compensator = sqrt_zero_distance / 1000000000.0f;
   if (large_distance_compensator > 1.0f) {
     sqrt_zero_distance /= large_distance_compensator;
     effective_radius /= large_distance_compensator;
@@ -389,9 +390,8 @@ void oo::SunEntity::drawOpaqueParts() {
              : NSSize{})
             .width /
         100.0);
-    float drawRatio2 =
-        drawFactor * effective_radius /
-        sqrt_zero_distance;  // equivalent to size on screen in pixels
+    // equivalent to size on screen in pixels
+    float drawRatio2 = drawFactor * effective_radius / sqrt_zero_distance;
 
     if (cam_zero_distance > 0.0f) {
       subdivideLevel = static_cast<int>(2 + floorf(drawRatio2));
@@ -481,8 +481,8 @@ void oo::SunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
 
   std::uint16_t i, j, k;
   GLfloat theta = 0.0f, delta;
-  delta = static_cast<GLfloat>(std::numbers::pi /
-                               180.0f);  // Convert step from degrees to radians
+  // Convert step from degrees to radians
+  delta = static_cast<GLfloat>(std::numbers::pi / 180.0f);
   pt0 = static_cast<GLfloat>((1.0 - corona_stage) * corona_blending);
   pt1 = static_cast<GLfloat>(corona_stage * corona_blending);
 
@@ -690,9 +690,9 @@ bool oo::SunEntity::changeSunProperty(const std::string& key,
   // get<> with fallback 0 is the same for a string or a number
   static GLfloat oldRadius = 0.0;
   if (key == "sun_radius") {
-    oldRadius = static_cast<GLfloat>(dict.get<double>(
-        key, 0.0));  // clamp corona_flare in case planetinfo.plist / savegame
-                     // contains the wrong value
+    // clamp corona_flare in case planetinfo.plist / savegame contains the wrong
+    // value
+    oldRadius = static_cast<GLfloat>(dict.get<double>(key, 0.0));
     setRadius(oldRadius, dict.get<float>("corona_flare", 0.0f));
   } else if (key == std::string(KEY_SUNNAME)) {
     // the Foundation get<> read nil unless a string or a number's text
@@ -812,8 +812,8 @@ double StellarBodyRadius(Entity* body) {
   if (SunEntity* sun = dynamic_cast<SunEntity*>(body)) return sun->radius();
   if (PlanetEntity* planet = dynamic_cast<PlanetEntity*>(body))
     return planet->radius();
-  return 0.0;  // any other body: none in the game; its object did not answer
-               // -radius
+  // any other body: none in the game; its object did not answer -radius
+  return 0.0;
 }
 
 StellarBodyType StellarBodyPlanetType(Entity* body) {
@@ -821,9 +821,8 @@ StellarBodyType StellarBodyPlanetType(Entity* body) {
   if (SunEntity* sun = dynamic_cast<SunEntity*>(body)) return sun->planetType();
   if (PlanetEntity* planet = dynamic_cast<PlanetEntity*>(body))
     return planet->planetType();
-  return static_cast<StellarBodyType>(
-      0);  // any other body: none in the game; its object
-           // did not answer -planetType
+  // any other body: none in the game; its object did not answer -planetType
+  return static_cast<StellarBodyType>(0);
 }
 
 }  // namespace oo

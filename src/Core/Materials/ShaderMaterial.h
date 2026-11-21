@@ -71,8 +71,9 @@ class ShaderMaterial : public BasicMaterial {
  public:
   ~ShaderMaterial() override;
 
+  // null -> false
   static bool configurationDictionarySpecifiesShaderMaterial(
-      const oo::PList& configuration);  // null -> false
+      const oo::PList& configuration);
 
   /*	Set up an OOShaderMaterial.
 
@@ -146,21 +147,22 @@ class ShaderMaterial : public BasicMaterial {
           that it checks against OOUniformBindingPermitted().
   */
   bool bindSafeUniform(const std::string& uniformName, Entity* target,
-                       const std::optional<std::string>&
-                           property,  // nullopt: no property (not bound)
+                       // nullopt: no property (not bound)
+                       const std::optional<std::string>& property,
                        UniformConvertOptions options);
 
   /*	Set a uniform value. The five selectors share their first keyword, so
      they are overloads; the comment names each one's second keyword.
+  // intValue:
   */
-  void setUniform(const std::string& uniformName, int value);    // intValue:
+  void setUniform(const std::string& uniformName, int value);
   void setUniform(const std::string& uniformName, float value);  // floatValue:
   void setUniform(const std::string& uniformName,
                   GLfloat value[4]);  // vectorValue:
-  void setUniform(
-      const std::string& uniformName,
-      const oo::PList& value);  // vectorObjectValue: Array of four numbers, or
-                                // something that can be OOVectorFromObject()ed.
+  void setUniform(const std::string& uniformName,
+                  // vectorObjectValue: Array of four numbers, or something that
+                  // can be OOVectorFromObject()ed.
+                  const oo::PList& value);
   void setUniform(const std::string& uniformName, Quaternion value,
                   bool asMatrix);  // quaternionValue:asMatrix:
 
@@ -197,8 +199,8 @@ class ShaderMaterial : public BasicMaterial {
       const std::vector<std::shared_ptr<Texture>>& textureObjects, GLuint max);
 
   std::shared_ptr<ShaderProgram> shaderProgram = {};
-  std::map<std::string, std::shared_ptr<ShaderUniform>, std::less<>>
-      uniforms;  // no `= {}` (GCC, incomplete T); by uniform name
+  // no `= {}` (GCC, incomplete T); by uniform name
+  std::map<std::string, std::shared_ptr<ShaderUniform>, std::less<>> uniforms;
 
   uint32_t texCount = {};
   std::unique_ptr<std::shared_ptr<Texture>[]> textures;

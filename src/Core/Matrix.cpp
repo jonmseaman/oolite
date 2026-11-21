@@ -154,8 +154,8 @@ HPVector HPVectorMultiplyMatrix(HPVector v, Matrix m) {
 Matrix MatrixOrthogonalize(Matrix m) {
   //	Simple orthogonalization: make everything orthogonal to everything else.
 
-  Vector i;  // = { m.m[0][0], m.m[1][0], m.m[2][0] };	// Overwritten without
-             // being used
+  // = { m.m[0][0], m.m[1][0], m.m[2][0] }; // Overwritten without being used
+  Vector i;
   Vector j = {m.m[0][1], m.m[1][1], m.m[2][1]};
   Vector k = {m.m[0][2], m.m[1][2], m.m[2][2]};
 

@@ -105,9 +105,10 @@ class DebugTCPConsoleClient : public DebuggerInterface {
  public:
   // [[OODebugTCPConsoleClient alloc] initWithAddress:port:]; null when the
   // connection fails.
+  // Pass nullopt for localhost
   static std::shared_ptr<DebugTCPConsoleClient> clientWithAddress(
-      const std::optional<std::string>& address,  // Pass nullopt for localhost
-      uint16_t port);                             // Pass 0 for default port
+      const std::optional<std::string>& address,
+      uint16_t port);  // Pass 0 for default port
 
   ~DebugTCPConsoleClient() override;
 
@@ -154,8 +155,8 @@ class DebugTCPConsoleClient : public DebuggerInterface {
       const oo::PList& parameters);  // a dictionary; null: the type alone
 
   void sendPacket(const std::string& packetType, const oo::PList& value,
-                  const std::string&
-                      paramKey);  // a null value or empty key: the type alone
+                  // a null value or empty key: the type alone
+                  const std::string& paramKey);
 
   bool openSocketToHost(const std::string& address, uint16_t port);
   std::ptrdiff_t receive(std::span<uint8_t> buffer);
@@ -180,9 +181,9 @@ class DebugTCPConsoleClient : public DebuggerInterface {
   void handlePingPacket(const oo::PList& packet);
   void handlePongPacket(const oo::PList& packet);
 
+  // nullopt: a close packet without a message
   void disconnectFromServerWithMessage(
-      const std::optional<std::string>&
-          message);  // nullopt: a close packet without a message
+      const std::optional<std::string>& message);
   void breakConnectionWithMessage(const std::string& message);
   void breakConnectionWithStreamError(int error);
 

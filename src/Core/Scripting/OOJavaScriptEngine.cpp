@@ -102,8 +102,8 @@ constexpr auto OOJS_STACK_SIZE = (1024 * 1024);
 #define OOJS_TIME_LIMIT (1)  // seconds
 #endif
 
-static OOJavaScriptEngine* sSharedEngine =
-    nullptr;  // the one +1 is never released
+// the one +1 is never released
+static OOJavaScriptEngine* sSharedEngine = nullptr;
 
 static unsigned sErrorHandlerStackSkip = 0;
 
@@ -132,8 +132,8 @@ OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
     // The one +1, never released. Recorded before init() runs, as -init
     // recorded self before it made the context, so a re-entrant sharedEngine()
     // answers the engine being set up.
-    static std::shared_ptr<OOJavaScriptEngine>* engineHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<OOJavaScriptEngine>* engineHolder = nullptr;
     engineHolder = new std::shared_ptr<OOJavaScriptEngine>(
         oo::makeShared<OOJavaScriptEngine>());
     OOJavaScriptEngine* engine = engineHolder->get();
@@ -249,8 +249,9 @@ void OOJavaScriptEngine::createMainThreadContext() {
   std::shared_ptr<OOJSValue> specialWrapper =
       OOJSValue::valueWithJSValue(special, _context);
   JS_FreeValue(_context, special);
+  // (nothing keeps it)
   OOScriptAutorelease(OOScript::jsScriptFromFileNamed(
-      "oolite-global-prefix.js",  // (nothing keeps it)
+      "oolite-global-prefix.js",
       oo::PList(oo::PList::Dict{
           {"special", OOJSValueObjectNode(specialWrapper.get())}})));
 
@@ -1254,8 +1255,8 @@ JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
       // The Foundation number's glue: a float type is always a double.
       double d = *plist.getIf<double>();
       if (plist.isSinglePrecision())
-        d = static_cast<double>(
-            static_cast<float>(d));  // +numberWithFloat: -doubleValue
+        // +numberWithFloat: -doubleValue
+        d = static_cast<double>(static_cast<float>(d));
       return JS_NewFloat64(context, d);
     }
 
@@ -1362,8 +1363,8 @@ std::optional<std::string> OOStringFromJSValueEvenIfNull(JSContext* context,
                                                          JSValueConst value) {
   OOJS_PROFILE_SCOPE();
   size_t length;
-  const char* chars = JS_ToCStringLen(
-      context, &length, value);  // Calls the value's toString method if needed.
+  // Calls the value's toString method if needed.
+  const char* chars = JS_ToCStringLen(context, &length, value);
   if (chars == nullptr) {
     JS_FreeValue(context, JS_GetException(context));
     return std::nullopt;
@@ -1525,8 +1526,8 @@ std::optional<std::string> OOJSConcatenationOfStringsFromJavaScriptValues(
     std::optional<std::string> element =
         OOStringFromJSValueEvenIfNull(context, values[i]);
     if (!result) {
-      result = element;  // a nil element left the result nil, as -mutableCopy
-                         // of nil did
+      // a nil element left the result nil, as -mutableCopy of nil did
+      result = element;
     } else {
       *result += separator;
       if (element) *result += *element;
@@ -1676,9 +1677,8 @@ bool JSFunctionPredicate(Entity* entity, void* parameter) {
   if (param->errorFlag) [[unlikely]]
     return false;
 
-  JSValue arg = OOJSEntityJSValue(
-      entity, param->context);  // the C++ entity's glue; entity is required to
-                                // be non-nil (asserted above).
+  // the C++ entity's glue; entity is required to be non-nil (asserted above).
+  JSValue arg = OOJSEntityJSValue(entity, param->context);
 
   OOJSStartTimeLimiter();
   OOJSResumeTimeLimiter();

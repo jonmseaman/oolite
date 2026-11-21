@@ -271,11 +271,10 @@ class GuiDisplayGen : public oo::Object {
   /*	Titles, row texts and row keys are UTF-8 std::strings, std::optional
      where the old code accepted or returned nil.
   */
-  GuiDisplayGen(
-      NSSize gui_size, int gui_cols, int gui_rows, int gui_row_height,
-      int gui_row_start,
-      const std::optional<std::string>&
-          gui_title);  // -initWithPixelSize:columns:rows:rowHeight:rowStart:title:
+  GuiDisplayGen(NSSize gui_size, int gui_cols, int gui_rows, int gui_row_height,
+                int gui_row_start,
+                // -initWithPixelSize:columns:rows:rowHeight:rowStart:title:
+                const std::optional<std::string>& gui_title);
   ~GuiDisplayGen() override;
 
   void resizeWithPixelSize(NSSize gui_size, int gui_cols, int gui_rows,
@@ -290,14 +289,14 @@ class GuiDisplayGen : public oo::Object {
   int rowStart();
 
   std::optional<std::string> getTitle();  // nullopt: no title
-  virtual void setTitle(
-      const std::optional<std::string>& str);  // empty string means no title
+  // empty string means no title
+  virtual void setTitle(const std::optional<std::string>& str);
 
   void setDrawPosition(Vector vector);
   Vector getDrawPosition();
 
-  oo::PList userSettings();  // gui-settings.plist, with any colours set by
-                             // setGuiColorSettingFromKey()
+  // gui-settings.plist, with any colours set by setGuiColorSettingFromKey()
+  oo::PList userSettings();
 
   void fadeOutFromTime(oo::TimeAbsolute now_time, oo::TimeDelta duration);
   void stopFadeOuts();
@@ -324,8 +323,8 @@ class GuiDisplayGen : public oo::Object {
 
   virtual void setColor(oo::Color* color, oo::GUIRow row);
 
-  oo::PList objectForRow(oo::GUIRow row);  // a string, or an array of column
-                                           // strings; null out of range
+  // a string, or an array of column strings; null out of range
+  oo::PList objectForRow(oo::GUIRow row);
   std::optional<std::string> keyForRow(oo::GUIRow row);
   oo::GUIRow rowForKey(const std::optional<std::string>& key);
   virtual oo::GUIRow getSelectedRow();

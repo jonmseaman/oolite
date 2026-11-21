@@ -45,8 +45,8 @@ static JSValue WormholeGetProperty(OOJS_GETTER_ARGS);
 
 static JSClassDef sWormholeClass = {
     .class_name = "Wormhole",
-    .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+    // the slot holds an OOJSEntityHolder
+    .finalizer = OOJSCxxObjectWrapperFinalize,
 };
 
 namespace {
@@ -157,8 +157,8 @@ static JSValue WormholeGetProperty(OOJS_GETTER_ARGS) {
       return OOJSNativeFailure(context);
   }
 
-  return JS_NULL;  // what OOJSValueFromNativeObject() gave
-                   // case returns)
+  // what OOJSValueFromNativeObject() gave case returns)
+  return JS_NULL;
 
   OOJS_NATIVE_EXIT
 }

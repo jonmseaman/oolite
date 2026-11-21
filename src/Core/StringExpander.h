@@ -401,8 +401,8 @@ template <class E>
   requires(std::is_enum_v<E> &&
            std::is_convertible_v<E, std::underlying_type_t<E>>)
 oo::PList CastParam(E value) {
-  return CastParam(
-      +value);  // the integral promotion OOCastParam's overload resolution made
+  // the integral promotion OOCastParam's overload resolution made
+  return CastParam(+value);
 }
 
 // The argument dictionary: the null PList when there are no arguments; null

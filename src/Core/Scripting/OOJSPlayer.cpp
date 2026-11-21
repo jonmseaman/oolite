@@ -180,8 +180,8 @@ static const JSCFunctionListEntry sPlayerMethods[] = {
                  PlayerIncreasePassengerReputation),
     JS_CFUNC_DEF("replaceShip", 1, PlayerReplaceShip),
     JS_CFUNC_DEF("setEscapePodDestination", 1,
-                 PlayerSetEscapePodDestination),  // null destination must be
-                                                  // set explicitly
+                 // null destination must be set explicitly
+                 PlayerSetEscapePodDestination),
     JS_CFUNC_DEF("setPlayerRole", 1, PlayerSetPlayerRole),
     JS_CFUNC_DEF("stopAudioMessage", 0, PlayerStopAudioMessage),
 };
@@ -245,8 +245,9 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewInt32(
           context, (player != nullptr
                         ? static_cast<int32_t>(player->PlayerEntity::score())
-                        : unsigned{}));  // qualified: the final overrider, so
-                                         // the binding test stands in for it
+                        // qualified: the final overrider, so the binding test
+                        // stands in for it
+                        : unsigned{}));
 
     case kCredits:
       return JS_NewNumber(context,
@@ -255,10 +256,10 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
     case kRank: {
       const std::optional<std::string> text =
           oo::DisplayRatingStringFromKillCount(
-              (player != nullptr
-                   ? player->PlayerEntity::score()
-                   : unsigned{}));  // qualified: the final overrider, so the
-                                    // binding test stands in for it
+              (player != nullptr ? player->PlayerEntity::score()
+                                 // qualified: the final overrider, so the
+                                 // binding test stands in for it
+                                 : unsigned{}));
       return OOJSValueFromPList(
           context, text.has_value() ? oo::PList(*text) : oo::PList());
     }
@@ -273,12 +274,11 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
     case kAlertCondition:
       return JS_NewInt32(
           context,
-          oo::ToUnderlying(
-              player != nullptr
-                  ? player->PlayerEntity::getAlertCondition()
-                  : oo::AlertCondition{}));  // qualified: the final overrider,
-                                             // so the binding test stands in
-                                             // for it
+          oo::ToUnderlying(player != nullptr
+                               ? player->PlayerEntity::getAlertCondition()
+                               // qualified: the final overrider, so the binding
+                               // test stands in for it
+                               : oo::AlertCondition{}));
 
     case kAlertTemperature:
       return OOJSValueFromBOOL(oo::AlertFlagIsOn(
@@ -314,8 +314,9 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
           context,
           (player != nullptr
                ? static_cast<double>(player->PlayerEntity::getTrumbleCount())
-               : 0));  // qualified: the final overrider, so the
-                       // binding test stands in for it
+               // qualified: the final overrider, so the binding test stands in
+               // for it
+               : 0));
 
       /* For compatibility with previous versions, these are still on
        * a -7 to +7 scale */
@@ -435,9 +436,9 @@ static JSValue PlayerSetProperty(OOJS_SETTER_ARGS) {
         if (player != nullptr)
           player->PlayerEntity::setBounty(
               static_cast<oo::CreditsQuantity>(iValue),
-              oo::LegalStatusReason::kByScript);  // qualified: the final
-                                                  // overrider, so the binding
-                                                  // test stands in for it
+              // qualified: the final overrider, so the binding test stands in
+              // for it
+              oo::LegalStatusReason::kByScript);
         return JS_UNDEFINED;
       }
       break;
@@ -486,8 +487,8 @@ static JSValue PlayerCommsMessage(JSContext* context, JSValueConst /*oojsThis*/,
     PLAYER->ShipEntity::doScriptEvent(
         OOJSID("commsMessageReceived"),
         {oo::PList(*message),
-         oo::PList()});  // qualified: the final overrider, so the binding test
-                         // stands in for it
+         // qualified: the final overrider, so the binding test stands in for it
+         oo::PList()});
   OOJS_RETURN_VOID;
 
   OOJS_NATIVE_EXIT
@@ -715,11 +716,11 @@ static JSValue PlayerReplaceShip(JSContext* context, JSValueConst /*oojsThis*/,
                                         {oo::EntityObjectNode(player)});
     // slightly misnamed world event now - to be deprecated
     if (player != nullptr)
-      player->ShipEntity::doScriptEvent(
-          OOJSID("playerBoughtNewShip"),
-          {oo::EntityObjectNode(player),
-           oo::PList::signedInteger(0)});  // qualified: the final overrider, so
-                                           // the binding test stands in for it
+      player->ShipEntity::doScriptEvent(OOJSID("playerBoughtNewShip"),
+                                        {oo::EntityObjectNode(player),
+                                         // qualified: the final overrider, so
+                                         // the binding test stands in for it
+                                         oo::PList::signedInteger(0)});
   }
 
   OOJS_RETURN_BOOL(success);
@@ -803,9 +804,10 @@ static JSValue PlayerSetEscapePodDestination(JSContext* context,
           // at the end of the docking sequence we'll check if the target system
           // is the same as the system we're in...
           if (player != nullptr)
-            player->PlayerEntity::setTargetSystemID(static_cast<oo::SystemID>(
-                i));  // qualified: the final overrider, so the binding test
-                      // stands in for it
+            // qualified: the final overrider, so the binding test stands in for
+            // it
+            player->PlayerEntity::setTargetSystemID(
+                static_cast<oo::SystemID>(i));
         }
         OK = true;
       }
@@ -850,18 +852,16 @@ static JSValue PlayerSetPlayerRole(JSContext* context,
   if (argc > 1) {
     if (JS_ToUint32(context, &index, OOJS_ARGV[1]) == 0) {
       if (player != nullptr)
-        player->PlayerEntity::addRoleToPlayer(
-            *role, index);  // qualified: the final overrider, so the binding
-                            // test stands in for it
+        // qualified: the final overrider, so the binding test stands in for it
+        player->PlayerEntity::addRoleToPlayer(*role, index);
       OOJS_RETURN_VOID;
     }
     // As before, fall back to the default slot if the index can't be converted.
     JS_FreeValue(context, JS_GetException(context));
   }
   if (player != nullptr)
-    player->PlayerEntity::addRoleToPlayer(
-        *role);  // qualified: the final overrider, so the binding test stands
-                 // in for it
+    // qualified: the final overrider, so the binding test stands in for it
+    player->PlayerEntity::addRoleToPlayer(*role);
   OOJS_RETURN_VOID;
 
   OOJS_NATIVE_EXIT

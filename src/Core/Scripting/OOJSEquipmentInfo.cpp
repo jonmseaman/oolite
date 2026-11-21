@@ -131,8 +131,8 @@ enum class EquipmentInfoProperty : std::int16_t {
   kRequiresMountedPylon,
   kRequiresNonCleanLegalRecord,
   kRequiresNonFullFuel,
-  kScriptInfo,  // arbitrary data for scripts, dictionary,
-                // read-only
+  // arbitrary data for scripts, dictionary, read-only
+  kScriptInfo,
   kScriptName,
   kTechLevel,
   kWeaponInfo
@@ -271,9 +271,9 @@ oo::EquipmentType* JSValueToEquipmentType(JSContext* context,
 
   if (JS_IsObject(value)) {
     if (JS_GetClassID(value) == sEquipmentInfoClassID) {
+      // borrowed: the slot holds it
       return static_cast<oo::EquipmentType*>(
-          OOJSCxxPrivateFromOpaque(JS_GetOpaque(
-              value, sEquipmentInfoClassID)));  // borrowed: the slot holds it
+          OOJSCxxPrivateFromOpaque(JS_GetOpaque(value, sEquipmentInfoClassID)));
     }
   }
 
@@ -344,10 +344,9 @@ static JSValue EquipmentInfoGetProperty(OOJS_GETTER_ARGS) {
 
     case kCalculatedPrice:
       if (Ask(type, &oo::EquipmentType::identifier) == "EQ_FUEL") {
-        PlayerEntity* player =
-            OOPlayerForScripting();  // fuelChargeRate qualified: the final
-                                     // overrider, so the binding test stands in
-                                     // for it
+        // fuelChargeRate qualified: the final overrider, so the binding test
+        // stands in for it
+        PlayerEntity* player = OOPlayerForScripting();
         return JS_NewNumber(
             context,
             static_cast<float>((PLAYER_MAX_FUEL -
@@ -360,8 +359,9 @@ static JSValue EquipmentInfoGetProperty(OOJS_GETTER_ARGS) {
         return JS_NewNumber(
             context,
             (player != nullptr ? player->PlayerEntity::renovationCosts()
-                               : 0));  // qualified: the final overrider, so the
-                                       // binding test stands in for it
+                               // qualified: the final overrider, so the binding
+                               // test stands in for it
+                               : 0));
       } else {
         PlayerEntity* player = OOPlayerForScripting();
         return JS_NewNumber(
@@ -553,8 +553,8 @@ static JSValue EquipmentInfoSetProperty(OOJS_SETTER_ARGS) {
           oo::Color::colorWithDescription(OOJSPListFromJSValue(context, value));
       if (colorForScript != nullptr || JS_IsNull(value)) {
         if (type != nullptr)
-          type->setDisplayColor(
-              colorForScript.get());  // (a message to nil did nothing)
+          // (a message to nil did nothing)
+          type->setDisplayColor(colorForScript.get());
         return JS_UNDEFINED;
       }
       break;

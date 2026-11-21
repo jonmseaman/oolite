@@ -93,9 +93,9 @@ class ExhaustPlumeEntity : public Entity, public cxx::OOSubEntityInterface {
 
  private:
   void saveToLastFrame();
-  Frame frameAtTime(double t_frame,
-                    Frame frame_zero);  // t_frame is relative to now ie. -0.5 =
-                                        // half a second ago.
+
+  // t_frame is relative to now ie. -0.5 = half a second ago.
+  Frame frameAtTime(double t_frame, Frame frame_zero);
 
   Vector _exhaustScale = {};
   oo::HPScalar _vertices[34 * 3] = {};

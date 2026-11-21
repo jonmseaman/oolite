@@ -180,8 +180,8 @@ class OXZManager : public oo::Object {
       const std::string& identifier,
       const std::string& version);  // nullopt: no user root
   std::optional<std::string> dataURL();
-  std::optional<std::string> humanSize(
-      std::size_t bytes);  // nullopt: the missing-field description is missing
+  // nullopt: the missing-field description is missing
+  std::optional<std::string> humanSize(std::size_t bytes);
 
   bool ensureInstallPath();
 
@@ -189,12 +189,13 @@ class OXZManager : public oo::Object {
   bool processDownloadedManifests();
   bool processDownloadedOXZ();
 
-  oo::PList installedManifestForIdentifier(
-      const std::string& identifier);  // null: not installed
+  // null: not installed
+  oo::PList installedManifestForIdentifier(const std::string& identifier);
   OXZInstallableState installableState(const oo::PList& manifest);
   std::shared_ptr<Color> colorForManifest(const oo::PList& manifest);
+  // nullopt: its description is missing
   std::optional<std::string> installStatusForManifest(
-      const oo::PList& manifest);  // nullopt: its description is missing
+      const oo::PList& manifest);
 
   bool installOXZ(std::size_t item);
   bool updateAllOXZ();
@@ -210,8 +211,8 @@ class OXZManager : public oo::Object {
   void setOXZList(const oo::PList& list);  // an Array (sorted here), or null
   void setFilteredList(const oo::PList& list);
   void setFilter(const std::string& filter);
-  void setOXPURL(const std::optional<std::string>&
-                     url);  // lowercased; nullopt: none (was nil)
+  // lowercased; nullopt: none (was nil)
+  void setOXPURL(const std::optional<std::string>& url);
   oo::PList applyCurrentFilter(const oo::PList& list);  // an Array
 
   void setCurrentDownload(std::unique_ptr<oo::http::Download> download,
@@ -239,12 +240,12 @@ class OXZManager : public oo::Object {
 
   oo::PList
       _oxzList;  // Array of manifests, sorted; null until a list is loaded
-  oo::PList _managedList;   // Array of the managed OXZs' manifests; null: to be
-                            // rebuilt
-  oo::PList _filteredList;  // Array of the manifests on show
-  std::string _currentFilter;                 // lowercase; "*" initially
-  std::optional<std::string> _currentOXPURL;  // lowercase; the info page's URL,
-                                              // nullopt: none (was nil)
+  // Array of the managed OXZs' manifests; null: to be rebuilt
+  oo::PList _managedList;
+  oo::PList _filteredList;     // Array of the manifests on show
+  std::string _currentFilter;  // lowercase; "*" initially
+  // lowercase; the info page's URL, nullopt: none (was nil)
+  std::optional<std::string> _currentOXPURL;
 
   OXZInterfaceState _interfaceState = {};
   bool _interfaceShowingOXZDetail = {};

@@ -94,9 +94,8 @@ void oo::PlasmaShotEntity::update(double delta_t) {
   const float attenuation = 1.0f;
 #endif
 
-  const std::vector<oo::EntityHold> colliding =
-      collidingEntities;  // a snapshot (enumerating the live array while it
-                          // changed raised)
+  // a snapshot (enumerating the live array while it changed raised)
+  const std::vector<oo::EntityHold> colliding = collidingEntities;
   std::size_t i, count = colliding.size();
   for (i = 0; i < count; i++) {
     Entity* e = colliding[i].get();

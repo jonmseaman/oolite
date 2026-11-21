@@ -359,8 +359,8 @@ std::optional<std::string> oo::PListSchemaVerifier::descriptionForKeyPath(
   if (const oo::PList::Array* components = keyPath.getIf<oo::PList::Array>()) {
     for (const oo::PList& component : *components) {
       if (component.isNumber()) {
-        result += "[" + oo::plist_get::numberStringValue(component) +
-                  "]";  // as %@ printed the number
+        // as %@ printed the number
+        result += "[" + oo::plist_get::numberStringValue(component) + "]";
       } else if (const std::string* string = component.getIf<std::string>()) {
         if (!first) result += ".";
         result += *string;

@@ -56,7 +56,7 @@ class Sound : public oo::Object {
      concrete sound refused.
   */
   static std::shared_ptr<Sound> initWithContentsOfFile(
-      const std::optional<std::string>& path);  // nullopt: null
+      const std::optional<std::string>& path);
 
   virtual std::optional<std::string> name();  // nullopt: none
 

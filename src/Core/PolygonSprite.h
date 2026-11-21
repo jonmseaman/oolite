@@ -97,8 +97,8 @@ class PolygonSprite : public HUDBeaconIcon, public GraphicsResetClient {
   ~PolygonSprite() override;
 
  private:
-  PolygonSprite() =
-      default;  // initWithDataArray() does -initWithDataArray:...'s work
+  // initWithDataArray() does -initWithDataArray:...'s work
+  PolygonSprite() = default;
 
   void drawWithData(GLfloat* data, size_t count, GLuint* vbo);
   bool loadPolygons(const oo::PList& dataArray, float outlineWidth);

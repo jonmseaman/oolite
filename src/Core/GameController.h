@@ -173,8 +173,8 @@ class GameController : public oo::Object {
 
   // nullopt: no saved game to load (was nil).
   std::optional<std::string> playerFileToLoad();
-  void setPlayerFileToLoad(
-      const std::string& filename);  // kept only for a .oolite-save path
+  // kept only for a .oolite-save path
+  void setPlayerFileToLoad(const std::string& filename);
 
   // nullopt: no save directory (was nil). A nullopt argument clears it and the
   // save-directory default, and the next playerFileDirectory() looks it up
@@ -237,24 +237,24 @@ class GameController : public oo::Object {
   int my_mouse_x = {}, my_mouse_y = {};
 
   std::optional<std::string>
-      _playerFileDirectory;  // nullopt: not looked up yet, or none (was nil);
-                             // named so -playerFileDirectory's member can
-                             // be playerFileDirectory()
+      // nullopt: not looked up yet, or none (was nil); named so
+      // -playerFileDirectory's member can be playerFileDirectory()
+      _playerFileDirectory;
   std::optional<std::string>
-      _playerFileToLoad;  // nullopt: none (was nil); named so
-                          // -playerFileToLoad's member can be
-                          // playerFileToLoad()
+      // nullopt: none (was nil); named so -playerFileToLoad's member can be
+      // playerFileToLoad()
+      _playerFileToLoad;
   std::vector<std::string>
-      expansionPathsToInclude;  // expansion folders opened with the application
-                                // (Mac)
+      // expansion folders opened with the application (Mac)
+      expansionPathsToInclude;
 
   double _animationTimerInterval = {};
 
   double _splashStart = {};  // oo::date::monotonicSeconds() at start-up
 
   std::string pauseSelector = {};  // the selector's name; "" none
-  oo::Object* pauseTarget =
-      {};  // not retained, as before; never performed on SDL
+  // not retained, as before; never performed on SDL
+  oo::Object* pauseTarget = {};
 
   bool gameIsPaused = {};
 
@@ -285,9 +285,9 @@ class GameController : public oo::Object {
   void fireDueDeadlines();
   void runFrameLoop();
 
+  // reason nullopt: none (was nil)
   void reportUnhandledStartupExceptionName(
-      const std::string& name, const std::optional<std::string>&
-                                   reason);  // reason nullopt: none (was nil)
+      const std::string& name, const std::optional<std::string>& reason);
 #if OO_DEBUG
   bool debugMessageTrackingIsOn();
   std::string debugMessageCurrentString();

@@ -72,8 +72,8 @@ class FlasherEntity;
 class ExhaustPlumeEntity;
 
 }  // namespace oo
-   // Universe.h's, for the members of
-   // ShipEntityAI.cpp's scans.
+
+// Universe.h's, for the members of ShipEntityAI.cpp's scans.
 
 using EntityFilterPredicate = bool (*)(Entity* entity, void* parameter);
 
@@ -106,8 +106,8 @@ inline constexpr float SHIP_COOLING_FACTOR = 0.1f;
 // heat taken from energy damage depends on mass
 // but limit maximum rate since masses vary so much
 // Cobra III ~=215000
-#define SHIP_ENERGY_DAMAGE_TO_HEAT_FACTOR \
-  (mass > 400000 ? 200000 / mass : 0.5)  // the ShipEntity member mass
+// the ShipEntity member mass
+#define SHIP_ENERGY_DAMAGE_TO_HEAT_FACTOR (mass > 400000 ? 200000 / mass : 0.5)
 inline constexpr float SHIP_INSULATION_FACTOR = 0.00175f;
 inline constexpr float SHIP_MAX_CABIN_TEMP = 256.0f;
 inline constexpr float SHIP_MIN_CABIN_TEMP = 60.0f;
@@ -146,8 +146,8 @@ inline constexpr std::string_view AIMS_AGGRESSOR_SWITCHED_TARGET =
 // number of vessels considered when scanning around
 inline constexpr int MAX_SCAN_NUMBER = 32;
 
-inline constexpr float BASELINE_SHIELD_LEVEL =
-    128.0f;  // Max shield level with no boosters.
+// Max shield level with no boosters.
+inline constexpr float BASELINE_SHIELD_LEVEL = 128.0f;
 inline constexpr double INITIAL_SHOT_TIME = 100.0;
 
 inline constexpr int MIN_FUEL = 0;  // minimum fuel required for afterburner use
@@ -189,8 +189,8 @@ inline constexpr float COMBAT_AI_STANDARD_REACTION_TIME = 1.5f;
 inline constexpr auto MAX_LANDING_SPEED2 =
     (MAX_LANDING_SPEED * MAX_LANDING_SPEED);
 
-#define MAX_COS \
-  0.995  // cos(5 degrees) is close enough in most cases for navigation
+// cos(5 degrees) is close enough in most cases for navigation
+#define MAX_COS 0.995
 inline constexpr auto MAX_COS2 = (MAX_COS * MAX_COS);
 
 #include "Behaviour.h"
@@ -234,7 +234,8 @@ namespace oo {
 struct ShipSaveContext;
 
 }  // namespace oo
-   // ShipEntityLoadRestore.h
+
+// ShipEntityLoadRestore.h
 struct ShipEntityTestAccess;  // the unit tests' reader of the private members
 
 /*	The ship's state and members.
@@ -286,8 +287,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   // subentity lists, AI scripts.
   virtual bool setUpOneStandardSubentity(
       const oo::PList& subentDict,
-      bool asTurret);  // virtual: a test seam (test_StationEntity's station
-                       // overrides it)
+      // virtual: a test seam (test_StationEntity's station overrides it)
+      bool asTurret);
   bool isTemplateCargoPod();
   void setUpCargoType(const std::string& cargoString);
   void removeScript();
@@ -603,8 +604,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   std::optional<std::string> getDisplayName();
   std::optional<std::string> scanDescriptionForScripting();
   std::optional<std::string> scanDescription();
-  virtual void setName(
-      const std::optional<std::string>& inName);  // PlayerEntity overrides
+  // PlayerEntity overrides
+  virtual void setName(const std::optional<std::string>& inName);
   void setShipUniqueName(const std::optional<std::string>& inName);
   void setShipClassName(const std::optional<std::string>& inName);
   void setDisplayName(const std::optional<std::string>& inName);
@@ -793,8 +794,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   Vector positionOffsetForAlignment(const std::string& align);
   virtual void becomeLargeExplosion(double factor);
   virtual void collectBountyFor(::ShipEntity* other);
-  oo::ComparisonResult compareBeaconCodeWith(
-      Entity* other);  // an OOBeaconEntity
+  // an OOBeaconEntity
+  oo::ComparisonResult compareBeaconCodeWith(Entity* other);
   GLfloat weaponRecoveryTime();
   virtual GLfloat laserHeatLevel();
   virtual GLfloat laserHeatLevelAft();
@@ -1050,8 +1051,8 @@ class ShipEntity : public oo::EntityWithDrawable,
 
   // Category ScriptMethods (ShipEntityScriptMethods.cpp): methods for use by
   // scripting mechanisms. std::nullopt ejects nothing, as nil did.
-  ::ShipEntity* ejectShipOfType(
-      const std::optional<std::string>& shipKey);  // Note: ship type, not role.
+  // Note: ship type, not role.
+  ::ShipEntity* ejectShipOfType(const std::optional<std::string>& shipKey);
   ::ShipEntity* ejectShipOfRole(const std::optional<std::string>& role);
   std::vector<oo::EntityHold> spawnShipsWithRole(const std::string& role,
                                                  std::size_t count);
@@ -1063,10 +1064,9 @@ class ShipEntity : public oo::EntityWithDrawable,
   static ::ShipEntity* shipRestoredFromDictionary(
       const oo::PList& dictionary, bool fallback,
       oo::ShipSaveContext* context);  // autoreleased; nil if it can't
-  void simplifyShipdata(
-      oo::PList::Dict& data,
-      std::vector<std::string>*
-          deletes);  // the file's private category LoadRestoreInternal
+  void simplifyShipdata(oo::PList::Dict& data,
+                        // the file's private category LoadRestoreInternal
+                        std::vector<std::string>* deletes);
 
   // ShipEntityAI.cpp: AI category, OOAIPrivate (ship and station) and the
   // station stubs.
@@ -1270,8 +1270,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   oo::TimeAbsolute aiScriptWakeTime = {};
 
   // docking instructions
-  oo::PList dockingInstructions;  // null: none (was nil); the station is an
-                                  // Object node (a weak reference)
+  // null: none (was nil); the station is an Object node (a weak reference)
+  oo::PList dockingInstructions;
 
   std::shared_ptr<oo::Color> laser_color;
   std::shared_ptr<oo::Color> default_laser_color;
@@ -1283,13 +1283,13 @@ class ShipEntity : public oo::EntityWithDrawable,
 
   // per ship-type variables
   //
-  GLfloat maxFlightSpeed = {};  // top speed			(160.0 for
-                                // player)  (200.0 for fast raider)
-  GLfloat max_flight_roll =
-      {};  // maximum roll rate	(2.0 for player)	(3.0 for fast raider)
-  GLfloat max_flight_pitch =
-      {};  // maximum pitch rate   (1.0 for player)	(1.5 for fast raider)
-           // also radians/sec for (* turrets *)
+  // top speed (160.0 for player) (200.0 for fast raider)
+  GLfloat maxFlightSpeed = {};
+  // maximum roll rate (2.0 for player) (3.0 for fast raider)
+  GLfloat max_flight_roll = {};
+  // maximum pitch rate (1.0 for player) (1.5 for fast raider) also radians/sec
+  // for (* turrets *)
+  GLfloat max_flight_pitch = {};
   GLfloat max_flight_yaw = {};
   GLfloat cruiseSpeed = {};  // 80% of top speed
 
@@ -1304,34 +1304,35 @@ class ShipEntity : public oo::EntityWithDrawable,
 
         pitching_over : 1 = 0,  // set to YES if executing a sharp loop
       rolling_over : 1 = 0,     // set to YES if executing a sharp roll
-      reportAIMessages : 1 =
-          0,  // normally NO, suppressing AI message reporting
+      // normally NO, suppressing AI message reporting
+      reportAIMessages : 1 = 0,
 
-      being_mined : 1 =
-          0,  // normally NO, set to Yes when fired on by mining laser
+        // normally NO, set to Yes when fired on by mining laser
+      being_mined : 1 = 0,
 
-      being_fined : 1 = 0,
+        being_fined : 1 = 0,
 
-        isHulk : 1 =
-            0,  // This is used to distinguish abandoned ships from cargo
-      trackCloseContacts : 1 = 0,
+        // This is used to distinguish abandoned ships from cargo
+      isHulk : 1 = 0, trackCloseContacts : 1 = 0,
         isNearPlanetSurface : 1 = 0,  // check for landing on planet
-      isFrangible : 1 =
-          0,  // frangible => subEntities can be damaged individually
-      cloaking_device_active : 1 = 0,  // cloaking_device
-      cloakPassive : 1 =
-          0,  // cloak deactivates when main weapons or missiles are fired
-      cloakAutomatic : 1 = 0,  // cloak activates itself automatic during attack
-      canFragment : 1 = 0,     // Can it break into wreckage?
-      isWreckage : 1 = 0,      // Is it wreckage?
-      _showDamage : 1 = 0,     // Show damage?
+      // frangible => subEntities can be damaged individually
+      isFrangible : 1 = 0,
+        cloaking_device_active : 1 = 0,  // cloaking_device
+      // cloak deactivates when main weapons or missiles are fired
+      cloakPassive : 1 = 0,
+        // cloak activates itself automatic during attack
+      cloakAutomatic : 1 = 0,
+        canFragment : 1 = 0,      // Can it break into wreckage?
+      isWreckage : 1 = 0,         // Is it wreckage?
+      _showDamage : 1 = 0,        // Show damage?
       suppressExplosion : 1 = 0,  // Avoid exploding on death (script hook)
-      suppressAegisMessages : 1 =
-          0,              // No script/AI messages sent by -checkForAegis,
-      isMissile : 1 = 0,  // Whether this was launched by fireMissile (used to
-                          // track submunitions).
-      _explicitlyUnpiloted : 1 = 0,  // Is meant to not have crew
-      hasScoopMessage : 1 = 0,       // suppress scoop messages when false.
+      // No script/AI messages sent by -checkForAegis,
+      suppressAegisMessages : 1 = 0,
+        // Whether this was launched by fireMissile (used to track
+        // submunitions).
+      isMissile : 1 = 0,
+        _explicitlyUnpiloted : 1 = 0,  // Is meant to not have crew
+      hasScoopMessage : 1 = 0,         // suppress scoop messages when false.
 
       // scripting
       scripted_misjump : 1 = 0, haveExecutedSpawnAction : 1 = 0,
@@ -1339,8 +1340,9 @@ class ShipEntity : public oo::EntityWithDrawable,
 
   GLfloat _scriptedMisjumpRange = {};
 
-  GLfloat sunGlareFilter = {};  // Range 0.0 - 1.0, where 0 means no sun glare
-                                // filter, 1 means glare fully filtered
+  // Range 0.0 - 1.0, where 0 means no sun glare filter, 1 means glare fully
+  // filtered
+  GLfloat sunGlareFilter = {};
 
   oo::FuelQuantity fuel = {};  // witch-space fuel
   GLfloat fuel_accumulator = {};
@@ -1348,34 +1350,34 @@ class ShipEntity : public oo::EntityWithDrawable,
   GLfloat afterburner_rate = {};
   GLfloat afterburner_speed_factor = {};
 
-  oo::CargoQuantity likely_cargo = {};  // likely amount of cargo (for pirates,
-                                        // this is what is spilled as loot)
-  oo::CargoQuantity max_cargo = {};     // capacity of cargo hold
-  oo::CargoQuantity extra_cargo =
-      {};  // capacity of cargo hold extension (if any)
-  oo::CargoQuantity equipment_weight =
-      {};  // amount of equipment using cargo space (excluding passenger_berth &
-           // extra_cargo_bay)
-  oo::CargoType cargo_type =
-      {};  // if this is scooped, this is indicates contents
+  // likely amount of cargo (for pirates, this is what is spilled as loot)
+  oo::CargoQuantity likely_cargo = {};
+  oo::CargoQuantity max_cargo = {};  // capacity of cargo hold
+  // capacity of cargo hold extension (if any)
+  oo::CargoQuantity extra_cargo = {};
+  // amount of equipment using cargo space (excluding passenger_berth &
+  // extra_cargo_bay)
+  oo::CargoQuantity equipment_weight = {};
+  // if this is scooped, this is indicates contents
+  oo::CargoType cargo_type = {};
   oo::CargoFlag cargo_flag = {};    // indicates contents for merchantmen
   oo::CreditsQuantity bounty = {};  // bounty (if any)
 
   GLfloat energy_recharge_rate = {};  // recharge rate for energy banks
 
   oo::WeaponFacingSet weapon_facings = {};  // weapon mounts available (bitmask)
-  oo::WeaponType forward_weapon_type =
-      {};  // type of forward weapon (allows lasers, plasma cannon, others)
-  oo::WeaponType aft_weapon_type =
-      {};  // type of aft weapon (allows lasers, plasma cannon, others)
+  // type of forward weapon (allows lasers, plasma cannon, others)
+  oo::WeaponType forward_weapon_type = {};
+  // type of aft weapon (allows lasers, plasma cannon, others)
+  oo::WeaponType aft_weapon_type = {};
   oo::WeaponType port_weapon_type = {};       // type of port weapon
   oo::WeaponType starboard_weapon_type = {};  // type of starboard weapon
   GLfloat weapon_damage = {};                 // energy damage dealt by weapon
-  GLfloat weapon_damage_override =
-      {};  // custom energy damage dealt by front laser, if applicable
+  // custom energy damage dealt by front laser, if applicable
+  GLfloat weapon_damage_override = {};
   GLfloat weaponRange = {};  // range of the weapon (in meters)
-  oo::WeaponFacing currentWeaponFacing =
-      {};  // not necessarily the same as view for the player
+  // not necessarily the same as view for the player
+  oo::WeaponFacing currentWeaponFacing = {};
 
   GLfloat weapon_energy_use = {}, weapon_temp = {},
           weapon_shot_temperature = {};  // active weapon temp, delta-temp
@@ -1388,8 +1390,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   unsigned max_missiles = {};  // number of missile pylons
   std::optional<std::string>
       _missileRole;  // nullopt: no missile_role (the generic fallback)
-  oo::TimeDelta missile_load_time =
-      {};  // minimum time interval between missile launches
+  // minimum time interval between missile launches
+  oo::TimeDelta missile_load_time = {};
   oo::TimeAbsolute missile_launch_time = {};  // time of last missile launch
 
   std::shared_ptr<::AI> shipAI = {};  // ship's AI system
@@ -1401,33 +1403,34 @@ class ShipEntity : public oo::EntityWithDrawable,
   std::optional<std::string> displayName;  // name shown on screen; nullopt: nil
   std::optional<std::string> scan_description;  // scan class name; nullopt: nil
   std::shared_ptr<::oo::RoleSet>
-      roleSet;  // Roles a ship can take, eg. trader, hunter,
-                // police, pirate, scavenger &c.
+      // Roles a ship can take, eg. trader, hunter, police, pirate, scavenger
+      // &c.
+      roleSet;
   std::optional<std::string>
       primaryRole;  // "Main" role of the ship; nullopt: not chosen yet
 
   oo::PList explosionType;  // explosion.plist entries; null: absent
 
   // AI stuff
-  Vector jink =
-      {};  // x and y set factors for offsetting a pursuing ship's position
+  // x and y set factors for offsetting a pursuing ship's position
+  Vector jink = {};
   HPVector coordinates = {};  // for flying to/from a set point
   Vector reference = {};      // a direction vector of magnitude 1 (* turrets *)
 
-  std::size_t _subIdx =
-      {};  // serialisation index - used only if this ship is a subentity
-  std::size_t _maxShipSubIdx = {};  // serialisation index - the number of ship
-                                    // subentities inside the shipdata
-  double launch_time = {};          // time at which launched
-  double launch_delay = {};         // delay for thinking after launch
+  // serialisation index - used only if this ship is a subentity
+  std::size_t _subIdx = {};
+  // serialisation index - the number of ship subentities inside the shipdata
+  std::size_t _maxShipSubIdx = {};
+  double launch_time = {};                // time at which launched
+  double launch_delay = {};               // delay for thinking after launch
   oo::UniversalID planetForLanding = {};  // for landing
 
-  GLfloat frustration = {},  // degree of dissatisfaction with the current
-                             // behavioural state, factor used to test this
-      success_factor = {};
+  // degree of dissatisfaction with the current behavioural state, factor used
+  // to test this
+  GLfloat frustration = {}, success_factor = {};
 
-  int patrol_counter =
-      {};  // keeps track of where the ship is along a patrol route
+  // keeps track of where the ship is along a patrol route
+  int patrol_counter = {};
 
   oo::PList
       previousCondition;  // restored after collision avoidance; null: none
@@ -1439,15 +1442,15 @@ class ShipEntity : public oo::EntityWithDrawable,
   oo::TimeAbsolute last_shot_time = {};   // time shot was last fired
 
   std::vector<oo::EntityHold>
-      cargo;  // cargo containers go in here (index 0 is the eject position);
-              // edited in place through -cargo
+      // cargo containers go in here (index 0 is the eject position); edited in
+      // place through -cargo
+      cargo;
 
   std::optional<std::string>
-      commodity_type;  // type of commodity in a container; nullopt: not a pod
-                       // (was nil)
-  oo::CargoQuantity commodity_amount =
-      {};  // 1 if unit is TONNES (0), possibly more if precious metals
-           // KILOGRAMS (1)
+      // type of commodity in a container; nullopt: not a pod (was nil)
+      commodity_type;
+  // 1 if unit is TONNES (0), possibly more if precious metals KILOGRAMS (1)
+  oo::CargoQuantity commodity_amount = {};
   // or gem stones GRAMS (2)
 
   // navigation
@@ -1461,13 +1464,13 @@ class ShipEntity : public oo::EntityWithDrawable,
   GLfloat aim_tolerance = {};
   int _missed_shots = {};
 
-  oo::AegisStatus aegis_status =
-      {};  // set to YES when within the station's protective zone
+  // set to YES when within the station's protective zone
+  oo::AegisStatus aegis_status = {};
   oo::SystemID home_system = {};
   oo::SystemID destination_system = {};
 
-  double messageTime =
-      {};  // counts down the seconds a radio message is active for
+  // counts down the seconds a radio message is active for
+  double messageTime = {};
 
   double next_spark_time = {};  // time of next spark when throwing sparks
 
@@ -1485,8 +1488,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   std::optional<std::vector<std::shared_ptr<oo::Character>>> crew;
 
   // close contact / collision tracking
-  std::map<std::string, std::string, std::less<>>
-      closeContactsInfo;  // "%d" universal ID -> "%f %f %f" relative position
+  // "%d" universal ID -> "%f %f %f" relative position
+  std::map<std::string, std::string, std::less<>> closeContactsInfo;
 
   std::optional<std::string> lastRadioMessage;  // nullopt: none yet
 
@@ -1514,10 +1517,10 @@ class ShipEntity : public oo::EntityWithDrawable,
   oo::Behaviour debugLastBehaviour = {};
 #endif
 
-  uint16_t entity_personality =
-      {};  // Per-entity random number. Exposed to shaders and scripts.
-  oo::PList scriptInfo;  // script_info dictionary from shipdata.plist, exposed
-                         // to scripts; null: none
+  // Per-entity random number. Exposed to shaders and scripts.
+  uint16_t entity_personality = {};
+  // script_info dictionary from shipdata.plist, exposed to scripts; null: none
+  oo::PList scriptInfo;
 
   std::vector<oo::EntityHold> subEntities;  // empty == none (was nil)
   ::oo::EquipmentType* missile_list[SHIPENTITY_MAX_MISSILES] = {};
@@ -1551,8 +1554,8 @@ class ShipEntity : public oo::EntityWithDrawable,
   friend struct ::ShipEntityTestAccess;
 
  private:
-  std::weak_ptr<Entity> _subEntityTakingDamage;  //	frangible => subEntities
-                                                 // can be damaged individually
+  // frangible => subEntities can be damaged individually
+  std::weak_ptr<Entity> _subEntityTakingDamage;
 
   std::optional<std::string> _shipKey;  // nullopt: nil
 
@@ -1673,11 +1676,10 @@ std::string StringFromShipDamageType(oo::ShipDamageType type);
 
 // Weapon identifiers and alert-condition names; nullopt where the old form gave
 // nil.
-std::optional<std::string> EquipmentIdentifierFromWeaponType(
-    WeaponType weapon);  // nullopt: no weapon
-WeaponType WeaponTypeFromEquipmentIdentifierSloppy(
-    const std::string&
-        string);  // Uses suffix match for backwards compatibility.
+// nullopt: no weapon
+std::optional<std::string> EquipmentIdentifierFromWeaponType(WeaponType weapon);
+// Uses suffix match for backwards compatibility.
+WeaponType WeaponTypeFromEquipmentIdentifierSloppy(const std::string& string);
 WeaponType WeaponTypeFromEquipmentIdentifierStrict(const std::string& string);
 WeaponType WeaponTypeFromEquipmentIdentifierLegacy(const std::string& string);
 std::optional<std::string> StringFromWeaponType(WeaponType weapon);

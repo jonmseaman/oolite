@@ -36,7 +36,8 @@ using ALAutoreleasePoolRef = ALAutoreleasePool*;
 ALStringRef ALGetConstantString(const char* string);
 
 }  // namespace oo
-   // Should only be used with string literals!
+
+// Should only be used with string literals!
 
 namespace oo {
 

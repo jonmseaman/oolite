@@ -35,8 +35,8 @@ MA 02110-1301, USA.
 
 #define kLaserFlashDuration 0.3f
 #define kExplosionFlashDuration 0.4f
-#define kGrowthRateFactor \
-  150.0f  // if average flashSize is 80 then this is 12000
+// if average flashSize is 80 then this is 12000
+#define kGrowthRateFactor 150.0f
 #define kMinExplosionGrowth 600.0f
 #define kLaserFlashInitialSize 1.0f
 #define kExplosionFlashAlpha 0.5f

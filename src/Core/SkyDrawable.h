@@ -94,9 +94,8 @@ class SkyDrawable : public Drawable, public GraphicsResetClient {
   unsigned _starCount = {};
   unsigned _nebulaCount = {};
 
-  std::vector<std::unique_ptr<SkyQuadSet>>
-      _quadSets;  // no `= {}` (GCC, incomplete
-                  // T);	// one per texture
+  // no `= {}` (GCC, incomplete T); // one per texture
+  std::vector<std::unique_ptr<SkyQuadSet>> _quadSets;
 
   GLint _displayListName = {};
 };

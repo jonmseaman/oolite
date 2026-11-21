@@ -235,14 +235,16 @@ oo::HUDBeaconIcon* oo::WaypointEntity::beaconDrawable() {
       const oo::PList iconData =
           (iconEntry != nullptr) ? *iconEntry : oo::PList();
       if (iconData.isArray())
-        _beaconDrawable = oo::PolygonSprite::initWithDataArray(
-            iconData, 0.5, *_beaconCode);  // null where it answered nil
+        // null where it answered nil
+        _beaconDrawable =
+            oo::PolygonSprite::initWithDataArray(iconData, 0.5, *_beaconCode);
     }
 
     if (_beaconDrawable == nullptr) {
       if (length > 0)
+        // -substringToIndex:1
         _beaconDrawable = oo::makeShared<oo::HUDBeaconCodeIcon>(
-            oo::utf16ToUtf8(beaconCode.substr(0, 1)));  // -substringToIndex:1
+            oo::utf16ToUtf8(beaconCode.substr(0, 1)));
       else
         _beaconDrawable = oo::makeShared<oo::HUDBeaconCodeIcon>(std::string());
     }

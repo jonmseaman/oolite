@@ -142,8 +142,8 @@ class SystemDescriptionManager : public oo::Object {
   oo::PList getProperty(const std::string& property, SystemID s, GalaxyID g);
 
   NSPoint getCoordinatesForSystem(SystemID s, GalaxyID g);
-  std::vector<SystemID> getNeighbourIDsForSystem(
-      SystemID s, GalaxyID g);  // empty for an invalid system
+  // empty for an invalid system
+  std::vector<SystemID> getNeighbourIDsForSystem(SystemID s, GalaxyID g);
 
   Random_Seed getRandomSeedForCurrentSystem();
   Random_Seed getRandomSeedForSystem(SystemID s, GalaxyID g);
@@ -175,12 +175,12 @@ class SystemDescriptionManager : public oo::Object {
   std::shared_ptr<SystemDescriptionEntry> interstellarSpace = {};
   std::map<std::string, std::shared_ptr<SystemDescriptionEntry>, std::less<>>
       systemDescriptions = {};
-  oo::PList propertyCache[OO_SYSTEM_CACHE_LENGTH] =
-      {};  // each a Dict: property -> value
+  // each a Dict: property -> value
+  oo::PList propertyCache[OO_SYSTEM_CACHE_LENGTH] = {};
   std::set<std::string> propertiesInUse = {};
   NSPoint coordinatesCache[OO_SYSTEM_CACHE_LENGTH] = {};
-  std::vector<SystemID> neighbourCache[OO_SYSTEM_CACHE_LENGTH] =
-      {};                          // system numbers
+  // system numbers
+  std::vector<SystemID> neighbourCache[OO_SYSTEM_CACHE_LENGTH] = {};
   oo::PList scriptedChanges = {};  // a Dict: joined override key -> value
 };
 

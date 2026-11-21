@@ -46,8 +46,9 @@ class OOJSFunction : public oo::Object {
                                                         JSContext* context);
   static std::shared_ptr<OOJSFunction> initWithName(
       const std::optional<std::string>& name,
-      JSValueConst scope,  // Ignored; QuickJS compiles functions in the global
-                           // scope. Pass JS_UNDEFINED.
+      // Ignored; QuickJS compiles functions in the global scope. Pass
+      // JS_UNDEFINED.
+      JSValueConst scope,
       const std::optional<std::string>& code,  // Function body.
       std::size_t argCount, const char** argNames,
       const std::optional<std::string>& fileName, std::size_t lineNumber,

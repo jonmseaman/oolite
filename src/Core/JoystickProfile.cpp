@@ -80,8 +80,8 @@ class JoystickSplineSegment : public oo::Object {
   bool initWithData(NSPoint left, NSPoint right, double gradientleft,
                     double gradientright);
 
-  double start_ = {};  // the ivars start and end (they clash
-                       // with start(), end())
+  // the ivars start and end (they clash with start(), end())
+  double start_ = {};
   double end_ = {};
   double a[4] = {};
 };
@@ -326,8 +326,8 @@ std::shared_ptr<oo::JoystickAxisProfile> oo::JoystickSplineAxisProfile::copy() {
   std::shared_ptr<oo::JoystickSplineAxisProfile> copy =
       oo::makeShared<oo::JoystickSplineAxisProfile>();
   copy->controlPoints_ = controlPoints_;
-  copy->segments =
-      segments;  // the same segment objects, as the array copy held
+  // the same segment objects, as the array copy held
+  copy->segments = segments;
   return copy;
 }
 

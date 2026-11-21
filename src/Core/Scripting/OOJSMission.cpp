@@ -137,8 +137,9 @@ static void SetOwnedValue(JSContext* context, JSValue* slot,
                           JSValueConst value) {
   JSValue old = *slot;
   *slot = JS_DupValue(context, value);
-  JS_FreeValue(context, old);  // Zero-filled (integer) values need no freeing,
-                               // and JS_FreeValue() ignores them.
+  // Zero-filled (integer) values need no freeing, and JS_FreeValue() ignores
+  // them.
+  JS_FreeValue(context, old);
 }
 
 static void ClearPendingCallback() {
@@ -335,10 +336,9 @@ static bool ValueToInt32NoError(JSContext* context, JSValueConst value,
                                 int32_t* outValue) {
   if (OOJSValueToInt32(context, value, outValue)) return true;
   if (JS_HasException(context))
-    JS_FreeValue(
-        context,
-        JS_GetException(
-            context));  // or JS_ValueToInt32 exception crashes JS engine
+    JS_FreeValue(context,
+                 // or JS_ValueToInt32 exception crashes JS engine
+                 JS_GetException(context));
   return false;
 }
 
@@ -700,8 +700,9 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
     if (titleKey.has_value()) {
       const oo::PList missionText =
           (UNIVERSE != nullptr ? UNIVERSE->getMissiontext() : oo::PList());
+      // -objectForKey:
       std::optional<std::string> message =
-          StringFromPList(missionText.find(*titleKey));  // -objectForKey:
+          StringFromPList(missionText.find(*titleKey));
       if (message.has_value()) {
         if (player != nullptr) player->setMissionTitle(OOExpand(*message));
       } else {
@@ -756,10 +757,10 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
     } else {
       if (player != nullptr)
         player->setCustomChartCentre(
-            (player != nullptr
-                 ? player->PlayerEntity::getGalaxy_coordinates()
-                 : NSPoint{}));  // qualified: the final overrider, so the
-                                 // binding test stands in for it
+            (player != nullptr ? player->PlayerEntity::getGalaxy_coordinates()
+                               // qualified: the final overrider, so the binding
+                               // test stands in for it
+                               : NSPoint{}));
       OOJSReportWarning(
           context,
           "Mission.runScreen: invalid value for customChartCentre. Must be "
@@ -779,10 +780,10 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
     } else {
       if (player != nullptr)
         player->setCustomChartCentre(
-            (player != nullptr
-                 ? player->PlayerEntity::getGalaxy_coordinates()
-                 : NSPoint{}));  // qualified: the final overrider, so the
-                                 // binding test stands in for it
+            (player != nullptr ? player->PlayerEntity::getGalaxy_coordinates()
+                               // qualified: the final overrider, so the binding
+                               // test stands in for it
+                               : NSPoint{}));
       OOJSReportWarning(
           context,
           "Mission.runScreen: invalid value for customChartCentreInLY. Must be "
@@ -792,8 +793,9 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
   JS_FreeValue(context, value);
 
   if (UNIVERSE != nullptr)
-    UNIVERSE->removeDemoShips();  // remove any demoship or miniature planet
-                                  // that may be remaining from previous screens
+    // remove any demoship or miniature planet that may be remaining from
+    // previous screens
+    UNIVERSE->removeDemoShips();
 
   ShipEntity* demoShip = nullptr;
   value = GetParameter(context, params, "model");
@@ -832,8 +834,8 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
     }
     JS_FreeValue(context, value);
 
-    JSValue demoShipVal =
-        OOJSValueFromCxxObject(context, demoShip);  // the C++ ship's JS value
+    // the C++ ship's JS value
+    JSValue demoShipVal = OOJSValueFromCxxObject(context, demoShip);
     if (JS_SetPropertyStr(context, sMissionObject, "displayModel",
                           demoShipVal) < 0) {
       OOJSReportPendingException(context);

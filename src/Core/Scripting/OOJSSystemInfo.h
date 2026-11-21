@@ -62,8 +62,8 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
   bool isEqual(const OOSystemInfo* other) const;  // null: not equal
   std::size_t hash() const;
 
-  oo::PList valueForKey(
-      const std::optional<std::string>& key);  // null for none
+  // null for none
+  oo::PList valueForKey(const std::optional<std::string>& key);
   void setValue(const oo::PList& value,
                 const std::string& key);  // a null value removes
 

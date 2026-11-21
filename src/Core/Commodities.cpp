@@ -198,11 +198,9 @@ oo::Commodities::generateManifestForPlayer() {
 
   for (const auto& [commodity, info] : _commodityLists) {
     // key order
-    oo::PList good =
-        info.isDict()
-            ? info
-            : oo::PList(oo::PList::Dict{});  // +dictionaryWithDictionary:
-                                             // of the entry
+    oo::PList good = info.isDict() ? info
+                                   // +dictionaryWithDictionary: of the entry
+                                   : oo::PList(oo::PList::Dict{});
     SetUnsigned(good, kCommodityPriceCurrent, 0);
     SetUnsigned(good, kCommodityQuantityCurrent, 0);
     /* The actual capacity of the player ship is a total, not
@@ -221,11 +219,9 @@ std::shared_ptr<oo::CommodityMarket> oo::Commodities::generateBlankMarket() {
 
   for (const auto& [commodity, info] : _commodityLists) {
     // key order
-    oo::PList good =
-        info.isDict()
-            ? info
-            : oo::PList(oo::PList::Dict{});  // +dictionaryWithDictionary:
-                                             // of the entry
+    oo::PList good = info.isDict() ? info
+                                   // +dictionaryWithDictionary: of the entry
+                                   : oo::PList(oo::PList::Dict{});
     SetUnsigned(good, kCommodityPriceCurrent, 0);
     SetUnsigned(good, kCommodityQuantityCurrent, 0);
     SetUnsigned(good, kCommodityCapacity, 0);
@@ -277,13 +273,13 @@ oo::PList oo::Commodities::modifyGood(const oo::PList& good, ::OOScript* script,
   // The JS boundary takes and gives property-list objects: the info crosses as
   // one, and an accepted result comes back through oo::PListFrom (an exact
   // round trip).
-  OOJSVal args[] = {
-      OOJSValueFromPList(context, good),
-      station != nullptr
-          ? station->jsValueInContext(context)
-          : JS_NULL,  // the C++ station's JS value, which
-                      // OOJSValueFromNativeObject() of its object reached
-      OOJSValueFromDouble(context, system)};
+  OOJSVal args[] = {OOJSValueFromPList(context, good),
+                    station != nullptr
+                        ? station->jsValueInContext(context)
+                        // the C++ station's JS value, which
+                        // OOJSValueFromNativeObject() of its object reached
+                        : JS_NULL,
+                    OOJSValueFromDouble(context, system)};
   bool OK = true;
   std::string_view errorType;
 
@@ -314,8 +310,9 @@ oo::PList oo::Commodities::modifyGood(const oo::PList& good, ::OOScript* script,
     return good;
   }
 
-  if (!JS_IsObject(rval)) {  // Unlike JSVAL_IS_OBJECT(), false for null, which
-                             // gets the same message below.
+  // Unlike JSVAL_IS_OBJECT(), false for null, which gets the same message
+  // below.
+  if (!JS_IsObject(rval)) {
     OO_LOG("script.commodityScript.error",
            "Could not update {} commodity definition for {} - return value "
            "invalid",
@@ -548,8 +545,8 @@ oo::CreditsQuantity oo::Commodities::samplePriceForCommodity(
   if (scriptName.has_value()) {
     ::OOScript* script =
         (PLAYER != nullptr ? PLAYER->commodityScriptNamed(scriptName)
-                           : static_cast<OOScript*>(
-                                 nullptr));  // (has a value: checked above)
+                           // (has a value: checked above)
+                           : static_cast<OOScript*>(nullptr));
     if (script != nullptr) {
       good = modifyGood(good, script, nullptr, system, true);
     }
@@ -612,8 +609,8 @@ oo::PList oo::Commodities::firstModifierForGood(const std::string& good,
 
 oo::CreditsQuantity oo::Commodities::adjustPrice(oo::CreditsQuantity price,
                                                  const oo::PList& rule) {
-  float p =
-      static_cast<float>(price);  // work in floats to avoid rounding problems
+  // work in floats to avoid rounding problems
+  float p = static_cast<float>(price);
   float pa = rule.get<float>(kCommodityMarketPriceAdder, 0.0);
   float pm = rule.get<float>(kCommodityMarketPriceMultiplier, 1.0);
   if (pm <= 0.0 && pa <= 0.0) {
@@ -633,8 +630,8 @@ oo::CreditsQuantity oo::Commodities::adjustPrice(oo::CreditsQuantity price,
 
 oo::CargoQuantity oo::Commodities::adjustQuantity(oo::CargoQuantity quantity,
                                                   const oo::PList& rule) {
-  float q = static_cast<float>(
-      quantity);  // work in floats to avoid rounding problems
+  // work in floats to avoid rounding problems
+  float q = static_cast<float>(quantity);
   float qa = rule.get<float>(kCommodityMarketQuantityAdder, 0.0);
   float qm = rule.get<float>(kCommodityMarketQuantityMultiplier, 1.0);
   if (qm <= 0.0 && qa <= 0.0) {

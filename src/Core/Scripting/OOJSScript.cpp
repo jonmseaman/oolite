@@ -60,8 +60,8 @@ struct RunningStack {
   RunningStack* back = nullptr;
   // The running script, held weakly; null for a script-less push.
   std::weak_ptr<OOJSScript> current;
-  bool scriptless =
-      false;  // pushed with no script, which scriptStack() refuses
+  // pushed with no script, which scriptStack() refuses
+  bool scriptless = false;
 };
 }  // namespace
 
@@ -342,8 +342,8 @@ std::optional<std::string> OOJSScript::name() {
   // (the property as text: a string is itself, anything else its -description)
   if (!_name.has_value()) _name = DescriptionOrNil(propertyNamed("name"));
   if (!_name.has_value())
-    return scriptNameFromPath(
-        _filePath);  // Special case for parse errors during load.
+    // Special case for parse errors during load.
+    return scriptNameFromPath(_filePath);
   return _name;
 }
 
@@ -557,8 +557,8 @@ std::string OOJSScript::scriptNameFromPath(
   std::string theName;
 
   if (!path.has_value()) {
-    theName = oo::str::pointerDescription(
-        this);  // (the script's address, as self's was)
+    // (the script's address, as self's was)
+    theName = oo::str::pointerDescription(this);
   } else {
     lastComponent = oo::str::lastPathComponent(*path);
     if (!oo::str::hasPrefix(lastComponent, "script.")) {
@@ -598,9 +598,9 @@ oo::PList::Dict OOJSScript::defaultPropertiesFromPath(
                 "manifest.plist"))
           : oo::PList();
   if (!manifest.isDict())
-    manifest = oo::PList();  // a dictionary or nothing, as OODictionaryFromFile
-                             // answered (its plist.wrongType line, which named
-                             // the Foundation class, is not kept)
+    // a dictionary or nothing, as OODictionaryFromFile answered (its
+    // plist.wrongType line, which named the Foundation class, is not kept)
+    manifest = oo::PList();
   oo::PList::Dict properties;
   /* __oolite.tmp.* is allocated for OXPs without manifests. Its
    * values are meaningless and shouldn't be used here */
@@ -746,14 +746,14 @@ static bool RunScriptWithName(JSContext* context,
 
     if (sCompiledScripts == nullptr)
       sCompiledScripts = new std::unordered_map<std::string, JSValue>;
-    (*sCompiledScripts)[*path] =
-        JS_DupValue(context, compiled);  // a compiled script has a path
+    // a compiled script has a path
+    (*sCompiledScripts)[*path] = JS_DupValue(context, compiled);
   }
 
   OOJSStartTimeLimiterWithTimeLimit(kOOJSLongTimeLimit);
   JSValue result;
-  JSValue function =
-      JS_EvalFunction(context, compiled);  // Takes ownership of compiled.
+  // Takes ownership of compiled.
+  JSValue function = JS_EvalFunction(context, compiled);
   if (JS_IsException(function)) {
     result = function;
   } else {
@@ -795,8 +795,9 @@ static JSValue CompileScriptWithName(
    * that here. */
   if (utf8Contents->find("\"use strict\";") == std::string::npos &&
       utf8Contents->find("'use strict';") == std::string::npos) {
+    // "%@" of the path
     oo::StandardsDeprecated("Script " + path.value_or("(null)") +
-                            " does not \"use strict\";");  // "%@" of the path
+                            " does not \"use strict\";");
     if (oo::EnforceStandards()) {
       // prepend it anyway (before wrapping: see OOJSWrapScriptSource())
       // TODO: some time after 1.82, make this required

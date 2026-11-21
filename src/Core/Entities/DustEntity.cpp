@@ -194,8 +194,8 @@ oo::ShaderProgram* DustEntity::getShader() {
 
     // Reuse tangent attribute ID for "warpiness", as we don't need a tangent.
     oo::PList::Dict attributes;
-    attributes["aWarpiness"] =
-        oo::PList::signedInteger(kTangentAttributeIndex);  // +numberWithInt:
+    // +numberWithInt:
+    attributes["aWarpiness"] = oo::PList::signedInteger(kTangentAttributeIndex);
 
     shader = oo::ShaderProgram::shaderProgramWithVertexShaderName(
         "oolite-dust.vertex", "oolite-dust.fragment",
@@ -210,9 +210,9 @@ oo::ShaderProgram* DustEntity::getShader() {
     std::shared_ptr<oo::ShaderUniform> uOffsetPlayerPosition =
         oo::ShaderUniform::initWithName(
             "uOffsetPlayerPosition", shader.get(), this, "offsetPlayerPosition",
-            oo::kShaderUniformTypeVector,  // -offsetPlayerPosition's return
-                                           // type
-            DustOffsetPlayerPositionBinding, oo::UniformConvertOptions::kNone);
+            // -offsetPlayerPosition's return type
+            oo::kShaderUniformTypeVector, DustOffsetPlayerPositionBinding,
+            oo::UniformConvertOptions::kNone);
 
     uniforms.push_back(uWarp);
     uniforms.push_back(uOffsetPlayerPosition);

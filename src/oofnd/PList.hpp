@@ -128,8 +128,8 @@ class PList {
   };
 
   struct Integer {
-    std::int64_t value =
-        0;  // two's-complement bits; read as uint64 when isUnsigned
+    // two's-complement bits; read as uint64 when isUnsigned
+    std::int64_t value = 0;
     bool isUnsigned = false;
 
     std::uint64_t unsignedValue() const noexcept {

@@ -253,8 +253,8 @@ constexpr const char* kLogOpenGLShaderSupport =
 
 namespace {
 
-oo::OpenGLExtensionManager* sSingleton =
-    nullptr;  // +1, never released (the retained singleton)
+// +1, never released (the retained singleton)
+oo::OpenGLExtensionManager* sSingleton = nullptr;
 
 }  // namespace
 
@@ -489,8 +489,9 @@ oo::OpenGLExtensionManager* oo::OpenGLExtensionManager::sharedManager() {
   if (sSingleton == nullptr) {
     // The singleton category's +allocWithZone: recorded the instance before
     // -init ran -reset, so it is recorded here before reset() runs too.
+    // never deleted
     static std::shared_ptr<oo::OpenGLExtensionManager>* sSingletonHolder =
-        nullptr;  // never deleted
+        nullptr;
     sSingletonHolder = new std::shared_ptr<oo::OpenGLExtensionManager>(
         oo::makeShared<oo::OpenGLExtensionManager>());
     sSingleton = sSingletonHolder->get();

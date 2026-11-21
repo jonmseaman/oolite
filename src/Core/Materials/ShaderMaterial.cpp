@@ -768,8 +768,8 @@ bool GetShaderSource(
     const std::optional<std::string>& /* prefix: unused, as before */,
     std::optional<std::string>* outResult) {
   if (!fileName.has_value())
-    return true;  // It's OK for one or the other of the shaders to be
-                  // undefined.
+    // It's OK for one or the other of the shaders to be undefined.
+    return true;
 
   std::optional<std::string> result =
       ResourceManager::stringFromFilesNamed(*fileName, std::string("Shaders"));

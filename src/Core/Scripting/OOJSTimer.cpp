@@ -193,8 +193,8 @@ std::optional<std::string> OOJSTimer::oo_jsClassName() {
 
 void OOJSTimer::timerFired() {
   JSValue rval = JS_UNDEFINED;
-  bool described =
-      false;  // was the description itself, used only to test for nil
+  // was the description itself, used only to test for nil
+  bool described = false;
 
   ::OOJavaScriptEngine* engine = OOJavaScriptEngine::sharedEngine();
   JSContext* context = OOJSAcquireContext();

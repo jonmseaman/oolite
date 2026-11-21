@@ -118,4 +118,5 @@ extern const char* const kLogOpenGLError;  // "rendering.opengl.error"
 extern const char* const kLogUnconvertedNSLog;
 
 }  // namespace oo
-   // "unclassified"
+
+// "unclassified"

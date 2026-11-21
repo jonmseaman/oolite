@@ -154,8 +154,8 @@ void EntityByNameTyped(Entity* entity, oo::EntityByNameValue& value) {
   } else if constexpr (std::is_convertible_v<Result, Entity*>) {
     value.entity = Function(entity);  // the C++ entity
   } else {
-    (void)Function(entity);  // a result callObjC() cannot read (it does not
-                             // call such a method)
+    // a result callObjC() cannot read (it does not call such a method)
+    (void)Function(entity);
   }
 }
 

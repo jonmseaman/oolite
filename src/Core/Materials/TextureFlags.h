@@ -49,19 +49,17 @@ enum class TextureFlags : std::uint32_t {
   kExtraShrink = 0x000020U,
   kRepeatS = 0x000040U,
   kRepeatT = 0x000080U,
-  kAllowRectTexture =
-      0x000100U,  // Indicates that GL_TEXTURE_RECTANGLE_EXT may be used
-                  // instead of GL_TEXTURE_2D. See -texCoordsScale for a
-                  // discussion of rectangle textures.
+  // Indicates that GL_TEXTURE_RECTANGLE_EXT may be used instead of
+  // GL_TEXTURE_2D. See -texCoordsScale for a discussion of rectangle textures.
+  kAllowRectTexture = 0x000100U,
   kNoFNFMessage = 0x000200U,  // Don't log file not found error
-  kNeverScale =
-      0x000400U,  // Don't rescale texture, even if rect textures are not
-                  // available. This *must not* be used for regular textures,
-                  // but may be passed to OOTextureLoader when being used for
-                  // other purposes.
-  kAlphaMask =
-      0x000800U,  // Single-channel texture should be GL_ALPHA, not
-                  // GL_LUMINANCE. No effect for multi-channel textures.
+  // Don't rescale texture, even if rect textures are not available. This *must
+  // not* be used for regular textures, but may be passed to OOTextureLoader
+  // when being used for other purposes.
+  kNeverScale = 0x000400U,
+  // Single-channel texture should be GL_ALPHA, not GL_LUMINANCE. No effect for
+  // multi-channel textures.
+  kAlphaMask = 0x000800U,
   kAllowCubeMap = 0x001000U,
 
   kSRGBA = 0x002000U,

@@ -239,8 +239,8 @@ oo::GameObserver* GameController::currentObserver() {
 
 GameController* GameController::sharedController() {
   if (sSharedController == nullptr) {
-    static std::shared_ptr<GameController>* sSharedControllerHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<GameController>* sSharedControllerHolder = nullptr;
     sSharedControllerHolder =
         new std::shared_ptr<GameController>(oo::makeShared<GameController>());
     sSharedController = sSharedControllerHolder->get();
@@ -258,10 +258,9 @@ GameController::GameController() {
 
   {
     _finishedLaunching = false;
-    last_timeInterval =
-        _clock.monotonicSeconds();  // the frame clock: intervals only
-                                    // (-doPerformGameTick)
-    delta_t = 0.01;                 // one hundredth of a second
+    // the frame clock: intervals only (-doPerformGameTick)
+    last_timeInterval = _clock.monotonicSeconds();
+    delta_t = 0.01;  // one hundredth of a second
     {
       oo::Defaults& prefs = oo::Defaults::standard();
       _animationTimerInterval =
@@ -272,9 +271,8 @@ GameController::GameController() {
 
     // rather than seeding this with the date repeatedly, seed it
     // once here at startup
-    ranrot_srand(static_cast<uint32_t>(
-        oo::date::timeIntervalSince1970()));  // reset randomiser
-                                              // with current time
+    // reset randomiser with current time
+    ranrot_srand(static_cast<uint32_t>(oo::date::timeIntervalSince1970()));
 
     _splashStart = oo::date::monotonicSeconds();
   }
@@ -426,9 +424,9 @@ void GameController::doPerformGameTick() {
       delta_t = _clock.monotonicSeconds() - last_timeInterval;
       last_timeInterval += delta_t;
       if (delta_t > MINIMUM_GAME_TICK)
-        delta_t =
-            MINIMUM_GAME_TICK;  // peg the maximum pause (at 0.5->1.0 seconds)
-                                // to protect against when the machine sleeps
+        // peg the maximum pause (at 0.5->1.0 seconds) to protect against when
+        // the machine sleeps
+        delta_t = MINIMUM_GAME_TICK;
     }
 
     tick(delta_t);
@@ -691,8 +689,8 @@ void GameController::startHeadless(const oo::HeadlessOptions& options) {
                          "view");
     }
     _gameView->setGameController(this);
-    setUpDisplayModes();  // as the windowed start: the options screen lists
-                          // them
+    // as the windowed start: the options screen lists them
+    setUpDisplayModes();
   }
   _universe = Universe::newUniverse(_gameView.get(), options);
   loadPlayerIfRequired();
@@ -1080,9 +1078,8 @@ std::size_t GameController::indexOfCurrentDisplayMode() {
   if (mode == nullptr)
     return oo::kNotFound;
   else
-    return static_cast<std::size_t>(
-        mode - displayModes.data());  // the first match, as
-                                      // -indexOfObject: found
+    // the first match, as -indexOfObject: found
+    return static_cast<std::size_t>(mode - displayModes.data());
 
   return oo::kNotFound;
 }

@@ -179,8 +179,8 @@ std::optional<std::string> oo::ConcreteTexture::descriptionComponents() const {
     stateDesc = "loading";
   }
 
-  return _key.value_or("(null)") + ", " +
-         stateDesc;  // "%@, %@": nil printed (null)
+  // "%@, %@": nil printed (null)
+  return _key.value_or("(null)") + ", " + stateDesc;
 }
 
 std::optional<std::string> oo::ConcreteTexture::shortDescriptionComponents()
@@ -255,8 +255,8 @@ void oo::ConcreteTexture::ensureFinishedLoading() {
 }
 
 bool oo::ConcreteTexture::isFinishedLoading() {
-  return _loaded || (_loader != nullptr &&
-                     _loader->isReady());  // a message to nil answered NO
+  // a message to nil answered NO
+  return _loaded || (_loader != nullptr && _loader->isReady());
 }
 
 std::optional<std::string> oo::ConcreteTexture::cacheKey() { return _key; }

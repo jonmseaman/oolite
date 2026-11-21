@@ -37,8 +37,8 @@ SOFTWARE.
 
 namespace {
 
-oo::GraphicsResetManager* sSingleton =
-    nullptr;  // +1, never released (the retained singleton)
+// +1, never released (the retained singleton)
+oo::GraphicsResetManager* sSingleton = nullptr;
 
 }  // namespace
 
@@ -52,8 +52,9 @@ GraphicsResetManager::~GraphicsResetManager() {
 
 oo::GraphicsResetManager* oo::GraphicsResetManager::sharedManager() {
   if (sSingleton == nullptr) {
+    // never deleted
     static std::shared_ptr<oo::GraphicsResetManager>* sSingletonHolder =
-        nullptr;  // never deleted
+        nullptr;
     sSingletonHolder = new std::shared_ptr<oo::GraphicsResetManager>(
         oo::makeShared<oo::GraphicsResetManager>());
     sSingleton = sSingletonHolder->get();

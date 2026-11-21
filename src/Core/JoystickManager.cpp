@@ -41,8 +41,8 @@ MA 02110-1301, USA.
 namespace {
 
 oo::JoystickManager::StickHandlerFactory sStickHandlerFactory = nullptr;
-oo::JoystickManager* sSharedStickHandler =
-    nullptr;  // never released, as before
+// never released, as before
+oo::JoystickManager* sSharedStickHandler = nullptr;
 
 }  // namespace
 
@@ -57,8 +57,9 @@ oo::JoystickManager* oo::JoystickManager::sharedStickHandler() {
             : oo::makeShared<oo::JoystickManager>();
     handler->init();
     // Never destroyed: a heap std::shared_ptr that is never deleted.
+    // never deleted
     static std::shared_ptr<oo::JoystickManager>* sSharedStickHandlerHolder =
-        nullptr;  // never deleted
+        nullptr;
     sSharedStickHandlerHolder =
         new std::shared_ptr<oo::JoystickManager>(std::move(handler));
     sSharedStickHandler = sSharedStickHandlerHolder->get();
@@ -296,8 +297,8 @@ std::vector<std::string> oo::JoystickManager::listSticks() {
 
   std::vector<std::string> stickList;
   for (i = 0; i < stickCount; i++) {
-    stickList.push_back(nameOfJoystick(i).value_or(
-        std::string()));  // a nameless stick lists as "", as before
+    // a nameless stick lists as "", as before
+    stickList.push_back(nameOfJoystick(i).value_or(std::string()));
   }
   return stickList;
 }

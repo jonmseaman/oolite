@@ -56,24 +56,27 @@ namespace oo {
 
 class EquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
  public:
-  static void loadEquipment();  // Load equipment data; called on loading and
-                                // when changing to/from strict mode.
-  static void addEquipmentWithInfo(
-      const oo::PList&
-          itemInfo);  // Used to generate equipment from missile_role entries.
+  // Load equipment data; called on loading and when changing to/from strict
+  // mode.
+  static void loadEquipment();
+  // Used to generate equipment from missile_role entries.
+  static void addEquipmentWithInfo(const oo::PList& itemInfo);
 
+  // nullopt: none registered
   static std::optional<std::string> getMissileRegistryRoleForShip(
-      const std::string& shipKey);  // nullopt: none registered
+      const std::string& shipKey);
   static void setMissileRegistryRole(const std::string& role,
                                      const std::string& shipKey);
 
+  // a snapshot, in equipment.plist order
+  static std::vector<std::shared_ptr<EquipmentType>> allEquipmentTypes();
+  // the outfitting dataset
   static std::vector<std::shared_ptr<EquipmentType>>
-  allEquipmentTypes();  // a snapshot, in equipment.plist order
-  static std::vector<std::shared_ptr<EquipmentType>>
-  allEquipmentTypesOutfitting();  // the outfitting dataset
+  allEquipmentTypesOutfitting();
 
+  // null: none
   static std::shared_ptr<EquipmentType> equipmentTypeWithIdentifier(
-      const std::string& identifier);  // null: none
+      const std::string& identifier);
 
   std::optional<std::string> identifier();
   std::optional<std::string> damagedIdentifier();
@@ -108,12 +111,12 @@ class EquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
   CargoQuantity requiredCargoSpace();
   // Equipment identifiers, sorted and de-duplicated; nullopt when not
   // specified.
-  std::optional<std::vector<std::string>>
-  requiresEquipment();  // all items required
-  std::optional<std::vector<std::string>>
-  requiresAnyEquipment();  // any item required
-  std::optional<std::vector<std::string>>
-  incompatibleEquipment();  // all items prohibited
+  // all items required
+  std::optional<std::vector<std::string>> requiresEquipment();
+  // any item required
+  std::optional<std::vector<std::string>> requiresAnyEquipment();
+  // all items prohibited
+  std::optional<std::vector<std::string>> incompatibleEquipment();
 
   // FIXME: should have general mechanism to handle scripts or legacy
   // conditions.
@@ -176,8 +179,8 @@ class EquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
 
   // -initWithInfo:, which could fail: createWithInfo() runs it on a new object.
   static std::shared_ptr<EquipmentType> createWithInfo(const oo::PList& info);
-  bool initWithInfo(
-      const oo::PList& info);  // an equipment.plist entry (an array)
+  // an equipment.plist entry (an array)
+  bool initWithInfo(const oo::PList& info);
 
   TechLevelID _techLevel = {};
   CreditsQuantity _price = {};

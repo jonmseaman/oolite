@@ -76,15 +76,16 @@ class OpenGLExtensionManager : public oo::Object {
   bool shadersForceDisabled();
   GraphicsDetail defaultDetailLevel();
   GraphicsDetail maximumDetailLevel();
-  GLint textureImageUnitCount();  // Fragment shader sampler count limit. Does
-                                  // not apply to fixed function multitexturing.
-                                  // (GL_MAX_TEXTURE_IMAGE_UNITS_ARB)
+  // Fragment shader sampler count limit. Does not apply to fixed function
+  // multitexturing. (GL_MAX_TEXTURE_IMAGE_UNITS_ARB)
+  GLint textureImageUnitCount();
 
   bool vboSupported();  // Vertex buffer objects
   bool fboSupported();  // Frame buffer objects
   bool textureCombinersSupported();
-  GLint textureUnitCount();  // Fixed function multitexture limit, does not
-                             // apply to shaders. (GL_MAX_TEXTURE_UNITS_ARB)
+  // Fixed function multitexture limit, does not apply to shaders.
+  // (GL_MAX_TEXTURE_UNITS_ARB)
+  GLint textureUnitCount();
 
   std::size_t majorVersionNumber();
   std::size_t minorVersionNumber();

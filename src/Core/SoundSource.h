@@ -54,7 +54,8 @@ namespace oo {
 class SoundReferencePoint;
 
 }  // namespace oo
-   // C++ (OOBasicSoundReferencePoint.h)
+
+// C++ (OOBasicSoundReferencePoint.h)
 struct OOSoundSourceTestAccess;
 
 namespace oo {
@@ -126,8 +127,8 @@ class SoundSource : public oo::Object, public ::oo::SoundChannelDelegate {
 
  private:
   std::shared_ptr<Sound> _sound;  // retained
-  ::oo::SoundChannel* _channel =
-      {};  // borrowed from the mixer, not retained, as before
+  // borrowed from the mixer, not retained, as before
+  ::oo::SoundChannel* _channel = {};
   std::shared_ptr<SoundSource>
       _playingHold;  // the source's own while a channel plays it (was retain)
   bool _loop = {};

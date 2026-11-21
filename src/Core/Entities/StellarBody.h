@@ -58,4 +58,5 @@ double StellarBodyRadius(Entity* body);  // of the C++ entity
 StellarBodyType StellarBodyPlanetType(Entity* body);
 
 }  // namespace oo
-   // the same
+
+// the same

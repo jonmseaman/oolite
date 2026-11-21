@@ -55,8 +55,9 @@ class Music;
 enum class ResourceMergeMode : std::int32_t {
   kNone,   // Just use the last file in search order.
   kBasic,  // Merge files by adding the top-level items of each file.
-  kSmart,  // Merge files by merging the top-level elements of each file
-           // (second-order merge, but not recursive)
+  // Merge files by merging the top-level elements of each file (second-order
+  // merge, but not recursive)
+  kSmart,
 };
 
 }  // namespace oo
@@ -92,17 +93,18 @@ class ResourceManager {
   static std::vector<std::string>
   rootPaths();  // Places add-ons are searched for, not including add-on paths.
   static std::vector<std::string>
-  userRootPaths();  // Places users are expected to place add-ons, not including
-                    // built-in data or managed add-ons directory.
+  // Places users are expected to place add-ons, not including built-in data or
+  // managed add-ons directory.
+  userRootPaths();
   static std::optional<std::string>
   builtInPath();  // Path for built-in data only.
   static std::vector<std::string>
   pathsWithAddOns();  // Root paths + add-on paths.
   static std::vector<std::string>
   paths();  // builtInPath or pathsWithAddOns, depending on useAddOns state.
+  // potential privacy concerns
   static std::vector<std::string> maskUserNameInPathArray(
-      const std::vector<std::string>&
-          inputPathArray);  // potential privacy concerns
+      const std::vector<std::string>& inputPathArray);
   static std::optional<std::string> maskUserName(const std::string& name,
                                                  const std::string& path);
   static std::optional<std::string>
@@ -115,9 +117,9 @@ class ResourceManager {
   static oo::PList manifestForIdentifier(const std::string& identifier);
 
   static std::optional<std::string>
-  errors();  // Errors which occurred during path scanning - essentially a list
-             // of OXPs whose requires.plist is bad. nullopt when there are
-             // none.
+  // Errors which occurred during path scanning - essentially a list of OXPs
+  // whose requires.plist is bad. nullopt when there are none.
+  errors();
 
   // Clear ResourceManager-internal caches (not those handled by OOCacheManager)
   static void clearCaches();
@@ -134,12 +136,12 @@ class ResourceManager {
       bool useCache);
   static std::shared_ptr<oo::Music> ooMusicNamed(
       const std::string& fileName,
-      const std::optional<std::string>&
-          folderName);  // a new music each call (not cached); null when none
+      // a new music each call (not cached); null when none
+      const std::optional<std::string>& folderName);
   static oo::Sound* ooSoundNamed(
       const std::string& fileName,
-      const std::optional<std::string>&
-          folderName);  // borrowed: the cache keeps it (was autoreleased)
+      // borrowed: the cache keeps it (was autoreleased)
+      const std::optional<std::string>& folderName);
   // nullopt when no file was found (was nil); folderName nullopt where nil was
   // passed.
   static std::optional<std::string> stringFromFilesNamed(
@@ -194,8 +196,8 @@ class ResourceManager {
   // These have special merging rules.
   static oo::PList logControlDictionary();
   static oo::PList
-  roleCategoriesDictionary();  // category -> array of its roles, each once (a
-                               // set), in first-seen order
+  // category -> array of its roles, each once (a set), in first-seen order
+  roleCategoriesDictionary();
 
   // compatibility checks (a manifest or relation is a Dict; title is nullopt
   // where nil was passed)
@@ -225,8 +227,8 @@ class ResourceManager {
       const std::string& fileName, const std::optional<std::string>& folderName,
       std::map<std::string, std::shared_ptr<oo::Sound>, std::less<>>* ioCache,
       std::optional<std::string> key,
-      bool useCache);  // the class was always OOSound; borrowed: the cache
-                       // keeps it
+      // the class was always OOSound; borrowed: the cache keeps it
+      bool useCache);
   static bool directoryExists(const std::string& inPath, bool inCreate);
   static bool checkCacheUpToDateForPaths(
       std::span<const std::string> searchPaths);

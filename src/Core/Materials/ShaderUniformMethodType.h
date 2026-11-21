@@ -48,47 +48,48 @@ SOFTWARE.
 namespace oo {
 
 using ShaderUniformType = int;
-inline constexpr ShaderUniformType kShaderUniformTypeInvalid =
-    0;  // Not valid for bindings or constants
+// Not valid for bindings or constants
+inline constexpr ShaderUniformType kShaderUniformTypeInvalid = 0;
 inline constexpr ShaderUniformType kShaderUniformTypeChar = 1;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeUnsignedChar =
-    2;                                                           // Binding only
+// Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeUnsignedChar = 2;
 inline constexpr ShaderUniformType kShaderUniformTypeShort = 3;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeUnsignedShort =
-    4;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeInt =
-    5;  // Binding or constant
-inline constexpr ShaderUniformType kShaderUniformTypeUnsignedInt =
-    6;                                                          // Binding only
+// Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeUnsignedShort = 4;
+// Binding or constant
+inline constexpr ShaderUniformType kShaderUniformTypeInt = 5;
+// Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeUnsignedInt = 6;
 inline constexpr ShaderUniformType kShaderUniformTypeLong = 7;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeUnsignedLong =
-    8;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeLongLong =
-    9;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeUnsignedLongLong =
-    10;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeFloat =
-    11;  // Binding or constant
-inline constexpr ShaderUniformType kShaderUniformTypeDouble =
-    12;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeVector =
-    13;  // Binding or constant
-inline constexpr ShaderUniformType kShaderUniformTypeHPVector =
-    14;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeQuaternion =
-    15;  // Binding or constant
-inline constexpr ShaderUniformType kShaderUniformTypeMatrix =
-    16;  // Binding or constant
-inline constexpr ShaderUniformType kShaderUniformTypePoint =
-    17;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeColor =
-    18;  // Binding only: the C++ colour (OOColor *)
-inline constexpr ShaderUniformType kShaderUniformTypeObject =
-    19;  // Binding only
+// Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeUnsignedLong = 8;
+// Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeLongLong = 9;
+// Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeUnsignedLongLong = 10;
+// Binding or constant
+inline constexpr ShaderUniformType kShaderUniformTypeFloat = 11;
+// Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeDouble = 12;
+// Binding or constant
+inline constexpr ShaderUniformType kShaderUniformTypeVector = 13;
+// Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeHPVector = 14;
+// Binding or constant
+inline constexpr ShaderUniformType kShaderUniformTypeQuaternion = 15;
+// Binding or constant
+inline constexpr ShaderUniformType kShaderUniformTypeMatrix = 16;
+// Binding only
+inline constexpr ShaderUniformType kShaderUniformTypePoint = 17;
+// Binding only: the C++ colour (OOColor *)
+inline constexpr ShaderUniformType kShaderUniformTypeColor = 18;
+// Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeObject = 19;
 inline constexpr ShaderUniformType kShaderUniformTypeCount = 20;
 
 }  // namespace oo
-   // Not valid for bindings or constants
+
+// Not valid for bindings or constants
 
 static_assert(static_cast<int>(oo::kShaderUniformTypeInvalid) == 0);
 static_assert(static_cast<int>(oo::kShaderUniformTypeChar) == 1);
@@ -218,8 +219,9 @@ using ShaderMemberGetter = void (*)(oo::Object* target,
 struct ShaderMemberBinding {
   ShaderUniformType type;
   ShaderMemberGetter get;
-  oo::Object* target;  // the C++ object get reads (the entity's part),
-                       // borrowed: the uniform holds it weakly
+  // the C++ object get reads (the entity's part), borrowed: the uniform holds
+  // it weakly
+  oo::Object* target;
 };
 
 }  // namespace oo
@@ -253,6 +255,7 @@ void SetShaderEntityHooks(const ShaderEntityHooks& hooks) noexcept;
 const ShaderEntityHooks* ShaderEntityHooksIfSet() noexcept;
 
 }  // namespace oo
-   // null where none is registered
+
+// null where none is registered
 
 #endif  // OO_SHADERS

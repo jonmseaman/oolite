@@ -101,12 +101,10 @@ static int WorldScriptsGetOwnProperty(JSContext* context,
     if (scriptName.has_value()) {
       script = nullptr;
       const auto worldScripts =
-          (player != nullptr
-               ? player->worldScriptsByName()
-               : std::vector<std::pair<
-                     std::string, std::shared_ptr<OOScript>>>());  // kept while
-                                                                   // script is
-                                                                   // used
+          (player != nullptr ? player->worldScriptsByName()
+                             : std::vector<std::pair<
+                                   // kept while script is used
+                                   std::string, std::shared_ptr<OOScript>>>());
       for (const auto& [name, scriptRef] : worldScripts) {
         // the last of a name, as the dictionary kept
         if (name == *scriptName && scriptRef.get() != nullptr)

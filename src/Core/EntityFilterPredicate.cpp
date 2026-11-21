@@ -131,21 +131,21 @@ bool IsVisualEffectPredicate(Entity* entity, void* /*parameter*/) {
 }
 
 bool HasRolePredicate(Entity* ship, void* parameter) {
-  const std::string* role = static_cast<const std::string*>(
-      parameter);  // a role, as the callers pass it; null for none
+  // a role, as the callers pass it; null for none
+  const std::string* role = static_cast<const std::string*>(parameter);
   return role != nullptr &&
          (oo::ToShip(ship) != nullptr ? oo::ToShip(ship)->hasRole(*role)
                                       : false);
 }
 
 bool HasPrimaryRolePredicate(Entity* ship, void* parameter) {
-  const std::string* role = static_cast<const std::string*>(
-      parameter);  // a role, as the callers pass it; null for none
+  // a role, as the callers pass it; null for none
+  const std::string* role = static_cast<const std::string*>(parameter);
   if (role == nullptr) {
     if (ShipEntity* s = oo::ToShip(ship))
-      (void)s->getPrimaryRole();  // still chooses a primary role if there is
-                                  // none, as before
-    return false;                 // -isEqual: nil was NO
+      // still chooses a primary role if there is none, as before
+      (void)s->getPrimaryRole();
+    return false;  // -isEqual: nil was NO
   }
   return (oo::ToShip(ship) != nullptr ? oo::ToShip(ship)->hasPrimaryRole(*role)
                                       : false);

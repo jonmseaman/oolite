@@ -77,8 +77,8 @@ class DefaultShaderSynthesizer : public oo::Object {
   DefaultShaderSynthesizer(
       const oo::PList& configuration,
       const std::optional<std::string>& materialKey,
-      const std::optional<std::string>&
-          name);  // -initWithMaterialConfiguration:materialKey:entityName:
+      // -initWithMaterialConfiguration:materialKey:entityName:
+      const std::optional<std::string>& name);
 
   bool run();
 
@@ -111,8 +111,9 @@ class DefaultShaderSynthesizer : public oo::Object {
 
   std::optional<std::string> readRGBForTextureSpec(
       const oo::PList& textureSpec,
-      const std::string& mapName);  // Generate a read for an RGB value, or a
-                                    // single channel splatted across RGB.
+      // Generate a read for an RGB value, or a single channel splatted across
+      // RGB.
+      const std::string& mapName);
   std::optional<std::string> readOneChannelForTextureSpec(
       const oo::PList& textureSpec,
       const std::string& mapName);  // Generate a read for a single channel.

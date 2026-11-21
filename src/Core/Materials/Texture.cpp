@@ -498,9 +498,9 @@ void oo::Texture::removeFromCaches() {
               cacheKey->c_str());  // miscount in autorelease
     // The following line is needed in order to avoid crashes when there's a
     // 'texture retain count error'. Please do not delete. -- Kaks 20091221
-    RecentTextures()->removePListForKey(
-        *cacheKey);  // make sure there's no reference left inside
-                     // sRecentTexture ( was a show stopper for 1.73)
+    // make sure there's no reference left inside sRecentTexture ( was a show
+    // stopper for 1.73)
+    RecentTextures()->removePListForKey(*cacheKey);
   }
 #endif
 }
@@ -678,8 +678,8 @@ std::optional<TextureSpecifier> InterpretTextureSpecifier(
       if (filterString == "nearest")
         options |= TextureFlags::kMagFilterNearest;
       else
-        options |=
-            TextureFlags::kMagFilterLinear;  // Covers "default" and "linear"
+        // Covers "default" and "linear"
+        options |= TextureFlags::kMagFilterLinear;
 
       if (specifier.get<bool>(kTextureSpecifierNoShrinkKey, false))
         options |= TextureFlags::kNoShrink;

@@ -438,8 +438,9 @@ static bool isHitByLine(const int* octbuffer, unsigned char* collbuffer,
 
   // first test the intersected octant, then the three adjacent, then the next
   // three adjacent, the finally the diagonal octant
-  int oct0, oct1, oct2, oct3;  // test oct0 then oct1, oct2, oct3 then (7 -
-                               // oct1), (7 - oct2), (7 - oct3) then (7 - oct0)
+  // test oct0 then oct1, oct2, oct3 then (7 - oct1), (7 - oct2), (7 - oct3)
+  // then (7 - oct0)
+  int oct0, oct1, oct2, oct3;
   oct0 = octantIntersected;
   oct1 = oct0 ^ 0x01;  // adjacent x
   oct2 = oct0 ^ 0x02;  // adjacent y
@@ -589,8 +590,8 @@ static bool isHitByOctree(Octree_details axialDetails,
 
     nextDetails.radius = 0.5f * otherRadius;
     for (i = 0; i < 8; i++) {
-      oct = static_cast<unsigned int>(
-          nearest_oct ^ change_oct[i]);  // work from nearest to furthest
+      // work from nearest to furthest
+      oct = static_cast<unsigned int>(nearest_oct ^ change_oct[i]);
       if (nextBuffer[oct]) {
         // don't test empty octants
         nextDetails.octree = &nextBuffer[oct];
@@ -629,8 +630,8 @@ static bool isHitByOctree(Octree_details axialDetails,
 
   nextDetails.radius = 0.5f * axialRadius;
   for (i = 0; i < 8; i++) {
-    oct = static_cast<unsigned int>(
-        nearest_oct ^ change_oct[i]);  // work from nearest to furthest
+    // work from nearest to furthest
+    oct = static_cast<unsigned int>(nearest_oct ^ change_oct[i]);
     if (nextBuffer[oct]) {
       // don't test empty octants
       nextDetails.octree = &nextBuffer[oct];

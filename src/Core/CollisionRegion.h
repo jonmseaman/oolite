@@ -53,9 +53,9 @@ class CollisionRegion : public oo::Object {
   struct AsUniverse {};
 
   explicit CollisionRegion(AsUniverse);  // -initAsUniverse
-  CollisionRegion(HPVector locn, GLfloat rad,
-                  CollisionRegion*
-                      otherRegion);  // -initAtLocation:withRadius:withinRegion:
+
+  // -initAtLocation:withRadius:withinRegion:
+  CollisionRegion(HPVector locn, GLfloat rad, CollisionRegion* otherRegion);
   ~CollisionRegion() override;
 
   void clearSubregions();
@@ -95,9 +95,9 @@ class CollisionRegion : public oo::Object {
   int crid = {};           // identifier
   HPVector location = {};  // center of the region
   GLfloat radius = {};     // inner radius of the region
-  GLfloat border_radius =
-      {};  // additiønal, border radius of the region (typically 32km or some
-           // value > the scanner range)
+  // additiønal, border radius of the region (typically 32km or some value > the
+  // scanner range)
+  GLfloat border_radius = {};
 
   unsigned checks_this_tick = {};
   unsigned checks_within_range = {};
@@ -106,8 +106,8 @@ class CollisionRegion : public oo::Object {
 
   bool isPlayerInRegion = {};
 
-  std::vector<Entity*> entity_array;  // entities within the region: their C++
-                                      // parts, borrowed
+  // entities within the region: their C++ parts, borrowed
+  std::vector<Entity*> entity_array;
 
   CollisionRegion* parentRegion = {};
 };

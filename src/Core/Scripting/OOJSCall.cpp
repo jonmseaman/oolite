@@ -67,8 +67,8 @@ constexpr MethodType kMethodTypeQuaternionVoid =
     oo::kShaderUniformTypeQuaternion;
 constexpr MethodType kMethodTypeMatrixVoid = oo::kShaderUniformTypeMatrix;
 constexpr MethodType kMethodTypePointVoid = oo::kShaderUniformTypePoint;
-constexpr MethodType kMethodTypeColorVoid =
-    oo::kShaderUniformTypeColor;  // a colour (OOColor *)
+// a colour (OOColor *)
+constexpr MethodType kMethodTypeColorVoid = oo::kShaderUniformTypeColor;
 constexpr MethodType kMethodTypeObjectVoid = oo::kShaderUniformTypeObject;
 constexpr MethodType kMethodTypeObjectObject = kMethodTypeObjectVoid + 1;
 constexpr MethodType kMethodTypeVoidVoid = kMethodTypeObjectObject + 1;
@@ -140,9 +140,8 @@ bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
           : nullptr;  // the C++ entity's; no other object is a ship
   if (ship != nullptr) {
     if (PLAYER != nullptr)
-      PLAYER->PlayerEntity::setScriptTarget(
-          ship);  // qualified: the final overrider, so the binding test stands
-                  // in for it
+      // qualified: the final overrider, so the binding test stands in for it
+      PLAYER->PlayerEntity::setScriptTarget(ship);
   }
 
   selectorString = OOStringFromJSValue(context, argv[0]);
@@ -211,8 +210,8 @@ bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
           result = oo::ColorObjectNode(typed.color);
           if (selectorString.has_value() &&
               oo::str::hasSuffix(*selectorString, "_bool"))
-            result = oo::PList(
-                false);  // a colour answered neither -boolValue nor -intValue
+            // a colour answered neither -boolValue nor -intValue
+            result = oo::PList(false);
           break;
 
         case kMethodTypeObjectVoid:
@@ -296,8 +295,8 @@ bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
           break;
       }
       if (!result.isNull()) {
-        *outResult = OOJSValueFromPList(
-            context, result);  // a Foundation result's PList form
+        // a Foundation result's PList form
+        *outResult = OOJSValueFromPList(context, result);
       }
     }
   } else {

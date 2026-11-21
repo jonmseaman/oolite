@@ -807,8 +807,8 @@ void oo::DefaultShaderSynthesizer::writeSpecularLighting() {
         oo::kTextureSpecifierScaleFactorKey, 1.0f));
   }
 
-  std::shared_ptr<oo::Color> specularColor;  // never null: both functions below
-                                             // answer a default colour
+  // never null: both functions below answer a default colour
+  std::shared_ptr<oo::Color> specularColor;
   if (specularColorMap.isNull()) {
     specularColor = oo::MaterialSpecularColor(_configuration);
   } else {
@@ -943,8 +943,8 @@ void oo::DefaultShaderSynthesizer::writeLightMaps() {
 
   _fragmentBody += "\tvec3 lightMapColor;\n";
 
-  const oo::PList notADictionary;  // a light map entry that is not a dictionary
-                                   // reads as nil
+  // a light map entry that is not a dictionary reads as nil
+  const oo::PList notADictionary;
   for (idx = 0; idx < count; idx++) {
     const oo::PList* entry = lightMaps->at<oo::PList::Dict>(idx);
     const oo::PList& lightMapSpec =
@@ -1006,8 +1006,8 @@ void oo::DefaultShaderSynthesizer::writeLightMaps() {
     if (binding != nullptr) {
       std::string bindingName = binding->get<std::string>("binding");
       oo::PList bindingTypes = ResourceManager::shaderBindingTypesDictionary();
-      const oo::PList* typeDict = bindingTypes.get<oo::PList::Dict>(
-          "player");  // FIXME: select appropriate binding subset.
+      // FIXME: select appropriate binding subset.
+      const oo::PList* typeDict = bindingTypes.get<oo::PList::Dict>("player");
       std::optional<std::string> bindingType =
           (typeDict != nullptr) ? OptionalStringFor(*typeDict, bindingName)
                                 : std::nullopt;
@@ -1063,8 +1063,8 @@ void oo::DefaultShaderSynthesizer::writeTotalColor() {
 }
 
 void oo::DefaultShaderSynthesizer::writeFinalColorComposite() {
-  REQUIRE_STAGE(writeTotalColor);  // Needed even if none of the following
-                                   // stages does anything.
+  // Needed even if none of the following stages does anything.
+  REQUIRE_STAGE(writeTotalColor);
   REQUIRE_STAGE(writeDiffuseLighting);
   REQUIRE_STAGE(writeSpecularLighting);
   REQUIRE_STAGE(writeLightMaps);

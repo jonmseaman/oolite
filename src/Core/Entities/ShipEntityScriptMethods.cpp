@@ -63,10 +63,9 @@ MA 02110-1301, USA.
 
 std::vector<oo::EntityHold> ShipEntity::spawnShipsWithRole(
     const std::string& role, std::size_t count) {
-  ::ShipEntity* ship = oo::ToShip(
-      rootShipEntity());  // FIXME: (EMMSTRAN) implement an -absolutePosition
-                          // method, use that in spawnShipWithRole:near:, and
-                          // use self instead of root.
+  // FIXME: (EMMSTRAN) implement an -absolutePosition method, use that in
+  // spawnShipWithRole:near:, and use self instead of root.
+  ::ShipEntity* ship = oo::ToShip(rootShipEntity());
   ::ShipEntity* spawned = nullptr;
   std::vector<oo::EntityHold> result;
 

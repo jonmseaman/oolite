@@ -234,8 +234,8 @@ static std::atomic<int32_t> sPreviousDumpID{0};
 #endif
 
 #if DUMP_MIP_MAPS
-constexpr int DUMP_CHANNELS =
-    -1;  // Bitmap of channel counts - -1 for all dumps
+// Bitmap of channel counts - -1 for all dumps
+constexpr int DUMP_CHANNELS = -1;
 
 #define DUMP_MIP_MAP_PREPARE(pl)                     \
   uint32_t dumpPlanes = pl;                          \
@@ -263,6 +263,7 @@ static void DumpMipMap(void* data, oo::PixMapDimension width,
 #if DUMP_SCALE
 #define DUMP_SCALE_PREPARE() \
   int32_t dumpID = sPreviousDumpID.fetch_add(1) + 1, dumpCount = 0;
+// stage: a C string
 #define DUMP_SCALE_DUMP(PM, stage)                                           \
   do {                                                                       \
     oo::PixMap* pm = &(PM);                                                  \
@@ -270,7 +271,7 @@ static void DumpMipMap(void* data, oo::PixMapDimension width,
                                   static_cast<unsigned>(dumpID),             \
                                   static_cast<unsigned>(dumpCount++), stage, \
                                   pm->width, pm->height));                   \
-  } while (0)  // stage: a C string
+  } while (0)
 #else
 #define DUMP_SCALE_PREPARE()
 #define DUMP_SCALE_DUMP(PM, stage) \
@@ -905,8 +906,8 @@ static void StretchVerticallyN_x1(oo::PixMap srcPx, oo::PixMap dstPx) {
 
   src = static_cast<uint8_t*>(srcPx.pixels);
   srcRowBytes = srcPx.rowBytes;
-  dst = static_cast<uint8_t*>(
-      dstPx.pixels);  // Assumes dstPx.width == dstPx.rowBytes.
+  // Assumes dstPx.width == dstPx.rowBytes.
+  dst = static_cast<uint8_t*>(dstPx.pixels);
 
   src0 = prev = src;
 
@@ -1058,8 +1059,8 @@ static void StretchHorizontally1(oo::PixMap srcPx, oo::PixMap dstPx) {
   uint32_t x, y, xCount;
   size_t srcRowBytes;
   uint16_t weight0, weight1;
-  uint32_t fractX, deltaX;  // X coordinate, fixed-point (20.12), allowing
-                            // widths up to 1 mebipixel
+  // X coordinate, fixed-point (20.12), allowing widths up to 1 mebipixel
+  uint32_t fractX, deltaX;
 
   OOCParameterAssert(
       oo::IsValidPixMap(srcPx) && oo::PixMapBytesPerPixel(srcPx) == 1 &&
@@ -1122,8 +1123,8 @@ static void StretchHorizontally2(oo::PixMap srcPx, oo::PixMap dstPx) {
   uint32_t x, y, xCount;
   size_t srcRowBytes;
   uint16_t weight0, weight1;
-  uint32_t fractX, deltaX;  // X coordinate, fixed-point (20.12), allowing
-                            // widths up to 1 mebipixel
+  // X coordinate, fixed-point (20.12), allowing widths up to 1 mebipixel
+  uint32_t fractX, deltaX;
 
   OOCParameterAssert(
       oo::IsValidPixMap(srcPx) && oo::PixMapBytesPerPixel(srcPx) == 2 &&
@@ -1192,8 +1193,8 @@ static void StretchHorizontally4(oo::PixMap srcPx, oo::PixMap dstPx) {
   uint32_t x, y, xCount;
   size_t srcRowBytes;
   uint16_t weight0, weight1;
-  uint32_t fractX, deltaX;  // X coordinate, fixed-point (20.12), allowing
-                            // widths up to 1 mebipixel
+  // X coordinate, fixed-point (20.12), allowing widths up to 1 mebipixel
+  uint32_t fractX, deltaX;
 
   OOCParameterAssert(
       oo::IsValidPixMap(srcPx) && oo::PixMapBytesPerPixel(srcPx) == 4 &&
@@ -1325,8 +1326,8 @@ static void SqueezeVertically1(oo::PixMap srcPx,
   OOCParameterAssert(oo::IsValidPixMap(srcPx) &&
                      oo::PixMapBytesPerPixel(srcPx) == 1);
 
-  dst = static_cast<uint8_t*>(
-      srcPx.pixels);  // Output is placed in same buffer, without line padding.
+  // Output is placed in same buffer, without line padding.
+  dst = static_cast<uint8_t*>(srcPx.pixels);
   srcRowBytes = srcPx.rowBytes;
   xCount = srcPx.width;
 
@@ -1475,8 +1476,8 @@ static void SqueezeVertically2(oo::PixMap srcPx,
   OOCParameterAssert(oo::IsValidPixMap(srcPx) &&
                      oo::PixMapBytesPerPixel(srcPx) == 2);
 
-  dst = static_cast<uint16_t*>(
-      srcPx.pixels);  // Output is placed in same buffer, without line padding.
+  // Output is placed in same buffer, without line padding.
+  dst = static_cast<uint16_t*>(srcPx.pixels);
   srcRowBytes = srcPx.rowBytes;
   xCount = srcPx.width;
 
@@ -1633,8 +1634,8 @@ static void SqueezeVertically4(oo::PixMap srcPx,
   OOCParameterAssert(oo::IsValidPixMap(srcPx) &&
                      oo::PixMapBytesPerPixel(srcPx) == 4);
 
-  dst = static_cast<uint32_t*>(
-      srcPx.pixels);  // Output is placed in same buffer, without line padding.
+  // Output is placed in same buffer, without line padding.
+  dst = static_cast<uint32_t*>(srcPx.pixels);
   srcRowBytes = srcPx.rowBytes;
   xCount = srcPx.width;
 

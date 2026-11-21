@@ -450,8 +450,9 @@ bool MyOpenGLView::init() {
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK |
                 SDL_INIT_GAMEPAD)) {
     OO_LOG("sdl.init.failed", "Unable to init SDL: {}\n", SDL_GetError());
-    return false;  // the maker releases the view (as -init released itself):
-                   // -dealloc's body is the destructor
+    // the maker releases the view (as -init released itself): -dealloc's body
+    // is the destructor
+    return false;
   }
 
   populateFullScreenModelist();
@@ -464,8 +465,8 @@ bool MyOpenGLView::init() {
 
   // Set up the drawing surface's dimensions.
   firstScreen = (fullScreen) ? modeAsSize(currentSize) : currentWindowSize;
-  viewSize = firstScreen;  // viewSize must be set prior to splash screen
-                           // initialization
+  // viewSize must be set prior to splash screen initialization
+  viewSize = firstScreen;
 
   oo::JoystickManager::setStickHandlerFactory(
       []() -> std::shared_ptr<oo::JoystickManager> {
@@ -504,11 +505,10 @@ bool MyOpenGLView::init() {
   allowingStringInput = StringInput::kNo;
   isAlphabetKeyDown = false;
 
-  timeIntervalAtLastClick =
-      static_cast<double>(SDL_GetTicksNS()) /
-      1e9;  // the clock SDL stamps events on (MyOpenGLView+Input.cpp)
-  timeSinceLastMouseWheel =
-      oo::date::monotonicSeconds();  // intervals only (MyOpenGLView+Input.cpp)
+  // the clock SDL stamps events on (MyOpenGLView+Input.cpp)
+  timeIntervalAtLastClick = static_cast<double>(SDL_GetTicksNS()) / 1e9;
+  // intervals only (MyOpenGLView+Input.cpp)
+  timeSinceLastMouseWheel = oo::date::monotonicSeconds();
 
   _mouseWheelDelta = 0.0f;
 
@@ -594,8 +594,8 @@ void MyOpenGLView::endSplashScreen() {
     // border and centred position before it is mapped. The splash window is
     // destroyed before the new one is shown, so no other Oolite window holds
     // focus when the new one is mapped.
-    SDL_Window* previousWindow =
-        window;  // the window in use so far, which showed the splash
+    // the window in use so far, which showed the splash
+    SDL_Window* previousWindow = window;
     window = nullptr;
     createWindowWithSize(firstScreen);
     SDL_DestroyWindow(previousWindow);
@@ -724,8 +724,8 @@ void MyOpenGLView::initialiseGLWithSize(NSSize v_size) {
     SDL_SetWindowBordered(window, true);
   }
 #if OOLITE_WINDOWS
-  else {  // Occurs on some systems eg. when going fullscreen -> window or vice
-          // versa
+  // Occurs on some systems eg. when going fullscreen -> window or vice versa
+  else {
     // Hack for Windows SDL3 pause issue:
     // https://github.com/libsdl-org/SDL/issues/12791
     LONG currentWindowStyle = GetWindowLong(windowHandle, GWL_STYLE);
@@ -1010,15 +1010,15 @@ bool MyOpenGLView::hdrOutput() { return _hdrOutput; }
 
 bool MyOpenGLView::isOutputDisplayHDREnabled() {
   bool result = false;
-  SDL_DisplayID displayID =
-      SDL_GetPrimaryDisplay();  // Get the primary display ID
+  // Get the primary display ID
+  SDL_DisplayID displayID = SDL_GetPrimaryDisplay();
   if (displayID == 0) {
     OO_LOG("gameView.isOutputDisplayHDREnabled",
            "Error! Failed to retrieve primary display ID: {}", SDL_GetError());
     return false;
   }
-  SDL_PropertiesID props = SDL_GetDisplayProperties(
-      displayID);  // Retrieve properties for the target display
+  // Retrieve properties for the target display
+  SDL_PropertiesID props = SDL_GetDisplayProperties(displayID);
   if (props == 0) {
     OO_LOG("gameView.isOutputDisplayHDREnabled",
            "Error! Failed to get display properties: {}", SDL_GetError());
@@ -1121,9 +1121,9 @@ void MyOpenGLView::populateFullScreenModelist() {
         oo::PList(static_cast<std::int64_t>(modes[i]->w));
     modeDict[std::string(oo::kDisplayHeight)] =
         oo::PList(static_cast<std::int64_t>(modes[i]->h));
-    modeDict[std::string(oo::kDisplayRefreshRate)] =
-        oo::PList::singleReal(static_cast<float>(
-            static_cast<int>(modes[i]->refresh_rate)));  // +numberWithFloat:
+    // +numberWithFloat:
+    modeDict[std::string(oo::kDisplayRefreshRate)] = oo::PList::singleReal(
+        static_cast<float>(static_cast<int>(modes[i]->refresh_rate)));
     const oo::PList mode(std::move(modeDict));
     if (std::find_if(screenSizes.begin(), screenSizes.end(),
                      [&](const oo::PList& m) { return SameMode(m, mode); }) ==
@@ -1531,8 +1531,8 @@ void MyOpenGLView::dumpGrayAlphaToFileNamed(const std::string& name,
 
   SDL_Surface* tmpSurface = SDL_CreateSurface(
       static_cast<int>(width), static_cast<int>(height),
-      SDL_PIXELFORMAT_RGBA32);  // its own pixels, as -dumpGray: never the
-                                // caller's 2-byte-a-pixel buffer
+      // its own pixels, as -dumpGray: never the caller's 2-byte-a-pixel buffer
+      SDL_PIXELFORMAT_RGBA32);
   for (int y = 0; static_cast<std::size_t>(y) < height; y++) {
     uint8_t* srcRow = bytes + rowBytes * static_cast<std::size_t>(y);
     uint8_t* dstRow =
@@ -1572,10 +1572,8 @@ void MyOpenGLView::dumpRGBAToRGBFileNamed(
       *rgbPx++ = *srcPx++;
       *rgbPx++ = *srcPx++;
       *rgbPx++ = *srcPx++;
-      trivalAlpha =
-          trivalAlpha &&
-          ((*srcPx == 0xFF) ||
-           (*srcPx == 0x00));  // Look for any "interesting" pixels in alpha.
+      // Look for any "interesting" pixels in alpha.
+      trivalAlpha = trivalAlpha && ((*srcPx == 0xFF) || (*srcPx == 0x00));
       *grayPx++ = *srcPx++;
     }
   }

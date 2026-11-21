@@ -64,16 +64,15 @@ HPVector RandomUnitHPVector() {
   HPScalar m;
 
   do {
-    float x =
-        randf() -
-        0.5f;  // one draw per local, in the order Clang evaluates the arguments
+    // one draw per local, in the order Clang evaluates the arguments
+    float x = randf() - 0.5f;
     float y = randf() - 0.5f;
     float z = randf() - 0.5f;
     v = make_HPvector(x, y, z);
     m = HPmagnitude2(v);
-  } while (m > 0.25 ||
-           m == 0.0);  // We're confining to a sphere of radius 0.5 using the
-                       // sqared magnitude; 0.5 squared is 0.25.
+    // We're confining to a sphere of radius 0.5 using the sqared magnitude; 0.5
+    // squared is 0.25.
+  } while (m > 0.25 || m == 0.0);
 
   return HPvector_normal(v);
 }
@@ -83,24 +82,23 @@ HPVector HPVectorRandomSpatial(HPScalar maxLength) {
   HPScalar m;
 
   do {
-    float x =
-        randf() -
-        0.5f;  // one draw per local, in the order Clang evaluates the arguments
+    // one draw per local, in the order Clang evaluates the arguments
+    float x = randf() - 0.5f;
     float y = randf() - 0.5f;
     float z = randf() - 0.5f;
     v = make_HPvector(x, y, z);
     m = HPmagnitude2(v);
-  } while (m > 0.25);  // We're confining to a sphere of radius 0.5 using the
-                       // sqared magnitude; 0.5 squared is 0.25.
+    // We're confining to a sphere of radius 0.5 using the sqared magnitude; 0.5
+    // squared is 0.25.
+  } while (m > 0.25);
 
-  return HPvector_multiply_scalar(
-      v, maxLength * 2.0);  // 2.0 is to compensate for the 0.5-radius sphere.
+  // 2.0 is to compensate for the 0.5-radius sphere.
+  return HPvector_multiply_scalar(v, maxLength * 2.0);
 }
 
 HPVector HPVectorRandomRadial(HPScalar maxLength) {
-  HPVector direction =
-      RandomUnitHPVector();  // one draw per local, in the order Clang
-                             // evaluates the arguments
+  // one draw per local, in the order Clang evaluates the arguments
+  HPVector direction = RandomUnitHPVector();
   HPScalar length = randf() * maxLength;
   return HPvector_multiply_scalar(direction, length);
 }
@@ -126,9 +124,8 @@ HPVector RandomPositionInCylinder(HPVector centre1, HPScalar exclusion1,
   }
   HPVector result;
   do {
-    HPVector along = HPVectorInterpolate(
-        centre1, centre2, randf());  // one draw per local, in the order
-                                     // Clang evaluates the arguments
+    // one draw per local, in the order Clang evaluates the arguments
+    HPVector along = HPVectorInterpolate(centre1, centre2, randf());
     HPVector offset = HPVectorRandomSpatial(radius);
     result = HPvector_add(along, offset);
   } while (HPdistance2(result, centre1) < exc12 ||

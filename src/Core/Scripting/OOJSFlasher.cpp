@@ -61,8 +61,8 @@ oo::PList NormalizedColorComponents(oo::Color* color) {
 
 static JSClassDef sFlasherClass = {
     .class_name = "Flasher",
-    .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+    // the slot holds an OOJSEntityHolder
+    .finalizer = OOJSCxxObjectWrapperFinalize,
 };
 
 namespace {

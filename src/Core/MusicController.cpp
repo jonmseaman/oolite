@@ -47,8 +47,8 @@ constexpr int kSpecialMission = kSpecialDocked + 1;
 
 oo::MusicController* oo::MusicController::sharedController() {
   if (sSingleton == nullptr) {
-    static std::shared_ptr<oo::MusicController>* sSingletonHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<oo::MusicController>* sSingletonHolder = nullptr;
     sSingletonHolder = new std::shared_ptr<oo::MusicController>(
         oo::makeShared<oo::MusicController>());
     sSingleton = sSingletonHolder->get();

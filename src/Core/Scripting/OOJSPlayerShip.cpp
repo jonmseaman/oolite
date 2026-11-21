@@ -198,11 +198,11 @@ enum class PlayerShipProperty : std::int16_t {
   kInjectorsEngaged,       // injectors in use, boolean, read-only
   kMassLockable,           // mass-lockability of player ship, read/write
   kMaxAftShield,           // maximum aft shield charge level, positive float,
-                           // read-only
-  kMaxForwardShield,       // maximum forward shield charge level,
-                           // positive float, read-only
-  kMessageGuiTextColor,    // message gui standard text color, array,
-                           // read/write
+  // read-only
+  kMaxForwardShield,          // maximum forward shield charge level,
+                              // positive float, read-only
+  kMessageGuiTextColor,       // message gui standard text color, array,
+                              // read/write
   kMessageGuiTextCommsColor,  // message gui incoming comms text
                               // color, array, read/write
   kMultiFunctionDisplays,     // mfd count, positive int, read-only
@@ -210,13 +210,13 @@ enum class PlayerShipProperty : std::int16_t {
   kMissilesOnline,            // bool (false for ident mode, true for missile
                               // mode)
   kPitch,                     // pitch (overrules Ship)
-  kPrice,               // idealised trade-in value decicredits, positive int,
-                        // read-only
-  kPrimedEquipment,     // currently primed equipment, string,
-                        // read/write
+  kPrice,            // idealised trade-in value decicredits, positive int,
+                     // read-only
+  kPrimedEquipment,  // currently primed equipment, string,
+  // read/write
   kRenovationCost,      // int read-only current renovation cost
   kReticleColorTarget,  // Reticle color for normal targets, array,
-                        // read/write
+  // read/write
   kReticleColorTargetSensitive,  // Reticle color for targets picked
                                  // up when sensitive mode is on,
                                  // array, read/write
@@ -458,10 +458,9 @@ void InitOOJSPlayerShip(JSContext* context, JSValueConst global) {
   OOJSRegisterObjectConverter(sPlayerShipClassID, OOJSEntityObjectConverter);
   OOJSRegisterSubclass(sPlayerShipClassID, JSShipClassID());
 
-  PlayerEntity* player =
-      PlayerEntity::sharedPlayer();  // NOTE: at time of writing, this creates
-                                     // the player entity. Don't use PLAYER
-                                     // here.
+  // NOTE: at time of writing, this creates the player entity. Don't use PLAYER
+  // here.
+  PlayerEntity* player = PlayerEntity::sharedPlayer();
 
   // Create ship object as a property of the player object.
   JSValue playerObject = JS_GetPropertyStr(context, global, "player");
@@ -742,10 +741,9 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
 
     case kCompassTarget:
       result = oo::EntityObjectNode(
-          player != nullptr
-              ? player->getCompassTargetEntity()
-              : static_cast<Entity*>(
-                    nullptr));  // the C++ entity's node, the same object's
+          player != nullptr ? player->getCompassTargetEntity()
+                            // the C++ entity's node, the same object's
+                            : static_cast<Entity*>(nullptr));
       break;
 
     case kCompassType:
@@ -1188,8 +1186,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         if (sValue.has_value() && player != nullptr)
-          player->switchHudTo(
-              *sValue);  // EMMSTRAN: logged error should be a JS warning.
+          // EMMSTRAN: logged error should be a JS warning.
+          player->switchHudTo(*sValue);
         return JS_UNDEFINED;
       } else {
         if (player != nullptr) player->resetHud();
@@ -1456,8 +1454,9 @@ static JSValue PlayerShipEngageAutopilotToStation(JSContext* context,
   StationEntity* stationForDocking = nullptr;
 
   if (argc > 0)
-    stationForDocking = oo::ToStation(OOJSEntityFromJSValue(
-        context, OOJS_ARGV[0]));  // a station's object is a ship's
+    // a station's object is a ship's
+    stationForDocking =
+        oo::ToStation(OOJSEntityFromJSValue(context, OOJS_ARGV[0]));
   if (stationForDocking == nullptr) {
     OOJSReportBadArguments(context, "PlayerShip", "engageAutopilot",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
@@ -1502,8 +1501,9 @@ static JSValue PlayerShipRequestDockingClearance(JSContext* context,
   StationEntity* stationForDocking = nullptr;
 
   if (argc > 0)
-    stationForDocking = oo::ToStation(OOJSEntityFromJSValue(
-        context, OOJS_ARGV[0]));  // a station's object is a ship's
+    // a station's object is a ship's
+    stationForDocking =
+        oo::ToStation(OOJSEntityFromJSValue(context, OOJS_ARGV[0]));
   if (stationForDocking == nullptr) {
     OOJSReportBadArguments(context, "PlayerShip", "requestDockingClearance",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
@@ -1530,8 +1530,9 @@ static JSValue PlayerShipCancelDockingRequest(JSContext* context,
   StationEntity* stationForDocking = nullptr;
 
   if (argc > 0)
-    stationForDocking = oo::ToStation(OOJSEntityFromJSValue(
-        context, OOJS_ARGV[0]));  // a station's object is a ship's
+    // a station's object is a ship's
+    stationForDocking =
+        oo::ToStation(OOJSEntityFromJSValue(context, OOJS_ARGV[0]));
   if (stationForDocking == nullptr) {
     OOJSReportBadArguments(context, "PlayerShip", "cancelDockingRequest",
                            std::min(argc, 1), OOJS_ARGV, std::nullopt,
@@ -1607,8 +1608,8 @@ static JSValue PlayerShipAddPassenger(JSContext* context,
 
   if (!ValidateContracts(context, argc, OOJS_ARGV, false, &start, &destination,
                          &eta, &fee, &advance, "addPassenger", &risk))
-    return OOJSNativeFailure(
-        context);  // always go through validate contracts (passenger)
+    // always go through validate contracts (passenger)
+    return OOJSNativeFailure(context);
 
   // Ensure there's space.
   if ((player != nullptr ? player->passengerCount() : 0) >=
@@ -1682,8 +1683,8 @@ static JSValue PlayerShipAddParcel(JSContext* context,
 
   if (!ValidateContracts(context, argc, OOJS_ARGV, false, &start, &destination,
                          &eta, &fee, &premium, "addParcel", &risk))
-    return OOJSNativeFailure(context);  // always go through validate contracts
-                                        // (passenger/parcel mode)
+    // always go through validate contracts (passenger/parcel mode)
+    return OOJSNativeFailure(context);
 
   // Ensure there's space.
 
@@ -1762,8 +1763,8 @@ static JSValue PlayerShipAwardContract(JSContext* context,
 
   if (!ValidateContracts(context, argc, OOJS_ARGV, true, &start, &destination,
                          &eta, &fee, &premium, "awardContract", nullptr))
-    return OOJSNativeFailure(
-        context);  // always go through validate contracts (cargo)
+    // always go through validate contracts (cargo)
+    return OOJSNativeFailure(context);
 
   bool OK =
       (player != nullptr

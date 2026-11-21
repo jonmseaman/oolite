@@ -104,11 +104,10 @@ std::vector<std::string> sUseAddOnsParts;
 std::vector<std::string> sOXPsWithMessagesFound;
 std::vector<std::string> sExternalPaths;
 std::vector<ResourceManagerError> sErrors;
-std::map<std::string, oo::PList, std::less<>>
-    sOXPManifests;  // identifier -> manifest (+ file_path, required_by)
-std::optional<std::vector<std::string>>
-    sSearchPaths;  // empty and nullopt both mean "scan again" (was
-                   // [sSearchPaths count] > 0)
+// identifier -> manifest (+ file_path, required_by)
+std::map<std::string, oo::PList, std::less<>> sOXPManifests;
+// empty and nullopt both mean "scan again" (was [sSearchPaths count] > 0)
+std::optional<std::vector<std::string>> sSearchPaths;
 
 // A manifest string property as the string extractor (oo_stringForKey:)
 // answered it: nullopt where that was nil (missing, or neither a string nor a
@@ -1219,8 +1218,9 @@ bool ResourceManager::matchVersions(const oo::PList& rangeDict,
       ManifestString(rangeDict, std::string(oo::kManifestRelationVersion));
   const std::optional<std::string> maximum =
       ManifestString(rangeDict, std::string(oo::kManifestRelationMaxVersion));
-  const std::vector<unsigned> isVersionComponents = oo::str::versionComponents(
-      version);  // "" (was nil) compares as the empty version
+  // "" (was nil) compares as the empty version
+  const std::vector<unsigned> isVersionComponents =
+      oo::str::versionComponents(version);
   if (minimum.has_value()) {
     if (oo::str::compareVersions(isVersionComponents,
                                  oo::str::versionComponents(*minimum)) < 0) {
@@ -1395,8 +1395,9 @@ bool ResourceManager::checkCacheUpToDateForPaths(
     upToDate = false;
   }
 
-  const oo::PList oldPaths = cacheMgr->pListForKey(
-      kCacheKeySearchPaths, kCacheSearchPathModDates);  // null: none
+  // null: none
+  const oo::PList oldPaths =
+      cacheMgr->pListForKey(kCacheKeySearchPaths, kCacheSearchPathModDates);
   const oo::PList searchPathList = StringArray(searchPaths);
   if (upToDate && !PListIsEqual(&oldPaths, &searchPathList)) {
     // OXPs added/removed
@@ -1651,8 +1652,8 @@ oo::PList ResourceManager::arrayFromFilesNamed(
         if (resultArrays.back().count() != 0 &&
             resultArrays.back().at(0)->isArray()) {
           if (lowercaseName == "equipment.plist")
-            handleEquipmentListMerging(
-                results, 3);  // Index 3 is the role string (EQ_*).
+            // Index 3 is the role string (EQ_*).
+            handleEquipmentListMerging(results, 3);
         }
       }
     }
@@ -1845,8 +1846,8 @@ void ResourceManager::handleStarNebulaListMerging(oo::PList& arrayToProcess) {
 
 oo::PList ResourceManager::whitelistDictionary() {
   static std::optional<oo::PList>
-      whitelistDictionary;  // a missing whitelist is remembered as null, not
-                            // retried
+      // a missing whitelist is remembered as null, not retried
+      whitelistDictionary;
 
   if (!whitelistDictionary.has_value()) {
     whitelistDictionary =
@@ -2101,8 +2102,8 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
       cacheKey = *folderName + "/" + fileName;
     else
       cacheKey = fileName;
-    const oo::PList cached = cache->pListForKey(
-        cacheKey, "resolved paths");  // a string (null: none)
+    // a string (null: none)
+    const oo::PList cached = cache->pListForKey(cacheKey, "resolved paths");
     if (const std::string* cachedPath = cached.getIf<std::string>())
       return *cachedPath;
   }

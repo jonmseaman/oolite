@@ -103,14 +103,14 @@ class Cache : public oo::Object {
 #endif
 
  private:
-  bool initWithPList(
-      const oo::PList& pList);  // false where -initWithPList: returned nil
+  // false where -initWithPList: returned nil
+  bool initWithPList(const oo::PList& pList);
 
   void loadFromArray(const oo::PList& inArray);
 
   std::unique_ptr<CacheImpl> cache;
-  unsigned _pruneThreshold =
-      {};                // (the ivar was pruneThreshold, now the getter's name)
+  // (the ivar was pruneThreshold, now the getter's name)
+  unsigned _pruneThreshold = {};
   bool _autoPrune = {};  // (autoPrune, likewise)
   bool _dirty = {};      // (dirty, likewise)
 };

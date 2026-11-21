@@ -53,8 +53,8 @@ static JSValue WaypointSetProperty(OOJS_SETTER_ARGS);
 
 static JSClassDef sWaypointClass = {
     .class_name = "Waypoint",
-    .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+    // the slot holds an OOJSEntityHolder
+    .finalizer = OOJSCxxObjectWrapperFinalize,
 };
 
 namespace {
@@ -199,10 +199,9 @@ static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
               waypoint) {
             // not virtual, so the binding test stands in for it
             if (PLAYER != nullptr)
-              PLAYER->PlayerEntity::setCompassMode(
-                  oo::CompassMode::kPlanet);  // qualified: the final overrider,
-                                              // so the binding test stands in
-                                              // for it
+              // qualified: the final overrider, so the binding test stands in
+              // for it
+              PLAYER->PlayerEntity::setCompassMode(oo::CompassMode::kPlanet);
           }
         }
       } else {
@@ -229,10 +228,10 @@ static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
       if (const std::optional<Quaternion> converted =
               JSValueToQuaternion(context, value)) {
         qValue = *converted;
-        waypoint->Entity::setNormalOrientation(
-            qValue);  // what the object's selector called; qualified: the final
-                      // overrider for a waypoint (no override, no subclass), so
-                      // the binding test stands in for it
+        // what the object's selector called; qualified: the final overrider for
+        // a waypoint (no override, no subclass), so the binding test stands in
+        // for it
+        waypoint->Entity::setNormalOrientation(qValue);
         return JS_UNDEFINED;
       }
       break;

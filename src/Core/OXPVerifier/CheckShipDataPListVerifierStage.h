@@ -79,10 +79,9 @@ class CheckShipDataPListVerifierStage : public TextureHandlingStage,
  private:
   void verifyShipInfo(const oo::PList& info, const std::string& name);
 
-  void reportMessage(
-      const std::string&
-          message);  // formatted by the caller, oo::str::formatRuntime (was
-                     // -message:, renamed so AI's -message: could flip)
+  // formatted by the caller, oo::str::formatRuntime (was -message:, renamed so
+  // AI's -message: could flip)
+  void reportMessage(const std::string& message);
   void verboseMessage(const std::string& message);
 
   void getRoles();
@@ -97,8 +96,8 @@ class CheckShipDataPListVerifierStage : public TextureHandlingStage,
   std::vector<std::string> _basicKeys = {}, _stationKeys = {}, _playerKeys = {},
                            _allKeys = {};
   std::shared_ptr<PListSchemaVerifier> _schemaVerifier = {};  // Made by run().
-  AIStateMachineVerifierStage* _aiVerifierStage =
-      {};  // Not retained (the verifier holds it).
+  // Not retained (the verifier holds it).
+  AIStateMachineVerifierStage* _aiVerifierStage = {};
 
   // Info about ship currently being checked.
   std::string _name = {};

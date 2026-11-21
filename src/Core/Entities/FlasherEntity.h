@@ -92,8 +92,8 @@ class FlasherEntity : public LightParticleEntity,
   double findCollisionRadius() override;
 
  private:
-  void setUpColors(
-      const oo::PList* colorSpecifiers);  // an array node, or nullptr
+  // an array node, or nullptr
+  void setUpColors(const oo::PList* colorSpecifiers);
   void getCurrentColorComponents();
   oo::Color* flasherColorAtIndex(std::size_t index);
 

@@ -241,8 +241,8 @@ inline bool scanDoubleAt(std::u16string_view s, std::size_t& location,
         negativeExponent = true;
       }
       if (loc >= length || s[loc] < u'0' || s[loc] > u'9') {
-        loc = saveExpLoc;  // no exponent (negativeExponent may stay set:
-                           // harmless, it is 0)
+        // no exponent (negativeExponent may stay set: harmless, it is 0)
+        loc = saveExpLoc;
       } else {
         while (loc < length && s[loc] >= u'0' && s[loc] <= u'9') {
           exponentBits =
@@ -530,8 +530,8 @@ inline std::string numberStringValue(const PList& v) {
   if (std::isinf(d)) return d < 0 ? "-inf" : "inf";
   if (v.isSinglePrecision())
     return std::format("{:.7g}",
-                       static_cast<double>(static_cast<float>(
-                           d)));  // +numberWithFloat: (captured)
+                       // +numberWithFloat: (captured)
+                       static_cast<double>(static_cast<float>(d)));
   return std::format("{:.16g}", d);
 }
 
@@ -556,11 +556,11 @@ struct PListGet<T> {
 
   static T from(const PList* v, T fallback) noexcept {
     if constexpr (sizeof(T) == sizeof(std::int64_t) && std::is_signed_v<T>) {
-      return static_cast<T>(
-          plist_get::longLongFrom(v, fallback));  // OOLongLongFromObject
+      // OOLongLongFromObject
+      return static_cast<T>(plist_get::longLongFrom(v, fallback));
     } else if constexpr (sizeof(T) == sizeof(std::int64_t)) {
-      return static_cast<T>(plist_get::unsignedLongLongFrom(
-          v, fallback));  // OOUnsignedLongLongFromObject
+      // OOUnsignedLongLongFromObject
+      return static_cast<T>(plist_get::unsignedLongLongFrom(v, fallback));
     } else {
       // OO_DEFINE_CLAMP: OOLongLongFromObject(v, fallback) clamped to T's
       // range.

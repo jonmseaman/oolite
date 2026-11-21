@@ -169,8 +169,8 @@ class NotificationCenter {
 
   template <class Pred>
   void removeIf(Pred pred) {
-    std::vector<std::shared_ptr<Entry>>
-        dropped;  // callbacks are destroyed outside the lock
+    // callbacks are destroyed outside the lock
+    std::vector<std::shared_ptr<Entry>> dropped;
     {
       std::lock_guard<std::mutex> lock(mutex_);
       auto keep = std::stable_partition(

@@ -85,8 +85,8 @@ std::shared_ptr<Entity> oo::MadeEntityRetained(
 }
 
 Entity* oo::MadeEntity(const std::shared_ptr<Entity>& entity) {
-  return oo::autorelease(
-      MadeEntityRetained(entity));  // [[... alloc] init...] autorelease]
+  // [[... alloc] init...] autorelease]
+  return oo::autorelease(MadeEntityRetained(entity));
 }
 
 Entity* oo::EntityInitAgain(Entity* entity) {
@@ -119,8 +119,8 @@ std::string oo::EntityOwnDescription(Entity* entity) {
 }
 
 std::string oo::EntityDescription(Entity* entity) {
-  return EntityOwnDescription(WithObject(
-      entity));  // "(null)", as DescriptionOf(nil), without its object
+  // "(null)", as DescriptionOf(nil), without its object
+  return EntityOwnDescription(WithObject(entity));
 }
 
 std::string oo::EntityShortDescription(Entity* entity) {

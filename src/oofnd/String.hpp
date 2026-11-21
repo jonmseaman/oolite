@@ -538,9 +538,9 @@ bool pathHasExtensionIn(std::string_view path, const Range& extensions) {
 // + U+0301 does not match U+00E9 (captured). GNUstep raises NSRangeException
 // for a <target> that starts with a combining unit; this does not.
 enum class Search {
-  kComposed,  // options:0 - an occurrence must end on a composed-sequence
-              // boundary
-  kLiteral,   // NSLiteralSearch - unit-for-unit
+  // options:0 - an occurrence must end on a composed-sequence boundary
+  kComposed,
+  kLiteral,  // NSLiteralSearch - unit-for-unit
 };
 
 inline std::string replaceOccurrences(std::string_view s,
@@ -663,8 +663,8 @@ enum class PathRoot {
 struct PathParts {
   PathRoot rootKind = PathRoot::kNone;
   std::size_t rootLength = 0;
-  std::vector<std::pair<std::size_t, std::size_t>>
-      spans;                       // [begin, end) of each non-root component
+  // [begin, end) of each non-root component
+  std::vector<std::pair<std::size_t, std::size_t>> spans;
   bool trailingSeparator = false;  // after the root, the path ends in one
 };
 
@@ -745,8 +745,8 @@ inline std::string pathWithComponents(
   if (components.size() == 1)
     return components[0].empty() ? std::string("/") : components[0];
   std::string result;
-  bool separatorNext =
-      false;  // whether the next component needs a "/" before it
+  // whether the next component needs a "/" before it
+  bool separatorNext = false;
   for (std::size_t c = 0; c < components.size(); ++c) {
     std::string_view s = components[c];
     if (c == 0) {
@@ -1426,8 +1426,8 @@ inline std::string formatRuntime(std::string_view fmt,
         (void)take();
         break;
       default:
-        out.append(
-            fmt.substr(start, i - start));  // unknown: copied, as GNUstep does
+        // unknown: copied, as GNUstep does
+        out.append(fmt.substr(start, i - start));
         break;
     }
   }

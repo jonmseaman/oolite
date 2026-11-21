@@ -79,8 +79,9 @@ static JSClassDef sManifestClass = {
 namespace {
 
 enum class ManifestProperty : std::int16_t {
-  kList  // manifest list, array of commodities: name, unit, quantity,
-         // displayName - read-only
+  // manifest list, array of commodities: name, unit, quantity, displayName -
+  // read-only
+  kList
 };
 
 }  // namespace
@@ -160,10 +161,11 @@ static JSValue ManifestGetProperty(OOJS_GETTER_ARGS) {
   switch (static_cast<ManifestProperty>(magic)) {
     using enum ManifestProperty;
     case kList:
-      result = (entity != nullptr
-                    ? entity->PlayerEntity::cargoListForScripting()
-                    : oo::PList());  // qualified: the final overrider, so the
-                                     // binding test stands in for it
+      result =
+          (entity != nullptr ? entity->PlayerEntity::cargoListForScripting()
+                             // qualified: the final overrider, so the binding
+                             // test stands in for it
+                             : oo::PList());
       break;
 
     default:
@@ -225,10 +227,11 @@ static bool ManifestSetProperty(JSContext* context, JSValueConst thisObj,
 
   oo::CommodityMarket* market =
       (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket() : nullptr);
-  oo::MassUnit unit = (market != nullptr)
-                          ? market->massUnitForGood(key)
-                          : oo::MassUnit::kTons;  // OOMassUnit::kTons (0): what
-                                                  // a message to nil answered
+  oo::MassUnit unit =
+      (market != nullptr)
+          ? market->massUnitForGood(key)
+          // OOMassUnit::kTons (0): what a message to nil answered
+          : oo::MassUnit::kTons;
   // we can always change gold, platinum & gem-stones quantities, even with
   // special cargo
   if (unit == oo::MassUnit::kTons &&
@@ -356,9 +359,8 @@ static JSValue ManifestComment(JSContext* context, JSValueConst /*oojsThis*/,
 
   oo::CommodityMarket* market =
       (PLAYER != nullptr ? PLAYER->getShipCommodityData()
-                         : static_cast<oo::CommodityMarket*>(
-                               nullptr));  // null: no comment,
-                                           // as a message to nil
+                         // null: no comment, as a message to nil
+                         : static_cast<oo::CommodityMarket*>(nullptr));
   if (market != nullptr) information = market->commentForGood(*good);
 
   OOJS_RETURN_STRING_OR_NULL(information);
@@ -387,8 +389,8 @@ static JSValue ManifestSetComment(JSContext* context, JSValueConst /*oojsThis*/,
 
   oo::CommodityMarket* market =
       (PLAYER != nullptr ? PLAYER->getShipCommodityData()
-                         : static_cast<oo::CommodityMarket*>(
-                               nullptr));  // null: false, as a message to nil
+                         // null: false, as a message to nil
+                         : static_cast<oo::CommodityMarket*>(nullptr));
   OK = market != nullptr && market->setComment(*information, *good);
 
   OOJS_RETURN_BOOL(OK);
@@ -415,9 +417,8 @@ static JSValue ManifestShortComment(JSContext* context,
 
   oo::CommodityMarket* market =
       (PLAYER != nullptr ? PLAYER->getShipCommodityData()
-                         : static_cast<oo::CommodityMarket*>(
-                               nullptr));  // null: no comment,
-                                           // as a message to nil
+                         // null: no comment, as a message to nil
+                         : static_cast<oo::CommodityMarket*>(nullptr));
   if (market != nullptr) information = market->shortCommentForGood(*good);
 
   OOJS_RETURN_STRING_OR_NULL(information);
@@ -447,8 +448,8 @@ static JSValue ManifestSetShortComment(JSContext* context,
 
   oo::CommodityMarket* market =
       (PLAYER != nullptr ? PLAYER->getShipCommodityData()
-                         : static_cast<oo::CommodityMarket*>(
-                               nullptr));  // null: false, as a message to nil
+                         // null: false, as a message to nil
+                         : static_cast<oo::CommodityMarket*>(nullptr));
   OK = market != nullptr && market->setShortComment(*information, *good);
 
   OOJS_RETURN_BOOL(OK);

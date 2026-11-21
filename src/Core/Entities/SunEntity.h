@@ -40,8 +40,8 @@ MA 02110-1301, USA.
    (nil stays nil).
 */
 
-#define SUN_CORONA_SAMPLES \
-  729  // Samples at half-degree intervals, with a bit of overlap.
+// Samples at half-degree intervals, with a bit of overlap.
+#define SUN_CORONA_SAMPLES 729
 inline constexpr double MAX_CORONAFLARE = 600000.0;  // nova flare
 
 #ifndef SUN_DIRECT_VISION_GLARE
@@ -122,11 +122,11 @@ class SunEntity : public Entity {
 
   GLfloat cor16k = {}, lim16k = {};
 
-  double corona_speed_factor =
-      {};  // multiply delta_t by this before adding it to corona_stage
+  // multiply delta_t by this before adding it to corona_stage
+  double corona_speed_factor = {};
   double corona_stage = {};  // 0.0 -> 1.0
-  GLfloat rvalue[SUN_CORONA_SAMPLES] =
-      {};  // stores random values for adjusting colors in the corona
+  // stores random values for adjusting colors in the corona
+  GLfloat rvalue[SUN_CORONA_SAMPLES] = {};
   float corona_blending = {};
 
   GLuint sunTriangles[3240 * 3] = {};

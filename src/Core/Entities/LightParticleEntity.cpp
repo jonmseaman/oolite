@@ -107,8 +107,9 @@ void oo::LightParticleEntity::drawSubEntityImmediate(bool immediate,
   /*	TODO: someone will inevitably build a ship so big that individual
           zero_distances are necessary for flashers, if they haven't already.
           -- Ahruman 2009-09-20
+  // -owner's C++ entity
   */
-  Entity* ownerPart = oo::LiveOwner(this);  // -owner's C++ entity
+  Entity* ownerPart = oo::LiveOwner(this);
   cam_zero_distance = ownerPart != nullptr
                           ? static_cast<GLfloat>(ownerPart->camZeroDistance())
                           : 0;  // a message to nil answered 0

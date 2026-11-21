@@ -74,22 +74,22 @@ class MusicController : public oo::Object {
   void playDockingMusic();
   void playDockedMusic();
 
-  void setMissionMusic(
-      const std::optional<std::string>&
-          missionMusicName);  // was -setMissionMusic:; nullopt: none
+  // was -setMissionMusic:; nullopt: none
+  void setMissionMusic(const std::optional<std::string>& missionMusicName);
   void playMissionMusic();
 
   void justStop();
   void stop();
-  void stopMusicNamed(
-      const std::string& name);  // Stop only if name == playingMusic
+  // Stop only if name == playingMusic
+  void stopMusicNamed(const std::string& name);
   void stopThemeMusic();
   void stopDockingMusic();
   void stopMissionMusic();
 
   void
-  toggleDockingMusic();  // Start docking music if none playing, stop docking
-                         // music if currently playing docking music.
+  // Start docking music if none playing, stop docking music if currently
+  // playing docking music.
+  toggleDockingMusic();
 
   ::oo::SoundSource* soundSource();
 

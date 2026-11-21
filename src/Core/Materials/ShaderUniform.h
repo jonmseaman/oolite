@@ -55,7 +55,8 @@ namespace oo {
 struct ShaderBindingValue;
 
 }  // namespace oo
-   // OOShaderUniformMethodType.h
+
+// OOShaderUniformMethodType.h
 class Entity;  // Entity.h: the materials' binding target
 
 /*	A uniform bound to a C++ object's member: the getter reads the member
@@ -91,8 +92,9 @@ class ShaderUniform : public oo::Object {
   static std::shared_ptr<ShaderUniform> initWithName(
       const std::string& uniformName, ShaderProgram* shaderProgram,
       Quaternion constValue,
-      bool asMatrix);  // quaternionValue:asMatrix: Converted to vector (in xyzw
-                       // order, not wxyz!) or rotation matrix.
+      // quaternionValue:asMatrix: Converted to vector (in xyzw order, not
+      // wxyz!) or rotation matrix.
+      bool asMatrix);
   static std::shared_ptr<ShaderUniform> initWithName(
       const std::string& uniformName, ShaderProgram* shaderProgram,
       oo::Matrix constValue);  // matrixValue:
@@ -132,8 +134,8 @@ class ShaderUniform : public oo::Object {
 
   void apply();
 
-  void setEntityBindingTarget(
-      Entity* target);  // as initWithEntityTarget() binds
+  // as initWithEntityTarget() binds
+  void setEntityBindingTarget(Entity* target);
 
  private:
   ShaderUniform() = default;

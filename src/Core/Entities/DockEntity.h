@@ -123,8 +123,8 @@ class DockEntity : public ShipEntity {
   void drawImmediate(bool immediate, bool translucent) override;
 
   // Public so the tests read them.
-  std::map<oo::UniversalID, std::vector<oo::PList>>
-      shipsOnApproach;  // coordinate stacks (Dicts) by ship ID
+  // coordinate stacks (Dicts) by ship ID
+  std::map<oo::UniversalID, std::vector<oo::PList>> shipsOnApproach;
   std::vector<oo::EntityHold> launchQueue;  // the ships' objects held
   double last_launch_time = {};
   //	double					approach_spacing; // not needed

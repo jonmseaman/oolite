@@ -79,7 +79,8 @@ namespace oo {
 SoundSourcePool::~SoundSourcePool() = default;
 
 }  // namespace oo
-   // the sources go with _sources
+
+// the sources go with _sources
 
 /*	The sound for a key is OOSoundWithCustomSoundKey() (Universe.h) and the
    pool makes its sources (its test stands in for both).

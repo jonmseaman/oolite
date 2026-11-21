@@ -137,14 +137,12 @@ class PlanetTextureGenerator : public TextureGenerator {
 
  private:
   std::optional<std::string> cacheKeyForType(const std::string& type);
-  PlanetNormalMapGenerator*
-  normalMapGenerator();  // Must be called before generator is enqueued for
-                         // rendering.
-  PlanetAtmosphereGenerator*
-  atmosphereGenerator();  // Must be called before generator is enqueued for
-                          // rendering.
-  void dumpNoiseBuffer(
-      float* noise);  // defined where the .cpp's DEBUG_DUMP_RAW is set
+  // Must be called before generator is enqueued for rendering.
+  PlanetNormalMapGenerator* normalMapGenerator();
+  // Must be called before generator is enqueued for rendering.
+  PlanetAtmosphereGenerator* atmosphereGenerator();
+  // defined where the .cpp's DEBUG_DUMP_RAW is set
+  void dumpNoiseBuffer(float* noise);
 
   PlanetTextureGeneratorInfo _info = {};
   unsigned _planetScale = {};

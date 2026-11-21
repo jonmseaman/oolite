@@ -35,8 +35,8 @@ MA 02110-1301, USA.
 #include "Universe.h"
 
 #define kQuiriumCascadeDuration (20.0)  // seconds
-#define kQuiriumCollisionDelay \
-  (0.05)  // seconds before we start colliding with and damaging things.
+// seconds before we start colliding with and damaging things.
+#define kQuiriumCollisionDelay (0.05)
 
 bool oo::QuiriumCascadeEntity::initQuiriumCascadeFromShip(::ShipEntity* ship) {
   if (ship == nullptr) {
@@ -91,9 +91,8 @@ void oo::QuiriumCascadeEntity::update(oo::TimeDelta delta_t) {
   }
 
   collision_radius += static_cast<GLfloat>(delta_t * expansionSpeed);  // expand
-  energy = static_cast<GLfloat>(
-      delta_t *
-      (100000 - 90000 * tf));  // adjusted to take into account delta_t
+  // adjusted to take into account delta_t
+  energy = static_cast<GLfloat>(delta_t * (100000 - 90000 * tf));
 
   _color[3] = oo::Clamp_0_1_f(0.5f * ((0.025f / tf) + 1.0f - stf));
 
@@ -105,9 +104,8 @@ void oo::QuiriumCascadeEntity::update(oo::TimeDelta delta_t) {
 
   // manage collisions
   Entity* owner = ownerEntity();
-  const std::vector<oo::EntityHold> colliding =
-      collidingEntities;  // a snapshot (enumerating the live array while it
-                          // changed raised)
+  // a snapshot (enumerating the live array while it changed raised)
+  const std::vector<oo::EntityHold> colliding = collidingEntities;
   for (const oo::EntityHold& collidingEntity : colliding) {
     Entity* e = collidingEntity.get();
     // we're going to force the weapon id to be the qbomb key here, because at

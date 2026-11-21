@@ -317,12 +317,12 @@ std::optional<std::string> OoliteInfoString(std::string_view key) {
 oo::OXZManager* oo::OXZManager::sharedManager() {
   // NOTE: assumes single-threaded first access.
   if (sSingleton == nullptr) {
-    static std::shared_ptr<oo::OXZManager>* managerHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<oo::OXZManager>* managerHolder = nullptr;
     managerHolder =
         new std::shared_ptr<oo::OXZManager>(oo::makeShared<oo::OXZManager>());
-    oo::OXZManager* manager =
-        managerHolder->get();  // the one +1, never released
+    // the one +1, never released
+    oo::OXZManager* manager = managerHolder->get();
     manager->init();
     sSingleton = manager;
   }
@@ -590,8 +590,8 @@ bool oo::OXZManager::applyFilterByAuthor(const oo::PList& manifest,
 
 bool oo::OXZManager::applyFilterByDays(const oo::PList& manifest,
                                        const std::string& days) {
-  std::ptrdiff_t i = static_cast<std::ptrdiff_t>(
-      oo::str::longLongValue(days));  // -integerValue
+  // -integerValue
+  std::ptrdiff_t i = static_cast<std::ptrdiff_t>(oo::str::longLongValue(days));
   if (i < 1) {
     return false;
   } else {
@@ -727,8 +727,8 @@ bool oo::OXZManager::cancelUpdate() {
   }
   OO_LOG("oxz.manager.debug", "{}", "Trying to cancel file download");
   if (_currentDownload != nullptr) {
-    _currentDownload->cancel();  // kept until the next download replaces it, as
-                                 // the connection was
+    // kept until the next download replaces it, as the connection was
+    _currentDownload->cancel();
   } else if (_downloadStatus == OXZDownloadStatus::kComplete) {
     if (const std::optional<std::string> path = downloadPath()) {
       (void)oo::fs::removeItem(oo::fs::pathFromUTF8(*path));
@@ -1436,12 +1436,10 @@ void oo::OXZManager::gui() {
     case OXZInterfaceState::kPickRemove:
       if (_interfaceState != OXZInterfaceState::kMain) {
         if (gui != nullptr) {
-          const std::string filterFormat = OO_DESC(
-              "oolite-oxzmanager-currentfilter-is-@-@");  // the format first,
-                                                          // as Clang evaluates
-                                                          // the arguments: a
-                                                          // description that is
-                                                          // an array draws
+          // the format first, as Clang evaluates the arguments: a description
+          // that is an array draws
+          const std::string filterFormat =
+              OO_DESC("oolite-oxzmanager-currentfilter-is-@-@");
           gui->setText(DescFormat(filterFormat,
                                   {OOExpand("[oolite_key_oxzmanager_setfilter]")
                                        .value_or("(null)"),
@@ -1482,12 +1480,10 @@ void oo::OXZManager::gui() {
                            OXZ_GUI_ROW_PROGRESS, oo::GUIAlignment::kLeft);
       } else {
         if (gui != nullptr) {
-          const std::string progressFormat = OO_DESC(
-              "oolite-oxzmanager-progress-@-is-@-of-@");  // the format first,
-                                                          // as Clang evaluates
-                                                          // the arguments: a
-                                                          // description that is
-                                                          // an array draws
+          // the format first, as Clang evaluates the arguments: a description
+          // that is an array draws
+          const std::string progressFormat =
+              OO_DESC("oolite-oxzmanager-progress-@-is-@-of-@");
           gui->addLongText(
               DescFormat(progressFormat, {_currentDownloadName,
                                           Arg(humanSize(_downloadProgress)),
@@ -1544,13 +1540,14 @@ void oo::OXZManager::gui() {
       break;
     case OXZInterfaceState::kTaskdone:
       if (_downloadStatus == OXZDownloadStatus::kComplete) {
-        const auto doneText = DescFormat(
-            OO_DESC("oolite-oxzmanager-progress-done-%u-%u"),
-            {static_cast<std::uint64_t>(_oxzList.count()),
-             static_cast<std::uint64_t>(
-                 managedOXZs()
-                     .count())});  // (evaluated, as a message's arguments
-                                   // were, whether or not there is a GUI)
+        const auto doneText =
+            DescFormat(OO_DESC("oolite-oxzmanager-progress-done-%u-%u"),
+                       {static_cast<std::uint64_t>(_oxzList.count()),
+                        static_cast<std::uint64_t>(
+                            managedOXZs()
+                                // (evaluated, as a message's arguments were,
+                                // whether or not there is a GUI)
+                                .count())});
         if (gui != nullptr)
           gui->addLongText(doneText, OXZ_GUI_ROW_PROGRESS,
                            oo::GUIAlignment::kLeft);

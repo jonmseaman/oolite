@@ -327,8 +327,8 @@ bool oo::DebugTCPConsoleClient::initWithAddress(
       OO_LOG("debugTCP.connect.failed",
              "Failed to connect to debug console at address {}:{}.", address,
              port);
-      return OK;  // self was released and nil answered: the factory drops the
-                  // object
+      // self was released and nil answered: the factory drops the object
+      return OK;
     }
   }
 
@@ -899,8 +899,8 @@ void oo::DebugTCPConsoleClient::handlePerformCommandPacket(
   const std::optional<std::string> message =
       PacketString(packet, kOOTCPMessage);
   if (message.has_value() && _monitor != nullptr)
-    _monitor->performJSConsoleCommand(
-        *message);  // no monitor: nothing, as nil did
+    // no monitor: nothing, as nil did
+    _monitor->performJSConsoleCommand(*message);
 }
 
 void oo::DebugTCPConsoleClient::handleRequestConfigurationValuePacket(

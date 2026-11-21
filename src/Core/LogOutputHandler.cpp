@@ -68,8 +68,8 @@ void AsyncLogMessage(std::string_view message);
 
 }  // namespace
 
-#define kFlushInterval \
-  2.0  // Lower bound on interval between explicit log file flushes.
+// Lower bound on interval between explicit log file flushes.
+#define kFlushInterval 2.0
 
 static bool sInited = false;
 static bool sWriteToStderr = true;

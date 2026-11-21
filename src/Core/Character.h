@@ -51,9 +51,9 @@ class Character : public oo::PListForeign {
                                                       SystemID s);
   static std::shared_ptr<Character> randomCharacterWithRole(
       const std::string& c_role, SystemID s);
+  // a dictionary (JS crew definitions may hold any object, as an Object node)
   static std::shared_ptr<Character> characterWithDictionary(
-      const oo::PList& c_dict);  // a dictionary (JS crew definitions may hold
-                                 // any object, as an Object node)
+      const oo::PList& c_dict);
 
   std::optional<std::string> planetOfOrigin();
   SystemID planetIDOfOrigin();
@@ -66,8 +66,8 @@ class Character : public oo::PListForeign {
   void setName(const std::optional<std::string>& value);
 
   std::optional<std::string> shortDescription();
-  void setShortDescription(
-      const std::optional<std::string>& value);  // nullopt: none
+  // nullopt: none
+  void setShortDescription(const std::optional<std::string>& value);
 
   int legalStatus();
   void setLegalStatus(int value);

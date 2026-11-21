@@ -49,21 +49,21 @@ Vector VectorFromPList(const oo::PList* value,
                        Vector defaultValue);  // OOVectorFromObject
 HPVector HPVectorFromPList(const oo::PList* value,
                            HPVector defaultValue);  // OOHPVectorFromObject
-Quaternion QuaternionFromPList(
-    const oo::PList* value, Quaternion defaultValue);  // OOQuaternionFromObject
+// OOQuaternionFromObject
+Quaternion QuaternionFromPList(const oo::PList* value, Quaternion defaultValue);
 
-oo::PList PListFromVector(
-    Vector value);  // OOPropertyListFromVector: {x y z} single-precision reals
-oo::PList PListFromHPVector(
-    HPVector value);  // OOPropertyListFromHPVector: {x y z} doubles
-oo::PList PListFromQuaternion(
-    Quaternion value);  // OOPropertyListFromQuaternion: {w x y z}
-                        // single-precision reals
+// OOPropertyListFromVector: {x y z} single-precision reals
+oo::PList PListFromVector(Vector value);
+// OOPropertyListFromHPVector: {x y z} doubles
+oo::PList PListFromHPVector(HPVector value);
+// OOPropertyListFromQuaternion: {w x y z} single-precision reals
+oo::PList PListFromQuaternion(Quaternion value);
 
 bool FuzzyBooleanFromPList(const oo::PList* value, float defaultValue);
 
 }  // namespace oo
-   // OOFuzzyBooleanFromObject (draws randf())
+
+// OOFuzzyBooleanFromObject (draws randf())
 
 namespace oo {
 

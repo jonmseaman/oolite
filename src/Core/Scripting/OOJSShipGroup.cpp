@@ -133,8 +133,8 @@ static JSValue ShipGroupGetProperty(OOJS_GETTER_ARGS) {
       result = oo::EntityNodesFrom(
           (cxxGroup != nullptr)
               ? cxxGroup->memberArray()
-              : std::vector<oo::EntityHold>());  // (no C++ value from a message
-                                                 // to nil; an empty array)
+              // (no C++ value from a message to nil; an empty array)
+              : std::vector<oo::EntityHold>());
       break;
 
     case kLeader:
@@ -246,8 +246,9 @@ static JSValue ShipGroupConstruct(OOJS_NATIVE_ARGS) {
     }
   }
 
-  const std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(
-      name, leader);  // kept until the JS object holds it
+  // kept until the JS object holds it
+  const std::shared_ptr<oo::ShipGroup> group =
+      oo::ShipGroup::groupWithName(name, leader);
   OOJS_RETURN(OOJSValueFromCxxObject(context, group.get()));
 
   OOJS_NATIVE_EXIT
@@ -378,8 +379,9 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
             thisGroupLeader->setGroup(
                 (*new std::shared_ptr<oo::ShipGroup>(
                      oo::ShipGroup::groupWithName(std::string("ship group"))))
-                    .get());  // +1 kept (a holder that is never deleted), as
-                              // [[OOShipGroup alloc] initWithName:] was
+                    // +1 kept (a holder that is never deleted), as
+                    // [[OOShipGroup alloc] initWithName:] was
+                    .get());
           thisGroup = (thisGroupLeader != nullptr
                            ? thisGroupLeader->group()
                            : static_cast<oo::ShipGroup*>(nullptr));
@@ -393,9 +395,8 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
       }
     }
     if (OK) {
-      OOJS_RETURN_BOOL(
-          cxxGroup != nullptr &&
-          cxxGroup->addShip(ship));  // if ship is there already, noop & YES
+      // if ship is there already, noop & YES
+      OOJS_RETURN_BOOL(cxxGroup != nullptr && cxxGroup->addShip(ship));
     } else {
       OOJS_RETURN_BOOL(false);
     }

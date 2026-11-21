@@ -77,8 +77,8 @@ class RoleSet : public oo::Object {
                                                 float probability);
   std::shared_ptr<RoleSet> roleSetWithAddedRoleIfNotSet(
       const std::string& role,
-      float probability);  // Unlike the above, does not change probability if
-                           // role exists.
+      // Unlike the above, does not change probability if role exists.
+      float probability);
   std::shared_ptr<RoleSet> roleSetWithRemovedRole(const std::string& role);
 
   // -isEqual: and -hash: equal role sets have the same roles with the same
@@ -103,8 +103,8 @@ class RoleSet : public oo::Object {
       const std::map<std::string, float>* dict);
 
   std::map<std::string, float> _rolesAndProbabilities = {};
-  std::optional<std::string> _roleString =
-      {};  // normalised form, built on first use
+  // normalised form, built on first use
+  std::optional<std::string> _roleString = {};
   float _totalProb = {};
 };
 

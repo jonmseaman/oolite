@@ -48,8 +48,8 @@ class MutableProbabilitySet;
 
 class ShipRegistry : public oo::Object {
  public:
-  static ShipRegistry* sharedRegistry();  // the one instance, made on first
-                                          // use and never released; borrowed
+  // the one instance, made on first use and never released; borrowed
+  static ShipRegistry* sharedRegistry();
 
   static void reload();
 
@@ -67,23 +67,24 @@ class ShipRegistry : public oo::Object {
   std::vector<std::string> shipKeys();   // in key order
   std::vector<std::string> shipRoles();  // in role order
   std::vector<std::string> shipKeysWithRole(const std::string& role);
-  std::optional<std::string> randomShipKeyForRole(
-      const std::string& role);  // nullopt: no ship has the role
+  // nullopt: no ship has the role
+  std::optional<std::string> randomShipKeyForRole(const std::string& role);
 
  private:
   oo::PList _shipData;    // ship key -> ship dictionary (null until loaded)
   oo::PList _effectData;  // effect key -> effect dictionary (null until loaded)
-  oo::PList _demoShips;   // demo ship entries (dictionaries) grouped in arrays
-                          // by class
+  // demo ship entries (dictionaries) grouped in arrays by class
+  oo::PList _demoShips;
   std::vector<std::string>
       _playerShips;  // shipyard keys, in shipyard.plist key order
   std::optional<
+      // role -> ship keys; nullopt: none cached yet
       std::map<std::string, std::shared_ptr<ProbabilitySet>, std::less<>>>
-      _probabilitySets;  // role -> ship keys; nullopt: none cached yet
+      _probabilitySets;
 
-  void init();  // -init's body: run by sharedRegistry() once sSingleton is set,
-                // so that a re-entrant sharedRegistry() answers the registry
-                // being loaded
+  // -init's body: run by sharedRegistry() once sSingleton is set, so that a
+  // re-entrant sharedRegistry() answers the registry being loaded
+  void init();
 
   // (OODataLoader) The load stages. The ship dictionary each stage mutates is
   // one property list, passed through every stage.

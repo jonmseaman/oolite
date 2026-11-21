@@ -568,8 +568,8 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
   oo::GalaxyID galaxy;
   oo::SystemID system;
   std::optional<std::string> stringValue;
-  oo::PList manifest;  // the running script's manifest identifier, handed on as
-                       // it was read
+  // the running script's manifest identifier, handed on as it was read
+  oo::PList manifest;
   double fValue;
   int32_t iValue;
   int bValue;
@@ -738,8 +738,8 @@ static JSValue SystemToString(JSContext* context, JSValueConst /*oojsThis*/,
 
   const oo::PList systemData =
       (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList());
-  const oo::PList* systemName =
-      systemData.find(KEY_NAME);  // -objectForKey:; "(null)" for none
+  // -objectForKey:; "(null)" for none
+  const oo::PList* systemName = systemData.find(KEY_NAME);
   systemDesc = std::format(
       "[System {}:{} \"{}\"]",
       (player != nullptr ? player->currentGalaxyID() : oo::GalaxyID{}),
@@ -772,8 +772,8 @@ static JSValue SystemAddPlanet(JSContext* context, JSValueConst /*oojsThis*/,
                               : static_cast<oo::PlanetEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, planet));  // the C++ planet's JS value
+  // the C++ planet's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, planet));
 
   OOJS_NATIVE_EXIT
 }
@@ -799,8 +799,8 @@ static JSValue SystemAddMoon(JSContext* context, JSValueConst /*oojsThis*/,
                               : static_cast<oo::PlanetEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, planet));  // the C++ planet's JS value
+  // the C++ planet's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, planet));
 
   OOJS_NATIVE_EXIT
 }
@@ -1612,9 +1612,8 @@ static JSValue SystemSetPopulator(JSContext* context, JSValueConst /*oojsThis*/,
     // (The SpiderMonkey version converted argv[1] directly; params is the same
     // object for any object argument.)
     settings = OOJSPListFromJSObject(context, params);
-    oo::PList::Dict* settingsDict =
-        settings.getIf<oo::PList::Dict>();  // messages to a nil dictionary did
-                                            // nothing
+    // messages to a nil dictionary did nothing
+    oo::PList::Dict* settingsDict = settings.getIf<oo::PList::Dict>();
     if (settingsDict != nullptr)
       (*settingsDict)["callbackObj"] =
           OOJSPopulatorDefinitionToPList(populator);
@@ -1703,8 +1702,8 @@ static JSValue SystemSetWaypoint(JSContext* context, JSValueConst /*oojsThis*/,
       return OOJSNativeFailure(context);
     }
 
-    settings = OOJSPListFromJSObject(
-        context, OOJS_ARGV[3]);  // a copy, as -mutableCopy was
+    // a copy, as -mutableCopy was
+    settings = OOJSPListFromJSObject(context, OOJS_ARGV[3]);
     if (oo::PList::Dict* settingsDict = settings.getIf<oo::PList::Dict>()) {
       // messages to a nil copy did
       // nothing
@@ -1784,12 +1783,12 @@ static JSValue SystemAddShipsOrGroup(JSContext* context, int argc,
                                  static_cast<GLfloat>(radius), isGroup)
                            : std::vector<oo::EntityHold>());
   if (!added.empty())
-    result =
-        oo::EntityNodesFrom(added);  // null where no ship was added, as before
+    // null where no ship was added, as before
+    result = oo::EntityNodesFrom(added);
 
   if (isGroup) {
-    const std::vector<Entity*> ships =
-        oo::EntitiesIn(result);  // borrowed: result holds them
+    // borrowed: result holds them
+    const std::vector<Entity*> ships = oo::EntitiesIn(result);
     ShipEntity* first = (ships.size() > 0 ? oo::ToShip(ships[0]) : nullptr);
     if (ships.size() > 0)
       result =
@@ -1809,14 +1808,14 @@ static JSValue SystemAddShipsOrGroupToRoute(JSContext* context, int argc,
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
-  std::optional<std::string> route =
-      "st";  // default route witchpoint -> station. ("st" itself is not
-             // selectable by script)
+  // default route witchpoint -> station. ("st" itself is not selectable by
+  // script)
+  std::optional<std::string> route = "st";
   static const std::set<std::string> validRoutes = {"wp", "pw", "ws",
                                                     "sw", "sp", "ps"};
   int32_t count = 0;
-  double where = static_cast<double>(
-      oo::kNotFound);  // a negative value means random positioning!
+  // a negative value means random positioning!
+  double where = static_cast<double>(oo::kNotFound);
   oo::PList result;
 
   std::string func = isGroup ? "addGroup" : "addShips";
@@ -1867,12 +1866,12 @@ static JSValue SystemAddShipsOrGroupToRoute(JSContext* context, int argc,
                                        isGroup)
            : std::vector<oo::EntityHold>());
   if (!added.empty())
-    result =
-        oo::EntityNodesFrom(added);  // null where no ship was added, as before
+    // null where no ship was added, as before
+    result = oo::EntityNodesFrom(added);
 
   if (isGroup) {
-    const std::vector<Entity*> ships =
-        oo::EntitiesIn(result);  // borrowed: result holds them
+    // borrowed: result holds them
+    const std::vector<Entity*> ships = oo::EntitiesIn(result);
     ShipEntity* first = (ships.size() > 0 ? oo::ToShip(ships[0]) : nullptr);
     if (ships.size() > 0)
       result =

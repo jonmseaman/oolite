@@ -58,7 +58,7 @@ class ALSoundDecoder : public oo::Object {
      open the file).
   */
   static std::shared_ptr<ALSoundDecoder> initWithPath(
-      const std::optional<std::string>& inPath);  // nullopt: null
+      const std::optional<std::string>& inPath);
   static std::shared_ptr<ALSoundDecoder> codecWithPath(
       const std::string& inPath);
 

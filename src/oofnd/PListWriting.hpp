@@ -282,8 +282,8 @@ class OldStyleWriter {
         newLineAndIndent(out, indent + 1);
       }
       if (!conforms(a[i])) {
-        error = "non-plist object in dictionary";  // (sic: GNUstep's text, for
-                                                   // arrays too)
+        // (sic: GNUstep's text, for arrays too)
+        error = "non-plist object in dictionary";
         return false;
       }
       if (!format(a[i], indent + 1, out)) return false;
@@ -401,8 +401,8 @@ inline void appendXMLString(std::string& out, const std::string& s) {
         break;
     }
   }
-  applyInitWithCharactersBOM(
-      map);  // the escaped text becomes an NSString from units
+  // the escaped text becomes an NSString from units
+  applyInitWithCharactersBOM(map);
   out += utf16ToUtf8(map);
 }
 
@@ -459,11 +459,13 @@ inline void appendXML(std::string& out, const PList& v, unsigned level) {
     }
     case PList::Type::kReal:
       out += "<real>";
-      out += v.isSinglePrecision()
-                 ? std::format("{:.7g}",
-                               static_cast<double>(static_cast<float>(
-                                   *v.getIf<double>())))  // +numberWithFloat:
-                 : std::format("{:.16g}", *v.getIf<double>());
+      out +=
+          v.isSinglePrecision()
+              ? std::format(
+                    "{:.7g}",
+                    // +numberWithFloat:
+                    static_cast<double>(static_cast<float>(*v.getIf<double>())))
+              : std::format("{:.16g}", *v.getIf<double>());
       out += "</real>\n";
       return;
     case PList::Type::kData:

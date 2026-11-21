@@ -166,8 +166,8 @@ int main(int argc, char* argv[]) {
   std::string directory(result.data());
   const std::size_t lastSlash = directory.rfind('/');
   if (lastSlash != std::string::npos) {
-    directory.resize(
-        lastSlash);  // Chop off the executable name, leaving just the directory
+    // Chop off the executable name, leaving just the directory
+    directory.resize(lastSlash);
   }
   if (chdir(directory.c_str()) != 0) {
     // As before: if the executable's directory cannot be entered, the game
@@ -214,8 +214,8 @@ int main(int argc, char* argv[]) {
   try {
     // dajt: allocate and set the NSApplication delegate manually because not
     // using NIB to do this
-    static std::shared_ptr<GameController>* controllerHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<GameController>* controllerHolder = nullptr;
     controllerHolder =
         new std::shared_ptr<GameController>(oo::makeShared<GameController>());
     controller = controllerHolder->get();  // never released (see above)

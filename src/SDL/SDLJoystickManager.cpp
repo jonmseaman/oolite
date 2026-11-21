@@ -196,8 +196,8 @@ void oo::SDLJoystickManager::decodeAxisEvent(SDL_JoyAxisEvent* evt) {
           oo::PList(static_cast<int>(evt->which));
       fnDict[std::string(STICK_AXBUT)] = oo::PList(static_cast<int>(evt->axis));
       cbHardware = 0;
-      const StickCallback callback =
-          cbCallback;  // a copy: the callback may set another
+      // a copy: the callback may set another
+      const StickCallback callback = cbCallback;
       callback(oo::PList(std::move(fnDict)));
       cbCallback = nullptr;
     }
@@ -257,8 +257,8 @@ void oo::SDLJoystickManager::decodeButtonEvent(SDL_JoyButtonEvent* evt) {
     fnDict[std::string(STICK_NUMBER)] = oo::PList(static_cast<int>(evt->which));
     fnDict[std::string(STICK_AXBUT)] = oo::PList(static_cast<int>(evt->button));
     cbHardware = 0;
-    const StickCallback callback =
-        cbCallback;  // a copy: the callback may set another
+    // a copy: the callback may set another
+    const StickCallback callback = cbCallback;
     callback(oo::PList(std::move(fnDict)));
     cbCallback = nullptr;
 

@@ -87,10 +87,9 @@ std::shared_ptr<oo::PlanetDrawable> oo::PlanetDrawable::initAsAtmosphere() {
 // -dealloc's DESTROY(_material) is the member's destructor.
 
 std::shared_ptr<oo::PlanetDrawable> oo::PlanetDrawable::copy() {
+  // [[[self class] allocWithZone:zone] init]: the class has no subclass
   std::shared_ptr<oo::PlanetDrawable> copy =
-      oo::makeShared<oo::PlanetDrawable>();  // [[[self class]
-                                             // allocWithZone:zone] init]: the
-                                             // class has no subclass
+      oo::makeShared<oo::PlanetDrawable>();
   copy->setMaterial(material());
   copy->_isAtmosphere = _isAtmosphere;
   copy->_radius = _radius;
@@ -150,16 +149,14 @@ void oo::PlanetDrawable::calculateLevelOfDetailForViewDistance(float distance) {
            : NSSize{})
           .width /
       (simple ? 100.0 : 40.0));
-  float drawRatio2 =
-      drawFactor * _radius /
-      sqrtf(distance);  // proportional to size on screen in pixels
+  // proportional to size on screen in pixels
+  float drawRatio2 = drawFactor * _radius / sqrtf(distance);
 
   float lod = sqrtf(static_cast<float>(drawRatio2 * LOD_FACTOR));
   if (simple) {
     lod -= 0.5f / LOD_GRANULARITY;  // Make LOD transitions earlier.
-    lod =
-        oo::Clamp_0_max_f(lod, (LOD_GRANULARITY - 1) /
-                                   LOD_GRANULARITY);  // Don't use highest LOD.
+    // Don't use highest LOD.
+    lod = oo::Clamp_0_max_f(lod, (LOD_GRANULARITY - 1) / LOD_GRANULARITY);
   }
   setLevelOfDetail(lod);
 }
@@ -202,8 +199,8 @@ void oo::PlanetDrawable::renderTranslucentPartsOnOpaquePass() {
 
 void oo::PlanetDrawable::renderCommonParts() {
   const oo::PlanetDataLevel* data = &kPlanetData[_lod];
-  oo::Material* material =
-      _material.get();  // messages to nil did nothing and answered NO
+  // messages to nil did nothing and answered NO
+  oo::Material* material = _material.get();
 
   OO_ENTER_OPENGL();
 

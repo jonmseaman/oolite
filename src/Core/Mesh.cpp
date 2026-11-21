@@ -75,19 +75,20 @@ MA 02110-1301, USA.
 // If set, cachable memory is scribbled with FEEDFACE to identify junk in cache.
 #define SCRIBBLE 0
 
-constexpr int kBaseOctreeDepth = 5;   // 32x32x32
-                                      //	kMaxOctreeDepth declared in Octree.h.
+// 32x32x32 kMaxOctreeDepth declared in Octree.h.
+constexpr int kBaseOctreeDepth = 5;
 constexpr int kSmallOctreeDepth = 4;  // 16x16x16
-constexpr int kOctreeSizeThreshold =
-    900;  // Size at which we start increasing octree depth
+// Size at which we start increasing octree depth
+constexpr int kOctreeSizeThreshold = 900;
 constexpr int kOctreeSmallSizeThreshold = 20;
 
 namespace oo {
 
 enum class MeshNormalMode : int { kPerFace, kSmooth, kExplicit };
 
+// an OO_LOG message class
 constexpr std::string_view kLogMeshDataNotFound =
-    "mesh.load.failed.fileNotFound";  // an OO_LOG message class
+    "mesh.load.failed.fileNotFound";
 constexpr std::string_view kLogMeshTooManyMaterials =
     "mesh.load.failed.tooManyMaterials";
 
@@ -221,8 +222,8 @@ std::shared_ptr<oo::Mesh> oo::Mesh::meshWithName(
 }
 
 std::shared_ptr<oo::Material> oo::Mesh::placeholderMaterial() {
-  static oo::BasicMaterial* placeholderMaterial =
-      nullptr;  // never released, as before
+  // never released, as before
+  static oo::BasicMaterial* placeholderMaterial = nullptr;
 
   if (placeholderMaterial == nullptr) {
     // +materialDefaults answers a copy: keep it alive while noTextures
@@ -230,8 +231,9 @@ std::shared_ptr<oo::Material> oo::Mesh::placeholderMaterial() {
     const oo::PList materialDefaults = ResourceManager::materialDefaults();
     const oo::PList* noTextures = materialDefaults.find("no-textures-material");
     // Never released: a heap std::shared_ptr that is never deleted.
+    // never deleted
     static std::shared_ptr<oo::BasicMaterial>* placeholderMaterialHolder =
-        nullptr;  // never deleted
+        nullptr;
     placeholderMaterialHolder = new std::shared_ptr<oo::BasicMaterial>(
         oo::BasicMaterial::materialWithName(
             std::string("/placeholder/"),
@@ -643,8 +645,9 @@ BoundingBox oo::Mesh::findBoundingBoxRelativeToPosition(Vector opv, Vector ri,
            sk.x * _vertices[0].z;
     pv.y = rpos.y + si.y * _vertices[0].x + sj.y * _vertices[0].y +
            sk.y * _vertices[0].z;
+    // _vertices[0] position rel to opv
     pv.z = rpos.z + si.z * _vertices[0].x + sj.z * _vertices[0].y +
-           sk.z * _vertices[0].z;  // _vertices[0] position rel to opv
+           sk.z * _vertices[0].z;
     rv.x = dot_product(ri, pv);
     rv.y = dot_product(rj, pv);
     rv.z = dot_product(rk, pv);  // _vertices[0] position rel to opv in ijk
@@ -1109,8 +1112,8 @@ bool oo::Mesh::loadData(const std::string& filename, float scale) {
     }
 
     // Allocate face->vertex table.
-    std::vector<VertexFaceRef> faceRefTable(
-        vertexCount);  // zeroed, freed when loading ends
+    // zeroed, freed when loading ends
+    std::vector<VertexFaceRef> faceRefTable(vertexCount);
     VertexFaceRef* faceRefs = faceRefTable.data();
 
     if (!allocateFaceBuffersWithCount(faceCount)) {
@@ -1125,8 +1128,8 @@ bool oo::Mesh::loadData(const std::string& filename, float scale) {
     // get vertex data
     if (scanner->scanString("VERTEX")) {
       for (j = 0; j < vertexCount; j++) {
-        float x = 0, y = 0, z = 0;  // read only after every scan succeeded (GCC
-                                    // -Wmaybe-uninitialized)
+        // read only after every scan succeeded (GCC -Wmaybe-uninitialized)
+        float x = 0, y = 0, z = 0;
         if (!failFlag) {
           if (!scanner->scanFloat(&x)) failFlag = true;
           if (!scanner->scanFloat(&y)) failFlag = true;
@@ -1149,9 +1152,11 @@ bool oo::Mesh::loadData(const std::string& filename, float scale) {
     if (scanner->scanString("FACES")) {
       for (j = 0; j < faceCount; j++) {
         int r, g, b;
-        float nx = 0, ny = 0,
-              nz = 0;  // read only after every scan succeeded (GCC
-                       // -Wmaybe-uninitialized)
+        float
+            nx = 0,
+            ny = 0,
+            // read only after every scan succeeded (GCC -Wmaybe-uninitialized)
+            nz = 0;
         int n_v;
         if (!failFlag) {
           // colors
@@ -1335,8 +1340,8 @@ bool oo::Mesh::loadData(const std::string& filename, float scale) {
       }
 
       for (j = 0; j < vertexCount; j++) {
-        float x = 0, y = 0, z = 0;  // read only after every scan succeeded (GCC
-                                    // -Wmaybe-uninitialized)
+        // read only after every scan succeeded (GCC -Wmaybe-uninitialized)
+        float x = 0, y = 0, z = 0;
         if (!failFlag) {
           if (!scanner->scanFloat(&x)) failFlag = true;
           if (!scanner->scanFloat(&y)) failFlag = true;
@@ -1534,8 +1539,8 @@ bool oo::Mesh::setUpVertexArrays() {
         static_cast<std::size_t>(tri_index) - triangle_range[mi].location;
   }
 
-  _displayLists.count =
-      static_cast<GLuint>(tri_index);  // total number of triangle vertices
+  // total number of triangle vertices
+  _displayLists.count = static_cast<GLuint>(tri_index);
   return true;
 }
 
@@ -1924,12 +1929,13 @@ void oo::Mesh::calculateBoundingVolumes() {
   if (_boundingBox.max.z - _boundingBox.min.z < length_shortest_axis)
     length_shortest_axis = _boundingBox.max.z - _boundingBox.min.z;
 
-  d_squared = static_cast<float>((length_longest_axis + length_shortest_axis) *
-                                 (length_longest_axis + length_shortest_axis) *
-                                 0.25);  // square of average length
-  _maxDrawDistance = static_cast<GLfloat>(
-      d_squared * NO_DRAW_DISTANCE_FACTOR *
-      NO_DRAW_DISTANCE_FACTOR);  // no longer based on the collision radius
+  // square of average length
+  d_squared =
+      static_cast<float>((length_longest_axis + length_shortest_axis) *
+                         (length_longest_axis + length_shortest_axis) * 0.25);
+  // no longer based on the collision radius
+  _maxDrawDistance = static_cast<GLfloat>(d_squared * NO_DRAW_DISTANCE_FACTOR *
+                                          NO_DRAW_DISTANCE_FACTOR);
 
   _collisionRadius = sqrtf(result);
 }
@@ -1994,8 +2000,8 @@ std::shared_ptr<Octree> CacheManagerOctreeForModel(const std::string& inKey) {
   std::shared_ptr<Octree> result;
   CacheManager* cache = CacheManager::sharedCache();
 
-  const oo::PList data =
-      cache->pListForKey(inKey, kCacheOctrees);  // null: absent
+  // null: absent
+  const oo::PList data = cache->pListForKey(inKey, kCacheOctrees);
   if (data) {
     result = Octree::initWithDictionary(data);
   }

@@ -157,8 +157,8 @@ inline Matrix MatrixLoadGLMatrix(GLenum matrixID) ALWAYS_INLINE_FUNC;
 
 namespace oo {
 
-std::string MatrixDescription(Matrix matrix);  // "{{#, #, #, #}, {#, #, #, #},
-                                               // {#, #, #, #}, {#, #, #, #}}"
+// "{{#, #, #, #}, {#, #, #, #}, {#, #, #, #}, {#, #, #, #}}"
+std::string MatrixDescription(Matrix matrix);
 
 // Row operations
 

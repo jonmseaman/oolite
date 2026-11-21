@@ -261,10 +261,9 @@ static void LoadExplicitSettings() {
         "logcontrol.plist");
     builtInSettings = oo::PropertyListFromFile(path);
     if (!builtInSettings.isDict())
-      builtInSettings =
-          oo::PList();  // a dictionary or nothing, as OODictionaryFromFile
-                        // answered (its plist.wrongType line, which named the
-                        // Foundation class, is not kept)
+      // a dictionary or nothing, as OODictionaryFromFile answered (its
+      // plist.wrongType line, which named the Foundation class, is not kept)
+      builtInSettings = oo::PList();
   }
   oo::log::logger().replaceSettings(SettingsFromDictionary(builtInSettings),
                                     false);

@@ -59,8 +59,9 @@ void oo::Material::setUp() {
 
 // name() is a subclass's override, so it cannot be const.
 std::optional<std::string> oo::Material::descriptionComponents() const {
+  // "%@" of the name, quoted
   return "\"" + const_cast<oo::Material*>(this)->name().value_or("(null)") +
-         "\"";  // "%@" of the name, quoted
+         "\"";
 }
 
 std::string oo::Material::description() const {

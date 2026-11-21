@@ -54,8 +54,8 @@ class EncodingConverter : public oo::Object {
 
   ~EncodingConverter() override;
 
-  oo::Data convertString(
-      const std::string& string);  // empty if the string cannot be converted
+  // empty if the string cannot be converted
+  oo::Data convertString(const std::string& string);
 
   std::optional<oo::str::Encoding> encoding();
 
@@ -65,16 +65,17 @@ class EncodingConverter : public oo::Object {
 
  private:
   std::optional<oo::Data> performConversionForString(const std::string& string);
-  void profileFire(void* junk);  // defined only when the .cpp's
-                                 // PROFILE_ENCODING_CONVERTER is on
+  // defined only when the .cpp's PROFILE_ENCODING_CONVERTER is on
+  void profileFire(void* junk);
 
-  std::optional<oo::str::Encoding> _encoding =
-      {};  // nullopt: an unknown encoding name (was oo::kNotFound)
+  // nullopt: an unknown encoding name (was oo::kNotFound)
+  std::optional<oo::str::Encoding> _encoding = {};
   std::shared_ptr<Cache>
-      _cache;  // no `= {}`: GCC instantiates ~Ref<T> at a default
-               // member initializer, and T is incomplete here
-  std::vector<std::pair<std::string, std::string>> _substitutions =
-      {};  // in the order they are applied
+      // no `= {}`: GCC instantiates ~Ref<T> at a default member initializer,
+      // and T is incomplete here
+      _cache;
+  // in the order they are applied
+  std::vector<std::pair<std::string, std::string>> _substitutions = {};
 };
 
 }  // namespace oo
@@ -87,7 +88,7 @@ class EncodingConverter : public oo::Object {
                 "windows-cyrillic"		windowsCP1251 (code page 1251)
                 "windows-greek"			windowsCP1253 (code page 1253)
                 "windows-turkish"		windowsCP1254 (code page 1254)
+// oo::str::Encoding numeric value; NULL for unknown
 */
-const char* StringFromEncoding(
-    unsigned encoding);  // oo::str::Encoding numeric value; NULL for unknown
+const char* StringFromEncoding(unsigned encoding);
 // (For the reverse, see oo::str::encodingFromName() in oofnd/Encoding.hpp.)

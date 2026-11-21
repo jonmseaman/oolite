@@ -46,7 +46,8 @@ namespace oo {
 class HUDBeaconIcon;
 
 }  // namespace oo
-   // OOPolygonSprite.h
+
+// OOPolygonSprite.h
 
 namespace oo {
 

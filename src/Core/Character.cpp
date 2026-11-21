@@ -150,8 +150,8 @@ std::optional<std::string> oo::Character::planetOfOrigin() {
                            : oo::PList());
   const oo::PList* name = originInfo.find(KEY_NAME);
   if (name == nullptr || !name->isString())
-    return std::nullopt;  // (the value was returned as it stood; it is a
-                          // string)
+    // (the value was returned as it stood; it is a string)
+    return std::nullopt;
   return *name->getIf<std::string>();
 }
 
@@ -162,8 +162,8 @@ oo::SystemID oo::Character::planetIDOfOrigin() {
 
 std::optional<std::string> oo::Character::species() {
   // determine the character's species
-  int species = genSeed().f &
-                0x03;  // 0-1 native to home system, 2 human colonial, 3 other
+  // 0-1 native to home system, 2 human colonial, 3 other
+  int species = genSeed().f & 0x03;
   std::optional<std::string> speciesString;
   if (species == 3)
     speciesString = (UNIVERSE != nullptr
@@ -197,9 +197,9 @@ void oo::Character::basicSetUp() {
                            : oo::PList());
   const std::optional<std::string> planet =
       OptionalStringForKey(originInfo, KEY_NAME);
+  // 0 .. 7 (0 anarchic .. 7 most stable)
   oo::GovernmentID government =
-      static_cast<oo::GovernmentID>(originInfo.get<int>(
-          KEY_GOVERNMENT));  // 0 .. 7 (0 anarchic .. 7 most stable)
+      static_cast<oo::GovernmentID>(originInfo.get<int>(KEY_GOVERNMENT));
   int criminalTendency = government ^ 0x07;
 
   // determine the character's species
@@ -463,8 +463,8 @@ void oo::Character::setCharacterFromDictionary(const oo::PList& dict) {
   }
 
   if (dict.find("random_seed") != nullptr) {
-    seed = RandomSeedFromString(OptionalStringForKey(
-        dict, "random_seed"));  // returns kNilRandomSeed on failure
+    // returns kNilRandomSeed on failure
+    seed = RandomSeedFromString(OptionalStringForKey(dict, "random_seed"));
   } else {
     seed.a = (ranrot_rand() & 0xff);
     seed.b = (ranrot_rand() & 0xff);

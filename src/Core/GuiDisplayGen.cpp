@@ -173,8 +173,8 @@ std::shared_ptr<oo::TextureSprite> NewTextureSpriteWithDescriptor(
 
 }  // namespace
 
-static bool _refreshStarChart =
-    false;  // set by refreshStarChart(), read by drawStarChart()
+// set by refreshStarChart(), read by drawStarChart()
+static bool _refreshStarChart = false;
 
 GuiDisplayGen::GuiDisplayGen() {
   size_in_pixels = NSMakeSize(MAIN_GUI_PIXEL_WIDTH, MAIN_GUI_PIXEL_HEIGHT);
@@ -182,8 +182,8 @@ GuiDisplayGen::GuiDisplayGen() {
   n_rows = GUI_DEFAULT_ROWS;
   pixel_row_center = static_cast<int>(size_in_pixels.width / 2);
   pixel_row_height = MAIN_GUI_ROW_HEIGHT;
-  pixel_row_start =
-      MAIN_GUI_PIXEL_ROW_START;  // first position down the page...
+  // first position down the page...
+  pixel_row_start = MAIN_GUI_PIXEL_ROW_START;
   max_alpha = 1.0;
 
   pixel_text_size =
@@ -217,8 +217,8 @@ GuiDisplayGen::GuiDisplayGen() {
     tabStops[i] = stops[i];
   }
 
-  title = std::string();  // an empty title, not none (-setTitle: would have
-                          // made it none)
+  // an empty title, not none (-setTitle: would have made it none)
+  title = std::string();
   textColor = oo::Color::yellowColor();
 
   drawPosition = make_vector(0.0f, 0.0f, 640.0f);
@@ -465,8 +465,8 @@ void GuiDisplayGen::setColor(::oo::Color* color, oo::GUIRow row) {
 
 oo::PList GuiDisplayGen::objectForRow(oo::GUIRow row) {
   if (RowInRange(row, rowRange))
-    return rowText[static_cast<std::size_t>(
-        row)];  // a string, or an array of column strings
+    // a string, or an array of column strings
+    return rowText[static_cast<std::size_t>(row)];
   else
     return oo::PList();  // null, where this was nil
 }
@@ -789,8 +789,8 @@ oo::PList GuiDisplayGen::getLastLines() {
     result.emplace_back(oo::PList(oo::PList::Array{text}).at<std::string>(0));
     result.emplace_back(
         std::format("{:.3g} {:.3g} {:.3g} {:.3g}", c.r, c.g, c.b, c.a));
-    result.push_back(
-        oo::PList::singleReal(rowFadeTime[r]));  // +numberWithFloat:
+    // +numberWithFloat:
+    result.push_back(oo::PList::singleReal(rowFadeTime[r]));
     return true;
   };
 
@@ -1108,8 +1108,8 @@ oo::PList GuiDisplayGen::textureDescriptorFromJSValue(
     if (name.has_value()) {
       result = oo::PList(oo::PList::Dict{{"name", oo::PList(*name)}});
       if (name->empty())
-        return result;  // Explicit empty string may be used to indicate no
-                        // texture.
+        // Explicit empty string may be used to indicate no texture.
+        return result;
     }
   }
 
@@ -1151,8 +1151,8 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
   }
   std::size_t itemsPerColumn = maxRows;
 
-  std::ptrdiff_t firstY =
-      40;  // firstRow =10 :-> 40  - firstRow=11 -> 24 etc...
+  // firstRow =10 :-> 40 - firstRow=11 -> 24 etc...
+  std::ptrdiff_t firstY = 40;
   std::size_t eqptCount = eqptArray->size();
   std::size_t pageCount = 1;
   std::size_t i;
@@ -1179,8 +1179,8 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
         start = 0;
       } else {
         statusPage = 2;
-        start =
-            static_cast<std::ptrdiff_t>(i / statusPage);  // for the for loop
+        // for the for loop
+        start = static_cast<std::ptrdiff_t>(i / statusPage);
       }
     } else {
       // three or more
@@ -1411,9 +1411,10 @@ int GuiDisplayGen::drawGUI(GLfloat alpha, bool drawCursor) {
 
     GLfloat h1 = 3.0f;
     GLfloat h3 = 9.0f;
-    OOGL(glColor4f(0.6f, 0.6f, 1.0f,
-                   1.0f));  // original value of (0.2f, 0.2f, 1.0f, 0.5f) too
-                            // dark - Nikos 20130616
+    OOGL(glColor4f(
+        0.6f, 0.6f, 1.0f,
+        // original value of (0.2f, 0.2f, 1.0f, 0.5f) too dark - Nikos 20130616
+        1.0f));
     OOGL(GLScaledLineWidth(2.0f));
 
     cursor_x += x;
@@ -1659,8 +1660,8 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
       bool isLeftAligned;
 
       for (j = 0; j < max_columns; j++) {
-        const std::string text =
-            array.at<std::string>(j);  // -oo_stringAtIndex: ("" for none)
+        // -oo_stringAtIndex: ("" for none)
+        const std::string text = array.at<std::string>(j);
         if (text.size() != 0) {
           isLeftAligned = tabStops[j] >= 0;
           rowPosition[i].x = static_cast<double>(llabs(tabStops[j]));

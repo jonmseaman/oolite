@@ -433,8 +433,8 @@ class XMLPListReader {
         cp_ += 8;
         while (cp_ + 3 < cend_ && std::memcmp(bytes_ + cp_, "]]>", 3) != 0)
           cp_++;
-        cp_ += 3;  // the CDATA text is not delivered: GSXMLPListParser has no
-                   // foundCDATA
+        // the CDATA text is not delivered: GSXMLPListParser has no foundCDATA
+        cp_ += 3;
         vp = cp_;
         c = cget();
         continue;
@@ -461,10 +461,10 @@ class XMLPListReader {
           reinterpret_cast<const char*>(bytes_) + tagStart,
           static_cast<std::size_t>(tagLen));
       if (!isStrictUtf8(rawTag))
-        return fail();  // cut at the end of the data: "invalid character in
-                        // tag"
-      const std::string tag(
-          utf8WithoutLeadingBOM(rawTag));  // NewUTF8STR() drops a leading BOM
+        // cut at the end of the data: "invalid character in tag"
+        return fail();
+      // NewUTF8STR() drops a leading BOM
+      const std::string tag(utf8WithoutLeadingBOM(rawTag));
 
       while (isCSpace(c)) c = cget();
       while (c != kEOF) {
@@ -618,8 +618,9 @@ class XMLPListReader {
         if (c == '&') containsEntity = true;
         c = cget();
       }
-      cp_--;  // back to the terminating character (one further at kEOF, as
-              // GNUstep does)
+      // back to the terminating character (one further at kEOF, as GNUstep
+      // does)
+      cp_--;
       len = cp_ - ap;
     }
     if (!isStrictUtf8(std::string_view(
@@ -660,8 +661,8 @@ class XMLPListReader {
     while (c != kEOF && !isCSpace(c) && c != '>') c = cget();
     const std::string_view rawDecl(reinterpret_cast<const char*>(bytes_) + tp,
                                    cp_ - tp - 1);
-    const std::string decl(
-        utf8WithoutLeadingBOM(rawDecl));  // NewUTF8STR() drops a leading BOM
+    // NewUTF8STR() drops a leading BOM
+    const std::string decl(utf8WithoutLeadingBOM(rawDecl));
     // Each word is a NewUTF8STR(): one cut at the end of the data can end
     // inside a character, and GNUstep then fails with "invalid character in
     // declaration[ name/attr/type]".
@@ -839,8 +840,8 @@ class XMLPListReader {
     } else if (name == "string") {
       item = PList(unescapeXMLPListString(value_));
     } else if (name == "integer") {
-      const std::int64_t v =
-          std::strtoll(value_.c_str(), nullptr, 10);  // -longLongValue
+      // -longLongValue
+      const std::int64_t v = std::strtoll(value_.c_str(), nullptr, 10);
       if (!value_.empty() && value_[0] == '-')
         item = PList::signedInteger(v);
       else

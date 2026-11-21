@@ -39,8 +39,9 @@ class FlashEffectEntity : public LightParticleEntity {
  public:
   // +explosionFlashFromEntity: and +laserFlashWithPosition:velocity:color:: a
   // new flash, initialised.
+  // the C++ entity
   static std::shared_ptr<FlashEffectEntity> explosionFlashFromEntity(
-      Entity* entity);  // the C++ entity
+      Entity* entity);
   static std::shared_ptr<FlashEffectEntity> laserFlashWithPosition(
       HPVector position, Vector vel, oo::Color* color);
 

@@ -520,9 +520,9 @@ void SynthEmissionAndIllumination(MaterialSynthContext* context) {
   if (emissionMapSpec.isNull() && !emissionAndIlluminationSpec.isNull()) {
     emissionMapSpec = emissionAndIlluminationSpec;
     if (illuminationMapSpec.isNull())
-      isCombinedSpec = true;  // Else use only emission part of
-                              // emission_and_illumination_map, combined with
-                              // full illumination_map.
+      // Else use only emission part of emission_and_illumination_map, combined
+      // with full illumination_map.
+      isCombinedSpec = true;
   }
 
   if (!emissionMapSpec.isNull() &&

@@ -37,9 +37,8 @@ oo::Drawable* oo::EntityWithDrawable::getDrawable() { return drawable.get(); }
 
 void oo::EntityWithDrawable::setDrawable(oo::Drawable* inDrawable) {
   if (inDrawable != drawable.get()) {
-    oo::DrawableAutorelease(
-        std::move(drawable));  // [drawable autorelease]: the old one lives
-                               // until the pool drains
+    // [drawable autorelease]: the old one lives until the pool drains
+    oo::DrawableAutorelease(std::move(drawable));
     drawable = oo::share(inDrawable);
     // Messages to a nil drawable did nothing and answered 0.
     oo::Drawable* cxxDrawable = drawable.get();
@@ -74,8 +73,8 @@ void oo::EntityWithDrawable::drawImmediate(bool /*immediate*/,
       if (getIsShip()) {
         clipradius = frustumRadius();  // [oo::ToShip(self) frustumRadius]
       } else if (getIsVisualEffect()) {
-        clipradius =
-            frustumRadius();  // [(OOVisualEffectEntity *)self frustumRadius]
+        // [(OOVisualEffectEntity *)self frustumRadius]
+        clipradius = frustumRadius();
       }
       // don't bother with frustum culling within/near collision radius, as
       // potential for problems with floating point inaccuracy causing

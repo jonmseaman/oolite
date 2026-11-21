@@ -45,7 +45,8 @@ namespace oo {
 class JoystickManager;
 
 }  // namespace oo
-   // OOJoystickManager.h
+
+// OOJoystickManager.h
 
 /* The player is the screen's one caller (the category above drives it); the
  * player keeps it as a std::shared_ptr.
@@ -77,8 +78,8 @@ class StickProfileScreen : public oo::Object {
   std::optional<std::string> profileType();
 
  private:
-  oo::JoystickManager* stickHandler =
-      nullptr;  // the shared handler, not retained, as before
+  // the shared handler, not retained, as before
+  oo::JoystickManager* stickHandler = nullptr;
   std::size_t current_axis = 0;
   std::shared_ptr<oo::JoystickAxisProfile> profiles[3][2] = {};
   GuiDisplayGen* gui = nullptr;  // not retained, as before

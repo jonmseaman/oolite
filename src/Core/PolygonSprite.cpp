@@ -76,15 +76,14 @@ using PolygonContour = std::vector<NSPoint>;
 }  // namespace oo
 
 struct TessPolygonData {
-  std::vector<GLfloat> data;   // the vertices, as x, y pairs
-  GLenum mode;                 // Current primitive mode.
-  size_t vCount;               // Number of vertices so far in primitive.
-  NSPoint pending0, pending1;  // Used for splitting
-                               // GL_TRIANGLE_STRIP/GL_TRIANGLE_FAN primitives.
-  bool OK;                     // Set to false to indicate error.
-  std::vector<std::unique_ptr<NSPoint>>
-      combinedVertices;  // made by the combine callback; live until the data
-                         // goes
+  std::vector<GLfloat> data;  // the vertices, as x, y pairs
+  GLenum mode;                // Current primitive mode.
+  size_t vCount;              // Number of vertices so far in primitive.
+  // Used for splitting GL_TRIANGLE_STRIP/GL_TRIANGLE_FAN primitives.
+  NSPoint pending0, pending1;
+  bool OK;  // Set to false to indicate error.
+  // made by the combine callback; live until the data goes
+  std::vector<std::unique_ptr<NSPoint>> combinedVertices;
 #ifndef NDEBUG
   bool generatingOutline;
   unsigned svgID;
@@ -783,10 +782,9 @@ void SVGDumpAppendBaseContour(TessPolygonData* data,
   // Close and add a circle at the first vertex. (SVG has support for end
   // markers, but this isn’t reliable across implementations.)
   if (points.empty())
-    oo::RaiseException(
-        oo::RangeException,
-        "SVGDumpAppendBaseContour: empty contour");  // -objectAtIndex:0
-                                                     // raised here
+    oo::RaiseException(oo::RangeException,
+                       // -objectAtIndex:0 raised here
+                       "SVGDumpAppendBaseContour: empty contour");
   NSPoint p = points[0];
   *data->debugSVG += std::format(
       "z\"/>\n\t\t\t<circle cx=\"{:f}\" cy=\"{:f}\" r=\"0.1\" fill=\"#BBB\" "

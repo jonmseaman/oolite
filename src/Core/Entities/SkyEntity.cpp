@@ -90,9 +90,9 @@ void SkyEntity::initWithColors(oo::Color* col1In, oo::Color* col2In,
   // The colours the body replaces are owned here (they were autoreleased).
   std::shared_ptr<oo::Color> col1 = oo::share(col1In);
   std::shared_ptr<oo::Color> col2 = oo::share(col2In);
+  // a copy, as the id form made of a colour
   std::shared_ptr<oo::Color> col3 =
-      oo::Color::colorWithDescription(oo::ColorObjectNode(
-          col1.get()));  // a copy, as the id form made of a colour
+      oo::Color::colorWithDescription(oo::ColorObjectNode(col1.get()));
   std::shared_ptr<oo::Color> col4 =
       oo::Color::colorWithDescription(oo::ColorObjectNode(col2.get()));
 
@@ -173,8 +173,8 @@ bool SkyEntity::changeProperty(const std::string& key, const oo::PList& dict) {
     std::shared_ptr<oo::Color> col =
         oo::Color::colorWithDescription(ValueForKey(dict, key));
     if (col != nullptr) {
-      skyColor = col;  // [col copy]: a copy of an immutable colour is the
-                       // colour itself
+      // [col copy]: a copy of an immutable colour is the colour itself
+      skyColor = col;
       if (UNIVERSE != nullptr) UNIVERSE->setLighting();
     }
   } else {

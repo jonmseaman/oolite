@@ -272,8 +272,8 @@ class Logger {
   void replaceSettings(
       const std::vector<std::pair<std::string, RawSetting>>& entries,
       bool final) {
-    std::vector<std::pair<const char*, std::string>>
-        diagnostics;  // (function, message)
+    // (function, message)
+    std::vector<std::pair<const char*, std::string>> diagnostics;
     {
       std::lock_guard<std::mutex> lock(mutex_);
       explicit_.clear();

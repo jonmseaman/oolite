@@ -101,8 +101,8 @@ struct PathEnvironment {
   Platform platform = Platform::kPosix;
   Getenv getenv;  // UTF-8 value of a variable, or nullopt when unset
   fs::Path currentDirectory;
-  bool gameDataToUserFolder =
-      false;  // the OO_GAME_DATA_TO_USER_FOLDER build setting
+  // the OO_GAME_DATA_TO_USER_FOLDER build setting
+  bool gameDataToUserFolder = false;
 
   // The running process: its platform, environment and current directory right
   // now.
@@ -130,12 +130,12 @@ struct PathEnvironment {
           ::GetEnvironmentVariableW(wname.c_str(), value.data(),
                                     static_cast<std::uint32_t>(value.size()));
       if (n == 0)
-        return std::nullopt;  // unset (an empty value also reads as unset, as
-                              // in SDL_getenv)
+        // unset (an empty value also reads as unset, as in SDL_getenv)
+        return std::nullopt;
       if (n < value.size()) {
         value.resize(n);
-        return fs::nativeUTF8String(
-            fs::Path(value));  // raw: a variable is not always a path
+        // raw: a variable is not always a path
+        return fs::nativeUTF8String(fs::Path(value));
       }
       value.assign(n, L'\0');  // n is the size needed, terminator included
     }

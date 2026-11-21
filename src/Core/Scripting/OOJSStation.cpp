@@ -312,10 +312,10 @@ static JSValue StationGetProperty(OOJS_GETTER_ARGS) {
     case kRoll:
       // same as in ship definition, but this time read/write below
       return JS_NewNumber(
-          context,
-          (entity != nullptr ? entity->ShipEntity::getFlightRoll()
-                             : 0.0f));  // qualified: the final overrider, so
-                                        // the binding test stands in for it
+          context, (entity != nullptr ? entity->ShipEntity::getFlightRoll()
+                                      // qualified: the final overrider, so the
+                                      // binding test stands in for it
+                                      : 0.0f));
 
     case kAllowsFastDocking:
       return OOJSValueFromBOOL(
@@ -608,14 +608,12 @@ static JSValue StationDockPlayer(JSContext* context, JSValueConst oojsThis,
     if (player != nullptr)
       player->setDockingClearanceStatus(oo::DockingClearanceStatus::kGranted);
     if (player != nullptr)
-      player->PlayerEntity::safeAllMissiles();  // qualified: the final
-                                                // overrider, so the binding
-                                                // test stands in for it
+      // qualified: the final overrider, so the binding test stands in for it
+      player->PlayerEntity::safeAllMissiles();
     if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(oo::ViewID::kForward);
     if (player != nullptr)
-      player->PlayerEntity::enterDock(
-          stationForDockingPlayer);  // qualified: the final overrider, so the
-                                     // binding test stands in for it
+      // qualified: the final overrider, so the binding test stands in for it
+      player->PlayerEntity::enterDock(stationForDockingPlayer);
   }
   OOJS_RETURN_VOID;
 
@@ -694,8 +692,8 @@ static JSValue StationLaunchShipWithRole(OOJS_NATIVE_ARGS) {
   }
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, result));  // the C++ ship's JS value
+  // the C++ ship's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, result));
   OOJS_NATIVE_EXIT
 }
 
@@ -712,8 +710,8 @@ static JSValue StationLaunchDefenseShip(JSContext* context,
   launched = (station != nullptr ? station->launchDefenseShip()
                                  : static_cast<::ShipEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
+  // the C++ ship's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, launched));
 
   OOJS_NATIVE_EXIT
 }
@@ -730,8 +728,8 @@ static JSValue StationLaunchEscort(JSContext* context, JSValueConst oojsThis,
   launched = (station != nullptr ? station->launchEscort()
                                  : static_cast<::ShipEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
+  // the C++ ship's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, launched));
 
   OOJS_NATIVE_EXIT
 }
@@ -749,8 +747,8 @@ static JSValue StationLaunchScavenger(JSContext* context, JSValueConst oojsThis,
   launched = (station != nullptr ? station->launchScavenger()
                                  : static_cast<::ShipEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
+  // the C++ ship's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, launched));
 
   OOJS_NATIVE_EXIT
 }
@@ -767,8 +765,8 @@ static JSValue StationLaunchMiner(JSContext* context, JSValueConst oojsThis,
   launched = (station != nullptr ? station->launchMiner()
                                  : static_cast<::ShipEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
+  // the C++ ship's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, launched));
   OOJS_NATIVE_EXIT
 }
 
@@ -785,8 +783,8 @@ static JSValue StationLaunchPirateShip(JSContext* context,
   launched = (station != nullptr ? station->launchPirateShip()
                                  : static_cast<::ShipEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
+  // the C++ ship's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, launched));
 
   OOJS_NATIVE_EXIT
 }
@@ -803,8 +801,8 @@ static JSValue StationLaunchShuttle(JSContext* context, JSValueConst oojsThis,
   launched = (station != nullptr ? station->launchShuttle()
                                  : static_cast<::ShipEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
+  // the C++ ship's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, launched));
   OOJS_NATIVE_EXIT
 }
 
@@ -820,8 +818,8 @@ static JSValue StationLaunchPatrol(JSContext* context, JSValueConst oojsThis,
   launched = (station != nullptr ? station->launchPatrol()
                                  : static_cast<::ShipEntity*>(nullptr));
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
+  // the C++ ship's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, launched));
   OOJS_NATIVE_EXIT
 }
 
@@ -984,8 +982,8 @@ static JSValue StationSetInterface(OOJS_NATIVE_ARGS) {
       if (JS_IsException(callbackThis)) {
         JS_FreeValue(context, JS_GetException(context));
       } else {
-        cxxDefinition->setCallbackThis(
-            callbackThis);  // Takes its own reference.
+        // Takes its own reference.
+        cxxDefinition->setCallbackThis(callbackThis);
       }
       JS_FreeValue(context, callbackThis);
     }
@@ -1086,9 +1084,8 @@ static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
   bool gotQuantity = OOJSValueToInt32(context, OOJS_ARGV[1], &quantity);
   oo::CommodityMarket* market =
       (station != nullptr ? station->getLocalMarket()
-                          : static_cast<oo::CommodityMarket*>(
-                                nullptr));  // null: no capacity,
-                                            // as a message to nil
+                          // null: no capacity, as a message to nil
+                          : static_cast<oo::CommodityMarket*>(nullptr));
   if (!gotQuantity || quantity < 0 ||
       static_cast<oo::CargoQuantity>(quantity) >
           ((market != nullptr) ? market->capacityForGood(commodity) : 0))
@@ -1254,8 +1251,8 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
   // ok, feel pretty safe to include this ship now
-  result[std::string(SHIPYARD_KEY_SHIPDATA_KEY)] =
-      *shipKey;  // non-nil: a nil key found no shipyard information above
+  // non-nil: a nil key found no shipyard information above
+  result[std::string(SHIPYARD_KEY_SHIPDATA_KEY)] = *shipKey;
 
   // add an ID
   Random_Seed ship_seed =

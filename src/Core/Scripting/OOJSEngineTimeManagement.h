@@ -121,8 +121,8 @@ class OOTimeProfile : public oo::Object {
   double nonExtensionTime();
   double profilerOverhead();
 
-  std::vector<std::shared_ptr<OOTimeProfileEntry>>
-  profileEntries();  // sorted by self time, longest first
+  // sorted by self time, longest first
+  std::vector<std::shared_ptr<OOTimeProfileEntry>> profileEntries();
 
   JSValue oo_jsValueInContext(JSContext* context);
 
@@ -177,8 +177,8 @@ class OOTimeProfileEntry : public oo::Object {
   JSValue oo_jsValueInContext(JSContext* context);
 
  private:
-  friend class OOTimeProfile;  // its "profiles" list holds each entry's
-                               // property list
+  // its "profiles" list holds each entry's property list
+  friend class OOTimeProfile;
   oo::PList propertyListRepresentation();
 
   std::optional<std::string> _function;  // nullopt when created without a name

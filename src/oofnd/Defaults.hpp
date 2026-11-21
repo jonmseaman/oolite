@@ -445,8 +445,8 @@ class Defaults {
   // The process's defaults, built on first use from the real environment and
   // command line.
   static Defaults& standard() {
-    static Defaults* instance =
-        new Defaults(forProcess());  // never destroyed, as the ObjC singleton
+    // never destroyed, as the ObjC singleton
+    static Defaults* instance = new Defaults(forProcess());
     return *instance;
   }
 
@@ -655,8 +655,8 @@ class Defaults {
   PList::Dict application_;
   PList::Dict global_;
   PList::Dict registration_;
-  std::map<std::string, std::optional<PList>, std::less<>>
-      changes_;                                   // since the last synchronize
+  // since the last synchronize
+  std::map<std::string, std::optional<PList>, std::less<>> changes_;
   std::set<std::string, std::less<>> floatKeys_;  // set with setFloat
 };
 

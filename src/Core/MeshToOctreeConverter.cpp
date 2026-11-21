@@ -270,9 +270,8 @@ std::shared_ptr<Octree> oo::MeshToOctreeConverter::findOctreeToDepth(
     std::size_t depth) {
   std::shared_ptr<oo::OctreeBuilder> builder =
       oo::makeShared<oo::OctreeBuilder>();
-  oo::Scalar halfWidth =
-      0.5f +
-      MaxDimensionFromOrigin(&_data);  // pad out from geometry by a half meter
+  // pad out from geometry by a half meter
+  oo::Scalar halfWidth = 0.5f + MaxDimensionFromOrigin(&_data);
 
   BuildSubOctree(&_data, builder.get(), halfWidth, depth);
 

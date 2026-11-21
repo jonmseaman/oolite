@@ -153,8 +153,8 @@ class ManualDispatchAsyncWorkManager : public AsyncWorkManagerInternal {
 struct PrioritizedTaskQueue {
   std::mutex mutex;
   std::condition_variable_any available;
-  std::deque<std::shared_ptr<oo::AsyncWorkTask>>
-      tasks[3];  // indexed by OOAsyncWorkPriority: low, medium, high
+  // indexed by OOAsyncWorkPriority: low, medium, high
+  std::deque<std::shared_ptr<oo::AsyncWorkTask>> tasks[3];
 };
 
 class OperationQueueAsyncWorkManager : public AsyncWorkManagerInternal {
@@ -244,16 +244,18 @@ static oo::AsyncWorkManager* MakeAsyncWorkManager() {
   oo::AsyncWorkManager* manager = nullptr;
   std::string_view className;
   if (OperationQueueAsyncWorkManager::canBeUsed()) {
+    // never deleted
     static std::shared_ptr<OperationQueueAsyncWorkManager>* managerHolder =
-        nullptr;  // never deleted
+        nullptr;
     managerHolder = new std::shared_ptr<OperationQueueAsyncWorkManager>(
         oo::makeShared<OperationQueueAsyncWorkManager>());
     manager = managerHolder->get();
     className = "OOOperationQueueAsyncWorkManager";
   }
   if (manager == nullptr) {
+    // never deleted
     static std::shared_ptr<ManualDispatchAsyncWorkManager>* managerHolder =
-        nullptr;  // never deleted
+        nullptr;
     managerHolder = new std::shared_ptr<ManualDispatchAsyncWorkManager>(
         oo::makeShared<ManualDispatchAsyncWorkManager>());
     manager = managerHolder->get();
@@ -358,8 +360,9 @@ void AsyncWorkManagerInternal::waitForTaskToComplete(oo::AsyncWorkTask* task) {
     }
 
     next->completeAsyncTask();
-  } while (next.get() != task);  // We don't control order, so keep looking
-                                 // until we get the one we care about.
+    // We don't control order, so keep looking until we get the one we care
+    // about.
+  } while (next.get() != task);
 }
 
 void AsyncWorkManagerInternal::queueResult(oo::AsyncWorkTask* task) {
@@ -371,8 +374,8 @@ void AsyncWorkManagerInternal::queueResult(oo::AsyncWorkTask* task) {
 void AsyncWorkManagerInternal::noteTaskQueued(oo::AsyncWorkTask* task) {
   const std::lock_guard guard(_pendingOpsLock);
   if (!PendingContains(_pendingCompletableOperations, task))
-    _pendingCompletableOperations.emplace_back(
-        oo::share(task));  // a set: added once
+    // a set: added once
+    _pendingCompletableOperations.emplace_back(oo::share(task));
 }
 
 /******* OOManualDispatchAsyncWorkManager - manual thread management *******/

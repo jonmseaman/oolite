@@ -324,8 +324,8 @@ std::optional<std::string> oo::ShaderUniform::description() {
       valueType = "vec2";
       break;
 
-    case oo::kShaderUniformTypeColor:  // what the colour bindings printed while
-                                       // they were objects
+    // what the colour bindings printed while they were objects
+    case oo::kShaderUniformTypeColor:
     case oo::kShaderUniformTypeObject:
       valueType = "object-binding";
       break;

@@ -152,30 +152,33 @@ namespace {
 
 enum class ConsoleProperty : std::int16_t {
   // Property IDs
-  kDebugFlags,            // debug flags, integer, read/write
-  kDetailLevel,           // graphics detail level, symbolic string, read/write
-  kMaximumDetailLevel,    // maximum graphics detail level, symbolic
-                          // string, read-only
-  kDisplayFPS,            // display FPS (and related info), boolean, read/write
-  kPlatformDescription,   // Information about system we're running on in
-                          // unspecified format, string, read-only
+  kDebugFlags,   // debug flags, integer, read/write
+  kDetailLevel,  // graphics detail level, symbolic string, read/write
+  // maximum graphics detail level, symbolic string, read-only
+  kMaximumDetailLevel,
+  kDisplayFPS,  // display FPS (and related info), boolean, read/write
+  // Information about system we're running on in unspecified format, string,
+  // read-only
+  kPlatformDescription,
   kIgnoreDroppedPackets,  // boolean (default false), read/write
-  kPedanticMode,          // JS pedantic mode (JS_STRICT flag, not the same as
-                          // "use strict"), boolean (default true), read/write
-  kShowErrorLocations,    // Show error/warning source locations, boolean
-                          // (default true), read/write
-  kDumpStackForErrors,    // Write stack dump when reporting
-                          // error/exception, boolean (default false),
-                          // read/write
-  kDumpStackForWarnings,  // Write stack dump when reporting warning,
-                          // boolean (default false), read/write
+  // JS pedantic mode (JS_STRICT flag, not the same as "use strict"), boolean
+  // (default true), read/write
+  kPedanticMode,
+  // Show error/warning source locations, boolean (default true), read/write
+  kShowErrorLocations,
+  // Write stack dump when reporting error/exception, boolean (default false),
+  // read/write
+  kDumpStackForErrors,
+  // Write stack dump when reporting warning, boolean (default false),
+  // read/write
+  kDumpStackForWarnings,
 
   kGlVendorString,    // OpenGL GL_VENDOR string, string, read-only
   kGlRendererString,  // OpenGL GL_RENDERER string, string, read-only
-  kGlFixedFunctionTextureUnitCount,   // GL_MAX_TEXTURE_UNITS_ARB,
-                                      // integer, read-only
-  kGlFragmentShaderTextureUnitCount,  // GL_MAX_TEXTURE_IMAGE_UNITS_ARB,
-                                      // integer, read-only
+  // GL_MAX_TEXTURE_UNITS_ARB, integer, read-only
+  kGlFixedFunctionTextureUnitCount,
+  // GL_MAX_TEXTURE_IMAGE_UNITS_ARB, integer, read-only
+  kGlFragmentShaderTextureUnitCount,
 
   // Symbolic constants for debug flags:
   kDebugLinkedLists,
@@ -839,8 +842,8 @@ static JSValue ConsoleInspectEntity(JSContext* context,
 
   if (argc > 0 && JSValueToEntity(context, OOJS_ARGV[0], &cxxEntity)) {
     OOJS_BEGIN_FULL_NATIVE(context)
-    oo::InspectEntity(
-        cxxEntity);  // -inspect, if the entity has it (nothing for nil)
+    // -inspect, if the entity has it (nothing for nil)
+    oo::InspectEntity(cxxEntity);
     OOJS_END_FULL_NATIVE
   }
 
@@ -1440,8 +1443,8 @@ bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
   // Fiddle with time limiter.
   // We want to save the current limit, reset the limiter, and set the time
   // limit to a long time.
-  constexpr double LONG_TIME =
-      (1e7);  // A long time - 115.7 days - but, crucially, finite.
+  // A long time - 115.7 days - but, crucially, finite.
+  constexpr double LONG_TIME = (1e7);
 
   oo::TimeDelta originalLimit = OOJSGetTimeLimiterLimit();
   OOJSSetTimeLimiterLimit(LONG_TIME);

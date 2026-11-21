@@ -156,23 +156,23 @@ class DebugMonitor : public oo::PListForeign,
   void setUpDebugConsoleScript();
   void javaScriptEngineWillReset(const oo::Notification& notification);
 
-  void disconnectDebuggerWithMessage(
-      const std::optional<std::string>&
-          message);  // nullopt: no message (the TCP client sends a bare close)
+  // nullopt: no message (the TCP client sends a bare close)
+  void disconnectDebuggerWithMessage(const std::optional<std::string>& message);
 
   oo::PList mergedConfiguration();
 
   /*	Convert a configuration dictionary to a standard form. In particular,
           convert all colour specifiers to RGBA arrays with values in [0, 1],
      and converts "show-console" values to booleans.
+  // always a Dict (empty for null)
   */
-  oo::PList normalizeConfigDictionary(
-      const oo::PList& dictionary);  // always a Dict (empty for null)
+  oo::PList normalizeConfigDictionary(const oo::PList& dictionary);
   oo::PList normalizeConfigValue(const oo::PList& value,
                                  const std::string& key);  // null: dropped
 
+  // nullopt: can't be read
   std::optional<std::vector<std::string>> loadSourceFile(
-      const std::string& filePath);  // nullopt: can't be read
+      const std::string& filePath);
 
   std::shared_ptr<DebuggerInterface> _debugger;  // a C++ interface
 
@@ -180,16 +180,17 @@ class DebugMonitor : public oo::PListForeign,
   std::shared_ptr<OOScript> _script;  // the console script (an OOJSScript)
   JSValue _jsSelf = JS_UNDEFINED;  // Owned; released when the JS engine resets.
 
-  oo::PList _configFromOXPs;   // Settings from debugConfig.plist (a Dict, never
-                               // null after init())
-  oo::PList _configOverrides;  // Settings from preferences, modifiable through
-                               // JS (a Dict; values may be Object nodes).
+  // Settings from debugConfig.plist (a Dict, never null after init())
+  oo::PList _configFromOXPs;
+  // Settings from preferences, modifiable through JS (a Dict; values may be
+  // Object nodes).
+  oo::PList _configOverrides;
 
   // Caches
   std::map<std::string, std::shared_ptr<oo::Color>, std::less<>> _fgColors,
       _bgColors;
-  std::map<std::string, std::vector<std::string>, std::less<>>
-      _sourceFiles;  // lines of each source file shown so far
+  // lines of each source file shown so far
+  std::map<std::string, std::vector<std::string>, std::less<>> _sourceFiles;
   // TCP options
   bool _TCPIgnoresDroppedPackets = {};
   bool _usingPlugInController = {};

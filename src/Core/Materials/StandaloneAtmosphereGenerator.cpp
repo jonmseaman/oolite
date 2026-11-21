@@ -28,9 +28,9 @@
 #define DEBUG_DUMP (0 && OOLITE_DEBUG)
 #define DEBUG_DUMP_RAW (1 && DEBUG_DUMP)
 
-#define ALBEDO_FACTOR \
-  0.7f  // Overall darkening of everything, allowing better contrast for snow
-        // and specular highlights.
+// Overall darkening of everything, allowing better contrast for snow and
+// specular highlights.
+#define ALBEDO_FACTOR 0.7f
 
 #include <array>
 #include <bit>
@@ -70,8 +70,8 @@ namespace {
 
 FloatRGB FloatRGBFromDictColor(
     const oo::PList& dictionary,
-    const std::string&
-        key);  // dictionary: the planet info (colours are Object nodes)
+    // dictionary: the planet info (colours are Object nodes)
+    const std::string& key);
 
 }  // namespace
 
@@ -732,8 +732,9 @@ static bool GenerateFBMNoise(oo::StandaloneAtmosphereGeneratorInfo* info) {
 
 static float QFactor(float* accbuffer, int x, int y, unsigned width,
                      float polar_y_value, float bias, float polar_y) {
+  // 0.0 -> 1.0
   float q = accbuffer[static_cast<unsigned int>(y) * width +
-                      static_cast<unsigned int>(x)];  // 0.0 -> 1.0
+                      static_cast<unsigned int>(x)];
   q += bias;
 
   // Polar Y smooth.

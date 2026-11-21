@@ -64,16 +64,14 @@ void oo::ParticleSystem::initWithPosition(HPVector pos, Vector vel,
     _maxSpeed = maxSpeed;
 
     for (unsigned i = 0; i < count; i++) {
+      // speed tends toward middle of range
       GLfloat speed =
-          minSpeed +
-          0.5f * (randf() + randf()) *
-              (maxSpeed - minSpeed);  // speed tends toward middle of range
+          minSpeed + 0.5f * (randf() + randf()) * (maxSpeed - minSpeed);
       _particleVelocity[i] =
           vector_multiply_scalar(oo::RandomUnitVector(), speed);
 
-      GLfloat red = baseColor[0] * 0.1f *
-                    (9.5f + randf());  // one draw per local, in the order Clang
-                                       // evaluates the arguments
+      // one draw per local, in the order Clang evaluates the arguments
+      GLfloat red = baseColor[0] * 0.1f * (9.5f + randf());
       GLfloat green = baseColor[1] * 0.1f * (9.5f + randf());
       GLfloat blue = baseColor[2] * 0.1f * (9.5f + randf());
       Vector color = make_vector(red, green, blue);
@@ -178,10 +176,9 @@ void oo::ParticleSystem::drawImmediate(bool /*immediate*/, bool translucent) {
 
     oo::GLPopModelView();
   } else {
-    float distanceThreshold =
-        collision_radius *
-        2.0f;  // Distance between player and middle of effect where we start to
-               // transition to "non-fast rendering."
+    // Distance between player and middle of effect where we start to transition
+    // to "non-fast rendering."
+    float distanceThreshold = collision_radius * 2.0f;
     float thresholdSq = distanceThreshold * distanceThreshold;
     float distanceSq = cam_zero_distance;
 
@@ -290,9 +287,10 @@ oo::SmallFragmentBurstEntity::fragmentBurstFromEntity(Entity* entity) {
   result->initFragmentBurstFrom(
       entity != nullptr ? entity->getPosition() : kZeroHPVector,
       entity != nullptr ? entity->getVelocity() : kZeroVector,
-      entity != nullptr ? entity->collisionRadius()
-                        : 0.0f);  // the C++ entity's members; none
-                                  // answers zero, as nil did
+      entity != nullptr
+          ? entity->collisionRadius()
+          // the C++ entity's members; none answers zero, as nil did
+          : 0.0f);
   return result;
 }
 

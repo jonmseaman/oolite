@@ -91,8 +91,9 @@ class Octree : public oo::Object {
 
   Octree(const oo::Data& data,
          GLfloat radius);  // -initWithData:radius:, less its failure
-  static std::shared_ptr<Octree> initWithData(
-      const oo::Data& data, GLfloat radius);  // Designated initializer.
+  // Designated initializer.
+  static std::shared_ptr<Octree> initWithData(const oo::Data& data,
+                                              GLfloat radius);
 
 #ifndef OODEBUGLDRAWING_DISABLE
   void drawOctreeFromLocation(uint32_t loc, GLfloat scale, Vector offset);

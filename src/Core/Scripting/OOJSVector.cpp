@@ -79,8 +79,8 @@ static JSValue VectorSquaredMagnitude(OOJS_NATIVE_ARGS);
 static JSValue VectorRotationTo(OOJS_NATIVE_ARGS);
 static JSValue VectorRotateBy(OOJS_NATIVE_ARGS);
 static JSValue VectorToArray(OOJS_NATIVE_ARGS);
-#ifndef OOJS_POC_HARNESS  // These need Universe, which the proof-of-concept
-                          // harness does not have.
+// These need Universe, which the proof-of-concept harness does not have.
+#ifndef OOJS_POC_HARNESS
 static JSValue VectorToCoordinateSystem(OOJS_NATIVE_ARGS);
 static JSValue VectorFromCoordinateSystem(OOJS_NATIVE_ARGS);
 #endif
@@ -283,8 +283,8 @@ bool JSObjectGetVector(JSContext* context, JSValueConst vectorObj,
 #if !OOJS_POC_HARNESS
   // If it's an entity, use its position.
   if (OOJSIsMemberOfSubclass(context, vectorObj, JSEntityClassID())) {
-    *outVector =
-        OOJSEntityPositionOfJSObject(context, vectorObj);  // the C++ entity's
+    // the C++ entity's
+    *outVector = OOJSEntityPositionOfJSObject(context, vectorObj);
     return true;
   }
 #endif

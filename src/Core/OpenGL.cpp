@@ -155,8 +155,8 @@ void GLDrawBallBillboard(GLfloat radius, GLfloat step, GLfloat z_distance) {
 
   r = static_cast<GLfloat>(radius * z_distance /
                            sqrt(z_distance * z_distance - radius * radius));
-  delta = static_cast<GLfloat>(step * std::numbers::pi /
-                               180.0f);  // Convert step from degrees to radians
+  // Convert step from degrees to radians
+  delta = static_cast<GLfloat>(step * std::numbers::pi / 180.0f);
 
   glVertex3i(0, 0, 0);
   for (i = 0; i < (std::numbers::pi * 2.0); i += delta) {

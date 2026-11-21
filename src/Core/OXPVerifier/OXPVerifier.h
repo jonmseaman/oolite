@@ -64,7 +64,8 @@ namespace oo {
 class OXPVerifierStage;
 
 }  // namespace oo
-   // OOOXPVerifierStage.h, which imports this header
+
+// OOOXPVerifierStage.h, which imports this header
 
 struct OOOXPVerifierTestAccess;  // tests only
 
@@ -97,23 +98,21 @@ class OXPVerifier : public oo::Object {
   std::optional<std::string> oxpPath();
   std::optional<std::string> oxpDisplayName();
 
-  ::oo::OXPVerifierStage* stageWithName(
-      const std::string& name);  // null: none (borrowed: the verifier keeps it)
+  // null: none (borrowed: the verifier keeps it)
+  ::oo::OXPVerifierStage* stageWithName(const std::string& name);
 
   // Read from verifyOXP.plist
   oo::PList configurationValueForKey(const std::string& key);
-  oo::PList configurationArrayForKey(
-      const std::string&
-          key);  // an Array, or null (was nil) if absent or not an array
-  oo::PList configurationDictionaryForKey(
-      const std::string&
-          key);  // a Dict, or null (was nil) if absent or not a dictionary
-  std::optional<std::string> configurationStringForKey(
-      const std::string&
-          key);  // a string, or a number's text; nullopt (was nil) otherwise
+  // an Array, or null (was nil) if absent or not an array
+  oo::PList configurationArrayForKey(const std::string& key);
+  // a Dict, or null (was nil) if absent or not a dictionary
+  oo::PList configurationDictionaryForKey(const std::string& key);
+  // a string, or a number's text; nullopt (was nil) otherwise
+  std::optional<std::string> configurationStringForKey(const std::string& key);
+  // the array's distinct strings in byte order; nullopt (was nil) if not an
+  // array
   std::optional<std::vector<std::string>> configurationSetForKey(
-      const std::string& key);  // the array's distinct strings in byte order;
-                                // nullopt (was nil) if not an array
+      const std::string& key);
 
  private:
   OXPVerifier() = default;
@@ -152,12 +151,13 @@ class OXPVerifier : public oo::Object {
   std::string _basePath = {};
   std::string _displayName = {};
 
+  // no `= {}`: GCC instantiates ~Ref<T> at a default member initializer, and T
+  // is incomplete here
   std::map<std::string, std::shared_ptr<::oo::OXPVerifierStage>, std::less<>>
-      _stagesByName;  // no `= {}`: GCC instantiates ~Ref<T> at a default member
-                      // initializer, and T is incomplete here
-  std::vector<std::shared_ptr<::oo::OXPVerifierStage>>
-      _waitingStages;  // no `= {}`: GCC instantiates ~Ref<T> at a default
-                       // member initializer, and T is incomplete here
+      _stagesByName;
+  // no `= {}`: GCC instantiates ~Ref<T> at a default member initializer, and T
+  // is incomplete here
+  std::vector<std::shared_ptr<::oo::OXPVerifierStage>> _waitingStages;
 
   bool _openForRegistration = {};
 };

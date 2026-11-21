@@ -141,8 +141,8 @@ void oo::CheckShipDataPListVerifierStage::run() {
   if (const oo::PList::Dict* shipDataDict =
           ooliteShipDataPList.getIf<oo::PList::Dict>()) {
     for (const auto& [shipKey, shipEntry] : *shipDataDict)
-      ooliteShipData.push_back(shipKey);  // byte order of the key (hash order
-                                          // before; only used as a set)
+      // byte order of the key (hash order before; only used as a set)
+      ooliteShipData.push_back(shipKey);
   }
 
   // Check that it's a dictionary

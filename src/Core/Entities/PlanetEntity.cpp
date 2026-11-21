@@ -67,10 +67,10 @@ A leaf of Entity. The class is global.
 #include "oofnd/PListGet.hpp"
 #include "oofnd/objc/Assert.h"
 
-#define OO_TERMINATOR_THRESHOLD_VECTOR_DEFAULT                       \
-  (make_vector(                                                      \
-      static_cast<oo::Scalar>(0.105), static_cast<oo::Scalar>(0.18), \
-      static_cast<oo::Scalar>(0.28)))  // used to be (0.1, 0.105, 0.12);
+// used to be (0.1, 0.105, 0.12);
+#define OO_TERMINATOR_THRESHOLD_VECTOR_DEFAULT                                \
+  (make_vector(static_cast<oo::Scalar>(0.105), static_cast<oo::Scalar>(0.18), \
+               static_cast<oo::Scalar>(0.28)))
 
 namespace {
 
@@ -184,9 +184,8 @@ void oo::PlanetEntity::initAsMainPlanetForSystem(oo::SystemID s) {
       s);
 }
 
-static const double kMesosphere =
-    10.0 * ATMOSPHERE_DEPTH;  // atmosphere effect starts at 10x the height of
-                              // the clouds
+// atmosphere effect starts at 10x the height of the clouds
+static const double kMesosphere = 10.0 * ATMOSPHERE_DEPTH;
 
 void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
                                           bool atmosphere, Random_Seed seed,
@@ -233,27 +232,25 @@ void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
   setName(planetName.has_value() ? OOExpand(*planetName) : std::nullopt);
 
   int radius_km = dict.get<int>(KEY_RADIUS, planetInfo.get<int>(KEY_RADIUS));
-  collision_radius =
-      static_cast<GLfloat>(radius_km * 10.0);  // Scale down by a factor of 100
+  // Scale down by a factor of 100
+  collision_radius = static_cast<GLfloat>(radius_km * 10.0);
   oo::TechLevelID techLevel = static_cast<oo::TechLevelID>(
       dict.get<int>(KEY_TECHLEVEL, planetInfo.get<int>(KEY_TECHLEVEL)));
 
   if (techLevel > 14) techLevel = 14;
   _shuttlesOnGround = static_cast<unsigned int>(1 + techLevel / 2);
-  _shuttleLaunchInterval =
-      3600.0 /
-      static_cast<double>(_shuttlesOnGround);  // All are launched in one hour.
-  _lastLaunchTime =
-      (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) + 30.0 -
-      _shuttleLaunchInterval;  // launch 30s after player enters universe.
-                               // make delay > 0 to allow scripts adding a
-                               // station nearby.
+  // All are launched in one hour.
+  _shuttleLaunchInterval = 3600.0 / static_cast<double>(_shuttlesOnGround);
+  // launch 30s after player enters universe. make delay > 0 to allow scripts
+  // adding a station nearby.
+  _lastLaunchTime = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) + 30.0 -
+                    _shuttleLaunchInterval;
 
   int percent_land =
       planetInfo.get<int>("percent_land", 24 + (gen_rnd_number() % 48));
   SetInfo(planetInfo, "land_fraction",
-          oo::PList::singleReal(
-              static_cast<float>(0.01 * percent_land)));  // +numberWithFloat:
+          // +numberWithFloat:
+          oo::PList::singleReal(static_cast<float>(0.01 * percent_land)));
 
   int percent_ice = planetInfo.get<int>("percent_ice", 5);
   SetInfo(planetInfo, "polar_fraction",
@@ -341,8 +338,8 @@ void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
                                    (kMesosphere + collision_radius)
                              : 0.0;
 
-  _normSpecMapName = OptionalStringForKey(
-      dict, "texture_normspec");  // must be set up before _textureName
+  // must be set up before _textureName
+  _normSpecMapName = OptionalStringForKey(dict, "texture_normspec");
 
   _textureName = OptionalStringForKey(dict, "texture");
   setUpPlanetFromTexture(_textureName);
@@ -357,11 +354,13 @@ void oo::PlanetEntity::initFromDictionary(const oo::PList& dictionary,
 
   // set speed of rotation.
   if (dict.find("rotational_velocity") != nullptr) {
-    _rotationalVelocity = dict.get<float>(
-        "rotational_velocity", 0.01f * randf());  // 0.0 .. 0.01 avr 0.005
+    // 0.0 .. 0.01 avr 0.005
+    _rotationalVelocity =
+        dict.get<float>("rotational_velocity", 0.01f * randf());
   } else {
-    _rotationalVelocity = planetInfo.get<float>(
-        "rotation_speed", 0.005f * randf());  // 0.0 .. 0.005 avr 0.0025
+    // 0.0 .. 0.005 avr 0.0025
+    _rotationalVelocity =
+        planetInfo.get<float>("rotation_speed", 0.005f * randf());
     _rotationalVelocity *= planetInfo.get<float>("rotation_speed_factor", 1.0f);
   }
 
@@ -554,8 +553,9 @@ void oo::PlanetEntity::setUpColorParametersWithSourceInfo(
     SetInfo(targetInfo, "polar_sea_color", ColorWithHSBColor(seaPolarHSB));
     SetInfo(targetInfo, "illumination_color", ColorWithHSBColor(illumHSB));
   } else {
-    landHSB = RandomHSBColor();  // NB: randomcolor is called twice to make the
-                                 // cloud colour similar to the old one.
+    // NB: randomcolor is called twice to make the cloud colour similar to the
+    // old one.
+    landHSB = RandomHSBColor();
 
     // add a cloud_color tinge to sky blue({0.66, 0.3, 1}).
     seaHSB = vector_add(
@@ -640,13 +640,13 @@ bool oo::PlanetEntity::initAsMiniatureVersionOfPlanet(
                                   ? planet->_atmosphereShaderDrawable->copy()
                                   : std::shared_ptr<oo::PlanetDrawable>();
   if (_atmosphereDrawable)
+    // not to scale: invisible otherwise
     _atmosphereDrawable->setRadius(static_cast<float>(
-        collision_radius + ATMOSPHERE_DEPTH * PLANET_MINIATURE_FACTOR *
-                               2.0));  // not to scale: invisible otherwise
+        collision_radius + ATMOSPHERE_DEPTH * PLANET_MINIATURE_FACTOR * 2.0));
   if (_cloudsShaderDrawable)
+    // not to scale: invisible otherwise
     _cloudsShaderDrawable->setRadius(static_cast<float>(
-        collision_radius + ATMOSPHERE_DEPTH * PLANET_MINIATURE_FACTOR *
-                               2.0));  // not to scale: invisible otherwise
+        collision_radius + ATMOSPHERE_DEPTH * PLANET_MINIATURE_FACTOR * 2.0));
   if (_atmosphereShaderDrawable)
     _atmosphereShaderDrawable->setRadius(static_cast<float>(
         collision_radius + ATMOSPHERE_DEPTH * PLANET_MINIATURE_FACTOR * 2.0));
@@ -710,10 +710,10 @@ void oo::PlanetEntity::update(oo::TimeDelta delta_t) {
         [[unlikely]] {
       OOCAssert(_airColor != nullptr,
                 "Expected a non-nil air colour for normal planet. Exiting.");
-      double alt = (sqrt(cam_zero_distance) - collision_radius) /
-                   kMesosphere;  // the viewpoint altitude
-      double trueAlt = (sqrt(zero_distance) - collision_radius) /
-                       kMesosphere;  // the actual ship altitude
+      // the viewpoint altitude
+      double alt = (sqrt(cam_zero_distance) - collision_radius) / kMesosphere;
+      // the actual ship altitude
+      double trueAlt = (sqrt(zero_distance) - collision_radius) / kMesosphere;
       // if at long distance external view, rotating the camera could
       // potentially end up with it being at negative altitude. Since we know we
       // are already inside the atmosphere at this point, just make sure that
@@ -734,9 +734,10 @@ void oo::PlanetEntity::update(oo::TimeDelta delta_t) {
         // occlusion rate: .9 is 18 degrees after the terminus, where twilight
         // ends. 1 is the terminus, 1.033 is 6 degrees before the terminus,
         // where the sky begins to redden
+        // from 0.97 to 1.03
         double rate =
             ((PLAYER != nullptr ? PLAYER->occlusionLevel() : 0.0f) - 0.97) /
-            0.06;  // from 0.97 to 1.03
+            0.06;
 
         if (rate <= 1.0 && rate > 0.0) [[likely]] {
           mixColor = mixColor->blendedColorWithFraction(
@@ -808,8 +809,8 @@ void oo::PlanetEntity::update(oo::TimeDelta delta_t) {
                : static_cast<oo::PlanetEntity*>(nullptr)) == this) {
         // ensure no problems in case of more than one planets
         if (UNIVERSE != nullptr)
-          UNIVERSE->setAirResistanceFactor(
-              0.0f);  // out of atmosphere - no air friction
+          // out of atmosphere - no air friction
+          UNIVERSE->setAirResistanceFactor(0.0f);
       }
     }
 
@@ -1013,8 +1014,8 @@ void oo::PlanetEntity::launchShuttle() {
     if (shuttle_ship != nullptr)
       shuttle_ship->switchAITo("oolite-shuttleAI.js");
     if (UNIVERSE != nullptr)
-      UNIVERSE->addEntity(
-          shuttle_ship.get());  // OOEntityStatus::kInFlight, AI state GLOBAL
+      // OOEntityStatus::kInFlight, AI state GLOBAL
+      UNIVERSE->addEntity(shuttle_ship.get());
     _shuttlesOnGround--;
     _lastLaunchTime = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
 
@@ -1137,8 +1138,8 @@ void oo::PlanetEntity::setTextureFileName(
     if (diffuseMap == nullptr)
       return;  // OOTexture will have logged a file-not-found warning.
     if (shadersOn) {
-      diffuseMap->ensureFinishedLoading();  // only know if it is a cube map if
-                                            // it's loaded
+      // only know if it is a cube map if it's loaded
+      diffuseMap->ensureFinishedLoading();
       if (diffuseMap->isCubeMap()) {
         macros = DictionaryForKey(materialDefaults,
                                   isMoon ? "moon-customized-cubemap-macros"
@@ -1159,8 +1160,8 @@ void oo::PlanetEntity::setTextureFileName(
       if (normalMap != nullptr) {
         // OOTexture will have logged a file-not-found warning.
         if (shadersOn) {
-          normalMap->ensureFinishedLoading();  // only know if it is a cube map
-                                               // if it's loaded
+          // only know if it is a cube map if it's loaded
+          normalMap->ensureFinishedLoading();
           if (normalMap->isCubeMap()) {
             macros = DictionaryForKey(
                 materialDefaults,

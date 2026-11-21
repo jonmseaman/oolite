@@ -65,11 +65,11 @@ using TextureDataFormat = PixMapFormat;
 
 inline constexpr TextureDataFormat kTextureDataInvalid = kPixMapInvalidFormat;
 inline constexpr TextureDataFormat kTextureDataRGBA = kPixMapRGBA;  // GL_RGBA
-inline constexpr TextureDataFormat kTextureDataGrayscale =
-    kPixMapGrayscale;  // GL_LUMINANCE (or GL_ALPHA with
-                       // OOTextureFlags::kAlphaMask)
+// GL_LUMINANCE (or GL_ALPHA with OOTextureFlags::kAlphaMask)
+inline constexpr TextureDataFormat kTextureDataGrayscale = kPixMapGrayscale;
+// GL_LUMINANCE_ALPHA
 inline constexpr TextureDataFormat kTextureDataGrayscaleAlpha =
-    kPixMapGrayscaleAlpha;  // GL_LUMINANCE_ALPHA
+    kPixMapGrayscaleAlpha;
 
 /*	Names and folders are UTF-8 std::strings (std::optional where the old
    code accepted nil); texture specifiers and configurations are oo::PList (a
@@ -186,10 +186,10 @@ class Texture : public oo::PListForeign {
   static void rebindAllTextures();
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  static std::vector<std::shared_ptr<Texture>>
-  cachedTexturesByAge();  // youngest first
-  static std::vector<std::shared_ptr<Texture>>
-  allTextures();  // in no particular order
+  // youngest first
+  static std::vector<std::shared_ptr<Texture>> cachedTexturesByAge();
+  // in no particular order
+  static std::vector<std::shared_ptr<Texture>> allTextures();
 
   size_t dataSize();
 
@@ -217,10 +217,11 @@ class Texture : public oo::PListForeign {
   // Internal: OOTextureInternal.h's subclass interface, for the subclasses.
   virtual void forceRebind();  // Subclass responsibility
   void addToCaches();
-  void removeFromCaches();  // Must be called on destruction (while cacheKey()
-                            // is still valid) for cacheable textures.
-  static Texture* existingTextureForKey(
-      const std::optional<std::string>& key);  // borrowed; null for nullopt
+  // Must be called on destruction (while cacheKey() is still valid) for
+  // cacheable textures.
+  void removeFromCaches();
+  // borrowed; null for nullopt
+  static Texture* existingTextureForKey(const std::optional<std::string>& key);
 
  protected:
 #ifdef OO_DEBUG_MONITOR_ENABLED

@@ -38,7 +38,8 @@ namespace oo {
 class ALSoundDecoder;
 
 }  // namespace oo
-   // only named here (OOALSoundDecoder.h)
+
+// only named here (OOALSoundDecoder.h)
 
 #include <memory>
 #include <optional>
@@ -62,8 +63,8 @@ class ALBufferedSound : public Sound {
   ALuint soundBuffer() override;
 
  private:
-  friend struct ::OOALBufferedSoundTestAccess;  // the stand-ins of tests that
-                                                // stub the sound
+  // the stand-ins of tests that stub the sound
+  friend struct ::OOALBufferedSoundTestAccess;
 
   ALBufferedSound() = default;
 

@@ -189,8 +189,8 @@ static JSValue ShipStaticSetShipDataForKey(OOJS_NATIVE_ARGS);
 
 static JSClassDef sShipClass = {
     .class_name = "Ship",
-    .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+    // the slot holds an OOJSEntityHolder
+    .finalizer = OOJSCxxObjectWrapperFinalize,
 };
 
 /* It turns out that the value in SpiderMonkey used to identify these
@@ -948,8 +948,8 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       return OOJSValueFromBOOL(AIHasSuspendedStateMachines(ship));
 
     case kTarget:
-      result = oo::EntityObjectNode(
-          ship->primaryTarget());  // the C++ entity's object node or nil
+      // the C++ entity's object node or nil
+      result = oo::EntityObjectNode(ship->primaryTarget());
       break;
 
     case kDefenseTargets: {
@@ -1208,8 +1208,8 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       return OOJSValueFromBOOL(ship->isWeapon());
 
     case kIsRock:
-      return OOJSValueFromBOOL(ship->getScanClass() ==
-                               oo::ScanClass::kRock);  // hermits and asteroids!
+      // hermits and asteroids!
+      return OOJSValueFromBOOL(ship->getScanClass() == oo::ScanClass::kRock);
 
     case kIsMinable:
       return OOJSValueFromBOOL(ship->isMinable());
@@ -1594,8 +1594,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         ship->setEntityPersonalityInt(static_cast<uint16_t>(iValue));
         return JS_UNDEFINED;
       }
-      [[fallthrough]];  // as upstream: a value that is not an int32 is tried as
-                        // the spin time
+      // as upstream: a value that is not an int32 is tried as the spin time
+      [[fallthrough]];
 
     case kHyperspaceSpinTime:
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
@@ -1681,15 +1681,15 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         ship->setPrimaryAggressor(nullptr);
         return JS_UNDEFINED;
       } else if (JSValueToEntity(context, value, &target) && IsShip(target)) {
-        ship->setPrimaryAggressor(
-            target);  // the C++ entity (the member takes it)
+        // the C++ entity (the member takes it)
+        ship->setPrimaryAggressor(target);
         return JS_UNDEFINED;
       }
       break;
 
     case kGroup:
-      group = oo::ShipGroupInObjectNode(OOJSPListFromJSValue(
-          context, value));  // a ShipGroup's group, else null
+      // a ShipGroup's group, else null
+      group = oo::ShipGroupInObjectNode(OOJSPListFromJSValue(context, value));
       if (group != nullptr || JS_IsNull(value)) {
         ship->setGroup(group);
         return JS_UNDEFINED;
@@ -2451,8 +2451,8 @@ static JSValue ShipEjectItem(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, ship->ejectShipOfRole(role)));  // the C++ ship's JS value
+  // the C++ ship's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, ship->ejectShipOfRole(role)));
 
   OOJS_NATIVE_EXIT
 }
@@ -2538,8 +2538,8 @@ static JSValue ShipEjectSpecificItem(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, ship->ejectShipOfType(itemKey)));  // the C++ ship's JS value
+  // the C++ ship's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, ship->ejectShipOfType(itemKey)));
 
   OOJS_NATIVE_EXIT
 }
@@ -2592,8 +2592,8 @@ static JSValue ShipDumpCargo(OOJS_NATIVE_ARGS) {
     }
   }
 
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, ship->dumpCargoItem(pref)));  // the C++ pod's JS value
+  // the C++ pod's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, ship->dumpCargoItem(pref)));
 
   OOJS_NATIVE_EXIT
 }
@@ -2841,8 +2841,8 @@ static JSValue ShipCanAwardEquipment(OOJS_NATIVE_ARGS) {
 
   ShipEntity* thisEnt = nullptr;
   std::optional<std::string> key;
-  std::string ctx =
-      "scripted";  // a nil context fails the check below, as "" does
+  // a nil context fails the check below, as "" does
+  std::string ctx = "scripted";
   bool result;
   bool exists;
 
@@ -2993,8 +2993,8 @@ static JSValue ShipRemoveEquipment(OOJS_NATIVE_ARGS) {
         if (ship->passengerCapacity() > ship->passengerCount()) {
           // must be the player's ship!
           if (ship->getIsPlayer()) {
-            static_cast<PlayerEntity*>(thisEnt)->changePassengerBerths(
-                -1);  // thisEnt is not null here
+            // thisEnt is not null here
+            static_cast<PlayerEntity*>(thisEnt)->changePassengerBerths(-1);
           }
         } else {
           OK = false;
@@ -3233,8 +3233,8 @@ static JSValue ShipFireMissile(OOJS_NATIVE_ARGS) {
   else
     result = ship->fireMissile();
 
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, result));  // the C++ missile's JS value
+  // the C++ missile's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, result));
 
   OOJS_NATIVE_EXIT
 }
@@ -3269,8 +3269,8 @@ static JSValue ShipFindNearestStation(JSContext* context, JSValueConst oojsThis,
     }
   }
 
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, result));  // the C++ station's JS value
+  // the C++ station's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, result));
 
   OOJS_NATIVE_EXIT
 }
@@ -3366,8 +3366,8 @@ static JSValue ShipSetCrew(OOJS_NATIVE_ARGS) {
               OOJSPListFromJSObject(context, OOJS_ARGV[0]));
       std::vector<std::shared_ptr<oo::Character>> members;
       if (crew != nullptr)
-        members.emplace_back(crew);  // a nil character was skipped (a
-                                     // Foundation array cannot hold nil)
+        // a nil character was skipped (a Foundation array cannot hold nil)
+        members.emplace_back(crew);
       ship->setCrew(members);
     }
   } else {
@@ -3581,8 +3581,9 @@ static JSValue ShipExitSystem(OOJS_NATIVE_ARGS) {
     }
   }
 
+  // -1 == random destination system
   OK = ship->performHyperSpaceToSpecificSystem(
-      static_cast<oo::SystemID>(systemID));  // -1 == random destination system
+      static_cast<oo::SystemID>(systemID));
 
   OOJS_RETURN_BOOL(OK);
 
@@ -3730,8 +3731,8 @@ static JSValue ShipAddCollisionException(OOJS_NATIVE_ARGS) {
   // than to test both ways
   ship->addCollisionException(target);
   if (target != nullptr)
-    target->addCollisionException(
-        thisEnt);  // none: nothing, as a message to nil
+    // none: nothing, as a message to nil
+    target->addCollisionException(thisEnt);
 
   OOJS_RETURN_VOID;
 }
@@ -3756,8 +3757,8 @@ static JSValue ShipRemoveCollisionException(OOJS_NATIVE_ARGS) {
   // doesn't need a check to see if it was already gone
   ship->removeCollisionException(target);
   if (target != nullptr)
-    target->removeCollisionException(
-        thisEnt);  // none: nothing, as a message to nil
+    // none: nothing, as a message to nil
+    target->removeCollisionException(thisEnt);
 
   OOJS_RETURN_VOID;
 }
@@ -3929,8 +3930,8 @@ static JSValue ShipEnterWormhole(OOJS_NATIVE_ARGS) {
       return OOJSNativeFailure(context);
     }
 
-    ship->enterWormhole(
-        static_cast<WormholeEntity*>(hole));  // the C++ wormhole
+    // the C++ wormhole
+    ship->enterWormhole(static_cast<WormholeEntity*>(hole));
   }
 
   OOJS_RETURN_VOID;
@@ -4201,8 +4202,8 @@ static JSValue ShipCheckCourseToDestination(JSContext* context,
                                               ship->destination())
                                         : nullptr);  // the C++ entities
 
-  OOJS_RETURN(
-      OOJSValueFromCxxObject(context, hazard));  // the C++ hazard's JS value
+  // the C++ hazard's JS value
+  OOJS_RETURN(OOJSValueFromCxxObject(context, hazard));
 }
 
 static JSValue ShipGetSafeCourseToDestination(JSContext* context,
@@ -4249,8 +4250,8 @@ static JSValue ShipCheckScanner(OOJS_NATIVE_ARGS) {
   oo::PList::Array scanResult;
   for (unsigned i = 0; i < num; i++) {
     if (scannedShips[i] != nullptr)
-      scanResult.push_back(oo::EntityObjectNode(
-          scannedShips[i]));  // nil skipped, as a Foundation array skipped it
+      // nil skipped, as a Foundation array skipped it
+      scanResult.push_back(oo::EntityObjectNode(scannedShips[i]));
   }
   OOJS_RETURN_PLIST(oo::PList(std::move(scanResult)));
 }
@@ -4480,10 +4481,9 @@ static JSValue ShipStaticKeysForRole(JSContext* context,
   oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
 
   if (argc > 0) {
-    const std::string role =
-        OOStringFromJSValue(context, OOJS_ARGV[0])
-            .value_or(
-                std::string());  // nil as "", as the registry bridge sent it
+    const std::string role = OOStringFromJSValue(context, OOJS_ARGV[0])
+                                 // nil as "", as the registry bridge sent it
+                                 .value_or(std::string());
     // null where there is no probability set for the role, as before
     if (registry->probabilitySetForRole(role) == nullptr) OOJS_RETURN_NULL;
     OOJS_RETURN_PLIST(StringArray(registry->shipKeysWithRole(role)));

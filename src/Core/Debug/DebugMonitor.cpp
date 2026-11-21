@@ -98,8 +98,8 @@ void oo::DebugMonitor::init() {
 
     ::OOJavaScriptEngine* jsEng = OOJavaScriptEngine::sharedEngine();
 #if OOJSENGINE_MONITOR_SUPPORT
-    jsEng->setMonitor(
-        this);  // the C++ monitor interface; the engine borrows it
+    // the C++ monitor interface; the engine borrows it
+    jsEng->setMonitor(this);
 #endif
 
     setUpDebugConsoleScript();
@@ -131,8 +131,8 @@ oo::DebugMonitor* oo::DebugMonitor::sharedDebugMonitor() {
   // whole, thread safe.
   if (sSingleton == nullptr) {
     // Recorded before init(), as +allocWithZone: recorded it before -init ran.
-    static std::shared_ptr<oo::DebugMonitor>* sSingletonHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<oo::DebugMonitor>* sSingletonHolder = nullptr;
     sSingletonHolder = new std::shared_ptr<oo::DebugMonitor>(
         oo::makeShared<oo::DebugMonitor>());
     sSingleton = sSingletonHolder->get();
@@ -392,9 +392,8 @@ void oo::DebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
 
   state->seenCount++;
 
-  size_t entitySize =
-      oo::EntityObjectSize(entity);  // its object's size, as the root's debug
-                                     // size method answered it
+  // its object's size, as the root's debug size method answered it
+  size_t entitySize = oo::EntityObjectSize(entity);
   size_t drawableSize = 0;
   oo::EntityWithDrawable* withDrawable =
       dynamic_cast<oo::EntityWithDrawable*>(entity);
@@ -403,9 +402,8 @@ void oo::DebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
     drawableSize = (drawable != nullptr) ? drawable->totalSize() : 0;
   }
 
-  bool visible =
-      parentVisible &&
-      entity->isVisible();  // the virtual member -isVisible forwarded to
+  // the virtual member -isVisible forwarded to
+  bool visible = parentVisible && entity->isVisible();
 
   for (const std::shared_ptr<oo::Texture>& texture : entity->allTextures()) {
     state->entityTextures.insert(texture);
@@ -448,8 +446,8 @@ void oo::DebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
     // FIXME: dump atmosphere texture.
   }
   if (entity->getIsWormhole()) {
-    const oo::PList shipsInTransit =
-        WormholeEntityShipsInTransit(entity);  // -shipsInTransit
+    // -shipsInTransit
+    const oo::PList shipsInTransit = WormholeEntityShipsInTransit(entity);
     if (const oo::PList::Array* shipInfos =
             shipsInTransit.getIf<oo::PList::Array>()) {
       for (const oo::PList& shipInfo : *shipInfos) {
@@ -540,9 +538,9 @@ void oo::DebugMonitor::dumpMemoryStatistics() {
 
       const char* usage = "";
       if (entityDumpState.visibleEntityTextures.count(texRef) != 0) {
-        visibleTextureDataSize +=
-            dataSize;  // NOT doubled if !OOTEXTURE_RELOADABLE, because we're
-                       // interested in what the GPU sees.
+        // NOT doubled if !OOTEXTURE_RELOADABLE, because we're interested in
+        // what the GPU sees.
+        visibleTextureDataSize += dataSize;
         usage = ", visible";
       } else if (entityDumpState.entityTextures.count(texRef) != 0) {
         usage = ", active";
@@ -794,8 +792,8 @@ oo::PList oo::DebugMonitor::normalizeConfigValue(const oo::PList& value,
         components.push_back(oo::PList::singleReal(component));
       return oo::PList(std::move(components));
     } else if (oo::str::hasPrefix(key, "show-console")) {
-      boolValue = oo::plist_get::boolFrom(
-          &value, false);  // OOBooleanFromObject (a null value: NO)
+      // OOBooleanFromObject (a null value: NO)
+      boolValue = oo::plist_get::boolFrom(&value, false);
       return oo::PList(boolValue);
     }
   }
@@ -862,8 +860,8 @@ void oo::DebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
   if (isWarning)
     showKey = "show-console-on-warning";
   else
-    showKey =
-        "show-console-on-error";  // if not a warning, it's a proper error.
+    // if not a warning, it's a proper error.
+    showKey = "show-console-on-error";
   const oo::PList showValue = configurationValueForKey(std::string(showKey));
   if (oo::plist_get::boolFrom(&showValue, false)) {
     // OOBooleanFromObject

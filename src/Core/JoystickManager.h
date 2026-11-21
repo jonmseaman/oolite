@@ -122,8 +122,8 @@ inline constexpr int BUTTON_ACTIVATEEQUIPMENT = BUTTON_PRIMEEQUIPMENT + 1;
 inline constexpr int BUTTON_UNARM = BUTTON_ACTIVATEEQUIPMENT + 1;
 inline constexpr int BUTTON_TARGETINCOMINGMISSILE = BUTTON_UNARM + 1;
 inline constexpr int BUTTON_CYCLEMISSILE = BUTTON_TARGETINCOMINGMISSILE + 1;
-inline constexpr int BUTTON_ENERGYBOMB =
-    BUTTON_CYCLEMISSILE + 1;  // now fast activate B
+// now fast activate B
+inline constexpr int BUTTON_ENERGYBOMB = BUTTON_CYCLEMISSILE + 1;
 inline constexpr int BUTTON_WEAPONSONLINETOGGLE = BUTTON_ENERGYBOMB + 1;
 inline constexpr int BUTTON_ID = BUTTON_WEAPONSONLINETOGGLE + 1;
 inline constexpr int BUTTON_ECM = BUTTON_ID + 1;
@@ -312,26 +312,29 @@ inline constexpr int HW_BUTTON = 2;
 inline constexpr int AXCBTHRESH = 20000;
 
 // Dictionary keys - used in the defaults file
-inline constexpr std::string_view AXIS_SETTINGS =
-    "JoystickAxes";  // oo::Defaults key
-inline constexpr std::string_view BUTTON_SETTINGS =
-    "JoystickButs";  // oo::Defaults key
-inline constexpr std::string_view GUI_BUTTON_SETTINGS =
-    "GuiJoystickButs";  // oo::Defaults key
-inline constexpr std::string_view STICK_ISAXIS =
-    "isAxis";  // YES=axis NO=button
-inline constexpr std::string_view STICK_NUMBER =
-    "stickNum";  // Stick number 0 to 4
-inline constexpr std::string_view STICK_AXBUT =
-    "stickAxBt";  // Axis or button number
-inline constexpr std::string_view kStickFunction =
-    "stickFunc";  // Function of axis/button
+// oo::Defaults key
+inline constexpr std::string_view AXIS_SETTINGS = "JoystickAxes";
+// oo::Defaults key
+inline constexpr std::string_view BUTTON_SETTINGS = "JoystickButs";
+// oo::Defaults key
+inline constexpr std::string_view GUI_BUTTON_SETTINGS = "GuiJoystickButs";
+// YES=axis NO=button
+inline constexpr std::string_view STICK_ISAXIS = "isAxis";
+// Stick number 0 to 4
+inline constexpr std::string_view STICK_NUMBER = "stickNum";
+// Axis or button number
+inline constexpr std::string_view STICK_AXBUT = "stickAxBt";
+// Function of axis/button
+inline constexpr std::string_view kStickFunction = "stickFunc";
+// Joystick Profiles
 inline constexpr std::string_view STICK_ROLL_AXIS_PROFILE_SETTING =
-    "RollAxisProfile";  // Joystick Profiles
+    "RollAxisProfile";
+// Joystick Profiles
 inline constexpr std::string_view STICK_PITCH_AXIS_PROFILE_SETTING =
-    "PitchAxisProfile";  // Joystick Profiles
+    "PitchAxisProfile";
+// Joystick Profiles
 inline constexpr std::string_view STICK_YAW_AXIS_PROFILE_SETTING =
-    "YawAxisProfile";  // Joystick Profiles
+    "YawAxisProfile";
 // shortcut to make code more readable when using enum as key for
 // a dictionary: a std::string (oofnd/String.hpp)
 #define ENUMKEY(x) std::format("{}", static_cast<int>(x))
@@ -386,8 +389,8 @@ class JoystickManager : public oo::Object {
 
   // Axis profile handling
   void setProfile(JoystickAxisProfile* profile, int axis);
-  JoystickAxisProfile* getProfileForAxis(
-      int axis);  // borrowed; null for an axis with none
+  // borrowed; null for an axis with none
+  JoystickAxisProfile* getProfileForAxis(int axis);
   void saveProfileForAxis(int axis);
   void loadProfileForAxis(int axis);
 
@@ -422,8 +425,8 @@ class JoystickManager : public oo::Object {
 
   // Methods that should be overridden by all subclasses
   virtual std::size_t joystickCount();
-  virtual std::optional<std::string> nameOfJoystick(
-      std::size_t stickNumber);  // nullopt: the device has no name
+  // nullopt: the device has no name
+  virtual std::optional<std::string> nameOfJoystick(std::size_t stickNumber);
   virtual int16_t getAxisWithStick(std::size_t stickNum, std::size_t axisNum);
 
  private:
@@ -440,9 +443,8 @@ class JoystickManager : public oo::Object {
   int8_t guibuttonmap[MAX_STICKS][MAX_BUTTONS] = {};
   bool true_butstate[MAX_STICKS][MAX_BUTTONS] = {};
   std::array<double, AXIS_end> axstate = {};
-  std::array<bool, BUTTON_end> butstate =
-      {};  // still bool: getAllButtonStates() hands
-           // unconverted callers a const bool *
+  // still bool: getAllButtonStates() hands unconverted callers a const bool *
+  std::array<bool, BUTTON_end> butstate = {};
   uint8_t hatstate[MAX_STICKS][MAX_HATS] = {};
   bool precisionMode = {};
 

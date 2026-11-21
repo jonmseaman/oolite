@@ -151,9 +151,9 @@ class ConcreteProbabilitySet final : public oo::ProbabilitySet {
 
   std::size_t _count = {};
   std::vector<oo::PList> _objects;
-  std::vector<float>
-      _cumulativeWeights;  // Each cumulative weight is weight of object at
-                           // this index + weight of all objects to left.
+  // Each cumulative weight is weight of object at this index + weight of
+  // all objects to left.
+  std::vector<float> _cumulativeWeights;
   float _sumOfWeights = {};
 };
 
@@ -215,8 +215,9 @@ oo::ProbabilitySet::probabilitySetWithObjects(const oo::PList* objects,
         oo::InvalidArgumentException,
         "Attempt to create %s with non-zero count but nil objects or weights.",
         "OOProbabilitySet");
-    abort();  // unreachable: +raise:format: does not return (the analyser
-              // cannot see that through a message)
+    // unreachable: +raise:format: does not return (the analyser cannot see that
+    // through a message)
+    abort();
   }
 
   // Single object: simple one-object set. Expected to be quite common.
@@ -307,14 +308,15 @@ float oo::ProbabilitySet::probabilityForObject(const oo::PList& object) {
 
 namespace {
 
-EmptyProbabilitySet* sOOEmptyProbabilitySetSingleton =
-    nullptr;  // never released (it was an immortal singleton)
+// never released (it was an immortal singleton)
+EmptyProbabilitySet* sOOEmptyProbabilitySetSingleton = nullptr;
 
 EmptyProbabilitySet* EmptyProbabilitySet::singleton() {
   if (sOOEmptyProbabilitySetSingleton == nullptr) {
     // Never destroyed: a heap std::shared_ptr that is never deleted.
+    // never deleted
     static std::shared_ptr<EmptyProbabilitySet>*
-        sOOEmptyProbabilitySetSingletonHolder = nullptr;  // never deleted
+        sOOEmptyProbabilitySetSingletonHolder = nullptr;
     sOOEmptyProbabilitySetSingletonHolder =
         new std::shared_ptr<EmptyProbabilitySet>(
             oo::makeShared<EmptyProbabilitySet>());
@@ -571,8 +573,9 @@ void ConcreteMutableProbabilitySet::initWithObjects(const oo::PList* objects,
         oo::InvalidArgumentException,
         "Attempt to create %s with non-zero count but nil objects or weights.",
         "OOMutableProbabilitySet");
-    abort();  // unreachable: +raise:format: does not return (the analyser
-              // cannot see that through a message)
+    // unreachable: +raise:format: does not return (the analyser cannot see that
+    // through a message)
+    abort();
   }
 
   // Set up & go.
@@ -686,9 +689,9 @@ void ConcreteMutableProbabilitySet::setWeight(float weight,
     // Else, _sumOfWeights is invalid and will need to be recalculated on
     // demand.
   } else {
-    _sumOfWeights =
-        -1.0f;  // Simply subtracting the relevant weight doesn't work if the
-                // weight is large, due to floating-point precision issues.
+    // Simply subtracting the relevant weight doesn't work if the weight is
+    // large, due to floating-point precision issues.
+    _sumOfWeights = -1.0f;
     _weights[index] = weight;
   }
 }
@@ -699,9 +702,9 @@ void ConcreteMutableProbabilitySet::removeObject(const oo::PList& object) {
   std::size_t index = IndexOfObject(_objects, object);
   if (index != oo::kNotFound) {
     _objects.erase(_objects.begin() + static_cast<std::ptrdiff_t>(index));
-    _sumOfWeights =
-        -1.0f;  // Simply subtracting the relevant weight doesn't work if the
-                // weight is large, due to floating-point precision issues.
+    // Simply subtracting the relevant weight doesn't work if the weight is
+    // large, due to floating-point precision issues.
+    _sumOfWeights = -1.0f;
     _weights.erase(_weights.begin() + static_cast<std::ptrdiff_t>(index));
   }
 }

@@ -123,8 +123,8 @@ class OOJavaScriptEngine : public oo::Object {
 #endif
 
  private:
-  void init();  // -init's body after [super init]: run by sharedEngine() on the
-                // new object
+  // -init's body after [super init]: run by sharedEngine() on the new object
+  void init();
 
   void createMainThreadContext();
   void destroyMainThreadContext();
@@ -139,8 +139,8 @@ class OOJavaScriptEngine : public oo::Object {
   bool _dumpStackForWarnings = {};
 #endif
 #if OOJSENGINE_MONITOR_SUPPORT
-  OOJavaScriptEngineMonitor* _monitor =
-      nullptr;  // borrowed: the debug monitor lives as long as the process
+  // borrowed: the debug monitor lives as long as the process
+  OOJavaScriptEngineMonitor* _monitor = nullptr;
 #endif
 };
 
@@ -198,12 +198,13 @@ class Entity;
 // OOEntityFilterPredicate wrapping a JavaScript function.
 struct JSFunctionPredicateParameter {
   JSContext* context;
-  JSValueConst function;  // Caller is responsible for ensuring this is a
-                          // function object (using OOJSValueIsFunction()).
+  // Caller is responsible for ensuring this is a function object (using
+  // OOJSValueIsFunction()).
+  JSValueConst function;
   JSValueConst jsThis;
-  bool errorFlag;  // Set if a JS exception occurs. The
-                   // exception will have been reported.
-                   // This also supresses further filtering.
+  // Set if a JS exception occurs. The exception will have been reported. This
+  // also supresses further filtering.
+  bool errorFlag;
 };
 
 bool JSFunctionPredicate(Entity* entity, void* parameter);

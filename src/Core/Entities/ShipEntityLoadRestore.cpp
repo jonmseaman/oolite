@@ -94,8 +94,8 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   oo::ShipSaveContext localContext;
   if (context == nullptr) context = &localContext;
 
-  result[std::string(kKeyShipKey)] =
-      _shipKey.value_or(std::string());  // nil as "", as oo::StdString gave
+  // nil as "", as oo::StdString gave
+  result[std::string(kKeyShipKey)] = _shipKey.value_or(std::string());
 
   oo::PList::Dict updatedShipInfo = DictFrom(shipinfoDictionary);
 
@@ -213,8 +213,8 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
 
   ::ShipEntity* ship = nullptr;
 
-  const std::string shipKey =
-      dict.get<std::string>(kKeyShipKey);  // "" finds no ship, as nil did
+  // "" finds no ship, as nil did
+  const std::string shipKey = dict.get<std::string>(kKeyShipKey);
   const oo::PList shipData =
       oo::ShipRegistry::sharedRegistry()->shipInfoForKey(shipKey);
 

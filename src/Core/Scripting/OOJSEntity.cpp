@@ -53,8 +53,8 @@ static JSValue EntityDumpState(OOJS_NATIVE_ARGS);
 
 static JSClassDef sEntityClass = {
     .class_name = "Entity",
-    .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+    // the slot holds an OOJSEntityHolder
+    .finalizer = OOJSCxxObjectWrapperFinalize,
 };
 
 namespace {
@@ -297,8 +297,8 @@ static JSValue EntityGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewFloat64(context, cxxEntity->getMass());
 
     case kOwner:
-      result = cxxEntity->ownerEntity();  // the owner's C++ entity (-owner
-                                          // answered its object)
+      // the owner's C++ entity (-owner answered its object)
+      result = cxxEntity->ownerEntity();
       if (result == cxxEntity) result = nullptr;
       break;
 

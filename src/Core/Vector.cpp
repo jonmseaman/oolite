@@ -69,16 +69,15 @@ Vector RandomUnitVector() {
   float m;
 
   do {
-    float x =
-        randf() -
-        0.5f;  // one draw per local, in the order Clang evaluates the arguments
+    // one draw per local, in the order Clang evaluates the arguments
+    float x = randf() - 0.5f;
     float y = randf() - 0.5f;
     float z = randf() - 0.5f;
     v = make_vector(x, y, z);
     m = magnitude2(v);
-  } while (m > 0.25f ||
-           m == 0.0f);  // We're confining to a sphere of radius 0.5 using the
-                        // sqared magnitude; 0.5 squared is 0.25.
+    // We're confining to a sphere of radius 0.5 using the sqared magnitude; 0.5
+    // squared is 0.25.
+  } while (m > 0.25f || m == 0.0f);
 
   return vector_normal(v);
 }
@@ -88,23 +87,23 @@ Vector VectorRandomSpatial(Scalar maxLength) {
   float m;
 
   do {
-    float x =
-        randf() -
-        0.5f;  // one draw per local, in the order Clang evaluates the arguments
+    // one draw per local, in the order Clang evaluates the arguments
+    float x = randf() - 0.5f;
     float y = randf() - 0.5f;
     float z = randf() - 0.5f;
     v = make_vector(x, y, z);
     m = magnitude2(v);
-  } while (m > 0.25f);  // We're confining to a sphere of radius 0.5 using the
-                        // sqared magnitude; 0.5 squared is 0.25.
+    // We're confining to a sphere of radius 0.5 using the sqared magnitude; 0.5
+    // squared is 0.25.
+  } while (m > 0.25f);
 
-  return vector_multiply_scalar(
-      v, maxLength * 2.0f);  // 2.0 is to compensate for the 0.5-radius sphere.
+  // 2.0 is to compensate for the 0.5-radius sphere.
+  return vector_multiply_scalar(v, maxLength * 2.0f);
 }
 
 Vector VectorRandomRadial(Scalar maxLength) {
-  Vector direction = RandomUnitVector();  // one draw per local, in the order
-                                          // Clang evaluates the arguments
+  // one draw per local, in the order Clang evaluates the arguments
+  Vector direction = RandomUnitVector();
   Scalar length = randf() * maxLength;
   return vector_multiply_scalar(direction, length);
 }

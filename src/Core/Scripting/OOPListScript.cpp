@@ -62,9 +62,9 @@ OOPListScript::scriptsInPListFile(const std::string& filePath) {
   } else {
     oo::PList dict = oo::PropertyListFromFile(filePath);
     if (!dict.isDict())
-      dict = oo::PList();  // a dictionary or nothing, as OODictionaryFromFile
-                           // answered (its plist.wrongType line, which named
-                           // the Foundation class, is not kept)
+      // a dictionary or nothing, as OODictionaryFromFile answered (its
+      // plist.wrongType line, which named the Foundation class, is not kept)
+      dict = oo::PList();
     if (!dict) return std::nullopt;
     return scriptsFromDictionaryOfScripts(dict, filePath);
   }
@@ -124,8 +124,8 @@ OOPListScript::scriptsFromDictionaryOfScripts(const oo::PList& dictionary,
 
   result.reserve(dictionary.count());
 
-  metadata =
-      dictionary.get<oo::PList::Dict>(kKeyMetadata);  // nil unless a dictionary
+  // nil unless a dictionary
+  metadata = dictionary.get<oo::PList::Dict>(kKeyMetadata);
 
   // Order-sensitive: the scripts come out in key order (they came out in hash
   // order).

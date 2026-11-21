@@ -162,11 +162,10 @@ static JSValue GlobalGetProperty(OOJS_GETTER_ARGS) {
     using enum GlobalProperty;
     case kGalaxyNumber:
       return JS_NewInt32(
-          context,
-          (player != nullptr ? player->PlayerEntity::currentGalaxyID()
-                             : oo::GalaxyID{}));  // qualified: the final
-                                                  // overrider so the binding
-                                                  // test stands in for it
+          context, (player != nullptr ? player->PlayerEntity::currentGalaxyID()
+                                      // qualified: the final overrider so the
+                                      // binding test stands in for it
+                                      : oo::GalaxyID{}));
 
     case kGuiScreen:
       return OOJSValueFromGUIScreenID(
@@ -353,8 +352,9 @@ static JSValue GlobalExpandMissionText(JSContext* context,
   if (string.has_value())
     string = oo::ExpandDescriptionString(
         kNilRandomSeed, *string, overrides, oo::PList(), std::nullopt,
+        // nil expanded to nil
         oo::ExpandOptions::kForJavaScript | oo::ExpandOptions::kBackslashN |
-            oo::ExpandOptions::kGoodRNG);  // nil expanded to nil
+            oo::ExpandOptions::kGoodRNG);
 
   OOJS_RETURN_STRING_OR_NULL(string);
 
@@ -730,9 +730,9 @@ static JSValue GlobalSetScreenBackgroundForKey(JSContext* context,
       value, context, "setScreenBackgroundDefault()");
 
   if (UNIVERSE != nullptr)
-    UNIVERSE->setScreenTextureDescriptorForKey(
-        *key, descriptor);  // (its Foundation round trip was the identity for
-                            // this JavaScript-derived dictionary)
+    // (its Foundation round trip was the identity for this JavaScript-derived
+    // dictionary)
+    UNIVERSE->setScreenTextureDescriptorForKey(*key, descriptor);
   result = true;
 
   OOJS_RETURN_BOOL(result);

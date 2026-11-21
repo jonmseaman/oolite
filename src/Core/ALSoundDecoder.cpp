@@ -347,8 +347,8 @@ bool ALSoundVorbisCodec::readCreatingBuffer(std::vector<char>& out) {
       dst += framesRead;
     } while (0 < remaining);
 
-    sizeInFrames -=
-        static_cast<size_t>(remaining);  // In case we stopped at an error
+    // In case we stopped at an error
+    sizeInFrames -= static_cast<size_t>(remaining);
   }
 
   buffer.resize(

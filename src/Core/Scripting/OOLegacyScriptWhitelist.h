@@ -66,9 +66,10 @@ undefined"); do = ("set: mission_cloakcounter 0");
         )
 the sanitized form (with rawString values replaced with "..." for simplicity)
 is:
+        // This is a conditonal statement
         (
                 (
-                        true,	// This is a conditonal statement
+                        true,
                         (		// conditions
                                 (OOOperationType::kNumber, "...",
 "galaxy_number", OOComparisonType::kEqual, ((false, "4"))),

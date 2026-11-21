@@ -356,10 +356,10 @@ bool oo::OXPVerifier::initWithPath(const std::optional<std::string>& path) {
     if (parsed && parsed->isDict()) _verifierPList = std::move(*parsed);
   }
 
-  _basePath = path.value_or(std::string());  // never nullopt: the path always
-                                             // came from the command line
-  _displayName = oo::str::lastPathComponent(
-      _basePath);  // what GNUstep's -displayNameAtPath: returns
+  // never nullopt: the path always came from the command line
+  _basePath = path.value_or(std::string());
+  // what GNUstep's -displayNameAtPath: returns
+  _displayName = oo::str::lastPathComponent(_basePath);
 
   if (_verifierPList.isNull()) {
     OO_LOG("verifyOXP.setup.failed", "{}",
@@ -512,8 +512,8 @@ void oo::OXPVerifier::buildDependencyGraph() {
     _openForRegistration = false;
 
     // Iterate over all stages, resolving dependencies.
-    std::vector<std::string> stageKeys;  // Get the keys up front because we may
-                                         // need to remove entries from the map.
+    // Get the keys up front because we may need to remove entries from the map.
+    std::vector<std::string> stageKeys;
     stageKeys.reserve(_stagesByName.size());
     for (const auto& entry : _stagesByName) stageKeys.push_back(entry.first);
 
@@ -598,10 +598,9 @@ void oo::OXPVerifier::runStages() {
     try {
       stageName = stageToRun->name();
       if (stageToRun->shouldRun()) {
-        NoteVerificationStage(
-            _displayName,
-            stageName.value_or(
-                "(null)"));  // "%@" text, as the old format printed it
+        NoteVerificationStage(_displayName,
+                              // "%@" text, as the old format printed it
+                              stageName.value_or("(null)"));
         OO_LOG("verifyOXP.runStage", "{}", stageName.value_or("(null)"));
         oo::log::indent();
         stageToRun->performRun();

@@ -96,8 +96,8 @@ HPVector HPVectorFromPList(const oo::PList* value, HPVector defaultValue) {
         result = *scanned;
       break;
 
-    case oo::plist_get::TupleSource::kObject:  // (no native HPVector object:
-                                               // the default)
+    // (no native HPVector object: the default)
+    case oo::plist_get::TupleSource::kObject:
     case oo::plist_get::TupleSource::kNone:
       break;
   }

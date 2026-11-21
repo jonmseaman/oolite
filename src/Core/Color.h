@@ -58,8 +58,9 @@ class Color : public oo::PListForeign {
   static std::shared_ptr<Color> colorWithWhite(float white, float alpha);
   static std::shared_ptr<Color> colorWithRGBAComponents(
       RGBAComponents components);
+  // Note: hue in 0..360
   static std::shared_ptr<Color> colorWithHSBAComponents(
-      HSBAComponents components);  // Note: hue in 0..360
+      HSBAComponents components);
 
   /*	Flexible color creator: <description> is
      plist data, one of

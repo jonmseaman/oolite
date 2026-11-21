@@ -648,8 +648,8 @@ bool OOJSArgumentListGetNumberNoError(JSContext* context, int argc,
 std::optional<std::string> OOStringFromJSValueEvenIfNull(JSContext* context,
                                                          JSValueConst value) {
   size_t length;
-  const char* chars = JS_ToCStringLen(
-      context, &length, value);  // Calls the value's toString method if needed.
+  // Calls the value's toString method if needed.
+  const char* chars = JS_ToCStringLen(context, &length, value);
   if (chars == NULL) {
     JS_FreeValue(context, JS_GetException(context));
     return std::nullopt;

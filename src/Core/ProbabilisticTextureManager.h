@@ -89,8 +89,8 @@ class ProbabilisticTextureManager : public oo::Object {
   ~ProbabilisticTextureManager() override;
 
  private:
-  ProbabilisticTextureManager() =
-      default;  // createWithPListName() runs initWithPListName()
+  // createWithPListName() runs initWithPListName()
+  ProbabilisticTextureManager() = default;
 
   bool initWithPListName(const std::string& plistName, oo::TextureFlags options,
                          GLfloat anisotropy, GLfloat lodBias, RANROTSeed seed);

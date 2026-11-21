@@ -80,8 +80,8 @@ class BasicMaterial : public Material {
   */
   void initWithName(
       const std::optional<std::string>& name,
-      const oo::PList& configuration);  // a null configuration is an empty one.
-                                        // Shared by the material classes.
+      // a null configuration is an empty one. Shared by the material classes.
+      const oo::PList& configuration);
 
   std::optional<std::string> name() override;
   bool doApply() override;

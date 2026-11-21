@@ -99,11 +99,11 @@ class FileScannerVerifierStage : public OXPVerifierStage {
                        const std::optional<std::string>& context,
                        bool checkBuiltIn);
 
-  oo::PList plistNamed(
-      const std::optional<std::string>&
-          file,  // Only uses "real" plist parser, not homebrew. Null: none.
-      const std::optional<std::string>& folder,
-      const std::optional<std::string>& context, bool checkBuiltIn);
+  // Only uses "real" plist parser, not homebrew. Null: none.
+  oo::PList plistNamed(const std::optional<std::string>& file,
+                       const std::optional<std::string>& folder,
+                       const std::optional<std::string>& context,
+                       bool checkBuiltIn);
 
   /*	Utility to handle display names of files.
           If a file and folder are provided, returns folder/file, otherwise just
@@ -156,8 +156,8 @@ class FileScannerVerifierStage : public OXPVerifierStage {
   std::map<std::string, std::map<std::string, std::string, std::less<>>,
            std::less<>>
       _directoryListings = {};
-  std::map<std::string, std::string, std::less<>> _directoryCases =
-      {};  // lowercase -> as on disk
+  // lowercase -> as on disk
+  std::map<std::string, std::string, std::less<>> _directoryCases = {};
   std::set<std::string> _badPLists = {};
   std::set<std::string> _junkFileNames = {};
   std::set<std::string> _skipDirectoryNames = {};

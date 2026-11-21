@@ -104,10 +104,9 @@ class VisualEffectEntity : public EntityWithDrawable,
   std::vector<oo::EntityHold>
   subEntities();  // a snapshot; empty before the first subentity (was nil)
   std::size_t subEntityCount();
-  std::optional<std::vector<oo::EntityHold>>
-  visualEffectSubEntityEnumerator();  // the visual-effect subentities' objects;
-                                      // nullopt where the array was nil
-  bool hasSubEntity(Entity* sub);     // the C++ entity's
+  // the visual-effect subentities' objects; nullopt where the array was nil
+  std::optional<std::vector<oo::EntityHold>> visualEffectSubEntityEnumerator();
+  bool hasSubEntity(Entity* sub);  // the C++ entity's
 
   std::vector<oo::EntityHold>
   subEntityEnumerator();  // snapshot, same as subEntities()

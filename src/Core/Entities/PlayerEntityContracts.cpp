@@ -91,8 +91,8 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
   // removes pods from cargo bay and treats
   // categories of characters carried
   unsigned i;
-  bool added_entry =
-      false;  // to prevent empty lines for slaves and the rare empty report.
+  // to prevent empty lines for slaves and the rare empty report.
+  bool added_entry = false;
   std::string result;
   std::vector<std::shared_ptr<oo::Character>> rescuees;
   // -intValue of the system's government: a string's leading integer, a number
@@ -108,8 +108,9 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
     government = static_cast<oo::GovernmentID>(
         static_cast<int>(governmentValue->int64Value()));
   if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false))
-    government = 1;  // equivalent to Feudal. I'm assuming any station in
-                     // interstellar space is military. -- Ahruman 2008-05-29
+    // equivalent to Feudal. I'm assuming any station in interstellar space is
+    // military. -- Ahruman 2008-05-29
+    government = 1;
 
   // step through the cargo removing crew from any escape pods
   // No enumerator because we're mutating the array -- Ahruman
@@ -225,17 +226,19 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
 
   calculateCurrentCargo();
 
-  return result;  // never nil (the old method returned an empty string when
-                  // nothing was reported)
+  // never nil (the old method returned an empty string when nothing was
+  // reported)
+  return result;
 }
 
 std::optional<std::string> PlayerEntity::checkPassengerContracts() {
   // returns messages from any passengers
   // whose status have changed
-  if (dockedStation() != (UNIVERSE != nullptr
-                              ? UNIVERSE->station()
-                              : nullptr))  // only drop off passengers or fulfil
-                                           // contracts at main station
+  if (dockedStation() !=
+      (UNIVERSE != nullptr
+           ? UNIVERSE->station()
+           // only drop off passengers or fulfil contracts at main station
+           : nullptr))
     return std::nullopt;
 
   // check escape pods...
@@ -247,9 +250,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
 
   // check passenger contracts
   for (i = 0; i < passengers.size(); i++) {
-    const oo::PList passenger_info =
-        passengers[i];  // a copy: the entry may be removed below (it was
-                        // retained)
+    // a copy: the entry may be removed below (it was retained)
+    const oo::PList passenger_info = passengers[i];
     const std::optional<std::string> passenger_name =
         OptionalStringForKey(passenger_info, PASSENGER_KEY_NAME);
     int dest = passenger_info.get<int>(CONTRACT_KEY_DESTINATION);
@@ -295,8 +297,9 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
              passenger_info});
       } else {
         // but we're late!
-        std::int64_t fee = passenger_info.get<std::int64_t>(CONTRACT_KEY_FEE) /
-                           2;  // halve fare
+        // halve fare
+        std::int64_t fee =
+            passenger_info.get<std::int64_t>(CONTRACT_KEY_FEE) / 2;
         while (randf() < 0.5)  // maybe halve fare a few times!
           fee /= 2;
         credits += static_cast<oo::CreditsQuantity>(10 * fee);
@@ -338,8 +341,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
 
   // check parcel contracts
   for (i = 0; i < parcels.size(); i++) {
-    const oo::PList parcel_info =
-        parcels[i];  // a copy: the entry may be removed below (it was retained)
+    // a copy: the entry may be removed below (it was retained)
+    const oo::PList parcel_info = parcels[i];
     const std::optional<std::string> parcel_name =
         OptionalStringForKey(parcel_info, PASSENGER_KEY_NAME);
     int dest = parcel_info.get<int>(CONTRACT_KEY_DESTINATION);
@@ -381,8 +384,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
              parcel_info});
       } else {
         // but we're late!
-        std::int64_t fee =
-            parcel_info.get<std::int64_t>(CONTRACT_KEY_FEE) / 2;  // halve fare
+        // halve fare
+        std::int64_t fee = parcel_info.get<std::int64_t>(CONTRACT_KEY_FEE) / 2;
         while (randf() < 0.5)  // maybe halve fare a few times!
           fee /= 2;
         credits += static_cast<oo::CreditsQuantity>(10 * fee);
@@ -422,9 +425,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
 
   // check cargo contracts
   for (i = 0; i < contracts.size(); i++) {
-    const oo::PList contract_info =
-        contracts[i];  // a copy: the entry may be removed below (it was
-                       // retained)
+    // a copy: the entry may be removed below (it was retained)
+    const oo::PList contract_info = contracts[i];
     const std::optional<std::string> contract_cargo_desc =
         OptionalStringForKey(contract_info, CARGO_KEY_DESCRIPTION);
     int dest = contract_info.get<int>(CONTRACT_KEY_DESTINATION);
@@ -438,9 +440,9 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
       int fee =
           static_cast<int>(10 * contract_info.get<float>(CONTRACT_KEY_FEE));
 
-      const std::string contract_cargo_type = contract_info.get<std::string>(
-          CARGO_KEY_TYPE);  // a missing type was nil, which the
-                            // market read as ""
+      // a missing type was nil, which the market read as ""
+      const std::string contract_cargo_type =
+          contract_info.get<std::string>(CARGO_KEY_TYPE);
       int contract_amount = contract_info.get<int>(CARGO_KEY_AMOUNT);
 
       int quantity_on_hand =
@@ -497,8 +499,9 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
           float percent_delivered =
               static_cast<float>(100.0 * static_cast<float>(quantity_on_hand) /
                                  static_cast<float>(contract_amount));
-          float acceptable_ratio = static_cast<float>(
-              100.0 - 10.0 * system_id / 256.0);  // down to 90%
+          // down to 90%
+          float acceptable_ratio =
+              static_cast<float>(100.0 - 10.0 * system_id / 256.0);
 
           if (percent_delivered >= acceptable_ratio) {
             // remove the goods...
@@ -586,8 +589,9 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
       bool on_board = false;
       unsigned j;
       for (j = 0; j < passengers.size(); j++) {
-        const oo::PList* passenger_name = passengers[j].find(
-            PASSENGER_KEY_NAME);  // -isEqual: to the record's key
+        // -isEqual: to the record's key
+        const oo::PList* passenger_name =
+            passengers[j].find(PASSENGER_KEY_NAME);
         if (passenger_name != nullptr && passenger_name->isString() &&
             *passenger_name->getIf<std::string>() == names[i])
           on_board = true;
@@ -603,8 +607,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
   std::vector<std::string> ids;
   for (const auto& record : contract_record) ids.push_back(record.first);
   for (i = 0; i < ids.size(); i++) {
-    double dest_eta =
-        DoubleForKey(contract_record, ids[i]) - ship_clock;  // -doubleValue
+    // -doubleValue
+    double dest_eta = DoubleForKey(contract_record, ids[i]) - ship_clock;
     if (dest_eta < 0) {
       contract_record.erase(ids[i]);
     }
@@ -615,8 +619,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
   std::vector<std::string> parcel_ids;
   for (const auto& record : parcel_record) parcel_ids.push_back(record.first);
   for (i = 0; i < parcel_ids.size(); i++) {
-    double dest_eta = DoubleForKey(parcel_record, parcel_ids[i]) -
-                      ship_clock;  // -doubleValue
+    // -doubleValue
+    double dest_eta = DoubleForKey(parcel_record, parcel_ids[i]) - ship_clock;
     if (dest_eta < 0) {
       parcel_record.erase(parcel_ids[i]);
     }
@@ -665,8 +669,8 @@ int PlayerEntity::passengerReputation() {
   else
     unknown = MAX_CONTRACT_REP;
 
-  return (good + unknown - 3 * bad) /
-         2;  // return a number from -MAX_CONTRACT_REP to +MAX_CONTRACT_REP
+  // return a number from -MAX_CONTRACT_REP to +MAX_CONTRACT_REP
+  return (good + unknown - 3 * bad) / 2;
 }
 
 void PlayerEntity::increasePassengerReputation(unsigned amount) {
@@ -721,8 +725,8 @@ int PlayerEntity::parcelReputation() {
   else
     unknown = MAX_CONTRACT_REP;
 
-  return (good + unknown - 3 * bad) /
-         2;  // return a number from -MAX_CONTRACT_REP to +MAX_CONTRACT_REP
+  // return a number from -MAX_CONTRACT_REP to +MAX_CONTRACT_REP
+  return (good + unknown - 3 * bad) / 2;
 }
 
 void PlayerEntity::increaseParcelReputation(unsigned amount) {
@@ -777,8 +781,8 @@ int PlayerEntity::contractReputation() {
   else
     unknown = MAX_CONTRACT_REP;
 
-  return (good + unknown - 3 * bad) /
-         2;  // return a number from -MAX_CONTRACT_REP to +MAX_CONTRACT_REP
+  // return a number from -MAX_CONTRACT_REP to +MAX_CONTRACT_REP
+  return (good + unknown - 3 * bad) / 2;
 }
 
 void PlayerEntity::increaseContractReputation(unsigned amount) {
@@ -1244,8 +1248,8 @@ void PlayerEntity::setGuiToManifestScreen() {
         kGuiManifestNoScrollColor, oo::Color::darkGrayColor().get());
 
     const std::vector<std::string> cargoManifest = cargoList();
-    const oo::PList missionsList =
-        this->missionsList();  // strings and arrays of strings
+    // strings and arrays of strings
+    const oo::PList missionsList = this->missionsList();
     // Its entries as the Foundation array carried them: a null element was
     // dropped.
     auto nonNull = [](const oo::PList& list) {
@@ -1367,8 +1371,8 @@ void PlayerEntity::setGuiToManifestScreen() {
       for (i = 0; i < manifestCount; i++) {
         const oo::PList& mmEntry = missionsManifest[i];
         if (mmEntry.isString()) {
-          const std::string mmItem =
-              "\t" + oo::DescriptionOf(mmEntry);  // @"\t%@"
+          // @"\t%@"
+          const std::string mmItem = "\t" + oo::DescriptionOf(mmEntry);
           SET_MANIFEST_ROW(oo::PList(mmItem), subheadColor.get(),
                            missionsRow + static_cast<oo::GUIRow>(mmRow));
           ++mmRow;
@@ -1531,8 +1535,8 @@ void PlayerEntity::setGuiToDockingReportScreen() {
     UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
   if (guiChanged) {
-    gui->setForegroundTextureKey(
-        std::string("docked_overlay"));  // has to be docked!
+    // has to be docked!
+    gui->setForegroundTextureKey(std::string("docked_overlay"));
 
     oo::PList bgDescriptor =
         (UNIVERSE != nullptr ? UNIVERSE->screenTextureDescriptorForKey("report")
@@ -1609,8 +1613,8 @@ std::vector<std::string> ShipyardLabelsRow(GuiDisplayGen* gui) {
 }  // namespace
 
 oo::CreditsQuantity PlayerEntity::priceForShipKey(const std::string& key) {
-  return CurrentShipyardEntry(key).get<std::uint64_t>(
-      "price");  // SHIPYARD_KEY_PRICE
+  // SHIPYARD_KEY_PRICE
+  return CurrentShipyardEntry(key).get<std::uint64_t>("price");
 }
 
 void PlayerEntity::setGuiToShipyardScreen(std::size_t skip) {
@@ -1649,8 +1653,9 @@ void PlayerEntity::setGuiToShipyardScreen(std::size_t skip) {
   currentShipyard.clear();
 
   for (i = 0; i < shipyard.size(); i++) {
+    // SHIPYARD_KEY_ID
     const std::optional<std::string> shipID =
-        OptionalStringForKey(shipyard[i], "id");         // SHIPYARD_KEY_ID
+        OptionalStringForKey(shipyard[i], "id");
     if (shipID) currentShipyard[*shipID] = shipyard[i];  // (a nil key raised)
   }
 
@@ -1718,10 +1723,10 @@ void PlayerEntity::setGuiToShipyardScreen(std::size_t skip) {
       for (i = 0; i < (shipCount - skip) && static_cast<int>(i) < rowCount;
            i++) {
         const oo::PList& ship_info = shipyard[i + skip];
-        oo::CreditsQuantity ship_price =
-            ship_info.get<std::uint64_t>("price");  // SHIPYARD_KEY_PRICE
-        const oo::PList* ship =
-            ship_info.get<oo::PList::Dict>("ship");  // SHIPYARD_KEY_SHIP
+        // SHIPYARD_KEY_PRICE
+        oo::CreditsQuantity ship_price = ship_info.get<std::uint64_t>("price");
+        // SHIPYARD_KEY_SHIP
+        const oo::PList* ship = ship_info.get<oo::PList::Dict>("ship");
         std::optional<std::string> shipName =
             ship != nullptr ? OptionalStringForKey(*ship, "display_name")
                             : std::nullopt;
@@ -1808,10 +1813,11 @@ void PlayerEntity::showShipyardInfoForSelection() {
 
   if (!info.isNull()) {
     // the key is a particular ship - show the details
-    const std::optional<std::string> salesPitch = OptionalStringForKey(
-        info, "short_description");  // KEY_SHORT_DESCRIPTION
-    const oo::PList* shipDictNode =
-        info.get<oo::PList::Dict>("ship");  // SHIPYARD_KEY_SHIP
+    // KEY_SHORT_DESCRIPTION
+    const std::optional<std::string> salesPitch =
+        OptionalStringForKey(info, "short_description");
+    // SHIPYARD_KEY_SHIP
+    const oo::PList* shipDictNode = info.get<oo::PList::Dict>("ship");
     const oo::PList shipDict =
         shipDictNode != nullptr ? *shipDictNode : oo::PList();
 
@@ -1821,8 +1827,8 @@ void PlayerEntity::showShipyardInfoForSelection() {
     float speedRating =
         static_cast<float>(0.001 * shipDict.get<int>("max_flight_speed"));
 
-    const oo::PList* shipExtras =
-        info.get<oo::PList::Array>("extras");  // KEY_EQUIPMENT_EXTRAS
+    // KEY_EQUIPMENT_EXTRAS
+    const oo::PList* shipExtras = info.get<oo::PList::Array>("extras");
     for (i = 0; shipExtras != nullptr && i < shipExtras->count(); i++) {
       if (shipExtras->at<std::string>(i) == "EQ_CARGO_BAY") {
         cargoRating += cargo_extra;
@@ -1853,8 +1859,9 @@ void PlayerEntity::showShipyardInfoForSelection() {
     }
 
     // now display the ship
-    const std::optional<std::string> shipKey = OptionalStringForKey(
-        info, "shipdata_key");  // SHIPYARD_KEY_SHIPDATA_KEY
+    // SHIPYARD_KEY_SHIPDATA_KEY
+    const std::optional<std::string> shipKey =
+        OptionalStringForKey(info, "shipdata_key");
     if (shipKey) {
       showShipyardModel(
           *shipKey, shipDict,
@@ -1930,10 +1937,11 @@ oo::CreditsQuantity PlayerEntity::tradeInValue() {
       static_cast<double>(value) -
       static_cast<double>(value) * 0.006 *
           static_cast<double>(missingSubEntitiesAdjustment()));
+  // Multiply by two percentages, divide by 100*100. The +5000 is to get normal
+  // rounding.
   const std::uint64_t rounded =
       ((value * 75 * static_cast<std::uint64_t>(ship_trade_in_factor)) + 5000) /
-      10000;  // Multiply by two percentages, divide by 100*100. The +5000 is to
-              // get normal rounding.
+      10000;
   value = static_cast<std::uint64_t>(
       cunningFee(static_cast<double>(rounded), 0.005));
   return value * 10;
@@ -1981,16 +1989,17 @@ bool PlayerEntity::buySelectedShip() {
 
   // first check you can afford it!
   const oo::PList shipInfo = CurrentShipyardEntry(key);
-  oo::CreditsQuantity price =
-      shipInfo.get<std::uint64_t>("price");  // SHIPYARD_KEY_PRICE
+  // SHIPYARD_KEY_PRICE
+  oo::CreditsQuantity price = shipInfo.get<std::uint64_t>("price");
   oo::CreditsQuantity tradeIn = tradeInValue();
 
   if (credits + tradeIn < price * 10) return false;  // you can't afford it!
 
   // from this point, the player is committed to buying - raise a pre-buy script
   // event
-  const std::optional<std::string> shipDataKey = OptionalStringForKey(
-      shipInfo, "shipdata_key");  // SHIPYARD_KEY_SHIPDATA_KEY
+  // SHIPYARD_KEY_SHIPDATA_KEY
+  const std::optional<std::string> shipDataKey =
+      OptionalStringForKey(shipInfo, "shipdata_key");
   std::vector<oo::PList>* dockedShipyard =
       (dockedStation() != nullptr
            ? dockedStation()->getLocalShipyard()
@@ -2025,16 +2034,16 @@ bool PlayerEntity::buySelectedShip() {
   // pay over the mazoolah
   credits -= 10 * price - tradeIn;
 
-  const oo::PList* shipDictNode =
-      shipInfo.get<oo::PList::Dict>("ship");  // SHIPYARD_KEY_SHIP
+  // SHIPYARD_KEY_SHIP
+  const oo::PList* shipDictNode = shipInfo.get<oo::PList::Dict>("ship");
   newShipCommonSetup(shipDataKey.value_or(""), shipInfo,
                      shipDictNode != nullptr ? *shipDictNode : oo::PList());
 
   // this ship has a clean record
   legalStatusValue = 0;
 
-  const oo::PList* extras =
-      shipInfo.get<oo::PList::Array>("extras");  // KEY_EQUIPMENT_EXTRAS
+  // KEY_EQUIPMENT_EXTRAS
+  const oo::PList* extras = shipInfo.get<oo::PList::Array>("extras");
   for (std::size_t i = 0; extras != nullptr && i < extras->count(); i++) {
     const std::optional<std::string> eq_key = OptionalStringAt(*extras, i);
     if (eq_key == "EQ_PASSENGER_BERTH") {
@@ -2047,12 +2056,13 @@ bool PlayerEntity::buySelectedShip() {
   }
 
   // add bought ship to shipyard_record
+  // SHIPYARD_KEY_ID
   const std::optional<std::string> shipID =
-      OptionalStringForKey(shipInfo, "id");  // SHIPYARD_KEY_ID
+      OptionalStringForKey(shipInfo, "id");
   if (shipID) {
     const std::optional<std::string> dataKey = this->shipDataKey();
-    shipyard_record[*shipID] =
-        dataKey ? oo::PList(*dataKey) : oo::PList();  // (a nil key raised)
+    // (a nil key raised)
+    shipyard_record[*shipID] = dataKey ? oo::PList(*dataKey) : oo::PList();
   }
 
   // remove the ship from the localShipyard
@@ -2068,8 +2078,8 @@ bool PlayerEntity::buySelectedShip() {
     return false;  // gather up all the info
 
   setStatus(oo::EntityStatus::kDocked);
-  setEntityPersonalityInt(
-      shipInfo.get<std::uint16_t>("personality"));  // SHIPYARD_KEY_PERSONALITY
+  // SHIPYARD_KEY_PERSONALITY
+  setEntityPersonalityInt(shipInfo.get<std::uint16_t>("personality"));
 
   // adjust the clock forward by an hour
   ship_clock_adjust += 3600.0;
@@ -2106,8 +2116,9 @@ bool PlayerEntity::replaceShipWithNamedShip(const std::string& shipKey) {
     return false;  // gather up all the info
 
   // refill from ship_info
-  const oo::PList* standardEquipment = ship_info.get<oo::PList::Dict>(
-      "standard_equipment");  // KEY_STANDARD_EQUIPMENT
+  // KEY_STANDARD_EQUIPMENT
+  const oo::PList* standardEquipment =
+      ship_info.get<oo::PList::Dict>("standard_equipment");
   const oo::PList* extrasNode =
       standardEquipment != nullptr
           ? standardEquipment->get<oo::PList::Array>("extras")
@@ -2124,8 +2135,8 @@ bool PlayerEntity::replaceShipWithNamedShip(const std::string& shipKey) {
     }
   }
 
-  setEntityPersonalityInt(
-      ship_info.get<std::uint16_t>("personality"));  // SHIPYARD_KEY_PERSONALITY
+  // SHIPYARD_KEY_PERSONALITY
+  setEntityPersonalityInt(ship_info.get<std::uint16_t>("personality"));
 
   return true;
 }
@@ -2156,8 +2167,9 @@ void PlayerEntity::newShipCommonSetup(const std::string& shipKey,
   setFuel(fuelCapacity());
 
   // get forward_weapon aft_weapon port_weapon starboard_weapon from ship_info
-  int base_facings = static_cast<int>(
-      shipDict.get<unsigned int>("weapon_facings", 15));  // KEY_WEAPON_FACINGS
+  // KEY_WEAPON_FACINGS
+  int base_facings =
+      static_cast<int>(shipDict.get<unsigned int>("weapon_facings", 15));
   int available_facings = static_cast<int>(ship_info.get<unsigned int>(
       "weapon_facings", static_cast<unsigned int>(base_facings)));
 

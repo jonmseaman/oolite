@@ -89,8 +89,8 @@ bool oo::ExhaustPlumeEntity::initForShip(::ShipEntity* ship,
   {
     setOwner(ship);
     oo::PList::Array tokenList(tokens.begin(), tokens.end());
-    const oo::PList definition(std::move(
-        tokenList));  // at<float>: the conversion -oo_floatAtIndex: made
+    // at<float>: the conversion -oo_floatAtIndex: made
+    const oo::PList definition(std::move(tokenList));
     HPVector pos = {definition.at<float>(0) * scaleFactor,
                     definition.at<float>(1) * scaleFactor,
                     definition.at<float>(2) * scaleFactor};
@@ -177,8 +177,8 @@ void oo::ExhaustPlumeEntity::update(oo::TimeDelta /*delta_t*/) {
   GLfloat hyper_fade = 8.0f / (8.0f + speed * speed * speed);
 
   GLfloat flare_factor = fmaxf(speed, 1.0) * ex_emissive[3] * hyper_fade;
-  GLfloat red_factor = speed * ex_emissive[0] * (ranrot_rand() % 11) *
-                       0.1f;  // random fluctuations
+  // random fluctuations
+  GLfloat red_factor = speed * ex_emissive[0] * (ranrot_rand() % 11) * 0.1f;
   GLfloat green_factor = speed * ex_emissive[1] * hyper_fade;
 
   if (speed > 1.0f) {
@@ -243,8 +243,8 @@ void oo::ExhaustPlumeEntity::update(oo::TimeDelta /*delta_t*/) {
   //	f01.position = vector_subtract(zero.position, vk); // 1m out from zero
   f01.position = zero.position;
 
-  ex_emissive[3] =
-      flare_factor * kOverallAlpha;  // fade alpha towards rear of exhaust
+  // fade alpha towards rear of exhaust
+  ex_emissive[3] = flare_factor * kOverallAlpha;
   ex_emissive[1] = green_factor;  // diminish green part towards rear of exhaust
   ex_emissive[0] = red_factor;    // diminish red part towards rear of exhaust
   vertex = HPvector_add(f01.position, vectorToHPVector(b01));
@@ -283,12 +283,12 @@ void oo::ExhaustPlumeEntity::update(oo::TimeDelta /*delta_t*/) {
     _exhaustBaseColors[ci++] = ex_emissive[3];
   }
 
-  ex_emissive[3] = kFadeLevel1 * flare_factor *
-                   kOverallAlpha;  // fade alpha towards rear of exhaust
-  ex_emissive[1] = kFadeLevel1 *
-                   green_factor;  // diminish green part towards rear of exhaust
-  ex_emissive[0] =
-      kFadeLevel1 * red_factor;  // diminish red part towards rear of exhaust
+  // fade alpha towards rear of exhaust
+  ex_emissive[3] = kFadeLevel1 * flare_factor * kOverallAlpha;
+  // diminish green part towards rear of exhaust
+  ex_emissive[1] = kFadeLevel1 * green_factor;
+  // diminish red part towards rear of exhaust
+  ex_emissive[0] = kFadeLevel1 * red_factor;
 
   k1 = f03.k;
   i1 = vector_multiply_scalar(cross_product(j1, k1),
@@ -317,12 +317,12 @@ void oo::ExhaustPlumeEntity::update(oo::TimeDelta /*delta_t*/) {
     _exhaustBaseColors[ci++] = ex_emissive[3];
   }
 
-  ex_emissive[3] = kFadeLevel2 * flare_factor *
-                   kOverallAlpha;  // fade alpha towards rear of exhaust
-  ex_emissive[1] = kFadeLevel2 *
-                   green_factor;  // diminish green part towards rear of exhaust
-  ex_emissive[0] =
-      kFadeLevel2 * red_factor;  // diminish red part towards rear of exhaust
+  // fade alpha towards rear of exhaust
+  ex_emissive[3] = kFadeLevel2 * flare_factor * kOverallAlpha;
+  // diminish green part towards rear of exhaust
+  ex_emissive[1] = kFadeLevel2 * green_factor;
+  // diminish red part towards rear of exhaust
+  ex_emissive[0] = kFadeLevel2 * red_factor;
 
   k1 = f06.k;
   i1 = vector_multiply_scalar(
@@ -353,12 +353,12 @@ void oo::ExhaustPlumeEntity::update(oo::TimeDelta /*delta_t*/) {
     _exhaustBaseColors[ci++] = ex_emissive[3];
   }
 
-  ex_emissive[3] = kFadeLevel3 * flare_factor *
-                   kOverallAlpha;  // fade alpha towards rear of exhaust
-  ex_emissive[1] = kFadeLevel3 *
-                   green_factor;  // diminish green part towards rear of exhaust
-  ex_emissive[0] =
-      kFadeLevel3 * red_factor;  // diminish red part towards rear of exhaust
+  // fade alpha towards rear of exhaust
+  ex_emissive[3] = kFadeLevel3 * flare_factor * kOverallAlpha;
+  // diminish green part towards rear of exhaust
+  ex_emissive[1] = kFadeLevel3 * green_factor;
+  // diminish red part towards rear of exhaust
+  ex_emissive[0] = kFadeLevel3 * red_factor;
   k1 = f08.k;
   i1 = vector_multiply_scalar(
       cross_product(j1, k1),

@@ -92,8 +92,8 @@ class CommodityMarket : public oo::Object {
   std::vector<std::string> sortedGoodKeys();
 
   std::map<std::string, oo::PList, std::less<>> _commodityList;
-  std::optional<std::vector<std::string>>
-      _sortedKeys;  // goods(), built on first use
+  // goods(), built on first use
+  std::optional<std::vector<std::string>> _sortedKeys;
 };
 
 }  // namespace oo

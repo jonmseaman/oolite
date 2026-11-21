@@ -75,12 +75,12 @@ namespace oo {
 HPVector RandomUnitHPVector();
 HPVector HPVectorRandomSpatial(
     HPScalar
-        maxLength);  // Random vector uniformly distributed in radius-maxLength
-                     // sphere. (Longer vectors are more common.)
-HPVector HPVectorRandomRadial(
-    HPScalar maxLength);  // Random vector with uniform distribution of
-                          // direction and radius in radius-maxLength sphere.
-                          // (Causes clustering at centre.)
+        // Random vector uniformly distributed in radius-maxLength sphere.
+        // (Longer vectors are more common.)
+        maxLength);
+// Random vector with uniform distribution of direction and radius in
+// radius-maxLength sphere. (Causes clustering at centre.)
+HPVector HPVectorRandomRadial(HPScalar maxLength);
 HPVector RandomPositionInCylinder(HPVector centre1, HPScalar exclusion1,
                                   HPVector centre2, HPScalar exclusion2,
                                   HPScalar radius);

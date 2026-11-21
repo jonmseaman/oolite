@@ -166,15 +166,16 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
   // (EntityVirtualMembers.h)
 
   // setOwner(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS (EntityVirtualMembers.h)
-  Entity* owner();  // the owner while it has its object, null for none or once
-                    // it has gone (what -owner answered the object of, +0)
-  Entity* ownerEntity();     // the owner's C++ entity, null once it has gone
-  Entity* parentEntity();    // owner if self is subentity of owner, otherwise
-                             // null (the C++ entity).
+  // the owner while it has its object, null for none or once it has gone (what
+  // -owner answered the object of, +0)
+  Entity* owner();
+  Entity* ownerEntity();  // the owner's C++ entity, null once it has gone
+  // owner if self is subentity of owner, otherwise null (the C++ entity).
+  Entity* parentEntity();
   Entity* rootShipEntity();  // like parentEntity, but recursive.
-  Entity* superShaderBindingTarget();  // the parent entity, +0 (what
-                                       // -superShaderBindingTarget answered the
-                                       // object of)
+  // the parent entity, +0 (what -superShaderBindingTarget answered the object
+  // of)
+  Entity* superShaderBindingTarget();
 
   // setPosition(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
   // (EntityVirtualMembers.h)
@@ -400,8 +401,8 @@ class Entity : public oo::Object, public ::OOJSPrivateObject {
 
   oo::TimeAbsolute spawnTime = {};
 
-  JSValue _jsSelf = {};  // Zero-filled (not an object) until created; test with
-                         // JS_IsObject().
+  // Zero-filled (not an object) until created; test with JS_IsObject().
+  JSValue _jsSelf = {};
   std::size_t lastDrawCounter = {};
 
  private:
@@ -456,7 +457,8 @@ namespace oo {
 struct ShaderMemberBinding;
 
 }  // namespace oo
-   // OOShaderUniformMethodType.h
+
+// OOShaderUniformMethodType.h
 
 bool EntityShaderMemberBindingFor(Entity* entity, std::string_view property,
                                   oo::ShaderMemberBinding* outBinding);
@@ -483,8 +485,8 @@ class EntityWeakPListForeign final : public PListForeign {
   }  // what the proxy's class was
 
   std::string description()
-      const override;  // the entity's description, or <Dead OOWeakReference
-                       // 0x...> (Entity.cpp)
+      // the entity's description, or <Dead OOWeakReference 0x...> (Entity.cpp)
+      const override;
 
  private:
   std::weak_ptr<Entity> _entity;

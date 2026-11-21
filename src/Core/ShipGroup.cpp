@@ -99,8 +99,8 @@ class ShipGroupMembers {
     ShipGroup* _group;
     std::size_t _updateCount;
     std::size_t _index = 0, _batchCount = 0, _position = 0;
-    oo::EntityHold _buffer[kBatchSize];  // held, as the autoreleased objects
-                                         // were
+    // held, as the autoreleased objects were
+    oo::EntityHold _buffer[kBatchSize];
   };
 
   Iterator begin() const { return Iterator(_group); }
@@ -259,8 +259,8 @@ bool oo::ShipGroup::addShip(::ShipEntity* ship) {
     }
   }
 
-  _members[_count++] =
-      std::weak_ptr<Entity>(oo::share(ship));  // empty for none
+  // empty for none
+  _members[_count++] = std::weak_ptr<Entity>(oo::share(ship));
   return true;
 }
 
@@ -286,8 +286,8 @@ bool oo::ShipGroup::removeShip(::ShipEntity* ship) {
       // Clean up
       if (ship != nullptr) ship->setGroup(nullptr);
       if (ship != nullptr)
-        ship->ShipEntity::setOwner(ship);  // qualified: the final overrider, so
-                                           // the group's test stands in for it
+        // qualified: the final overrider, so the group's test stands in for it
+        ship->ShipEntity::setOwner(ship);
       cleanUp();
       break;
     }
@@ -333,9 +333,8 @@ void oo::ShipGroup::cleanUp() {
 
   if (_count >= kMaxFreeSpace) {
     if (_capacity > _count + kMaxFreeSpace) {
-      newCapacity =
-          _count +
-          1;  // +1 keeps us at powers of two + multiples of kMaxFreespace.
+      // +1 keeps us at powers of two + multiples of kMaxFreespace.
+      newCapacity = _count + 1;
     }
   } else {
     if (_capacity > _count * 2) {
@@ -402,9 +401,8 @@ std::size_t oo::ShipGroupMembers::FillBatch(oo::ShipGroup* group,
   while (srcIndex < group->_count && dstIndex < length) {
     item = oo::ToShip(group->_members[srcIndex].lock().get());
     if (item != nullptr) {
-      buffer[dstIndex++] =
-          oo::Hold(item);  // its object retained (and autoreleased by
-                           // oo::ToObjC), as before
+      // its object retained (and autoreleased by oo::ToObjC), as before
+      buffer[dstIndex++] = oo::Hold(item);
       srcIndex++;
     } else {
       group->_members[srcIndex] = group->_members[--group->_count];

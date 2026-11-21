@@ -163,9 +163,9 @@ static JSValue SoundSourceConstruct(JSContext* context, JSValueConst oojsThis,
     return JS_EXCEPTION;
   }
 
+  // [[[OOSoundSource alloc] init] autorelease]
   const std::shared_ptr<oo::SoundSource> source =
-      oo::makeShared<oo::SoundSource>();  // [[[OOSoundSource alloc] init]
-                                          // autorelease]
+      oo::makeShared<oo::SoundSource>();
   OOJS_RETURN(OOJSSoundSourceJSValueInContext(source.get(), context));
 
   OOJS_NATIVE_EXIT

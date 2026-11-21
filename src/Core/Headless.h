@@ -53,11 +53,11 @@ struct HeadlessOptions {
   std::optional<std::uint32_t> seed;  // every generator; unset: the clock
   AddOns addOns = AddOns::kAll;       // kNone: the built-in Resources only
   bool populate = true;               // fill the system with traffic
-  bool startInFlight = false;    // the player in flight in the empty system
-  bool inputView = false;        // a view with no window, for key events
-  double step = 1.0 / 60.0;      // the headless stepper's fixed dt, s
-  double scriptTimeLimit = 0.0;  // the script limiter's limit, s; 0: the
-                                 // engine's own
+  bool startInFlight = false;  // the player in flight in the empty system
+  bool inputView = false;      // a view with no window, for key events
+  double step = 1.0 / 60.0;    // the headless stepper's fixed dt, s
+  // the script limiter's limit, s; 0: the engine's own
+  double scriptTimeLimit = 0.0;
 
   // Raises OOInvalidArgumentException, naming the rule, if the options are
   // inconsistent: a headless game needs a seed, and reads no add-ons.

@@ -63,8 +63,8 @@ bool oo::ExplosionCloudEntity::initExplosionCloudWithEntity(
                           ? 10
                           : 25;
   HPVector pos = entity != nullptr ? entity->getPosition()
-                                   : kZeroHPVector;  // the C++ entity; nil
-                                                     // answered zero
+                                   // the C++ entity; nil answered zero
+                                   : kZeroHPVector;
   Vector vel = entity != nullptr ? entity->getVelocity() : kZeroVector;
 
   if (settings.isNull()) {

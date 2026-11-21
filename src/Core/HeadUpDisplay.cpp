@@ -71,8 +71,8 @@ MA 02110-1301, USA.
 constexpr double ONE_SIXTEENTH = 0.0625;
 constexpr double ONE_SIXTYFOURTH = 0.015625;
 constexpr double DEFAULT_OVERALL_ALPHA = 0.75;
-constexpr double GLYPH_SCALE_FACTOR =
-    0.13;  // 0.13 is an inherited magic number
+// 0.13 is an inherited magic number
+constexpr double GLYPH_SCALE_FACTOR = 0.13;
 #define IDENTIFY_SCANNER_LOLLIPOPS (0 && OOLITE_DEBUG)
 
 constexpr auto NOT_DEFINED = INFINITY;
@@ -364,8 +364,9 @@ void HeadUpDisplay::initWithDictionary(
   if (FontTexture() == nullptr) InitTextEngine();
 
   deferredHudName
-      .reset();  // if engaged, it means that we have a deferred HUD which is to
-                 // be drawn at first available opportunity
+      // if engaged, it means that we have a deferred HUD which is to be drawn
+      // at first available opportunity
+      .reset();
   hudName = hudFileName;
 
   // init arrays
@@ -542,8 +543,8 @@ void HeadUpDisplay::resetGuis(const oo::PList& info) {
 
   ::GuiDisplayGen* gui =
       (UNIVERSE != nullptr ? UNIVERSE->messageGUI() : nullptr);
-  const oo::PList* gui_info =
-      info.get<oo::PList::Dict>("message_gui");  // nullptr where nil was
+  // nullptr where nil was
+  const oo::PList* gui_info = info.get<oo::PList::Dict>("message_gui");
   if (gui && gui_info != nullptr && gui_info->count() > 0) {
     /*
             If switching message guis, remember the last 2 message lines.
@@ -553,11 +554,10 @@ void HeadUpDisplay::resetGuis(const oo::PList& info) {
             TODO: a more usable GUI code! - Kaks 2011.11.05
     */
 
-    const oo::PList lastLines =
-        gui->getLastLines();  // text, colour, fade time - text, colour, fade
-                              // time
-    bool line1 = OptionalStringAt(lastLines, 0) !=
-                 "";  // a missing line counted as not empty
+    // text, colour, fade time - text, colour, fade time
+    const oo::PList lastLines = gui->getLastLines();
+    // a missing line counted as not empty
+    bool line1 = OptionalStringAt(lastLines, 0) != "";
     resetGui(gui, *gui_info);
 
     bool permanent = gui_info->get<bool>("permanent", false);
@@ -719,8 +719,8 @@ bool HeadUpDisplay::getReticleTargetSensitive() {
 
 void HeadUpDisplay::setReticleTargetSensitive(
     bool newReticleTargetSensitiveValue) {
-  reticleTargetSensitive =
-      !!newReticleTargetSensitiveValue;  // ensure YES or NO.
+  // ensure YES or NO.
+  reticleTargetSensitive = !!newReticleTargetSensitiveValue;
 }
 
 oo::PList* HeadUpDisplay::getPropertiesReticleTargetSensitive() {
@@ -1083,8 +1083,8 @@ bool HeadUpDisplay::setCrosshairDefinition(const std::string& newDefinition) {
 
   _crosshairOverrides = ResourceManager::dictionaryFromFilesNamed(
       newDefinition, std::string("Config"), true);
-  if (_crosshairOverrides.count() ==
-      0) {  // invalid file (none found, or empty)
+  // invalid file (none found, or empty)
+  if (_crosshairOverrides.count() == 0) {
     _crosshairOverrides = ResourceManager::dictionaryFromFilesNamed(
         "crosshairs.plist", std::string("Config"), true);
     crosshairDefinition = "crosshairs.plist";
@@ -1169,8 +1169,8 @@ void HeadUpDisplay::drawLegend(const oo::PList& info) {
     return;
   }
 
-  oo::TextureSprite* legendSprite =
-      nullptr;  // the sprite the legend's widget holds
+  // the sprite the legend's widget holds
+  oo::TextureSprite* legendSprite = nullptr;
   std::optional<std::string> legendText;
   float x, y;
   NSSize size;
@@ -1440,8 +1440,8 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
   GLfloat alpha = scanner_color[3];
   GLfloat col[4] = {1.0, 1.0, 1.0, alpha};  // temporary colour variable
 
-  GLfloat z_factor =
-      static_cast<GLfloat>(siz.height / siz.width);               // approx 1/4
+  // approx 1/4
+  GLfloat z_factor = static_cast<GLfloat>(siz.height / siz.width);
   GLfloat y_factor = static_cast<GLfloat>(1.0 - sqrt(z_factor));  // approx 1/2
 
   int scanner_cx = x;
@@ -1468,16 +1468,17 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
 
   // use a non-mutable copy so this can't be changed under us.
   int ent_count = static_cast<int>(UNIVERSE->n_entities);
-  Entity** uni_entities =
-      UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(static_cast<std::size_t>(
-      ent_count));  // the C++ entities, their objects retained
+  // grab the public sorted list
+  Entity** uni_entities = UNIVERSE->sortedEntities;
+  // the C++ entities, their objects retained
+  std::vector<Entity*> my_entities(static_cast<std::size_t>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   Entity* scannedEntity = nullptr;
 
   for (i = 0; i < ent_count; i++) {
+    // retained
     my_entities[static_cast<std::size_t>(i)] =
-        oo::HoldIn(my_holds, uni_entities[i]);  // retained
+        oo::HoldIn(my_holds, uni_entities[i]);
   }
 
   if (!emptyDial) {
@@ -1807,9 +1808,9 @@ void HeadUpDisplay::drawScannerZoomIndicator(const oo::PList& info) {
   GLfloat cx = static_cast<GLfloat>(x - 0.3 * siz.width);
   GLfloat cy = static_cast<GLfloat>(y - 0.75 * siz.height);
 
-  int zoomLevel = static_cast<int>(
-      scanner_zoom);  // was zl, which reads as the member z1
-                      // (clang-tidy misc-confusable-identifiers)
+  // was zl, which reads as the member z1 (clang-tidy
+  // misc-confusable-identifiers)
+  int zoomLevel = static_cast<int>(scanner_zoom);
   if (zoomLevel < 1) zoomLevel = 1;
   if (zoomLevel > SCANNER_ZOOM_LEVELS) zoomLevel = SCANNER_ZOOM_LEVELS;
   if (zoomLevel == 1) zoom_color[3] *= static_cast<GLfloat>(0.75);
@@ -1919,11 +1920,10 @@ void HeadUpDisplay::drawCompass(const oo::PList& info) {
       case oo::CompassMode::kBasic:
         if (reference != nullptr &&
             reference
-                ->getIsStation())  // validateCompassTarget in PlayerEntity.m
-                                   // changes COMPASS_BASIC_MODE target to the
-                                   // main station when inside the planetary
-                                   // aegis or in docking range of the main
-                                   // station
+                // validateCompassTarget in PlayerEntity.m changes
+                // COMPASS_BASIC_MODE target to the main station when inside the
+                // planetary aegis or in docking range of the main station
+                ->getIsStation())
           drawCompassStationBlipAt(relativePosition, siz, alpha);
         else
           drawCompassPlanetBlipAt(relativePosition, siz, alpha);
@@ -1948,9 +1948,8 @@ void HeadUpDisplay::drawCompass(const oo::PList& info) {
       case oo::CompassMode::kBeacons:
         drawCompassBeaconBlipAt(relativePosition, siz, alpha);
         Entity* beacon = (PLAYER != nullptr ? PLAYER->nextBeacon() : nullptr);
-        oo::HUDBeaconIcon* beaconIcon =
-            oo::BeaconDrawable(beacon);  // nil beacon or drawable: nothing, as
-                                         // the message to nil
+        // nil beacon or drawable: nothing, as the message to nil
+        oo::HUDBeaconIcon* beaconIcon = oo::BeaconDrawable(beacon);
         if (beaconIcon != nullptr)
           beaconIcon->drawHUDBeaconIconAt(NSMakePoint(x, y), siz, alpha, z1);
         break;
@@ -2061,10 +2060,9 @@ void HeadUpDisplay::drawSecondaryTargetReticle(const oo::PList& info) {
     // needs target memory to be working in addition to any other equipment
     // this item may be bound to
     Entity* primary =
-        (player != nullptr
-             ? player->primaryTarget()
-             : static_cast<Entity*>(nullptr));  // the C++ entities: a target
-                                                // may be any entity
+        (player != nullptr ? player->primaryTarget()
+                           // the C++ entities: a target may be any entity
+                           : static_cast<Entity*>(nullptr));
     for (unsigned i = 0; i < PLAYER_TARGET_MEMORY_SIZE; i++) {
       const std::weak_ptr<Entity> sec_ref =
           (player != nullptr ? player->targetMemory()
@@ -2074,8 +2072,8 @@ void HeadUpDisplay::drawSecondaryTargetReticle(const oo::PList& info) {
       // gives null from oo::LiveEntity below.
       if (!oo::isUnset(sec_ref)) {
         // a weak reference (-isProxy), not an empty slot
-        Entity* secondary =
-            oo::LiveEntity(sec_ref);  // +0, null once its object has gone
+        // +0, null once its object has gone
+        Entity* secondary = oo::LiveEntity(sec_ref);
         if (secondary != nullptr && secondary != primary) {
           if (secondary->zeroDistance() <= SCANNER_MAX_RANGE2 &&
               secondary->isInSpace()) {
@@ -2100,8 +2098,8 @@ void HeadUpDisplay::drawWaypoints(const oo::PList& info) {
        (UNIVERSE != nullptr
             ? UNIVERSE->currentWaypoints()
             : std::map<std::string, oo::EntityHold, std::less<>>())) {
-    Entity* waypoint =
-        waypointRef.get();  // the universe holds the C++ waypoint
+    // the universe holds the C++ waypoint
+    Entity* waypoint = waypointRef.get();
     hudDrawWaypoint(waypoint, PLAYER, z1, alpha, waypoint == compass, scale);
   }
 }
@@ -2560,8 +2558,8 @@ void HeadUpDisplay::drawEnergyGauge(const oo::PList& info) {
 
   bankHeight = static_cast<GLfloat>(siz.height / n_bars);
   // draw energy banks
-  NSSize barSize =
-      NSMakeSize(siz.width, bankHeight - 2.0);  // leave a gap between bars
+  // leave a gap between bars
+  NSSize barSize = NSMakeSize(siz.width, bankHeight - 2.0);
   GLfloat midBank = bankHeight / 2.0f;
   bankY =
       static_cast<GLfloat>(static_cast<GLfloat>(y) -
@@ -3301,8 +3299,9 @@ void HeadUpDisplay::drawDirectionCue(const oo::PList& /*info*/) {
       std::size_t cueColorIndex = target->getIsWormhole()
                                       ? OO_RETICLE_COLOR_WORMHOLE
                                       : OO_RETICLE_COLOR_TARGET;
-      oo::Color* directionCueColor = ReticleColorAt(
-          _reticleColors, cueColorIndex);  // never null: it raises past the end
+      // never null: it raises past the end
+      oo::Color* directionCueColor =
+          ReticleColorAt(_reticleColors, cueColorIndex);
       GLfloat clearColorArray[4] = {directionCueColor->redComponent(),
                                     directionCueColor->greenComponent(),
                                     directionCueColor->blueComponent(), 0.0f};
@@ -3700,9 +3699,8 @@ void HeadUpDisplay::drawStickSensitivityIndicator(const oo::PList& /*info*/) {
   NSSize siz;
   GLfloat alpha = overallAlpha;
   bool mouse = (PLAYER != nullptr ? PLAYER->isMouseControlOn() : false);
-  oo::JoystickManager* stickHandler =
-      oo::JoystickManager::sharedStickHandler();  // made by the platform's
-                                                  // registered factory
+  // made by the platform's registered factory
+  oo::JoystickManager* stickHandler = oo::JoystickManager::sharedStickHandler();
   struct CachedInfo cached;
 
   if (stickHandler == nullptr || !stickHandler->joystickCount()) {
@@ -4195,10 +4193,9 @@ void hudDrawReticleOnTarget(
           // unless we want a separate line Destination: XXX ?
         case WORMHOLE_SCANINFO::kArrivalTime: {
           // a format read at run time
-          const std::string etaFormat =
-              OO_DESC("wormhole-ETA-@");  // the format first, as Clang
-                                          // evaluates the arguments: a
-                                          // description that is an array draws
+          // the format first, as Clang evaluates the arguments: a description
+          // that is an array draws
+          const std::string etaFormat = OO_DESC("wormhole-ETA-@");
           std::string wormholeETA = oo::str::formatRuntime(
               etaFormat,
               {ClockToString(HeadUpDisplayWormholeEstimatedArrivalTime(
@@ -4447,10 +4444,9 @@ static GLfloat drawCharacterQuad(uint8_t chr, GLfloat x, GLfloat y, GLfloat z,
     GLfloat texture_x = static_cast<GLfloat>(ONE_SIXTEENTH * (chr & 0x0f));
     GLfloat texture_y = static_cast<GLfloat>(ONE_SIXTEENTH * (chr >> 4));
     if (chr > 32)
-      y += static_cast<GLfloat>(
-          ONE_EIGHTH *
-          siz.height);  // Adjust for baseline offset change in 1.71 (needed to
-                        // keep accented characters in box)
+      // Adjust for baseline offset change in 1.71 (needed to keep accented
+      // characters in box)
+      y += static_cast<GLfloat>(ONE_EIGHTH * siz.height);
 
     glTexCoord2f(texture_x, static_cast<GLfloat>(texture_y + ONE_SIXTEENTH));
     glVertex3f(x, y, z);
@@ -4655,8 +4651,9 @@ void DrawPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y, GLfloat z,
             .get(),
         1.0);
 
+    // charcters 0..7 are government symbols
     cx += drawCharacterQuad(static_cast<uint8_t>(gov), cx, y, z, siz) -
-          sF6KernGovt;  // charcters 0..7 are government symbols
+          sF6KernGovt;
     HeadUpDisplayUniverseGUISetGLColorFromSetting(
         kGuiChartTechColor, Color::colorWithRed(0.5, 1.0f, 1.0f, 1.0f).get(),
         1.0);
@@ -4719,8 +4716,8 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
                                          GLfloat alpha) {
   Vector spacepos, scannerpos;
   GLfloat theta, phi;
-  GLfloat z_factor =
-      static_cast<GLfloat>(siz.height / siz.width);               // approx 1/4
+  // approx 1/4
+  GLfloat z_factor = static_cast<GLfloat>(siz.height / siz.width);
   GLfloat y_factor = static_cast<GLfloat>(1.0 - sqrt(z_factor));  // approx 1/2
   std::array<oo::GLVector, 25> ring;
   int i, j;
@@ -4878,8 +4875,8 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
         }
       }
     } else {
-      km_scan = static_cast<GLfloat>(0.001 * SCANNER_MAX_RANGE /
-                                     zoom);  // calculate kilometer divisions
+      // calculate kilometer divisions
+      km_scan = static_cast<GLfloat>(0.001 * SCANNER_MAX_RANGE / zoom);
       hdiv = static_cast<GLfloat>(0.5 * siz.height / km_scan);
       wdiv = static_cast<GLfloat>(0.25 * siz.width / km_scan);
       if (wdiv < 4.0) {

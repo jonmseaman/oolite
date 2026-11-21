@@ -121,8 +121,8 @@ struct EntityFacadeRow {
 */
 enum class EntityObjectNameKind : std::uint8_t {
   kSignature,  // no signature a by-name call can use: logged
-  kCalled,     // a root-entity row's method with no argument: the row's body,
-               // called
+  // a root-entity row's method with no argument: the row's body, called
+  kCalled,
   kLifetime  // a root-class or lifetime method: answered, logged, never called
 };
 
@@ -134,16 +134,16 @@ struct EntityObjectName {
 };
 
 std::span<const oo::EntityObjectName> EntityObjectNames();
-const oo::EntityObjectName* EntityObjectNameNamed(
-    const std::string& name);  // null if the object did not answer it
+// null if the object did not answer it
+const oo::EntityObjectName* EntityObjectNameNamed(const std::string& name);
 
 std::span<const oo::EntityFacadeRow> EntityFacadeRows();
-const oo::EntityFacadeRow* EntityFacadeRowNamed(
-    const std::string& name);  // null if not a root-entity row
+// null if not a root-entity row
+const oo::EntityFacadeRow* EntityFacadeRowNamed(const std::string& name);
 
 std::span<const oo::EntityByNameRow> EntityByNameRows();
-const oo::EntityByNameRow* EntityByNameRowNamed(
-    const std::string& name);  // null if not tabled
+// null if not tabled
+const oo::EntityByNameRow* EntityByNameRowNamed(const std::string& name);
 bool EntityByNameRowApplies(const oo::EntityByNameRow& row, Entity* entity);
 
 // The tabled method with no argument that applies to the entity, called, its

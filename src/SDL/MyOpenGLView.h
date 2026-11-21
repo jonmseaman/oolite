@@ -78,7 +78,8 @@ inline constexpr double MOUSEWHEEL_EVENTS_DELAY_INTERVAL = 0.05;
 inline constexpr int MOUSEWHEEL_DELTA = 120;
 
 }  // namespace oo
-   // Same as Windows WHEEL_DELTA
+
+// Same as Windows WHEEL_DELTA
 
 #define SNAPSHOTS_PNG_FORMAT 1
 inline constexpr std::string_view SNAPSHOTHDR_EXTENSION_EXR = ".exr";
@@ -351,8 +352,8 @@ class MyOpenGLView : public oo::Object {
   oo::OpenGLMatrixManager* getOpenGLMatrixManager();  // borrowed
 
   // Snapshots and debug image dumps.
-  bool snapShot(const std::optional<std::string>&
-                    filename);  // nullopt: auto-numbered "oolite-NNN"
+  // nullopt: auto-numbered "oolite-NNN"
+  bool snapShot(const std::optional<std::string>& filename);
 #ifndef NDEBUG
   // General image-dumping method.
   void dumpRGBAToFileNamed(const std::string& name, uint8_t* bytes,
@@ -426,8 +427,8 @@ class MyOpenGLView : public oo::Object {
   ::GameController* gameController = {};  // not retained
   bool keys[NUM_KEYS] = {};
   int scancode2Unicode[NUM_KEYS] = {};
-  oo::PList keyMappings_normal;  // the keyboard's mapping_normal /
-                                 // mapping_shifted (null if none)
+  // the keyboard's mapping_normal / mapping_shifted (null if none)
+  oo::PList keyMappings_normal;
   oo::PList keyMappings_shifted;
   bool suppressKeys = {};  // DJS
   bool opt = {}, ctrl = {}, command = {}, shift = {}, lastKeyShifted = {};
@@ -459,10 +460,10 @@ class MyOpenGLView : public oo::Object {
   bool _msaa = {};
 
   // Full screen sizes
-  std::vector<oo::PList>
-      screenSizes;       // mode Dicts: Width, Height (integers), RefreshRate (a
-                         // single real; the native mode's an integer 0)
-  int currentSize = {};  // we need an int!
+  // mode Dicts: Width, Height (integers), RefreshRate (a single real; the
+  // native mode's an integer 0)
+  std::vector<oo::PList> screenSizes;
+  int currentSize = {};
   bool fullScreen = {};
 
   // Windowed mode

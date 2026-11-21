@@ -41,8 +41,8 @@ oo::NullTexture* sSingleton = nullptr;
 oo::NullTexture* oo::NullTexture::sharedNullTexture() {
   // NOTE: assumes single-threaded access.
   if (sSingleton == nullptr) {
-    static std::shared_ptr<oo::NullTexture>* sSingletonHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<oo::NullTexture>* sSingletonHolder = nullptr;
     sSingletonHolder =
         new std::shared_ptr<oo::NullTexture>(oo::makeShared<oo::NullTexture>());
     sSingleton = sSingletonHolder->get();

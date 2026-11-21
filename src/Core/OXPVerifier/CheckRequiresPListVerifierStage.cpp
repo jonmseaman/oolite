@@ -99,8 +99,8 @@ void oo::CheckRequiresPListVerifierStage::run() {
   std::string unknownKeys;
   std::optional<std::string> version, maxVersion;
   std::vector<unsigned>
-      ooVersionComponents;  // empty where ComponentsFromVersionString()
-                            // answered nil
+      // empty where ComponentsFromVersionString() answered nil
+      ooVersionComponents;
   std::optional<std::vector<unsigned>> versionComponents, maxVersionComponents;
 
   fileScanner = static_cast<oo::FileScannerVerifierStage*>(

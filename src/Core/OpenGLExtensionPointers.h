@@ -78,8 +78,8 @@ SOFTWARE.
 #endif  // OO_SHADERS
 
 #if GL_ARB_vertex_buffer_object
-#define OO_USE_VBO \
-  0  // Disabled due to crashes on certain systems (and limited VBO use)
+// Disabled due to crashes on certain systems (and limited VBO use)
+#define OO_USE_VBO 0
 #else
 #define OO_USE_VBO 0
 #warning Building without vertex buffer object support, are your OpenGL headers up to date?

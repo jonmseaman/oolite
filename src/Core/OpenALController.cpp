@@ -34,8 +34,8 @@ MA 02110-1301, USA.
 
 namespace {
 
-oo::OpenALController* sSingleton =
-    nullptr;  // +1, never released (the retained singleton)
+// +1, never released (the retained singleton)
+oo::OpenALController* sSingleton = nullptr;
 
 }  // namespace
 
@@ -47,8 +47,8 @@ oo::OpenALController* oo::OpenALController::sharedController() {
         oo::makeShared<oo::OpenALController>();
     // Never destroyed: a heap std::shared_ptr that is never deleted.
     if (controller->init()) {
-      static std::shared_ptr<oo::OpenALController>* sSingletonHolder =
-          nullptr;  // never deleted
+      // never deleted
+      static std::shared_ptr<oo::OpenALController>* sSingletonHolder = nullptr;
       sSingletonHolder =
           new std::shared_ptr<oo::OpenALController>(std::move(controller));
       sSingleton = sSingletonHolder->get();
@@ -76,9 +76,8 @@ bool oo::OpenALController::init() {
            "Failed to create default sound context");
     return false;
   }
-  error = static_cast<ALuint>(
-      alGetError());  // out of the condition (clang-tidy
-                      // bugprone-assignment-in-if-condition)
+  // out of the condition (clang-tidy bugprone-assignment-in-if-condition)
+  error = static_cast<ALuint>(alGetError());
   if (error != AL_NO_ERROR) {
     OO_LOG(oo::kLogSoundInitError, "Error {} creating sound context", error);
   }

@@ -210,9 +210,8 @@ class StationEntity : public ShipEntity {
   // NPC launchers. Not overrides: ShipEntity's same-named members are
   // not virtual (the ship's answer "not a station"); a
   // station's part is asked first.
-  oo::PList launchIndependentShip(
-      const std::string&
-          role);  // the ship launched, as an Object node (null: none)
+  // the ship launched, as an Object node (null: none)
+  oo::PList launchIndependentShip(const std::string& role);
   oo::PList launchPolice();  // the ships launched, as Object nodes
   ::ShipEntity* launchDefenseShip();
   ::ShipEntity* launchScavenger();
@@ -254,8 +253,8 @@ class StationEntity : public ShipEntity {
   oo::CargoQuantity marketCapacity = {};
   oo::PList marketDefinition;  // an array; null: none (was nil)
   std::optional<std::string> marketScriptName;  // nullopt: none (was nil)
-  std::optional<std::vector<oo::PList>>
-      localShipyard;  // nullopt: not generated yet (was nil)
+  // nullopt: not generated yet (was nil)
+  std::optional<std::vector<oo::PList>> localShipyard;
 
   std::map<std::string, std::shared_ptr<::OOJSInterfaceDefinition>, std::less<>>
       localInterfaces;

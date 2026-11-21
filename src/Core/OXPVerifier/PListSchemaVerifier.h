@@ -114,10 +114,12 @@ class PListSchemaVerifierDelegate {
 
 class PListSchemaVerifier : public oo::Object {
  public:
+  // null for a null schema
   static std::shared_ptr<PListSchemaVerifier> verifierWithSchema(
-      const oo::PList& schema);  // null for a null schema
+      const oo::PList& schema);
+  // -initWithSchema:; null for a null schema
   static std::shared_ptr<PListSchemaVerifier> initWithSchema(
-      const oo::PList& schema);  // -initWithSchema:; null for a null schema
+      const oo::PList& schema);
 
   void setDelegate(PListSchemaVerifierDelegate* delegate);  // not retained
   PListSchemaVerifierDelegate* delegate();
@@ -130,11 +132,11 @@ class PListSchemaVerifier : public oo::Object {
           brackets. For instance, the key path ( "adder-player", "custom_views",
      0, "view_description" ) is transfomed to
           "adder-player.custom_views[0].view_description".
+  // a null or empty path is "root"; nullopt for a component that is neither
+  string nor number
   */
   static std::optional<std::string> descriptionForKeyPath(
-      const oo::PList&
-          keyPath);  // a null or empty path is "root"; nullopt for a component
-                     // that is neither string nor number
+      const oo::PList& keyPath);
 
   // Internal (the OOPrivate category): the verification core and the delegate
   // calls, which the type verifiers in OOPListSchemaVerifier.cpp (file-static
@@ -156,12 +158,12 @@ class PListSchemaVerifier : public oo::Object {
                    bool* outStop);
   oo::PList resolveSchemaType(
       const oo::PList& specifier, BackLinkChain keyPath,
-      std::optional<PListSchemaVerifierError>*
-          outError);  // null: not resolved (*outError says why)
+      // null: not resolved (*outError says why)
+      std::optional<PListSchemaVerifierError>* outError);
 
  private:
-  explicit PListSchemaVerifier(
-      const oo::PList& schema);  // -initWithSchema:, less its failure
+  // -initWithSchema:, less its failure
+  explicit PListSchemaVerifier(const oo::PList& schema);
 
   oo::PList _schema;
   oo::PList _definitions;  // the schema's $definitions (null if none)
@@ -183,34 +185,30 @@ extern const char* const
 
 extern const char* const
     kExpectedClassErrorKey;  // Expected class. Nil for vector and quaternion.
-extern const char* const
-    kExpectedClassNameErrorKey;  // String describing expected class. May be
-                                 // more specific (for instance, "boolean" or
-                                 // "positive integer" for a number).
+// String describing expected class. May be more specific (for instance,
+// "boolean" or "positive integer" for a number).
+extern const char* const kExpectedClassNameErrorKey;
 extern const char* const
     kUnknownKeyErrorKey;  // Unallowed key found in dictionary.
-extern const char* const
-    kMissingRequiredKeysErrorKey;  // Array of the required keys not present in
-                                   // dictionary, sorted
-extern const char* const
-    kMissingSubStringErrorKey;  // String or array of strings not found for
-                                // OOPListSchemaVerifierErrorCode::kStringPrefixMissing/OOPListSchemaVerifierErrorCode::kStringSuffixMissing/OOPListSchemaVerifierErrorCode::kStringSubstringMissing.
-extern const char* const
-    kUnnownFilterErrorKey;  // Unrecognized filter specifier for
-                            // OOPListSchemaVerifierErrorCode::kSchemaUnknownFilter.
-                            // Not specified if filter is not a string.
+// Array of the required keys not present in dictionary, sorted
+extern const char* const kMissingRequiredKeysErrorKey;
+// String or array of strings not found for
+// OOPListSchemaVerifierErrorCode::kStringPrefixMissing/OOPListSchemaVerifierErrorCode::kStringSuffixMissing/OOPListSchemaVerifierErrorCode::kStringSubstringMissing.
+extern const char* const kMissingSubStringErrorKey;
+// Unrecognized filter specifier for
+// OOPListSchemaVerifierErrorCode::kSchemaUnknownFilter.
+// Not specified if filter is not a string.
+extern const char* const kUnnownFilterErrorKey;
 extern const char* const kErrorsByOptionErrorKey;
-extern const char* const
-    kUnderlyingErrorErrorKey;  // The delegate's own error for
-                               // OOPListSchemaVerifierErrorCode::kDelegatedTypeError.
-                               // // Dictionary of errors for oneOf types.
+// The delegate's own error for
+// OOPListSchemaVerifierErrorCode::kDelegatedTypeError.
+// Dictionary of errors for oneOf types.
+extern const char* const kUnderlyingErrorErrorKey;
 
-extern const char* const
-    kUnknownTypeErrorKey;  // Set for
-                           // OOPListSchemaVerifierErrorCode::kSchemaUnknownType.
-extern const char* const
-    kUndefinedMacroErrorKey;  // Set for
-                              // OOPListSchemaVerifierErrorCode::kSchemaUndefiniedMacroReference.
+// Set for OOPListSchemaVerifierErrorCode::kSchemaUnknownType.
+extern const char* const kUnknownTypeErrorKey;
+// Set for OOPListSchemaVerifierErrorCode::kSchemaUndefiniedMacroReference.
+extern const char* const kUndefinedMacroErrorKey;
 
 // All plist verifier errors have a short error description in their
 // -localizedFailureReason.
@@ -243,7 +241,7 @@ enum class PListSchemaVerifierErrorCode : std::int32_t {
   kDictionaryMissingRequiredKeys,  // requiredKeys rule is not
                                    // fulfilled. The missing keys are
                                    // listed in
-                                   // kMissingRequiredKeysErrorKey.
+  // kMissingRequiredKeysErrorKey.
 
   kEnumerationBadValue,  // Enumeration type contains string that
                          // isn't in permitted set.

@@ -52,8 +52,8 @@ std::vector<std::shared_ptr<oo::EquipmentType>> sEquipmentTypes;
 std::vector<std::shared_ptr<oo::EquipmentType>> sEquipmentTypesOutfitting;
 std::map<std::string, std::shared_ptr<oo::EquipmentType>, std::less<>>
     sEquipmentTypesByIdentifier;
-std::map<std::string, std::string, std::less<>>
-    sMissilesRegistry;  // ship key -> missile role
+// ship key -> missile role
+std::map<std::string, std::string, std::less<>> sMissilesRegistry;
 }  // namespace
 
 namespace {
@@ -313,8 +313,8 @@ bool oo::EquipmentType::initWithInfo(const oo::PList& info) {
         }
       }
 
-      const oo::PList* dispColor =
-          extraInfo.find("display_color");  // absent: a null PList, as nil was
+      // absent: a null PList, as nil was
+      const oo::PList* dispColor = extraInfo.find("display_color");
       _displayColor = oo::Color::colorWithDescription(
           (dispColor != nullptr) ? *dispColor : oo::PList());
 
@@ -635,8 +635,8 @@ GLfloat oo::EquipmentType::weaponThreatAssessment() {
 }
 
 std::shared_ptr<oo::Color> oo::EquipmentType::weaponColor() {
-  const oo::PList* color =
-      _weaponInfo.find("color");  // absent: a null PList, as nil was
+  // absent: a null PList, as nil was
+  const oo::PList* color = _weaponInfo.find("color");
   return oo::Color::brightColorWithDescription(
       (color != nullptr) ? *color : oo::PList());
 }
@@ -677,9 +677,9 @@ oo::TechLevelID oo::EquipmentType::effectiveTechLevel() {
       const oo::PList missionValue =
           (PLAYER != nullptr
                ? PLAYER->missionVariableForKey("mission_TL_FOR_" + _identifier)
-               : oo::PList());  // OOUIntegerFromObject:
-                                // OOUnsignedLongLongFromObject on this 64-bit
-                                // build
+               // OOUIntegerFromObject: OOUnsignedLongLongFromObject on this
+               // 64-bit build
+               : oo::PList());
       tl = static_cast<oo::TechLevelID>(
           static_cast<std::ptrdiff_t>(oo::plist_get::unsignedLongLongFrom(
               !missionValue.isNull() ? &missionValue : nullptr, tl)));

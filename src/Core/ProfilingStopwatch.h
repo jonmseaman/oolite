@@ -71,8 +71,8 @@ namespace oo {
 using HighResTimeValue = DWORD;
 
 }  // namespace oo
-   // Rolls over once every 50 days, but we can
-   // live with that.
+
+// Rolls over once every 50 days, but we can live with that.
 
 // Note: timeGetTime returns time in milliseconds. This results in lower time
 // resolution in Windows, but at this stage I don't think we need to do
@@ -146,8 +146,8 @@ class ProfilingStopwatch : public oo::Object {
 
   void start();
   void stop();
-  TimeDelta currentTime();  // Returns stop time - start time if stopped, or
-                            // now - start time if running.
+  // Returns stop time - start time if stopped, or now - start time if running.
+  TimeDelta currentTime();
 
   /*	Resets timer to zero, returning the current value. This is drift-free,
      i.e. if it is called twice in a row while running the sum is an accurate

@@ -84,10 +84,8 @@ void Entity::init() {
   no_draw_distance = 100000.0;  //  10 km
 
   scanClass = oo::ScanClass::kNotSet;
-  Entity::setStatus(
-      oo::EntityStatus::kCockpitDisplay);  // the base's own: ShipEntity's
-                                           // override does the same for this
-                                           // status
+  // the base's own: ShipEntity's override does the same for this status
+  Entity::setStatus(oo::EntityStatus::kCockpitDisplay);
 
   spawnTime = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
 
@@ -429,9 +427,8 @@ void Entity::updateLinkedLists() {
     x_next->x_previous = this;
   if (x_previous)  // insert self into the list after x_previous..
     x_previous->x_next = this;
-  if ((x_previous == nullptr) &&
-      (UNIVERSE))  // if we're the first then tell the UNIVERSE!
-    UNIVERSE->x_list_start = this;
+  // if we're the first then tell the UNIVERSE!
+  if ((x_previous == nullptr) && (UNIVERSE)) UNIVERSE->x_list_start = this;
 
   // update position in linked list for position.y
   // take self out of list..
@@ -454,9 +451,8 @@ void Entity::updateLinkedLists() {
     y_next->y_previous = this;
   if (y_previous)  // insert self into the list after y_previous..
     y_previous->y_next = this;
-  if ((y_previous == nullptr) &&
-      (UNIVERSE))  // if we're the first then tell the UNIVERSE!
-    UNIVERSE->y_list_start = this;
+  // if we're the first then tell the UNIVERSE!
+  if ((y_previous == nullptr) && (UNIVERSE)) UNIVERSE->y_list_start = this;
 
   // update position in linked list for position.z
   // take self out of list..
@@ -479,9 +475,8 @@ void Entity::updateLinkedLists() {
     z_next->z_previous = this;
   if (z_previous)  // insert self into the list after z_previous..
     z_previous->z_next = this;
-  if ((z_previous == nullptr) &&
-      (UNIVERSE))  // if we're the first then tell the UNIVERSE!
-    UNIVERSE->z_list_start = this;
+  // if we're the first then tell the UNIVERSE!
+  if ((z_previous == nullptr) && (UNIVERSE)) UNIVERSE->z_list_start = this;
 
   // done
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -530,13 +525,13 @@ void Entity::throwSparks() {
 }
 
 void Entity::setOwner(Entity* ent) {
-  _owner = oo::share(oo::WithObject(
-      ent));  // an entity without its object was nil's empty reference
+  // an entity without its object was nil's empty reference
+  _owner = oo::share(oo::WithObject(ent));
 }
 
 Entity* Entity::owner() {
-  return oo::WithObject(
-      _owner.lock().get());  // +0, null once it has gone, as the object read
+  // +0, null once it has gone, as the object read
+  return oo::WithObject(_owner.lock().get());
 }
 
 Entity* Entity::ownerEntity() { return _owner.lock().get(); }
@@ -806,8 +801,8 @@ void Entity::dumpState() {
       dumpSelfState();
     } catch (...) {
       if (!oo::CurrentOOException()) throw;
-    }  // was @catch (id exception) {}: the game's exceptions only
-       // (oo::Exception)
+    }
+    // was @catch (id exception) {}: the game's exceptions only (oo::Exception)
     oo::log::popIndent();
   }
 }

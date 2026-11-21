@@ -97,9 +97,9 @@ inline constexpr const char* kMaterialSpecularColorMapName =
     "specular_color_map";
 inline constexpr const char* kMaterialSpecularExponentMapName =
     "specular_exponent_map";
-inline constexpr const char* kMaterialCombinedSpecularMapName =
-    "specular_map";  // Combined specular_color_map and specular_exponent_map
-                     // (unfortunate name required for backwards-compatibility).
+// Combined specular_color_map and specular_exponent_map (unfortunate name
+// required for backwards-compatibility).
+inline constexpr const char* kMaterialCombinedSpecularMapName = "specular_map";
 inline constexpr const char* kMaterialNormalMapName = "normal_map";
 inline constexpr const char* kMaterialParallaxMapName = "parallax_map";
 inline constexpr const char* kMaterialNormalAndParallaxMapName =

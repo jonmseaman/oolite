@@ -66,14 +66,14 @@ class Commodities : public oo::Object {
  public:
   Commodities();  // reads trade-goods.plist
 
-  static std::optional<std::string> legacyCommodityType(
-      std::size_t i);  // always a key (the old method never returned nil)
+  // always a key (the old method never returned nil)
+  static std::optional<std::string> legacyCommodityType(std::size_t i);
 
   std::shared_ptr<CommodityMarket> generateManifestForPlayer();
   std::shared_ptr<CommodityMarket> generateBlankMarket();
+  // nullopt: no script (was nil)
   std::shared_ptr<CommodityMarket> generateMarketForSystemWithEconomy(
-      EconomyID economy, const std::optional<std::string>&
-                             scriptName);  // nullopt: no script (was nil)
+      EconomyID economy, const std::optional<std::string>& scriptName);
   std::shared_ptr<CommodityMarket> generateMarketForStation(
       ::StationEntity* station);
 
@@ -84,8 +84,8 @@ class Commodities : public oo::Object {
   std::size_t count();
   std::vector<std::string> goods();  // commodity keys, in key order
   bool goodDefined(const std::string& key);
-  std::optional<std::string> goodNamed(
-      const std::string& name);  // nullopt: no good has that (expanded) name
+  // nullopt: no good has that (expanded) name
+  std::optional<std::string> goodNamed(const std::string& name);
   std::string getRandomCommodity();  // a commodity key
   MassUnit massUnitForGood(const std::string& good);
 
@@ -110,8 +110,8 @@ class Commodities : public oo::Object {
   oo::PList updateInfoFor(const oo::PList& good, const oo::PList& rule,
                           CargoQuantity maxCapacity);
 
-  std::map<std::string, oo::PList, std::less<>>
-      _commodityLists;  // trade-goods.plist: commodity key -> its info (a Dict)
+  // trade-goods.plist: commodity key -> its info (a Dict)
+  std::map<std::string, oo::PList, std::less<>> _commodityLists;
 };
 
 }  // namespace oo

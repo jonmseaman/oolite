@@ -192,8 +192,8 @@ int OOJSGetSharedPermanentOwnPropertyNames(JSContext* context,
 
   for (uint32_t i = 0; i < count; i++) {
     tab[i].atom = JS_DupAtom(context, table->atoms[i]);
-    tab[i].is_enumerable =
-        false;  // Ignored; QuickJS asks get_own_property for flags.
+    // Ignored; QuickJS asks get_own_property for flags.
+    tab[i].is_enumerable = false;
   }
 
   *ptab = tab;

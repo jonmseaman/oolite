@@ -231,8 +231,8 @@ bool oo::VisualEffectEntity::getIsVisualEffect() { return true; }
 bool oo::VisualEffectEntity::canCollide() { return false; }
 
 ::oo::Mesh* oo::VisualEffectEntity::mesh() {
-  return static_cast<::oo::Mesh*>(
-      getDrawable());  // an effect's drawable is its mesh
+  // an effect's drawable is its mesh
+  return static_cast<::oo::Mesh*>(getDrawable());
 }
 
 void oo::VisualEffectEntity::setMesh(::oo::Mesh* mesh) {
@@ -271,8 +271,8 @@ bool oo::VisualEffectEntity::setUpSubEntities() {
       effectinfoDictionary.get<oo::PList::Array>("subentities");
 
   for (i = 0; subs != nullptr && i < subs->count(); i++) {
-    const oo::PList* subentDict =
-        subs->at<oo::PList::Dict>(i);  // nil for anything but a dictionary
+    // nil for anything but a dictionary
+    const oo::PList* subentDict = subs->at<oo::PList::Dict>(i);
     setUpOneSubentity(subentDict != nullptr ? *subentDict : oo::PList());
   }
 
@@ -811,14 +811,16 @@ oo::HUDBeaconIcon* oo::VisualEffectEntity::beaconDrawable() {
       const oo::PList iconData =
           (iconEntry != nullptr) ? *iconEntry : oo::PList();
       if (iconData.isArray())
-        _beaconDrawable = oo::PolygonSprite::initWithDataArray(
-            iconData, 0.5, *_beaconCode);  // null where it answered nil
+        // null where it answered nil
+        _beaconDrawable =
+            oo::PolygonSprite::initWithDataArray(iconData, 0.5, *_beaconCode);
     }
 
     if (_beaconDrawable == nullptr) {
       if (length > 0)
+        // -substringToIndex:1
         _beaconDrawable = oo::makeShared<oo::HUDBeaconCodeIcon>(
-            oo::utf16ToUtf8(beaconCode.substr(0, 1)));  // -substringToIndex:1
+            oo::utf16ToUtf8(beaconCode.substr(0, 1)));
       else
         _beaconDrawable = oo::makeShared<oo::HUDBeaconCodeIcon>(std::string());
     }

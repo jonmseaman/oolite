@@ -77,8 +77,8 @@ class JoystickStandardAxisProfile : public JoystickAxisProfile {
   double rawValue(double x) override;
 
  private:
-  double power_ =
-      {};  // the ivars power and parameter (clash with power(), parameter())
+  // the ivars power and parameter (clash with power(), parameter())
+  double power_ = {};
   double parameter_ = {};
 };
 
@@ -105,9 +105,9 @@ class JoystickSplineAxisProfile : public JoystickAxisProfile {
 
   // The ivar controlPoints (clashes with controlPoints()).
   std::vector<NSPoint> controlPoints_ = {};
-  std::vector<std::shared_ptr<JoystickSplineSegment>>
-      segments;  // no `= {}`: GCC instantiates ~Ref<T> at a default member
-                 // initializer, and T is incomplete here
+  // no `= {}`: GCC instantiates ~Ref<T> at a default member initializer, and T
+  // is incomplete here
+  std::vector<std::shared_ptr<JoystickSplineSegment>> segments;
 };
 
 }  // namespace oo

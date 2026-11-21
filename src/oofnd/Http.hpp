@@ -241,8 +241,8 @@ struct Event {
   enum class Kind { kResponse, kData, kFinished, kFailed };
   Kind kind = Kind::kFailed;
   int status = 0;  // response: the HTTP status (0 for file:)
-  std::int64_t expectedLength =
-      -1;             // response: Content-Length, or -1 without one
+  // response: Content-Length, or -1 without one
+  std::int64_t expectedLength = -1;
   std::string bytes;  // data
   std::string error;  // failed: a description for the log
 };

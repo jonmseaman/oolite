@@ -57,8 +57,8 @@ class ALStreamedSound : public Sound {
   ALuint soundBuffer() override;
 
  private:
-  friend struct ::OOALStreamedSoundTestAccess;  // the stand-ins of tests that
-                                                // stub the sound
+  // the stand-ins of tests that stub the sound
+  friend struct ::OOALStreamedSoundTestAccess;
 
   ALStreamedSound() = default;
 

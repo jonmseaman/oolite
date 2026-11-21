@@ -113,10 +113,10 @@ oo::ShaderProgram::shaderProgramWithVertexShader(
     const std::optional<std::string>& fragmentShaderSource,
     const std::optional<std::string>& vertexShaderName,
     const std::optional<std::string>& fragmentShaderName,
-    const std::optional<std::string>&
-        inPrefixString,  // String prepended to program source (both vs and fs)
-    const oo::PList&
-        attributeBindings,  // Maps vertex attribute names to "locations".
+    // String prepended to program source (both vs and fs)
+    const std::optional<std::string>& inPrefixString,
+    // Maps vertex attribute names to "locations".
+    const oo::PList& attributeBindings,
     const std::optional<std::string>& cacheKey) {
   std::shared_ptr<oo::ShaderProgram> result;
   std::optional<std::string> prefixString = inPrefixString;
@@ -495,8 +495,8 @@ bool GetShaderSource(const std::optional<std::string>& fileName,
   std::optional<std::string> result;
 
   if (!fileName.has_value())
-    return true;  // It's OK for one or the other of the shaders to be
-                  // undefined.
+    // It's OK for one or the other of the shaders to be undefined.
+    return true;
 
   result = ResourceManager::stringFromFilesNamed(*fileName, "Shaders");
   if (!result.has_value()) {

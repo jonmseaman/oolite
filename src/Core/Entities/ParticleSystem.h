@@ -94,8 +94,9 @@ class ParticleSystem : public Entity {
 
 class SmallFragmentBurstEntity : public ParticleSystem {
  public:
+  // the C++ entity
   static std::shared_ptr<SmallFragmentBurstEntity> fragmentBurstFromEntity(
-      Entity* entity);  // the C++ entity
+      Entity* entity);
 
   void update(oo::TimeDelta delta_t) override;
 
@@ -106,8 +107,9 @@ class SmallFragmentBurstEntity : public ParticleSystem {
 
 class BigFragmentBurstEntity : public ParticleSystem {
  public:
+  // the C++ entity
   static std::shared_ptr<BigFragmentBurstEntity> fragmentBurstFromEntity(
-      Entity* entity);  // the C++ entity
+      Entity* entity);
 
   void update(double delta_t) override;
 

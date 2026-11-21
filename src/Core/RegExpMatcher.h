@@ -78,8 +78,8 @@ class RegExpMatcher : public oo::Object {
   bool init();
 
   std::shared_ptr<OOJSFunction> _tester = {};
-  std::optional<std::string> _cachedRegExpString =
-      {};  // UTF-8; nullopt: nothing cached
+  // UTF-8; nullopt: nothing cached
+  std::optional<std::string> _cachedRegExpString = {};
   std::shared_ptr<OOJSValue> _cachedRegExpObject = {};
   RegExpFlags _cachedFlags = {};
 };

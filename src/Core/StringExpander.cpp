@@ -118,18 +118,19 @@ struct StringExpansionContext {
   oo::PList legacyLocals;  // a dictionary of mixed values; null: none (was nil)
   bool isJavaScript;
   bool convertBackslashN;
-  bool hasPercentR =
-      false;  // Set to indicate we need an ExpandPercentR() pass.
+  // Set to indicate we need an ExpandPercentR() pass.
+  bool hasPercentR = false;
   bool useGoodRNG;
   bool disallowPercentI = false;
 
   oo::MaybeUnits systemNameWithIan{};  // Cache for %I
   oo::MaybeUnits randomNameN{};        // Cache for %N
   oo::MaybeUnits randomNameR{};        // Cache for %R
-  oo::PList systemDescriptions{};  // Cache for system_description (an array),
-                                   // used for numbered keys; null: not loaded.
-  std::size_t sysDescCount = 0;    // Count of systemDescriptions, valid after
-                                   // GetSystemDescriptions() called.
+  // Cache for system_description (an array), used for numbered keys; null: not
+  // loaded.
+  oo::PList systemDescriptions{};
+  // Count of systemDescriptions, valid after GetSystemDescriptions() called.
+  std::size_t sysDescCount = 0;
 };
 
 }  // namespace
@@ -137,8 +138,9 @@ struct StringExpansionContext {
 namespace {
 
 /*	Accessors for lazily-instantiated caches in context.
+ // %H
  */
-oo::MaybeUnits GetSystemName(StringExpansionContext* context);     // %H
+oo::MaybeUnits GetSystemName(StringExpansionContext* context);
 oo::MaybeUnits GetSystemNameIan(StringExpansionContext* context);  // %I
 oo::MaybeUnits GetRandomNameN(StringExpansionContext* context);    // %N
 oo::MaybeUnits GetRandomNameR(StringExpansionContext* context);    // %R
@@ -341,10 +343,10 @@ std::optional<std::string> GenerateSystemDescription(
 
 Random_Seed StringExpanderDefaultRandomSeed() {
   auto* manager =
-      (UNIVERSE != nullptr
-           ? UNIVERSE->getSystemManager()
-           : nullptr);  // null: a zero seed, as a message to nil (auto: the
-                        // expander harness stubs the class)
+      (UNIVERSE != nullptr ? UNIVERSE->getSystemManager()
+                           // null: a zero seed, as a message to nil (auto: the
+                           // expander harness stubs the class)
+                           : nullptr);
   return (manager != nullptr) ? manager->getRandomSeedForCurrentSystem()
                               : Random_Seed{};
 }
@@ -817,12 +819,13 @@ oo::MaybeUnits ExpandStringKeyOverride(StringExpansionContext* context,
   if (value != nullptr) {
 #if WARNINGS
     if (!value->isString() && !value->isNumber()) {
-      SyntaxWarning(context, "strings.expand.warning.invalidOverride",
-                    "String expansion override value %s for [%s] is not a "
-                    "string or number.",
-                    oo::DescriptionOf(*value).c_str(),
-                    key.c_str());  // the value (was <ClassName 0x...> of its
-                                   // Foundation object)
+      SyntaxWarning(
+          context, "strings.expand.warning.invalidOverride",
+          "String expansion override value %s for [%s] is not a "
+          "string or number.",
+          oo::DescriptionOf(*value).c_str(),
+          // the value (was <ClassName 0x...> of its Foundation object)
+          key.c_str());
     }
 #endif
     return ValueText(*value);
@@ -947,8 +950,8 @@ oo::MaybeUnits ExpandStringKeyFromDescriptions(StringExpansionContext* context,
                  "String expansion value {} for [{}] from descriptions.plist "
                  "is not a string or number.",
                  oo::DescriptionOf(value),
-                 key);  // the value (was <ClassName 0x...> of its Foundation
-                        // object)
+                 // the value (was <ClassName 0x...> of its Foundation object)
+                 key);
       return std::nullopt;
     }
 
@@ -1530,8 +1533,8 @@ oo::Units NewRandomDigrams(StringExpansionContext* context) {
   unsigned length = (static_cast<unsigned int>(OO_EXPANDER_RANDOM % 4)) + 1;
   if ((static_cast<unsigned int>(OO_EXPANDER_RANDOM % 5)) <
       ((length == 1) ? 3 : 1))
-    ++length;  // Make two-letter names rarer and 10-letter names happen
-               // sometimes
+    // Make two-letter names rarer and 10-letter names happen sometimes
+    ++length;
   const oo::PList* digramsEntry = UNIVERSE->descriptions()->find("digrams");
   const std::string* digramsText =
       (digramsEntry != nullptr) ? digramsEntry->getIf<std::string>() : nullptr;

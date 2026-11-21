@@ -58,7 +58,8 @@ namespace oo {
 class PlanetDrawable;
 
 }  // namespace oo
-   // this class is its one caller
+
+// this class is its one caller
 
 /*	The universe and the legacy scripts make it with
    oo::makeShared<OOPlanetEntity>() and hold it as
@@ -94,8 +95,8 @@ class PlanetEntity : public Entity, public ::oo::GraphicsResetClient {
   std::optional<std::string> textureFileName();  // nullopt: none
   void setTextureFileName(const std::optional<std::string>& textureName);
 
-  bool setUpPlanetFromTexture(
-      const std::optional<std::string>& fileName);  // nullopt: none
+  // nullopt: none
+  bool setUpPlanetFromTexture(const std::optional<std::string>& fileName);
 
   // The drawables' materials, as the drawables keep them.
   oo::Material* material();

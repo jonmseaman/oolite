@@ -176,8 +176,8 @@ oo::ShipRegistry* oo::ShipRegistry::sharedRegistry() {
   if (sSingleton == nullptr) {
     OO_LOG("shipData.load.begin", "{}",
            "Loading ship data.");  // was +allocWithZone:'s
-    static std::shared_ptr<oo::ShipRegistry>* sSingletonHolder =
-        nullptr;  // never deleted
+    // never deleted
+    static std::shared_ptr<oo::ShipRegistry>* sSingletonHolder = nullptr;
     sSingletonHolder = new std::shared_ptr<oo::ShipRegistry>(
         oo::makeShared<oo::ShipRegistry>());
     sSingleton = sSingletonHolder->get();
@@ -205,8 +205,9 @@ void oo::ShipRegistry::init() {
     oo::CacheManager* cache = oo::CacheManager::sharedCache();
 
     _shipData = cache->pListForKey(kShipDataCacheKey, kShipRegistryCacheName);
-    _playerShips.clear();  // the cached array's string elements, in order
-                           // (anything else skipped, as oo::StringsFrom did)
+    // the cached array's string elements, in order (anything else skipped, as
+    // oo::StringsFrom did)
+    _playerShips.clear();
     const oo::PList cachedPlayerShips =
         cache->pListForKey(kPlayerShipsCacheKey, kShipRegistryCacheName);
     if (const oo::PList::Array* playerShips =
@@ -475,8 +476,9 @@ void oo::ShipRegistry::loadDemoShips() {
   const oo::PList initialDemoShips = ResourceManager::arrayFromFilesNamed(
       "shiplibrary.plist", "Config", true, false);
   const oo::PList::Array noShips;
+  // null unless isArray()
   const oo::PList::Array* initialArray =
-      initialDemoShips.getIf<oo::PList::Array>();  // null unless isArray()
+      initialDemoShips.getIf<oo::PList::Array>();
   const oo::PList::Array& initialEntries =
       initialArray != nullptr ? *initialArray : noShips;
   oo::PList::Array demoShips = initialEntries;
@@ -718,9 +720,8 @@ bool oo::ShipRegistry::applyLikeShips(oo::PList& ioData,
                    "one or more shipdata.plist entries have {} references that "
                    "cannot be resolved: {}",
                    likeKey,
-                   CaseInsensitiveSortedList(std::move(
-                       reportedBadShips)));  // FIXME: distinguish shipdata and
-                                             // effectdata
+                   // FIXME: distinguish shipdata and effectdata
+                   CaseInsensitiveSortedList(std::move(reportedBadShips)));
         oo::StandardsError("Likely missing a dependency in a manifest.plist");
       }
       break;
@@ -1102,8 +1103,8 @@ bool oo::ShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData) {
     const oo::PList* declarations =
         shipEntry.get<oo::PList::Array>("subentities");
     if (declarations != nullptr) {
-      const oo::PList subentityDeclarations =
-          *declarations;  // a copy: the entry's list is replaced below
+      // a copy: the entry's list is replaced below
+      const oo::PList subentityDeclarations = *declarations;
       oo::PList::Array okSubentities;
       okSubentities.reserve(subentityDeclarations.count());
       for (const oo::PList& subentityDecl :
@@ -1530,10 +1531,9 @@ oo::ShipRegistry::validateNewStyleStandardSubentityDeclaration(
                   "is too high, using {:.1f}.",
                   weaponRange, shipKey,
                   TURRET_SHOT_RANGE * COMBAT_WEAPON_RANGE_FACTOR);
-      weaponRange = static_cast<float>(
-          TURRET_SHOT_RANGE *
-          COMBAT_WEAPON_RANGE_FACTOR);  // approx. range of primary plasma
-                                        // canon.
+      // approx. range of primary plasma canon.
+      weaponRange =
+          static_cast<float>(TURRET_SHOT_RANGE * COMBAT_WEAPON_RANGE_FACTOR);
     }
 
     weaponEnergy = declaration.get<float>("weapon_energy", -1.0f);

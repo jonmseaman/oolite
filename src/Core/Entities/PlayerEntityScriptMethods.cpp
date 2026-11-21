@@ -329,8 +329,9 @@ oo::PList PlayerEntity::validatedMarker(const oo::PList& marker) {
   result["name"] = std::move(group);
   result["markerColor"] = marker.get<std::string>("markerColor", "redColor");
   result["markerShape"] = marker.get<std::string>("markerShape", "MARKER_X");
-  result["markerScale"] = oo::PList::singleReal(
-      marker.get<float>("markerScale", 1.0));  // +numberWithFloat:
+  // +numberWithFloat:
+  result["markerScale"] =
+      oo::PList::singleReal(marker.get<float>("markerScale", 1.0));
   return oo::PList(std::move(result));
 }
 
@@ -390,8 +391,8 @@ std::optional<std::string> PlayerEntity::getKeyBindingDescription(
     const oo::PList* def = keyList.at(i);
     oo::KeyCode k_int =
         static_cast<oo::KeyCode>(IntegerValueOf(def->find("key")));
-    const std::string desc =
-        keyCodeDescription(k_int).value_or("(null)");  // %@ of nil
+    // %@ of nil
+    const std::string desc = keyCodeDescription(k_int).value_or("(null)");
     // 0 = key not set
     if (k_int != 0) {
       if (BoolValueOf(def->find("mod2")) == true) final += keyMod2Text + "+";
@@ -497,8 +498,8 @@ std::optional<std::string> PlayerEntity::keyCodeDescription(oo::KeyCode code) {
       return OO_DESC("oolite-keycode-numpadenter");
 
     default:
-      return oo::utf16ToUtf8(
-          std::u16string(1, static_cast<char16_t>(code)));  // %C
+      // %C
+      return oo::utf16ToUtf8(std::u16string(1, static_cast<char16_t>(code)));
   }
 }
 
@@ -596,8 +597,8 @@ std::optional<std::string> PlayerEntity::keyCodeDescriptionShort(
     case gvNumberPadKeyEnter:
       return OO_DESC("oolite-keycode-short-numpadenter");
     default:
-      return oo::utf16ToUtf8(
-          std::u16string(1, static_cast<char16_t>(code)));  // %C
+      // %C
+      return oo::utf16ToUtf8(std::u16string(1, static_cast<char16_t>(code)));
   }
 }
 

@@ -69,8 +69,8 @@ constexpr unsigned kCubeShrinkThreshold = 256;
 static unsigned sGLMaxSize;
 static uint32_t sUserMaxSize;
 static bool sReducedDetail;
-static bool sHaveNPOTTextures =
-    false;  // TODO: support "true" non-power-of-two textures.
+// TODO: support "true" non-power-of-two textures.
+static bool sHaveNPOTTextures = false;
 static bool sHaveSetUp = false;
 
 std::shared_ptr<oo::TextureLoader> oo::TextureLoader::loaderWithPath(
@@ -360,13 +360,13 @@ void oo::TextureLoader::generateMipMapsForCubeMap() {
   OOCParameterAssert(_data != nullptr);
 
   uint8_t components = oo::TextureComponentsForFormat(_format);
-  size_t srcSideSize =
-      _width * _width * components;  // Space for one side without mip-maps.
-  size_t newSideSize =
-      srcSideSize * 4 / 3;  // Space for one side with mip-maps.
-  newSideSize = (newSideSize + 15) &
-                static_cast<size_t>(~15);  // Round up to multiple of 16 bytes.
-  size_t newSize = newSideSize * 6;        // Space for all six sides.
+  // Space for one side without mip-maps.
+  size_t srcSideSize = _width * _width * components;
+  // Space for one side with mip-maps.
+  size_t newSideSize = srcSideSize * 4 / 3;
+  // Round up to multiple of 16 bytes.
+  newSideSize = (newSideSize + 15) & static_cast<size_t>(~15);
+  size_t newSize = newSideSize * 6;  // Space for all six sides.
 
   oo::PixelBuffer newData = oo::MakePixelBuffer(newSize);
 

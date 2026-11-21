@@ -166,8 +166,7 @@ void oo::SoundChannel::hasStopped() {
   }
   _bigSound = false;
 
-  std::shared_ptr<oo::Sound> sound =
-      std::move(_sound);  // [sound release] at the end of the scope
+  std::shared_ptr<oo::Sound> sound = std::move(_sound);
 
   if (nullptr != _delegate) {
     _delegate->channel(this, sound.get());

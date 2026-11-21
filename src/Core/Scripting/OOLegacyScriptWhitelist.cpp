@@ -40,9 +40,9 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 
-#define INCLUDE_RAW_STRING \
-  OOLITE_DEBUG  // If nonzero, raw condition strings are included; if zero, a
-                // placeholder is used.
+// If nonzero, raw condition strings are included; if zero, a placeholder is
+// used.
+#define INCLUDE_RAW_STRING OOLITE_DEBUG
 
 /*	The sanitizer works on oo::PList trees: a sanitized script or conditions
    array is plist data (bools, unsigned integers, strings, nested arrays). A
@@ -75,13 +75,13 @@ static oo::PList SanitizeActionStatement(const std::string& statement,
 static oo::OperationType ClassifyLHSConditionSelector(
     const std::string& selectorString,
     std::optional<std::string>* outSanitizedMethod);
+// Checks aliases and whitelist, returns nullopt if whitelist fails.
 static std::optional<std::string> SanitizeQueryMethod(
-    const std::string& selectorString);  // Checks aliases and whitelist,
-                                         // returns nullopt if whitelist fails.
+    const std::string& selectorString);
 static std::optional<std::string> SanitizeActionMethod(
     const std::string& selectorString,
-    bool allowAIMethods);  // Checks aliases and whitelist, returns nullopt if
-                           // whitelist fails.
+    // Checks aliases and whitelist, returns nullopt if whitelist fails.
+    bool allowAIMethods);
 static oo::PList AlwaysFalseConditions();
 static bool IsAlwaysFalseConditions(const oo::PList& conditions);
 
@@ -142,8 +142,8 @@ oo::PList OOSanitizeLegacyScriptConditions(
       nullptr,
       context ? context : std::optional<std::string>("<anonymous conditions>"),
       0};
-  return OOSanitizeLegacyScriptConditionsInternal(
-      conditions, &stackRoot);  // a copy, as the deep copy was; null = nil
+  // a copy, as the deep copy was; null = nil
+  return OOSanitizeLegacyScriptConditionsInternal(conditions, &stackRoot);
 }
 
 namespace {

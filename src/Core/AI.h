@@ -52,7 +52,8 @@ namespace oo {
 class PreservedAIStateMachine;
 
 }  // namespace oo
-   // private to AI.cpp; global
+
+// private to AI.cpp; global
 
 /*	A ship's AI. Held as std::shared_ptr<AI>; a ship's shipAI owns it.
  */
@@ -72,8 +73,8 @@ class AI : public oo::Object {
   std::string description() const;
   std::string shortDescription() const;
 
-  static AI*
-  currentlyRunningAI();  // borrowed; null: none (+currentlyRunningAI)
+  // borrowed; null: none (+currentlyRunningAI)
+  static AI* currentlyRunningAI();
   static std::optional<std::string> currentlyRunningAIDescription();
 
   // -initWithStateMachine:andState:'s body after its [self init]
@@ -105,8 +106,8 @@ class AI : public oo::Object {
   void restorePreviousStateMachine();
 
   bool hasSuspendedStateMachines();
-  void exitStateMachineWithMessage(
-      const std::optional<std::string>& message);  // nullopt: "RESTARTED"
+  // nullopt: "RESTARTED"
+  void exitStateMachineWithMessage(const std::optional<std::string>& message);
 
   std::size_t stackDepth();
 
@@ -122,8 +123,8 @@ class AI : public oo::Object {
 
   void message(const std::string& ms);
   void dropMessage(const std::string& ms);
-  std::set<std::string>
-  getPendingMessages();  // -pendingMessages, in byte order
+  // -pendingMessages, in byte order
+  std::set<std::string> getPendingMessages();
   void debugDumpPendingMessages();
 
   void setNextThinkTime(oo::TimeAbsolute ntt);
@@ -169,22 +170,21 @@ class AI : public oo::Object {
                          const std::string& stateKey,
                          const std::string& smName);
 
-  std::weak_ptr<Entity> _owner =
-      {};  // the ShipEntity this is the AI for, weakly
-  std::optional<std::string> ownerDesc =
-      {};  // describes the object this is the AI for; nullopt until it has an
-           // owner
+  // the ShipEntity this is the AI for, weakly
+  std::weak_ptr<Entity> _owner = {};
+  // describes the object this is the AI for; nullopt until it has an owner
+  std::optional<std::string> ownerDesc = {};
 
-  oo::PList stateMachine =
-      {};  // the loaded, whitelisted state machine; null: none (nil)
+  // the loaded, whitelisted state machine; null: none (nil)
+  oo::PList stateMachine = {};
   std::string stateMachineName = {};
   std::optional<std::string> currentState = {};  // nullopt: no state (nil)
-  std::set<std::string> pendingMessages =
-      {};  // in byte order (a Foundation set before)
+  // in byte order (a Foundation set before)
+  std::set<std::string> pendingMessages = {};
 
-  std::vector<std::shared_ptr<oo::PreservedAIStateMachine>>
-      aiStack;  // no `= {}`: GCC instantiates ~Ref<T> at a default member
-                // initializer, and T is incomplete here
+  // no `= {}`: GCC instantiates ~Ref<T> at a default member initializer, and T
+  // is incomplete here
+  std::vector<std::shared_ptr<oo::PreservedAIStateMachine>> aiStack;
 
   oo::TimeAbsolute nextThinkTime = {};
   oo::TimeDelta thinkTimeInterval = {};
@@ -192,7 +192,7 @@ class AI : public oo::Object {
   std::optional<std::string> jsScript = {};
 };
 
-/*	[ai autorelease]: keeps the AI until the current autorelease pool
+/* [ai autorelease]: keeps the AI until the current autorelease pool
    drains, so an AI a ship lets go of (replaced, or the ship set up again) while
    it may still be running lives exactly as long as its autoreleased object did.
    Nothing for null.

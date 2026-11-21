@@ -45,8 +45,8 @@ struct ShipSaveContext {
   std::map<oo::ShipGroup*, unsigned>
       groupIDs;  // not retained, as the pointer-box keys were not
   unsigned nextGroupID = 0;
-  std::vector<std::shared_ptr<oo::ShipGroup>>
-      groups;  // keeps the groups alive while they have IDs
+  // keeps the groups alive while they have IDs
+  std::vector<std::shared_ptr<oo::ShipGroup>> groups;
   std::map<std::size_t, std::shared_ptr<oo::ShipGroup>> groupsByID;
 };
 

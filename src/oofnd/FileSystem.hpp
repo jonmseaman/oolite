@@ -127,9 +127,9 @@ enum class FileType {
   kNone,  // does not exist (or cannot be examined)
   kRegular,
   kDirectory,
-  kSymbolicLink,  // only from RecursiveDirectoryEnumerator::entryType
-                  // (symlink_status)
-  kOther,         // a device, socket, fifo...
+  // only from RecursiveDirectoryEnumerator::entryType (symlink_status)
+  kSymbolicLink,
+  kOther,  // a device, socket, fifo...
 };
 
 inline FileType fileType(const Path& path) noexcept {
@@ -381,8 +381,8 @@ inline Result<Data> readFile(const Path& path) {
 
 enum class WriteMode {
   kDirect,  // truncate and write in place (writeToFile:atomically:NO)
-  kAtomic,  // write a sibling temporary, then rename it over the file
-            // (atomically:YES)
+  // write a sibling temporary, then rename it over the file (atomically:YES)
+  kAtomic,
 };
 
 inline Result<void> writeFile(const Path& path, const Data& data,

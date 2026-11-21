@@ -45,8 +45,8 @@ static JSValue ExhaustPlumeRemove(OOJS_NATIVE_ARGS);
 
 static JSClassDef sExhaustPlumeClass = {
     .class_name = "ExhaustPlume",
-    .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+    // the slot holds an OOJSEntityHolder
+    .finalizer = OOJSCxxObjectWrapperFinalize,
 };
 
 namespace {

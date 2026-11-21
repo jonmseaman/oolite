@@ -72,21 +72,21 @@ class ProbabilitySet : public oo::Object {
   virtual oo::PList propertyListRepresentation() = 0;
 
   virtual std::size_t count() = 0;
-  virtual oo::PList randomObject() = 0;  // A null PList for none (an empty set,
-                                         // or every weight zero).
+  // A null PList for none (an empty set, or every weight zero).
+  virtual oo::PList randomObject() = 0;
 
-  virtual float weightForObject(
-      const oo::PList& object) = 0;  // Returns -1 for unknown objects.
+  // Returns -1 for unknown objects.
+  virtual float weightForObject(const oo::PList& object) = 0;
   virtual float sumOfWeights() = 0;
   virtual std::vector<oo::PList>
-  allElements() = 0;  // the elements, in the same order (-allObjects is
-                      // OOWeakSet's family)
+  // the elements, in the same order (-allObjects is OOWeakSet's family)
+  allElements() = 0;
 
   // (OOExtendedProbabilitySet)
   bool containsObject(const oo::PList& object);
-  float probabilityForObject(
-      const oo::PList& object);  // Returns -1 for unknown objects, or a value
-                                 // from 0 to 1 inclusive for known objects.
+  // Returns -1 for unknown objects, or a value from 0 to 1 inclusive for known
+  // objects.
+  float probabilityForObject(const oo::PList& object);
 
   // -copy (an immutable set) and -mutableCopy.
   virtual std::shared_ptr<ProbabilitySet> copy();
@@ -106,10 +106,9 @@ class MutableProbabilitySet : public ProbabilitySet {
   static std::shared_ptr<MutableProbabilitySet>
   probabilitySetWithPropertyListRepresentation(const oo::PList& plist);
 
-  virtual void setWeight(
-      float weight,
-      const oo::PList&
-          object) = 0;  // Adds object if needed; a null object is ignored.
+  virtual void setWeight(float weight,
+                         // Adds object if needed; a null object is ignored.
+                         const oo::PList& object) = 0;
   virtual void removeObject(const oo::PList& object) = 0;
 
   std::shared_ptr<ProbabilitySet> copy() override;

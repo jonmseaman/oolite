@@ -120,8 +120,9 @@ void oo::FlasherEntity::update(oo::TimeDelta delta_t) {
         // results with very low frequencies
         _justSwitched = true;
         ++_activeColor;
-        _activeColor %= count;  //_activeColor = ++_activeColor % count; is
-                                // potentially undefined operation
+        // _activeColor = ++_activeColor % count; is potentially undefined
+        // operation
+        _activeColor %= count;
         setColor(flasherColorAtIndex(_activeColor));
       }
     } else if (_justSwitched) {

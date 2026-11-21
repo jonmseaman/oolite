@@ -94,8 +94,8 @@ class OOScript : public oo::PListForeign, public ::OOJSPrivateObject {
   virtual bool requiresTickle();
   virtual void runWithTarget(Entity* target);  // the C++ entity
 
-  std::optional<std::string> displayName();  // "name version" if version is
-                                             // defined, otherwise just "name".
+  // "name version" if version is defined, otherwise just "name".
+  std::optional<std::string> displayName();
 
   /*	OOScript (JavaScriptEvents), which every script answered: call a method.
      For simplicity, calling methods on non-JS scripts works but does nothing

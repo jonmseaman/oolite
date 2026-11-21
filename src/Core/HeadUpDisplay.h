@@ -248,10 +248,10 @@ inline constexpr std::string_view kNonlinearScanner = "nonlinear_scanner";
 inline constexpr double ONE_EIGHTH = 0.125;
 
 inline constexpr int MAX_ACCURACY_RANGE = 7000;  // 7.000km
-#define ACCURACY_PROBABILITY_DECREASE_FACTOR \
-  0.000035f  // for every 1000km decrease by 3.5% the chance of high accuracy
-#define MIN_PROBABILITY_ACCURACY \
-  0.35f  // floor value for probability of high accuracy is 35%
+// for every 1000km decrease by 3.5% the chance of high accuracy
+#define ACCURACY_PROBABILITY_DECREASE_FACTOR 0.000035f
+// floor value for probability of high accuracy is 35%
+#define MIN_PROBABILITY_ACCURACY 0.35f
 
 inline constexpr int OO_RETICLE_COLOR_TARGET = 0;
 inline constexpr int OO_RETICLE_COLOR_TARGET_SENSITIVE =
@@ -279,8 +279,8 @@ class HeadUpDisplay : public oo::Object {
   void resetGuis(const oo::PList& info);
 
   std::optional<std::string> getHudName();
-  void setHudName(const std::optional<std::string>&
-                      newHudName);  // nullopt is ignored, as nil was
+  // nullopt is ignored, as nil was
+  void setHudName(const std::optional<std::string>& newHudName);
 
   GLfloat scannerZoom();
   void setScannerZoom(GLfloat value);
@@ -297,8 +297,8 @@ class HeadUpDisplay : public oo::Object {
 
   bool getAllowBigGui();
 
-  bool hasHidden(const std::optional<std::string>&
-                     selectorName);  // nullopt (was nil): false
+  // nullopt (was nil): false
+  bool hasHidden(const std::optional<std::string>& selectorName);
   void setHiddenSelector(const std::string& selectorName, bool hide);
   void clearHiddenSelectors();
 
@@ -395,22 +395,21 @@ class HeadUpDisplay : public oo::Object {
 
   std::optional<std::string> hudName;
   std::optional<std::string>
-      deferredHudName;  // Usually it will be nullopt. If engaged, then it means
-                        // that we have a deferred HUD waiting to be drawn This
-                        // may happen for example when a script handler attempts
-                        // to switch HUD while it is being rendered. - Nikos
-                        // 20110628
+      // Usually it will be nullopt. If engaged, then it means that we have a
+      // deferred HUD waiting to be drawn This may happen for example when a
+      // script handler attempts to switch HUD while it is being rendered. -
+      // Nikos 20110628
+      deferredHudName;
   bool hudUpdating = {};
 
   GLfloat overallAlpha = {};
 
-  bool reticleTargetSensitive =
-      {};  // TO DO: Move this into the propertiesReticleTargetSensitive
-           // structure (Getafix - 2010/08/21)
+  // TO DO: Move this into the propertiesReticleTargetSensitive structure
+  // (Getafix - 2010/08/21)
+  bool reticleTargetSensitive = {};
   oo::PList
-      propertiesReticleTargetSensitive;  // isAccurate (bool),
-                                         // timeLastAccuracyProbabilityCalculation
-                                         // (double)
+      // isAccurate (bool), timeLastAccuracyProbabilityCalculation (double)
+      propertiesReticleTargetSensitive;
 
   bool cloakIndicatorOnStatusLight = {};
 
@@ -476,8 +475,8 @@ class HeadUpDisplay : public oo::Object {
                                 GLfloat alpha);
   void drawDirectionCue(const oo::PList& info);
 
-  oo::PList crosshairDefinitionForWeaponType(
-      oo::WeaponType weapon);  // a null PList for none
+  // a null PList for none
+  oo::PList crosshairDefinitionForWeaponType(oo::WeaponType weapon);
 
   void resetGui(::GuiDisplayGen* gui, const oo::PList& gui_info);
   void resetGuiPosition(::GuiDisplayGen* gui, const oo::PList& gui_info);
@@ -595,8 +594,8 @@ WORMHOLE_SCANINFO HeadUpDisplayWormholeScanInfo(WormholeEntity* wormhole);
 double HeadUpDisplayWormholeEstimatedArrivalTime(WormholeEntity* wormhole);
 double HeadUpDisplayWormholeExpiryTime(WormholeEntity* wormhole);
 oo::TimeAbsolute HeadUpDisplayUniverseGetTime();
-const oo::PList*
-HeadUpDisplayUniverseDescriptions();  // MissileIconDefinition()
+// MissileIconDefinition()
+const oo::PList* HeadUpDisplayUniverseDescriptions();
 oo::ViewID HeadUpDisplayUniverseViewDirection();
 Entity* HeadUpDisplayUniverseFirstEntityTargetedByPlayer();
 Entity* HeadUpDisplayUniverseFirstEntityTargetedByPlayerPrecisely();

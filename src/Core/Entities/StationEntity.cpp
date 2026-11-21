@@ -89,8 +89,8 @@ oo::PList MakeDockingInstructions(
                                                  {"z", oo::PList(coords.z)}});
   acc["speed"] = oo::PList(static_cast<double>(speed));
   acc["range"] = oo::PList(static_cast<double>(range));
-  acc["station"] = oo::EntityWeakNode(
-      station);  // weakly, as its object's weak reference was
+  // weakly, as its object's weak reference was
+  acc["station"] = oo::EntityWeakNode(station);
   acc["match_rotation"] = oo::PList(match_rotation);
   acc["docking_stage"] = oo::PList::signedInteger(docking_stage);
   if (ai_message) {
@@ -190,8 +190,8 @@ oo::PList StationEntity::launchIndependentShip(const std::string& role) {
         (ship != nullptr ? ship->pendingEscortCount() : uint8_t{});
     if (escorts > 0) {
       if (ship != nullptr)
-        ship->setOwner(
-            self);  // makes escorts get added to station launch queue
+        // makes escorts get added to station launch queue
+        ship->setOwner(self);
       if (ship != nullptr) ship->setUpEscorts();
       if (ship != nullptr) ship->setOwner(ship.get());
     }
@@ -309,10 +309,8 @@ oo::PList StationEntity::launchPolice() {
   if (scanClass == oo::ScanClass::kRock)
     default_defense_ship_role = "hermit-ship";
 
-  if (defenders_launched >=
-      max_defense_ships)  // shuttles are to rockhermits what police ships are
-                          // to stations
-    return nullptr;
+  // shuttles are to rockhermits what police ships are to stations
+  if (defenders_launched >= max_defense_ships) return nullptr;
 
   if ((UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(defense_target)
                            : nullptr) == nullptr) {
@@ -320,8 +318,9 @@ oo::PList StationEntity::launchPolice() {
     return nullptr;
   }
 
-  const std::optional<std::string> defense_ship_key = OptionalStringValue(
-      shipinfoDictionary.find("defense_ship"));  // -oo_stringForKey:
+  // -oo_stringForKey:
+  const std::optional<std::string> defense_ship_key =
+      OptionalStringValue(shipinfoDictionary.find("defense_ship"));
   if (defense_ship_key) {
     defense_ship =
         (UNIVERSE != nullptr ? UNIVERSE->newShipWithName(*defense_ship_key)
@@ -458,9 +457,9 @@ oo::PList StationEntity::launchPolice() {
       if (scavenger_ship != nullptr)
         scavenger_ship->setHeatInsulation(heatInsulation());
     if (scavenger_ship != nullptr)
-      scavenger_ship->setGroup(
-          stationGroup());  // who's your Daddy -- FIXME: should we have a
-                            // separate group for non-escort auxiliaires?
+      // who's your Daddy -- FIXME: should we have a separate group for
+      // non-escort auxiliaires?
+      scavenger_ship->setGroup(stationGroup());
     if (scavenger_ship != nullptr)
       scavenger_ship->switchAITo("oolite-scavengerAI.js");
     addShipToLaunchQueue(scavenger_ship.get(), false);
@@ -517,9 +516,9 @@ oo::PList StationEntity::launchPolice() {
       if (miner_ship != nullptr)
         miner_ship->setHeatInsulation(heatInsulation());
     if (miner_ship != nullptr)
-      miner_ship->setGroup(
-          stationGroup());  // who's your Daddy -- FIXME: should we have a
-                            // separate group for non-escort auxiliaires?
+      // who's your Daddy -- FIXME: should we have a separate group for
+      // non-escort auxiliaires?
+      miner_ship->setGroup(stationGroup());
     if (miner_ship != nullptr) miner_ship->switchAITo("oolite-scavengerAI.js");
     addShipToLaunchQueue(miner_ship.get(), false);
     oo::autorelease(miner_ship);
@@ -546,8 +545,8 @@ oo::PList StationEntity::launchPolice() {
   std::shared_ptr<::ShipEntity> pirate_ship;
 
   if (defenders_launched >= max_defense_ships)
-    return nullptr;  // shuttles are to rockhermits what police ships are to
-                     // stations
+    // shuttles are to rockhermits what police ships are to stations
+    return nullptr;
 
   if ((UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(defense_target)
                            : nullptr) == nullptr) {
@@ -899,28 +898,28 @@ oo::CreditsQuantity StationEntity::legalStatusOfManifest(
 }
 
 void StationEntity::setLocalMarket(const oo::PList& some_market) {
-  oo::CommodityMarket* market =
-      getLocalMarket();  // null: nothing set, as a message to nil
+  // null: nothing set, as a message to nil
+  oo::CommodityMarket* market = getLocalMarket();
   if (market != nullptr) market->loadStationAmounts(some_market);
 }
 
 oo::PList StationEntity::localMarketForScripting() {
-  oo::CommodityMarket* market =
-      getLocalMarket();  // null: null, as a message to nil
+  // null: null, as a message to nil
+  oo::CommodityMarket* market = getLocalMarket();
   return (market != nullptr) ? market->dictionaryForScripting() : oo::PList();
 }
 
 void StationEntity::setPrice(oo::CreditsQuantity price,
                              const std::string& commodity) {
-  oo::CommodityMarket* market =
-      getLocalMarket();  // null: nothing set, as a message to nil
+  // null: nothing set, as a message to nil
+  oo::CommodityMarket* market = getLocalMarket();
   if (market != nullptr) market->setPrice(price, commodity);
 }
 
 void StationEntity::setQuantity(oo::CargoQuantity quantity,
                                 const std::string& commodity) {
-  oo::CommodityMarket* market =
-      getLocalMarket();  // null: nothing set, as a message to nil
+  // null: nothing set, as a message to nil
+  oo::CommodityMarket* market = getLocalMarket();
   if (market != nullptr) market->setQuantity(quantity, commodity);
 }
 
@@ -1006,8 +1005,9 @@ bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
 
   // port_dimensions is deprecated
   port_dimensions = make_vector(69, 69, 250);
+  // -oo_stringForKey:
   const std::optional<std::string> portDimensionsStr =
-      OptionalStringValue(dict.find("port_dimensions"));  // -oo_stringForKey:
+      OptionalStringValue(dict.find("port_dimensions"));
   if (portDimensionsStr) {
     oo::StandardsDeprecated("The port_dimensions key is deprecated");
     if (!oo::EnforceStandards()) {
@@ -1086,8 +1086,8 @@ bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
 
     docked_traders = 3 + (ranrot_rand() & 7);          // 1..3;
     trader_launch_interval = 3600.0 / docked_traders;  // every few minutes
-    last_trader_launch_time =
-        unitime + 60.0 - trader_launch_interval;  // in one minute's time
+    // in one minute's time
+    last_trader_launch_time = unitime + 60.0 - trader_launch_interval;
   } else {
     docked_shuttles = 0;
     docked_traders = 0;  // 1..3;
@@ -1279,8 +1279,9 @@ void StationEntity::generateShipyard(oo::TechLevelID stationTechLevel) {
 
   // remove ships that the player has already bought
   for (i = 0; i < shipyard->size(); i++) {
+    // SHIPYARD_KEY_ID
     const std::optional<std::string> shipID =
-        OptionalStringValue((*shipyard)[i].find("id"));  // SHIPYARD_KEY_ID
+        OptionalStringValue((*shipyard)[i].find("id"));
     if (shipID && shipyardRecord != nullptr &&
         shipyardRecord->contains(*shipID)) {
       shipyard->erase(shipyard->begin() + i--);
@@ -1522,8 +1523,8 @@ oo::PList StationEntity::dockingInstructionsForShip(::ShipEntity* ship) {
   doScriptEvent(OOJSID("stationReceivedDockingRequest"), ship);
 
   if ((ship != nullptr ? ship->getIsPlayer() : false)) {
-    player_reserved_dock =
-        nullptr;  // clear any dock reservation for manual docking
+    // clear any dock reservation for manual docking
+    player_reserved_dock = nullptr;
   }
 
   if ((ship != nullptr ? ship->getIsPlayer() : false) &&
@@ -1753,9 +1754,8 @@ void StationEntity::update(oo::TimeDelta delta_t) {
       } else if (last_launch_time < unitime) {
         sendExpandedMessage("[station-docking-clearance-expired]", player);
         if (player != nullptr)
-          player->setDockingClearanceStatus(
-              oo::DockingClearanceStatus::kNone);  // Docking clearance for
-                                                   // player has expired.
+          // Docking clearance for player has expired.
+          player->setDockingClearanceStatus(oo::DockingClearanceStatus::kNone);
         if (player != nullptr)
           player->doScriptEvent(OOJSID("playerDockingClearanceExpired"));
         if (currentlyInDockingQueues() == 0) {
@@ -1782,15 +1782,10 @@ void StationEntity::update(oo::TimeDelta delta_t) {
       ::DockEntity* dock = selectDockForDocking();
       last_launch_time = unitime + DOCKING_CLEARANCE_WINDOW;
       if (hasMultipleDocks()) {
-        const std::string grantedFormat = OO_DESC(
-            "station-docking-clearance-granted-in-@-until-@");  // the format
-                                                                // first, as
-                                                                // Clang
-                                                                // evaluates the
-                                                                // arguments: a
-                                                                // description
-                                                                // that is an
-                                                                // array draws.
+        // the format first, as Clang evaluates the arguments: a description
+        // that is an array draws.
+        const std::string grantedFormat =
+            OO_DESC("station-docking-clearance-granted-in-@-until-@");
         sendExpandedMessage(
             oo::str::formatRuntime(
                 grantedFormat,
@@ -1802,12 +1797,10 @@ void StationEntity::update(oo::TimeDelta delta_t) {
                                false)}),
             player);
       } else {
-        const std::string grantedFormat = OO_DESC(
-            "station-docking-clearance-granted-until-@");  // the format first,
-                                                           // as Clang evaluates
-                                                           // the arguments: a
-                                                           // description that
-                                                           // is an array draws.
+        // the format first, as Clang evaluates the arguments: a description
+        // that is an array draws.
+        const std::string grantedFormat =
+            OO_DESC("station-docking-clearance-granted-until-@");
         sendExpandedMessage(
             oo::str::formatRuntime(
                 grantedFormat,
@@ -2113,8 +2106,9 @@ bool StationEntity::collideWithShip(::ShipEntity* other) {
           docking clearance.
           -- Micha 2010-06-10
          Reformatted, Ahruman 2012-08-26
+  // [super collideWithShip:other]
   */
-  return ShipEntity::collideWithShip(other);  // [super collideWithShip:other]
+  return ShipEntity::collideWithShip(other);
 }
 
 bool StationEntity::hasHostileTarget() {
@@ -2300,8 +2294,8 @@ void StationEntity::becomeEnergyBlast() {
 
 void StationEntity::becomeLargeExplosion(double factor) {
   if (this == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr)) return;
-  ShipEntity::becomeLargeExplosion(
-      factor);  // [super becomeLargeExplosion:factor]
+  // [super becomeLargeExplosion:factor]
+  ShipEntity::becomeLargeExplosion(factor);
 }
 
 void StationEntity::acceptPatrolReportFrom(::ShipEntity* /* patrol_ship */) {
@@ -2360,14 +2354,10 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
       case oo::DockingClearanceStatus::kTimingOut:
         if (!no_docking_while_launching) {
           last_launch_time = timeNow + DOCKING_CLEARANCE_WINDOW;
-          const std::string extendedFormat = OO_DESC(
-              "station-docking-clearance-extended-until-@");  // the format
-                                                              // first, as Clang
-                                                              // evaluates the
-                                                              // arguments: a
-                                                              // description
-                                                              // that is an
-                                                              // array draws.
+          // the format first, as Clang evaluates the arguments: a description
+          // that is an array draws.
+          const std::string extendedFormat =
+              OO_DESC("station-docking-clearance-extended-until-@");
           sendExpandedMessage(
               oo::str::formatRuntime(
                   extendedFormat,
@@ -2541,14 +2531,10 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
 
     if (hasMultipleDocks() &&
         (other != nullptr ? other->getIsPlayer() : false)) {
-      const std::string grantedFormat = OO_DESC(
-          "station-docking-clearance-granted-in-@-until-@");  // the format
-                                                              // first, as Clang
-                                                              // evaluates the
-                                                              // arguments: a
-                                                              // description
-                                                              // that is an
-                                                              // array draws.
+      // the format first, as Clang evaluates the arguments: a description that
+      // is an array draws.
+      const std::string grantedFormat =
+          OO_DESC("station-docking-clearance-granted-in-@-until-@");
       sendExpandedMessage(
           oo::str::formatRuntime(
               grantedFormat,
@@ -2561,12 +2547,10 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
                              false)}),
           other);
     } else {
-      const std::string grantedFormat = OO_DESC(
-          "station-docking-clearance-granted-until-@");  // the format first, as
-                                                         // Clang evaluates the
-                                                         // arguments: a
-                                                         // description that is
-                                                         // an array draws.
+      // the format first, as Clang evaluates the arguments: a description that
+      // is an array draws.
+      const std::string grantedFormat =
+          OO_DESC("station-docking-clearance-granted-until-@");
       sendExpandedMessage(
           oo::str::formatRuntime(
               grantedFormat,

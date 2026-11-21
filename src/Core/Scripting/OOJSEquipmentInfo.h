@@ -48,7 +48,8 @@ namespace oo {
 class EquipmentType;
 
 }  // namespace oo
-   // C++ (OOEquipmentType.h)
+
+// C++ (OOEquipmentType.h)
 
 oo::EquipmentType* JSValueToEquipmentType(JSContext* context,
                                           JSValueConst value);
