@@ -441,12 +441,13 @@ void GameController::doPerformGameTick() {
 
 void GameController::startAnimationTimer() {
   if (!sGameTickScheduled) {
-    double ti =
-        _animationTimerInterval;  // default one two-hundredth of a second
-                                  // (should be a fair bit faster than expected
-                                  // frame rate ~60Hz to avoid problems with
-                                  // phase differences)
-    if (ti <= 0.0) ti = 0.0001;   // as the Foundation timer did
+    // default one two-hundredth of a second
+    // (should be a fair bit faster than expected
+    // frame rate ~60Hz to avoid problems with
+    // phase differences)
+    double ti = _animationTimerInterval;
+
+    if (ti <= 0.0) ti = 0.0001;  // as the Foundation timer did
 
     sGameTickInterval = std::chrono::duration_cast<TickClock::duration>(
                             std::chrono::duration<double>(ti))

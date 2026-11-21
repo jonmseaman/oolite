@@ -791,6 +791,9 @@ void MyOpenGLView::initSplashScreen() {
   dest.h = image->h;
 
   createWindowWithSize(NSMakeSize(image->w, image->h));
+  // Let the window system map the window before drawing into it: on macOS a
+  // window is not put on screen until the event loop runs.
+  SDL_PumpEvents();
   OOSetOpenGLState(OOOpenGLStateID::kOverlay);
   float pixelDensity = SDL_GetWindowPixelDensity(window);
   if (pixelDensity == 0.0f) {
@@ -865,6 +868,7 @@ void MyOpenGLView::initSplashScreen() {
   glFinish();
 
   SDL_GL_SwapWindow(window);
+  SDL_PumpEvents();  // and let it present the swapped frame
   matrixManager->resetModelView();
   matrixManager->syncModelView();
 
