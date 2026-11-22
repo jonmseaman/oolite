@@ -18,7 +18,6 @@
 
 #include <gtest/gtest.h>
 
-#include "oo_gtest.hpp"
 #include "oofnd/String.hpp"
 
 namespace {
@@ -222,44 +221,44 @@ const JoinRow kJoinRows[] = {
 
 TEST(string_sweep, path_components_are_gnusteps) {
   for (const PathRow& r : kPathRows) {
-    if (!OO_EXPECT_V(oo::str::pathComponents(r.path) == r.components))
-      std::printf("    path [%s]\n", r.path);
+    EXPECT_TRUE(oo::str::pathComponents(r.path) == r.components)
+        << "path [" << r.path << "]";
   }
 }
 
 TEST(string_sweep, last_path_component_is_gnusteps) {
   for (const PathRow& r : kPathRows) {
-    if (!OO_EXPECT_EQ_V(oo::str::lastPathComponent(r.path), std::string(r.last)))
-      std::printf("    path [%s]\n", r.path);
+    EXPECT_EQ(oo::str::lastPathComponent(r.path), std::string(r.last))
+        << "path [" << r.path << "]";
   }
 }
 
 TEST(string_sweep, deleting_last_path_component_is_gnusteps) {
   for (const PathRow& r : kPathRows) {
-    if (!OO_EXPECT_EQ_V(oo::str::deletingLastPathComponent(r.path),
-                     std::string(r.deleting)))
-      std::printf("    path [%s]\n", r.path);
+    EXPECT_EQ(oo::str::deletingLastPathComponent(r.path),
+              std::string(r.deleting))
+        << "path [" << r.path << "]";
   }
 }
 
 TEST(string_sweep, appending_path_component_is_gnusteps) {
   for (const PathRow& r : kPathRows) {
-    if (!OO_EXPECT_EQ_V(oo::str::appendingPathComponent(r.path, "z"),
-                     std::string(r.appendingZ)))
-      std::printf("    path [%s]\n", r.path);
+    EXPECT_EQ(oo::str::appendingPathComponent(r.path, "z"),
+              std::string(r.appendingZ))
+        << "path [" << r.path << "]";
   }
 }
 
 TEST(string_sweep, path_with_components_is_gnusteps) {
   for (const PathRow& r : kPathRows) {
-    if (!OO_EXPECT_EQ_V(oo::str::pathWithComponents(r.components),
-                     std::string(r.rejoined)))
-      std::printf("    path [%s]\n", r.path);
+    EXPECT_EQ(oo::str::pathWithComponents(r.components),
+              std::string(r.rejoined))
+        << "path [" << r.path << "]";
   }
   for (const JoinRow& r : kJoinRows) {
-    if (!OO_EXPECT_EQ_V(oo::str::pathWithComponents(r.components),
-                     std::string(r.joined)))
-      std::printf("    joined [%s]\n", r.joined);
+    EXPECT_EQ(oo::str::pathWithComponents(r.components),
+              std::string(r.joined))
+        << "joined [" << r.joined << "]";
   }
 }
 

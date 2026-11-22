@@ -136,9 +136,8 @@ oo_tests_built = not get_option('deployment_release') or get_option('deployment_
 if oo_tests_built
     # Static, so a test program needs no DLL beside it on Windows.
     gtest_dep = dependency('gtest', main: false, default_options: ['default_library=static'])
+    # Google Test's own main, for every test program without one.
     gtest_main_dep = dependency('gtest_main', default_options: ['default_library=static'])
-    # oo_gtest_main_dep (gtest_main) and oo_gtest_dep (no main); meson test --suite gtest.
-    subdir('tests/support')
 endif
 
 if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows'

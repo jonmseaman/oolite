@@ -15,7 +15,7 @@ if oo_tests_built
     test('test_plist2json5',
         executable('test_plist2json5', 'test_plist2json5.cpp',
             include_directories: [oofnd_inc, plist2json5_inc],
-            dependencies: oo_gtest_main_dep,
+            dependencies: gtest_main_dep,
             install: false, override_options: oofnd_override_options),
         suite: 'plist2json5', timeout: 60, protocol: 'gtest')
 endif

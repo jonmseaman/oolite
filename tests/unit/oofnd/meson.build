@@ -39,7 +39,7 @@ foreach t : oofnd_tests
     exe = executable(
         'oofnd_' + t,
         t + '.cpp',
-        dependencies: [oofnd_dep, oo_gtest_main_dep],
+        dependencies: [oofnd_dep, gtest_main_dep],
         override_options: oofnd_override_options,
         install: false,
     )
@@ -53,7 +53,7 @@ test('test_http',
     executable(
         'oofnd_test_http',
         'test_http.cpp',
-        dependencies: [oofnd_dep, oo_gtest_main_dep],
+        dependencies: [oofnd_dep, gtest_main_dep],
         link_args: oofnd_http_link_args,
         override_options: oofnd_override_options,
         install: false,
@@ -83,7 +83,7 @@ foreach t : oofnd_plist_tests
     exe = executable(
         'oofnd_' + t,
         t + '.cpp',
-        dependencies: [oofnd_dep, oo_gtest_main_dep],
+        dependencies: [oofnd_dep, gtest_main_dep],
         override_options: oofnd_override_options,
         install: false,
     )
@@ -106,7 +106,7 @@ foreach t : oofnd_objc_tests
     exe = executable(
         'oofnd_' + t,
         t + '.cpp',
-        dependencies: [oofnd_objc_dep, oo_gtest_main_dep],
+        dependencies: [oofnd_objc_dep, gtest_main_dep],
         override_options: oofnd_override_options,
         install: false,
     )

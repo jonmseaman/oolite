@@ -11,7 +11,6 @@
    meson test -C build/meson_test test_OOTextureScaling
 */
 
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
@@ -23,7 +22,6 @@
 #include "Logging.h"
 #include "TextureScaling.h"
 #include "Universe.h"
-#include "oo_gtest.hpp"
 #include "oofnd/Exception.hpp"
 
 // Link stubs: the scaler's object and OOPixMap.mm reach these, and the test
@@ -96,26 +94,20 @@ std::vector<int> Bytes(oo::PixMap pixMap) {
   return result;
 }
 
-// Checks the result's shape and bytes; on a mismatch prints the bytes it got,
-// so a pin can be read.
-bool Pinned(const char* what, oo::PixMap pixMap, oo::PixMapDimension width,
+// Checks the result's shape and bytes; on a mismatch the failure shows the
+// bytes it got, so a pin can be read.
+void Pinned(const char* what, oo::PixMap pixMap, oo::PixMapDimension width,
             oo::PixMapDimension height, std::vector<int> expected) {
-  bool ok = OO_EXPECT_V(pixMap.pixels != nullptr);
-  ok = OO_EXPECT_EQ_V(pixMap.width, width) && ok;
-  ok = OO_EXPECT_EQ_V(pixMap.height, height) && ok;
-  ok = OO_EXPECT_EQ_V(pixMap.rowBytes, static_cast<size_t>(width) *
-                                        oo::PixMapBytesPerPixel(pixMap)) &&
-       ok;
-  if (pixMap.pixels == nullptr) return false;
+  EXPECT_TRUE(pixMap.pixels != nullptr) << what;
+  EXPECT_EQ(pixMap.width, width) << what;
+  EXPECT_EQ(pixMap.height, height) << what;
+  EXPECT_EQ(pixMap.rowBytes,
+            static_cast<size_t>(width) * oo::PixMapBytesPerPixel(pixMap))
+      << what;
+  if (pixMap.pixels == nullptr) return;
   std::vector<int> actual = Bytes(pixMap);
-  if (!OO_EXPECT_V(actual == expected)) {
-    std::fprintf(stderr, "  %s got {", what);
-    for (size_t i = 0; i < actual.size(); i++)
-      std::fprintf(stderr, "%s%d", i ? ", " : " ", actual[i]);
-    std::fprintf(stderr, " }\n");
-    ok = false;
-  }
-  return ok;
+  EXPECT_TRUE(actual == expected)
+      << what << " got " << ::testing::PrintToString(actual);
 }
 
 bool AllEqual(oo::PixMap pixMap, uint8_t value) {

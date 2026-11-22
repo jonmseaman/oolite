@@ -31,7 +31,6 @@
 #include "ProbabilitySet.h"
 #include "ShipRegistry.h"
 #include "StringParsing.h"
-#include "oo_gtest.hpp"
 #include "oofnd/PListParsing.hpp"
 
 // Link stubs: what OOShipRegistry.mm and OOCacheManager.mm reference whose
@@ -220,11 +219,9 @@ std::string Text(const oo::PList& plist) {
   return plist.isNull() ? "(null)" : oo::DescriptionOf(plist);
 }
 
-bool Pinned(const char* what, const std::string& actual,
+void Pinned(const char* what, const std::string& actual,
             const std::string& expected) {
-  if (OO_EXPECT_EQ_V(actual, expected)) return true;
-  std::fprintf(stderr, "  %s got: %s\n", what, actual.c_str());
-  return false;
+  EXPECT_EQ(actual, expected) << what;
 }
 
 }  // namespace

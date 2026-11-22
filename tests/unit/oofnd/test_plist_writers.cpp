@@ -22,7 +22,6 @@
 #include <string>
 #include <string_view>
 
-#include "oo_gtest.hpp"
 #include "plist_dump.hpp"
 
 using namespace std::string_view_literals;
@@ -748,14 +747,12 @@ std::string xml(const oo::PList& p) {
 }
 
 // The fixture test: parse `in`, then both writers must produce GNUstep's bytes.
-bool writesLikeGNUstep(std::string_view in, std::string_view expectedOld,
+void writesLikeGNUstep(std::string_view in, std::string_view expectedOld,
                        std::string_view expectedXml) {
   const oo::PList p = parsedOrNull(in);
-  bool ok = OO_EXPECT_V(!p.isNull());
-  if (!expectedOld.empty())
-    ok = OO_EXPECT_EQ_V(oldStyle(p), std::string(expectedOld)) && ok;
-  ok = OO_EXPECT_EQ_V(xml(p), std::string(expectedXml)) && ok;
-  return ok;
+  EXPECT_TRUE(!p.isNull());
+  if (!expectedOld.empty()) EXPECT_EQ(oldStyle(p), std::string(expectedOld));
+  EXPECT_EQ(xml(p), std::string(expectedXml));
 }
 
 }  // namespace

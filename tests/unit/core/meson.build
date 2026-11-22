@@ -231,7 +231,7 @@ foreach name, game_sources : core_tests
         name + '.cpp',
         objects: oolite_bin.extract_objects(sources),
         include_directories: oolite_includes,
-        dependencies: oolite_dependencies + [oo_gtest_main_dep],
+        dependencies: oolite_dependencies + [gtest_main_dep],
         override_options: oolite_override_options,
         install: false,
     )

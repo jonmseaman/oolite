@@ -5,7 +5,7 @@
 # Every platform builds them (no host guard, unlike tests/unit). Each program links every game
 # object but main's, extracted from the oolite target so it is compiled exactly as the game is,
 # with the game's include directories and dependencies but not its link arguments (-mwindows
-# would hide the program's output). The cases are Google Test's (tests/support), and one case alone
+# would hide the program's output). The cases are Google Test's, and one case alone
 # is --test-args=--gtest_filter=<Suite>.<case>. Meson runs them by exit status, not its gtest
 # protocol: that protocol has the program write <test>.xml into its working directory, which here
 # is the application bundle, and a file there breaks the bundle's signature on macOS.
@@ -92,7 +92,7 @@ endforeach
 component_game_objects = oolite_bin.extract_objects(component_game_sources)
 
 # oo_component: what every program but the skeleton is written against. Its runMain is their main;
-# the skeleton, which boots nothing, links Google Test's (oo_gtest_main_dep).
+# the skeleton, which boots nothing, links Google Test's (gtest_main_dep).
 component_support_sources = files('oo_component.cpp')
 
 # The GL trap (Linux and macOS): every GL function the game's objects import, defined to print its
@@ -144,7 +144,7 @@ foreach name, options : component_programs
         cpp_args: component_trap_args,
         objects: component_game_objects,
         include_directories: oolite_includes,
-        dependencies: oolite_dependencies + [name == 'test_skeleton' ? oo_gtest_main_dep : oo_gtest_dep],
+        dependencies: oolite_dependencies + [name == 'test_skeleton' ? gtest_main_dep : gtest_dep],
         override_options: oolite_override_options,
         install: false,
     )

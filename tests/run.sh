@@ -1,7 +1,7 @@
 #!/bin/bash
 # Run Oolite's test tiers from this directory, inside a private virtualenv.
 #
-#     tests/run.sh unit        meson suites: gtest, oofnd, core, headers (needs ./mk.sh build dev)
+#     tests/run.sh unit        meson suites: oofnd, core, headers (needs ./mk.sh build dev)
 #     tests/run.sh component   headless C++ programs, meson suite component; needs no display
 #                              and no virtualenv (--cpp is accepted and means the same)
 #     tests/run.sh smoke       launch_snapshot.py via mk.sh
@@ -102,7 +102,7 @@ run_unit() {
         echo "tests/run.sh unit: -k needs a Google Test filter" >&2
         return 2
     fi
-    for suite in gtest oofnd core headers; do
+    for suite in oofnd core headers; do
         if $have_filter; then
             [[ "$suite" == headers ]] && continue
             echo "--> meson test --suite $suite --test-args=--gtest_filter=$filter"

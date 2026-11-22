@@ -24,7 +24,6 @@
 
 #include <gtest/gtest.h>
 
-#include "oo_gtest.hpp"
 #include "oofnd/Encoding.hpp"
 
 namespace {
@@ -124,9 +123,9 @@ class Scratch {
 
 TEST(unicode_file, decode_matches_gnustep) {
   for (const Row& r : kRows) {
-    if (!OO_EXPECT_V(oo::utf8ToUtf16(oo::str::decodeUnicodeText(r.bytes)) ==
-                  r.units))
-      std::printf("    row %s\n", r.name);
+    EXPECT_TRUE(oo::utf8ToUtf16(oo::str::decodeUnicodeText(r.bytes)) ==
+                r.units)
+        << "row " << r.name;
   }
 }
 
@@ -135,8 +134,8 @@ TEST(unicode_file, file_matches_gnustep) {
   for (const Row& r : kRows) {
     const std::optional<std::string> s =
         oo::str::stringWithContentsOfUnicodeFile(dir.write(r.name, r.bytes));
-    if (!OO_EXPECT_V(s.has_value() && oo::utf8ToUtf16(*s) == r.units))
-      std::printf("    row %s\n", r.name);
+    EXPECT_TRUE(s.has_value() && oo::utf8ToUtf16(*s) == r.units)
+        << "row " << r.name;
   }
 }
 
