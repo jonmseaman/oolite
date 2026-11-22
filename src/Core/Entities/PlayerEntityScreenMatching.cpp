@@ -45,22 +45,21 @@ MA 02110-1301, USA.
 
 namespace {
 
-enum : OOGUIRow {
-  kRowMatching = 4,
-  kRowSize = 6,
-  kRowAspect,
-  kRowShape,
-  kRowCurvature,
-  kRowDistance,
-  kRowUnits,
-  kRowFovMode = 13,
-  kRowHorizontal,
-  kRowVertical,
-  kRowLook,
-  kRowNotice = 18,
-  kRowHint = 20,
-  kRowBack = 22,
-};
+// The screen's rows.
+constexpr OOGUIRow kRowMatching = 4;
+constexpr OOGUIRow kRowSize = 6;
+constexpr OOGUIRow kRowAspect = 7;
+constexpr OOGUIRow kRowShape = 8;
+constexpr OOGUIRow kRowCurvature = 9;
+constexpr OOGUIRow kRowDistance = 10;
+constexpr OOGUIRow kRowUnits = 11;
+constexpr OOGUIRow kRowFovMode = 13;
+constexpr OOGUIRow kRowHorizontal = 14;
+constexpr OOGUIRow kRowVertical = 15;
+constexpr OOGUIRow kRowLook = 16;
+constexpr OOGUIRow kRowNotice = 18;
+constexpr OOGUIRow kRowHint = 20;
+constexpr OOGUIRow kRowBack = 22;
 
 constexpr double kMmPerInch = 25.4;
 const char* const kDegrees = "\xC2\xB0";
