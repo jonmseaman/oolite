@@ -297,12 +297,12 @@ TEST(OOMesh, copies) {
     if (mesh == nullptr) return;
 
     // Immutable seen from outside: a copy is the mesh itself, retained.
-    const std::shared_ptr<oo::Mesh> copy = mesh->copyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> copy = mesh->copyWithZone();
     EXPECT_TRUE(copy == mesh);
 
     // A mutable copy is a new mesh with the same model, sharing nothing it can
     // change.
-    const std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone();
     EXPECT_TRUE(mutableCopy != nullptr);
     EXPECT_TRUE(mutableCopy != mesh);
     EXPECT_TRUE(dynamic_cast<oo::Mesh*>(mutableCopy.get()) != nullptr);
@@ -341,7 +341,7 @@ TEST(OOMesh, graphicsResetAfterRelease) {
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
     EXPECT_TRUE(mesh != nullptr);
-    std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone(nullptr);
+    std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone();
     // Both are registered: the reset rebinds their materials.
     oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
     EXPECT_EQ(mesh->getVertexCount(), 4u);
@@ -422,7 +422,7 @@ TEST(OOMesh, facadeContract) {
     EXPECT_TRUE(cxxMesh->descriptionComponents() ==
              std::optional<std::string>("\"tetra.dat\", 4 vertices, 4 faces, "
                                         "radius: 10 m normals: per-face"));
-    EXPECT_TRUE(cxxMesh->copyWithZone(nullptr).get() ==
+    EXPECT_TRUE(cxxMesh->copyWithZone().get() ==
              cxxMesh);  // a copy is the mesh itself
 
     // Through the root's C++ pointer, the overrides answer (the bounding box is
@@ -513,7 +513,7 @@ TEST(OOMesh, rendering) {
     EXPECT_TRUE(Near(mesh->collisionRadius(), 10.0));
 
     // A mutable copy draws on its own lists.
-    const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone();
     copy->renderOpaqueParts();
     EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
   }
@@ -571,7 +571,7 @@ TEST(OOMesh, loadingMembers) {
     EXPECT_EQ(mesh->modelName().value_or("<none>"), "tetra.dat");
 
     // A mutable copy shares the buffers and is a new mesh.
-    const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone();
     EXPECT_TRUE(copy.get() != nullptr && copy.get() != mesh.get());
     if (copy.get() == nullptr) return;
     EXPECT_TRUE(copy->_vertices == mesh->_vertices);
