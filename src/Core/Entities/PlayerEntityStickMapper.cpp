@@ -25,7 +25,6 @@ MA 02110-1301, USA.
 #include "PlayerEntityStickMapper.h"
 
 #include <cstddef>
-#include <cstdint>
 #include <format>
 #include <string>
 #include <string_view>

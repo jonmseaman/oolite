@@ -25,7 +25,6 @@ MA 02110-1301, USA.
 #include "PlayerEntityStickProfile.h"
 
 #include <cstddef>
-#include <cstdint>
 #include <format>
 #include <string>
 #include <vector>
