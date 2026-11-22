@@ -13,8 +13,8 @@
 namespace oo_gtest {
 
 void InitGoogleTest(int* argc, char*** argv) {
-  // 1.17 defines the flag but its headers declare no GTEST_FLAG_SET for it, so
-  // it goes in as the first argument.
+  // Google Test (1.17, 1.18) defines the flag but its headers declare no
+  // GTEST_FLAG_SET for it, so it goes in as the first argument.
   static char failIfNoTestLinked[] = "--gtest_fail_if_no_test_linked";
   static std::vector<char*> args;
   args.assign(*argv, *argv + *argc);

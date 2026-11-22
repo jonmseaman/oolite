@@ -84,12 +84,12 @@ modules:
       # Google Test (third_party/gtest.wrap), for the C++ component tests the build runs in the
       # sandbox: its tarball and WrapDB's meson overlay, both read from the packagecache.
       - type: file
-        url: https://github.com/google/googletest/archive/refs/tags/v1.17.0.tar.gz
-        sha256: 65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c
+        url: https://github.com/google/googletest/archive/refs/tags/v1.18.0.tar.gz
+        sha256: 6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5
         dest: third_party/packagecache
-        dest-filename: googletest-1.17.0.tar.gz
+        dest-filename: googletest-1.18.0.tar.gz
       - type: file
-        url: https://wrapdb.mesonbuild.com/v2/gtest_1.17.0-4/get_patch
-        sha256: 3abf7662d09db706453a5b064a1e914678c74b9d9b0b19382747ca561d0d8750
+        url: https://wrapdb.mesonbuild.com/v2/gtest_1.18.0-1/get_patch
+        sha256: a51d48aa7a48fc666026f247f72c03d1629a145a89ae8a518825f189a52ace5d
         dest: third_party/packagecache
-        dest-filename: gtest_1.17.0-4_patch.zip
+        dest-filename: gtest_1.18.0-1_patch.zip
