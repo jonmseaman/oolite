@@ -156,7 +156,7 @@ void RmlShipLibraryView::Refresh() {
 }
 
 ShipStage RmlShipLibraryView::Stage() const {
-  return ShipStage{.distance_scale = 0.68, .x_offset = 0.17, .y_offset = 0.15};
+  return ShipStage{.distance_scale = 0.8, .x_offset = 0.19, .y_offset = 0.08};
 }
 
 bool RmlShipLibraryView::IsShowing() const {

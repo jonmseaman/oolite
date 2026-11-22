@@ -6,12 +6,12 @@
 #include <SDL3/SDL_opengl.h>
 
 #include <algorithm>
-#include <cmath>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
+#include "UI/RmlUi/PointerMapping.h"
 #include "UI/RmlUi/RmlDocumentHost.h"
 #include "UI/RmlUi/RmlShipLibraryView.h"
 #include "UI/ShipLibrary/GridShipLibraryView.h"
@@ -124,8 +124,8 @@ class RmlUiHost final : public UiHost, public RmlDocumentHost {
     context_ = Rml::CreateContext(kContextName, Rml::Vector2i(width, height));
     if (context_ == nullptr) return false;
     Resize(width, height);
-    OO_LOG("ui.rmlui", "RmlUi {} started, {}x{} pixels, density {}.",
-           Rml::GetVersion(), width, height, PixelDensity());
+    OO_LOG("ui.rmlui", "RmlUi {} started, {}x{} pixels.", Rml::GetVersion(),
+           width, height);
     return true;
   }
 
@@ -133,13 +133,15 @@ class RmlUiHost final : public UiHost, public RmlDocumentHost {
 
   bool HandleEvent(const SDL_Event& event) override {
     if (!IsCoveringGui()) return false;
-    const float density = PixelDensity();
     switch (event.type) {
-      case SDL_EVENT_MOUSE_MOTION:
-        context_->ProcessMouseMove(
-            static_cast<int>(std::lround(event.motion.x * density)),
-            static_cast<int>(std::lround(event.motion.y * density)), 0);
+      case SDL_EVENT_MOUSE_MOTION: {
+        SDL_Window* window = SDL_GetWindowFromEvent(&event);
+        if (window == nullptr) return false;
+        const ContextPoint at =
+            ToContext(*window, event.motion.x, event.motion.y);
+        context_->ProcessMouseMove(at.x, at.y, 0);
         return false;  // the game still tracks the pointer
+      }
       case SDL_EVENT_MOUSE_BUTTON_DOWN:
         return !context_->ProcessMouseButtonDown(
             RmlMouseButton(event.button.button), 0);
@@ -220,9 +222,15 @@ class RmlUiHost final : public UiHost, public RmlDocumentHost {
   void Unregister(RmlDocumentView* view) override { std::erase(views_, view); }
 
  private:
-  float PixelDensity() const {
-    const float density = SDL_GetWindowPixelDensity(options_.window);
-    return density > 0.0f ? density : 1.0f;
+  // A pointer position in <window>'s points, in the context's pixels. The
+  // window comes with each event: the game may replace its window (a change
+  // of display mode), so none is kept.
+  ContextPoint ToContext(SDL_Window& window, float x, float y) const {
+    int window_width = 0;
+    int window_height = 0;
+    SDL_GetWindowSize(&window, &window_width, &window_height);
+    const Rml::Vector2i size = context_->GetDimensions();
+    return PointerToContext(x, y, window_width, window_height, size.x, size.y);
   }
 
   RmlUiHostOptions options_;

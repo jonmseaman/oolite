@@ -17,7 +17,8 @@ struct RmlUiHostOptions {
   // The game's built-in Resources directory; documents, styles and fonts are
   // read from its UI folder only, never from an expansion.
   std::filesystem::path resource_root;
-  // The game's window, whose GL context is current.
+  // The game's window, whose GL context is current. Read at start-up only:
+  // the game may replace its window later, and pointer events name their own.
   SDL_Window* window = nullptr;
 };
 

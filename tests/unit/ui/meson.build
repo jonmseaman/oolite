@@ -1,7 +1,7 @@
 # Unit tests of the interface layer's view-models and classic views (meson test --suite ui, or
 # tests/run.sh unit). They build src/UI's own sources (oolite_ui_sources: no game class, no RmlUi)
 # with fakes for the game's side, so every platform builds and runs them.
-ui_tests = ['test_ship_library_view_model', 'test_grid_ship_library_view']
+ui_tests = ['test_ship_library_view_model', 'test_grid_ship_library_view', 'test_pointer_mapping']
 
 foreach name : ui_tests
     exe = executable(name,

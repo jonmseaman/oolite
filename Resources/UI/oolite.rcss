@@ -30,7 +30,7 @@ span { display: inline; }
 
 .panel {
 	position: absolute;
-	background-color: #07130ed9;
+	background-color: #07130ef5;
 	border: 1dp #3fd27a55;
 	border-radius: 6dp;
 	padding: 10dp 12dp;
@@ -130,7 +130,7 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc {
 #list {
 	left: 16dp;
 	top: 68dp;
-	bottom: 44dp;
+	bottom: 16dp;
 	width: 250dp;
 	padding: 6dp;
 }
@@ -165,14 +165,14 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc {
 #sheet {
 	left: 282dp;
 	right: 16dp;
-	bottom: 44dp;
-	height: 190dp;
+	bottom: 16dp;
+	height: 162dp;
 	display: flex;
 	flex-direction: row;
 }
 
 #sheet-main {
-	flex: 1.4 1 0;
+	flex: 2.7 1 0;
 	margin-right: 16dp;
 }
 
@@ -183,7 +183,7 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc {
 }
 
 #summary {
-	margin: 4dp 0 10dp 0;
+	margin: 2dp 0 8dp 0;
 	color: #a8c7b2;
 }
 
@@ -204,14 +204,15 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc {
 }
 
 .stat {
-	width: 33%;
-	padding: 3dp 0;
-	font-size: 13dp;
+	box-sizing: border-box;
+	width: 33.3%;
+	padding: 3dp 8dp 3dp 0;
+	font-size: 12.5dp;
 	color: #d6e4d8;
 }
 
 #description {
-	flex: 1 1 0;
+	flex: 1.25 1 0;
 	height: 100%;
 	overflow-y: auto;
 	padding-right: 4dp;
@@ -222,10 +223,9 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc {
 
 #hint {
 	position: absolute;
-	left: 16dp;
-	right: 16dp;
-	bottom: 14dp;
-	text-align: center;
+	right: 20dp;
+	top: 58dp;
+	text-align: right;
 	font-size: 12dp;
 	color: #7f9a88;
 }
