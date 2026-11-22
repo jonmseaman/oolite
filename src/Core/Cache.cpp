@@ -52,7 +52,6 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
-#include "Logging.h"
 #include "oofnd/PList.hpp"
 #if DEBUG_GRAPHVIZ
 #include "StringParsing.h"

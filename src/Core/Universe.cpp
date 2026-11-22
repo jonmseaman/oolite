@@ -107,7 +107,6 @@ MA 02110-1301, USA.
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/PListFile.hpp"
-#include "oofnd/PListParsing.hpp"
 #include "oofnd/Process.hpp"  // IWYU pragma: keep: used only with OO_LOCALIZATION_TOOLS
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"

@@ -27,7 +27,6 @@ MA 02110-1301, USA.
 
 #include <chrono>
 #include <cmath>
-#include <cstddef>
 #include <cstdint>
 
 #include "oofnd/Date.hpp"

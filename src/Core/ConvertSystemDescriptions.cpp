@@ -26,17 +26,16 @@ SOFTWARE.
 
 */
 
-#include <cstdint>
-#include <map>
-#include <set>
-#include <string>
-#include <utility>
-
 #include "Universe.h"  // IWYU pragma: keep: used only with OO_LOCALIZATION_TOOLS
 
 #if OO_LOCALIZATION_TOOLS
 
+#include <cstdint>
 #include <format>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
 
 #include "ConvertSystemDescriptions.h"
 #include "ResourceManager.h"

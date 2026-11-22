@@ -27,7 +27,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <format>
 #include <functional>
 #include <map>

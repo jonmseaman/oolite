@@ -28,7 +28,7 @@ SOFTWARE.
 #include "NullTexture.h"
 
 #include <memory>
-#include <string>
+#include <string>  // IWYU pragma: keep: used only without NDEBUG
 
 #include "Foundation.h"
 
