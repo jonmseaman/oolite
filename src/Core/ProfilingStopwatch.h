@@ -55,7 +55,7 @@ SOFTWARE.
 /*	Platform-specific high-resolution timer:
 
         OOHighResTimeValue is a time value. This could be a scalar, struct or
-   pointer. OOHighResTimeValue OOGetHighResTime(void) returns the current time.
+   pointer. OOHighResTimeValue OOGetHighResTime() returns the current time.
         OODisposeHighResTime() destroys an existing OOHighResTimeValue, if
    necessary. It must do nothing if the value passed is zeroed out.
         OOCopyHighResTime(x) returns a timer value equal to x.
@@ -108,7 +108,7 @@ using HighResTimeValue = int64_t;
 
 }  // namespace oo
 
-inline oo::HighResTimeValue OOGetHighResTime(void) {
+inline oo::HighResTimeValue OOGetHighResTime() {
   LARGE_INTEGER counter;
   QueryPerformanceCounter(&counter);
   return counter.QuadPart;
@@ -130,9 +130,9 @@ using HighResTimeValue = timeval;
 
 }  // namespace oo
 
-inline oo::HighResTimeValue OOGetHighResTime(void) {
+inline oo::HighResTimeValue OOGetHighResTime() {
   struct timeval tv;
-  gettimeofday(&tv, NULL);
+  gettimeofday(&tv, nullptr);
   return tv;
 }
 

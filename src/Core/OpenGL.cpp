@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 #include <numbers>
 #include <string>
 
-#include "LogIndentScope.h"
+#include "LogIndentScope.h"  // IWYU pragma: keep: used only without NDEBUG or with OO_CHECK_GL_HEAVY
 #include "Logging.h"  // IWYU pragma: keep: used only without NDEBUG or with OO_CHECK_GL_HEAVY
 #include "MacroOpenGL.h"
 // std::numbers::pi: Windows' <math.h> leaves it out unless _USE_MATH_DEFINES is
@@ -565,6 +565,6 @@ std::string GLFlagToString(bool value) {
 
 #else
 
-void LogOpenGLState(void) {}
+void LogOpenGLState() {}
 
 #endif
