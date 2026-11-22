@@ -24,8 +24,10 @@ Rules:
 
 ## Trying the RmlUi look
 
-Run the game with `-modern-ui`, or set the default `ui-look` to `modern`, and open the ship library
-(start screen, or `mission.runShipLibrary()` while docked). The classic grid stays the default, and
+Run the game with `-modern-ui`, or set the default `ui-look` to `modern`, and open the ship library:
+"View Ship Library" on the start screen, or, docked, the Interfaces screen (F4) entry "View ship
+specifications" (Resources/Scripts/oolite-ship-library.js, which hides the HUD first). Calling
+`mission.runShipLibrary()` from the console skips that script, so the HUD stays drawn under it. The classic grid stays the default, and
 the headless game always uses it.
 
 ## Prototype findings (spec 007)
@@ -50,7 +52,6 @@ To copy into `specs/007-rmlui-gui` Notes when a plan is written:
   third are now zero, where they were uninitialised.
 - **Not done here.** The document's own words ("Ship Library", "Back", the key hint) are English
   in the RML, not description keys. There is no classic font and no in-game look switch. Under the
-  RmlUi look the grid is not written, so debug-console row reads see nothing (FR-013). Opened
-  in-game, the HUD is still drawn under the library, as it is in the classic look. Windows and Linux
+  RmlUi look the grid is not written, so debug-console row reads see nothing (FR-013). Windows and Linux
   builds are untried: they need FreeType (MSYS2 `mingw-w64-ucrt-x86_64-freetype`; the parent repo's
   `tools/setup-windows.sh` does not install it yet).
