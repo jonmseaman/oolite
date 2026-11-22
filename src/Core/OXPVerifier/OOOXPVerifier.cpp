@@ -73,7 +73,6 @@ SOFTWARE.
 #include "oofnd/Log.hpp"
 #include "oofnd/PListFile.hpp"
 #include "oofnd/PListGet.hpp"
-#include "oofnd/PListParsing.hpp"
 #include "oofnd/Process.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
