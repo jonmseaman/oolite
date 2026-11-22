@@ -15,7 +15,7 @@ project(
         # Always use the bundled, patched QuickJS-ng (see third_party/quickjs-ng.wrap):
         # an unpatched system build breaks OXPs that rely on SpiderMonkey behaviour. Google Test
         # (third_party/gtest.wrap) is always the pinned one too, never a system package.
-        'force_fallback_for=quickjs-ng,gtest',
+        'force_fallback_for=quickjs-ng,gtest,gtest_main',
     ],
 )
 
@@ -136,7 +136,8 @@ oo_tests_built = not get_option('deployment_release') or get_option('deployment_
 if oo_tests_built
     # Static, so a test program needs no DLL beside it on Windows.
     gtest_dep = dependency('gtest', main: false, default_options: ['default_library=static'])
-    # The shared main and headers (oo_gtest_main_dep, oo_gtest_dep); meson test --suite gtest.
+    gtest_main_dep = dependency('gtest_main', default_options: ['default_library=static'])
+    # oo_gtest_main_dep (gtest_main) and oo_gtest_dep (no main); meson test --suite gtest.
     subdir('tests/support')
 endif
 

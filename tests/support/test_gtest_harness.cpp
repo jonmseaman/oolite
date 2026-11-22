@@ -1,9 +1,7 @@
 /*	tests/support/test_gtest_harness.cpp
-        The tests of the shared Google Test pieces (oo_gtest_main.cpp,
-   oo_gtest.hpp) that can live in a passing program: cases run in source order,
-   and the value forms report once, at the caller, and return the result. The
-   failing, empty and aborting programs are the probes beside this file, run by
-   check_probe.py.
+        The tests of oo_gtest.hpp and of how the tree uses Google Test: cases run
+   in source order, and the value forms report once, at the caller, and return
+   the result. A failing program is probe_gtest_fails, run by check_probe.py.
    Run: meson test -C build/meson_<type> --suite gtest
 */
 

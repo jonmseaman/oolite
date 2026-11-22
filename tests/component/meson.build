@@ -92,7 +92,7 @@ endforeach
 component_game_objects = oolite_bin.extract_objects(component_game_sources)
 
 # oo_component: what every program but the skeleton is written against. Its runMain is their main;
-# the skeleton, which boots nothing, links the shared one (oo_gtest_main_dep).
+# the skeleton, which boots nothing, links Google Test's (oo_gtest_main_dep).
 component_support_sources = files('oo_component.cpp')
 
 # The GL trap (Linux and macOS): every GL function the game's objects import, defined to print its

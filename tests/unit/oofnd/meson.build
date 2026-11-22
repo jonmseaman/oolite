@@ -1,6 +1,6 @@
 # oofnd unit tests: meson test -C build/meson_<type> --suite oofnd
 #
-# One executable per test_*.cpp, plain C++20 on Google Test with the shared main (tests/support). Add a new test
+# One executable per test_*.cpp, plain C++20 on Google Test with its own main (gtest_main). Add a new test
 # file's name here as well: a test_*.cpp missing from this list is not built.
 
 oofnd_tests = [

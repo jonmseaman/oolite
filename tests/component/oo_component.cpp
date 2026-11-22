@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <csignal>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -49,7 +48,6 @@
 #include "oofnd/Defaults.hpp"
 #include "GuiDisplayGen.h"
 #include "Universe.h"
-#include "oo_gtest_init.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "ShipEntity.h"
 #include "StationEntity.h"
@@ -1642,9 +1640,8 @@ int runMain(int argc, char** argv, const char* file) {
   // Google Test takes its own flags (--gtest_filter=<Suite>.<case> runs one
   // case); the rest (--layout, --digest-out, --without-weapon) are the
   // program's.
-  ::oo_gtest::InitGoogleTest(&argc, &argv);
+  ::testing::InitGoogleTest(&argc, argv);
   for (int i = 1; i < argc; ++i) Arguments().emplace_back(argv[i]);
-  ::oo_gtest::NameCaseOnAbort();
   ::testing::UnitTest::GetInstance()->listeners().Append(new FailedCaseState(file));
   const int result = RUN_ALL_TESTS();
   FinishScratch(result);
