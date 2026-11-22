@@ -225,8 +225,9 @@ class GameController : public oo::Object {
 
  private:
   // The interface layer for this run, injected into the view and the
-  // universe: the classic grid.
-  void setUpUiHost();
+  // universe: RmlUi's look when windowed with ui-look "modern" (or
+  // -modern-ui), else the classic grid.
+  void setUpUiHost(bool headless);
 
   // Internal: the state, read and written by the members above.
 

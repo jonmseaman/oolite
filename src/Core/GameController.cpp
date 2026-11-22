@@ -46,6 +46,7 @@ MA 02110-1301, USA.
 #ifndef NDEBUG
 #include "OOJavaScriptEngine.h"
 #endif
+#include <algorithm>
 #include <chrono>
 #include <cstddef>  // IWYU pragma: keep: NULL, in the Windows code
 #include <cstdint>
@@ -59,6 +60,7 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "UI/NullUiHost.h"
+#include "UI/RmlUi/RmlUiHost.h"
 #include "UI/UiHost.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Date.hpp"
@@ -282,8 +284,20 @@ GameController::GameController() {
 
 GameController::~GameController() = default;
 
-void GameController::setUpUiHost() {
-  _uiHost = std::make_unique<oo::ui::NullUiHost>();
+void GameController::setUpUiHost(bool headless) {
+  _uiHost.reset();
+  const std::vector<std::string>& arguments = oo::process::arguments();
+  const bool modern =
+      std::find(arguments.begin(), arguments.end(), "-modern-ui") !=
+          arguments.end() ||
+      oo::Defaults::standard().stringForKey("ui-look") == "modern";
+  if (modern && !headless && _gameView != nullptr) {
+    _uiHost = oo::ui::MakeRmlUiHost(oo::ui::RmlUiHostOptions{
+        .resource_root =
+            oo::ResourcePaths::current().builtInResourcesDirectory(),
+        .window = _gameView->sdlWindow()});
+  }
+  if (_uiHost == nullptr) _uiHost = std::make_unique<oo::ui::NullUiHost>();
   if (_gameView != nullptr) _gameView->setUiHost(_uiHost.get());
 }
 
@@ -601,7 +615,7 @@ void GameController::applicationDidFinishLaunching() {
     // moved here to try to avoid initialising this before having an Open GL
     // context logProgress(OO_DESC("Initialising universe")); // DESC expansions
     // only possible after Universe init
-    setUpUiHost();
+    setUpUiHost(false);
     _universe = Universe::newUniverse(
         _gameView
             .get());  // also gSharedUniverse; destroyed with the controller
@@ -701,7 +715,7 @@ void GameController::startHeadless(const oo::HeadlessOptions& options) {
     // as the windowed start: the options screen lists them
     setUpDisplayModes();
   }
-  setUpUiHost();
+  setUpUiHost(true);
   _universe = Universe::newUniverse(_gameView.get(), options);
   _universe->setUiHost(_uiHost.get());
   loadPlayerIfRequired();

@@ -1,0 +1,47 @@
+<rml>
+<!--
+	The ship library in the RmlUi look (ui-look "modern"). Bound to the
+	"ship_library" data model (src/UI/RmlUi/RmlShipLibraryView.cpp); the game
+	draws the demo ship behind it, in the space right of the list and above
+	the sheet. Text from the game's data reaches this document only through
+	{{ }} bindings, which show it as text, never as markup.
+-->
+<head>
+	<title>Ship Library</title>
+	<link type="text/rcss" href="oolite.rcss"/>
+</head>
+<body id="ship-library" data-model="ship_library">
+	<div id="header">
+		<div id="title">Ship Library</div>
+		<div id="categories">
+			<div class="button category-step" data-event-click="previous_category">&lt;&nbsp; {{previous_category}}</div>
+			<div id="category">{{category}}</div>
+			<div class="button category-step" data-event-click="next_category">{{next_category}} &nbsp;&gt;</div>
+		</div>
+		<div id="back" class="button" data-event-click="exit">Back</div>
+	</div>
+
+	<div id="list" class="panel">
+		<div id="ship-scroll">
+			<div class="ship" data-for="ship : ships"
+				data-attr-id="ship.id"
+				data-class-selected="it_index == selected"
+				data-class-shown="it_index == shown"
+				data-event-click="select_ship(it_index)">{{ship.name}}</div>
+		</div>
+	</div>
+
+	<div id="sheet" class="panel">
+		<div id="sheet-main">
+			<div id="ship-name">{{class_name}}</div>
+			<div id="summary"><span class="tag">{{category_singular}}</span> {{summary}}</div>
+			<div id="stats" data-if="has_stats">
+				<div class="stat" data-for="stat : stats">{{stat}}</div>
+			</div>
+		</div>
+		<div id="description" data-if="has_description">{{description}}</div>
+	</div>
+
+	<div id="hint">Up/Down or click: ship &nbsp;·&nbsp; Left/Right: category &nbsp;·&nbsp; Space: back</div>
+</body>
+</rml>
