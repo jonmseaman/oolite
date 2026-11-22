@@ -77,8 +77,7 @@ class JoystickStandardAxisProfile : public JoystickAxisProfile {
   double rawValue(double x) override;
 
  private:
-  double power_ =
-      {};  // the ivars power and parameter (clash with power(), parameter())
+  double power_ = {};  // the ivars power and parameter (clash with power(), parameter())
   double parameter_ = {};
 };
 

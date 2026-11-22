@@ -55,13 +55,15 @@ class ConcreteTexture : public Texture {
      -initWithPath:..., which answered nil for no loader: null here. The new
      texture is in the caches.
   */
-  static std::shared_ptr<ConcreteTexture> initWithLoader(
-      TextureLoader* loader, const std::optional<std::string>& key,
-      TextureFlags options, GLfloat anisotropy, GLfloat lodBias);
+  static std::shared_ptr<ConcreteTexture> initWithLoader(TextureLoader* loader,
+                                                         const std::optional<std::string>& key,
+                                                         TextureFlags options, GLfloat anisotropy,
+                                                         GLfloat lodBias);
 
-  static std::shared_ptr<ConcreteTexture> initWithPath(
-      const std::string& path, const std::optional<std::string>& key,
-      TextureFlags options, float anisotropy, GLfloat lodBias);
+  static std::shared_ptr<ConcreteTexture> initWithPath(const std::string& path,
+                                                       const std::optional<std::string>& key,
+                                                       TextureFlags options, float anisotropy,
+                                                       GLfloat lodBias);
 
   ~ConcreteTexture() override;
 
@@ -96,8 +98,7 @@ class ConcreteTexture : public Texture {
   void uploadTexture();
   void uploadTextureDataWithMipMap(bool mipMap, TextureDataFormat format);
 #if OO_TEXTURE_CUBE_MAP
-  void uploadTextureCubeMapDataWithMipMap(bool mipMap,
-                                          TextureDataFormat format);
+  void uploadTextureCubeMapDataWithMipMap(bool mipMap, TextureDataFormat format);
 #endif
 
   GLenum glTextureTarget();

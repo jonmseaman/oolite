@@ -91,20 +91,14 @@ enum class GUIBackgroundSpecial : std::int32_t {
 
 static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kNone) == 0);
 static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kCustom) == 1);
-static_assert(
-    std::to_underlying(oo::GUIBackgroundSpecial::kCustomAnaShortest) == 2);
-static_assert(
-    std::to_underlying(oo::GUIBackgroundSpecial::kCustomAnaQuickest) == 3);
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kCustomAnaShortest) == 2);
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kCustomAnaQuickest) == 3);
 static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kShort) == 4);
-static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kShortAnaShortest) ==
-              5);
-static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kShortAnaQuickest) ==
-              6);
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kShortAnaShortest) == 5);
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kShortAnaQuickest) == 6);
 static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kLong) == 7);
-static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kLongAnaShortest) ==
-              8);
-static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kLongAnaQuickest) ==
-              9);
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kLongAnaShortest) == 8);
+static_assert(std::to_underlying(oo::GUIBackgroundSpecial::kLongAnaQuickest) == 9);
 
 inline constexpr std::string_view GUI_KEY_OK = "OK";
 inline constexpr std::string_view GUI_KEY_SKIP = "SKIP-ROW";
@@ -113,127 +107,89 @@ inline constexpr std::string_view GUI_KEY_SKIP = "SKIP-ROW";
 inline constexpr const char* kGuiDefaultTextColor = "default_text_color";
 inline constexpr const char* kGuiScreenTitleColor = "screen_title_color";
 inline constexpr const char* kGuiScreenDividerColor = "screen_divider_color";
-inline constexpr const char* kGuiSelectedRowBackgroundColor =
-    "selected_row_background_color";
+inline constexpr const char* kGuiSelectedRowBackgroundColor = "selected_row_background_color";
 inline constexpr const char* kGuiSelectedRowColor = "selected_row_color";
-inline constexpr const char* kGuiTextInputCursorColor =
-    "text_input_cursor_color";
+inline constexpr const char* kGuiTextInputCursorColor = "text_input_cursor_color";
 // F3
 inline constexpr const char* kGuiEquipmentCashColor = "equipment_cash_color";
-inline constexpr const char* kGuiEquipmentUnavailableColor =
-    "equipment_unavailable_color";
-inline constexpr const char* kGuiEquipmentScrollColor =
-    "equipment_scroll_color";
-inline constexpr const char* kGuiEquipmentOptionColor =
-    "equipment_option_color";
-inline constexpr const char* kGuiEquipmentRepairColor =
-    "equipment_repair_color";
-inline constexpr const char* kGuiEquipmentDescriptionColor =
-    "equipment_description_color";
+inline constexpr const char* kGuiEquipmentUnavailableColor = "equipment_unavailable_color";
+inline constexpr const char* kGuiEquipmentScrollColor = "equipment_scroll_color";
+inline constexpr const char* kGuiEquipmentOptionColor = "equipment_option_color";
+inline constexpr const char* kGuiEquipmentRepairColor = "equipment_repair_color";
+inline constexpr const char* kGuiEquipmentDescriptionColor = "equipment_description_color";
 inline constexpr const char* kGuiEquipmentLaserColor = "equipment_laser_color";
-inline constexpr const char* kGuiEquipmentLaserFittedColor =
-    "equipment_laser_fitted_color";
+inline constexpr const char* kGuiEquipmentLaserFittedColor = "equipment_laser_fitted_color";
 inline constexpr const char* kGuiEquipmentTabs = "equipment_tabs";
 // F3 F3
-inline constexpr const char* kGuiShipyardHeadingColor =
-    "shipyard_heading_color";
+inline constexpr const char* kGuiShipyardHeadingColor = "shipyard_heading_color";
 inline constexpr const char* kGuiShipyardScrollColor = "shipyard_scroll_color";
 inline constexpr const char* kGuiShipyardEntryColor = "shipyard_entry_color";
 inline constexpr const char* kGuiShipyardNoshipColor = "shipyard_noship_color";
-inline constexpr const char* kGuiShipyardTradeinColor =
-    "shipyard_tradein_color";
-inline constexpr const char* kGuiShipyardDescriptionColor =
-    "shipyard_description_color";
+inline constexpr const char* kGuiShipyardTradeinColor = "shipyard_tradein_color";
+inline constexpr const char* kGuiShipyardDescriptionColor = "shipyard_description_color";
 inline constexpr const char* kGuiShipyardTabs = "shipyard_tabs";
 // F4
-inline constexpr const char* kGuiInterfaceHeadingColor =
-    "interface_heading_color";
-inline constexpr const char* kGuiInterfaceScrollColor =
-    "interface_scroll_color";
+inline constexpr const char* kGuiInterfaceHeadingColor = "interface_heading_color";
+inline constexpr const char* kGuiInterfaceScrollColor = "interface_scroll_color";
 inline constexpr const char* kGuiInterfaceEntryColor = "interface_entry_color";
-inline constexpr const char* kGuiInterfaceDescriptionColor =
-    "interface_description_color";
+inline constexpr const char* kGuiInterfaceDescriptionColor = "interface_description_color";
 inline constexpr const char* kGuiInterfaceNoneColor = "interface_none_color";
 inline constexpr const char* kGuiInterfaceTabs = "interface_tabs";
 // F5
 inline constexpr const char* kGuiStatusShipnameColor = "status_shipname_color";
 inline constexpr const char* kGuiStatusDataColor = "status_data_color";
-inline constexpr const char* kGuiStatusEquipmentHeadingColor =
-    "status_equipment_heading_color";
-inline constexpr const char* kGuiStatusEquipmentScrollColor =
-    "status_equipment_scroll_color";
-inline constexpr const char* kGuiStatusEquipmentOkColor =
-    "status_equipment_ok_color";
-inline constexpr const char* kGuiStatusEquipmentDamagedColor =
-    "status_equipment_damaged_color";
+inline constexpr const char* kGuiStatusEquipmentHeadingColor = "status_equipment_heading_color";
+inline constexpr const char* kGuiStatusEquipmentScrollColor = "status_equipment_scroll_color";
+inline constexpr const char* kGuiStatusEquipmentOkColor = "status_equipment_ok_color";
+inline constexpr const char* kGuiStatusEquipmentDamagedColor = "status_equipment_damaged_color";
 inline constexpr const char* kGuiStatusTabs = "status_tabs";
-inline constexpr const char* kGuiStatusPrioritiseDamaged =
-    "status_prioritise_damaged";
+inline constexpr const char* kGuiStatusPrioritiseDamaged = "status_prioritise_damaged";
 // F5 F5
-inline constexpr const char* kGuiManifestSubheadColor =
-    "manifest_subhead_color";
+inline constexpr const char* kGuiManifestSubheadColor = "manifest_subhead_color";
 inline constexpr const char* kGuiManifestEntryColor = "manifest_entry_color";
 inline constexpr const char* kGuiManifestScrollColor = "manifest_scroll_color";
-inline constexpr const char* kGuiManifestNoScrollColor =
-    "manifest_no_scroll_color";
+inline constexpr const char* kGuiManifestNoScrollColor = "manifest_no_scroll_color";
 inline constexpr const char* kGuiManifestTabs = "manifest_tabs";
 // F6
 inline constexpr const char* kGuiChartLabelScale = "chart_label_scale";
 inline constexpr const char* kGuiChartCircleScale = "chart_circle_scale";
 inline constexpr const char* kGuiChartLabelColor = "chart_label_color";
-inline constexpr const char* kGuiChartLabelReachableColor =
-    "chart_labelreachable_color";
+inline constexpr const char* kGuiChartLabelReachableColor = "chart_labelreachable_color";
 inline constexpr const char* kGuiChartRangeColor = "chart_range_color";
 inline constexpr const char* kGuiChartCrosshairColor = "chart_crosshair_color";
 inline constexpr const char* kGuiChartCursorColor = "chart_cursor_color";
-inline constexpr const char* kGuiChartInfoMarkerColor =
-    "chart_info_marker_color";
+inline constexpr const char* kGuiChartInfoMarkerColor = "chart_info_marker_color";
 inline constexpr const char* kGuiChartMatchBoxColor = "chart_match_box_color";
-inline constexpr const char* kGuiChartMatchLabelColor =
-    "chart_match_label_color";
-inline constexpr const char* kGuiChartConnectionColor =
-    "chart_connection_color";
-inline constexpr const char* kGuiChartCurrentJumpStartColor =
-    "chart_currentjumpstart_color";
-inline constexpr const char* kGuiChartCurrentJumpEndColor =
-    "chart_currentjumpend_color";
-inline constexpr const char* kGuiChartRouteShortColor =
-    "chart_route_short_color";
-inline constexpr const char* kGuiChartRouteQuickColor =
-    "chart_route_quick_color";
+inline constexpr const char* kGuiChartMatchLabelColor = "chart_match_label_color";
+inline constexpr const char* kGuiChartConnectionColor = "chart_connection_color";
+inline constexpr const char* kGuiChartCurrentJumpStartColor = "chart_currentjumpstart_color";
+inline constexpr const char* kGuiChartCurrentJumpEndColor = "chart_currentjumpend_color";
+inline constexpr const char* kGuiChartRouteShortColor = "chart_route_short_color";
+inline constexpr const char* kGuiChartRouteQuickColor = "chart_route_quick_color";
 inline constexpr const char* kGuiChartTraveltimeTabs = "chart_traveltime_tabs";
 
 inline constexpr const char* kGuiChartEconomyUColor = "chart_economy_%zu_color";
-inline constexpr const char* kGuiChartGovernmentUColor =
-    "chart_government_%zu_color";
+inline constexpr const char* kGuiChartGovernmentUColor = "chart_government_%zu_color";
 inline constexpr const char* kGuiChartTechColor = "chart_tech_color";
 // F7
-inline constexpr const char* kGuiSystemdataFactsColor =
-    "systemdata_facts_color";
-inline constexpr const char* kGuiSystemdataDescriptionColor =
-    "systemdata_description_color";
+inline constexpr const char* kGuiSystemdataFactsColor = "systemdata_facts_color";
+inline constexpr const char* kGuiSystemdataDescriptionColor = "systemdata_description_color";
 inline constexpr const char* kGuiSystemdataTabs = "systemdata_tabs";
 // F8
 inline constexpr const char* kGuiMarketHeadingColor = "market_heading_color";
-inline constexpr const char* kGuiMarketCommodityColor =
-    "market_commodity_color";
+inline constexpr const char* kGuiMarketCommodityColor = "market_commodity_color";
 inline constexpr const char* kGuiMarketScrollColor = "market_scroll_color";
-inline constexpr const char* kGuiMarketFilteredAllColor =
-    "market_filtered_all_color";
-inline constexpr const char* kGuiMarketFilterInfoColor =
-    "market_filter_info_color";
+inline constexpr const char* kGuiMarketFilteredAllColor = "market_filtered_all_color";
+inline constexpr const char* kGuiMarketFilterInfoColor = "market_filter_info_color";
 inline constexpr const char* kGuiMarketCashColor = "market_cash_color";
 // F8 F8 extras
-inline constexpr const char* kGuiMarketContractedColor =
-    "market_contracted_color";
-inline constexpr const char* kGuiMarketDescriptionColor =
-    "market_description_color";
+inline constexpr const char* kGuiMarketContractedColor = "market_contracted_color";
+inline constexpr const char* kGuiMarketDescriptionColor = "market_description_color";
 inline constexpr const char* kGuiMarketTabs = "market_tabs";
 // Docking report
 inline constexpr const char* kGuiDockingReportColor = "docking_report_color";
 inline constexpr const char* kGuiDockingSummaryColor = "docking_summary_color";
-inline constexpr const char* kGuiDockingContinueColor =
-    "docking_continue_color";
+inline constexpr const char* kGuiDockingContinueColor = "docking_continue_color";
 
 namespace oo {
 
@@ -271,27 +227,22 @@ class GuiDisplayGen : public oo::Object {
   /*	Titles, row texts and row keys are UTF-8 std::strings, std::optional
      where the old code accepted or returned nil.
   */
-  GuiDisplayGen(
-      NSSize gui_size, int gui_cols, int gui_rows, int gui_row_height,
-      int gui_row_start,
-      const std::optional<std::string>&
-          gui_title);  // -initWithPixelSize:columns:rows:rowHeight:rowStart:title:
+  GuiDisplayGen(NSSize gui_size, int gui_cols, int gui_rows, int gui_row_height, int gui_row_start,
+                const std::optional<std::string>&
+                    gui_title);  // -initWithPixelSize:columns:rows:rowHeight:rowStart:title:
   ~GuiDisplayGen() override;
 
-  void resizeWithPixelSize(NSSize gui_size, int gui_cols, int gui_rows,
-                           int gui_row_height, int gui_row_start,
-                           const std::optional<std::string>& gui_title);
-  void resizeTo(NSSize gui_size, int csize,
-                const std::optional<std::string>& gui_title);
+  void resizeWithPixelSize(NSSize gui_size, int gui_cols, int gui_rows, int gui_row_height,
+                           int gui_row_start, const std::optional<std::string>& gui_title);
+  void resizeTo(NSSize gui_size, int csize, const std::optional<std::string>& gui_title);
   NSSize size();
   unsigned columns();
   unsigned rows();
   unsigned rowHeight();
   int rowStart();
 
-  std::optional<std::string> getTitle();  // nullopt: no title
-  virtual void setTitle(
-      const std::optional<std::string>& str);  // empty string means no title
+  std::optional<std::string> getTitle();                         // nullopt: no title
+  virtual void setTitle(const std::optional<std::string>& str);  // empty string means no title
 
   void setDrawPosition(Vector vector);
   Vector getDrawPosition();
@@ -312,10 +263,10 @@ class GuiDisplayGen : public oo::Object {
   virtual void setTextColor(oo::Color* color);
   virtual oo::Color* getTextCommsColor();
   virtual void setTextCommsColor(oo::Color* color);
-  std::shared_ptr<oo::Color> colorFromSetting(
-      const std::optional<std::string>& setting, oo::Color* def);
-  void setGLColorFromSetting(const std::optional<std::string>& setting,
-                             oo::Color* def, GLfloat alpha);
+  std::shared_ptr<oo::Color> colorFromSetting(const std::optional<std::string>& setting,
+                                              oo::Color* def);
+  void setGLColorFromSetting(const std::optional<std::string>& setting, oo::Color* def,
+                             GLfloat alpha);
   void setGuiColorSettingFromKey(const std::string& key, oo::Color* col);
 
   void setCharacterSize(NSSize character_size);
@@ -345,8 +296,7 @@ class GuiDisplayGen : public oo::Object {
   virtual void setSelectableRange(NSRange range);
 
   virtual void setTabStops(oo::GUITabSettings stops);
-  void overrideTabs(oo::GUITabSettings stops, const std::string& setting,
-                    std::size_t len);
+  void overrideTabs(oo::GUITabSettings stops, const std::string& setting, std::size_t len);
 
   void clear();
   virtual void clearAndKeepBackground(bool keepBackground);
@@ -358,18 +308,15 @@ class GuiDisplayGen : public oo::Object {
 
   // A nil text or key is std::nullopt (nothing printed / no key set, as
   // before); text_array, when not nullptr, receives each line printed.
-  virtual std::optional<std::string> reflowTextForMFD(
-      const std::optional<std::string>& input);
-  virtual oo::GUIRow addLongText(const std::optional<std::string>& str,
-                                 oo::GUIRow row, oo::GUIAlignment alignment);
-  void printLongText(const std::optional<std::string>& str,
-                     oo::GUIAlignment alignment, oo::Color* text_color,
-                     float text_fade,
+  virtual std::optional<std::string> reflowTextForMFD(const std::optional<std::string>& input);
+  virtual oo::GUIRow addLongText(const std::optional<std::string>& str, oo::GUIRow row,
+                                 oo::GUIAlignment alignment);
+  void printLongText(const std::optional<std::string>& str, oo::GUIAlignment alignment,
+                     oo::Color* text_color, float text_fade,
                      const std::optional<std::string>& text_key,
                      std::vector<std::string>* text_array);
-  void printLineNoScroll(const std::optional<std::string>& str,
-                         oo::GUIAlignment alignment, oo::Color* text_color,
-                         float text_fade,
+  void printLineNoScroll(const std::optional<std::string>& str, oo::GUIAlignment alignment,
+                         oo::Color* text_color, float text_fade,
                          const std::optional<std::string>& text_key,
                          std::vector<std::string>* text_array);
 
@@ -378,14 +325,13 @@ class GuiDisplayGen : public oo::Object {
 
   // items: an array of row texts (a string, or an array of column strings);
   // item_keys: null or an array of the same length.
-  void insertItemsFromArray(const oo::PList& items, const oo::PList& item_keys,
-                            oo::GUIRow row, oo::Color* text_color);
+  void insertItemsFromArray(const oo::PList& items, const oo::PList& item_keys, oo::GUIRow row,
+                            oo::Color* text_color);
 
   void scrollUp(int how_much);
 
   /* allows the use of special dynamic backgrounds */
-  void setBackgroundTextureSpecial(oo::GUIBackgroundSpecial spec,
-                                   bool withBackground);
+  void setBackgroundTextureSpecial(oo::GUIBackgroundSpecial spec, bool withBackground);
 
   /*
           A background/foreground texture descriptor is a dictionary with a
@@ -411,9 +357,8 @@ class GuiDisplayGen : public oo::Object {
 
           Requires a request on context.
   */
-  oo::PList textureDescriptorFromJSValue(
-      JSValue value, JSContext* context,
-      const std::optional<std::string>& callerDescription);
+  oo::PList textureDescriptorFromJSValue(JSValue value, JSContext* context,
+                                         const std::optional<std::string>& callerDescription);
 
   void clearBackground();
 
@@ -437,8 +382,8 @@ class GuiDisplayGen : public oo::Object {
   oo::SystemID targetNextFoundSystem(int direction);
 
  private:
-  void drawSystemMarkers(const oo::PList& markers, GLfloat x, GLfloat y,
-                         GLfloat z, GLfloat alpha, GLfloat scale);
+  void drawSystemMarkers(const oo::PList& markers, GLfloat x, GLfloat y, GLfloat z, GLfloat alpha,
+                         GLfloat scale);
 
   NSSize size_in_pixels = {};
   unsigned n_columns = {};
@@ -462,8 +407,7 @@ class GuiDisplayGen : public oo::Object {
 
   std::optional<std::string> title;  // none: no title bar
 
-  std::vector<oo::PList>
-      rowText;  // each a string, or an array of column strings
+  std::vector<oo::PList> rowText;  // each a string, or an array of column strings
   std::vector<std::string> rowKey;
   std::vector<std::shared_ptr<oo::Color>> rowColor;
 
@@ -494,12 +438,10 @@ class GuiDisplayGen : public oo::Object {
 
   void drawGLDisplay(GLfloat x, GLfloat y, GLfloat z, GLfloat alpha);
   void drawCrossHairsWithSize(GLfloat size, GLfloat x, GLfloat y, GLfloat z);
-  void drawStarChart(GLfloat x, GLfloat y, GLfloat z, GLfloat alpha,
-                     bool compact);
-  void drawSystemMarker(const oo::PList& marker, GLfloat x, GLfloat y,
-                        GLfloat z, GLfloat alpha, GLfloat scale);
-  void drawAdvancedNavArrayAtX(float x, float y, float z, float alpha,
-                               const oo::PList& routeInfo,
+  void drawStarChart(GLfloat x, GLfloat y, GLfloat z, GLfloat alpha, bool compact);
+  void drawSystemMarker(const oo::PList& marker, GLfloat x, GLfloat y, GLfloat z, GLfloat alpha,
+                        GLfloat scale);
+  void drawAdvancedNavArrayAtX(float x, float y, float z, float alpha, const oo::PList& routeInfo,
                                oo::RouteType optimizeBy, oo::Scalar zoom);
 };
 

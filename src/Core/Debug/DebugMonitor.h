@@ -79,27 +79,23 @@ class DebugMonitor : public oo::PListForeign,
   // Note: disconnectDebugger() will cause a disconnectDebugMonitor:message:
   // message to be sent to the debugger. The debugger should not send
   // disconnectDebugger:message: in response to disconnectDebugMonitor:message:.
-  void disconnectDebugger(DebuggerInterface* debugger,
-                          const std::optional<std::string>& message);
+  void disconnectDebugger(DebuggerInterface* debugger, const std::optional<std::string>& message);
 
   // *** JavaScript console support.
 
   // Perform a JS command as though entered at the console, including echoing.
   void performJSConsoleCommand(const std::string& command);
 
-  void appendJSConsoleLine(const std::string& string,
-                           const std::optional<std::string>& colorKey,
+  void appendJSConsoleLine(const std::string& string, const std::optional<std::string>& colorKey,
                            NSRange emphasisRange);
 
-  void appendJSConsoleLine(const std::string& string,
-                           const std::optional<std::string>& colorKey);
+  void appendJSConsoleLine(const std::string& string, const std::optional<std::string>& colorKey);
 
   void clearJSConsole();
   void showJSConsole();
 
   oo::PList configurationValueForKey(const std::string& key);
-  std::int64_t configurationIntValueForKey(const std::string& key,
-                                           std::int64_t value);
+  std::int64_t configurationIntValueForKey(const std::string& key, std::int64_t value);
   void setConfigurationValue(const oo::PList& value, const std::string& key);
 
   std::vector<std::string> configurationKeys();  // sorted case-insensitively
@@ -124,13 +120,10 @@ class DebugMonitor : public oo::PListForeign,
   // The JavaScript engine's monitor (OOJavaScriptEngineMonitor): errors and
   // warnings, and log messages (messageClass nullopt if Log() is used rather
   // than LogWithClass()).
-  void jsEngine(::OOJavaScriptEngine* engine, JSContext* context,
-                const std::string& severity,
-                const std::optional<std::string>& file, unsigned line,
-                unsigned stackSkip, bool showLocation,
-                const std::string& message) override;
-  void jsEngine(::OOJavaScriptEngine* engine, JSContext* context,
-                const std::string& message,
+  void jsEngine(::OOJavaScriptEngine* engine, JSContext* context, const std::string& severity,
+                const std::optional<std::string>& file, unsigned line, unsigned stackSkip,
+                bool showLocation, const std::string& message) override;
+  void jsEngine(::OOJavaScriptEngine* engine, JSContext* context, const std::string& message,
                 const std::optional<std::string>& messageClass) override;
 
   // The console's JS glue (OOJSPrivateObject): its JavaScript object, made on
@@ -178,7 +171,7 @@ class DebugMonitor : public oo::PListForeign,
 
   // JavaScript console support.
   std::shared_ptr<OOScript> _script;  // the console script (an OOJSScript)
-  JSValue _jsSelf = JS_UNDEFINED;  // Owned; released when the JS engine resets.
+  JSValue _jsSelf = JS_UNDEFINED;     // Owned; released when the JS engine resets.
 
   oo::PList _configFromOXPs;   // Settings from debugConfig.plist (a Dict, never
                                // null after init())
@@ -186,8 +179,7 @@ class DebugMonitor : public oo::PListForeign,
                                // JS (a Dict; values may be Object nodes).
 
   // Caches
-  std::map<std::string, std::shared_ptr<oo::Color>, std::less<>> _fgColors,
-      _bgColors;
+  std::map<std::string, std::shared_ptr<oo::Color>, std::less<>> _fgColors, _bgColors;
   std::map<std::string, std::vector<std::string>, std::less<>>
       _sourceFiles;  // lines of each source file shown so far
   // TCP options

@@ -92,15 +92,14 @@ class Texture : public oo::PListForeign {
           This method may change; textureWithConfiguration() is generally more
           appropriate. Null for no name, or a file that is not found.
   */
-  static std::shared_ptr<Texture> textureWithName(
-      const std::optional<std::string>& name,
-      const std::optional<std::string>& directory, TextureFlags options,
-      GLfloat anisotropy, GLfloat lodBias);
+  static std::shared_ptr<Texture> textureWithName(const std::optional<std::string>& name,
+                                                  const std::optional<std::string>& directory,
+                                                  TextureFlags options, GLfloat anisotropy,
+                                                  GLfloat lodBias);
 
   // Default options, anisotropy and LOD bias.
-  static std::shared_ptr<Texture> textureWithName(
-      const std::optional<std::string>& name,
-      const std::optional<std::string>& directory);
+  static std::shared_ptr<Texture> textureWithName(const std::optional<std::string>& name,
+                                                  const std::optional<std::string>& directory);
 
   /*	Load a texure, looking in Textures directories, using configuration
           dictionary or name. (That is, configuration may be either a dictionary
@@ -119,10 +118,9 @@ class Texture : public oo::PListForeign {
                   extract_channel		(string, one of "r", "g", "b",
      "a")
   */
-  static std::shared_ptr<Texture> textureWithConfiguration(
-      const oo::PList& configuration);
-  static std::shared_ptr<Texture> textureWithConfiguration(
-      const oo::PList& configuration, TextureFlags extraOptions);
+  static std::shared_ptr<Texture> textureWithConfiguration(const oo::PList& configuration);
+  static std::shared_ptr<Texture> textureWithConfiguration(const oo::PList& configuration,
+                                                           TextureFlags extraOptions);
 
   /*	Test-only loader hooks: the five-argument
           textureWithName() and the one-argument textureWithConfiguration()
@@ -131,29 +129,26 @@ class Texture : public oo::PListForeign {
      replaces them. The game never sets them; the other
      factories call the real loaders directly.
   */
-  using NameFactory = std::shared_ptr<Texture> (*)(
-      const std::optional<std::string>& name,
-      const std::optional<std::string>& directory, TextureFlags options,
-      GLfloat anisotropy, GLfloat lodBias);
-  using ConfigurationFactory =
-      std::shared_ptr<Texture> (*)(const oo::PList& configuration);
+  using NameFactory = std::shared_ptr<Texture> (*)(const std::optional<std::string>& name,
+                                                   const std::optional<std::string>& directory,
+                                                   TextureFlags options, GLfloat anisotropy,
+                                                   GLfloat lodBias);
+  using ConfigurationFactory = std::shared_ptr<Texture> (*)(const oo::PList& configuration);
   static NameFactory nameFactory;
   static ConfigurationFactory configurationFactory;
-  static std::shared_ptr<Texture> loadTextureWithName(
-      const std::optional<std::string>& name,
-      const std::optional<std::string>& directory, TextureFlags options,
-      GLfloat anisotropy, GLfloat lodBias);
-  static std::shared_ptr<Texture> loadTextureWithConfiguration(
-      const oo::PList& configuration);
+  static std::shared_ptr<Texture> loadTextureWithName(const std::optional<std::string>& name,
+                                                      const std::optional<std::string>& directory,
+                                                      TextureFlags options, GLfloat anisotropy,
+                                                      GLfloat lodBias);
+  static std::shared_ptr<Texture> loadTextureWithConfiguration(const oo::PList& configuration);
 
   // The "null texture" (OONullTexture's shared instance).
   static std::shared_ptr<Texture> nullTexture();
 
   // Load a texture from a generator, optionally forcing an enqueue.
-  static std::shared_ptr<Texture> textureWithGenerator(
-      ::oo::TextureGenerator* generator);
-  static std::shared_ptr<Texture> textureWithGenerator(
-      ::oo::TextureGenerator* generator, bool enqueue);
+  static std::shared_ptr<Texture> textureWithGenerator(::oo::TextureGenerator* generator);
+  static std::shared_ptr<Texture> textureWithGenerator(::oo::TextureGenerator* generator,
+                                                       bool enqueue);
 
   // Bind the texture to the current texture unit. This will block until loading
   // is completed.
@@ -161,10 +156,9 @@ class Texture : public oo::PListForeign {
 
   static void applyNone();
 
-  virtual void ensureFinishedLoading();  // Default: does nothing
-  virtual bool isFinishedLoading();      // Default: true
-  virtual std::optional<std::string>
-  cacheKey();  // nullopt: not cacheable (the default)
+  virtual void ensureFinishedLoading();           // Default: does nothing
+  virtual bool isFinishedLoading();               // Default: true
+  virtual std::optional<std::string> cacheKey();  // nullopt: not cacheable (the default)
 
   virtual NSSize dimensions();          // Subclass responsibility
   virtual NSSize originalDimensions();  // Default: dimensions()
@@ -186,10 +180,8 @@ class Texture : public oo::PListForeign {
   static void rebindAllTextures();
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  static std::vector<std::shared_ptr<Texture>>
-  cachedTexturesByAge();  // youngest first
-  static std::vector<std::shared_ptr<Texture>>
-  allTextures();  // in no particular order
+  static std::vector<std::shared_ptr<Texture>> cachedTexturesByAge();  // youngest first
+  static std::vector<std::shared_ptr<Texture>> allTextures();          // in no particular order
 
   size_t dataSize();
 
@@ -270,8 +262,8 @@ struct TextureSpecifier {
         Interpret a texture specifier (string or dictionary); nullopt where it
         is not one.
 */
-std::optional<TextureSpecifier> InterpretTextureSpecifier(
-    const oo::PList& specifier, bool ignoreExtract);
+std::optional<TextureSpecifier> InterpretTextureSpecifier(const oo::PList& specifier,
+                                                          bool ignoreExtract);
 
 /*	OOMakeTextureSpecifier()
 
@@ -280,8 +272,8 @@ std::optional<TextureSpecifier> InterpretTextureSpecifier(
         If internal is used, an optimized form unsuitable for serialization may
    be used.
 */
-oo::PList MakeTextureSpecifier(const std::string& name, TextureFlags options,
-                               float anisotropy, float lodBias, bool internal);
+oo::PList MakeTextureSpecifier(const std::string& name, TextureFlags options, float anisotropy,
+                               float lodBias, bool internal);
 
 /*	OOApplyTextureOptionDefaults()
 
@@ -305,8 +297,7 @@ inline constexpr const char* kTextureSpecifierLODBiasKey = "texture_LOD_bias";
 // Keys not used in texture setup, but put in specific texture specifiers to
 // simplify plists.
 inline constexpr const char* kTextureSpecifierModulateColorKey = "color";
-inline constexpr const char* kTextureSpecifierIlluminationModeKey =
-    "illumination_mode";
+inline constexpr const char* kTextureSpecifierIlluminationModeKey = "illumination_mode";
 inline constexpr const char* kTextureSpecifierSelfColorKey = "self_color";
 inline constexpr const char* kTextureSpecifierScaleFactorKey = "scale_factor";
 inline constexpr const char* kTextureSpecifierBindingKey = "binding";

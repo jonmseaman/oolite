@@ -50,41 +50,26 @@ namespace oo {
 using ShaderUniformType = int;
 inline constexpr ShaderUniformType kShaderUniformTypeInvalid =
     0;  // Not valid for bindings or constants
-inline constexpr ShaderUniformType kShaderUniformTypeChar = 1;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeUnsignedChar =
-    2;                                                           // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeShort = 3;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeUnsignedShort =
-    4;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeInt =
-    5;  // Binding or constant
-inline constexpr ShaderUniformType kShaderUniformTypeUnsignedInt =
-    6;                                                          // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeLong = 7;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeUnsignedLong =
-    8;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeLongLong =
-    9;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeUnsignedLongLong =
-    10;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeFloat =
-    11;  // Binding or constant
-inline constexpr ShaderUniformType kShaderUniformTypeDouble =
-    12;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeVector =
-    13;  // Binding or constant
-inline constexpr ShaderUniformType kShaderUniformTypeHPVector =
-    14;  // Binding only
-inline constexpr ShaderUniformType kShaderUniformTypeQuaternion =
-    15;  // Binding or constant
-inline constexpr ShaderUniformType kShaderUniformTypeMatrix =
-    16;  // Binding or constant
-inline constexpr ShaderUniformType kShaderUniformTypePoint =
-    17;  // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeChar = 1;               // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeUnsignedChar = 2;       // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeShort = 3;              // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeUnsignedShort = 4;      // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeInt = 5;                // Binding or constant
+inline constexpr ShaderUniformType kShaderUniformTypeUnsignedInt = 6;        // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeLong = 7;               // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeUnsignedLong = 8;       // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeLongLong = 9;           // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeUnsignedLongLong = 10;  // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeFloat = 11;             // Binding or constant
+inline constexpr ShaderUniformType kShaderUniformTypeDouble = 12;            // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeVector = 13;            // Binding or constant
+inline constexpr ShaderUniformType kShaderUniformTypeHPVector = 14;          // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeQuaternion = 15;        // Binding or constant
+inline constexpr ShaderUniformType kShaderUniformTypeMatrix = 16;            // Binding or constant
+inline constexpr ShaderUniformType kShaderUniformTypePoint = 17;             // Binding only
 inline constexpr ShaderUniformType kShaderUniformTypeColor =
     18;  // Binding only: the C++ colour (OOColor *)
-inline constexpr ShaderUniformType kShaderUniformTypeObject =
-    19;  // Binding only
+inline constexpr ShaderUniformType kShaderUniformTypeObject = 19;  // Binding only
 inline constexpr ShaderUniformType kShaderUniformTypeCount = 20;
 
 }  // namespace oo
@@ -212,8 +197,7 @@ class Object;
 
 namespace oo {
 
-using ShaderMemberGetter = void (*)(oo::Object* target,
-                                    ShaderBindingValue& outValue);
+using ShaderMemberGetter = void (*)(oo::Object* target, ShaderBindingValue& outValue);
 
 struct ShaderMemberBinding {
   ShaderUniformType type;
@@ -243,8 +227,7 @@ struct ShaderEntityHooks {
   std::string (*description)(Entity* entity);
   // The row of the entities' member table for the name, where it binds this
   // entity (as the member lookup above).
-  bool (*memberBinding)(Entity* entity, const char* property,
-                        ShaderMemberBinding* outBinding);
+  bool (*memberBinding)(Entity* entity, const char* property, ShaderMemberBinding* outBinding);
   // -randomSeedForShaders, where the entity's object answers it.
   bool (*randomSeed)(Entity* entity, uint32_t* outSeed);
 };

@@ -39,8 +39,7 @@
 // Foundation's own NSNotFound and struct _NSRange collide with these, so the
 // two cannot be mixed silently in either order.
 #if defined(GNUSTEP_BASE_MAJOR_VERSION) || defined(NSINTEGER_DEFINED) || \
-    defined(__NSRange_h_GNUSTEP_BASE_INCLUDE) ||                         \
-    defined(__NSGeometry_h_GNUSTEP_BASE_INCLUDE)
+    defined(__NSRange_h_GNUSTEP_BASE_INCLUDE) || defined(__NSGeometry_h_GNUSTEP_BASE_INCLUDE)
 #error \
     "oofnd/objc/OOFoundationTypes.h replaces Foundation's C types and cannot be used together with Foundation"
 #endif
@@ -97,9 +96,7 @@ struct _NSRange {
   std::size_t length;
 };
 
-inline std::size_t NSMaxRange(NSRange range) {
-  return range.location + range.length;
-}
+inline std::size_t NSMaxRange(NSRange range) { return range.location + range.length; }
 
 inline bool NSLocationInRange(std::size_t location, NSRange range) {
   return (location >= range.location) && (location < NSMaxRange(range));
@@ -109,11 +106,8 @@ inline NSRange NSMakeRange(std::size_t location, std::size_t length) {
   NSRange range;
   std::size_t end = location + length;
   if (end < location || end < length) {
-    fprintf(
-        stderr,
-        "oofnd: NSMakeRange(%llu, %llu): range location + length too great\n",
-        static_cast<std::uint64_t>(location),
-        static_cast<std::uint64_t>(length));
+    fprintf(stderr, "oofnd: NSMakeRange(%llu, %llu): range location + length too great\n",
+            static_cast<std::uint64_t>(location), static_cast<std::uint64_t>(length));
     abort();
   }
   range.location = location;
@@ -122,8 +116,7 @@ inline NSRange NSMakeRange(std::size_t location, std::size_t length) {
 }
 
 inline bool NSEqualRanges(NSRange range1, NSRange range2) {
-  return ((range1.location == range2.location) &&
-          (range1.length == range2.length));
+  return ((range1.location == range2.location) && (range1.length == range2.length));
 }
 
 inline NSPoint NSMakePoint(double x, double y) {
@@ -156,14 +149,11 @@ inline bool NSEqualPoints(NSPoint aPoint, NSPoint bPoint) {
 }
 
 inline bool NSEqualSizes(NSSize aSize, NSSize bSize) {
-  return ((aSize.width == bSize.width) && (aSize.height == bSize.height))
-             ? true
-             : false;
+  return ((aSize.width == bSize.width) && (aSize.height == bSize.height)) ? true : false;
 }
 
 inline bool NSEqualRects(NSRect aRect, NSRect bRect) {
-  return (NSEqualPoints(aRect.origin, bRect.origin) &&
-          NSEqualSizes(aRect.size, bRect.size))
+  return (NSEqualPoints(aRect.origin, bRect.origin) && NSEqualSizes(aRect.size, bRect.size))
              ? true
              : false;
 }

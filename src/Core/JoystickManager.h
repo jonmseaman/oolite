@@ -122,8 +122,7 @@ inline constexpr int BUTTON_ACTIVATEEQUIPMENT = BUTTON_PRIMEEQUIPMENT + 1;
 inline constexpr int BUTTON_UNARM = BUTTON_ACTIVATEEQUIPMENT + 1;
 inline constexpr int BUTTON_TARGETINCOMINGMISSILE = BUTTON_UNARM + 1;
 inline constexpr int BUTTON_CYCLEMISSILE = BUTTON_TARGETINCOMINGMISSILE + 1;
-inline constexpr int BUTTON_ENERGYBOMB =
-    BUTTON_CYCLEMISSILE + 1;  // now fast activate B
+inline constexpr int BUTTON_ENERGYBOMB = BUTTON_CYCLEMISSILE + 1;  // now fast activate B
 inline constexpr int BUTTON_WEAPONSONLINETOGGLE = BUTTON_ENERGYBOMB + 1;
 inline constexpr int BUTTON_ID = BUTTON_WEAPONSONLINETOGGLE + 1;
 inline constexpr int BUTTON_ECM = BUTTON_ID + 1;
@@ -295,8 +294,7 @@ inline constexpr double STICK_AXISUNASSIGNED = -10.0;
 
 #define STICK_PRECISIONFAC 3
 #define STICK_NORMALDIV 32768
-inline constexpr auto STICK_PRECISIONDIV =
-    (STICK_PRECISIONFAC * STICK_NORMALDIV);
+inline constexpr auto STICK_PRECISIONDIV = (STICK_PRECISIONFAC * STICK_NORMALDIV);
 
 #define STICK_DEADZONE 0.05
 
@@ -312,20 +310,13 @@ inline constexpr int HW_BUTTON = 2;
 inline constexpr int AXCBTHRESH = 20000;
 
 // Dictionary keys - used in the defaults file
-inline constexpr std::string_view AXIS_SETTINGS =
-    "JoystickAxes";  // oo::Defaults key
-inline constexpr std::string_view BUTTON_SETTINGS =
-    "JoystickButs";  // oo::Defaults key
-inline constexpr std::string_view GUI_BUTTON_SETTINGS =
-    "GuiJoystickButs";  // oo::Defaults key
-inline constexpr std::string_view STICK_ISAXIS =
-    "isAxis";  // YES=axis NO=button
-inline constexpr std::string_view STICK_NUMBER =
-    "stickNum";  // Stick number 0 to 4
-inline constexpr std::string_view STICK_AXBUT =
-    "stickAxBt";  // Axis or button number
-inline constexpr std::string_view kStickFunction =
-    "stickFunc";  // Function of axis/button
+inline constexpr std::string_view AXIS_SETTINGS = "JoystickAxes";           // oo::Defaults key
+inline constexpr std::string_view BUTTON_SETTINGS = "JoystickButs";         // oo::Defaults key
+inline constexpr std::string_view GUI_BUTTON_SETTINGS = "GuiJoystickButs";  // oo::Defaults key
+inline constexpr std::string_view STICK_ISAXIS = "isAxis";                  // YES=axis NO=button
+inline constexpr std::string_view STICK_NUMBER = "stickNum";                // Stick number 0 to 4
+inline constexpr std::string_view STICK_AXBUT = "stickAxBt";                // Axis or button number
+inline constexpr std::string_view kStickFunction = "stickFunc";  // Function of axis/button
 inline constexpr std::string_view STICK_ROLL_AXIS_PROFILE_SETTING =
     "RollAxisProfile";  // Joystick Profiles
 inline constexpr std::string_view STICK_PITCH_AXIS_PROFILE_SETTING =
@@ -361,8 +352,7 @@ class JoystickManager : public oo::Object {
   // didn't) so in the future when more handler classes are written,
   // the GameView event loop can just go through an array of handlers
   // until it finds a handler that handles the event.
-  void
-  init();  // run once, right after construction, by whoever makes the manager
+  void init();  // run once, right after construction, by whoever makes the manager
 
   // Roll/pitch axis
   NSPoint rollPitchAxis();
@@ -386,8 +376,7 @@ class JoystickManager : public oo::Object {
 
   // Axis profile handling
   void setProfile(JoystickAxisProfile* profile, int axis);
-  JoystickAxisProfile* getProfileForAxis(
-      int axis);  // borrowed; null for an axis with none
+  JoystickAxisProfile* getProfileForAxis(int axis);  // borrowed; null for an axis with none
   void saveProfileForAxis(int axis);
   void loadProfileForAxis(int axis);
 
@@ -440,9 +429,8 @@ class JoystickManager : public oo::Object {
   int8_t guibuttonmap[MAX_STICKS][MAX_BUTTONS] = {};
   bool true_butstate[MAX_STICKS][MAX_BUTTONS] = {};
   std::array<double, AXIS_end> axstate = {};
-  std::array<bool, BUTTON_end> butstate =
-      {};  // still bool: getAllButtonStates() hands
-           // unconverted callers a const bool *
+  std::array<bool, BUTTON_end> butstate = {};  // still bool: getAllButtonStates() hands
+                                               // unconverted callers a const bool *
   uint8_t hatstate[MAX_STICKS][MAX_HATS] = {};
   bool precisionMode = {};
 

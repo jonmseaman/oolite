@@ -77,8 +77,7 @@ class StickProfileScreen : public oo::Object {
   std::optional<std::string> profileType();
 
  private:
-  oo::JoystickManager* stickHandler =
-      nullptr;  // the shared handler, not retained, as before
+  oo::JoystickManager* stickHandler = nullptr;  // the shared handler, not retained, as before
   std::size_t current_axis = 0;
   std::shared_ptr<oo::JoystickAxisProfile> profiles[3][2] = {};
   GuiDisplayGen* gui = nullptr;  // not retained, as before

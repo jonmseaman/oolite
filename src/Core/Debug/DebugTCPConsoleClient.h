@@ -63,20 +63,12 @@ enum class TCPClientConnectionStatus : int {
 
 }  // namespace oo
 
-static_assert(
-    std::to_underlying(oo::TCPClientConnectionStatus::kNotConnected) == 0);
-static_assert(std::to_underlying(
-                  oo::TCPClientConnectionStatus::kStartedConnectionStage1) ==
-              1);
-static_assert(std::to_underlying(
-                  oo::TCPClientConnectionStatus::kStartedConnectionStage2) ==
-              2);
-static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kConnected) ==
-              3);
-static_assert(
-    std::to_underlying(oo::TCPClientConnectionStatus::kConnectionRefused) == 4);
-static_assert(
-    std::to_underlying(oo::TCPClientConnectionStatus::kDisconnected) == 5);
+static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kNotConnected) == 0);
+static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kStartedConnectionStage1) == 1);
+static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kStartedConnectionStage2) == 2);
+static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kConnected) == 3);
+static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kConnectionRefused) == 4);
+static_assert(std::to_underlying(oo::TCPClientConnectionStatus::kDisconnected) == 5);
 
 /*	The frame loop's side of the console socket: what the run loop did for
    the console's streams. OODebugTCPConsoleIsWaitingForInput() is true while a
@@ -114,16 +106,13 @@ class DebugTCPConsoleClient : public DebuggerInterface {
   // The debugger interface (OODebuggerInterface).
   bool connectDebugMonitor(DebugMonitor* debugMonitor,
                            std::optional<std::string>* message) override;
-  void disconnectDebugMonitor(
-      DebugMonitor* debugMonitor,
-      const std::optional<std::string>& message) override;
+  void disconnectDebugMonitor(DebugMonitor* debugMonitor,
+                              const std::optional<std::string>& message) override;
   void debugMonitor(DebugMonitor* debugMonitor, const std::string& output,
-                    const std::optional<std::string>& colorKey,
-                    NSRange emphasisRange) override;
+                    const std::optional<std::string>& colorKey, NSRange emphasisRange) override;
   void debugMonitorClearConsole(DebugMonitor* debugMonitor) override;
   void debugMonitorShowConsole(DebugMonitor* debugMonitor) override;
-  void debugMonitor(DebugMonitor* debugMonitor,
-                    const oo::PList& configuration) override;
+  void debugMonitor(DebugMonitor* debugMonitor, const oo::PList& configuration) override;
   void debugMonitor(DebugMonitor* debugMonitor, const oo::PList& newValue,
                     const std::string& key) override;
   std::string description() const override;  // <OODebugTCPConsoleClient 0x...>
@@ -134,8 +123,7 @@ class DebugTCPConsoleClient : public DebuggerInterface {
   friend void ::oo::DebugTCPConsoleServiceInput(double timeout);
 
   DebugTCPConsoleClient() = default;
-  bool initWithAddress(const std::optional<std::string>& address,
-                       uint16_t port);
+  bool initWithAddress(const std::optional<std::string>& address, uint16_t port);
 
   // The decoder's callbacks; its string and dictionary handles are
   // OOALObjectRef.
@@ -149,13 +137,11 @@ class DebugTCPConsoleClient : public DebuggerInterface {
 
   // Packet type and parameter names are OODebugTCPConsoleProtocol.h's constants
   // (ProtocolName()).
-  void sendPacket(
-      const std::string& packetType,
-      const oo::PList& parameters);  // a dictionary; null: the type alone
+  void sendPacket(const std::string& packetType,
+                  const oo::PList& parameters);  // a dictionary; null: the type alone
 
   void sendPacket(const std::string& packetType, const oo::PList& value,
-                  const std::string&
-                      paramKey);  // a null value or empty key: the type alone
+                  const std::string& paramKey);  // a null value or empty key: the type alone
 
   bool openSocketToHost(const std::string& address, uint16_t port);
   std::ptrdiff_t receive(std::span<uint8_t> buffer);
@@ -181,14 +167,12 @@ class DebugTCPConsoleClient : public DebuggerInterface {
   void handlePongPacket(const oo::PList& packet);
 
   void disconnectFromServerWithMessage(
-      const std::optional<std::string>&
-          message);  // nullopt: a close packet without a message
+      const std::optional<std::string>& message);  // nullopt: a close packet without a message
   void breakConnectionWithMessage(const std::string& message);
   void breakConnectionWithStreamError(int error);
 
-  std::optional<std::string>
-      _hostName;           // was the host object; nullopt when closed
-  uintptr_t _socket = {};  // SOCKET / file descriptor; all ones when closed
+  std::optional<std::string> _hostName;  // was the host object; nullopt when closed
+  uintptr_t _socket = {};                // SOCKET / file descriptor; all ones when closed
   int _inStatus = {}, _outStatus = {};
   int _inError = {}, _outError = {};
   int _pendingErrorCode = {};

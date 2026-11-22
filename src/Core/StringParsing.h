@@ -42,12 +42,9 @@ MA 02110-1301, USA.
 // if passed a null string (nullopt), so they can be used to, say, read
 // dictionary entries which might not exist. They also ignore any extra
 // components in the string.
-std::optional<Vector> ScanVectorFromString(
-    const std::optional<std::string>& xyzString);
-std::optional<HPVector> ScanHPVectorFromString(
-    const std::optional<std::string>& xyzString);
-std::optional<Quaternion> ScanQuaternionFromString(
-    const std::optional<std::string>& wxyzString);
+std::optional<Vector> ScanVectorFromString(const std::optional<std::string>& xyzString);
+std::optional<HPVector> ScanHPVectorFromString(const std::optional<std::string>& xyzString);
+std::optional<Quaternion> ScanQuaternionFromString(const std::optional<std::string>& wxyzString);
 
 // A position and an orientation, as ScanVectorAndQuaternionFromString() reads
 // them.
@@ -62,8 +59,7 @@ struct VectorAndQuaternion {
 std::optional<oo::VectorAndQuaternion> ScanVectorAndQuaternionFromString(
     const std::optional<std::string>& xyzwxyzString);
 
-Vector VectorFromString(const std::optional<std::string>& xyzString,
-                        Vector defaultValue);
+Vector VectorFromString(const std::optional<std::string>& xyzString, Vector defaultValue);
 Quaternion QuaternionFromString(const std::optional<std::string>& wxyzString,
                                 Quaternion defaultValue);
 
@@ -71,17 +67,15 @@ std::string StringFromPoint(NSPoint point);
 NSPoint PointFromString(const std::string& xyString);
 
 // nullopt is read as nil was (a conversion error, logged, and kNilRandomSeed).
-Random_Seed RandomSeedFromString(
-    const std::optional<std::string>& abcdefString);
+Random_Seed RandomSeedFromString(const std::optional<std::string>& abcdefString);
 std::string StringFromRandomSeed(Random_Seed seed);
 
 namespace oo {
 
-std::string StringFromDeciCredits(CreditsQuantity tenthsOfCredits,
-                                  bool includeDecimal, bool includeSymbol);
+std::string StringFromDeciCredits(CreditsQuantity tenthsOfCredits, bool includeDecimal,
+                                  bool includeSymbol);
 
-inline std::string StringFromIntCredits(CreditsQuantity integerCredits,
-                                        bool includeSymbol) {
+inline std::string StringFromIntCredits(CreditsQuantity integerCredits, bool includeSymbol) {
   return StringFromDeciCredits(integerCredits * 10, false, includeSymbol);
 }
 
@@ -127,7 +121,6 @@ std::string EscapedGraphVizString(const std::string& string);
         case-insensitive GraphViz keywords node, edge, graph, digraph, subgraph
         and strict.
 */
-std::string GraphVizTokenString(const std::string& string,
-                                std::set<std::string>* uniqueSet);
+std::string GraphVizTokenString(const std::string& string, std::set<std::string>* uniqueSet);
 
 #endif

@@ -165,8 +165,7 @@ class Trumble : public oo::Object {
 
   ::PlayerEntity* player = {};  // owning entity (not retained)
   //
-  uint16_t digram[2] =
-      {};  // seed for pseudo-randomly setting up Trumble (pair of characters)
+  uint16_t digram[2] = {};  // seed for pseudo-randomly setting up Trumble (pair of characters)
   //
   GLfloat colorBase[4] = {};    // color of Trumble
   GLfloat colorPoint1[4] = {};  // color of Trumble (variation 1)
@@ -174,7 +173,7 @@ class Trumble : public oo::Object {
   GLfloat colorEyes[4] = {};    // color of Trumble (eye color)
   GLfloat* pointColor[6] = {};  // pointscheme
   //
-  GLfloat hunger = {};  // behaviour modifier 0.0 (satiated) to 1.0 (starving)
+  GLfloat hunger = {};      // behaviour modifier 0.0 (satiated) to 1.0 (starving)
   GLfloat discomfort = {};  // behaviour modifier 0.0 (very happy) to 1.0
                             // (extremely uncomfortable)
   //
@@ -188,10 +187,8 @@ class Trumble : public oo::Object {
   NSPoint position = {};  // x, y onscreen relative to center of screen
   NSPoint movement = {};  // +x, +y (screen units / sec)
   //
-  NSPoint eye_position =
-      {};  // current position of eyes relative to their starting position
-  NSPoint mouth_position =
-      {};  // current position of eyes relative to their starting position
+  NSPoint eye_position = {};    // current position of eyes relative to their starting position
+  NSPoint mouth_position = {};  // current position of eyes relative to their starting position
   //
   double animationTime = {};      // set to 0.0 at start of current animation
   double animationDuration = {};  // set to 0.0 at start of current animation

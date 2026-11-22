@@ -55,18 +55,15 @@ class DebuggerInterface : public oo::Object {
                                    std::optional<std::string>* message) = 0;
 
   // Sent to close connection. message: nullopt when none.
-  virtual void disconnectDebugMonitor(
-      DebugMonitor* debugMonitor,
-      const std::optional<std::string>& message) = 0;
+  virtual void disconnectDebugMonitor(DebugMonitor* debugMonitor,
+                                      const std::optional<std::string>& message) = 0;
 
   // Sent to print to the JavaScript console.
   // colorKey is intended to be used to look up a foreground/background colour
   // pair in the configuration. EmphasisRange is to specify a bold section of
   // text.
-  virtual void debugMonitor(DebugMonitor* debugMonitor,
-                            const std::string& output,
-                            const std::optional<std::string>& colorKey,
-                            NSRange emphasisRange) = 0;
+  virtual void debugMonitor(DebugMonitor* debugMonitor, const std::string& output,
+                            const std::optional<std::string>& colorKey, NSRange emphasisRange) = 0;
 
   // Sent to clear the JavaScript console.
   virtual void debugMonitorClearConsole(DebugMonitor* debugMonitor) = 0;
@@ -76,12 +73,10 @@ class DebuggerInterface : public oo::Object {
   virtual void debugMonitorShowConsole(DebugMonitor* debugMonitor) = 0;
 
   // Sent once when the debugger is connected.
-  virtual void debugMonitor(DebugMonitor* debugMonitor,
-                            const oo::PList& configuration) = 0;
+  virtual void debugMonitor(DebugMonitor* debugMonitor, const oo::PList& configuration) = 0;
 
   // Sent when configuration changes. newValue null = was nil.
-  virtual void debugMonitor(DebugMonitor* debugMonitor,
-                            const oo::PList& newValue,
+  virtual void debugMonitor(DebugMonitor* debugMonitor, const oo::PList& newValue,
                             const std::string& key) = 0;
 
   // What the monitor's log lines print for the debugger (<ClassName 0x...>).
