@@ -6,6 +6,7 @@
 #include "oo_component.hpp"
 
 #include <SDL3/SDL.h>
+#include <gtest/gtest.h>
 #include <quickjs.h>
 
 #include <algorithm>
@@ -48,7 +49,7 @@
 #include "oofnd/Defaults.hpp"
 #include "GuiDisplayGen.h"
 #include "Universe.h"
-#include "oo_test.hpp"
+#include "oo_gtest_init.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "ShipEntity.h"
 #include "StationEntity.h"
@@ -309,7 +310,7 @@ void PrintState(const char* file, int line) {
   if (line > 0) {
     std::printf("     at %s:%d:", file, line);
   } else {
-    std::printf("     after the case:");  // RunCases, for a plain OO_CHECK
+    std::printf("     after the case:");  // FailedCaseState, for a plain EXPECT_*
   }
   std::printf(" seed %u, game time %.3f s, step %llu, screen %s\n",
               static_cast<unsigned>(state.seed),
@@ -543,19 +544,15 @@ const Event* EventRecord::firstOf(std::string_view name,
 
 void checkNoErrors(const Game& game, const char* file, int line) {
   const std::vector<Event> errors = game.errors();
-  if (errors.empty()) {
-    ::oo_test::check(true, "no error in the event record", file, line);
-    return;
-  }
-  ::oo_test::check(false, "no error in the event record", file, line);
+  if (errors.empty()) return;
+  ADD_FAILURE_AT(file, line) << "no error in the event record";
   std::printf("     %zu error entries:\n", errors.size());
   for (const Event& event : errors) PrintEvent(event);
   PrintState(file, line);
 }
 
 void fail(std::string_view message, const char* file, int line) {
-  const std::string text(message);
-  ::oo_test::check(false, text.c_str(), file, line);
+  ADD_FAILURE_AT(file, line) << message;
   PrintState(file, line);
 }
 
@@ -1132,14 +1129,11 @@ bool Game::exitRequested() const {
 
 void Game::checkPressEffect(std::string_view key, bool changed,
                             const char* file, int line) const {
-  if (changed) {
-    ::oo_test::check(true, "", file, line);
-    return;
-  }
+  if (changed) return;
   const std::string message =
       std::format("pressing {} had no effect at {}, game time {:.3f}\n     {}",
                   key, screen(), time(), describeKey(key));
-  ::oo_test::check(false, message.c_str(), file, line);
+  ADD_FAILURE_AT(file, line) << message;
   PrintState(file, line);
 }
 
@@ -1602,41 +1596,20 @@ double Game::eval(std::string_view js) {
 
 namespace {
 
-// oo_test::runAll's loop and output, and after a case that failed, the game's
-// state (seed, game time, screen, the last events, the rerun command): a
-// plain OO_CHECK knows nothing of the game.
-int RunCases(const char* file) {
-  const std::vector<::oo_test::Case>& cases = ::oo_test::registry();
-  std::signal(SIGABRT, [](int) {
-    std::fprintf(stderr, "oo_test: abort() in case %s\n", ::oo_test::currentTest());
-    std::fflush(stderr);
-  });
-  // --case <name>: that case alone (a program whose cases each need a game of
-  // their own is registered once per case).
-  std::optional<std::string> only;
-  for (std::size_t i = 0; i + 1 < Arguments().size(); ++i) {
-    if (Arguments()[i] == "--case") only = Arguments()[i + 1];
-  }
-  std::size_t ran = 0;
-  for (const ::oo_test::Case& c : cases) {
-    if (only.has_value() && *only != c.name) continue;
-    ++ran;
-    ::oo_test::currentTest() = c.name;
-    const int before = ::oo_test::failures();
-    c.fn();
-    const bool passed = ::oo_test::failures() == before;
-    if (!passed) PrintState(file, 0);
-    std::printf("%s %s\n", passed ? "ok  " : "FAIL", c.name);
+// After a case that failed, the game's state (seed, game time, screen, the last
+// events, the rerun command): a plain EXPECT_* knows nothing of the game.
+class FailedCaseState : public ::testing::EmptyTestEventListener {
+ public:
+  explicit FailedCaseState(const char* file) : file_(file) {}
+
+  void OnTestEnd(const ::testing::TestInfo& info) override {
+    if (info.result() != nullptr && info.result()->Failed()) PrintState(file_, 0);
     std::fflush(stdout);
   }
-  std::printf("oo_test: %s: %zu tests, %d checks, %d failures\n", file, ran,
-              ::oo_test::checks(), ::oo_test::failures());
-  if (ran == 0) {
-    std::printf("FAIL %s: no tests registered\n", file);
-    return 2;
-  }
-  return ::oo_test::failures() == 0 ? 0 : 1;
-}
+
+ private:
+  const char* file_;
+};
 
 }  // namespace
 
@@ -1666,8 +1639,14 @@ void exitProgram(int code) {
 
 int runMain(int argc, char** argv, const char* file) {
   ProgramPath() = argc > 0 ? argv[0] : "component";
+  // Google Test takes its own flags (--gtest_filter=<Suite>.<case> runs one
+  // case); the rest (--layout, --digest-out, --without-weapon) are the
+  // program's.
+  ::oo_gtest::InitGoogleTest(&argc, &argv);
   for (int i = 1; i < argc; ++i) Arguments().emplace_back(argv[i]);
-  const int result = RunCases(file);
+  ::oo_gtest::NameCaseOnAbort();
+  ::testing::UnitTest::GetInstance()->listeners().Append(new FailedCaseState(file));
+  const int result = RUN_ALL_TESTS();
   FinishScratch(result);
   return result;
 }

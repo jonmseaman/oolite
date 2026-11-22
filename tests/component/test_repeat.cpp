@@ -12,8 +12,9 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 
 namespace {
 
@@ -28,7 +29,7 @@ std::vector<std::string> Lines(const std::string& path) {
 
 }  // namespace
 
-OO_TEST(two_runs_of_s1_give_the_same_digest_at_every_step) {
+TEST(repeat, two_runs_of_s1_give_the_same_digest_at_every_step) {
   const std::string program = oo::component::siblingProgram(kScenario);
   const std::string base = oo::component::programPath();
   std::vector<std::vector<std::string>> runs;
@@ -37,19 +38,19 @@ OO_TEST(two_runs_of_s1_give_the_same_digest_at_every_step) {
     const int status = oo::component::runChild(program, {"--digest-out", digests},
                                                "", "");
     std::printf("run %d: %s exited %d\n", run, kScenario, status);
-    OO_CHECK_EQ(status, 0);
+    EXPECT_EQ(status, 0);
     runs.push_back(Lines(digests));
     std::remove(digests.c_str());
   }
-  OO_CHECK(!runs[0].empty());
+  EXPECT_TRUE(!runs[0].empty());
   std::printf("%zu and %zu steps\n", runs[0].size(), runs[1].size());
-  OO_CHECK_EQ(runs[0].size(), runs[1].size());
+  EXPECT_EQ(runs[0].size(), runs[1].size());
   const std::size_t n = runs[0].size() < runs[1].size() ? runs[0].size() : runs[1].size();
   for (std::size_t i = 0; i < n; ++i) {
     if (runs[0][i] != runs[1][i]) {
       std::printf("first difference at line %zu: '%s' against '%s'\n", i + 1,
                   runs[0][i].c_str(), runs[1][i].c_str());
-      OO_CHECK(runs[0][i] == runs[1][i]);
+      EXPECT_TRUE(runs[0][i] == runs[1][i]);
       return;
     }
   }

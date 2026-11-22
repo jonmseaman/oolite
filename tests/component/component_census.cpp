@@ -40,6 +40,8 @@
 #include <string_view>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "EquipmentType.h"
 #include "PListParsing.h"
 #include "ShipRegistry.h"
@@ -48,7 +50,6 @@
 #include "ShipEntity.h"
 #include "Universe.h"
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 
 namespace fs = std::filesystem;
 using oo::component::Game;
@@ -717,7 +718,7 @@ int RunInGame(const Options& o) {
 
 }  // namespace
 
-OO_TEST(census) {
+TEST(component_census, census) {
   const Options o = ParseOptions();
   int code = 0;
   if (o.bad) {

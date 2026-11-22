@@ -15,10 +15,11 @@
 #include <sstream>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "OpenGLExtensionManager.h"
 #include "Texture.h"
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 
 namespace {
 
@@ -31,7 +32,7 @@ bool IsChild() {
 
 }  // namespace
 
-OO_TEST(a_gl_call_while_headless_is_caught) {
+TEST(gl_trap, a_gl_call_while_headless_is_caught) {
   if (IsChild()) {
     oo::OpenGLExtensionManager::setHeadless(true);
     oo::Texture::applyNone();  // glBindTexture: the trap aborts here
@@ -46,8 +47,8 @@ OO_TEST(a_gl_call_while_headless_is_caught) {
   text << in.rdbuf();
   std::printf("child exit status %d; its error output:\n%s\n", status,
               text.str().c_str());
-  OO_CHECK(status != 0);
-  OO_CHECK(text.str().find("GL call glBindTexture while headless") !=
+  EXPECT_TRUE(status != 0);
+  EXPECT_TRUE(text.str().find("GL call glBindTexture while headless") !=
            std::string::npos);
   std::remove(errors.c_str());
 }

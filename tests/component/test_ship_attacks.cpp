@@ -10,26 +10,27 @@
 
 #include <chrono>
 
+#include <gtest/gtest.h>
+
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 
 using namespace std::chrono_literals;
 using oo::component::Game;
 using oo::component::ShipWithKey;
 
-OO_TEST(a_ship_told_to_attack_opens_fire) {
+TEST(ship_attacks, a_ship_told_to_attack_opens_fire) {
   Game game = Game::scenario(20260910);
 
   oo::component::ShipHandle target =
       game.add(ShipWithKey("cobra3-trader").near(game.player(), 20'000.0));
-  OO_CHECK(target.alive());
+  EXPECT_TRUE(target.alive());
   target->setAITo("nullAI.plist");  // it does not run or fight back
   oo::component::ShipHandle hunter = game.add(ShipWithKey("adder").near(target, 5'000.0));
-  OO_CHECK(hunter.alive());
+  EXPECT_TRUE(hunter.alive());
   hunter->setAITo("nullAI.plist");
-  OO_CHECK(hunter->setWeaponMount(oo::WeaponFacing::kForward,
+  EXPECT_TRUE(hunter->setWeaponMount(oo::WeaponFacing::kForward,
                                   oo::component::hasArgument("--without-weapon")
                                       ? "EQ_WEAPON_NONE"
                                       : "EQ_WEAPON_PULSE_LASER"));
@@ -38,9 +39,9 @@ OO_TEST(a_ship_told_to_attack_opens_fire) {
   hunter->performAttack();
 
   // It has to turn, close the range and line up: give it time, and assert that it happened.
-  OO_CHECK(game.simulateUntil(
+  EXPECT_TRUE(game.simulateUntil(
       [&] { return game.events().has("shipBeingAttacked", target); }, 60s));
-  OO_CHECK(target.alive() && target->energy < target->maxEnergy);
+  EXPECT_TRUE(target.alive() && target->energy < target->maxEnergy);
   OO_COMPONENT_CHECK_NO_ERRORS(game);
 }
 

@@ -20,19 +20,20 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "GameController.h"
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 
 using namespace std::chrono_literals;
 using oo::component::Game;
 
-OO_TEST(quitting_logs_the_javascript_leak_check) {
+TEST(exit_runs_js_leak_check, quitting_logs_the_javascript_leak_check) {
   // With a view: the universe reaches the controller through its view, so a
   // game with none never passes the quit on.
   Game game = Game::inFlightWithKeys(1);
   game.eval("quitGame(), 0");
-  OO_CHECK(game.simulateUntil([&game] { return game.exitRequested(); }, 1s));
+  EXPECT_TRUE(game.simulateUntil([&game] { return game.exitRequested(); }, 1s));
   OO_COMPONENT_CHECK_NO_ERRORS(game);
 
   game.controller()->shutDownForExit();
@@ -40,7 +41,7 @@ OO_TEST(quitting_logs_the_javascript_leak_check) {
 #ifndef NDEBUG
   const std::vector<std::string> shutdown =
       game.logLinesContaining("[script.javaScript.shutDown");
-  OO_CHECK(!shutdown.empty());  // the exit shut the runtime down
+  EXPECT_TRUE(!shutdown.empty());  // the exit shut the runtime down
   bool clean = false;
   for (const std::string& line : shutdown) {
     std::printf("    %s\n", line.c_str());
@@ -50,7 +51,7 @@ OO_TEST(quitting_logs_the_javascript_leak_check) {
       clean = true;
     }
   }
-  OO_CHECK(clean);  // and nothing was still alive
+  EXPECT_TRUE(clean);  // and nothing was still alive
 #endif
 }
 

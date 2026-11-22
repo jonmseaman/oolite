@@ -8,14 +8,15 @@
 #include <cstdio>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 
 using oo::component::Game;
 using oo::component::ShipsWithRole;
 using oo::component::ticks;
 
-OO_TEST(eight_neutral_ships_run_for_900_ticks_without_incident) {
+TEST(s7_neutral_traffic_is_quiet, eight_neutral_ships_run_for_900_ticks_without_incident) {
   const auto started = std::chrono::steady_clock::now();
 
   // Given a universe seeded with 20260910
@@ -23,14 +24,14 @@ OO_TEST(eight_neutral_ships_run_for_900_ticks_without_incident) {
   const double gameStart = game.time();
 
   // When I spawn 8 ships with role "shuttle"
-  OO_CHECK_EQ(game.spawn(ShipsWithRole("shuttle").count(8)).size(), 8u);
+  EXPECT_EQ(game.spawn(ShipsWithRole("shuttle").count(8)).size(), 8u);
   // And the simulation runs for 900 ticks
   game.simulate(ticks(900));
 
   // Then a ship with role "shuttle" survives
-  OO_CHECK(game.countWithRole("shuttle") > 0);
+  EXPECT_TRUE(game.countWithRole("shuttle") > 0);
   // And no ERROR appears in the log
-  OO_CHECK(game.logLinesContaining("ERROR").empty());
+  EXPECT_TRUE(game.logLinesContaining("ERROR").empty());
   for (const std::string& line : game.logLinesContaining("ERROR")) {
     std::printf("     %s\n", line.c_str());
   }

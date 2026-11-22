@@ -16,26 +16,27 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "GameController.h"
 #include "MyOpenGLView.h"
 #include "LogOutputHandler.h"
 #include "oofnd/ResourcePaths.hpp"
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 
 using namespace std::chrono_literals;
 using oo::component::Game;
 
-OO_TEST(the_start_screen_shows) {
+TEST(menus, the_start_screen_shows) {
   Game game = Game::atStartScreen(20260910);
   game.simulate(2s);
-  OO_CHECK_EQ(game.screen(), std::string("GUI_SCREEN_INTRO1"));
+  EXPECT_EQ(game.screen(), std::string("GUI_SCREEN_INTRO1"));
   OO_COMPONENT_CHECK_NO_ERRORS(game);
 }
 
-OO_TEST(the_default_lookup_is_sdls_own) {
+TEST(menus, the_default_lookup_is_sdls_own) {
   Game game = Game::current();
-  OO_CHECK(game.view() != nullptr);
+  EXPECT_TRUE(game.view() != nullptr);
   if (game.view() == nullptr) return;
   // Run with --layout, the view's lookup is that layout's table instead.
   std::optional<oo::component::Layout> layout;
@@ -58,10 +59,10 @@ OO_TEST(the_default_lookup_is_sdls_own) {
       }
     }
   }
-  OO_CHECK_EQ(differ, 0);
+  EXPECT_EQ(differ, 0);
 }
 
-OO_TEST(us_tsv_agrees_with_sdls_built_in_map) {
+TEST(menus, us_tsv_agrees_with_sdls_built_in_map) {
   // Under the dummy video driver SDL answers from its own built-in US map.
   const oo::component::Layout us = oo::component::Layout::load("us");
   // The modifier sets the default lookup is checked under (the case above).
@@ -84,39 +85,39 @@ OO_TEST(us_tsv_agrees_with_sdls_built_in_map) {
       }
     }
   }
-  OO_CHECK_EQ(differ, 0);
+  EXPECT_EQ(differ, 0);
   std::size_t tableRows = 0;
   for (const auto& [where, keycode] : us.rows()) {
     if (where.second <= 2) ++tableRows;  // -, shift, caps
   }
-  OO_CHECK_EQ(tableRows, static_cast<std::size_t>(rows));
+  EXPECT_EQ(tableRows, static_cast<std::size_t>(rows));
 }
 
-OO_TEST(every_layout_file_loads) {
+TEST(menus, every_layout_file_loads) {
   using oo::component::Layout;
   for (const char* name : {"us", "fr_azerty", "ru"}) {
     const Layout layout = Layout::load(name);
-    OO_CHECK(layout.rows().size() > 100);
+    EXPECT_TRUE(layout.rows().size() > 100);
   }
   // Letters move on AZERTY: the key in the US Q position gives a.
-  OO_CHECK_EQ(Layout::load("fr_azerty").keyFor(SDL_SCANCODE_Q, SDL_KMOD_NONE), 0x61u);
+  EXPECT_EQ(Layout::load("fr_azerty").keyFor(SDL_SCANCODE_Q, SDL_KMOD_NONE), 0x61u);
   // A non-Latin layout: the N key gives a code point above the game's 326 keys.
-  OO_CHECK(Layout::load("ru").keyFor(SDL_SCANCODE_N, SDL_KMOD_NONE) > 326u);
+  EXPECT_TRUE(Layout::load("ru").keyFor(SDL_SCANCODE_N, SDL_KMOD_NONE) > 326u);
 }
 
 // US3 scenario 1.
-OO_TEST(down_up_and_enter_move_and_open) {
+TEST(menus, down_up_and_enter_move_and_open) {
   Game game = Game::current();
-  OO_CHECK_EQ(game.screen(), std::string("GUI_SCREEN_INTRO1"));
+  EXPECT_EQ(game.screen(), std::string("GUI_SCREEN_INTRO1"));
   const long first = game.selectedRow();
-  OO_CHECK(first >= 0);
+  EXPECT_TRUE(first >= 0);
   OO_COMPONENT_PRESS_EXPECT(game, "down", game.selectedRow() == first + 1);
   OO_COMPONENT_PRESS_EXPECT(game, "up", game.selectedRow() == first);
   const std::string opens = game.rowText(first);
   OO_COMPONENT_PRESS_EXPECT(game, "enter", game.screen() != "GUI_SCREEN_INTRO1");
   std::printf("     enter on \"%s\" opened %s\n", opens.c_str(), game.screen().c_str());
   // The new-game screen is left by its own "exit" row, as a player leaves it.
-  OO_CHECK_EQ(game.screen(), std::string("GUI_SCREEN_NEWGAME"));
+  EXPECT_EQ(game.screen(), std::string("GUI_SCREEN_NEWGAME"));
   game.selectRowWithKey("exit");
   OO_COMPONENT_PRESS_EXPECT(game, "enter", game.screen() == "GUI_SCREEN_INTRO1");
   OO_COMPONENT_CHECK_NO_ERRORS(game);
@@ -125,15 +126,15 @@ OO_TEST(down_up_and_enter_move_and_open) {
 // US3 scenario 5: a control that acts once per press acts once however long
 // the key is held. Enter on "Start New Commander" opens the new-game screen;
 // were the held key seen again, it would start the scenario selected there.
-OO_TEST(a_held_enter_acts_once) {
+TEST(menus, a_held_enter_acts_once) {
   Game game = Game::current();
-  OO_CHECK_EQ(game.screen(), std::string("GUI_SCREEN_INTRO1"));
+  EXPECT_EQ(game.screen(), std::string("GUI_SCREEN_INTRO1"));
   game.selectRowWithText("Start New Commander");
   game.hold("enter", [] { return false; }, std::chrono::seconds(3));
   const std::string opened = game.screen();
-  OO_CHECK_EQ(opened, std::string("GUI_SCREEN_NEWGAME"));
+  EXPECT_EQ(opened, std::string("GUI_SCREEN_NEWGAME"));
   game.simulate(std::chrono::seconds(1));
-  OO_CHECK_EQ(game.screen(), opened);
+  EXPECT_EQ(game.screen(), opened);
   game.selectRowWithKey("exit");
   OO_COMPONENT_PRESS_EXPECT(game, "enter", game.screen() == "GUI_SCREEN_INTRO1");
   OO_COMPONENT_CHECK_NO_ERRORS(game);
@@ -191,7 +192,7 @@ std::size_t WalkRows(Game& game, const std::vector<long>& skip) {
     bool skipped = false;
     for (long s : skip) skipped = skipped || s == row;
     if (skipped) continue;
-    OO_CHECK(game.selectRow(row));
+    EXPECT_TRUE(game.selectRow(row));
     const std::string text = game.rowText(row);
     game.press("enter");
     const std::string opened = game.screen();
@@ -200,11 +201,11 @@ std::size_t WalkRows(Game& game, const std::vector<long>& skip) {
     ++visited;
     if (opened == home) continue;
     PrintRows(game);
-    OO_CHECK(BackOut(game));
+    EXPECT_TRUE(BackOut(game));
     if (game.screen() != home) {
       std::printf("     backing out of %s reached %s, not %s\n", opened.c_str(),
                   game.screen().c_str(), home.c_str());
-      OO_CHECK_EQ(game.screen(), home);
+      EXPECT_EQ(game.screen(), home);
       return visited;
     }
   }
@@ -216,22 +217,22 @@ std::size_t WalkRows(Game& game, const std::vector<long>& skip) {
 // US3 scenario 2 (FR-024, FR-025, SC-006): every row the start screen reports,
 // and every row of the options screen beneath it, opened and backed out of by
 // key. The rows are the game's own, never listed here.
-OO_TEST(every_start_screen_row_opens_and_returns) {
+TEST(menus, every_start_screen_row_opens_and_returns) {
   Game game = Game::current();
-  OO_CHECK_EQ(game.screen(), std::string(kStartScreen));
+  EXPECT_EQ(game.screen(), std::string(kStartScreen));
   PrintRows(game);
   const std::vector<long> rows = game.selectableRows();
-  OO_CHECK(rows.size() >= 2);
+  EXPECT_TRUE(rows.size() >= 2);
   if (rows.size() < 2) return;
   const long exitRow = rows.back();  // Exit Game: exit_game_asks_to_quit
   const std::size_t visited = WalkRows(game, {exitRow});
-  OO_CHECK_EQ(visited + 1, rows.size());
+  EXPECT_EQ(visited + 1, rows.size());
   OO_COMPONENT_CHECK_NO_ERRORS(game);
 }
 
-OO_TEST(every_game_options_row_opens_and_returns) {
+TEST(menus, every_game_options_row_opens_and_returns) {
   Game game = Game::current();
-  OO_CHECK_EQ(game.screen(), std::string(kStartScreen));
+  EXPECT_EQ(game.screen(), std::string(kStartScreen));
   bool opened = false;
   for (long row : game.selectableRows()) {
     game.selectRow(row);
@@ -242,21 +243,21 @@ OO_TEST(every_game_options_row_opens_and_returns) {
     }
     BackOut(game);
   }
-  OO_CHECK(opened);
+  EXPECT_TRUE(opened);
   if (!opened) return;
   PrintRows(game);
   const std::vector<long> rows = game.selectableRows();
   const long backRow = rows.back();  // returns to the start screen
   const std::size_t visited = WalkRows(game, {backRow});
-  OO_CHECK_EQ(visited + 1, rows.size());
-  OO_CHECK(BackOut(game));
-  OO_CHECK_EQ(game.screen(), std::string(kStartScreen));
+  EXPECT_EQ(visited + 1, rows.size());
+  EXPECT_TRUE(BackOut(game));
+  EXPECT_EQ(game.screen(), std::string(kStartScreen));
   OO_COMPONENT_CHECK_NO_ERRORS(game);
 }
 
 // Every user directory the game resolved is in the test's scratch directory
 // (US3 scenario 7: the developer's own saves and settings are untouched).
-OO_TEST(every_user_directory_is_under_the_scratch_directory) {
+TEST(menus, every_user_directory_is_under_the_scratch_directory) {
   Game game = Game::current();
   const std::filesystem::path scratch =
       std::filesystem::weakly_canonical(Game::scratchDirectory());
@@ -290,18 +291,18 @@ OO_TEST(every_user_directory_is_under_the_scratch_directory) {
       std::printf("     %s: %s is not under %s\n", what, full.generic_string().c_str(),
                   scratch.generic_string().c_str());
     }
-    OO_CHECK(under);
+    EXPECT_TRUE(under);
   }
 }
 
-OO_TEST(exit_game_asks_to_quit) {
+TEST(menus, exit_game_asks_to_quit) {
   Game game = Game::current();
-  OO_CHECK_EQ(game.screen(), std::string(kStartScreen));
+  EXPECT_EQ(game.screen(), std::string(kStartScreen));
   const std::vector<long> rows = game.selectableRows();
-  OO_CHECK(!rows.empty());
+  EXPECT_TRUE(!rows.empty());
   if (rows.empty()) return;
-  OO_CHECK(game.selectRow(rows.back()));
-  OO_CHECK_EQ(game.rowText(rows.back()), std::string("Exit Game"));
+  EXPECT_TRUE(game.selectRow(rows.back()));
+  EXPECT_EQ(game.rowText(rows.back()), std::string("Exit Game"));
   OO_COMPONENT_PRESS_EXPECT(game, "enter", game.exitRequested());
 }
 

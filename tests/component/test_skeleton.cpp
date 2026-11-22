@@ -20,9 +20,10 @@
 #include <cstdio>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "GameController.h"
 #include "Headless.h"
-#include "oo_test.hpp"
 #include "oofnd/Exception.hpp"
 
 // main.cpp defines the debug flags, and the program has its own main.
@@ -30,32 +31,32 @@
 uint32_t gDebugFlags = 0;
 #endif
 
-OO_TEST(the_whole_game_links) {
+TEST(skeleton, the_whole_game_links) {
   GameController* (*shared)() = &GameController::sharedController;
-  OO_CHECK(shared != nullptr);
+  EXPECT_TRUE(shared != nullptr);
 }
 
 // The simulation half of the frame is a member of its own, which a headless
 // game steps.
-OO_TEST(the_controller_has_tick) {
+TEST(skeleton, the_controller_has_tick) {
   void (GameController::*tick)(double) = &GameController::tick;
-  OO_CHECK(tick != nullptr);
+  EXPECT_TRUE(tick != nullptr);
 }
 
-OO_TEST(sdl_dummy_video_driver_initialises) {
+TEST(skeleton, sdl_dummy_video_driver_initialises) {
   SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "dummy");
   const bool initialised = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
   if (!initialised) std::printf("SDL_Init: %s\n", SDL_GetError());
-  OO_CHECK(initialised);
+  EXPECT_TRUE(initialised);
   const char* driver = SDL_GetCurrentVideoDriver();
   const int version = SDL_GetVersion();
   std::printf("probe: SDL %d.%d.%d, video driver %s\n",
               SDL_VERSIONNUM_MAJOR(version), SDL_VERSIONNUM_MINOR(version),
               SDL_VERSIONNUM_MICRO(version), driver != nullptr ? driver : "(none)");
-  OO_CHECK(driver != nullptr && SDL_strcmp(driver, "dummy") == 0);
+  EXPECT_TRUE(driver != nullptr && SDL_strcmp(driver, "dummy") == 0);
 }
 
-OO_TEST(a_pushed_key_event_comes_back) {
+TEST(skeleton, a_pushed_key_event_comes_back) {
   // SDL is still up from the case above; drain whatever start-up queued.
   SDL_Event event{};
   while (SDL_PollEvent(&event)) {
@@ -66,25 +67,25 @@ OO_TEST(a_pushed_key_event_comes_back) {
   pushed.key.mod = SDL_KMOD_LSHIFT;
   pushed.key.key = SDL_GetKeyFromScancode(SDL_SCANCODE_N, SDL_KMOD_LSHIFT, true);
   pushed.key.down = true;
-  OO_CHECK(SDL_PushEvent(&pushed));
+  EXPECT_TRUE(SDL_PushEvent(&pushed));
   bool found = false;
   while (SDL_PollEvent(&event)) {
     if (event.type == SDL_EVENT_KEY_DOWN) {
       found = true;
-      OO_CHECK_EQ(event.key.scancode, SDL_SCANCODE_N);
-      OO_CHECK_EQ(event.key.mod, SDL_KMOD_LSHIFT);
-      OO_CHECK(event.key.down);
+      EXPECT_EQ(event.key.scancode, SDL_SCANCODE_N);
+      EXPECT_EQ(event.key.mod, SDL_KMOD_LSHIFT);
+      EXPECT_TRUE(event.key.down);
     }
   }
   std::printf("probe: pushed key event %s\n", found ? "came back" : "was lost");
-  OO_CHECK(found);
+  EXPECT_TRUE(found);
 }
 
-OO_TEST(caps_lock_n_lookup_is_printed) {
+TEST(skeleton, caps_lock_n_lookup_is_printed) {
   const SDL_Keycode key = SDL_GetKeyFromScancode(SDL_SCANCODE_N, SDL_KMOD_CAPS, false);
   std::printf("probe: SDL_GetKeyFromScancode(N, caps) = 0x%x\n",
               static_cast<unsigned>(key));
-  OO_CHECK(key == SDLK_N || key == static_cast<SDL_Keycode>('N'));
+  EXPECT_TRUE(key == SDLK_N || key == static_cast<SDL_Keycode>('N'));
   SDL_Quit();
 }
 
@@ -100,57 +101,55 @@ std::string ValidationFailure(const oo::HeadlessOptions& options) {
 }
 }  // namespace
 
-OO_TEST(default_options_are_the_windowed_game) {
+TEST(skeleton, default_options_are_the_windowed_game) {
   const oo::HeadlessOptions options;
-  OO_CHECK(!options.headless);
-  OO_CHECK(!options.seed.has_value());
-  OO_CHECK(options.addOns == oo::HeadlessOptions::AddOns::kAll);
-  OO_CHECK(options.populate);
-  OO_CHECK(!options.startInFlight);
-  OO_CHECK(!options.inputView);
-  OO_CHECK_EQ(options.scriptTimeLimit, 0.0);
-  OO_CHECK_EQ(ValidationFailure(options), std::string());
+  EXPECT_TRUE(!options.headless);
+  EXPECT_TRUE(!options.seed.has_value());
+  EXPECT_TRUE(options.addOns == oo::HeadlessOptions::AddOns::kAll);
+  EXPECT_TRUE(options.populate);
+  EXPECT_TRUE(!options.startInFlight);
+  EXPECT_TRUE(!options.inputView);
+  EXPECT_EQ(options.scriptTimeLimit, 0.0);
+  EXPECT_EQ(ValidationFailure(options), std::string());
 }
 
-OO_TEST(headless_without_a_seed_is_rejected) {
+TEST(skeleton, headless_without_a_seed_is_rejected) {
   oo::HeadlessOptions options;
   options.headless = true;
   options.addOns = oo::HeadlessOptions::AddOns::kNone;
-  OO_CHECK_EQ(ValidationFailure(options),
+  EXPECT_EQ(ValidationFailure(options),
               std::string("headless true requires seed to be given"));
   options.seed = 20260910;
-  OO_CHECK_EQ(ValidationFailure(options), std::string());
+  EXPECT_EQ(ValidationFailure(options), std::string());
 }
 
-OO_TEST(headless_with_all_addons_is_rejected) {
+TEST(skeleton, headless_with_all_addons_is_rejected) {
   oo::HeadlessOptions options;
   options.headless = true;
   options.seed = 20260910;
-  OO_CHECK_EQ(ValidationFailure(options),
+  EXPECT_EQ(ValidationFailure(options),
               std::string("addOns is never all when headless is true"));
 }
 
-OO_TEST(the_manual_clock_moves_only_when_advanced) {
+TEST(skeleton, the_manual_clock_moves_only_when_advanced) {
   oo::GameClock clock = oo::GameClock::manual(20260910);
-  OO_CHECK(clock.isManual());
-  OO_CHECK_EQ(clock.monotonicSeconds(), 0.0);
+  EXPECT_TRUE(clock.isManual());
+  EXPECT_EQ(clock.monotonicSeconds(), 0.0);
   const double startOfDay = oo::GameClock::manualTimeOfDayStart(20260910);
-  OO_CHECK_EQ(clock.timeOfDay(), startOfDay);
-  OO_CHECK(startOfDay >= 0.0 && startOfDay < 86400.0);
-  OO_CHECK_EQ(clock.monotonicSeconds(), 0.0);  // reading does not move it
+  EXPECT_EQ(clock.timeOfDay(), startOfDay);
+  EXPECT_TRUE(startOfDay >= 0.0 && startOfDay < 86400.0);
+  EXPECT_EQ(clock.monotonicSeconds(), 0.0);  // reading does not move it
   clock.advance(0.5);
   clock.advance(0.25);
-  OO_CHECK_EQ(clock.monotonicSeconds(), 0.75);
-  OO_CHECK_EQ(clock.timeOfDay(), startOfDay + 0.75);
+  EXPECT_EQ(clock.monotonicSeconds(), 0.75);
+  EXPECT_EQ(clock.timeOfDay(), startOfDay + 0.75);
   clock.advance(86400.0);  // a day later it is the same time of day
-  OO_CHECK(clock.timeOfDay() - (startOfDay + 0.75) < 1e-6 &&
+  EXPECT_TRUE(clock.timeOfDay() - (startOfDay + 0.75) < 1e-6 &&
            (startOfDay + 0.75) - clock.timeOfDay() < 1e-6);
   // The system clock is not moved by advance.
   oo::GameClock system = oo::GameClock::system();
-  OO_CHECK(!system.isManual());
+  EXPECT_TRUE(!system.isManual());
   const double before = system.monotonicSeconds();
   system.advance(1000.0);
-  OO_CHECK(system.monotonicSeconds() - before < 1000.0);
+  EXPECT_TRUE(system.monotonicSeconds() - before < 1000.0);
 }
-
-OO_TEST_MAIN()

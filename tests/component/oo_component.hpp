@@ -15,15 +15,19 @@
    defaults) is pointed into it. It is removed when every case passed and kept
    when one failed.
 
+            #include <gtest/gtest.h>
             #include "oo_component.hpp"
-            #include "oo_test.hpp"
             using namespace std::chrono_literals;
-            OO_TEST(time_moves) {
+            TEST(time, moves) {
               oo::component::Game game = oo::component::Game::scenario(1);
               game.simulate(10s);
-              OO_CHECK(game.time() >= 10.0);
+              EXPECT_TRUE(game.time() >= 10.0);
             }
             OO_COMPONENT_MAIN()
+
+        The cases are Google Test's, run in source order. One case alone:
+   --gtest_filter=<Suite>.<case> on the program, or through meson,
+   meson test -C build/meson_<type> <test> --test-args=--gtest_filter=...
 */
 
 #pragma once
@@ -430,8 +434,9 @@ void checkNoErrors(const Game& game, const char* file, int line);
 // exit code are its own (the census).
 [[noreturn]] void exitProgram(int code);
 
-// main(): runs the cases, then removes the scratch directory if every case
-// passed, or says where it was kept.
+// main(): runs the cases on Google Test (after a failed case, the game's
+// state), then removes the scratch directory if every case passed, or says
+// where it was kept.
 int runMain(int argc, char** argv, const char* file);
 
 }  // namespace oo::component

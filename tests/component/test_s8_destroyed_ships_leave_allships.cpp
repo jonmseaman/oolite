@@ -8,14 +8,15 @@
 #include <cstdio>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 
 using oo::component::Game;
 using oo::component::ShipsWithRole;
 using oo::component::ticks;
 
-OO_TEST(setup_with_a_pirate_and_police_runs_cleanly) {
+TEST(s8_destroyed_ships_leave_allships, setup_with_a_pirate_and_police_runs_cleanly) {
   const auto started = std::chrono::steady_clock::now();
 
   // Given a universe seeded with 20260910
@@ -23,16 +24,16 @@ OO_TEST(setup_with_a_pirate_and_police_runs_cleanly) {
   const double gameStart = game.time();
 
   // When I spawn 1 ship with role "pirate"
-  OO_CHECK_EQ(game.spawn(ShipsWithRole("pirate").count(1)).size(), 1u);
+  EXPECT_EQ(game.spawn(ShipsWithRole("pirate").count(1)).size(), 1u);
   // And I spawn 8 ships with role "police" within 10 km
-  OO_CHECK_EQ(game.spawn(ShipsWithRole("police").count(8).withinKm(10)).size(), 8u);
+  EXPECT_EQ(game.spawn(ShipsWithRole("police").count(8).withinKm(10)).size(), 8u);
   // And the simulation runs for 900 ticks
   game.simulate(ticks(900));
 
   // Then a ship with role "police" survives
-  OO_CHECK(game.countWithRole("police") > 0);
+  EXPECT_TRUE(game.countWithRole("police") > 0);
   // And no ERROR appears in the log
-  OO_CHECK(game.logLinesContaining("ERROR").empty());
+  EXPECT_TRUE(game.logLinesContaining("ERROR").empty());
   for (const std::string& line : game.logLinesContaining("ERROR")) {
     std::printf("     %s\n", line.c_str());
   }

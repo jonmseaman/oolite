@@ -9,32 +9,33 @@
 #include <chrono>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 
 using namespace std::chrono_literals;
 using oo::component::Game;
 using oo::component::ShipWithKey;
 
-OO_TEST(holding_the_fire_key_fires_the_forward_laser) {
+TEST(fire_key, holding_the_fire_key_fires_the_forward_laser) {
   Game game = Game::inFlightWithKeys(20260910);
   game.player()->setSpeed(0.0);
-  OO_CHECK(game.player()->setWeaponMount(oo::WeaponFacing::kForward,
+  EXPECT_TRUE(game.player()->setWeaponMount(oo::WeaponFacing::kForward,
                                          oo::component::hasArgument("--without-weapon")
                                              ? "EQ_WEAPON_NONE"
                                              : "EQ_WEAPON_PULSE_LASER"));
   oo::component::ShipHandle target =
       game.add(ShipWithKey("asteroid").aheadOf(game.player(), 1'000.0));
-  OO_CHECK(target.alive());
+  EXPECT_TRUE(target.alive());
   game.step(2);
   const float energyBefore = target->energy;
 
   const std::string fire = game.keyForControl("key_fire_lasers");
   game.hold(fire, [&] { return !target.alive() || target->energy < energyBefore; }, 2s);
-  OO_CHECK(!target.alive() || target->energy < energyBefore);
-  OO_CHECK(game.player()->laserHeatLevelForward() > 0.0f);
+  EXPECT_TRUE(!target.alive() || target->energy < energyBefore);
+  EXPECT_TRUE(game.player()->laserHeatLevelForward() > 0.0f);
   OO_COMPONENT_CHECK_NO_ERRORS(game);
 }
 

@@ -1,11 +1,13 @@
 # The C++ half of the component tier: programs that start the real game in their own process
 # with no window, no GL context and no sound, and step it without waiting on the clock.
-# meson test -C build/meson_<type> --suite component, or tests/run.sh component --cpp.
+# meson test -C build/meson_<type> --suite component, or tests/run.sh component.
 #
 # Every platform builds them (no host guard, unlike tests/unit). Each program links every game
 # object but main's, extracted from the oolite target so it is compiled exactly as the game is,
 # with the game's include directories and dependencies but not its link arguments (-mwindows
-# would hide the program's output). The harness is tests/unit/oofnd/oo_test.hpp.
+# would hide the program's output). The cases are Google Test's (tests/support): meson runs each
+# program with the gtest protocol, so testlog.junit.xml has a result per case, and one case alone
+# is --test-args=--gtest_filter=<Suite>.<case>.
 #
 # A program runs in the built application directory, because the game reads Resources from its
 # working directory. OO_COMPONENT_SOURCE_ROOT (layouts, fixtures) and OO_COMPONENT_BUILD_ROOT
@@ -16,8 +18,10 @@
 # it passes, for a program whose output is a record, like the skeleton's probes), 'source' (another
 # program's source), 'needs_trap' (registered only where the GL trap is linked), 'layouts' (one
 # test per keyboard layout, <test>_<layout>, each given --layout <layout>), 'cases' (one test per
-# case, {test name: case name}, each given --case <case>), 'should_fail' (those of its tests that
-# are expected to fail: a recorded finding, checked both ways).
+# case, {test name: case name}, each running that case alone with --gtest_filter=<Suite>.<case>,
+# where <Suite> is the source's name less test_), 'should_fail' (those of its tests that are
+# expected to fail: a recorded finding, checked both ways), 'protocol' (default 'gtest'; a program
+# that ends itself mid-case, like the census, writes no Google Test report and is 'exitcode').
 # Every program links the GL trap where there is one.
 
 # The recorded keyboard layouts the key tests run under (layouts/<name>.tsv); a layout whose table
@@ -73,7 +77,7 @@ component_programs = {
     'test_dictionary_arguments_reject_arrays': {},
     'test_exit_runs_js_leak_check': {'verbose': true},
     # Every ship and equipment item in the core data, one outcome each (contracts/census.md).
-    'component_census': {'test_name': 'census', 'timeout': 600, 'verbose': true},
+    'component_census': {'test_name': 'census', 'timeout': 600, 'verbose': true, 'protocol': 'exitcode'},
 }
 
 fs = import('fs')
@@ -87,7 +91,8 @@ foreach f : oolite_sources
 endforeach
 component_game_objects = oolite_bin.extract_objects(component_game_sources)
 
-# oo_component: what every program but the skeleton is written against.
+# oo_component: what every program but the skeleton is written against. Its runMain is their main;
+# the skeleton, which boots nothing, links the shared one (oo_gtest_main_dep).
 component_support_sources = files('oo_component.cpp')
 
 # The GL trap (Linux and macOS): every GL function the game's objects import, defined to print its
@@ -138,15 +143,17 @@ foreach name, options : component_programs
         component_trap_sources,
         cpp_args: component_trap_args,
         objects: component_game_objects,
-        include_directories: [oolite_includes, include_directories('../unit/oofnd')],
-        dependencies: oolite_dependencies,
+        include_directories: oolite_includes,
+        dependencies: oolite_dependencies + [name == 'test_skeleton' ? oo_gtest_main_dep : oo_gtest_dep],
         override_options: oolite_override_options,
         install: false,
     )
     if options.has_key('cases')
         foreach test_name, case_name : options.get('cases')
             test(test_name, exe,
-                args: options.get('args', []) + ['--case', case_name],
+                args: options.get('args', []) + [
+                    '--gtest_filter=' + name.substring(5) + '.' + case_name],
+                protocol: options.get('protocol', 'gtest'),
                 should_fail: options.get('should_fail', []).contains(test_name),
                 suite: options.get('suite', 'component'),
                 timeout: options.get('timeout', 60),
@@ -160,6 +167,7 @@ foreach name, options : component_programs
         foreach layout : options.get('layouts')
             test(options.get('test_name', name) + '_' + layout, exe,
                 args: options.get('args', []) + ['--layout', layout],
+                protocol: options.get('protocol', 'gtest'),
                 should_fail: options.get('should_fail', []).contains(
                     options.get('test_name', name) + '_' + layout),
                 suite: options.get('suite', 'component'),
@@ -173,6 +181,7 @@ foreach name, options : component_programs
     else
         test(options.get('test_name', name), exe,
             args: options.get('args', []),
+            protocol: options.get('protocol', 'gtest'),
             suite: options.get('suite', 'component'),
             timeout: options.get('timeout', 60),
             verbose: options.get('verbose', false),

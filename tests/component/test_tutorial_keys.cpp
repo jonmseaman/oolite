@@ -11,8 +11,9 @@
 #include <chrono>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 #include "tutorial_steps.hpp"
 
 using namespace std::chrono_literals;
@@ -25,10 +26,10 @@ constexpr int kMaxPresses = 80;
 
 }  // namespace
 
-OO_TEST(the_next_key_advances_every_step_of_lessons_0_and_1) {
+TEST(tutorial_keys, the_next_key_advances_every_step_of_lessons_0_and_1) {
   Game game = Game::atStartScreen(20261027);
   StartTutorial(game);
-  OO_CHECK(Progress(game) == (Stage{0, 2}));
+  EXPECT_TRUE(Progress(game) == (Stage{0, 2}));
 
   const std::string next = game.keyForControl("key_activate_equipment");
   int presses = 0;
@@ -37,7 +38,7 @@ OO_TEST(the_next_key_advances_every_step_of_lessons_0_and_1) {
     OO_COMPONENT_PRESS_EXPECT(game, next, Progress(game) != before);
     if (Progress(game) == before) break;  // reported; the rest would repeat it
   }
-  OO_CHECK(Progress(game) == (Stage{2, 0}));
+  EXPECT_TRUE(Progress(game) == (Stage{2, 0}));
   OO_COMPONENT_CHECK_NO_ERRORS(game);
 }
 

@@ -13,10 +13,11 @@
 #include <format>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_component.hpp"
-#include "oo_test.hpp"
 
 struct Stage {
   int stage = -1;
@@ -40,7 +41,7 @@ inline Stage Progress(oo::component::Game& game) {
 */
 inline void StartTutorial(oo::component::Game& game) {
   using namespace std::chrono_literals;
-  OO_CHECK(game.selectRowWithText("Start New Commander"));
+  EXPECT_TRUE(game.selectRowWithText("Start New Commander"));
   OO_COMPONENT_PRESS_EXPECT(game, "enter", game.screen() == "GUI_SCREEN_NEWGAME");
   // The scenario screen's rows are keyed Scenario:<index into scenarios.plist>.
   const oo::PList scenarios = game.universe()->scenarios();
@@ -52,17 +53,17 @@ inline void StartTutorial(oo::component::Game& game) {
       tutorial = i;
     }
   }
-  OO_CHECK(tutorial < scenarios.count());
-  OO_CHECK(game.selectRowWithKey(std::format("Scenario:{}", tutorial)));
+  EXPECT_TRUE(tutorial < scenarios.count());
+  EXPECT_TRUE(game.selectRowWithKey(std::format("Scenario:{}", tutorial)));
   OO_COMPONENT_PRESS_EXPECT(game, "enter", game.screen() == "GUI_SCREEN_MISSION");
-  OO_CHECK(game.simulateUntil(
+  EXPECT_TRUE(game.simulateUntil(
       [&] { return game.evalString("mission.screenID") == "oolite-tutorial-0-0"; },
       10s));
-  OO_CHECK(Progress(game) == (Stage{0, 0}));
+  EXPECT_TRUE(Progress(game) == (Stage{0, 0}));
   OO_COMPONENT_PRESS_EXPECT(game, "enter", game.screen() != "GUI_SCREEN_MISSION");
   // "The player is in flight": in flight, the main
   // screen, and the tutorial's post-launch step.
-  OO_CHECK(game.simulateUntil(
+  EXPECT_TRUE(game.simulateUntil(
       [&] {
         return game.player()->status() == oo::EntityStatus::kInFlight &&
                game.screen() == "GUI_SCREEN_MAIN" && Progress(game) == (Stage{0, 2});
