@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "CacheManager.h"
 #include "DebugStandards.h"
 #include "Description.h"
@@ -29,7 +31,7 @@
 #include "ProbabilitySet.h"
 #include "ShipRegistry.h"
 #include "StringParsing.h"
-#include "oo_test.hpp"
+#include "oo_gtest.hpp"
 #include "oofnd/PListParsing.hpp"
 
 // Link stubs: what OOShipRegistry.mm and OOCacheManager.mm reference whose
@@ -220,24 +222,24 @@ std::string Text(const oo::PList& plist) {
 
 bool Pinned(const char* what, const std::string& actual,
             const std::string& expected) {
-  if (OO_CHECK_EQ(actual, expected)) return true;
+  if (OO_EXPECT_EQ_V(actual, expected)) return true;
   std::fprintf(stderr, "  %s got: %s\n", what, actual.c_str());
   return false;
 }
 
 }  // namespace
 
-OO_TEST(sharedRegistryLoadsOnce) {
+TEST(OOShipRegistry, sharedRegistryLoadsOnce) {
   oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
-  OO_CHECK(registry != nullptr);
-  OO_CHECK(oo::ShipRegistry::sharedRegistry() == registry);
+  EXPECT_TRUE(registry != nullptr);
+  EXPECT_TRUE(oo::ShipRegistry::sharedRegistry() == registry);
   Pinned("files", Join(sFilesRead),
          "shipdata.plist shipdata-overrides.plist shipyard.plist "
          "shipyard-overrides.plist effectdata.plist shiplibrary.plist "
          "shiplibrary.plist");
 }
 
-OO_TEST(looksUpShipsEffectsAndShipyards) {
+TEST(OOShipRegistry, looksUpShipsEffectsAndShipyards) {
   oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
   Pinned("ship keys", Join(registry->shipKeys()),
          "adder cobra3-player coriolis-station");
@@ -267,7 +269,7 @@ OO_TEST(looksUpShipsEffectsAndShipyards) {
          "name = \"Coriolis Station\"; ship = \"coriolis-station\"; }))");
 }
 
-OO_TEST(answersRoles) {
+TEST(OOShipRegistry, answersRoles) {
   oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
   Pinned("roles", Join(registry->shipRoles()),
          "[adder] [cobra3-player] [coriolis-station] coriolis hunter player "
@@ -276,11 +278,11 @@ OO_TEST(answersRoles) {
          "adder cobra3-player");
   Pinned("hunters", Join(registry->shipKeysWithRole("hunter")), "adder");
   Pinned("none", Join(registry->shipKeysWithRole("pirate")), "");
-  OO_CHECK(registry->probabilitySetForRole("pirate") == nullptr);
+  EXPECT_TRUE(registry->probabilitySetForRole("pirate") == nullptr);
   oo::ProbabilitySet* traders = registry->probabilitySetForRole("trader");
-  OO_CHECK(traders != nullptr);
+  EXPECT_TRUE(traders != nullptr);
   if (traders != nullptr) {
-    OO_CHECK_EQ(traders->count(), 2u);
+    EXPECT_EQ(traders->count(), 2u);
     Pinned("trader weights",
            std::to_string(traders->weightForObject(oo::PList("adder"))) + " " +
                std::to_string(
@@ -295,7 +297,7 @@ OO_TEST(answersRoles) {
          "(nullopt)");
 }
 
-OO_TEST(replacesAnEntry) {
+TEST(OOShipRegistry, replacesAnEntry) {
   oo::ShipRegistry* registry = oo::ShipRegistry::sharedRegistry();
   registry->setShipInfoForKey("viper", Parse("{ name = Viper; }"));
   Pinned("viper", Text(registry->shipInfoForKey("viper")), "{name = Viper; }");
@@ -303,13 +305,13 @@ OO_TEST(replacesAnEntry) {
          "adder cobra3-player coriolis-station viper");
 }
 
-OO_TEST(reloadMakesANewRegistryFromTheCache) {
+TEST(OOShipRegistry, reloadMakesANewRegistryFromTheCache) {
   oo::ShipRegistry* before = oo::ShipRegistry::sharedRegistry();
   sFilesRead.clear();
   oo::ShipRegistry::reload();
   oo::ShipRegistry* after = oo::ShipRegistry::sharedRegistry();
-  OO_CHECK(after != nullptr);
-  OO_CHECK(after != before);
+  EXPECT_TRUE(after != nullptr);
+  EXPECT_TRUE(after != before);
   Pinned("files", Join(sFilesRead), "shiplibrary.plist shiplibrary.plist");
   Pinned("ship keys", Join(after->shipKeys()),
          "adder cobra3-player coriolis-station");
@@ -326,7 +328,7 @@ OO_TEST(reloadMakesANewRegistryFromTheCache) {
 // Subentity declarations (the loader's canonicalisation and validation): a
 // fresh load of the subentity data set, the registry's cache cleared first so
 // that +reload reads the files again.
-OO_TEST(canonicalizesSubentityDeclarations) {
+TEST(OOShipRegistry, canonicalizesSubentityDeclarations) {
   sSubentityData = true;
   oo::CacheManager::sharedCache()->clearCache("ship registry");
   oo::ShipRegistry::reload();
@@ -361,5 +363,3 @@ OO_TEST(canonicalizesSubentityDeclarations) {
          "[cobra3-player] [dock] [mothership] [turret] [wreck] player trader");
   sSubentityData = false;
 }
-
-OO_TEST_MAIN()

@@ -14,10 +14,11 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "ConcreteTexture.h"
 #include "TextureGenerator.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -96,76 +97,76 @@ void ClearCache() {
 
 }  // namespace
 
-OO_TEST(defaults) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureGenerator, defaults) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
     BareGenerator* generator =
         Generator<BareGenerator>("bare generator", oo::TextureFlags::kMinFilterLinear);
-    OO_CHECK(generator->textureOptions() == oo::TextureFlags::kDefaultOptions);
-    OO_CHECK(generator->anisotropy() == (GLfloat)kOOTextureDefaultAnisotropy &&
+    EXPECT_TRUE(generator->textureOptions() == oo::TextureFlags::kDefaultOptions);
+    EXPECT_TRUE(generator->anisotropy() == (GLfloat)kOOTextureDefaultAnisotropy &&
              generator->lodBias() == (GLfloat)kOOTextureDefaultLODBias);
-    OO_CHECK(!generator->cacheKey()
+    EXPECT_TRUE(!generator->cacheKey()
                   .has_value());  // a generator is not cached unless it says so
-    OO_CHECK(generator->path() == std::optional<std::string>("bare generator"));
-    OO_CHECK(dynamic_cast<oo::TextureLoader*>(generator) != nullptr);
-    OO_CHECK(
+    EXPECT_TRUE(generator->path() == std::optional<std::string>("bare generator"));
+    EXPECT_TRUE(dynamic_cast<oo::TextureLoader*>(generator) != nullptr);
+    EXPECT_TRUE(
         generator->description().ends_with(">{{bare generator -- loading}}"));
-    OO_CHECK(!oo::makeShared<BareGenerator>()->initWithPath(std::nullopt, oo::TextureFlags::kNone));
+    EXPECT_TRUE(!oo::makeShared<BareGenerator>()->initWithPath(std::nullopt, oo::TextureFlags::kNone));
   }
 }
 
-OO_TEST(enqueueLoadsOnTheWorkManager) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureGenerator, enqueueLoadsOnTheWorkManager) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
     const int loads = gLoads;
     BareGenerator* generator =
         Generator<BareGenerator>("queued generator", oo::TextureFlags::kMinFilterLinear);
-    OO_CHECK(generator->enqueue());
+    EXPECT_TRUE(generator->enqueue());
     oo::PixMap pixMap = oo::kNullPixMap;
     oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
     uint32_t width = 0;
     const std::optional<oo::TextureLoader::Result> loaded =
         generator->getResult();
-    OO_CHECK(loaded.has_value());
+    EXPECT_TRUE(loaded.has_value());
     if (loaded) {
       pixMap = loaded->pixMap;
       format = loaded->format;
       width = loaded->originalWidth;
     }
-    OO_CHECK(gLoads == loads + 1 && generator->isReady());
-    OO_CHECK(pixMap.width == 8 && pixMap.height == 8 && width == 8 &&
+    EXPECT_TRUE(gLoads == loads + 1 && generator->isReady());
+    EXPECT_TRUE(pixMap.width == 8 && pixMap.height == 8 && width == 8 &&
              format == oo::kPixMapRGBA);
-    OO_CHECK(((uint8_t*)pixMap.pixels)[0] == 1);
+    EXPECT_TRUE(((uint8_t*)pixMap.pixels)[0] == 1);
     oo::FreePixMap(&pixMap);
   }
 }
 
-OO_TEST(aTextureTakesTheGeneratorsSettings) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureGenerator, aTextureTakesTheGeneratorsSettings) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
     ChoosyGenerator* generator =
         Generator<ChoosyGenerator>("choosy generator", oo::TextureFlags::kNone);
-    OO_CHECK(generator->textureOptions() ==
+    EXPECT_TRUE(generator->textureOptions() ==
              (oo::TextureFlags::kMinFilterNearest | oo::TextureFlags::kMagFilterNearest));
-    OO_CHECK(generator->anisotropy() == 0.25f && generator->lodBias() == 0.5f);
+    EXPECT_TRUE(generator->anisotropy() == 0.25f && generator->lodBias() == 0.5f);
 
     oo::Texture* texture =
         Autoreleased(oo::Texture::textureWithGenerator(generator));
-    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(texture) != nullptr));
-    OO_CHECK(texture->cacheKey() == std::optional<std::string>("test:choosy"));
-    OO_CHECK(oo::Texture::textureWithGenerator(generator).get() ==
+    EXPECT_TRUE((dynamic_cast<oo::ConcreteTexture*>(texture) != nullptr));
+    EXPECT_TRUE(texture->cacheKey() == std::optional<std::string>("test:choosy"));
+    EXPECT_TRUE(oo::Texture::textureWithGenerator(generator).get() ==
              texture);  // cached by the generator's key
     texture->ensureFinishedLoading();
-    OO_CHECK(texture->dimensions().width == 8 &&
+    EXPECT_TRUE(texture->dimensions().width == 8 &&
              !texture->isMipMapped());  // nearest: no mip-maps
 #ifndef NDEBUG
-    OO_CHECK(texture->name() ==
+    EXPECT_TRUE(texture->name() ==
              std::optional<std::string>("<ChoosyGenerator>"));
 #endif
   }
@@ -200,33 +201,31 @@ class TestCxxGenerator final : public oo::TextureGenerator {
   int loads = 0;
 };
 
-OO_TEST(cxxApi) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureGenerator, cxxApi) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
     const std::shared_ptr<TestCxxGenerator> generator = oo::makeShared<TestCxxGenerator>();
-    OO_CHECK(generator->initWithPath(std::string("cxx generator"), oo::TextureFlags::kNone));
-    OO_CHECK(generator->anisotropy() == (GLfloat)kOOTextureDefaultAnisotropy &&
+    EXPECT_TRUE(generator->initWithPath(std::string("cxx generator"), oo::TextureFlags::kNone));
+    EXPECT_TRUE(generator->anisotropy() == (GLfloat)kOOTextureDefaultAnisotropy &&
              generator->lodBias() == (GLfloat)kOOTextureDefaultLODBias);
 
     // A texture takes it.
-    OO_CHECK(generator->textureOptions() ==
+    EXPECT_TRUE(generator->textureOptions() ==
              (oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear));
-    OO_CHECK(generator->cacheKey() ==
+    EXPECT_TRUE(generator->cacheKey() ==
              std::optional<std::string>("test:cxxgen"));
     oo::Texture* texture =
         Autoreleased(oo::Texture::textureWithGenerator(generator.get()));
-    OO_CHECK(texture->cacheKey() == std::optional<std::string>("test:cxxgen"));
+    EXPECT_TRUE(texture->cacheKey() == std::optional<std::string>("test:cxxgen"));
     texture->ensureFinishedLoading();
-    OO_CHECK(generator->loads == 1 && texture->dimensions().width == 8);
+    EXPECT_TRUE(generator->loads == 1 && texture->dimensions().width == 8);
 
     // The bare class's own answers.
     const std::shared_ptr<oo::TextureGenerator> bare = oo::makeShared<oo::TextureGenerator>();
-    OO_CHECK(bare->textureOptions() == oo::TextureFlags::kDefaultOptions &&
+    EXPECT_TRUE(bare->textureOptions() == oo::TextureFlags::kDefaultOptions &&
              !bare->cacheKey().has_value());
   }
   ClearCache();
 }
-
-OO_TEST_MAIN()

@@ -27,13 +27,14 @@
 #include <thread>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "ALBufferedSound.h"
 #include "ALSound.h"
 #include "ALSoundChannel.h"
 #include "ALSoundDecoder.h"
 #include "ALSoundMixer.h"
 #include "ALStreamedSound.h"
-#include "oo_test.hpp"
 
 namespace stdfs = std::filesystem;
 
@@ -149,15 +150,15 @@ stdfs::path sRoot;
 
 void SetUp() {
   if (!sRoot.empty()) return;
-  OO_CHECK(::_putenv_s("ALSOFT_DRIVERS", "null") == 0);
+  EXPECT_TRUE(::_putenv_s("ALSOFT_DRIVERS", "null") == 0);
   sRoot = stdfs::temp_directory_path() /
           ("oo-test-soundchannel-" +
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
-  OO_CHECK(oo::Sound::setUp());
+  EXPECT_TRUE(oo::Sound::setUp());
 }
 
 }  // namespace
@@ -198,23 +199,23 @@ bool UpdateUntilFinished(oo::SoundChannel* channel) {
 
 }  // namespace
 
-OO_TEST(aNewChannelHasARelativeSource) {
-  SetUp();
+TEST(OOSoundChannel, aNewChannelHasARelativeSource) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
-    OO_CHECK(channel != nullptr);
+    EXPECT_TRUE(channel != nullptr);
     const ALuint source = SourceOf(channel.get());
-    OO_CHECK(source != 0 && alIsSource(source));
-    OO_CHECK(SourceInt(source, AL_SOURCE_RELATIVE) == AL_TRUE);
-    OO_CHECK(channel->sound() == nullptr && channel->next() == nullptr);
+    EXPECT_TRUE(source != 0 && alIsSource(source));
+    EXPECT_TRUE(SourceInt(source, AL_SOURCE_RELATIVE) == AL_TRUE);
+    EXPECT_TRUE(channel->sound() == nullptr && channel->next() == nullptr);
     channel->update();  // nothing playing: nothing
     channel->stop();
-    OO_CHECK(channel->sound() == nullptr);
+    EXPECT_TRUE(channel->sound() == nullptr);
   }
 }
 
-OO_TEST(positionGainAndTheFreeList) {
-  SetUp();
+TEST(OOSoundChannel, positionGainAndTheFreeList) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
     const std::shared_ptr<oo::SoundChannel> other = NewChannel();
@@ -223,54 +224,54 @@ OO_TEST(positionGainAndTheFreeList) {
     channel->setPosition(make_vector(1.0f, 2.0f, 3.0f));
     ALfloat x = 0, y = 0, z = 0;
     alGetSource3f(source, AL_POSITION, &x, &y, &z);
-    OO_CHECK(x == 1.0f && y == 2.0f && z == 3.0f);
+    EXPECT_TRUE(x == 1.0f && y == 2.0f && z == 3.0f);
 
     channel->setGain(0.5f);
     ALfloat gain = 0;
     alGetSourcef(source, AL_GAIN, &gain);
-    OO_CHECK(gain == 0.5f);
+    EXPECT_TRUE(gain == 0.5f);
 
     channel->setNext(other.get());
-    OO_CHECK(channel->next() == other.get() && other->next() == nullptr);
+    EXPECT_TRUE(channel->next() == other.get() && other->next() == nullptr);
     channel->setNext(nullptr);
-    OO_CHECK(channel->next() == nullptr);
+    EXPECT_TRUE(channel->next() == nullptr);
   }
 }
 
 // A sound plays, is retained while it plays, and when it ends the delegate
 // hears of it.
-OO_TEST(playsASoundToTheEnd) {
-  SetUp();
+TEST(OOSoundChannel, playsASoundToTheEnd) {
+  ::SetUp();
   TestDelegate delegate;
   {
     const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
     channel->setDelegate(&delegate);
 
-    OO_CHECK(!channel->playSound(nullptr, false));
+    EXPECT_TRUE(!channel->playSound(nullptr, false));
 
     std::shared_ptr<TestSound> made = oo::makeShared<TestSound>();
     TestSound* sound = made.get();
-    OO_CHECK(channel->playSound(sound, false));
-    OO_CHECK(sound->_rewinds == 1 && sound->_made == 1);
-    OO_CHECK(channel->sound() == sound);
+    EXPECT_TRUE(channel->playSound(sound, false));
+    EXPECT_TRUE(sound->_rewinds == 1 && sound->_made == 1);
+    EXPECT_TRUE(channel->sound() == sound);
     const ALuint source = SourceOf(channel.get());
-    OO_CHECK(SourceInt(source, AL_BUFFERS_QUEUED) == 1);
+    EXPECT_TRUE(SourceInt(source, AL_BUFFERS_QUEUED) == 1);
     made = nullptr;              // [sound release]
-    OO_CHECK(gLiveSounds == 1);  // the channel keeps it
+    EXPECT_TRUE(gLiveSounds == 1);  // the channel keeps it
 
-    OO_CHECK(UpdateUntilFinished(channel.get()));
-    OO_CHECK(delegate._finished.size() == 1 && delegate._finished[0] == sound &&
+    EXPECT_TRUE(UpdateUntilFinished(channel.get()));
+    EXPECT_TRUE(delegate._finished.size() == 1 && delegate._finished[0] == sound &&
              delegate._lastChannel == channel.get());
-    OO_CHECK(SourceInt(source, AL_BUFFERS_QUEUED) == 0);
+    EXPECT_TRUE(SourceInt(source, AL_BUFFERS_QUEUED) == 0);
     channel->setDelegate(nullptr);  // unretained
   }
-  OO_CHECK(gLiveSounds == 0);
+  EXPECT_TRUE(gLiveSounds == 0);
 }
 
 // stop() ends the sound at once, and the delegate hears of it; a new sound
 // stops the old one.
-OO_TEST(stopAndReplace) {
-  SetUp();
+TEST(OOSoundChannel, stopAndReplace) {
+  ::SetUp();
   TestDelegate delegate;
   {
     const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
@@ -280,27 +281,27 @@ OO_TEST(stopAndReplace) {
     first->_frames = 22050;  // a second: still playing when stopped
     const std::shared_ptr<TestSound> second = oo::makeShared<TestSound>();
     second->_frames = 22050;
-    OO_CHECK(channel->playSound(first.get(), false));
-    OO_CHECK(channel->playSound(second.get(), false));
-    OO_CHECK(delegate._finished.size() == 1 &&
+    EXPECT_TRUE(channel->playSound(first.get(), false));
+    EXPECT_TRUE(channel->playSound(second.get(), false));
+    EXPECT_TRUE(delegate._finished.size() == 1 &&
              delegate._finished[0] == first.get());
-    OO_CHECK(channel->sound() == second.get());
+    EXPECT_TRUE(channel->sound() == second.get());
 
     channel->stop();
-    OO_CHECK(delegate._finished.size() == 2 &&
+    EXPECT_TRUE(delegate._finished.size() == 2 &&
              delegate._finished[1] == second.get());
-    OO_CHECK(channel->sound() == nullptr);
-    OO_CHECK(SourceInt(SourceOf(channel.get()), AL_SOURCE_STATE) == AL_STOPPED);
-    OO_CHECK(SourceInt(SourceOf(channel.get()), AL_BUFFERS_QUEUED) == 0);
+    EXPECT_TRUE(channel->sound() == nullptr);
+    EXPECT_TRUE(SourceInt(SourceOf(channel.get()), AL_SOURCE_STATE) == AL_STOPPED);
+    EXPECT_TRUE(SourceInt(SourceOf(channel.get()), AL_BUFFERS_QUEUED) == 0);
     channel->setDelegate(nullptr);
   }
-  OO_CHECK(gLiveSounds == 0);
+  EXPECT_TRUE(gLiveSounds == 0);
 }
 
 // A streamed sound: the next buffer is made while it plays, until the sound is
 // complete.
-OO_TEST(streamsAnIncompleteSound) {
-  SetUp();
+TEST(OOSoundChannel, streamsAnIncompleteSound) {
+  ::SetUp();
   TestDelegate delegate;
   {
     const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
@@ -309,60 +310,60 @@ OO_TEST(streamsAnIncompleteSound) {
     const std::shared_ptr<TestSound> sound = oo::makeShared<TestSound>();
     sound->_chunks = 4;
     sound->_frames = 2205;  // a tenth of a second each
-    OO_CHECK(channel->playSound(sound.get(), false));
-    OO_CHECK(UpdateUntilFinished(channel.get()));
-    OO_CHECK(sound->_made == 4);
-    OO_CHECK(delegate._finished.size() == 1);
+    EXPECT_TRUE(channel->playSound(sound.get(), false));
+    EXPECT_TRUE(UpdateUntilFinished(channel.get()));
+    EXPECT_TRUE(sound->_made == 4);
+    EXPECT_TRUE(delegate._finished.size() == 1);
     channel->setDelegate(nullptr);
   }
 }
 
 // A looped sound is rewound and played again when it is complete.
-OO_TEST(loopsASound) {
-  SetUp();
+TEST(OOSoundChannel, loopsASound) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::SoundChannel> channel = NewChannel();
     const std::shared_ptr<TestSound> sound = oo::makeShared<TestSound>();
     sound->_frames = 2205;
-    OO_CHECK(channel->playSound(sound.get(), true));
+    EXPECT_TRUE(channel->playSound(sound.get(), true));
     for (int i = 0; i < 400 && sound->_rewinds < 3; i++) {
       channel->update();
       std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
-    OO_CHECK(sound->_rewinds >= 3);
-    OO_CHECK(channel->sound() == sound.get());
+    EXPECT_TRUE(sound->_rewinds >= 3);
+    EXPECT_TRUE(channel->sound() == sound.get());
     channel->stop();
-    OO_CHECK(channel->sound() == nullptr);
+    EXPECT_TRUE(channel->sound() == nullptr);
   }
 }
 
 // The C++ API: -init's failure is init()'s false; the free list holds C++
 // channels.
-OO_TEST(cxxApi) {
-  SetUp();
+TEST(OOSoundChannel, cxxApi) {
+  ::SetUp();
   TestDelegate delegate;
   {
     const std::shared_ptr<oo::SoundChannel> channel = oo::makeShared<oo::SoundChannel>();
-    OO_CHECK(channel->init());
+    EXPECT_TRUE(channel->init());
     const ALuint source = OOSoundChannelTestAccess::Source(channel.get());
-    OO_CHECK(source != 0 && alIsSource(source) &&
+    EXPECT_TRUE(source != 0 && alIsSource(source) &&
              SourceInt(source, AL_SOURCE_RELATIVE) == AL_TRUE);
 
     const std::shared_ptr<oo::SoundChannel> other = oo::makeShared<oo::SoundChannel>();
-    OO_CHECK(other->init());
+    EXPECT_TRUE(other->init());
     channel->setNext(other.get());
-    OO_CHECK(channel->next() == other.get() && other->next() == nullptr);
+    EXPECT_TRUE(channel->next() == other.get() && other->next() == nullptr);
 
     channel->setDelegate(&delegate);
-    OO_CHECK(!channel->playSound(nullptr, false));
+    EXPECT_TRUE(!channel->playSound(nullptr, false));
     const std::shared_ptr<TestSound> sound = oo::makeShared<TestSound>();
     sound->_frames = 22050;
-    OO_CHECK(channel->playSound(sound.get(), false) &&
+    EXPECT_TRUE(channel->playSound(sound.get(), false) &&
              channel->sound() == sound.get());
     channel->stop();
-    OO_CHECK(channel->sound() == nullptr);
+    EXPECT_TRUE(channel->sound() == nullptr);
     // The delegate is told of the channel.
-    OO_CHECK(delegate._finished.size() == 1 &&
+    EXPECT_TRUE(delegate._finished.size() == 1 &&
              delegate._lastChannel == channel.get());
     channel->setDelegate(nullptr);
   }
@@ -370,8 +371,8 @@ OO_TEST(cxxApi) {
 
 // A channel released while it plays tells the delegate of itself (the
 // destructor does it).
-OO_TEST(releasedWhilePlayingTellsTheDelegate) {
-  SetUp();
+TEST(OOSoundChannel, releasedWhilePlayingTellsTheDelegate) {
+  ::SetUp();
   TestDelegate delegate;
   oo::SoundChannel* released = nullptr;
   TestSound* sound = nullptr;
@@ -382,14 +383,12 @@ OO_TEST(releasedWhilePlayingTellsTheDelegate) {
     sound = made.get();
     sound->_frames = 22050;
     channel->setDelegate(&delegate);
-    OO_CHECK(channel->playSound(sound, false));
+    EXPECT_TRUE(channel->playSound(sound, false));
     released = channel.get();
     channel = nullptr;  // the last reference
-    OO_CHECK(delegate._finished.size() == 1 && delegate._finished[0] == sound);
+    EXPECT_TRUE(delegate._finished.size() == 1 && delegate._finished[0] == sound);
   }
-  OO_CHECK(delegate._lastChannel ==
+  EXPECT_TRUE(delegate._lastChannel ==
            released);  // the channel itself, while it was destroyed
-  OO_CHECK(gLiveSounds == 0);
+  EXPECT_TRUE(gLiveSounds == 0);
 }
-
-OO_TEST_MAIN()

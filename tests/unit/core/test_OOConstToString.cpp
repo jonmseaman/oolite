@@ -19,11 +19,12 @@
 #include <cstdlib>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "CommodityMarket.h"
 #include "ConstToString.h"
 #include "EquipmentType.h"
 #include "StringExpander.h"
-#include "oo_test.hpp"
 
 // ShipEntity.h's declarations (it imports the whole game).
 namespace oo {
@@ -236,27 +237,27 @@ std::string IdentifierOf(oo::WeaponType weapon) {
 // --- Weapon types
 // ----------------------------------------------------------------------------
 
-OO_TEST(weaponTypeIdentifiers) {
+TEST(OOConstToString, weaponTypeIdentifiers) {
   {
     LoadEquipment();
     oo::WeaponType pulse =
         oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
             .get();
-    OO_CHECK(pulse != nullptr);
+    EXPECT_TRUE(pulse != nullptr);
 
-    OO_CHECK(oo::StringFromWeaponType(pulse) ==
+    EXPECT_TRUE(oo::StringFromWeaponType(pulse) ==
              std::optional<std::string>("EQ_WEAPON_PULSE_LASER"));
-    OO_CHECK(oo::StringFromWeaponType(nullptr) ==
+    EXPECT_TRUE(oo::StringFromWeaponType(nullptr) ==
              std::optional<std::string>("EQ_WEAPON_NONE"));
 
-    OO_CHECK(oo::EquipmentIdentifierFromWeaponType(pulse) ==
+    EXPECT_TRUE(oo::EquipmentIdentifierFromWeaponType(pulse) ==
              std::optional<std::string>("EQ_WEAPON_PULSE_LASER"));
     // A message to nil answered a zeroed std::optional: no identifier.
-    OO_CHECK(oo::EquipmentIdentifierFromWeaponType(nullptr) == std::nullopt);
+    EXPECT_TRUE(oo::EquipmentIdentifierFromWeaponType(nullptr) == std::nullopt);
   }
 }
 
-OO_TEST(sloppyLookUp) {
+TEST(OOConstToString, sloppyLookUp) {
   {
     LoadEquipment();
     oo::WeaponType pulse =
@@ -264,40 +265,40 @@ OO_TEST(sloppyLookUp) {
             .get();
     oo::WeaponType none =
         oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_NONE").get();
-    OO_CHECK(pulse != nullptr && none != nullptr && pulse != none);
+    EXPECT_TRUE(pulse != nullptr && none != nullptr && pulse != none);
 
     // The identifier itself, then with "EQ_" put in front, then EQ_WEAPON_NONE.
-    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy(
+    EXPECT_TRUE(oo::WeaponTypeFromEquipmentIdentifierSloppy(
                  "EQ_WEAPON_PULSE_LASER") == pulse);
-    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy(
+    EXPECT_TRUE(oo::WeaponTypeFromEquipmentIdentifierSloppy(
                  "WEAPON_PULSE_LASER") == pulse);
-    OO_CHECK(
+    EXPECT_TRUE(
         oo::WeaponTypeFromEquipmentIdentifierSloppy("LASER_WITHOUT_PREFIX") ==
         oo::EquipmentType::equipmentTypeWithIdentifier("LASER_WITHOUT_PREFIX")
             .get());
-    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy("EQ_FUEL") ==
+    EXPECT_TRUE(oo::WeaponTypeFromEquipmentIdentifierSloppy("EQ_FUEL") ==
              oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get());
-    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy("PULSE_LASER") ==
+    EXPECT_TRUE(oo::WeaponTypeFromEquipmentIdentifierSloppy("PULSE_LASER") ==
              none);
-    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy(
+    EXPECT_TRUE(oo::WeaponTypeFromEquipmentIdentifierSloppy(
                  "EQ_NO_SUCH_THING") == none);
-    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierSloppy("") == none);
+    EXPECT_TRUE(oo::WeaponTypeFromEquipmentIdentifierSloppy("") == none);
 
     // The other spellings are the same look-up.
-    OO_CHECK(
+    EXPECT_TRUE(
         oo::WeaponTypeFromEquipmentIdentifierStrict("WEAPON_BEAM_LASER") ==
         oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_BEAM_LASER")
             .get());
-    OO_CHECK(oo::WeaponTypeFromString("WEAPON_PULSE_LASER") == pulse);
-    OO_CHECK(oo::WeaponTypeFromString("nonsense") == none);
+    EXPECT_TRUE(oo::WeaponTypeFromString("WEAPON_PULSE_LASER") == pulse);
+    EXPECT_TRUE(oo::WeaponTypeFromString("nonsense") == none);
 
     // Save games stored weapons as numbers.
-    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierLegacy("2") == pulse);
-    OO_CHECK(IdentifierOf(oo::WeaponTypeFromEquipmentIdentifierLegacy("3")) ==
+    EXPECT_TRUE(oo::WeaponTypeFromEquipmentIdentifierLegacy("2") == pulse);
+    EXPECT_TRUE(IdentifierOf(oo::WeaponTypeFromEquipmentIdentifierLegacy("3")) ==
              "EQ_WEAPON_BEAM_LASER");
-    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierLegacy("4") ==
+    EXPECT_TRUE(oo::WeaponTypeFromEquipmentIdentifierLegacy("4") ==
              none);  // no mining laser here
-    OO_CHECK(oo::WeaponTypeFromEquipmentIdentifierLegacy("EQ_FUEL") ==
+    EXPECT_TRUE(oo::WeaponTypeFromEquipmentIdentifierLegacy("EQ_FUEL") ==
              oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get());
   }
 }
@@ -305,13 +306,13 @@ OO_TEST(sloppyLookUp) {
 // --- Mass units
 // ------------------------------------------------------------------------------
 
-OO_TEST(massUnitOfACommodity) {
+TEST(OOConstToString, massUnitOfACommodity) {
   {
     LoadEquipment();
 
     // No market: a message to nil answered 0, OOMassUnit::kTons.
     gSharedUniverse->market = nullptr;
-    OO_CHECK(DisplayStringForMassUnitForCommodity("gold") ==
+    EXPECT_TRUE(DisplayStringForMassUnitForCommodity("gold") ==
              std::optional<std::string>("t"));
 
     std::shared_ptr<oo::CommodityMarket> market = oo::makeShared<oo::CommodityMarket>();
@@ -325,15 +326,15 @@ OO_TEST(massUnitOfACommodity) {
                                     {"quantity_unit", oo::PList(7)}}));
     gSharedUniverse->market = market;
 
-    OO_CHECK(DisplayStringForMassUnitForCommodity("gold") ==
+    EXPECT_TRUE(DisplayStringForMassUnitForCommodity("gold") ==
              std::optional<std::string>("kg"));
-    OO_CHECK(DisplayStringForMassUnitForCommodity("gems") ==
+    EXPECT_TRUE(DisplayStringForMassUnitForCommodity("gems") ==
              std::optional<std::string>("g"));
-    OO_CHECK(DisplayStringForMassUnitForCommodity("food") ==
+    EXPECT_TRUE(DisplayStringForMassUnitForCommodity("food") ==
              std::optional<std::string>("t"));
-    OO_CHECK(DisplayStringForMassUnitForCommodity("unobtainium") ==
+    EXPECT_TRUE(DisplayStringForMassUnitForCommodity("unobtainium") ==
              std::optional<std::string>("t"));
-    OO_CHECK(DisplayStringForMassUnitForCommodity("alloys") ==
+    EXPECT_TRUE(DisplayStringForMassUnitForCommodity("alloys") ==
              DisplayStringForMassUnit(oo::MassUnit::kUnknown));
 
     gSharedUniverse->market = nullptr;
@@ -347,5 +348,3 @@ void oo::EquipmentType::clearJSSelf(JSValueConst) {}
 std::optional<std::string> oo::EquipmentType::jsDescription() {
   return std::nullopt;
 }
-
-OO_TEST_MAIN()

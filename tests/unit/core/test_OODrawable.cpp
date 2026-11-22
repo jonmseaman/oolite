@@ -11,8 +11,9 @@
 
 #include <cstring>
 
+#include <gtest/gtest.h>
+
 #include "Drawable.h"
-#include "oo_test.hpp"
 
 // A subclass that overrides the root's members.
 class TestSubDrawable : public oo::Drawable {
@@ -51,67 +52,67 @@ bool IsZero(const BoundingBox& box) {
 
 }  // namespace
 
-OO_TEST(rootDefaults) {
+TEST(OODrawable, rootDefaults) {
   {
     const std::shared_ptr<oo::Drawable> drawable = oo::makeShared<oo::Drawable>();
     drawable->renderOpaqueParts();
     drawable->renderTranslucentParts();
-    OO_CHECK(!drawable->hasOpaqueParts() && !drawable->hasTranslucentParts());
-    OO_CHECK(drawable->collisionRadius() == 0.0f &&
+    EXPECT_TRUE(!drawable->hasOpaqueParts() && !drawable->hasTranslucentParts());
+    EXPECT_TRUE(drawable->collisionRadius() == 0.0f &&
              drawable->maxDrawDistance() == 0.0f);
-    OO_CHECK(IsZero(drawable->boundingBox()));
+    EXPECT_TRUE(IsZero(drawable->boundingBox()));
     drawable->setBindingTarget(nullptr);
     drawable->dumpSelfState();
 #ifndef NDEBUG
-    OO_CHECK(drawable->allTextures().empty());
-    OO_CHECK(drawable->totalSize() == drawable->objectSize());
-    OO_CHECK(drawable->objectSize() == sizeof(oo::Drawable));
+    EXPECT_TRUE(drawable->allTextures().empty());
+    EXPECT_TRUE(drawable->totalSize() == drawable->objectSize());
+    EXPECT_TRUE(drawable->objectSize() == sizeof(oo::Drawable));
 #endif
   }
 }
 
-OO_TEST(objCSubclass) {
+TEST(OODrawable, objCSubclass) {
   {
     const std::shared_ptr<TestSubDrawable> drawable = oo::makeShared<TestSubDrawable>();
     drawable->radius = 12.5f;
     drawable->renderOpaqueParts();
-    OO_CHECK(drawable->opaqueRenders == 1);
-    OO_CHECK(drawable->hasOpaqueParts() && !drawable->hasTranslucentParts());
-    OO_CHECK(drawable->collisionRadius() == 12.5f &&
+    EXPECT_TRUE(drawable->opaqueRenders == 1);
+    EXPECT_TRUE(drawable->hasOpaqueParts() && !drawable->hasTranslucentParts());
+    EXPECT_TRUE(drawable->collisionRadius() == 12.5f &&
              drawable->maxDrawDistance() == 0.0f);
 #ifndef NDEBUG
     // The root's totalSize() is the subclass's size, not the root's.
-    OO_CHECK(drawable->totalSize() == sizeof(TestSubDrawable) + 100);
+    EXPECT_TRUE(drawable->totalSize() == sizeof(TestSubDrawable) + 100);
 #endif
     // Virtual calls through the root's type reach the overrides, or the root's
     // own answers.
     oo::Drawable* part = drawable.get();
     part->renderOpaqueParts();
-    OO_CHECK(drawable->opaqueRenders == 2);
-    OO_CHECK(!part->descriptionComponents().has_value());
+    EXPECT_TRUE(drawable->opaqueRenders == 2);
+    EXPECT_TRUE(!part->descriptionComponents().has_value());
   }
 }
 
-OO_TEST(cxxDrawableBehindTheFacade) {
+TEST(OODrawable, cxxDrawableBehindTheFacade) {
   {
     const std::shared_ptr<TestCxxDrawable> drawable = oo::makeShared<TestCxxDrawable>();
     oo::Drawable* part = drawable.get();
 
     // The entities' calls reach the C++ overrides, and the root's defaults.
     part->renderTranslucentParts();
-    OO_CHECK(drawable->translucentRenders == 1);
-    OO_CHECK(part->hasTranslucentParts() && !part->hasOpaqueParts());
-    OO_CHECK(part->maxDrawDistance() == 1000.0f &&
+    EXPECT_TRUE(drawable->translucentRenders == 1);
+    EXPECT_TRUE(part->hasTranslucentParts() && !part->hasOpaqueParts());
+    EXPECT_TRUE(part->maxDrawDistance() == 1000.0f &&
              part->collisionRadius() == 0.0f);
-    OO_CHECK(IsZero(part->boundingBox()));
+    EXPECT_TRUE(IsZero(part->boundingBox()));
 
     const std::string text = part->description();
-    OO_CHECK(text.starts_with("<TestCxxDrawable 0x"));
-    OO_CHECK(text.ends_with(">{test}"));
+    EXPECT_TRUE(text.starts_with("<TestCxxDrawable 0x"));
+    EXPECT_TRUE(text.ends_with(">{test}"));
   }
 }
 
-OO_TEST(autoreleaseKeepsTheDrawable) {
+TEST(OODrawable, autoreleaseKeepsTheDrawable) {
   // OODrawableAutorelease() (an entity's replaced drawable, as [drawable
   // autorelease]): the drawable lives until the pool drains.
   std::shared_ptr<TestCxxDrawable> drawable = oo::makeShared<TestCxxDrawable>();
@@ -119,9 +120,7 @@ OO_TEST(autoreleaseKeepsTheDrawable) {
   {
     oo::DrawableAutorelease(std::shared_ptr<oo::Drawable>(std::move(drawable)));
     raw->renderTranslucentParts();  // still alive
-    OO_CHECK(raw->translucentRenders == 1);
+    EXPECT_TRUE(raw->translucentRenders == 1);
   }
   oo::DrawableAutorelease(std::shared_ptr<oo::Drawable>());  // null: nothing
 }
-
-OO_TEST_MAIN()

@@ -24,9 +24,10 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "Color.h"
 #include "EquipmentType.h"
-#include "oo_test.hpp"
 
 // --- The game around the class
 // --------------------------------------------------------------
@@ -366,7 +367,7 @@ std::string Identifiers(const std::vector<std::shared_ptr<oo::EquipmentType>>& t
 
 }  // namespace
 
-OO_TEST(loading) {
+TEST(OOEquipmentType, loading) {
   Expected expect{
       "deprecated The conditions key is deprecated for equipment Shield "
       "booster; sanitize <equipment type \"Shield booster\">; script good.js; "
@@ -477,20 +478,20 @@ OO_TEST(loading) {
   {
     Reset();
     oo::EquipmentType::loadEquipment();
-    OO_CHECK(expect(Log()));
-    OO_CHECK(expect(Identifiers(oo::EquipmentType::allEquipmentTypes())));
-    OO_CHECK(
+    EXPECT_TRUE(expect(Log()));
+    EXPECT_TRUE(expect(Identifiers(oo::EquipmentType::allEquipmentTypes())));
+    EXPECT_TRUE(
         expect(Identifiers(oo::EquipmentType::allEquipmentTypesOutfitting())));
     for (const char* key :
          {"EQ_FUEL", "EQ_MISSILE", "EQ_PASSENGER_BERTH_REMOVAL", "EQ_QC_MINE",
           "EQ_WEAPON_PULSE_LASER", "EQ_SHIELD_BOOSTER", "EQ_SCOOPER",
           "EQ_BROKEN", "EQ_EMPTY_NAME", "EQ_NO_NAME", "EQ_OUTFIT"}) {
       gLog.clear();
-      OO_CHECK(expect(
+      EXPECT_TRUE(expect(
           Describe(oo::EquipmentType::equipmentTypeWithIdentifier(key).get())));
-      OO_CHECK(expect(Log()));
+      EXPECT_TRUE(expect(Log()));
     }
-    OO_CHECK(
+    EXPECT_TRUE(
         expect(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_SHIELD_BOOSTER")
                    .get()
                    ->descriptionComponents()
@@ -498,7 +499,7 @@ OO_TEST(loading) {
   }
 }
 
-OO_TEST(registries) {
+TEST(OOEquipmentType, registries) {
   Expected expect{
       "EQ_FUEL EQ_MISSILE EQ_PASSENGER_BERTH_REMOVAL EQ_QC_MINE "
       "EQ_WEAPON_PULSE_LASER EQ_SHIELD_BOOSTER EQ_SCOOPER EQ_BROKEN "
@@ -532,109 +533,109 @@ OO_TEST(registries) {
   {
     // The registry keeps its types: the same object, pool after pool, and from
     // every list.
-    OO_CHECK(fuel != nullptr &&
+    EXPECT_TRUE(fuel != nullptr &&
              oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get() ==
                  fuel);
-    OO_CHECK(oo::EquipmentType::allEquipmentTypes().front().get() == fuel);
-    OO_CHECK(fuel->identifier() == std::optional<std::string>("EQ_FUEL"));
-    OO_CHECK(oo::EquipmentType::allEquipmentTypesOutfitting().front().get() !=
+    EXPECT_TRUE(oo::EquipmentType::allEquipmentTypes().front().get() == fuel);
+    EXPECT_TRUE(fuel->identifier() == std::optional<std::string>("EQ_FUEL"));
+    EXPECT_TRUE(oo::EquipmentType::allEquipmentTypesOutfitting().front().get() !=
              fuel);  // its own objects
 
     // Added types go to both lists and the index.
     oo::EquipmentType::addEquipmentWithInfo(
         Item(3, 30, "Extra", "EQ_EXTRA_MISSILE", "Added"));
     oo::EquipmentType::addEquipmentWithInfo(oo::PList("not an entry"));
-    OO_CHECK(expect(Identifiers(oo::EquipmentType::allEquipmentTypes())));
-    OO_CHECK(
+    EXPECT_TRUE(expect(Identifiers(oo::EquipmentType::allEquipmentTypes())));
+    EXPECT_TRUE(
         expect(Identifiers(oo::EquipmentType::allEquipmentTypesOutfitting())));
-    OO_CHECK(expect(Describe(
+    EXPECT_TRUE(expect(Describe(
         oo::EquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MISSILE")
             .get())));
 
     // The missile registry.
-    OO_CHECK(
+    EXPECT_TRUE(
         !oo::EquipmentType::getMissileRegistryRoleForShip("viper").has_value());
     oo::EquipmentType::setMissileRegistryRole("EQ_MISSILE", "viper");
     oo::EquipmentType::setMissileRegistryRole("EQ_MINE", "");
-    OO_CHECK(oo::EquipmentType::getMissileRegistryRoleForShip("viper") ==
+    EXPECT_TRUE(oo::EquipmentType::getMissileRegistryRoleForShip("viper") ==
              std::optional<std::string>("EQ_MISSILE"));
-    OO_CHECK(!oo::EquipmentType::getMissileRegistryRoleForShip("").has_value());
+    EXPECT_TRUE(!oo::EquipmentType::getMissileRegistryRoleForShip("").has_value());
 
     // The display colour can be replaced.
     oo::EquipmentType* laser =
         oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
             .get();
     laser->setDisplayColor(oo::Color::blueColor().get());
-    OO_CHECK(expect(Colour(laser->displayColor().get())));
+    EXPECT_TRUE(expect(Colour(laser->displayColor().get())));
     laser->setDisplayColor(nullptr);
-    OO_CHECK(expect(Colour(laser->displayColor().get())));
+    EXPECT_TRUE(expect(Colour(laser->displayColor().get())));
   }
   {
     // Strict standards: legacy conditions are dropped and TL99 stays 99.
     Reset();
     gEnforceStandards = true;
     oo::EquipmentType::loadEquipment();
-    OO_CHECK(expect(Log()));
+    EXPECT_TRUE(expect(Log()));
     oo::EquipmentType* booster =
         oo::EquipmentType::equipmentTypeWithIdentifier("EQ_SHIELD_BOOSTER").get();
-    OO_CHECK(booster->conditions().isNull() &&
+    EXPECT_TRUE(booster->conditions().isNull() &&
              booster->effectiveTechLevel() == 99);
-    OO_CHECK(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MISSILE")
+    EXPECT_TRUE(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MISSILE")
                  .get() == nullptr);  // a reload starts again
-    OO_CHECK(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL")
+    EXPECT_TRUE(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL")
                  .get()
                  ->identifier() == std::optional<std::string>("EQ_FUEL"));
   }
 }
 
-OO_TEST(cxxClass) {
+TEST(OOEquipmentType, cxxClass) {
   {
     Reset();
     oo::EquipmentType::loadEquipment();
     const std::vector<std::shared_ptr<oo::EquipmentType>> all =
         oo::EquipmentType::allEquipmentTypes();
-    OO_CHECK(all.size() == 9 &&
+    EXPECT_TRUE(all.size() == 9 &&
              oo::EquipmentType::allEquipmentTypesOutfitting().size() == 2);
     std::shared_ptr<oo::EquipmentType> laser =
         oo::EquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER");
-    OO_CHECK(laser != nullptr && laser == all[4]);
-    OO_CHECK(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_NO_NAME") ==
+    EXPECT_TRUE(laser != nullptr && laser == all[4]);
+    EXPECT_TRUE(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_NO_NAME") ==
              nullptr);
-    OO_CHECK(laser->identifier() ==
+    EXPECT_TRUE(laser->identifier() ==
                  std::optional<std::string>("EQ_WEAPON_PULSE_LASER") &&
              laser->isPrimaryWeapon() && laser->isTurretLaser());
-    OO_CHECK(laser->weaponRange() == 15000.0f &&
+    EXPECT_TRUE(laser->weaponRange() == 15000.0f &&
              laser->weaponDamage() == 10.0f &&
              laser->fxShotHitName() == std::optional<std::string>("[zap]"));
-    OO_CHECK(laser->displayColor() != nullptr &&
+    EXPECT_TRUE(laser->displayColor() != nullptr &&
              laser->displayColor()->greenComponent() == 1.0f);
-    OO_CHECK(laser->weaponColor()->redComponent() == 1.0f);
+    EXPECT_TRUE(laser->weaponColor()->redComponent() == 1.0f);
     laser->setDisplayColor(oo::Color::blueColor().get());
-    OO_CHECK(laser->displayColor()->blueComponent() == 1.0f);
-    OO_CHECK(
+    EXPECT_TRUE(laser->displayColor()->blueComponent() == 1.0f);
+    EXPECT_TRUE(
         laser->descriptionComponents() ==
         std::optional<std::string>("EQ_WEAPON_PULSE_LASER \"Pulse laser\""));
 
     std::shared_ptr<oo::EquipmentType> booster =
         oo::EquipmentType::equipmentTypeWithIdentifier("EQ_SHIELD_BOOSTER");
-    OO_CHECK(booster->techLevel() == 99 && booster->effectiveTechLevel() == 7);
-    OO_CHECK(booster->requiresEquipment() ==
+    EXPECT_TRUE(booster->techLevel() == 99 && booster->effectiveTechLevel() == 7);
+    EXPECT_TRUE(booster->requiresEquipment() ==
              std::optional<std::vector<std::string>>({"EQ_A", "EQ_B"}));
-    OO_CHECK(booster->provides("boost") && !booster->provides("speed") &&
+    EXPECT_TRUE(booster->provides("boost") && !booster->provides("speed") &&
              booster->repairTime() == 300);
 
     oo::EquipmentType::addEquipmentWithInfo(
         Item(3, 30, "Extra", "EQ_EXTRA_MINE", "Added"));
-    OO_CHECK(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MINE")
+    EXPECT_TRUE(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MINE")
                  ->fxWeaponLaunchedName() ==
              std::optional<std::string>("[mine-launched]"));
     oo::EquipmentType::setMissileRegistryRole("EQ_EXTRA_MINE", "cobra");
-    OO_CHECK(oo::EquipmentType::getMissileRegistryRoleForShip("cobra") ==
+    EXPECT_TRUE(oo::EquipmentType::getMissileRegistryRoleForShip("cobra") ==
              std::optional<std::string>("EQ_EXTRA_MINE"));
   }
 }
 
-OO_TEST(objectNode) {
+TEST(OOEquipmentType, objectNode) {
   // A type is its own PList Object node payload: the node gives the same type
   // back, and describes it as "%@" printed it.
   {
@@ -643,23 +644,23 @@ OO_TEST(objectNode) {
     oo::EquipmentType* fuel =
         oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get();
     const oo::PList node = oo::EquipmentTypeObjectNode(fuel);
-    OO_CHECK(oo::EquipmentTypeInObjectNode(node) == fuel);
-    OO_CHECK(oo::EquipmentTypeObjectNode(nullptr).isNull() &&
+    EXPECT_TRUE(oo::EquipmentTypeInObjectNode(node) == fuel);
+    EXPECT_TRUE(oo::EquipmentTypeObjectNode(nullptr).isNull() &&
              oo::EquipmentTypeInObjectNode(oo::PList("EQ_FUEL")) == nullptr);
-    OO_CHECK(fuel->className() == "OOEquipmentType");
+    EXPECT_TRUE(fuel->className() == "OOEquipmentType");
     const std::string text = fuel->description();
-    OO_CHECK(text.rfind("<OOEquipmentType 0x", 0) == 0 &&
+    EXPECT_TRUE(text.rfind("<OOEquipmentType 0x", 0) == 0 &&
              text.find(">{EQ_FUEL \"Fuel\"}") != std::string::npos);
     const oo::PList nodes = oo::EquipmentTypeObjectNodes(
         {oo::share(fuel), std::shared_ptr<oo::EquipmentType>(),
          oo::share(fuel)});
-    OO_CHECK(nodes.count() == 2 &&
+    EXPECT_TRUE(nodes.count() == 2 &&
              oo::EquipmentTypeInObjectNode(
                  (*nodes.getIf<oo::PList::Array>())[1]) == fuel);
   }
 }
 
-OO_TEST(facadeIdentity) {
+TEST(OOEquipmentType, facadeIdentity) {
   oo::EquipmentType* fuel = nullptr;
   std::shared_ptr<oo::Color> blue;  // the C++ colour
   {
@@ -670,19 +671,19 @@ OO_TEST(facadeIdentity) {
     // The display colour comes back as the same colour.
     blue = oo::Color::blueColor();
     fuel->setDisplayColor(blue.get());
-    OO_CHECK(fuel->displayColor().get() == blue.get());
+    EXPECT_TRUE(fuel->displayColor().get() == blue.get());
   }
   {
     // A registered type outlives the pool (ships keep them unretained), and a
     // type registered later is the same object each time it is looked up.
-    OO_CHECK(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get() ==
+    EXPECT_TRUE(oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get() ==
                  fuel &&
              fuel->displayColor().get() == blue.get());
     oo::EquipmentType::addEquipmentWithInfo(
         Item(3, 30, "Quiet", "EQ_QUIET", "Added in C++"));
     oo::EquipmentType* quiet =
         oo::EquipmentType::equipmentTypeWithIdentifier("EQ_QUIET").get();
-    OO_CHECK(
+    EXPECT_TRUE(
         quiet != nullptr &&
         quiet ==
             oo::EquipmentType::equipmentTypeWithIdentifier("EQ_QUIET").get());
@@ -697,5 +698,3 @@ void oo::EquipmentType::clearJSSelf(JSValueConst) {}
 std::optional<std::string> oo::EquipmentType::jsDescription() {
   return std::nullopt;
 }
-
-OO_TEST_MAIN()

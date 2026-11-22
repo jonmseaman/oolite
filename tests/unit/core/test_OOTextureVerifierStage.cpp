@@ -22,12 +22,13 @@
 #include <fstream>
 #include <sstream>
 
+#include <gtest/gtest.h>
+
 #include "OXPVerifierStage.h"
 #include "PixMap.h"
 #include "Texture.h"
 #include "TextureLoader.h"
 #include "TextureVerifierStage.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
@@ -214,46 +215,46 @@ oo::OXPVerifier* MakeVerifier(
 
 }  // namespace
 
-OO_TEST(nameAndNeighbours) {
+TEST(OOTextureVerifierStage, nameAndNeighbours) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({});
-    OO_CHECK(oo::TextureVerifierStage::nameForReverseDependencyForVerifier(
+    EXPECT_TRUE(oo::TextureVerifierStage::nameForReverseDependencyForVerifier(
                  verifier) == "Testing textures and images");
 
     const std::shared_ptr<oo::TextureVerifierStage> stage =
         oo::makeShared<oo::TextureVerifierStage>();
     stage->setVerifier(verifier);
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Testing textures and images"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(!stage->shouldRun());  // nothing named, no Images
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(!stage->shouldRun());  // nothing named, no Images
     stage->run();
-    OO_CHECK(gLog.empty());
+    EXPECT_TRUE(gLog.empty());
 
     stage->setVerifier(MakeVerifier({{"Images/a.png", "8x8"}}));
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->shouldRun());
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(stagesNameTextures) {
+TEST(OOTextureVerifierStage, stagesNameTextures) {
   {
     const std::shared_ptr<oo::TextureVerifierStage> stage =
         oo::makeShared<oo::TextureVerifierStage>();
     stage->setVerifier(MakeVerifier({{"Textures/hull.png", "8x8"}}));
 
     stage->textureNamed("", "nowhere");
-    OO_CHECK(!stage->shouldRun() && gLog.empty());  // an empty name is ignored
+    EXPECT_TRUE(!stage->shouldRun() && gLog.empty());  // an empty name is ignored
 
     stage->textureNamed("hull.png", "ship.dat");
     stage->textureNamed("builtin.png", "ship.dat");
-    OO_CHECK(stage->shouldRun() && gLog.empty());
+    EXPECT_TRUE(stage->shouldRun() && gLog.empty());
 
     stage->textureNamed("missing.png", "shipdata.plist entry \"a\"");
     stage->textureNamed("missing.png", "shipdata.plist entry \"b\"");
-    OO_CHECK(gLog.size() == 1);
-    OO_CHECK(
+    EXPECT_TRUE(gLog.size() == 1);
+    EXPECT_TRUE(
         LogLinesContaining("----- WARNING: texture \"missing.png\" referenced "
                            "in shipdata.plist entry \"a\" could not be found "
                            "in Test.oxp or in Oolite.") == 1);
@@ -261,7 +262,7 @@ OO_TEST(stagesNameTextures) {
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(runLoadsTexturesAndImages) {
+TEST(OOTextureVerifierStage, runLoadsTexturesAndImages) {
   {
     const std::shared_ptr<oo::TextureVerifierStage> stage =
         oo::makeShared<oo::TextureVerifierStage>();
@@ -282,68 +283,68 @@ OO_TEST(runLoadsTexturesAndImages) {
     gPixMapsFreed = 0;
     stage->run();
 
-    OO_CHECK(gLoaderOptions ==
+    EXPECT_TRUE(gLoaderOptions ==
              (oo::TextureFlags::kMinFilterNearest | oo::TextureFlags::kNoShrink |
               oo::TextureFlags::kNoFNFMessage | oo::TextureFlags::kNeverScale));
-    OO_CHECK(LogLinesContaining("- Textures/pot.png (64x32 px) OK.") == 1);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining("- Textures/pot.png (64x32 px) OK.") == 1);
+    EXPECT_TRUE(LogLinesContaining(
                  "----- WARNING: image Textures/npot.png has non-power-of-two "
                  "dimensions; it will have to be rescaled (from 100x30 pixels "
                  "to 128x32 pixels) at runtime.") == 1);
-    OO_CHECK(
+    EXPECT_TRUE(
         LogLinesContaining(
             "***** ERROR: image Textures/unreadable.png could not be read.") ==
         1);
-    OO_CHECK(
+    EXPECT_TRUE(
         LogLinesContaining(
             "***** ERROR: texture loader failed to load Textures/fail.png.") ==
         1);
-    OO_CHECK(LogLinesContaining("unused.png") == 0 &&
+    EXPECT_TRUE(LogLinesContaining("unused.png") == 0 &&
              LogLinesContaining("builtin.png") == 0 &&
              LogLinesContaining("missing.png") == 0);
 
     // Every image is checked, named textures first (byte order), then Images
     // (as listed).
-    OO_CHECK(LogLinesContaining("- Images/A.png (3x3 px) OK.") == 0);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining("- Images/A.png (3x3 px) OK.") == 0);
+    EXPECT_TRUE(LogLinesContaining(
                  "image Images/A.png has non-power-of-two dimensions; it will "
                  "have to be rescaled (from 3x3 pixels to 2x2 pixels)") == 1);
-    OO_CHECK(LogLinesContaining("- Images/b.png (16x16 px) OK.") == 1);
-    OO_CHECK(gLog.size() == 6 &&
+    EXPECT_TRUE(LogLinesContaining("- Images/b.png (16x16 px) OK.") == 1);
+    EXPECT_TRUE(gLog.size() == 6 &&
              gLog.front().find("fail.png") != std::string::npos &&
              gLog.back().find("Images/b.png") != std::string::npos);
-    OO_CHECK(gPixMapsFreed == 4);
+    EXPECT_TRUE(gPixMapsFreed == 4);
 
     // The named textures are forgotten after the run; the images are not.
     gLog.clear();
     stage->run();
-    OO_CHECK(gLog.size() == 2);
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(gLog.size() == 2);
+    EXPECT_TRUE(stage->shouldRun());
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(textureHandlingStage) {
+TEST(OOTextureVerifierStage, textureHandlingStage) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({});
     const std::shared_ptr<TestTextureUser> user = oo::makeShared<TestTextureUser>();
     user->setVerifier(verifier);
-    OO_CHECK(user->name() == std::optional<std::string>("Using textures"));
-    OO_CHECK(user->dependencies() == kScannerName);
-    OO_CHECK(user->dependents() == kTextureUserDependents);
-    OO_CHECK(user->dependents() ==
+    EXPECT_TRUE(user->name() == std::optional<std::string>("Using textures"));
+    EXPECT_TRUE(user->dependencies() == kScannerName);
+    EXPECT_TRUE(user->dependents() == kTextureUserDependents);
+    EXPECT_TRUE(user->dependents() ==
              kTextureUserDependents);  // asked again: no duplicate
 
     const std::shared_ptr<TestSuperCallingTextureUser> superCalling =
         oo::makeShared<TestSuperCallingTextureUser>();
     superCalling->setVerifier(verifier);
-    OO_CHECK(superCalling->dependents() ==
+    EXPECT_TRUE(superCalling->dependents() ==
              (std::vector<std::string>{"Checking for unused files",
                                        "Testing textures and images",
                                        "Extra dependent"}));
 
     oo::OXPVerifierStage* stage = user.get();
-    OO_CHECK(dynamic_cast<oo::TextureHandlingStage*>(stage) != nullptr &&
+    EXPECT_TRUE(dynamic_cast<oo::TextureHandlingStage*>(stage) != nullptr &&
              dynamic_cast<oo::FileHandlingVerifierStage*>(stage) != nullptr);
   }
 }
@@ -355,48 +356,46 @@ class TestCxxTextureUser : public oo::TextureHandlingStage {
   std::optional<std::string> name() override { return "Using textures in C++"; }
 };
 
-OO_TEST(cxxTextureUserBehindTheFacade) {
+TEST(OOTextureVerifierStage, cxxTextureUserBehindTheFacade) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({});
     const std::shared_ptr<TestCxxTextureUser> user = oo::makeShared<TestCxxTextureUser>();
     user->setVerifier(verifier);
-    OO_CHECK(user->dependents() == kTextureUserDependents);
+    EXPECT_TRUE(user->dependents() == kTextureUserDependents);
 
-    OO_CHECK(user->name() ==
+    EXPECT_TRUE(user->name() ==
              std::optional<std::string>("Using textures in C++"));
-    OO_CHECK(user->dependents() == kTextureUserDependents);
-    OO_CHECK(user->description().starts_with("<TestCxxTextureUser 0x"));
+    EXPECT_TRUE(user->dependents() == kTextureUserDependents);
+    EXPECT_TRUE(user->description().starts_with("<TestCxxTextureUser 0x"));
   }
 }
 
 // The texture stage is global: the verifier's stage lookup by the texture
 // stage's name answers it once it is registered.
-OO_TEST(textureStageFacade) {
+TEST(OOTextureVerifierStage, textureStageFacade) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({{"Images/a.png", "8x8"}});
     const std::shared_ptr<oo::TextureVerifierStage> stage =
         oo::makeShared<oo::TextureVerifierStage>();
-    OO_CHECK(stage->description().starts_with("<OOTextureVerifierStage 0x"));
+    EXPECT_TRUE(stage->description().starts_with("<OOTextureVerifierStage 0x"));
 
-    OO_CHECK(verifier->stageWithName(
+    EXPECT_TRUE(verifier->stageWithName(
                  oo::TextureVerifierStage::nameForReverseDependencyForVerifier(
                      verifier)) == nullptr);
     verifier->registerStage(stage.get());
-    OO_CHECK(verifier->stageWithName(
+    EXPECT_TRUE(verifier->stageWithName(
                  oo::TextureVerifierStage::nameForReverseDependencyForVerifier(
                      verifier)) == stage.get());
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Testing textures and images"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(stage->shouldRun());
     gLog.clear();
     stage->dependencyRegistrationComplete();
     stage->performRun();
-    OO_CHECK(gLog.size() == 1 &&
+    EXPECT_TRUE(gLog.size() == 1 &&
              LogLinesContaining("- Images/a.png (8x8 px) OK.") == 1);
   }
   std::filesystem::remove_all(kBase);
 }
-
-OO_TEST_MAIN()

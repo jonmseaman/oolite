@@ -9,25 +9,24 @@
    tests/run.sh unit
 */
 
-#include "BasicSoundReferencePoint.h"
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
 
-OO_TEST(settersAreNoOps) {
+#include "BasicSoundReferencePoint.h"
+
+TEST(OOSoundReferencePoint, settersAreNoOps) {
   std::shared_ptr<oo::SoundReferencePoint> point = oo::makeShared<oo::SoundReferencePoint>();
-  OO_CHECK(point != nullptr);
+  EXPECT_TRUE(point != nullptr);
   point->setPosition(make_vector(1.0f, 2.0f, 3.0f));
   point->setVelocity(make_vector(-1.0f, 0.0f, 0.5f));
   point->setOrientation(make_vector(0.0f, 0.0f, 1.0f));
-  OO_CHECK(point.use_count() == 1);
+  EXPECT_TRUE(point.use_count() == 1);
 }
 
-OO_TEST(lastReleaseFrees) {
+TEST(OOSoundReferencePoint, lastReleaseFrees) {
   std::shared_ptr<oo::SoundReferencePoint> point =
       oo::makeShared<oo::SoundReferencePoint>();  // the one owner, as +alloc's +1 was
   std::weak_ptr<oo::SoundReferencePoint> weak = point;
-  OO_CHECK(weak.lock().get() == point.get());
+  EXPECT_TRUE(weak.lock().get() == point.get());
   point.reset();  // the last release
-  OO_CHECK(weak.lock().get() == nullptr);
+  EXPECT_TRUE(weak.lock().get() == nullptr);
 }
-
-OO_TEST_MAIN()

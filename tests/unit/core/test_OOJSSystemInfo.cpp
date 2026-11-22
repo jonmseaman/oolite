@@ -20,6 +20,8 @@
 	equality). Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "SystemDescriptionManager.h"
 #include "Commodities.h"
@@ -127,7 +129,6 @@ public:
 #include "OOJSSystemInfo.h"
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -649,17 +650,17 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSSystemInfo, registration)
 {
 	SetUpContext();
-	OO_CHECK_EQ(sConverters.size(), 1u);
+	EXPECT_EQ(sConverters.size(), 1u);
 	OO_CHECK_EVAL("typeof SystemInfo", "function");
 	OO_CHECK_EVAL("new SystemInfo()", "threw: unconstructable");
 	OO_CHECK_EVAL("lave instanceof SystemInfo", "true");
@@ -667,7 +668,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(cache)
+TEST(OOJSSystemInfo, cache)
 {
 	SetUpContext();
 	// The last object made is given again for the same system, and a new one for another.
@@ -676,14 +677,14 @@ OO_TEST(cache)
 	// A system out of range is null, with a warning.
 	sLastWarning.clear();
 	OO_CHECK_EVAL("info(9, 7)", "null");
-	OO_CHECK_EQ(sLastWarning, std::string("Could not create system info object for galaxy 9, system 7."));
+	EXPECT_EQ(sLastWarning, std::string("Could not create system info object for galaxy 9, system 7."));
 	OO_CHECK_EVAL("info(0, 256)", "null");
 	OO_CHECK_EVAL("info(0, -2)", "null");
 	OO_CHECK_EVAL("info(1, -1) instanceof SystemInfo", "true");	// interstellar space
 }
 
 
-OO_TEST(wrappedObject)
+TEST(OOJSSystemInfo, wrappedObject)
 {
 	SetUpContext();
 	JSValue a = GetJSSystemInfoForSystem(sContext, 0, 7);
@@ -694,19 +695,19 @@ OO_TEST(wrappedObject)
 	OOSystemInfo *cxxB = slot(b);
 	JSValue c = GetJSSystemInfoForSystem(sContext, 0, 7);
 	OOSystemInfo *cxxC = slot(c);
-	OO_CHECK(cxxA != nullptr && cxxB != nullptr && cxxC != nullptr && cxxA != cxxC);
-	OO_CHECK(cxxA->oo_jsClassName() == std::optional<std::string>("SystemInfo"));
-	OO_CHECK(cxxA->isEqual(cxxC));
-	OO_CHECK(!cxxA->isEqual(cxxB));
-	OO_CHECK(!cxxA->isEqual(nullptr));
-	OO_CHECK_EQ(cxxA->hash(), cxxC->hash());
-	OO_CHECK_EQ(cxxB->hash(), static_cast<std::size_t>((3u << 16) | 7u));
-	OO_CHECK(cxxA->description().find(">{galaxy 0, system 7}") != std::string::npos);
+	EXPECT_TRUE(cxxA != nullptr && cxxB != nullptr && cxxC != nullptr && cxxA != cxxC);
+	EXPECT_TRUE(cxxA->oo_jsClassName() == std::optional<std::string>("SystemInfo"));
+	EXPECT_TRUE(cxxA->isEqual(cxxC));
+	EXPECT_TRUE(!cxxA->isEqual(cxxB));
+	EXPECT_TRUE(!cxxA->isEqual(nullptr));
+	EXPECT_EQ(cxxA->hash(), cxxC->hash());
+	EXPECT_EQ(cxxB->hash(), static_cast<std::size_t>((3u << 16) | 7u));
+	EXPECT_TRUE(cxxA->description().find(">{galaxy 0, system 7}") != std::string::npos);
 	// toString() is the engine's OOJSCxxObjectWrapperToString: the system info's jsDescription().
 	OO_CHECK_EVAL("String(lave)", "[SystemInfo galaxy 0, system 7]");
 	// Its JS value is a new object each time.
 	JSValue another = cxxA->jsValueInContext(sContext);
-	OO_CHECK(JS_VALUE_GET_PTR(another) != JS_VALUE_GET_PTR(a));
+	EXPECT_TRUE(JS_VALUE_GET_PTR(another) != JS_VALUE_GET_PTR(a));
 	JS_FreeValue(sContext, another);
 	JS_FreeValue(sContext, c);
 	JS_FreeValue(sContext, b);
@@ -714,7 +715,7 @@ OO_TEST(wrappedObject)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSSystemInfo, properties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("lave.galaxyID + ' ' + lave.systemID", "0 7");
@@ -732,7 +733,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(systemData)
+TEST(OOJSSystemInfo, systemData)
 {
 	SetUpContext();
 	// Read from the system manager; numbers, and strings that are number literals, as numbers.
@@ -742,15 +743,15 @@ OO_TEST(systemData)
 	OO_CHECK_EVAL("lave.nothing", "undefined");
 	// Set through the universe, with the running script's manifest, in the dynamic layer.
 	OO_CHECK_EVAL("(function () { lave.motto = 'Hi'; return lave.motto; })()", "Hi");	// kept on the object too
-	OO_CHECK_EQ(sUniverse->_lastSet, std::string("0 7 motto=Hi from org.test.script layer 2"));
+	EXPECT_EQ(sUniverse->_lastSet, std::string("0 7 motto=Hi from org.test.script layer 2"));
 	OO_CHECK_EVAL("(function () { lave.motto = 5; return 1; })()", "1");
-	OO_CHECK_EQ(sUniverse->_lastSet, std::string("0 7 motto=5 from org.test.script layer 2"));
+	EXPECT_EQ(sUniverse->_lastSet, std::string("0 7 motto=5 from org.test.script layer 2"));
 	sScriptManifest = oo::PList(3.0);	// not a string: no manifest
 	OO_CHECK_EVAL("(function () { lave.motto = null; return 1; })()", "1");
-	OO_CHECK_EQ(sUniverse->_lastSet, std::string("0 7 motto=(null) from (none) layer 2"));
+	EXPECT_EQ(sUniverse->_lastSet, std::string("0 7 motto=(null) from (none) layer 2"));
 	sScriptManifest = oo::PList(std::string("org.test.script"));
 	OO_CHECK_EVAL("(function () { delete lave.motto; return 1; })()", "1");
-	OO_CHECK_EQ(sUniverse->_lastSet, std::string("0 7 motto=(null) from org.test.script layer 2"));
+	EXPECT_EQ(sUniverse->_lastSet, std::string("0 7 motto=(null) from org.test.script layer 2"));
 	// Enumeration: the universe's keys for the system (#768 hides the fixed properties).
 	OO_CHECK_EVAL("(function () { var k = []; for (var p in lave) k.push(p); return k.join(); })()", "economy,government,name");
 	// Not own properties, as in SpiderMonkey; but the in operator, which QuickJS-ng's for..in also
@@ -764,7 +765,7 @@ OO_TEST(systemData)
 }
 
 
-OO_TEST(interstellar)
+TEST(OOJSSystemInfo, interstellar)
 {
 	SetUpContext();
 	sUniverse->_interstellar = true;
@@ -782,7 +783,7 @@ OO_TEST(interstellar)
 // in an if-init dangled while the keys were read. Long keys (no small-string
 // optimisation) make the copies pushed while iterating allocate, so freed
 // dictionary nodes are reused under the loop.
-OO_TEST(interstellar_keys_of_a_fresh_snapshot)
+TEST(OOJSSystemInfo, interstellar_keys_of_a_fresh_snapshot)
 {
 	SetUpContext();
 	oo::PList::Dict data;
@@ -804,7 +805,7 @@ OO_TEST(interstellar_keys_of_a_fresh_snapshot)
 }
 
 
-OO_TEST(methods)
+TEST(OOJSSystemInfo, methods)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("lave.distanceToSystem(info(0, 10)).toFixed(4)", "4.8000");
@@ -812,9 +813,9 @@ OO_TEST(methods)
 	OO_CHECK_EVAL("lave.distanceToSystem({})", "threw: bad arguments: SystemInfo.distanceToSystem(1) - / system info");
 	OO_CHECK_EVAL("lave.distanceToSystem()", "threw: bad arguments: SystemInfo.distanceToSystem(0) - / system info");
 	OO_CHECK_EVAL("JSON.stringify(lave.routeToSystem(info(0, 10)))", "{\"jumps\":2,\"route\":[7,10]}");
-	OO_CHECK_EQ(static_cast<int>(sUniverse->_routeType), static_cast<int>(oo::RouteType::kJumps));
+	EXPECT_EQ(static_cast<int>(sUniverse->_routeType), static_cast<int>(oo::RouteType::kJumps));
 	OO_CHECK_EVAL("lave.routeToSystem(info(0, 10), 'OPTIMIZED_BY_TIME').jumps", "2");
-	OO_CHECK_EQ(static_cast<int>(sUniverse->_routeType), static_cast<int>(oo::RouteType::kTime));
+	EXPECT_EQ(static_cast<int>(sUniverse->_routeType), static_cast<int>(oo::RouteType::kTime));
 	OO_CHECK_EVAL("lave.routeToSystem(info(0, 13))", "null");
 	OO_CHECK_EVAL("lave.routeToSystem(info(4, 10))", "threw: SystemInfo.routeToSystem: Cannot calculate route for destinations in other galaxies.");
 	OO_CHECK_EVAL("lave.routeToSystem(5)", "threw: bad arguments: SystemInfo.routeToSystem(1) - / system info");
@@ -824,9 +825,9 @@ OO_TEST(methods)
 	OO_CHECK_EVAL("info(1, 7).samplePrice('food')", "threw: SystemInfo.samplePrice: Cannot calculate sample price for destinations in other galaxies.");
 	// setProperty(layer, key, value [, manifest]).
 	OO_CHECK_EVAL("lave.setProperty(1, 'motto', 'Yo')", "undefined");
-	OO_CHECK_EQ(sUniverse->_lastSet, std::string("0 7 motto=Yo from org.test.script layer 1"));
+	EXPECT_EQ(sUniverse->_lastSet, std::string("0 7 motto=Yo from org.test.script layer 1"));
 	OO_CHECK_EVAL("lave.setProperty(3, 'motto', null, 'org.other')", "undefined");
-	OO_CHECK_EQ(sUniverse->_lastSet, std::string("0 7 motto=(null) from org.other layer 3"));
+	EXPECT_EQ(sUniverse->_lastSet, std::string("0 7 motto=(null) from org.other layer 3"));
 	OO_CHECK_EVAL("lave.setProperty(4, 'motto', 'x')", "threw: bad arguments: SystemInfo.setProperty(3) - / layer must be 0, 1, 2 or 3");
 	OO_CHECK_EVAL("lave.setProperty('a', 'motto', 'x')", "threw: bad arguments: SystemInfo.setProperty(3) - / setProperty(layer, property, value [,manifest])");
 	OO_CHECK_EVAL("lave.setProperty(1, 'motto')", "threw: bad arguments: SystemInfo.setProperty(2) - / setProperty(layer, property, value [,manifest])");
@@ -834,7 +835,7 @@ OO_TEST(methods)
 }
 
 
-OO_TEST(staticMethods)
+TEST(OOJSSystemInfo, staticMethods)
 {
 	SetUpContext();
 	// filteredSystems: every system of the player's galaxy, through the predicate, with this.
@@ -843,12 +844,12 @@ OO_TEST(staticMethods)
 	OO_CHECK_EVAL("SystemInfo.filteredSystems(null, function (s) { return false; }).length", "0");
 	OO_CHECK_EVAL("SystemInfo.filteredSystems({}, 5)", "threw: bad arguments: SystemInfo.filteredSystems(2) - / this and predicate function");
 	sPlayer->_galaxy = 0;
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
 	// setInterstellarProperty(galaxy, from, to, layer, key, value [, manifest]): in the system manager.
 	OO_CHECK_EVAL("SystemInfo.setInterstellarProperty(0, 7, 10, 2, 'danger', 'high')", "undefined");
-	OO_CHECK(sUniverse->_systemManager->getProperty("danger", "interstellar: 0 7 10") == oo::PList(std::string("high")));
+	EXPECT_TRUE(sUniverse->_systemManager->getProperty("danger", "interstellar: 0 7 10") == oo::PList(std::string("high")));
 	OO_CHECK_EVAL("SystemInfo.setInterstellarProperty(0, 7, 10, 2, 'danger', null)", "undefined");
-	OO_CHECK(sUniverse->_systemManager->getProperty("danger", "interstellar: 0 7 10").isNull());
+	EXPECT_TRUE(sUniverse->_systemManager->getProperty("danger", "interstellar: 0 7 10").isNull());
 	OO_CHECK_EVAL("SystemInfo.setInterstellarProperty(8, 7, 10, 2, 'danger', 'x')", "threw: bad arguments: SystemInfo.setInterstellarProperty(3) - / galaxy out of range");
 	OO_CHECK_EVAL("SystemInfo.setInterstellarProperty(0, 256, 10, 2, 'danger', 'x')", "threw: bad arguments: SystemInfo.setInterstellarProperty(3) - / fromsystem out of range");
 	OO_CHECK_EVAL("SystemInfo.setInterstellarProperty(0, 7, -1, 2, 'danger', 'x')", "threw: bad arguments: SystemInfo.setInterstellarProperty(3) - / tosystem out of range");
@@ -857,7 +858,7 @@ OO_TEST(staticMethods)
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSSystemInfo, otherObjects)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("SystemInfo.prototype.galaxyID", "undefined");	// the prototype: left to the engine
@@ -866,15 +867,12 @@ OO_TEST(otherObjects)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSSystemInfo, nativeExceptions)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("info(0, 99).internalCoordinates", "threw: Native exception: coordinates boom");
 	OO_CHECK_EVAL("info(0, 98).coordinates", "threw: Native exception: cxx boom");
 	OO_CHECK_EVAL("lave.coordinates", "7,7,0");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

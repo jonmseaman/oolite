@@ -23,10 +23,11 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "Description.h"
 #include "SystemDescriptionManager.h"
 #include "ResourceManager.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Data.hpp"
 #include "oofnd/FileSystem.hpp"
@@ -82,50 +83,50 @@ std::string UserName() {
 
 }  // namespace
 
-OO_TEST(stateBeforeAnyScan) {
+TEST(ResourceManager, stateBeforeAnyScan) {
   {
-    OO_CHECK(ResourceManager::useAddOns() == std::nullopt);
-    OO_CHECK(ResourceManager::errors() == std::nullopt);
-    OO_CHECK(ResourceManager::OXPsWithMessagesFound().empty());
-    OO_CHECK(ResourceManager::manifestForIdentifier("org.test.none").isNull());
+    EXPECT_TRUE(ResourceManager::useAddOns() == std::nullopt);
+    EXPECT_TRUE(ResourceManager::errors() == std::nullopt);
+    EXPECT_TRUE(ResourceManager::OXPsWithMessagesFound().empty());
+    EXPECT_TRUE(ResourceManager::manifestForIdentifier("org.test.none").isNull());
     ResourceManager::clearCaches();
   }
 }
 
-OO_TEST(rootPathsAreTheResourcePaths) {
+TEST(ResourceManager, rootPathsAreTheResourcePaths) {
   {
     const oo::ResourcePaths paths = oo::ResourcePaths::current();
     const std::string builtIn =
         oo::fs::utf8String(paths.builtInResourcesDirectory());
-    OO_CHECK(ResourceManager::builtInPath() ==
+    EXPECT_TRUE(ResourceManager::builtInPath() ==
              std::optional<std::string>(builtIn));
 
     std::vector<std::string> userRoots;
     for (const oo::fs::Path& path : paths.userRootDirectories())
       userRoots.push_back(oo::fs::utf8String(path));
-    OO_CHECK(ResourceManager::userRootPaths() == userRoots);
+    EXPECT_TRUE(ResourceManager::userRootPaths() == userRoots);
 
     const std::vector<std::string> roots = ResourceManager::rootPaths();
-    OO_CHECK_EQ(roots.size(), userRoots.size() + 2);
-    OO_CHECK(roots.size() >= 2 && roots[0] == builtIn);
-    OO_CHECK(roots.size() >= 2 &&
+    EXPECT_EQ(roots.size(), userRoots.size() + 2);
+    EXPECT_TRUE(roots.size() >= 2 && roots[0] == builtIn);
+    EXPECT_TRUE(roots.size() >= 2 &&
              roots[1] == oo::fs::utf8String(paths.managedAddOnsDirectory()));
-    OO_CHECK(roots.size() >= 2 &&
+    EXPECT_TRUE(roots.size() >= 2 &&
              std::vector<std::string>(roots.begin() + 2, roots.end()) ==
                  userRoots);
-    OO_CHECK(ResourceManager::rootPaths() == roots);  // computed once
+    EXPECT_TRUE(ResourceManager::rootPaths() == roots);  // computed once
   }
 }
 
-OO_TEST(maskUserName) {
+TEST(ResourceManager, maskUserName) {
   {
-    OO_CHECK(ResourceManager::maskUserName("jon", "C:/Users/jon/AddOns") ==
+    EXPECT_TRUE(ResourceManager::maskUserName("jon", "C:/Users/jon/AddOns") ==
              std::optional<std::string>("C:/Users/*/AddOns"));
-    OO_CHECK(ResourceManager::maskUserName("jon", "/home/jon/jon.oxp") ==
+    EXPECT_TRUE(ResourceManager::maskUserName("jon", "/home/jon/jon.oxp") ==
              std::optional<std::string>("/home/*/*.oxp"));
-    OO_CHECK(ResourceManager::maskUserName("jon", "/srv/oolite") ==
+    EXPECT_TRUE(ResourceManager::maskUserName("jon", "/srv/oolite") ==
              std::optional<std::string>("/srv/oolite"));
-    OO_CHECK(ResourceManager::maskUserName("jon", "") ==
+    EXPECT_TRUE(ResourceManager::maskUserName("jon", "") ==
              std::optional<std::string>(""));
 
     // The array form masks the name of the user running the game, in every
@@ -135,54 +136,54 @@ OO_TEST(maskUserName) {
       const std::vector<std::string> masked =
           ResourceManager::maskUserNameInPathArray(
               {"/a/" + user + "/b", "/c/d"});
-      OO_CHECK(masked == (std::vector<std::string>{"/a/*/b", "/c/d"}));
+      EXPECT_TRUE(masked == (std::vector<std::string>{"/a/*/b", "/c/d"}));
     }
-    OO_CHECK(ResourceManager::maskUserNameInPathArray({}).empty());
+    EXPECT_TRUE(ResourceManager::maskUserNameInPathArray({}).empty());
   }
 }
 
-OO_TEST(externalPathsAreTheSearchPathsWithoutAScan) {
+TEST(ResourceManager, externalPathsAreTheSearchPathsWithoutAScan) {
   {
     ResourceManager::addExternalPath("ext/one.oxp");
     ResourceManager::addExternalPath("ext/two.oxp");
     ResourceManager::addExternalPath("ext/one.oxp");  // already there
     const std::vector<std::string> expected{"ext/one.oxp", "ext/two.oxp"};
-    OO_CHECK(ResourceManager::paths() == expected);
-    OO_CHECK(ResourceManager::pathsWithAddOns() == expected);
-    OO_CHECK(ResourceManager::useAddOns() ==
+    EXPECT_TRUE(ResourceManager::paths() == expected);
+    EXPECT_TRUE(ResourceManager::pathsWithAddOns() == expected);
+    EXPECT_TRUE(ResourceManager::useAddOns() ==
              std::nullopt);  // no scan, so no selection
 
     // -reset forgets them (the next -paths would scan again, which the test
     // does not do).
     ResourceManager::reset();
-    OO_CHECK(ResourceManager::useAddOns() == std::nullopt);
-    OO_CHECK(ResourceManager::errors() == std::nullopt);
+    EXPECT_TRUE(ResourceManager::useAddOns() == std::nullopt);
+    EXPECT_TRUE(ResourceManager::errors() == std::nullopt);
     ResourceManager::addExternalPath("ext/three.oxp");
-    OO_CHECK(ResourceManager::paths() ==
+    EXPECT_TRUE(ResourceManager::paths() ==
              std::vector<std::string>{"ext/three.oxp"});
     ResourceManager::reset();
   }
 }
 
-OO_TEST(cxxAPIAnswersTheSame) {
+TEST(ResourceManager, cxxAPIAnswersTheSame) {
   {
     // The static members.
-    OO_CHECK(ResourceManager::builtInPath() == ResourceManager::builtInPath());
-    OO_CHECK(ResourceManager::rootPaths() == ResourceManager::rootPaths());
-    OO_CHECK(ResourceManager::userRootPaths() ==
+    EXPECT_TRUE(ResourceManager::builtInPath() == ResourceManager::builtInPath());
+    EXPECT_TRUE(ResourceManager::rootPaths() == ResourceManager::rootPaths());
+    EXPECT_TRUE(ResourceManager::userRootPaths() ==
              ResourceManager::userRootPaths());
-    OO_CHECK(ResourceManager::maskUserName("jon", "/home/jon") ==
+    EXPECT_TRUE(ResourceManager::maskUserName("jon", "/home/jon") ==
              std::optional<std::string>("/home/*"));
-    OO_CHECK(ResourceManager::useAddOns() == std::nullopt);
-    OO_CHECK(ResourceManager::errors() == std::nullopt);
-    OO_CHECK(ResourceManager::manifestForIdentifier("org.test.none").isNull());
-    OO_CHECK(ResourceManager::OXPsWithMessagesFound().empty());
+    EXPECT_TRUE(ResourceManager::useAddOns() == std::nullopt);
+    EXPECT_TRUE(ResourceManager::errors() == std::nullopt);
+    EXPECT_TRUE(ResourceManager::manifestForIdentifier("org.test.none").isNull());
+    EXPECT_TRUE(ResourceManager::OXPsWithMessagesFound().empty());
     ResourceManager::addExternalPath("ext/cxx.oxp");
-    OO_CHECK(ResourceManager::paths() ==
+    EXPECT_TRUE(ResourceManager::paths() ==
              std::vector<std::string>{"ext/cxx.oxp"});
-    OO_CHECK(ResourceManager::paths() ==
+    EXPECT_TRUE(ResourceManager::paths() ==
              std::vector<std::string>{"ext/cxx.oxp"});
-    OO_CHECK(ResourceManager::pathsWithAddOns() ==
+    EXPECT_TRUE(ResourceManager::pathsWithAddOns() ==
              std::vector<std::string>{"ext/cxx.oxp"});
     ResourceManager::reset();
     ResourceManager::clearCaches();
@@ -200,14 +201,14 @@ namespace {
 
 void WriteText(const std::filesystem::path& path, const std::string& text) {
   std::filesystem::create_directories(path.parent_path());
-  OO_CHECK(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
+  EXPECT_TRUE(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
                              oo::fs::WriteMode::kDirect)
                .has_value());
 }
 
 oo::PList Manifest(const char* text) {
   auto result = oo::parsePropertyList(text);
-  OO_CHECK(result.has_value());
+  EXPECT_TRUE(result.has_value());
   return result ? *result : oo::PList();
 }
 
@@ -218,38 +219,38 @@ bool EndsWith(const std::string& s, const std::string& suffix) {
 
 }  // namespace
 
-OO_TEST(versionsAndCompatibility) {
+TEST(ResourceManager, versionsAndCompatibility) {
   {
     const oo::PList range =
         Manifest("{ version = \"1.0\"; maximum_version = \"2.0\"; }");
-    OO_CHECK(ResourceManager::matchVersions(range, "1.5"));
-    OO_CHECK(ResourceManager::matchVersions(range, "1.0"));
-    OO_CHECK(ResourceManager::matchVersions(range, "2.0"));
-    OO_CHECK(!ResourceManager::matchVersions(range, "0.9"));
-    OO_CHECK(!ResourceManager::matchVersions(range, "2.0.1"));
-    OO_CHECK(ResourceManager::matchVersions(Manifest("{}"), ""));
-    OO_CHECK(
+    EXPECT_TRUE(ResourceManager::matchVersions(range, "1.5"));
+    EXPECT_TRUE(ResourceManager::matchVersions(range, "1.0"));
+    EXPECT_TRUE(ResourceManager::matchVersions(range, "2.0"));
+    EXPECT_TRUE(!ResourceManager::matchVersions(range, "0.9"));
+    EXPECT_TRUE(!ResourceManager::matchVersions(range, "2.0.1"));
+    EXPECT_TRUE(ResourceManager::matchVersions(Manifest("{}"), ""));
+    EXPECT_TRUE(
         !ResourceManager::matchVersions(Manifest("{ version = \"1\"; }"), ""));
 
     // The game's version is the scratch Info-gnustep.plist's, 9.9.9.
-    OO_CHECK(ResourceManager::checkVersionCompatibility(
+    EXPECT_TRUE(ResourceManager::checkVersionCompatibility(
         Manifest("{ required_oolite_version = \"1.80\"; }"), "t"));
-    OO_CHECK(!ResourceManager::checkVersionCompatibility(
+    EXPECT_TRUE(!ResourceManager::checkVersionCompatibility(
         Manifest("{ required_oolite_version = \"10.0\"; }"), "t"));
-    OO_CHECK(!ResourceManager::checkVersionCompatibility(
+    EXPECT_TRUE(!ResourceManager::checkVersionCompatibility(
         Manifest("{ required_oolite_version = \"1.0\"; maximum_oolite_version "
                  "= \"9.0\"; }"),
         "t"));
-    OO_CHECK(ResourceManager::checkVersionCompatibility(
+    EXPECT_TRUE(ResourceManager::checkVersionCompatibility(
         Manifest("{ required_oolite_version = \"1.0\"; maximum_oolite_version "
                  "= \"\"; }"),
         std::nullopt));
-    OO_CHECK(ResourceManager::checkVersionCompatibility(
+    EXPECT_TRUE(ResourceManager::checkVersionCompatibility(
         Manifest("{}"), "t"));  // nothing required
   }
 }
 
-OO_TEST(scanKeepsTheAddOnsWhoseManifestsAllowThem) {
+TEST(ResourceManager, scanKeepsTheAddOnsWhoseManifestsAllowThem) {
   {
     const std::filesystem::path addOns =
         std::filesystem::current_path() / "AddOns";
@@ -295,18 +296,18 @@ OO_TEST(scanKeepsTheAddOnsWhoseManifestsAllowThem) {
       else if (EndsWith(path, ".oxp"))
         sawOther = true;
     }
-    OO_CHECK(sawA && sawH && !sawOther);
-    OO_CHECK(ResourceManager::useAddOns() ==
+    EXPECT_TRUE(sawA && sawH && !sawOther);
+    EXPECT_TRUE(ResourceManager::useAddOns() ==
              std::optional<std::string>(""));  // the scan chose "all"
 
     const oo::PList a = ResourceManager::manifestForIdentifier("org.test.a");
-    OO_CHECK(a.isDict() && EndsWith(a.get<std::string>("file_path"), "a.oxp"));
-    OO_CHECK(a.find("required_by") != nullptr &&
+    EXPECT_TRUE(a.isDict() && EndsWith(a.get<std::string>("file_path"), "a.oxp"));
+    EXPECT_TRUE(a.find("required_by") != nullptr &&
              a.find("required_by")->count() == 1);  // h requires it
-    OO_CHECK(ResourceManager::manifestForIdentifier("org.test.b").isNull());
-    OO_CHECK(ResourceManager::manifestForIdentifier("org.test.c").isNull());
-    OO_CHECK(ResourceManager::manifestForIdentifier("org.test.f").isNull());
-    OO_CHECK(ResourceManager::OXPsWithMessagesFound() ==
+    EXPECT_TRUE(ResourceManager::manifestForIdentifier("org.test.b").isNull());
+    EXPECT_TRUE(ResourceManager::manifestForIdentifier("org.test.c").isNull());
+    EXPECT_TRUE(ResourceManager::manifestForIdentifier("org.test.f").isNull());
+    EXPECT_TRUE(ResourceManager::OXPsWithMessagesFound() ==
              std::vector<std::string>{"a.oxp"});
 
     // With a in the list, c's conflict and b's requirement are seen again (not
@@ -314,49 +315,49 @@ OO_TEST(scanKeepsTheAddOnsWhoseManifestsAllowThem) {
     const oo::PList c = Manifest(
         "{ identifier = \"org.test.c\"; title = C; conflict_oxps = ( { "
         "identifier = \"org.test.a\"; } ); }");
-    OO_CHECK(ResourceManager::manifestHasConflicts(c, false));
-    OO_CHECK(!ResourceManager::manifestHasConflicts(
+    EXPECT_TRUE(ResourceManager::manifestHasConflicts(c, false));
+    EXPECT_TRUE(!ResourceManager::manifestHasConflicts(
         Manifest("{ conflict_oxps = ( { identifier = \"org.test.zz\"; } ); }"),
         false));
     const oo::PList b = Manifest(
         "{ identifier = \"org.test.b\"; title = B; requires_oxps = ( { "
         "identifier = \"org.test.a\"; version = \"2.0\"; } ); }");
-    OO_CHECK(ResourceManager::manifestHasMissingDependencies(b, false));
-    OO_CHECK(ResourceManager::manifest(
+    EXPECT_TRUE(ResourceManager::manifestHasMissingDependencies(b, false));
+    EXPECT_TRUE(ResourceManager::manifest(
         b, Manifest("{ identifier = \"org.test.a\"; version = \"2.0\"; }"),
         false));
-    OO_CHECK(!ResourceManager::manifest(
+    EXPECT_TRUE(!ResourceManager::manifest(
         b, Manifest("{ identifier = \"org.test.a\"; }"), false));
-    OO_CHECK(
+    EXPECT_TRUE(
         !ResourceManager::manifestHasMissingDependencies(Manifest("{}"), false));
 
     // The rejections were recorded; with no universe their texts are empty, and
     // reading them clears them.
     const std::optional<std::string> errors = ResourceManager::errors();
-    OO_CHECK(errors == std::optional<std::string>(""));
-    OO_CHECK(ResourceManager::errors() == std::nullopt);
+    EXPECT_TRUE(errors == std::optional<std::string>(""));
+    EXPECT_TRUE(ResourceManager::errors() == std::nullopt);
 
     ResourceManager::reset();
   }
 }
 
-OO_TEST(cxxSlice2API) {
+TEST(ResourceManager, cxxSlice2API) {
   {
     const oo::PList range =
         Manifest("{ version = \"1.0\"; maximum_version = \"2.0\"; }");
-    OO_CHECK(ResourceManager::matchVersions(range, "1.5"));
-    OO_CHECK(!ResourceManager::matchVersions(range, "3"));
-    OO_CHECK(ResourceManager::checkVersionCompatibility(
+    EXPECT_TRUE(ResourceManager::matchVersions(range, "1.5"));
+    EXPECT_TRUE(!ResourceManager::matchVersions(range, "3"));
+    EXPECT_TRUE(ResourceManager::checkVersionCompatibility(
         Manifest("{ required_oolite_version = \"1.0\"; }"), "t"));
-    OO_CHECK(!ResourceManager::checkVersionCompatibility(
+    EXPECT_TRUE(!ResourceManager::checkVersionCompatibility(
         Manifest("{ required_oolite_version = \"10.0\"; }"), std::nullopt));
-    OO_CHECK(!ResourceManager::manifestHasConflicts(Manifest("{}"), false));
-    OO_CHECK(!ResourceManager::manifestHasMissingDependencies(Manifest("{}"),
+    EXPECT_TRUE(!ResourceManager::manifestHasConflicts(Manifest("{}"), false));
+    EXPECT_TRUE(!ResourceManager::manifestHasMissingDependencies(Manifest("{}"),
                                                               false));
-    OO_CHECK(ResourceManager::manifest(
+    EXPECT_TRUE(ResourceManager::manifest(
         Manifest("{ title = X; }"),
         Manifest("{ identifier = \"org.test.none\"; }"), false));
-    OO_CHECK(ResourceManager::matchVersions(range, "1.5") ==
+    EXPECT_TRUE(ResourceManager::matchVersions(range, "1.5") ==
              ResourceManager::matchVersions(range, "1.5"));
   }
 }
@@ -367,7 +368,7 @@ OO_TEST(cxxSlice2API) {
 // scan), each with Config plists that the test writes. No cache: every load is
 // asked with the cache off, or for a file name no other test loads.
 
-OO_TEST(mergedPlistsFromTheSearchPaths) {
+TEST(ResourceManager, mergedPlistsFromTheSearchPaths) {
   {
     namespace stdfs = std::filesystem;
     const stdfs::path work = stdfs::current_path();
@@ -395,7 +396,7 @@ OO_TEST(mergedPlistsFromTheSearchPaths) {
 
     ResourceManager::reset();
     const std::vector<std::string> paths = ResourceManager::paths();
-    OO_CHECK(paths.size() >= 2);
+    EXPECT_TRUE(paths.size() >= 2);
 
     // OOResourceMergeMode::kNone: the last file in search order; OOResourceMergeMode::kBasic: top-level keys;
     // OOResourceMergeMode::kSmart: second level.
@@ -408,38 +409,38 @@ OO_TEST(mergedPlistsFromTheSearchPaths) {
     const oo::PList smart = ResourceManager::dictionaryFromFilesNamed(
         "oo-test-dict.plist", std::string("Config"), oo::ResourceMergeMode::kSmart, false);
     std::printf("  MERGE_SMART: %s\n", oo::DescriptionOf(smart).c_str());
-    OO_CHECK(basic.find("base") != nullptr && basic.find("fromA") != nullptr &&
+    EXPECT_TRUE(basic.find("base") != nullptr && basic.find("fromA") != nullptr &&
              basic.find("fromH") != nullptr);
-    OO_CHECK(smart.find("shared") != nullptr &&
+    EXPECT_TRUE(smart.find("shared") != nullptr &&
              smart.find("shared")->find("x") != nullptr &&
              smart.find("shared")->find("z") != nullptr);
-    OO_CHECK(ResourceManager::dictionaryFromFilesNamed(
+    EXPECT_TRUE(ResourceManager::dictionaryFromFilesNamed(
                  "oo-test-none.plist", std::string("Config"), true)
                  .isNull());
 
     const oo::PList array = ResourceManager::arrayFromFilesNamed(
         "oo-test-array.plist", std::string("Config"), true, false);
     std::printf("  array merged: %s\n", oo::DescriptionOf(array).c_str());
-    OO_CHECK(array.isArray());
+    EXPECT_TRUE(array.isArray());
     const oo::PList arrayLast = ResourceManager::arrayFromFilesNamed(
         "oo-test-array.plist", std::string("Config"), false, false);
     std::printf("  array last: %s\n", oo::DescriptionOf(arrayLast).c_str());
-    OO_CHECK(ResourceManager::arrayFromFilesNamed("oo-test-none.plist",
+    EXPECT_TRUE(ResourceManager::arrayFromFilesNamed("oo-test-none.plist",
                                                   std::string("Config"), true)
                  .isNull());
 
     // The built-in path is not excluded for a core plist; an add-on is, unless
     // it overrides it.
-    OO_CHECK(!ResourceManager::corePlist("oo-test-dict.plist",
+    EXPECT_TRUE(!ResourceManager::corePlist("oo-test-dict.plist",
                                          *ResourceManager::builtInPath()));
 
     const oo::PList roles = ResourceManager::roleCategoriesDictionary();
     std::printf("  role categories: %s\n", oo::DescriptionOf(roles).c_str());
-    OO_CHECK(roles.isDict() && roles.find("oolite-trader") != nullptr &&
+    EXPECT_TRUE(roles.isDict() && roles.find("oolite-trader") != nullptr &&
              roles.find("oolite-test") != nullptr);
 
     const oo::PList logControl = ResourceManager::logControlDictionary();
-    OO_CHECK(logControl.isDict());
+    EXPECT_TRUE(logControl.isDict());
     std::printf(
         "  log control oo-test.*: base=%s overridden=%s fromA=%s\n",
         logControl.find("oo-test.base")
@@ -452,12 +453,12 @@ OO_TEST(mergedPlistsFromTheSearchPaths) {
             ? oo::DescriptionOf(*logControl.find("oo-test.fromA")).c_str()
             : "-");
 
-    OO_CHECK(ResourceManager::whitelistDictionary()
+    EXPECT_TRUE(ResourceManager::whitelistDictionary()
                  .isNull());  // no whitelist.plist in the scratch data
   }
 }
 
-OO_TEST(equipmentAndStarListMerging) {
+TEST(ResourceManager, equipmentAndStarListMerging) {
   {
     // Equipment lists: an entry of an earlier file whose key (index 3) a later
     // file also has is replaced by the later one.
@@ -473,9 +474,9 @@ OO_TEST(equipmentAndStarListMerging) {
     ResourceManager::handleEquipmentListMerging(lists, 3);
     std::printf("  equipment lists merged: %s\n",
                 oo::DescriptionOf(lists).c_str());
-    OO_CHECK(lists.at(0) != nullptr && lists.at(0)->at(0) != nullptr &&
+    EXPECT_TRUE(lists.at(0) != nullptr && lists.at(0)->at(0) != nullptr &&
              lists.at(0)->at(0)->at<std::string>(2) == "New");
-    OO_CHECK(lists.at(0) != nullptr && lists.at(0)->at(1) != nullptr &&
+    EXPECT_TRUE(lists.at(0) != nullptr && lists.at(0)->at(1) != nullptr &&
              lists.at(0)->at(1)->at<std::string>(2) == "Keep");
 
     // Star and nebula lists: the same by the entry itself (or a dictionary's
@@ -489,7 +490,7 @@ OO_TEST(equipmentAndStarListMerging) {
             {"key", oo::PList("k")}, {"texture", oo::PList("new.png")}})})});
     ResourceManager::handleStarNebulaListMerging(stars);
     std::printf("  star lists merged: %s\n", oo::DescriptionOf(stars).c_str());
-    OO_CHECK(stars.at(0) != nullptr && stars.at(0)->at(1) != nullptr &&
+    EXPECT_TRUE(stars.at(0) != nullptr && stars.at(0)->at(1) != nullptr &&
              stars.at(0)->at(1)->get<std::string>("texture") == "new.png");
 
     // No equipment-overrides.plist: the lists are unchanged.
@@ -497,34 +498,34 @@ OO_TEST(equipmentAndStarListMerging) {
         oo::PList(1), oo::PList(10), oo::PList("Name"), oo::PList("EQ_A")})});
     const oo::PList before = equipment;
     ResourceManager::handleEquipmentOverrides(equipment);
-    OO_CHECK(oo::DescriptionOf(equipment) == oo::DescriptionOf(before));
+    EXPECT_TRUE(oo::DescriptionOf(equipment) == oo::DescriptionOf(before));
   }
 }
 
-OO_TEST(cxxSlice3API) {
+TEST(ResourceManager, cxxSlice3API) {
   {
-    OO_CHECK(ResourceManager::dictionaryFromFilesNamed("oo-test-dict.plist",
+    EXPECT_TRUE(ResourceManager::dictionaryFromFilesNamed("oo-test-dict.plist",
                                                        std::string("Config"),
                                                        oo::ResourceMergeMode::kBasic, false)
                  .find("fromA") != nullptr);
-    OO_CHECK(ResourceManager::dictionaryFromFilesNamed(
+    EXPECT_TRUE(ResourceManager::dictionaryFromFilesNamed(
                  "oo-test-none.plist", std::string("Config"), true)
                  .isNull());
-    OO_CHECK(ResourceManager::arrayFromFilesNamed(
+    EXPECT_TRUE(ResourceManager::arrayFromFilesNamed(
                  "oo-test-array.plist", std::string("Config"), true, false)
                  .isArray());
-    OO_CHECK(!ResourceManager::corePlist("oo-test-dict.plist",
+    EXPECT_TRUE(!ResourceManager::corePlist("oo-test-dict.plist",
                                          *ResourceManager::builtInPath()));
-    OO_CHECK(ResourceManager::whitelistDictionary().isNull());
-    OO_CHECK(ResourceManager::roleCategoriesDictionary().isDict());
-    OO_CHECK(ResourceManager::logControlDictionary().isDict());
+    EXPECT_TRUE(ResourceManager::whitelistDictionary().isNull());
+    EXPECT_TRUE(ResourceManager::roleCategoriesDictionary().isDict());
+    EXPECT_TRUE(ResourceManager::logControlDictionary().isDict());
   }
 }
 
 // --- File lookup, sounds, music, strings, scripts, diagnostics --- Over the
 // same scratch game folder.
 
-OO_TEST(singleFileLookups) {
+TEST(ResourceManager, singleFileLookups) {
   {
     namespace stdfs = std::filesystem;
     const stdfs::path work = stdfs::current_path();
@@ -540,85 +541,85 @@ OO_TEST(singleFileLookups) {
     // data), with the folder, else without it; nullopt when no path has it.
     const std::optional<std::string> path = ResourceManager::pathForFileNamed(
         "oo-test-text.txt", std::string("Config"), false);
-    OO_CHECK(path.has_value() &&
+    EXPECT_TRUE(path.has_value() &&
              EndsWith(*path, "a.oxp/Config/oo-test-text.txt"));
     const std::optional<std::string> loose = ResourceManager::pathForFileNamed(
         "oo-test-loose.txt", std::string("Config"), false);
-    OO_CHECK(loose.has_value() &&
+    EXPECT_TRUE(loose.has_value() &&
              EndsWith(*loose, "Resources/oo-test-loose.txt"));
-    OO_CHECK(ResourceManager::pathForFileNamed(
+    EXPECT_TRUE(ResourceManager::pathForFileNamed(
                  "oo-test-missing.txt", std::string("Config")) == std::nullopt);
-    OO_CHECK(ResourceManager::pathForFileNamed("oo-test-text.txt", std::nullopt,
+    EXPECT_TRUE(ResourceManager::pathForFileNamed("oo-test-text.txt", std::nullopt,
                                                false) == std::nullopt);
 
-    OO_CHECK(ResourceManager::stringFromFilesNamed("oo-test-text.txt",
+    EXPECT_TRUE(ResourceManager::stringFromFilesNamed("oo-test-text.txt",
                                                    std::string("Config")) ==
              std::optional<std::string>("hello, a.oxp"));
-    OO_CHECK(ResourceManager::stringFromFilesNamed("oo-test-missing.txt",
+    EXPECT_TRUE(ResourceManager::stringFromFilesNamed("oo-test-missing.txt",
                                                    std::string("Config"),
                                                    false) == std::nullopt);
 
     // No such sound or music file: nil.
-    OO_CHECK(ResourceManager::ooSoundNamed("oo-test-missing.ogg",
+    EXPECT_TRUE(ResourceManager::ooSoundNamed("oo-test-missing.ogg",
                                            std::string("Sounds")) == nullptr);
-    OO_CHECK(!ResourceManager::ooMusicNamed("oo-test-missing.ogg",
+    EXPECT_TRUE(!ResourceManager::ooMusicNamed("oo-test-missing.ogg",
                                             std::string("Music")));
 
     // No shader-uniform-bindings.plist and no material-defaults.plist in the
     // scratch data.
-    OO_CHECK(ResourceManager::shaderBindingTypesDictionary().isNull());
-    OO_CHECK(ResourceManager::materialDefaults().isNull());
+    EXPECT_TRUE(ResourceManager::shaderBindingTypesDictionary().isNull());
+    EXPECT_TRUE(ResourceManager::materialDefaults().isNull());
   }
 }
 
-OO_TEST(scriptsAndSystemsAndDiagnostics) {
+TEST(ResourceManager, scriptsAndSystemsAndDiagnostics) {
   {
     // No add-on has world scripts.
-    OO_CHECK(ResourceManager::loadScripts().empty());
+    EXPECT_TRUE(ResourceManager::loadScripts().empty());
 
     // No planetinfo.plist: a manager with nothing set, made anew on each call.
     std::shared_ptr<oo::SystemDescriptionManager> manager =
         ResourceManager::systemDescriptionManager();
-    OO_CHECK(manager != nullptr);
-    OO_CHECK(manager != ResourceManager::systemDescriptionManager());
+    EXPECT_TRUE(manager != nullptr);
+    EXPECT_TRUE(manager != ResourceManager::systemDescriptionManager());
 
     // Diagnostics go under the log folder, which is under the scratch home.
     const std::optional<std::string> logs =
         ResourceManager::diagnosticFileLocation();
     std::printf("  diagnostics at: %s\n", logs ? logs->c_str() : "(none)");
     if (logs.has_value()) {
-      OO_CHECK(ResourceManager::writeDiagnosticString(
+      EXPECT_TRUE(ResourceManager::writeDiagnosticString(
           "diagnostic text", "oo-test/.hidden/note.txt"));
       const auto written = oo::fs::readFile(oo::fs::pathFromUTF8(*logs) /
                                             "oo-test" / "!hidden" / "note.txt");
-      OO_CHECK(written.has_value() &&
+      EXPECT_TRUE(written.has_value() &&
                std::string(written->stringView()) == "diagnostic text");
-      OO_CHECK(ResourceManager::writeDiagnosticPList(
+      EXPECT_TRUE(ResourceManager::writeDiagnosticPList(
           oo::PList(oo::PList::Dict{{"k", oo::PList("v")}}),
           "oo-test-plist.plist"));
     }
   }
 }
 
-OO_TEST(cxxSlice4API) {
+TEST(ResourceManager, cxxSlice4API) {
   {
-    OO_CHECK(ResourceManager::stringFromFilesNamed("oo-test-text.txt",
+    EXPECT_TRUE(ResourceManager::stringFromFilesNamed("oo-test-text.txt",
                                                    std::string("Config")) ==
              std::optional<std::string>("hello, a.oxp"));
-    OO_CHECK(ResourceManager::pathForFileNamed("oo-test-missing.txt",
+    EXPECT_TRUE(ResourceManager::pathForFileNamed("oo-test-missing.txt",
                                                std::string("Config"),
                                                false) == std::nullopt);
-    OO_CHECK(ResourceManager::ooSoundNamed("oo-test-missing.ogg",
+    EXPECT_TRUE(ResourceManager::ooSoundNamed("oo-test-missing.ogg",
                                            std::string("Sounds")) == nullptr);
-    OO_CHECK(ResourceManager::shaderBindingTypesDictionary().isNull());
-    OO_CHECK(ResourceManager::loadScripts().empty());
-    OO_CHECK(ResourceManager::systemDescriptionManager().get() != nullptr);
-    OO_CHECK(ResourceManager::diagnosticFileLocation() ==
+    EXPECT_TRUE(ResourceManager::shaderBindingTypesDictionary().isNull());
+    EXPECT_TRUE(ResourceManager::loadScripts().empty());
+    EXPECT_TRUE(ResourceManager::systemDescriptionManager().get() != nullptr);
+    EXPECT_TRUE(ResourceManager::diagnosticFileLocation() ==
              ResourceManager::diagnosticFileLocation());
     // A new C++ manager.
     std::shared_ptr<oo::SystemDescriptionManager> manager =
         ResourceManager::systemDescriptionManager();
-    OO_CHECK(manager != nullptr);
+    EXPECT_TRUE(manager != nullptr);
   }
 }
 
@@ -628,25 +629,25 @@ OO_TEST(cxxSlice4API) {
    object, so nothing waits for a scope's drain, and nothing is counted as
         autoreleased without a scope, whether or not a scope is open.
 */
-OO_TEST(soundLookupHandsNothingToTheScope) {
+TEST(ResourceManager, soundLookupHandsNothingToTheScope) {
   const std::size_t leaked = oo::AutoreleaseScope::leakedWithoutScope();
   {
     oo::AutoreleaseScope scope;
-    OO_CHECK(ResourceManager::ooSoundNamed("oo-test-missing.ogg",
+    EXPECT_TRUE(ResourceManager::ooSoundNamed("oo-test-missing.ogg",
                                            std::string("Sounds")) == nullptr);
-    OO_CHECK(scope.pendingCount() == 0);
+    EXPECT_TRUE(scope.pendingCount() == 0);
   }
-  OO_CHECK(oo::AutoreleaseScope::current() == nullptr);
-  OO_CHECK(ResourceManager::ooSoundNamed("oo-test-missing.ogg",
+  EXPECT_TRUE(oo::AutoreleaseScope::current() == nullptr);
+  EXPECT_TRUE(ResourceManager::ooSoundNamed("oo-test-missing.ogg",
                                          std::string("Sounds")) == nullptr);
-  OO_CHECK(oo::AutoreleaseScope::leakedWithoutScope() == leaked);
+  EXPECT_TRUE(oo::AutoreleaseScope::leakedWithoutScope() == leaked);
 }
 
 // --- <name>.json5 where <name>.plist is asked for --- Over the same scratch
 // game folder: built-in data in JSON5 merges with an add-on's plist of the same
 // name, and a single file is found by its .plist name.
 
-OO_TEST(json5FilesStandInForPlists) {
+TEST(ResourceManager, json5FilesStandInForPlists) {
   namespace stdfs = std::filesystem;
   const stdfs::path work = stdfs::current_path();
   WriteText(work / "Resources" / "Config" / "oo-test-json5.json5",
@@ -662,18 +663,16 @@ OO_TEST(json5FilesStandInForPlists) {
       "oo-test-json5.plist", std::string("Config"), oo::ResourceMergeMode::kSmart, false);
   std::printf("  JSON5 + plist, MERGE_SMART: %s\n",
               oo::DescriptionOf(smart).c_str());
-  OO_CHECK(smart.find("base") != nullptr && smart.find("fromA") != nullptr);
-  OO_CHECK(smart.find("shared") != nullptr &&
+  EXPECT_TRUE(smart.find("base") != nullptr && smart.find("fromA") != nullptr);
+  EXPECT_TRUE(smart.find("shared") != nullptr &&
            smart.find("shared")->find("x") != nullptr &&
            smart.find("shared")->find("z") != nullptr);
 
   const std::optional<std::string> ai = ResourceManager::pathForFileNamed(
       "oo-test-json5AI.plist", std::string("AIs"), false);
-  OO_CHECK(ai.has_value() &&
+  EXPECT_TRUE(ai.has_value() &&
            EndsWith(*ai, "Resources/AIs/oo-test-json5AI.json5"));
-  OO_CHECK(ResourceManager::pathForFileNamed("oo-test-json5-missing.plist",
+  EXPECT_TRUE(ResourceManager::pathForFileNamed("oo-test-json5-missing.plist",
                                              std::string("AIs"),
                                              false) == std::nullopt);
 }
-
-OO_TEST_MAIN()

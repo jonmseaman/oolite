@@ -13,6 +13,8 @@
 	answers the engine. Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
@@ -82,7 +84,6 @@ public:
 #include "OOJSSun.h"
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstdint>
@@ -393,25 +394,25 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSSun, registration)
 {
 	SetUpContext();
 	const JSClassID sunClass = sSunObject->oo_jsClassID();
-	OO_CHECK(sunClass != 0 && OOJSClassName(sunClass) != nullptr && std::strcmp(OOJSClassName(sunClass), "Sun") == 0);
+	EXPECT_TRUE(sunClass != 0 && OOJSClassName(sunClass) != nullptr && std::strcmp(OOJSClassName(sunClass), "Sun") == 0);
 	JSValue prototype = JS_GetClassProto(sContext, sunClass);
-	OO_CHECK(JS_IsObject(prototype));
+	EXPECT_TRUE(JS_IsObject(prototype));
 	JS_FreeValue(sContext, prototype);
-	OO_CHECK(OOJSIsSubclass(sunClass, sFakeEntityClassID));
-	OO_CHECK_EQ(sConverters[sunClass], 1);
-	OO_CHECK(sSunObject->oo_jsClassName() == std::optional<std::string>("Sun"));
-	OO_CHECK(sSunObject->isVisibleToScripts());
+	EXPECT_TRUE(OOJSIsSubclass(sunClass, sFakeEntityClassID));
+	EXPECT_EQ(sConverters[sunClass], 1);
+	EXPECT_TRUE(sSunObject->oo_jsClassName() == std::optional<std::string>("Sun"));
+	EXPECT_TRUE(sSunObject->isVisibleToScripts());
 	OO_CHECK_EVAL("typeof Sun", "function");
 	OO_CHECK_EVAL("new Sun()", "threw: unconstructable");
 	OO_CHECK_EVAL("Object.getPrototypeOf(Sun.prototype) === Entity.prototype", "true");
@@ -419,7 +420,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSSun, properties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("sun.radius", "250000.5");
@@ -435,32 +436,32 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(nova)
+TEST(OOJSSun, nova)
 {
 	SetUpContext();
 	sSun->_novaCalls = 0;
 	OO_CHECK_EVAL("sun.goNova(30)", "undefined");
-	OO_CHECK(sSun->_willGoNova && sSun->_novaTime == 30 && sSun->_novaCalls == 1);
+	EXPECT_TRUE(sSun->_willGoNova && sSun->_novaTime == 30 && sSun->_novaCalls == 1);
 	OO_CHECK_EVAL("sun.isGoingNova", "true");
 	OO_CHECK_EVAL("sun.goNova()", "undefined");
-	OO_CHECK(sSun->_novaTime == 0 && sSun->_novaCalls == 2);
+	EXPECT_TRUE(sSun->_novaTime == 0 && sSun->_novaCalls == 2);
 	OO_CHECK_EVAL("sun.cancelNova()", "undefined");
-	OO_CHECK(!sSun->_willGoNova && sSun->_novaCalls == 3);
+	EXPECT_TRUE(!sSun->_willGoNova && sSun->_novaCalls == 3);
 	OO_CHECK_EVAL("sun.cancelNova()", "undefined");	// not going nova: nothing to cancel
-	OO_CHECK_EQ(sSun->_novaCalls, 3);
+	EXPECT_EQ(sSun->_novaCalls, 3);
 	// Gone nova: isGoingNova is false, and cancelNova() does nothing.
 	sSun->_willGoNova = true;
 	sSun->_goneNova = true;
 	OO_CHECK_EVAL("sun.hasGoneNova", "true");
 	OO_CHECK_EVAL("sun.isGoingNova", "false");
 	OO_CHECK_EVAL("sun.cancelNova()", "undefined");
-	OO_CHECK_EQ(sSun->_novaCalls, 3);
+	EXPECT_EQ(sSun->_novaCalls, 3);
 	sSun->_willGoNova = false;
 	sSun->_goneNova = false;
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSSun, otherObjects)
 {
 	OO_CHECK_EVAL("Object.getOwnPropertyDescriptor(Sun.prototype, 'radius').get.call(plainEntity)", "threw: Native method expected Sun, got [object Entity].");
 	OO_CHECK_EVAL("Sun.prototype.goNova.call({})", "threw: Native method expected Sun, got [object Object].");
@@ -468,7 +469,7 @@ OO_TEST(otherObjects)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSSun, nativeExceptions)
 {
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the entity is a JS error,
@@ -479,9 +480,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("sun.radius", "threw: Native exception: cxx boom");
 	sSun->_radius = 250000.5;
 	OO_CHECK_EVAL("sun.radius", "250000.5");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

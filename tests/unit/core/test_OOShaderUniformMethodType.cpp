@@ -11,10 +11,11 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "RegExpMatcher.h"
 #include "ShaderUniformMethodType.h"
 #include "ValueType.h"
-#include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 
 /*	OOMatrix.mm (the test's matrices) links the extension manager, whose
@@ -69,38 +70,36 @@ oo::ShaderUniformType TypeOf() {
 /*	The types of the return types, one each, are the types their encodings
    are given.
 */
-OO_TEST(typesFromEncodings) {
-  OO_CHECK(TypeOf<float>() == oo::kShaderUniformTypeFloat);
-  OO_CHECK(TypeOf<double>() == oo::kShaderUniformTypeDouble);
-  OO_CHECK(TypeOf<signed char>() == oo::kShaderUniformTypeChar);
-  OO_CHECK(TypeOf<unsigned char>() == oo::kShaderUniformTypeUnsignedChar);
-  OO_CHECK(TypeOf<signed short>() == oo::kShaderUniformTypeShort);
-  OO_CHECK(TypeOf<unsigned short>() == oo::kShaderUniformTypeUnsignedShort);
-  OO_CHECK(TypeOf<signed int>() == oo::kShaderUniformTypeInt);
-  OO_CHECK(TypeOf<unsigned int>() == oo::kShaderUniformTypeUnsignedInt);
-  OO_CHECK(TypeOf<signed long>() == oo::kShaderUniformTypeLong);
-  OO_CHECK(TypeOf<unsigned long>() == oo::kShaderUniformTypeUnsignedLong);
-  OO_CHECK(TypeOf<Vector>() == oo::kShaderUniformTypeVector);
-  OO_CHECK(TypeOf<HPVector>() == oo::kShaderUniformTypeHPVector);
-  OO_CHECK(TypeOf<Quaternion>() == oo::kShaderUniformTypeQuaternion);
-  OO_CHECK(TypeOf<oo::Matrix>() == oo::kShaderUniformTypeMatrix);
-  OO_CHECK(TypeOf<NSPoint>() == oo::kShaderUniformTypePoint);
-  OO_CHECK(TypeOf<oo::ObjectResult>() == oo::kShaderUniformTypeObject);
+TEST(OOShaderUniformMethodType, typesFromEncodings) {
+  EXPECT_TRUE(TypeOf<float>() == oo::kShaderUniformTypeFloat);
+  EXPECT_TRUE(TypeOf<double>() == oo::kShaderUniformTypeDouble);
+  EXPECT_TRUE(TypeOf<signed char>() == oo::kShaderUniformTypeChar);
+  EXPECT_TRUE(TypeOf<unsigned char>() == oo::kShaderUniformTypeUnsignedChar);
+  EXPECT_TRUE(TypeOf<signed short>() == oo::kShaderUniformTypeShort);
+  EXPECT_TRUE(TypeOf<unsigned short>() == oo::kShaderUniformTypeUnsignedShort);
+  EXPECT_TRUE(TypeOf<signed int>() == oo::kShaderUniformTypeInt);
+  EXPECT_TRUE(TypeOf<unsigned int>() == oo::kShaderUniformTypeUnsignedInt);
+  EXPECT_TRUE(TypeOf<signed long>() == oo::kShaderUniformTypeLong);
+  EXPECT_TRUE(TypeOf<unsigned long>() == oo::kShaderUniformTypeUnsignedLong);
+  EXPECT_TRUE(TypeOf<Vector>() == oo::kShaderUniformTypeVector);
+  EXPECT_TRUE(TypeOf<HPVector>() == oo::kShaderUniformTypeHPVector);
+  EXPECT_TRUE(TypeOf<Quaternion>() == oo::kShaderUniformTypeQuaternion);
+  EXPECT_TRUE(TypeOf<oo::Matrix>() == oo::kShaderUniformTypeMatrix);
+  EXPECT_TRUE(TypeOf<NSPoint>() == oo::kShaderUniformTypePoint);
+  EXPECT_TRUE(TypeOf<oo::ObjectResult>() == oo::kShaderUniformTypeObject);
 }
 
 /*	The types the table has no row for, through the encoding.
  */
-OO_TEST(encodingsTheTableHasNot) {
+TEST(OOShaderUniformMethodType, encodingsTheTableHasNot) {
   // bool is encoded as a signed char here.
-  OO_CHECK(TypeOf<bool>() == oo::kShaderUniformTypeChar);
+  EXPECT_TRUE(TypeOf<bool>() == oo::kShaderUniformTypeChar);
   // The table has no long long entries: on this platform (LLP64) a long is 32
   // bits, so a long long matches nothing.
-  OO_CHECK(TypeOf<long long>() == oo::kShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<unsigned long long>() == oo::kShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<void>() == oo::kShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<NSRect>() == oo::kShaderUniformTypeInvalid);
-  OO_CHECK(oo::ShaderUniformTypeOf(oo::ValueType::kOther) ==
+  EXPECT_TRUE(TypeOf<long long>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(TypeOf<unsigned long long>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(TypeOf<void>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(TypeOf<NSRect>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(oo::ShaderUniformTypeOf(oo::ValueType::kOther) ==
            oo::kShaderUniformTypeInvalid);
 }
-
-OO_TEST_MAIN()

@@ -24,9 +24,10 @@
 #include <thread>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
@@ -52,7 +53,7 @@ void SleepMs(int ms) {
 
 void WriteText(const stdfs::path& path, const std::string& text) {
   stdfs::create_directories(path.parent_path());
-  OO_CHECK(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
+  EXPECT_TRUE(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
                              oo::fs::WriteMode::kDirect)
                .has_value());
 }
@@ -66,7 +67,7 @@ void SetUp() {
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
   WriteText(sRoot / "Resources" / "Info-gnustep.plist",
             "{ CFBundleVersion = \"9.9.9-test\"; }");
@@ -97,56 +98,56 @@ bool Evaluate(const char* source, const char* fileName) {
 // MARK: Tests
 // -------------------------------------------------------------------------------------
 
-OO_TEST(limiter) {
-  SetUp();
-  OO_CHECK_EQ(OOJSGetTimeLimiterLimit(), 0.0);
+TEST(OOJSTimeLimiter, limiter) {
+  ::SetUp();
+  EXPECT_EQ(OOJSGetTimeLimiterLimit(), 0.0);
   StartLimiter(0.0);  // the default limit
   const double defaultLimit = OOJSGetTimeLimiterLimit();
-  OO_CHECK(defaultLimit == 0.2 ||
+  EXPECT_TRUE(defaultLimit == 0.2 ||
            defaultLimit == 1.0);  // debug-limiter builds keep a short leash
   StartLimiter(5.0);              // nested: the outermost limit stays
-  OO_CHECK_EQ(OOJSGetTimeLimiterLimit(), defaultLimit);
+  EXPECT_EQ(OOJSGetTimeLimiterLimit(), defaultLimit);
   StopLimiter();
-  OO_CHECK_EQ(OOJSGetTimeLimiterLimit(), defaultLimit);
+  EXPECT_EQ(OOJSGetTimeLimiterLimit(), defaultLimit);
   StopLimiter();
-  OO_CHECK_EQ(OOJSGetTimeLimiterLimit(), 0.0);
+  EXPECT_EQ(OOJSGetTimeLimiterLimit(), 0.0);
 
   // A stop too many is logged and ignored: the next start is outermost again.
   StopLimiter();
   StartLimiter(3.0);
-  OO_CHECK_EQ(OOJSGetTimeLimiterLimit(), 3.0);
+  EXPECT_EQ(OOJSGetTimeLimiterLimit(), 3.0);
   OOJSSetTimeLimiterLimit(4.5);
-  OO_CHECK_EQ(OOJSGetTimeLimiterLimit(), 4.5);
+  EXPECT_EQ(OOJSGetTimeLimiterLimit(), 4.5);
   StopLimiter();
-  OO_CHECK_EQ(OOJSGetTimeLimiterLimit(), 0.0);
+  EXPECT_EQ(OOJSGetTimeLimiterLimit(), 0.0);
 }
 
-OO_TEST(pauseAndResume) {
-  SetUp();
+TEST(OOJSTimeLimiter, pauseAndResume) {
+  ::SetUp();
   StartLimiter(10.0);
   OOJSPauseTimeLimiter();
   OOJSPauseTimeLimiter();  // nested: only the outermost pause counts
   SleepMs(60);
   OOJSResumeTimeLimiter();
-  OO_CHECK_EQ(OOJSGetTimeLimiterLimit(), 10.0);
+  EXPECT_EQ(OOJSGetTimeLimiterLimit(), 10.0);
   OOJSResumeTimeLimiter();
   const double extended = OOJSGetTimeLimiterLimit();
-  OO_CHECK(extended > 10.04 &&
+  EXPECT_TRUE(extended > 10.04 &&
            extended < 11.0);  // the paused time is added to the limit
   StopLimiter();
 }
 
-OO_TEST(watchdog) {
+TEST(OOJSTimeLimiter, watchdog) {
   // The engine stops a script that runs past its limit (QuickJS-ng's interrupt
   // handler, which replaced the watchdog thread).
-  SetUp();
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;  // was @autoreleasepool
     const stdfs::path scriptPath = sRoot / "running" / "running.js";
     WriteText(scriptPath, "this.name = \"test script\";\n");
     const std::shared_ptr<OOJSScript> script =
         OOJSScript::scriptWithPath(scriptPath.generic_string(), oo::PList());
-    OO_CHECK(script != nullptr);
+    EXPECT_TRUE(script != nullptr);
     OOJSScript::pushScript(script.get());  // the script named in the log line
 
     oo::log::logger().setSink(
@@ -165,8 +166,8 @@ OO_TEST(watchdog) {
     oo::log::logger().setSink(nullptr);
     OOJSScript::popScript(script.get());
 
-    OO_CHECK(!completed);
-    OO_CHECK(seconds < 10.0);
+    EXPECT_TRUE(!completed);
+    EXPECT_TRUE(seconds < 10.0);
     bool logged = false;
     int stackDumps = 0;
     for (const std::string& line : sLogLines) {
@@ -178,25 +179,23 @@ OO_TEST(watchdog) {
           line.find("<no JavaScript stack>") != std::string::npos)
         stackDumps++;
     }
-    OO_CHECK(logged);
+    EXPECT_TRUE(logged);
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    OO_CHECK_EQ(stackDumps, 1);  // the engine dumps the stack (OOJSDumpStack)
+    EXPECT_EQ(stackDumps, 1);  // the engine dumps the stack (OOJSDumpStack)
 #else
     (void)stackDumps;
 #endif
 
     // After a reset, scripts run again.
     StartLimiter(0.0);
-    OO_CHECK(Evaluate("1 + 1", "quick.js"));
+    EXPECT_TRUE(Evaluate("1 + 1", "quick.js"));
     StopLimiter();
   }
 }
 
-OO_TEST(cleanUp) {
+TEST(OOJSTimeLimiter, cleanUp) {
   stdfs::current_path(stdfs::temp_directory_path());
   std::error_code ignored;
   stdfs::remove_all(sRoot, ignored);
-  OO_CHECK(true);
+  EXPECT_TRUE(true);
 }
-
-OO_TEST_MAIN()

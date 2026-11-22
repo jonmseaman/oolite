@@ -24,6 +24,9 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "ConcreteTexture.h"
@@ -32,7 +35,6 @@
 #include "TextureGenerator.h"
 #include "TextureInternal.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -150,53 +152,53 @@ bool Contains(const std::vector<std::shared_ptr<oo::Texture>>& textures,
 
 }  // namespace
 
-OO_TEST(rootDefaults) {
+TEST(OOTexture, rootDefaults) {
   {
     oo::AutoreleaseScope pool;
     oo::Texture* bare = Autoreleased(oo::makeShared<BareTexture>());
-    OO_CHECK(bare->isFinishedLoading());
-    OO_CHECK(!bare->cacheKey().has_value());
-    OO_CHECK(!bare->isRectangleTexture() && !bare->isCubeMap());
-    OO_CHECK(SameSize(bare->texCoordsScale(), 1, 1));
-    OO_CHECK(oo::IsNullPixMap(bare->copyPixMapRepresentation()));
+    EXPECT_TRUE(bare->isFinishedLoading());
+    EXPECT_TRUE(!bare->cacheKey().has_value());
+    EXPECT_TRUE(!bare->isRectangleTexture() && !bare->isCubeMap());
+    EXPECT_TRUE(SameSize(bare->texCoordsScale(), 1, 1));
+    EXPECT_TRUE(oo::IsNullPixMap(bare->copyPixMapRepresentation()));
     bare->ensureFinishedLoading();
 
     // The subclass responsibilities log and answer zero.
-    OO_CHECK(SameSize(bare->dimensions(), 0, 0));
-    OO_CHECK(SameSize(bare->originalDimensions(), 0, 0));
-    OO_CHECK(!bare->isMipMapped());
-    OO_CHECK(bare->glTextureName() == 0);
+    EXPECT_TRUE(SameSize(bare->dimensions(), 0, 0));
+    EXPECT_TRUE(SameSize(bare->originalDimensions(), 0, 0));
+    EXPECT_TRUE(!bare->isMipMapped());
+    EXPECT_TRUE(bare->glTextureName() == 0);
     bare->apply();
 #ifndef NDEBUG
-    OO_CHECK(!bare->name().has_value());
-    OO_CHECK(bare->dataSize() == 0);
+    EXPECT_TRUE(!bare->name().has_value());
+    EXPECT_TRUE(bare->dataSize() == 0);
 #endif
-    OO_CHECK(bare->description().starts_with("<BareTexture 0x"));
+    EXPECT_TRUE(bare->description().starts_with("<BareTexture 0x"));
   }
 }
 
-OO_TEST(subclassOverrides) {
+TEST(OOTexture, subclassOverrides) {
   {
     oo::AutoreleaseScope pool;
     TestTexture* texture = MakeTexture(std::nullopt);
-    OO_CHECK(SameSize(texture->originalDimensions(), 8,
+    EXPECT_TRUE(SameSize(texture->originalDimensions(), 8,
                       4));  // the root's, from -dimensions
-    OO_CHECK(SameSize(texture->texCoordsScale(), 1, 1));
-    OO_CHECK(texture->glTextureName() == 7 && texture->isMipMapped());
+    EXPECT_TRUE(SameSize(texture->texCoordsScale(), 1, 1));
+    EXPECT_TRUE(texture->glTextureName() == 7 && texture->isMipMapped());
     texture->apply();
-    OO_CHECK(texture->_applies == 1);
+    EXPECT_TRUE(texture->_applies == 1);
 #ifndef NDEBUG
-    OO_CHECK(texture->dataSize() == 42);  // 8 * 4, mip-mapped: * 4 / 3
-    OO_CHECK(texture->name() == std::optional<std::string>("test texture"));
+    EXPECT_TRUE(texture->dataSize() == 42);  // 8 * 4, mip-mapped: * 4 / 3
+    EXPECT_TRUE(texture->name() == std::optional<std::string>("test texture"));
     texture->setTrace(true);
     texture->setTrace(false);
 #endif
     const std::string text = texture->description();
-    OO_CHECK(text.starts_with("<TestTexture 0x") && text.ends_with(">{test}"));
+    EXPECT_TRUE(text.starts_with("<TestTexture 0x") && text.ends_with(">{test}"));
   }
 }
 
-OO_TEST(cachesKeepAndForget) {
+TEST(OOTexture, cachesKeepAndForget) {
   ClearCache();
   const int deallocs = gTestDeallocs;
   TestTexture* texture = nullptr;
@@ -205,24 +207,24 @@ OO_TEST(cachesKeepAndForget) {
     oo::AutoreleaseScope pool;
     texture = MakeTexture(std::string("test:cache"));
     bare = oo::test::NewRetained<BareTexture>();
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cache")) ==
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:cache")) ==
              texture);
-    OO_CHECK(oo::Texture::existingTextureForKey(std::nullopt) == nullptr);
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:none")) == nullptr);
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::nullopt) == nullptr);
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:none")) == nullptr);
   }
 
   // The recent textures keep it alive; the live textures find it.
-  OO_CHECK(gTestDeallocs == deallocs);
-  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cache")) ==
+  EXPECT_TRUE(gTestDeallocs == deallocs);
+  EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:cache")) ==
            texture);
 #ifndef NDEBUG
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(Contains(oo::Texture::cachedTexturesByAge(), texture));
-    OO_CHECK(!Contains(oo::Texture::cachedTexturesByAge(),
+    EXPECT_TRUE(Contains(oo::Texture::cachedTexturesByAge(), texture));
+    EXPECT_TRUE(!Contains(oo::Texture::cachedTexturesByAge(),
                        bare));  // no key: not cached
     const std::vector<std::shared_ptr<oo::Texture>> all = oo::Texture::allTextures();
-    OO_CHECK(Contains(all, texture) && Contains(all, bare));
+    EXPECT_TRUE(Contains(all, texture) && Contains(all, bare));
   }
 #endif
 
@@ -230,17 +232,17 @@ OO_TEST(cachesKeepAndForget) {
   {
     oo::AutoreleaseScope scope;
     oo::Texture::clearCache();
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cache")) ==
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:cache")) ==
              nullptr);
   }
-  OO_CHECK(gTestDeallocs == deallocs + 1);
+  EXPECT_TRUE(gTestDeallocs == deallocs + 1);
 #ifndef NDEBUG
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(oo::Texture::cachedTexturesByAge().empty());
+    EXPECT_TRUE(oo::Texture::cachedTexturesByAge().empty());
     const std::vector<std::shared_ptr<oo::Texture>> all = oo::Texture::allTextures();
-    OO_CHECK(Contains(all, bare));
-    OO_CHECK(
+    EXPECT_TRUE(Contains(all, bare));
+    EXPECT_TRUE(
         std::none_of(all.begin(), all.end(), [](const std::shared_ptr<oo::Texture>& t) {
           return dynamic_cast<TestTexture*>(t.get()) != nullptr;
         }));
@@ -249,32 +251,32 @@ OO_TEST(cachesKeepAndForget) {
   oo::test::Release(bare);
 }
 
-OO_TEST(rebindAllTextures) {
+TEST(OOTexture, rebindAllTextures) {
   const int deallocs = gTestDeallocs;
   {
     oo::AutoreleaseScope pool;
     TestTexture* cached = MakeTexture(std::string("test:rebind"));
     TestTexture* plain = MakeTexture(std::nullopt);
     oo::Texture::rebindAllTextures();
-    OO_CHECK(cached->_rebinds == 1 && plain->_rebinds == 1);
+    EXPECT_TRUE(cached->_rebinds == 1 && plain->_rebinds == 1);
 
     // The recent textures are dropped; the live textures still find it while it
     // lives.
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:rebind")) ==
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:rebind")) ==
              cached);
 #ifndef NDEBUG
-    OO_CHECK(oo::Texture::cachedTexturesByAge().empty());
+    EXPECT_TRUE(oo::Texture::cachedTexturesByAge().empty());
 #endif
   }
-  OO_CHECK(gTestDeallocs == deallocs + 2);
-  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:rebind")) == nullptr);
+  EXPECT_TRUE(gTestDeallocs == deallocs + 2);
+  EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:rebind")) == nullptr);
 }
 
-OO_TEST(namedTextureFromTheCache) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTexture, namedTextureFromTheCache) {
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(oo::Texture::textureWithName(std::nullopt, std::string("Textures"))
+    EXPECT_TRUE(oo::Texture::textureWithName(std::nullopt, std::string("Textures"))
                  .get() == nullptr);
 
     // Linear filtering: no anisotropy and no LOD bias in the key, whatever the
@@ -282,83 +284,83 @@ OO_TEST(namedTextureFromTheCache) {
     const std::string key = oo::GenerateTextureCacheKey(
         std::string("Textures"), "test.png",
         oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear, 0.5f, -0.25f);
-    OO_CHECK(key == "Textures/test.png:0x0006/0/0");
+    EXPECT_TRUE(key == "Textures/test.png:0x0006/0/0");
     TestTexture* texture = MakeTexture(key);
 
-    OO_CHECK(oo::Texture::textureWithName(
+    EXPECT_TRUE(oo::Texture::textureWithName(
                  std::string("test.png"), std::string("Textures"),
                  oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear |
                      oo::TextureFlags::kNoFNFMessage,
                  kOOTextureDefaultAnisotropy, kOOTextureDefaultLODBias)
                  .get() == texture);
-    OO_CHECK(oo::Texture::textureWithConfiguration(oo::PList(oo::PList::Dict{
+    EXPECT_TRUE(oo::Texture::textureWithConfiguration(oo::PList(oo::PList::Dict{
                  {"name", oo::PList("test.png")},
                  {"min_filter", oo::PList("linear")}})).get() == texture);
-    OO_CHECK(oo::Texture::textureWithConfiguration(
+    EXPECT_TRUE(oo::Texture::textureWithConfiguration(
                  oo::PList(oo::PList::Dict{{"name", oo::PList("test.png")}}),
                  oo::TextureFlags::kMinFilterLinear).get() == texture);
 
     // A specifier that names no texture.
-    OO_CHECK(oo::Texture::textureWithConfiguration(oo::PList(
+    EXPECT_TRUE(oo::Texture::textureWithConfiguration(oo::PList(
                  oo::PList::Dict{{"min_filter", oo::PList("linear")}})) == nullptr);
-    OO_CHECK(oo::Texture::textureWithConfiguration(oo::PList(3.0)).get() == nullptr);
-    OO_CHECK(oo::Texture::textureWithConfiguration(oo::PList()).get() == nullptr);
+    EXPECT_TRUE(oo::Texture::textureWithConfiguration(oo::PList(3.0)).get() == nullptr);
+    EXPECT_TRUE(oo::Texture::textureWithConfiguration(oo::PList()).get() == nullptr);
     ClearCache();
   }
 }
 
-OO_TEST(texturesFromGenerators) {
+TEST(OOTexture, texturesFromGenerators) {
   {
     oo::AutoreleaseScope pool;
     ClearCache();
-    OO_CHECK(oo::Texture::textureWithGenerator(nullptr).get() == nullptr);
+    EXPECT_TRUE(oo::Texture::textureWithGenerator(nullptr).get() == nullptr);
     TestGenerator* refusing = MakeGenerator(std::string("test:refused"), false);
-    OO_CHECK(oo::Texture::textureWithGenerator(refusing).get() == nullptr &&
+    EXPECT_TRUE(oo::Texture::textureWithGenerator(refusing).get() == nullptr &&
              refusing->_enqueues == 1);
 
     TestGenerator* generator = MakeGenerator(std::string("test:gen"), true);
     oo::Texture* first = Autoreleased(oo::Texture::textureWithGenerator(generator));
-    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(first) != nullptr) &&
+    EXPECT_TRUE((dynamic_cast<oo::ConcreteTexture*>(first) != nullptr) &&
              generator->_enqueues == 1);
-    OO_CHECK(first->cacheKey() == std::optional<std::string>("test:gen"));
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gen")) ==
+    EXPECT_TRUE(first->cacheKey() == std::optional<std::string>("test:gen"));
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:gen")) ==
              first);
 
     // Cached: the same texture, not queued again; unless the caller forces a
     // new one.
-    OO_CHECK(oo::Texture::textureWithGenerator(generator).get() == first &&
+    EXPECT_TRUE(oo::Texture::textureWithGenerator(generator).get() == first &&
              generator->_enqueues == 1);
     oo::Texture* second =
         Autoreleased(oo::Texture::textureWithGenerator(generator, true));
-    OO_CHECK(second != nullptr && second != first && generator->_enqueues == 2);
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gen")) ==
+    EXPECT_TRUE(second != nullptr && second != first && generator->_enqueues == 2);
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:gen")) ==
              second);
 
     // No key: never cached.
     TestGenerator* uncached = MakeGenerator(std::nullopt, true);
     oo::Texture* a = Autoreleased(oo::Texture::textureWithGenerator(uncached));
     oo::Texture* b = Autoreleased(oo::Texture::textureWithGenerator(uncached));
-    OO_CHECK(a != nullptr && b != nullptr && a != b && uncached->_enqueues == 2);
+    EXPECT_TRUE(a != nullptr && b != nullptr && a != b && uncached->_enqueues == 2);
   }
 
   /*	The first texture's -dealloc (when the recent textures replaced it and
      the pool drained) uncached its key from the live textures, although the
      second texture had it by then.
   */
-  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gen")) == nullptr);
+  EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:gen")) == nullptr);
   ClearCache();
 }
 
-OO_TEST(nullTexture) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTexture, nullTexture) {
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::AutoreleaseScope pool;
     oo::Texture* none = oo::Texture::nullTexture().get();
-    OO_CHECK(dynamic_cast<oo::NullTexture*>(none) != nullptr &&
+    EXPECT_TRUE(dynamic_cast<oo::NullTexture*>(none) != nullptr &&
              none == oo::Texture::nullTexture().get());
-    OO_CHECK(SameSize(none->dimensions(), 0, 0) && !none->isMipMapped());
+    EXPECT_TRUE(SameSize(none->dimensions(), 0, 0) && !none->isMipMapped());
 #ifndef NDEBUG
-    OO_CHECK(none->name() == std::optional<std::string>("<null texture>"));
+    EXPECT_TRUE(none->name() == std::optional<std::string>("<null texture>"));
 #endif
     none->forceRebind();
 
@@ -369,22 +371,22 @@ OO_TEST(nullTexture) {
     none->apply();
     GLint bound = -1;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound);
-    OO_CHECK(bound == 0);
+    EXPECT_TRUE(bound == 0);
     glDeleteTextures(1, &name);
   }
 }
 
-OO_TEST(applyNone) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTexture, applyNone) {
+  EXPECT_TRUE(OOTestGLContext());
   GLuint name = 0;
   glGenTextures(1, &name);
   glBindTexture(GL_TEXTURE_2D, name);
   GLint bound = -1;
   glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound);
-  OO_CHECK(bound == (GLint)name);
+  EXPECT_TRUE(bound == (GLint)name);
   oo::Texture::applyNone();
   glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound);
-  OO_CHECK(bound == 0);
+  EXPECT_TRUE(bound == 0);
   glDeleteTextures(1, &name);
 }
 
@@ -423,49 +425,49 @@ class TestCxxTexture final : public oo::Texture {
   std::optional<std::string> _key;
 };
 
-OO_TEST(cxxApi) {
+TEST(OOTexture, cxxApi) {
   ClearCache();
   {
     oo::AutoreleaseScope pool;
     // The factories answer the C++ texture, retained.
-    OO_CHECK(
+    EXPECT_TRUE(
         !oo::Texture::textureWithName(std::nullopt, std::string("Textures")));
     const std::shared_ptr<oo::Texture> none = oo::Texture::nullTexture();
-    OO_CHECK(dynamic_cast<oo::NullTexture*>(none.get()) != nullptr &&
+    EXPECT_TRUE(dynamic_cast<oo::NullTexture*>(none.get()) != nullptr &&
              none.get() == oo::Texture::nullTexture().get());
     TestGenerator* generator = MakeGenerator(std::string("test:cxxgen"), true);
     const std::shared_ptr<oo::Texture> generated =
         oo::Texture::textureWithGenerator(generator);
-    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(generated.get()) != nullptr));
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cxxgen")) ==
+    EXPECT_TRUE((dynamic_cast<oo::ConcreteTexture*>(generated.get()) != nullptr));
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:cxxgen")) ==
              generated.get());
-    OO_CHECK(oo::Texture::textureWithGenerator(generator, false).get() ==
+    EXPECT_TRUE(oo::Texture::textureWithGenerator(generator, false).get() ==
                  generated.get() &&
              generator->_enqueues == 1);
-    OO_CHECK(!oo::Texture::textureWithConfiguration(oo::PList(3.0)));
-    OO_CHECK(oo::Texture::existingTextureForKey(std::nullopt) == nullptr);
+    EXPECT_TRUE(!oo::Texture::textureWithConfiguration(oo::PList(3.0)));
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::nullopt) == nullptr);
     ClearCache();
   }
 
   // The root's own answers.
   const std::shared_ptr<oo::Texture> root = oo::makeShared<oo::Texture>();
-  OO_CHECK(root->isFinishedLoading() && !root->cacheKey().has_value());
-  OO_CHECK(SameSize(root->dimensions(), 0, 0) &&
+  EXPECT_TRUE(root->isFinishedLoading() && !root->cacheKey().has_value());
+  EXPECT_TRUE(SameSize(root->dimensions(), 0, 0) &&
            SameSize(root->originalDimensions(), 0, 0));
-  OO_CHECK(SameSize(root->texCoordsScale(), 1, 1) && !root->isMipMapped() &&
+  EXPECT_TRUE(SameSize(root->texCoordsScale(), 1, 1) && !root->isMipMapped() &&
            root->glTextureName() == 0);
-  OO_CHECK(!root->isRectangleTexture() && !root->isCubeMap() &&
+  EXPECT_TRUE(!root->isRectangleTexture() && !root->isCubeMap() &&
            oo::IsNullPixMap(root->copyPixMapRepresentation()));
-  OO_CHECK(!root->descriptionComponents().has_value());
+  EXPECT_TRUE(!root->descriptionComponents().has_value());
   root->apply();
   root->ensureFinishedLoading();
   root->forceRebind();
 #ifndef NDEBUG
-  OO_CHECK(!root->name().has_value() && root->dataSize() == 0);
+  EXPECT_TRUE(!root->name().has_value() && root->dataSize() == 0);
 #endif
 }
 
-OO_TEST(cxxTextureBehindTheFacade) {
+TEST(OOTexture, cxxTextureBehindTheFacade) {
   const int deallocs = gTestDeallocs;
   {
     oo::AutoreleaseScope pool;
@@ -474,36 +476,36 @@ OO_TEST(cxxTextureBehindTheFacade) {
     oo::Texture* facade = texture.get();  // what the callers hold
 
     // The callers' calls reach the C++ overrides, and the root's defaults.
-    OO_CHECK(SameSize(facade->dimensions(), 16, 2) &&
+    EXPECT_TRUE(SameSize(facade->dimensions(), 16, 2) &&
              SameSize(facade->originalDimensions(), 16, 2));
-    OO_CHECK(facade->glTextureName() == 9 && !facade->isMipMapped() &&
+    EXPECT_TRUE(facade->glTextureName() == 9 && !facade->isMipMapped() &&
              facade->isFinishedLoading());
-    OO_CHECK(facade->cacheKey() == std::optional<std::string>("test:cxx"));
+    EXPECT_TRUE(facade->cacheKey() == std::optional<std::string>("test:cxx"));
     facade->apply();
-    OO_CHECK(texture->applies == 1);
+    EXPECT_TRUE(texture->applies == 1);
 #ifndef NDEBUG
-    OO_CHECK(facade->dataSize() == 32);
+    EXPECT_TRUE(facade->dataSize() == 32);
 #endif
     const std::string text = facade->description();
-    OO_CHECK(text.starts_with("<TestCxxTexture 0x") &&
+    EXPECT_TRUE(text.starts_with("<TestCxxTexture 0x") &&
              text.ends_with(">{cxx}"));
 
     // The caches hold it by key; a graphics reset reaches it.
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cxx")) ==
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:cxx")) ==
              facade);
     oo::Texture::rebindAllTextures();
-    OO_CHECK(texture->rebinds == 1);
+    EXPECT_TRUE(texture->rebinds == 1);
 #ifndef NDEBUG
     {
       oo::AutoreleaseScope pool;
-      OO_CHECK(Contains(oo::Texture::allTextures(), facade));
+      EXPECT_TRUE(Contains(oo::Texture::allTextures(), facade));
     }
 #endif
   }
   ClearCache();
-  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cxx")) ==
+  EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:cxx")) ==
            nullptr);  // destroyed: uncached
-  OO_CHECK(gTestDeallocs == deallocs);
+  EXPECT_TRUE(gTestDeallocs == deallocs);
 }
 
 /*	clearCache() hands the old recent-texture cache to
@@ -514,7 +516,7 @@ OO_TEST(cxxTextureBehindTheFacade) {
    an outer scope's drain, and nothing is counted as autoreleased without a
    scope.
 */
-OO_TEST(clearCacheReleasesAtTheNearestScopesDrain) {
+TEST(OOTexture, clearCacheReleasesAtTheNearestScopesDrain) {
   ClearCache();
   const int deallocs = gTestDeallocs;
   const std::size_t leaked = oo::AutoreleaseScope::leakedWithoutScope();
@@ -524,28 +526,26 @@ OO_TEST(clearCacheReleasesAtTheNearestScopesDrain) {
       oo::AutoreleaseScope made;
       MakeTexture(std::string("test:drain"));
     }
-    OO_CHECK(gTestDeallocs == deallocs);  // only the recent textures keep it
+    EXPECT_TRUE(gTestDeallocs == deallocs);  // only the recent textures keep it
     const std::size_t outerPending = outer.pendingCount();
     {
       oo::AutoreleaseScope nearest;
       oo::Texture::clearCache();
-      OO_CHECK(nearest.pendingCount() ==
+      EXPECT_TRUE(nearest.pendingCount() ==
                1);  // the old cache, waiting for the drain
-      OO_CHECK(outer.pendingCount() == outerPending);
-      OO_CHECK(gTestDeallocs == deallocs);  // no earlier than the drain
-      OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:drain")) ==
+      EXPECT_TRUE(outer.pendingCount() == outerPending);
+      EXPECT_TRUE(gTestDeallocs == deallocs);  // no earlier than the drain
+      EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:drain")) ==
                nullptr);  // forgotten at once
 
       // With no recent textures left, a second clear hands nothing over.
       oo::Texture::clearCache();
-      OO_CHECK(nearest.pendingCount() == 1);
+      EXPECT_TRUE(nearest.pendingCount() == 1);
     }
-    OO_CHECK(gTestDeallocs ==
+    EXPECT_TRUE(gTestDeallocs ==
              deallocs + 1);  // released at the nearest scope's drain
-    OO_CHECK(outer.pendingCount() == outerPending);
+    EXPECT_TRUE(outer.pendingCount() == outerPending);
   }
-  OO_CHECK(gTestDeallocs == deallocs + 1);
-  OO_CHECK(oo::AutoreleaseScope::leakedWithoutScope() == leaked);
+  EXPECT_TRUE(gTestDeallocs == deallocs + 1);
+  EXPECT_TRUE(oo::AutoreleaseScope::leakedWithoutScope() == leaked);
 }
-
-OO_TEST_MAIN()

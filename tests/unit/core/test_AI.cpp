@@ -25,12 +25,14 @@
 #include <map>
 #include <string>
 #include <vector>
+
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "AI.h"
 #include "GameController.h"  // OOScheduleDeferredCall, stood in below
 #include "CallByName.h"    // oo::CallEntityByName, stood in below
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Exception.hpp"  // oo::Exception
@@ -410,36 +412,36 @@ AI* NewAI(TestShip* ship) {
 
 }  // namespace
 
-OO_TEST(initialState) {
-  SetUp();
+TEST(AI, initialState) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     AI* ai = NewAI(nullptr);
-    OO_CHECK(ai->name() == std::optional<std::string>("<no AI>"));
-    OO_CHECK(!ai->state().has_value());
-    OO_CHECK(!ai->associatedJS().has_value());
-    OO_CHECK(ai->owner() == nullptr);
-    OO_CHECK(ai->stackDepth() == 0 && !ai->hasSuspendedStateMachines());
-    OO_CHECK(ai->getPendingMessages().empty());
-    OO_CHECK(ai->getThinkTimeInterval() == AI_THINK_INTERVAL);
-    OO_CHECK(std::isinf(ai->getNextThinkTime()));
+    EXPECT_TRUE(ai->name() == std::optional<std::string>("<no AI>"));
+    EXPECT_TRUE(!ai->state().has_value());
+    EXPECT_TRUE(!ai->associatedJS().has_value());
+    EXPECT_TRUE(ai->owner() == nullptr);
+    EXPECT_TRUE(ai->stackDepth() == 0 && !ai->hasSuspendedStateMachines());
+    EXPECT_TRUE(ai->getPendingMessages().empty());
+    EXPECT_TRUE(ai->getThinkTimeInterval() == AI_THINK_INTERVAL);
+    EXPECT_TRUE(std::isinf(ai->getNextThinkTime()));
     ai->setNextThinkTime(5.0);
-    OO_CHECK(std::isinf(ai->getNextThinkTime()));  // no state machine: never
+    EXPECT_TRUE(std::isinf(ai->getNextThinkTime()));  // no state machine: never
     ai->setThinkTimeInterval(0.5);
-    OO_CHECK(ai->getThinkTimeInterval() == 0.5);
-    OO_CHECK(ai->descriptionComponents() ==
+    EXPECT_TRUE(ai->getThinkTimeInterval() == 0.5);
+    EXPECT_TRUE(ai->descriptionComponents() ==
              std::optional<std::string>(
                  "\"<no AI>\" in state: \"(null)\" for (null)"));
-    OO_CHECK(ai->shortDescriptionComponents() ==
+    EXPECT_TRUE(ai->shortDescriptionComponents() ==
              std::optional<std::string>("<no AI>:(null) / (null)"));
-    OO_CHECK(AI::currentlyRunningAI() == nullptr);
-    OO_CHECK(AI::currentlyRunningAIDescription() ==
+    EXPECT_TRUE(AI::currentlyRunningAI() == nullptr);
+    EXPECT_TRUE(AI::currentlyRunningAIDescription() ==
              std::optional<std::string>("<no AI running>"));
   }
 }
 
-OO_TEST(ownerIsWeak) {
-  SetUp();
+TEST(AI, ownerIsWeak) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     AI* ai = Autoreleased(oo::makeShared<AI>());
@@ -448,27 +450,27 @@ OO_TEST(ownerIsWeak) {
       TestShip* ship = oo::test::NewRetained<TestShip>();
       ship->_id = 7;
       ai->setOwner(Part(ship));
-      OO_CHECK(ai->owner() == Part(ship));
-      OO_CHECK(ai->descriptionComponents() ==
+      EXPECT_TRUE(ai->owner() == Part(ship));
+      EXPECT_TRUE(ai->descriptionComponents() ==
                std::optional<std::string>(
                    "\"<no AI>\" in state: \"(null)\" for Test ship 7"));
       ship->_isPlayer = true;
       ai->setOwner(Part(ship));
-      OO_CHECK(ai->descriptionComponents() ==
+      EXPECT_TRUE(ai->descriptionComponents() ==
                std::optional<std::string>(
                    "\"<no AI>\" in state: \"(null)\" for player autopilot"));
       oo::test::Release(ship);
     }
-    OO_CHECK(ai->owner() == nullptr);
+    EXPECT_TRUE(ai->owner() == nullptr);
     ai->setOwner(nullptr);
-    OO_CHECK(ai->descriptionComponents() ==
+    EXPECT_TRUE(ai->descriptionComponents() ==
              std::optional<std::string>(
                  "\"<no AI>\" in state: \"(null)\" for no owner"));
   }
 }
 
-OO_TEST(loadsAndRunsAStateMachine) {
-  SetUp();
+TEST(AI, loadsAndRunsAStateMachine) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     TestShip* ship = NewShip(3);
@@ -478,81 +480,81 @@ OO_TEST(loadsAndRunsAStateMachine) {
     // GLOBAL's ENTER moved it to ATTACK, whose ENTER ran the whitelisted
     // actions only, an alias by its real name, a list alias as its words;
     // GLOBAL had no EXIT, so the ship was told.
-    OO_CHECK(ai->name() == std::optional<std::string>("test.plist"));
-    OO_CHECK(ai->state() == std::optional<std::string>("ATTACK"));
-    OO_CHECK(ai->associatedJS() == std::optional<std::string>("test.js"));
-    OO_CHECK(ship->_calls ==
+    EXPECT_TRUE(ai->name() == std::optional<std::string>("test.plist"));
+    EXPECT_TRUE(ai->state() == std::optional<std::string>("ATTACK"));
+    EXPECT_TRUE(ai->associatedJS() == std::optional<std::string>("test.js"));
+    EXPECT_TRUE(ship->_calls ==
              std::vector<std::string>(
                  {"setStateTo: ATTACK", "interpretAIMessage: EXIT",
                   "doThing: 1 2", "doNothing", "doThing: twice"}));
-    OO_CHECK(
+    EXPECT_TRUE(
         ship->_runningAIs ==
         std::vector<std::string>({"test.plist in state ATTACK (this AI)",
                                   "test.plist in state ATTACK (this AI)"}));
-    OO_CHECK(AI::currentlyRunningAI() == nullptr);
-    OO_CHECK(ai->getNextThinkTime() == 0.0);
-    OO_CHECK(ai->descriptionComponents() ==
+    EXPECT_TRUE(AI::currentlyRunningAI() == nullptr);
+    EXPECT_TRUE(ai->getNextThinkTime() == 0.0);
+    EXPECT_TRUE(ai->descriptionComponents() ==
              std::optional<std::string>(
                  "\"test.plist\" in state: \"ATTACK\" for Test ship 3"));
-    OO_CHECK(ai->shortDescriptionComponents() ==
+    EXPECT_TRUE(ai->shortDescriptionComponents() ==
              std::optional<std::string>("test.plist:ATTACK / test.js"));
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "uses \"forbidden:\", which is not a permitted AI method") ==
              1);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "State \"BROKEN\" in AI \"test.plist\" is not a dictionary") ==
              1);
-    OO_CHECK(
+    EXPECT_TRUE(
         LogLinesContaining("Handler \"BADHANDLER\" for state \"ATTACK\"") == 1);
 
     // The cleaned machine is cached, with its script name.
     const oo::PList cached =
         oo::CacheManager::sharedCache()->pListForKey("test.plist", "AIs");
-    OO_CHECK(cached.get<std::string>("jsScript") == "test.js");
-    OO_CHECK(cached.find("BROKEN") == nullptr);
-    OO_CHECK(*cached.find("ATTACK")->find("ENTER") ==
+    EXPECT_TRUE(cached.get<std::string>("jsScript") == "test.js");
+    EXPECT_TRUE(cached.find("BROKEN") == nullptr);
+    EXPECT_TRUE(*cached.find("ATTACK")->find("ENTER") ==
              Strings({"doThing: 1  2", "doNothing", "doThing: twice"}));
 
     // A message with no handler goes to the ship; a missing state does nothing.
     ship->_calls.clear();
     ai->reactToMessage("NOHANDLER", std::nullopt);
-    OO_CHECK(ship->_calls ==
+    EXPECT_TRUE(ship->_calls ==
              std::vector<std::string>({"interpretAIMessage: NOHANDLER"}));
     ai->setState("NOSUCHSTATE");
-    OO_CHECK(ai->state() == std::optional<std::string>("ATTACK"));
+    EXPECT_TRUE(ai->state() == std::optional<std::string>("ATTACK"));
 
     // An action the ship does not answer is logged.
     gLog.clear();
     ai->reactToMessage("UNKNOWN", "test");
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "Test ship 3 does not respond to unknownMethod") == 1);
   }
 }
 
-OO_TEST(unknownStateMachines) {
-  SetUp();
+TEST(AI, unknownStateMachines) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     TestShip* ship = NewShip(4);
     AI* ai = NewAI(ship);
     gLog.clear();
     ai->setStateMachine("missing.plist", "x.js");
-    OO_CHECK(ai->name() == std::optional<std::string>("<no AI>"));
-    OO_CHECK(LogLinesContaining("to \"missing.plist\" - could not load file") ==
+    EXPECT_TRUE(ai->name() == std::optional<std::string>("<no AI>"));
+    EXPECT_TRUE(LogLinesContaining("to \"missing.plist\" - could not load file") ==
              1);
-    OO_CHECK(oo::CacheManager::sharedCache()->pListForKey(
+    EXPECT_TRUE(oo::CacheManager::sharedCache()->pListForKey(
                  "missing.plist", "AIs") == oo::PList(std::string("nil")));
 
     // Remembered as missing: no second attempt, no second log line.
     const int lines = LogLinesContaining("missing.plist");
     ai->setStateMachine("missing.plist", "x.js");
-    OO_CHECK(LogLinesContaining("missing.plist") == lines);
-    OO_CHECK(ship->_calls.empty());
+    EXPECT_TRUE(LogLinesContaining("missing.plist") == lines);
+    EXPECT_TRUE(ship->_calls.empty());
   }
 }
 
-OO_TEST(stackOfStateMachines) {
-  SetUp();
+TEST(AI, stackOfStateMachines) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     TestShip* ship = NewShip(5);
@@ -562,11 +564,11 @@ OO_TEST(stackOfStateMachines) {
     ship->_calls.clear();
 
     ai->setStateMachine("other.plist", "other.js");
-    OO_CHECK(ai->stackDepth() == 1 && ai->hasSuspendedStateMachines());
-    OO_CHECK(ai->name() == std::optional<std::string>("other.plist"));
-    OO_CHECK(ai->state() == std::optional<std::string>("GLOBAL"));
-    OO_CHECK(ship->_calls == std::vector<std::string>({"doThing: other"}));
-    OO_CHECK(ai->getPendingMessages() ==
+    EXPECT_TRUE(ai->stackDepth() == 1 && ai->hasSuspendedStateMachines());
+    EXPECT_TRUE(ai->name() == std::optional<std::string>("other.plist"));
+    EXPECT_TRUE(ai->state() == std::optional<std::string>("GLOBAL"));
+    EXPECT_TRUE(ship->_calls == std::vector<std::string>({"doThing: other"}));
+    EXPECT_TRUE(ai->getPendingMessages() ==
              std::set<std::string>({"FOO"}));  // not cleared by a push
 
     // Exiting restores the machine, its state, its script and its messages,
@@ -574,36 +576,36 @@ OO_TEST(stackOfStateMachines) {
     ai->dropMessage("FOO");
     ship->_calls.clear();
     ai->exitStateMachineWithMessage(std::nullopt);
-    OO_CHECK(ai->stackDepth() == 0);
-    OO_CHECK(ai->name() == std::optional<std::string>("test.plist"));
-    OO_CHECK(ai->state() == std::optional<std::string>("ATTACK"));
-    OO_CHECK(ship->_script == std::optional<std::string>("test.js"));
-    OO_CHECK(ai->getPendingMessages() == std::set<std::string>({"FOO"}));
-    OO_CHECK(ship->_calls ==
+    EXPECT_TRUE(ai->stackDepth() == 0);
+    EXPECT_TRUE(ai->name() == std::optional<std::string>("test.plist"));
+    EXPECT_TRUE(ai->state() == std::optional<std::string>("ATTACK"));
+    EXPECT_TRUE(ship->_script == std::optional<std::string>("test.js"));
+    EXPECT_TRUE(ai->getPendingMessages() == std::set<std::string>({"FOO"}));
+    EXPECT_TRUE(ship->_calls ==
              std::vector<std::string>({"interpretAIMessage: RESTARTED"}));
 
     // Nothing suspended: nothing happens.
     ship->_calls.clear();
     ai->exitStateMachineWithMessage("BAR");
-    OO_CHECK(ship->_calls.empty());
+    EXPECT_TRUE(ship->_calls.empty());
 
     // Pushing and exiting with a message.
     ai->setStateMachine("other.plist", "other.js");
     ship->_calls.clear();
     ai->exitStateMachineWithMessage("BAR");
-    OO_CHECK(ship->_calls == std::vector<std::string>({"doThing: bar"}));
+    EXPECT_TRUE(ship->_calls == std::vector<std::string>({"doThing: bar"}));
 
     ai->setStateMachine("other.plist", "other.js");
     ai->clearStack();
-    OO_CHECK(ai->stackDepth() == 0);
+    EXPECT_TRUE(ai->stackDepth() == 0);
     ai->preserveCurrentStateMachine();
     ai->preserveCurrentStateMachine();
-    OO_CHECK(ai->stackDepth() == 2);
+    EXPECT_TRUE(ai->stackDepth() == 2);
     ai->restorePreviousStateMachine();
-    OO_CHECK(ai->stackDepth() == 1);
+    EXPECT_TRUE(ai->stackDepth() == 1);
     ai->clearAllData();
-    OO_CHECK(ai->stackDepth() == 0 && ai->getPendingMessages().empty());
-    OO_CHECK(ai->getNextThinkTime() == 36000.0);
+    EXPECT_TRUE(ai->stackDepth() == 0 && ai->getPendingMessages().empty());
+    EXPECT_TRUE(ai->getNextThinkTime() == 36000.0);
 
     // The stack is limited: the 33rd push raises, after logging.
     gLog.clear();
@@ -615,14 +617,14 @@ OO_TEST(stackOfStateMachines) {
     {
       raised = true;
     }
-    OO_CHECK(raised);
-    OO_CHECK(ai->stackDepth() == 32);
-    OO_CHECK(LogLinesContaining("AI stack overflow for") == 1);
+    EXPECT_TRUE(raised);
+    EXPECT_TRUE(ai->stackDepth() == 32);
+    EXPECT_TRUE(LogLinesContaining("AI stack overflow for") == 1);
   }
 }
 
-OO_TEST(messagesAndThinking) {
-  SetUp();
+TEST(AI, messagesAndThinking) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     TestShip* ship = NewShip(6);
@@ -633,26 +635,26 @@ OO_TEST(messagesAndThinking) {
     ai->message("FOO");
     ai->message("BAR");
     ai->message("FOO");
-    OO_CHECK(ai->getPendingMessages() == std::set<std::string>({"BAR", "FOO"}));
+    EXPECT_TRUE(ai->getPendingMessages() == std::set<std::string>({"BAR", "FOO"}));
     gLog.clear();
     ai->debugDumpPendingMessages();
-    OO_CHECK(
+    EXPECT_TRUE(
         LogLinesContaining("Pending messages for AI \"test.plist\" in state: "
                            "\"ATTACK\" for Test ship 6: BAR, FOO") == 1);
 
     // A think sends UPDATE, then the queued messages in byte order, and empties
     // the queue.
     ai->think();
-    OO_CHECK(ship->_calls ==
+    EXPECT_TRUE(ship->_calls ==
              std::vector<std::string>(
                  {"doThing: update", "doThing: bar", "doThing: foo"}));
-    OO_CHECK(ai->getPendingMessages().empty());
+    EXPECT_TRUE(ai->getPendingMessages().empty());
 
     // The queue holds 33 messages; more are logged and dropped.
     gLog.clear();
     for (int i = 0; i < 34; i++) ai->message("M" + std::to_string(100 + i));
-    OO_CHECK(ai->getPendingMessages().size() == 33);
-    OO_CHECK(LogLinesContaining("AI message \"M133\" received by 'Test ship 6' "
+    EXPECT_TRUE(ai->getPendingMessages().size() == 33);
+    EXPECT_TRUE(LogLinesContaining("AI message \"M133\" received by 'Test ship 6' "
                                 "AI while pending messages stack full") == 1);
     ai->clearAllData();
 
@@ -660,20 +662,20 @@ OO_TEST(messagesAndThinking) {
     ship->_id = NO_TARGET;
     ship->_calls.clear();
     ai->message("FOO");
-    OO_CHECK(ai->getPendingMessages().empty());
+    EXPECT_TRUE(ai->getPendingMessages().empty());
     ai->think();
     ai->reactToMessage("FOO", std::nullopt);
-    OO_CHECK(ship->_calls.empty());
+    EXPECT_TRUE(ship->_calls.empty());
 
     gLog.clear();
     ai->dumpState();
-    OO_CHECK(LogLinesContaining("State machine name: test.plist") == 1);
-    OO_CHECK(LogLinesContaining("Current state: ATTACK") == 1);
+    EXPECT_TRUE(LogLinesContaining("State machine name: test.plist") == 1);
+    EXPECT_TRUE(LogLinesContaining("Current state: ATTACK") == 1);
   }
 }
 
-OO_TEST(actionsAndRecursion) {
-  SetUp();
+TEST(AI, actionsAndRecursion) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     TestShip* ship = NewShip(8);
@@ -685,9 +687,9 @@ OO_TEST(actionsAndRecursion) {
     ai->takeAction("doThing:   a b   c");
     ai->takeAction("doNothing");
     ai->takeAction("");
-    OO_CHECK(ship->_calls ==
+    EXPECT_TRUE(ship->_calls ==
              std::vector<std::string>({"doThing: a b c", "doNothing"}));
-    OO_CHECK(ship->_runningAIs.back() ==
+    EXPECT_TRUE(ship->_runningAIs.back() ==
              "<no AI running>");  // not inside a handler
 
     // A handler whose action sends its own message again recurses until the
@@ -695,20 +697,20 @@ OO_TEST(actionsAndRecursion) {
     ship->_calls.clear();
     gLog.clear();
     ai->reactToMessage("LOOP", "test");
-    OO_CHECK(LogLinesContaining("hit stack depth limit") == 1);
-    OO_CHECK(ship->_calls.size() > 32);
+    EXPECT_TRUE(LogLinesContaining("hit stack depth limit") == 1);
+    EXPECT_TRUE(ship->_calls.size() > 32);
 
     // An orphaned AI logs instead of acting.
     AI* orphan = NewAI(nullptr);
     gLog.clear();
     orphan->takeAction("doNothing");
-    OO_CHECK(LogLinesContaining("AI <no AI>, trying to perform doNothing, is "
+    EXPECT_TRUE(LogLinesContaining("AI <no AI>, trying to perform doNothing, is "
                                 "orphaned (no owner)") == 1);
   }
 }
 
-OO_TEST(deferredCalls) {
-  SetUp();
+TEST(AI, deferredCalls) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     TestShip* ship = NewShip(9);
@@ -717,55 +719,55 @@ OO_TEST(deferredCalls) {
     ship->_calls.clear();
 
     ai->setState("GLOBAL", 2.5);
-    OO_CHECK(gDeferred.size() == 1);
-    OO_CHECK(gDeferred[0].call != nullptr);  // the call's own C++ call
-    OO_CHECK(gDeferred[0].delay == 2.5);
-    OO_CHECK(ai->state() == std::optional<std::string>("ATTACK"));  // not yet
+    EXPECT_TRUE(gDeferred.size() == 1);
+    EXPECT_TRUE(gDeferred[0].call != nullptr);  // the call's own C++ call
+    EXPECT_TRUE(gDeferred[0].delay == 2.5);
+    EXPECT_TRUE(ai->state() == std::optional<std::string>("ATTACK"));  // not yet
     FireDeferredCalls();
     // EXIT in ATTACK (no handler), then GLOBAL's ENTER moves straight back to
     // ATTACK.
-    OO_CHECK(ai->state() == std::optional<std::string>("ATTACK"));
-    OO_CHECK(ship->_calls.size() == 6);
-    OO_CHECK(ship->_calls[0] == "interpretAIMessage: EXIT" &&
+    EXPECT_TRUE(ai->state() == std::optional<std::string>("ATTACK"));
+    EXPECT_TRUE(ship->_calls.size() == 6);
+    EXPECT_TRUE(ship->_calls[0] == "interpretAIMessage: EXIT" &&
              ship->_calls[1] == "setStateTo: ATTACK");
 
     // The deferred state machine change names a selector the AI does not answer
     // (-setStateMachine: is the ship's), so it does nothing.
     ai->setStateMachine("other.plist", 1.0);
-    OO_CHECK(gDeferred.size() == 1);
+    EXPECT_TRUE(gDeferred.size() == 1);
     FireDeferredCalls();
-    OO_CHECK(ai->name() == std::optional<std::string>("test.plist"));
+    EXPECT_TRUE(ai->name() == std::optional<std::string>("test.plist"));
 
     // The call keeps the AI alive until it fires.
     std::shared_ptr<AI> keptRef = oo::makeShared<AI>();
     AI* kept = keptRef.get();
     kept->setState("GLOBAL", 0.0);
     keptRef = nullptr;  // [kept release]
-    OO_CHECK(kept->name() == std::optional<std::string>("<no AI>"));
+    EXPECT_TRUE(kept->name() == std::optional<std::string>("<no AI>"));
     FireDeferredCalls();
   }
 }
 
-OO_TEST(initialiserWithStateMachine) {
-  SetUp();
+TEST(AI, initialiserWithStateMachine) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     AI* ai = Autoreleased(
         AI::newWithStateMachine(std::string("other.plist"), "FROZEN"));
-    OO_CHECK(ai->name() == std::optional<std::string>("other.plist"));
-    OO_CHECK(ai->state() == std::optional<std::string>("FROZEN"));
-    OO_CHECK(ai->owner() == nullptr);
+    EXPECT_TRUE(ai->name() == std::optional<std::string>("other.plist"));
+    EXPECT_TRUE(ai->state() == std::optional<std::string>("FROZEN"));
+    EXPECT_TRUE(ai->owner() == nullptr);
 
     AI* plain =
         Autoreleased(AI::newWithStateMachine(std::nullopt, std::nullopt));
-    OO_CHECK(plain->name() == std::optional<std::string>("<no AI>"));
-    OO_CHECK(!plain->state().has_value());
+    EXPECT_TRUE(plain->name() == std::optional<std::string>("<no AI>"));
+    EXPECT_TRUE(!plain->state().has_value());
   }
 }
 
 // The C++ AI's own calls.
-OO_TEST(cxxAPI) {
-  SetUp();
+TEST(AI, cxxAPI) {
+  ::SetUp();
   std::shared_ptr<AI> kept;
   {
     oo::AutoreleaseScope pool;
@@ -773,30 +775,28 @@ OO_TEST(cxxAPI) {
     std::shared_ptr<AI> ai = oo::makeShared<AI>();
     ship->_ai = ai.get();
     ai->setOwner(Part(ship));
-    OO_CHECK(ai->owner() == Part(ship));
+    EXPECT_TRUE(ai->owner() == Part(ship));
 
     // The C++ calls run the machine; the actions see it running.
     ai->setStateMachine("test.plist", "test.js");
-    OO_CHECK(ai->state() == std::optional<std::string>("ATTACK"));
-    OO_CHECK(ship->_runningAIs.size() == 2);
+    EXPECT_TRUE(ai->state() == std::optional<std::string>("ATTACK"));
+    EXPECT_TRUE(ship->_runningAIs.size() == 2);
     ai->message("FOO");
-    OO_CHECK(ai->getPendingMessages() == std::set<std::string>({"FOO"}));
-    OO_CHECK(AI::currentlyRunningAI() == nullptr);
+    EXPECT_TRUE(ai->getPendingMessages() == std::set<std::string>({"FOO"}));
+    EXPECT_TRUE(AI::currentlyRunningAI() == nullptr);
 
     // A deferred call holds the AI.
     ai->setState("GLOBAL", 1.0);
-    OO_CHECK(gDeferred.size() == 1);
+    EXPECT_TRUE(gDeferred.size() == 1);
     FireDeferredCalls();
-    OO_CHECK(ai->state() == std::optional<std::string>("ATTACK"));
+    EXPECT_TRUE(ai->state() == std::optional<std::string>("ATTACK"));
 
     kept = ai;
   }
-  OO_CHECK(kept->name() == std::optional<std::string>("test.plist"));
+  EXPECT_TRUE(kept->name() == std::optional<std::string>("test.plist"));
   {
     oo::AutoreleaseScope pool;
     std::shared_ptr<AI> bare = oo::makeShared<AI>();
-    OO_CHECK(bare->name() == std::optional<std::string>("<no AI>"));
+    EXPECT_TRUE(bare->name() == std::optional<std::string>("<no AI>"));
   }
 }
-
-OO_TEST_MAIN()

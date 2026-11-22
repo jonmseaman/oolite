@@ -19,6 +19,8 @@
    native's exception. Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Commodities.h"
 #include "CommodityMarket.h"
 #include "StringExpander.h"
@@ -92,7 +94,6 @@ public:
 #include "OOJSManifest.h"
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -460,14 +461,14 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSManifest, registration)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("typeof Manifest", "function");
@@ -480,7 +481,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(quantities)
+TEST(OOJSManifest, quantities)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("JSON.stringify(manifest.list)", "[{\"commodity\":\"food\",\"quantity\":3},{\"commodity\":\"gems\",\"quantity\":12}]");
@@ -495,20 +496,20 @@ OO_TEST(quantities)
 	// (upstream #768 throws where the error was reported and the assignment ignored).
 	OO_CHECK_EVAL("(function () { manifest.food = 'x'; return 'set'; })()", "threw: Cannot set property food of instance of Manifest to invalid value x.");
 	OO_CHECK_EVAL("manifest.food", "5");
-	OO_CHECK_EQ(sPlayer->_sets, 3);
+	EXPECT_EQ(sPlayer->_sets, 3);
 	OO_CHECK_EVAL("(function () { manifest.food = 9; delete manifest.food; return 'deleted'; })()", "threw: Cannot set property food of instance of Manifest to invalid value undefined.");
 	OO_CHECK_EVAL("manifest.food", "9");
-	OO_CHECK_EQ(sPlayer->_sets, 4);
+	EXPECT_EQ(sPlayer->_sets, 4);
 	// Any other name is set on the player as it is, commodity or not, and kept on the object.
 	OO_CHECK_EVAL("(function () { manifest.unobtainium = 3; return manifest.unobtainium; })()", "3");
-	OO_CHECK_EQ(sPlayer->_sets, 5);
-	OO_CHECK_EQ(sPlayer->_cargo["unobtainium"], 3u);
+	EXPECT_EQ(sPlayer->_sets, 5);
+	EXPECT_EQ(sPlayer->_cargo["unobtainium"], 3u);
 	sPlayer->_cargo.erase("unobtainium");
 	sPlayer->_cargo["food"] = 3;
 }
 
 
-OO_TEST(specialCargo)
+TEST(OOJSManifest, specialCargo)
 {
 	SetUpContext();
 	sPlayer->_specialCargo = std::string("a sealed crate");
@@ -516,16 +517,16 @@ OO_TEST(specialCargo)
 	sPlayer->_sets = 0;
 	// Tonnage cannot change with special cargo; grams and kilograms can.
 	OO_CHECK_EVAL("(function () { manifest.food = 10; return manifest.food; })()", "3");
-	OO_CHECK_EQ(sLastWarning, std::string("PlayerShip.manifest['foo'] - cannot modify cargo tonnage when Special Cargo is in use."));
-	OO_CHECK_EQ(sPlayer->_sets, 0);
+	EXPECT_EQ(sLastWarning, std::string("PlayerShip.manifest['foo'] - cannot modify cargo tonnage when Special Cargo is in use."));
+	EXPECT_EQ(sPlayer->_sets, 0);
 	OO_CHECK_EVAL("(function () { manifest.gems = 20; return manifest.gems; })()", "20");
-	OO_CHECK_EQ(sPlayer->_sets, 1);
+	EXPECT_EQ(sPlayer->_sets, 1);
 	sPlayer->_specialCargo = std::nullopt;
 	sPlayer->_cargo["gems"] = 12;
 }
 
 
-OO_TEST(comments)
+TEST(OOJSManifest, comments)
 {
 	SetUpContext();
 	// The market expands its comments (the expander here gives "<text>").
@@ -537,7 +538,7 @@ OO_TEST(comments)
 	OO_CHECK_EVAL("manifest.shortComment('food')", "<[oolite-commodity-no-short-comment]>");
 	OO_CHECK_EVAL("manifest.setComment('unobtainium', 'x')", "false");
 	OO_CHECK_EVAL("manifest.comment('unobtainium')", "<[oolite-unknown-commodity-name]>");
-	OO_CHECK(sPlayer->_shipCommodityData->commentForGood("food") == std::optional<std::string>("<Edible>"));
+	EXPECT_TRUE(sPlayer->_shipCommodityData->commentForGood("food") == std::optional<std::string>("<Edible>"));
 	OO_CHECK_EVAL("manifest.comment()", "threw: bad arguments: Manifest.comment(0) - / good");
 	OO_CHECK_EVAL("manifest.shortComment(null)", "threw: bad arguments: Manifest.shortComment(1) - / good");
 	OO_CHECK_EVAL("manifest.setComment('food')", "threw: bad arguments: Manifest.setComment(1) - / good and information text");
@@ -545,7 +546,7 @@ OO_TEST(comments)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSManifest, nativeExceptions)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("manifest.furs", "threw: Native exception: cargo boom");
@@ -553,9 +554,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("manifest.gems", "threw: Native exception: cxx boom");
 	sPlayer->_throwCxx = false;
 	OO_CHECK_EVAL("manifest.gems", "12");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

@@ -23,6 +23,8 @@
         Run: bash meson test -C build/meson_test test_OODebugTCPConsoleClient
 */
 
+#include <gtest/gtest.h>
+
 #include "DebugMonitor.h"
 #include "DebugTCPConsoleClient.h"
 #include "EntityManualRefs.h"  // the tests' manual references
@@ -37,7 +39,6 @@
 #include <vector>
 
 #include "DebugTCPConsoleProtocol.h"
-#include "oo_test.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/PListWriting.hpp"
 
@@ -229,77 +230,77 @@ struct Session {
 
 // Connecting sends "Request Connection" with the protocol version; the monitor
 // can then connect, and the console's approval is read.
-OO_TEST(connectsAndRequestsTheConnection) {
+TEST(OODebugTCPConsoleClient, connectsAndRequestsTheConnection) {
   {
     Session session;
-    OO_CHECK(session.client != nullptr);
-    OO_CHECK(TypeOf(session.request) == "Request Connection");
+    EXPECT_TRUE(session.client != nullptr);
+    EXPECT_TRUE(TypeOf(session.request) == "Request Connection");
     const oo::PList* version = Value(session.request, "protocol version");
-    OO_CHECK(Same(version, oo::PList(static_cast<std::int64_t>(
+    EXPECT_TRUE(Same(version, oo::PList(static_cast<std::int64_t>(
                                oo::kTCPProtocolVersion_1_1_0))));
 
     std::optional<std::string> message;
-    OO_CHECK(session.client->connectDebugMonitor(Monitor(), &message));
-    OO_CHECK(!message.has_value());
-    OO_CHECK(oo::DebugTCPConsoleIsWaitingForInput());
+    EXPECT_TRUE(session.client->connectDebugMonitor(Monitor(), &message));
+    EXPECT_TRUE(!message.has_value());
+    EXPECT_TRUE(oo::DebugTCPConsoleIsWaitingForInput());
 
     SendPacket(session.console, "Approve Connection",
                {{"console identity", oo::PList(std::string("Test Console"))}});
-    OO_CHECK(oo::DebugTCPConsoleIsWaitingForInput());
+    EXPECT_TRUE(oo::DebugTCPConsoleIsWaitingForInput());
   }
 }
 
 // What the monitor sends becomes the console's packets.
-OO_TEST(sendsTheMonitorsOutput) {
+TEST(OODebugTCPConsoleClient, sendsTheMonitorsOutput) {
   {
     Session session;
-    OO_CHECK(session.client->connectDebugMonitor(Monitor(), NULL));
+    EXPECT_TRUE(session.client->connectDebugMonitor(Monitor(), NULL));
     SendPacket(session.console, "Approve Connection");
 
     session.client->debugMonitor(Monitor(), "hello", std::nullopt,
                                  NSMakeRange(1, 2));
     oo::PList packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Console Output");
-    OO_CHECK(Same(Value(packet, "message"), oo::PList(std::string("hello"))));
-    OO_CHECK(
+    EXPECT_TRUE(TypeOf(packet) == "Console Output");
+    EXPECT_TRUE(Same(Value(packet, "message"), oo::PList(std::string("hello"))));
+    EXPECT_TRUE(
         Same(Value(packet, "color key"), oo::PList(std::string("general"))));
-    OO_CHECK(Same(Value(packet, "emphasis ranges"),
+    EXPECT_TRUE(Same(Value(packet, "emphasis ranges"),
                   oo::PList(oo::PList::Array{oo::PList(1), oo::PList(2)})));
 
     session.client->debugMonitor(Monitor(), "oops", std::string("error"),
                                  NSMakeRange(0, 0));
     packet = ReadPacket(session.console);
-    OO_CHECK(Same(Value(packet, "color key"), oo::PList(std::string("error"))));
-    OO_CHECK(Value(packet, "emphasis ranges") == nullptr);
+    EXPECT_TRUE(Same(Value(packet, "color key"), oo::PList(std::string("error"))));
+    EXPECT_TRUE(Value(packet, "emphasis ranges") == nullptr);
 
     session.client->debugMonitorClearConsole(Monitor());
     packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Clear Console" &&
+    EXPECT_TRUE(TypeOf(packet) == "Clear Console" &&
              packet.getIf<oo::PList::Dict>()->size() == 1);
 
     session.client->debugMonitorShowConsole(Monitor());
-    OO_CHECK(TypeOf(ReadPacket(session.console)) == "Show Console");
+    EXPECT_TRUE(TypeOf(ReadPacket(session.console)) == "Show Console");
 
     oo::PList::Dict configuration;
     configuration["font-size"] = oo::PList(12);
     session.client->debugMonitor(Monitor(), oo::PList(configuration));
     packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Note Configuration");
-    OO_CHECK(Same(Value(packet, "configuration"), oo::PList(configuration)));
+    EXPECT_TRUE(TypeOf(packet) == "Note Configuration");
+    EXPECT_TRUE(Same(Value(packet, "configuration"), oo::PList(configuration)));
 
     session.client->debugMonitor(Monitor(), oo::PList(14),
                                  std::string("font-size"));
     packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Note Configuration");
+    EXPECT_TRUE(TypeOf(packet) == "Note Configuration");
     configuration["font-size"] = oo::PList(14);
-    OO_CHECK(Same(Value(packet, "configuration"), oo::PList(configuration)));
+    EXPECT_TRUE(Same(Value(packet, "configuration"), oo::PList(configuration)));
 
     session.client->debugMonitor(Monitor(), oo::PList(),
                                  std::string("font-size"));
     packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Note Configuration");
-    OO_CHECK(Value(packet, "configuration") == nullptr);
-    OO_CHECK(
+    EXPECT_TRUE(TypeOf(packet) == "Note Configuration");
+    EXPECT_TRUE(Value(packet, "configuration") == nullptr);
+    EXPECT_TRUE(
         Same(Value(packet, "removed configuration keys"),
              oo::PList(oo::PList::Array{oo::PList(std::string("font-size"))})));
   }
@@ -308,32 +309,32 @@ OO_TEST(sendsTheMonitorsOutput) {
 // What the console sends: ping is answered, commands and configuration go to
 // the monitor, a configuration request is answered from the monitor, and an
 // unknown packet is ignored.
-OO_TEST(handlesTheConsolesPackets) {
+TEST(OODebugTCPConsoleClient, handlesTheConsolesPackets) {
   {
     Session session;
-    OO_CHECK(session.client->connectDebugMonitor(Monitor(), NULL));
+    EXPECT_TRUE(session.client->connectDebugMonitor(Monitor(), NULL));
     SendPacket(session.console, "Approve Connection");
 
     SendPacket(session.console, "Ping",
                {{"message", oo::PList(std::string("p1"))}});
     oo::PList packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Pong");
-    OO_CHECK(Same(Value(packet, "message"), oo::PList(std::string("p1"))));
+    EXPECT_TRUE(TypeOf(packet) == "Pong");
+    EXPECT_TRUE(Same(Value(packet, "message"), oo::PList(std::string("p1"))));
 
     SendPacket(session.console, "Ping");
     packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Pong" &&
+    EXPECT_TRUE(TypeOf(packet) == "Pong" &&
              packet.getIf<oo::PList::Dict>()->size() == 1);
 
     sMonitor = MonitorRecord();
     SendPacket(session.console, "Perform Command",
                {{"message", oo::PList(std::string("1 + 1"))}});
-    OO_CHECK(sMonitor.commands == std::vector<std::string>{"1 + 1"});
+    EXPECT_TRUE(sMonitor.commands == std::vector<std::string>{"1 + 1"});
     SendPacket(session.console, "Perform Command",
                {{"message", oo::PList(42)}});  // a number's string value
-    OO_CHECK(sMonitor.commands.size() == 2 && sMonitor.commands[1] == "42");
+    EXPECT_TRUE(sMonitor.commands.size() == 2 && sMonitor.commands[1] == "42");
     SendPacket(session.console, "Perform Command");
-    OO_CHECK(sMonitor.commands.size() == 2);
+    EXPECT_TRUE(sMonitor.commands.size() == 2);
 
     // Every entry of the configuration is set, the removed-keys entry included;
     // the removed keys are then cleared.
@@ -343,32 +344,32 @@ OO_TEST(handlesTheConsolesPackets) {
         oo::PList(oo::PList::Array{oo::PList(std::string("b")), oo::PList(3)});
     SendPacket(session.console, "Note Configuration Change",
                {{"configuration", oo::PList(change)}});
-    OO_CHECK(sMonitor.configurationSets.size() == 3);
+    EXPECT_TRUE(sMonitor.configurationSets.size() == 3);
     if (sMonitor.configurationSets.size() == 3) {
-      OO_CHECK(sMonitor.configurationSets[0].first == "a" &&
+      EXPECT_TRUE(sMonitor.configurationSets[0].first == "a" &&
                Same(&sMonitor.configurationSets[0].second, oo::PList(1)));
-      OO_CHECK(sMonitor.configurationSets[1].first ==
+      EXPECT_TRUE(sMonitor.configurationSets[1].first ==
                "removed configuration keys");
-      OO_CHECK(sMonitor.configurationSets[2].first == "b" &&
+      EXPECT_TRUE(sMonitor.configurationSets[2].first == "b" &&
                sMonitor.configurationSets[2].second.isNull());
     }
     SendPacket(session.console, "Note Configuration Change",
                {{"configuration", oo::PList(std::string("not a dictionary"))}});
-    OO_CHECK(sMonitor.configurationSets.size() == 3);
+    EXPECT_TRUE(sMonitor.configurationSets.size() == 3);
 
     sMonitor.configuration["font-size"] = oo::PList(12);
     SendPacket(session.console, "Request Configuration Value",
                {{"configuration key", oo::PList(std::string("font-size"))}});
     packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Note Configuration");
+    EXPECT_TRUE(TypeOf(packet) == "Note Configuration");
     oo::PList::Dict expected;
     expected["font-size"] = oo::PList(12);
-    OO_CHECK(Same(Value(packet, "configuration"), oo::PList(expected)));
+    EXPECT_TRUE(Same(Value(packet, "configuration"), oo::PList(expected)));
 
     SendPacket(session.console, "Request Configuration Value",
                {{"configuration key", oo::PList(std::string("missing"))}});
     packet = ReadPacket(session.console);
-    OO_CHECK(
+    EXPECT_TRUE(
         Same(Value(packet, "removed configuration keys"),
              oo::PList(oo::PList::Array{oo::PList(std::string("missing"))})));
 
@@ -376,30 +377,30 @@ OO_TEST(handlesTheConsolesPackets) {
     SendPacket(session.console, "Ping",
                {{"message", oo::PList(std::string("p2"))}});
     packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Pong" &&
+    EXPECT_TRUE(TypeOf(packet) == "Pong" &&
              Same(Value(packet, "message"), oo::PList(std::string("p2"))));
   }
 }
 
 // The monitor disconnects: a close packet with the message, then the socket
 // closes; the client cannot be connected again.
-OO_TEST(disconnectsFromTheConsole) {
+TEST(OODebugTCPConsoleClient, disconnectsFromTheConsole) {
   {
     Session session;
-    OO_CHECK(session.client->connectDebugMonitor(Monitor(), NULL));
+    EXPECT_TRUE(session.client->connectDebugMonitor(Monitor(), NULL));
     SendPacket(session.console, "Approve Connection");
 
     session.client->disconnectDebugMonitor(Monitor(), std::string("bye"));
     oo::PList packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Close Connection");
-    OO_CHECK(Same(Value(packet, "message"), oo::PList(std::string("bye"))));
+    EXPECT_TRUE(TypeOf(packet) == "Close Connection");
+    EXPECT_TRUE(Same(Value(packet, "message"), oo::PList(std::string("bye"))));
     char byte = 0;
-    OO_CHECK(recv(session.console, &byte, 1, 0) == 0);
-    OO_CHECK(!oo::DebugTCPConsoleIsWaitingForInput());
+    EXPECT_TRUE(recv(session.console, &byte, 1, 0) == 0);
+    EXPECT_TRUE(!oo::DebugTCPConsoleIsWaitingForInput());
 
     std::optional<std::string> message;
-    OO_CHECK(!session.client->connectDebugMonitor(Monitor(), &message));
-    OO_CHECK(message == std::optional<std::string>(
+    EXPECT_TRUE(!session.client->connectDebugMonitor(Monitor(), &message));
+    EXPECT_TRUE(message == std::optional<std::string>(
                             "Cannot reconnect after disconnecting."));
 
     // Disconnecting again sends nothing: the socket is already closed.
@@ -408,68 +409,68 @@ OO_TEST(disconnectsFromTheConsole) {
 }
 
 // No message: the close packet has no message key.
-OO_TEST(disconnectsWithoutAMessage) {
+TEST(OODebugTCPConsoleClient, disconnectsWithoutAMessage) {
   {
     Session session;
     session.client->disconnectDebugMonitor(Monitor(), std::nullopt);
     oo::PList packet = ReadPacket(session.console);
-    OO_CHECK(TypeOf(packet) == "Close Connection" &&
+    EXPECT_TRUE(TypeOf(packet) == "Close Connection" &&
              packet.getIf<oo::PList::Dict>()->size() == 1);
   }
 }
 
 // The console refuses the connection: the monitor cannot connect.
-OO_TEST(theConsoleRefuses) {
+TEST(OODebugTCPConsoleClient, theConsoleRefuses) {
   {
     Session session;
     SendPacket(session.console, "Reject Connection",
                {{"message", oo::PList(std::string("no thanks"))}});
-    OO_CHECK(!oo::DebugTCPConsoleIsWaitingForInput());
+    EXPECT_TRUE(!oo::DebugTCPConsoleIsWaitingForInput());
     char byte = 0;
-    OO_CHECK(recv(session.console, &byte, 1, 0) == 0);
+    EXPECT_TRUE(recv(session.console, &byte, 1, 0) == 0);
 
     std::optional<std::string> message;
-    OO_CHECK(!session.client->connectDebugMonitor(Monitor(), &message));
-    OO_CHECK(message == std::optional<std::string>("Connection refused."));
+    EXPECT_TRUE(!session.client->connectDebugMonitor(Monitor(), &message));
+    EXPECT_TRUE(message == std::optional<std::string>("Connection refused."));
   }
 }
 
 // The console closes the connection: the client closes its socket and cannot be
 // connected again.
-OO_TEST(theConsoleCloses) {
+TEST(OODebugTCPConsoleClient, theConsoleCloses) {
   {
     Session session;
-    OO_CHECK(session.client->connectDebugMonitor(Monitor(), NULL));
+    EXPECT_TRUE(session.client->connectDebugMonitor(Monitor(), NULL));
     SendPacket(session.console, "Approve Connection");
     SendPacket(session.console, "Close Connection");
-    OO_CHECK(!oo::DebugTCPConsoleIsWaitingForInput());
+    EXPECT_TRUE(!oo::DebugTCPConsoleIsWaitingForInput());
 
     std::optional<std::string> message;
-    OO_CHECK(!session.client->connectDebugMonitor(Monitor(), &message));
-    OO_CHECK(message == std::optional<std::string>(
+    EXPECT_TRUE(!session.client->connectDebugMonitor(Monitor(), &message));
+    EXPECT_TRUE(message == std::optional<std::string>(
                             "Cannot reconnect after disconnecting."));
 
     // Nothing more is sent.
     session.client->debugMonitorShowConsole(Monitor());
-    OO_CHECK(!oo::DebugTCPConsoleIsWaitingForInput());
+    EXPECT_TRUE(!oo::DebugTCPConsoleIsWaitingForInput());
   }
 }
 
 // The console hangs up: the client's input is at its end and it waits for
 // nothing more.
-OO_TEST(theConsoleHangsUp) {
+TEST(OODebugTCPConsoleClient, theConsoleHangsUp) {
   {
     Session session;
-    OO_CHECK(oo::DebugTCPConsoleIsWaitingForInput());
+    EXPECT_TRUE(oo::DebugTCPConsoleIsWaitingForInput());
     closesocket(session.console);
     session.console = INVALID_SOCKET;
     oo::DebugTCPConsoleServiceInput(2.0);
-    OO_CHECK(!oo::DebugTCPConsoleIsWaitingForInput());
+    EXPECT_TRUE(!oo::DebugTCPConsoleIsWaitingForInput());
   }
 }
 
 // Nobody answers: the connection fails and the initialiser answers nil.
-OO_TEST(nobodyAnswers) {
+TEST(OODebugTCPConsoleClient, nobodyAnswers) {
   {
     uint16_t port = 0;
     SOCKET listener = Listen(&port);
@@ -478,22 +479,22 @@ OO_TEST(nobodyAnswers) {
     std::shared_ptr<oo::DebugTCPConsoleClient> client =
         oo::DebugTCPConsoleClient::clientWithAddress(std::string("127.0.0.1"),
                                                    port);
-    OO_CHECK(client == nullptr);
-    OO_CHECK(!oo::DebugTCPConsoleIsWaitingForInput());
+    EXPECT_TRUE(client == nullptr);
+    EXPECT_TRUE(!oo::DebugTCPConsoleIsWaitingForInput());
   }
 }
 
 // The C++ client.
-OO_TEST(cxxClientAndItsFacade) {
+TEST(OODebugTCPConsoleClient, cxxClientAndItsFacade) {
   {
     Session session;
     oo::DebugTCPConsoleClient* client = session.client.get();
-    OO_CHECK(client != nullptr);
+    EXPECT_TRUE(client != nullptr);
 
-    OO_CHECK(client->connectDebugMonitor(oo::DebugMonitor::sharedDebugMonitor(),
+    EXPECT_TRUE(client->connectDebugMonitor(oo::DebugMonitor::sharedDebugMonitor(),
                                          nullptr));
     client->debugMonitorShowConsole(oo::DebugMonitor::sharedDebugMonitor());
-    OO_CHECK(TypeOf(ReadPacket(session.console)) == "Show Console");
+    EXPECT_TRUE(TypeOf(ReadPacket(session.console)) == "Show Console");
   }
 
   {
@@ -502,15 +503,15 @@ OO_TEST(cxxClientAndItsFacade) {
     std::shared_ptr<oo::DebugTCPConsoleClient> client =
         oo::DebugTCPConsoleClient::clientWithAddress(std::string("127.0.0.1"),
                                                    port);
-    OO_CHECK(client.get() != nullptr);
+    EXPECT_TRUE(client.get() != nullptr);
     SOCKET console = Accept(listener);
-    OO_CHECK(TypeOf(ReadPacket(console)) == "Request Connection");
+    EXPECT_TRUE(TypeOf(ReadPacket(console)) == "Request Connection");
 
     client->debugMonitorClearConsole(Monitor());
-    OO_CHECK(TypeOf(ReadPacket(console)) == "Clear Console");
+    EXPECT_TRUE(TypeOf(ReadPacket(console)) == "Clear Console");
 
     client->debugMonitorShowConsole(Monitor());
-    OO_CHECK(TypeOf(ReadPacket(console)) == "Show Console");
+    EXPECT_TRUE(TypeOf(ReadPacket(console)) == "Show Console");
     client = std::shared_ptr<oo::DebugTCPConsoleClient>();
     closesocket(console);
     closesocket(listener);
@@ -519,9 +520,7 @@ OO_TEST(cxxClientAndItsFacade) {
   uint16_t port = 0;
   SOCKET listener = Listen(&port);
   closesocket(listener);
-  OO_CHECK(
+  EXPECT_TRUE(
       oo::DebugTCPConsoleClient::clientWithAddress(std::string("127.0.0.1"), port)
           .get() == nullptr);
 }
-
-OO_TEST_MAIN()

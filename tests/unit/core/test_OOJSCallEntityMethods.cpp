@@ -27,10 +27,11 @@
 #include <set>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "EntityCalledByName.h"
 #include "OOJSCallEntityMethods.h"
 #include "ShaderUniformMethodType.h"
-#include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -96,15 +97,15 @@ std::map<std::string, OracleRow> OracleSafeSet() {
 
 }  // namespace
 
-OO_TEST(tableIsTheMatchersSafeSet) {
+TEST(OOJSCallEntityMethods, tableIsTheMatchersSafeSet) {
   {
     const std::map<std::string, OracleRow> oracle = OracleSafeSet();
     std::map<std::string, const OOJSCallEntityMethodRow*> table;
     for (const OOJSCallEntityMethodRow& row : kOOJSCallEntityMethods)
       table[row.name] = &row;
-    OO_CHECK_EQ(table.size(),
+    EXPECT_EQ(table.size(),
                 std::size(kOOJSCallEntityMethods));  // no name twice
-    OO_CHECK(oracle.size() > 400);                   // the by-name categories
+    EXPECT_TRUE(oracle.size() > 400);                   // the by-name categories
 
     std::string missing, different;
     for (const auto& [name, row] : oracle) {
@@ -119,15 +120,15 @@ OO_TEST(tableIsTheMatchersSafeSet) {
         same = (oo::ShaderUniformTypeOf(entry.type) == row.type);
       if (!same) different += " " + name;
     }
-    OO_CHECK_EQ(missing, std::string());
-    OO_CHECK_EQ(different, std::string());
+    EXPECT_EQ(missing, std::string());
+    EXPECT_EQ(different, std::string());
   }
 }
 
 // The safe set leaves out what callObjC() could not call safely: lifetime and
 // root-protocol names, and every selector with an argument but the two string
 // templates.
-OO_TEST(tableLeavesOutUnsafeNames) {
+TEST(OOJSCallEntityMethods, tableLeavesOutUnsafeNames) {
   std::set<std::string> names;
   for (const OOJSCallEntityMethodRow& row : kOOJSCallEntityMethods)
     names.insert(row.name);
@@ -135,7 +136,7 @@ OO_TEST(tableLeavesOutUnsafeNames) {
        {"init", "dealloc", "retain", "release", "autorelease", "copy", "self",
         "class", "hash", "description",
         "respondsToSelector:", "isKindOfClass:", "initWithCxxEntity:"}) {
-    OO_CHECK(!names.contains(name));
+    EXPECT_TRUE(!names.contains(name));
   }
   for (const OOJSCallEntityMethodRow& row : kOOJSCallEntityMethods) {
     const bool takesString =
@@ -143,8 +144,8 @@ OO_TEST(tableLeavesOutUnsafeNames) {
          row.form == OOJSCallEntityMethodForm::kPListString);
     const bool endsWithColon = (std::strlen(row.name) > 0 &&
                                 row.name[std::strlen(row.name) - 1] == ':');
-    OO_CHECK(takesString == endsWithColon);
-    OO_CHECK((row.form == OOJSCallEntityMethodForm::kTyped) ==
+    EXPECT_TRUE(takesString == endsWithColon);
+    EXPECT_TRUE((row.form == OOJSCallEntityMethodForm::kTyped) ==
              (row.type != oo::ValueType::kVoid));
   }
 }
@@ -154,7 +155,7 @@ OO_TEST(tableLeavesOutUnsafeNames) {
 // (OOEntityCalledByName.mm), never both; each facade row is a method of the
 // root facade (the class Entity, with its categories), and has the facade
 // method's body exactly when callObjC() can read the method's result.
-OO_TEST(everyNameIsAnsweredByTheCxxEntity) {
+TEST(OOJSCallEntityMethods, everyNameIsAnsweredByTheCxxEntity) {
   {
     std::set<std::string> names;
     for (const OOJSCallEntityMethodRow& row : kOOJSCallEntityMethods)
@@ -188,11 +189,9 @@ OO_TEST(everyNameIsAnsweredByTheCxxEntity) {
       if (!names.contains(facade.name))
         notInTable += std::string(" ") + facade.name;
     }
-    OO_CHECK_EQ(uncovered, std::string());
-    OO_CHECK_EQ(twice, std::string());
-    OO_CHECK_EQ(notInTable, std::string());
-    OO_CHECK_EQ(typedMismatch, std::string());
+    EXPECT_EQ(uncovered, std::string());
+    EXPECT_EQ(twice, std::string());
+    EXPECT_EQ(notInTable, std::string());
+    EXPECT_EQ(typedMismatch, std::string());
   }
 }
-
-OO_TEST_MAIN()

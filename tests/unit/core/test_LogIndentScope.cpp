@@ -7,22 +7,23 @@
 
 #include <stdexcept>
 
+#include <gtest/gtest.h>
+
 #include "LogIndentScope.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
-OO_TEST(indentsForTheScopeAndRestores) {
+TEST(LogIndentScope, indentsForTheScopeAndRestores) {
   const unsigned before = oo::log::indentLevel();
   {
     const oo::LogIndentScope indent;
-    OO_CHECK(oo::log::indentLevel() == before + 1);
+    EXPECT_TRUE(oo::log::indentLevel() == before + 1);
     {
       const oo::LogIndentScope inner;
-      OO_CHECK(oo::log::indentLevel() == before + 2);
+      EXPECT_TRUE(oo::log::indentLevel() == before + 2);
     }
-    OO_CHECK(oo::log::indentLevel() == before + 1);
+    EXPECT_TRUE(oo::log::indentLevel() == before + 1);
   }
-  OO_CHECK(oo::log::indentLevel() == before);
+  EXPECT_TRUE(oo::log::indentLevel() == before);
 }
 
 static unsigned IndentedEarlyReturn(bool early) {
@@ -31,13 +32,13 @@ static unsigned IndentedEarlyReturn(bool early) {
   return oo::log::indentLevel();
 }
 
-OO_TEST(restoresOnAnEarlyReturn) {
+TEST(LogIndentScope, restoresOnAnEarlyReturn) {
   const unsigned before = oo::log::indentLevel();
-  OO_CHECK(IndentedEarlyReturn(true) == before + 1);
-  OO_CHECK(oo::log::indentLevel() == before);
+  EXPECT_TRUE(IndentedEarlyReturn(true) == before + 1);
+  EXPECT_TRUE(oo::log::indentLevel() == before);
 }
 
-OO_TEST(restoresWhenAnExceptionLeavesTheScope) {
+TEST(LogIndentScope, restoresWhenAnExceptionLeavesTheScope) {
   const unsigned before = oo::log::indentLevel();
   bool caught = false;
   try {
@@ -46,8 +47,6 @@ OO_TEST(restoresWhenAnExceptionLeavesTheScope) {
   } catch (const std::runtime_error&) {
     caught = true;
   }
-  OO_CHECK(caught);
-  OO_CHECK(oo::log::indentLevel() == before);
+  EXPECT_TRUE(caught);
+  EXPECT_TRUE(oo::log::indentLevel() == before);
 }
-
-OO_TEST_MAIN()

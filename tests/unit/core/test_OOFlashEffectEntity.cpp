@@ -25,12 +25,13 @@
 #include <optional>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "Color.h"
 #include "FlashEffectEntity.h"
 #include "Texture.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -135,125 +136,123 @@ Entity* Exploding() {
 
 }  // namespace
 
-OO_TEST(explosionFlash) {
+TEST(OOFlashEffectEntity, explosionFlash) {
   {
-    SetUp(5.0);
+    ::SetUp(5.0);
     Entity* flash =
         FlashObject(oo::FlashEffectEntity::explosionFlashFromEntity(Exploding()));
-    OO_CHECK(flash != nullptr && Part(flash) != nullptr);
-    OO_CHECK(HPvector_equal(flash->getPosition(), make_HPvector(10, 20, 30)));
+    EXPECT_TRUE(flash != nullptr && Part(flash) != nullptr);
+    EXPECT_TRUE(HPvector_equal(flash->getPosition(), make_HPvector(10, 20, 30)));
     Vector v = flash->getVelocity();
-    OO_CHECK(v.x == 1 && v.y == 2 && v.z == 3);
-    OO_CHECK(Part(flash)->diameter() == 2.0f && Diameter(flash) == 2.0f);
-    OO_CHECK(flash->collisionRadius() == 0.0f && flash->getEnergy() == 0.0f);
-    OO_CHECK(flash->status() == oo::EntityStatus::kEffect &&
+    EXPECT_TRUE(v.x == 1 && v.y == 2 && v.z == 3);
+    EXPECT_TRUE(Part(flash)->diameter() == 2.0f && Diameter(flash) == 2.0f);
+    EXPECT_TRUE(flash->collisionRadius() == 0.0f && flash->getEnergy() == 0.0f);
+    EXPECT_TRUE(flash->status() == oo::EntityStatus::kEffect &&
              flash->getScanClass() == oo::ScanClass::kNoDraw && flash->isEffect() &&
              !flash->canCollide());
     const GLfloat* c = ColorComponents(flash);
-    OO_CHECK(c[0] == 1.0f && c[1] == 1.0f && c[2] == 1.0f && c[3] == 1.0f);
+    EXPECT_TRUE(c[0] == 1.0f && c[1] == 1.0f && c[2] == 1.0f && c[3] == 1.0f);
 
     // Growth max(150 * 2, 600) = 600 a second; alpha 0.5, duration 0.4: fade in
     // for 0.2668 s.
     sUniverse->_time = 5.1;
     flash->update(0.1);
-    OO_CHECK(Near(Diameter(flash), 62.0));
-    OO_CHECK(Near(c[3], 0.5 * 0.1 / (0.4 * 0.667)));
-    OO_CHECK(sUniverse->_removed == nullptr);
+    EXPECT_TRUE(Near(Diameter(flash), 62.0));
+    EXPECT_TRUE(Near(c[3], 0.5 * 0.1 / (0.4 * 0.667)));
+    EXPECT_TRUE(sUniverse->_removed == nullptr);
 
     sUniverse->_time = 5.35;
     flash->update(0.25);
-    OO_CHECK(Near(Diameter(flash), 212.0));
-    OO_CHECK(Near(c[3], 0.5 * (0.4 - 0.35) / (0.4 - 0.4 * 0.667)));
-    OO_CHECK(sUniverse->_removed == nullptr);
+    EXPECT_TRUE(Near(Diameter(flash), 212.0));
+    EXPECT_TRUE(Near(c[3], 0.5 * (0.4 - 0.35) / (0.4 - 0.4 * 0.667)));
+    EXPECT_TRUE(sUniverse->_removed == nullptr);
 
     sUniverse->_time = 5.41;
     flash->update(0.06);
-    OO_CHECK(sUniverse->_removed == flash);
+    EXPECT_TRUE(sUniverse->_removed == flash);
   }
 }
 
-OO_TEST(bigExplosionGrowsFaster) {
+TEST(OOFlashEffectEntity, bigExplosionGrowsFaster) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     Entity* big = Exploding();
     big->setCollisionRadius(10.0f);
     Entity* flash =
         FlashObject(oo::FlashEffectEntity::explosionFlashFromEntity(big));
-    OO_CHECK(Part(flash)->diameter() == 10.0f);
+    EXPECT_TRUE(Part(flash)->diameter() == 10.0f);
     sUniverse->_time = 0.1;
     flash->update(0.1);
-    OO_CHECK(Near(Diameter(flash), 10.0 + 0.1 * 1500.0));  // 150 * 10 > 600
+    EXPECT_TRUE(Near(Diameter(flash), 10.0 + 0.1 * 1500.0));  // 150 * 10 > 600
   }
 }
 
-OO_TEST(laserFlash) {
+TEST(OOFlashEffectEntity, laserFlash) {
   {
-    SetUp(1.0);
+    ::SetUp(1.0);
     Entity* flash = FlashObject(oo::FlashEffectEntity::laserFlashWithPosition(
         make_HPvector(-1, -2, -3), make_vector(4, 5, 6),
         oo::Color::colorWithRed(1.0f, 0.5f, 0.25f, 0.125f).get()));
-    OO_CHECK(flash != nullptr && Part(flash) != nullptr);
-    OO_CHECK(HPvector_equal(flash->getPosition(), make_HPvector(-1, -2, -3)));
+    EXPECT_TRUE(flash != nullptr && Part(flash) != nullptr);
+    EXPECT_TRUE(HPvector_equal(flash->getPosition(), make_HPvector(-1, -2, -3)));
     Vector v = flash->getVelocity();
-    OO_CHECK(v.x == 4 && v.y == 5 && v.z == 6);
-    OO_CHECK(Part(flash)->diameter() == 1.0f);
+    EXPECT_TRUE(v.x == 4 && v.y == 5 && v.z == 6);
+    EXPECT_TRUE(Part(flash)->diameter() == 1.0f);
     const GLfloat* c = ColorComponents(flash);
-    OO_CHECK(c[0] == 1.0f && c[1] == 0.5f && c[2] == 0.25f &&
+    EXPECT_TRUE(c[0] == 1.0f && c[1] == 0.5f && c[2] == 0.25f &&
              c[3] == 1.0f);  // opaque
 
     // Growth 150 a second; alpha 1, duration 0.3.
     sUniverse->_time = 1.1;
     flash->update(0.1);
-    OO_CHECK(Near(Diameter(flash), 16.0));
-    OO_CHECK(Near(c[3], 0.1 / (0.3 * 0.667)));
+    EXPECT_TRUE(Near(Diameter(flash), 16.0));
+    EXPECT_TRUE(Near(c[3], 0.1 / (0.3 * 0.667)));
 
     sUniverse->_time = 1.25;
     flash->update(0.15);
-    OO_CHECK(Near(c[3], (0.3 - 0.25) / (0.3 - 0.3 * 0.667)));
-    OO_CHECK(sUniverse->_removed == nullptr);
+    EXPECT_TRUE(Near(c[3], (0.3 - 0.25) / (0.3 - 0.3 * 0.667)));
+    EXPECT_TRUE(sUniverse->_removed == nullptr);
 
     sUniverse->_time = 1.31;
     flash->update(0.06);
-    OO_CHECK(sUniverse->_removed == flash);
+    EXPECT_TRUE(sUniverse->_removed == flash);
   }
 }
 
-OO_TEST(nilColourKeepsWhite) {
+TEST(OOFlashEffectEntity, nilColourKeepsWhite) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     Entity* flash = FlashObject(oo::FlashEffectEntity::laserFlashWithPosition(
         kZeroHPVector, kZeroVector, nullptr));
     const GLfloat* c = ColorComponents(flash);
-    OO_CHECK(c[0] == 1.0f && c[1] == 1.0f && c[2] == 1.0f && c[3] == 1.0f);
+    EXPECT_TRUE(c[0] == 1.0f && c[1] == 1.0f && c[2] == 1.0f && c[3] == 1.0f);
   }
 }
 
-OO_TEST(texture) {
+TEST(OOFlashEffectEntity, texture) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     Entity* flash =
         FlashObject(oo::FlashEffectEntity::explosionFlashFromEntity(Exploding()));
     sTextureName.reset();
-    OO_CHECK(Part(flash)->texture() == sTexture);
-    OO_CHECK(sTextureName ==
+    EXPECT_TRUE(Part(flash)->texture() == sTexture);
+    EXPECT_TRUE(sTextureName ==
              std::optional<std::string>("oolite-particle-flash.png"));
     sTextureName.reset();
-    OO_CHECK(Part(flash)->texture() == sTexture &&
+    EXPECT_TRUE(Part(flash)->texture() == sTexture &&
              !sTextureName.has_value());  // loaded once
     oo::FlashEffectEntity::setUpTexture();
-    OO_CHECK(!sTextureName.has_value());
+    EXPECT_TRUE(!sTextureName.has_value());
   }
 }
 
-OO_TEST(facade) {
+TEST(OOFlashEffectEntity, facade) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     Entity* flash =
         FlashObject(oo::FlashEffectEntity::explosionFlashFromEntity(Exploding()));
     // A C++ entity.
-    OO_CHECK(dynamic_cast<oo::FlashEffectEntity*>(flash) != nullptr);
-    OO_CHECK(flash == flash);
+    EXPECT_TRUE(dynamic_cast<oo::FlashEffectEntity*>(flash) != nullptr);
+    EXPECT_TRUE(flash == flash);
   }
 }
-
-OO_TEST_MAIN()

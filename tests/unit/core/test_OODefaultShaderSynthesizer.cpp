@@ -27,9 +27,10 @@
 #include <string_view>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "DefaultShaderSynthesizer.h"
 #include "Description.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -136,12 +137,12 @@ struct Expected {
 void CheckSynthesized(const char* name, const Synthesized& actual,
                       const Expected& expected) {
   std::printf("-- %s\n", name);
-  OO_CHECK(actual.ok);
-  OO_CHECK(Pin("vertex", actual.vertex, expected.vertex));
-  OO_CHECK(Pin("fragment", actual.fragment, expected.fragment));
-  OO_CHECK(
+  EXPECT_TRUE(actual.ok);
+  EXPECT_TRUE(Pin("vertex", actual.vertex, expected.vertex));
+  EXPECT_TRUE(Pin("fragment", actual.fragment, expected.fragment));
+  EXPECT_TRUE(
       Pin("textures", oo::DescriptionOf(actual.textures), expected.textures));
-  OO_CHECK(
+  EXPECT_TRUE(
       Pin("uniforms", oo::DescriptionOf(actual.uniforms), expected.uniforms));
 }
 
@@ -152,7 +153,7 @@ void CheckSynthesized(const char* name, const Synthesized& actual,
 
 // No configuration but the material key: a diffuse map named after it, lit by
 // the light source.
-OO_TEST(diffuseMapFromMaterialKey) {
+TEST(OODefaultShaderSynthesizer, diffuseMapFromMaterialKey) {
   Synthesized s = Synthesize({}, std::string("hull.png"));
   CheckSynthesized(
       "diffuseMapFromMaterialKey", s,
@@ -229,12 +230,12 @@ OO_TEST(diffuseMapFromMaterialKey) {
        "}",
        "({name = \"hull.png\"; })",
        "{uTexture0 = {type = texture; value = 0; }; }"});
-  OO_CHECK_EQ(LogLinesContaining("WARNING"), 0);
-  OO_CHECK_EQ(LogLinesContaining("ERROR"), 0);
+  EXPECT_EQ(LogLinesContaining("WARNING"), 0);
+  EXPECT_EQ(LogLinesContaining("ERROR"), 0);
 }
 
 // A black diffuse colour: no diffuse term, so no lighting, and no texture.
-OO_TEST(blackDiffuseColour) {
+TEST(OODefaultShaderSynthesizer, blackDiffuseColour) {
   Synthesized s =
       Synthesize({{"diffuse_color", Color(0, 0, 0)}}, std::string("hull.png"));
   CheckSynthesized(
@@ -295,7 +296,7 @@ OO_TEST(blackDiffuseColour) {
 }
 
 // A tinted diffuse map (the legacy key "diffuse"): the sample times the colour.
-OO_TEST(tintedDiffuseMap) {
+TEST(OODefaultShaderSynthesizer, tintedDiffuseMap) {
   Synthesized s =
       Synthesize({{"diffuse", Color(0.5, 0.25, 1.0)}}, std::string("hull.png"));
   CheckSynthesized(
@@ -377,7 +378,7 @@ OO_TEST(tintedDiffuseMap) {
 }
 
 // A single channel of the diffuse map is splatted across RGB.
-OO_TEST(diffuseMapOneChannel) {
+TEST(OODefaultShaderSynthesizer, diffuseMapOneChannel) {
   Synthesized s =
       Synthesize({{"diffuse_map", Map("d.png", "g")}}, std::string("hull.png"));
   CheckSynthesized(
@@ -459,7 +460,7 @@ OO_TEST(diffuseMapOneChannel) {
 
 // Two channels of the diffuse map cannot be read as a colour: a warning and a
 // marker.
-OO_TEST(diffuseMapExtractionMismatch) {
+TEST(OODefaultShaderSynthesizer, diffuseMapExtractionMismatch) {
   Synthesized s = Synthesize({{"diffuse_map", Map("d.png", "rg")}},
                              std::string("hull.png"));
   CheckSynthesized(
@@ -539,12 +540,12 @@ OO_TEST(diffuseMapExtractionMismatch) {
        "}",
        "({name = \"d.png\"; })",
        "{uTexture0 = {type = texture; value = 0; }; }"});
-  OO_CHECK_EQ(LogLinesContaining("specifies 2 channels to extract"), 1);
+  EXPECT_EQ(LogLinesContaining("specifies 2 channels to extract"), 1);
 }
 
 // Specular lighting with a constant colour (the legacy key "specular") and
 // exponent.
-OO_TEST(specularConstant) {
+TEST(OODefaultShaderSynthesizer, specularConstant) {
   Synthesized s =
       Synthesize({{"specular", Color(1, 1, 1)}, {"shininess", oo::PList(20)}},
                  std::string("hull.png"));
@@ -627,7 +628,7 @@ OO_TEST(specularConstant) {
 
 // The legacy combined specular map: colour from RGB, exponent from alpha, with
 // a modulate colour.
-OO_TEST(specularCombinedMap) {
+TEST(OODefaultShaderSynthesizer, specularCombinedMap) {
   Synthesized s = Synthesize({{"specular_map", oo::PList("spec.png")},
                               {"specular_modulate_color", Color(0.5, 0.5, 0.5)},
                               {"specular_exponent", oo::PList(10)}},
@@ -714,7 +715,7 @@ OO_TEST(specularCombinedMap) {
 }
 
 // A specular colour map scaled and self-coloured, with no exponent map.
-OO_TEST(specularColourMapScaledSelfColoured) {
+TEST(OODefaultShaderSynthesizer, specularColourMapScaledSelfColoured) {
   oo::PList::Dict map{{"name", oo::PList("spec.png")},
                       {"scale_factor", oo::PList(2.0)},
                       {"self_color", oo::PList(true)}};
@@ -805,7 +806,7 @@ OO_TEST(specularColourMapScaledSelfColoured) {
 
 // The legacy combined normal and parallax map: tangent basis, eye vector,
 // parallax-offset coordinates.
-OO_TEST(normalAndParallaxMap) {
+TEST(OODefaultShaderSynthesizer, normalAndParallaxMap) {
   Synthesized s =
       Synthesize({{"normal_and_parallax_map", oo::PList("normal.png")},
                   {"parallax_scale", oo::PList(0.02)},
@@ -899,7 +900,7 @@ OO_TEST(normalAndParallaxMap) {
 
 // A normal map read from two channels cannot be used: a warning, and the
 // constant normal.
-OO_TEST(normalMapExtractionMismatch) {
+TEST(OODefaultShaderSynthesizer, normalMapExtractionMismatch) {
   Synthesized s = Synthesize(
       {{"normal_map", Map("n.png", "rg")}, {"specular_exponent", oo::PList(5)}},
       std::string("hull.png"));
@@ -981,12 +982,12 @@ OO_TEST(normalMapExtractionMismatch) {
        "({name = \"hull.png\"; }, {name = \"n.png\"; })",
        "{uTexture0 = {type = texture; value = 0; }; uTexture1 = {type = "
        "texture; value = 1; }; }"});
-  OO_CHECK_EQ(LogLinesContaining("specifies 2 channels to extract"), 1);
+  EXPECT_EQ(LogLinesContaining("specifies 2 channels to extract"), 1);
 }
 
 // Legacy emission and illumination maps become light maps, one tinted, one in
 // illumination mode.
-OO_TEST(emissionAndIlluminationMaps) {
+TEST(OODefaultShaderSynthesizer, emissionAndIlluminationMaps) {
   Synthesized s = Synthesize({{"emission_map", oo::PList("glow.png")},
                               {"emission_modulate_color", Color(1, 0, 0)},
                               {"illumination_map", oo::PList("lit.png")}},
@@ -1086,7 +1087,7 @@ OO_TEST(emissionAndIlluminationMaps) {
 // The colour-only map is read as a texture specifier with no name
 // (OOTextureSpecFromObject keeps a dictionary when there is no default
 // name), which is invalid, so nothing is synthesized (but YES).
-OO_TEST(lightMapColourOnlyFails) {
+TEST(OODefaultShaderSynthesizer, lightMapColourOnlyFails) {
   oo::PList::Array lightMaps{
       oo::PList(oo::PList::Dict{{"color", Color(0, 1, 0)}}),
       oo::PList(oo::PList::Dict{{"name", oo::PList("a.png")},
@@ -1096,31 +1097,31 @@ OO_TEST(lightMapColourOnlyFails) {
   };
   Synthesized s = Synthesize({{"light_map", oo::PList(std::move(lightMaps))}},
                              std::string("hull.png"));
-  OO_CHECK(s.ok);
-  OO_CHECK(s.vertex.empty());
-  OO_CHECK(s.fragment.empty());
-  OO_CHECK(s.textures.isNull());
-  OO_CHECK(s.uniforms.isNull());
+  EXPECT_TRUE(s.ok);
+  EXPECT_TRUE(s.vertex.empty());
+  EXPECT_TRUE(s.fragment.empty());
+  EXPECT_TRUE(s.textures.isNull());
+  EXPECT_TRUE(s.uniforms.isNull());
 }
 
 // A colour-only light map and one with neither colour nor name: both are
 // texture specifiers with no name, so nothing is synthesized (but YES).
-OO_TEST(lightMapWithNoNameFails) {
+TEST(OODefaultShaderSynthesizer, lightMapWithNoNameFails) {
   oo::PList::Array lightMaps{
       oo::PList(oo::PList::Dict{{"color", Color(0, 1, 0)}}),
       oo::PList(oo::PList::Dict{}),
   };
   Synthesized s = Synthesize({{"light_map", oo::PList(std::move(lightMaps))}},
                              std::string("hull.png"));
-  OO_CHECK(s.ok);
-  OO_CHECK(s.vertex.empty());
-  OO_CHECK(s.fragment.empty());
-  OO_CHECK(s.textures.isNull());
-  OO_CHECK(s.uniforms.isNull());
+  EXPECT_TRUE(s.ok);
+  EXPECT_TRUE(s.vertex.empty());
+  EXPECT_TRUE(s.fragment.empty());
+  EXPECT_TRUE(s.textures.isNull());
+  EXPECT_TRUE(s.uniforms.isNull());
 }
 
 // One texture used for two maps is sampled once, with one sampler uniform.
-OO_TEST(sharedTexture) {
+TEST(OODefaultShaderSynthesizer, sharedTexture) {
   Synthesized s = Synthesize({{"diffuse_map", oo::PList("same.png")},
                               {"emission_map", oo::PList("same.png")}},
                              std::string("hull.png"));
@@ -1207,17 +1208,17 @@ OO_TEST(sharedTexture) {
 
 // A cube map cannot be used by the default shader: an error, and nothing
 // synthesized (but YES).
-OO_TEST(cubeMapFails) {
+TEST(OODefaultShaderSynthesizer, cubeMapFails) {
   oo::PList::Dict map{{"name", oo::PList("cube.png")},
                       {"cube_map", oo::PList(true)}};
   Synthesized s = Synthesize({{"diffuse_map", oo::PList(std::move(map))}},
                              std::string("hull.png"));
-  OO_CHECK(s.ok);
-  OO_CHECK(s.vertex.empty());
-  OO_CHECK(s.fragment.empty());
-  OO_CHECK(s.textures.isNull());
-  OO_CHECK(s.uniforms.isNull());
-  OO_CHECK_EQ(LogLinesContaining("specifies a cube map texture"), 1);
+  EXPECT_TRUE(s.ok);
+  EXPECT_TRUE(s.vertex.empty());
+  EXPECT_TRUE(s.fragment.empty());
+  EXPECT_TRUE(s.textures.isNull());
+  EXPECT_TRUE(s.uniforms.isNull());
+  EXPECT_EQ(LogLinesContaining("specifies a cube map texture"), 1);
 }
 
 // --- The shader stages
@@ -1225,7 +1226,7 @@ OO_TEST(cubeMapFails) {
 
 // Light maps with textures: one in illumination mode (which pulls in the
 // diffuse lighting), one tinted black (no effect), one tinted grey with alpha.
-OO_TEST(lightMapsWithTextures) {
+TEST(OODefaultShaderSynthesizer, lightMapsWithTextures) {
   oo::PList::Array lightMaps{
       oo::PList(oo::PList::Dict{{"name", oo::PList("a.png")},
                                 {"illumination_mode", oo::PList(true)}}),
@@ -1333,7 +1334,7 @@ OO_TEST(lightMapsWithTextures) {
 
 // A parallax map read from two channels cannot be used: a warning, and plain
 // texture coordinates.
-OO_TEST(parallaxMapExtractionMismatch) {
+TEST(OODefaultShaderSynthesizer, parallaxMapExtractionMismatch) {
   Synthesized s = Synthesize({{"normal_map", oo::PList("n.png")},
                               {"parallax_map", Map("p.png", "rg")}},
                              std::string("hull.png"));
@@ -1415,12 +1416,12 @@ OO_TEST(parallaxMapExtractionMismatch) {
        "({name = \"hull.png\"; }, {name = \"n.png\"; })",
        "{uTexture0 = {type = texture; value = 0; }; uTexture1 = {type = "
        "texture; value = 1; }; }"});
-  OO_CHECK_EQ(LogLinesContaining("specifies 2 channels to extract"), 1);
+  EXPECT_EQ(LogLinesContaining("specifies 2 channels to extract"), 1);
 }
 
 // A specular exponent map read from three channels cannot be used: a warning
 // and a marker.
-OO_TEST(specularExponentMapExtractionMismatch) {
+TEST(OODefaultShaderSynthesizer, specularExponentMapExtractionMismatch) {
   Synthesized s = Synthesize({{"specular_color_map", oo::PList("s.png")},
                               {"specular_exponent_map", Map("e.png", "rgb")},
                               {"specular_exponent", oo::PList(10)}},
@@ -1498,7 +1499,7 @@ OO_TEST(specularExponentMapExtractionMismatch) {
        "({name = \"hull.png\"; }, {name = \"s.png\"; }, {name = \"e.png\"; })",
        "{uTexture0 = {type = texture; value = 0; }; uTexture1 = {type = "
        "texture; value = 1; }; uTexture2 = {type = texture; value = 2; }; }"});
-  OO_CHECK_EQ(LogLinesContaining("specifies 3 channels to extract"), 1);
+  EXPECT_EQ(LogLinesContaining("specifies 3 channels to extract"), 1);
 }
 
 // --- The C++ class
@@ -1506,7 +1507,7 @@ OO_TEST(specularExponentMapExtractionMismatch) {
 
 // The C++ synthesizer, run directly, answers what the entry point wrote; it
 // keeps the material key and (as upstream did) not the entity name.
-OO_TEST(cxxSynthesizerAnswersAsTheEntryPoint) {
+TEST(OODefaultShaderSynthesizer, cxxSynthesizerAnswersAsTheEntryPoint) {
   Synthesized expected =
       Synthesize({{"specular", Color(1, 1, 1)}, {"shininess", oo::PList(20)}},
                  std::string("hull.png"));
@@ -1516,15 +1517,13 @@ OO_TEST(cxxSynthesizerAnswersAsTheEntryPoint) {
             oo::PList(oo::PList::Dict{{"specular", Color(1, 1, 1)},
                                       {"shininess", oo::PList(20)}}),
             std::string("hull.png"), std::string("test entity"));
-    OO_CHECK(synthesizer->run());
-    OO_CHECK(synthesizer->vertexShader() == expected.vertex);
-    OO_CHECK(synthesizer->fragmentShader() == expected.fragment);
-    OO_CHECK(synthesizer->textureSpecifications() == expected.textures);
-    OO_CHECK(synthesizer->uniformSpecifications() == expected.uniforms);
-    OO_CHECK(synthesizer->materialKey() ==
+    EXPECT_TRUE(synthesizer->run());
+    EXPECT_TRUE(synthesizer->vertexShader() == expected.vertex);
+    EXPECT_TRUE(synthesizer->fragmentShader() == expected.fragment);
+    EXPECT_TRUE(synthesizer->textureSpecifications() == expected.textures);
+    EXPECT_TRUE(synthesizer->uniformSpecifications() == expected.uniforms);
+    EXPECT_TRUE(synthesizer->materialKey() ==
              std::optional<std::string>("hull.png"));
-    OO_CHECK(!synthesizer->entityName().has_value());
+    EXPECT_TRUE(!synthesizer->entityName().has_value());
   }
 }
-
-OO_TEST_MAIN()

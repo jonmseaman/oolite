@@ -23,12 +23,14 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "DebugMonitor.h"
 #include "DebugSupport.h"
 #include "DebugTCPConsoleClient.h"
-#include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 
 // MARK: What the rest of the game provides
@@ -173,94 +175,92 @@ void Reset(oo::PList::Dict configuration, bool beacon) {
 // -------------------------------------------------------------------------------------
 
 // No debug OXP and no always-load: nothing is set up.
-OO_TEST(nothingWithoutTheDebugOXP) {
+TEST(OODebugSupport, nothingWithoutTheDebugOXP) {
   {
     Reset({}, false);
     OOInitDebugSupport();
-    OO_CHECK(sRecord.clientsMade.empty());
-    OO_CHECK(sRecord.usingPlugInController.empty());
-    OO_CHECK(sRecord.debuggersSet.empty());
-    OO_CHECK(sRecord.debuggerStatementsEnabled == 0);
+    EXPECT_TRUE(sRecord.clientsMade.empty());
+    EXPECT_TRUE(sRecord.usingPlugInController.empty());
+    EXPECT_TRUE(sRecord.debuggersSet.empty());
+    EXPECT_TRUE(sRecord.debuggerStatementsEnabled == 0);
   }
 }
 
 // always-load-debug-console without the OXP: the console with no debugger.
-OO_TEST(alwaysLoadWithoutTheDebugOXP) {
+TEST(OODebugSupport, alwaysLoadWithoutTheDebugOXP) {
   {
     Reset({{"always-load-debug-console", oo::PList(kTrue)}}, false);
     OOInitDebugSupport();
-    OO_CHECK(sRecord.clientsMade.empty());
-    OO_CHECK(sRecord.debuggersSet.size() == 1 &&
+    EXPECT_TRUE(sRecord.clientsMade.empty());
+    EXPECT_TRUE(sRecord.debuggersSet.size() == 1 &&
              sRecord.debuggersSet[0] == nullptr);
-    OO_CHECK(sRecord.debuggerStatementsEnabled == 1);
+    EXPECT_TRUE(sRecord.debuggerStatementsEnabled == 1);
   }
 }
 
 // The debug OXP: a TCP client for the configured host and port becomes the
 // monitor's debugger.
-OO_TEST(theTCPConsoleClient) {
+TEST(OODebugSupport, theTCPConsoleClient) {
   {
     Reset({{"console-host", oo::PList(std::string("console.example"))},
            {"console-port", oo::PList(8564)}},
           true);
     OOInitDebugSupport();
-    OO_CHECK(sRecord.clientsMade.size() == 1);
+    EXPECT_TRUE(sRecord.clientsMade.size() == 1);
     if (sRecord.clientsMade.size() == 1) {
-      OO_CHECK(sRecord.clientsMade[0].first ==
+      EXPECT_TRUE(sRecord.clientsMade[0].first ==
                std::optional<std::string>("console.example"));
-      OO_CHECK(sRecord.clientsMade[0].second == 8564);
+      EXPECT_TRUE(sRecord.clientsMade[0].second == 8564);
     }
-    OO_CHECK(sRecord.usingPlugInController == std::vector<bool>{false});
-    OO_CHECK(sRecord.lastClient != nullptr);
-    OO_CHECK(sRecord.debuggersSet.size() == 1 &&
+    EXPECT_TRUE(sRecord.usingPlugInController == std::vector<bool>{false});
+    EXPECT_TRUE(sRecord.lastClient != nullptr);
+    EXPECT_TRUE(sRecord.debuggersSet.size() == 1 &&
              sRecord.debuggersSet[0] == sRecord.lastClient);
-    OO_CHECK(sRecord.debuggerStatementsEnabled == 1);
+    EXPECT_TRUE(sRecord.debuggerStatementsEnabled == 1);
   }
 }
 
 // No host: the client's default (nullopt), and port 0; a number is read as its
 // string value; anything else is no host.
-OO_TEST(theHostSetting) {
+TEST(OODebugSupport, theHostSetting) {
   {
     Reset({}, true);
     OOInitDebugSupport();
-    OO_CHECK(sRecord.clientsMade.size() == 1 &&
+    EXPECT_TRUE(sRecord.clientsMade.size() == 1 &&
              !sRecord.clientsMade[0].first.has_value() &&
              sRecord.clientsMade[0].second == 0);
 
     Reset({{"console-host", oo::PList(42)}}, true);
     OOInitDebugSupport();
-    OO_CHECK(sRecord.clientsMade.size() == 1 &&
+    EXPECT_TRUE(sRecord.clientsMade.size() == 1 &&
              sRecord.clientsMade[0].first == std::optional<std::string>("42"));
 
     Reset({{"console-host",
             oo::PList(oo::PList::Array{oo::PList(std::string("x"))})}},
           true);
     OOInitDebugSupport();
-    OO_CHECK(sRecord.clientsMade.size() == 1 &&
+    EXPECT_TRUE(sRecord.clientsMade.size() == 1 &&
              !sRecord.clientsMade[0].first.has_value());
   }
 }
 
 // The client cannot connect: no console, unless always-load is set, and then no
 // debugger.
-OO_TEST(theClientFails) {
+TEST(OODebugSupport, theClientFails) {
   {
     Reset({{"console-host", oo::PList(std::string("127.0.0.1"))}}, true);
     sRecord.clientFails = true;
     OOInitDebugSupport();
-    OO_CHECK(sRecord.clientsMade.size() == 1);
-    OO_CHECK(sRecord.usingPlugInController == std::vector<bool>{false});
-    OO_CHECK(sRecord.debuggersSet.empty());
-    OO_CHECK(sRecord.debuggerStatementsEnabled == 0);
+    EXPECT_TRUE(sRecord.clientsMade.size() == 1);
+    EXPECT_TRUE(sRecord.usingPlugInController == std::vector<bool>{false});
+    EXPECT_TRUE(sRecord.debuggersSet.empty());
+    EXPECT_TRUE(sRecord.debuggerStatementsEnabled == 0);
 
     Reset({{"always-load-debug-console", oo::PList(kTrue)}}, true);
     sRecord.clientFails = true;
     OOInitDebugSupport();
-    OO_CHECK(sRecord.debuggersSet.size() == 1 &&
+    EXPECT_TRUE(sRecord.debuggersSet.size() == 1 &&
              sRecord.debuggersSet[0] == nullptr);
-    OO_CHECK(sRecord.debuggerStatementsEnabled == 1);
+    EXPECT_TRUE(sRecord.debuggerStatementsEnabled == 1);
   }
 }
-
-OO_TEST_MAIN()

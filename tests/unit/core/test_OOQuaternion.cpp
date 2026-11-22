@@ -12,8 +12,9 @@
 #include <cmath>
 #include <numbers>
 
+#include <gtest/gtest.h>
+
 #include "Maths.h"
-#include "oo_test.hpp"
 
 // The test links the whole game but main, which defines the debug flags.
 #ifndef NDEBUG
@@ -41,32 +42,32 @@ Quaternion Turn(Vector axis, float angle) {
 
 }  // namespace
 
-OO_TEST(identityIsNeutral) {
+TEST(OOQuaternion, identityIsNeutral) {
 	const Quaternion q = make_quaternion(0.5f, 0.5f, -0.5f, 0.5f);
-	OO_CHECK(NearQuaternion(quaternion_multiply(kIdentityQuaternion, q), q));
-	OO_CHECK(NearQuaternion(quaternion_multiply(q, kIdentityQuaternion), q));
-	OO_CHECK(NearVector(quaternion_rotate_vector(kIdentityQuaternion, make_vector(1, 2, 3)), make_vector(1, 2, 3)));
+	EXPECT_TRUE(NearQuaternion(quaternion_multiply(kIdentityQuaternion, q), q));
+	EXPECT_TRUE(NearQuaternion(quaternion_multiply(q, kIdentityQuaternion), q));
+	EXPECT_TRUE(NearVector(quaternion_rotate_vector(kIdentityQuaternion, make_vector(1, 2, 3)), make_vector(1, 2, 3)));
 }
 
-OO_TEST(normalisingGivesUnitLength) {
+TEST(OOQuaternion, normalisingGivesUnitLength) {
 	Quaternion q = make_quaternion(1, 2, 3, 4);
 	quaternion_normalize(&q);
-	OO_CHECK(Near(quaternion_dot_product(q, q), 1.0f));
+	EXPECT_TRUE(Near(quaternion_dot_product(q, q), 1.0f));
 }
 
-OO_TEST(aRotationKeepsLengthsAndItsConjugateUndoesIt) {
+TEST(OOQuaternion, aRotationKeepsLengthsAndItsConjugateUndoesIt) {
 	const Vector v = make_vector(1.0f, -2.0f, 0.5f);
 	const Quaternion turns[] = {Turn(make_vector(0, 0, 1), static_cast<float>(std::numbers::pi / 2.0)),
 								Turn(make_vector(1, 1, 1), 0.9f), Turn(make_vector(-1, 0, 2), 2.5f)};
 	for (const Quaternion& q : turns) {
 		const Vector turned = quaternion_rotate_vector(q, v);
-		OO_CHECK(Near(magnitude(turned), magnitude(v)));
-		OO_CHECK(NearVector(quaternion_rotate_vector(quaternion_conjugate(q), turned), v));
-		OO_CHECK(NearQuaternion(quaternion_multiply(q, quaternion_conjugate(q)), kIdentityQuaternion));
+		EXPECT_TRUE(Near(magnitude(turned), magnitude(v)));
+		EXPECT_TRUE(NearVector(quaternion_rotate_vector(quaternion_conjugate(q), turned), v));
+		EXPECT_TRUE(NearQuaternion(quaternion_multiply(q, quaternion_conjugate(q)), kIdentityQuaternion));
 	}
 }
 
-OO_TEST(theRotationMatrixTurnsVectorsAsTheQuaternionDoes) {
+TEST(OOQuaternion, theRotationMatrixTurnsVectorsAsTheQuaternionDoes) {
 	const Quaternion q = Turn(make_vector(1, 2, 3), 1.1f);
 	const oo::Matrix m = oo::MatrixForQuaternionRotation(q);
 	const Vector v = make_vector(0.3f, 0.6f, -0.9f);
@@ -74,22 +75,20 @@ OO_TEST(theRotationMatrixTurnsVectorsAsTheQuaternionDoes) {
 	const Vector byMatrix = oo::VectorMultiplyMatrix(v, m);
 	const Vector byMatrixTransposed = oo::VectorMultiplyMatrix(v, oo::MatrixTranspose(m));
 	// The matrix is the quaternion's rotation in one of the two storage orders.
-	OO_CHECK(NearVector(byMatrix, byQuaternion, 1e-4f) || NearVector(byMatrixTransposed, byQuaternion, 1e-4f));
-	OO_CHECK(Near(magnitude(byMatrix), magnitude(v), 1e-4f));
+	EXPECT_TRUE(NearVector(byMatrix, byQuaternion, 1e-4f) || NearVector(byMatrixTransposed, byQuaternion, 1e-4f));
+	EXPECT_TRUE(Near(magnitude(byMatrix), magnitude(v), 1e-4f));
 }
 
-OO_TEST(rotationBetweenTakesOneDirectionOntoTheOther) {
+TEST(OOQuaternion, rotationBetweenTakesOneDirectionOntoTheOther) {
 	const Vector from = vector_normal(make_vector(1, 0, 0));
 	const Vector to = vector_normal(make_vector(0, 1, 1));
 	const Quaternion q = quaternion_rotation_between(from, to);
 	const bool forward = NearVector(quaternion_rotate_vector(q, from), to, 1e-4f);
 	const bool backward = NearVector(quaternion_rotate_vector(quaternion_conjugate(q), from), to, 1e-4f);
-	OO_CHECK(forward || backward);
+	EXPECT_TRUE(forward || backward);
 }
 
-OO_TEST(theDescriptionSpellsTheComponents) {
-	OO_CHECK_EQ(QuaternionDescription(make_quaternion(1, 0, 0, 0)), std::string("(1 + 0i + 0j + 0k)"));
-	OO_CHECK_EQ(QuaternionDescription(make_quaternion(0.5f, -0.5f, 0.25f, -2)), std::string("(0.5 - 0.5i + 0.25j - 2k)"));
+TEST(OOQuaternion, theDescriptionSpellsTheComponents) {
+	EXPECT_EQ(QuaternionDescription(make_quaternion(1, 0, 0, 0)), std::string("(1 + 0i + 0j + 0k)"));
+	EXPECT_EQ(QuaternionDescription(make_quaternion(0.5f, -0.5f, 0.25f, -2)), std::string("(0.5 - 0.5i + 0.25j - 2k)"));
 }
-
-OO_TEST_MAIN()

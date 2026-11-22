@@ -12,9 +12,10 @@
 
 #include <cmath>
 
+#include <gtest/gtest.h>
+
 #include "MeshToOctreeConverter.h"
 #include "Octree.h"
-#include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -82,83 +83,81 @@ std::shared_ptr<oo::MeshToOctreeConverter> OneTriangle() {
 
 }  // namespace
 
-OO_TEST(emptyGivesAnEmptyOctree) {
+TEST(OOMeshToOctreeConverter, emptyGivesAnEmptyOctree) {
   {
     std::shared_ptr<oo::MeshToOctreeConverter> empty =
         oo::MeshToOctreeConverter::converterWithCapacity(0);
     std::shared_ptr<Octree> octree = At(empty, 3);
-    OO_CHECK(Nodes(octree) == std::vector<int>({0}));
-    OO_CHECK(Radius(octree) == 0.5f);  // the half-metre pad
-    OO_CHECK(octree->volume() == 0.0f);
-    OO_CHECK(Description(empty) == std::optional<std::string>("0 triangles"));
+    EXPECT_TRUE(Nodes(octree) == std::vector<int>({0}));
+    EXPECT_TRUE(Radius(octree) == 0.5f);  // the half-metre pad
+    EXPECT_TRUE(octree->volume() == 0.0f);
+    EXPECT_TRUE(Description(empty) == std::optional<std::string>("0 triangles"));
   }
 }
 
-OO_TEST(oneTriangle) {
+TEST(OOMeshToOctreeConverter, oneTriangle) {
   {
     std::shared_ptr<oo::MeshToOctreeConverter> one = OneTriangle();
-    OO_CHECK(Description(one) == std::optional<std::string>("1 triangles"));
+    EXPECT_TRUE(Description(one) == std::optional<std::string>("1 triangles"));
 
     std::shared_ptr<Octree> d0 = At(one, 0);
-    OO_CHECK(Nodes(d0) == std::vector<int>({-1}));
-    OO_CHECK(Radius(d0) == 4.5f);
-    OO_CHECK(Near(d0->volume(), 91.125f));
+    EXPECT_TRUE(Nodes(d0) == std::vector<int>({-1}));
+    EXPECT_TRUE(Radius(d0) == 4.5f);
+    EXPECT_TRUE(Near(d0->volume(), 91.125f));
 
-    OO_CHECK(Nodes(At(one, 1)) ==
+    EXPECT_TRUE(Nodes(At(one, 1)) ==
              std::vector<int>({1, 0, 0, 0, 0, 0, 0, 0, -1}));
-    OO_CHECK(Near(At(one, 1)->volume(), 11.3906f));
-    OO_CHECK(Nodes(At(one, 2)) ==
+    EXPECT_TRUE(Near(At(one, 1)->volume(), 11.3906f));
+    EXPECT_TRUE(Nodes(At(one, 2)) ==
              std::vector<int>(
                  {1, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, -1, 0, -1, 0, 0, 0}));
-    OO_CHECK(Near(At(one, 2)->volume(), 4.27148f));
-    OO_CHECK(Nodes(At(one, 3)) ==
+    EXPECT_TRUE(Near(At(one, 2)->volume(), 4.27148f));
+    EXPECT_TRUE(Nodes(At(one, 3)) ==
              std::vector<int>({1, 0,  0, 0,  0, 0,  0, 0,  1, 8,  0, 14, 0, 20,
                                0, 0,  0, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0, -1,
                                0, -1, 0, 0,  0, -1, 0, -1, 0, -1, 0, 0,  0}));
-    OO_CHECK(Near(At(one, 3)->volume(), 1.77979f));
+    EXPECT_TRUE(Near(At(one, 3)->volume(), 1.77979f));
   }
 }
 
-OO_TEST(cubeGrowsPastInlineStorage) {
+TEST(OOMeshToOctreeConverter, cubeGrowsPastInlineStorage) {
   {
     std::shared_ptr<oo::MeshToOctreeConverter> cube =
         oo::makeShared<oo::MeshToOctreeConverter>(12);
     AddCube(*cube, 10);
     AddCube(*cube, 5);  // 24 triangles: past the sixteen inline slots
-    OO_CHECK(Description(cube) == std::optional<std::string>("24 triangles"));
+    EXPECT_TRUE(Description(cube) == std::optional<std::string>("24 triangles"));
 
     for (unsigned d = 0; d <= 2; d++) {
       std::shared_ptr<Octree> octree = At(cube, d);
-      OO_CHECK(Nodes(octree) == std::vector<int>({-1}) &&
+      EXPECT_TRUE(Nodes(octree) == std::vector<int>({-1}) &&
                Radius(octree) == 10.5f);
     }
     std::shared_ptr<Octree> d3 = At(cube, 3);
     std::vector<int> nodes = Nodes(d3);
-    OO_CHECK(nodes.size() == 585);
-    OO_CHECK(std::vector<int>(nodes.begin(), nodes.begin() + 9) ==
+    EXPECT_TRUE(nodes.size() == 585);
+    EXPECT_TRUE(std::vector<int>(nodes.begin(), nodes.begin() + 9) ==
              std::vector<int>({1, 8, 79, 150, 221, 292, 363, 434, 505}));
-    OO_CHECK(Near(d3->volume(), 795.867f));
-    OO_CHECK(Nodes(At(cube, 4)).size() == 3401);
-    OO_CHECK(Near(At(cube, 4)->volume(), 465.763f));
+    EXPECT_TRUE(Near(d3->volume(), 795.867f));
+    EXPECT_TRUE(Nodes(At(cube, 4)).size() == 3401);
+    EXPECT_TRUE(Near(At(cube, 4)->volume(), 465.763f));
   }
 }
 
-OO_TEST(cxxConverter) {
+TEST(OOMeshToOctreeConverter, cxxConverter) {
   std::shared_ptr<oo::MeshToOctreeConverter> one =
       oo::MeshToOctreeConverter::converterWithCapacity(1);
   one->addTriangle(
       Tri(make_vector(0, 0, 0), make_vector(4, 0, 0), make_vector(0, 4, 0)));
   one->addTriangle(Tri(make_vector(1, 1, 1), make_vector(1, 1, 1),
                        make_vector(2, 2, 2)));  // degenerate: dropped
-  OO_CHECK(one->descriptionComponents() ==
+  EXPECT_TRUE(one->descriptionComponents() ==
            std::optional<std::string>("1 triangles"));
   std::shared_ptr<Octree> octree = one->findOctreeToDepth(1);
-  OO_CHECK(octree.get() != nullptr && Near(octree->volume(), 11.3906f));
-  OO_CHECK(Nodes(octree) == std::vector<int>({1, 0, 0, 0, 0, 0, 0, 0, -1}));
+  EXPECT_TRUE(octree.get() != nullptr && Near(octree->volume(), 11.3906f));
+  EXPECT_TRUE(Nodes(octree) == std::vector<int>({1, 0, 0, 0, 0, 0, 0, 0, -1}));
 
   std::shared_ptr<oo::MeshToOctreeConverter> empty =
       oo::makeShared<oo::MeshToOctreeConverter>(0);
-  OO_CHECK(empty->findOctreeToDepth(2)->volume() == 0.0f);
+  EXPECT_TRUE(empty->findOctreeToDepth(2)->volume() == 0.0f);
 }
-
-OO_TEST_MAIN()

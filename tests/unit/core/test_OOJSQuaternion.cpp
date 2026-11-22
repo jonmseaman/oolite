@@ -12,6 +12,8 @@
 	orientation, and how an exception under a native reaches JS. Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
@@ -22,7 +24,6 @@
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -293,7 +294,7 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 
 double EvalNumber(const char *src)
@@ -306,7 +307,7 @@ double EvalNumber(const char *src)
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(construction)
+TEST(OOJSQuaternion, construction)
 {
 	OO_CHECK_EVAL("new Quaternion(1, 2, 3, 4)", "(1 + 2i + 3j + 4k)");
 	OO_CHECK_EVAL("new Quaternion(1, 2, 3, 4).toSource()", "Quaternion(1, 2, 3, 4)");
@@ -320,7 +321,7 @@ OO_TEST(construction)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSQuaternion, properties)
 {
 	OO_CHECK_EVAL("new Quaternion(1, 2, 3, 4).w", "1");
 	OO_CHECK_EVAL("new Quaternion(1, 2, 3, 4).x", "2");
@@ -336,7 +337,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(methods)
+TEST(OOJSQuaternion, methods)
 {
 	OO_CHECK_EVAL("new Quaternion(1, 0, 0, 0).multiply([0, 1, 0, 0]).toSource()", "Quaternion(0, 1, 0, 0)");
 	OO_CHECK_EVAL("new Quaternion(0, 1, 0, 0).multiply(new Quaternion(0, 0, 1, 0)).toSource()", "Quaternion(0, 0, 0, 1)");
@@ -350,11 +351,11 @@ OO_TEST(methods)
 	OO_CHECK_EVAL("new Quaternion().vectorRight()", "(1, 0, 0)");
 	OO_CHECK_EVAL("new Quaternion().vectorForward() instanceof Vector3D", "true");
 	OO_CHECK_EVAL("new Quaternion(1, 2, 3, 4).rotate([0, 0, 1])", "(1 + 2i + 3j + 4k)");	// no angle: unchanged
-	OO_CHECK(std::fabs(EvalNumber("new Quaternion().rotate([0, 0, 1], Math.PI).w")) < 1e-6);
-	OO_CHECK(std::fabs(std::fabs(EvalNumber("new Quaternion().rotate([0, 0, 1], Math.PI).z")) - 1) < 1e-6);
-	OO_CHECK(std::fabs(std::fabs(EvalNumber("new Quaternion().rotateX(Math.PI).x")) - 1) < 1e-6);
-	OO_CHECK(std::fabs(std::fabs(EvalNumber("new Quaternion().rotateY(Math.PI).y")) - 1) < 1e-6);
-	OO_CHECK(std::fabs(std::fabs(EvalNumber("new Quaternion().rotateZ(Math.PI).z")) - 1) < 1e-6);
+	EXPECT_TRUE(std::fabs(EvalNumber("new Quaternion().rotate([0, 0, 1], Math.PI).w")) < 1e-6);
+	EXPECT_TRUE(std::fabs(std::fabs(EvalNumber("new Quaternion().rotate([0, 0, 1], Math.PI).z")) - 1) < 1e-6);
+	EXPECT_TRUE(std::fabs(std::fabs(EvalNumber("new Quaternion().rotateX(Math.PI).x")) - 1) < 1e-6);
+	EXPECT_TRUE(std::fabs(std::fabs(EvalNumber("new Quaternion().rotateY(Math.PI).y")) - 1) < 1e-6);
+	EXPECT_TRUE(std::fabs(std::fabs(EvalNumber("new Quaternion().rotateZ(Math.PI).z")) - 1) < 1e-6);
 	OO_CHECK_EVAL("new Quaternion(1, 2, 3, 4).multiply('x')", "threw: bad arguments: Quaternion.multiply (1): Could not construct quaternion from parameters; expected Quaternion, Entity or four numbers");
 	OO_CHECK_EVAL("new Quaternion(1, 2, 3, 4).rotateX('x')", "threw: bad arguments: Quaternion.rotateX (1): Expected number, got; expected ");
 	OO_CHECK_EVAL("new Quaternion(1, 2, 3, 4).rotate('x', 1)", "threw: bad arguments: Quaternion.rotate (2): Could not construct vector from parameters; expected Vector, Entity or array of three numbers");
@@ -362,14 +363,14 @@ OO_TEST(methods)
 }
 
 
-OO_TEST(staticMethods)
+TEST(OOJSQuaternion, staticMethods)
 {
-	OO_CHECK(std::fabs(EvalNumber("(function () { var q = Quaternion.random(); return q.dot(q); })()") - 1.0) < 1e-5);
+	EXPECT_TRUE(std::fabs(EvalNumber("(function () { var q = Quaternion.random(); return q.dot(q); })()") - 1.0) < 1e-5);
 	OO_CHECK_EVAL("Quaternion.random() instanceof Quaternion", "true");
 }
 
 
-OO_TEST(entities)
+TEST(OOJSQuaternion, entities)
 {
 	// An entity converts to its orientation.
 	OO_CHECK_EVAL("new Quaternion(makeEntity(0, 1, 0, 0)).toSource()", "Quaternion(0, 1, 0, 0)");
@@ -377,42 +378,38 @@ OO_TEST(entities)
 }
 
 
-OO_TEST(nativeInterface)
+TEST(OOJSQuaternion, nativeInterface)
 {
 	SetUpContext();
 	JSValue value = JS_UNDEFINED;
-	OO_CHECK(QuaternionToJSValue(sContext, make_quaternion(1, 2, 3, 4), &value));
+	EXPECT_TRUE(QuaternionToJSValue(sContext, make_quaternion(1, 2, 3, 4), &value));
 	Quaternion q = kZeroQuaternion;
 	const std::optional<Quaternion> got = JSValueToQuaternion(sContext, value);
-	OO_CHECK(got && got->w == 1 && got->x == 2 && got->y == 3 && got->z == 4);
-	OO_CHECK(JSQuaternionSetQuaternion(sContext, value, make_quaternion(5, 6, 7, 8)));
-	OO_CHECK(JSObjectGetQuaternion(sContext, value, &q) && q.w == 5 && q.x == 6 && q.y == 7 && q.z == 8);
-	OO_CHECK(!JSValueToQuaternion(sContext, JS_NewInt32(sContext, 3)));
-	OO_CHECK(!JSObjectGetQuaternion(sContext, JS_NULL, &q));
+	EXPECT_TRUE(got && got->w == 1 && got->x == 2 && got->y == 3 && got->z == 4);
+	EXPECT_TRUE(JSQuaternionSetQuaternion(sContext, value, make_quaternion(5, 6, 7, 8)));
+	EXPECT_TRUE(JSObjectGetQuaternion(sContext, value, &q) && q.w == 5 && q.x == 6 && q.y == 7 && q.z == 8);
+	EXPECT_TRUE(!JSValueToQuaternion(sContext, JS_NewInt32(sContext, 3)));
+	EXPECT_TRUE(!JSObjectGetQuaternion(sContext, JS_NULL, &q));
 	JSValue made = JSQuaternionWithQuaternion(sContext, make_quaternion(0, 0, 0, 1));
-	OO_CHECK(JS_IsObject(made) && JSObjectGetQuaternion(sContext, made, &q) && q.z == 1);
+	EXPECT_TRUE(JS_IsObject(made) && JSObjectGetQuaternion(sContext, made, &q) && q.z == 1);
 	JS_FreeValue(sContext, made);
 	int consumed = 99;
-	OO_CHECK(QuaternionFromArgumentList(sContext, "Test", "test", 1, &value, &q, &consumed) && consumed == 1 && q.w == 5);
+	EXPECT_TRUE(QuaternionFromArgumentList(sContext, "Test", "test", 1, &value, &q, &consumed) && consumed == 1 && q.w == 5);
 	JSValue four[4] = { JS_NewInt32(sContext, 1), JS_NewInt32(sContext, 2), JS_NewInt32(sContext, 3), JS_NewInt32(sContext, 4) };
-	OO_CHECK(!QuaternionFromArgumentList(sContext, "Test", "test", 4, four, &q, &consumed) && consumed == 0);	// numbers only for the constructor
+	EXPECT_TRUE(!QuaternionFromArgumentList(sContext, "Test", "test", 4, four, &q, &consumed) && consumed == 0);	// numbers only for the constructor
 	JS_FreeValue(sContext, JS_GetException(sContext));
 	JS_FreeValue(sContext, value);
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSQuaternion, nativeExceptions)
 {
 	// toString() is a native (OOJS_NATIVE_ENTER); an entity's -orientation that raises there is a
 	// JS error, and a C++ exception is too.
 	OO_CHECK_EVAL("Quaternion.prototype.toString.call(makeEntity(-1, 0, 0, 0))", "threw: Native exception: orientation boom");
 	OO_CHECK_EVAL("Quaternion.prototype.toSource.call(makeEntity(-2, 0, 0, 0))", "threw: Native exception: cxx boom");
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
 #if OOJS_PROFILE
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 #endif
 }
-
-
-
-OO_TEST_MAIN()

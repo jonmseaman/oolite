@@ -15,9 +15,10 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "Logging.h"
 #include "OOScriptTimer.h"
-#include "oo_test.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked. The functions of it that the class calls are defined here instead,
@@ -103,210 +104,208 @@ std::string Fired() {
 
 }  // namespace
 
-OO_TEST(initialisers) {
+TEST(OOScriptTimer, initialisers) {
   {
-    SetUp(100.0);
+    ::SetUp(100.0);
     std::shared_ptr<OOScriptTimer> timer = OOScriptTimer::timerWithNextTime(110.0, 5.0);
-    OO_CHECK(timer != nullptr);
-    OO_CHECK_EQ(timer->nextTime(), 110.0);
-    OO_CHECK_EQ(timer->interval(), 5.0);
-    OO_CHECK(!timer->isScheduled());
+    EXPECT_TRUE(timer != nullptr);
+    EXPECT_EQ(timer->nextTime(), 110.0);
+    EXPECT_EQ(timer->interval(), 5.0);
+    EXPECT_TRUE(!timer->isScheduled());
 
     // A negative next time is "now + interval"; a non-positive interval is -1
     // (one-shot).
     timer = OOScriptTimer::timerWithNextTime(-1.0, 5.0);
-    OO_CHECK_EQ(timer->nextTime(), 105.0);
+    EXPECT_EQ(timer->nextTime(), 105.0);
     timer = OOScriptTimer::timerWithNextTime(120.0, 0.0);
-    OO_CHECK_EQ(timer->interval(), -1.0);
-    OO_CHECK_EQ(timer->nextTime(), 120.0);
+    EXPECT_EQ(timer->interval(), -1.0);
+    EXPECT_EQ(timer->nextTime(), 120.0);
 
     // A past (or negative) next time with no interval is meaningless: nil.
-    OO_CHECK(OOScriptTimer::timerWithNextTime(90.0, -1.0) == nullptr);
-    OO_CHECK(OOScriptTimer::timerWithNextTime(-1.0, 0.0) == nullptr);
-    OO_CHECK(OOScriptTimer::timerWithNextTime(100.0, -1.0) != nullptr);
+    EXPECT_TRUE(OOScriptTimer::timerWithNextTime(90.0, -1.0) == nullptr);
+    EXPECT_TRUE(OOScriptTimer::timerWithNextTime(-1.0, 0.0) == nullptr);
+    EXPECT_TRUE(OOScriptTimer::timerWithNextTime(100.0, -1.0) != nullptr);
 
     // A one-shot timer fires after the delay.
     timer = OOScriptTimer::oneShotTimerWithDelay(2.5);
-    OO_CHECK_EQ(timer->nextTime(), 102.5);
-    OO_CHECK_EQ(timer->interval(), -1.0);
+    EXPECT_EQ(timer->nextTime(), 102.5);
+    EXPECT_EQ(timer->interval(), -1.0);
   }
 }
 
-OO_TEST(accessors) {
+TEST(OOScriptTimer, accessors) {
   {
-    SetUp(100.0);
+    ::SetUp(100.0);
     std::shared_ptr<OOScriptTimer> timer = OOScriptTimer::timerWithNextTime(110.0, 5.0);
     timer->setInterval(-3.0);
-    OO_CHECK_EQ(timer->interval(), -1.0);
+    EXPECT_EQ(timer->interval(), -1.0);
     timer->setInterval(7.0);
-    OO_CHECK_EQ(timer->interval(), 7.0);
-    OO_CHECK(timer->setNextTime(130.0));
-    OO_CHECK_EQ(timer->nextTime(), 130.0);
+    EXPECT_EQ(timer->interval(), 7.0);
+    EXPECT_TRUE(timer->setNextTime(130.0));
+    EXPECT_EQ(timer->nextTime(), 130.0);
 
     // While scheduled the next time cannot change.
-    OO_CHECK(timer->scheduleTimer());
-    OO_CHECK(timer->isScheduled());
-    OO_CHECK(
+    EXPECT_TRUE(timer->scheduleTimer());
+    EXPECT_TRUE(timer->isScheduled());
+    EXPECT_TRUE(
         timer->scheduleTimer());  // already scheduled: YES, no second entry
-    OO_CHECK(!timer->setNextTime(140.0));
-    OO_CHECK_EQ(timer->nextTime(), 130.0);
+    EXPECT_TRUE(!timer->setNextTime(140.0));
+    EXPECT_EQ(timer->nextTime(), 130.0);
     timer->unscheduleTimer();
-    OO_CHECK(!timer->isScheduled());
-    OO_CHECK(timer->setNextTime(140.0));
+    EXPECT_TRUE(!timer->isScheduled());
+    EXPECT_TRUE(timer->setNextTime(140.0));
   }
 }
 
-OO_TEST(description) {
+TEST(OOScriptTimer, description) {
   {
-    SetUp(100.0);
+    ::SetUp(100.0);
     std::shared_ptr<OOScriptTimer> timer = OOScriptTimer::timerWithNextTime(110.0, 5.0);
-    OO_CHECK_EQ(timer->descriptionComponents().value_or("<none>"),
+    EXPECT_EQ(timer->descriptionComponents().value_or("<none>"),
                 "nextTime: 110, interval: 5, not running");
     timer->scheduleTimer();
-    OO_CHECK_EQ(timer->descriptionComponents().value_or("<none>"),
+    EXPECT_EQ(timer->descriptionComponents().value_or("<none>"),
                 "nextTime: 110, interval: 5, running");
     timer->unscheduleTimer();
     timer = OOScriptTimer::oneShotTimerWithDelay(1.5);
-    OO_CHECK_EQ(timer->descriptionComponents().value_or("<none>"),
+    EXPECT_EQ(timer->descriptionComponents().value_or("<none>"),
                 "nextTime: 101.5, one-shot, not running");
-    OO_CHECK(timer->description().find("OOScriptTimer") != std::string::npos);
+    EXPECT_TRUE(timer->description().find("OOScriptTimer") != std::string::npos);
   }
 }
 
-OO_TEST(ordering) {
+TEST(OOScriptTimer, ordering) {
   {
-    SetUp(100.0);
+    ::SetUp(100.0);
     std::shared_ptr<OOScriptTimer> early = OOScriptTimer::timerWithNextTime(110.0, 5.0);
     std::shared_ptr<OOScriptTimer> late = OOScriptTimer::timerWithNextTime(120.0, 5.0);
-    OO_CHECK_EQ(early->compareByNextFireTime(late.get()), oo::ComparisonResult::kAscending);
-    OO_CHECK_EQ(late->compareByNextFireTime(early.get()), oo::ComparisonResult::kDescending);
-    OO_CHECK_EQ(early->compareByNextFireTime(early.get()), oo::ComparisonResult::kSame);
-    OO_CHECK_EQ(early->compareByNextFireTime(nullptr),
+    EXPECT_EQ(early->compareByNextFireTime(late.get()), oo::ComparisonResult::kAscending);
+    EXPECT_EQ(late->compareByNextFireTime(early.get()), oo::ComparisonResult::kDescending);
+    EXPECT_EQ(early->compareByNextFireTime(early.get()), oo::ComparisonResult::kSame);
+    EXPECT_EQ(early->compareByNextFireTime(nullptr),
                 oo::ComparisonResult::kDescending);  // nil is -INFINITY
   }
 }
 
-OO_TEST(firing) {
+TEST(OOScriptTimer, firing) {
   {
-    SetUp(100.0);
+    ::SetUp(100.0);
     std::shared_ptr<TestTimer> b = MakeTimer("b", 120.0, -1.0);
     std::shared_ptr<TestTimer> a = MakeTimer("a", 110.0, -1.0);
     std::shared_ptr<TestTimer> r = MakeTimer("r", 105.0, 10.0);
-    OO_CHECK(b->scheduleTimer() && a->scheduleTimer() && r->scheduleTimer());
+    EXPECT_TRUE(b->scheduleTimer() && a->scheduleTimer() && r->scheduleTimer());
 
     OOScriptTimer::updateTimers();
-    OO_CHECK_EQ(Fired(), "");
+    EXPECT_EQ(Fired(), "");
 
     gNow = 112.0;
     OOScriptTimer::updateTimers();
-    OO_CHECK_EQ(Fired(), "r,a");
-    OO_CHECK(!a->isScheduled());  // one-shot: done
-    OO_CHECK(r->isScheduled());   // repeating: rescheduled at the next multiple
+    EXPECT_EQ(Fired(), "r,a");
+    EXPECT_TRUE(!a->isScheduled());  // one-shot: done
+    EXPECT_TRUE(r->isScheduled());   // repeating: rescheduled at the next multiple
                                   // of its interval
-    OO_CHECK_EQ(r->nextTime(), 115.0);
+    EXPECT_EQ(r->nextTime(), 115.0);
 
     gNow = 130.0;
     OOScriptTimer::updateTimers();
-    OO_CHECK_EQ(Fired(), "r,a,r,b");
-    OO_CHECK_EQ(r->nextTime(), 135.0);
-    OO_CHECK(!b->isScheduled());
+    EXPECT_EQ(Fired(), "r,a,r,b");
+    EXPECT_EQ(r->nextTime(), 135.0);
+    EXPECT_TRUE(!b->isScheduled());
 
     // A one-shot that has run cannot be scheduled again once its time has
     // passed.
-    OO_CHECK(!a->scheduleTimer());
-    OO_CHECK(!a->isScheduled());
+    EXPECT_TRUE(!a->scheduleTimer());
+    EXPECT_TRUE(!a->isScheduled());
 
     r->unscheduleTimer();
     gNow = 200.0;
     OOScriptTimer::updateTimers();
-    OO_CHECK_EQ(Fired(), "r,a,r,b");
+    EXPECT_EQ(Fired(), "r,a,r,b");
   }
 }
 
-OO_TEST(scheduleMovesPastTimeForward) {
+TEST(OOScriptTimer, scheduleMovesPastTimeForward) {
   {
-    SetUp(100.0);
+    ::SetUp(100.0);
     std::shared_ptr<TestTimer> r = MakeTimer("r", 101.0, 4.0);
     gNow = 110.0;
-    OO_CHECK(r->isValidForScheduling());
-    OO_CHECK_EQ(r->nextTime(), 113.0);  // the next 101 + 4n after now
+    EXPECT_TRUE(r->isValidForScheduling());
+    EXPECT_EQ(r->nextTime(), 113.0);  // the next 101 + 4n after now
     gNow = 113.0;
     std::shared_ptr<TestTimer> s = MakeTimer("s", 105.0, 4.0);
-    OO_CHECK(s->isValidForScheduling());
-    OO_CHECK_EQ(s->nextTime(),
+    EXPECT_TRUE(s->isValidForScheduling());
+    EXPECT_EQ(s->nextTime(),
                 113.0);  // exactly now: not run yet, so it may fire now
   }
 }
 
-OO_TEST(stopsItselfAndDefers) {
+TEST(OOScriptTimer, stopsItselfAndDefers) {
   {
-    SetUp(100.0);
+    ::SetUp(100.0);
     std::shared_ptr<TestTimer> stopper = MakeTimer("stopper", 101.0, 5.0);
     stopper->stopWhenFired = true;
     std::shared_ptr<TestTimer> later = MakeTimer("later", 102.0, -1.0);
     std::shared_ptr<TestTimer> starter = MakeTimer("starter", 101.5, -1.0);
     starter->startWhenFired = later.get();
-    OO_CHECK(stopper->scheduleTimer() && starter->scheduleTimer());
+    EXPECT_TRUE(stopper->scheduleTimer() && starter->scheduleTimer());
 
     gNow = 103.0;
     OOScriptTimer::updateTimers();
     // "later" was due, but it was scheduled during the update, so it waits for
     // the next one.
-    OO_CHECK_EQ(Fired(), "stopper,starter");
-    OO_CHECK(!stopper->isScheduled());
-    OO_CHECK(later->isScheduled());
+    EXPECT_EQ(Fired(), "stopper,starter");
+    EXPECT_TRUE(!stopper->isScheduled());
+    EXPECT_TRUE(later->isScheduled());
 
     OOScriptTimer::updateTimers();
-    OO_CHECK_EQ(Fired(), "stopper,starter,later");
-    OO_CHECK(!later->isScheduled());
+    EXPECT_EQ(Fired(), "stopper,starter,later");
+    EXPECT_TRUE(!later->isScheduled());
   }
 }
 
-OO_TEST(gameReset) {
+TEST(OOScriptTimer, gameReset) {
   {
-    SetUp(100.0);
+    ::SetUp(100.0);
     std::shared_ptr<TestTimer> a = MakeTimer("a", 110.0, 5.0);
     std::shared_ptr<TestTimer> b = MakeTimer("b", 120.0, -1.0);
-    OO_CHECK(a->scheduleTimer() && b->scheduleTimer());
+    EXPECT_TRUE(a->scheduleTimer() && b->scheduleTimer());
     OOScriptTimer::noteGameReset();
-    OO_CHECK(!a->isScheduled());
-    OO_CHECK(!b->isScheduled());
+    EXPECT_TRUE(!a->isScheduled());
+    EXPECT_TRUE(!b->isScheduled());
     gNow = 200.0;
     OOScriptTimer::updateTimers();
-    OO_CHECK_EQ(Fired(), "");      // the queue was emptied
-    OO_CHECK(a->scheduleTimer());  // and they can be scheduled again
+    EXPECT_EQ(Fired(), "");      // the queue was emptied
+    EXPECT_TRUE(a->scheduleTimer());  // and they can be scheduled again
     OOScriptTimer::updateTimers();
-    OO_CHECK_EQ(Fired(), "a");
+    EXPECT_EQ(Fired(), "a");
     a->unscheduleTimer();
   }
 }
 
-OO_TEST(baseTimerFired) {
+TEST(OOScriptTimer, baseTimerFired) {
   {
-    SetUp(100.0);
+    ::SetUp(100.0);
     std::shared_ptr<OOScriptTimer> timer =
         OOScriptTimer::timerWithNextTime(101.0, -1.0);
-    OO_CHECK(timer->scheduleTimer());
+    EXPECT_TRUE(timer->scheduleTimer());
     gSubclassResponsibilities = 0;
     gNow = 102.0;
     OOScriptTimer::updateTimers();
-    OO_CHECK_EQ(gSubclassResponsibilities, 1);
-    OO_CHECK(!timer->isScheduled());
+    EXPECT_EQ(gSubclassResponsibilities, 1);
+    EXPECT_TRUE(!timer->isScheduled());
   }
 }
 
-OO_TEST(scheduledTimerIsKept) {
+TEST(OOScriptTimer, scheduledTimerIsKept) {
   // The timer subsystem retains a scheduled timer: one the caller has let go of
   // still fires.
-  SetUp(100.0);
+  ::SetUp(100.0);
   {
-    OO_CHECK(MakeTimer("kept", 101.0, -1.0)->scheduleTimer());
+    EXPECT_TRUE(MakeTimer("kept", 101.0, -1.0)->scheduleTimer());
   }
   gNow = 102.0;
   {
     OOScriptTimer::updateTimers();
   }
-  OO_CHECK_EQ(Fired(), "kept");
+  EXPECT_EQ(Fired(), "kept");
 }
-
-OO_TEST_MAIN()

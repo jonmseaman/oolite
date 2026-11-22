@@ -22,13 +22,14 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "CombinedEmissionMapGenerator.h"
 #include "MultiTextureMaterial.h"
 #include "OpenGLExtensionManager.h"
 #include "RegExpMatcher.h"
 #include "Texture.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/String.hpp"
 
 // --- Stubs
@@ -313,47 +314,47 @@ GLint TexEnvMode(GLenum unit) {
 
 }  // namespace
 
-OO_TEST(combinersRequired) {
+TEST(OOMultiTextureMaterial, combinersRequired) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
     // On a GL without texture combiners the initialiser answers nil; this
     // context has them.
-    OO_CHECK(CombinersSupported());
-    OO_CHECK(Make("Hull", {}) != nullptr);
+    EXPECT_TRUE(CombinersSupported());
+    EXPECT_TRUE(Make("Hull", {}) != nullptr);
   }
 }
 
-OO_TEST(mapsFromTheConfiguration) {
+TEST(OOMultiTextureMaterial, mapsFromTheConfiguration) {
   if (!CombinersSupported()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
     // Only a name: the diffuse map is named after it, and there is no emission
     // map to bake.
     std::shared_ptr<oo::MultiTextureMaterial> m = Make("hull.png", {});
-    OO_CHECK(gTextureConfigurations.size() == 1 &&
+    EXPECT_TRUE(gTextureConfigurations.size() == 1 &&
              gTextureConfigurations[0].first == oo::PList("hull.png") &&
              gTextureConfigurations[0].second == 0);
-    OO_CHECK(gGenerators ==
+    EXPECT_TRUE(gGenerators ==
              std::vector<std::string>{
                  "emission:- emissionColor:no diffuseMap:yes diffuseColor:no "
                  "illumination:- illuminationColor:no options:-"});
-    OO_CHECK(m->textureUnitCount() == 1 &&
+    EXPECT_TRUE(m->textureUnitCount() == 1 &&
              m->countOfTextureUnitsWithBaseCoordinates() == 1);
 
     // A plain emission map: loaded shrunk, not baked.
     m = Make("Hull", {{"diffuse_map", oo::PList("d.png")},
                       {"emission_map", oo::PList("e.png")}});
-    OO_CHECK(gTextureConfigurations.size() == 2);
-    OO_CHECK(gTextureConfigurations[0].first == oo::PList("d.png") &&
+    EXPECT_TRUE(gTextureConfigurations.size() == 2);
+    EXPECT_TRUE(gTextureConfigurations[0].first == oo::PList("d.png") &&
              gTextureConfigurations[0].second == 0);
-    OO_CHECK(gTextureConfigurations[1].first == oo::PList("e.png") &&
+    EXPECT_TRUE(gTextureConfigurations[1].first == oo::PList("e.png") &&
              gTextureConfigurations[1].second == kExtraShrink);
-    OO_CHECK(gGenerators.empty() && m->textureUnitCount() == 2);
+    EXPECT_TRUE(gGenerators.empty() && m->textureUnitCount() == 2);
 
     // An emission map with a modulating colour: baked, and the basic material's
     // emission colour is dropped from what it is given.
@@ -364,42 +365,42 @@ OO_TEST(mapsFromTheConfiguration) {
                          {"emission_color", oo::PList("greenColor")},
                          {"diffuse_color", oo::PList("blueColor")},
                      });
-    OO_CHECK(
+    EXPECT_TRUE(
         gGenerators ==
         std::vector<std::string>{
             "emission:e.png emissionColor:yes diffuseMap:yes diffuseColor:yes "
             "illumination:- illuminationColor:no options:e.png"});
     GLfloat c[4] = {};
     m->getEmissionComponents(c);
-    OO_CHECK(c[0] == 0 && c[1] == 0 && c[2] == 0 && c[3] == 1);
+    EXPECT_TRUE(c[0] == 0 && c[1] == 0 && c[2] == 0 && c[3] == 1);
     m->getDiffuseComponents(c);
-    OO_CHECK(c[0] == 0 && c[2] == 1);
-    OO_CHECK(m->textureUnitCount() == 2);
+    EXPECT_TRUE(c[0] == 0 && c[2] == 1);
+    EXPECT_TRUE(m->textureUnitCount() == 2);
 
     // An illumination map alone: baked, with it as the options specifier; the
     // emission colour stays.
     m = Make("Hull", {{"illumination_map", oo::PList("i.png")},
                       {"emission_color", oo::PList("greenColor")}});
-    OO_CHECK(gGenerators ==
+    EXPECT_TRUE(gGenerators ==
              std::vector<std::string>{
                  "emission:- emissionColor:no diffuseMap:yes diffuseColor:no "
                  "illumination:i.png illuminationColor:no options:i.png"});
     m->getEmissionComponents(c);
-    OO_CHECK(c[1] == 1);
+    EXPECT_TRUE(c[1] == 1);
 
     // The combined map: the other generator.
     m = Make("Hull", {{"emission_and_illumination_map", oo::PList("ei.png")}});
-    OO_CHECK(
+    EXPECT_TRUE(
         gGenerators ==
         std::vector<std::string>{
             "emissionAndIllumination:ei.png diffuseMap:yes options:ei.png"});
-    OO_CHECK(m->textureUnitCount() == 2);
+    EXPECT_TRUE(m->textureUnitCount() == 2);
   }
 }
 
-OO_TEST(texturesKeptAndAsked) {
+TEST(OOMultiTextureMaterial, texturesKeptAndAsked) {
   if (!CombinersSupported()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   const int deallocated = gTexturesDeallocated;
@@ -408,23 +409,23 @@ OO_TEST(texturesKeptAndAsked) {
     m = Make("Hull", {{"diffuse_map", oo::PList("d.png")},
                       {"emission_map", oo::PList("e.png")}});
   }
-  OO_CHECK(gTexturesDeallocated == deallocated);
+  EXPECT_TRUE(gTexturesDeallocated == deallocated);
   {
     m->ensureFinishedLoading();
 #ifndef NDEBUG
     const std::vector<std::shared_ptr<oo::Texture>> textures = m->allTextures();
-    OO_CHECK(textures.size() == 2 && AsTest(textures[0])->_ensures == 1 &&
+    EXPECT_TRUE(textures.size() == 2 && AsTest(textures[0])->_ensures == 1 &&
              AsTest(textures[1])->_ensures == 1);
-    OO_CHECK(AsTest(textures[0])->_configuration == oo::PList("d.png") &&
+    EXPECT_TRUE(AsTest(textures[0])->_configuration == oo::PList("d.png") &&
              AsTest(textures[1])->_configuration == oo::PList("e.png"));
 #endif
     const std::string text = m->description();
-    OO_CHECK(text.starts_with("<OOMultiTextureMaterial 0x"));
-    OO_CHECK(text.ends_with(
+    EXPECT_TRUE(text.starts_with("<OOMultiTextureMaterial 0x"));
+    EXPECT_TRUE(text.ends_with(
         ">{\"Hull\" - diffuse map: tex:d.png,emission map: tex:e.png}"));
   }
   m = nullptr;
-  OO_CHECK(gTexturesDeallocated == deallocated + 2);
+  EXPECT_TRUE(gTexturesDeallocated == deallocated + 2);
 
   {
     // No diffuse map (no name): only the emission map.
@@ -433,18 +434,18 @@ OO_TEST(texturesKeptAndAsked) {
         oo::MultiTextureMaterial::materialWithName(
             std::nullopt,
             oo::PList(oo::PList::Dict{{"emission_map", oo::PList("e.png")}}));
-    OO_CHECK(emissive->textureUnitCount() == 1);
+    EXPECT_TRUE(emissive->textureUnitCount() == 1);
 #ifndef NDEBUG
-    OO_CHECK(emissive->allTextures().size() == 1);
+    EXPECT_TRUE(emissive->allTextures().size() == 1);
 #endif
-    OO_CHECK(emissive->description().ends_with(
+    EXPECT_TRUE(emissive->description().ends_with(
         ">{\"(null)\" - emission map: tex:e.png}"));
   }
 }
 
-OO_TEST(applyAndUnapply) {
+TEST(OOMultiTextureMaterial, applyAndUnapply) {
   if (!CombinersSupported()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -458,15 +459,15 @@ OO_TEST(applyAndUnapply) {
 #endif
 
     two->apply();
-    OO_CHECK(oo::Material::current().get() == two.get());
+    EXPECT_TRUE(oo::Material::current().get() == two.get());
 #ifndef NDEBUG
-    OO_CHECK(diffuse->_applies == 1 && emission->_applies == 1);
+    EXPECT_TRUE(diffuse->_applies == 1 && emission->_applies == 1);
 #endif
-    OO_CHECK(TexEnvMode(GL_TEXTURE0_ARB) == GL_COMBINE_ARB &&
+    EXPECT_TRUE(TexEnvMode(GL_TEXTURE0_ARB) == GL_COMBINE_ARB &&
              TexEnvMode(GL_TEXTURE1_ARB) == GL_COMBINE_ARB);
     GLint active = 0;
     glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &active);
-    OO_CHECK(active == GL_TEXTURE0_ARB);
+    EXPECT_TRUE(active == GL_TEXTURE0_ARB);
 
     // The next material uses two units: nothing to clear, and it is a basic
     // material.
@@ -474,29 +475,29 @@ OO_TEST(applyAndUnapply) {
     two->unapplyWithNext(Make("Other", {{"diffuse_map", oo::PList("x.png")},
                                         {"emission_map", oo::PList("y.png")}})
                              .get());
-    OO_CHECK(gTextureApplyNones == applyNones);
+    EXPECT_TRUE(gTextureApplyNones == applyNones);
 
     // One unit: the second is cleared, back to modulate.
     two->unapplyWithNext(one.get());
-    OO_CHECK(gTextureApplyNones == applyNones + 1 &&
+    EXPECT_TRUE(gTextureApplyNones == applyNones + 1 &&
              TexEnvMode(GL_TEXTURE1_ARB) == GL_MODULATE);
 
     // Nothing: the default material (no texture), then both units cleared.
     applyNones = gTextureApplyNones;
     oo::Material::applyNone();
-    OO_CHECK(gTextureApplyNones == applyNones + 3 &&
+    EXPECT_TRUE(gTextureApplyNones == applyNones + 3 &&
              TexEnvMode(GL_TEXTURE0_ARB) == GL_MODULATE);
-    OO_CHECK(oo::Material::current() == nullptr);
-    OO_CHECK(glGetError() == GL_NO_ERROR);
+    EXPECT_TRUE(oo::Material::current() == nullptr);
+    EXPECT_TRUE(glGetError() == GL_NO_ERROR);
   }
 }
 
 // --- The C++ class and the root
 // -----------------------------------------
 
-OO_TEST(cxxAPI) {
+TEST(OOMultiTextureMaterial, cxxAPI) {
   if (!CombinersSupported()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -506,45 +507,43 @@ OO_TEST(cxxAPI) {
             std::string("Cxx"),
             oo::PList(oo::PList::Dict{{"diffuse_map", oo::PList("d.png")},
                                       {"emission_map", oo::PList("e.png")}}));
-    OO_CHECK(m != nullptr && m->textureUnitCount() == 2 &&
+    EXPECT_TRUE(m != nullptr && m->textureUnitCount() == 2 &&
              m->countOfTextureUnitsWithBaseCoordinates() == 2);
-    OO_CHECK(m->descriptionComponents() ==
+    EXPECT_TRUE(m->descriptionComponents() ==
              std::optional<std::string>(
                  "\"Cxx\" - diffuse map: tex:d.png,emission map: tex:e.png"));
 #ifndef NDEBUG
-    OO_CHECK(m->allTextures().size() == 2);
+    EXPECT_TRUE(m->allTextures().size() == 2);
 #endif
 
     // apply() is virtual: through a root pointer, twice.
     oo::Material* root = m.get();
     root->apply();
 #ifndef NDEBUG
-    OO_CHECK(AsTest(m->allTextures()[0])->_applies == 1 &&
+    EXPECT_TRUE(AsTest(m->allTextures()[0])->_applies == 1 &&
              AsTest(m->allTextures()[1])->_applies == 1);
 #endif
-    OO_CHECK(oo::Material::current().get() == m.get());
+    EXPECT_TRUE(oo::Material::current().get() == m.get());
     root->apply();
 #ifndef NDEBUG
-    OO_CHECK(AsTest(m->allTextures()[0])->_applies == 2);
+    EXPECT_TRUE(AsTest(m->allTextures()[0])->_applies == 2);
 #endif
     const int applyNones = gTextureApplyNones;
     oo::Material::applyNone();
-    OO_CHECK(gTextureApplyNones == applyNones + 3);
+    EXPECT_TRUE(gTextureApplyNones == applyNones + 3);
   }
 }
 
 // The description names the C++ class.
-OO_TEST(descriptionNamesTheClass) {
+TEST(OOMultiTextureMaterial, descriptionNamesTheClass) {
   if (!CombinersSupported()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
     const std::shared_ptr<oo::MultiTextureMaterial> m =
         oo::MultiTextureMaterial::materialWithName(std::string("Cxx"),
                                                  oo::PList());
-    OO_CHECK(m->description().starts_with("<OOMultiTextureMaterial 0x"));
+    EXPECT_TRUE(m->description().starts_with("<OOMultiTextureMaterial 0x"));
   }
 }
-
-OO_TEST_MAIN()

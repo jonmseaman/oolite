@@ -18,11 +18,12 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "OpenGL.h"
 #include "OpenGLExtensionManager.h"
 #include "RegExpMatcher.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 
 // --- Stubs
@@ -144,8 +145,8 @@ bool Matches(oo::OpenGLStateID state) {
 // --- Tests
 // --------------------------------------------------------------------------------------
 
-OO_TEST(fromTheInitialState) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOOpenGLStateManager, fromTheInitialState) {
+  EXPECT_TRUE(OOTestGLContext());
   (void)oo::OpenGLExtensionManager::sharedManager();  // loads glActiveTextureARB
                                                     // & co.
 
@@ -165,28 +166,28 @@ OO_TEST(fromTheInitialState) {
     oo::ResetGLStateVerifier();
 
     OOSetOpenGLState((oo::OpenGLStateID)s);
-    OO_CHECK(Matches((oo::OpenGLStateID)s));
-    OO_CHECK(glGetError() == GL_NO_ERROR);
+    EXPECT_TRUE(Matches((oo::OpenGLStateID)s));
+    EXPECT_TRUE(glGetError() == GL_NO_ERROR);
   }
 }
 
-OO_TEST(betweenEveryPairOfStates) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOOpenGLStateManager, betweenEveryPairOfStates) {
+  EXPECT_TRUE(OOTestGLContext());
   for (int from = 0; from < oo::ToUnderlying(oo::OpenGLStateID::kInternalUseOnly); from++) {
     for (int to = 0; to < oo::ToUnderlying(oo::OpenGLStateID::kInternalUseOnly); to++) {
       OOSetOpenGLState((oo::OpenGLStateID)from);
-      OO_CHECK(Matches((oo::OpenGLStateID)from));
+      EXPECT_TRUE(Matches((oo::OpenGLStateID)from));
       OOSetOpenGLState((oo::OpenGLStateID)to);
-      OO_CHECK(Matches((oo::OpenGLStateID)to));
+      EXPECT_TRUE(Matches((oo::OpenGLStateID)to));
       OOVerifyOpenGLState();
-      OO_CHECK(Matches((oo::OpenGLStateID)to));
+      EXPECT_TRUE(Matches((oo::OpenGLStateID)to));
     }
   }
-  OO_CHECK(glGetError() == GL_NO_ERROR);
+  EXPECT_TRUE(glGetError() == GL_NO_ERROR);
 }
 
-OO_TEST(openItemsAreLeftAlone) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOOpenGLStateManager, openItemsAreLeftAlone) {
+  EXPECT_TRUE(OOTestGLContext());
   // LIGHT0, LIGHT1 and (but for the overlay) FOG are kStateMaybe. A switch
   // touches a state flag only when it is set in both the source and the target
   // state, so it leaves them alone, and switching from an open FOG to the
@@ -197,21 +198,19 @@ OO_TEST(openItemsAreLeftAlone) {
   glDisable(GL_LIGHT1);
   glEnable(GL_FOG);
   OOSetOpenGLState(oo::OpenGLStateID::kTranslucentPass);
-  OO_CHECK(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
+  EXPECT_TRUE(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
            glIsEnabled(GL_FOG));
   OOSetOpenGLState(oo::OpenGLStateID::kAdditiveBlending);
-  OO_CHECK(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
+  EXPECT_TRUE(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
            glIsEnabled(GL_FOG));
   OOSetOpenGLState(oo::OpenGLStateID::kOverlay);
-  OO_CHECK(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
+  EXPECT_TRUE(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
            glIsEnabled(GL_FOG));
   glDisable(GL_FOG);  // as the overlay expects, so that the next switch has
                       // nothing to verify
   OOSetOpenGLState(oo::OpenGLStateID::kOpaque);
-  OO_CHECK(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
+  EXPECT_TRUE(glIsEnabled(GL_LIGHT0) && !glIsEnabled(GL_LIGHT1) &&
            !glIsEnabled(GL_FOG));
   glDisable(GL_LIGHT0);
-  OO_CHECK(glGetError() == GL_NO_ERROR);
+  EXPECT_TRUE(glGetError() == GL_NO_ERROR);
 }
-
-OO_TEST_MAIN()

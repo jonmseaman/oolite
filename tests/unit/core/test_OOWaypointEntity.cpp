@@ -23,6 +23,8 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual entity references
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
@@ -30,7 +32,6 @@
 #include "WaypointEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -112,32 +113,32 @@ Entity* Waypoint(const std::string& code) {
 
 }  // namespace
 
-OO_TEST(defaults) {
+TEST(OOWaypointEntity, defaults) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* wp = WaypointObject(Dict({{"unused", oo::PList(1)}}));
-    OO_CHECK(wp != nullptr && Part(wp) != nullptr);
-    OO_CHECK(HPvector_equal(wp->getPosition(), kZeroHPVector));
-    OO_CHECK(QuatIs(wp->getOrientation(), 1, 0, 0, 0) &&
+    EXPECT_TRUE(wp != nullptr && Part(wp) != nullptr);
+    EXPECT_TRUE(HPvector_equal(wp->getPosition(), kZeroHPVector));
+    EXPECT_TRUE(QuatIs(wp->getOrientation(), 1, 0, 0, 0) &&
              Part(wp)->getOriented());
-    OO_CHECK(Part(wp)->size() == 1000.0);
-    OO_CHECK(NoDrawDistance(wp) ==
+    EXPECT_TRUE(Part(wp)->size() == 1000.0);
+    EXPECT_TRUE(NoDrawDistance(wp) ==
              (GLfloat)(1000.0 * 1000.0 * NO_DRAW_DISTANCE_FACTOR *
                        NO_DRAW_DISTANCE_FACTOR * 2));
-    OO_CHECK(oo::BeaconCode(wp) == std::optional<std::string>("W"));
-    OO_CHECK(oo::BeaconLabel(wp) == std::optional<std::string>("Waypoint"));
-    OO_CHECK(oo::EntityIsBeacon(wp) && !oo::BeaconIsJammingScanning(wp));
-    OO_CHECK(wp->status() == oo::EntityStatus::kEffect &&
+    EXPECT_TRUE(oo::BeaconCode(wp) == std::optional<std::string>("W"));
+    EXPECT_TRUE(oo::BeaconLabel(wp) == std::optional<std::string>("Waypoint"));
+    EXPECT_TRUE(oo::EntityIsBeacon(wp) && !oo::BeaconIsJammingScanning(wp));
+    EXPECT_TRUE(wp->status() == oo::EntityStatus::kEffect &&
              wp->getScanClass() == oo::ScanClass::kNoDraw);
-    OO_CHECK(wp->isEffect() && wp->isWaypoint());
+    EXPECT_TRUE(wp->isEffect() && wp->isWaypoint());
   }
 }
 
-OO_TEST(dictionary) {
+TEST(OOWaypointEntity, dictionary) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* wp = WaypointObject(Dict({
         {"position", Vec(1, 2, 3)},
         {"orientation",
@@ -147,118 +148,118 @@ OO_TEST(dictionary) {
         {"beaconCode", oo::PList("AB")},
         {"beaconLabel", oo::PList("Somewhere")},
     }));
-    OO_CHECK(HPvector_equal(wp->getPosition(), make_HPvector(1, 2, 3)));
-    OO_CHECK(QuatIs(wp->getOrientation(), 0, 1, 0, 0) &&
+    EXPECT_TRUE(HPvector_equal(wp->getPosition(), make_HPvector(1, 2, 3)));
+    EXPECT_TRUE(QuatIs(wp->getOrientation(), 0, 1, 0, 0) &&
              Part(wp)->getOriented());
-    OO_CHECK(Part(wp)->size() == 50.0);
-    OO_CHECK(oo::BeaconCode(wp) == std::optional<std::string>("AB"));
-    OO_CHECK(oo::BeaconLabel(wp) == std::optional<std::string>("Somewhere"));
+    EXPECT_TRUE(Part(wp)->size() == 50.0);
+    EXPECT_TRUE(oo::BeaconCode(wp) == std::optional<std::string>("AB"));
+    EXPECT_TRUE(oo::BeaconLabel(wp) == std::optional<std::string>("Somewhere"));
   }
 }
 
-OO_TEST(emptyDictionary) {
+TEST(OOWaypointEntity, emptyDictionary) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     // A nil dictionary read zero-filled values and nil strings: the zero
     // orientation is unoriented.
     Entity* wp = WaypointObject(oo::PList());
-    OO_CHECK(HPvector_equal(wp->getPosition(), kZeroHPVector));
-    OO_CHECK(QuatIs(wp->getOrientation(), 1, 0, 0, 0) &&
+    EXPECT_TRUE(HPvector_equal(wp->getPosition(), kZeroHPVector));
+    EXPECT_TRUE(QuatIs(wp->getOrientation(), 1, 0, 0, 0) &&
              !Part(wp)->getOriented());
-    OO_CHECK(!oo::BeaconCode(wp).has_value() &&
+    EXPECT_TRUE(!oo::BeaconCode(wp).has_value() &&
              !oo::BeaconLabel(wp).has_value() && !oo::EntityIsBeacon(wp));
   }
 }
 
-OO_TEST(orientation) {
+TEST(OOWaypointEntity, orientation) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* wp = Waypoint("W");
     wp->setOrientation(kZeroQuaternion);
-    OO_CHECK(!Part(wp)->getOriented() &&
+    EXPECT_TRUE(!Part(wp)->getOriented() &&
              QuatIs(wp->getOrientation(), 1, 0, 0, 0));
     Quaternion q = {0, 0, 1, 0};
     wp->setOrientation(q);
-    OO_CHECK(Part(wp)->getOriented() &&
+    EXPECT_TRUE(Part(wp)->getOriented() &&
              QuatIs(wp->getOrientation(), 0, 0, 1, 0));
   }
 }
 
-OO_TEST(size) {
+TEST(OOWaypointEntity, size) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* wp = Waypoint("W");
     Part(wp)->setSize(10.0);
-    OO_CHECK(Part(wp)->size() == 10.0);
-    OO_CHECK(NoDrawDistance(wp) ==
+    EXPECT_TRUE(Part(wp)->size() == 10.0);
+    EXPECT_TRUE(NoDrawDistance(wp) ==
              (GLfloat)(10.0 * 10.0 * NO_DRAW_DISTANCE_FACTOR *
                        NO_DRAW_DISTANCE_FACTOR * 2));
     Part(wp)->setSize(0.0);
     Part(wp)->setSize(-5.0);
-    OO_CHECK(Part(wp)->size() == 10.0);
+    EXPECT_TRUE(Part(wp)->size() == 10.0);
   }
 }
 
-OO_TEST(beaconStrings) {
+TEST(OOWaypointEntity, beaconStrings) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* wp = WaypointObject(Dict(
         {{"beaconCode", oo::PList("X")}, {"beaconLabel", oo::PList("Label")}}));
     oo::SetBeaconCode(wp, std::string(""));
-    OO_CHECK(!oo::BeaconCode(wp).has_value() && !oo::EntityIsBeacon(wp));
-    OO_CHECK(oo::BeaconLabel(wp) == std::optional<std::string>("Label"));
+    EXPECT_TRUE(!oo::BeaconCode(wp).has_value() && !oo::EntityIsBeacon(wp));
+    EXPECT_TRUE(oo::BeaconLabel(wp) == std::optional<std::string>("Label"));
 
     static_cast<oo::WaypointEntity*>(wp)->setBeaconLabel(
         std::string(""));  // the waypoint's, which its object's
                            // -setBeaconLabel: forwarded to
-    OO_CHECK(!oo::BeaconLabel(wp).has_value());
+    EXPECT_TRUE(!oo::BeaconLabel(wp).has_value());
     oo::SetBeaconCode(wp, std::string("Q"));
-    OO_CHECK(oo::BeaconCode(wp) == std::optional<std::string>("Q") &&
+    EXPECT_TRUE(oo::BeaconCode(wp) == std::optional<std::string>("Q") &&
              oo::BeaconLabel(wp) == std::optional<std::string>("Q"));
     oo::SetBeaconCode(wp, std::string("R"));
-    OO_CHECK(oo::BeaconLabel(wp) ==
+    EXPECT_TRUE(oo::BeaconLabel(wp) ==
              std::optional<std::string>("Q"));  // a label is kept
   }
 }
 
-OO_TEST(compareBeaconCodes) {
+TEST(OOWaypointEntity, compareBeaconCodes) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
-    OO_CHECK(Part(Waypoint("a"))->compareBeaconCodeWith(Waypoint("B")) ==
+    ::SetUp();
+    EXPECT_TRUE(Part(Waypoint("a"))->compareBeaconCodeWith(Waypoint("B")) ==
              oo::ComparisonResult::kAscending);
-    OO_CHECK(Part(Waypoint("b"))->compareBeaconCodeWith(Waypoint("A")) ==
+    EXPECT_TRUE(Part(Waypoint("b"))->compareBeaconCodeWith(Waypoint("A")) ==
              oo::ComparisonResult::kDescending);
-    OO_CHECK(Part(Waypoint("abc"))->compareBeaconCodeWith(Waypoint("ABC")) ==
+    EXPECT_TRUE(Part(Waypoint("abc"))->compareBeaconCodeWith(Waypoint("ABC")) ==
              oo::ComparisonResult::kSame);
   }
 }
 
-OO_TEST(beaconDrawable) {
+TEST(OOWaypointEntity, beaconDrawable) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* wp = Waypoint("W");
     // A C++ OOHUDBeaconIcon, held as the test retained it.
     std::shared_ptr<oo::HUDBeaconIcon> icon(oo::share(
         static_cast<oo::HUDBeaconIcon*>(oo::BeaconDrawable(wp))));
-    OO_CHECK(icon != nullptr && oo::BeaconDrawable(wp) == icon.get());
+    EXPECT_TRUE(icon != nullptr && oo::BeaconDrawable(wp) == icon.get());
     oo::SetBeaconCode(wp, std::string("V"));
-    OO_CHECK(oo::BeaconDrawable(wp) != nullptr &&
+    EXPECT_TRUE(oo::BeaconDrawable(wp) != nullptr &&
              oo::BeaconDrawable(wp) != icon.get());
   }
 }
 
-OO_TEST(neighbours) {
+TEST(OOWaypointEntity, neighbours) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* wp = Waypoint("W");
-    OO_CHECK(oo::PrevBeacon(wp) == nullptr && oo::NextBeacon(wp) == nullptr);
+    EXPECT_TRUE(oo::PrevBeacon(wp) == nullptr && oo::NextBeacon(wp) == nullptr);
     Entity* other = nullptr;
     {
       oo::AutoreleaseScope scope;
@@ -266,21 +267,21 @@ OO_TEST(neighbours) {
     }
     oo::SetPrevBeacon(wp, other);
     oo::SetNextBeacon(wp, other);
-    OO_CHECK(oo::PrevBeacon(wp) == other && oo::NextBeacon(wp) == other);
+    EXPECT_TRUE(oo::PrevBeacon(wp) == other && oo::NextBeacon(wp) == other);
     oo::ReleaseEntity(other);  // weak: they read nil once it is gone
-    OO_CHECK(oo::PrevBeacon(wp) == nullptr && oo::NextBeacon(wp) == nullptr);
+    EXPECT_TRUE(oo::PrevBeacon(wp) == nullptr && oo::NextBeacon(wp) == nullptr);
   }
 }
 
-OO_TEST(facade) {
+TEST(OOWaypointEntity, facade) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* wp = Waypoint("W");  // the root entity (the protocol type would
                                  // pick a subclass's crossing)
     // A C++ entity.
-    OO_CHECK(dynamic_cast<oo::WaypointEntity*>(wp) != nullptr);
-    OO_CHECK(wp == wp);
+    EXPECT_TRUE(dynamic_cast<oo::WaypointEntity*>(wp) != nullptr);
+    EXPECT_TRUE(wp == wp);
   }
 }
 
@@ -301,31 +302,29 @@ static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
 // The beacon selectors on the root entity: answered for a waypoint's part,
 // and not for another entity's, whose object did not answer them. The beacon
 // questions a plain entity is asked answer none.
-OO_TEST(beaconSelectorsForAWaypointOnly) {
+TEST(OOWaypointEntity, beaconSelectorsForAWaypointOnly) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* plain = oo::MadeEntity(oo::makeShared<Entity>());
-    OO_CHECK(!oo::EntityIsBeacon(plain) && !oo::BeaconCode(plain).has_value());
-    OO_CHECK(oo::NextBeacon(plain) == nullptr);
+    EXPECT_TRUE(!oo::EntityIsBeacon(plain) && !oo::BeaconCode(plain).has_value());
+    EXPECT_TRUE(oo::NextBeacon(plain) == nullptr);
   }
 }
 
 // The binding's category: what the engine asks a waypoint's object for by
 // selector is what OOJSWaypoint.mm answers.
-OO_TEST(jsExtensions) {
+TEST(OOWaypointEntity, jsExtensions) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* wp = Waypoint("W");
     RegisterJSClasses(InitOOJSWaypoint);
     const JSClassID jsClass = OOJSEntityJSClassID(wp);
     const JSClassID expectedClass = JSWaypointClassID();
-    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
-    OO_CHECK(OOJSEntityJSClassName(wp) ==
+    EXPECT_TRUE(jsClass != 0 && jsClass == expectedClass);
+    EXPECT_TRUE(OOJSEntityJSClassName(wp) ==
              std::optional<std::string>("Waypoint"));
-    OO_CHECK(OOJSEntityIsVisibleToScripts(wp) == true);
+    EXPECT_TRUE(OOJSEntityIsVisibleToScripts(wp) == true);
   }
 }
-
-OO_TEST_MAIN()

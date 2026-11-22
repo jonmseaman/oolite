@@ -13,12 +13,13 @@
 	held Ref for retain/release). Run: bash tools/check-core-tests.sh
 */
 
+#include <gtest/gtest.h>
+
 #include "ShaderProgram.h"
 #include "RegExpMatcher.h"
 #include "MyOpenGLView.h"
 
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 
 #include <cstdio>
 #include <filesystem>
@@ -145,114 +146,114 @@ bool OnlyTheTeardownsError()
 }	// namespace
 
 
-OO_TEST(programsFromSources)
+TEST(OOShaderProgram, programsFromSources)
 {
-	if (!SetUp())  { OO_CHECK(false); return; }
+	if (!::SetUp())  { EXPECT_TRUE(false); return; }
 	{
 		std::shared_ptr<oo::ShaderProgram> p = Make(kVertex, kFragment);
-		OO_CHECK(p != nullptr && p->program() != 0);
-		OO_CHECK(gGetAttribLocation(p->program(), "tangent") == 15);	// the attribute bindings
+		EXPECT_TRUE(p != nullptr && p->program() != 0);
+		EXPECT_TRUE(gGetAttribLocation(p->program(), "tangent") == 15);	// the attribute bindings
 
-		OO_CHECK(Make(std::nullopt, kFragment) != nullptr);	// one shader is enough
-		OO_CHECK(Make(kVertex, std::nullopt) != nullptr);
-		OO_CHECK(glGetError() == GL_NO_ERROR);
+		EXPECT_TRUE(Make(std::nullopt, kFragment) != nullptr);	// one shader is enough
+		EXPECT_TRUE(Make(kVertex, std::nullopt) != nullptr);
+		EXPECT_TRUE(glGetError() == GL_NO_ERROR);
 
 		/*	A failed initialiser leaves at most its teardown's error behind (OnlyTheTeardownsError),
 			and a successful one none.
 		*/
-		OO_CHECK(Make(std::nullopt, std::nullopt) == nullptr);	// none is not
-		OO_CHECK(OnlyTheTeardownsError());
+		EXPECT_TRUE(Make(std::nullopt, std::nullopt) == nullptr);	// none is not
+		EXPECT_TRUE(OnlyTheTeardownsError());
 
 		// The prefix is prepended to both sources; an empty one is none.
-		OO_CHECK(Make(kVertex, kFragmentNeedingPrefix) == nullptr);
-		OO_CHECK(OnlyTheTeardownsError());
-		OO_CHECK(Make(kVertex, kFragmentNeedingPrefix, std::string("")) == nullptr);
-		OO_CHECK(OnlyTheTeardownsError());
-		OO_CHECK(Make(kVertex, kFragmentNeedingPrefix, std::string("#define PREFIXED 0.5\n")) != nullptr);
-		OO_CHECK(glGetError() == GL_NO_ERROR);
+		EXPECT_TRUE(Make(kVertex, kFragmentNeedingPrefix) == nullptr);
+		EXPECT_TRUE(OnlyTheTeardownsError());
+		EXPECT_TRUE(Make(kVertex, kFragmentNeedingPrefix, std::string("")) == nullptr);
+		EXPECT_TRUE(OnlyTheTeardownsError());
+		EXPECT_TRUE(Make(kVertex, kFragmentNeedingPrefix, std::string("#define PREFIXED 0.5\n")) != nullptr);
+		EXPECT_TRUE(glGetError() == GL_NO_ERROR);
 
-		OO_CHECK(Make(std::string("this is not GLSL"), kFragment) == nullptr);	// does not compile
-		OO_CHECK(OnlyTheTeardownsError());
+		EXPECT_TRUE(Make(std::string("this is not GLSL"), kFragment) == nullptr);	// does not compile
+		EXPECT_TRUE(OnlyTheTeardownsError());
 	}
 }
 
 
-OO_TEST(cache)
+TEST(OOShaderProgram, cache)
 {
-	if (!SetUp())  { OO_CHECK(false); return; }
+	if (!::SetUp())  { EXPECT_TRUE(false); return; }
 	std::shared_ptr<oo::ShaderProgram> kept;
 	GLhandleARB handle = 0;
 	{
 		std::shared_ptr<oo::ShaderProgram> a = Make(kVertex, kFragment, std::nullopt, std::string("key-a"));
-		OO_CHECK(a != nullptr && Make(kVertex, kFragment, std::nullopt, std::string("key-a")) == a);	// one per key
-		OO_CHECK(Make(std::string("anything: it is not compiled"), std::nullopt, std::nullopt, std::string("key-a")) == a);
-		OO_CHECK(Make(kVertex, kFragment, std::nullopt, std::string("key-b")) != a);
-		OO_CHECK(Make(kVertex, kFragment).get() != Make(kVertex, kFragment).get());	// no key: never shared
+		EXPECT_TRUE(a != nullptr && Make(kVertex, kFragment, std::nullopt, std::string("key-a")) == a);	// one per key
+		EXPECT_TRUE(Make(std::string("anything: it is not compiled"), std::nullopt, std::nullopt, std::string("key-a")) == a);
+		EXPECT_TRUE(Make(kVertex, kFragment, std::nullopt, std::string("key-b")) != a);
+		EXPECT_TRUE(Make(kVertex, kFragment).get() != Make(kVertex, kFragment).get());	// no key: never shared
 		kept = a;
 		handle = a->program();
 	}
 	{
 		// Still alive (kept): still the cached one.
-		OO_CHECK(Make(kVertex, kFragment, std::nullopt, std::string("key-a")) == kept);
+		EXPECT_TRUE(Make(kVertex, kFragment, std::nullopt, std::string("key-a")) == kept);
 	}
 	kept = nullptr;
 	{
 		// Gone: the cache forgot it, and its GL program was deleted.
-		OO_CHECK(!gIsProgram(handle));
+		EXPECT_TRUE(!gIsProgram(handle));
 		std::shared_ptr<oo::ShaderProgram> again = Make(kVertex, kFragment, std::nullopt, std::string("key-a"));
-		OO_CHECK(again != nullptr && again->program() != 0);
+		EXPECT_TRUE(again != nullptr && again->program() != 0);
 	}
 }
 
 
-OO_TEST(programsFromFiles)
+TEST(OOShaderProgram, programsFromFiles)
 {
-	if (!SetUp())  { OO_CHECK(false); return; }
+	if (!::SetUp())  { EXPECT_TRUE(false); return; }
 	{
 		gShaderFiles = { { "test.vertex", kVertex }, { "test.frag", kFragment }, { "other.vert", kVertex } };
 		gShaderFileRequests.clear();
 
 		// Each name bare, then with its type's two extensions until one is found.
 		std::shared_ptr<oo::ShaderProgram> p = oo::ShaderProgram::shaderProgramWithVertexShaderName("test", "test", std::nullopt, kBindings);
-		OO_CHECK(p != nullptr && gGetAttribLocation(p->program(), "tangent") == 15);
-		OO_CHECK(gShaderFileRequests == (std::vector<std::string>{ "Shaders/test", "Shaders/test.vertex", "Shaders/test", "Shaders/test.fragment", "Shaders/test.frag" }));
+		EXPECT_TRUE(p != nullptr && gGetAttribLocation(p->program(), "tangent") == 15);
+		EXPECT_TRUE(gShaderFileRequests == (std::vector<std::string>{ "Shaders/test", "Shaders/test.vertex", "Shaders/test", "Shaders/test.fragment", "Shaders/test.frag" }));
 
 		// Cached by the names and the prefix: the files are not read again.
 		gShaderFileRequests.clear();
-		OO_CHECK(oo::ShaderProgram::shaderProgramWithVertexShaderName("test", "test", std::string(""), kBindings) == p);
-		OO_CHECK(gShaderFileRequests.empty());
+		EXPECT_TRUE(oo::ShaderProgram::shaderProgramWithVertexShaderName("test", "test", std::string(""), kBindings) == p);
+		EXPECT_TRUE(gShaderFileRequests.empty());
 		std::shared_ptr<oo::ShaderProgram> prefixed = oo::ShaderProgram::shaderProgramWithVertexShaderName("test", "test", std::string("#define UNUSED 1\n"), kBindings);
-		OO_CHECK(prefixed != nullptr && prefixed != p && gShaderFileRequests.size() == 5);
+		EXPECT_TRUE(prefixed != nullptr && prefixed != p && gShaderFileRequests.size() == 5);
 
 		// A name with one of the extensions is not extended; a file that is not there fails.
 		gShaderFileRequests.clear();
-		OO_CHECK(oo::ShaderProgram::shaderProgramWithVertexShaderName("other.vert", "missing.frag", std::nullopt, kBindings) == nullptr);
-		OO_CHECK(gShaderFileRequests == (std::vector<std::string>{ "Shaders/other.vert", "Shaders/missing.frag" }));
+		EXPECT_TRUE(oo::ShaderProgram::shaderProgramWithVertexShaderName("other.vert", "missing.frag", std::nullopt, kBindings) == nullptr);
+		EXPECT_TRUE(gShaderFileRequests == (std::vector<std::string>{ "Shaders/other.vert", "Shaders/missing.frag" }));
 		gShaderFiles.clear();
 	}
 }
 
 
-OO_TEST(applyAndApplyNone)
+TEST(OOShaderProgram, applyAndApplyNone)
 {
-	if (!SetUp())  { OO_CHECK(false); return; }
+	if (!::SetUp())  { EXPECT_TRUE(false); return; }
 	std::shared_ptr<oo::ShaderProgram> p;
 	{
 		p = Make(kVertex, kFragment);
 		std::shared_ptr<oo::ShaderProgram> q = Make(kVertex, kFragment);
 		const long retained = p.use_count();
 		p->apply();
-		OO_CHECK(CurrentProgram() == (GLint)p->program());
-		OO_CHECK(p.use_count() == retained + 1);	// kept while in use
+		EXPECT_TRUE(CurrentProgram() == (GLint)p->program());
+		EXPECT_TRUE(p.use_count() == retained + 1);	// kept while in use
 		p->apply();	// again: no change
-		OO_CHECK(p.use_count() == retained + 1);
+		EXPECT_TRUE(p.use_count() == retained + 1);
 		q->apply();
-		OO_CHECK(CurrentProgram() == (GLint)q->program() && p.use_count() == retained);
+		EXPECT_TRUE(CurrentProgram() == (GLint)q->program() && p.use_count() == retained);
 		oo::ShaderProgram::applyNone();
-		OO_CHECK(CurrentProgram() == 0);
+		EXPECT_TRUE(CurrentProgram() == 0);
 		oo::ShaderProgram::applyNone();	// nothing in use: nothing
-		OO_CHECK(CurrentProgram() == 0);
-		OO_CHECK(glGetError() == GL_NO_ERROR);
+		EXPECT_TRUE(CurrentProgram() == 0);
+		EXPECT_TRUE(glGetError() == GL_NO_ERROR);
 	}
 	p = nullptr;
 }
@@ -260,28 +261,28 @@ OO_TEST(applyAndApplyNone)
 
 // --- The C++ API ----------------------------------------------------------------------------------
 
-OO_TEST(cxxAPI)
+TEST(OOShaderProgram, cxxAPI)
 {
-	if (!SetUp())  { OO_CHECK(false); return; }
+	if (!::SetUp())  { EXPECT_TRUE(false); return; }
 	{
-		OO_CHECK(oo::ShaderProgram::shaderProgramWithVertexShader(std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, kBindings, std::nullopt) == nullptr);
+		EXPECT_TRUE(oo::ShaderProgram::shaderProgramWithVertexShader(std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, kBindings, std::nullopt) == nullptr);
 		const std::shared_ptr<oo::ShaderProgram> p = oo::ShaderProgram::shaderProgramWithVertexShader(kVertex, kFragment, std::string("v"), std::string("f"), std::nullopt, kBindings, std::string("cxx-key"));
-		OO_CHECK(p != nullptr && p->program() != 0 && gGetAttribLocation(p->program(), "tangent") == 15);
+		EXPECT_TRUE(p != nullptr && p->program() != 0 && gGetAttribLocation(p->program(), "tangent") == 15);
 
 		// The cache shares it.
-		OO_CHECK(oo::ShaderProgram::shaderProgramWithVertexShader(std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, kBindings, std::string("cxx-key")).get() == p.get());
-		OO_CHECK(Make(kVertex, kFragment, std::nullopt, std::string("cxx-key")).get() == p.get());
+		EXPECT_TRUE(oo::ShaderProgram::shaderProgramWithVertexShader(std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, kBindings, std::string("cxx-key")).get() == p.get());
+		EXPECT_TRUE(Make(kVertex, kFragment, std::nullopt, std::string("cxx-key")).get() == p.get());
 
 		gShaderFiles = { { "c.vert", kVertex }, { "c.frag", kFragment } };
 		const std::shared_ptr<oo::ShaderProgram> fromFiles = oo::ShaderProgram::shaderProgramWithVertexShaderName("c.vert", "c.frag", std::nullopt, kBindings);
-		OO_CHECK(fromFiles != nullptr && fromFiles.get() == oo::ShaderProgram::shaderProgramWithVertexShaderName("c.vert", "c.frag", std::nullopt, kBindings).get());
-		OO_CHECK(oo::ShaderProgram::shaderProgramWithVertexShaderName("none.vert", "c.frag", std::nullopt, kBindings) == nullptr);
+		EXPECT_TRUE(fromFiles != nullptr && fromFiles.get() == oo::ShaderProgram::shaderProgramWithVertexShaderName("c.vert", "c.frag", std::nullopt, kBindings).get());
+		EXPECT_TRUE(oo::ShaderProgram::shaderProgramWithVertexShaderName("none.vert", "c.frag", std::nullopt, kBindings) == nullptr);
 		gShaderFiles.clear();
 
 		p->apply();
-		OO_CHECK(CurrentProgram() == (GLint)p->program());
+		EXPECT_TRUE(CurrentProgram() == (GLint)p->program());
 		oo::ShaderProgram::applyNone();
-		OO_CHECK(CurrentProgram() == 0);
+		EXPECT_TRUE(CurrentProgram() == 0);
 	}
 }
 
@@ -335,14 +336,14 @@ const std::string kGLSL120Prefix = "#version 120\n#extension GL_EXT_gpu_shader4 
 }	// namespace
 
 
-OO_TEST(translateGLSL330To120)
+TEST(OOShaderProgram, translateGLSL330To120)
 {
 	oo::PList::Dict bindings;
-	OO_CHECK(oo::TranslateGLSL330To120(std::nullopt, true, bindings) == std::nullopt);
-	OO_CHECK(bindings.empty());
+	EXPECT_TRUE(oo::TranslateGLSL330To120(std::nullopt, true, bindings) == std::nullopt);
+	EXPECT_TRUE(bindings.empty());
 
 	// Vertex: located inputs become attributes and bindings, outputs varyings.
-	OO_CHECK_EQ(Translated("layout (location = 0) in vec3 aPos;\n"
+	EXPECT_EQ(Translated("layout (location = 0) in vec3 aPos;\n"
 	                       "layout(location=3) in vec2 aTexCoords;\n"
 	                       "out vec2 TexCoords;\n"
 	                       "void main() { TexCoords = aTexCoords; }\n", true, bindings),
@@ -350,15 +351,15 @@ OO_TEST(translateGLSL330To120)
 	                        "attribute vec2 aTexCoords;\n"
 	                        "varying vec2 TexCoords;\n"
 	                        "void main() { TexCoords = aTexCoords; }\n"));
-	OO_CHECK(bindings.size() == 2);
-	OO_CHECK(bindings["aPos"] == oo::PList::signedInteger(0));
-	OO_CHECK(bindings["aTexCoords"] == oo::PList::signedInteger(3));
+	EXPECT_TRUE(bindings.size() == 2);
+	EXPECT_TRUE(bindings["aPos"] == oo::PList::signedInteger(0));
+	EXPECT_TRUE(bindings["aTexCoords"] == oo::PList::signedInteger(3));
 
 	// Fragment: vec4 outputs become gl_FragData defines (location 0 when none is given), inputs
 	// varyings; texture() and textureSize() take their 1.20 names, and a qualifier inside a function
 	// is left alone.
 	bindings.clear();
-	OO_CHECK_EQ(Translated("layout (location = 1) out vec4 bright;\n"
+	EXPECT_EQ(Translated("layout (location = 1) out vec4 bright;\n"
 	                       "out vec4 FragColor;\n"
 	                       "in vec2 TexCoords;\n"
 	                       "uniform sampler2D image;\n"
@@ -378,16 +379,16 @@ OO_TEST(translateGLSL330To120)
 	                        "\tFragColor = texture2D(image, TexCoords);\n"
 	                        "\tbright = texture2D(image, s);\n"
 	                        "}\n"));
-	OO_CHECK(bindings.empty());
+	EXPECT_TRUE(bindings.empty());
 
 	// isnan() is not in GLSL 1.20: a shim is prepended and called instead.
-	OO_CHECK_EQ(Translated("void main() { bool b = isnan(1.0) || isnan (2.0); }\n", false, bindings),
+	EXPECT_EQ(Translated("void main() { bool b = isnan(1.0) || isnan (2.0); }\n", false, bindings),
 	            std::string("bool oo_isnan(float x) { return !(x < 0.0 || x > 0.0 || x == 0.0); }\n"
 	                        "void main() { bool b = oo_isnan(1.0) || oo_isnan(2.0); }\n"));
 }
 
 
-OO_TEST(translateGameShadersGLSL330To120)
+TEST(OOShaderProgram, translateGameShadersGLSL330To120)
 {
 	struct Program { const char *vertex; const char *fragment; };
 	const Program programs[] = {
@@ -397,33 +398,33 @@ OO_TEST(translateGameShadersGLSL330To120)
 	};
 	const std::regex texture330(R"(\btexture\s*\()");
 	const std::regex inOut330(R"(^\s*(in|out)\s)", std::regex::ECMAScript | std::regex::multiline);
-	const bool canCompile = SetUp() && oo::OpenGLExtensionManager::sharedManager()->haveExtension("GL_EXT_gpu_shader4");
+	const bool canCompile = ::SetUp() && oo::OpenGLExtensionManager::sharedManager()->haveExtension("GL_EXT_gpu_shader4");
 	if (!canCompile)  std::printf("note: no GL_EXT_gpu_shader4, so the translated game shaders are not compiled\n");
 
 	for (const Program &program : programs)
 	{
 		const std::string vertex330 = ShaderFile(program.vertex);
 		const std::string fragment330 = ShaderFile(program.fragment);
-		OO_CHECK(!vertex330.empty() && !fragment330.empty());
+		EXPECT_TRUE(!vertex330.empty() && !fragment330.empty());
 		oo::PList::Dict bindings;
 		const std::string vertex = Translated(vertex330, true, bindings);
 		const std::string fragment = Translated(fragment330, false, bindings);
 
 		// Every game vertex shader takes its two inputs at locations 0 and 1.
-		OO_CHECK(bindings.size() == 2);
+		EXPECT_TRUE(bindings.size() == 2);
 		for (const auto &[name, location] : bindings)
-			OO_CHECK(location == oo::PList::signedInteger(0) || location == oo::PList::signedInteger(1));
+			EXPECT_TRUE(location == oo::PList::signedInteger(0) || location == oo::PList::signedInteger(1));
 		for (const std::string *translated : { &vertex, &fragment })
 		{
-			OO_CHECK(!Contains(*translated, "layout"));
-			OO_CHECK(!std::regex_search(*translated, texture330));
-			OO_CHECK(!std::regex_search(*translated, inOut330));
+			EXPECT_TRUE(!Contains(*translated, "layout"));
+			EXPECT_TRUE(!std::regex_search(*translated, texture330));
+			EXPECT_TRUE(!std::regex_search(*translated, inOut330));
 		}
-		OO_CHECK(Contains(vertex, "attribute "));
-		OO_CHECK(Contains(vertex, "varying "));
-		OO_CHECK(Contains(fragment, "gl_FragData[0]"));
-		OO_CHECK(Contains(fragment, "varying "));
-		OO_CHECK(Contains(fragment, "isnan(") == Contains(fragment, "bool oo_isnan(float x)"));
+		EXPECT_TRUE(Contains(vertex, "attribute "));
+		EXPECT_TRUE(Contains(vertex, "varying "));
+		EXPECT_TRUE(Contains(fragment, "gl_FragData[0]"));
+		EXPECT_TRUE(Contains(fragment, "varying "));
+		EXPECT_TRUE(Contains(fragment, "isnan(") == Contains(fragment, "bool oo_isnan(float x)"));
 
 		if (canCompile)
 		{
@@ -431,15 +432,13 @@ OO_TEST(translateGameShadersGLSL330To120)
 			{
 				std::shared_ptr<oo::ShaderProgram> compiled = Make(vertex, fragment, kGLSL120Prefix);
 				if (compiled == nullptr)  std::printf("FAIL: %s + %s do not compile as GLSL 1.20\n", program.vertex, program.fragment);
-				OO_CHECK(compiled != nullptr);
+				EXPECT_TRUE(compiled != nullptr);
 			}
 		}
 	}
 	// The texture program's two outputs go to the two colour attachments.
 	oo::PList::Dict bindings;
 	const std::string texture = Translated(ShaderFile("oolite-texture.fragment"), false, bindings);
-	OO_CHECK(Contains(texture, "#define out_color gl_FragData[0]"));
-	OO_CHECK(Contains(texture, "#define bright_color gl_FragData[1]"));
+	EXPECT_TRUE(Contains(texture, "#define out_color gl_FragData[0]"));
+	EXPECT_TRUE(Contains(texture, "#define bright_color gl_FragData[1]"));
 }
-
-OO_TEST_MAIN()

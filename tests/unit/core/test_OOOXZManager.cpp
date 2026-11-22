@@ -20,6 +20,8 @@
    C++ singleton. Run: bash tools/check-core-tests.sh test_OOOXZManager
 */
 
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual entity references
 #include "CacheManager.h"
 #include "Color.h"
@@ -29,7 +31,6 @@
 #include "XMLExtensions.h"
 #include "PlayerEntity.h"  // the stand-in PLAYER
 #include "ResourceManager.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
@@ -57,7 +58,7 @@ static void CheckText(const std::string& actual, const std::string& expected,
   if (actual != expected)
     std::printf("  got \"%s\", expected \"%s\"\n", actual.c_str(),
                 expected.c_str());
-  ::oo_test::check(actual == expected, text, __FILE__, line);
+  if (actual != expected) ADD_FAILURE_AT(__FILE__, line) << text;
 }
 
 #define OO_CHECK_TEXT(actual, expected) \
@@ -80,7 +81,7 @@ void WriteText(const stdfs::path& path, const std::string& text) {
 std::string Generic(const stdfs::path& path) { return path.generic_string(); }
 
 void SetEnv(const char* name, const std::string& value) {
-  OO_CHECK(::_putenv_s(name, value.c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s(name, value.c_str()) == 0);
 }
 
 oo::PList Manifest(const char* identifier, const char* title,
@@ -170,7 +171,7 @@ void SetUp() {
                             "Missions", "Ann Author", "A mission", {"story"}, 0,
                             nullptr));
   stdfs::create_directories(CacheDirectory());
-  OO_CHECK(oo::WriteXMLPListToFile(
+  EXPECT_TRUE(oo::WriteXMLPListToFile(
       oo::PList(std::move(cached)),
       Generic(CacheDirectory() / "Oolite-manifests.plist")));
 }
@@ -221,111 +222,111 @@ std::string Filtered(const std::string& filter) {
 
 }  // namespace
 
-OO_TEST(sharedManagerLoadsTheCachedListSorted) {
-  SetUp();
+TEST(OOOXZManager, sharedManagerLoadsTheCachedListSorted) {
+  ::SetUp();
   {
     oo::OXZManager* manager = oo::OXZManager::sharedManager();
-    OO_CHECK(manager != nullptr);
-    OO_CHECK(oo::OXZManager::sharedManager() == manager);
+    EXPECT_TRUE(manager != nullptr);
+    EXPECT_TRUE(oo::OXZManager::sharedManager() == manager);
     // category, then title, then version descending
     OO_CHECK_TEXT(Titles(manager->manifests()),
                   "Mission 0.1, Alpha 2.0, Alpha 1.5, Zeta 1.0");
-    OO_CHECK(!manager->isRestarting());
+    EXPECT_TRUE(!manager->isRestarting());
     // Nothing to cancel, and no download to deliver.
-    OO_CHECK(!manager->cancelUpdate());
+    EXPECT_TRUE(!manager->cancelUpdate());
     manager->processDownloadEvents();
     OO_CHECK_TEXT(Titles(manager->manifests()),
                   "Mission 0.1, Alpha 2.0, Alpha 1.5, Zeta 1.0");
   }
 }
 
-OO_TEST(paths) {
-  SetUp();
+TEST(OOOXZManager, paths) {
+  ::SetUp();
   {
     oo::OXZManager* manager = oo::OXZManager::sharedManager();
-    OO_CHECK_EQ(manager->installPath().value_or("(none)"),
+    EXPECT_EQ(manager->installPath().value_or("(none)"),
                 Generic(sRoot / "Managed"));
-    OO_CHECK_EQ(manager->extractAddOnsPath().value_or("(none)"),
+    EXPECT_EQ(manager->extractAddOnsPath().value_or("(none)"),
                 Generic(sRoot / "Extract"));
     const std::vector<std::string> additional =
         manager->additionalAddOnsPaths();
-    OO_CHECK_EQ(additional.size(), 3u);
+    EXPECT_EQ(additional.size(), 3u);
     if (additional.size() == 3) {
-      OO_CHECK_EQ(additional[0], Generic(sRoot / "More1"));
-      OO_CHECK_EQ(additional[1], "");
-      OO_CHECK_EQ(additional[2], Generic(sRoot / "More2"));
+      EXPECT_EQ(additional[0], Generic(sRoot / "More1"));
+      EXPECT_EQ(additional[1], "");
+      EXPECT_EQ(additional[2], Generic(sRoot / "More2"));
     }
 
     const std::string cacheDirectory =
         oo::CacheManager::sharedCache()
             ->cacheDirectoryPathCreatingIfNecessary(true)
             .value_or("(none)");
-    OO_CHECK_EQ(ManifestPath().value_or("(none)"),
+    EXPECT_EQ(ManifestPath().value_or("(none)"),
                 oo::str::appendingPathComponent(cacheDirectory,
                                                 "Oolite-manifests.plist"));
-    OO_CHECK_EQ(
+    EXPECT_EQ(
         DownloadPath().value_or("(none)"),
         oo::str::appendingPathComponent(cacheDirectory, "Oolite-download.oxz"));
 
     // The extraction folder: the last user root, the blacklisted characters
     // removed.
     const std::vector<std::string> roots = ResourceManager::userRootPaths();
-    OO_CHECK(!roots.empty());
+    EXPECT_TRUE(!roots.empty());
     if (!roots.empty()) {
-      OO_CHECK_EQ(ExtractionBase("oolite.oxp.test:alpha", "1.0 beta/2#")
+      EXPECT_EQ(ExtractionBase("oolite.oxp.test:alpha", "1.0 beta/2#")
                       .value_or("(none)"),
                   oo::str::appendingPathComponent(
                       roots.back(), "oolite.oxp.testalpha-1.0beta2.off"));
     }
 
     // The install folder is made when missing, and refused when it is a file.
-    OO_CHECK(!stdfs::exists(sRoot / "Managed"));
-    OO_CHECK(EnsureInstallPath());
-    OO_CHECK(stdfs::is_directory(sRoot / "Managed"));
-    OO_CHECK(EnsureInstallPath());
+    EXPECT_TRUE(!stdfs::exists(sRoot / "Managed"));
+    EXPECT_TRUE(EnsureInstallPath());
+    EXPECT_TRUE(stdfs::is_directory(sRoot / "Managed"));
+    EXPECT_TRUE(EnsureInstallPath());
     WriteText(sRoot / "AFile", "x");
     SetEnv("OO_MANAGEDADDONSDIR", Generic(sRoot / "AFile"));
-    OO_CHECK(!EnsureInstallPath());
+    EXPECT_TRUE(!EnsureInstallPath());
     SetEnv("OO_MANAGEDADDONSDIR", Generic(sRoot / "Managed"));
 
-    OO_CHECK_EQ(DataURL().value_or("(none)"),
+    EXPECT_EQ(DataURL().value_or("(none)"),
                 "https://addons.oolite.space/api/1.0/overview");
   }
 }
 
-OO_TEST(humanSizeAndFilterValidation) {
-  SetUp();
+TEST(OOOXZManager, humanSizeAndFilterValidation) {
+  ::SetUp();
   {
     // The missing-field description; with no Universe the description lookup
     // answers its key.
-    OO_CHECK_EQ(HumanSize(0).value_or("(none)"),
+    EXPECT_EQ(HumanSize(0).value_or("(none)"),
                 "oolite-oxzmanager-missing-field");
-    OO_CHECK_EQ(HumanSize(1).value_or("(none)"), "<1 kB");
-    OO_CHECK_EQ(HumanSize(1023).value_or("(none)"), "<1 kB");
-    OO_CHECK_EQ(HumanSize(1024).value_or("(none)"), "1 kB");
-    OO_CHECK_EQ(HumanSize(1048575).value_or("(none)"), "1023 kB");
-    OO_CHECK_EQ(HumanSize(1048576).value_or("(none)"), "1.00 MB");
-    OO_CHECK_EQ(HumanSize(1572864).value_or("(none)"), "1.50 MB");
+    EXPECT_EQ(HumanSize(1).value_or("(none)"), "<1 kB");
+    EXPECT_EQ(HumanSize(1023).value_or("(none)"), "<1 kB");
+    EXPECT_EQ(HumanSize(1024).value_or("(none)"), "1 kB");
+    EXPECT_EQ(HumanSize(1048575).value_or("(none)"), "1023 kB");
+    EXPECT_EQ(HumanSize(1048576).value_or("(none)"), "1.00 MB");
+    EXPECT_EQ(HumanSize(1572864).value_or("(none)"), "1.50 MB");
 
     const char* valid[] = {"",    "*",   "u",   "i",   "U",  "k:x",
                            "A:x", "d:5", "t:a", "c:b", "k: "};
     for (const char* filter : valid) {
       if (!ValidateFilter(filter))
         std::printf("  valid filter refused: \"%s\"\n", filter);
-      OO_CHECK(ValidateFilter(filter));
+      EXPECT_TRUE(ValidateFilter(filter));
     }
     const char* invalid[] = {"k:", "a:", "d:0", "d:x", "d:-1",
                              "t:", "c:", "x",   "**",  "ux"};
     for (const char* filter : invalid) {
       if (ValidateFilter(filter))
         std::printf("  invalid filter accepted: \"%s\"\n", filter);
-      OO_CHECK(!ValidateFilter(filter));
+      EXPECT_TRUE(!ValidateFilter(filter));
     }
   }
 }
 
-OO_TEST(filters) {
-  SetUp();
+TEST(OOOXZManager, filters) {
+  ::SetUp();
   {
     OO_CHECK_TEXT(Filtered("*"), "Mission 0.1, Alpha 2.0, Alpha 1.5, Zeta 1.0");
     OO_CHECK_TEXT(Filtered("K:cobra"), "Alpha 2.0, Alpha 1.5");
@@ -347,8 +348,8 @@ OO_TEST(filters) {
   }
 }
 
-OO_TEST(managedOXZs) {
-  SetUp();
+TEST(OOOXZManager, managedOXZs) {
+  ::SetUp();
   {
     // Two managed OXZs (synthetic manifests), and a stray file with none.
     WriteText(sRoot / "Managed" / "alpha.oxp" / "manifest.plist",
@@ -362,20 +363,20 @@ OO_TEST(managedOXZs) {
     const oo::PList managed = oo::OXZManager::sharedManager()->managedOXZs();
     OO_CHECK_TEXT(Titles(managed), "Local 3, Alpha 1.0");
     const oo::PList::Array* array = managed.getIf<oo::PList::Array>();
-    OO_CHECK(array != nullptr && array->size() == 2);
+    EXPECT_TRUE(array != nullptr && array->size() == 2);
     if (array != nullptr && array->size() == 2) {
       const oo::PList& local = (*array)[0];
       const oo::PList& alpha = (*array)[1];
-      OO_CHECK_EQ(Str(local, oo::kManifestFilePath),
+      EXPECT_EQ(Str(local, oo::kManifestFilePath),
                   oo::str::appendingPathComponent(Generic(sRoot / "Managed"),
                                                   "local.oxp"));
-      OO_CHECK_EQ(Str(local, oo::kManifestAvailableVersion), "-");
-      OO_CHECK_EQ(Str(local, oo::kManifestDownloadURL), "-");
-      OO_CHECK_EQ(Str(alpha, oo::kManifestFilePath),
+      EXPECT_EQ(Str(local, oo::kManifestAvailableVersion), "-");
+      EXPECT_EQ(Str(local, oo::kManifestDownloadURL), "-");
+      EXPECT_EQ(Str(alpha, oo::kManifestFilePath),
                   oo::str::appendingPathComponent(Generic(sRoot / "Managed"),
                                                   "alpha.oxp"));
-      OO_CHECK_EQ(Str(alpha, oo::kManifestAvailableVersion), "2.0");
-      OO_CHECK_EQ(Str(alpha, oo::kManifestDownloadURL),
+      EXPECT_EQ(Str(alpha, oo::kManifestAvailableVersion), "2.0");
+      EXPECT_EQ(Str(alpha, oo::kManifestDownloadURL),
                   "file:///nowhere/alpha-2.0.oxz");
     }
 
@@ -393,8 +394,8 @@ OO_TEST(managedOXZs) {
   }
 }
 
-OO_TEST(manifestDownload) {
-  SetUp();
+TEST(OOOXZManager, manifestDownload) {
+  ::SetUp();
   {
     oo::OXZManager* manager = oo::OXZManager::sharedManager();
 
@@ -406,22 +407,22 @@ OO_TEST(manifestDownload) {
     index.push_back(Manifest("oolite.oxp.test.alpha", "Alpha", "3.0", "Ships",
                              "Bob Builder", "Cobra variants", {}, -1,
                              "file:///nowhere/alpha-3.0.oxz"));
-    OO_CHECK(oo::WriteXMLPListToFile(oo::PList(std::move(index)),
+    EXPECT_TRUE(oo::WriteXMLPListToFile(oo::PList(std::move(index)),
                                    Generic(sRoot / "index.plist")));
     const std::string url = "file:///" + Generic(sRoot / "index.plist");
     oo::Defaults::standard().setObject("oxz-index-url", oo::PList(url));
-    OO_CHECK_EQ(DataURL().value_or("(none)"), url);
+    EXPECT_EQ(DataURL().value_or("(none)"), url);
 
     const std::string cacheDirectory =
         oo::CacheManager::sharedCache()
             ->cacheDirectoryPathCreatingIfNecessary(true)
             .value_or("(none)");
-    OO_CHECK(manager->updateManifests());
-    OO_CHECK_EQ(DownloadPath().value_or("(none)"),
+    EXPECT_TRUE(manager->updateManifests());
+    EXPECT_EQ(DownloadPath().value_or("(none)"),
                 oo::str::appendingPathComponent(cacheDirectory,
                                                 "Oolite-download.plist"));
     // A second request while one is under way is refused.
-    OO_CHECK(!manager->updateManifests());
+    EXPECT_TRUE(!manager->updateManifests());
 
     const auto deadline =
         std::chrono::steady_clock::now() + std::chrono::seconds(20);
@@ -438,22 +439,22 @@ OO_TEST(manifestDownload) {
         oo::PropertyListFromFile(oo::str::appendingPathComponent(
             cacheDirectory, "Oolite-manifests.plist"));
     OO_CHECK_TEXT(Titles(cached), "Alpha 3.0, Beta 1.0");
-    OO_CHECK(!stdfs::exists(stdfs::path(oo::str::appendingPathComponent(
+    EXPECT_TRUE(!stdfs::exists(stdfs::path(oo::str::appendingPathComponent(
         cacheDirectory, "Oolite-download.plist"))));
     const oo::PList managed = manager->managedOXZs();
     OO_CHECK_TEXT(Titles(managed), "Late 1, Local 3, Alpha 1.0");
     const oo::PList::Array* array = managed.getIf<oo::PList::Array>();
     if (array != nullptr && array->size() == 3) {
-      OO_CHECK_EQ(Str((*array)[2], oo::kManifestAvailableVersion), "3.0");
-      OO_CHECK_EQ(Str((*array)[2], oo::kManifestDownloadURL),
+      EXPECT_EQ(Str((*array)[2], oo::kManifestAvailableVersion), "3.0");
+      EXPECT_EQ(Str((*array)[2], oo::kManifestDownloadURL),
                   "file:///nowhere/alpha-3.0.oxz");
     }
 
     // The download is complete: no new one starts, and there is nothing to
     // cancel.
-    OO_CHECK(!manager->updateManifests());
-    OO_CHECK(!manager->cancelUpdate());
-    OO_CHECK_EQ(
+    EXPECT_TRUE(!manager->updateManifests());
+    EXPECT_TRUE(!manager->cancelUpdate());
+    EXPECT_EQ(
         DownloadPath().value_or("(none)"),
         oo::str::appendingPathComponent(cacheDirectory, "Oolite-download.oxz"));
   }
@@ -589,8 +590,8 @@ std::string Element(const oo::PList& list, std::size_t index) {
 
 }  // namespace
 
-OO_TEST(installableStates) {
-  SetUp();
+TEST(OOOXZManager, installableStates) {
+  ::SetUp();
   {
     // The list holds Alpha 3.0 and Beta 1.0; Alpha 1.0 is managed.
     const oo::PList list = Manager()->manifests();
@@ -603,13 +604,13 @@ OO_TEST(installableStates) {
     OO_CHECK_TEXT(
         Str(InstalledManifest("oolite.oxp.test.alpha"), oo::kManifestVersion),
         "1.0");
-    OO_CHECK(InstalledManifest("oolite.oxp.test.beta").isNull());
-    OO_CHECK(!IsRestarting());
+    EXPECT_TRUE(InstalledManifest("oolite.oxp.test.beta").isNull());
+    EXPECT_TRUE(!IsRestarting());
   }
 }
 
-OO_TEST(installExtractAndRemove) {
-  SetUp();
+TEST(OOOXZManager, installExtractAndRemove) {
+  ::SetUp();
   {
     // A synthetic OXZ, offered in the list with a file: URL.
     WriteZip(sRoot / "gamma.oxz", {{"manifest.plist", kGammaManifest},
@@ -628,23 +629,23 @@ OO_TEST(installExtractAndRemove) {
                   "Alpha 3.0, Beta 1.0, Gamma 1.0");
     Manager()->_downloadStatus = OXZDownloadStatus::kNone;
 
-    OO_CHECK(!InstallOXZ(3));
-    OO_CHECK(InstallOXZ(2));
-    OO_CHECK(Manager()->_interfaceState == OXZInterfaceState::kInstalling);
-    OO_CHECK(!InstallOXZ(2));  // one download at a time
+    EXPECT_TRUE(!InstallOXZ(3));
+    EXPECT_TRUE(InstallOXZ(2));
+    EXPECT_TRUE(Manager()->_interfaceState == OXZInterfaceState::kInstalling);
+    EXPECT_TRUE(!InstallOXZ(2));  // one download at a time
     FinishDownload();
-    OO_CHECK(Manager()->_downloadStatus == OXZDownloadStatus::kComplete);
-    OO_CHECK(Manager()->_interfaceState == OXZInterfaceState::kTaskdone);
-    OO_CHECK(Manager()->_changesMade);
-    OO_CHECK(Manager()->_dependencyStack.empty());
-    OO_CHECK(stdfs::exists(sRoot / "Managed" / "oolite.oxp.test.gamma.oxz"));
+    EXPECT_TRUE(Manager()->_downloadStatus == OXZDownloadStatus::kComplete);
+    EXPECT_TRUE(Manager()->_interfaceState == OXZInterfaceState::kTaskdone);
+    EXPECT_TRUE(Manager()->_changesMade);
+    EXPECT_TRUE(Manager()->_dependencyStack.empty());
+    EXPECT_TRUE(stdfs::exists(sRoot / "Managed" / "oolite.oxp.test.gamma.oxz"));
     const oo::PList managed = Manager()->managedOXZs();
     OO_CHECK_TEXT(Titles(managed), "Late 1, Local 3, Alpha 1.0, Gamma 1.0");
     OO_CHECK_TEXT(InstallStatus(*Manager()->manifests().at(2)),
                   "oolite-oxzmanager-installable-already");
     OO_CHECK_TEXT(Color(*Manager()->manifests().at(2)), "white");
     Manager()->_downloadStatus = OXZDownloadStatus::kNone;
-    OO_CHECK(!InstallOXZ(2));  // already installed
+    EXPECT_TRUE(!InstallOXZ(2));  // already installed
 
     // Extracting: Gamma into the extract folder; again (it exists); Alpha (a
     // folder, not a zip); nothing.
@@ -656,43 +657,43 @@ OO_TEST(installExtractAndRemove) {
         "log-num-u-extractedoolite-oxzmanager-extract-log-extracted-to-@");
     const stdfs::path extracted =
         sRoot / "Extract" / "oolite.oxp.test.gamma-1.0.off";
-    OO_CHECK(stdfs::exists(extracted / "manifest.plist"));
-    OO_CHECK(stdfs::exists(extracted / "Config" / "notes.txt"));
+    EXPECT_TRUE(stdfs::exists(extracted / "manifest.plist"));
+    EXPECT_TRUE(stdfs::exists(extracted / "Config" / "notes.txt"));
     OO_CHECK_TEXT(ExtractOXZ(3), "oolite-oxzmanager-extract-log-main-exists");
     OO_CHECK_TEXT(ExtractOXZ(2), "oolite-oxzmanager-extract-log-bad-original");
     OO_CHECK_TEXT(ExtractOXZ(9), "oolite-oxzmanager-extract-log-no-original");
 
     // Removing: out of range, then Gamma.
-    OO_CHECK(!RemoveOXZ(9));
-    OO_CHECK(RemoveOXZ(3));
-    OO_CHECK(!stdfs::exists(sRoot / "Managed" / "oolite.oxp.test.gamma.oxz"));
-    OO_CHECK(Manager()->_interfaceState == OXZInterfaceState::kRemoving);
+    EXPECT_TRUE(!RemoveOXZ(9));
+    EXPECT_TRUE(RemoveOXZ(3));
+    EXPECT_TRUE(!stdfs::exists(sRoot / "Managed" / "oolite.oxp.test.gamma.oxz"));
+    EXPECT_TRUE(Manager()->_interfaceState == OXZInterfaceState::kRemoving);
     OO_CHECK_TEXT(Titles(Manager()->managedOXZs()),
                   "Late 1, Local 3, Alpha 1.0");
   }
 }
 
-OO_TEST(restartAndUpdateAll) {
-  SetUp();
+TEST(OOOXZManager, restartAndUpdateAll) {
+  ::SetUp();
   {
     Manager()->_interfaceState = OXZInterfaceState::kRestarting;
-    OO_CHECK(IsRestarting());
-    OO_CHECK(Manager()->_interfaceState == OXZInterfaceState::kMain);
-    OO_CHECK(!Manager()->_changesMade);
-    OO_CHECK(Manager()->_downloadStatus == OXZDownloadStatus::kNone);
-    OO_CHECK(!IsRestarting());
+    EXPECT_TRUE(IsRestarting());
+    EXPECT_TRUE(Manager()->_interfaceState == OXZInterfaceState::kMain);
+    EXPECT_TRUE(!Manager()->_changesMade);
+    EXPECT_TRUE(Manager()->_downloadStatus == OXZDownloadStatus::kNone);
+    EXPECT_TRUE(!IsRestarting());
 
     // Alpha 3.0 updates the managed Alpha 1.0; its URL names no file, so the
     // download fails.
-    OO_CHECK(UpdateAllOXZ());
-    OO_CHECK(Manager()->_downloadAllDependencies);
-    OO_CHECK_EQ(Manager()->_dependencyStack.size(), 1u);
-    OO_CHECK_EQ(Manager()->_item, 0u);
-    OO_CHECK(Manager()->_interfaceState == OXZInterfaceState::kInstalling);
+    EXPECT_TRUE(UpdateAllOXZ());
+    EXPECT_TRUE(Manager()->_downloadAllDependencies);
+    EXPECT_EQ(Manager()->_dependencyStack.size(), 1u);
+    EXPECT_EQ(Manager()->_item, 0u);
+    EXPECT_TRUE(Manager()->_interfaceState == OXZInterfaceState::kInstalling);
     OO_CHECK_TEXT(Titles(Manager()->_filteredList),
                   "Alpha 3.0, Beta 1.0, Gamma 1.0");
     FinishDownload();
-    OO_CHECK(Manager()->_downloadStatus == OXZDownloadStatus::kError);
+    EXPECT_TRUE(Manager()->_downloadStatus == OXZDownloadStatus::kError);
   }
 }
 
@@ -868,7 +869,7 @@ void Show(const char* name, const std::string& page) {
 void CheckPage(const char* name, const std::string& page,
                const std::string& expected, int line) {
   if (page != expected) Show(name, page);
-  ::oo_test::check(page == expected, name, __FILE__, line);
+  if (page != expected) ADD_FAILURE_AT(__FILE__, line) << name;
 }
 
 #define OO_CHECK_PAGE(name, page, expected) \
@@ -876,8 +877,8 @@ void CheckPage(const char* name, const std::string& page,
 
 }  // namespace
 
-OO_TEST(guiPages) {
-  SetUp();
+TEST(OOOXZManager, guiPages) {
+  ::SetUp();
   {
     StandInUniverse standIn;
     oo::OXZManager* m = Manager();
@@ -1292,8 +1293,8 @@ OO_TEST(guiPages) {
   }
 }
 
-OO_TEST(guiInput) {
-  SetUp();
+TEST(OOOXZManager, guiInput) {
+  ::SetUp();
   // The manager leaves these pages through the intro screen, which it shows
   // only with no PLAYER (PLAYER's setGuiToIntroFirstGo()): they run with none,
   // as before, which only a release-style build can (the debug build asserts
@@ -1308,16 +1309,16 @@ OO_TEST(guiInput) {
     // The filter: the key, typed text, its prompt.
     m->_interfaceState = OXZInterfaceState::kNoData;
     m->processFilterKey();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kNoData);
-    OO_CHECK(!m->isAcceptingTextInput());
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kNoData);
+    EXPECT_TRUE(!m->isAcceptingTextInput());
     m->_interfaceState = OXZInterfaceState::kMain;
     m->_interfaceShowingOXZDetail = true;
     m->processFilterKey();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kSetfilter);
-    OO_CHECK(!m->_interfaceShowingOXZDetail);
-    OO_CHECK_EQ(standIn.universe->testGameView->resets, 1);
-    OO_CHECK(m->isAcceptingTextInput());
-    OO_CHECK(m->isAcceptingGUIInput());
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kSetfilter);
+    EXPECT_TRUE(!m->_interfaceShowingOXZDetail);
+    EXPECT_EQ(standIn.universe->testGameView->resets, 1);
+    EXPECT_TRUE(m->isAcceptingTextInput());
+    EXPECT_TRUE(m->isAcceptingGUIInput());
     standIn.Page();
     m->refreshTextInput("k:x");
     OO_CHECK_PAGE("prompt valid", standIn.Page(),
@@ -1328,10 +1329,10 @@ OO_TEST(guiInput) {
                   "text 27 0 oolite-oxzmanager-text-prompt-@\n"
                   "color 27 100,50,0\n");
     m->processTextInput("k:");
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kSetfilter);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kSetfilter);
     OO_CHECK_PAGE("text invalid", standIn.Page(), "");
     m->processTextInput("C:Ships");
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kPickInstall);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kPickInstall);
     OO_CHECK_TEXT(m->_currentFilter, "c:ships");
     OO_CHECK_PAGE(
         "text valid", standIn.Page(),
@@ -1414,9 +1415,9 @@ OO_TEST(guiInput) {
     // The info page of the selected entry, and back.
     gui->selected = OXZ_GUI_ROW_LISTSTART + 1;
     m->processShowInfoKey();
-    OO_CHECK(m->_interfaceShowingOXZDetail);
-    OO_CHECK(!m->isAcceptingGUIInput());
-    OO_CHECK_EQ(m->_item, 1u);
+    EXPECT_TRUE(m->_interfaceShowingOXZDetail);
+    EXPECT_TRUE(!m->isAcceptingGUIInput());
+    EXPECT_EQ(m->_item, 1u);
     OO_CHECK_TEXT(standIn.universe->testGameView->clipboard, "");
     OO_CHECK_PAGE("info", standIn.Page(),
                   "clear keep\n"
@@ -1430,7 +1431,7 @@ OO_TEST(guiInput) {
                   "text 27 2 oolite-oxzmanager-infopage-return\n"
                   "color 27 0,100,0\n");
     m->processShowInfoKey();
-    OO_CHECK(!m->_interfaceShowingOXZDetail);
+    EXPECT_TRUE(!m->_interfaceShowingOXZDetail);
     OO_CHECK_PAGE(
         "info closed", standIn.Page(),
         "clear keep\n"
@@ -1563,23 +1564,23 @@ OO_TEST(guiInput) {
         "color 4 100,100,0\n");
     gui->selected = 0;
     m->processShowInfoKey();
-    OO_CHECK(!m->_interfaceShowingOXZDetail);
+    EXPECT_TRUE(!m->_interfaceShowingOXZDetail);
 
     // Extracting is offered from the installed list only.
     gui->selected = OXZ_GUI_ROW_LISTSTART;
     m->processExtractKey();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kPickInstall);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kPickInstall);
     m->_interfaceState = OXZInterfaceState::kPickInstalled;
     m->gui();
     standIn.Page();
-    OO_CHECK_EQ(gui->selected,
+    EXPECT_EQ(gui->selected,
                 OXZ_GUI_ROW_INSTALL);  // the page selected its first control
     m->processExtractKey();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kPickInstalled);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kPickInstalled);
     gui->selected = OXZ_GUI_ROW_LISTSTART;
     m->processExtractKey();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kExtract);
-    OO_CHECK_EQ(m->_item, 0u);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kExtract);
+    EXPECT_EQ(m->_item, 0u);
     OO_CHECK_PAGE("extract key", standIn.Page(),
                   "clear keep\n"
                   "title oolite-oxzmanager-title\n"
@@ -1599,7 +1600,7 @@ OO_TEST(guiInput) {
     // Selections.
     gui->selected = OXZ_GUI_ROW_CANCEL;
     m->processSelection();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kMain);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kMain);
     OO_CHECK_PAGE("extract cancelled", standIn.Page(),
                   "clear keep\n"
                   "title oolite-oxzmanager-title\n"
@@ -1620,35 +1621,35 @@ OO_TEST(guiInput) {
                   "select 22\n");
     gui->selected = OXZ_GUI_ROW_INSTALLED;
     m->processSelection();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kPickInstalled);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kPickInstalled);
     standIn.Page();
     gui->selected = OXZ_GUI_ROW_REMOVE;
     m->processSelection();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kPickRemove);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kPickRemove);
     standIn.Page();
     m->_interfaceState = OXZInterfaceState::kRemoving;
     gui->selected = OXZ_GUI_ROW_UPDATE;
     m->processSelection();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kPickRemove);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kPickRemove);
     standIn.Page();
     gui->selected = OXZ_GUI_ROW_INSTALL;
     m->processSelection();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kPickInstall);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kPickInstall);
     standIn.Page();
     m->_changesMade = false;
     gui->selected = OXZ_GUI_ROW_EXIT;
     m->processSelection();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kMain);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kMain);
     OO_CHECK_PAGE("exit", standIn.Page(), "");
     m->_changesMade = true;
     m->processSelection();
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kRestarting);
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kRestarting);
     OO_CHECK_PAGE("exit to restart", standIn.Page(),
                   "clear keep\n"
                   "title oolite-oxzmanager-title\n"
                   "long 1 0 oolite-oxzmanager-restart\n");
-    OO_CHECK(m->isRestarting());
-    OO_CHECK(m->_interfaceState == OXZInterfaceState::kMain);
+    EXPECT_TRUE(m->isRestarting());
+    EXPECT_TRUE(m->_interfaceState == OXZInterfaceState::kMain);
   }
 #endif
 }
@@ -1667,8 +1668,8 @@ std::string OptionTitles(const std::vector<oo::PList>& options) {
 
 }  // namespace
 
-OO_TEST(optionPages) {
-  SetUp();
+TEST(OOOXZManager, optionPages) {
+  ::SetUp();
   // The manager leaves these pages through the intro screen, which it shows
   // only with no PLAYER (PLAYER's setGuiToIntroFirstGo()): they run with none,
   // as before, which only a release-style build can (the debug build asserts
@@ -1705,12 +1706,12 @@ OO_TEST(optionPages) {
     OO_CHECK_TEXT(OptionTitles(InstallOptions()),
                   "Item 00 1, Item 01 1, Item 02 1, Item 03 1, Item 04 1, Item "
                   "05 1, Item 06 1, Item 07 1, Item 08 1, Item 09 1");
-    OO_CHECK_EQ(m->_offset, 0u);
+    EXPECT_EQ(m->_offset, 0u);
 
     // Paging through the install list.
     gui->selected = OXZ_GUI_ROW_LISTSTART + 1;
     m->processOptionsNext();
-    OO_CHECK_EQ(m->_offset, 10u);
+    EXPECT_EQ(m->_offset, 10u);
     OO_CHECK_PAGE(
         "install page 2", standIn.Page(),
         "tabs 100,320\n"
@@ -1769,10 +1770,10 @@ OO_TEST(optionPages) {
         "key 4 oolite.oxp.test.item12\n"
         "color 4 100,100,0\n");
     m->processOptionsNext();
-    OO_CHECK_EQ(m->_offset, 10u);
+    EXPECT_EQ(m->_offset, 10u);
     standIn.Page();
     m->processOptionsPrev();
-    OO_CHECK_EQ(m->_offset, 0u);
+    EXPECT_EQ(m->_offset, 0u);
     OO_CHECK_PAGE(
         "install page 1", standIn.Page(),
         "tabs 100,320\n"
@@ -1852,21 +1853,21 @@ OO_TEST(optionPages) {
         "key 11 oolite.oxp.test.item9\n"
         "color 11 100,100,0\n");
     m->processOptionsPrev();
-    OO_CHECK_EQ(m->_offset, 0u);
+    EXPECT_EQ(m->_offset, 0u);
     standIn.Page();
     gui->selected = 12;  // the "more" row
     m->showOptionsNext();
-    OO_CHECK_EQ(m->_offset, 10u);
+    EXPECT_EQ(m->_offset, 10u);
     standIn.Page();
     gui->selected = 1;  // the "back" row
     m->showOptionsPrev();
-    OO_CHECK_EQ(m->_offset, 0u);
+    EXPECT_EQ(m->_offset, 0u);
     standIn.Page();
     gui->selected = OXZ_GUI_ROW_LISTSTART;
     m->showOptionsNext();  // not on the "more" row
-    OO_CHECK_EQ(m->_offset, 0u);
+    EXPECT_EQ(m->_offset, 0u);
     OO_CHECK_PAGE("show next elsewhere", standIn.Page(), "");
-    OO_CHECK_EQ(m->showInstallOptions(), 1);
+    EXPECT_EQ(m->showInstallOptions(), 1);
     standIn.Page();
 
     // The remove list: the managed OXZs, then nothing.
@@ -1926,8 +1927,8 @@ OO_TEST(optionPages) {
         "key 4 oolite.oxp.test.alpha\n"
         "color 4 100,100,100\n");
     m->setFilteredList(oo::PList(oo::PList::Array()));
-    OO_CHECK(RemoveOptions().empty());
-    OO_CHECK_EQ(m->showRemoveOptions(), 1);
+    EXPECT_TRUE(RemoveOptions().empty());
+    EXPECT_EQ(m->showRemoveOptions(), 1);
     OO_CHECK_PAGE("nothing removable", standIn.Page(),
                   "long 1 0 oolite-oxzmanager-nothing-removable\n");
 
@@ -1944,8 +1945,8 @@ OO_TEST(optionPages) {
 // the URL that page showed, lowercased; with no URL, or off the list, or
 // outside the pick states, it copies nothing. The info page itself no longer
 // copies anything.
-OO_TEST(copyUrlKey) {
-  SetUp();
+TEST(OOOXZManager, copyUrlKey) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     StandInUniverse standIn;
@@ -1984,7 +1985,7 @@ OO_TEST(copyUrlKey) {
       clipboard = "";
       m->processCopyUrlKey();
       OO_CHECK_TEXT(clipboard, "HTTPS://Example.ORG/Pack");
-      OO_CHECK_EQ(m->_item, 0u);
+      EXPECT_EQ(m->_item, 0u);
     }
 
     // An entry without a URL: nothing is copied, but the item is selected.
@@ -1992,13 +1993,13 @@ OO_TEST(copyUrlKey) {
     clipboard = "untouched";
     m->processCopyUrlKey();
     OO_CHECK_TEXT(clipboard, "untouched");
-    OO_CHECK_EQ(m->_item, 1u);
+    EXPECT_EQ(m->_item, 1u);
 
     // Off the list: nothing.
     gui->selected = OXZ_GUI_ROW_LISTSTART - 1;
     m->processCopyUrlKey();
     OO_CHECK_TEXT(clipboard, "untouched");
-    OO_CHECK_EQ(m->_item, 1u);
+    EXPECT_EQ(m->_item, 1u);
 
     // The info page: showing it copies nothing; the key then copies the URL it
     // showed, lowercased.
@@ -2007,9 +2008,9 @@ OO_TEST(copyUrlKey) {
     gui->selected = OXZ_GUI_ROW_LISTSTART;
     clipboard = "untouched";
     m->processShowInfoKey();
-    OO_CHECK(m->_interfaceShowingOXZDetail);
+    EXPECT_TRUE(m->_interfaceShowingOXZDetail);
     OO_CHECK_TEXT(clipboard, "untouched");
-    OO_CHECK(m->_currentOXPURL ==
+    EXPECT_TRUE(m->_currentOXPURL ==
              std::optional<std::string>("https://example.org/pack"));
     gui->selected = OXZ_GUI_ROW_LISTSTART +
                     1;  // the selection does not matter on the info page
@@ -2025,5 +2026,3 @@ OO_TEST(copyUrlKey) {
     m->_interfaceState = OXZInterfaceState::kMain;
   }
 }
-
-OO_TEST_MAIN()

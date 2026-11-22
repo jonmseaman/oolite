@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "ALSound.h"
 #include "CommodityMarket.h"
 #include "EntityHold.h"  // the cargo list
@@ -35,7 +37,6 @@
 #include "Texture.h"
 #include "Trumble.h"
 #include "Types.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/String.hpp"
 
@@ -425,7 +426,7 @@ std::string Log() {
 
 }  // namespace
 
-OO_TEST(setUp) {
+TEST(OOTrumble, setUp) {
   Expected expect{
       "digram 97 49 size 0.71506/1.2016 growth 0.0040491 hunger 0 discomfort 0 "
       "rot -7.0848 vel -0.60638 pos (-182 -98) mov (-6.8647 9.7904) anim 1 "
@@ -466,18 +467,18 @@ OO_TEST(setUp) {
     oo::AutoreleaseScope pool;
     Reset();
     std::shared_ptr<oo::Trumble> t = oo::makeShared<oo::Trumble>(Player());
-    OO_CHECK(expect(State(t)));
-    OO_CHECK(expect(Log()));
+    EXPECT_TRUE(expect(State(t)));
+    EXPECT_TRUE(expect(Log()));
     for (const char* digram : {"Zq", "@G", "8", ""}) {
       Reset();
-      OO_CHECK(expect(State(oo::makeShared<oo::Trumble>(Player(), digram))));
-      OO_CHECK(expect(Log()));
+      EXPECT_TRUE(expect(State(oo::makeShared<oo::Trumble>(Player(), digram))));
+      EXPECT_TRUE(expect(Log()));
     }
-    OO_CHECK(expect(State(oo::makeShared<oo::Trumble>())));
+    EXPECT_TRUE(expect(State(oo::makeShared<oo::Trumble>())));
   }
 }
 
-OO_TEST(spawningAndActions) {
+TEST(OOTrumble, spawningAndActions) {
   Expected expect{
       "digram 122 81 size 0.5/1.3603 growth 0.0063244 hunger 0.25 discomfort 0 "
       "rot -7.2588 vel -0.16373 pos (14 -126) mov (6.0117 24.861) anim 1 next "
@@ -516,10 +517,10 @@ OO_TEST(spawningAndActions) {
     std::shared_ptr<oo::Trumble> parent = Trumble("Zq");
     std::shared_ptr<oo::Trumble> child = Trumble("a1");
     child->spawnFrom(parent.get());
-    OO_CHECK(expect(State(child)));
+    EXPECT_TRUE(expect(State(child)));
     std::shared_ptr<oo::Trumble> orphan = Trumble("a1");
     orphan->spawnFrom(nullptr);
-    OO_CHECK(expect(State(orphan)));
+    EXPECT_TRUE(expect(State(orphan)));
 
     Reset();
     std::shared_ptr<oo::Trumble> t = Trumble("a1");
@@ -546,11 +547,11 @@ OO_TEST(spawningAndActions) {
     t->randomizeMotionY();
     t->calcGrowthRate();
     actions += State(t);
-    OO_CHECK(expect(actions));
+    EXPECT_TRUE(expect(actions));
   }
 }
 
-OO_TEST(living) {
+TEST(OOTrumble, living) {
   Expected expect{
       "digram 90 113 size 0.9273/1.1381 growth 0.0018522 hunger 0.059472 "
       "discomfort 0.01014 rot -6.7916 vel 4.5333 pos (44.058 -91.697) mov "
@@ -612,16 +613,16 @@ OO_TEST(living) {
       p->roll = -0.25f;
       p->heat = 0.5f;
       std::shared_ptr<oo::Trumble> t = Trumble("Zq");
-      Run(t, 50);
-      OO_CHECK(expect(State(t)));
-      Run(t, 400);
-      OO_CHECK(expect(State(t)));
-      OO_CHECK(expect(Log()));
+      ::Run(t, 50);
+      EXPECT_TRUE(expect(State(t)));
+      ::Run(t, 400);
+      EXPECT_TRUE(expect(State(t)));
+      EXPECT_TRUE(expect(Log()));
     }
   }
 }
 
-OO_TEST(savegame) {
+TEST(OOTrumble, savegame) {
   Expected expect{
       "digram=Zq discomfort=0.00108162 growth_rate=0.00188507 hunger=0.0357329 "
       "movement=6.011658 16.860657 position=32.034973 -75.418030 "
@@ -640,17 +641,17 @@ OO_TEST(savegame) {
     oo::AutoreleaseScope pool;
     Reset();
     std::shared_ptr<oo::Trumble> t = Trumble("Zq");
-    Run(t, 30);
+    ::Run(t, 30);
     oo::PList dict = t->dictionary();
-    OO_CHECK(expect(Dictionary(dict)));
+    EXPECT_TRUE(expect(Dictionary(dict)));
     std::shared_ptr<oo::Trumble> copy = Trumble("a1");
     copy->setFromDictionary(dict);
-    OO_CHECK(expect(State(copy)));
-    OO_CHECK(expect(Dictionary(copy->dictionary())));
+    EXPECT_TRUE(expect(State(copy)));
+    EXPECT_TRUE(expect(Dictionary(copy->dictionary())));
   }
 }
 
-OO_TEST(feedingPopAndSpawn) {
+TEST(OOTrumble, feedingPopAndSpawn) {
   Expected expect{
       "digram 90 113 size 1.1002/1.1381 growth 0 hunger 0 discomfort 0 rot "
       "-7.4828 vel -2.2403 pos (14.601 -124.31) mov (6.0117 16.861) anim 1 "
@@ -692,20 +693,20 @@ OO_TEST(feedingPopAndSpawn) {
     state["size"] = oo::PList(1.1);
     state["discomfort"] = oo::PList(0.1);
     t->setFromDictionary(oo::PList(state));
-    Run(t, 1);
-    OO_CHECK(expect(State(t)));
-    OO_CHECK(expect(Log()));
-    OO_CHECK(p->cargo.size() == 2 && p->cargo[0].get() != food &&
+    ::Run(t, 1);
+    EXPECT_TRUE(expect(State(t)));
+    EXPECT_TRUE(expect(Log()));
+    EXPECT_TRUE(p->cargo.size() == 2 && p->cargo[0].get() != food &&
              p->cargo[1].get() != food);
-    OO_CHECK(std::fabs(p->appetite - 0.401194f) < 1e-5f);
+    EXPECT_TRUE(std::fabs(p->appetite - 0.401194f) < 1e-5f);
     int ticks = 0;
     while (p->added.empty() && ticks < 5000) {
-      Run(t, 1);
+      ::Run(t, 1);
       ticks++;
     }
-    OO_CHECK(ticks == 119);
-    OO_CHECK(p->added.size() == 1 && p->added[0] == t.get());
-    OO_CHECK(expect(State(t)));
+    EXPECT_TRUE(ticks == 119);
+    EXPECT_TRUE(p->added.size() == 1 && p->added[0] == t.get());
+    EXPECT_TRUE(expect(State(t)));
 
     // Too uncomfortable: pops, and asks to be removed.
     Reset();
@@ -715,38 +716,38 @@ OO_TEST(feedingPopAndSpawn) {
     t->setFromDictionary(oo::PList(state));
     ticks = 0;
     while (p->removed.empty() && ticks < 5000) {
-      Run(t, 1);
+      ::Run(t, 1);
       ticks++;
     }
-    OO_CHECK(ticks == 40);
-    OO_CHECK(p->removed.size() == 1 && p->removed[0] == t.get());
-    OO_CHECK(expect(State(t)));
-    OO_CHECK(expect(Log()));
+    EXPECT_TRUE(ticks == 40);
+    EXPECT_TRUE(p->removed.size() == 1 && p->removed[0] == t.get());
+    EXPECT_TRUE(expect(State(t)));
+    EXPECT_TRUE(expect(Log()));
   }
 }
 
-OO_TEST(cxxClass) {
+TEST(OOTrumble, cxxClass) {
   // The C++ API: a trumble and its growth.
   Reset();
   std::shared_ptr<oo::Trumble> t = oo::makeShared<oo::Trumble>(Player(), "Zq");
-  OO_CHECK(t->getDigram()[0] == 'Z' && t->getDigram()[1] == 'q');
-  OO_CHECK(std::fabs(t->getSize() - 0.91782f) < 1e-5f &&
+  EXPECT_TRUE(t->getDigram()[0] == 'Z' && t->getDigram()[1] == 'q');
+  EXPECT_TRUE(std::fabs(t->getSize() - 0.91782f) < 1e-5f &&
            t->getHunger() == 0.0f && t->getDiscomfort() == 0.0f);
-  OO_CHECK(t->getPosition().x == 14 && t->getPosition().y == -126);
-  OO_CHECK(std::fabs(t->getRotation() - -7.2588f) < 1e-4f);
-  OO_CHECK(std::fabs(t->getMovement().y - 16.861f) < 1e-3f);
+  EXPECT_TRUE(t->getPosition().x == 14 && t->getPosition().y == -126);
+  EXPECT_TRUE(std::fabs(t->getRotation() - -7.2588f) < 1e-4f);
+  EXPECT_TRUE(std::fabs(t->getMovement().y - 16.861f) < 1e-3f);
   Reset();
-  OO_CHECK(State(Trumble("Zq")) == State(t));
+  EXPECT_TRUE(State(Trumble("Zq")) == State(t));
 
   std::shared_ptr<oo::Trumble> child = oo::makeShared<oo::Trumble>(Player());
   child->spawnFrom(t.get());
-  OO_CHECK(child->getSize() == 0.5f && child->getHunger() == 0.25f);
+  EXPECT_TRUE(child->getSize() == 0.5f && child->getHunger() == 0.25f);
   child->spawnFrom(nullptr);
-  OO_CHECK(child->getSize() == 0.5f);
+  EXPECT_TRUE(child->getSize() == 0.5f);
 
   std::shared_ptr<oo::Trumble> blank = oo::makeShared<oo::Trumble>();
-  OO_CHECK(blank->getSize() == 0.0f && blank->getDigram()[0] == 0);
-  OO_CHECK(blank->dictionary().count() == 9);
+  EXPECT_TRUE(blank->getSize() == 0.0f && blank->getDigram()[0] == 0);
+  EXPECT_TRUE(blank->dictionary().count() == 9);
 }
 
 // The pods' objects (oo::ToObjC, which the test does not
@@ -760,5 +761,3 @@ OO_TEST(cxxClass) {
   auto found = sObjects.find(entity);
   return found != sObjects.end() ? found->second : nullptr;
 }
-
-OO_TEST_MAIN()

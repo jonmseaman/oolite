@@ -16,6 +16,8 @@
 	Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "OOJSEngineCore.h"
 #include "oofnd/Exception.hpp"
@@ -27,7 +29,6 @@
 #include "OOJSPrivateObject.h"
 #include "OOJSSoundSource.h"
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -398,34 +399,34 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSSoundSource, registration)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("typeof SoundSource", "function");
-	OO_CHECK_EQ(sConverters.size(), 1u);
-	OO_CHECK(OOJSSoundSourceJSClassName() == std::optional<std::string>("SoundSource"));
+	EXPECT_EQ(sConverters.size(), 1u);
+	EXPECT_TRUE(OOJSSoundSourceJSClassName() == std::optional<std::string>("SoundSource"));
 	// -oo_jsValueInContext: makes a new SoundSource object each time, holding the source retained.
 	const long before = sSourceObject->weak_from_this().use_count();
 	JSValue a = OOJSSoundSourceJSValueInContext(sSourceObject, sContext);
 	JSValue b = OOJSSoundSourceJSValueInContext(sSourceObject, sContext);
-	OO_CHECK(JS_IsObject(a) && JS_IsObject(b) && JS_VALUE_GET_PTR(a) != JS_VALUE_GET_PTR(b));
+	EXPECT_TRUE(JS_IsObject(a) && JS_IsObject(b) && JS_VALUE_GET_PTR(a) != JS_VALUE_GET_PTR(b));
 	JS_FreeValue(sContext, b);	// the stand-in finalizer keeps its holder
 	Define("sourceA", a);	// the slot's holder holds the source: the object answers its record
 	OO_CHECK_EVAL("sourceA.volume", "0.5");
-	OO_CHECK_EQ(sSourceObject->weak_from_this().use_count(), before + 2);
+	EXPECT_EQ(sSourceObject->weak_from_this().use_count(), before + 2);
 	OO_CHECK_EVAL("source instanceof SoundSource", "true");
 	OO_CHECK_EVAL("String(source)", "[SoundSource]");
 }
 
 
-OO_TEST(construction)
+TEST(OOJSSoundSource, construction)
 {
 	OO_CHECK_EVAL("new SoundSource() instanceof SoundSource", "true");
 	OO_CHECK_EVAL("new SoundSource().volume", "0");
@@ -434,7 +435,7 @@ OO_TEST(construction)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSSoundSource, properties)
 {
 	OO_CHECK_EVAL("source.isPlaying", "false");
 	OO_CHECK_EVAL("source.loop", "false");
@@ -447,7 +448,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(setters)
+TEST(OOJSSoundSource, setters)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("(function () { source.loop = 1; return source.loop; })()", "true");
@@ -460,42 +461,42 @@ OO_TEST(setters)
 	OO_CHECK_EVAL("(function () { source.volume = 3; return source.volume; })()", "1");
 	OO_CHECK_EVAL("(function () { source.volume = -3; return source.volume; })()", "0");
 	OO_CHECK_EVAL("(function () { source.sound = null; return source.sound; })()", "null");
-	OO_CHECK(sSource->_sound == nullptr);
+	EXPECT_TRUE(sSource->_sound == nullptr);
 	OO_CHECK_EVAL("(function () { source.sound = aSound; return source.sound === null; })()", "false");
-	OO_CHECK(sSource->_sound.get() == sSound);
+	EXPECT_TRUE(sSource->_sound.get() == sSound);
 	sSource->_gain = 0.5f;
 }
 
 
-OO_TEST(methods)
+TEST(OOJSSoundSource, methods)
 {
 	SetUpContext();
 	sSource->_repeatCount = 1;
 	int plays = sSource->_plays;
 	OO_CHECK_EVAL("source.play()", "undefined");
-	OO_CHECK_EQ(sSource->_plays, plays + 1);
-	OO_CHECK_EQ(static_cast<int>(sSource->_repeatCount), 1);
+	EXPECT_EQ(sSource->_plays, plays + 1);
+	EXPECT_EQ(static_cast<int>(sSource->_repeatCount), 1);
 	OO_CHECK_EVAL("source.play(3)", "undefined");
-	OO_CHECK_EQ(static_cast<int>(sSource->_repeatCount), 3);
+	EXPECT_EQ(static_cast<int>(sSource->_repeatCount), 3);
 	OO_CHECK_EVAL("source.play(1000)", "undefined");
-	OO_CHECK_EQ(static_cast<int>(sSource->_repeatCount), 100);
+	EXPECT_EQ(static_cast<int>(sSource->_repeatCount), 100);
 	OO_CHECK_EVAL("source.play(0)", "undefined");	// not positive: the count is left alone
-	OO_CHECK_EQ(static_cast<int>(sSource->_repeatCount), 100);
+	EXPECT_EQ(static_cast<int>(sSource->_repeatCount), 100);
 	OO_CHECK_EVAL("source.play(undefined)", "undefined");
-	OO_CHECK_EQ(sSource->_plays, plays + 5);
+	EXPECT_EQ(sSource->_plays, plays + 5);
 	OO_CHECK_EVAL("source.play({ valueOf: function () { throw new Error('no count'); } })", "threw: bad arguments: SoundSource.play (1): ; expected integer count or no argument");
 	OO_CHECK_EVAL("source.isPlaying", "true");
 	OO_CHECK_EVAL("source.stop()", "undefined");
 	OO_CHECK_EVAL("source.isPlaying", "false");
 	int repeats = sSource->_playOrRepeats;
 	OO_CHECK_EVAL("source.playOrRepeat()", "undefined");
-	OO_CHECK_EQ(sSource->_playOrRepeats, repeats + 1);
+	EXPECT_EQ(sSource->_playOrRepeats, repeats + 1);
 	OO_CHECK_EVAL("SoundSource.prototype.stop.call({})", "threw: Native method expected SoundSource, got [object Object].");
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSSoundSource, nativeExceptions)
 {
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the source is a JS error,
@@ -506,9 +507,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("source.volume", "threw: Native exception: cxx boom");
 	sSource->_gain = 0.5f;
 	OO_CHECK_EVAL("source.volume", "0.5");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

@@ -18,6 +18,8 @@
 	clears it). Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "ShipGroup.h"
 #include <quickjs.h>
 #include "oofnd/Exception.hpp"
@@ -97,7 +99,6 @@ public:
 #include "OOJSShipGroup.h"
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstdint>
@@ -447,17 +448,17 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSShipGroup, registration)
 {
 	SetUpContext();
-	OO_CHECK_EQ(sConverters.size(), 1u);
+	EXPECT_EQ(sConverters.size(), 1u);
 	OO_CHECK_EVAL("typeof ShipGroup", "function");
 	OO_CHECK_EVAL("Object.keys(ShipGroup.prototype).join()", "count,leader,name,ships");
 	OO_CHECK_EVAL("ShipGroup()", "threw: ShipGroup() cannot be called as a function, it must be used as a constructor (as in new ShipGroup(...)).");
@@ -465,32 +466,32 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(category)
+TEST(OOJSShipGroup, category)
 {
 	SetUpContext();
 	// One JS object per group, made on first use; the engine's finalizer clears it.
 	std::shared_ptr<oo::ShipGroup> group = oo::ShipGroup::groupWithName(std::string("cat"));
 	JSValue first = group->jsValueInContext(sContext);
-	OO_CHECK(JS_IsObject(first));
+	EXPECT_TRUE(JS_IsObject(first));
 	JSValue again = group->jsValueInContext(sContext);
-	OO_CHECK(JS_VALUE_GET_PTR(again) == JS_VALUE_GET_PTR(first));
+	EXPECT_TRUE(JS_VALUE_GET_PTR(again) == JS_VALUE_GET_PTR(first));
 	JS_FreeValue(sContext, again);
-	OO_CHECK(OOJSCxxPrivateFromOpaque(JS_GetOpaque(first, JS_GetClassID(first))) == static_cast<oo::Object *>(group.get()));
+	EXPECT_TRUE(OOJSCxxPrivateFromOpaque(JS_GetOpaque(first, JS_GetClassID(first))) == static_cast<oo::Object *>(group.get()));
 	Define("catGroup", first);	// the global holds it from here on
 	OO_CHECK_EVAL("catGroup.name", "cat");
 	// Clearing with another object leaves it; clearing with its own makes the next one new.
 	group->clearJSSelf(JS_NULL);
 	again = group->jsValueInContext(sContext);
-	OO_CHECK(JS_VALUE_GET_PTR(again) == JS_VALUE_GET_PTR(first));
+	EXPECT_TRUE(JS_VALUE_GET_PTR(again) == JS_VALUE_GET_PTR(first));
 	JS_FreeValue(sContext, again);
 	group->clearJSSelf(first);
 	JSValue second = group->jsValueInContext(sContext);
-	OO_CHECK(JS_IsObject(second) && JS_VALUE_GET_PTR(second) != JS_VALUE_GET_PTR(first));
+	EXPECT_TRUE(JS_IsObject(second) && JS_VALUE_GET_PTR(second) != JS_VALUE_GET_PTR(first));
 	JS_FreeValue(sContext, second);
 }
 
 
-OO_TEST(constructor)
+TEST(OOJSShipGroup, constructor)
 {
 	SetUpContext();
 	NewShip("alpha");
@@ -505,7 +506,7 @@ OO_TEST(constructor)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSShipGroup, properties)
 {
 	SetUpContext();
 	NewShip("beta");
@@ -523,7 +524,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(membership)
+TEST(OOJSShipGroup, membership)
 {
 	SetUpContext();
 	NewShip("delta");
@@ -542,7 +543,7 @@ OO_TEST(membership)
 }
 
 
-OO_TEST(escorts)
+TEST(OOJSShipGroup, escorts)
 {
 	SetUpContext();
 	ShipEntity *leader = NewShip("leader");
@@ -559,7 +560,7 @@ OO_TEST(escorts)
 	OO_CHECK_EVAL("[escorts.addShip(escort), escorts.containsShip(escort)].join()", "false,false");
 	leader->_acceptsEscorts = true;
 	OO_CHECK_EVAL("[escorts.addShip(escort), escorts.containsShip(escort)].join()", "true,true");
-	OO_CHECK_EQ(leader->_accepted, 1);
+	EXPECT_EQ(leader->_accepted, 1);
 	// A ship that already escorts someone else is refused, with a warning.
 	std::shared_ptr<oo::ShipGroup> otherEscorts = oo::ShipGroup::groupWithName(std::string("other"), other);
 	otherEscorts->addShip(taken);
@@ -567,8 +568,8 @@ OO_TEST(escorts)
 	taken->_group = otherEscorts;
 	sLastWarning.clear();
 	OO_CHECK_EVAL("escorts.addShip(taken)", "false");
-	OO_CHECK_EQ(sLastWarning, "ShipGroup.addShip: Ship " + TestEntityObjectDescription(TestObjectOf(taken), true) + " cannot be assigned to two escort groups, ignoring.");
-	OO_CHECK(TestEntityObjectDescription(TestObjectOf(taken), true).find("{taken}") != std::string::npos);
+	EXPECT_EQ(sLastWarning, "ShipGroup.addShip: Ship " + TestEntityObjectDescription(TestObjectOf(taken), true) + " cannot be assigned to two escort groups, ignoring.");
+	EXPECT_TRUE(TestEntityObjectDescription(TestObjectOf(taken), true).find("{taken}") != std::string::npos);
 	// A lone leader whose escort group is its own group gets a new group, and the ship joins that.
 	ShipEntity *lone = NewShip("lone");
 	std::shared_ptr<oo::ShipGroup> loneGroup = oo::ShipGroup::groupWithName(std::string("alone"), lone);
@@ -576,8 +577,8 @@ OO_TEST(escorts)
 	lone->_group = loneGroup;
 	Define("loneGroup", loneGroup->jsValueInContext(sContext));
 	OO_CHECK_EVAL("[loneGroup.addShip(escort), loneGroup.containsShip(escort)].join()", "true,false");
-	OO_CHECK(lone->_group != loneGroup && lone->_group->containsShip(escort));
-	OO_CHECK(lone->_group->name() == std::optional<std::string>("ship group"));
+	EXPECT_TRUE(lone->_group != loneGroup && lone->_group->containsShip(escort));
+	EXPECT_TRUE(lone->_group->name() == std::optional<std::string>("ship group"));
 	// A lone leader with a group of its own: it is asked to accept the escort.
 	ShipEntity *custom = NewShip("custom");
 	std::shared_ptr<oo::ShipGroup> customGroup = oo::ShipGroup::groupWithName(std::string("custom"), custom);
@@ -588,11 +589,11 @@ OO_TEST(escorts)
 	OO_CHECK_EVAL("customGroup.addShip(escort)", "false");
 	custom->_acceptsEscorts = true;
 	OO_CHECK_EVAL("customGroup.addShip(escort)", "true");
-	OO_CHECK_EQ(custom->_accepted, 1);
+	EXPECT_EQ(custom->_accepted, 1);
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSShipGroup, otherObjects)
 {
 	SetUpContext();
 	NewShip("zeta");
@@ -604,7 +605,7 @@ OO_TEST(otherObjects)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSShipGroup, nativeExceptions)
 {
 	SetUpContext();
 	ShipEntity *chief = NewShip("chief");
@@ -616,9 +617,6 @@ OO_TEST(nativeExceptions)
 	Define("exGroup", group->jsValueInContext(sContext));
 	OO_CHECK_EVAL("exGroup.addShip(boom)", "threw: Native exception: escort boom");
 	OO_CHECK_EVAL("exGroup.count", "2");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

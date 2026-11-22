@@ -17,9 +17,10 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "Entity.h"
 #include "PlayerEntity.h"
-#include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -115,92 +116,92 @@ double BoundFloat(Entity* entity, const char* name) {
 
 }  // namespace
 
-OO_TEST(clockTime) {
+TEST(EntityShaderBindings, clockTime) {
   {
-    SetUp();
+    ::SetUp();
     Entity* entity = AnEntity();
     sPlayer->_clockTime = 1234.5;
-    OO_CHECK(BoundFloat(entity, "clock") == 1234.5f);
+    EXPECT_TRUE(BoundFloat(entity, "clock") == 1234.5f);
     // A double clock time is narrowed to a float.
     sPlayer->_clockTime = 180054321.75;
-    OO_CHECK(BoundFloat(entity, "clock") == (GLfloat)180054321.75);
+    EXPECT_TRUE(BoundFloat(entity, "clock") == (GLfloat)180054321.75);
   }
 }
 
-OO_TEST(flavourNumbers) {
+TEST(EntityShaderBindings, flavourNumbers) {
   {
-    SetUp();
+    ::SetUp();
     Entity* entity = AnEntity();
     sPlayer->_random100 = 42;
     sPlayer->_random256 = 200;
-    OO_CHECK(BoundInt(entity, "pseudoFixedD100") == 42);
-    OO_CHECK(BoundInt(entity, "pseudoFixedD256") == 200);
+    EXPECT_TRUE(BoundInt(entity, "pseudoFixedD100") == 42);
+    EXPECT_TRUE(BoundInt(entity, "pseudoFixedD256") == 200);
   }
 }
 
-OO_TEST(systemAttributes) {
+TEST(EntityShaderBindings, systemAttributes) {
   {
-    SetUp();
+    ::SetUp();
     Entity* entity = AnEntity();
     sPlayer->_government = oo::PList(3);
     sPlayer->_economy = oo::PList(5);
     sPlayer->_techLevel = oo::PList(11);
     sPlayer->_population = oo::PList(47);
     sPlayer->_productivity = oo::PList(21680);
-    OO_CHECK(BoundInt(entity, "systemGovernment") == 3);
-    OO_CHECK(BoundInt(entity, "systemEconomy") == 5);
-    OO_CHECK(BoundInt(entity, "systemTechLevel") == 11);
-    OO_CHECK(BoundInt(entity, "systemPopulation") == 47);
-    OO_CHECK(BoundInt(entity, "systemProductivity") == 21680);
+    EXPECT_TRUE(BoundInt(entity, "systemGovernment") == 3);
+    EXPECT_TRUE(BoundInt(entity, "systemEconomy") == 5);
+    EXPECT_TRUE(BoundInt(entity, "systemTechLevel") == 11);
+    EXPECT_TRUE(BoundInt(entity, "systemPopulation") == 47);
+    EXPECT_TRUE(BoundInt(entity, "systemProductivity") == 21680);
   }
 }
 
-OO_TEST(attributeNotANumberIsZero) {
+TEST(EntityShaderBindings, attributeNotANumberIsZero) {
   {
-    SetUp();
+    ::SetUp();
     Entity* entity = AnEntity();
     // No value (nil), and a value that is not a number: 0, as -unsignedIntValue
     // of nil.
     sPlayer->_government = oo::PList();
     sPlayer->_economy = oo::PList("rich");
-    OO_CHECK(BoundInt(entity, "systemGovernment") == 0);
-    OO_CHECK(BoundInt(entity, "systemEconomy") == 0);
-    OO_CHECK(BoundInt(entity, "systemTechLevel") == 0);
-    OO_CHECK(BoundInt(entity, "systemPopulation") == 0);
-    OO_CHECK(BoundInt(entity, "systemProductivity") == 0);
+    EXPECT_TRUE(BoundInt(entity, "systemGovernment") == 0);
+    EXPECT_TRUE(BoundInt(entity, "systemEconomy") == 0);
+    EXPECT_TRUE(BoundInt(entity, "systemTechLevel") == 0);
+    EXPECT_TRUE(BoundInt(entity, "systemPopulation") == 0);
+    EXPECT_TRUE(BoundInt(entity, "systemProductivity") == 0);
   }
 }
 
-OO_TEST(uniformTypes) {
+TEST(EntityShaderBindings, uniformTypes) {
   {
     // The uniform's type is the method's return type: a float for the clock
     // ('f'), unsigned ints ('I') for the rest.
     Entity* entity = AnEntity();
-    OO_CHECK(Binding(entity, "clock").type == oo::kShaderUniformTypeFloat);
-    OO_CHECK(Binding(entity, "pseudoFixedD100").type ==
+    EXPECT_TRUE(Binding(entity, "clock").type == oo::kShaderUniformTypeFloat);
+    EXPECT_TRUE(Binding(entity, "pseudoFixedD100").type ==
              oo::kShaderUniformTypeUnsignedInt);
-    OO_CHECK(Binding(entity, "pseudoFixedD256").type ==
+    EXPECT_TRUE(Binding(entity, "pseudoFixedD256").type ==
              oo::kShaderUniformTypeUnsignedInt);
-    OO_CHECK(Binding(entity, "systemGovernment").type ==
+    EXPECT_TRUE(Binding(entity, "systemGovernment").type ==
              oo::kShaderUniformTypeUnsignedInt);
-    OO_CHECK(Binding(entity, "systemEconomy").type ==
+    EXPECT_TRUE(Binding(entity, "systemEconomy").type ==
              oo::kShaderUniformTypeUnsignedInt);
-    OO_CHECK(Binding(entity, "systemTechLevel").type ==
+    EXPECT_TRUE(Binding(entity, "systemTechLevel").type ==
              oo::kShaderUniformTypeUnsignedInt);
-    OO_CHECK(Binding(entity, "systemPopulation").type ==
+    EXPECT_TRUE(Binding(entity, "systemPopulation").type ==
              oo::kShaderUniformTypeUnsignedInt);
-    OO_CHECK(Binding(entity, "systemProductivity").type ==
+    EXPECT_TRUE(Binding(entity, "systemProductivity").type ==
              oo::kShaderUniformTypeUnsignedInt);
   }
 }
 
-OO_TEST(subclassesAnswerToo) {
+TEST(EntityShaderBindings, subclassesAnswerToo) {
   {
-    SetUp();
+    ::SetUp();
     // A subclass of Entity (here the test's player) answers the category's
     // selectors.
     sPlayer->_random100 = 7;
-    OO_CHECK(BoundInt(sPlayer, "pseudoFixedD100") == 7);  // the player's object
+    EXPECT_TRUE(BoundInt(sPlayer, "pseudoFixedD100") == 7);  // the player's object
   }
 }
 
@@ -209,9 +210,9 @@ OO_TEST(subclassesAnswerToo) {
 // uniform type the selector path read; laserColor, which nothing answers, and
 // the std::size_t names, whose type no uniform takes, bind neither way. The rows
 // and the bindings they make are checked.
-OO_TEST(everyPermittedNameBindsAsBySelector) {
+TEST(EntityShaderBindings, everyPermittedNameBindsAsBySelector) {
   {
-    SetUp();
+    ::SetUp();
     static const char* const kNames[] = {
         "position",
         "orientation",
@@ -309,22 +310,20 @@ OO_TEST(everyPermittedNameBindsAsBySelector) {
         oo::ShaderMemberBinding binding = {};
         const bool byRow = EntityShaderMemberBindingFor(object, name, &binding);
         if (byRow) {
-          OO_CHECK(binding.target == object);
+          EXPECT_TRUE(binding.target == object);
           rows++;
         }
       }
     }
-    OO_CHECK(rows > 0);
-    OO_CHECK(Binding(AnEntity(), "laserColor").get == nullptr);
-    OO_CHECK(Binding(AnEntity(), "airColorAsVector").get ==
+    EXPECT_TRUE(rows > 0);
+    EXPECT_TRUE(Binding(AnEntity(), "laserColor").get == nullptr);
+    EXPECT_TRUE(Binding(AnEntity(), "airColorAsVector").get ==
              nullptr);  // a planet's only
-    OO_CHECK(Binding(AnEntity(), "cameraRelativePosition").type ==
+    EXPECT_TRUE(Binding(AnEntity(), "cameraRelativePosition").type ==
              oo::kShaderUniformTypeVector);
-    OO_CHECK(Binding(AnEntity(), "fogUniform").type ==
+    EXPECT_TRUE(Binding(AnEntity(), "fogUniform").type ==
              oo::kShaderUniformTypeColor);
-    OO_CHECK(Binding(sPlayer, "tradeInFactor").type == oo::kShaderUniformTypeInt);
-    OO_CHECK(BoundInt(sPlayer, "tradeInFactor") == sPlayer->tradeInFactor());
+    EXPECT_TRUE(Binding(sPlayer, "tradeInFactor").type == oo::kShaderUniformTypeInt);
+    EXPECT_TRUE(BoundInt(sPlayer, "tradeInFactor") == sPlayer->tradeInFactor());
   }
 }
-
-OO_TEST_MAIN()

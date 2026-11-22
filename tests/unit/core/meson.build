@@ -230,8 +230,8 @@ foreach name, game_sources : core_tests
         'core_' + name,
         name + '.cpp',
         objects: oolite_bin.extract_objects(sources),
-        include_directories: [oolite_includes, include_directories('../oofnd')],
-        dependencies: oolite_dependencies,
+        include_directories: oolite_includes,
+        dependencies: oolite_dependencies + [oo_gtest_main_dep],
         override_options: oolite_override_options,
         install: false,
     )
@@ -239,5 +239,6 @@ foreach name, game_sources : core_tests
     # out with --no-suite openal: the prebuilt libopenal-1.dll's onexit registration trips ASan's
     # allocator-ownership check inside ucrtbase.dll, a third-party report no suppression reaches
     # (tests/unit/asan-suppressions.txt). The game's sanitized launch uses --nosound instead.
-    test(name, exe, suite: name in openal_tests ? ['core', 'openal'] : 'core', timeout: 60)
+    test(name, exe, suite: name in openal_tests ? ['core', 'openal'] : 'core', timeout: 60,
+        protocol: 'gtest')
 endforeach

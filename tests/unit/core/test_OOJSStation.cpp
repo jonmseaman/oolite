@@ -16,6 +16,8 @@
 	a native's exception) and what the category answers the engine. Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "Commodities.h"
 #include "CommodityMarket.h"
@@ -304,7 +306,6 @@ public:
 #include "OOJSStation.h"
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -975,24 +976,24 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSStation, registration)
 {
 	SetUpContext();
 	const JSClassID stationClass = sStationObject->oo_jsClassID();
-	OO_CHECK(stationClass != 0 && OOJSClassName(stationClass) != nullptr && std::strcmp(OOJSClassName(stationClass), "Station") == 0);
+	EXPECT_TRUE(stationClass != 0 && OOJSClassName(stationClass) != nullptr && std::strcmp(OOJSClassName(stationClass), "Station") == 0);
 	JSValue prototype = JS_GetClassProto(sContext, stationClass);
-	OO_CHECK(JS_IsObject(prototype));
+	EXPECT_TRUE(JS_IsObject(prototype));
 	JS_FreeValue(sContext, prototype);
-	OO_CHECK(OOJSIsSubclass(stationClass, sFakeShipClassID));
-	OO_CHECK_EQ(sConverters[stationClass], 1);
-	OO_CHECK(sStationObject->oo_jsClassName() == std::optional<std::string>("Station"));
+	EXPECT_TRUE(OOJSIsSubclass(stationClass, sFakeShipClassID));
+	EXPECT_EQ(sConverters[stationClass], 1);
+	EXPECT_TRUE(sStationObject->oo_jsClassName() == std::optional<std::string>("Station"));
 	OO_CHECK_EVAL("typeof Station", "function");
 	OO_CHECK_EVAL("new Station()", "threw: unconstructable");
 	OO_CHECK_EVAL("Object.getPrototypeOf(Station.prototype) === Ship.prototype", "true");
@@ -1000,7 +1001,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSStation, properties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("station.isMainStation + ' ' + other.isMainStation", "true false");
@@ -1023,7 +1024,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(setters)
+TEST(OOJSStation, setters)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("(function () { station.hasNPCTraffic = false; return station.hasNPCTraffic; })()", "false");
@@ -1049,14 +1050,14 @@ OO_TEST(setters)
 }
 
 
-OO_TEST(docking)
+TEST(OOJSStation, docking)
 {
 	SetUpContext();
 	sStation->_abortAll = 0;
 	OO_CHECK_EVAL("station.abortAllDockings()", "undefined");
-	OO_CHECK_EQ(sStation->_abortAll, 1);
+	EXPECT_EQ(sStation->_abortAll, 1);
 	OO_CHECK_EVAL("station.abortDockingForShip(ship)", "undefined");
-	OO_CHECK(sStation->_abortedShip == sShipPart);
+	EXPECT_TRUE(sStation->_abortedShip == sShipPart);
 	OO_CHECK_EVAL("station.abortDockingForShip()", "threw: bad arguments: Station.abortDockingForShip(0) - / ship in docking queue");
 	sStation->_fits = true;
 	OO_CHECK_EVAL("station.canDockShip(ship)", "true");
@@ -1066,17 +1067,17 @@ OO_TEST(docking)
 	// dockPlayer(): unpauses the game, then docks the player unless it is docked.
 	sUniverse->_controller->_paused = true;
 	OO_CHECK_EVAL("station.dockPlayer()", "undefined");
-	OO_CHECK(!sUniverse->_controller->_paused);
-	OO_CHECK_EQ(sPlayer->_dockLog, "clearance " + std::to_string(static_cast<int>(oo::DockingClearanceStatus::kGranted)) + "; safe; dock Coriolis");
-	OO_CHECK_EQ(static_cast<int>(sUniverse->_view), static_cast<int>(oo::ViewID::kForward));
+	EXPECT_TRUE(!sUniverse->_controller->_paused);
+	EXPECT_EQ(sPlayer->_dockLog, "clearance " + std::to_string(static_cast<int>(oo::DockingClearanceStatus::kGranted)) + "; safe; dock Coriolis");
+	EXPECT_EQ(static_cast<int>(sUniverse->_view), static_cast<int>(oo::ViewID::kForward));
 	sPlayer->_dockLog.clear();
 	OO_CHECK_EVAL("other.dockPlayer()", "undefined");
-	OO_CHECK_EQ(sPlayer->_dockLog, std::string());
+	EXPECT_EQ(sPlayer->_dockLog, std::string());
 	sPlayer->_docked = false;
 }
 
 
-OO_TEST(alertLevel)
+TEST(OOJSStation, alertLevel)
 {
 	SetUpContext();
 	sStation->_alertLevel = oo::StationAlertLevel::kGreen;
@@ -1085,58 +1086,58 @@ OO_TEST(alertLevel)
 }
 
 
-OO_TEST(launches)
+TEST(OOJSStation, launches)
 {
 	SetUpContext();
 	sStation->_launched = sShipPart;
 	OO_CHECK_EVAL("station.launchShipWithRole('trader') === ship", "true");
-	OO_CHECK_EQ(sStation->_lastLaunch, std::string("role trader"));
+	EXPECT_EQ(sStation->_lastLaunch, std::string("role trader"));
 	sStation->_abortAll = 0;
 	OO_CHECK_EVAL("station.launchShipWithRole('trader', true) === ship", "true");
-	OO_CHECK_EQ(sStation->_abortAll, 1);
+	EXPECT_EQ(sStation->_abortAll, 1);
 	OO_CHECK_EVAL("station.launchShipWithRole()", "threw: bad arguments: Station.launchShipWithRole(0) - / string (role)");
 	const char *launches[][2] = { { "launchDefenseShip", "defense" }, { "launchEscort", "escort" }, { "launchScavenger", "scavenger" }, { "launchMiner", "miner" }, { "launchPirateShip", "pirate" }, { "launchShuttle", "shuttle" }, { "launchPatrol", "patrol" } };
 	for (const auto &launch : launches)
 	{
 		std::string src = std::string("station.") + launch[0] + "() === ship";
 		OO_CHECK_EVAL(src.c_str(), "true");
-		OO_CHECK_EQ(sStation->_lastLaunch, std::string(launch[1]));
+		EXPECT_EQ(sStation->_lastLaunch, std::string(launch[1]));
 	}
 	OO_CHECK_EVAL("station.launchPolice().length + ' ' + (station.launchPolice()[0] === ship)", "2 true");
 	sStation->_launched = nullptr;
 	OO_CHECK_EVAL("station.launchMiner()", "null");
 	OO_CHECK_EVAL("station.launchShipWithRole('trader')", "null");
 	OO_CHECK_EVAL("station.launchPolice().length", "0");	// no ship: none in the array
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
 }
 
 
-OO_TEST(interfaces)
+TEST(OOJSStation, interfaces)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("station.setInterface('k', {title: 'T', summary: 'S', category: 'C', callback: function () {}})", "undefined");
-	OO_CHECK(sStation->_interfaces.count("k") == 1);
+	EXPECT_TRUE(sStation->_interfaces.count("k") == 1);
 	if (sStation->_interfaces.count("k") == 1)
 	{
 		OOJSInterfaceDefinition *definition = sStation->_interfaces["k"].get();
-		OO_CHECK(definition->title() == std::optional<std::string>("T"));
-		OO_CHECK(definition->summary() == std::optional<std::string>("S"));
-		OO_CHECK(definition->category() == std::optional<std::string>("C"));
+		EXPECT_TRUE(definition->title() == std::optional<std::string>("T"));
+		EXPECT_TRUE(definition->summary() == std::optional<std::string>("S"));
+		EXPECT_TRUE(definition->category() == std::optional<std::string>("C"));
 		JSValue callback = definition->callback();
 		JSValue callbackThis = definition->callbackThis();
-		OO_CHECK(JS_IsObject(callback) && !JS_IsObject(callbackThis));
+		EXPECT_TRUE(JS_IsObject(callback) && !JS_IsObject(callbackThis));
 		JS_FreeValue(sContext, callbackThis);
 		JS_FreeValue(sContext, callback);
 	}
 	OO_CHECK_EVAL("station.setInterface('k2', {title: 'T', summary: 'S', callback: function () {}, cbThis: station})", "undefined");
-	OO_CHECK(sStation->_interfaces.count("k2") == 1 && sStation->_interfaces["k2"]->category() == std::optional<std::string>("desc(interfaces-category-uncategorised)"));
-	OO_CHECK(sStation->_interfaces.count("k2") == 1 && SameObject(sStation->_interfaces["k2"]->callbackThis(), sStationObject->_jsSelf));
+	EXPECT_TRUE(sStation->_interfaces.count("k2") == 1 && sStation->_interfaces["k2"]->category() == std::optional<std::string>("desc(interfaces-category-uncategorised)"));
+	EXPECT_TRUE(sStation->_interfaces.count("k2") == 1 && SameObject(sStation->_interfaces["k2"]->callbackThis(), sStationObject->_jsSelf));
 	OO_CHECK_EVAL("station.setInterface('k2', {title: 'T', summary: 'S', category: '', callback: function () {}})", "undefined");
-	OO_CHECK(sStation->_interfaces.count("k2") == 1 && sStation->_interfaces["k2"]->category() == std::optional<std::string>("desc(interfaces-category-uncategorised)"));
+	EXPECT_TRUE(sStation->_interfaces.count("k2") == 1 && sStation->_interfaces["k2"]->category() == std::optional<std::string>("desc(interfaces-category-uncategorised)"));
 	OO_CHECK_EVAL("station.setInterface('k')", "undefined");
-	OO_CHECK(sStation->_interfaces.count("k") == 0);
+	EXPECT_TRUE(sStation->_interfaces.count("k") == 0);
 	OO_CHECK_EVAL("station.setInterface('k2', null)", "undefined");
-	OO_CHECK(sStation->_interfaces.empty());
+	EXPECT_TRUE(sStation->_interfaces.empty());
 	OO_CHECK_EVAL("station.setInterface()", "threw: bad arguments: Station.setInterface(0) - / key [, definition]");
 	OO_CHECK_EVAL("station.setInterface('k', {summary: 'S'})", "threw: bad arguments: Station.setInterface(1) - / key [, definition]; if definition is set, it must have a 'title' property.");
 	OO_CHECK_EVAL("station.setInterface('k', {title: ''})", "threw: bad arguments: Station.setInterface(1) - / key [, definition]; if definition is set, 'title' property must be a non-empty string.");
@@ -1144,19 +1145,19 @@ OO_TEST(interfaces)
 	OO_CHECK_EVAL("station.setInterface('k', {title: 'T', summary: ''})", "threw: bad arguments: Station.setInterface(1) - / key [, definition]; if definition is set, 'summary' property must be a non-empty string.");
 	OO_CHECK_EVAL("station.setInterface('k', {title: 'T', summary: 'S'})", "threw: bad arguments: Station.setInterface(1) - / key [, definition]; if definition is set, it must have a 'callback' property.");
 	OO_CHECK_EVAL("station.setInterface('k', {title: 'T', summary: 'S', callback: 5})", "threw: bad arguments: Station.setInterface(1) - / key [, definition]; 'callback' property must be a function.");
-	OO_CHECK(sStation->_interfaces.empty());
+	EXPECT_TRUE(sStation->_interfaces.empty());
 }
 
 
-OO_TEST(market)
+TEST(OOJSStation, market)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("station.setMarketPrice('food', 120)", "true");
-	OO_CHECK_EQ(sStation->_market->priceForGood("food"), 120u);
+	EXPECT_EQ(sStation->_market->priceForGood("food"), 120u);
 	// A blank market has no capacity: only 0 fits.
 	sStation->_market->setQuantity(5, "food");
 	OO_CHECK_EVAL("station.setMarketQuantity('food', 0)", "true");
-	OO_CHECK_EQ(sStation->_market->quantityForGood("food"), 0u);
+	EXPECT_EQ(sStation->_market->quantityForGood("food"), 0u);
 	OO_CHECK_EVAL("station.market.food.quantity + ' ' + station.market.food.price", "0 120");
 	OO_CHECK_EVAL("station.setMarketQuantity('food', 1)", "threw: bad arguments: Station.setMarketQuantity(2) - / Quantity must be between 0 and the station market capacity");
 	OO_CHECK_EVAL("station.setMarketQuantity('food', -1)", "threw: bad arguments: Station.setMarketQuantity(2) - / Quantity must be between 0 and the station market capacity");
@@ -1170,23 +1171,23 @@ OO_TEST(market)
 	sPlayer->_screen = oo::GUIScreenID::kMarket;
 	sPlayer->_marketRefreshes = 0;
 	OO_CHECK_EVAL("station.setMarketPrice('food', 100) && station.setMarketQuantity('food', 0)", "true");
-	OO_CHECK_EQ(sPlayer->_marketRefreshes, 2);
+	EXPECT_EQ(sPlayer->_marketRefreshes, 2);
 	sPlayer->_dockedStation = nullptr;
 	sPlayer->_screen = oo::GUIScreenID::kStatus;
 }
 
 
-OO_TEST(shipyard)
+TEST(OOJSStation, shipyard)
 {
 	SetUpContext();
 	sLastWarning.clear();
 	OO_CHECK_EVAL("station.addShipToShipyard({short_description: 'x'})", "<evaluation failed>");
-	OO_CHECK_EQ(sLastWarning, std::string("Station.removeShipFromShipyard: Station does not have shipyard."));
+	EXPECT_EQ(sLastWarning, std::string("Station.removeShipFromShipyard: Station does not have shipyard."));
 	OO_CHECK_EVAL("station.removeShipFromShipyard(0)", "<evaluation failed>");
 	sStation->_hasShipyard = true;
 	sStation->_shipyardsMade = 0;
 	OO_CHECK_EVAL("station.shipyard.length + ' ' + station.shipyard[0].short_description", "1 Cobra");
-	OO_CHECK_EQ(sStation->_shipyardsMade, 1);
+	EXPECT_EQ(sStation->_shipyardsMade, 1);
 	OO_CHECK_EVAL("station.addShipToShipyard(null)", "undefined");
 	OO_CHECK_EVAL("station.addShipToShipyard()", "threw: bad arguments: Station.addShipToShipyard(0) - / shipyard item definition");
 	OO_CHECK_EVAL("station.addShipToShipyard({})", "threw: bad arguments: Station.addShipToShipyard(1) - / 'short_description' in dictionary");
@@ -1196,14 +1197,14 @@ OO_TEST(shipyard)
 	sPlayer->_dockedStation = sStation;
 	sPlayer->_screen = oo::GUIScreenID::kShipyard;
 	OO_CHECK_EVAL("station.removeShipFromShipyard(0) + ' ' + station.shipyard.length", "true 0");
-	OO_CHECK_EQ(sPlayer->_shipyardRefreshes, 1);
+	EXPECT_EQ(sPlayer->_shipyardRefreshes, 1);
 	sPlayer->_dockedStation = nullptr;
 	sPlayer->_screen = oo::GUIScreenID::kStatus;
 	sStation->_hasShipyard = false;
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSStation, otherObjects)
 {
 	SetUpContext();
 	// A non-station entity is refused without a JS error; a non-entity is an error.
@@ -1218,7 +1219,7 @@ OO_TEST(otherObjects)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSStation, nativeExceptions)
 {
 	SetUpContext();
 	sStation->_techLevel = 99;
@@ -1227,8 +1228,8 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("station.equivalentTechLevel", "threw: Native exception: cxx boom");
 	sStation->_techLevel = 9;
 	OO_CHECK_EVAL("station.equivalentTechLevel", "9");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
 
 
@@ -1237,6 +1238,3 @@ OO_TEST(nativeExceptions)
 JSValue oo::EquipmentType::jsValueInContext(JSContext *)  { return JS_UNDEFINED; }
 void oo::EquipmentType::clearJSSelf(JSValueConst)  {}
 std::optional<std::string> oo::EquipmentType::jsDescription()  { return std::nullopt; }
-
-
-OO_TEST_MAIN()

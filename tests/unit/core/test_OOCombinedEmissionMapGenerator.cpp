@@ -25,13 +25,14 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "Color.h"
 #include "CombinedEmissionMapGenerator.h"
 #include "ConcreteTexture.h"
 #include "TextureInternal.h"
 #include "ResourceManager.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -77,19 +78,19 @@ bool WritePNG(const char* name, uint32_t size, png_uint_32 format,
    200 (emission .rgb, illumination .a).
 */
 void SetUp() {
-  OO_CHECK(OOTestGLContext());
+  EXPECT_TRUE(OOTestGLContext());
   if (sRoot.empty()) {
     sRoot = stdfs::temp_directory_path() /
             ("oo-test-emission-" +
              std::to_string(static_cast<unsigned long>(::_getpid())));
     stdfs::remove_all(sRoot);
     stdfs::create_directories(sRoot / "Resources" / "Textures");
-    OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+    EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
     stdfs::current_path(sRoot);
-    OO_CHECK(WritePNG("e.png", 8, PNG_FORMAT_RGB, 200));
-    OO_CHECK(WritePNG("i.png", 8, PNG_FORMAT_GRAY, 100));
-    OO_CHECK(WritePNG("d.png", 8, PNG_FORMAT_RGB, 128));
-    OO_CHECK(WritePNG("c.png", 8, PNG_FORMAT_RGBA, 200));
+    EXPECT_TRUE(WritePNG("e.png", 8, PNG_FORMAT_RGB, 200));
+    EXPECT_TRUE(WritePNG("i.png", 8, PNG_FORMAT_GRAY, 100));
+    EXPECT_TRUE(WritePNG("d.png", 8, PNG_FORMAT_RGB, 128));
+    EXPECT_TRUE(WritePNG("c.png", 8, PNG_FORMAT_RGBA, 200));
     ResourceManager::setUseAddOns(std::string(
         SCENARIO_OXP_DEFINITION_NONE));  // strict: the built-in Resources alone
   }
@@ -152,7 +153,7 @@ struct Baked {
 };
 
 void Bake(oo::TextureGenerator* generator, Baked& baked) {
-  OO_CHECK(generator->enqueue());
+  EXPECT_TRUE(generator->enqueue());
   if (std::optional<oo::TextureLoader::Result> loaded = generator->getResult()) {
     baked.ok = true;
     baked.pixMap = loaded->pixMap;
@@ -177,19 +178,19 @@ void ClearCache() {
 
 }  // namespace
 
-OO_TEST(nothingToBake) {
-  SetUp();
+TEST(OOCombinedEmissionMapGenerator, nothingToBake) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(NewGenerator(oo::PList(), nullptr, nullptr, nullptr, oo::PList(),
+    EXPECT_TRUE(NewGenerator(oo::PList(), nullptr, nullptr, nullptr, oo::PList(),
                           oo::Color::redColor().get(),
                           oo::PList("e.png")) == nullptr);
-    OO_CHECK(NewCombinedGenerator(oo::PList(), nullptr, nullptr, nullptr, nullptr) == nullptr);
+    EXPECT_TRUE(NewCombinedGenerator(oo::PList(), nullptr, nullptr, nullptr, nullptr) == nullptr);
   }
 }
 
-OO_TEST(settingsFromTheOptionsSpecifier) {
-  SetUp();
+TEST(OOCombinedEmissionMapGenerator, settingsFromTheOptionsSpecifier) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     const oo::PList options(
@@ -199,32 +200,32 @@ OO_TEST(settingsFromTheOptionsSpecifier) {
                         {"texture_LOD_bias", oo::PList(-0.25)}});
     const std::optional<oo::TextureSpecifier> interpreted =
         oo::InterpretTextureSpecifier(options, true);
-    OO_CHECK(interpreted.has_value());
+    EXPECT_TRUE(interpreted.has_value());
     const oo::TextureFlags expected =
         interpreted ? interpreted->options : oo::TextureFlags::kNone;
     const float anisotropy = interpreted ? interpreted->anisotropy : 0;
     const float lodBias = interpreted ? interpreted->lodBias : 0;
     oo::TextureGenerator* generator = NewGenerator(
         oo::PList("e.png"), nullptr, nullptr, nullptr, oo::PList(), nullptr, options);
-    OO_CHECK(generator != nullptr &&
+    EXPECT_TRUE(generator != nullptr &&
              (dynamic_cast<oo::TextureGenerator*>(generator) != nullptr));
-    OO_CHECK(generator->textureOptions() ==
+    EXPECT_TRUE(generator->textureOptions() ==
              oo::ApplyTextureOptionDefaults(expected));
-    OO_CHECK(generator->anisotropy() == anisotropy &&
+    EXPECT_TRUE(generator->anisotropy() == anisotropy &&
              generator->lodBias() == lodBias);
-    OO_CHECK(generator->path() ==
+    EXPECT_TRUE(generator->path() ==
              std::optional<std::string>("<generated emission map>"));
   }
 }
 
-OO_TEST(cacheKeys) {
-  SetUp();
+TEST(OOCombinedEmissionMapGenerator, cacheKeys) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     std::shared_ptr<oo::Color> red = oo::Color::redColor();
     const std::string redRGBA = red->rgbaDescription().value_or("");
 
-    OO_CHECK(NewGenerator(oo::PList("e.png"), red.get(), nullptr, nullptr, oo::PList(),
+    EXPECT_TRUE(NewGenerator(oo::PList("e.png"), red.get(), nullptr, nullptr, oo::PList(),
                           nullptr, oo::PList("e.png"))
                  ->cacheKey() ==
              std::optional<std::string>("emission map;emission:{" +
@@ -236,29 +237,29 @@ OO_TEST(cacheKeys) {
         NewGenerator(oo::PList("e.png"), oo::Color::whiteColor().get(),
                      DiffuseMap(), nullptr, oo::PList(), nullptr, oo::PList("e.png"))
             ->cacheKey();
-    OO_CHECK(whiteKey == std::optional<std::string>("emission map;emission:{" +
+    EXPECT_TRUE(whiteKey == std::optional<std::string>("emission map;emission:{" +
                                                     KeyOf("e.png") + "};"));
 
     oo::Texture* diffuse = DiffuseMap();
     const std::string diffuseKey = diffuse->cacheKey().value_or("");
-    OO_CHECK(!diffuseKey.empty());
+    EXPECT_TRUE(!diffuseKey.empty());
     // The illumination colour is the diffuse colour times the illumination
     // colour.
-    OO_CHECK(NewGenerator(oo::PList(), nullptr, diffuse, red.get(),
+    EXPECT_TRUE(NewGenerator(oo::PList(), nullptr, diffuse, red.get(),
                           oo::PList("i.png"), oo::Color::yellowColor().get(),
                           oo::PList("i.png"))
                  ->cacheKey() ==
              std::optional<std::string>("illumination map;illumination:{" +
                                         KeyOf("i.png") + "}*{" + diffuseKey +
                                         "}*" + redRGBA + ";"));
-    OO_CHECK(NewGenerator(oo::PList("e.png"), nullptr, nullptr, nullptr, oo::PList("i.png"),
+    EXPECT_TRUE(NewGenerator(oo::PList("e.png"), nullptr, nullptr, nullptr, oo::PList("i.png"),
                           nullptr, oo::PList("e.png"))
                  ->cacheKey() ==
              std::optional<std::string>(
                  "merged emission and illumination map;emission:{" +
                  KeyOf("e.png") + "};illumination:{" + KeyOf("i.png") +
                  "}*{};"));
-    OO_CHECK(NewCombinedGenerator(oo::PList("c.png"), diffuse, nullptr, nullptr, nullptr)
+    EXPECT_TRUE(NewCombinedGenerator(oo::PList("c.png"), diffuse, nullptr, nullptr, nullptr)
                  ->cacheKey() ==
              std::optional<std::string>(
                  "combined emission and illumination map;emission:{" +
@@ -268,8 +269,8 @@ OO_TEST(cacheKeys) {
   ClearCache();
 }
 
-OO_TEST(bakesTheEmissionMap) {
-  SetUp();
+TEST(OOCombinedEmissionMapGenerator, bakesTheEmissionMap) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     // Emission alone, tinted (0.5, 1, 0.25).
@@ -278,17 +279,17 @@ OO_TEST(bakesTheEmissionMap) {
                       oo::Color::colorWithRed(0.5f, 1.0f, 0.25f, 1.0f).get(), nullptr,
                       nullptr, oo::PList(), nullptr, oo::PList("e.png")),
          baked);
-    OO_CHECK(baked.ok && baked.format == oo::kPixMapRGBA &&
+    EXPECT_TRUE(baked.ok && baked.format == oo::kPixMapRGBA &&
              baked.pixMap.width > 0 &&
              baked.pixMap.width == baked.pixMap.height);
-    OO_CHECK(baked.pixel()[0] == 100 && baked.pixel()[1] == 200 &&
+    EXPECT_TRUE(baked.pixel()[0] == 100 && baked.pixel()[1] == 200 &&
              baked.pixel()[2] == 50);
   }
   ClearCache();
 }
 
-OO_TEST(bakesTheIlluminationMap) {
-  SetUp();
+TEST(OOCombinedEmissionMapGenerator, bakesTheIlluminationMap) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     // Illumination alone: grey 100 x the diffuse map's 128 (x a white colour,
@@ -297,55 +298,55 @@ OO_TEST(bakesTheIlluminationMap) {
     Bake(NewGenerator(oo::PList(), nullptr, DiffuseMap(), nullptr, oo::PList("i.png"),
                       nullptr, oo::PList("i.png")),
          illumination);
-    OO_CHECK(illumination.ok && illumination.pixMap.width > 0);
+    EXPECT_TRUE(illumination.ok && illumination.pixMap.width > 0);
     const uint8_t lit = illumination.pixel()[0];
-    OO_CHECK(lit == 50 || lit == 51);
+    EXPECT_TRUE(lit == 50 || lit == 51);
 
     // Emission plus illumination: added.
     Baked merged;
     Bake(NewGenerator(oo::PList("e.png"), nullptr, DiffuseMap(), nullptr,
                       oo::PList("i.png"), nullptr, oo::PList("e.png")),
          merged);
-    OO_CHECK(merged.ok && merged.format == oo::kPixMapRGBA);
-    OO_CHECK(merged.pixel()[0] == 200 + lit);
+    EXPECT_TRUE(merged.ok && merged.format == oo::kPixMapRGBA);
+    EXPECT_TRUE(merged.pixel()[0] == 200 + lit);
 
     // One map: its alpha (200) is the illumination, x the diffuse map; its
     // colour the emission.
     Baked combined;
     Bake(NewCombinedGenerator(oo::PList("c.png"), DiffuseMap(), nullptr, nullptr, nullptr),
          combined);
-    OO_CHECK(combined.ok && combined.format == oo::kPixMapRGBA);
-    OO_CHECK(combined.pixel()[0] == 255);  // 200 + ~100, saturated
+    EXPECT_TRUE(combined.ok && combined.format == oo::kPixMapRGBA);
+    EXPECT_TRUE(combined.pixel()[0] == 255);  // 200 + ~100, saturated
   }
   ClearCache();
 }
 
-OO_TEST(aMissingMap) {
-  SetUp();
+TEST(OOCombinedEmissionMapGenerator, aMissingMap) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     // Made (the spec names a map), but there is nothing to bake.
     oo::TextureGenerator* generator =
         NewGenerator(oo::PList("missing.png"), nullptr, nullptr, nullptr, oo::PList(), nullptr,
                      oo::PList("missing.png"));
-    OO_CHECK(generator != nullptr);
+    EXPECT_TRUE(generator != nullptr);
     Baked baked;
     Bake(generator, baked);
-    OO_CHECK(!baked.ok && baked.pixMap.pixels == NULL);
+    EXPECT_TRUE(!baked.ok && baked.pixMap.pixels == NULL);
   }
 }
 
-OO_TEST(aTextureOfTheGenerator) {
-  SetUp();
+TEST(OOCombinedEmissionMapGenerator, aTextureOfTheGenerator) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     oo::Texture* texture = Autoreleased(oo::Texture::textureWithGenerator(
         NewGenerator(oo::PList("e.png"), oo::Color::redColor().get(), nullptr, nullptr,
                      oo::PList(), nullptr, oo::PList("e.png"))));
-    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(texture) != nullptr));
+    EXPECT_TRUE((dynamic_cast<oo::ConcreteTexture*>(texture) != nullptr));
     texture->ensureFinishedLoading();
-    OO_CHECK(texture->isFinishedLoading() && texture->dimensions().width > 0);
-    OO_CHECK(texture->cacheKey() ==
+    EXPECT_TRUE(texture->isFinishedLoading() && texture->dimensions().width > 0);
+    EXPECT_TRUE(texture->cacheKey() ==
              NewGenerator(oo::PList("e.png"), oo::Color::redColor().get(), nullptr,
                           nullptr, oo::PList(), nullptr, oo::PList("e.png"))
                  ->cacheKey());
@@ -356,23 +357,23 @@ OO_TEST(aTextureOfTheGenerator) {
     Bake(NewGenerator(oo::PList("e.png"), oo::Color::redColor().get(), nullptr, nullptr,
                       oo::PList(), nullptr, oo::PList("e.png")),
          baked);
-    OO_CHECK(!baked.ok);
+    EXPECT_TRUE(!baked.ok);
   }
   ClearCache();
 }
 
 #ifndef NDEBUG
-OO_TEST(description) {
-  SetUp();
+TEST(OOCombinedEmissionMapGenerator, description) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     const std::string description =
         NewGenerator(oo::PList("e.png"), oo::Color::redColor().get(), nullptr, nullptr,
                      oo::PList(), nullptr, oo::PList("e.png"))
             ->description();
-    OO_CHECK(description.starts_with("<OOCombinedEmissionMapGenerator 0x"));
-    OO_CHECK(description.find("{emission map: ") != std::string::npos);
-    OO_CHECK(description.find(
+    EXPECT_TRUE(description.starts_with("<OOCombinedEmissionMapGenerator 0x"));
+    EXPECT_TRUE(description.find("{emission map: ") != std::string::npos);
+    EXPECT_TRUE(description.find(
                  " * " + oo::Color::redColor()->rgbaDescription().value_or("") +
                  "}") != std::string::npos);
   }
@@ -382,13 +383,13 @@ OO_TEST(description) {
 // --- The C++ API (after the conversion)
 // --------------------------------------------------------
 
-OO_TEST(cxxApi) {
-  SetUp();
+TEST(OOCombinedEmissionMapGenerator, cxxApi) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(!oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
+    EXPECT_TRUE(!oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
         oo::PList(), nullptr, nullptr, nullptr, oo::PList(), nullptr, oo::PList()));
-    OO_CHECK(!oo::CombinedEmissionMapGenerator::
+    EXPECT_TRUE(!oo::CombinedEmissionMapGenerator::
                  generatorWithEmissionAndIlluminationMapSpec(
                      oo::PList(), nullptr, nullptr, nullptr, nullptr, oo::PList()));
 
@@ -398,7 +399,7 @@ OO_TEST(cxxApi) {
         oo::CombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
             oo::PList("e.png"), red.get(), nullptr, nullptr, oo::PList(), nullptr,
             oo::PList("e.png"));
-    OO_CHECK(generator &&
+    EXPECT_TRUE(generator &&
              generator->cacheKey() ==
                  std::optional<std::string>(
                      "emission map;emission:{" + KeyOf("e.png") + "}*" +
@@ -408,16 +409,14 @@ OO_TEST(cxxApi) {
     oo::TextureGenerator* made =
         NewGenerator(oo::PList("e.png"), nullptr, nullptr, nullptr, oo::PList(), nullptr,
                      oo::PList("e.png"));
-    OO_CHECK(dynamic_cast<oo::CombinedEmissionMapGenerator*>(made) != nullptr);
+    EXPECT_TRUE(dynamic_cast<oo::CombinedEmissionMapGenerator*>(made) != nullptr);
 
     // Baking through the C++ object.
     generator->loadTexture();
-    OO_CHECK(generator->_data != nullptr &&
+    EXPECT_TRUE(generator->_data != nullptr &&
              generator->_format == oo::kPixMapRGBA &&
              generator->_data->data()[0] == 200 &&
              generator->_data->data()[1] == 0);
   }
   ClearCache();
 }
-
-OO_TEST_MAIN()

@@ -16,11 +16,12 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "GraphicsResetManager.h"
 #include "OpenGLExtensionManager.h"
 #include "RegExpMatcher.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/Exception.hpp"
 
@@ -114,12 +115,12 @@ OOTestResetClient* Client(int tag) {
 // --- Tests
 // --------------------------------------------------------------------------------------
 
-OO_TEST(resetTellsEachClientOnce) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOGraphicsResetManager, resetTellsEachClientOnce) {
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::GraphicsResetManager* manager = oo::GraphicsResetManager::sharedManager();
-    OO_CHECK(manager != nullptr);
-    OO_CHECK(oo::GraphicsResetManager::sharedManager() == manager);
+    EXPECT_TRUE(manager != nullptr);
+    EXPECT_TRUE(oo::GraphicsResetManager::sharedManager() == manager);
 
     (void)oo::OpenGLExtensionManager::sharedManager();
     const unsigned pathsBefore = sPathsCalls;
@@ -136,23 +137,23 @@ OO_TEST(resetTellsEachClientOnce) {
 
     sOrder.clear();
     manager->resetGraphicsState();
-    OO_CHECK(sPathsCalls ==
+    EXPECT_TRUE(sPathsCalls ==
              pathsBefore + 1);  // the extension manager was reset
-    OO_CHECK(sRebinds == 1);
-    OO_CHECK(a->resets == 1 && b->resets == 1 && c->resets == 0);
-    OO_CHECK(sOrder.size() == 3 &&
+    EXPECT_TRUE(sRebinds == 1);
+    EXPECT_TRUE(a->resets == 1 && b->resets == 1 && c->resets == 0);
+    EXPECT_TRUE(sOrder.size() == 3 &&
              sOrder[0] == 0);  // textures first, then the clients
 
     manager->unregisterCxxClient(a);
     manager->unregisterCxxClient(b);
     manager->resetGraphicsState();
-    OO_CHECK(sRebinds == 2);
-    OO_CHECK(a->resets == 1 && b->resets == 1);
+    EXPECT_TRUE(sRebinds == 2);
+    EXPECT_TRUE(a->resets == 1 && b->resets == 1);
   }
 }
 
-OO_TEST(clientsMayUnregisterAndRaise) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOGraphicsResetManager, clientsMayUnregisterAndRaise) {
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::GraphicsResetManager* manager = oo::GraphicsResetManager::sharedManager();
 
@@ -164,7 +165,7 @@ OO_TEST(clientsMayUnregisterAndRaise) {
     manager->registerCxxClient(x);
     manager->registerCxxClient(y);
     manager->resetGraphicsState();
-    OO_CHECK(x->resets + y->resets == 1);
+    EXPECT_TRUE(x->resets + y->resets == 1);
     manager->unregisterCxxClient(x);
     manager->unregisterCxxClient(y);
 
@@ -175,21 +176,21 @@ OO_TEST(clientsMayUnregisterAndRaise) {
     manager->registerCxxClient(thrower);
     manager->registerCxxClient(q);
     manager->resetGraphicsState();
-    OO_CHECK(thrower->resets == 1 && p->resets == 1 && q->resets == 1);
+    EXPECT_TRUE(thrower->resets == 1 && p->resets == 1 && q->resets == 1);
     manager->unregisterCxxClient(thrower);
     manager->unregisterCxxClient(p);
     manager->unregisterCxxClient(q);
   }
 }
 
-OO_TEST(clientsAreNotRetained) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOGraphicsResetManager, clientsAreNotRetained) {
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::GraphicsResetManager* manager = oo::GraphicsResetManager::sharedManager();
     std::shared_ptr<OOTestResetClient> client = oo::makeShared<OOTestResetClient>();
     const long before = client->weak_from_this().use_count();
     manager->registerCxxClient(client.get());
-    OO_CHECK(client->weak_from_this().use_count() == before);
+    EXPECT_TRUE(client->weak_from_this().use_count() == before);
     manager->unregisterCxxClient(client.get());
   }
 }
@@ -208,8 +209,8 @@ struct TestCxxClient : oo::GraphicsResetClient {
 
 }  // namespace
 
-OO_TEST(cxxClients) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOGraphicsResetManager, cxxClients) {
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::GraphicsResetManager* manager = oo::GraphicsResetManager::sharedManager();
     TestCxxClient c1, c2;
@@ -225,15 +226,13 @@ OO_TEST(cxxClients) {
     sOrder.clear();
     const unsigned rebinds = sRebinds;
     manager->resetGraphicsState();
-    OO_CHECK(sRebinds == rebinds + 1);
-    OO_CHECK(c1.resets == 1 && c2.resets == 0 && objc->resets == 1);
-    OO_CHECK(sOrder.size() == 3 && sOrder[0] == 0);  // textures first
+    EXPECT_TRUE(sRebinds == rebinds + 1);
+    EXPECT_TRUE(c1.resets == 1 && c2.resets == 0 && objc->resets == 1);
+    EXPECT_TRUE(sOrder.size() == 3 && sOrder[0] == 0);  // textures first
 
     manager->unregisterCxxClient(&c1);
     manager->unregisterCxxClient(objc);
     manager->resetGraphicsState();
-    OO_CHECK(c1.resets == 1 && objc->resets == 1);
+    EXPECT_TRUE(c1.resets == 1 && objc->resets == 1);
   }
 }
-
-OO_TEST_MAIN()

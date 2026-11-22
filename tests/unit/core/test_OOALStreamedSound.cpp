@@ -23,11 +23,12 @@
 #include <filesystem>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "ALBufferedSound.h"
 #include "ALSoundDecoder.h"
 #include "ALSoundMixer.h"
 #include "ALStreamedSound.h"
-#include "oo_test.hpp"
 
 namespace stdfs = std::filesystem;
 
@@ -91,15 +92,15 @@ void SetUp() {
   if (!sRoot.empty()) return;
   (void)BoopPath();
   (void)ThemePath();
-  OO_CHECK(::_putenv_s("ALSOFT_DRIVERS", "null") == 0);
+  EXPECT_TRUE(::_putenv_s("ALSOFT_DRIVERS", "null") == 0);
   sRoot = stdfs::temp_directory_path() /
           ("oo-test-streamedsound-" +
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
-  OO_CHECK(oo::Sound::setUp());
+  EXPECT_TRUE(oo::Sound::setUp());
 }
 
 ALint BufferInt(ALuint buffer, ALenum what) {
@@ -122,92 +123,90 @@ constexpr ALint kBoopBytes = 7682;
 
 }  // namespace
 
-OO_TEST(madeFromADecoder) {
-  SetUp();
+TEST(OOALStreamedSound, madeFromADecoder) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::ALSoundDecoder> decoder =
         oo::ALSoundDecoder::codecWithPath(BoopPath());
-    OO_CHECK(decoder != nullptr);
+    EXPECT_TRUE(decoder != nullptr);
     const std::shared_ptr<oo::ALStreamedSound> sound =
         oo::ALStreamedSound::initWithDecoder(decoder.get());
-    OO_CHECK(sound != nullptr);
-    OO_CHECK(dynamic_cast<oo::ALStreamedSound*>(sound.get()) != nullptr &&
+    EXPECT_TRUE(sound != nullptr);
+    EXPECT_TRUE(dynamic_cast<oo::ALStreamedSound*>(sound.get()) != nullptr &&
              dynamic_cast<oo::Sound*>(sound.get()) != nullptr);
-    OO_CHECK(sound->name() == std::optional<std::string>("boop.ogg"));
-    OO_CHECK(sound->soundIncomplete());  // nothing streamed yet
-    OO_CHECK(sound->description().starts_with("<OOALStreamedSound 0x"));
+    EXPECT_TRUE(sound->name() == std::optional<std::string>("boop.ogg"));
+    EXPECT_TRUE(sound->soundIncomplete());  // nothing streamed yet
+    EXPECT_TRUE(sound->description().starts_with("<OOALStreamedSound 0x"));
 
-    OO_CHECK(!oo::ALStreamedSound::initWithDecoder(nullptr));
+    EXPECT_TRUE(!oo::ALStreamedSound::initWithDecoder(nullptr));
   }
 }
 
 // A sound shorter than a chunk: one short buffer, then complete; a rewind
 // starts it again.
-OO_TEST(aShortSoundIsOneChunk) {
-  SetUp();
+TEST(OOALStreamedSound, aShortSoundIsOneChunk) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::ALStreamedSound> sound = oo::ALStreamedSound::initWithDecoder(
         oo::ALSoundDecoder::codecWithPath(BoopPath()).get());
     ALuint buffer = sound->soundBuffer();
-    OO_CHECK(buffer != 0 && alIsBuffer(buffer));
-    OO_CHECK(BufferInt(buffer, AL_SIZE) == kBoopBytes);
-    OO_CHECK(BufferInt(buffer, AL_FREQUENCY) == kBoopRate);
-    OO_CHECK(BufferInt(buffer, AL_CHANNELS) == 1);
+    EXPECT_TRUE(buffer != 0 && alIsBuffer(buffer));
+    EXPECT_TRUE(BufferInt(buffer, AL_SIZE) == kBoopBytes);
+    EXPECT_TRUE(BufferInt(buffer, AL_FREQUENCY) == kBoopRate);
+    EXPECT_TRUE(BufferInt(buffer, AL_CHANNELS) == 1);
     alDeleteBuffers(1, &buffer);
-    OO_CHECK(!sound->soundIncomplete());
+    EXPECT_TRUE(!sound->soundIncomplete());
 
-    OO_CHECK(NextBufferSize(sound.get()) ==
+    EXPECT_TRUE(NextBufferSize(sound.get()) ==
              0);  // past the end: an empty buffer
 
     sound->rewind();
-    OO_CHECK(sound->soundIncomplete());
-    OO_CHECK(NextBufferSize(sound.get()) == kBoopBytes);
-    OO_CHECK(!sound->soundIncomplete());
+    EXPECT_TRUE(sound->soundIncomplete());
+    EXPECT_TRUE(NextBufferSize(sound.get()) == kBoopBytes);
+    EXPECT_TRUE(!sound->soundIncomplete());
   }
 }
 
 // The music is streamed by the root's class cluster, a chunk at a time, in
 // stereo.
-OO_TEST(theClusterStreamsTheMusic) {
-  SetUp();
+TEST(OOALStreamedSound, theClusterStreamsTheMusic) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Sound> sound = oo::Sound::initWithContentsOfFile(ThemePath());
-    OO_CHECK(dynamic_cast<oo::ALStreamedSound*>(sound.get()) != nullptr);
-    OO_CHECK(sound->name() == std::optional<std::string>("OoliteTheme.ogg"));
+    EXPECT_TRUE(dynamic_cast<oo::ALStreamedSound*>(sound.get()) != nullptr);
+    EXPECT_TRUE(sound->name() == std::optional<std::string>("OoliteTheme.ogg"));
 
     ALuint buffer = sound->soundBuffer();
-    OO_CHECK(BufferInt(buffer, AL_SIZE) ==
+    EXPECT_TRUE(BufferInt(buffer, AL_SIZE) ==
              static_cast<ALint>(oo::AL_STREAM_CHUNK_SIZE));
-    OO_CHECK(BufferInt(buffer, AL_CHANNELS) == 2);
+    EXPECT_TRUE(BufferInt(buffer, AL_CHANNELS) == 2);
     alDeleteBuffers(1, &buffer);
-    OO_CHECK(sound->soundIncomplete());
-    OO_CHECK(NextBufferSize(sound.get()) ==
+    EXPECT_TRUE(sound->soundIncomplete());
+    EXPECT_TRUE(NextBufferSize(sound.get()) ==
              static_cast<ALint>(oo::AL_STREAM_CHUNK_SIZE));
 
     sound->rewind();
-    OO_CHECK(sound->soundIncomplete());
-    OO_CHECK(NextBufferSize(sound.get()) ==
+    EXPECT_TRUE(sound->soundIncomplete());
+    EXPECT_TRUE(NextBufferSize(sound.get()) ==
              static_cast<ALint>(oo::AL_STREAM_CHUNK_SIZE));
   }
 }
 
 // The C++ API: the factory answers null where the initialiser answered nil.
-OO_TEST(cxxApi) {
-  SetUp();
+TEST(OOALStreamedSound, cxxApi) {
+  ::SetUp();
   {
-    OO_CHECK(!oo::ALStreamedSound::initWithDecoder(nullptr));
+    EXPECT_TRUE(!oo::ALStreamedSound::initWithDecoder(nullptr));
     const std::shared_ptr<oo::ALStreamedSound> sound = oo::ALStreamedSound::initWithDecoder(
         oo::ALSoundDecoder::codecWithPath(BoopPath()).get());
-    OO_CHECK(sound && sound->name() == std::optional<std::string>("boop.ogg"));
-    OO_CHECK(sound->soundIncomplete());
+    EXPECT_TRUE(sound && sound->name() == std::optional<std::string>("boop.ogg"));
+    EXPECT_TRUE(sound->soundIncomplete());
     ALuint buffer = sound->soundBuffer();
-    OO_CHECK(BufferInt(buffer, AL_SIZE) == kBoopBytes &&
+    EXPECT_TRUE(BufferInt(buffer, AL_SIZE) == kBoopBytes &&
              BufferInt(buffer, AL_FREQUENCY) == kBoopRate);
     alDeleteBuffers(1, &buffer);
-    OO_CHECK(!sound->soundIncomplete());
+    EXPECT_TRUE(!sound->soundIncomplete());
     sound->rewind();
-    OO_CHECK(sound->soundIncomplete());
+    EXPECT_TRUE(sound->soundIncomplete());
   }
 }
-
-OO_TEST_MAIN()

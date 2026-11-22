@@ -36,9 +36,10 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "OXPVerifier.h"
 #include "OXPVerifierStage.h"
-#include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Process.hpp"
@@ -81,7 +82,7 @@ VerifierView gView;
 
 void WriteText(const stdfs::path& path, const std::string& text) {
   stdfs::create_directories(path.parent_path());
-  OO_CHECK(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
+  EXPECT_TRUE(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
                              oo::fs::WriteMode::kDirect)
                .has_value());
 }
@@ -116,7 +117,7 @@ void SetUp() {
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
   WriteText(sRoot / "Resources" / "Info-gnustep.plist",
             "{ CFBundleVersion = \"9.9.9-test\"; }");
@@ -314,32 +315,32 @@ std::shared_ptr<oo::OXPVerifierStage> MakeTestStage(const std::string& name) {
 // --- Tests
 // ------------------------------------------------------------------------------------
 
-OO_TEST(noRequest) {
-  SetUp();
+TEST(OOOXPVerifier, noRequest) {
+  ::SetUp();
   {
-    OO_CHECK(!RunWithArguments({}));
-    OO_CHECK(!RunWithArguments({"-load", "Test.oxp"}));
-    OO_CHECK(gEvents.empty());
+    EXPECT_TRUE(!RunWithArguments({}));
+    EXPECT_TRUE(!RunWithArguments({"-load", "Test.oxp"}));
+    EXPECT_TRUE(gEvents.empty());
   }
 }
 
 // -verify-oxp or --verify-oxp is answered YES even when there is nothing to
 // verify.
-OO_TEST(requestWithoutAnOXP) {
-  SetUp();
+TEST(OOOXPVerifier, requestWithoutAnOXP) {
+  ::SetUp();
   {
-    OO_CHECK(RunWithArguments({"-verify-oxp"}));
-    OO_CHECK(RunWithArguments({"--verify-oxp", "NoSuch.oxp"}));
-    OO_CHECK(RunWithArguments({"-verify-oxp", "a-file.txt"}));
-    OO_CHECK(gEvents.empty());
+    EXPECT_TRUE(RunWithArguments({"-verify-oxp"}));
+    EXPECT_TRUE(RunWithArguments({"--verify-oxp", "NoSuch.oxp"}));
+    EXPECT_TRUE(RunWithArguments({"-verify-oxp", "a-file.txt"}));
+    EXPECT_TRUE(gEvents.empty());
   }
 }
 
-OO_TEST(verification) {
-  SetUp();
+TEST(OOOXPVerifier, verification) {
+  ::SetUp();
   {
     const std::string path = (sRoot / "Test.oxp").generic_string();
-    OO_CHECK(RunWithArguments({"-verify-oxp", path}));
+    EXPECT_TRUE(RunWithArguments({"-verify-oxp", path}));
 
     // Registration in the configuration's (sorted, distinct) order, X excluded,
     // the unknown class, the nameless stage and the second "Dup" refused, Sub
@@ -351,31 +352,29 @@ OO_TEST(verification) {
         "run D", "run A", "run B", "run Dup1", "should E",     "run F",
         "run G", "run H", "run K", "run L",    "Late refused", "run Sub",
     };
-    OO_CHECK(gEvents == expected);
+    EXPECT_TRUE(gEvents == expected);
     if (gEvents != expected) {
       for (const std::string& event : gEvents)
         std::printf("  event: %s\n", event.c_str());
     }
 
-    OO_CHECK(gView.seen);
-    OO_CHECK(gView.path == std::optional<std::string>(path));
-    OO_CHECK(gView.displayName == std::optional<std::string>("Test.oxp"));
-    OO_CHECK(gView.value.isNumber() && gView.value.int64Value() == 42);
-    OO_CHECK(gView.missing.isNull());
-    OO_CHECK(gView.array.isArray() && gView.array.count() == 4);
-    OO_CHECK(gView.notAnArray.isNull());
-    OO_CHECK(gView.dictionary.isDict() &&
+    EXPECT_TRUE(gView.seen);
+    EXPECT_TRUE(gView.path == std::optional<std::string>(path));
+    EXPECT_TRUE(gView.displayName == std::optional<std::string>("Test.oxp"));
+    EXPECT_TRUE(gView.value.isNumber() && gView.value.int64Value() == 42);
+    EXPECT_TRUE(gView.missing.isNull());
+    EXPECT_TRUE(gView.array.isArray() && gView.array.count() == 4);
+    EXPECT_TRUE(gView.notAnArray.isNull());
+    EXPECT_TRUE(gView.dictionary.isDict() &&
              gView.dictionary.get<std::string>("key") == "value");
-    OO_CHECK(gView.notADictionary.isNull());
-    OO_CHECK(gView.string == std::optional<std::string>("text"));
-    OO_CHECK(gView.number == std::optional<std::string>("42"));
-    OO_CHECK(!gView.notAString.has_value());
-    OO_CHECK(gView.set == std::optional<std::vector<std::string>>(
+    EXPECT_TRUE(gView.notADictionary.isNull());
+    EXPECT_TRUE(gView.string == std::optional<std::string>("text"));
+    EXPECT_TRUE(gView.number == std::optional<std::string>("42"));
+    EXPECT_TRUE(!gView.notAString.has_value());
+    EXPECT_TRUE(gView.set == std::optional<std::vector<std::string>>(
                               std::vector<std::string>{"a", "b"}));
-    OO_CHECK(!gView.notASet.has_value());
-    OO_CHECK(gView.foundA);
-    OO_CHECK(gView.foundNothing);
+    EXPECT_TRUE(!gView.notASet.has_value());
+    EXPECT_TRUE(gView.foundA);
+    EXPECT_TRUE(gView.foundNothing);
   }
 }
-
-OO_TEST_MAIN()

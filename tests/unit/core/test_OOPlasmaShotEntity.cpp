@@ -22,12 +22,13 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "Color.h"
 #include "PlasmaBurstEntity.h"
 #include "PlasmaShotEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -168,61 +169,61 @@ Entity* Ship() {
 
 }  // namespace
 
-OO_TEST(shotIsMade) {
+TEST(OOPlasmaShotEntity, shotIsMade) {
   {
-    SetUp(10.0);
+    ::SetUp(10.0);
     Entity* shot = RedShot();
-    OO_CHECK(shot != nullptr &&
+    EXPECT_TRUE(shot != nullptr &&
              dynamic_cast<oo::LightParticleEntity*>(shot) != nullptr);
-    OO_CHECK(HPvector_equal(shot->getPosition(), make_HPvector(1, 2, 3)));
+    EXPECT_TRUE(HPvector_equal(shot->getPosition(), make_HPvector(1, 2, 3)));
     Vector v = shot->getVelocity();
-    OO_CHECK(v.x == 4 && v.y == 5 && v.z == 6);
-    OO_CHECK(shot->getEnergy() == 7.0f && shot->collisionRadius() == 2.0f);
-    OO_CHECK(Particle(shot)->diameter() == 12.0f);
-    OO_CHECK(shot->status() == oo::EntityStatus::kEffect &&
+    EXPECT_TRUE(v.x == 4 && v.y == 5 && v.z == 6);
+    EXPECT_TRUE(shot->getEnergy() == 7.0f && shot->collisionRadius() == 2.0f);
+    EXPECT_TRUE(Particle(shot)->diameter() == 12.0f);
+    EXPECT_TRUE(shot->status() == oo::EntityStatus::kEffect &&
              shot->getScanClass() == oo::ScanClass::kNoDraw && shot->isEffect());
-    OO_CHECK(shot->getSpawnTime() == 10.0f);
+    EXPECT_TRUE(shot->getSpawnTime() == 10.0f);
     const GLfloat* c = ColorComponents(shot);
-    OO_CHECK(c[0] == 1.0f && c[1] == 0.0f && c[2] == 0.0f &&
+    EXPECT_TRUE(c[0] == 1.0f && c[1] == 0.0f && c[2] == 0.0f &&
              c[3] == 1.0f);  // always opaque
   }
 }
 
-OO_TEST(activationDelay) {
+TEST(OOPlasmaShotEntity, activationDelay) {
   {
-    SetUp(10.0);
+    ::SetUp(10.0);
     Entity* shot = RedShot();
-    OO_CHECK(!shot->canCollide());
+    EXPECT_TRUE(!shot->canCollide());
     sUniverse->_time = 10.04;
-    OO_CHECK(!shot->canCollide());
+    EXPECT_TRUE(!shot->canCollide());
     sUniverse->_time = 10.06;
-    OO_CHECK(shot->canCollide());
+    EXPECT_TRUE(shot->canCollide());
   }
 }
 
-OO_TEST(collisions) {
+TEST(OOPlasmaShotEntity, collisions) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     Entity* shot = RedShot();
     Entity* plain = oo::MadeEntity(oo::makeShared<Entity>());
     Entity* effect = oo::MadeEntity(oo::makeShared<TestEffect>());
 
     // No owner: a plain entity's root ship is nil too.
-    OO_CHECK(!shot->checkCloseCollisionWith(plain));
+    EXPECT_TRUE(!shot->checkCloseCollisionWith(plain));
 
     Entity* ship = Ship();
     shot->setOwner(ship);
-    OO_CHECK(shot->checkCloseCollisionWith(plain));
-    OO_CHECK(!shot->checkCloseCollisionWith(effect));
-    OO_CHECK(!shot->checkCloseCollisionWith(ship));  // its own ship
-    OO_CHECK(shot->checkCloseCollisionWith(Ship()));
-    OO_CHECK(shot->checkCloseCollisionWith(nullptr));
+    EXPECT_TRUE(shot->checkCloseCollisionWith(plain));
+    EXPECT_TRUE(!shot->checkCloseCollisionWith(effect));
+    EXPECT_TRUE(!shot->checkCloseCollisionWith(ship));  // its own ship
+    EXPECT_TRUE(shot->checkCloseCollisionWith(Ship()));
+    EXPECT_TRUE(shot->checkCloseCollisionWith(nullptr));
   }
 }
 
-OO_TEST(hitDamagesAndBursts) {
+TEST(OOPlasmaShotEntity, hitDamagesAndBursts) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     Entity* shot = RedShot();
     Entity* ship = Ship();
     shot->setOwner(ship);
@@ -231,35 +232,33 @@ OO_TEST(hitDamagesAndBursts) {
     SetColliding(shot, ship);
     sUniverse->_time = 0.1;
     shot->update(0.1);
-    OO_CHECK(sUniverse->_removed == nullptr && sUniverse->_added == nullptr);
+    EXPECT_TRUE(sUniverse->_removed == nullptr && sUniverse->_added == nullptr);
 
     TestTarget* target =
         static_cast<TestTarget*>(oo::MadeEntity(oo::makeShared<TestTarget>()));
     SetColliding(shot, target);
     shot->update(0.1);
-    OO_CHECK(target->_hits == 1 && target->_amount == 7.0 &&
+    EXPECT_TRUE(target->_hits == 1 && target->_amount == 7.0 &&
              target->_from == shot && target->_becauseOf == ship);
-    OO_CHECK(target->_weapon == "EQ_WEAPON_PLASMA_SHOT");
-    OO_CHECK(sUniverse->_removed == shot);
+    EXPECT_TRUE(target->_weapon == "EQ_WEAPON_PLASMA_SHOT");
+    EXPECT_TRUE(sUniverse->_removed == shot);
     Entity* burst = sUniverse->_added;
-    OO_CHECK(burst != nullptr && burst != shot &&
+    EXPECT_TRUE(burst != nullptr && burst != shot &&
              dynamic_cast<oo::PlasmaBurstEntity*>(burst) !=
                  nullptr);  // a C++ entity
-    OO_CHECK(HPvector_equal(burst->getPosition(), shot->getPosition()));
+    EXPECT_TRUE(HPvector_equal(burst->getPosition(), shot->getPosition()));
   }
 }
 
-OO_TEST(expires) {
+TEST(OOPlasmaShotEntity, expires) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     Entity* shot = RedShot();
     sUniverse->_time = 1.0;
     shot->update(1.0);
-    OO_CHECK(sUniverse->_removed == nullptr);
+    EXPECT_TRUE(sUniverse->_removed == nullptr);
     sUniverse->_time = 2.5;
     shot->update(1.5);
-    OO_CHECK(sUniverse->_removed == shot);
+    EXPECT_TRUE(sUniverse->_removed == shot);
   }
 }
-
-OO_TEST_MAIN()

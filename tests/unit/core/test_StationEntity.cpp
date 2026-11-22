@@ -14,6 +14,8 @@
 	test_StationEntity
 */
 
+#include <gtest/gtest.h>
+
 #include "DockEntity.h"
 #include "PlayerEntity.h"
 #include "StationEntity.h"
@@ -35,7 +37,6 @@
 #include "OOJSStation.h"
 #include "CallByName.h"	// oo::EntityRespondsToName / oo::CallEntityByName
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <string>
@@ -158,10 +159,10 @@ bool Near(HPVector a, HPVector b)	{ return std::fabs(a.x - b.x) < 1e-3 && std::f
 
 // The initialiser and the set-up from the definition: every key the station
 // reads, and the virtual dock it makes because it has none.
-OO_TEST(initAndSetUpFromDictionary)
+TEST(StationEntity, initAndSetUpFromDictionary)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("coriolis", {
 			{ "port_radius", oo::PList(750.0) },
 			{ "equivalent_tech_level", oo::PList(9) },
@@ -182,201 +183,201 @@ OO_TEST(initAndSetUpFromDictionary)
 			{ "allows_auto_docking", oo::PList(false) },
 			{ "interstellar_undocking", oo::PList(true) },
 		});
-		OO_CHECK(station != nullptr);
-		OO_CHECK((station != nullptr ? station->getIsShip() : false) && (station != nullptr ? station->getIsStation() : false) && !(station != nullptr ? station->getIsPlayer() : false));
-		OO_CHECK((station != nullptr ? station->shipDataKey() : std::optional<std::string>()) == std::optional<std::string>("coriolis"));
-		OO_CHECK((station != nullptr ? station->getHasBreakPattern() : false));
-		OO_CHECK((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kGreen);
-		OO_CHECK((station != nullptr ? station->getEquivalentTechLevel() : 0) == 9);
-		OO_CHECK((station != nullptr ? station->countOfDockedContractors() : unsigned{}) == 2);
-		OO_CHECK((station != nullptr ? station->countOfDockedPolice() : unsigned{}) == 5);
-		OO_CHECK((station != nullptr ? station->countOfDockedDefenders() : unsigned{}) == 4);
-		OO_CHECK((station != nullptr ? station->getEquipmentPriceFactor() : 0.0f) == 0.5f);		// at least 0.5
-		OO_CHECK(!(station != nullptr ? station->getHasNPCTraffic() : false));
-		OO_CHECK((station != nullptr ? station->suppressArrivalReports() : false));
-		OO_CHECK((station != nullptr ? station->getAllegiance() : std::optional<std::string>()) == std::optional<std::string>("pirate"));
-		OO_CHECK((station != nullptr ? station->getMarketCapacity() : 0) == 50);
-		OO_CHECK((station != nullptr ? station->getMarketDefinition() : oo::PList()).isArray() && (station != nullptr ? station->getMarketDefinition() : oo::PList()).count() == 2);
-		OO_CHECK((station != nullptr ? station->getMarketScriptName() : std::optional<std::string>()) == std::optional<std::string>("market.js"));
-		OO_CHECK((station != nullptr ? station->getMarketMonitored() : false) && !(station != nullptr ? station->getMarketBroadcast() : false));	// not the main station
-		OO_CHECK((station != nullptr ? station->getRequiresDockingClearance() : false));
-		OO_CHECK((station != nullptr ? station->getAllowsFastDocking() : false) && !(station != nullptr ? station->getAllowsAutoDocking() : false));
-		OO_CHECK((station != nullptr ? station->getInterstellarUndockingAllowed() : false));
-		OO_CHECK((station != nullptr ? station->getAllowsSaving() : false) == (UNIVERSE != nullptr ? UNIVERSE->deterministicPopulation() : false));	// a fixed station (no top speed)
-		OO_CHECK(vector_equal((station != nullptr ? station->virtualPortDimensions() : Vector{}), make_vector(69, 69, 250)));
-		OO_CHECK((station != nullptr ? station->playerReservedDock() : (DockEntity *)nullptr) == nullptr);
-		OO_CHECK((station != nullptr ? station->group() : (oo::ShipGroup *)nullptr) != nullptr && (station != nullptr ? station->group() : (oo::ShipGroup *)nullptr) == (station != nullptr ? station->stationGroup() : (oo::ShipGroup *)nullptr));
-		OO_CHECK(!(station != nullptr ? station->getCrew() : std::optional<std::vector<std::shared_ptr<oo::Character>>>()).has_value());
+		EXPECT_TRUE(station != nullptr);
+		EXPECT_TRUE((station != nullptr ? station->getIsShip() : false) && (station != nullptr ? station->getIsStation() : false) && !(station != nullptr ? station->getIsPlayer() : false));
+		EXPECT_TRUE((station != nullptr ? station->shipDataKey() : std::optional<std::string>()) == std::optional<std::string>("coriolis"));
+		EXPECT_TRUE((station != nullptr ? station->getHasBreakPattern() : false));
+		EXPECT_TRUE((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kGreen);
+		EXPECT_TRUE((station != nullptr ? station->getEquivalentTechLevel() : 0) == 9);
+		EXPECT_TRUE((station != nullptr ? station->countOfDockedContractors() : unsigned{}) == 2);
+		EXPECT_TRUE((station != nullptr ? station->countOfDockedPolice() : unsigned{}) == 5);
+		EXPECT_TRUE((station != nullptr ? station->countOfDockedDefenders() : unsigned{}) == 4);
+		EXPECT_TRUE((station != nullptr ? station->getEquipmentPriceFactor() : 0.0f) == 0.5f);		// at least 0.5
+		EXPECT_TRUE(!(station != nullptr ? station->getHasNPCTraffic() : false));
+		EXPECT_TRUE((station != nullptr ? station->suppressArrivalReports() : false));
+		EXPECT_TRUE((station != nullptr ? station->getAllegiance() : std::optional<std::string>()) == std::optional<std::string>("pirate"));
+		EXPECT_TRUE((station != nullptr ? station->getMarketCapacity() : 0) == 50);
+		EXPECT_TRUE((station != nullptr ? station->getMarketDefinition() : oo::PList()).isArray() && (station != nullptr ? station->getMarketDefinition() : oo::PList()).count() == 2);
+		EXPECT_TRUE((station != nullptr ? station->getMarketScriptName() : std::optional<std::string>()) == std::optional<std::string>("market.js"));
+		EXPECT_TRUE((station != nullptr ? station->getMarketMonitored() : false) && !(station != nullptr ? station->getMarketBroadcast() : false));	// not the main station
+		EXPECT_TRUE((station != nullptr ? station->getRequiresDockingClearance() : false));
+		EXPECT_TRUE((station != nullptr ? station->getAllowsFastDocking() : false) && !(station != nullptr ? station->getAllowsAutoDocking() : false));
+		EXPECT_TRUE((station != nullptr ? station->getInterstellarUndockingAllowed() : false));
+		EXPECT_TRUE((station != nullptr ? station->getAllowsSaving() : false) == (UNIVERSE != nullptr ? UNIVERSE->deterministicPopulation() : false));	// a fixed station (no top speed)
+		EXPECT_TRUE(vector_equal((station != nullptr ? station->virtualPortDimensions() : Vector{}), make_vector(69, 69, 250)));
+		EXPECT_TRUE((station != nullptr ? station->playerReservedDock() : (DockEntity *)nullptr) == nullptr);
+		EXPECT_TRUE((station != nullptr ? station->group() : (oo::ShipGroup *)nullptr) != nullptr && (station != nullptr ? station->group() : (oo::ShipGroup *)nullptr) == (station != nullptr ? station->stationGroup() : (oo::ShipGroup *)nullptr));
+		EXPECT_TRUE(!(station != nullptr ? station->getCrew() : std::optional<std::vector<std::shared_ptr<oo::Character>>>()).has_value());
 
 		// No docks: a virtual one, at the port radius.
-		OO_CHECK(sVirtualDocks == 1);
-		OO_CHECK(sVirtualDockDict.get<std::string>("subentity_key", "") == "oolite-dock-virtual");
-		OO_CHECK(sVirtualDockDict.get<bool>("is_dock", false) && sVirtualDockDict.get<bool>("_is_virtual_dock", false));
-		OO_CHECK(sVirtualDockDict.get<std::string>("dock_label", "") == "the docking bay");
+		EXPECT_TRUE(sVirtualDocks == 1);
+		EXPECT_TRUE(sVirtualDockDict.get<std::string>("subentity_key", "") == "oolite-dock-virtual");
+		EXPECT_TRUE(sVirtualDockDict.get<bool>("is_dock", false) && sVirtualDockDict.get<bool>("_is_virtual_dock", false));
+		EXPECT_TRUE(sVirtualDockDict.get<std::string>("dock_label", "") == "the docking bay");
 		const oo::PList *position = sVirtualDockDict.find("position");
-		OO_CHECK(position != nullptr && position->get<double>("z", 0) == 750.0 && position->get<double>("x", 1) == 0.0);
-		OO_CHECK((station != nullptr ? station->dockSubEntities() : std::vector<oo::EntityHold>()).empty());
+		EXPECT_TRUE(position != nullptr && position->get<double>("z", 0) == 750.0 && position->get<double>("x", 1) == 0.0);
+		EXPECT_TRUE((station != nullptr ? station->dockSubEntities() : std::vector<oo::EntityHold>()).empty());
 	}
 }
 
 
 // The defaults of every key the station reads.
-OO_TEST(setUpDefaults)
+TEST(StationEntity, setUpDefaults)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("plain");
-		OO_CHECK(station != nullptr);
-		OO_CHECK((station != nullptr ? station->countOfDockedContractors() : unsigned{}) == 3 && (station != nullptr ? station->countOfDockedDefenders() : unsigned{}) == 3);
-		OO_CHECK((station != nullptr ? station->countOfDockedPolice() : unsigned{}) == STATION_MAX_POLICE);
-		OO_CHECK((station != nullptr ? station->getEquipmentPriceFactor() : 0.0f) == 1.0f);
-		OO_CHECK((station != nullptr ? station->getHasNPCTraffic() : false));		// a fixed station has traffic
-		OO_CHECK(!(station != nullptr ? station->suppressArrivalReports() : false));
-		OO_CHECK(!(station != nullptr ? station->getAllegiance() : std::optional<std::string>()).has_value());
-		OO_CHECK((station != nullptr ? station->getMarketCapacity() : 0) == MAIN_SYSTEM_MARKET_LIMIT);
-		OO_CHECK((station != nullptr ? station->getMarketDefinition() : oo::PList()).isNull());
-		OO_CHECK(!(station != nullptr ? station->getMarketScriptName() : std::optional<std::string>()).has_value());
-		OO_CHECK(!(station != nullptr ? station->getMarketMonitored() : false) && (station != nullptr ? station->getMarketBroadcast() : false));
-		OO_CHECK((station != nullptr ? station->getRequiresDockingClearance() : false) == (UNIVERSE != nullptr ? UNIVERSE->dockingClearanceProtocolActive() : false));
-		OO_CHECK(!(station != nullptr ? station->getAllowsFastDocking() : false) && (station != nullptr ? station->getAllowsAutoDocking() : false));
-		OO_CHECK(!(station != nullptr ? station->getInterstellarUndockingAllowed() : false));
-		OO_CHECK(!(station != nullptr ? station->isRotatingStation() : false) || (station != nullptr ? station->shipInfoDictionary() : oo::PList()).find("roles") == nullptr);
-		OO_CHECK(!(station != nullptr ? station->marketOverrideName() : std::optional<std::string>()).has_value());
-		OO_CHECK(!(station != nullptr ? station->hasShipyard() : false));
-		OO_CHECK(sVirtualDocks == 1);
+		EXPECT_TRUE(station != nullptr);
+		EXPECT_TRUE((station != nullptr ? station->countOfDockedContractors() : unsigned{}) == 3 && (station != nullptr ? station->countOfDockedDefenders() : unsigned{}) == 3);
+		EXPECT_TRUE((station != nullptr ? station->countOfDockedPolice() : unsigned{}) == STATION_MAX_POLICE);
+		EXPECT_TRUE((station != nullptr ? station->getEquipmentPriceFactor() : 0.0f) == 1.0f);
+		EXPECT_TRUE((station != nullptr ? station->getHasNPCTraffic() : false));		// a fixed station has traffic
+		EXPECT_TRUE(!(station != nullptr ? station->suppressArrivalReports() : false));
+		EXPECT_TRUE(!(station != nullptr ? station->getAllegiance() : std::optional<std::string>()).has_value());
+		EXPECT_TRUE((station != nullptr ? station->getMarketCapacity() : 0) == MAIN_SYSTEM_MARKET_LIMIT);
+		EXPECT_TRUE((station != nullptr ? station->getMarketDefinition() : oo::PList()).isNull());
+		EXPECT_TRUE(!(station != nullptr ? station->getMarketScriptName() : std::optional<std::string>()).has_value());
+		EXPECT_TRUE(!(station != nullptr ? station->getMarketMonitored() : false) && (station != nullptr ? station->getMarketBroadcast() : false));
+		EXPECT_TRUE((station != nullptr ? station->getRequiresDockingClearance() : false) == (UNIVERSE != nullptr ? UNIVERSE->dockingClearanceProtocolActive() : false));
+		EXPECT_TRUE(!(station != nullptr ? station->getAllowsFastDocking() : false) && (station != nullptr ? station->getAllowsAutoDocking() : false));
+		EXPECT_TRUE(!(station != nullptr ? station->getInterstellarUndockingAllowed() : false));
+		EXPECT_TRUE(!(station != nullptr ? station->isRotatingStation() : false) || (station != nullptr ? station->shipInfoDictionary() : oo::PList()).find("roles") == nullptr);
+		EXPECT_TRUE(!(station != nullptr ? station->marketOverrideName() : std::optional<std::string>()).has_value());
+		EXPECT_TRUE(!(station != nullptr ? station->hasShipyard() : false));
+		EXPECT_TRUE(sVirtualDocks == 1);
 	}
 }
 
 
 // A virtual dock that cannot be made: -setUpSubEntities answers NO, which ShipEntity's set-up
 // ignores, so the station is still made.
-OO_TEST(virtualDockThatFails)
+TEST(StationEntity, virtualDockThatFails)
 {
 	{
-		SetUp();
+		::SetUp();
 		sFailVirtualDock = true;
 		TestStation *station = MakeStation("dockless");
-		OO_CHECK(station != nullptr && sVirtualDocks == 1);
-		OO_CHECK(!(station != nullptr ? station->setUpSubEntities() : false) && sVirtualDocks == 2);
+		EXPECT_TRUE(station != nullptr && sVirtualDocks == 1);
+		EXPECT_TRUE(!(station != nullptr ? station->setUpSubEntities() : false) && sVirtualDocks == 2);
 		sFailVirtualDock = false;
-		OO_CHECK((station != nullptr ? station->setUpSubEntities() : false) && sVirtualDocks == 3);
+		EXPECT_TRUE((station != nullptr ? station->setUpSubEntities() : false) && sVirtualDocks == 3);
 	}
 }
 
 
 // Stations of any scan class are piloted unless explicitly unpiloted or a hulk.
-OO_TEST(isUnpiloted)
+TEST(StationEntity, isUnpiloted)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("rock", { { "scan_class", oo::PList(std::string("CLASS_CARGO")) } });
-		OO_CHECK((station != nullptr ? station->isUnpiloted() : false));			// unpiloted = yes
+		EXPECT_TRUE((station != nullptr ? station->isUnpiloted() : false));			// unpiloted = yes
 		SetExplicitlyUnpiloted(station, false);
-		OO_CHECK(!(station != nullptr ? station->isUnpiloted() : false));			// a ship of OOScanClass::kCargo would be
+		EXPECT_TRUE(!(station != nullptr ? station->isUnpiloted() : false));			// a ship of OOScanClass::kCargo would be
 		if (station != nullptr)  station->setHulk(true);
-		OO_CHECK((station != nullptr ? station->isUnpiloted() : false));
+		EXPECT_TRUE((station != nullptr ? station->isUnpiloted() : false));
 		if (station != nullptr)  station->setHulk(false);
-		OO_CHECK(!(station != nullptr ? station->isUnpiloted() : false));
+		EXPECT_TRUE(!(station != nullptr ? station->isUnpiloted() : false));
 	}
 }
 
 
-OO_TEST(flagsAndCounts)
+TEST(StationEntity, flagsAndCounts)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("flags");
 		if (station != nullptr)  station->setEquivalentTechLevel(4);
-		OO_CHECK((station != nullptr ? station->getEquivalentTechLevel() : 0) == 4);
+		EXPECT_TRUE((station != nullptr ? station->getEquivalentTechLevel() : 0) == 4);
 
 		if (station != nullptr)  station->setHasNPCTraffic(false);
-		OO_CHECK(!(station != nullptr ? station->getHasNPCTraffic() : false));
+		EXPECT_TRUE(!(station != nullptr ? station->getHasNPCTraffic() : false));
 		if (station != nullptr)  station->setHasNPCTraffic((bool)7);
-		OO_CHECK((station != nullptr ? station->getHasNPCTraffic() : false) == true);
+		EXPECT_TRUE((station != nullptr ? station->getHasNPCTraffic() : false) == true);
 
 		if (station != nullptr)  station->setRequiresDockingClearance((bool)2);
-		OO_CHECK((station != nullptr ? station->getRequiresDockingClearance() : false) == true);
+		EXPECT_TRUE((station != nullptr ? station->getRequiresDockingClearance() : false) == true);
 		if (station != nullptr)  station->setRequiresDockingClearance(false);
-		OO_CHECK((station != nullptr ? station->getRequiresDockingClearance() : false) == false);
+		EXPECT_TRUE((station != nullptr ? station->getRequiresDockingClearance() : false) == false);
 
 		if (station != nullptr)  station->setAllowsFastDocking((bool)4);
-		OO_CHECK((station != nullptr ? station->getAllowsFastDocking() : false) == true);
+		EXPECT_TRUE((station != nullptr ? station->getAllowsFastDocking() : false) == true);
 		if (station != nullptr)  station->setAllowsAutoDocking(false);
-		OO_CHECK((station != nullptr ? station->getAllowsAutoDocking() : false) == false);
+		EXPECT_TRUE((station != nullptr ? station->getAllowsAutoDocking() : false) == false);
 
 		if (station != nullptr)  station->setSuppressArrivalReports((bool)8);
-		OO_CHECK((station != nullptr ? station->suppressArrivalReports() : false) == true);
+		EXPECT_TRUE((station != nullptr ? station->suppressArrivalReports() : false) == true);
 		if (station != nullptr)  station->setHasBreakPattern(false);
-		OO_CHECK((station != nullptr ? station->getHasBreakPattern() : false) == false);
+		EXPECT_TRUE((station != nullptr ? station->getHasBreakPattern() : false) == false);
 		if (station != nullptr)  station->setHasBreakPattern(true);
-		OO_CHECK((station != nullptr ? station->getHasBreakPattern() : false) == true);
+		EXPECT_TRUE((station != nullptr ? station->getHasBreakPattern() : false) == true);
 	}
 }
 
 
 // The shipyard is held as given and edited in place; the interfaces are a live map.
-OO_TEST(shipyardAndInterfaces)
+TEST(StationEntity, shipyardAndInterfaces)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("yard");
-		OO_CHECK((station != nullptr ? station->getLocalShipyard() : (std::vector<oo::PList> *)nullptr) == nullptr);	// not generated yet
+		EXPECT_TRUE((station != nullptr ? station->getLocalShipyard() : (std::vector<oo::PList> *)nullptr) == nullptr);	// not generated yet
 		const std::vector<oo::PList> given{ oo::PList(oo::PList::Dict{ { "id", oo::PList(std::string("x")) } }) };
 		if (station != nullptr)  station->setLocalShipyard(given);
 		std::vector<oo::PList> *shipyard = (station != nullptr ? station->getLocalShipyard() : (std::vector<oo::PList> *)nullptr);
-		OO_CHECK(shipyard != nullptr && shipyard->size() == 1);
+		EXPECT_TRUE(shipyard != nullptr && shipyard->size() == 1);
 		shipyard->push_back(oo::PList());
-		OO_CHECK((station != nullptr ? station->getLocalShipyard() : (std::vector<oo::PList> *)nullptr)->size() == 2);
+		EXPECT_TRUE((station != nullptr ? station->getLocalShipyard() : (std::vector<oo::PList> *)nullptr)->size() == 2);
 
 		auto *interfaces = (station != nullptr ? station->getLocalInterfaces() : (std::map<std::string, std::shared_ptr<OOJSInterfaceDefinition>, std::less<>> *)nullptr);
-		OO_CHECK(interfaces != nullptr && interfaces->empty());
+		EXPECT_TRUE(interfaces != nullptr && interfaces->empty());
 		if (station != nullptr)  station->setInterfaceDefinition(nullptr, "absent");	// removing nothing
-		OO_CHECK((station != nullptr ? station->getLocalInterfaces() : (std::map<std::string, std::shared_ptr<OOJSInterfaceDefinition>, std::less<>> *)nullptr)->empty());
+		EXPECT_TRUE((station != nullptr ? station->getLocalInterfaces() : (std::map<std::string, std::shared_ptr<OOJSInterfaceDefinition>, std::less<>> *)nullptr)->empty());
 
 		StationEntity *none = nullptr;
-		OO_CHECK((none != nullptr ? none->getLocalShipyard() : (std::vector<oo::PList> *)nullptr) == nullptr && (none != nullptr ? none->getLocalInterfaces() : (std::map<std::string, std::shared_ptr<OOJSInterfaceDefinition>, std::less<>> *)nullptr) == nullptr);
+		EXPECT_TRUE((none != nullptr ? none->getLocalShipyard() : (std::vector<oo::PList> *)nullptr) == nullptr && (none != nullptr ? none->getLocalInterfaces() : (std::map<std::string, std::shared_ptr<OOJSInterfaceDefinition>, std::less<>> *)nullptr) == nullptr);
 	}
 }
 
 
 // The shipdata keys the station reads after the set-up: rotation, the market override, the
 // shipyard.
-OO_TEST(shipInfoQueries)
+TEST(StationEntity, shipInfoQueries)
 {
 	{
-		SetUp();
-		OO_CHECK(IsRotatingStation(MakeStation("r1", { { "rotating", oo::PList(true) }, { "roles", oo::PList(std::string("carrier")) } })));
-		OO_CHECK(IsRotatingStation(MakeStation("r2", { { "roles", oo::PList(std::string("station rotating-station")) } })));
-		OO_CHECK(!IsRotatingStation(MakeStation("r3", { { "roles", oo::PList(std::string("carrier")) } })));
-		OO_CHECK(IsRotatingStation(MakeStation("r4")));		// no roles at all: legacy YES
+		::SetUp();
+		EXPECT_TRUE(IsRotatingStation(MakeStation("r1", { { "rotating", oo::PList(true) }, { "roles", oo::PList(std::string("carrier")) } })));
+		EXPECT_TRUE(IsRotatingStation(MakeStation("r2", { { "roles", oo::PList(std::string("station rotating-station")) } })));
+		EXPECT_TRUE(!IsRotatingStation(MakeStation("r3", { { "roles", oo::PList(std::string("carrier")) } })));
+		EXPECT_TRUE(IsRotatingStation(MakeStation("r4")));		// no roles at all: legacy YES
 
-		OO_CHECK(MarketOverrideName(MakeStation("m1", { { "market", oo::PList(std::string("special")) } })) == std::optional<std::string>("special"));
-		OO_CHECK(MarketOverrideName(MakeStation("m2", { { "market", oo::PList(3) } })) == std::optional<std::string>("3"));
-		OO_CHECK(!MarketOverrideName(MakeStation("m3", { { "market", oo::PList(oo::PList::Array{}) } })).has_value());
+		EXPECT_TRUE(MarketOverrideName(MakeStation("m1", { { "market", oo::PList(std::string("special")) } })) == std::optional<std::string>("special"));
+		EXPECT_TRUE(MarketOverrideName(MakeStation("m2", { { "market", oo::PList(3) } })) == std::optional<std::string>("3"));
+		EXPECT_TRUE(!MarketOverrideName(MakeStation("m3", { { "market", oo::PList(oo::PList::Array{}) } })).has_value());
 
-		OO_CHECK(HasShipyard(MakeStation("s1", { { "has_shipyard", oo::PList(true) } })));
-		OO_CHECK(HasShipyard(MakeStation("s2", { { "hasShipyard", oo::PList(std::string("yes")) } })));
-		OO_CHECK(!HasShipyard(MakeStation("s3", { { "has_shipyard", oo::PList(false) }, { "hasShipyard", oo::PList(true) } })));
-		OO_CHECK(!HasShipyard(MakeStation("s4")));
+		EXPECT_TRUE(HasShipyard(MakeStation("s1", { { "has_shipyard", oo::PList(true) } })));
+		EXPECT_TRUE(HasShipyard(MakeStation("s2", { { "hasShipyard", oo::PList(std::string("yes")) } })));
+		EXPECT_TRUE(!HasShipyard(MakeStation("s3", { { "has_shipyard", oo::PList(false) }, { "hasShipyard", oo::PList(true) } })));
+		EXPECT_TRUE(!HasShipyard(MakeStation("s4")));
 	}
 }
 
 
-OO_TEST(positionPlanetAndDescription)
+TEST(StationEntity, positionPlanetAndDescription)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("where", { { "name", oo::PList(std::string("Coriolis")) } });
 		if (station != nullptr)  station->setPosition(make_HPvector(1, 2, 3));
 		if (station != nullptr)  station->setOrientation(kIdentityQuaternion);
 		HPVector forward = vectorToHPVector(vector_forward_from_quaternion(kIdentityQuaternion));
-		OO_CHECK(Near((station != nullptr ? station->beaconPosition() : HPVector{}), HPvector_add(make_HPvector(1, 2, 3), HPvector_multiply_scalar(forward, 10000.0))));
+		EXPECT_TRUE(Near((station != nullptr ? station->beaconPosition() : HPVector{}), HPvector_add(make_HPvector(1, 2, 3), HPvector_multiply_scalar(forward, 10000.0))));
 
 		if (station != nullptr)  station->setPlanet(nullptr);
-		OO_CHECK((station != nullptr ? station->getPlanet() : (oo::PlanetEntity *)nullptr) == nullptr);
+		EXPECT_TRUE((station != nullptr ? station->getPlanet() : (oo::PlanetEntity *)nullptr) == nullptr);
 
 		const std::optional<std::string> components = (station != nullptr ? station->descriptionComponents() : std::optional<std::string>());
-		OO_CHECK(components.has_value() && components->rfind("\"Coriolis\" \"Coriolis\" ", 0) == 0);	// the ship's own after the station's name
+		EXPECT_TRUE(components.has_value() && components->rfind("\"Coriolis\" \"Coriolis\" ", 0) == 0);	// the ship's own after the station's name
 
 #ifndef NDEBUG
 		if (station != nullptr)  station->dumpSelfState();		// logs; nothing to check but that it runs
@@ -389,24 +390,24 @@ OO_TEST(positionPlanetAndDescription)
 
 // A station's object holds its C++ part, a StationEntity, and from C++ the ship's virtual members
 // reach the station's.
-OO_TEST(objCStationPartIsAStation)
+TEST(StationEntity, objCStationPartIsAStation)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("crossing", { { "name", oo::PList(std::string("Dodo")) } });
 		Entity *asEntity = station;
 		StationEntity *part = station;
-		OO_CHECK(part != nullptr);
-		OO_CHECK(dynamic_cast<StationEntity *>(asEntity) == part);
-		OO_CHECK(oo::ToStation(asEntity) == part);
-		OO_CHECK(part->getHasBreakPattern() && part->getMarketCapacity() == MAIN_SYSTEM_MARKET_LIMIT);
+		EXPECT_TRUE(part != nullptr);
+		EXPECT_TRUE(dynamic_cast<StationEntity *>(asEntity) == part);
+		EXPECT_TRUE(oo::ToStation(asEntity) == part);
+		EXPECT_TRUE(part->getHasBreakPattern() && part->getMarketCapacity() == MAIN_SYSTEM_MARKET_LIMIT);
 
 		ShipEntity *asShip = part;
-		OO_CHECK(asShip->isUnpiloted());		// unpiloted = yes
+		EXPECT_TRUE(asShip->isUnpiloted());		// unpiloted = yes
 		SetExplicitlyUnpiloted(station, false);
-		OO_CHECK(!asShip->isUnpiloted());
+		EXPECT_TRUE(!asShip->isUnpiloted());
 		Entity *asCxxEntity = part;
-		OO_CHECK(asCxxEntity->descriptionComponents() == station->descriptionComponents());
+		EXPECT_TRUE(asCxxEntity->descriptionComponents() == station->descriptionComponents());
 	}
 }
 
@@ -441,21 +442,21 @@ unsigned DockedTraders2(StationEntity *s)				{ return s->docked_traders; }
 }	// namespace
 
 
-OO_TEST(slice2NoDocks)
+TEST(StationEntity, slice2NoDocks)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("dockless2");
 		TestVisitor *ship = MakeVisitor("visitor");
-		OO_CHECK((station != nullptr ? station->dockSubEntities() : std::vector<oo::EntityHold>()).empty());
-		OO_CHECK(!(station != nullptr ? station->hasMultipleDocks() : false) && !(station != nullptr ? station->hasClearDock() : false) && !(station != nullptr ? station->hasLaunchDock() : false) && !(station != nullptr ? station->hasEligibleDock() : false));
-		OO_CHECK((station != nullptr ? station->selectDockForDocking() : (DockEntity *)nullptr) == nullptr);
-		OO_CHECK(!(station != nullptr ? station->dockingCorridorIsEmpty() : false));
-		OO_CHECK(!(station != nullptr ? station->shipIsInDockingCorridor(ship) : false) && !(station != nullptr ? station->shipIsInDockingCorridor(nullptr) : false));
-		OO_CHECK(vector_equal((station != nullptr ? station->portUpVectorForShip(ship) : Vector{}), kZeroVector));
-		OO_CHECK((station != nullptr ? station->countOfShipsInLaunchQueueWithPrimaryRole("trader") : unsigned{}) == 0);
-		OO_CHECK(!(station != nullptr ? station->fitsInDock(nullptr) : false) && !(station != nullptr ? station->fitsInDock(ship) : false) && !(station != nullptr ? station->fitsInDock(ship, false) : false));
-		OO_CHECK((station != nullptr ? station->dockingInstructionsForShip(nullptr) : oo::PList()).isNull());
+		EXPECT_TRUE((station != nullptr ? station->dockSubEntities() : std::vector<oo::EntityHold>()).empty());
+		EXPECT_TRUE(!(station != nullptr ? station->hasMultipleDocks() : false) && !(station != nullptr ? station->hasClearDock() : false) && !(station != nullptr ? station->hasLaunchDock() : false) && !(station != nullptr ? station->hasEligibleDock() : false));
+		EXPECT_TRUE((station != nullptr ? station->selectDockForDocking() : (DockEntity *)nullptr) == nullptr);
+		EXPECT_TRUE(!(station != nullptr ? station->dockingCorridorIsEmpty() : false));
+		EXPECT_TRUE(!(station != nullptr ? station->shipIsInDockingCorridor(ship) : false) && !(station != nullptr ? station->shipIsInDockingCorridor(nullptr) : false));
+		EXPECT_TRUE(vector_equal((station != nullptr ? station->portUpVectorForShip(ship) : Vector{}), kZeroVector));
+		EXPECT_TRUE((station != nullptr ? station->countOfShipsInLaunchQueueWithPrimaryRole("trader") : unsigned{}) == 0);
+		EXPECT_TRUE(!(station != nullptr ? station->fitsInDock(nullptr) : false) && !(station != nullptr ? station->fitsInDock(ship) : false) && !(station != nullptr ? station->fitsInDock(ship, false) : false));
+		EXPECT_TRUE((station != nullptr ? station->dockingInstructionsForShip(nullptr) : oo::PList()).isNull());
 
 		// Nothing to launch from, clear or check: nothing happens.
 		if (station != nullptr)  station->addShipToLaunchQueue(ship, true);	// logged
@@ -463,79 +464,79 @@ OO_TEST(slice2NoDocks)
 		if (station != nullptr)  station->clearDockingCorridor();
 		if (station != nullptr)  station->sanityCheckShipsOnApproach();
 		if (station != nullptr)  station->autoDockShipsOnHold();
-		OO_CHECK((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight && (station != nullptr ? station->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
+		EXPECT_TRUE((ship != nullptr ? ship->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight && (station != nullptr ? station->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
 	}
 }
 
 
 // The ships on hold: told to hold position (as docking instructions), cleared, aborted.
-OO_TEST(slice2HoldPosition)
+TEST(StationEntity, slice2HoldPosition)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("holder");
 		TestVisitor *ship = MakeVisitor("waiter");
 		if (ship != nullptr)  ship->setPosition(make_HPvector(1, 2, 3));
 		ShipsOnHold2(station)->add(ship);		// already holding: no message
 		const oo::PList hold = (station != nullptr ? station->holdPositionInstructionForShip(ship) : oo::PList());
-		OO_CHECK(hold.get<std::string>("ai_message", "") == "HOLD_POSITION" && hold.find("comms_message") == nullptr);
-		OO_CHECK(hold.get<double>("speed", -1) == 0 && hold.get<double>("range", -1) == 100);
-		OO_CHECK(hold.get<int>("docking_stage", 0) == -1 && !hold.get<bool>("match_rotation", true));
+		EXPECT_TRUE(hold.get<std::string>("ai_message", "") == "HOLD_POSITION" && hold.find("comms_message") == nullptr);
+		EXPECT_TRUE(hold.get<double>("speed", -1) == 0 && hold.get<double>("range", -1) == 100);
+		EXPECT_TRUE(hold.get<int>("docking_stage", 0) == -1 && !hold.get<bool>("match_rotation", true));
 		const oo::PList *destination = hold.find("destination");
-		OO_CHECK(destination != nullptr && destination->get<double>("x", 0) == 1 && destination->get<double>("z", 0) == 3);
+		EXPECT_TRUE(destination != nullptr && destination->get<double>("x", 0) == 1 && destination->get<double>("z", 0) == 3);
 		const oo::PList *stationRef = hold.find("station");
-		OO_CHECK(stationRef != nullptr && oo::EntityInWeakNode(*stationRef) == station);
-		OO_CHECK(ShipsOnHold2(station)->contains(ship) && ShipsOnHold2(station)->count() == 1);
+		EXPECT_TRUE(stationRef != nullptr && oo::EntityInWeakNode(*stationRef) == station);
+		EXPECT_TRUE(ShipsOnHold2(station)->contains(ship) && ShipsOnHold2(station)->count() == 1);
 
 		if (station != nullptr)  station->clear();
-		OO_CHECK(ShipsOnHold2(station)->count() == 0);
+		EXPECT_TRUE(ShipsOnHold2(station)->count() == 0);
 
 		ShipsOnHold2(station)->add(ship);
 		if (station != nullptr)  station->abortDockingForShip(ship);
-		OO_CHECK(!ShipsOnHold2(station)->contains(ship));
+		EXPECT_TRUE(!ShipsOnHold2(station)->contains(ship));
 	}
 }
 
 
 // A docked ship counts back in: defenders and scavengers return. (Shuttles and traders are known by
 // the role categories, which the test's universe has not loaded: they count as neither.)
-OO_TEST(slice2StationCount)
+TEST(StationEntity, slice2StationCount)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("counter", { { "has_npc_traffic", oo::PList(false) } });
-		OO_CHECK(DockedShuttles2(station) == 0 && DockedTraders2(station) == 0);
+		EXPECT_TRUE(DockedShuttles2(station) == 0 && DockedTraders2(station) == 0);
 		if (station != nullptr)  station->addShipToStationCount(MakeVisitor("shuttle", { { "roles", oo::PList(std::string("shuttle")) } }));
-		OO_CHECK(DockedShuttles2(station) == 0 && DockedTraders2(station) == 0);
+		EXPECT_TRUE(DockedShuttles2(station) == 0 && DockedTraders2(station) == 0);
 
 		SetDefendersLaunched2(station, 2);
 		const unsigned police = (station != nullptr ? station->countOfDockedPolice() : unsigned{});
 		if (station != nullptr)  station->addShipToStationCount(MakeVisitor("cop", { { "roles", oo::PList(std::string("defense_ship")) } }));
-		OO_CHECK((station != nullptr ? station->countOfDockedPolice() : unsigned{}) == police + 1);
+		EXPECT_TRUE((station != nullptr ? station->countOfDockedPolice() : unsigned{}) == police + 1);
 
 		SetScavengersLaunched2(station, 1);
 		const unsigned contractors = (station != nullptr ? station->countOfDockedContractors() : unsigned{});
 		if (station != nullptr)  station->addShipToStationCount(MakeVisitor("miner", { { "roles", oo::PList(std::string("miner")) } }));
-		OO_CHECK((station != nullptr ? station->countOfDockedContractors() : unsigned{}) == contractors + 1);
+		EXPECT_TRUE((station != nullptr ? station->countOfDockedContractors() : unsigned{}) == contractors + 1);
 		if (station != nullptr)  station->addShipToStationCount(MakeVisitor("scavenger", { { "roles", oo::PList(std::string("scavenger")) } }));
-		OO_CHECK((station != nullptr ? station->countOfDockedContractors() : unsigned{}) == contractors + 1);	// none out any more
+		EXPECT_TRUE((station != nullptr ? station->countOfDockedContractors() : unsigned{}) == contractors + 1);	// none out any more
 	}
 }
 
 
 // From C++ (after the conversion): the members.
-OO_TEST(slice2MembersFromCxx)
+TEST(StationEntity, slice2MembersFromCxx)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("member2");
 		TestVisitor *ship = MakeVisitor("guest");
 		StationEntity *part = station;
-		OO_CHECK(!part->hasMultipleDocks() && !part->fitsInDock(nullptr) && part->selectDockForDocking() == nullptr);
+		EXPECT_TRUE(!part->hasMultipleDocks() && !part->fitsInDock(nullptr) && part->selectDockForDocking() == nullptr);
 		ShipsOnHold2(station)->add(ship);
-		OO_CHECK(part->holdPositionInstructionForShip(ship).get<std::string>("ai_message", "") == "HOLD_POSITION");
+		EXPECT_TRUE(part->holdPositionInstructionForShip(ship).get<std::string>("ai_message", "") == "HOLD_POSITION");
 		part->clear();
-		OO_CHECK(ShipsOnHold2(station)->count() == 0);
+		EXPECT_TRUE(ShipsOnHold2(station)->count() == 0);
 	}
 }
 
@@ -556,46 +557,46 @@ void SetPrimaryTarget3(ShipEntity *s, Entity *target)
 }	// namespace
 
 
-OO_TEST(slice3AllegianceAndAlertLevel)
+TEST(StationEntity, slice3AllegianceAndAlertLevel)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("alert");
 		if (station != nullptr)  station->setAllegiance(std::string("hunter"));
-		OO_CHECK((station != nullptr ? station->getAllegiance() : std::optional<std::string>()) == std::optional<std::string>("hunter"));
+		EXPECT_TRUE((station != nullptr ? station->getAllegiance() : std::optional<std::string>()) == std::optional<std::string>("hunter"));
 		if (station != nullptr)  station->setAllegiance(std::nullopt);
-		OO_CHECK(!(station != nullptr ? station->getAllegiance() : std::optional<std::string>()).has_value());
+		EXPECT_TRUE(!(station != nullptr ? station->getAllegiance() : std::optional<std::string>()).has_value());
 
-		OO_CHECK((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kGreen);
+		EXPECT_TRUE((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kGreen);
 		if (station != nullptr)  station->setAlertLevel(oo::StationAlertLevel::kRed, false);
-		OO_CHECK((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kRed);
+		EXPECT_TRUE((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kRed);
 		if (station != nullptr)  station->setAlertLevel((oo::StationAlertLevel)99, false);		// clamped
-		OO_CHECK((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kRed);
+		EXPECT_TRUE((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kRed);
 		if (station != nullptr)  station->setAlertLevel((oo::StationAlertLevel)0, false);
-		OO_CHECK((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kGreen);
+		EXPECT_TRUE((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kGreen);
 		if (station != nullptr)  station->increaseAlertLevel();
-		OO_CHECK((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kYellow);
+		EXPECT_TRUE((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kYellow);
 		if (station != nullptr)  station->increaseAlertLevel();
 		if (station != nullptr)  station->increaseAlertLevel();
-		OO_CHECK((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kRed);
+		EXPECT_TRUE((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kRed);
 		if (station != nullptr)  station->decreaseAlertLevel();
-		OO_CHECK((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kYellow);
+		EXPECT_TRUE((station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kYellow);
 
 		// A target at yellow or red alert is a hostile one; none, or green, is not.
-		OO_CHECK(!(station != nullptr ? station->hasHostileTarget() : false));
+		EXPECT_TRUE(!(station != nullptr ? station->hasHostileTarget() : false));
 		TestVisitor *intruder = MakeVisitor("intruder");
 		SetPrimaryTarget3(station, intruder);
-		OO_CHECK((station != nullptr ? station->hasHostileTarget() : false));
+		EXPECT_TRUE((station != nullptr ? station->hasHostileTarget() : false));
 		if (station != nullptr)  station->setAlertLevel(oo::StationAlertLevel::kGreen, false);
-		OO_CHECK(!(station != nullptr ? station->hasHostileTarget() : false));
+		EXPECT_TRUE(!(station != nullptr ? station->hasHostileTarget() : false));
 	}
 }
 
 
-OO_TEST(slice3DamageAndMovement)
+TEST(StationEntity, slice3DamageAndMovement)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("target");
 		TestVisitor *friendly = MakeVisitor("defender");
 		if (friendly != nullptr)  friendly->setGroup((station != nullptr ? station->group() : (oo::ShipGroup *)nullptr));
@@ -603,49 +604,49 @@ OO_TEST(slice3DamageAndMovement)
 		// Friendly fire is ignored.
 		SetEnergy3(station, 500);
 		if (station != nullptr)  station->takeEnergyDamage(100, friendly, friendly, "");
-		OO_CHECK(Energy3(station) == 500);
+		EXPECT_TRUE(Energy3(station) == 500);
 
 		// A station that is not the main one is moved like a ship.
 		if (station != nullptr)  station->setVelocity(kZeroVector);
 		if (station != nullptr)  station->adjustVelocity(make_vector(1, 0, 0));
-		OO_CHECK(vector_equal((station != nullptr ? station->getVelocity() : Vector{}), make_vector(1, 0, 0)));
+		EXPECT_TRUE(vector_equal((station != nullptr ? station->getVelocity() : Vector{}), make_vector(1, 0, 0)));
 	}
 }
 
 
-OO_TEST(slice3PatrolsAndQueues)
+TEST(StationEntity, slice3PatrolsAndQueues)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("base");
 		SetLastPatrolReport3(station, -1000);
 		if (station != nullptr)  station->acceptPatrolReportFrom(nullptr);
-		OO_CHECK(LastPatrolReport3(station) == (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0));
-		OO_CHECK((station != nullptr ? station->currentlyInDockingQueues() : unsigned{}) == 0 && (station != nullptr ? station->currentlyInLaunchingQueues() : unsigned{}) == 0);
+		EXPECT_TRUE(LastPatrolReport3(station) == (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0));
+		EXPECT_TRUE((station != nullptr ? station->currentlyInDockingQueues() : unsigned{}) == 0 && (station != nullptr ? station->currentlyInLaunchingQueues() : unsigned{}) == 0);
 	}
 }
 
 
 // From C++ (after the conversion): the members, and the ship's virtual members reaching the station's.
-OO_TEST(slice3MembersFromCxx)
+TEST(StationEntity, slice3MembersFromCxx)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("member3");
 		StationEntity *part = station;
 		part->setAlertLevel(oo::StationAlertLevel::kRed, false);
-		OO_CHECK(part->getAlertLevel() == oo::StationAlertLevel::kRed && (station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kRed);
+		EXPECT_TRUE(part->getAlertLevel() == oo::StationAlertLevel::kRed && (station != nullptr ? station->getAlertLevel() : oo::StationAlertLevel{}) == oo::StationAlertLevel::kRed);
 		part->setAllegiance(std::string("neutral"));
-		OO_CHECK(part->getAllegiance() == std::optional<std::string>("neutral"));
+		EXPECT_TRUE(part->getAllegiance() == std::optional<std::string>("neutral"));
 		ShipEntity *asShip = part;
 		SetPrimaryTarget3(station, MakeVisitor("foe"));
-		OO_CHECK(asShip->hasHostileTarget());		// virtual: the station's
+		EXPECT_TRUE(asShip->hasHostileTarget());		// virtual: the station's
 		TestVisitor *friendly = MakeVisitor("friend");
 		if (friendly != nullptr)  friendly->setGroup((station != nullptr ? station->group() : (oo::ShipGroup *)nullptr));
 		SetEnergy3(station, 500);
 		Entity *asEntity = part;
 		asEntity->takeEnergyDamage(100, friendly, friendly, "");
-		OO_CHECK(Energy3(station) == 500);			// friendly fire, through the root's virtual
+		EXPECT_TRUE(Energy3(station) == 500);			// friendly fire, through the root's virtual
 	}
 }
 
@@ -665,67 +666,67 @@ unsigned DockedShuttles4(StationEntity *s)		{ return s->docked_shuttles; }
 }	// namespace
 
 
-OO_TEST(slice4LaunchersWithoutLaunchDock)
+TEST(StationEntity, slice4LaunchersWithoutLaunchDock)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("launcher", { { "max_police", oo::PList(4) }, { "max_defense_ships", oo::PList(4) } });
 		SetPrimaryTarget3(station, MakeVisitor("quarry"));
-		OO_CHECK(!(station != nullptr ? station->hasLaunchDock() : false));
+		EXPECT_TRUE(!(station != nullptr ? station->hasLaunchDock() : false));
 		const unsigned defenders = DefendersLaunched4(station);
 		const unsigned scavengers = ScavengersLaunched4(station);
 		const unsigned shuttles = DockedShuttles4(station);
 
-		OO_CHECK((station != nullptr ? station->launchIndependentShip("trader") : oo::PList()).isNull());
-		OO_CHECK(oo::EntitiesIn((station != nullptr ? station->launchPolice() : oo::PList())).empty());
-		OO_CHECK((station != nullptr ? station->launchDefenseShip() : (::ShipEntity *)nullptr) == nullptr);
-		OO_CHECK((station != nullptr ? station->launchScavenger() : (::ShipEntity *)nullptr) == nullptr);
-		OO_CHECK((station != nullptr ? station->launchMiner() : (::ShipEntity *)nullptr) == nullptr);
-		OO_CHECK((station != nullptr ? station->launchPirateShip() : (::ShipEntity *)nullptr) == nullptr);
-		OO_CHECK((station != nullptr ? station->launchShuttle() : (::ShipEntity *)nullptr) == nullptr);
-		OO_CHECK((station != nullptr ? station->launchEscort() : (::ShipEntity *)nullptr) == nullptr);
-		OO_CHECK((station != nullptr ? station->launchPatrol() : (::ShipEntity *)nullptr) == nullptr);
+		EXPECT_TRUE((station != nullptr ? station->launchIndependentShip("trader") : oo::PList()).isNull());
+		EXPECT_TRUE(oo::EntitiesIn((station != nullptr ? station->launchPolice() : oo::PList())).empty());
+		EXPECT_TRUE((station != nullptr ? station->launchDefenseShip() : (::ShipEntity *)nullptr) == nullptr);
+		EXPECT_TRUE((station != nullptr ? station->launchScavenger() : (::ShipEntity *)nullptr) == nullptr);
+		EXPECT_TRUE((station != nullptr ? station->launchMiner() : (::ShipEntity *)nullptr) == nullptr);
+		EXPECT_TRUE((station != nullptr ? station->launchPirateShip() : (::ShipEntity *)nullptr) == nullptr);
+		EXPECT_TRUE((station != nullptr ? station->launchShuttle() : (::ShipEntity *)nullptr) == nullptr);
+		EXPECT_TRUE((station != nullptr ? station->launchEscort() : (::ShipEntity *)nullptr) == nullptr);
+		EXPECT_TRUE((station != nullptr ? station->launchPatrol() : (::ShipEntity *)nullptr) == nullptr);
 		if (station != nullptr)  station->launchShipWithRole("shuttle");
 
-		OO_CHECK(DefendersLaunched4(station) == defenders && ScavengersLaunched4(station) == scavengers && DockedShuttles4(station) == shuttles);
-		OO_CHECK((station != nullptr ? station->countOfShipsInLaunchQueueWithPrimaryRole("police") : unsigned{}) == 0 && (station != nullptr ? station->currentlyInLaunchingQueues() : unsigned{}) == 0);
-		OO_CHECK((station != nullptr ? station->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
+		EXPECT_TRUE(DefendersLaunched4(station) == defenders && ScavengersLaunched4(station) == scavengers && DockedShuttles4(station) == shuttles);
+		EXPECT_TRUE((station != nullptr ? station->countOfShipsInLaunchQueueWithPrimaryRole("police") : unsigned{}) == 0 && (station != nullptr ? station->currentlyInLaunchingQueues() : unsigned{}) == 0);
+		EXPECT_TRUE((station != nullptr ? station->status() : oo::EntityStatus{}) == oo::EntityStatus::kInFlight);
 	}
 }
 
 
 // The launchers stay reachable by name (AI and scripts send them by name); the
 // by-name table answers them.
-OO_TEST(slice4LaunchersAnswerTheirSelectors)
+TEST(StationEntity, slice4LaunchersAnswerTheirSelectors)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("selectors");
-		OO_CHECK(oo::EntityRespondsToName(station, "launchIndependentShip:") && oo::EntityRespondsToName(station, "launchShipWithRole:"));
-		OO_CHECK(oo::EntityRespondsToName(station, "launchPolice") && oo::EntityRespondsToName(station, "launchDefenseShip"));
-		OO_CHECK(oo::EntityRespondsToName(station, "launchScavenger") && oo::EntityRespondsToName(station, "launchMiner"));
-		OO_CHECK(oo::EntityRespondsToName(station, "launchPirateShip") && oo::EntityRespondsToName(station, "launchShuttle"));
-		OO_CHECK(oo::EntityRespondsToName(station, "launchEscort") && oo::EntityRespondsToName(station, "launchPatrol"));
+		EXPECT_TRUE(oo::EntityRespondsToName(station, "launchIndependentShip:") && oo::EntityRespondsToName(station, "launchShipWithRole:"));
+		EXPECT_TRUE(oo::EntityRespondsToName(station, "launchPolice") && oo::EntityRespondsToName(station, "launchDefenseShip"));
+		EXPECT_TRUE(oo::EntityRespondsToName(station, "launchScavenger") && oo::EntityRespondsToName(station, "launchMiner"));
+		EXPECT_TRUE(oo::EntityRespondsToName(station, "launchPirateShip") && oo::EntityRespondsToName(station, "launchShuttle"));
+		EXPECT_TRUE(oo::EntityRespondsToName(station, "launchEscort") && oo::EntityRespondsToName(station, "launchPatrol"));
 	}
 }
 
 
 // From C++: the members, which the selectors forward to.
-OO_TEST(slice4MembersFromCxx)
+TEST(StationEntity, slice4MembersFromCxx)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("member4");
 		SetPrimaryTarget3(station, MakeVisitor("mark"));
 		StationEntity *part = station;
 		const unsigned defenders = DefendersLaunched4(station);
-		OO_CHECK(part->launchIndependentShip("trader").isNull());
-		OO_CHECK(oo::EntitiesIn(part->launchPolice()).empty());
-		OO_CHECK(part->launchDefenseShip() == nullptr && part->launchScavenger() == nullptr && part->launchMiner() == nullptr);
-		OO_CHECK(part->launchPirateShip() == nullptr && part->launchShuttle() == nullptr && part->launchEscort() == nullptr);
-		OO_CHECK(part->launchPatrol() == nullptr);
+		EXPECT_TRUE(part->launchIndependentShip("trader").isNull());
+		EXPECT_TRUE(oo::EntitiesIn(part->launchPolice()).empty());
+		EXPECT_TRUE(part->launchDefenseShip() == nullptr && part->launchScavenger() == nullptr && part->launchMiner() == nullptr);
+		EXPECT_TRUE(part->launchPirateShip() == nullptr && part->launchShuttle() == nullptr && part->launchEscort() == nullptr);
+		EXPECT_TRUE(part->launchPatrol() == nullptr);
 		part->launchShipWithRole("escort");
-		OO_CHECK(DefendersLaunched4(station) == defenders && part->currentlyInLaunchingQueues() == 0);
+		EXPECT_TRUE(DefendersLaunched4(station) == defenders && part->currentlyInLaunchingQueues() == 0);
 	}
 }
 
@@ -736,10 +737,10 @@ OO_TEST(slice4MembersFromCxx)
 // What the engine asks a station by selector: its JS class is the Station
 // class, not the Ship class it inherits, both through the root and from its
 // C++ part.
-OO_TEST(stationAnswersTheStationJSClass)
+TEST(StationEntity, stationAnswersTheStationJSClass)
 {
 	{
-		SetUp();
+		::SetUp();
 		TestStation *station = MakeStation("jsclass");
 		// The classes are registered by their Init functions, parents first, as the engine's
 		// start registers them.
@@ -751,18 +752,15 @@ OO_TEST(stationAnswersTheStationJSClass)
 		JS_FreeValue(context, global);
 		OOJSRelinquishContext(context);
 		const JSClassID stationClass = JSStationClassID();
-		OO_CHECK(stationClass != 0 && stationClass != JSShipClassID());
+		EXPECT_TRUE(stationClass != 0 && stationClass != JSShipClassID());
 
-		OO_CHECK(OOJSEntityJSClassName(station) == std::optional<std::string>("Station"));
+		EXPECT_TRUE(OOJSEntityJSClassName(station) == std::optional<std::string>("Station"));
 		JSClassID jsClass = OOJSEntityJSClassID(station);
-		OO_CHECK(jsClass == stationClass);
+		EXPECT_TRUE(jsClass == stationClass);
 
 		ShipEntity *asShip = station;
-		OO_CHECK(asShip->jsClassName() == std::optional<std::string>("Station"));
+		EXPECT_TRUE(asShip->jsClassName() == std::optional<std::string>("Station"));
 		jsClass = asShip->jsClassID();
-		OO_CHECK(jsClass == stationClass);
+		EXPECT_TRUE(jsClass == stationClass);
 	}
 }
-
-
-OO_TEST_MAIN()

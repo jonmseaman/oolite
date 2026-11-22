@@ -16,12 +16,13 @@
 	Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Commodities.h"
 #include "CommodityMarket.h"
 #include "StringExpander.h"
 #include "OOJSPropID.h"
 
-#include "oo_test.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -255,7 +256,7 @@ StationEntity *Station(oo::PList definition, oo::CargoQuantity capacity, bool mo
 }	// namespace
 
 
-OO_TEST(goods)
+TEST(OOCommodities, goods)
 {
 	Expected expect{
 		"resources trade-goods.plist in Config merge 2 cache 1; ",
@@ -269,27 +270,27 @@ OO_TEST(goods)
 	{
 		Reset();
 		std::shared_ptr<oo::Commodities> c = Commodities();
-		OO_CHECK(expect(Log()));
-		OO_CHECK(c->count() == 4);
+		EXPECT_TRUE(expect(Log()));
+		EXPECT_TRUE(c->count() == 4);
 		std::string goods;
 		for (const std::string &g : c->goods())  goods += g + " ";
-		OO_CHECK(expect(goods));
-		OO_CHECK(c->goodDefined("food") && !c->goodDefined("junk") && !c->goodDefined("unobtainium"));
-		OO_CHECK(expect(c->goodNamed("<Furs>").value_or("-")));
-		OO_CHECK(expect(c->goodNamed("Furs").value_or("-")));
-		OO_CHECK(c->massUnitForGood("food") == oo::MassUnit::kTons && c->massUnitForGood("furs") == oo::MassUnit::kKilograms && c->massUnitForGood("gems") == oo::MassUnit::kGrams);
-		OO_CHECK(c->massUnitForGood("junk") == oo::MassUnit::kTons && c->massUnitForGood("unobtainium") == oo::MassUnit::kTons);
+		EXPECT_TRUE(expect(goods));
+		EXPECT_TRUE(c->goodDefined("food") && !c->goodDefined("junk") && !c->goodDefined("unobtainium"));
+		EXPECT_TRUE(expect(c->goodNamed("<Furs>").value_or("-")));
+		EXPECT_TRUE(expect(c->goodNamed("Furs").value_or("-")));
+		EXPECT_TRUE(c->massUnitForGood("food") == oo::MassUnit::kTons && c->massUnitForGood("furs") == oo::MassUnit::kKilograms && c->massUnitForGood("gems") == oo::MassUnit::kGrams);
+		EXPECT_TRUE(c->massUnitForGood("junk") == oo::MassUnit::kTons && c->massUnitForGood("unobtainium") == oo::MassUnit::kTons);
 		std::string random;
 		for (int i = 0; i < 8; i++)  random += c->getRandomCommodity() + " ";
-		OO_CHECK(expect(random));
+		EXPECT_TRUE(expect(random));
 		std::string legacy;
 		for (std::size_t i = 0; i <= 18; i++)  legacy += oo::Commodities::legacyCommodityType(i).value_or("-") + " ";
-		OO_CHECK(expect(legacy));
+		EXPECT_TRUE(expect(legacy));
 	}
 }
 
 
-OO_TEST(markets)
+TEST(OOCommodities, markets)
 {
 	Expected expect{
 		"food q0 p0 c4294967295 l0/0 u0; furs q0 p0 c4294967295 l1/2 u1; gems q0 p0 c4294967295 l0/0 u2; junk q0 p0 c4294967295 l0/0 u0; ",
@@ -305,31 +306,31 @@ OO_TEST(markets)
 	{
 		Reset();
 		std::shared_ptr<oo::Commodities> c = Commodities();
-		OO_CHECK(expect(Describe(c->generateManifestForPlayer())));
-		OO_CHECK(expect(Describe(c->generateBlankMarket())));
-		OO_CHECK(expect(c->generateManifestForPlayer()->definitionForGood("food").get<std::string>("key")));
+		EXPECT_TRUE(expect(Describe(c->generateManifestForPlayer())));
+		EXPECT_TRUE(expect(Describe(c->generateBlankMarket())));
+		EXPECT_TRUE(expect(c->generateManifestForPlayer()->definitionForGood("food").get<std::string>("key")));
 		for (oo::EconomyID economy : { 0, 3, 7 })
 		{
 			Reset();
-			OO_CHECK(expect(Describe(c->generateMarketForSystemWithEconomy(economy, std::nullopt))));
+			EXPECT_TRUE(expect(Describe(c->generateMarketForSystemWithEconomy(economy, std::nullopt))));
 		}
-		OO_CHECK(expect(Log()));
+		EXPECT_TRUE(expect(Log()));
 		Reset();
 		// A sample price: a fresh price for one good (0 for one that is not a dictionary).
 		struct { oo::EconomyID economy; oo::CreditsQuantity food, furs, gems; } const samples[] = { { 0, 78, 553, 178 }, { 4, 45, 659, 132 }, { 7, 23, 685, 159 } };
 		for (const auto &sample : samples)
 		{
-			OO_CHECK(c->samplePriceForCommodity("food", sample.economy, std::nullopt, 3) == sample.food);
-			OO_CHECK(c->samplePriceForCommodity("furs", sample.economy, std::nullopt, 3) == sample.furs);
-			OO_CHECK(c->samplePriceForCommodity("gems", sample.economy, "x.js", 3) == sample.gems);
-			OO_CHECK(c->samplePriceForCommodity("junk", sample.economy, std::nullopt, 3) == 0);
+			EXPECT_TRUE(c->samplePriceForCommodity("food", sample.economy, std::nullopt, 3) == sample.food);
+			EXPECT_TRUE(c->samplePriceForCommodity("furs", sample.economy, std::nullopt, 3) == sample.furs);
+			EXPECT_TRUE(c->samplePriceForCommodity("gems", sample.economy, "x.js", 3) == sample.gems);
+			EXPECT_TRUE(c->samplePriceForCommodity("junk", sample.economy, std::nullopt, 3) == 0);
 		}
-		OO_CHECK(expect(Log()));
+		EXPECT_TRUE(expect(Log()));
 	}
 }
 
 
-OO_TEST(stationMarkets)
+TEST(OOCommodities, stationMarkets)
 {
 	Expected expect{
 		"food q34 p62 c127 l0/0 u0; furs q30 p400 c30 l1/2 u1; gems q127 p132 c127 l0/0 u2; junk q0 p0 c127 l0/0 u0; ",
@@ -344,15 +345,15 @@ OO_TEST(stationMarkets)
 		Reset();
 		std::shared_ptr<oo::Commodities> c = Commodities();
 		gSharedUniverse->mainMarket = c->generateMarketForSystemWithEconomy(2, std::nullopt);
-		OO_CHECK(expect(Describe(gSharedUniverse->mainMarket)));
+		EXPECT_TRUE(expect(Describe(gSharedUniverse->mainMarket)));
 
 		// No definition and no script: a blank market.
 		Reset();
-		OO_CHECK(expect(Describe(c->generateMarketForStation(Station(oo::PList(), 100, true)))));
+		EXPECT_TRUE(expect(Describe(c->generateMarketForStation(Station(oo::PList(), 100, true)))));
 
 		// A default rule; then rules for a good and a class, first match wins; unmonitored.
 		Reset();
-		OO_CHECK(expect(Describe(c->generateMarketForStation(Station(oo::PList(oo::PList::Array{ Dict({ { "type", oo::PList("default") } }) }), 60, true)))));
+		EXPECT_TRUE(expect(Describe(c->generateMarketForStation(Station(oo::PList(oo::PList::Array{ Dict({ { "type", oo::PList("default") } }) }), 60, true)))));
 		Reset();
 		oo::PList rules(oo::PList::Array{
 			Dict({ { "type", oo::PList("good") }, { "name", oo::PList("gems") }, { "price_multiplier", oo::PList(2.0) }, { "quantity_adder", oo::PList(5) }, { "capacity", oo::PList(8) } }),
@@ -360,47 +361,47 @@ OO_TEST(stationMarkets)
 				{ "quantity_multiplier", oo::PList(0.5) }, { "quantity_randomiser", oo::PList(0.2) }, { "legality_import", oo::PList(3) }, { "legality_export", oo::PList(0) } }),
 			Dict({ { "type", oo::PList("default") }, { "price_multiplier", oo::PList(0) }, { "quantity_multiplier", oo::PList(0) } }),
 			oo::PList("not a rule") });
-		OO_CHECK(expect(Describe(c->generateMarketForStation(Station(rules, 50, false)))));
+		EXPECT_TRUE(expect(Describe(c->generateMarketForStation(Station(rules, 50, false)))));
 		Reset();
-		OO_CHECK(expect(Describe(c->generateMarketForStation(Station(rules, 500, true)))));
-		OO_CHECK(expect(Log()));
+		EXPECT_TRUE(expect(Describe(c->generateMarketForStation(Station(rules, 500, true)))));
+		EXPECT_TRUE(expect(Log()));
 		gSharedUniverse->mainMarket = nullptr;
 	}
 }
 
 
-OO_TEST(cxxClass)
+TEST(OOCommodities, cxxClass)
 {
 	{
 		Reset();
 		std::shared_ptr<oo::Commodities> c = oo::makeShared<oo::Commodities>();
-		OO_CHECK(c->count() == 4 && c->goods() == std::vector<std::string>({ "food", "furs", "gems", "junk" }));
-		OO_CHECK(c->goodDefined("furs") && !c->goodDefined("junk"));
-		OO_CHECK(c->goodNamed("<Gem-stones>") == std::optional<std::string>("gems"));
-		OO_CHECK(c->massUnitForGood("gems") == oo::MassUnit::kGrams);
-		OO_CHECK(oo::Commodities::legacyCommodityType(11) == std::optional<std::string>("furs"));
+		EXPECT_TRUE(c->count() == 4 && c->goods() == std::vector<std::string>({ "food", "furs", "gems", "junk" }));
+		EXPECT_TRUE(c->goodDefined("furs") && !c->goodDefined("junk"));
+		EXPECT_TRUE(c->goodNamed("<Gem-stones>") == std::optional<std::string>("gems"));
+		EXPECT_TRUE(c->massUnitForGood("gems") == oo::MassUnit::kGrams);
+		EXPECT_TRUE(oo::Commodities::legacyCommodityType(11) == std::optional<std::string>("furs"));
 
 		// Its markets are C++ markets; the same answers as above.
 		std::shared_ptr<oo::CommodityMarket> manifest = c->generateManifestForPlayer();
-		OO_CHECK(manifest->count() == 4 && manifest->capacityForGood("food") == UINT32_MAX);
-		OO_CHECK(Describe(c->generateBlankMarket()) == "food q0 p0 c0 l0/0 u0; furs q0 p0 c0 l1/2 u1; gems q0 p0 c0 l0/0 u2; junk q0 p0 c0 l0/0 u0; ");
+		EXPECT_TRUE(manifest->count() == 4 && manifest->capacityForGood("food") == UINT32_MAX);
+		EXPECT_TRUE(Describe(c->generateBlankMarket()) == "food q0 p0 c0 l0/0 u0; furs q0 p0 c0 l1/2 u1; gems q0 p0 c0 l0/0 u2; junk q0 p0 c0 l0/0 u0; ");
 		Reset();
-		OO_CHECK(Describe(c->generateMarketForSystemWithEconomy(0, std::nullopt)) == "food q22 p76 c127 l0/0 u0; furs q30 p503 c30 l1/2 u1; gems q127 p132 c127 l0/0 u2; junk q0 p0 c127 l0/0 u0; ");
+		EXPECT_TRUE(Describe(c->generateMarketForSystemWithEconomy(0, std::nullopt)) == "food q22 p76 c127 l0/0 u0; furs q30 p503 c30 l1/2 u1; gems q127 p132 c127 l0/0 u2; junk q0 p0 c127 l0/0 u0; ");
 		Reset();
-		OO_CHECK(c->samplePriceForCommodity("food", 0, std::nullopt, 3) == 78);
+		EXPECT_TRUE(c->samplePriceForCommodity("food", 0, std::nullopt, 3) == 78);
 
 		// A station market reads the main market through the universe.
 		Reset();
 		gSharedUniverse->mainMarket = c->generateMarketForSystemWithEconomy(2, std::nullopt);
 		Reset();
-		OO_CHECK(Describe(c->generateMarketForStation(Station(oo::PList(oo::PList::Array{ Dict({ { "type", oo::PList("default") } }) }), 60, true)))
+		EXPECT_TRUE(Describe(c->generateMarketForStation(Station(oo::PList(oo::PList::Array{ Dict({ { "type", oo::PList("default") } }) }), 60, true)))
 			== "food q16 p62 c60 l0/0 u0; furs q60 p400 c60 l1/2 u1; gems q60 p132 c60 l0/0 u2; junk q0 p0 c127 l0/0 u0; ");
 		gSharedUniverse->mainMarket = nullptr;
 	}
 }
 
 
-OO_TEST(facadeIdentity)
+TEST(OOCommodities, facadeIdentity)
 {
 	{
 		Reset();
@@ -408,11 +409,8 @@ OO_TEST(facadeIdentity)
 
 		// It makes a market, and a new one each time, as before.
 		std::shared_ptr<oo::CommodityMarket> manifest = c->generateManifestForPlayer();
-		OO_CHECK(manifest != nullptr);
-		OO_CHECK(c->generateBlankMarket() != c->generateBlankMarket());	// a new market each time, as before
-		OO_CHECK(c->count() == 4);
+		EXPECT_TRUE(manifest != nullptr);
+		EXPECT_TRUE(c->generateBlankMarket() != c->generateBlankMarket());	// a new market each time, as before
+		EXPECT_TRUE(c->count() == 4);
 	}
 }
-
-
-OO_TEST_MAIN()

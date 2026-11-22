@@ -29,13 +29,14 @@
 #include <string_view>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "ALBufferedSound.h"
 #include "ALSound.h"
 #include "ALSoundDecoder.h"
 #include "ALSoundMixer.h"
 #include "ALStreamedSound.h"
 #include "Logging.h"
-#include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Log.hpp"
 
@@ -201,13 +202,13 @@ stdfs::path sRoot;
 // The null OpenAL backend and a scratch home, before anything asks for either.
 void SetUp() {
   if (!sRoot.empty()) return;
-  OO_CHECK(::_putenv_s("ALSOFT_DRIVERS", "null") == 0);
+  EXPECT_TRUE(::_putenv_s("ALSOFT_DRIVERS", "null") == 0);
   sRoot = stdfs::temp_directory_path() /
           ("oo-test-sound-" +
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
 }
 
@@ -246,121 +247,121 @@ int LogLinesContaining(std::string_view text) {
 
 // First: making a sound sets the sound system up, at half volume when the user
 // has set none.
-OO_TEST(initSetsUpAtHalfVolume) {
-  SetUp();
-  OO_CHECK(!oo::Sound::isSoundOK());
-  OO_CHECK(oo::Defaults::standard().object("volume_control").isNull());
+TEST(OOSound, initSetsUpAtHalfVolume) {
+  ::SetUp();
+  EXPECT_TRUE(!oo::Sound::isSoundOK());
+  EXPECT_TRUE(oo::Defaults::standard().object("volume_control").isNull());
 
   const std::shared_ptr<oo::Sound> sound = oo::makeShared<oo::Sound>();
-  OO_CHECK(sound != nullptr);
-  OO_CHECK(oo::Sound::isSoundOK());
-  OO_CHECK(oo::Sound::setUp());  // once only, and remembered
-  OO_CHECK(Near(oo::Sound::masterVolume(), 0.5f));
-  OO_CHECK(Near(ListenerGain(), 0.5f));
-  OO_CHECK(Near(VolumeDefault(), 0.5f));
+  EXPECT_TRUE(sound != nullptr);
+  EXPECT_TRUE(oo::Sound::isSoundOK());
+  EXPECT_TRUE(oo::Sound::setUp());  // once only, and remembered
+  EXPECT_TRUE(Near(oo::Sound::masterVolume(), 0.5f));
+  EXPECT_TRUE(Near(ListenerGain(), 0.5f));
+  EXPECT_TRUE(Near(VolumeDefault(), 0.5f));
 }
 
-OO_TEST(masterVolumeIsClampedAndKept) {
-  SetUp();
+TEST(OOSound, masterVolumeIsClampedAndKept) {
+  ::SetUp();
   oo::Sound::setMasterVolume(0.25f);
-  OO_CHECK(Near(oo::Sound::masterVolume(), 0.25f));
-  OO_CHECK(Near(ListenerGain(), 0.25f));
-  OO_CHECK(Near(VolumeDefault(), 0.25f));
+  EXPECT_TRUE(Near(oo::Sound::masterVolume(), 0.25f));
+  EXPECT_TRUE(Near(ListenerGain(), 0.25f));
+  EXPECT_TRUE(Near(VolumeDefault(), 0.25f));
 
   oo::Sound::setMasterVolume(2.0f);
-  OO_CHECK(Near(oo::Sound::masterVolume(), 1.0f));
-  OO_CHECK(Near(VolumeDefault(), 1.0f));
+  EXPECT_TRUE(Near(oo::Sound::masterVolume(), 1.0f));
+  EXPECT_TRUE(Near(VolumeDefault(), 1.0f));
 
   oo::Sound::setMasterVolume(-1.0f);
-  OO_CHECK(Near(oo::Sound::masterVolume(), 0.0f));
-  OO_CHECK(Near(ListenerGain(), 0.0f));
+  EXPECT_TRUE(Near(oo::Sound::masterVolume(), 0.0f));
+  EXPECT_TRUE(Near(ListenerGain(), 0.0f));
 
   // The default is written only when the volume changes.
   oo::Defaults::standard().setFloat("volume_control", 0.75f);
   oo::Sound::setMasterVolume(0.0f);
-  OO_CHECK(Near(VolumeDefault(), 0.75f));
+  EXPECT_TRUE(Near(VolumeDefault(), 0.75f));
   oo::Sound::setMasterVolume(0.5f);
-  OO_CHECK(Near(VolumeDefault(), 0.5f));
+  EXPECT_TRUE(Near(VolumeDefault(), 0.5f));
 }
 
-OO_TEST(updateAsksTheMixer) {
-  SetUp();
+TEST(OOSound, updateAsksTheMixer) {
+  ::SetUp();
   const unsigned before = gMixerUpdates;
   oo::Sound::update();
   oo::Sound::update();
-  OO_CHECK(gMixerUpdates == before + 2);
+  EXPECT_TRUE(gMixerUpdates == before + 2);
 }
 
-OO_TEST(rootDefaults) {
-  SetUp();
+TEST(OOSound, rootDefaults) {
+  ::SetUp();
   const std::shared_ptr<oo::Sound> sound = oo::makeShared<oo::Sound>();
   const int before = gSubclassResponsibilities;
-  OO_CHECK(sound->name() == std::optional<std::string>(std::string()));
-  OO_CHECK(gSubclassResponsibilities == before + 1);
-  OO_CHECK(sound->soundBuffer() == 0);
-  OO_CHECK(gSubclassResponsibilities == before + 2);
-  OO_CHECK(!sound->soundIncomplete());
+  EXPECT_TRUE(sound->name() == std::optional<std::string>(std::string()));
+  EXPECT_TRUE(gSubclassResponsibilities == before + 1);
+  EXPECT_TRUE(sound->soundBuffer() == 0);
+  EXPECT_TRUE(gSubclassResponsibilities == before + 2);
+  EXPECT_TRUE(!sound->soundIncomplete());
   sound->rewind();
-  OO_CHECK(gSubclassResponsibilities == before + 2);
+  EXPECT_TRUE(gSubclassResponsibilities == before + 2);
 }
 
 // The class cluster: the decoded size picks the concrete sound; the decoder is
 // released.
-OO_TEST(loadingPicksBufferedOrStreamed) {
-  SetUp();
+TEST(OOSound, loadingPicksBufferedOrStreamed) {
+  ::SetUp();
   StartLog();
   {
     const std::shared_ptr<oo::Sound> small =
         oo::Sound::initWithContentsOfFile(std::string("small.ogg"));
-    OO_CHECK(dynamic_cast<oo::ALBufferedSound*>(small.get()) != nullptr);
-    OO_CHECK(small->name() == std::optional<std::string>("small.ogg"));
-    OO_CHECK(small->soundBuffer() == 42 && !small->soundIncomplete());
+    EXPECT_TRUE(dynamic_cast<oo::ALBufferedSound*>(small.get()) != nullptr);
+    EXPECT_TRUE(small->name() == std::optional<std::string>("small.ogg"));
+    EXPECT_TRUE(small->soundBuffer() == 42 && !small->soundIncomplete());
 
     const std::shared_ptr<oo::Sound> edge =
         oo::Sound::initWithContentsOfFile(std::string("edge.ogg"));
-    OO_CHECK(dynamic_cast<oo::ALBufferedSound*>(edge.get()) != nullptr);
+    EXPECT_TRUE(dynamic_cast<oo::ALBufferedSound*>(edge.get()) != nullptr);
 
     const std::shared_ptr<oo::Sound> big =
         oo::Sound::initWithContentsOfFile(std::string("big.ogg"));
-    OO_CHECK(dynamic_cast<oo::ALStreamedSound*>(big.get()) != nullptr);
-    OO_CHECK(big->name() == std::optional<std::string>("big.ogg"));
-    OO_CHECK(big->soundBuffer() == 7 && big->soundIncomplete());
+    EXPECT_TRUE(dynamic_cast<oo::ALStreamedSound*>(big.get()) != nullptr);
+    EXPECT_TRUE(big->name() == std::optional<std::string>("big.ogg"));
+    EXPECT_TRUE(big->soundBuffer() == 7 && big->soundIncomplete());
     big->rewind();
-    OO_CHECK(Rewinds(big.get()) == 1);
+    EXPECT_TRUE(Rewinds(big.get()) == 1);
 
-    OO_CHECK(gLiveDecoders == 0);
+    EXPECT_TRUE(gLiveDecoders == 0);
   }
 #ifndef NDEBUG
-  OO_CHECK(LogLinesContaining("Loaded sound small.ogg") == 1);
-  OO_CHECK(LogLinesContaining("Loaded sound big.ogg") == 1);
+  EXPECT_TRUE(LogLinesContaining("Loaded sound small.ogg") == 1);
+  EXPECT_TRUE(LogLinesContaining("Loaded sound big.ogg") == 1);
 #endif
-  OO_CHECK(LogLinesContaining("Failed to load sound") == 0);
+  EXPECT_TRUE(LogLinesContaining("Failed to load sound") == 0);
 }
 
-OO_TEST(loadingFailures) {
-  SetUp();
+TEST(OOSound, loadingFailures) {
+  ::SetUp();
   StartLog();
   // No decoder: null, and nothing logged.
-  OO_CHECK(oo::Sound::initWithContentsOfFile(std::nullopt) == nullptr);
-  OO_CHECK(oo::Sound::initWithContentsOfFile(std::string("missing.ogg")) ==
+  EXPECT_TRUE(oo::Sound::initWithContentsOfFile(std::nullopt) == nullptr);
+  EXPECT_TRUE(oo::Sound::initWithContentsOfFile(std::string("missing.ogg")) ==
            nullptr);
-  OO_CHECK(gLog.empty());
+  EXPECT_TRUE(gLog.empty());
 
   // The concrete sound refuses: null, logged.
-  OO_CHECK(oo::Sound::initWithContentsOfFile(std::string("bad.ogg")) == nullptr);
-  OO_CHECK(LogLinesContaining("Failed to load sound \"bad.ogg\"") == 1);
-  OO_CHECK(gLiveDecoders == 0);
+  EXPECT_TRUE(oo::Sound::initWithContentsOfFile(std::string("bad.ogg")) == nullptr);
+  EXPECT_TRUE(LogLinesContaining("Failed to load sound \"bad.ogg\"") == 1);
+  EXPECT_TRUE(gLiveDecoders == 0);
 }
 
-OO_TEST(subclassOverridingTheInitialiser) {
-  SetUp();
+TEST(OOSound, subclassOverridingTheInitialiser) {
+  ::SetUp();
   const std::shared_ptr<TestMusic> music =
       TestMusic::initWithContentsOfFile(std::string("small.ogg"));
-  OO_CHECK(dynamic_cast<TestMusic*>(static_cast<oo::Sound*>(music.get())) !=
+  EXPECT_TRUE(dynamic_cast<TestMusic*>(static_cast<oo::Sound*>(music.get())) !=
            nullptr);
-  OO_CHECK(music->name() == std::optional<std::string>("small.ogg"));
-  OO_CHECK(!music->soundIncomplete());
-  OO_CHECK(TestMusic::initWithContentsOfFile(std::string("missing.ogg")) ==
+  EXPECT_TRUE(music->name() == std::optional<std::string>("small.ogg"));
+  EXPECT_TRUE(!music->soundIncomplete());
+  EXPECT_TRUE(TestMusic::initWithContentsOfFile(std::string("missing.ogg")) ==
            nullptr);
 }
 
@@ -378,76 +379,74 @@ class TestCxxSound : public oo::Sound {
   int rewinds = 0;
 };
 
-OO_TEST(cxxApi) {
-  SetUp();
-  OO_CHECK(oo::Sound::isSoundOK() && oo::Sound::setUp());
+TEST(OOSound, cxxApi) {
+  ::SetUp();
+  EXPECT_TRUE(oo::Sound::isSoundOK() && oo::Sound::setUp());
   oo::Sound::setMasterVolume(0.125f);
-  OO_CHECK(Near(oo::Sound::masterVolume(), 0.125f));
+  EXPECT_TRUE(Near(oo::Sound::masterVolume(), 0.125f));
   const unsigned updates = gMixerUpdates;
   oo::Sound::update();
-  OO_CHECK(gMixerUpdates == updates + 1);
+  EXPECT_TRUE(gMixerUpdates == updates + 1);
 
   {
     // The factory answers the concrete sound.
     const std::shared_ptr<oo::Sound> small =
         oo::Sound::initWithContentsOfFile(std::string("small.ogg"));
-    OO_CHECK(dynamic_cast<oo::ALBufferedSound*>(small.get()) != nullptr);
-    OO_CHECK(small->name() == std::optional<std::string>("small.ogg"));
+    EXPECT_TRUE(dynamic_cast<oo::ALBufferedSound*>(small.get()) != nullptr);
+    EXPECT_TRUE(small->name() == std::optional<std::string>("small.ogg"));
     const std::shared_ptr<oo::Sound> big =
         oo::Sound::initWithContentsOfFile(std::string("big.ogg"));
-    OO_CHECK(dynamic_cast<oo::ALStreamedSound*>(big.get()) != nullptr);
-    OO_CHECK(!oo::Sound::initWithContentsOfFile(std::nullopt));
-    OO_CHECK(!oo::Sound::initWithContentsOfFile(std::string("bad.ogg")));
-    OO_CHECK(gLiveDecoders == 0);
+    EXPECT_TRUE(dynamic_cast<oo::ALStreamedSound*>(big.get()) != nullptr);
+    EXPECT_TRUE(!oo::Sound::initWithContentsOfFile(std::nullopt));
+    EXPECT_TRUE(!oo::Sound::initWithContentsOfFile(std::string("bad.ogg")));
+    EXPECT_TRUE(gLiveDecoders == 0);
   }
 
   const std::shared_ptr<oo::Sound> root = oo::makeShared<oo::Sound>();
   const int before = gSubclassResponsibilities;
-  OO_CHECK(root->name() == std::optional<std::string>(std::string()) &&
+  EXPECT_TRUE(root->name() == std::optional<std::string>(std::string()) &&
            root->soundBuffer() == 0);
-  OO_CHECK(gSubclassResponsibilities == before + 2);
-  OO_CHECK(!root->soundIncomplete());
+  EXPECT_TRUE(gSubclassResponsibilities == before + 2);
+  EXPECT_TRUE(!root->soundIncomplete());
   root->rewind();
-  OO_CHECK(!root->descriptionComponents().has_value());
+  EXPECT_TRUE(!root->descriptionComponents().has_value());
 }
 
 // A C++ subclass's overrides answer, and the root's defaults; "%@" names the
 // class.
-OO_TEST(cxxSoundBehindTheFacade) {
-  SetUp();
+TEST(OOSound, cxxSoundBehindTheFacade) {
+  ::SetUp();
   const std::shared_ptr<TestCxxSound> sound = oo::makeShared<TestCxxSound>();
   oo::Sound* root = sound.get();
 
-  OO_CHECK(root->name() == std::optional<std::string>("cxx.ogg"));
-  OO_CHECK(root->soundBuffer() == 99 && !root->soundIncomplete());
+  EXPECT_TRUE(root->name() == std::optional<std::string>("cxx.ogg"));
+  EXPECT_TRUE(root->soundBuffer() == 99 && !root->soundIncomplete());
   root->rewind();
-  OO_CHECK(sound->rewinds == 1);
+  EXPECT_TRUE(sound->rewinds == 1);
 
   const std::string text = root->description();
-  OO_CHECK(text.starts_with("<TestCxxSound 0x"));
-  OO_CHECK(text.ends_with(">{test}"));
+  EXPECT_TRUE(text.starts_with("<TestCxxSound 0x"));
+  EXPECT_TRUE(text.ends_with(">{test}"));
 }
 
 // Virtual calls reach the concrete sounds' overrides, and the root's where they
 // have none.
-OO_TEST(objCSoundBehindACxxPointer) {
-  SetUp();
+TEST(OOSound, objCSoundBehindACxxPointer) {
+  ::SetUp();
   const std::shared_ptr<oo::Sound> part =
       oo::Sound::initWithContentsOfFile(std::string("big.ogg"));
-  OO_CHECK(part != nullptr);
+  EXPECT_TRUE(part != nullptr);
 
   // The streamed sound is C++: its rewind reaches the root's.
-  OO_CHECK(part->name() == std::optional<std::string>("big.ogg"));
-  OO_CHECK(part->soundBuffer() == 7 && part->soundIncomplete());
+  EXPECT_TRUE(part->name() == std::optional<std::string>("big.ogg"));
+  EXPECT_TRUE(part->soundBuffer() == 7 && part->soundIncomplete());
   part->rewind();
-  OO_CHECK(Rewinds(part.get()) == 1);
-  OO_CHECK(!part->descriptionComponents().has_value());
+  EXPECT_TRUE(Rewinds(part.get()) == 1);
+  EXPECT_TRUE(!part->descriptionComponents().has_value());
 
   // A subclass that overrides only some: the root answers the rest.
   const std::shared_ptr<TestMusic> music =
       TestMusic::initWithContentsOfFile(std::string("small.ogg"));
-  OO_CHECK(music->name() == std::optional<std::string>("small.ogg"));
-  OO_CHECK(!music->soundIncomplete());
+  EXPECT_TRUE(music->name() == std::optional<std::string>("small.ogg"));
+  EXPECT_TRUE(!music->soundIncomplete());
 }
-
-OO_TEST_MAIN()

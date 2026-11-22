@@ -16,6 +16,8 @@
 	Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "JSConsole.h"
 #include "DebugMonitor.h"
@@ -25,7 +27,6 @@
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -604,7 +605,7 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
@@ -612,7 +613,7 @@ std::string EvalShown(const char *src, const char *expected)
 // MARK: Tests -------------------------------------------------------------------------------------
 
 // The console object and its settings object are made, and are not constructible from JS.
-OO_TEST(theConsoleObjects)
+TEST(OOJSConsole, theConsoleObjects)
 {
 	OO_CHECK_EVAL("typeof console", "object");
 	OO_CHECK_EVAL("typeof console.settings", "object");
@@ -623,7 +624,7 @@ OO_TEST(theConsoleObjects)
 
 
 // The settings are the monitor's configuration: read, set, set to null/undefined, deleted.
-OO_TEST(theSettingsAreTheMonitorsConfiguration)
+TEST(OOJSConsole, theSettingsAreTheMonitorsConfiguration)
 {
 	SetUpContext();
 	sMonitor = MonitorRecord();
@@ -639,26 +640,26 @@ OO_TEST(theSettingsAreTheMonitorsConfiguration)
 	// whether or not the object has the property, as SpiderMonkey ran it (upstream's
 	// ConsoleSettingsDeleteProperty sent -setConfigurationValue:nil forKey:).
 	OO_CHECK_EVAL("delete console.settings['also-gone']", "true");
-	OO_CHECK(sMonitor.configurationSets.size() == 4);
+	EXPECT_TRUE(sMonitor.configurationSets.size() == 4);
 	if (sMonitor.configurationSets.size() == 4)
 	{
-		OO_CHECK(sMonitor.configurationSets[0].first == "font-size" && sMonitor.configurationSets[0].second == oo::PList(14.0));
-		OO_CHECK(sMonitor.configurationSets[1].first == "font-face" && sMonitor.configurationSets[1].second == oo::PList(std::string("Courier")));
-		OO_CHECK(sMonitor.configurationSets[2].first == "gone" && sMonitor.configurationSets[2].second.isNull());
-		OO_CHECK(sMonitor.configurationSets[3].first == "also-gone" && sMonitor.configurationSets[3].second.isNull());
+		EXPECT_TRUE(sMonitor.configurationSets[0].first == "font-size" && sMonitor.configurationSets[0].second == oo::PList(14.0));
+		EXPECT_TRUE(sMonitor.configurationSets[1].first == "font-face" && sMonitor.configurationSets[1].second == oo::PList(std::string("Courier")));
+		EXPECT_TRUE(sMonitor.configurationSets[2].first == "gone" && sMonitor.configurationSets[2].second.isNull());
+		EXPECT_TRUE(sMonitor.configurationSets[3].first == "also-gone" && sMonitor.configurationSets[3].second.isNull());
 	}
 
 	// A value the engine cannot convert is a warning, not a setting.
 	sWarnings.clear();
 	OO_CHECK_EVAL("console.settings['f'] = {}", "[object Object]");
-	OO_CHECK(sMonitor.configurationSets.size() == 4);
-	OO_CHECK(sWarnings.size() == 1);
+	EXPECT_TRUE(sMonitor.configurationSets.size() == 4);
+	EXPECT_TRUE(sWarnings.size() == 1);
 }
 
 
 // consoleMessage(colour, message[, location, length]) is a console line; one argument is a
 // command result; none is a warning.
-OO_TEST(consoleMessage)
+TEST(OOJSConsole, consoleMessage)
 {
 	SetUpContext();
 	sMonitor = MonitorRecord();
@@ -667,8 +668,8 @@ OO_TEST(consoleMessage)
 	OO_CHECK_EVAL("console.consoleMessage('general', 'plain')", "undefined");
 	OO_CHECK_EVAL("console.consoleMessage('only')", "undefined");
 	OO_CHECK_EVAL("console.consoleMessage()", "undefined");
-	OO_CHECK(sMonitor.lines == (std::vector<std::string>{ "error|hello|1,3", "general|plain|0,0", "command-result|only|0,0" }));
-	OO_CHECK(sWarnings.size() == 1);
+	EXPECT_TRUE(sMonitor.lines == (std::vector<std::string>{ "error|hello|1,3", "general|plain|0,0", "command-result|only|0,0" }));
+	EXPECT_TRUE(sWarnings.size() == 1);
 
 	// Not the console: an internal error. (It names the native by its C++ signature, a QuickJS
 	// native's since the engine is QuickJS-ng's own.)
@@ -682,7 +683,7 @@ OO_TEST(consoleMessage)
 
 // clearConsole(), writeMemoryStats(), writeJSMemoryStats() and writeLogMarker() reach the monitor
 // and the log.
-OO_TEST(theMonitorsActions)
+TEST(OOJSConsole, theMonitorsActions)
 {
 	SetUpContext();
 	sMonitor = MonitorRecord();
@@ -690,8 +691,8 @@ OO_TEST(theMonitorsActions)
 	OO_CHECK_EVAL("console.writeMemoryStats()", "undefined");
 	OO_CHECK_EVAL("console.writeJSMemoryStats()", "undefined");
 	OO_CHECK_EVAL("console.writeLogMarker()", "undefined");
-	OO_CHECK(sMonitor.clears == 1 && sMonitor.memoryDumps == 1 && sMonitor.jsMemoryDumps == 1);
-	OO_CHECK(sLogMarkers == 1);
+	EXPECT_TRUE(sMonitor.clears == 1 && sMonitor.memoryDumps == 1 && sMonitor.jsMemoryDumps == 1);
+	EXPECT_TRUE(sLogMarkers == 1);
 #if defined(__GNUC__) && !defined(__clang__)
 	OO_CHECK_EVAL("console.clearConsole.call({})", "threw: Expected OODebugMonitor, got (null) in JSValue ConsoleClearConsole(JSContext*, JSValue, int, JSValue*). This is an internal error, please report it.");
 #else
@@ -702,13 +703,13 @@ OO_TEST(theMonitorsActions)
 
 // The read-write flags: the monitor's dropped-packet flag, the engine's error flags, the
 // universe's FPS display and detail level, the context's strict option and the debug flags.
-OO_TEST(theFlags)
+TEST(OOJSConsole, theFlags)
 {
 	SetUpContext();
 	sMonitor = MonitorRecord();
 	OO_CHECK_EVAL("console.ignoreDroppedPackets", "false");
 	OO_CHECK_EVAL("console.ignoreDroppedPackets = true", "true");
-	OO_CHECK(sMonitor.ignoresDroppedPackets);
+	EXPECT_TRUE(sMonitor.ignoresDroppedPackets);
 	OO_CHECK_EVAL("console.ignoreDroppedPackets", "true");
 
 	OO_CHECK_EVAL("console.__showErrorLocations = true", "true");
@@ -731,7 +732,7 @@ OO_TEST(theFlags)
 
 #ifndef NDEBUG
 	OO_CHECK_EVAL("console.debugFlags = 5", "5");
-	OO_CHECK(gDebugFlags == 5);
+	EXPECT_TRUE(gDebugFlags == 5);
 	OO_CHECK_EVAL("console.debugFlags", "5");
 #endif
 
@@ -740,7 +741,7 @@ OO_TEST(theFlags)
 
 
 // The OpenGL answers, from the extension manager.
-OO_TEST(theOpenGLAnswers)
+TEST(OOJSConsole, theOpenGLAnswers)
 {
 	OO_CHECK_EVAL("console.maximumDetailLevel", "DETAIL_3");
 	OO_CHECK_EVAL("console.glVendorString", "Test Vendor");
@@ -751,19 +752,19 @@ OO_TEST(theOpenGLAnswers)
 
 
 // inspectEntity() asks an entity that can be inspected to do so; other values do nothing.
-OO_TEST(inspectEntity)
+TEST(OOJSConsole, inspectEntity)
 {
 	SetUpContext();
 	sInspections = 0;
 	OO_CHECK_EVAL("console.inspectEntity(true)", "undefined");
 	OO_CHECK_EVAL("console.inspectEntity(false)", "undefined");
 	OO_CHECK_EVAL("console.inspectEntity(42)", "undefined");
-	OO_CHECK(sInspections == 1);
+	EXPECT_TRUE(sInspections == 1);
 }
 
 
 // The rest: the script stack, executable JavaScript, the log's message classes, garbage collection.
-OO_TEST(theOtherMethods)
+TEST(OOJSConsole, theOtherMethods)
 {
 	OO_CHECK_EVAL("console.scriptStack().length", "0");
 	OO_CHECK_EVAL("console.isExecutableJavaScript(this, '1 + 1')", "true");
@@ -783,7 +784,7 @@ OO_TEST(theOtherMethods)
 
 // profile(), getProfile() and trace() run a function under the engine's profiler (this file links
 // the real one), with "this" the given object or the console's script.
-OO_TEST(profiling)
+TEST(OOJSConsole, profiling)
 {
 	OO_CHECK_EVAL("console.trace(function () { return 7; }, {})", "7");
 	OO_CHECK_EVAL("console.trace(function () { return typeof this; })", "object");
@@ -791,6 +792,3 @@ OO_TEST(profiling)
 	OO_CHECK_EVAL("console.getProfile(function () {})", "null");	// the profile's property list, which this file's OOJSValueFromPList stand-in gives as null for a dictionary
 	OO_CHECK_EVAL("console.profile(42)", "threw: bad arguments: Console.profile (1): ; expected function");
 }
-
-
-OO_TEST_MAIN()

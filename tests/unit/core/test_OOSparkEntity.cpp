@@ -14,11 +14,12 @@
 
 #include <cmath>
 
+#include <gtest/gtest.h>
+
 #include "Color.h"
 #include "SparkEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -99,43 +100,41 @@ bool ComponentsAre(Entity* e, GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 
 }  // namespace
 
-OO_TEST(initWithPosition) {
+TEST(OOSparkEntity, initWithPosition) {
   {
-    SetUp();
+    ::SetUp();
     std::shared_ptr<oo::Color> color = oo::Color::colorWithRed(0.2f, 0.4f, 0.6f, 0.8f);
     Entity* spark = MakeSpark(make_HPvector(1, 2, 3), make_vector(10, 0, 0),
                               2.0, 4.0f, color.get());
-    OO_CHECK(spark != nullptr);
-    OO_CHECK(HPvector_equal(spark->getPosition(), make_HPvector(1, 2, 3)));
-    OO_CHECK(vector_equal(spark->getVelocity(), make_vector(10, 0, 0)));
-    OO_CHECK(spark->collisionRadius() == 2.0f &&
+    EXPECT_TRUE(spark != nullptr);
+    EXPECT_TRUE(HPvector_equal(spark->getPosition(), make_HPvector(1, 2, 3)));
+    EXPECT_TRUE(vector_equal(spark->getVelocity(), make_vector(10, 0, 0)));
+    EXPECT_TRUE(spark->collisionRadius() == 2.0f &&
              Particle(spark)->diameter() == 4.0f);
-    OO_CHECK(spark->status() == oo::EntityStatus::kEffect &&
+    EXPECT_TRUE(spark->status() == oo::EntityStatus::kEffect &&
              spark->getScanClass() == oo::ScanClass::kNoDraw);
-    OO_CHECK(spark->isEffect() && !spark->canCollide());
-    OO_CHECK(ComponentsAre(spark, 0.2f, 0.4f, 0.6f, 0.8f));
-    OO_CHECK(oo::EntityDescription(spark).starts_with("<OOSparkEntity 0x"));
+    EXPECT_TRUE(spark->isEffect() && !spark->canCollide());
+    EXPECT_TRUE(ComponentsAre(spark, 0.2f, 0.4f, 0.6f, 0.8f));
+    EXPECT_TRUE(oo::EntityDescription(spark).starts_with("<OOSparkEntity 0x"));
   }
 }
 
-OO_TEST(fadesTowardsRedAndIsRemoved) {
+TEST(OOSparkEntity, fadesTowardsRedAndIsRemoved) {
   {
-    SetUp();
+    ::SetUp();
     std::shared_ptr<oo::Color> color = oo::Color::colorWithRed(0.2f, 0.4f, 0.6f, 0.8f);
     Entity* spark = MakeSpark(make_HPvector(1, 2, 3), make_vector(10, 0, 0),
                               2.0, 4.0f, color.get());
 
     // Half way: half the base colour, plus half red; moved by its velocity.
     spark->update(1.0);
-    OO_CHECK(ComponentsAre(spark, 0.6f, 0.2f, 0.3f, 0.4f));
-    OO_CHECK(HPvector_equal(spark->getPosition(), make_HPvector(11, 2, 3)));
-    OO_CHECK(sRemoved == nullptr);
+    EXPECT_TRUE(ComponentsAre(spark, 0.6f, 0.2f, 0.3f, 0.4f));
+    EXPECT_TRUE(HPvector_equal(spark->getPosition(), make_HPvector(11, 2, 3)));
+    EXPECT_TRUE(sRemoved == nullptr);
 
     // Gone: red, transparent, and removed from the universe.
     spark->update(1.5);
-    OO_CHECK(ComponentsAre(spark, 1.0f, 0.0f, 0.0f, 0.0f));
-    OO_CHECK(sRemoved == spark);
+    EXPECT_TRUE(ComponentsAre(spark, 1.0f, 0.0f, 0.0f, 0.0f));
+    EXPECT_TRUE(sRemoved == spark);
   }
 }
-
-OO_TEST_MAIN()

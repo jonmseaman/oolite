@@ -12,10 +12,11 @@
 	Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "OOJSEngineTimeManagement.h"
 #include "oofnd/PList.hpp"
 
-#include "oo_test.hpp"
 
 #include <chrono>
 #include <string>
@@ -80,12 +81,12 @@ const oo::PList *Key(const oo::PList &dict, const char *key)
 // MARK: Tests -------------------------------------------------------------------------------------
 
 #if OOJS_PROFILE
-OO_TEST(profiling)
+TEST(OOJSEngineTimeManagement, profiling)
 {
 	{
-		OO_CHECK(!OOJSIsProfiling());
+		EXPECT_TRUE(!OOJSIsProfiling());
 		OOJSBeginProfiling(false);
-		OO_CHECK(OOJSIsProfiling());
+		EXPECT_TRUE(OOJSIsProfiling());
 
 		OOJSProfileStackFrame outer, inner, again, nameless;
 		OOJSProfileEnter(&outer, "outer");
@@ -101,79 +102,76 @@ OO_TEST(profiling)
 
 		std::shared_ptr<OOTimeProfile> profileRef = OOJSEndProfiling();
 		OOTimeProfile *profile = profileRef.get();
-		OO_CHECK(!OOJSIsProfiling());
-		OO_CHECK(profile != nullptr);
-		OO_CHECK_EQ(profile->profileEntries().size(), 3u);
+		EXPECT_TRUE(!OOJSIsProfiling());
+		EXPECT_TRUE(profile != nullptr);
+		EXPECT_EQ(profile->profileEntries().size(), 3u);
 
 		OOTimeProfileEntry *outerEntry = EntryNamed(profile, "outer");
 		OOTimeProfileEntry *innerEntry = EntryNamed(profile, "inner");
-		OO_CHECK(outerEntry != nullptr && innerEntry != nullptr);
-		OO_CHECK_EQ(outerEntry->hitCount(), 1u);
-		OO_CHECK_EQ(innerEntry->hitCount(), 2u);
-		OO_CHECK(!innerEntry->isJavaScriptFrame());
-		OO_CHECK(outerEntry->totalTimeSum() >= innerEntry->totalTimeSum());	// outer contains inner's first call
-		OO_CHECK(outerEntry->totalTimeSum() >= outerEntry->selfTimeSum());
-		OO_CHECK_EQ(innerEntry->totalTimeAverage(), innerEntry->totalTimeSum() / 2);
-		OO_CHECK_EQ(innerEntry->selfTimeMax(), innerEntry->totalTimeMax());	// nothing below it
-		OO_CHECK(profile->totalTime() >= outerEntry->totalTimeSum());
-		OO_CHECK_EQ(profile->nonExtensionTime(), profile->totalTime() - profile->extensionTime());
-		OO_CHECK_EQ(profile->javaScriptTime(), profile->totalTime() - profile->nativeTime());
-		OO_CHECK(profile->nativeTime() >= outerEntry->selfTimeSum() + innerEntry->selfTimeSum());
+		EXPECT_TRUE(outerEntry != nullptr && innerEntry != nullptr);
+		EXPECT_EQ(outerEntry->hitCount(), 1u);
+		EXPECT_EQ(innerEntry->hitCount(), 2u);
+		EXPECT_TRUE(!innerEntry->isJavaScriptFrame());
+		EXPECT_TRUE(outerEntry->totalTimeSum() >= innerEntry->totalTimeSum());	// outer contains inner's first call
+		EXPECT_TRUE(outerEntry->totalTimeSum() >= outerEntry->selfTimeSum());
+		EXPECT_EQ(innerEntry->totalTimeAverage(), innerEntry->totalTimeSum() / 2);
+		EXPECT_EQ(innerEntry->selfTimeMax(), innerEntry->totalTimeMax());	// nothing below it
+		EXPECT_TRUE(profile->totalTime() >= outerEntry->totalTimeSum());
+		EXPECT_EQ(profile->nonExtensionTime(), profile->totalTime() - profile->extensionTime());
+		EXPECT_EQ(profile->javaScriptTime(), profile->totalTime() - profile->nativeTime());
+		EXPECT_TRUE(profile->nativeTime() >= outerEntry->selfTimeSum() + innerEntry->selfTimeSum());
 
 		// Comparisons: "reverse" is longest first.
-		OO_CHECK_EQ(outerEntry->compareBySelfTime(outerEntry), oo::ComparisonResult::kSame);
-		OO_CHECK_EQ(oo::ToUnderlying(outerEntry->compareByTotalTime(innerEntry)), -oo::ToUnderlying(outerEntry->compareByTotalTimeReverse(innerEntry)));
-		OO_CHECK_EQ(oo::ToUnderlying(innerEntry->compareBySelfTime(outerEntry)), -oo::ToUnderlying(innerEntry->compareBySelfTimeReverse(outerEntry)));
-		if (outerEntry->totalTimeSum() > innerEntry->totalTimeSum())  OO_CHECK_EQ(outerEntry->compareByTotalTimeReverse(innerEntry), oo::ComparisonResult::kAscending);
+		EXPECT_EQ(outerEntry->compareBySelfTime(outerEntry), oo::ComparisonResult::kSame);
+		EXPECT_EQ(oo::ToUnderlying(outerEntry->compareByTotalTime(innerEntry)), -oo::ToUnderlying(outerEntry->compareByTotalTimeReverse(innerEntry)));
+		EXPECT_EQ(oo::ToUnderlying(innerEntry->compareBySelfTime(outerEntry)), -oo::ToUnderlying(innerEntry->compareBySelfTimeReverse(outerEntry)));
+		if (outerEntry->totalTimeSum() > innerEntry->totalTimeSum())  EXPECT_EQ(outerEntry->compareByTotalTimeReverse(innerEntry), oo::ComparisonResult::kAscending);
 
 		// The descriptions.
 		const std::string profileText = profile->description().value_or("");
-		OO_CHECK(profileText.find("Total time: ") != std::string::npos);
-		OO_CHECK(profileText.find("NAME  T  COUNT    TOTAL     SELF  TOTAL%   SELF%  SELFMAX") != std::string::npos);
-		OO_CHECK(profileText.find("inner  N      2 ") != std::string::npos);
-		OO_CHECK(profileText.find("outer  N      1 ") != std::string::npos);
-		OO_CHECK(profileText.find("(null)  N      1 ") != std::string::npos);
+		EXPECT_TRUE(profileText.find("Total time: ") != std::string::npos);
+		EXPECT_TRUE(profileText.find("NAME  T  COUNT    TOTAL     SELF  TOTAL%   SELF%  SELFMAX") != std::string::npos);
+		EXPECT_TRUE(profileText.find("inner  N      2 ") != std::string::npos);
+		EXPECT_TRUE(profileText.find("outer  N      1 ") != std::string::npos);
+		EXPECT_TRUE(profileText.find("(null)  N      1 ") != std::string::npos);
 		const std::string innerText = innerEntry->description().value_or("");
-		OO_CHECK(innerText.find("inner: 2 times, total ") != std::string::npos);
+		EXPECT_TRUE(innerText.find("inner: 2 times, total ") != std::string::npos);
 		const std::string outerText = outerEntry->description().value_or("");
-		OO_CHECK(outerText.find("outer: 1 time, ") != std::string::npos);
-		OO_CHECK(outerText.find("(self ") != std::string::npos);
+		EXPECT_TRUE(outerText.find("outer: 1 time, ") != std::string::npos);
+		EXPECT_TRUE(outerText.find("(self ") != std::string::npos);
 
 		// The property lists, as JS gets them.
 		sConverted.clear();
 		innerEntry->oo_jsValueInContext(NULL);
-		OO_CHECK_EQ(sConverted.size(), 1u);
+		EXPECT_EQ(sConverted.size(), 1u);
 		if (sConverted.size() == 1)
 		{
 			const oo::PList &plist = sConverted[0];
-			OO_CHECK(plist.isDict() && plist.count() == 9);
-			OO_CHECK(Key(plist, "name") != nullptr && *Key(plist, "name")->getIf<std::string>() == "inner");
-			OO_CHECK(Key(plist, "hitCount") != nullptr && Key(plist, "hitCount")->doubleValue() == 2);
-			OO_CHECK(Key(plist, "isJavaScriptFrame") != nullptr && Key(plist, "isJavaScriptFrame")->type() == oo::PList::Type::kBool && !Key(plist, "isJavaScriptFrame")->boolValue());
+			EXPECT_TRUE(plist.isDict() && plist.count() == 9);
+			EXPECT_TRUE(Key(plist, "name") != nullptr && *Key(plist, "name")->getIf<std::string>() == "inner");
+			EXPECT_TRUE(Key(plist, "hitCount") != nullptr && Key(plist, "hitCount")->doubleValue() == 2);
+			EXPECT_TRUE(Key(plist, "isJavaScriptFrame") != nullptr && Key(plist, "isJavaScriptFrame")->type() == oo::PList::Type::kBool && !Key(plist, "isJavaScriptFrame")->boolValue());
 		}
 		sConverted.clear();
 		EntryNamed(profile, "<none>")->oo_jsValueInContext(NULL);
-		OO_CHECK(sConverted.size() == 1 && sConverted[0].isDict() && sConverted[0].count() == 0);	// a nameless entry
+		EXPECT_TRUE(sConverted.size() == 1 && sConverted[0].isDict() && sConverted[0].count() == 0);	// a nameless entry
 
 		sConverted.clear();
 		profile->oo_jsValueInContext(NULL);
-		OO_CHECK_EQ(sConverted.size(), 1u);
+		EXPECT_EQ(sConverted.size(), 1u);
 		if (sConverted.size() == 1)
 		{
 			const oo::PList &plist = sConverted[0];
-			OO_CHECK(plist.isDict() && plist.count() == 7);
-			for (const char *key : { "totalTime", "javaScriptTime", "nativeTime", "extensionTime", "nonExtensionTime", "profilerOverhead" })  OO_CHECK(Key(plist, key) != nullptr && Key(plist, key)->type() == oo::PList::Type::kReal);
+			EXPECT_TRUE(plist.isDict() && plist.count() == 7);
+			for (const char *key : { "totalTime", "javaScriptTime", "nativeTime", "extensionTime", "nonExtensionTime", "profilerOverhead" })  EXPECT_TRUE(Key(plist, key) != nullptr && Key(plist, key)->type() == oo::PList::Type::kReal);
 			const oo::PList *profiles = Key(plist, "profiles");
-			OO_CHECK(profiles != nullptr && profiles->isArray() && profiles->count() == 3);
+			EXPECT_TRUE(profiles != nullptr && profiles->isArray() && profiles->count() == 3);
 			if (profiles != nullptr && profiles->isArray())
 			{
 				// Each entry's own property list, as #768 builds "profiles".
-				for (const oo::PList &entry : *profiles->getIf<oo::PList::Array>())  OO_CHECK(entry.isDict() && (entry.count() == 9 || entry.count() == 0));
+				for (const oo::PList &entry : *profiles->getIf<oo::PList::Array>())  EXPECT_TRUE(entry.isDict() && (entry.count() == 9 || entry.count() == 0));
 			}
 		}
 	}
 }
 #endif
-
-
-OO_TEST_MAIN()

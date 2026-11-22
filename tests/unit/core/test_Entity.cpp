@@ -26,12 +26,13 @@
 #include <type_traits>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "Entity.h"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 #include "DebugFlags.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Log.hpp"
 
@@ -219,7 +220,7 @@ bool QuaternionNear(Quaternion a, Quaternion b) {
 
 }  // namespace
 
-OO_TEST(defaults) {
+TEST(Entity, defaults) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -228,118 +229,118 @@ OO_TEST(defaults) {
     UniverseIvar<oo::TimeAbsolute>("universal_time") = 12.5;
 
     Entity* entity = oo::MadeEntity(oo::makeShared<Entity>());
-    OO_CHECK(entity->sessionID() == 7);
-    OO_CHECK(entity->getSpawnTime() == 12.5f);
-    OO_CHECK(!entity->getIsShip() && !entity->isDock() &&
+    EXPECT_TRUE(entity->sessionID() == 7);
+    EXPECT_TRUE(entity->getSpawnTime() == 12.5f);
+    EXPECT_TRUE(!entity->getIsShip() && !entity->isDock() &&
              !entity->getIsStation() && !entity->getIsSubEntity() &&
              !entity->getIsPlayer());
-    OO_CHECK(!entity->isPlanet() && !entity->isSun() &&
+    EXPECT_TRUE(!entity->isPlanet() && !entity->isSun() &&
              !entity->isStellarObject() && !entity->isSky() &&
              !entity->getIsWormhole());
-    OO_CHECK(!entity->isEffect() && !entity->getIsVisualEffect() &&
+    EXPECT_TRUE(!entity->isEffect() && !entity->getIsVisualEffect() &&
              !entity->isWaypoint() && !entity->getIsImmuneToBreakPatternHide());
-    OO_CHECK(entity->getIsSunlit());
-    OO_CHECK(entity->status() == oo::EntityStatus::kCockpitDisplay &&
+    EXPECT_TRUE(entity->getIsSunlit());
+    EXPECT_TRUE(entity->status() == oo::EntityStatus::kCockpitDisplay &&
              entity->getScanClass() == oo::ScanClass::kNotSet);
-    OO_CHECK(!entity->isInSpace());
-    OO_CHECK(HPvector_equal(entity->getPosition(), kZeroHPVector));
-    OO_CHECK(quaternion_equal(entity->getOrientation(), kIdentityQuaternion));
-    OO_CHECK(oo::MatrixEqual(entity->rotationMatrix(), kIdentityMatrix));
-    OO_CHECK(entity->getEnergy() == 0 && entity->getMaxEnergy() == 0 &&
+    EXPECT_TRUE(!entity->isInSpace());
+    EXPECT_TRUE(HPvector_equal(entity->getPosition(), kZeroHPVector));
+    EXPECT_TRUE(quaternion_equal(entity->getOrientation(), kIdentityQuaternion));
+    EXPECT_TRUE(oo::MatrixEqual(entity->rotationMatrix(), kIdentityMatrix));
+    EXPECT_TRUE(entity->getEnergy() == 0 && entity->getMaxEnergy() == 0 &&
              entity->getMass() == 0);
-    OO_CHECK(entity->collisionRadius() == 0 && entity->frustumRadius() == 0);
-    OO_CHECK(entity->getUniversalID() == NO_TARGET &&
+    EXPECT_TRUE(entity->collisionRadius() == 0 && entity->frustumRadius() == 0);
+    EXPECT_TRUE(entity->getUniversalID() == NO_TARGET &&
              entity->getLastDrawCounter() == 0);
-    OO_CHECK(entity->owner() == nullptr && entity->parentEntity() == nullptr &&
+    EXPECT_TRUE(entity->owner() == nullptr && entity->parentEntity() == nullptr &&
              entity->rootShipEntity() == nullptr);
-    OO_CHECK(entity->getCollisionRegion() == nullptr);
-    OO_CHECK(entity->getCollidingEntities() != nullptr &&
+    EXPECT_TRUE(entity->getCollisionRegion() == nullptr);
+    EXPECT_TRUE(entity->getCollidingEntities() != nullptr &&
              entity->getCollidingEntities()->empty());
-    OO_CHECK(entity->canCollide() && entity->isVisible() &&
+    EXPECT_TRUE(entity->canCollide() && entity->isVisible() &&
              !entity->throwingSparks());
-    OO_CHECK(NoDrawDistance(entity) == 100000.0f);
+    EXPECT_TRUE(NoDrawDistance(entity) == 100000.0f);
 
     oo::Color* fog = entity->fogUniform().get();
-    OO_CHECK(fog != nullptr);
-    OO_CHECK(fog->redComponent() == 0 && fog->greenComponent() == 0 &&
+    EXPECT_TRUE(fog != nullptr);
+    EXPECT_TRUE(fog->redComponent() == 0 && fog->greenComponent() == 0 &&
              fog->blueComponent() == 0 && fog->alphaComponent() == 0);
 
     // The components %@ prints.
-    OO_CHECK(oo::EntityDescription(entity).ends_with(
+    EXPECT_TRUE(oo::EntityDescription(entity).ends_with(
         "{position: (0, 0, 0) scanClass: CLASS_NOT_SET status: "
         "STATUS_COCKPIT_DISPLAY}"));
-    OO_CHECK(oo::EntityDescription(entity).starts_with("<Entity 0x"));
+    EXPECT_TRUE(oo::EntityDescription(entity).starts_with("<Entity 0x"));
   }
 }
 
-OO_TEST(accessors) {
+TEST(Entity, accessors) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(make_HPvector(1, 1, 1), make_HPvector(0, 0, 10));
 
     Entity* entity = MakeEntity(make_HPvector(3, 4, 10), 2.0f);
-    OO_CHECK(HPvector_equal(entity->getPosition(), make_HPvector(3, 4, 10)));
+    EXPECT_TRUE(HPvector_equal(entity->getPosition(), make_HPvector(3, 4, 10)));
     // -setPosition: updates the camera-relative position from PLAYER's
     // viewpoint.
-    OO_CHECK(
+    EXPECT_TRUE(
         VectorEqual(entity->getCameraRelativePosition(), make_vector(3, 4, 0)));
-    OO_CHECK(entity->cameraRangeFront() == 3.0f &&
+    EXPECT_TRUE(entity->cameraRangeFront() == 3.0f &&
              entity->cameraRangeBack() == 7.0f);
-    OO_CHECK(VectorEqual(entity->relativePosition(), make_vector(2, 3, 9)));
+    EXPECT_TRUE(VectorEqual(entity->relativePosition(), make_vector(2, 3, 9)));
 
     entity->setPositionX(-1, -2, -3);
-    OO_CHECK(HPvector_equal(entity->getPosition(), make_HPvector(-1, -2, -3)));
-    OO_CHECK(VectorEqual(entity->getCameraRelativePosition(),
+    EXPECT_TRUE(HPvector_equal(entity->getPosition(), make_HPvector(-1, -2, -3)));
+    EXPECT_TRUE(VectorEqual(entity->getCameraRelativePosition(),
                          make_vector(-1, -2, -13)));
 
     Entity* other = MakeEntity(make_HPvector(2, 2, 2), 1.0f);
-    OO_CHECK(VectorEqual(entity->vectorTo(other), make_vector(3, 4, 5)));
+    EXPECT_TRUE(VectorEqual(entity->vectorTo(other), make_vector(3, 4, 5)));
 
     entity->setVelocity(make_vector(3, 0, 4));
-    OO_CHECK(VectorEqual(entity->getVelocity(), make_vector(3, 0, 4)) &&
+    EXPECT_TRUE(VectorEqual(entity->getVelocity(), make_vector(3, 0, 4)) &&
              entity->speed() == 5.0);
     entity->setEnergy(40);
     entity->setMaxEnergy(100);
-    OO_CHECK(entity->getEnergy() == 40 && entity->getMaxEnergy() == 100);
+    EXPECT_TRUE(entity->getEnergy() == 40 && entity->getMaxEnergy() == 100);
     entity->setDistanceTravelled(9);
-    OO_CHECK(entity->getDistanceTravelled() == 9);
+    EXPECT_TRUE(entity->getDistanceTravelled() == 9);
     entity->setStatus(oo::EntityStatus::kInFlight);
-    OO_CHECK(entity->status() == oo::EntityStatus::kInFlight && entity->isInSpace());
+    EXPECT_TRUE(entity->status() == oo::EntityStatus::kInFlight && entity->isInSpace());
     entity->setStatus(oo::EntityStatus::kDead);
-    OO_CHECK(!entity->isInSpace());
+    EXPECT_TRUE(!entity->isInSpace());
     entity->setScanClass(oo::ScanClass::kBuoy);
-    OO_CHECK(entity->getScanClass() == oo::ScanClass::kBuoy);
+    EXPECT_TRUE(entity->getScanClass() == oo::ScanClass::kBuoy);
     entity->setUniversalID(42);
-    OO_CHECK(entity->getUniversalID() == 42);
+    EXPECT_TRUE(entity->getUniversalID() == 42);
     entity->setUniversalID(
         NO_TARGET);  // so that -dealloc does not ask the universe to remove it
     entity->setThrowSparks(true);
-    OO_CHECK(entity->throwingSparks());
+    EXPECT_TRUE(entity->throwingSparks());
     entity->throwSparks();
     entity->setLastDrawCounter(17);
-    OO_CHECK(entity->getLastDrawCounter() == 17);
+    EXPECT_TRUE(entity->getLastDrawCounter() == 17);
 
     // -compareZeroDistance: sorts the nearer entity later.
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
     entity->update(0);
     other->update(0);
-    OO_CHECK(entity->zeroDistance() == 14.0 && other->zeroDistance() == 12.0);
-    OO_CHECK(entity->compareZeroDistance(other) == oo::ComparisonResult::kAscending);
-    OO_CHECK(other->compareZeroDistance(entity) == oo::ComparisonResult::kDescending);
-    OO_CHECK(entity->compareZeroDistance(nullptr) == oo::ComparisonResult::kDescending);
+    EXPECT_TRUE(entity->zeroDistance() == 14.0 && other->zeroDistance() == 12.0);
+    EXPECT_TRUE(entity->compareZeroDistance(other) == oo::ComparisonResult::kAscending);
+    EXPECT_TRUE(other->compareZeroDistance(entity) == oo::ComparisonResult::kDescending);
+    EXPECT_TRUE(entity->compareZeroDistance(nullptr) == oo::ComparisonResult::kDescending);
 
-    OO_CHECK(!entity->checkCloseCollisionWith(nullptr) &&
+    EXPECT_TRUE(!entity->checkCloseCollisionWith(nullptr) &&
              entity->checkCloseCollisionWith(other));
     entity->takeEnergyDamage(10, other, other, "EQ_WEAPON_TEST");
-    OO_CHECK(entity->getEnergy() == 40);  // the root takes no damage
+    EXPECT_TRUE(entity->getEnergy() == 40);  // the root takes no damage
     entity->warnAboutHostiles();
     entity->wasAddedToUniverse();
     entity->wasRemovedFromUniverse();
   }
 }
 
-OO_TEST(orientationAndMovement) {
+TEST(Entity, orientationAndMovement) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -349,24 +350,24 @@ OO_TEST(orientationAndMovement) {
     Quaternion q =
         make_quaternion(2, 0, 0, 0);  // normalised by -setOrientation:
     entity->setOrientation(q);
-    OO_CHECK(quaternion_equal(entity->getOrientation(), kIdentityQuaternion));
-    OO_CHECK(
+    EXPECT_TRUE(quaternion_equal(entity->getOrientation(), kIdentityQuaternion));
+    EXPECT_TRUE(
         quaternion_equal(entity->normalOrientation(), kIdentityQuaternion));
 
     // No rotation and no rotation last frame: nothing happens.
     entity->applyRoll(0, 0);
-    OO_CHECK(quaternion_equal(entity->getOrientation(), kIdentityQuaternion));
+    EXPECT_TRUE(quaternion_equal(entity->getOrientation(), kIdentityQuaternion));
 
     Quaternion expected = kIdentityQuaternion;
     quaternion_rotate_about_z(&expected, -0.25f);
     quaternion_rotate_about_x(&expected, -0.5f);
     quaternion_normalize(&expected);
     entity->applyRoll(0.25f, 0.5f);
-    OO_CHECK(QuaternionNear(entity->getOrientation(), expected));
-    OO_CHECK(
+    EXPECT_TRUE(QuaternionNear(entity->getOrientation(), expected));
+    EXPECT_TRUE(
         oo::MatrixEqual(entity->rotationMatrix(),
                       oo::MatrixForQuaternionRotation(entity->getOrientation())));
-    OO_CHECK(
+    EXPECT_TRUE(
         oo::MatrixEqual(entity->drawRotationMatrix(), entity->rotationMatrix()));
 
     quaternion_rotate_about_z(&expected, -0.1f);
@@ -374,32 +375,32 @@ OO_TEST(orientationAndMovement) {
     quaternion_rotate_about_y(&expected, -0.3f);
     quaternion_normalize(&expected);
     entity->applyRoll(0.1f, 0.2f, 0.3f);
-    OO_CHECK(QuaternionNear(entity->getOrientation(), expected));
+    EXPECT_TRUE(QuaternionNear(entity->getOrientation(), expected));
 
     entity->setNormalOrientation(kIdentityQuaternion);
-    OO_CHECK(quaternion_equal(entity->getOrientation(), kIdentityQuaternion));
+    EXPECT_TRUE(quaternion_equal(entity->getOrientation(), kIdentityQuaternion));
 
     // Forward is +z for the identity orientation.
     entity->moveForward(5);
-    OO_CHECK(HPvector_equal(entity->getPosition(), make_HPvector(0, 0, 5)));
-    OO_CHECK(entity->getDistanceTravelled() == 5);
+    EXPECT_TRUE(HPvector_equal(entity->getPosition(), make_HPvector(0, 0, 5)));
+    EXPECT_TRUE(entity->getDistanceTravelled() == 5);
 
     oo::Matrix translated =
         oo::MatrixHPTranslate(kIdentityMatrix, make_HPvector(0, 0, 5));
-    OO_CHECK(oo::MatrixEqual(entity->transformationMatrix(), translated));
-    OO_CHECK(oo::MatrixEqual(entity->drawTransformationMatrix(), translated));
+    EXPECT_TRUE(oo::MatrixEqual(entity->transformationMatrix(), translated));
+    EXPECT_TRUE(oo::MatrixEqual(entity->drawTransformationMatrix(), translated));
 
     // With no parent, the absolute position of an offset is position + offset
     // rotated.
-    OO_CHECK(HPvector_equal(entity->absolutePositionForSubentity(),
+    EXPECT_TRUE(HPvector_equal(entity->absolutePositionForSubentity(),
                             make_HPvector(0, 0, 5)));
-    OO_CHECK(HPvector_equal(
+    EXPECT_TRUE(HPvector_equal(
         entity->absolutePositionForSubentityOffset(make_HPvector(1, 2, 3)),
         make_HPvector(1, 2, 8)));
   }
 }
 
-OO_TEST(update) {
+TEST(Entity, update) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -410,25 +411,25 @@ OO_TEST(update) {
     Entity* entity = MakeEntity(make_HPvector(3, 0, 4), 1.0f);
     entity->setVelocity(make_vector(1, 0, 0));
     entity->update(2);
-    OO_CHECK(entity->zeroDistance() == 25.0 &&
+    EXPECT_TRUE(entity->zeroDistance() == 25.0 &&
              entity->camZeroDistance() == 25.0);
-    OO_CHECK(VectorEqual(CameraRelativePosition(entity), make_vector(3, 0, 4)));
-    OO_CHECK(HPvector_equal(entity->getPosition(), make_HPvector(3, 0, 4)));
-    OO_CHECK(
+    EXPECT_TRUE(VectorEqual(CameraRelativePosition(entity), make_vector(3, 0, 4)));
+    EXPECT_TRUE(HPvector_equal(entity->getPosition(), make_HPvector(3, 0, 4)));
+    EXPECT_TRUE(
         HasMoved(entity) &&
         HasRotated(entity));  // from the zeroed last position and orientation
     entity->update(2);
-    OO_CHECK(!HasMoved(entity) && !HasRotated(entity));
+    EXPECT_TRUE(!HasMoved(entity) && !HasRotated(entity));
 
     // In flight, from PLAYER's position and viewpoint, then the velocity
     // applies.
     entity->setStatus(oo::EntityStatus::kInFlight);
     entity->update(2);
-    OO_CHECK(entity->zeroDistance() == 18.0 &&
+    EXPECT_TRUE(entity->zeroDistance() == 18.0 &&
              entity->camZeroDistance() == 13.0);
-    OO_CHECK(VectorEqual(CameraRelativePosition(entity), make_vector(3, 0, 2)));
-    OO_CHECK(HPvector_equal(entity->getPosition(), make_HPvector(5, 0, 4)));
-    OO_CHECK(HasMoved(entity));
+    EXPECT_TRUE(VectorEqual(CameraRelativePosition(entity), make_vector(3, 0, 2)));
+    EXPECT_TRUE(HPvector_equal(entity->getPosition(), make_HPvector(5, 0, 4)));
+    EXPECT_TRUE(HasMoved(entity));
 
     // A subentity takes its owner's distances.
     Entity* sub = MakeEntity(make_HPvector(100, 0, 0), 1.0f);
@@ -436,12 +437,12 @@ OO_TEST(update) {
     SetSubEntity(sub, true);
     sub->setStatus(oo::EntityStatus::kInFlight);
     sub->update(0);
-    OO_CHECK(sub->zeroDistance() == 18.0 && sub->camZeroDistance() == 13.0);
-    OO_CHECK(sub->getIsSubEntity());
+    EXPECT_TRUE(sub->zeroDistance() == 18.0 && sub->camZeroDistance() == 13.0);
+    EXPECT_TRUE(sub->getIsSubEntity());
   }
 }
 
-OO_TEST(ownersAndParents) {
+TEST(Entity, ownersAndParents) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -452,39 +453,39 @@ OO_TEST(ownersAndParents) {
       oo::AutoreleaseScope scope;
       Entity* owner = oo::RetainEntity(oo::MadeEntity(oo::makeShared<Entity>()));
       entity->setOwner(owner);
-      OO_CHECK(entity->owner() == owner);
+      EXPECT_TRUE(entity->owner() == owner);
       // Not a ship with this as a subentity: no parent, and not a ship itself.
-      OO_CHECK(entity->parentEntity() == nullptr &&
+      EXPECT_TRUE(entity->parentEntity() == nullptr &&
                entity->rootShipEntity() == nullptr);
-      OO_CHECK(entity->superShaderBindingTarget() == nullptr);
+      EXPECT_TRUE(entity->superShaderBindingTarget() == nullptr);
       oo::ReleaseEntity(owner);
     }
-    OO_CHECK(entity->owner() == nullptr);  // held weakly
+    EXPECT_TRUE(entity->owner() == nullptr);  // held weakly
 
     entity->setOwner(entity);
-    OO_CHECK(entity->owner() == entity);
+    EXPECT_TRUE(entity->owner() == entity);
     entity->setOwner(nullptr);
-    OO_CHECK(entity->owner() == nullptr);
+    EXPECT_TRUE(entity->owner() == nullptr);
     CaptureLog();
     entity->dumpState();
-    OO_CHECK(Logged("State for <Entity 0x") && Logged("Universal ID: 0") &&
+    EXPECT_TRUE(Logged("State for <Entity 0x") && Logged("Universal ID: 0") &&
              Logged("Scan class: CLASS_NOT_SET"));
-    OO_CHECK(Logged("Status: STATUS_COCKPIT_DISPLAY") &&
+    EXPECT_TRUE(Logged("Status: STATUS_COCKPIT_DISPLAY") &&
              Logged("Position: (0, 0, 0)") &&
              Logged("Orientation: (1 + 0i + 0j + 0k)"));
-    OO_CHECK(Logged("Distance travelled: 0") && Logged("Energy: 0 of 0") &&
+    EXPECT_TRUE(Logged("Distance travelled: 0") && Logged("Energy: 0 of 0") &&
              Logged("Mass: 0"));
     // The owner line and those after it are not pinned here: the Objective-C
     // body described the literal @"none", and a tiny string's -description
     // could raise, which -dumpState swallowed, ending the dump.
 
     SetIsShip(entity, true);
-    OO_CHECK(entity->getIsShip() && entity->rootShipEntity() == entity);
+    EXPECT_TRUE(entity->getIsShip() && entity->rootShipEntity() == entity);
     SetIsShip(entity, false);
   }
 }
 
-OO_TEST(linkedLists) {
+TEST(Entity, linkedLists) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -496,18 +497,18 @@ OO_TEST(linkedLists) {
     Entity* c = MakeEntity(make_HPvector(30, 20, 10), 1.0f);
 
     a->updateLinkedLists();  // not in the lists: nothing happens
-    OO_CHECK(XNext(a) == nullptr && sUniverse->x_list_start == nullptr);
+    EXPECT_TRUE(XNext(a) == nullptr && sUniverse->x_list_start == nullptr);
 
     a->addToLinkedLists();
     b->addToLinkedLists();
     c->addToLinkedLists();
     sUniverse->n_entities = 3;
-    OO_CHECK(sUniverse->x_list_start == a && XNext(a) == b && XNext(b) == c &&
+    EXPECT_TRUE(sUniverse->x_list_start == a && XNext(a) == b && XNext(b) == c &&
              XNext(c) == nullptr);
-    OO_CHECK(XPrevious(a) == nullptr && XPrevious(b) == a && XPrevious(c) == b);
-    OO_CHECK(sUniverse->y_list_start == b && YNext(b) == c && YNext(c) == a &&
+    EXPECT_TRUE(XPrevious(a) == nullptr && XPrevious(b) == a && XPrevious(c) == b);
+    EXPECT_TRUE(sUniverse->y_list_start == b && YNext(b) == c && YNext(c) == a &&
              YNext(a) == nullptr);
-    OO_CHECK(sUniverse->z_list_start == c && ZNext(c) == a && ZNext(a) == b &&
+    EXPECT_TRUE(sUniverse->z_list_start == c && ZNext(c) == a && ZNext(a) == b &&
              ZNext(b) == nullptr);
 
     // Moving b to the far end of x re-sorts it, and the lists still check.
@@ -517,22 +518,22 @@ OO_TEST(linkedLists) {
 #endif
     b->setPosition(make_HPvector(40, 10, 30));
     b->updateLinkedLists();
-    OO_CHECK(sUniverse->x_list_start == a && XNext(a) == c && XNext(c) == b &&
+    EXPECT_TRUE(sUniverse->x_list_start == a && XNext(a) == c && XNext(c) == b &&
              XNext(b) == nullptr);
-    OO_CHECK(XPrevious(b) == c && XPrevious(c) == a);
-    OO_CHECK(sUniverse->y_list_start == b && YNext(b) == c);
+    EXPECT_TRUE(XPrevious(b) == c && XPrevious(c) == a);
+    EXPECT_TRUE(sUniverse->y_list_start == b && YNext(b) == c);
 
     c->removeFromLinkedLists();
     sUniverse->n_entities = 2;
-    OO_CHECK(sUniverse->x_list_start == a && XNext(a) == b &&
+    EXPECT_TRUE(sUniverse->x_list_start == a && XNext(a) == b &&
              XPrevious(b) == a);
-    OO_CHECK(sUniverse->z_list_start == a && ZNext(a) == b);
-    OO_CHECK(XNext(c) == nullptr && XPrevious(c) == nullptr);
+    EXPECT_TRUE(sUniverse->z_list_start == a && ZNext(a) == b);
+    EXPECT_TRUE(XNext(c) == nullptr && XPrevious(c) == nullptr);
     c->removeFromLinkedLists();  // removed already: nothing happens
 #ifndef NDEBUG
-    OO_CHECK(Logged("DEBUG removing entity <Entity 0x") &&
+    EXPECT_TRUE(Logged("DEBUG removing entity <Entity 0x") &&
              Logged("from linked lists"));
-    OO_CHECK(!Logged("Broken") && !Logged("problem encountered"));
+    EXPECT_TRUE(!Logged("Broken") && !Logged("problem encountered"));
     gDebugFlags = 0;
 #endif
 
@@ -540,7 +541,7 @@ OO_TEST(linkedLists) {
     // knows (the universe's own check rebuilds it): pinned as it is.
     a->setPosition(make_HPvector(50, 30, 20));
     a->updateLinkedLists();
-    OO_CHECK(sUniverse->x_list_start == a && XNext(b) == a &&
+    EXPECT_TRUE(sUniverse->x_list_start == a && XNext(b) == a &&
              XPrevious(a) == b && XPrevious(b) == nullptr);
 
     a->removeFromLinkedLists();
@@ -549,7 +550,7 @@ OO_TEST(linkedLists) {
   }
 }
 
-OO_TEST(sessionAndShaderBindings) {
+TEST(Entity, sessionAndShaderBindings) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -557,30 +558,30 @@ OO_TEST(sessionAndShaderBindings) {
     UniverseIvar<oo::TimeAbsolute>("universal_time") = 100;
 
     Entity* entity = MakeEntity(make_HPvector(0, 0, 3), 1.0f);
-    OO_CHECK(entity->validForAddToUniverse());
+    EXPECT_TRUE(entity->validForAddToUniverse());
     UniverseIvar<std::size_t>("_sessionID") = 1;  // a new game started since
-    OO_CHECK(!entity->validForAddToUniverse());
+    EXPECT_TRUE(!entity->validForAddToUniverse());
 
     UniverseIvar<oo::TimeAbsolute>("universal_time") = 104.5;
-    OO_CHECK(entity->universalTime() == 104.5f &&
+    EXPECT_TRUE(entity->universalTime() == 104.5f &&
              entity->getSpawnTime() == 100.0f);
-    OO_CHECK(entity->timeElapsedSinceSpawn() == 4.5f);
-    OO_CHECK(VectorEqual(entity->relativePosition(), make_vector(0, -1, 3)));
+    EXPECT_TRUE(entity->timeElapsedSinceSpawn() == 4.5f);
+    EXPECT_TRUE(VectorEqual(entity->relativePosition(), make_vector(0, -1, 3)));
 
     entity->setAtmosphereFogging(
         oo::Color::colorWithRed(0.25f, 0.5f, 0.75f, 1.0f).get());
-    OO_CHECK(entity->fogUniform().get()->greenComponent() == 0.5f &&
+    EXPECT_TRUE(entity->fogUniform().get()->greenComponent() == 0.5f &&
              entity->fogUniform().get()->alphaComponent() == 1.0f);
     entity->setAtmosphereFogging(nullptr);
-    OO_CHECK(entity->fogUniform().get() == nullptr);
+    EXPECT_TRUE(entity->fogUniform().get() == nullptr);
 
 #ifndef NDEBUG
-    OO_CHECK(entity->allTextures().empty());
-    OO_CHECK(entity->descriptionForObjDumpBasic() ==
+    EXPECT_TRUE(entity->allTextures().empty());
+    EXPECT_TRUE(entity->descriptionForObjDumpBasic() ==
              std::optional<std::string>(
                  "Entity position: (0, 0, 3) scanClass: CLASS_NOT_SET status: "
                  "STATUS_COCKPIT_DISPLAY"));
-    OO_CHECK(entity->descriptionForObjDump() ==
+    EXPECT_TRUE(entity->descriptionForObjDump() ==
              std::optional<std::string>(
                  "Entity position: (0, 0, 3) scanClass: CLASS_NOT_SET status: "
                  "STATUS_COCKPIT_DISPLAY range: 3.16228 (visible: yes)"));
@@ -588,7 +589,7 @@ OO_TEST(sessionAndShaderBindings) {
   }
 }
 
-OO_TEST(objCSubclassOverrides) {
+TEST(Entity, objCSubclassOverrides) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -601,40 +602,40 @@ OO_TEST(objCSubclassOverrides) {
 
     // The root's own members call the virtual members, so they reach the
     // subclass's overrides.
-    OO_CHECK(entity->isStellarObject());
+    EXPECT_TRUE(entity->isStellarObject());
     entity->setPosition(make_HPvector(0, 0, 10));
-    OO_CHECK(entity->_cameraUpdates == 1);
-    OO_CHECK(entity->cameraRangeFront() == 8.5f &&
+    EXPECT_TRUE(entity->_cameraUpdates == 1);
+    EXPECT_TRUE(entity->cameraRangeFront() == 8.5f &&
              entity->cameraRangeBack() == 11.5f);
     entity->setOrientation(kIdentityQuaternion);
     entity->applyRoll(0.5f, 0);
-    OO_CHECK(entity->_orientationChanges == 2);
+    EXPECT_TRUE(entity->_orientationChanges == 2);
     CaptureLog();
-    OO_CHECK(
+    EXPECT_TRUE(
         !entity->validForAddToUniverse());  // session 3 is not the universe's 0
-    OO_CHECK(Logged("from session 3 cannot be added to universe in session 0"));
+    EXPECT_TRUE(Logged("from session 3 cannot be added to universe in session 0"));
     entity->_session = 0;
-    OO_CHECK(entity->validForAddToUniverse());
+    EXPECT_TRUE(entity->validForAddToUniverse());
     entity->dumpState();
-    OO_CHECK(entity->_selfStateDumps == 1);
-    OO_CHECK(Logged("State for <TestObjCEntity 0x") && Logged("Mass: 0"));
+    EXPECT_TRUE(entity->_selfStateDumps == 1);
+    EXPECT_TRUE(Logged("State for <TestObjCEntity 0x") && Logged("Mass: 0"));
     entity->setStatus(oo::EntityStatus::kInFlight);
     entity->update(0);
-    OO_CHECK(entity->_cameraUpdates == 2);
-    OO_CHECK(!entity->canCollide());
+    EXPECT_TRUE(entity->_cameraUpdates == 2);
+    EXPECT_TRUE(!entity->canCollide());
     entity->drawImmediate(false, false);
-    OO_CHECK(entity->_draws == 1);
+    EXPECT_TRUE(entity->_draws == 1);
 #ifndef NDEBUG
     entity->_visible = false;
-    OO_CHECK(
+    EXPECT_TRUE(
         entity->descriptionForObjDump()->ends_with("range: 10 (visible: no)"));
-    OO_CHECK(entity->descriptionForObjDumpBasic()->starts_with(
+    EXPECT_TRUE(entity->descriptionForObjDumpBasic()->starts_with(
         "TestObjCEntity position: "));
 #endif
   }
 }
 
-OO_TEST(rootDefaultsForSubclassResponsibilities) {
+TEST(Entity, rootDefaultsForSubclassResponsibilities) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -642,19 +643,19 @@ OO_TEST(rootDefaultsForSubclassResponsibilities) {
 
     Entity* entity = MakeEntity(kZeroHPVector, 1.0f);
     CaptureLog();
-    OO_CHECK(entity->findCollisionRadius() ==
+    EXPECT_TRUE(entity->findCollisionRadius() ==
              0);  // logs the subclass responsibility
     entity->drawImmediate(true, false);
-    OO_CHECK(sLog.size() == 2);
+    EXPECT_TRUE(sLog.size() == 2);
     entity->warnAboutHostiles();
-    OO_CHECK(Logged("***** Entity does nothing in warnAboutHostiles"));
+    EXPECT_TRUE(Logged("***** Entity does nothing in warnAboutHostiles"));
     entity->subEntityReallyDied(nullptr);
-    OO_CHECK(Logged("called for non-ship entity"));
+    EXPECT_TRUE(Logged("called for non-ship entity"));
   }
 }
 
 #ifndef NDEBUG
-OO_TEST(liveEntityCount) {
+TEST(Entity, liveEntityCount) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -668,11 +669,11 @@ OO_TEST(liveEntityCount) {
       entity = oo::RetainEntity(oo::MadeEntity(
           oo::makeShared<TestObjCEntity>()));  // +1, as +alloc's was
     }
-    OO_CHECK(gLiveEntityCount == count + 1);
-    OO_CHECK(gTotalEntityMemory ==
+    EXPECT_TRUE(gLiveEntityCount == count + 1);
+    EXPECT_TRUE(gTotalEntityMemory ==
              memory + oo::EntityObjectSize(entity));  // its object's size
     oo::ReleaseEntity(entity);
-    OO_CHECK(gLiveEntityCount == count && gTotalEntityMemory == memory);
+    EXPECT_TRUE(gLiveEntityCount == count && gTotalEntityMemory == memory);
   }
 }
 #endif
@@ -680,7 +681,7 @@ OO_TEST(liveEntityCount) {
 // --- The crossing
 // ---------------------------------------------------------
 
-OO_TEST(cxxEntityBehindItsFacade) {
+TEST(Entity, cxxEntityBehindItsFacade) {
 #ifndef NDEBUG
   const uint32_t count = gLiveEntityCount;
 #endif
@@ -693,23 +694,23 @@ OO_TEST(cxxEntityBehindItsFacade) {
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
 
     Entity* facade = oo::MadeEntity(entity);
-    OO_CHECK(facade == entity.get());
+    EXPECT_TRUE(facade == entity.get());
 #ifndef NDEBUG
-    OO_CHECK(gLiveEntityCount == count + 1);
+    EXPECT_TRUE(gLiveEntityCount == count + 1);
 #endif
 
     // Messages reach the C++ overrides, and the root's members call them.
-    OO_CHECK(facade->isPlanet() && facade->isStellarObject() &&
+    EXPECT_TRUE(facade->isPlanet() && facade->isStellarObject() &&
              !facade->isSun());
     facade->setPosition(make_HPvector(0, 0, 10));
-    OO_CHECK(entity->cameraUpdates == 1);
-    OO_CHECK(facade->cameraRangeFront() == 8.0f &&
+    EXPECT_TRUE(entity->cameraUpdates == 1);
+    EXPECT_TRUE(facade->cameraRangeFront() == 8.0f &&
              facade->cameraRangeBack() == 12.0f);
-    OO_CHECK(HPvector_equal(entity->getPosition(), make_HPvector(0, 0, 10)));
-    OO_CHECK(oo::EntityDescription(facade).starts_with("<TestCxxEntity 0x") &&
+    EXPECT_TRUE(HPvector_equal(entity->getPosition(), make_HPvector(0, 0, 10)));
+    EXPECT_TRUE(oo::EntityDescription(facade).starts_with("<TestCxxEntity 0x") &&
              oo::EntityDescription(facade).ends_with(">{test}"));
 #ifndef NDEBUG
-    OO_CHECK(facade->descriptionForObjDumpBasic() ==
+    EXPECT_TRUE(facade->descriptionForObjDumpBasic() ==
              std::optional<std::string>("TestCxxEntity test"));
 #endif
 
@@ -718,7 +719,7 @@ OO_TEST(cxxEntityBehindItsFacade) {
     facade->addToLinkedLists();
     other->addToLinkedLists();
     sUniverse->n_entities = 2;
-    OO_CHECK(sUniverse->x_list_start == facade && XNext(facade) == other &&
+    EXPECT_TRUE(sUniverse->x_list_start == facade && XNext(facade) == other &&
              XPrevious(other) == facade);
     facade->removeFromLinkedLists();
     other->removeFromLinkedLists();
@@ -726,7 +727,7 @@ OO_TEST(cxxEntityBehindItsFacade) {
   }
   // The facade was the entity's identity and owner: gone with the pool.
 #ifndef NDEBUG
-  OO_CHECK(gLiveEntityCount == count);
+  EXPECT_TRUE(gLiveEntityCount == count);
 #endif
 }
 
@@ -734,7 +735,7 @@ OO_TEST(cxxEntityBehindItsFacade) {
 // initWithKey:...]) to an entity that is already initialised and has a
 // script object: the body runs again over the same state, and what it does not
 // set stays.
-OO_TEST(initSentAgain) {
+TEST(Entity, initSentAgain) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -746,16 +747,16 @@ OO_TEST(initSentAgain) {
     entity->setEnergy(42);
     entity->setUniversalID(9);
     entity->init();  // the body -init ran again
-    OO_CHECK(HPvector_equal(entity->getPosition(), kZeroHPVector) &&
+    EXPECT_TRUE(HPvector_equal(entity->getPosition(), kZeroHPVector) &&
              entity->status() == oo::EntityStatus::kCockpitDisplay);
-    OO_CHECK(entity->getEnergy() == 42 && entity->getUniversalID() == 9);
+    EXPECT_TRUE(entity->getEnergy() == 42 && entity->getUniversalID() == 9);
     entity->setUniversalID(NO_TARGET);
   }
 }
 
 // The Objective-C body described the literals @"self" and @"none", which could
 // raise and end the dump; the C++ body prints them.
-OO_TEST(dumpStateOwnerLines) {
+TEST(Entity, dumpStateOwnerLines) {
   {
     oo::AutoreleaseScope scope;
     SetUpUniverse();
@@ -763,14 +764,12 @@ OO_TEST(dumpStateOwnerLines) {
     Entity* entity = MakeEntity(kZeroHPVector, 1.0f);
     CaptureLog();
     entity->dumpState();
-    OO_CHECK(Logged("Owner: none") && Logged("Flags: isSunlit") &&
+    EXPECT_TRUE(Logged("Owner: none") && Logged("Flags: isSunlit") &&
              Logged("Collision Test Filter: 0"));
     entity->setOwner(entity);
     sLog.clear();
     entity->dumpState();
-    OO_CHECK(Logged("Owner: self") && Logged("Flags: isSunlit"));
+    EXPECT_TRUE(Logged("Owner: self") && Logged("Flags: isSunlit"));
     entity->setOwner(nullptr);
   }
 }
-
-OO_TEST_MAIN()

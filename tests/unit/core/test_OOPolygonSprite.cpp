@@ -16,9 +16,10 @@
 
 #include <limits>
 
+#include <gtest/gtest.h>
+
 #include "GraphicsResetManager.h"
 #include "PolygonSprite.h"
-#include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -43,66 +44,64 @@ std::shared_ptr<oo::PolygonSprite> Sprite(const oo::PList& data, const char* nam
 
 }  // namespace
 
-OO_TEST(dataArraysThatMakeASprite) {
+TEST(OOPolygonSprite, dataArraysThatMakeASprite) {
   {
     const oo::PList square = Numbers({0, 0, 1, 0, 1, 1, 0, 1});
-    OO_CHECK(Sprite(square, "flat") != nullptr);  // one contour as flat pairs
-    OO_CHECK(Sprite(Contours({square}), "contours") !=
+    EXPECT_TRUE(Sprite(square, "flat") != nullptr);  // one contour as flat pairs
+    EXPECT_TRUE(Sprite(Contours({square}), "contours") !=
              nullptr);  // array of contours
-    OO_CHECK(Sprite(Numbers({0, 0, 0, 1, 1, 1, 1, 0}), "clockwise") !=
+    EXPECT_TRUE(Sprite(Numbers({0, 0, 0, 1, 1, 1, 1, 0}), "clockwise") !=
              nullptr);  // flipped
-    OO_CHECK(Sprite(Numbers({0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0}),
+    EXPECT_TRUE(Sprite(Numbers({0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0}),
                     "duplicates") != nullptr);
     const double nan = std::numeric_limits<double>::quiet_NaN();
     const double inf = std::numeric_limits<double>::infinity();
-    OO_CHECK(Sprite(Numbers({0, 0, nan, 1, 1, 0, inf, 3, 1, 1, 0, 1}),
+    EXPECT_TRUE(Sprite(Numbers({0, 0, nan, 1, 1, 0, inf, 3, 1, 1, 0, 1}),
                     "non-finite") != nullptr);
-    OO_CHECK(Sprite(Contours({square,
+    EXPECT_TRUE(Sprite(Contours({square,
                               Numbers({0.25, 0.25, 0.75, 0.25, 0.75, 0.75})}),
                     "two") != nullptr);
-    OO_CHECK(Sprite(Numbers({0, 0, 1, 0}), "degenerate") !=
+    EXPECT_TRUE(Sprite(Numbers({0, 0, 1, 0}), "degenerate") !=
              nullptr);  // no area: nothing to fill
   }
 }
 
-OO_TEST(emptyDataAnswersNil) {
+TEST(OOPolygonSprite, emptyDataAnswersNil) {
   {
-    OO_CHECK(Sprite(oo::PList(oo::PList::Array()), "empty") == nullptr);
-    OO_CHECK(oo::PolygonSprite::initWithDataArray(oo::PList(), 1.0f, "null") ==
+    EXPECT_TRUE(Sprite(oo::PList(oo::PList::Array()), "empty") == nullptr);
+    EXPECT_TRUE(oo::PolygonSprite::initWithDataArray(oo::PList(), 1.0f, "null") ==
              nullptr);
   }
 }
 
-OO_TEST(descriptionAndProtocols) {
+TEST(OOPolygonSprite, descriptionAndProtocols) {
   {
     std::shared_ptr<oo::PolygonSprite> sprite =
         Sprite(Numbers({0, 0, 1, 0, 1, 1}), "triangle");
     std::string text = sprite->description();
-    OO_CHECK(text.starts_with("<OOPolygonSprite 0x"));
+    EXPECT_TRUE(text.starts_with("<OOPolygonSprite 0x"));
 #ifndef NDEBUG
-    OO_CHECK(text.ends_with(">{triangle}"));
+    EXPECT_TRUE(text.ends_with(">{triangle}"));
 #endif
     // The protocols are C++ interfaces; drawFilled/drawOutline are members.
-    OO_CHECK(dynamic_cast<oo::HUDBeaconIcon*>(sprite.get()) != nullptr);
+    EXPECT_TRUE(dynamic_cast<oo::HUDBeaconIcon*>(sprite.get()) != nullptr);
     oo::GraphicsResetClient* client =
         dynamic_cast<oo::GraphicsResetClient*>(sprite.get());
-    OO_CHECK(client != nullptr);
+    EXPECT_TRUE(client != nullptr);
     client->resetGraphicsState();  // no buffers made yet: nothing to delete
   }
 }
 
-OO_TEST(cxxSprite) {
+TEST(OOPolygonSprite, cxxSprite) {
   std::shared_ptr<oo::PolygonSprite> sprite = oo::PolygonSprite::initWithDataArray(
       Numbers({0, 0, 1, 0, 1, 1, 0, 1}), 0.5f, "square");
-  OO_CHECK(sprite.get() != nullptr);
+  EXPECT_TRUE(sprite.get() != nullptr);
 #ifndef NDEBUG
-  OO_CHECK(sprite->descriptionComponents() ==
+  EXPECT_TRUE(sprite->descriptionComponents() ==
            std::optional<std::string>("square"));
 #endif
   sprite->resetGraphicsState();
-  OO_CHECK(oo::PolygonSprite::initWithDataArray(oo::PList(oo::PList::Array()),
+  EXPECT_TRUE(oo::PolygonSprite::initWithDataArray(oo::PList(oo::PList::Array()),
                                               0.5f, "empty")
                .get() == nullptr);
 }
-
-OO_TEST_MAIN()

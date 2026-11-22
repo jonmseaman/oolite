@@ -21,12 +21,13 @@
 #include <cstdlib>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "MyOpenGLView.h"
 #include "Color.h"
 #include "Crosshairs.h"
 #include "OpenGL.h"
 #include "OpenGLMatrixManager.h"
-#include "oo_test.hpp"
 
 // --- Link stubs: what render() references. The test never renders; a call is a
 // test bug. -------
@@ -89,32 +90,32 @@ const std::vector<float> kRedMarker = {-0.01f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 
 }  // namespace
 
-OO_TEST(greenWithoutAColour) {
+TEST(OOCrosshairs, greenWithoutAColour) {
   oo::PList points(oo::PList::Array{Segment(1.0, 1.0, 2.0, 0.5, 3.0, 4.0)});
-  OO_CHECK(Same(Build(points, 2.0f, nullptr, 1.0f),
+  EXPECT_TRUE(Same(Build(points, 2.0f, nullptr, 1.0f),
                 {2, 4, 0, 1, 0, 1, 6, 8, 0, 1, 0, 0.5f}));
 }
 
-OO_TEST(colourAndAlpha) {
+TEST(OOCrosshairs, colourAndAlpha) {
   std::shared_ptr<oo::Color> color = oo::Color::colorWithRed(0.25f, 0.5f, 0.75f, 0.5f);
   oo::PList points(oo::PList::Array{Segment(1.0, -1.0, 0.0, 0.5, 1.0, 0.0),
                                     Segment(0.0, 0.0, -2.0, 1.0, 0.0, 2.0)});
 
   // Point alpha * colour alpha, clamped, then * overall alpha.
-  OO_CHECK(Same(Build(points, 0.5f, color.get(), 0.5f),
+  EXPECT_TRUE(Same(Build(points, 0.5f, color.get(), 0.5f),
                 {-0.5f, 0,    0.25f, 0.5f,   0.75f, 0.25f, 0.5f,  0,
                  0.25f, 0.5f, 0.75f, 0.125f, 0,     -1,    0.25f, 0.5f,
                  0.75f, 0.0f, 0,     1,      0.25f, 0.5f,  0.75f, 0.25f}));
 }
 
-OO_TEST(alphaIsClamped) {
+TEST(OOCrosshairs, alphaIsClamped) {
   oo::PList points(oo::PList::Array{Segment(4.0, 0.0, 0.0, -1.0, 1.0, 1.0)});
   // 4 * 1 clamps to 1 before the overall alpha, and a negative alpha to 0.
-  OO_CHECK(Same(Build(points, 1.0f, nullptr, 0.75f),
+  EXPECT_TRUE(Same(Build(points, 1.0f, nullptr, 0.75f),
                 {0, 0, 0, 1, 0, 0.75f, 1, 1, 0, 1, 0, 0}));
 }
 
-OO_TEST(badEntriesAreRedMarkers) {
+TEST(OOCrosshairs, badEntriesAreRedMarkers) {
   oo::PList shortEntry(oo::PList::Array{1.0, 2.0, 3.0, 4.0, 5.0});
   oo::PList points(oo::PList::Array{oo::PList("not an array"), shortEntry,
                                     Segment(1.0, 1.0, 1.0, 1.0, 2.0, 2.0)});
@@ -123,18 +124,16 @@ OO_TEST(badEntriesAreRedMarkers) {
   expected.insert(expected.end(), kRedMarker.begin(), kRedMarker.end());
   std::vector<float> good = {1, 1, 0, 1, 0, 1, 2, 2, 0, 1, 0, 1};
   expected.insert(expected.end(), good.begin(), good.end());
-  OO_CHECK(Same(Build(points, 1.0f, nullptr, 1.0f), expected));
+  EXPECT_TRUE(Same(Build(points, 1.0f, nullptr, 1.0f), expected));
 }
 
-OO_TEST(nothingIsBuilt) {
+TEST(OOCrosshairs, nothingIsBuilt) {
   oo::PList points(oo::PList::Array{Segment(1.0, 1.0, 2.0, 0.5, 3.0, 4.0)});
-  OO_CHECK(Build(points, 1.0f, nullptr, 0.0f).empty());  // no overall alpha
-  OO_CHECK(Build(points, 1.0f, nullptr, -1.0f).empty());
-  OO_CHECK(Build(points, 1.0f, oo::Color::clearColor().get(), 1.0f)
+  EXPECT_TRUE(Build(points, 1.0f, nullptr, 0.0f).empty());  // no overall alpha
+  EXPECT_TRUE(Build(points, 1.0f, nullptr, -1.0f).empty());
+  EXPECT_TRUE(Build(points, 1.0f, oo::Color::clearColor().get(), 1.0f)
                .empty());  // a transparent colour
-  OO_CHECK(Build(oo::PList(oo::PList::Array{}), 1.0f, nullptr, 1.0f)
+  EXPECT_TRUE(Build(oo::PList(oo::PList::Array{}), 1.0f, nullptr, 1.0f)
                .empty());                                     // no points
-  OO_CHECK(Build(oo::PList(), 1.0f, nullptr, 1.0f).empty());  // not an array
+  EXPECT_TRUE(Build(oo::PList(), 1.0f, nullptr, 1.0f).empty());  // not an array
 }
-
-OO_TEST_MAIN()

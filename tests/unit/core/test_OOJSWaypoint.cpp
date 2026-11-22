@@ -15,6 +15,8 @@
 	and what the category answers the engine. Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Maths.h"
 #include <quickjs.h>
 #include "oofnd/Exception.hpp"
@@ -140,7 +142,6 @@ public:
 #include "OOJSWaypoint.h"
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstdint>
@@ -496,25 +497,25 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSWaypoint, registration)
 {
 	SetUpContext();
 	JSClassID waypointClass = sWaypoint->oo_jsClassID();
-	OO_CHECK(waypointClass != 0 && OOJSClassName(waypointClass) != nullptr && std::strcmp(OOJSClassName(waypointClass), "Waypoint") == 0);
+	EXPECT_TRUE(waypointClass != 0 && OOJSClassName(waypointClass) != nullptr && std::strcmp(OOJSClassName(waypointClass), "Waypoint") == 0);
 	JSValue prototype = JS_GetClassProto(sContext, waypointClass);
-	OO_CHECK(JS_IsObject(prototype));
+	EXPECT_TRUE(JS_IsObject(prototype));
 	JS_FreeValue(sContext, prototype);
-	OO_CHECK(OOJSIsSubclass(waypointClass, sFakeEntityClassID));
-	OO_CHECK_EQ(sConverters[waypointClass], 1);
-	OO_CHECK(sWaypoint->oo_jsClassName() == std::optional<std::string>("Waypoint"));
-	OO_CHECK(sWaypoint->isVisibleToScripts());
+	EXPECT_TRUE(OOJSIsSubclass(waypointClass, sFakeEntityClassID));
+	EXPECT_EQ(sConverters[waypointClass], 1);
+	EXPECT_TRUE(sWaypoint->oo_jsClassName() == std::optional<std::string>("Waypoint"));
+	EXPECT_TRUE(sWaypoint->isVisibleToScripts());
 	OO_CHECK_EVAL("typeof Waypoint", "function");
 	OO_CHECK_EVAL("new Waypoint()", "threw: unconstructable");
 	OO_CHECK_EVAL("Object.getPrototypeOf(Waypoint.prototype) === Entity.prototype", "true");
@@ -522,7 +523,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSWaypoint, properties)
 {
 	OO_CHECK_EVAL("waypoint.beaconCode", "null");
 	OO_CHECK_EVAL("waypoint.beaconLabel", "Label");
@@ -535,7 +536,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(setters)
+TEST(OOJSWaypoint, setters)
 {
 	OO_CHECK_EVAL("(function () { waypoint.beaconLabel = 'Other'; return waypoint.beaconLabel; })()", "Other");
 	OO_CHECK_EVAL("(function () { waypoint.beaconLabel = null; return waypoint.beaconLabel; })()", "threw: bad property value");
@@ -547,31 +548,31 @@ OO_TEST(setters)
 }
 
 
-OO_TEST(beaconCode)
+TEST(OOJSWaypoint, beaconCode)
 {
 	SetUpContext();
 	// Not a beacon yet: setting a code makes it one and tells the universe.
 	int added = sGame->_added;
 	OO_CHECK_EVAL("(function () { waypoint.beaconCode = 'W'; return waypoint.beaconCode; })()", "W");
-	OO_CHECK_EQ(sGame->_added, added + 1);
+	EXPECT_EQ(sGame->_added, added + 1);
 	// Already a beacon: a new code is just set.
 	OO_CHECK_EVAL("(function () { waypoint.beaconCode = 'X'; return waypoint.beaconCode; })()", "X");
-	OO_CHECK_EQ(sGame->_added, added + 1);
+	EXPECT_EQ(sGame->_added, added + 1);
 	// An empty code clears the beacon; the compass leaves it if it pointed there.
 	sGame->_nextBeacon = sWaypoint;
 	sGame->_compassMode = -1;
 	int cleared = sGame->_cleared;
 	OO_CHECK_EVAL("(function () { waypoint.beaconCode = ''; return waypoint.beaconCode; })()", "null");
-	OO_CHECK_EQ(sGame->_cleared, cleared + 1);
-	OO_CHECK_EQ(sGame->_compassMode, static_cast<int>(oo::CompassMode::kPlanet));
+	EXPECT_EQ(sGame->_cleared, cleared + 1);
+	EXPECT_EQ(sGame->_compassMode, static_cast<int>(oo::CompassMode::kPlanet));
 	// Clearing a waypoint that is not a beacon does nothing.
 	OO_CHECK_EVAL("(function () { waypoint.beaconCode = null; return waypoint.beaconCode; })()", "null");
-	OO_CHECK_EQ(sGame->_cleared, cleared + 1);
+	EXPECT_EQ(sGame->_cleared, cleared + 1);
 	sGame->_nextBeacon = nullptr;
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSWaypoint, otherObjects)
 {
 	OO_CHECK_EVAL("Object.getOwnPropertyDescriptor(Waypoint.prototype, 'size').get.call(plainEntity)", "<evaluation failed>");
 	OO_CHECK_EVAL("Object.getOwnPropertyDescriptor(Waypoint.prototype, 'size').get.call({})", "threw: Native method expected Entity, got [object Object].");
@@ -579,7 +580,7 @@ OO_TEST(otherObjects)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSWaypoint, nativeExceptions)
 {
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the entity is a JS error,
@@ -590,9 +591,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("waypoint.size", "threw: Native exception: cxx boom");
 	sWaypointPart->_size = 20;
 	OO_CHECK_EVAL("waypoint.size", "20");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

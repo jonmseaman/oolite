@@ -17,8 +17,9 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "SDLJoystickManager.h"
-#include "oo_test.hpp"
 
 namespace {
 
@@ -99,96 +100,96 @@ std::shared_ptr<oo::JoystickManager> MakeSDLManager() {
 
 }  // namespace
 
-OO_TEST(opensAndNamesTheSticks) {
+TEST(OOSDLJoystickManager, opensAndNamesTheSticks) {
   VirtualStick& vs = Stick();
-  OO_CHECK(vs.id != 0 && vs.handle != nullptr);
+  EXPECT_TRUE(vs.id != 0 && vs.handle != nullptr);
 
   {
     std::shared_ptr<oo::SDLJoystickManager> manager = NewManager();
-    OO_CHECK(manager != nullptr);
-    OO_CHECK(manager->joystickCount() == 1);
-    OO_CHECK(manager->nameOfJoystick(0) ==
+    EXPECT_TRUE(manager != nullptr);
+    EXPECT_TRUE(manager->joystickCount() == 1);
+    EXPECT_TRUE(manager->nameOfJoystick(0) ==
              std::optional<std::string>(kStickName));
-    OO_CHECK(manager->nameOfJoystick(1) ==
+    EXPECT_TRUE(manager->nameOfJoystick(1) ==
              std::optional<std::string>("(unknown joystick)"));
-    OO_CHECK(manager->nameOfJoystick(MAX_STICKS) ==
+    EXPECT_TRUE(manager->nameOfJoystick(MAX_STICKS) ==
              std::optional<std::string>("(unknown joystick)"));
 
     // The superclass lists the sticks through the overrides.
-    OO_CHECK(manager->listSticks() == std::vector<std::string>({kStickName}));
+    EXPECT_TRUE(manager->listSticks() == std::vector<std::string>({kStickName}));
 
-    OO_CHECK(manager->getJoystickIndexFromId(vs.id) == 0);
-    OO_CHECK(manager->getJoystickIndexFromId(vs.id + 100) == -1);
+    EXPECT_TRUE(manager->getJoystickIndexFromId(vs.id) == 0);
+    EXPECT_TRUE(manager->getJoystickIndexFromId(vs.id + 100) == -1);
   }
 }
 
-OO_TEST(makesEvents) {
+TEST(OOSDLJoystickManager, makesEvents) {
   VirtualStick& vs = Stick();
   {
     std::shared_ptr<oo::SDLJoystickManager> manager = NewManager();
 
     SDL_Event axis = AxisEvent(vs.id, 1, -1234);
     SDL_JoyAxisEvent a = manager->makeJoyAxisEvent(&axis.jaxis);
-    OO_CHECK(a.type == SDL_EVENT_JOYSTICK_AXIS_MOTION && a.which == 0 &&
+    EXPECT_TRUE(a.type == SDL_EVENT_JOYSTICK_AXIS_MOTION && a.which == 0 &&
              a.axis == 1 && a.value == -1234);
 
     SDL_Event button = ButtonEvent(vs.id, 3, true);
     SDL_JoyButtonEvent b = manager->makeJoyButtonEvent(&button.jbutton);
-    OO_CHECK(b.type == SDL_EVENT_JOYSTICK_BUTTON_DOWN && b.which == 0 &&
+    EXPECT_TRUE(b.type == SDL_EVENT_JOYSTICK_BUTTON_DOWN && b.which == 0 &&
              b.button == 3 && b.down);
 
     SDL_Event hat = HatEvent(vs.id, 0, SDL_HAT_UP);
     SDL_JoyHatEvent h = manager->makeJoyHatEvent(&hat.jhat);
-    OO_CHECK(h.type == SDL_EVENT_JOYSTICK_HAT_MOTION && h.which == 0 &&
+    EXPECT_TRUE(h.type == SDL_EVENT_JOYSTICK_HAT_MOTION && h.which == 0 &&
              h.hat == 0 && h.value == SDL_HAT_UP);
 
     // An unknown stick's id becomes -1 (as an SDL_JoystickID, which is what the
     // caller tests).
     SDL_Event stray = AxisEvent(vs.id + 100, 0, 1);
-    OO_CHECK((int)manager->makeJoyAxisEvent(&stray.jaxis).which == -1);
+    EXPECT_TRUE((int)manager->makeJoyAxisEvent(&stray.jaxis).which == -1);
   }
 }
 
-OO_TEST(readsAxesFromSDL) {
+TEST(OOSDLJoystickManager, readsAxesFromSDL) {
   VirtualStick& vs = Stick();
   {
     std::shared_ptr<oo::SDLJoystickManager> manager = NewManager();
     SDL_SetJoystickVirtualAxis(vs.handle, 0, 5000);
     SDL_SetJoystickVirtualAxis(vs.handle, 1, -300);
     SDL_UpdateJoysticks();
-    OO_CHECK(manager->getAxisWithStick(0, 0) == 5000);
-    OO_CHECK(manager->getAxisWithStick(0, 1) == -300);
+    EXPECT_TRUE(manager->getAxisWithStick(0, 0) == 5000);
+    EXPECT_TRUE(manager->getAxisWithStick(0, 1) == -300);
   }
 }
 
-OO_TEST(handlesEventsThroughTheSuperclass) {
+TEST(OOSDLJoystickManager, handlesEventsThroughTheSuperclass) {
   VirtualStick& vs = Stick();
   {
     // As the game makes it: the SDL class registered with the superclass, which
     // creates it.
-    OO_CHECK(oo::JoystickManager::setStickHandlerFactory(MakeSDLManager));
+    EXPECT_TRUE(oo::JoystickManager::setStickHandlerFactory(MakeSDLManager));
     oo::SDLJoystickManager* manager = dynamic_cast<oo::SDLJoystickManager*>(
         oo::JoystickManager::sharedStickHandler());
-    OO_CHECK(manager != nullptr);
-    OO_CHECK(manager->joystickCount() == 1);
+    EXPECT_TRUE(manager != nullptr);
+    EXPECT_TRUE(manager->joystickCount() == 1);
 
     SDL_Event down = ButtonEvent(vs.id, 2, true);
-    OO_CHECK(manager->handleSDLEvent(&down));
-    OO_CHECK(manager->isButtonDown(2, 0));
+    EXPECT_TRUE(manager->handleSDLEvent(&down));
+    EXPECT_TRUE(manager->isButtonDown(2, 0));
     SDL_Event up = ButtonEvent(vs.id, 2, false);
-    OO_CHECK(manager->handleSDLEvent(&up));
-    OO_CHECK(!manager->isButtonDown(2, 0));
+    EXPECT_TRUE(manager->handleSDLEvent(&up));
+    EXPECT_TRUE(!manager->isButtonDown(2, 0));
 
     // A hat is decoded as four buttons past the real ones.
     SDL_Event hat = HatEvent(vs.id, 0, SDL_HAT_UP);
-    OO_CHECK(manager->handleSDLEvent(&hat));
-    OO_CHECK(manager->isButtonDown(MAX_REAL_BUTTONS, 0));
+    EXPECT_TRUE(manager->handleSDLEvent(&hat));
+    EXPECT_TRUE(manager->isButtonDown(MAX_REAL_BUTTONS, 0));
     SDL_Event centred = HatEvent(vs.id, 0, SDL_HAT_CENTERED);
-    OO_CHECK(manager->handleSDLEvent(&centred));
-    OO_CHECK(!manager->isButtonDown(MAX_REAL_BUTTONS, 0));
+    EXPECT_TRUE(manager->handleSDLEvent(&centred));
+    EXPECT_TRUE(!manager->isButtonDown(MAX_REAL_BUTTONS, 0));
 
     SDL_Event axis = AxisEvent(vs.id, 0, 100);
-    OO_CHECK(manager->handleSDLEvent(&axis));
+    EXPECT_TRUE(manager->handleSDLEvent(&axis));
 
     // An event it does not handle is refused. (Not pinned: an event of a stick
     // it did not open. Its index is -1 in an unsigned SDL_JoystickID, so the
@@ -196,7 +197,7 @@ OO_TEST(handlesEventsThroughTheSuperclass) {
     // tables with it.)
     SDL_Event key = {};
     key.type = SDL_EVENT_KEY_DOWN;
-    OO_CHECK(!manager->handleSDLEvent(&key));
+    EXPECT_TRUE(!manager->handleSDLEvent(&key));
   }
 }
 
@@ -204,37 +205,37 @@ OO_TEST(handlesEventsThroughTheSuperclass) {
 // made) is refused and leaves the superclass's state alone. Its index, -1, used
 // to be stored in the unsigned SDL_JoystickID, so the `which >= 0` guard let it
 // through to the decoder, which indexed its per-stick tables with it.
-OO_TEST(refusesEventsOfAStickItDidNotOpen) {
+TEST(OOSDLJoystickManager, refusesEventsOfAStickItDidNotOpen) {
   VirtualStick& vs = Stick();
   const SDL_JoystickID stray = vs.id + 100;
   {
     std::shared_ptr<oo::SDLJoystickManager> manager = NewManager();
-    OO_CHECK(manager->getJoystickIndexFromId(stray) == -1);
+    EXPECT_TRUE(manager->getJoystickIndexFromId(stray) == -1);
 
     SDL_Event down = ButtonEvent(vs.id, 0, true);
-    OO_CHECK(manager->handleSDLEvent(&down));
-    OO_CHECK(manager->isButtonDown(0, 0));
+    EXPECT_TRUE(manager->handleSDLEvent(&down));
+    EXPECT_TRUE(manager->isButtonDown(0, 0));
 
     SDL_Event strayUp = ButtonEvent(stray, 0, false);
-    OO_CHECK(!manager->handleSDLEvent(&strayUp));
-    OO_CHECK(manager->isButtonDown(0, 0));
+    EXPECT_TRUE(!manager->handleSDLEvent(&strayUp));
+    EXPECT_TRUE(manager->isButtonDown(0, 0));
 
     SDL_Event strayHat = HatEvent(stray, 0, SDL_HAT_UP);
-    OO_CHECK(!manager->handleSDLEvent(&strayHat));
-    OO_CHECK(!manager->isButtonDown(MAX_REAL_BUTTONS, 0));
+    EXPECT_TRUE(!manager->handleSDLEvent(&strayHat));
+    EXPECT_TRUE(!manager->isButtonDown(MAX_REAL_BUTTONS, 0));
 
     SDL_Event strayAxis = AxisEvent(stray, 0, 100);
-    OO_CHECK(!manager->handleSDLEvent(&strayAxis));
+    EXPECT_TRUE(!manager->handleSDLEvent(&strayAxis));
 
     SDL_Event up = ButtonEvent(vs.id, 0, false);
-    OO_CHECK(manager->handleSDLEvent(&up));
-    OO_CHECK(!manager->isButtonDown(0, 0));
+    EXPECT_TRUE(manager->handleSDLEvent(&up));
+    EXPECT_TRUE(!manager->isButtonDown(0, 0));
   }
 }
 
 // Upstream #783: an SDL button or hat event of a button given a GUI function
 // sets that function's state, which the GUI screens read.
-OO_TEST(decodesGuiButtonsFromSDL) {
+TEST(OOSDLJoystickManager, decodesGuiButtonsFromSDL) {
   VirtualStick& vs = Stick();
   {
     std::shared_ptr<oo::SDLJoystickManager> manager = NewManager();
@@ -247,23 +248,21 @@ OO_TEST(decodesGuiButtonsFromSDL) {
     };
     manager->setFunction(BUTTON_GUISELECT, buttonFn(3));
     manager->setFunction(BUTTON_GUIUP, buttonFn(MAX_REAL_BUTTONS));
-    OO_CHECK(!manager->getButtonState(BUTTON_GUISELECT));
+    EXPECT_TRUE(!manager->getButtonState(BUTTON_GUISELECT));
 
     SDL_Event down = ButtonEvent(vs.id, 3, true);
-    OO_CHECK(manager->handleSDLEvent(&down));
-    OO_CHECK(manager->getButtonState(BUTTON_GUISELECT));
-    OO_CHECK(manager->getAllButtonStates()[BUTTON_GUISELECT]);
+    EXPECT_TRUE(manager->handleSDLEvent(&down));
+    EXPECT_TRUE(manager->getButtonState(BUTTON_GUISELECT));
+    EXPECT_TRUE(manager->getAllButtonStates()[BUTTON_GUISELECT]);
     SDL_Event up = ButtonEvent(vs.id, 3, false);
-    OO_CHECK(manager->handleSDLEvent(&up));
-    OO_CHECK(!manager->getButtonState(BUTTON_GUISELECT));
+    EXPECT_TRUE(manager->handleSDLEvent(&up));
+    EXPECT_TRUE(!manager->getButtonState(BUTTON_GUISELECT));
 
     SDL_Event hat = HatEvent(vs.id, 0, SDL_HAT_UP);
-    OO_CHECK(manager->handleSDLEvent(&hat));
-    OO_CHECK(manager->getButtonState(BUTTON_GUIUP));
+    EXPECT_TRUE(manager->handleSDLEvent(&hat));
+    EXPECT_TRUE(manager->getButtonState(BUTTON_GUIUP));
     SDL_Event centred = HatEvent(vs.id, 0, SDL_HAT_CENTERED);
-    OO_CHECK(manager->handleSDLEvent(&centred));
-    OO_CHECK(!manager->getButtonState(BUTTON_GUIUP));
+    EXPECT_TRUE(manager->handleSDLEvent(&centred));
+    EXPECT_TRUE(!manager->getButtonState(BUTTON_GUIUP));
   }
 }
-
-OO_TEST_MAIN()

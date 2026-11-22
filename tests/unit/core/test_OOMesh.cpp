@@ -33,6 +33,8 @@
 #include <filesystem>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "Entity.h"
 #include "BasicMaterial.h"
 #include "CacheManager.h"
@@ -40,7 +42,6 @@
 #include "Mesh.h"
 #include "Octree.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/FileSystem.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -56,7 +57,7 @@ stdfs::path sRoot;
 
 void WriteText(const stdfs::path& path, const std::string& text) {
   stdfs::create_directories(path.parent_path());
-  OO_CHECK(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
+  EXPECT_TRUE(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
                              oo::fs::WriteMode::kDirect)
                .has_value());
 }
@@ -108,10 +109,10 @@ void SetUp() {
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot / "game");
-  OO_CHECK(::_putenv_s("HOMEPATH", (sRoot / "home").string().c_str()) == 0);
-  OO_CHECK(::_putenv_s("OO_MANAGEDADDONSDIR",
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", (sRoot / "home").string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("OO_MANAGEDADDONSDIR",
                        (sRoot / "managed").string().c_str()) == 0);
-  OO_CHECK(::_putenv_s("OO_ADDONSEXTRACTDIR",
+  EXPECT_TRUE(::_putenv_s("OO_ADDONSEXTRACTDIR",
                        (sRoot / "extract").string().c_str()) == 0);
   stdfs::current_path(sRoot / "game");
   WriteText(sRoot / "game" / "Resources" / "Info-gnustep.plist",
@@ -124,7 +125,7 @@ void SetUp() {
             kTetrahedron);
   WriteText(sRoot / "game" / "Resources" / "Models" / "normals.dat",
             kTetrahedronWithNormals);
-  OO_CHECK(OOTestGLContext());
+  EXPECT_TRUE(OOTestGLContext());
 }
 
 std::shared_ptr<oo::Mesh> Mesh(const std::string& name, float scale = 1.0f,
@@ -161,33 +162,33 @@ bool SameVector(Vector a, Vector b) {
 
 }  // namespace
 
-OO_TEST(loadsModel) {
-  SetUp();
+TEST(OOMesh, loadsModel) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
-    OO_CHECK(mesh != nullptr);
+    EXPECT_TRUE(mesh != nullptr);
     if (mesh == nullptr) return;
-    OO_CHECK(dynamic_cast<oo::Mesh*>(mesh.get()) != nullptr);
-    OO_CHECK(dynamic_cast<oo::Drawable*>(mesh.get()) != nullptr);
-    OO_CHECK_EQ(mesh->modelName().value_or("<none>"), "tetra.dat");
-    OO_CHECK_EQ(mesh->getVertexCount(), 4u);
-    OO_CHECK_EQ(mesh->getFaceCount(), 4u);
-    OO_CHECK(Near(mesh->collisionRadius(), 10.0));
+    EXPECT_TRUE(dynamic_cast<oo::Mesh*>(mesh.get()) != nullptr);
+    EXPECT_TRUE(dynamic_cast<oo::Drawable*>(mesh.get()) != nullptr);
+    EXPECT_EQ(mesh->modelName().value_or("<none>"), "tetra.dat");
+    EXPECT_EQ(mesh->getVertexCount(), 4u);
+    EXPECT_EQ(mesh->getFaceCount(), 4u);
+    EXPECT_TRUE(Near(mesh->collisionRadius(), 10.0));
     // The average of the longest and shortest sides, squared, times the no-draw
     // factor squared.
-    OO_CHECK(Near(mesh->maxDrawDistance(),
+    EXPECT_TRUE(Near(mesh->maxDrawDistance(),
                   100.0 * NO_DRAW_DISTANCE_FACTOR * NO_DRAW_DISTANCE_FACTOR));
     const BoundingBox box = mesh->boundingBox();
-    OO_CHECK(SameVector(box.min, make_vector(0, 0, 0)));
-    OO_CHECK(SameVector(box.max, make_vector(10, 10, 10)));
-    OO_CHECK(mesh->hasOpaqueParts());
-    OO_CHECK(!mesh->hasTranslucentParts());
-    OO_CHECK(!mesh->getMaterials());
-    OO_CHECK(!mesh->shaders());
+    EXPECT_TRUE(SameVector(box.min, make_vector(0, 0, 0)));
+    EXPECT_TRUE(SameVector(box.max, make_vector(10, 10, 10)));
+    EXPECT_TRUE(mesh->hasOpaqueParts());
+    EXPECT_TRUE(!mesh->hasTranslucentParts());
+    EXPECT_TRUE(!mesh->getMaterials());
+    EXPECT_TRUE(!mesh->shaders());
 
     const std::string description = mesh->description();
-    OO_CHECK(description.starts_with("<OOMesh "));
-    OO_CHECK(description.find("{\"tetra.dat\", 4 vertices, 4 faces, radius: 10 "
+    EXPECT_TRUE(description.starts_with("<OOMesh "));
+    EXPECT_TRUE(description.find("{\"tetra.dat\", 4 vertices, 4 faces, radius: 10 "
                               "m normals: per-face}") != std::string::npos);
 
     // Binding targets go to the materials; dumping the state only logs.
@@ -197,14 +198,14 @@ OO_TEST(loadsModel) {
 #ifndef NDEBUG
     // The placeholder material has no textures; the size counts the vertex and
     // face buffers.
-    OO_CHECK(mesh->allTextures().empty());
-    OO_CHECK(mesh->totalSize() >= 4 * sizeof(Vector) + 4 * sizeof(oo::MeshFace));
+    EXPECT_TRUE(mesh->allTextures().empty());
+    EXPECT_TRUE(mesh->totalSize() >= 4 * sizeof(Vector) + 4 * sizeof(oo::MeshFace));
 #endif
   }
 }
 
-OO_TEST(dictionariesAndSmoothing) {
-  SetUp();
+TEST(OOMesh, dictionariesAndSmoothing) {
+  ::SetUp();
   {
     oo::PList::Dict materials;
     materials["other.png"] = oo::PList(oo::PList::Dict{});
@@ -212,176 +213,176 @@ OO_TEST(dictionariesAndSmoothing) {
     shaders["other.png"] = oo::PList(oo::PList::Dict{});
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra2.dat", 1.0f, true, true,
                                       oo::PList(materials), oo::PList(shaders));
-    OO_CHECK(mesh != nullptr);
+    EXPECT_TRUE(mesh != nullptr);
     if (mesh == nullptr) return;
-    OO_CHECK(mesh->getMaterials() == oo::PList(materials));
-    OO_CHECK(mesh->shaders() == oo::PList(shaders));
-    OO_CHECK(mesh->description().find("normals: smooth}") != std::string::npos);
+    EXPECT_TRUE(mesh->getMaterials() == oo::PList(materials));
+    EXPECT_TRUE(mesh->shaders() == oo::PList(shaders));
+    EXPECT_TRUE(mesh->description().find("normals: smooth}") != std::string::npos);
   }
 }
 
-OO_TEST(scaleAndMissingModel) {
-  SetUp();
+TEST(OOMesh, scaleAndMissingModel) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra3.dat", 2.0f, false);
-    OO_CHECK(mesh != nullptr);
+    EXPECT_TRUE(mesh != nullptr);
     if (mesh == nullptr) return;
-    OO_CHECK(Near(mesh->collisionRadius(), 20.0));
-    OO_CHECK(SameVector(mesh->boundingBox().max, make_vector(20, 20, 20)));
+    EXPECT_TRUE(Near(mesh->collisionRadius(), 20.0));
+    EXPECT_TRUE(SameVector(mesh->boundingBox().max, make_vector(20, 20, 20)));
     // Not cache-writeable: neither the mesh data nor its octree is cached.
-    OO_CHECK(!CachedPList("tetra3.dat:0:2.000", "OOMesh"));
-    OO_CHECK(MeshOctree(mesh.get()) != nullptr);
-    OO_CHECK(!CachedPList("tetra3.dat-2.000", "octrees"));
+    EXPECT_TRUE(!CachedPList("tetra3.dat:0:2.000", "OOMesh"));
+    EXPECT_TRUE(MeshOctree(mesh.get()) != nullptr);
+    EXPECT_TRUE(!CachedPList("tetra3.dat-2.000", "octrees"));
 
-    OO_CHECK(Mesh("no such model.dat") == nullptr);
+    EXPECT_TRUE(Mesh("no such model.dat") == nullptr);
   }
 }
 
-OO_TEST(caches) {
-  SetUp();
+TEST(OOMesh, caches) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
-    OO_CHECK(mesh != nullptr);
+    EXPECT_TRUE(mesh != nullptr);
     if (mesh == nullptr) return;
 
     // The OOCacheManager (OOMesh) category: the mesh data, under name:normal
     // mode:scale.
     const oo::PList meshData = CachedPList("tetra.dat:0:1.000", "OOMesh");
-    OO_CHECK(meshData.isDict());
-    OO_CHECK_EQ(meshData.get<unsigned int>("vertex count"), 4u);
-    OO_CHECK_EQ(meshData.get<unsigned int>("face count"), 4u);
+    EXPECT_TRUE(meshData.isDict());
+    EXPECT_EQ(meshData.get<unsigned int>("vertex count"), 4u);
+    EXPECT_EQ(meshData.get<unsigned int>("face count"), 4u);
 
     // The octree is made once, and cached under name-scale.
     Octree* octree = MeshOctree(mesh.get());
-    OO_CHECK(octree != nullptr);
-    OO_CHECK(MeshOctree(mesh.get()) == octree);
+    EXPECT_TRUE(octree != nullptr);
+    EXPECT_TRUE(MeshOctree(mesh.get()) == octree);
     const oo::PList octreeData = CachedPList("tetra.dat-1.000", "octrees");
-    OO_CHECK(octreeData.isDict());
-    OO_CHECK(octreeData == octree->dictionaryRepresentation());
+    EXPECT_TRUE(octreeData.isDict());
+    EXPECT_TRUE(octreeData == octree->dictionaryRepresentation());
 
     // The OOCacheManager (Octree) category.
     std::shared_ptr<Octree> cached = OctreeForModel("tetra.dat-1.000");
-    OO_CHECK(cached.get() != nullptr);
-    OO_CHECK(cached.get() != octree);
-    OO_CHECK(cached->dictionaryRepresentation() == octreeData);
-    OO_CHECK(OctreeForModel("no such model-1.000").get() == nullptr);
+    EXPECT_TRUE(cached.get() != nullptr);
+    EXPECT_TRUE(cached.get() != octree);
+    EXPECT_TRUE(cached->dictionaryRepresentation() == octreeData);
+    EXPECT_TRUE(OctreeForModel("no such model-1.000").get() == nullptr);
     SetOctreeForModel(octree, "copied-1.000");
-    OO_CHECK(CachedPList("copied-1.000", "octrees") == octreeData);
+    EXPECT_TRUE(CachedPList("copied-1.000", "octrees") == octreeData);
     SetOctreeForModel(nullptr, "nil-1.000");  // does nothing
-    OO_CHECK(!CachedPList("nil-1.000", "octrees"));
+    EXPECT_TRUE(!CachedPList("nil-1.000", "octrees"));
   }
 }
 
-OO_TEST(placeholderMaterial) {
-  SetUp();
+TEST(OOMesh, placeholderMaterial) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Material> placeholder = oo::Mesh::placeholderMaterial();
-    OO_CHECK(placeholder != nullptr);
-    OO_CHECK(dynamic_cast<oo::BasicMaterial*>(placeholder.get()) != nullptr);
-    OO_CHECK_EQ(placeholder->name().value_or("<none>"), "/placeholder/");
-    OO_CHECK(oo::Mesh::placeholderMaterial() == placeholder);
+    EXPECT_TRUE(placeholder != nullptr);
+    EXPECT_TRUE(dynamic_cast<oo::BasicMaterial*>(placeholder.get()) != nullptr);
+    EXPECT_EQ(placeholder->name().value_or("<none>"), "/placeholder/");
+    EXPECT_TRUE(oo::Mesh::placeholderMaterial() == placeholder);
   }
   {
     const std::shared_ptr<oo::Material> again = oo::Mesh::placeholderMaterial();
-    OO_CHECK(again != nullptr);
-    OO_CHECK_EQ(again->name().value_or("<none>"), "/placeholder/");
+    EXPECT_TRUE(again != nullptr);
+    EXPECT_EQ(again->name().value_or("<none>"), "/placeholder/");
   }
 }
 
-OO_TEST(copies) {
-  SetUp();
+TEST(OOMesh, copies) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
-    OO_CHECK(mesh != nullptr);
+    EXPECT_TRUE(mesh != nullptr);
     if (mesh == nullptr) return;
 
     // Immutable seen from outside: a copy is the mesh itself, retained.
     const std::shared_ptr<oo::Mesh> copy = mesh->copyWithZone(nullptr);
-    OO_CHECK(copy == mesh);
+    EXPECT_TRUE(copy == mesh);
 
     // A mutable copy is a new mesh with the same model, sharing nothing it can
     // change.
     const std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone(nullptr);
-    OO_CHECK(mutableCopy != nullptr);
-    OO_CHECK(mutableCopy != mesh);
-    OO_CHECK(dynamic_cast<oo::Mesh*>(mutableCopy.get()) != nullptr);
-    OO_CHECK_EQ(mutableCopy->modelName().value_or("<none>"), "tetra.dat");
-    OO_CHECK_EQ(mutableCopy->getVertexCount(), 4u);
-    OO_CHECK_EQ(mutableCopy->getFaceCount(), 4u);
-    OO_CHECK(Near(mutableCopy->collisionRadius(), 10.0));
-    OO_CHECK(MeshOctree(mutableCopy.get()) != nullptr);
+    EXPECT_TRUE(mutableCopy != nullptr);
+    EXPECT_TRUE(mutableCopy != mesh);
+    EXPECT_TRUE(dynamic_cast<oo::Mesh*>(mutableCopy.get()) != nullptr);
+    EXPECT_EQ(mutableCopy->modelName().value_or("<none>"), "tetra.dat");
+    EXPECT_EQ(mutableCopy->getVertexCount(), 4u);
+    EXPECT_EQ(mutableCopy->getFaceCount(), 4u);
+    EXPECT_TRUE(Near(mutableCopy->collisionRadius(), 10.0));
+    EXPECT_TRUE(MeshOctree(mutableCopy.get()) != nullptr);
 
     // The subentity bounding box: the vertices moved by the position and
     // rotated.
     const BoundingBox moved = mesh->findSubentityBoundingBoxWithPosition(
         make_vector(1, 2, 3), kIdentityMatrix);
-    OO_CHECK(SameVector(moved.min, make_vector(1, 2, 3)));
-    OO_CHECK(SameVector(moved.max, make_vector(11, 12, 13)));
+    EXPECT_TRUE(SameVector(moved.min, make_vector(1, 2, 3)));
+    EXPECT_TRUE(SameVector(moved.max, make_vector(11, 12, 13)));
 
     // Rescaled: a mutable copy, scaled, with no name (so its octree is not
     // cached).
     const std::shared_ptr<oo::Mesh> rescaled = mesh->meshRescaledBy(3.0f);
-    OO_CHECK(rescaled != nullptr && rescaled != mesh);
-    OO_CHECK(Near(rescaled->collisionRadius(), 30.0));
-    OO_CHECK(!rescaled->modelName().has_value());
-    OO_CHECK(SameVector(rescaled->boundingBox().max, make_vector(30, 30, 30)));
-    OO_CHECK(Near(mesh->collisionRadius(), 10.0));
-    OO_CHECK(SameVector(mesh->boundingBox().max, make_vector(10, 10, 10)));
+    EXPECT_TRUE(rescaled != nullptr && rescaled != mesh);
+    EXPECT_TRUE(Near(rescaled->collisionRadius(), 30.0));
+    EXPECT_TRUE(!rescaled->modelName().has_value());
+    EXPECT_TRUE(SameVector(rescaled->boundingBox().max, make_vector(30, 30, 30)));
+    EXPECT_TRUE(Near(mesh->collisionRadius(), 10.0));
+    EXPECT_TRUE(SameVector(mesh->boundingBox().max, make_vector(10, 10, 10)));
     // The copy shares the original's vertex buffer, so the original's vertices
     // were scaled too (its radius and bounding box were not recalculated).
     const BoundingBox shared = mesh->findSubentityBoundingBoxWithPosition(
         make_vector(0, 0, 0), kIdentityMatrix);
-    OO_CHECK(SameVector(shared.max, make_vector(30, 30, 30)));
+    EXPECT_TRUE(SameVector(shared.max, make_vector(30, 30, 30)));
   }
 }
 
-OO_TEST(graphicsResetAfterRelease) {
-  SetUp();
+TEST(OOMesh, graphicsResetAfterRelease) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
-    OO_CHECK(mesh != nullptr);
+    EXPECT_TRUE(mesh != nullptr);
     std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone(nullptr);
     // Both are registered: the reset rebinds their materials.
     oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
-    OO_CHECK_EQ(mesh->getVertexCount(), 4u);
-    OO_CHECK_EQ(mutableCopy->getVertexCount(), 4u);
+    EXPECT_EQ(mesh->getVertexCount(), 4u);
+    EXPECT_EQ(mutableCopy->getVertexCount(), 4u);
     mutableCopy = nullptr;
   }
   // Both are gone and unregistered themselves, so the reset does not reach
   // them.
   oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
-  OO_CHECK(true);
+  EXPECT_TRUE(true);
 }
 
 // Pins for loading, geometry and rendering.
-OO_TEST(laterSlices) {
-  SetUp();
+TEST(OOMesh, laterSlices) {
+  ::SetUp();
   {
     // Loading: a smooth mesh caches its normals and tangents with
     // normal mode 1.
     const std::shared_ptr<oo::Mesh> smooth = Mesh("tetra2.dat", 1.0f, true, true);
-    OO_CHECK(smooth != nullptr);
+    EXPECT_TRUE(smooth != nullptr);
     const oo::PList smoothData = CachedPList("tetra2.dat:1:1.000", "OOMesh");
-    OO_CHECK(smoothData.isDict());
-    OO_CHECK_EQ(smoothData.get<unsigned int>("normal mode"), 1u);
-    OO_CHECK(smoothData.find("normal data") != nullptr);
-    OO_CHECK(smoothData.find("tangent data") != nullptr);
+    EXPECT_TRUE(smoothData.isDict());
+    EXPECT_EQ(smoothData.get<unsigned int>("normal mode"), 1u);
+    EXPECT_TRUE(smoothData.find("normal data") != nullptr);
+    EXPECT_TRUE(smoothData.find("tangent data") != nullptr);
     const oo::PList* keys = smoothData.find("material keys");
-    OO_CHECK(keys != nullptr && keys->isArray() &&
+    EXPECT_TRUE(keys != nullptr && keys->isArray() &&
              keys->getIf<oo::PList::Array>()->size() == 1);
 
     // Explicit normals: the normal mode is explicit, cached under the per-face
     // key.
     const std::shared_ptr<oo::Mesh> normals = Mesh("normals.dat");
-    OO_CHECK(normals != nullptr);
+    EXPECT_TRUE(normals != nullptr);
     if (normals == nullptr) return;
-    OO_CHECK(normals->description().find("normals: explicit}") !=
+    EXPECT_TRUE(normals->description().find("normals: explicit}") !=
              std::string::npos);
     const oo::PList normalsData = CachedPList("normals.dat:0:1.000", "OOMesh");
-    OO_CHECK_EQ(normalsData.get<unsigned int>("normal mode"), 2u);
-    OO_CHECK(normalsData.find("normal data") != nullptr);
+    EXPECT_EQ(normalsData.get<unsigned int>("normal mode"), 2u);
+    EXPECT_TRUE(normalsData.find("normal data") != nullptr);
     // A per-face mesh caches no normals.
-    OO_CHECK(CachedPList("tetra.dat:0:1.000", "OOMesh").find("normal data") ==
+    EXPECT_TRUE(CachedPList("tetra.dat:0:1.000", "OOMesh").find("normal data") ==
              nullptr);
 
     // Geometry: the bounding box relative to a position and basis.
@@ -389,111 +390,111 @@ OO_TEST(laterSlices) {
                  k = make_vector(0, 0, 1);
     const BoundingBox relative = normals->findBoundingBoxRelativeToPosition(
         make_vector(0, 0, 0), i, j, k, make_vector(1, 2, 3), i, j, k);
-    OO_CHECK(SameVector(relative.min, make_vector(1, 2, 3)));
-    OO_CHECK(SameVector(relative.max, make_vector(11, 12, 13)));
+    EXPECT_TRUE(SameVector(relative.min, make_vector(1, 2, 3)));
+    EXPECT_TRUE(SameVector(relative.max, make_vector(11, 12, 13)));
     // Seen along -x from (5, 0, 0): x is flipped and offset.
     const BoundingBox flipped = normals->findBoundingBoxRelativeToPosition(
         make_vector(5, 0, 0), make_vector(-1, 0, 0), j, k, make_vector(0, 0, 0),
         i, j, k);
-    OO_CHECK(SameVector(flipped.min, make_vector(-5, 0, 0)));
-    OO_CHECK(SameVector(flipped.max, make_vector(5, 10, 10)));
-    OO_CHECK(MeshOctree(normals.get()) != nullptr);
+    EXPECT_TRUE(SameVector(flipped.min, make_vector(-5, 0, 0)));
+    EXPECT_TRUE(SameVector(flipped.max, make_vector(5, 10, 10)));
+    EXPECT_TRUE(MeshOctree(normals.get()) != nullptr);
 
     // Rendering: rebinding the materials keeps the placeholder.
     normals->rebindMaterials();
-    OO_CHECK(normals->hasOpaqueParts());
+    EXPECT_TRUE(normals->hasOpaqueParts());
 #ifndef NDEBUG
-    OO_CHECK(normals->allTextures().empty());
+    EXPECT_TRUE(normals->allTextures().empty());
 #endif
   }
 }
 
-OO_TEST(facadeContract) {
-  SetUp();
+TEST(OOMesh, facadeContract) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
     oo::Mesh* cxxMesh = mesh.get();
-    OO_CHECK(cxxMesh != nullptr);
+    EXPECT_TRUE(cxxMesh != nullptr);
     if (cxxMesh == nullptr) return;
 
     // The C++ members' answers.
-    OO_CHECK(cxxMesh->hasOpaqueParts());
-    OO_CHECK(cxxMesh->descriptionComponents() ==
+    EXPECT_TRUE(cxxMesh->hasOpaqueParts());
+    EXPECT_TRUE(cxxMesh->descriptionComponents() ==
              std::optional<std::string>("\"tetra.dat\", 4 vertices, 4 faces, "
                                         "radius: 10 m normals: per-face"));
-    OO_CHECK(cxxMesh->copyWithZone(nullptr).get() ==
+    EXPECT_TRUE(cxxMesh->copyWithZone(nullptr).get() ==
              cxxMesh);  // a copy is the mesh itself
 
     // Through the root's C++ pointer, the overrides answer (the bounding box is
     // geometry's).
     oo::Drawable* drawable = cxxMesh;
-    OO_CHECK(Near(drawable->collisionRadius(), 10.0));
-    OO_CHECK(Near(drawable->maxDrawDistance(), cxxMesh->maxDrawDistance()));
-    OO_CHECK(SameVector(drawable->boundingBox().max, make_vector(10, 10, 10)));
-    OO_CHECK(!drawable->hasTranslucentParts());
+    EXPECT_TRUE(Near(drawable->collisionRadius(), 10.0));
+    EXPECT_TRUE(Near(drawable->maxDrawDistance(), cxxMesh->maxDrawDistance()));
+    EXPECT_TRUE(SameVector(drawable->boundingBox().max, make_vector(10, 10, 10)));
+    EXPECT_TRUE(!drawable->hasTranslucentParts());
 
     // The C++ factory: a mesh; null for a missing model.
     const std::shared_ptr<oo::Mesh> made =
         oo::Mesh::meshWithName("tetra.dat", std::nullopt, oo::PList(),
                              oo::PList(), false, oo::PList(), nullptr, 2.0f, false);
-    OO_CHECK(made.get() != nullptr);
+    EXPECT_TRUE(made.get() != nullptr);
     if (made.get() == nullptr) return;
-    OO_CHECK(Near(made->collisionRadius(), 20.0));
-    OO_CHECK(made->description().starts_with("<OOMesh "));
-    OO_CHECK(oo::Mesh::meshWithName("no such model.dat", std::nullopt,
+    EXPECT_TRUE(Near(made->collisionRadius(), 20.0));
+    EXPECT_TRUE(made->description().starts_with("<OOMesh "));
+    EXPECT_TRUE(oo::Mesh::meshWithName("no such model.dat", std::nullopt,
                                   oo::PList(), oo::PList(), false, oo::PList(),
                                   nullptr)
                  .get() == nullptr);
 
     // A C++ mesh made bare is the old -init's: no model yet.
     const std::shared_ptr<oo::Mesh> bare = oo::makeShared<oo::Mesh>();
-    OO_CHECK_EQ(bare->modelName().value_or("<none>"), "No Model");
-    OO_CHECK_EQ(bare->getVertexCount(), 0u);
+    EXPECT_EQ(bare->modelName().value_or("<none>"), "No Model");
+    EXPECT_EQ(bare->getVertexCount(), 0u);
   }
 }
 
 // The geometry members.
-OO_TEST(geometryMembers) {
-  SetUp();
+TEST(OOMesh, geometryMembers) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
     oo::Mesh* cxxMesh = mesh.get();
-    OO_CHECK(cxxMesh != nullptr);
+    EXPECT_TRUE(cxxMesh != nullptr);
     if (cxxMesh == nullptr) return;
 
     const std::shared_ptr<Octree> octree = cxxMesh->getOctree();
-    OO_CHECK(octree.get() != nullptr);
-    OO_CHECK(cxxMesh->getOctree().get() == octree.get());  // made once
-    OO_CHECK(MeshOctree(mesh.get()) == octree.get());
+    EXPECT_TRUE(octree.get() != nullptr);
+    EXPECT_TRUE(cxxMesh->getOctree().get() == octree.get());  // made once
+    EXPECT_TRUE(MeshOctree(mesh.get()) == octree.get());
 
-    OO_CHECK(SameVector(cxxMesh->boundingBox().max, make_vector(10, 10, 10)));
+    EXPECT_TRUE(SameVector(cxxMesh->boundingBox().max, make_vector(10, 10, 10)));
     const Vector i = make_vector(1, 0, 0), j = make_vector(0, 1, 0),
                  k = make_vector(0, 0, 1);
     const BoundingBox relative = cxxMesh->findBoundingBoxRelativeToPosition(
         make_vector(0, 0, 0), i, j, k, make_vector(1, 2, 3), i, j, k);
-    OO_CHECK(SameVector(relative.max, make_vector(11, 12, 13)));
+    EXPECT_TRUE(SameVector(relative.max, make_vector(11, 12, 13)));
     const BoundingBox moved = cxxMesh->findSubentityBoundingBoxWithPosition(
         make_vector(2, 2, 2), kIdentityMatrix);
-    OO_CHECK(SameVector(moved.min, make_vector(2, 2, 2)));
-    OO_CHECK(SameVector(moved.max, make_vector(12, 12, 12)));
+    EXPECT_TRUE(SameVector(moved.min, make_vector(2, 2, 2)));
+    EXPECT_TRUE(SameVector(moved.max, make_vector(12, 12, 12)));
 
     // Rescaled through the C++ member: a new mesh, with no name.
     const std::shared_ptr<oo::Mesh> rescaled = cxxMesh->meshRescaledBy(0.5f);
-    OO_CHECK(rescaled.get() != nullptr && rescaled.get() != cxxMesh);
+    EXPECT_TRUE(rescaled.get() != nullptr && rescaled.get() != cxxMesh);
     if (rescaled.get() == nullptr) return;
-    OO_CHECK(Near(rescaled->collisionRadius(), 5.0));
-    OO_CHECK(!rescaled->modelName().has_value());
+    EXPECT_TRUE(Near(rescaled->collisionRadius(), 5.0));
+    EXPECT_TRUE(!rescaled->modelName().has_value());
   }
 }
 
 // Drawing on the hidden GL context, the display lists it makes, and a graphics
 // reset between draws.
-OO_TEST(rendering) {
-  SetUp();
+TEST(OOMesh, rendering) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
     const std::shared_ptr<oo::Mesh> smooth = Mesh("tetra2.dat", 1.0f, true, true);
-    OO_CHECK(mesh != nullptr && smooth != nullptr);
+    EXPECT_TRUE(mesh != nullptr && smooth != nullptr);
     if (mesh == nullptr || smooth == nullptr) return;
     while (glGetError() != GL_NO_ERROR) {
     }
@@ -501,30 +502,30 @@ OO_TEST(rendering) {
     mesh->renderOpaqueParts();  // makes the display lists
     mesh->renderOpaqueParts();
     smooth->renderOpaqueParts();
-    OO_CHECK_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
+    EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
 
     // A reset deletes the display lists and rebinds the materials; the next
     // draw remakes them.
     oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
     mesh->renderOpaqueParts();
-    OO_CHECK_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
-    OO_CHECK_EQ(mesh->getVertexCount(), 4u);
-    OO_CHECK(Near(mesh->collisionRadius(), 10.0));
+    EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
+    EXPECT_EQ(mesh->getVertexCount(), 4u);
+    EXPECT_TRUE(Near(mesh->collisionRadius(), 10.0));
 
     // A mutable copy draws on its own lists.
     const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone(nullptr);
     copy->renderOpaqueParts();
-    OO_CHECK_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
+    EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
   }
 }
 
 // The rendering members, through the C++ mesh.
-OO_TEST(renderingMembers) {
-  SetUp();
+TEST(OOMesh, renderingMembers) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
     oo::Mesh* cxxMesh = mesh.get();
-    OO_CHECK(cxxMesh != nullptr);
+    EXPECT_TRUE(cxxMesh != nullptr);
     if (cxxMesh == nullptr) return;
     while (glGetError() != GL_NO_ERROR) {
     }
@@ -532,50 +533,50 @@ OO_TEST(renderingMembers) {
     // Through the root's C++ pointer, as the entities draw.
     oo::Drawable* drawable = cxxMesh;
     drawable->renderOpaqueParts();
-    OO_CHECK(cxxMesh->listsReady);
+    EXPECT_TRUE(cxxMesh->listsReady);
     cxxMesh->deleteDisplayLists();
-    OO_CHECK(!cxxMesh->listsReady);
+    EXPECT_TRUE(!cxxMesh->listsReady);
     drawable->renderOpaqueParts();
-    OO_CHECK_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
+    EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
 
     // The materials: the placeholder, rebound; a reset.
     cxxMesh->rebindMaterials();
-    OO_CHECK(cxxMesh->materials[0].get() == oo::Mesh::placeholderMaterial().get());
+    EXPECT_TRUE(cxxMesh->materials[0].get() == oo::Mesh::placeholderMaterial().get());
     cxxMesh->resetGraphicsState();
-    OO_CHECK(!cxxMesh->listsReady);
-    OO_CHECK(cxxMesh->materials[0].get() == oo::Mesh::placeholderMaterial().get());
+    EXPECT_TRUE(!cxxMesh->listsReady);
+    EXPECT_TRUE(cxxMesh->materials[0].get() == oo::Mesh::placeholderMaterial().get());
 
     // The buffers: a renamed key, and bytes kept by key.
     cxxMesh->renameTexturesFrom("_oo_placeholder_material",
                                 "_oo_placeholder_material");
-    OO_CHECK_EQ(cxxMesh->materialKeys[0], "_oo_placeholder_material");
+    EXPECT_EQ(cxxMesh->materialKeys[0], "_oo_placeholder_material");
     void* bytes = cxxMesh->allocateBytesWithSize(4, 3, "test bytes");
-    OO_CHECK(bytes != nullptr);
-    OO_CHECK(cxxMesh->_retainedObjects.find("test bytes") !=
+    EXPECT_TRUE(bytes != nullptr);
+    EXPECT_TRUE(cxxMesh->_retainedObjects.find("test bytes") !=
              cxxMesh->_retainedObjects.end());
   }
 }
 
 // Loading and copying are C++ members, and the mesh itself is the graphics
 // reset client.
-OO_TEST(loadingMembers) {
-  SetUp();
+TEST(OOMesh, loadingMembers) {
+  ::SetUp();
   {
     const std::shared_ptr<oo::Mesh> mesh =
         oo::Mesh::meshWithName("tetra.dat", std::nullopt, oo::PList(),
                              oo::PList(), false, oo::PList(), nullptr);
-    OO_CHECK(mesh.get() != nullptr);
+    EXPECT_TRUE(mesh.get() != nullptr);
     if (mesh.get() == nullptr) return;
-    OO_CHECK_EQ(mesh->getVertexCount(), 4u);
-    OO_CHECK_EQ(mesh->modelName().value_or("<none>"), "tetra.dat");
+    EXPECT_EQ(mesh->getVertexCount(), 4u);
+    EXPECT_EQ(mesh->modelName().value_or("<none>"), "tetra.dat");
 
     // A mutable copy shares the buffers and is a new mesh.
     const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone(nullptr);
-    OO_CHECK(copy.get() != nullptr && copy.get() != mesh.get());
+    EXPECT_TRUE(copy.get() != nullptr && copy.get() != mesh.get());
     if (copy.get() == nullptr) return;
-    OO_CHECK(copy->_vertices == mesh->_vertices);
-    OO_CHECK(copy->octree == mesh->octree);
-    OO_CHECK(!copy->listsReady);
+    EXPECT_TRUE(copy->_vertices == mesh->_vertices);
+    EXPECT_TRUE(copy->octree == mesh->octree);
+    EXPECT_TRUE(!copy->listsReady);
 
     // Both are registered with no other owner for either: a reset deletes
     // their display lists.
@@ -583,18 +584,16 @@ OO_TEST(loadingMembers) {
     }
     mesh->renderOpaqueParts();
     copy->renderOpaqueParts();
-    OO_CHECK(mesh->listsReady && copy->listsReady);
+    EXPECT_TRUE(mesh->listsReady && copy->listsReady);
     oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
-    OO_CHECK(!mesh->listsReady && !copy->listsReady);
-    OO_CHECK_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
+    EXPECT_TRUE(!mesh->listsReady && !copy->listsReady);
+    EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
   }
 }
 
-OO_TEST(cleanUp) {
+TEST(OOMesh, cleanUp) {
   stdfs::current_path(stdfs::temp_directory_path());
   std::error_code ignored;
   stdfs::remove_all(sRoot, ignored);
-  OO_CHECK(true);
+  EXPECT_TRUE(true);
 }
-
-OO_TEST_MAIN()

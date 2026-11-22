@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "HeadUpDisplay.h"
 #include "Color.h"
@@ -38,7 +40,6 @@
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Notification.hpp"
 #include "oofnd/String.hpp"
@@ -455,7 +456,7 @@ PlayerEntity* sRealPlayer = nullptr;
 
 // The scratch home and game folder, the engine, and the stand-ins; made once.
 void SetUp() {
-  OO_CHECK(OOTestGLContext());
+  EXPECT_TRUE(OOTestGLContext());
   if (!sRoot.empty()) return;
   std::setvbuf(stdout, nullptr, _IONBF, 0);  // a crash keeps the results so far
   sRoot = stdfs::temp_directory_path() /
@@ -463,10 +464,10 @@ void SetUp() {
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot / "Resources");
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
   const std::string info = "{ CFBundleVersion = \"9.9.9-test\"; }";
-  OO_CHECK(oo::fs::writeFile(sRoot / "Resources" / "Info-gnustep.plist",
+  EXPECT_TRUE(oo::fs::writeFile(sRoot / "Resources" / "Info-gnustep.plist",
                              oo::Data(info.data(), info.size()),
                              oo::fs::WriteMode::kDirect)
                .has_value());
@@ -512,7 +513,7 @@ void SetUp() {
 // ("undefined", "null",
 // ...), or "threw: <message>".
 std::string Eval(const std::string& src) {
-  SetUp();
+  ::SetUp();
   JSContext* context = OOJSAcquireContext();
   std::string wrapped = "(function () { try { return String(" + src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
@@ -538,7 +539,7 @@ std::string EvalShown(const std::string& src, const std::string& expected) {
   return result;
 }
 #define OO_CHECK_EVAL(src, expected) \
-  OO_CHECK_EQ(EvalShown(src, expected), expected)
+  EXPECT_EQ(EvalShown(src, expected), expected)
 
 std::string Log(std::vector<std::string>& log) {
   std::string result;
@@ -556,23 +557,23 @@ std::string LogShown(std::vector<std::string>& log,
   return result;
 }
 #define OO_CHECK_LOG(log, expected) \
-  OO_CHECK_EQ(LogShown(log, expected), expected)
+  EXPECT_EQ(LogShown(log, expected), expected)
 
 }  // namespace
 
 // MARK: Tests
 // -------------------------------------------------------------------------------------
 
-OO_TEST(registration) {
-  SetUp();
-  OO_CHECK(sRealPlayer != nullptr);
+TEST(OOJSPlayerShip, registration) {
+  ::SetUp();
+  EXPECT_TRUE(sRealPlayer != nullptr);
   OO_CHECK_EVAL("typeof player.ship", "object");
-  OO_CHECK(OOJSClassName(JSPlayerShipClassID()) != nullptr &&
+  EXPECT_TRUE(OOJSClassName(JSPlayerShipClassID()) != nullptr &&
            std::strcmp(OOJSClassName(JSPlayerShipClassID()), "PlayerShip") ==
                0);
   JSContext* context = OOJSAcquireContext();
   JSValue prototype = JS_GetClassProto(context, JSPlayerShipClassID());
-  OO_CHECK(JS_IsObject(prototype));
+  EXPECT_TRUE(JS_IsObject(prototype));
   JS_FreeValue(context, prototype);
   OOJSRelinquishContext(context);
   OO_CHECK_EVAL("player.ship instanceof Ship", "true");
@@ -583,8 +584,8 @@ OO_TEST(registration) {
       "derived");
 }
 
-OO_TEST(getterPlayerState) {
-  SetUp();
+TEST(OOJSPlayerShip, getterPlayerState) {
+  ::SetUp();
   OO_CHECK_EVAL("player.ship.activeMissile", "2");
   OO_CHECK_EVAL("player.ship.fuelLeakRate", "0.5");
   OO_CHECK_EVAL("player.ship.docked", "true");
@@ -636,7 +637,7 @@ OO_TEST(getterPlayerState) {
                oo::str::format("weaponTypeForFacing %d 0",
                                static_cast<int>(oo::WeaponFacing::kForward)));
   OO_CHECK_EVAL("player.ship.price", "123456");
-  OO_CHECK_EQ(sUniverse->_lastCommander, "commander");
+  EXPECT_EQ(sUniverse->_lastCommander, "commander");
   OO_CHECK_EVAL("player.ship.serviceLevel", "95");
   OO_CHECK_EVAL("player.ship.renovationCost", "1500");
   OO_CHECK_EVAL("player.ship.renovationMultiplier", "1.25");
@@ -647,8 +648,8 @@ OO_TEST(getterPlayerState) {
   OO_CHECK_EVAL("player.ship.messageGuiTextCommsColor", "0,1,0,0.5");
 }
 
-OO_TEST(getterHUD) {
-  SetUp();
+TEST(OOJSPlayerShip, getterHUD) {
+  ::SetUp();
   OO_CHECK_EVAL("player.ship.reticleColorTarget.length", "4");
   OO_CHECK_EVAL("player.ship.reticleColorTargetSensitive.length", "4");
   OO_CHECK_EVAL("player.ship.reticleColorWormhole.length", "4");
@@ -674,8 +675,8 @@ OO_TEST(getterHUD) {
   sPlayer->_hud = hud;
 }
 
-OO_TEST(passengersAndParcels) {
-  SetUp();
+TEST(OOJSPlayerShip, passengersAndParcels) {
+  ::SetUp();
   Log(sPlayer->_log);
   OO_CHECK_EVAL("player.ship.addPassenger('Ann', 3, 4, 2000, 50)", "true");
   OO_CHECK_EVAL("player.ship.addPassenger('Bob', 3, 4, 2000, 50, 10, 2)",
@@ -701,29 +702,29 @@ OO_TEST(passengersAndParcels) {
   sPlayer->_parcels = 0;
 
   // The argument checks.
-  OO_CHECK(
+  EXPECT_TRUE(
       Eval("player.ship.addPassenger('Ann', 3, 4, 2000)").rfind("threw: ", 0) ==
       0);  // too few
-  OO_CHECK(Eval("player.ship.addPassenger(null, 3, 4, 2000, 50)")
+  EXPECT_TRUE(Eval("player.ship.addPassenger(null, 3, 4, 2000, 50)")
                .rfind("threw: ", 0) == 0);  // no name
-  OO_CHECK(Eval("player.ship.addPassenger('Ann', -1, 4, 2000, 50)")
+  EXPECT_TRUE(Eval("player.ship.addPassenger('Ann', -1, 4, 2000, 50)")
                .rfind("threw: ", 0) == 0);  // bad start
-  OO_CHECK(Eval("player.ship.addPassenger('Ann', 3, 300, 2000, 50)")
+  EXPECT_TRUE(Eval("player.ship.addPassenger('Ann', 3, 300, 2000, 50)")
                .rfind("threw: ", 0) == 0);  // bad destination
-  OO_CHECK(Eval("player.ship.addPassenger('Ann', 3, 4, 999, 50)")
+  EXPECT_TRUE(Eval("player.ship.addPassenger('Ann', 3, 4, 999, 50)")
                .rfind("threw: ", 0) == 0);  // in the past
-  OO_CHECK(Eval("player.ship.addPassenger('Ann', 3, 4, 2000, -5)")
+  EXPECT_TRUE(Eval("player.ship.addPassenger('Ann', 3, 4, 2000, -5)")
                .rfind("threw: ", 0) == 0);  // negative fee
-  OO_CHECK(
+  EXPECT_TRUE(
       Eval("player.ship.addParcel('Box', 1, 2, 3000)").rfind("threw: ", 0) ==
       0);
-  OO_CHECK(Eval("player.ship.removePassenger()").rfind("threw: ", 0) == 0);
-  OO_CHECK(Eval("player.ship.removeParcel()").rfind("threw: ", 0) == 0);
+  EXPECT_TRUE(Eval("player.ship.removePassenger()").rfind("threw: ", 0) == 0);
+  EXPECT_TRUE(Eval("player.ship.removeParcel()").rfind("threw: ", 0) == 0);
   OO_CHECK_LOG(sPlayer->_log, "");
 }
 
-OO_TEST(contracts) {
-  SetUp();
+TEST(OOJSPlayerShip, contracts) {
+  ::SetUp();
   Log(sPlayer->_log);
   OO_CHECK_EVAL("player.ship.awardContract(5, 'food', 1, 2, 4000, 100)",
                 "true");
@@ -742,26 +743,26 @@ OO_TEST(contracts) {
                "awardContract 5 food 1 2 4000 100 0; removeContract food 2; "
                "removeContract food 2");
 
-  OO_CHECK(Eval("player.ship.awardContract(5, 'food', 1, 2, 4000)")
+  EXPECT_TRUE(Eval("player.ship.awardContract(5, 'food', 1, 2, 4000)")
                .rfind("threw: ", 0) == 0);
-  OO_CHECK(Eval("player.ship.awardContract('x', 'food', 1, 2, 4000, 100)")
+  EXPECT_TRUE(Eval("player.ship.awardContract('x', 'food', 1, 2, 4000, 100)")
                .rfind("threw: ", 0) == 0);
-  OO_CHECK(Eval("player.ship.awardContract(5, null, 1, 2, 4000, 100)")
+  EXPECT_TRUE(Eval("player.ship.awardContract(5, null, 1, 2, 4000, 100)")
                .rfind("threw: ", 0) == 0);
-  OO_CHECK(Eval("player.ship.awardContract(5, 'food', 1, 2, 10, 100)")
+  EXPECT_TRUE(Eval("player.ship.awardContract(5, 'food', 1, 2, 10, 100)")
                .rfind("threw: ", 0) == 0);
-  OO_CHECK(Eval("player.ship.removeContract('food')").rfind("threw: ", 0) == 0);
-  OO_CHECK(
+  EXPECT_TRUE(Eval("player.ship.removeContract('food')").rfind("threw: ", 0) == 0);
+  EXPECT_TRUE(
       Eval("player.ship.removeContract('food', 256)").rfind("threw: ", 0) == 0);
-  OO_CHECK(Eval("player.ship.removeContract(null, 2)").rfind("threw: ", 0) ==
+  EXPECT_TRUE(Eval("player.ship.removeContract(null, 2)").rfind("threw: ", 0) ==
            0);
   OO_CHECK_LOG(sPlayer->_log, "");
 }
 
 // The property setter, launch, cargo, autopilot,
 // docking and the pylon.
-OO_TEST(setterPlayerState) {
-  SetUp();
+TEST(OOJSPlayerShip, setterPlayerState) {
+  ::SetUp();
   Log(sPlayer->_log);
   OO_CHECK_EVAL(
       "(function () { player.ship.fuelLeakRate = 2; player.ship.massLockable = "
@@ -825,8 +826,8 @@ OO_TEST(setterPlayerState) {
                                static_cast<int>(oo::WeaponFacing::kForward)));
 }
 
-OO_TEST(setterChartAndCompass) {
-  SetUp();
+TEST(OOJSPlayerShip, setterChartAndCompass) {
+  ::SetUp();
   Log(sPlayer->_log);
   OO_CHECK_EVAL(
       "(function () { player.ship.chartHighlightMode = 'OOLRC_MODE_TECHLEVEL'; "
@@ -836,7 +837,7 @@ OO_TEST(setterChartAndCompass) {
       sPlayer->_log,
       oo::str::format("setLongRangeChartMode %d; event(OOLRC_MODE_ECONOMY)",
                       static_cast<int>(oo::LongRangeChartMode::kTechLevel)));
-  OO_CHECK(Eval("(function () { player.ship.chartHighlightMode = "
+  EXPECT_TRUE(Eval("(function () { player.ship.chartHighlightMode = "
                 "'OOLRC_MODE_NONSENSE'; })()")
                .rfind("threw: ", 0) == 0);
   OO_CHECK_EVAL(
@@ -864,7 +865,7 @@ OO_TEST(setterChartAndCompass) {
                oo::str::format("setCompassMode %d; setCompassMode %d",
                                static_cast<int>(oo::CompassMode::kBasic),
                                static_cast<int>(oo::CompassMode::kPlanet)));
-  OO_CHECK(Eval("(function () { player.ship.compassType = "
+  EXPECT_TRUE(Eval("(function () { player.ship.compassType = "
                 "'OO_COMPASSTYPE_FANCY'; })()")
                .rfind("threw: ", 0) == 0);
   Log(sPlayer->_log);
@@ -876,14 +877,14 @@ OO_TEST(setterChartAndCompass) {
   OO_CHECK_LOG(sPlayer->_log,
                "setNextCompassMode; validateCompassTarget; setNextCompassMode; "
                "validateCompassTarget");
-  OO_CHECK(Eval("(function () { player.ship.compassTarget = null; })()")
+  EXPECT_TRUE(Eval("(function () { player.ship.compassTarget = null; })()")
                .rfind("threw: ", 0) == 0);
   sPlayer->_compassTarget = nullptr;
   sPlayer->_equipment.clear();
 }
 
-OO_TEST(setterHUD) {
-  SetUp();
+TEST(OOJSPlayerShip, setterHUD) {
+  ::SetUp();
   Log(sPlayer->_log);
   OO_CHECK_EVAL(
       "(function () { player.ship.reticleTargetSensitive = true; return "
@@ -938,7 +939,7 @@ OO_TEST(setterHUD) {
       "player.ship.messageGuiTextCommsColor = null; return "
       "player.ship.messageGuiTextColor; })()",
       "0,0,1,1");
-  OO_CHECK(sUniverse->_gui->_textCommsColor == nullptr);
+  EXPECT_TRUE(sUniverse->_gui->_textCommsColor == nullptr);
   OO_CHECK_EVAL(
       "(function () { player.ship.messageGuiTextColor = 'notAColor'; })()",
       "threw: Cannot set property messageGuiTextColor of instance of "
@@ -960,25 +961,25 @@ OO_TEST(setterHUD) {
   OO_CHECK_EVAL("player.ship.hudHidden", "false");
 }
 
-OO_TEST(setterTargetSystem) {
-  SetUp();
+TEST(OOJSPlayerShip, setterTargetSystem) {
+  ::SetUp();
   Log(sPlayer->_log);
   sPlayer->Entity::setStatus(oo::EntityStatus::kDocked);
   OO_CHECK_EVAL("(function () { player.ship.targetSystem = 33; })()",
                 "undefined");
   OO_CHECK_LOG(sPlayer->_log, "setTargetSystemID 33");
   sPlayer->Entity::setStatus(oo::EntityStatus::kInFlight);
-  OO_CHECK(Eval("(function () { player.ship.targetSystem = 33; })()")
+  EXPECT_TRUE(Eval("(function () { player.ship.targetSystem = 33; })()")
                .rfind("threw: ", 0) == 0);
   sPlayer->Entity::setStatus(oo::EntityStatus::kEnteringWitchspace);
-  OO_CHECK(Eval("(function () { player.ship.targetSystem = 33; })()")
+  EXPECT_TRUE(Eval("(function () { player.ship.targetSystem = 33; })()")
                .rfind("threw: ", 0) == 0);
   OO_CHECK_LOG(sPlayer->_log, "");
   sPlayer->Entity::setStatus(oo::EntityStatus::kDocked);
 }
 
-OO_TEST(slice2Methods) {
-  SetUp();
+TEST(OOJSPlayerShip, slice2Methods) {
+  ::SetUp();
   Log(sPlayer->_log);
   OO_CHECK_EVAL("player.ship.launch()", "undefined");
   OO_CHECK_EVAL("player.ship.disengageAutopilot()", "undefined");
@@ -991,15 +992,15 @@ OO_TEST(slice2Methods) {
   OO_CHECK_EVAL("player.ship.removeAllCargo()",
                 "threw: PlayerShip.removeAllCargo only works when docked.");
   sPlayer->_docked = true;
-  OO_CHECK(Eval("player.ship.useSpecialCargo()").rfind("threw: ", 0) == 0);
-  OO_CHECK(
+  EXPECT_TRUE(Eval("player.ship.useSpecialCargo()").rfind("threw: ", 0) == 0);
+  EXPECT_TRUE(
       Eval("player.ship.engageAutopilotToStation(player.ship.dockedStation)")
           .rfind("threw: ", 0) == 0);  // not a station
-  OO_CHECK(Eval("player.ship.requestDockingClearance()").rfind("threw: ", 0) ==
+  EXPECT_TRUE(Eval("player.ship.requestDockingClearance()").rfind("threw: ", 0) ==
            0);
-  OO_CHECK(Eval("player.ship.cancelDockingRequest(5)").rfind("threw: ", 0) ==
+  EXPECT_TRUE(Eval("player.ship.cancelDockingRequest(5)").rfind("threw: ", 0) ==
            0);
-  OO_CHECK(Eval("player.ship.awardEquipmentToCurrentPylon('EQ_NO_SUCH_THING')")
+  EXPECT_TRUE(Eval("player.ship.awardEquipmentToCurrentPylon('EQ_NO_SUCH_THING')")
                .rfind("threw: ", 0) == 0);
   OO_CHECK_LOG(sPlayer->_log, "");
 }
@@ -1007,8 +1008,8 @@ OO_TEST(slice2Methods) {
 // The custom views, scanner zoom, internal damage, the
 // hyperspace countdowns, the MFDs, primed equipment, the HUD dials and
 // selectors.
-OO_TEST(customViews) {
-  SetUp();
+TEST(OOJSPlayerShip, customViews) {
+  ::SetUp();
   Log(sPlayer->_log);
   OO_CHECK_EVAL(
       "player.ship.setCustomView([1, 2, 3], [1, 0, 0, 0])",
@@ -1036,11 +1037,11 @@ OO_TEST(customViews) {
           static_cast<int>(oo::ViewID::kCustom), static_cast<int>(oo::ViewID::kCustom),
           static_cast<int>(oo::ViewID::kCustom), static_cast<int>(oo::ViewID::kCustom),
           static_cast<int>(oo::ViewID::kCustom), static_cast<int>(oo::ViewID::kCustom)));
-  OO_CHECK(Eval("player.ship.setCustomView([1, 2, 3])").rfind("threw: ", 0) ==
+  EXPECT_TRUE(Eval("player.ship.setCustomView([1, 2, 3])").rfind("threw: ", 0) ==
            0);
-  OO_CHECK(Eval("player.ship.setCustomView('here', [1, 0, 0, 0])")
+  EXPECT_TRUE(Eval("player.ship.setCustomView('here', [1, 0, 0, 0])")
                .rfind("threw: ", 0) == 0);
-  OO_CHECK(
+  EXPECT_TRUE(
       Eval("player.ship.setCustomView([1, 2, 3], 'up')").rfind("threw: ", 0) ==
       0);
   OO_CHECK_EVAL("player.ship.setCustomView([1, 2, 3], [1, 0, 0, 0], null)",
@@ -1054,8 +1055,8 @@ OO_TEST(customViews) {
   OO_CHECK_LOG(sPlayer->_log, "resetScannerZoom; takeInternalDamage");
 }
 
-OO_TEST(hyperspaceCountdowns) {
-  SetUp();
+TEST(OOJSPlayerShip, hyperspaceCountdowns) {
+  ::SetUp();
   Log(sPlayer->_log);
   sPlayer->_hyperspaceMotor = false;
   OO_CHECK_EVAL("player.ship.beginHyperspaceCountdown()", "false");
@@ -1067,9 +1068,9 @@ OO_TEST(hyperspaceCountdowns) {
   OO_CHECK_LOG(sPlayer->_log,
                "witchJumpChecklist 0; beginWitchspaceCountdown 10; "
                "witchJumpChecklist 0; beginWitchspaceCountdown 0");
-  OO_CHECK(
+  EXPECT_TRUE(
       Eval("player.ship.beginHyperspaceCountdown(4)").rfind("threw: ", 0) == 0);
-  OO_CHECK(
+  EXPECT_TRUE(
       Eval("player.ship.beginHyperspaceCountdown(61)").rfind("threw: ", 0) ==
       0);
   OO_CHECK_EVAL("player.ship.cancelHyperspaceCountdown()",
@@ -1091,19 +1092,19 @@ OO_TEST(hyperspaceCountdowns) {
           "setStatus %d; playGalacticHyperspace",
           static_cast<int>(oo::EntityStatus::kWitchspaceCountdown)));
   OO_CHECK_LOG(sUniverse->_messages, "witch-galactic-in-f-seconds 1");
-  OO_CHECK(Eval("player.ship.beginGalacticHyperspaceCountdown(3)")
+  EXPECT_TRUE(Eval("player.ship.beginGalacticHyperspaceCountdown(3)")
                .rfind("threw: ", 0) == 0);
   sPlayer->_equipment.clear();
   sPlayer->Entity::setStatus(oo::EntityStatus::kDocked);
 }
 
-OO_TEST(mfdsAndDials) {
-  SetUp();
+TEST(OOJSPlayerShip, mfdsAndDials) {
+  ::SetUp();
   Log(sPlayer->_log);
   OO_CHECK_EVAL("player.ship.setMultiFunctionDisplay(1, 'mfd-x')", "true");
   OO_CHECK_EVAL("player.ship.setMultiFunctionDisplay(5)", "false");
   OO_CHECK_EVAL("player.ship.setMultiFunctionDisplay()", "true");
-  OO_CHECK(Eval("player.ship.setMultiFunctionDisplay(-1)").rfind("<", 0) != 0);
+  EXPECT_TRUE(Eval("player.ship.setMultiFunctionDisplay(-1)").rfind("<", 0) != 0);
   Log(sPlayer->_log);
   OO_CHECK_EVAL("player.ship.setMultiFunctionText('mfd-x', 'Hello')",
                 "undefined");
@@ -1113,7 +1114,7 @@ OO_TEST(mfdsAndDials) {
   OO_CHECK_LOG(sPlayer->_log,
                "setMultiFunctionText mfd-x Hello; setMultiFunctionText mfd-x "
                "(nil); setMultiFunctionText mfd-x [reflowed Hello]");
-  OO_CHECK(Eval("player.ship.setMultiFunctionText()").rfind("threw: ", 0) == 0);
+  EXPECT_TRUE(Eval("player.ship.setMultiFunctionText()").rfind("threw: ", 0) == 0);
 
   OO_CHECK_EVAL("player.ship.setPrimedEquipment('EQ_ECM')", "true");
   OO_CHECK_EVAL("player.ship.setPrimedEquipment('EQ_NONE_SUCH', false)",
@@ -1121,20 +1122,20 @@ OO_TEST(mfdsAndDials) {
   OO_CHECK_LOG(
       sPlayer->_log,
       "setPrimedEquipment EQ_ECM 1; setPrimedEquipment EQ_NONE_SUCH 0");
-  OO_CHECK(Eval("player.ship.setPrimedEquipment()").rfind("threw: ", 0) == 0);
+  EXPECT_TRUE(Eval("player.ship.setPrimedEquipment()").rfind("threw: ", 0) == 0);
 
   OO_CHECK_EVAL("player.ship.setCustomHUDDial('dial', 5)", "undefined");
   OO_CHECK_EVAL("player.ship.setCustomHUDDial('dial')", "undefined");
   OO_CHECK_LOG(sPlayer->_log, "setDialCustom dial 5; setDialCustom dial ");
-  OO_CHECK(Eval("player.ship.setCustomHUDDial()").rfind("threw: ", 0) == 0);
+  EXPECT_TRUE(Eval("player.ship.setCustomHUDDial()").rfind("threw: ", 0) == 0);
 
   // The HUD's selectors.
   OO_CHECK_EVAL("player.ship.hideHUDSelector('drawCompass:')", "undefined");
-  OO_CHECK(sPlayer->_hud->hasHidden(std::string("drawCompass:")));
+  EXPECT_TRUE(sPlayer->_hud->hasHidden(std::string("drawCompass:")));
   OO_CHECK_EVAL("player.ship.showHUDSelector('drawCompass:')", "undefined");
-  OO_CHECK(!sPlayer->_hud->hasHidden(std::string("drawCompass:")));
-  OO_CHECK(Eval("player.ship.hideHUDSelector()").rfind("threw: ", 0) == 0);
-  OO_CHECK(Eval("player.ship.showHUDSelector()").rfind("threw: ", 0) == 0);
+  EXPECT_TRUE(!sPlayer->_hud->hasHidden(std::string("drawCompass:")));
+  EXPECT_TRUE(Eval("player.ship.hideHUDSelector()").rfind("threw: ", 0) == 0);
+  EXPECT_TRUE(Eval("player.ship.showHUDSelector()").rfind("threw: ", 0) == 0);
   std::shared_ptr<HeadUpDisplay> hud = sPlayer->_hud;
   sPlayer->_hud = nullptr;
   OO_CHECK_EVAL("player.ship.hideHUDSelector('drawCompass:')",
@@ -1151,15 +1152,15 @@ static bool SameObject(JSValueConst a, JSValueConst b) {
 
 // What the engine asks of the player (the ship's facade, which asks the C++
 // player): the class name, and the JS object.
-OO_TEST(playerCategory) {
-  SetUp();
-  OO_CHECK_EQ(OOJSEntityJSClassName(sRealPlayer).value_or("<none>"),
+TEST(OOJSPlayerShip, playerCategory) {
+  ::SetUp();
+  EXPECT_EQ(OOJSEntityJSClassName(sRealPlayer).value_or("<none>"),
               "PlayerShip");
   JSContext* context = OOJSAcquireContext();
   JSValue shipObject = JSPlayerShipObject();
-  OO_CHECK(SameObject(sRealPlayer->_jsSelf, shipObject));
+  EXPECT_TRUE(SameObject(sRealPlayer->_jsSelf, shipObject));
   JSValue value = OOJSEntityJSValue(sRealPlayer, context);
-  OO_CHECK(JS_IsObject(value) && SameObject(value, shipObject));
+  EXPECT_TRUE(JS_IsObject(value) && SameObject(value, shipObject));
   JS_FreeValue(context, value);
   JS_FreeValue(context, shipObject);
   OOJSRelinquishContext(context);
@@ -1168,21 +1169,19 @@ OO_TEST(playerCategory) {
   oo::NotificationCenter::defaultCenter().post(
       kOOJavaScriptEngineWillResetNotificationName,
       OOJavaScriptEngine::sharedEngine());
-  OO_CHECK(JS_IsUndefined(sRealPlayer->_jsSelf));
+  EXPECT_TRUE(JS_IsUndefined(sRealPlayer->_jsSelf));
   context = OOJSAcquireContext();
   shipObject = JSPlayerShipObject();
   OOJSPlayerShipSetJSSelf(sRealPlayer, shipObject,
                           context);  // as InitOOJSPlayerShip() did
-  OO_CHECK(SameObject(sRealPlayer->_jsSelf, shipObject));
+  EXPECT_TRUE(SameObject(sRealPlayer->_jsSelf, shipObject));
   JS_FreeValue(context, shipObject);
   OOJSRelinquishContext(context);
 }
 
-OO_TEST(cleanUp) {
+TEST(OOJSPlayerShip, cleanUp) {
   stdfs::current_path(stdfs::temp_directory_path());
   std::error_code ignored;
   stdfs::remove_all(sRoot, ignored);
-  OO_CHECK(true);
+  EXPECT_TRUE(true);
 }
-
-OO_TEST_MAIN()

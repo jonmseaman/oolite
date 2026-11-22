@@ -15,8 +15,9 @@
 #include <chrono>
 #include <thread>
 
+#include <gtest/gtest.h>
+
 #include "AsyncWorkManager.h"
-#include "oo_test.hpp"
 #include "oofnd/Exception.hpp"  // oo::Exception
 
 class TestTask : public oo::AsyncWorkTask {
@@ -77,108 +78,106 @@ bool WaitFor(const std::atomic<bool>& flag) {
 
 }  // namespace
 
-OO_TEST(oneSharedManager) {
+TEST(OOAsyncWorkManager, oneSharedManager) {
   {
     oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
-    OO_CHECK(manager != nullptr);
-    OO_CHECK(oo::AsyncWorkManager::sharedAsyncWorkManager() == manager);
+    EXPECT_TRUE(manager != nullptr);
+    EXPECT_TRUE(oo::AsyncWorkManager::sharedAsyncWorkManager() == manager);
   }
 }
 
-OO_TEST(nilIsRefused) {
+TEST(OOAsyncWorkManager, nilIsRefused) {
   {
     oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
-    OO_CHECK(!manager->addTask(nullptr, oo::AsyncWorkPriority::kMedium));
+    EXPECT_TRUE(!manager->addTask(nullptr, oo::AsyncWorkPriority::kMedium));
     manager->waitForTaskToComplete(nullptr);  // returns at once
   }
 }
 
-OO_TEST(waitPerformsThenCompletesOnTheWaitingThread) {
+TEST(OOAsyncWorkManager, waitPerformsThenCompletesOnTheWaitingThread) {
   {
     oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     const std::shared_ptr<TestTask> task = oo::makeShared<TestTask>();
-    OO_CHECK(manager->addTask(task.get(), oo::AsyncWorkPriority::kMedium));
+    EXPECT_TRUE(manager->addTask(task.get(), oo::AsyncWorkPriority::kMedium));
     manager->waitForTaskToComplete(task.get());
-    OO_CHECK(task->performed);
-    OO_CHECK(!task->performedOnCallingThread);  // on a work thread
-    OO_CHECK_EQ(task->completions.load(), 1);
-    OO_CHECK(task->completedAfterPerform);
-    OO_CHECK(task->completedOnCallingThread);
+    EXPECT_TRUE(task->performed);
+    EXPECT_TRUE(!task->performedOnCallingThread);  // on a work thread
+    EXPECT_EQ(task->completions.load(), 1);
+    EXPECT_TRUE(task->completedAfterPerform);
+    EXPECT_TRUE(task->completedOnCallingThread);
     manager->completePendingTasks();
-    OO_CHECK_EQ(task->completions.load(), 1);  // completed once only
+    EXPECT_EQ(task->completions.load(), 1);  // completed once only
   }
 }
 
-OO_TEST(completePendingTasksCollectsReadyTasks) {
+TEST(OOAsyncWorkManager, completePendingTasksCollectsReadyTasks) {
   {
     oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     const std::shared_ptr<TestTask> task = oo::makeShared<TestTask>();
-    OO_CHECK_EQ(task.use_count(), 1);
-    OO_CHECK(manager->addTask(task.get(), oo::AsyncWorkPriority::kHigh));
-    OO_CHECK(WaitFor(task->performed));
+    EXPECT_EQ(task.use_count(), 1);
+    EXPECT_TRUE(manager->addTask(task.get(), oo::AsyncWorkPriority::kHigh));
+    EXPECT_TRUE(WaitFor(task->performed));
     // Performed, but completed only when collected: poll until it is ready.
     for (int i = 0; i < 500 && task->completions == 0; i++) {
       manager->completePendingTasks();
       if (task->completions == 0)
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    OO_CHECK_EQ(task->completions.load(), 1);
-    OO_CHECK(task->completedOnCallingThread);
+    EXPECT_EQ(task->completions.load(), 1);
+    EXPECT_TRUE(task->completedOnCallingThread);
     manager->waitForTaskToComplete(
         task.get());  // no longer pending: returns at once
-    OO_CHECK_EQ(task->completions.load(), 1);
+    EXPECT_EQ(task->completions.load(), 1);
   }
 }
 
-OO_TEST(waitForATaskNeverAddedReturns) {
+TEST(OOAsyncWorkManager, waitForATaskNeverAddedReturns) {
   {
     const std::shared_ptr<TestTask> task = oo::makeShared<TestTask>();
     oo::AsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(
         task.get());
-    OO_CHECK(!task->performed);
-    OO_CHECK_EQ(task->completions.load(), 0);
+    EXPECT_TRUE(!task->performed);
+    EXPECT_EQ(task->completions.load(), 0);
   }
 }
 
-OO_TEST(taskWithoutCompletionIsPerformed) {
+TEST(OOAsyncWorkManager, taskWithoutCompletionIsPerformed) {
   {
     oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     const std::shared_ptr<TestFireAndForgetTask> task =
         oo::makeShared<TestFireAndForgetTask>();
-    OO_CHECK(manager->addTask(task.get(), oo::AsyncWorkPriority::kLow));
-    OO_CHECK(WaitFor(task->performed));
+    EXPECT_TRUE(manager->addTask(task.get(), oo::AsyncWorkPriority::kLow));
+    EXPECT_TRUE(WaitFor(task->performed));
     manager
         ->completePendingTasks();  // nothing to collect for it; must not hang
   }
 }
 
-OO_TEST(exceptionInPerformIsSwallowed) {
+TEST(OOAsyncWorkManager, exceptionInPerformIsSwallowed) {
   {
     oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     const std::shared_ptr<TestTask> task = oo::makeShared<TestTask>();
     task->shouldThrow = true;
-    OO_CHECK(manager->addTask(task.get(), oo::AsyncWorkPriority::kMedium));
+    EXPECT_TRUE(manager->addTask(task.get(), oo::AsyncWorkPriority::kMedium));
     manager->waitForTaskToComplete(task.get());
-    OO_CHECK(task->performed);
-    OO_CHECK_EQ(task->completions.load(), 1);
+    EXPECT_TRUE(task->performed);
+    EXPECT_EQ(task->completions.load(), 1);
   }
 }
 
-OO_TEST(everyPriorityIsPerformed) {
+TEST(OOAsyncWorkManager, everyPriorityIsPerformed) {
   {
     oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
     const std::shared_ptr<TestTask> low = oo::makeShared<TestTask>();
     const std::shared_ptr<TestTask> medium = oo::makeShared<TestTask>();
     const std::shared_ptr<TestTask> high = oo::makeShared<TestTask>();
-    OO_CHECK(manager->addTask(low.get(), oo::AsyncWorkPriority::kLow));
-    OO_CHECK(manager->addTask(medium.get(), oo::AsyncWorkPriority::kMedium));
-    OO_CHECK(manager->addTask(high.get(), oo::AsyncWorkPriority::kHigh));
+    EXPECT_TRUE(manager->addTask(low.get(), oo::AsyncWorkPriority::kLow));
+    EXPECT_TRUE(manager->addTask(medium.get(), oo::AsyncWorkPriority::kMedium));
+    EXPECT_TRUE(manager->addTask(high.get(), oo::AsyncWorkPriority::kHigh));
     manager->waitForTaskToComplete(low.get());
     manager->waitForTaskToComplete(medium.get());
     manager->waitForTaskToComplete(high.get());
-    OO_CHECK(low->completions == 1 && medium->completions == 1 &&
+    EXPECT_TRUE(low->completions == 1 && medium->completions == 1 &&
              high->completions == 1);
   }
 }
-
-OO_TEST_MAIN()

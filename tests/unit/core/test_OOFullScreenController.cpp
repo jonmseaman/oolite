@@ -13,11 +13,13 @@
 */
 
 #include <cstdlib>
+
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "FullScreenController.h"
 #include "Logging.h"
-#include "oo_test.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked. The one function of it that the base calls is defined here instead,
@@ -85,56 +87,56 @@ class TestFullScreenController final : public oo::FullScreenController {
   std::size_t index = 0;
 };
 
-OO_TEST(baseDefaults) {
+TEST(OOFullScreenController, baseDefaults) {
   {
     MyOpenGLView* view = oo::test::NewRetained<MyOpenGLView>();
     const std::size_t viewRetains = view->weak_from_this().use_count();
     std::shared_ptr<oo::FullScreenController> controller =
         oo::makeShared<oo::FullScreenController>(view);
-    OO_CHECK(controller != nullptr);
-    OO_CHECK(controller->gameView() == view);
-    OO_CHECK(view->weak_from_this().use_count() == viewRetains + 1);
+    EXPECT_TRUE(controller != nullptr);
+    EXPECT_TRUE(controller->gameView() == view);
+    EXPECT_TRUE(view->weak_from_this().use_count() == viewRetains + 1);
 
     gSubclassResponsibilities = 0;
-    OO_CHECK(!controller->inFullScreenMode());
-    OO_CHECK(gSubclassResponsibilities == 1);
+    EXPECT_TRUE(!controller->inFullScreenMode());
+    EXPECT_TRUE(gSubclassResponsibilities == 1);
     controller->setFullScreenMode(true);
-    OO_CHECK(gSubclassResponsibilities == 2);
-    OO_CHECK(controller->displayModes().isNull());
-    OO_CHECK(gSubclassResponsibilities == 3);
-    OO_CHECK(controller->indexOfCurrentDisplayMode() == oo::kNotFound);
-    OO_CHECK(gSubclassResponsibilities == 4);
-    OO_CHECK(!controller->setDisplayWidth(800, 600, 60));
-    OO_CHECK(gSubclassResponsibilities == 5);
-    OO_CHECK(controller->findDisplayModeForWidth(800, 600, 60).isNull());
-    OO_CHECK(gSubclassResponsibilities == 6);
+    EXPECT_TRUE(gSubclassResponsibilities == 2);
+    EXPECT_TRUE(controller->displayModes().isNull());
+    EXPECT_TRUE(gSubclassResponsibilities == 3);
+    EXPECT_TRUE(controller->indexOfCurrentDisplayMode() == oo::kNotFound);
+    EXPECT_TRUE(gSubclassResponsibilities == 4);
+    EXPECT_TRUE(!controller->setDisplayWidth(800, 600, 60));
+    EXPECT_TRUE(gSubclassResponsibilities == 5);
+    EXPECT_TRUE(controller->findDisplayModeForWidth(800, 600, 60).isNull());
+    EXPECT_TRUE(gSubclassResponsibilities == 6);
 
     // No mode list: null, after asking only for the list.
-    OO_CHECK(controller->currentDisplayMode().isNull());
-    OO_CHECK(gSubclassResponsibilities == 7);
+    EXPECT_TRUE(controller->currentDisplayMode().isNull());
+    EXPECT_TRUE(gSubclassResponsibilities == 7);
 
     // The one method with an empty body.
     controller->noteMouseInteractionModeChangedFrom(
         oo::MouseInteractionMode::kUiScreenNoInteraction,
         oo::MouseInteractionMode::kFlightWithMouseControl);
-    OO_CHECK(gSubclassResponsibilities == 7);
+    EXPECT_TRUE(gSubclassResponsibilities == 7);
 
     controller = nullptr;
-    OO_CHECK(view->weak_from_this().use_count() == viewRetains);
+    EXPECT_TRUE(view->weak_from_this().use_count() == viewRetains);
     oo::test::Release(view);
   }
 }
 
-OO_TEST(nilGameView) {
+TEST(OOFullScreenController, nilGameView) {
   {
     std::shared_ptr<oo::FullScreenController> controller =
         oo::makeShared<oo::FullScreenController>(nullptr);
-    OO_CHECK(controller != nullptr);
-    OO_CHECK(controller->gameView() == nullptr);
+    EXPECT_TRUE(controller != nullptr);
+    EXPECT_TRUE(controller->gameView() == nullptr);
   }
 }
 
-OO_TEST(currentDisplayMode) {
+TEST(OOFullScreenController, currentDisplayMode) {
   {
     std::shared_ptr<TestFullScreenController> controller =
         oo::makeShared<TestFullScreenController>(nullptr);
@@ -142,30 +144,28 @@ OO_TEST(currentDisplayMode) {
 
     controller->modes = Modes();
     controller->index = 1;
-    OO_CHECK(controller->currentDisplayMode() == Mode(1024, 768, 75));
+    EXPECT_TRUE(controller->currentDisplayMode() == Mode(1024, 768, 75));
     controller->index = 0;
-    OO_CHECK(controller->currentDisplayMode() == Mode(640, 480, 60));
+    EXPECT_TRUE(controller->currentDisplayMode() == Mode(640, 480, 60));
     controller->index = 2;
-    OO_CHECK(controller->currentDisplayMode() == Mode(1920, 1080, 60));
-    OO_CHECK(controller->currentDisplayMode().get<std::size_t>(
+    EXPECT_TRUE(controller->currentDisplayMode() == Mode(1920, 1080, 60));
+    EXPECT_TRUE(controller->currentDisplayMode().get<std::size_t>(
                  std::string(oo::kDisplayWidth)) == 1920);
 
     // An index past the end, and oo::kNotFound: null.
     controller->index = 3;
-    OO_CHECK(controller->currentDisplayMode().isNull());
+    EXPECT_TRUE(controller->currentDisplayMode().isNull());
     controller->index = oo::kNotFound;
-    OO_CHECK(controller->currentDisplayMode().isNull());
+    EXPECT_TRUE(controller->currentDisplayMode().isNull());
 
     // A mode list that is not an array, and an empty one: null.
     controller->index = 0;
     controller->modes = Mode(640, 480, 60);
-    OO_CHECK(controller->currentDisplayMode().isNull());
+    EXPECT_TRUE(controller->currentDisplayMode().isNull());
     controller->modes = oo::PList(oo::PList::Array{});
-    OO_CHECK(controller->currentDisplayMode().isNull());
+    EXPECT_TRUE(controller->currentDisplayMode().isNull());
 
     // The subclass's overrides were used: the base logged nothing.
-    OO_CHECK(gSubclassResponsibilities == 0);
+    EXPECT_TRUE(gSubclassResponsibilities == 0);
   }
 }
-
-OO_TEST_MAIN()

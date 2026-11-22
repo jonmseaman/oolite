@@ -20,13 +20,14 @@
 #include <filesystem>
 #include <fstream>
 
+#include <gtest/gtest.h>
+
 #include "AIStateMachineVerifierStage.h"
 #include "CheckShipDataPListVerifierStage.h"
 #include "OXPVerifierStage.h"
 #include "PListSchemaVerifier.h"
 #include "PixMap.h"
 #include "TextureLoader.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListParsing.hpp"
 
@@ -249,39 +250,39 @@ std::vector<std::string> LinesForShip(const std::string& ship) {
 
 }  // namespace
 
-OO_TEST(nameAndNeighbours) {
+TEST(OOCheckShipDataPListVerifierStage, nameAndNeighbours) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({});
     const std::shared_ptr<oo::CheckShipDataPListVerifierStage> stage =
         oo::makeShared<oo::CheckShipDataPListVerifierStage>();
     stage->setVerifier(verifier);
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking shipdata.plist"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(verifier->stageWithName("Testing models") == nullptr);
-    OO_CHECK(stage->dependents() ==
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(verifier->stageWithName("Testing models") == nullptr);
+    EXPECT_TRUE(stage->dependents() ==
              (std::vector<std::string>{"Checking for unused files",
                                        "Testing textures and images",
                                        "Testing models", "Validating AIs"}));
-    OO_CHECK(verifier->stageWithName("Testing models") !=
+    EXPECT_TRUE(verifier->stageWithName("Testing models") !=
              nullptr);  // asking registers the model stage
-    OO_CHECK(verifier->stageWithName("Validating AIs") ==
+    EXPECT_TRUE(verifier->stageWithName("Validating AIs") ==
              nullptr);  // but not the AI stage
-    OO_CHECK(!stage->shouldRun());
+    EXPECT_TRUE(!stage->shouldRun());
     stage->run();
-    OO_CHECK(gLog.empty());
+    EXPECT_TRUE(gLog.empty());
 
     stage->setVerifier(MakeVerifier({{"Config/shipdata.plist", "( a )"}}));
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->shouldRun());
     stage->run();
-    OO_CHECK(gLog.size() == 1 &&
+    EXPECT_TRUE(gLog.size() == 1 &&
              LogLinesContaining(
                  "***** ERROR: shipdata.plist is not a dictionary.") == 1);
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(checksEachShip) {
+TEST(OOCheckShipDataPListVerifierStage, checksEachShip) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({
         {"Models/ship.dat", "model"},
@@ -317,71 +318,69 @@ OO_TEST(checksEachShip) {
     gLog.clear();
     stage->run();
 
-    OO_CHECK(gSchemaVerifiers >= 1);
-    OO_CHECK(LinesForShip("good").empty());
-    OO_CHECK(LogLinesContaining("- ship \"good\" OK.") == 1);
-    OO_CHECK(
+    EXPECT_TRUE(gSchemaVerifiers >= 1);
+    EXPECT_TRUE(LinesForShip("good").empty());
+    EXPECT_TRUE(LogLinesContaining("- ship \"good\" OK.") == 1);
+    EXPECT_TRUE(
         LinesForShip("keys") ==
         (std::vector<std::string>{"----- WARNING: key \"max_cargo\" does not "
                                   "apply to this category of ship.",
                                   "----- WARNING: key \"port_radius\" does not "
                                   "apply to this category of ship.",
                                   "----- WARNING: unknown key \"wibble\"."}));
-    OO_CHECK(
+    EXPECT_TRUE(
         LinesForShip("both") ==
         (std::vector<std::string>{"***** ERROR: ship is both a player ship and "
                                   "a station. Treating as non-station."}));
-    OO_CHECK(LinesForShip("station").empty() &&
+    EXPECT_TRUE(LinesForShip("station").empty() &&
              LogLinesContaining("- ship \"station\" OK.") == 1);
-    OO_CHECK(LinesForShip("template")
+    EXPECT_TRUE(LinesForShip("template")
                  .empty());  // another category's key is allowed in a template
-    OO_CHECK(LinesForShip("nomodel") ==
+    EXPECT_TRUE(LinesForShip("nomodel") ==
              (std::vector<std::string>{
                  "***** ERROR: ship does not specify model or like_ship."}));
-    OO_CHECK(
+    EXPECT_TRUE(
         LinesForShip("lost") ==
         (std::vector<std::string>{"----- WARNING: model \"lost.dat\" could not "
                                   "be found in Test.oxp or in Oolite."}));
-    OO_CHECK(
+    EXPECT_TRUE(
         LinesForShip("schema") ==
         (std::vector<std::string>{
             "***** ERROR: verification of ship \"schema\" failed at "
             "\"bounty\": a test failure",
             "- Skipping verification for type aTestType at schema.notes."}));
-    OO_CHECK(LogLinesContaining("***** ERROR: shipdata.plist entry for "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: shipdata.plist entry for "
                                 "\"notDict\" is not a dictionary.") == 1);
 
     // Ships in case-insensitive order of their keys.
-    OO_CHECK(gLog.front().find("\"both\"") != std::string::npos);
+    EXPECT_TRUE(gLog.front().find("\"both\"") != std::string::npos);
 
     // The models found went to the model stage; the AI (not the JavaScript one)
     // to the AI stage.
-    OO_CHECK(verifier->stageWithName("Testing models")->shouldRun());
-    OO_CHECK(aiStage->shouldRun());
+    EXPECT_TRUE(verifier->stageWithName("Testing models")->shouldRun());
+    EXPECT_TRUE(aiStage->shouldRun());
   }
   std::filesystem::remove_all(kBase);
 }
 
 // The stage is global: the verifier registers it and finds it by name, and it
 // describes itself with its class's name.
-OO_TEST(facade) {
+TEST(OOCheckShipDataPListVerifierStage, facade) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({});
     const std::shared_ptr<oo::CheckShipDataPListVerifierStage> stage =
         oo::makeShared<oo::CheckShipDataPListVerifierStage>();
-    OO_CHECK(stage->description().starts_with(
+    EXPECT_TRUE(stage->description().starts_with(
         "<OOCheckShipDataPListVerifierStage 0x"));
 
     verifier->registerStage(stage.get());
-    OO_CHECK(verifier->stageWithName("Checking shipdata.plist") == stage.get());
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(verifier->stageWithName("Checking shipdata.plist") == stage.get());
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking shipdata.plist"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() ==
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() ==
              (std::vector<std::string>{"Checking for unused files",
                                        "Testing textures and images",
                                        "Testing models", "Validating AIs"}));
   }
 }
-
-OO_TEST_MAIN()

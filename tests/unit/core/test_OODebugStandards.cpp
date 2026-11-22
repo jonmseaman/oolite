@@ -18,9 +18,10 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "GameController.h"
 #include "DebugStandards.h"
-#include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 
 namespace {
@@ -46,62 +47,60 @@ void GameController::exitAppWithContext(const std::string& context) {
 
 // First: an out-of-range setting (7) is clamped to quit mode, which enforces,
 // logs and asks the game to exit with the message class as its context.
-OO_TEST(quitModeFromAClampedSetting) {
+TEST(OODebugStandards, quitModeFromAClampedSetting) {
   oo::Defaults::standard().setObject("enforce-oxp-standards", oo::PList(7));
 
-  OO_CHECK(oo::EnforceStandards());
-  OO_CHECK(sExitContexts.empty());
+  EXPECT_TRUE(oo::EnforceStandards());
+  EXPECT_TRUE(sExitContexts.empty());
 
   oo::StandardsDeprecated("a deprecated thing");
-  OO_CHECK(sExitContexts.size() == 1 &&
+  EXPECT_TRUE(sExitContexts.size() == 1 &&
            sExitContexts[0] == "oxp-standards.deprecated");
 
   oo::StandardsError("an OXP error");
-  OO_CHECK(sExitContexts.size() == 2 &&
+  EXPECT_TRUE(sExitContexts.size() == 2 &&
            sExitContexts[1] == "oxp-standards.error");
 }
 
 // The setting is read on every check (OOStandardsSetup never marks it read;
 // kept): each level in turn, and a negative one clamped to off.
-OO_TEST(theSettingIsReadOnEveryCheck) {
+TEST(OODebugStandards, theSettingIsReadOnEveryCheck) {
   oo::Defaults::standard().setObject("enforce-oxp-standards", oo::PList(0));
-  OO_CHECK(!oo::EnforceStandards());
+  EXPECT_TRUE(!oo::EnforceStandards());
   oo::StandardsError("off: nothing happens");
-  OO_CHECK(sExitContexts.size() == 2);
+  EXPECT_TRUE(sExitContexts.size() == 2);
 
   oo::Defaults::standard().setObject("enforce-oxp-standards", oo::PList(-3));
-  OO_CHECK(!oo::EnforceStandards());
+  EXPECT_TRUE(!oo::EnforceStandards());
 
   oo::Defaults::standard().setObject("enforce-oxp-standards", oo::PList(1));
-  OO_CHECK(!oo::EnforceStandards());
+  EXPECT_TRUE(!oo::EnforceStandards());
   oo::StandardsDeprecated("warn: only logged");
-  OO_CHECK(sExitContexts.size() == 2);
+  EXPECT_TRUE(sExitContexts.size() == 2);
 
   oo::Defaults::standard().setObject("enforce-oxp-standards", oo::PList(2));
-  OO_CHECK(oo::EnforceStandards());
+  EXPECT_TRUE(oo::EnforceStandards());
   oo::StandardsError("enforce: only logged");
-  OO_CHECK(sExitContexts.size() == 2);
+  EXPECT_TRUE(sExitContexts.size() == 2);
 
   oo::Defaults::standard().setObject("enforce-oxp-standards", oo::PList(3));
-  OO_CHECK(oo::EnforceStandards());
+  EXPECT_TRUE(oo::EnforceStandards());
   oo::StandardsError("quit again");
-  OO_CHECK(sExitContexts.size() == 3 &&
+  EXPECT_TRUE(sExitContexts.size() == 3 &&
            sExitContexts[2] == "oxp-standards.error");
 }
 
 // The OXP verifier runs in warn mode: nothing is enforced and nothing exits.
-OO_TEST(verifierModeWarns) {
+TEST(OODebugStandards, verifierModeWarns) {
   oo::SetStandardsForOXPVerifierMode();
-  OO_CHECK(!oo::EnforceStandards());
+  EXPECT_TRUE(!oo::EnforceStandards());
 
   const size_t before = sExitContexts.size();
   oo::StandardsDeprecated("only logged");
   oo::StandardsError("only logged");
-  OO_CHECK(sExitContexts.size() == before);
+  EXPECT_TRUE(sExitContexts.size() == before);
 
   // The verifier mode marks the setting read: the defaults stay ignored.
   oo::Defaults::standard().setObject("enforce-oxp-standards", oo::PList(3));
-  OO_CHECK(!oo::EnforceStandards());
+  EXPECT_TRUE(!oo::EnforceStandards());
 }
-
-OO_TEST_MAIN()

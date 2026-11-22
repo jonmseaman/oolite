@@ -23,13 +23,14 @@
 #include <set>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "ALBufferedSound.h"
 #include "ALSound.h"
 #include "ALSoundChannel.h"
 #include "ALSoundDecoder.h"
 #include "ALSoundMixer.h"
 #include "ALStreamedSound.h"
-#include "oo_test.hpp"
 
 namespace stdfs = std::filesystem;
 
@@ -123,103 +124,101 @@ stdfs::path sRoot;
 
 void SetUp() {
   if (!sRoot.empty()) return;
-  OO_CHECK(::_putenv_s("ALSOFT_DRIVERS", "null") == 0);
+  EXPECT_TRUE(::_putenv_s("ALSOFT_DRIVERS", "null") == 0);
   sRoot = stdfs::temp_directory_path() /
           ("oo-test-soundmixer-" +
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
 }
 
 }  // namespace
 
 // First: the shared mixer sets sound up and makes its channels, once.
-OO_TEST(theSharedMixerMakesItsChannels) {
-  SetUp();
-  OO_CHECK(!oo::Sound::isSoundOK());
+TEST(OOSoundMixer, theSharedMixerMakesItsChannels) {
+  ::SetUp();
+  EXPECT_TRUE(!oo::Sound::isSoundOK());
   oo::SoundMixer* mixer = oo::SoundMixer::sharedMixer();
-  OO_CHECK(mixer != nullptr);
-  OO_CHECK(oo::Sound::isSoundOK());
-  OO_CHECK(gLiveChannels == kMixerGeneralChannels);
-  OO_CHECK(oo::SoundMixer::sharedMixer() == mixer);
-  OO_CHECK(gLiveChannels == kMixerGeneralChannels);
+  EXPECT_TRUE(mixer != nullptr);
+  EXPECT_TRUE(oo::Sound::isSoundOK());
+  EXPECT_TRUE(gLiveChannels == kMixerGeneralChannels);
+  EXPECT_TRUE(oo::SoundMixer::sharedMixer() == mixer);
+  EXPECT_TRUE(gLiveChannels == kMixerGeneralChannels);
 }
 
 // The free list: last pushed, first popped; each channel once; nil when empty.
-OO_TEST(popAndPushTheFreeList) {
-  SetUp();
+TEST(OOSoundMixer, popAndPushTheFreeList) {
+  ::SetUp();
   oo::SoundMixer* mixer = oo::SoundMixer::sharedMixer();
   std::set<oo::SoundChannel*> popped;
   oo::SoundChannel* first = nullptr;
   for (int i = 0; i < kMixerGeneralChannels; i++) {
     oo::SoundChannel* channel = mixer->popChannel();
-    OO_CHECK(channel != nullptr && channel->next() == nullptr);
+    EXPECT_TRUE(channel != nullptr && channel->next() == nullptr);
     if (first == nullptr) first = channel;
     popped.insert(channel);
   }
-  OO_CHECK(popped.size() == kMixerGeneralChannels);
-  OO_CHECK(mixer->popChannel() == nullptr);
-  OO_CHECK(mixer->popChannel() == nullptr);
+  EXPECT_TRUE(popped.size() == kMixerGeneralChannels);
+  EXPECT_TRUE(mixer->popChannel() == nullptr);
+  EXPECT_TRUE(mixer->popChannel() == nullptr);
 
   oo::SoundChannel* a = *popped.begin();
   oo::SoundChannel* b = *popped.rbegin();
   mixer->pushChannel(a);
   mixer->pushChannel(b);
-  OO_CHECK(b->next() == a);
-  OO_CHECK(mixer->popChannel() == b);
-  OO_CHECK(mixer->popChannel() == a);
-  OO_CHECK(mixer->popChannel() == nullptr);
+  EXPECT_TRUE(b->next() == a);
+  EXPECT_TRUE(mixer->popChannel() == b);
+  EXPECT_TRUE(mixer->popChannel() == a);
+  EXPECT_TRUE(mixer->popChannel() == nullptr);
 
   for (oo::SoundChannel* channel : popped) mixer->pushChannel(channel);
-  OO_CHECK(gLiveChannels == kMixerGeneralChannels);
+  EXPECT_TRUE(gLiveChannels == kMixerGeneralChannels);
   (void)first;
 }
 
 // -update, and the root's +update, update every channel once.
-OO_TEST(updateUpdatesEveryChannel) {
-  SetUp();
+TEST(OOSoundMixer, updateUpdatesEveryChannel) {
+  ::SetUp();
   oo::SoundMixer* mixer = oo::SoundMixer::sharedMixer();
   const int before = gChannelUpdates;
   mixer->update();
-  OO_CHECK(gChannelUpdates == before + kMixerGeneralChannels);
+  EXPECT_TRUE(gChannelUpdates == before + kMixerGeneralChannels);
   oo::Sound::update();
-  OO_CHECK(gChannelUpdates == before + 2 * kMixerGeneralChannels);
+  EXPECT_TRUE(gChannelUpdates == before + 2 * kMixerGeneralChannels);
 
   oo::SoundChannel* channel = mixer->popChannel();
-  OO_CHECK(gUpdates[channel] == 2);
+  EXPECT_TRUE(gUpdates[channel] == 2);
   mixer->pushChannel(channel);
 }
 
 // The C++ API: the one mixer, the same free list and the same channels on every
 // call.
-OO_TEST(cxxApi) {
-  SetUp();
+TEST(OOSoundMixer, cxxApi) {
+  ::SetUp();
   oo::SoundMixer* mixer = oo::SoundMixer::sharedMixer();
-  OO_CHECK(mixer != nullptr && mixer == oo::SoundMixer::sharedMixer());
+  EXPECT_TRUE(mixer != nullptr && mixer == oo::SoundMixer::sharedMixer());
 
   oo::SoundChannel* channel = mixer->popChannel();
-  OO_CHECK(channel != nullptr && channel->next() == nullptr);
+  EXPECT_TRUE(channel != nullptr && channel->next() == nullptr);
   mixer->pushChannel(channel);
-  OO_CHECK(oo::SoundMixer::sharedMixer()->popChannel() == channel);
+  EXPECT_TRUE(oo::SoundMixer::sharedMixer()->popChannel() == channel);
   oo::SoundMixer::sharedMixer()->pushChannel(channel);
 
   const int before = gChannelUpdates;
   mixer->update();
-  OO_CHECK(gChannelUpdates == before + kMixerGeneralChannels);
+  EXPECT_TRUE(gChannelUpdates == before + kMixerGeneralChannels);
 }
 
 // Last: -shutdown releases the channels; -update then has nothing to update.
-OO_TEST(shutdownReleasesTheChannels) {
-  SetUp();
+TEST(OOSoundMixer, shutdownReleasesTheChannels) {
+  ::SetUp();
   oo::SoundMixer* mixer = oo::SoundMixer::sharedMixer();
   mixer->shutdown();
-  OO_CHECK(gLiveChannels == 0);
+  EXPECT_TRUE(gLiveChannels == 0);
   const int before = gChannelUpdates;
   mixer->update();
-  OO_CHECK(gChannelUpdates == before);
-  OO_CHECK(oo::SoundMixer::sharedMixer() == mixer);
+  EXPECT_TRUE(gChannelUpdates == before);
+  EXPECT_TRUE(oo::SoundMixer::sharedMixer() == mixer);
 }
-
-OO_TEST_MAIN()

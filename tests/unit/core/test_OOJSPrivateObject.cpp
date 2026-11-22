@@ -16,13 +16,14 @@
 	Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "OOJSPrivateObject.h"
 #include "OOJSEngineCore.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual references
 
-#include "oo_test.hpp"
 
 #include <quickjs.h>
 
@@ -273,35 +274,35 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(jsValue)
+TEST(OOJSPrivateObject, jsValue)
 {
 	SetUpContext();
 	// -oo_jsValueInContext: of nil was null; of an object, its own JS object, made once.
-	OO_CHECK(JS_IsNull(OOJSValueFromCxxObject(sContext, nullptr)));
+	EXPECT_TRUE(JS_IsNull(OOJSValueFromCxxObject(sContext, nullptr)));
 	std::shared_ptr<Thing> thing = std::shared_ptr<Thing>(new Thing("alpha", std::nullopt), oo::Dispose{});
-	OO_CHECK_EQ(thing->weak_from_this().use_count(), 1u);
+	EXPECT_EQ(thing->weak_from_this().use_count(), 1u);
 	JSValue first = OOJSValueFromCxxObject(sContext, thing.get());
-	OO_CHECK(JS_IsObject(first));
+	EXPECT_TRUE(JS_IsObject(first));
 	JSValue again = OOJSValueFromCxxObject(sContext, thing.get());
-	OO_CHECK(JS_VALUE_GET_PTR(again) == JS_VALUE_GET_PTR(first));
+	EXPECT_TRUE(JS_VALUE_GET_PTR(again) == JS_VALUE_GET_PTR(first));
 	JS_FreeValue(sContext, again);
 	// The slot holds the object as an oo::Object *, with one retain.
-	OO_CHECK(OOJSCxxPrivateFromOpaque(JS_GetOpaque(first, sThingClassID)) == static_cast<oo::Object *>(thing.get()));
-	OO_CHECK_EQ(thing->weak_from_this().use_count(), 2u);
+	EXPECT_TRUE(OOJSCxxPrivateFromOpaque(JS_GetOpaque(first, sThingClassID)) == static_cast<oo::Object *>(thing.get()));
+	EXPECT_EQ(thing->weak_from_this().use_count(), 2u);
 	Define("alpha", first);
 	OO_CHECK_EVAL("alpha.name()", "alpha");
 	OO_CHECK_EVAL("Object.getPrototypeOf(alpha) === thingPrototype", "true");
 }
 
 
-OO_TEST(getter)
+TEST(OOJSPrivateObject, getter)
 {
 	SetUpContext();
 	std::shared_ptr<Thing> sub = std::shared_ptr<Thing>(new Thing("beta", std::nullopt, &sSubThingClassID), oo::Dispose{});
@@ -311,12 +312,12 @@ OO_TEST(getter)
 	OO_CHECK_EVAL("thingPrototype.name()", "<none>");
 	// Anything else is the engine's error, as DEFINE_JS_OBJECT_GETTER reported it.
 	OO_CHECK_EVAL("thingPrototype.name.call({})", "threw: Native method expected Thing, got [object Object].");
-	OO_CHECK_EQ(Eval("thingPrototype.name.call(new Date(0))").rfind("threw: Native method expected Thing, got ", 0), 0u);
+	EXPECT_EQ(Eval("thingPrototype.name.call(new Date(0))").rfind("threw: Native method expected Thing, got ", 0), 0u);
 	OO_CHECK_EVAL("Object.getPrototypeOf(Object.getPrototypeOf(beta)) === thingPrototype", "true");
 }
 
 
-OO_TEST(finalize)
+TEST(OOJSPrivateObject, finalize)
 {
 	SetUpContext();
 	// The engine's finalizer sends clearJSSelf() with the dying wrapper, then releases the slot.
@@ -325,37 +326,37 @@ OO_TEST(finalize)
 	Thing *thing = oo::test::NewRetained<Thing>("gamma", std::nullopt);	// the test's reference, released below
 	JSValue wrapperValue = OOJSValueFromCxxObject(sContext, thing);
 	void *wrapper = JS_VALUE_GET_PTR(wrapperValue);
-	OO_CHECK(JS_IsObject(wrapperValue));
-	OO_CHECK_EQ(thing->weak_from_this().use_count(), 2u);
+	EXPECT_TRUE(JS_IsObject(wrapperValue));
+	EXPECT_EQ(thing->weak_from_this().use_count(), 2u);
 	JS_FreeValue(sContext, wrapperValue);
 	JS_RunGC(sRuntime);
-	OO_CHECK_EQ(thing->_clearCalls, 1);
-	OO_CHECK(thing->_lastCleared == wrapper);
-	OO_CHECK(!JS_IsObject(thing->_jsSelf));
-	OO_CHECK_EQ(thing->weak_from_this().use_count(), 1u);
+	EXPECT_EQ(thing->_clearCalls, 1);
+	EXPECT_TRUE(thing->_lastCleared == wrapper);
+	EXPECT_TRUE(!JS_IsObject(thing->_jsSelf));
+	EXPECT_EQ(thing->weak_from_this().use_count(), 1u);
 	// A new wrapper is made on the next use, and its finalizer's release is the last one.
 	JSValue second = OOJSValueFromCxxObject(sContext, thing);
-	OO_CHECK(JS_IsObject(second));
+	EXPECT_TRUE(JS_IsObject(second));
 	const int destroyed = sDestroyed;
 	oo::test::Release(thing);
-	OO_CHECK_EQ(sDestroyed, destroyed);
+	EXPECT_EQ(sDestroyed, destroyed);
 	JS_FreeValue(sContext, second);
 	JS_RunGC(sRuntime);
-	OO_CHECK_EQ(sDestroyed, destroyed + 1);
+	EXPECT_EQ(sDestroyed, destroyed + 1);
 
 	// A slot object without the JS glue is released all the same.
 	JSValue plainWrapper = JS_NewObjectClass(sContext, static_cast<int>(sThingClassID));
 	PlainThing *plain = oo::test::NewRetained<PlainThing>();
-	OO_CHECK(OOJSSetCxxPrivate(plainWrapper, oo::share(plain)));
-	OO_CHECK_EQ(plain->weak_from_this().use_count(), 2u);
+	EXPECT_TRUE(OOJSSetCxxPrivate(plainWrapper, oo::share(plain)));
+	EXPECT_EQ(plain->weak_from_this().use_count(), 2u);
 	oo::test::Release(plain);
 	JS_FreeValue(sContext, plainWrapper);
 	JS_RunGC(sRuntime);
-	OO_CHECK_EQ(sDestroyed, destroyed + 2);
+	EXPECT_EQ(sDestroyed, destroyed + 2);
 }
 
 
-OO_TEST(toString)
+TEST(OOJSPrivateObject, toString)
 {
 	SetUpContext();
 	std::shared_ptr<Thing> described = std::shared_ptr<Thing>(new Thing("delta", std::string("[Thing delta, caf\xC3\xA9]")), oo::Dispose{});
@@ -372,12 +373,9 @@ OO_TEST(toString)
 	// Another class's `this` is described by the engine's toString().
 	sForeignToStrings = 0;
 	OO_CHECK_EVAL("thingPrototype.toString.call({})", "foreign");
-	OO_CHECK_EQ(sForeignToStrings, 1);
+	EXPECT_EQ(sForeignToStrings, 1);
 	// An exception under jsDescription() becomes a JS error, as under any native.
 	std::shared_ptr<Thing> boom = std::shared_ptr<Thing>(new Thing("boom", std::nullopt), oo::Dispose{});
 	Define("boom", OOJSValueFromCxxObject(sContext, boom.get()));
 	OO_CHECK_EVAL("String(boom)", "threw: Native exception: description boom");
 }
-
-
-OO_TEST_MAIN()

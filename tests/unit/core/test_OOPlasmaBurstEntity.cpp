@@ -15,10 +15,11 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "PlasmaBurstEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -105,39 +106,37 @@ bool ComponentsAre(Entity* e, GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 
 }  // namespace
 
-OO_TEST(initWithPosition) {
+TEST(OOPlasmaBurstEntity, initWithPosition) {
   {
-    SetUp();
+    ::SetUp();
     Entity* burst = MakeBurst(make_HPvector(4, 5, 6));
-    OO_CHECK(burst != nullptr);
-    OO_CHECK(HPvector_equal(burst->getPosition(), make_HPvector(4, 5, 6)));
-    OO_CHECK(Particle(burst)->diameter() == 64.0f &&
+    EXPECT_TRUE(burst != nullptr);
+    EXPECT_TRUE(HPvector_equal(burst->getPosition(), make_HPvector(4, 5, 6)));
+    EXPECT_TRUE(Particle(burst)->diameter() == 64.0f &&
              burst->collisionRadius() == 2.0f);
-    OO_CHECK(burst->status() == oo::EntityStatus::kEffect &&
+    EXPECT_TRUE(burst->status() == oo::EntityStatus::kEffect &&
              burst->getScanClass() == oo::ScanClass::kNoDraw && burst->isEffect());
-    OO_CHECK(ComponentsAre(burst, 1.0f, 0.0f, 0.0f, 1.0f));
-    OO_CHECK(
+    EXPECT_TRUE(ComponentsAre(burst, 1.0f, 0.0f, 0.0f, 1.0f));
+    EXPECT_TRUE(
         oo::EntityDescription(burst).starts_with("<OOPlasmaBurstEntity 0x"));
   }
 }
 
-OO_TEST(growsFadesAndIsRemoved) {
+TEST(OOPlasmaBurstEntity, growsFadesAndIsRemoved) {
   {
-    SetUp();
+    ::SetUp();
     Entity* burst = MakeBurst(make_HPvector(4, 5, 6));
 
     sTime = 1.0;
     burst->update(0.1);
-    OO_CHECK(Particle(burst)->diameter() == 128.0f);
-    OO_CHECK(ComponentsAre(burst, 1.0f, 0.0f, 0.0f, 0.5f));
-    OO_CHECK(sRemoved == nullptr);
+    EXPECT_TRUE(Particle(burst)->diameter() == 128.0f);
+    EXPECT_TRUE(ComponentsAre(burst, 1.0f, 0.0f, 0.0f, 0.5f));
+    EXPECT_TRUE(sRemoved == nullptr);
 
     sTime = 2.5;
     burst->update(0.1);
-    OO_CHECK(Particle(burst)->diameter() == 64.0f + 2.5f * 64.0f);
-    OO_CHECK(ComponentsAre(burst, 1.0f, 0.0f, 0.0f, 0.0f));
-    OO_CHECK(sRemoved == burst);
+    EXPECT_TRUE(Particle(burst)->diameter() == 64.0f + 2.5f * 64.0f);
+    EXPECT_TRUE(ComponentsAre(burst, 1.0f, 0.0f, 0.0f, 0.0f));
+    EXPECT_TRUE(sRemoved == burst);
   }
 }
-
-OO_TEST_MAIN()

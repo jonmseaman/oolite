@@ -17,8 +17,9 @@
 #include <typeinfo>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "JoystickManager.h"
-#include "oo_test.hpp"
 
 namespace {
 
@@ -37,62 +38,62 @@ bool IsExactly(oo::JoystickAxisProfile* profile) {
 
 }  // namespace
 
-OO_TEST(axisProfileDeadzone) {
+TEST(OOJoystickProfile, axisProfileDeadzone) {
   {
     std::shared_ptr<oo::JoystickAxisProfile> profile =
         oo::makeShared<oo::JoystickAxisProfile>();
-    OO_CHECK(Near(profile->deadzone(), STICK_DEADZONE));
-    OO_CHECK(Near(profile->rawValue(0.3), 0.3));  // identity curve
-    OO_CHECK(profile->value(STICK_DEADZONE / 2) == 0.0);
-    OO_CHECK(profile->value(-STICK_DEADZONE / 2) == 0.0);
-    OO_CHECK(Near(profile->value(1.0), 1.0));
-    OO_CHECK(Near(profile->value(-1.0), -1.0));
-    OO_CHECK(Near(profile->value(0.5),
+    EXPECT_TRUE(Near(profile->deadzone(), STICK_DEADZONE));
+    EXPECT_TRUE(Near(profile->rawValue(0.3), 0.3));  // identity curve
+    EXPECT_TRUE(profile->value(STICK_DEADZONE / 2) == 0.0);
+    EXPECT_TRUE(profile->value(-STICK_DEADZONE / 2) == 0.0);
+    EXPECT_TRUE(Near(profile->value(1.0), 1.0));
+    EXPECT_TRUE(Near(profile->value(-1.0), -1.0));
+    EXPECT_TRUE(Near(profile->value(0.5),
                   (0.5 - STICK_DEADZONE) / (1.0 - STICK_DEADZONE)));
-    OO_CHECK(Near(profile->value(-0.5),
+    EXPECT_TRUE(Near(profile->value(-0.5),
                   -(0.5 - STICK_DEADZONE) / (1.0 - STICK_DEADZONE)));
 
     profile->setDeadzone(1.0);
-    OO_CHECK(Near(profile->deadzone(), STICK_MAX_DEADZONE));
+    EXPECT_TRUE(Near(profile->deadzone(), STICK_MAX_DEADZONE));
     profile->setDeadzone(-1.0);
-    OO_CHECK(profile->deadzone() == 0.0);
+    EXPECT_TRUE(profile->deadzone() == 0.0);
     profile->setDeadzone(STICK_DEADZONE * 1.5);
-    OO_CHECK(Near(profile->deadzone(), STICK_DEADZONE * 1.5));
+    EXPECT_TRUE(Near(profile->deadzone(), STICK_DEADZONE * 1.5));
 
     std::shared_ptr<oo::JoystickAxisProfile> copy = profile->copy();
-    OO_CHECK(copy != profile && IsExactly<oo::JoystickAxisProfile>(copy.get()));
-    OO_CHECK(
+    EXPECT_TRUE(copy != profile && IsExactly<oo::JoystickAxisProfile>(copy.get()));
+    EXPECT_TRUE(
         Near(copy->deadzone(), STICK_DEADZONE));  // the dead zone is not copied
   }
 }
 
-OO_TEST(standardProfile) {
+TEST(OOJoystickProfile, standardProfile) {
   {
     std::shared_ptr<oo::JoystickStandardAxisProfile> profile =
         oo::makeShared<oo::JoystickStandardAxisProfile>();
-    OO_CHECK(dynamic_cast<oo::JoystickAxisProfile*>(profile.get()) != nullptr);
-    OO_CHECK(profile->power() == 1.0 && profile->parameter() == 1.0);
-    OO_CHECK(Near(profile->deadzone(), STICK_DEADZONE));
-    OO_CHECK(Near(profile->rawValue(0.4), 0.4));
+    EXPECT_TRUE(dynamic_cast<oo::JoystickAxisProfile*>(profile.get()) != nullptr);
+    EXPECT_TRUE(profile->power() == 1.0 && profile->parameter() == 1.0);
+    EXPECT_TRUE(Near(profile->deadzone(), STICK_DEADZONE));
+    EXPECT_TRUE(Near(profile->rawValue(0.4), 0.4));
 
     profile->setPower(0.5);
-    OO_CHECK(profile->power() == 1.0);
+    EXPECT_TRUE(profile->power() == 1.0);
     profile->setPower(25.0);
-    OO_CHECK(profile->power() == STICKPROFILE_MAX_POWER);
+    EXPECT_TRUE(profile->power() == STICKPROFILE_MAX_POWER);
     profile->setPower(3.0);
-    OO_CHECK(profile->power() == 3.0);
+    EXPECT_TRUE(profile->power() == 3.0);
     profile->setParameter(2.0);
-    OO_CHECK(profile->parameter() == 1.0);
+    EXPECT_TRUE(profile->parameter() == 1.0);
     profile->setParameter(-2.0);
-    OO_CHECK(profile->parameter() == 0.0);
+    EXPECT_TRUE(profile->parameter() == 0.0);
     profile->setParameter(0.5);
-    OO_CHECK(profile->parameter() == 0.5);
+    EXPECT_TRUE(profile->parameter() == 0.5);
 
     // parameter * x^power - (parameter - 1) * x, clamped to [0, 1], odd.
-    OO_CHECK(Near(profile->rawValue(0.5), 0.5 * 0.125 + 0.5 * 0.5));
-    OO_CHECK(Near(profile->rawValue(-0.5), -(0.5 * 0.125 + 0.5 * 0.5)));
-    OO_CHECK(Near(profile->rawValue(1.0), 1.0));
-    OO_CHECK(Near(profile->value(0.5),
+    EXPECT_TRUE(Near(profile->rawValue(0.5), 0.5 * 0.125 + 0.5 * 0.5));
+    EXPECT_TRUE(Near(profile->rawValue(-0.5), -(0.5 * 0.125 + 0.5 * 0.5)));
+    EXPECT_TRUE(Near(profile->rawValue(1.0), 1.0));
+    EXPECT_TRUE(Near(profile->value(0.5),
                   profile->rawValue(
                       (0.5 - STICK_DEADZONE) /
                       (1.0 - STICK_DEADZONE))));  // value: reaches the override
@@ -100,61 +101,61 @@ OO_TEST(standardProfile) {
     profile->setDeadzone(0.0);
     std::shared_ptr<oo::JoystickStandardAxisProfile> copy(oo::share(
         dynamic_cast<oo::JoystickStandardAxisProfile*>(profile->copy().get())));
-    OO_CHECK(copy != nullptr &&
+    EXPECT_TRUE(copy != nullptr &&
              IsExactly<oo::JoystickStandardAxisProfile>(copy.get()));
-    OO_CHECK(copy->power() == 3.0 && copy->parameter() == 0.5);
-    OO_CHECK(Near(copy->deadzone(), STICK_DEADZONE));  // not copied
+    EXPECT_TRUE(copy->power() == 3.0 && copy->parameter() == 0.5);
+    EXPECT_TRUE(Near(copy->deadzone(), STICK_DEADZONE));  // not copied
   }
 }
 
-OO_TEST(splineProfileEditing) {
+TEST(OOJoystickProfile, splineProfileEditing) {
   {
     std::shared_ptr<oo::JoystickSplineAxisProfile> profile =
         oo::makeShared<oo::JoystickSplineAxisProfile>();
-    OO_CHECK(dynamic_cast<oo::JoystickAxisProfile*>(profile.get()) != nullptr);
-    OO_CHECK(profile->countPoints() == 0 && profile->controlPoints().empty());
-    OO_CHECK(Near(profile->rawValue(0.3), 0.3) &&
+    EXPECT_TRUE(dynamic_cast<oo::JoystickAxisProfile*>(profile.get()) != nullptr);
+    EXPECT_TRUE(profile->countPoints() == 0 && profile->controlPoints().empty());
+    EXPECT_TRUE(Near(profile->rawValue(0.3), 0.3) &&
              Near(profile->rawValue(-0.3), -0.3));  // the straight line
-    OO_CHECK(Near(profile->gradient(0.3), 1.0));
-    OO_CHECK(SamePoint(profile->pointAtIndex(-1), 0, 0) &&
+    EXPECT_TRUE(Near(profile->gradient(0.3), 1.0));
+    EXPECT_TRUE(SamePoint(profile->pointAtIndex(-1), 0, 0) &&
              SamePoint(profile->pointAtIndex(0), 1, 1));
 
-    OO_CHECK(profile->addControl(NSMakePoint(0.01, 0.5)) ==
+    EXPECT_TRUE(profile->addControl(NSMakePoint(0.01, 0.5)) ==
              -1);  // too near the ends
-    OO_CHECK(profile->addControl(NSMakePoint(0.99, 0.5)) == -1);
-    OO_CHECK(profile->addControl(NSMakePoint(0.5, 0.25)) == 0);
-    OO_CHECK(profile->addControl(NSMakePoint(0.25, 0.1)) ==
+    EXPECT_TRUE(profile->addControl(NSMakePoint(0.99, 0.5)) == -1);
+    EXPECT_TRUE(profile->addControl(NSMakePoint(0.5, 0.25)) == 0);
+    EXPECT_TRUE(profile->addControl(NSMakePoint(0.25, 0.1)) ==
              0);  // inserted in x order
-    OO_CHECK(profile->addControl(NSMakePoint(0.75, 0.6)) == 2);
-    OO_CHECK(profile->addControl(NSMakePoint(0.26, 0.2)) ==
+    EXPECT_TRUE(profile->addControl(NSMakePoint(0.75, 0.6)) == 2);
+    EXPECT_TRUE(profile->addControl(NSMakePoint(0.26, 0.2)) ==
              0);  // within the spacing: replaces
-    OO_CHECK(profile->countPoints() == 3);
-    OO_CHECK(SamePoint(profile->pointAtIndex(0), 0.26, 0.2));
-    OO_CHECK(SamePoint(profile->pointAtIndex(1), 0.5, 0.25));
-    OO_CHECK(SamePoint(profile->pointAtIndex(2), 0.75, 0.6));
-    OO_CHECK(SamePoint(profile->pointAtIndex(3), 1, 1));
+    EXPECT_TRUE(profile->countPoints() == 3);
+    EXPECT_TRUE(SamePoint(profile->pointAtIndex(0), 0.26, 0.2));
+    EXPECT_TRUE(SamePoint(profile->pointAtIndex(1), 0.5, 0.25));
+    EXPECT_TRUE(SamePoint(profile->pointAtIndex(2), 0.75, 0.6));
+    EXPECT_TRUE(SamePoint(profile->pointAtIndex(3), 1, 1));
     std::vector<NSPoint> points = profile->controlPoints();
-    OO_CHECK(points.size() == 3 && SamePoint(points[1], 0.5, 0.25));
+    EXPECT_TRUE(points.size() == 3 && SamePoint(points[1], 0.5, 0.25));
 
     profile->moveControl(
         1, NSMakePoint(0.1, 0.3));  // past its left neighbour: kept right of it
-    OO_CHECK(SamePoint(profile->pointAtIndex(1), 0.26 + 0.02, 0.3));
+    EXPECT_TRUE(SamePoint(profile->pointAtIndex(1), 0.26 + 0.02, 0.3));
     profile->moveControl(1, NSMakePoint(0.5, 1.5));  // y clamped
-    OO_CHECK(SamePoint(profile->pointAtIndex(1), 0.5, 1.0));
+    EXPECT_TRUE(SamePoint(profile->pointAtIndex(1), 0.5, 1.0));
     profile->moveControl(5, NSMakePoint(0.5, 0.5));  // out of range: nothing
-    OO_CHECK(profile->countPoints() == 3);
+    EXPECT_TRUE(profile->countPoints() == 3);
 
     profile->removeControl(1);
-    OO_CHECK(profile->countPoints() == 2 &&
+    EXPECT_TRUE(profile->countPoints() == 2 &&
              SamePoint(profile->pointAtIndex(1), 0.75, 0.6));
     profile->removeControl(7);
-    OO_CHECK(profile->countPoints() == 2);
+    EXPECT_TRUE(profile->countPoints() == 2);
     profile->clearControlPoints();
-    OO_CHECK(profile->countPoints() == 0 && Near(profile->rawValue(0.6), 0.6));
+    EXPECT_TRUE(profile->countPoints() == 0 && Near(profile->rawValue(0.6), 0.6));
   }
 }
 
-OO_TEST(splineProfileCurve) {
+TEST(OOJoystickProfile, splineProfileCurve) {
   {
     std::shared_ptr<oo::JoystickSplineAxisProfile> profile =
         oo::makeShared<oo::JoystickSplineAxisProfile>();
@@ -162,67 +163,65 @@ OO_TEST(splineProfileCurve) {
     profile->addControl(NSMakePoint(0.8, 0.5));
 
     // Passes through its control points and the ends; odd; clamped to [0, 1].
-    OO_CHECK(Near(profile->rawValue(0.0), 0.0));
-    OO_CHECK(Near(profile->rawValue(0.5), 0.25));
-    OO_CHECK(Near(profile->rawValue(0.8), 0.5));
-    OO_CHECK(Near(profile->rawValue(1.0), 1.0));
-    OO_CHECK(Near(profile->rawValue(-0.5), -0.25));
+    EXPECT_TRUE(Near(profile->rawValue(0.0), 0.0));
+    EXPECT_TRUE(Near(profile->rawValue(0.5), 0.25));
+    EXPECT_TRUE(Near(profile->rawValue(0.8), 0.5));
+    EXPECT_TRUE(Near(profile->rawValue(1.0), 1.0));
+    EXPECT_TRUE(Near(profile->rawValue(-0.5), -0.25));
     // Pinned: the linear-quadratic-quadratic curve
     // and its slope.
-    OO_CHECK(Near(profile->rawValue(0.05), 0.019375) &&
+    EXPECT_TRUE(Near(profile->rawValue(0.05), 0.019375) &&
              Near(profile->gradient(0.05), 0.4));
-    OO_CHECK(Near(profile->rawValue(0.2), 0.085) &&
+    EXPECT_TRUE(Near(profile->rawValue(0.2), 0.085) &&
              Near(profile->gradient(0.2), 0.475));
-    OO_CHECK(Near(profile->rawValue(0.35), 0.161875) &&
+    EXPECT_TRUE(Near(profile->rawValue(0.35), 0.161875) &&
              Near(profile->gradient(0.35), 0.55));
-    OO_CHECK(Near(profile->rawValue(0.65), 0.3421875) &&
+    EXPECT_TRUE(Near(profile->rawValue(0.65), 0.3421875) &&
              Near(profile->gradient(0.65), 0.71875));
-    OO_CHECK(Near(profile->rawValue(0.95), 0.8375) &&
+    EXPECT_TRUE(Near(profile->rawValue(0.95), 0.8375) &&
              Near(profile->gradient(0.95), 3.0));
-    OO_CHECK(Near(profile->rawValue(-0.65), -0.3421875));
+    EXPECT_TRUE(Near(profile->rawValue(-0.65), -0.3421875));
 
     std::shared_ptr<oo::JoystickSplineAxisProfile> copy(oo::share(
         dynamic_cast<oo::JoystickSplineAxisProfile*>(profile->copy().get())));
-    OO_CHECK(copy != nullptr &&
+    EXPECT_TRUE(copy != nullptr &&
              IsExactly<oo::JoystickSplineAxisProfile>(copy.get()));
-    OO_CHECK(copy->countPoints() == 2 &&
+    EXPECT_TRUE(copy->countPoints() == 2 &&
              Near(copy->rawValue(0.3), profile->rawValue(0.3)));
     copy->addControl(NSMakePoint(0.3, 0.3));
-    OO_CHECK(profile->countPoints() == 2);  // the original is untouched
-    OO_CHECK(Near(copy->rawValue(0.3), 0.3));
+    EXPECT_TRUE(profile->countPoints() == 2);  // the original is untouched
+    EXPECT_TRUE(Near(copy->rawValue(0.3), 0.3));
   }
 }
 
-OO_TEST(cxxProfiles) {
+TEST(OOJoystickProfile, cxxProfiles) {
   std::shared_ptr<oo::JoystickStandardAxisProfile> standard =
       oo::makeShared<oo::JoystickStandardAxisProfile>();
   standard->setPower(3.0);
   standard->setParameter(0.5);
-  OO_CHECK(Near(standard->rawValue(0.5), 0.5 * 0.125 + 0.5 * 0.5));
+  EXPECT_TRUE(Near(standard->rawValue(0.5), 0.5 * 0.125 + 0.5 * 0.5));
   oo::JoystickAxisProfile* base = standard.get();
-  OO_CHECK(Near(base->value(1.0), 1.0) &&
+  EXPECT_TRUE(Near(base->value(1.0), 1.0) &&
            Near(base->rawValue(-0.5), -(0.5 * 0.125 + 0.5 * 0.5)));  // virtual
 
   standard->setDeadzone(0.0);
   std::shared_ptr<oo::JoystickAxisProfile> copy = standard->copy();
   oo::JoystickStandardAxisProfile* standardCopy =
       dynamic_cast<oo::JoystickStandardAxisProfile*>(copy.get());
-  OO_CHECK(standardCopy != nullptr && standardCopy->power() == 3.0 &&
+  EXPECT_TRUE(standardCopy != nullptr && standardCopy->power() == 3.0 &&
            standardCopy->parameter() == 0.5);
-  OO_CHECK(Near(copy->deadzone(), STICK_DEADZONE));  // not copied
+  EXPECT_TRUE(Near(copy->deadzone(), STICK_DEADZONE));  // not copied
 
   std::shared_ptr<oo::JoystickSplineAxisProfile> spline =
       oo::makeShared<oo::JoystickSplineAxisProfile>();
-  OO_CHECK(spline->addControl(NSMakePoint(0.5, 0.25)) == 0 &&
+  EXPECT_TRUE(spline->addControl(NSMakePoint(0.5, 0.25)) == 0 &&
            spline->addControl(NSMakePoint(0.8, 0.5)) == 1);
-  OO_CHECK(Near(spline->rawValue(0.65), 0.3421875) &&
+  EXPECT_TRUE(Near(spline->rawValue(0.65), 0.3421875) &&
            Near(spline->gradient(0.95), 3.0));
   std::shared_ptr<oo::JoystickAxisProfile> splineCopy = spline->copy();
-  OO_CHECK(dynamic_cast<oo::JoystickSplineAxisProfile*>(splineCopy.get()) !=
+  EXPECT_TRUE(dynamic_cast<oo::JoystickSplineAxisProfile*>(splineCopy.get()) !=
            nullptr);
-  OO_CHECK(Near(splineCopy->rawValue(0.35), 0.161875));
-  OO_CHECK(dynamic_cast<oo::JoystickStandardAxisProfile*>(
+  EXPECT_TRUE(Near(splineCopy->rawValue(0.35), 0.161875));
+  EXPECT_TRUE(dynamic_cast<oo::JoystickStandardAxisProfile*>(
                oo::makeShared<oo::JoystickAxisProfile>()->copy().get()) == nullptr);
 }
-
-OO_TEST_MAIN()

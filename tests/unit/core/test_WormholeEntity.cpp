@@ -28,6 +28,8 @@
 #include <numbers>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJSWormhole.h"
@@ -35,7 +37,6 @@
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "WormholeEntity.h"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -190,202 +191,202 @@ oo::PList Saved(double expiry = 1500.0) {
 
 }  // namespace
 
-OO_TEST(madeByShip) {
+TEST(WormholeEntity, madeByShip) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
-    OO_CHECK(wh != nullptr &&
+    EXPECT_TRUE(wh != nullptr &&
              dynamic_cast<WormholeEntity*>(static_cast<Entity*>(wh)) !=
                  nullptr &&
              wh->getIsWormhole());
-    OO_CHECK(wh->status() == oo::EntityStatus::kEffect &&
+    EXPECT_TRUE(wh->status() == oo::EntityStatus::kEffect &&
              wh->getScanClass() == oo::ScanClass::kWormhole);
-    OO_CHECK(wh->getOrigin() == 7 && wh->getDestination() == 9);
+    EXPECT_TRUE(wh->getOrigin() == 7 && wh->getDestination() == 9);
     NSPoint o = wh->originCoordinates(), d = wh->destinationCoordinates();
-    OO_CHECK(o.x == 10 && o.y == 20 && d.x == 13 && d.y == 24);
-    OO_CHECK(HPvector_equal(wh->getPosition(), make_HPvector(1, 2, 3)));
+    EXPECT_TRUE(o.x == 10 && o.y == 20 && d.x == 13 && d.y == 24);
+    EXPECT_TRUE(HPvector_equal(wh->getPosition(), make_HPvector(1, 2, 3)));
     // No player mass (not the player): 200000 tonnes.
-    OO_CHECK(Near(wh->collisionRadius(),
+    EXPECT_TRUE(Near(wh->collisionRadius(),
                   0.5 * std::numbers::pi * std::pow(200000.0, 1.0 / 3.0)));
     const double distance = distanceBetweenPlanetPositions(10, 20, 13, 24);
-    OO_CHECK(Near(wh->travelTime(), distance * distance * 3600));
-    OO_CHECK(Near(wh->arrivalTime(), 1000.0 + distance * distance * 3600));
-    OO_CHECK(wh->estimatedArrivalTime() == wh->arrivalTime());
-    OO_CHECK(Near(wh->expiryTime(), 1000.0 + 200000.0 / WORMHOLE_SHRINK_RATE));
-    OO_CHECK(!wh->withMisjump() && !wh->isScanned() &&
+    EXPECT_TRUE(Near(wh->travelTime(), distance * distance * 3600));
+    EXPECT_TRUE(Near(wh->arrivalTime(), 1000.0 + distance * distance * 3600));
+    EXPECT_TRUE(wh->estimatedArrivalTime() == wh->arrivalTime());
+    EXPECT_TRUE(Near(wh->expiryTime(), 1000.0 + 200000.0 / WORMHOLE_SHRINK_RATE));
+    EXPECT_TRUE(!wh->withMisjump() && !wh->isScanned() &&
              wh->scanInfo() == WORMHOLE_SCANINFO::kNone);
-    OO_CHECK(wh->exitSpeed() == 50.0);
-    OO_CHECK(wh->canCollide());
-    OO_CHECK(wh->getShipsInTransit() == oo::PList(oo::PList::Array{}));
+    EXPECT_TRUE(wh->exitSpeed() == 50.0);
+    EXPECT_TRUE(wh->canCollide());
+    EXPECT_TRUE(wh->getShipsInTransit() == oo::PList(oo::PList::Array{}));
   }
 }
 
-OO_TEST(misjump) {
+TEST(WormholeEntity, misjump) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
     const double arrival = wh->arrivalTime();
     const double distance = distanceBetweenPlanetPositions(10, 20, 13, 24);
     wh->setMisjump();
-    OO_CHECK(wh->withMisjump());
-    OO_CHECK(Near(wh->arrivalTime(), arrival - distance * distance * 900));
+    EXPECT_TRUE(wh->withMisjump());
+    EXPECT_TRUE(Near(wh->arrivalTime(), arrival - distance * distance * 900));
     NSPoint d = wh->destinationCoordinates();
-    OO_CHECK(d.x == 11.5 && d.y == 22);
+    EXPECT_TRUE(d.x == 11.5 && d.y == 22);
     wh->setMisjump();  // only once
-    OO_CHECK(Near(wh->arrivalTime(), arrival - distance * distance * 900));
+    EXPECT_TRUE(Near(wh->arrivalTime(), arrival - distance * distance * 900));
 
     WormholeEntity* ranged = ToNine(Ship(1000.0f));
     ranged->setMisjumpWithRange(0.25f);
-    OO_CHECK(ranged->withMisjump() && ranged->misjumpRange() == 0.25f);
-    OO_CHECK(Near(ranged->arrivalTime(),
+    EXPECT_TRUE(ranged->withMisjump() && ranged->misjumpRange() == 0.25f);
+    EXPECT_TRUE(Near(ranged->arrivalTime(),
                   arrival - (distance * 0.75) * (distance * 0.75) * 3600.0));
     d = ranged->destinationCoordinates();
-    OO_CHECK(Near(d.x, 10 * 0.75 + 13 * 0.25) &&
+    EXPECT_TRUE(Near(d.x, 10 * 0.75 + 13 * 0.25) &&
              Near(d.y, 20 * 0.75 + 24 * 0.25));
 
     WormholeEntity* unsafe = ToNine(Ship(1000.0f));
     unsafe->setMisjumpWithRange(2.0f);
-    OO_CHECK(unsafe->misjumpRange() == 0.5f);
+    EXPECT_TRUE(unsafe->misjumpRange() == 0.5f);
   }
 }
 
-OO_TEST(saved) {
+TEST(WormholeEntity, saved) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* wh = FromDict(Saved());
-    OO_CHECK(wh->getOrigin() == 7 && wh->getDestination() == 9);
-    OO_CHECK(wh->expiryTime() == 1500.0 && wh->arrivalTime() == 2000.0 &&
+    EXPECT_TRUE(wh->getOrigin() == 7 && wh->getDestination() == 9);
+    EXPECT_TRUE(wh->expiryTime() == 1500.0 && wh->arrivalTime() == 2000.0 &&
              wh->estimatedArrivalTime() == 2000.0);
-    OO_CHECK(HPvector_equal(wh->getPosition(), make_HPvector(4, 5, 6)));
-    OO_CHECK(wh->withMisjump() && wh->isScanned() &&
+    EXPECT_TRUE(HPvector_equal(wh->getPosition(), make_HPvector(4, 5, 6)));
+    EXPECT_TRUE(wh->withMisjump() && wh->isScanned() &&
              wh->scanInfo() == WORMHOLE_SCANINFO::kScanned);
-    OO_CHECK(!wh->canCollide());  // no mass
+    EXPECT_TRUE(!wh->canCollide());  // no mass
 
     oo::PList dict = wh->getDict();
-    OO_CHECK(dict.get<int>("origin_id") == 7 && dict.get<int>("dest_id") == 9);
-    OO_CHECK(dict.get<double>("expiry_time") == 1500.0 &&
+    EXPECT_TRUE(dict.get<int>("origin_id") == 7 && dict.get<int>("dest_id") == 9);
+    EXPECT_TRUE(dict.get<double>("expiry_time") == 1500.0 &&
              dict.get<double>("arrival_time") == 2000.0);
-    OO_CHECK(dict.get<bool>("misjump"));
-    OO_CHECK(dict.get<std::string>("origin_coords") == "10.000000 20.000000" &&
+    EXPECT_TRUE(dict.get<bool>("misjump"));
+    EXPECT_TRUE(dict.get<std::string>("origin_coords") == "10.000000 20.000000" &&
              dict.get<std::string>("dest_coords") == "13.000000 24.000000");
-    OO_CHECK(dict.find("ships") != nullptr && dict.find("ships")->count() == 0);
+    EXPECT_TRUE(dict.find("ships") != nullptr && dict.find("ships")->count() == 0);
 
     // Crossed times: the expiry is a second before the arrival.
     WormholeEntity* fixed = FromDict(Saved(2500.0));
-    OO_CHECK(fixed->expiryTime() == 1999.0);
+    EXPECT_TRUE(fixed->expiryTime() == 1999.0);
   }
 }
 
-OO_TEST(scanning) {
+TEST(WormholeEntity, scanning) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
     wh->setScannedAt(1234.0);
-    OO_CHECK(wh->isScanned() && wh->scanTime() == 1234.0 &&
+    EXPECT_TRUE(wh->isScanned() && wh->scanTime() == 1234.0 &&
              wh->scanInfo() == WORMHOLE_SCANINFO::kScanned);
     wh->setScannedAt(5678.0);
-    OO_CHECK(wh->scanTime() == 1234.0);
+    EXPECT_TRUE(wh->scanTime() == 1234.0);
     wh->setScanInfo(WORMHOLE_SCANINFO::kDestination);
-    OO_CHECK(wh->scanInfo() == WORMHOLE_SCANINFO::kDestination);
+    EXPECT_TRUE(wh->scanInfo() == WORMHOLE_SCANINFO::kDestination);
     wh->setExitSpeed(75.0);
-    OO_CHECK(wh->exitSpeed() == 75.0);
+    EXPECT_TRUE(wh->exitSpeed() == 75.0);
   }
 }
 
-OO_TEST(collisions) {
+TEST(WormholeEntity, collisions) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
-    OO_CHECK(wh->canCollide());
+    EXPECT_TRUE(wh->canCollide());
     sUniverse->_system = 8;
-    OO_CHECK(!wh->canCollide());
+    EXPECT_TRUE(!wh->canCollide());
     sUniverse->_system = 7;
     sPlayer->_coordinates = NSMakePoint(11, 20);
-    OO_CHECK(!wh->canCollide());
+    EXPECT_TRUE(!wh->canCollide());
     sPlayer->_coordinates = NSMakePoint(10, 20);
 
-    OO_CHECK(wh->checkCloseCollisionWith(Ship(1.0f)));
-    OO_CHECK(!wh->checkCloseCollisionWith(
+    EXPECT_TRUE(wh->checkCloseCollisionWith(Ship(1.0f)));
+    EXPECT_TRUE(!wh->checkCloseCollisionWith(
         oo::MadeEntity(oo::makeShared<TestEffect>())));
   }
 }
 
-OO_TEST(update) {
+TEST(WormholeEntity, update) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* saved = FromDict(Saved());
     saved->update(0.1);
-    OO_CHECK(saved->getScanClass() == oo::ScanClass::kNoDraw);  // no mass
-    OO_CHECK(sUniverse->_removed == nullptr);
+    EXPECT_TRUE(saved->getScanClass() == oo::ScanClass::kNoDraw);  // no mass
+    EXPECT_TRUE(sUniverse->_removed == nullptr);
     sPlayer->_clock = 1600.0;  // past its expiry
     saved->update(0.1);
-    OO_CHECK(sUniverse->_removed == saved);
+    EXPECT_TRUE(sUniverse->_removed == saved);
 
     sPlayer->_clock = 1000.0;
     WormholeEntity* wh = ToNine(Ship(1000.0f));
     wh->update(1.0);
-    OO_CHECK(wh->getScanClass() == oo::ScanClass::kWormhole);
-    OO_CHECK(Near(
+    EXPECT_TRUE(wh->getScanClass() == oo::ScanClass::kWormhole);
+    EXPECT_TRUE(Near(
         wh->collisionRadius(),
         0.5 * std::numbers::pi * std::pow(200000.0 - WORMHOLE_SHRINK_RATE, 1.0 / 3.0)));
   }
 }
 
-OO_TEST(suckInRefused) {
+TEST(WormholeEntity, suckInRefused) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
-    OO_CHECK(!wh->suckInShip(nullptr));
+    EXPECT_TRUE(!wh->suckInShip(nullptr));
     Entity* leaving = Ship(10.0f);
     leaving->setStatus(oo::EntityStatus::kEnteringWitchspace);
-    OO_CHECK(!wh->suckInShip(oo::ToShip(leaving)));
+    EXPECT_TRUE(!wh->suckInShip(oo::ToShip(leaving)));
     sUniverse->_system = 8;
-    OO_CHECK(!wh->suckInShip(oo::ToShip(Ship(10.0f))));
+    EXPECT_TRUE(!wh->suckInShip(oo::ToShip(Ship(10.0f))));
     sUniverse->_system = 7;
     sPlayer->_clock =
         1000.0 + 200000.0 / WORMHOLE_SHRINK_RATE + 1.0;  // expired
-    OO_CHECK(!wh->suckInShip(oo::ToShip(Ship(10.0f))));
-    OO_CHECK(wh->getShipsInTransit() == oo::PList(oo::PList::Array{}));
+    EXPECT_TRUE(!wh->suckInShip(oo::ToShip(Ship(10.0f))));
+    EXPECT_TRUE(wh->getShipsInTransit() == oo::PList(oo::PList::Array{}));
   }
 }
 
-OO_TEST(disgorgeWithPlayer) {
+TEST(WormholeEntity, disgorgeWithPlayer) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
     sPlayer->setPosition(make_HPvector(100, 0, 0));
     wh->disgorgeShips();  // no ships, no player: it stays
-    OO_CHECK(HPvector_equal(wh->getPosition(), make_HPvector(1, 2, 3)));
+    EXPECT_TRUE(HPvector_equal(wh->getPosition(), make_HPvector(1, 2, 3)));
     wh->setContainsPlayer(true);
     wh->disgorgeShips();
-    OO_CHECK(HPvector_equal(wh->getPosition(), make_HPvector(100, 0, -500)));
+    EXPECT_TRUE(HPvector_equal(wh->getPosition(), make_HPvector(100, 0, -500)));
     wh->setExitPosition(make_HPvector(7, 7, 7));
     wh->disgorgeShips();  // once only
-    OO_CHECK(HPvector_equal(wh->getPosition(), make_HPvector(7, 7, 7)));
+    EXPECT_TRUE(HPvector_equal(wh->getPosition(), make_HPvector(7, 7, 7)));
   }
 }
 
-OO_TEST(description) {
+TEST(WormholeEntity, description) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
     const std::string description = oo::EntityDescription(wh);
-    OO_CHECK(description.find(
+    EXPECT_TRUE(description.find(
                  "destination: System 9 ttl: 50.00s arrival: 0000000:") !=
              std::string::npos);
     wh->setMisjump();
-    OO_CHECK(oo::EntityDescription(wh).find(
+    EXPECT_TRUE(oo::EntityDescription(wh).find(
                  "destination: Interstellar Space") != std::string::npos);
   }
 }
 
-OO_TEST(facade) {
+TEST(WormholeEntity, facade) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
     Entity* object = wh;
-    OO_CHECK(object != nullptr);  // A C++ entity.
-    OO_CHECK(dynamic_cast<WormholeEntity*>(object) == wh);
+    EXPECT_TRUE(object != nullptr);  // A C++ entity.
+    EXPECT_TRUE(dynamic_cast<WormholeEntity*>(object) == wh);
   }
 }
 
@@ -406,19 +407,17 @@ static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
 // The binding's category: what
 // the engine asks a WormholeEntity for by selector is what OOJSWormhole.mm
 // answers.
-OO_TEST(jsExtensions) {
+TEST(WormholeEntity, jsExtensions) {
   {
-    SetUp();
+    ::SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
     RegisterJSClasses(InitOOJSWormhole);
     Entity* object = wh;  // what the engine asks
     const JSClassID jsClass = OOJSEntityJSClassID(object);
     const JSClassID expectedClass = JSWormholeClassID();
-    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
-    OO_CHECK(OOJSEntityJSClassName(object) ==
+    EXPECT_TRUE(jsClass != 0 && jsClass == expectedClass);
+    EXPECT_TRUE(OOJSEntityJSClassName(object) ==
              std::optional<std::string>("Wormhole"));
-    OO_CHECK(OOJSEntityIsVisibleToScripts(object) == true);
+    EXPECT_TRUE(OOJSEntityIsVisibleToScripts(object) == true);
   }
 }
-
-OO_TEST_MAIN()

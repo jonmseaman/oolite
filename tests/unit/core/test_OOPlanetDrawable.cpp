@@ -16,6 +16,9 @@
 */
 
 #include <cmath>
+
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "MyOpenGLView.h"  // the game view is C++
@@ -23,7 +26,6 @@
 #include "PlanetData.h"
 #include "PlanetDrawable.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -119,67 +121,67 @@ void SetTextureName(const Planet& d, const std::string& name) {
 
 }  // namespace
 
-OO_TEST(planetDefaults) {
+TEST(OOPlanetDrawable, planetDefaults) {
   {
-    SetUp();
+    ::SetUp();
     Planet planet = NewPlanet();
-    OO_CHECK(Radius(planet) == 1.0f);
-    OO_CHECK(CollisionRadius(planet) == 1.0f);
-    OO_CHECK(Near(LevelOfDetail(planet), Level(0.5f)));
-    OO_CHECK(HasOpaqueParts(planet) && !HasTranslucentParts(planet));
-    OO_CHECK(std::isinf(MaxDrawDistance(planet)));
-    OO_CHECK(Material(planet) == nullptr);
-    OO_CHECK(!TextureName(planet).has_value());
+    EXPECT_TRUE(Radius(planet) == 1.0f);
+    EXPECT_TRUE(CollisionRadius(planet) == 1.0f);
+    EXPECT_TRUE(Near(LevelOfDetail(planet), Level(0.5f)));
+    EXPECT_TRUE(HasOpaqueParts(planet) && !HasTranslucentParts(planet));
+    EXPECT_TRUE(std::isinf(MaxDrawDistance(planet)));
+    EXPECT_TRUE(Material(planet) == nullptr);
+    EXPECT_TRUE(!TextureName(planet).has_value());
   }
 }
 
-OO_TEST(atmosphere) {
+TEST(OOPlanetDrawable, atmosphere) {
   {
-    SetUp();
+    ::SetUp();
     Planet atmosphere = NewAtmosphere();
-    OO_CHECK(Radius(atmosphere) == 1.0f);
-    OO_CHECK(!HasOpaqueParts(atmosphere) && HasTranslucentParts(atmosphere));
+    EXPECT_TRUE(Radius(atmosphere) == 1.0f);
+    EXPECT_TRUE(!HasOpaqueParts(atmosphere) && HasTranslucentParts(atmosphere));
 
     Planet sized = AtmosphereWithRadius(-250.0f);
-    OO_CHECK(Radius(sized) == 250.0f);
-    OO_CHECK(!HasOpaqueParts(sized) && HasTranslucentParts(sized));
-    OO_CHECK(Near(LevelOfDetail(sized), Level(0.5f)));
+    EXPECT_TRUE(Radius(sized) == 250.0f);
+    EXPECT_TRUE(!HasOpaqueParts(sized) && HasTranslucentParts(sized));
+    EXPECT_TRUE(Near(LevelOfDetail(sized), Level(0.5f)));
   }
 }
 
-OO_TEST(radiusAndBounds) {
+TEST(OOPlanetDrawable, radiusAndBounds) {
   {
-    SetUp();
+    ::SetUp();
     Planet planet = NewPlanet();
     SetRadius(planet, -5000.0f);
-    OO_CHECK(Radius(planet) == 5000.0f);
-    OO_CHECK(CollisionRadius(planet) == 5000.0f);
+    EXPECT_TRUE(Radius(planet) == 5000.0f);
+    EXPECT_TRUE(CollisionRadius(planet) == 5000.0f);
     BoundingBox box = Bounds(planet);
-    OO_CHECK(box.min.x == -5000.0f && box.min.y == -5000.0f &&
+    EXPECT_TRUE(box.min.x == -5000.0f && box.min.y == -5000.0f &&
              box.min.z == -5000.0f);
-    OO_CHECK(box.max.x == 5000.0f && box.max.y == 5000.0f &&
+    EXPECT_TRUE(box.max.x == 5000.0f && box.max.y == 5000.0f &&
              box.max.z == 5000.0f);
   }
 }
 
-OO_TEST(levelOfDetail) {
+TEST(OOPlanetDrawable, levelOfDetail) {
   {
-    SetUp();
+    ::SetUp();
     Planet planet = NewPlanet();
     SetLevelOfDetail(planet, 0.3f);
-    OO_CHECK(Near(LevelOfDetail(planet), Level(0.3f)));
+    EXPECT_TRUE(Near(LevelOfDetail(planet), Level(0.3f)));
     SetLevelOfDetail(planet, -2.0f);
-    OO_CHECK(LevelOfDetail(planet) == 0.0f);
+    EXPECT_TRUE(LevelOfDetail(planet) == 0.0f);
     SetLevelOfDetail(planet, 7.0f);
-    OO_CHECK(LevelOfDetail(planet) == 1.0f);
+    EXPECT_TRUE(LevelOfDetail(planet) == 1.0f);
     SetLevelOfDetail(planet, 0.8f);
-    OO_CHECK(Near(LevelOfDetail(planet), Level(0.8f)));
+    EXPECT_TRUE(Near(LevelOfDetail(planet), Level(0.8f)));
   }
 }
 
-OO_TEST(levelOfDetailForViewDistance) {
+TEST(OOPlanetDrawable, levelOfDetailForViewDistance) {
   {
-    SetUp();
+    ::SetUp();
     Planet planet = NewPlanet();
     SetRadius(planet, 100.0f);
 
@@ -188,25 +190,25 @@ OO_TEST(levelOfDetailForViewDistance) {
     float distance = 1.0e6f;
     float expected = sqrtf((800.0f / 40.0f) * 100.0f / sqrtf(distance) * 0.25f);
     CalculateLevelOfDetail(planet, distance);
-    OO_CHECK(Near(LevelOfDetail(planet), Level(fminf(expected, 1.0f))));
+    EXPECT_TRUE(Near(LevelOfDetail(planet), Level(fminf(expected, 1.0f))));
 
     // Close by: the highest level.
     CalculateLevelOfDetail(planet, 1.0f);
-    OO_CHECK(LevelOfDetail(planet) == 1.0f);
+    EXPECT_TRUE(LevelOfDetail(planet) == 1.0f);
 
     // Far away: the lowest.
     CalculateLevelOfDetail(planet, 1.0e20f);
-    OO_CHECK(LevelOfDetail(planet) == 0.0f);
+    EXPECT_TRUE(LevelOfDetail(planet) == 0.0f);
 
     // Reduced detail: a narrower budget, earlier transitions, and never the
     // highest level.
     sUniverse->_reduced = true;
     CalculateLevelOfDetail(planet, 1.0f);
-    OO_CHECK(Near(LevelOfDetail(planet), (kGranularity - 1.0f) / kGranularity));
+    EXPECT_TRUE(Near(LevelOfDetail(planet), (kGranularity - 1.0f) / kGranularity));
     expected = sqrtf((800.0f / 100.0f) * 100.0f / sqrtf(distance) * 0.25f) -
                0.5f / kGranularity;
     CalculateLevelOfDetail(planet, distance);
-    OO_CHECK(Near(LevelOfDetail(planet),
+    EXPECT_TRUE(Near(LevelOfDetail(planet),
                   Level(fminf(fmaxf(expected, 0.0f),
                               (kGranularity - 1.0f) / kGranularity))));
 
@@ -215,50 +217,48 @@ OO_TEST(levelOfDetailForViewDistance) {
     sUniverse->_view->_size = NSMakeSize(1600, 1200);
     expected = sqrtf((1600.0f / 40.0f) * 100.0f / sqrtf(distance) * 0.25f);
     CalculateLevelOfDetail(planet, distance);
-    OO_CHECK(Near(LevelOfDetail(planet), Level(fminf(expected, 1.0f))));
+    EXPECT_TRUE(Near(LevelOfDetail(planet), Level(fminf(expected, 1.0f))));
   }
 }
 
-OO_TEST(material) {
+TEST(OOPlanetDrawable, material) {
   {
-    SetUp();
+    ::SetUp();
     Planet planet = NewPlanet();
     oo::Material* material = NamedMaterial("rock");
     SetMaterial(planet, material);
-    OO_CHECK(Material(planet) == material);
-    OO_CHECK(TextureName(planet) == std::optional<std::string>("rock"));
+    EXPECT_TRUE(Material(planet) == material);
+    EXPECT_TRUE(TextureName(planet) == std::optional<std::string>("rock"));
 
     // The same name keeps the material.
     SetTextureName(planet, "rock");
-    OO_CHECK(Material(planet) == material);
+    EXPECT_TRUE(Material(planet) == material);
 
     SetMaterial(planet, nullptr);
-    OO_CHECK(Material(planet) == nullptr);
-    OO_CHECK(!TextureName(planet).has_value());
+    EXPECT_TRUE(Material(planet) == nullptr);
+    EXPECT_TRUE(!TextureName(planet).has_value());
   }
 }
 
-OO_TEST(copy) {
+TEST(OOPlanetDrawable, copy) {
   {
-    SetUp();
+    ::SetUp();
     Planet atmosphere = AtmosphereWithRadius(321.0f);
     oo::Material* material = NamedMaterial("air");
     SetMaterial(atmosphere, material);
     SetLevelOfDetail(atmosphere, 0.2f);
 
     Planet copy = Copy(atmosphere);
-    OO_CHECK(copy != atmosphere);
-    OO_CHECK(Radius(copy) == 321.0f);
-    OO_CHECK(Material(copy) == material);
-    OO_CHECK(!HasOpaqueParts(copy) && HasTranslucentParts(copy));
-    OO_CHECK(Near(LevelOfDetail(copy), Level(0.2f)));
+    EXPECT_TRUE(copy != atmosphere);
+    EXPECT_TRUE(Radius(copy) == 321.0f);
+    EXPECT_TRUE(Material(copy) == material);
+    EXPECT_TRUE(!HasOpaqueParts(copy) && HasTranslucentParts(copy));
+    EXPECT_TRUE(Near(LevelOfDetail(copy), Level(0.2f)));
     BoundingBox box = Bounds(copy);
-    OO_CHECK(box.max.x == 321.0f);
+    EXPECT_TRUE(box.max.x == 321.0f);
 
     // The copy is its own drawable.
     SetRadius(copy, 10.0f);
-    OO_CHECK(Radius(atmosphere) == 321.0f && Radius(copy) == 10.0f);
+    EXPECT_TRUE(Radius(atmosphere) == 321.0f && Radius(copy) == 10.0f);
   }
 }
-
-OO_TEST_MAIN()

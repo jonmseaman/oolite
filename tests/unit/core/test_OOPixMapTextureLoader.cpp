@@ -15,10 +15,11 @@
 
 #include <cstdlib>
 
+#include <gtest/gtest.h>
+
 #include "ConcreteTexture.h"
 #include "PixMapTextureLoader.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -79,100 +80,100 @@ void ClearCache() {
 
 }  // namespace
 
-OO_TEST(takesThePixMap) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOPixMapTextureLoader, takesThePixMap) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
     oo::TextureGenerator* loader = NewLoader(
         TestPixMap(), oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kRepeatS, true);
-    OO_CHECK(loader != nullptr &&
+    EXPECT_TRUE(loader != nullptr &&
              dynamic_cast<oo::TextureGenerator*>(loader) != nullptr);
-    OO_CHECK(loader->textureOptions() ==
+    EXPECT_TRUE(loader->textureOptions() ==
              oo::ApplyTextureOptionDefaults(oo::TextureFlags::kMinFilterLinear |
                                           oo::TextureFlags::kRepeatS));
-    OO_CHECK(loader->path().value_or("").starts_with("OOPixMap@"));
-    OO_CHECK(!loader->cacheKey().has_value());  // a generator: not cached
+    EXPECT_TRUE(loader->path().value_or("").starts_with("OOPixMap@"));
+    EXPECT_TRUE(!loader->cacheKey().has_value());  // a generator: not cached
 
-    OO_CHECK(loader->enqueue());
+    EXPECT_TRUE(loader->enqueue());
     oo::PixMap result = oo::kNullPixMap;
     oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
     uint32_t width = 0, height = 0;
     const std::optional<oo::TextureLoader::Result> loaded = loader->getResult();
-    OO_CHECK(loaded.has_value());
+    EXPECT_TRUE(loaded.has_value());
     if (loaded) {
       result = loaded->pixMap;
       format = loaded->format;
       width = loaded->originalWidth;
       height = loaded->originalHeight;
     }
-    OO_CHECK(format == oo::kPixMapRGBA && result.width == 8 &&
+    EXPECT_TRUE(format == oo::kPixMapRGBA && result.width == 8 &&
              result.height == 8 && result.rowBytes == 32);
-    OO_CHECK(width == 8 && height == 8);
-    OO_CHECK(((const uint8_t*)result.pixels)[0] == 1 &&
+    EXPECT_TRUE(width == 8 && height == 8);
+    EXPECT_TRUE(((const uint8_t*)result.pixels)[0] == 1 &&
              ((const uint8_t*)result.pixels)[255] == 0);
     oo::FreePixMap(&result);
   }
 }
 
-OO_TEST(refusals) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOPixMapTextureLoader, refusals) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
     // Not a pixmap.
-    OO_CHECK(NewLoader(oo::kNullPixMap, oo::TextureFlags::kMinFilterLinear, true) ==
+    EXPECT_TRUE(NewLoader(oo::kNullPixMap, oo::TextureFlags::kMinFilterLinear, true) ==
              nullptr);
 
     // Not taken over: the initialiser duplicates its own (still empty) pixmap,
     // not the one it was given, so it answers nil and the caller keeps its
     // pixels. (As it has since 2010; kept.)
     oo::PixMap kept = TestPixMap();
-    OO_CHECK(NewLoader(kept, oo::TextureFlags::kMinFilterLinear, false) == nullptr);
-    OO_CHECK(oo::IsValidPixMap(kept) && ((const uint8_t*)kept.pixels)[0] == 1);
+    EXPECT_TRUE(NewLoader(kept, oo::TextureFlags::kMinFilterLinear, false) == nullptr);
+    EXPECT_TRUE(oo::IsValidPixMap(kept) && ((const uint8_t*)kept.pixels)[0] == 1);
     oo::FreePixMap(&kept);
   }
 }
 
-OO_TEST(loadsWithMipMaps) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOPixMapTextureLoader, loadsWithMipMaps) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
     oo::TextureGenerator* loader =
         NewLoader(TestPixMap(), oo::TextureFlags::kMinFilterMipMap, true);
-    OO_CHECK(loader->textureOptions() ==
+    EXPECT_TRUE(loader->textureOptions() ==
              oo::ApplyTextureOptionDefaults(oo::TextureFlags::kMinFilterMipMap));
-    OO_CHECK(loader->enqueue());
+    EXPECT_TRUE(loader->enqueue());
     oo::PixMap result = oo::kNullPixMap;
     oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
     const std::optional<oo::TextureLoader::Result> loaded = loader->getResult();
-    OO_CHECK(loaded.has_value());
+    EXPECT_TRUE(loaded.has_value());
     if (loaded) {
       result = loaded->pixMap;
       format = loaded->format;
     }
-    OO_CHECK(result.width == 8 && result.height == 8 &&
+    EXPECT_TRUE(result.width == 8 && result.height == 8 &&
              format == oo::kPixMapRGBA);
-    OO_CHECK(((const uint8_t*)result.pixels)[0] ==
+    EXPECT_TRUE(((const uint8_t*)result.pixels)[0] ==
              1);  // the base level as given
     oo::FreePixMap(&result);
   }
 }
 
-OO_TEST(aTextureOfTheGenerator) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOPixMapTextureLoader, aTextureOfTheGenerator) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
     oo::TextureGenerator* loader = NewLoader(
         TestPixMap(), oo::TextureFlags::kDefaultOptions | oo::TextureFlags::kRepeatS, true);
     oo::Texture* texture = Autoreleased(oo::Texture::textureWithGenerator(loader));
-    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(texture) != nullptr));
+    EXPECT_TRUE((dynamic_cast<oo::ConcreteTexture*>(texture) != nullptr));
     texture->ensureFinishedLoading();
-    OO_CHECK(texture->dimensions().width == 8 &&
+    EXPECT_TRUE(texture->dimensions().width == 8 &&
              texture->dimensions().height == 8);
-    OO_CHECK(texture->isFinishedLoading());
+    EXPECT_TRUE(texture->isFinishedLoading());
   }
   ClearCache();
 }
@@ -180,29 +181,27 @@ OO_TEST(aTextureOfTheGenerator) {
 // --- The C++ API (after the conversion)
 // --------------------------------------------------------
 
-OO_TEST(cxxApi) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOPixMapTextureLoader, cxxApi) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(!oo::PixMapTextureLoader::loaderWithPixMap(oo::kNullPixMap, oo::TextureFlags::kNone, true));
+    EXPECT_TRUE(!oo::PixMapTextureLoader::loaderWithPixMap(oo::kNullPixMap, oo::TextureFlags::kNone, true));
 
     const std::shared_ptr<oo::PixMapTextureLoader> loader =
         oo::PixMapTextureLoader::loaderWithPixMap(
             TestPixMap(), oo::TextureFlags::kMinFilterLinear, true);
-    OO_CHECK(loader &&
+    EXPECT_TRUE(loader &&
              loader->textureOptions() ==
                  oo::ApplyTextureOptionDefaults(oo::TextureFlags::kMinFilterLinear));
-    OO_CHECK(loader->path().value_or("").starts_with("OOPixMap@") &&
+    EXPECT_TRUE(loader->path().value_or("").starts_with("OOPixMap@") &&
              !loader->cacheKey().has_value());
 
     // Loading hands the pixels over as they are.
     loader->loadTexture();
-    OO_CHECK(loader->_data != nullptr && loader->_width == 8 &&
+    EXPECT_TRUE(loader->_data != nullptr && loader->_width == 8 &&
              loader->_height == 8 && loader->_rowBytes == 32);
-    OO_CHECK(loader->_format == oo::kPixMapRGBA &&
+    EXPECT_TRUE(loader->_format == oo::kPixMapRGBA &&
              loader->_data->data()[0] == 1);
   }
 }
-
-OO_TEST_MAIN()

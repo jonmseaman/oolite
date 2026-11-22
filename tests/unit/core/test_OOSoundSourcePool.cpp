@@ -20,10 +20,11 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "ALSound.h"
 #include "SoundSource.h"
 #include "SoundSourcePool.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // The game clock.
@@ -153,37 +154,37 @@ void Reset(oo::TimeAbsolute time) {
 
 // A count of 0 is 1, and of 255 is 254; a source is made the first time its
 // slot is used.
-OO_TEST(countsAndSources) {
+TEST(OOSoundSourcePool, countsAndSources) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
     std::shared_ptr<oo::SoundSourcePool> one = oo::SoundSourcePool::poolWithCount(0, 0.0);
-    OO_CHECK(one != nullptr && gSources.empty());
+    EXPECT_TRUE(one != nullptr && gSources.empty());
     one->playSoundWithKey("[a]");
-    OO_CHECK((Playing() == std::vector<std::string>{"[a]"}));
+    EXPECT_TRUE((Playing() == std::vector<std::string>{"[a]"}));
     one->playSoundWithKey(
         "[b]");  // the one source is busy with an unexpired equal priority
-    OO_CHECK((Playing() == std::vector<std::string>{"[a]"}));
+    EXPECT_TRUE((Playing() == std::vector<std::string>{"[a]"}));
     gSharedUniverse->_time += 1.0;  // now it has expired
     one->playSoundWithKey("[b]");
-    OO_CHECK((Playing() == std::vector<std::string>{"[b]"}) &&
+    EXPECT_TRUE((Playing() == std::vector<std::string>{"[b]"}) &&
              Source(0)->_stops == 1);
 
     Reset(100.0);
     std::shared_ptr<oo::SoundSourcePool> many =
         oo::SoundSourcePool::poolWithCount(255, -1.0);
     for (int i = 0; i < 300; i++) many->playSoundWithKey("[k]", 1.0f, 10.0);
-    OO_CHECK(gSources.size() == 254);
+    EXPECT_TRUE(gSources.size() == 254);
 
     // A missing sound plays nothing and makes no source.
     Reset(100.0);
     std::shared_ptr<oo::SoundSourcePool> pool = oo::SoundSourcePool::poolWithCount(2, 0.0);
     pool->playSoundWithKey("[missing]");
-    OO_CHECK(gSources.empty());
+    EXPECT_TRUE(gSources.empty());
   }
 }
 
-OO_TEST(slotsByPriorityAndExpiry) {
+TEST(OOSoundSourcePool, slotsByPriorityAndExpiry) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
@@ -191,17 +192,17 @@ OO_TEST(slotsByPriorityAndExpiry) {
     pool->playSoundWithKey("[low]", 1.0f, 1.0);
     pool->playSoundWithKey("[mid]", 2.0f, 5.0);
     pool->playSoundWithKey("[high]", 3.0f, 1.0);
-    OO_CHECK(
+    EXPECT_TRUE(
         (Playing() == std::vector<std::string>{"[low]", "[mid]", "[high]"}));
 
     // Full, nothing expired: a higher priority takes an unexpired
     // lower-priority source...
     pool->playSoundWithKey("[x]", 2.5f, 1.0);
-    OO_CHECK(Playing()[0] == "[x]" || Playing()[1] == "[x]");
-    OO_CHECK(Playing()[2] == "[high]");
+    EXPECT_TRUE(Playing()[0] == "[x]" || Playing()[1] == "[x]");
+    EXPECT_TRUE(Playing()[2] == "[high]");
     // ...and a lower priority than every source gets none.
     pool->playSoundWithKey("[y]", 0.5f, 1.0);
-    OO_CHECK(PlayingCount("[y]") == 0);
+    EXPECT_TRUE(PlayingCount("[y]") == 0);
 
     // An expired lower-priority source is preferred to an unexpired one.
     Reset(100.0);
@@ -210,64 +211,64 @@ OO_TEST(slotsByPriorityAndExpiry) {
     pool->playSoundWithKey("[long]", 1.0f, 10.0);
     gSharedUniverse->_time += 2.0;
     pool->playSoundWithKey("[new]", 2.0f, 1.0);
-    OO_CHECK((Playing() == std::vector<std::string>{"[new]", "[long]"}));
+    EXPECT_TRUE((Playing() == std::vector<std::string>{"[new]", "[long]"}));
 
     // An idle source is preferred to anything.
     StopAll();
     Source(0)->_playing = true;
     pool->playSoundWithKey("[idle]", 0.5f, 1.0);
-    OO_CHECK((Playing() == std::vector<std::string>{"[new]", "[idle]"}));
+    EXPECT_TRUE((Playing() == std::vector<std::string>{"[new]", "[idle]"}));
   }
 }
 
 // The position goes to the source; the conveniences' defaults.
-OO_TEST(positionsAndDefaults) {
+TEST(OOSoundSourcePool, positionsAndDefaults) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
     std::shared_ptr<oo::SoundSourcePool> pool = oo::SoundSourcePool::poolWithCount(4, 0.0);
     pool->playSoundWithKey("[p]", 1.0f, make_vector(1, 2, 3));
-    OO_CHECK(vector_equal(Source(0)->_position, make_vector(1, 2, 3)));
+    EXPECT_TRUE(vector_equal(Source(0)->_position, make_vector(1, 2, 3)));
     pool->playSoundWithKey("[q]", make_vector(4, 5, 6));
-    OO_CHECK(vector_equal(Source(1)->_position, make_vector(4, 5, 6)));
+    EXPECT_TRUE(vector_equal(Source(1)->_position, make_vector(4, 5, 6)));
     pool->playSoundWithKey("[r]", 1.0f);
-    OO_CHECK(vector_equal(Source(2)->_position, kZeroVector));
+    EXPECT_TRUE(vector_equal(Source(2)->_position, kZeroVector));
     pool->playSoundWithKey("[s]", 1.0f, 1.0);
-    OO_CHECK(vector_equal(Source(3)->_position, kZeroVector));
+    EXPECT_TRUE(vector_equal(Source(3)->_position, kZeroVector));
 
     // The default expiry is between 0.5 and 0.6 s: 0.45 s later an equal
     // priority is refused, 0.65 s later it is taken.
     gSharedUniverse->_time += 0.45;
     pool->playSoundWithKey("[t]");
-    OO_CHECK(PlayingCount("[t]") == 0);
+    EXPECT_TRUE(PlayingCount("[t]") == 0);
     gSharedUniverse->_time += 0.2;
     pool->playSoundWithKey("[t]", static_cast<bool>(true), make_vector(7, 8, 9));
-    OO_CHECK(PlayingCount("[t]") == 1);
+    EXPECT_TRUE(PlayingCount("[t]") == 1);
   }
 }
 
 // A minimum repeat time refuses the same key until it has passed; other keys
 // still play.
-OO_TEST(minimumRepeatTime) {
+TEST(OOSoundSourcePool, minimumRepeatTime) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
     std::shared_ptr<oo::SoundSourcePool> pool = oo::SoundSourcePool::poolWithCount(4, 0.1);
     pool->playSoundWithKey("[scrape]");
     pool->playSoundWithKey("[scrape]");
-    OO_CHECK(gSources.size() == 1);
+    EXPECT_TRUE(gSources.size() == 1);
     pool->playSoundWithKey("[hit]");
-    OO_CHECK(gSources.size() == 2);
+    EXPECT_TRUE(gSources.size() == 2);
     pool->playSoundWithKey("[hit]");  // the last key is now [hit]
-    OO_CHECK(gSources.size() == 2);
+    EXPECT_TRUE(gSources.size() == 2);
     gSharedUniverse->_time += 0.2;
     pool->playSoundWithKey("[hit]");
-    OO_CHECK(gSources.size() == 3);
+    EXPECT_TRUE(gSources.size() == 3);
   }
 }
 
 // A sound that must not overlap reserves its source until that has stopped.
-OO_TEST(noOverlap) {
+TEST(OOSoundSourcePool, noOverlap) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
@@ -275,43 +276,41 @@ OO_TEST(noOverlap) {
     pool->playSoundWithKey("[overheat]", static_cast<bool>(false));
     pool->playSoundWithKey("[overheat]", static_cast<bool>(false));
     pool->playSoundWithKey("[other]", static_cast<bool>(false), kZeroVector);
-    OO_CHECK((Playing() == std::vector<std::string>{"[overheat]"}));
+    EXPECT_TRUE((Playing() == std::vector<std::string>{"[overheat]"}));
     pool->playSoundWithKey("[shot]");  // overlapping sounds still play
-    OO_CHECK((Playing() == std::vector<std::string>{"[overheat]", "[shot]"}));
+    EXPECT_TRUE((Playing() == std::vector<std::string>{"[overheat]", "[shot]"}));
 
     Source(0)->_playing = false;
     pool->playSoundWithKey("[overheat]", static_cast<bool>(false));
-    OO_CHECK(Playing().size() == 3 && Playing()[2] == "[overheat]");
+    EXPECT_TRUE(Playing().size() == 3 && Playing()[2] == "[overheat]");
   }
 }
 
 // The C++ API: each overload is the selector it was. An overlap is passed as a bool, since game
 // code sees OOFoundation.h's integer true and false.
-OO_TEST(cxxApi) {
+TEST(OOSoundSourcePool, cxxApi) {
   const bool overlap = static_cast<bool>(1), noOverlap = static_cast<bool>(0);
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     Reset(100.0);
     const std::shared_ptr<oo::SoundSourcePool> pool =
         oo::SoundSourcePool::poolWithCount(3, 0.0);
-    OO_CHECK(pool);
+    EXPECT_TRUE(pool);
     pool->playSoundWithKey("[a]", overlap);  // overlapping, priority 1
     pool->playSoundWithKey("[b]", noOverlap,
                            make_vector(1, 2, 3));  // reserves its source
     pool->playSoundWithKey("[c]",
                            noOverlap);  // refused: the reserved source plays
-    OO_CHECK((Playing() == std::vector<std::string>{"[a]", "[b]"}));
-    OO_CHECK(vector_equal(Source(1)->_position, make_vector(1, 2, 3)));
+    EXPECT_TRUE((Playing() == std::vector<std::string>{"[a]", "[b]"}));
+    EXPECT_TRUE(vector_equal(Source(1)->_position, make_vector(1, 2, 3)));
     pool->playSoundWithKey("[d]", 2.0f);  // a float priority, not an overlap
-    OO_CHECK((Playing() == std::vector<std::string>{"[a]", "[b]", "[d]"}));
+    EXPECT_TRUE((Playing() == std::vector<std::string>{"[a]", "[b]", "[d]"}));
     pool->playSoundWithKey("[e]", 3.0f, make_vector(4, 5, 6));
-    OO_CHECK(PlayingCount("[e]") == 1);
+    EXPECT_TRUE(PlayingCount("[e]") == 1);
     pool->playSoundWithKey("[f]", make_vector(7, 8, 9));
     pool->playSoundWithKey("[g]", 0.5f, 1.0);
     pool->playSoundWithKey("[h]", 9.0f, 1.0, overlap, kZeroVector);
-    OO_CHECK(PlayingCount("[h]") == 1);
-    OO_CHECK(PlayingCount("[g]") == 0);
+    EXPECT_TRUE(PlayingCount("[h]") == 1);
+    EXPECT_TRUE(PlayingCount("[g]") == 0);
   }
 }
-
-OO_TEST_MAIN()

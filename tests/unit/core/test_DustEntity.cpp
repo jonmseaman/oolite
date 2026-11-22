@@ -18,12 +18,13 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "DustEntity.h"
 #include "Color.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -58,7 +59,7 @@ T* NewTestPlayer() {
 namespace {
 
 TestPlayer* SetUp() {
-  OO_CHECK(OOTestGLContext());
+  EXPECT_TRUE(OOTestGLContext());
   static Universe* universe = nullptr;
   if (universe == nullptr) {
     universe = new Universe();  // never released
@@ -88,21 +89,21 @@ bool ColorIs(oo::Color* color, float r, float g, float b, float a) {
 
 }  // namespace
 
-OO_TEST(init) {
+TEST(DustEntity, init) {
   {
-    SetUp();
+    ::SetUp();
     DustEntity* dust = nullptr;
     Entity* object = MakeDust(&dust);
-    OO_CHECK(object != nullptr && dust != nullptr &&
+    EXPECT_TRUE(object != nullptr && dust != nullptr &&
              dynamic_cast<DustEntity*>(object) == dust);
-    OO_CHECK(dust->status() == oo::EntityStatus::kActive);
-    OO_CHECK(dust->collisionRadius() == DUST_SCALE && !dust->canCollide());
-    OO_CHECK(ColorIs(dust->dustColor(), 0.5f, 1.0f, 1.0f, 1.0f));
-    OO_CHECK(oo::EntityClassName(dust) == "DustEntity");
+    EXPECT_TRUE(dust->status() == oo::EntityStatus::kActive);
+    EXPECT_TRUE(dust->collisionRadius() == DUST_SCALE && !dust->canCollide());
+    EXPECT_TRUE(ColorIs(dust->dustColor(), 0.5f, 1.0f, 1.0f, 1.0f));
+    EXPECT_TRUE(oo::EntityClassName(dust) == "DustEntity");
 
     std::shared_ptr<oo::Color> color = oo::Color::colorWithRed(0.25f, 0.5f, 0.75f, 1.0f);
     dust->setDustColor(color.get());
-    OO_CHECK(dust->dustColor() == color.get());
+    EXPECT_TRUE(dust->dustColor() == color.get());
 
     // Nothing is drawn in the opaque pass.
     dust->drawImmediate(false, false);
@@ -111,37 +112,35 @@ OO_TEST(init) {
   }
 }
 
-OO_TEST(cameraRelativePosition) {
+TEST(DustEntity, cameraRelativePosition) {
   {
-    TestPlayer* player = SetUp();
+    TestPlayer* player = ::SetUp();
     DustEntity* dust = nullptr;
     Entity* object = MakeDust(&dust);
     player->_viewpoint = make_HPvector(2500, -100, 4000);
     dust->updateCameraRelativePosition();
     Vector relative = object->getCameraRelativePosition();
-    OO_CHECK(relative.x == -500 && relative.y == 100 && relative.z == 0);
+    EXPECT_TRUE(relative.x == -500 && relative.y == 100 && relative.z == 0);
 
     // update(): puts the dust at zero distance (it is always around the
     // player).
     dust->update(0.1);
-    OO_CHECK(dust->zeroDistance() == 0.0);
+    EXPECT_TRUE(dust->zeroDistance() == 0.0);
   }
 }
 
-OO_TEST(shaderBindings) {
+TEST(DustEntity, shaderBindings) {
   {
-    TestPlayer* player = SetUp();
+    TestPlayer* player = ::SetUp();
     DustEntity* dust = nullptr;
     MakeDust(&dust);
     player->setVelocity(make_vector(0, 64, 320));
-    OO_CHECK(vector_equal(dust->warpVector(), make_vector(0, 2, 10)));
+    EXPECT_TRUE(vector_equal(dust->warpVector(), make_vector(0, 2, 10)));
 
 #if OO_SHADERS
     player->_viewpoint = make_HPvector(2500, -100, 0);
     Vector offset = dust->offsetPlayerPosition();
-    OO_CHECK(offset.x == -500 && offset.y == -1100 && offset.z == -1000);
+    EXPECT_TRUE(offset.x == -500 && offset.y == -1100 && offset.z == -1000);
 #endif
   }
 }
-
-OO_TEST_MAIN()

@@ -14,6 +14,9 @@
 */
 
 #include <quickjs.h>
+
+#include <gtest/gtest.h>
+
 #include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
@@ -46,7 +49,6 @@ public:
 #include "OOJSMissionVariables.h"
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstring>
@@ -249,14 +251,14 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSMissionVariables, registration)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("typeof missionVariables", "object");
@@ -264,14 +266,14 @@ OO_TEST(registration)
 	OO_CHECK_EVAL("String(missionVariables)", "[object Object]");
 	OO_CHECK_EVAL("(function () { missionVariables = 5; return typeof missionVariables; })()", "object");	// read-only
 #ifndef NDEBUG
-	OO_CHECK_EQ(sConverters.size(), static_cast<std::size_t>(1));
+	EXPECT_EQ(sConverters.size(), static_cast<std::size_t>(1));
 #else
-	OO_CHECK(sConverters.empty());
+	EXPECT_TRUE(sConverters.empty());
 #endif
 }
 
 
-OO_TEST(reading)
+TEST(OOJSMissionVariables, reading)
 {
 	SetUpContext();
 	ResetVariables();
@@ -283,11 +285,11 @@ OO_TEST(reading)
 	OO_CHECK_EVAL("missionVariables.missing", "null");
 	OO_CHECK_EVAL("missionVariables._count", "undefined");	// a leading underscore is not a variable
 	OO_CHECK_EVAL("missionVariables['instructions']", "null");	// read as mission_instructions
-	OO_CHECK(sPlayer->_scriptTargetSets > 0);
+	EXPECT_TRUE(sPlayer->_scriptTargetSets > 0);
 }
 
 
-OO_TEST(enumeration)
+TEST(OOJSMissionVariables, enumeration)
 {
 	SetUpContext();
 	ResetVariables();
@@ -301,33 +303,33 @@ OO_TEST(enumeration)
 	// The keys are a copy: the loop may change the variables.
 	ResetVariables();
 	OO_CHECK_EVAL("(function () { var n = 0; for (var k in missionVariables) { missionVariables['z' + k] = 1; n++; } return n; })()", "5");
-	OO_CHECK(sPlayer->_missionVariables.count("mission_zalpha") == 1 && sPlayer->_missionVariables.count("mission_zspaced") == 1);
+	EXPECT_TRUE(sPlayer->_missionVariables.count("mission_zalpha") == 1 && sPlayer->_missionVariables.count("mission_zspaced") == 1);
 }
 
 
-OO_TEST(writing)
+TEST(OOJSMissionVariables, writing)
 {
 	SetUpContext();
 	ResetVariables();
 	sPlayer->_sets = 0;
 	OO_CHECK_EVAL("(function () { missionVariables.stage = 'two'; return missionVariables.stage; })()", "two");
-	OO_CHECK(sPlayer->_missionVariables["mission_stage"] == oo::PList("two"));
+	EXPECT_TRUE(sPlayer->_missionVariables["mission_stage"] == oo::PList("two"));
 	OO_CHECK_EVAL("(function () { missionVariables.stage = 3; return typeof missionVariables.stage; })()", "number");
-	OO_CHECK(sPlayer->_missionVariables["mission_stage"] == oo::PList("3"));	// kept as its string
+	EXPECT_TRUE(sPlayer->_missionVariables["mission_stage"] == oo::PList("3"));	// kept as its string
 	OO_CHECK_EVAL("(function () { missionVariables.flag = true; return missionVariables.flag; })()", "true");
-	OO_CHECK(sPlayer->_missionVariables["mission_flag"] == oo::PList("true"));
+	EXPECT_TRUE(sPlayer->_missionVariables["mission_flag"] == oo::PList("true"));
 	OO_CHECK_EVAL("(function () { missionVariables.stage = null; return missionVariables.stage; })()", "null");
-	OO_CHECK(sPlayer->_missionVariables.count("mission_stage") == 0);
+	EXPECT_TRUE(sPlayer->_missionVariables.count("mission_stage") == 0);
 	OO_CHECK_EVAL("(function () { missionVariables.flag = undefined; return missionVariables.flag; })()", "null");
-	OO_CHECK(sPlayer->_missionVariables.count("mission_flag") == 0);
-	OO_CHECK_EQ(sPlayer->_sets, 5);
+	EXPECT_TRUE(sPlayer->_missionVariables.count("mission_flag") == 0);
+	EXPECT_EQ(sPlayer->_sets, 5);
 	OO_CHECK_EVAL("(function () { missionVariables._secret = 1; return 'set'; })()", "threw: Invalid mission variable name \"<_secret>\".");
-	OO_CHECK_EQ(sPlayer->_sets, 5);
-	OO_CHECK(sPlayer->_missionVariables.count("mission__secret") == 0);
+	EXPECT_EQ(sPlayer->_sets, 5);
+	EXPECT_TRUE(sPlayer->_missionVariables.count("mission__secret") == 0);
 }
 
 
-OO_TEST(deleting)
+TEST(OOJSMissionVariables, deleting)
 {
 	SetUpContext();
 	ResetVariables();
@@ -337,19 +339,19 @@ OO_TEST(deleting)
   // variables the object does not report yet: assigning to one it does report
   // is a fault of the backend, not of the binding.)
 	OO_CHECK_EVAL("(function () { missionVariables.added = 'x'; return delete missionVariables.added; })()", "true");
-	OO_CHECK(sPlayer->_missionVariables.count("mission_added") == 0);
+	EXPECT_TRUE(sPlayer->_missionVariables.count("mission_added") == 0);
 	OO_CHECK_EVAL("missionVariables.added", "null");
-	OO_CHECK_EQ(sPlayer->_sets, 2);
+	EXPECT_EQ(sPlayer->_sets, 2);
 	OO_CHECK_EVAL("(function () { missionVariables._name = 'x'; })()", "threw: Invalid mission variable name \"<_name>\".");
 	OO_CHECK_EVAL("delete missionVariables._name", "true");	// nothing to clear
-	OO_CHECK_EQ(sPlayer->_sets, 2);
+	EXPECT_EQ(sPlayer->_sets, 2);
 }
 
 
 // A variable the script never touched (loaded from a saved game, or set by a legacy script) has no
 // property on the object, only the player's value: delete still clears it, because SpiderMonkey ran
 // the class's delProperty hook whether or not the object had an own property of that name.
-OO_TEST(deletingAVariableTheScriptNeverSet)
+TEST(OOJSMissionVariables, deletingAVariableTheScriptNeverSet)
 {
 	SetUpContext();
 	ResetVariables();
@@ -357,9 +359,9 @@ OO_TEST(deletingAVariableTheScriptNeverSet)
 	sPlayer->_missionVariables["mission_fromSave"] = oo::PList("loaded");
 	OO_CHECK_EVAL("missionVariables.fromSave", "loaded");
 	OO_CHECK_EVAL("delete missionVariables.fromSave", "true");
-	OO_CHECK(sPlayer->_missionVariables.count("mission_fromSave") == 0);
+	EXPECT_TRUE(sPlayer->_missionVariables.count("mission_fromSave") == 0);
 	OO_CHECK_EVAL("missionVariables.fromSave", "null");
-	OO_CHECK_EQ(sPlayer->_sets, 1);
+	EXPECT_EQ(sPlayer->_sets, 1);
 }
 
 
@@ -367,7 +369,7 @@ OO_TEST(deletingAVariableTheScriptNeverSet)
 // is still written through the class's setter, as SpiderMonkey's assignment
 // did, and is not shadowed by a read-only property; delete on it then clears
 // it.
-OO_TEST(overwritingAReportedVariable)
+TEST(OOJSMissionVariables, overwritingAReportedVariable)
 {
 	SetUpContext();
 	ResetVariables();
@@ -375,32 +377,29 @@ OO_TEST(overwritingAReportedVariable)
 	// (Earlier tests leave their own names on the object; what matters is that count is listed.)
 	OO_CHECK_EVAL("Object.keys(missionVariables).indexOf('count') >= 0", "true");
 	OO_CHECK_EVAL("(function () { missionVariables.count = 5; return missionVariables.count; })()", "5");
-	OO_CHECK(sPlayer->_missionVariables["mission_count"] == oo::PList("5"));
-	OO_CHECK_EQ(sPlayer->_sets, 1);
+	EXPECT_TRUE(sPlayer->_missionVariables["mission_count"] == oo::PList("5"));
+	EXPECT_EQ(sPlayer->_sets, 1);
 	OO_CHECK_EVAL("(function () { var d = Object.getOwnPropertyDescriptor(missionVariables, 'count'); return d.writable + ',' + d.configurable; })()", "true,true");
 	// The player's variable is what reads give, not a value frozen on the object.
 	sPlayer->_missionVariables["mission_count"] = oo::PList("6");
 	OO_CHECK_EVAL("missionVariables.count", "6");
 	OO_CHECK_EVAL("(function () { missionVariables.name = 'Plans'; return missionVariables.name; })()", "Plans");
-	OO_CHECK(sPlayer->_missionVariables["mission_name"] == oo::PList("Plans"));
-	OO_CHECK_EQ(sPlayer->_sets, 2);
+	EXPECT_TRUE(sPlayer->_missionVariables["mission_name"] == oo::PList("Plans"));
+	EXPECT_EQ(sPlayer->_sets, 2);
 	OO_CHECK_EVAL("delete missionVariables.count", "true");
-	OO_CHECK(sPlayer->_missionVariables.count("mission_count") == 0);
+	EXPECT_TRUE(sPlayer->_missionVariables.count("mission_count") == 0);
 	OO_CHECK_EVAL("missionVariables.count", "null");
-	OO_CHECK_EQ(sPlayer->_sets, 3);
+	EXPECT_EQ(sPlayer->_sets, 3);
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSMissionVariables, nativeExceptions)
 {
 	SetUpContext();
 	ResetVariables();
 	OO_CHECK_EVAL("missionVariables.boom", "threw: Native exception: variable boom");
 	OO_CHECK_EVAL("missionVariables.cxxboom", "threw: Native exception: cxx boom");
 	OO_CHECK_EVAL("missionVariables.count", "12");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

@@ -19,12 +19,13 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "MyOpenGLView.h"
 #include "OpenGLExtensionManager.h"
 #include "OpenGLMatrixManager.h"
 #include "RegExpMatcher.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 
 // --- Stubs
@@ -144,109 +145,109 @@ GLuint Shader(GLenum type, const char* source) {
 // --- Tests
 // --------------------------------------------------------------------------------------
 
-OO_TEST(stack) {
+TEST(OOOpenGLMatrixManager, stack) {
   {
     std::shared_ptr<oo::OpenGLMatrixStack> stack = oo::makeShared<oo::OpenGLMatrixStack>();
-    OO_CHECK(stack->stackCount() == 0);
-    OO_CHECK(Same(stack->pop(),
+    EXPECT_TRUE(stack->stackCount() == 0);
+    EXPECT_TRUE(Same(stack->pop(),
                   kIdentityMatrix));  // empty: identity, and still empty
-    OO_CHECK(stack->stackCount() == 0);
+    EXPECT_TRUE(stack->stackCount() == 0);
     stack->push(kSample);
     stack->push(kZeroMatrix);
-    OO_CHECK(stack->stackCount() == 2);
-    OO_CHECK(Same(stack->pop(), kZeroMatrix));
-    OO_CHECK(Same(stack->pop(), kSample));
-    OO_CHECK(stack->stackCount() == 0);
+    EXPECT_TRUE(stack->stackCount() == 2);
+    EXPECT_TRUE(Same(stack->pop(), kZeroMatrix));
+    EXPECT_TRUE(Same(stack->pop(), kSample));
+    EXPECT_TRUE(stack->stackCount() == 0);
   }
 }
 
-OO_TEST(modelView) {
+TEST(OOOpenGLMatrixManager, modelView) {
   {
     std::shared_ptr<oo::OpenGLMatrixManager> m = oo::makeShared<oo::OpenGLMatrixManager>();
-    OO_CHECK(Same(m->getModelView(), kIdentityMatrix));
-    OO_CHECK(Same(m->getProjection(), kIdentityMatrix));
-    OO_CHECK(m->countModelView() == 0);
+    EXPECT_TRUE(Same(m->getModelView(), kIdentityMatrix));
+    EXPECT_TRUE(Same(m->getProjection(), kIdentityMatrix));
+    EXPECT_TRUE(m->countModelView() == 0);
 
     m->loadModelView(kSample);
-    OO_CHECK(Same(m->getModelView(), kSample));
+    EXPECT_TRUE(Same(m->getModelView(), kSample));
     m->multModelView(oo::MatrixForScale(2, 3, 4));
-    OO_CHECK(Same(m->getModelView(),
+    EXPECT_TRUE(Same(m->getModelView(),
                   oo::MatrixMultiply(oo::MatrixForScale(2, 3, 4), kSample)));
 
     m->resetModelView();
     m->translateModelView(make_vector(1, 2, 3));
-    OO_CHECK(
+    EXPECT_TRUE(
         Same(m->getModelView(), oo::MatrixForTranslationComponents(1, 2, 3)));
-    OO_CHECK(m->getModelView().m[3][0] == 1 && m->getModelView().m[3][1] == 2 &&
+    EXPECT_TRUE(m->getModelView().m[3][0] == 1 && m->getModelView().m[3][1] == 2 &&
              m->getModelView().m[3][2] == 3);
 
     m->resetModelView();
     m->scaleModelView(make_vector(2, 3, 4));
-    OO_CHECK(Same(m->getModelView(), oo::MatrixForScale(2, 3, 4)));
+    EXPECT_TRUE(Same(m->getModelView(), oo::MatrixForScale(2, 3, 4)));
     m->resetModelView();
     m->rotateModelView(0.5f, make_vector(0, 0, 1));
-    OO_CHECK(Same(m->getModelView(),
+    EXPECT_TRUE(Same(m->getModelView(),
                   oo::MatrixForRotation(make_vector(0, 0, 1), 0.5f)));
 
     m->resetModelView();
     m->lookAtWithEye(make_vector(0, 0, 5), make_vector(0, 0, 0),
                      make_vector(0, 1, 0));
-    OO_CHECK(Near(
+    EXPECT_TRUE(Near(
         m->getModelView(),
         oo::MatrixConstruct(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, -5, 1)));
 
     m->loadModelView(kSample);
     m->pushModelView();
     m->pushModelView();
-    OO_CHECK(m->countModelView() == 2);
+    EXPECT_TRUE(m->countModelView() == 2);
     m->resetModelView();
-    OO_CHECK(Same(m->popModelView(), kSample));
-    OO_CHECK(Same(m->getModelView(), kSample));
-    OO_CHECK(Same(m->popModelView(), kSample));
-    OO_CHECK(m->countModelView() == 0);
-    OO_CHECK(Same(m->popModelView(), kIdentityMatrix));  // empty stack
+    EXPECT_TRUE(Same(m->popModelView(), kSample));
+    EXPECT_TRUE(Same(m->getModelView(), kSample));
+    EXPECT_TRUE(Same(m->popModelView(), kSample));
+    EXPECT_TRUE(m->countModelView() == 0);
+    EXPECT_TRUE(Same(m->popModelView(), kIdentityMatrix));  // empty stack
   }
 }
 
-OO_TEST(projection) {
+TEST(OOOpenGLMatrixManager, projection) {
   {
     std::shared_ptr<oo::OpenGLMatrixManager> m = oo::makeShared<oo::OpenGLMatrixManager>();
 
     m->loadProjection(kSample);
-    OO_CHECK(Same(m->getProjection(), kSample));
-    OO_CHECK(Same(m->getModelView(), kIdentityMatrix));
+    EXPECT_TRUE(Same(m->getProjection(), kSample));
+    EXPECT_TRUE(Same(m->getModelView(), kIdentityMatrix));
     m->multProjection(oo::MatrixForScale(2, 3, 4));
-    OO_CHECK(Same(m->getProjection(),
+    EXPECT_TRUE(Same(m->getProjection(),
                   oo::MatrixMultiply(oo::MatrixForScale(2, 3, 4), kSample)));
 
     // Unlike the model view, translate writes the last column.
     m->resetProjection();
     m->translateProjection(make_vector(1, 2, 3));
-    OO_CHECK(Same(
+    EXPECT_TRUE(Same(
         m->getProjection(),
         oo::MatrixConstruct(1, 0, 0, 1, 0, 1, 0, 2, 0, 0, 1, 3, 0, 0, 0, 1)));
 
     m->resetProjection();
     m->scaleProjection(make_vector(2, 3, 4));
-    OO_CHECK(Same(m->getProjection(), oo::MatrixForScale(2, 3, 4)));
+    EXPECT_TRUE(Same(m->getProjection(), oo::MatrixForScale(2, 3, 4)));
     m->resetProjection();
     m->rotateProjection(0.25f, make_vector(1, 0, 0));
-    OO_CHECK(Same(m->getProjection(),
+    EXPECT_TRUE(Same(m->getProjection(),
                   oo::MatrixForRotation(make_vector(1, 0, 0), 0.25f)));
 
     m->resetProjection();
     m->frustumLeft(-1, 1, -2, 2, 1, 3);
-    OO_CHECK(
+    EXPECT_TRUE(
         Near(m->getProjection(), oo::MatrixConstruct(1, 0, 0, 0, 0, 0.5f, 0, 0, 0,
                                                    0, -2, -1, 0, 0, -3, 0)));
     m->resetProjection();
     m->orthoLeft(0, 4, 0, 2, -1, 1);
-    OO_CHECK(
+    EXPECT_TRUE(
         Near(m->getProjection(), oo::MatrixConstruct(0.5f, 0, 0, 0, 0, 1, 0, 0, 0,
                                                    0, -1, 0, -1, -1, 0, 1)));
     m->resetProjection();
     m->perspectiveFovy(90, 2, 1, 3);
-    OO_CHECK(
+    EXPECT_TRUE(
         Near(m->getProjection(), oo::MatrixConstruct(0.5f, 0, 0, 0, 0, 1, 0, 0, 0,
                                                    0, -2, -1, 0, 0, -3, 0)));
 
@@ -262,22 +263,22 @@ OO_TEST(projection) {
     m->orthoLeft(-1, 1, -1, 1, 2, 2);
     m->perspectiveFovy(60, 0, 1, 2);
     m->perspectiveFovy(60, 1, 2, 2);
-    OO_CHECK(Same(m->getProjection(), kSample));
+    EXPECT_TRUE(Same(m->getProjection(), kSample));
 
     m->pushProjection();
     m->resetProjection();
-    OO_CHECK(Same(m->popProjection(), kSample));
-    OO_CHECK(Same(m->popProjection(), kIdentityMatrix));  // empty stack
+    EXPECT_TRUE(Same(m->popProjection(), kSample));
+    EXPECT_TRUE(Same(m->popProjection(), kIdentityMatrix));  // empty stack
   }
 }
 
-OO_TEST(derivedMatrices) {
+TEST(OOOpenGLMatrixManager, derivedMatrices) {
   {
     std::shared_ptr<oo::OpenGLMatrixManager> m = oo::makeShared<oo::OpenGLMatrixManager>();
     for (int i = 0; i < oo::LITE_GL_MATRIX_END; i++)
-      OO_CHECK(Same(m->getMatrix(i), kIdentityMatrix));
-    OO_CHECK(Same(m->getMatrix(-1), kIdentityMatrix));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_END), kIdentityMatrix));
+      EXPECT_TRUE(Same(m->getMatrix(i), kIdentityMatrix));
+    EXPECT_TRUE(Same(m->getMatrix(-1), kIdentityMatrix));
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_END), kIdentityMatrix));
 
     const oo::Matrix mv =
         oo::MatrixMultiply(oo::MatrixForRotation(make_vector(0, 1, 0), 0.3f),
@@ -287,45 +288,45 @@ OO_TEST(derivedMatrices) {
     m->loadModelView(mv);
     m->loadProjection(p);
     const oo::Matrix mvp = oo::MatrixMultiply(mv, p);
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW), mv));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_PROJECTION), p));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION), mvp));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_INVERSE),
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW), mv));
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_PROJECTION), p));
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION), mvp));
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_INVERSE),
                   oo::MatrixInverse(mv)));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_PROJECTION_INVERSE),
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_PROJECTION_INVERSE),
                   oo::MatrixInverse(p)));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION_INVERSE),
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION_INVERSE),
                   oo::MatrixInverse(mvp)));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_TRANSPOSE),
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_TRANSPOSE),
                   oo::MatrixTranspose(mv)));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_PROJECTION_TRANSPOSE),
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_PROJECTION_TRANSPOSE),
                   oo::MatrixTranspose(p)));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION_TRANSPOSE),
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION_TRANSPOSE),
                   oo::MatrixTranspose(mvp)));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_INVERSE_TRANSPOSE),
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_INVERSE_TRANSPOSE),
                   oo::MatrixTranspose(oo::MatrixInverse(mv))));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_PROJECTION_INVERSE_TRANSPOSE),
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_PROJECTION_INVERSE_TRANSPOSE),
                   oo::MatrixTranspose(oo::MatrixInverse(p))));
-    OO_CHECK(Same(
+    EXPECT_TRUE(Same(
         m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION_INVERSE_TRANSPOSE),
         oo::MatrixTranspose(oo::MatrixInverse(mvp))));
 
     // The normal matrix of a rotation is the rotation (the translation dropped,
     // det 1).
-    OO_CHECK(Near(m->getMatrix(oo::LITE_GL_MATRIX_NORMAL),
+    EXPECT_TRUE(Near(m->getMatrix(oo::LITE_GL_MATRIX_NORMAL),
                   oo::MatrixForRotation(make_vector(0, 1, 0), 0.3f)));
     // A uniform scale s: inverse-transpose is 1/s, normalised by the cube root
     // of det = 1/s^3.
     m->loadModelView(oo::MatrixForScale(2, 2, 2));
-    OO_CHECK(
+    EXPECT_TRUE(
         Near(m->getMatrix(oo::LITE_GL_MATRIX_NORMAL), oo::MatrixForScale(1, 1, 1)));
     m->loadModelView(oo::MatrixForScale(2, 4, 8));  // det 64, cube root 4
-    OO_CHECK(Near(m->getMatrix(oo::LITE_GL_MATRIX_NORMAL),
+    EXPECT_TRUE(Near(m->getMatrix(oo::LITE_GL_MATRIX_NORMAL),
                   oo::MatrixForScale(2, 1, 0.5f)));
     // A singular model view: the inverse's determinant is 0 and no
     // normalisation happens.
     m->loadModelView(kZeroMatrix);
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_NORMAL),
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_NORMAL),
                   oo::MatrixTranspose(oo::MatrixInverse(oo::MatrixConstruct(
                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)))));
 
@@ -337,16 +338,16 @@ OO_TEST(derivedMatrices) {
     const oo::Matrix mvInverse = m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_INVERSE);
     (void)m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION);
     m->loadProjection(kIdentityMatrix);
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_NORMAL), normal));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_INVERSE), mvInverse));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION), mv));
-    OO_CHECK(Same(m->getMatrix(oo::LITE_GL_MATRIX_PROJECTION_INVERSE),
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_NORMAL), normal));
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_INVERSE), mvInverse));
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION), mv));
+    EXPECT_TRUE(Same(m->getMatrix(oo::LITE_GL_MATRIX_PROJECTION_INVERSE),
                   kIdentityMatrix));
   }
 }
 
-OO_TEST(syncLoadsOpenGL) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOOpenGLMatrixManager, syncLoadsOpenGL) {
+  EXPECT_TRUE(OOTestGLContext());
   {
     std::shared_ptr<oo::OpenGLMatrixManager> m = oo::makeShared<oo::OpenGLMatrixManager>();
     m->loadModelView(kSample);
@@ -356,22 +357,22 @@ OO_TEST(syncLoadsOpenGL) {
     m->syncModelView();
     GLint mode = 0;
     glGetIntegerv(GL_MATRIX_MODE, &mode);
-    OO_CHECK(mode == GL_MODELVIEW);
-    OO_CHECK(Same(oo::MatrixLoadGLMatrix(GL_MODELVIEW_MATRIX), kSample));
+    EXPECT_TRUE(mode == GL_MODELVIEW);
+    EXPECT_TRUE(Same(oo::MatrixLoadGLMatrix(GL_MODELVIEW_MATRIX), kSample));
 
     m->syncProjection();
     glGetIntegerv(GL_MATRIX_MODE, &mode);
-    OO_CHECK(mode == GL_PROJECTION);
-    OO_CHECK(Same(oo::MatrixLoadGLMatrix(GL_PROJECTION_MATRIX),
+    EXPECT_TRUE(mode == GL_PROJECTION);
+    EXPECT_TRUE(Same(oo::MatrixLoadGLMatrix(GL_PROJECTION_MATRIX),
                   oo::MatrixForScale(2, 3, 4)));
-    OO_CHECK(Same(oo::MatrixLoadGLMatrix(GL_MODELVIEW_MATRIX), kSample));
-    OO_CHECK(glGetError() == GL_NO_ERROR);
+    EXPECT_TRUE(Same(oo::MatrixLoadGLMatrix(GL_MODELVIEW_MATRIX), kSample));
+    EXPECT_TRUE(glGetError() == GL_NO_ERROR);
   }
 }
 
-OO_TEST(standardUniformLocations) {
-  OO_CHECK(OOTestGLContext());
-  OO_CHECK(oo::OpenGLExtensionManager::sharedManager()
+TEST(OOOpenGLMatrixManager, standardUniformLocations) {
+  EXPECT_TRUE(OOTestGLContext());
+  EXPECT_TRUE(oo::OpenGLExtensionManager::sharedManager()
                ->shadersSupported());  // loads the ARB entry points
   {
     std::shared_ptr<oo::OpenGLMatrixManager> m = oo::makeShared<oo::OpenGLMatrixManager>();
@@ -393,11 +394,11 @@ OO_TEST(standardUniformLocations) {
     glLinkProgramARB(program);
     GLint linked = 0;
     glGetObjectParameterivARB(program, GL_OBJECT_LINK_STATUS_ARB, &linked);
-    OO_CHECK(linked);
+    EXPECT_TRUE(linked);
 
     const oo::PList locations = m->standardMatrixUniformLocations(program);
     const oo::PList::Array* array = locations.getIf<oo::PList::Array>();
-    OO_CHECK(array != nullptr && array->size() == 3);
+    EXPECT_TRUE(array != nullptr && array->size() == 3);
     if (array != nullptr && array->size() == 3) {
       const int expectedIndex[3] = {
           oo::LITE_GL_MATRIX_MODELVIEW_PROJECTION, oo::LITE_GL_MATRIX_NORMAL,
@@ -408,23 +409,23 @@ OO_TEST(standardUniformLocations) {
       const char* expectedType[3] = {"mat4", "mat3", "mat4"};
       for (int k = 0; k < 3; k++) {
         const oo::PList::Array* triple = (*array)[k].getIf<oo::PList::Array>();
-        OO_CHECK(triple != nullptr && triple->size() == 3);
+        EXPECT_TRUE(triple != nullptr && triple->size() == 3);
         if (triple == nullptr || triple->size() != 3) continue;
-        OO_CHECK((*triple)[0].int64Value() ==
+        EXPECT_TRUE((*triple)[0].int64Value() ==
                  glGetUniformLocationARB(program, expectedName[k]));
-        OO_CHECK((*triple)[1].int64Value() == expectedIndex[k]);
-        OO_CHECK((*triple)[2].getIf<std::string>() != nullptr &&
+        EXPECT_TRUE((*triple)[1].int64Value() == expectedIndex[k]);
+        EXPECT_TRUE((*triple)[2].getIf<std::string>() != nullptr &&
                  *(*triple)[2].getIf<std::string>() == expectedType[k]);
       }
     }
-    OO_CHECK(
+    EXPECT_TRUE(
         std::string(ooliteStandardMatrixUniforms[oo::LITE_GL_MATRIX_NORMAL]) ==
         "ooliteNormalMatrix");
     glDeleteObjectARB(program);
 
     // A program with none of them.
     const oo::PList none = m->standardMatrixUniformLocations(0);
-    OO_CHECK(none.getIf<oo::PList::Array>() != nullptr &&
+    EXPECT_TRUE(none.getIf<oo::PList::Array>() != nullptr &&
              none.getIf<oo::PList::Array>()->empty());
     glGetError();
   }
@@ -436,8 +437,8 @@ struct MyOpenGLViewTestAccess {
   static auto& matrixManager(MyOpenGLView* view) { return view->matrixManager; }
 };
 
-OO_TEST(openGLFunctionsUseTheGameViewsManager) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOOpenGLMatrixManager, openGLFunctionsUseTheGameViewsManager) {
+  EXPECT_TRUE(OOTestGLContext());
   {
     std::shared_ptr<oo::OpenGLMatrixManager> manager =
         oo::makeShared<oo::OpenGLMatrixManager>();
@@ -450,26 +451,26 @@ OO_TEST(openGLFunctionsUseTheGameViewsManager) {
 
     oo::GLResetModelView();
     oo::GLLoadModelView(kSample);
-    OO_CHECK(Same(m->getModelView(), kSample));
-    OO_CHECK(Same(oo::MatrixLoadGLMatrix(GL_MODELVIEW_MATRIX), kSample));
+    EXPECT_TRUE(Same(m->getModelView(), kSample));
+    EXPECT_TRUE(Same(oo::MatrixLoadGLMatrix(GL_MODELVIEW_MATRIX), kSample));
     oo::GLPushModelView();
-    OO_CHECK(m->countModelView() == 1);
+    EXPECT_TRUE(m->countModelView() == 1);
     oo::GLMultModelView(oo::MatrixForScale(2, 2, 2));
     oo::GLTranslateModelView(make_vector(1, 0, 0));
     oo::GLRotateModelView(0.1f, make_vector(0, 0, 1));
     oo::GLScaleModelView(make_vector(1, 2, 1));
     oo::GLLookAt(make_vector(0, 0, 1), make_vector(0, 0, 0),
                make_vector(0, 1, 0));
-    OO_CHECK(Same(oo::GLGetModelView(), m->getModelView()));
-    OO_CHECK(
+    EXPECT_TRUE(Same(oo::GLGetModelView(), m->getModelView()));
+    EXPECT_TRUE(
         Same(oo::MatrixLoadGLMatrix(GL_MODELVIEW_MATRIX), m->getModelView()));
-    OO_CHECK(Same(oo::GLPopModelView(), kSample));
-    OO_CHECK(Same(oo::MatrixLoadGLMatrix(GL_MODELVIEW_MATRIX), kSample));
+    EXPECT_TRUE(Same(oo::GLPopModelView(), kSample));
+    EXPECT_TRUE(Same(oo::MatrixLoadGLMatrix(GL_MODELVIEW_MATRIX), kSample));
 
     oo::GLResetProjection();
     oo::GLPerspective(90, 2, 1, 3);
-    OO_CHECK(Same(oo::GLGetProjection(), m->getProjection()));
-    OO_CHECK(
+    EXPECT_TRUE(Same(oo::GLGetProjection(), m->getProjection()));
+    EXPECT_TRUE(
         Same(oo::MatrixLoadGLMatrix(GL_PROJECTION_MATRIX), m->getProjection()));
     oo::GLPushProjection();
     oo::GLLoadProjection(kSample);
@@ -479,12 +480,12 @@ OO_TEST(openGLFunctionsUseTheGameViewsManager) {
     oo::GLScaleProjection(make_vector(3, 2, 1));
     oo::GLFrustum(-1, 1, -1, 1, 1, 10);
     oo::GLOrtho(-1, 1, -1, 1, -1, 1);
-    OO_CHECK(
+    EXPECT_TRUE(
         Same(oo::MatrixLoadGLMatrix(GL_PROJECTION_MATRIX), m->getProjection()));
     const oo::Matrix mvp =
         oo::MatrixMultiply(m->getModelView(), m->getProjection());
-    OO_CHECK(Same(oo::GLGetModelViewProjection(), mvp));
-    OO_CHECK(Same(oo::GLPopProjection(),
+    EXPECT_TRUE(Same(oo::GLGetModelViewProjection(), mvp));
+    EXPECT_TRUE(Same(oo::GLPopProjection(),
                   oo::MatrixConstruct(0.5f, 0, 0, 0, 0, 1, 0, 0, 0, 0, -2, -1, 0,
                                     0, -3, 0)));
 
@@ -493,14 +494,12 @@ OO_TEST(openGLFunctionsUseTheGameViewsManager) {
     gSharedUniverse = nullptr;
     oo::GLLoadModelView(kIdentityMatrix);
     oo::GLPushModelView();
-    OO_CHECK(Same(m->getModelView(), kSample));
-    OO_CHECK(m->countModelView() == 0);
-    OO_CHECK(Same(oo::GLGetModelView(), kZeroMatrix));
-    OO_CHECK(Same(oo::GLPopModelView(), kZeroMatrix));
-    OO_CHECK(Same(oo::GLGetProjection(), kZeroMatrix));
-    OO_CHECK(Same(oo::GLGetModelViewProjection(), kZeroMatrix));
-    OO_CHECK(glGetError() == GL_NO_ERROR);
+    EXPECT_TRUE(Same(m->getModelView(), kSample));
+    EXPECT_TRUE(m->countModelView() == 0);
+    EXPECT_TRUE(Same(oo::GLGetModelView(), kZeroMatrix));
+    EXPECT_TRUE(Same(oo::GLPopModelView(), kZeroMatrix));
+    EXPECT_TRUE(Same(oo::GLGetProjection(), kZeroMatrix));
+    EXPECT_TRUE(Same(oo::GLGetModelViewProjection(), kZeroMatrix));
+    EXPECT_TRUE(glGetError() == GL_NO_ERROR);
   }
 }
-
-OO_TEST_MAIN()

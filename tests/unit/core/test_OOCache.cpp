@@ -10,6 +10,8 @@
    C++ class's. Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Cache.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PList.hpp"
@@ -19,7 +21,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "oo_test.hpp"
 
 /*	The game's OOStringParsing.mm reaches the JavaScript engine, so it is
    not linked. The one function of it that the cache names (in its
@@ -50,131 +51,131 @@ oo::PList Entry(const std::string& key, const oo::PList& value) {
 
 }  // namespace
 
-OO_TEST(emptyCache) {
+TEST(OOCache, emptyCache) {
   {
     std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
-    OO_CHECK(cache != nullptr);
-    OO_CHECK(cache->pruneThreshold() == oo::kCacheDefaultPruneThreshold);
-    OO_CHECK(cache->autoPrune());
-    OO_CHECK(!cache->dirty());
-    OO_CHECK(!cache->name().has_value());
-    OO_CHECK(cache->pListRepresentation().isNull());
-    OO_CHECK(cache->pListsByAge().empty());
-    OO_CHECK(cache->pListForKey("absent").isNull());
+    EXPECT_TRUE(cache != nullptr);
+    EXPECT_TRUE(cache->pruneThreshold() == oo::kCacheDefaultPruneThreshold);
+    EXPECT_TRUE(cache->autoPrune());
+    EXPECT_TRUE(!cache->dirty());
+    EXPECT_TRUE(!cache->name().has_value());
+    EXPECT_TRUE(cache->pListRepresentation().isNull());
+    EXPECT_TRUE(cache->pListsByAge().empty());
+    EXPECT_TRUE(cache->pListForKey("absent").isNull());
 
-    OO_CHECK(
+    EXPECT_TRUE(
         cache->descriptionComponents() ==
         std::optional<std::string>("\"(null)\", 0 elements, prune "
                                    "threshold=200, auto-prune=yes dirty=no"));
     cache->setName(std::string("Text encoding"));
-    OO_CHECK(cache->name() == std::optional<std::string>("Text encoding"));
-    OO_CHECK(
+    EXPECT_TRUE(cache->name() == std::optional<std::string>("Text encoding"));
+    EXPECT_TRUE(
         cache->descriptionComponents() ==
         std::optional<std::string>("\"Text encoding\", 0 elements, prune "
                                    "threshold=200, auto-prune=yes dirty=no"));
     cache->setName(std::nullopt);
-    OO_CHECK(!cache->name().has_value());
+    EXPECT_TRUE(!cache->name().has_value());
   }
 }
 
-OO_TEST(storeReplaceRemove) {
+TEST(OOCache, storeReplaceRemove) {
   {
     std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
     cache->setPList(oo::PList(), "null");  // a null value is not stored
-    OO_CHECK(!cache->dirty() && cache->pListsByAge().empty());
+    EXPECT_TRUE(!cache->dirty() && cache->pListsByAge().empty());
 
     cache->setPList(Str("one"), "a");
-    OO_CHECK(cache->dirty());
-    OO_CHECK(cache->pListForKey("a") == Str("one"));
+    EXPECT_TRUE(cache->dirty());
+    EXPECT_TRUE(cache->pListForKey("a") == Str("one"));
     cache->markClean();
-    OO_CHECK(!cache->dirty());
+    EXPECT_TRUE(!cache->dirty());
 
     cache->setPList(Str("uno"), "a");  // replacing marks it dirty too
-    OO_CHECK(cache->dirty() && cache->pListForKey("a") == Str("uno"));
+    EXPECT_TRUE(cache->dirty() && cache->pListForKey("a") == Str("uno"));
     cache->markClean();
 
     cache->removePListForKey("b");  // absent: not dirty
-    OO_CHECK(!cache->dirty());
+    EXPECT_TRUE(!cache->dirty());
     cache->removePListForKey("a");
-    OO_CHECK(cache->dirty() && cache->pListForKey("a").isNull());
-    OO_CHECK(
+    EXPECT_TRUE(cache->dirty() && cache->pListForKey("a").isNull());
+    EXPECT_TRUE(
         cache->descriptionComponents() ==
         std::optional<std::string>("\"(null)\", 0 elements, prune "
                                    "threshold=200, auto-prune=yes dirty=yes"));
   }
 }
 
-OO_TEST(leastRecentlyUsedOrder) {
+TEST(OOCache, leastRecentlyUsedOrder) {
   {
     std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
     for (const char* key : {"d", "b", "a", "c"})
       cache->setPList(Str(std::string("value ") + key), key);
-    OO_CHECK(Strings(cache->pListsByAge()) ==
+    EXPECT_TRUE(Strings(cache->pListsByAge()) ==
              std::vector<std::string>({"value c", "value a", "value b",
                                        "value d"}));  // youngest first
 
     (void)cache->pListForKey("d");   // a lookup promotes
     (void)cache->pListForKey("zz");  // a miss does not change the order
     cache->markClean();
-    OO_CHECK(
+    EXPECT_TRUE(
         Strings(cache->pListsByAge()) ==
         std::vector<std::string>({"value d", "value c", "value a", "value b"}));
-    OO_CHECK(!cache->dirty());  // reordering does not dirty it
+    EXPECT_TRUE(!cache->dirty());  // reordering does not dirty it
 
     // The property list: {key, value} entries, oldest first.
     oo::PList::Array expected = {
         Entry("b", Str("value b")), Entry("a", Str("value a")),
         Entry("c", Str("value c")), Entry("d", Str("value d"))};
-    OO_CHECK(cache->pListRepresentation() == oo::PList(expected));
+    EXPECT_TRUE(cache->pListRepresentation() == oo::PList(expected));
   }
 }
 
-OO_TEST(pruning) {
+TEST(OOCache, pruning) {
   {
     std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
     cache->setPruneThreshold(3);
-    OO_CHECK(cache->pruneThreshold() ==
+    EXPECT_TRUE(cache->pruneThreshold() ==
              oo::kCacheMinimumPruneThreshold);  // the floor
 
     // Auto-pruning: past the threshold, down to 80% of it, oldest first.
     for (int i = 0; i < 25; i++)
       cache->setPList(Str(std::to_string(i)), std::to_string(100 + i));
-    OO_CHECK(cache->pListsByAge().size() == 25);
+    EXPECT_TRUE(cache->pListsByAge().size() == 25);
     cache->setPList(Str("25"), "125");
-    OO_CHECK(cache->pListsByAge().size() == 20);
-    OO_CHECK(cache->pListForKey("105").isNull() &&
+    EXPECT_TRUE(cache->pListsByAge().size() == 20);
+    EXPECT_TRUE(cache->pListForKey("105").isNull() &&
              cache->pListForKey("106") == Str("6"));
 
     // Manual pruning: nothing until -prune, then down to the threshold itself.
     cache->setAutoPrune(false);
-    OO_CHECK(!cache->autoPrune());
+    EXPECT_TRUE(!cache->autoPrune());
     for (int i = 26; i < 40; i++)
       cache->setPList(Str(std::to_string(i)), std::to_string(100 + i));
-    OO_CHECK(cache->pListsByAge().size() == 34);
+    EXPECT_TRUE(cache->pListsByAge().size() == 34);
     cache->prune();
-    OO_CHECK(cache->pListsByAge().size() == 25);
+    EXPECT_TRUE(cache->pListsByAge().size() == 25);
 
     // Raising the threshold prunes nothing; lowering it with auto-prune on
     // prunes at once.
     cache->setPruneThreshold(30);
-    OO_CHECK(cache->pListsByAge().size() == 25);
+    EXPECT_TRUE(cache->pListsByAge().size() == 25);
     cache->setAutoPrune(
         true);  // turning it on prunes (under the threshold: nothing)
-    OO_CHECK(cache->pListsByAge().size() == 25);
+    EXPECT_TRUE(cache->pListsByAge().size() == 25);
     cache->setPruneThreshold(oo::kCacheMinimumPruneThreshold);
-    OO_CHECK(cache->pListsByAge().size() == 25);  // not over the threshold
+    EXPECT_TRUE(cache->pListsByAge().size() == 25);  // not over the threshold
     cache->setPList(Str("x"), "x");
-    OO_CHECK(cache->pListsByAge().size() == 20);
+    EXPECT_TRUE(cache->pListsByAge().size() == 20);
 
     cache->setPruneThreshold(oo::kCacheNoPrune);
     for (int i = 0; i < 40; i++)
       cache->setPList(Str("y"), "y" + std::to_string(i));
     cache->prune();
-    OO_CHECK(cache->pListsByAge().size() == 60);
+    EXPECT_TRUE(cache->pListsByAge().size() == 60);
   }
 }
 
-OO_TEST(propertyListRoundTrip) {
+TEST(OOCache, propertyListRoundTrip) {
   {
     oo::PList::Array entries;
     for (int i = 0; i < 250; i++)
@@ -187,22 +188,22 @@ OO_TEST(propertyListRoundTrip) {
     entries.push_back(oo::PList(oo::PList::Dict({{"key", Str("no value")}})));
 
     std::shared_ptr<oo::Cache> loaded = oo::Cache::cacheWithPList(oo::PList(entries));
-    OO_CHECK(loaded != nullptr);
-    OO_CHECK(loaded->pListsByAge().size() ==
+    EXPECT_TRUE(loaded != nullptr);
+    EXPECT_TRUE(loaded->pListsByAge().size() ==
              250);  // loading does not prune, even past the threshold
-    OO_CHECK(loaded->dirty());
-    OO_CHECK(loaded->pruneThreshold() == oo::kCacheDefaultPruneThreshold &&
+    EXPECT_TRUE(loaded->dirty());
+    EXPECT_TRUE(loaded->pruneThreshold() == oo::kCacheDefaultPruneThreshold &&
              loaded->autoPrune());
-    OO_CHECK(loaded->pListForKey("k0") == oo::PList(std::int64_t(0)));
-    OO_CHECK(loaded->pListForKey("no value").isNull());
+    EXPECT_TRUE(loaded->pListForKey("k0") == oo::PList(std::int64_t(0)));
+    EXPECT_TRUE(loaded->pListForKey("no value").isNull());
 
     std::shared_ptr<oo::Cache> again =
         oo::Cache::cacheWithPList(loaded->pListRepresentation());
-    OO_CHECK(again->pListRepresentation() == loaded->pListRepresentation());
+    EXPECT_TRUE(again->pListRepresentation() == loaded->pListRepresentation());
 
-    OO_CHECK(oo::Cache::cacheWithPList(oo::PList())->pListsByAge().empty());
-    OO_CHECK(oo::Cache::cacheWithPList(Str("not an array")) == nullptr);
-    OO_CHECK(oo::Cache::cacheWithPList(oo::PList(oo::PList::Dict())) == nullptr);
+    EXPECT_TRUE(oo::Cache::cacheWithPList(oo::PList())->pListsByAge().empty());
+    EXPECT_TRUE(oo::Cache::cacheWithPList(Str("not an array")) == nullptr);
+    EXPECT_TRUE(oo::Cache::cacheWithPList(oo::PList(oo::PList::Dict())) == nullptr);
   }
 }
 
@@ -217,19 +218,19 @@ class TestForeign final : public oo::PListForeign {
 
 }  // namespace
 
-OO_TEST(holdsALiveObject) {
+TEST(OOCache, holdsALiveObject) {
   std::shared_ptr<TestForeign> object = oo::makeShared<TestForeign>();
   std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
   {
     oo::AutoreleaseScope pool;
     cache->setPList(oo::PList(oo::PList::Object(object)), "texture");
-    OO_CHECK(object->weak_from_this().use_count() == 2);  // the cache retains it
+    EXPECT_TRUE(object->weak_from_this().use_count() == 2);  // the cache retains it
     const oo::PList held = cache->pListForKey("texture");
     const oo::PList::Object* node = held.getIf<oo::PList::Object>();
-    OO_CHECK(node != nullptr && node->get() == object.get());
+    EXPECT_TRUE(node != nullptr && node->get() == object.get());
   }
   cache->removePListForKey("texture");
-  OO_CHECK(object->weak_from_this().use_count() == 1);
+  EXPECT_TRUE(object->weak_from_this().use_count() == 1);
   cache = nullptr;
 }
 
@@ -264,7 +265,7 @@ class SelfLookingUpForeign final : public oo::PListForeign {
 
 }  // namespace
 
-OO_TEST(aValueMayUseTheCacheAsItGoes) {
+TEST(OOCache, aValueMayUseTheCacheAsItGoes) {
   std::shared_ptr<oo::Cache> cache = oo::Cache::cacheWithPList(oo::PList());
   int destroyed = 0;
   auto Add = [&](const std::string& key) {
@@ -277,17 +278,15 @@ OO_TEST(aValueMayUseTheCacheAsItGoes) {
   Add("a");
   Add("b");
   cache->removePListForKey("a");  // its value was the last reference
-  OO_CHECK(destroyed == 1);
-  OO_CHECK(cache->pListForKey("a").isNull());
+  EXPECT_TRUE(destroyed == 1);
+  EXPECT_TRUE(cache->pListForKey("a").isNull());
 
   Add("b");  // replaces b's value, the last reference to the old one
-  OO_CHECK(destroyed == 2);
-  OO_CHECK(!cache->pListForKey("b").isNull());
+  EXPECT_TRUE(destroyed == 2);
+  EXPECT_TRUE(!cache->pListForKey("b").isNull());
 
   cache->setPruneThreshold(oo::kCacheMinimumPruneThreshold);
   for (int i = 0; i < 30; ++i) Add("p" + std::to_string(i));
-  OO_CHECK(destroyed > 2);  // pruning dropped the oldest values
-  OO_CHECK(cache->pListsByAge().size() <= oo::kCacheMinimumPruneThreshold);
+  EXPECT_TRUE(destroyed > 2);  // pruning dropped the oldest values
+  EXPECT_TRUE(cache->pListsByAge().size() <= oo::kCacheMinimumPruneThreshold);
 }
-
-OO_TEST_MAIN()

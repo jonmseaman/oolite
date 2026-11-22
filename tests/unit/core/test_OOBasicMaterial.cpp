@@ -15,10 +15,11 @@
 #include <cmath>
 #include <cstdlib>
 
+#include <gtest/gtest.h>
+
 #include "BasicMaterial.h"
 #include "Texture.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked; what the material and the GL error check call of it is defined here.
@@ -179,41 +180,41 @@ std::shared_ptr<TestSubMaterial> NamedSub(
 
 }  // namespace
 
-OO_TEST(defaults) {
+TEST(OOBasicMaterial, defaults) {
   {
     const std::shared_ptr<oo::BasicMaterial> m = Named("Hull");
-    OO_CHECK(m->name() == std::optional<std::string>("Hull"));
-    OO_CHECK(Same(Diffuse(m.get()).v, {1, 1, 1, 1}));
-    OO_CHECK(Same(Ambient(m.get()).v, {1, 1, 1, 1}));
-    OO_CHECK(Same(Specular(m.get()).v, {0, 0, 0, 1}));
-    OO_CHECK(Same(Emission(m.get()).v, {0, 0, 0, 1}));
-    OO_CHECK(m->shininess() == 0);
-    OO_CHECK(m->permitSpecular());  // no universe: not reduced detail
-    OO_CHECK(m->isFinishedLoading() && !m->wantsNormalsAsTextureCoordinates());
+    EXPECT_TRUE(m->name() == std::optional<std::string>("Hull"));
+    EXPECT_TRUE(Same(Diffuse(m.get()).v, {1, 1, 1, 1}));
+    EXPECT_TRUE(Same(Ambient(m.get()).v, {1, 1, 1, 1}));
+    EXPECT_TRUE(Same(Specular(m.get()).v, {0, 0, 0, 1}));
+    EXPECT_TRUE(Same(Emission(m.get()).v, {0, 0, 0, 1}));
+    EXPECT_TRUE(m->shininess() == 0);
+    EXPECT_TRUE(m->permitSpecular());  // no universe: not reduced detail
+    EXPECT_TRUE(m->isFinishedLoading() && !m->wantsNormalsAsTextureCoordinates());
 #ifndef NDEBUG
-    OO_CHECK(m->allTextures().empty());
+    EXPECT_TRUE(m->allTextures().empty());
 #endif
-    OO_CHECK(
+    EXPECT_TRUE(
         !oo::BasicMaterial::materialWithName(std::nullopt)->name().has_value());
   }
 }
 
-OO_TEST(emptyConfiguration) {
+TEST(OOBasicMaterial, emptyConfiguration) {
   {
     // A null configuration is an empty one: the specifier's defaults apply
     // (exponent 10, 0.2 white).
     const std::shared_ptr<oo::BasicMaterial> m =
         oo::BasicMaterial::materialWithName(std::string("Plain"), oo::PList());
-    OO_CHECK(m->name() == std::optional<std::string>("Plain"));
-    OO_CHECK(Same(Diffuse(m.get()).v, {1, 1, 1, 1}));
-    OO_CHECK(Same(Ambient(m.get()).v, {1, 1, 1, 1}));
-    OO_CHECK(Same(Specular(m.get()).v, {0.2f, 0.2f, 0.2f, 1}));
-    OO_CHECK(Same(Emission(m.get()).v, {0, 0, 0, 1}));
-    OO_CHECK(m->shininess() == 10);
+    EXPECT_TRUE(m->name() == std::optional<std::string>("Plain"));
+    EXPECT_TRUE(Same(Diffuse(m.get()).v, {1, 1, 1, 1}));
+    EXPECT_TRUE(Same(Ambient(m.get()).v, {1, 1, 1, 1}));
+    EXPECT_TRUE(Same(Specular(m.get()).v, {0.2f, 0.2f, 0.2f, 1}));
+    EXPECT_TRUE(Same(Emission(m.get()).v, {0, 0, 0, 1}));
+    EXPECT_TRUE(m->shininess() == 10);
   }
 }
 
-OO_TEST(configuration) {
+TEST(OOBasicMaterial, configuration) {
   {
     std::shared_ptr<oo::BasicMaterial> m = oo::BasicMaterial::materialWithName(
         std::string("Painted"),
@@ -223,12 +224,12 @@ OO_TEST(configuration) {
             {"specular_color", oo::PList("blueColor")},
             {"specular_exponent", oo::PList(std::int64_t(200))},
         }));
-    OO_CHECK(Same(Diffuse(m.get()).v, {1, 0, 0, 1}));
-    OO_CHECK(Same(Ambient(m.get()).v,
+    EXPECT_TRUE(Same(Diffuse(m.get()).v, {1, 0, 0, 1}));
+    EXPECT_TRUE(Same(Ambient(m.get()).v,
                   {1, 0, 0, 1}));  // no ambient: the diffuse colour
-    OO_CHECK(Same(Emission(m.get()).v, {0, 1, 0, 1}));
-    OO_CHECK(Same(Specular(m.get()).v, {0, 0, 1, 1}));
-    OO_CHECK(m->shininess() == 128);  // clamped
+    EXPECT_TRUE(Same(Emission(m.get()).v, {0, 1, 0, 1}));
+    EXPECT_TRUE(Same(Specular(m.get()).v, {0, 0, 1, 1}));
+    EXPECT_TRUE(m->shininess() == 128);  // clamped
 
     // Legacy names; white diffuse and black emission count as none; exponent 0:
     // no specular.
@@ -240,15 +241,15 @@ OO_TEST(configuration) {
                                    {"shininess", oo::PList(std::int64_t(0))},
                                    {"specular", oo::PList("blueColor")},
                                }));
-    OO_CHECK(Same(Diffuse(m.get()).v, {1, 1, 1, 1}));
-    OO_CHECK(Same(Ambient(m.get()).v, {1, 1, 0, 1}));
-    OO_CHECK(Same(Emission(m.get()).v, {0, 0, 0, 1}));
-    OO_CHECK(Same(Specular(m.get()).v, {0, 0, 0, 1}));
-    OO_CHECK(m->shininess() == 0);
+    EXPECT_TRUE(Same(Diffuse(m.get()).v, {1, 1, 1, 1}));
+    EXPECT_TRUE(Same(Ambient(m.get()).v, {1, 1, 0, 1}));
+    EXPECT_TRUE(Same(Emission(m.get()).v, {0, 0, 0, 1}));
+    EXPECT_TRUE(Same(Specular(m.get()).v, {0, 0, 0, 1}));
+    EXPECT_TRUE(m->shininess() == 0);
   }
 }
 
-OO_TEST(permitSpecular) {
+TEST(OOBasicMaterial, permitSpecular) {
   {
     const oo::PList config =
         Config({{"specular_exponent", oo::PList(std::int64_t(20))}});
@@ -259,84 +260,84 @@ OO_TEST(permitSpecular) {
     gSharedUniverse = universe;
     const std::shared_ptr<oo::BasicMaterial> m =
         oo::BasicMaterial::materialWithName(std::string("Reduced"), config);
-    OO_CHECK(!m->permitSpecular());
-    OO_CHECK(m->shininess() == 0 && Same(Specular(m.get()).v, {0, 0, 0, 1}));
+    EXPECT_TRUE(!m->permitSpecular());
+    EXPECT_TRUE(m->shininess() == 0 && Same(Specular(m.get()).v, {0, 0, 0, 1}));
     universe->_reducedDetail = false;
-    OO_CHECK(m->permitSpecular());
+    EXPECT_TRUE(m->permitSpecular());
     gSharedUniverse = nullptr;
 
     // A subclass's override is asked while the superclass initialises.
     const std::shared_ptr<TestSubMaterial> sub = NamedSub(std::string("Sub"), config);
-    OO_CHECK(sub->shininess() == 0 &&
+    EXPECT_TRUE(sub->shininess() == 0 &&
              Same(Specular(sub.get()).v, {0, 0, 0, 1}));
-    OO_CHECK(sub->name() == std::optional<std::string>("Sub"));
-    OO_CHECK(Same(Diffuse(sub.get()).v, {1, 1, 1, 1}));
+    EXPECT_TRUE(sub->name() == std::optional<std::string>("Sub"));
+    EXPECT_TRUE(Same(Diffuse(sub.get()).v, {1, 1, 1, 1}));
   }
 }
 
-OO_TEST(accessors) {
+TEST(OOBasicMaterial, accessors) {
   {
     const std::shared_ptr<oo::BasicMaterial> mRef = Named("Accessors");
     oo::BasicMaterial* m = mRef.get();
 
     m->setDiffuseRed(0.1f, 0.2f, 0.3f, 0.4f);
-    OO_CHECK(SameColor(m->diffuseColor(), {0.1f, 0.2f, 0.3f, 0.4f}));
+    EXPECT_TRUE(SameColor(m->diffuseColor(), {0.1f, 0.2f, 0.3f, 0.4f}));
     m->setDiffuseColor(nullptr);  // null: unchanged
-    OO_CHECK(Same(Diffuse(m).v, {0.1f, 0.2f, 0.3f, 0.4f}));
+    EXPECT_TRUE(Same(Diffuse(m).v, {0.1f, 0.2f, 0.3f, 0.4f}));
     m->setDiffuseColor(oo::Color::redColor().get());
-    OO_CHECK(Same(Diffuse(m).v, {1, 0, 0, 1}));
+    EXPECT_TRUE(Same(Diffuse(m).v, {1, 0, 0, 1}));
 
     m->setAmbientAndDiffuseColor(oo::Color::greenColor().get());
-    OO_CHECK(Same(Diffuse(m).v, {0, 1, 0, 1}) &&
+    EXPECT_TRUE(Same(Diffuse(m).v, {0, 1, 0, 1}) &&
              Same(Ambient(m).v, {0, 1, 0, 1}));
     m->setAmbientColor(oo::Color::blueColor().get());
-    OO_CHECK(SameColor(m->ambientColor(), {0, 0, 1, 1}));
+    EXPECT_TRUE(SameColor(m->ambientColor(), {0, 0, 1, 1}));
     m->setAmbientColor(nullptr);
-    OO_CHECK(Same(Ambient(m).v, {0, 0, 1, 1}));
+    EXPECT_TRUE(Same(Ambient(m).v, {0, 0, 1, 1}));
 
     m->setSpecularColor(oo::Color::yellowColor().get());
-    OO_CHECK(SameColor(m->specularColor(), {1, 1, 0, 1}));
+    EXPECT_TRUE(SameColor(m->specularColor(), {1, 1, 0, 1}));
     m->setSpecularColor(nullptr);
-    OO_CHECK(Same(Specular(m).v, {1, 1, 0, 1}));
+    EXPECT_TRUE(Same(Specular(m).v, {1, 1, 0, 1}));
     m->setEmissionColor(oo::Color::magentaColor().get());
-    OO_CHECK(SameColor(m->emmisionColor(), {1, 0, 1, 1}));
+    EXPECT_TRUE(SameColor(m->emmisionColor(), {1, 0, 1, 1}));
     m->setEmissionColor(nullptr);
-    OO_CHECK(Same(Emission(m).v, {1, 0, 1, 1}));
+    EXPECT_TRUE(Same(Emission(m).v, {1, 0, 1, 1}));
 
     const GLfloat c[4] = {0.5f, 0.25f, 0.125f, 1};
     m->setDiffuseComponents(c);
     m->setSpecularComponents(c);
     m->setEmissionComponents(c);
     m->setAmbientComponents(c);
-    OO_CHECK(Same(Diffuse(m).v, {0.5f, 0.25f, 0.125f, 1}) &&
+    EXPECT_TRUE(Same(Diffuse(m).v, {0.5f, 0.25f, 0.125f, 1}) &&
              Same(Specular(m).v, {0.5f, 0.25f, 0.125f, 1}));
-    OO_CHECK(Same(Emission(m).v, {0.5f, 0.25f, 0.125f, 1}) &&
+    EXPECT_TRUE(Same(Emission(m).v, {0.5f, 0.25f, 0.125f, 1}) &&
              Same(Ambient(m).v, {0.5f, 0.25f, 0.125f, 1}));
     const GLfloat d[4] = {0, 0.5f, 0, 0.5f};
     m->setAmbientAndDiffuseComponents(d);
-    OO_CHECK(Same(Diffuse(m).v, {0, 0.5f, 0, 0.5f}) &&
+    EXPECT_TRUE(Same(Diffuse(m).v, {0, 0.5f, 0, 0.5f}) &&
              Same(Ambient(m).v, {0, 0.5f, 0, 0.5f}));
 
     m->setAmbientAndDiffuseRed(1, 0, 1, 1);
-    OO_CHECK(Same(Diffuse(m).v, {1, 0, 1, 1}) &&
+    EXPECT_TRUE(Same(Diffuse(m).v, {1, 0, 1, 1}) &&
              Same(Ambient(m).v, {1, 0, 1, 1}));
     m->setAmbientRed(0.25f, 0.25f, 0.25f, 1);
     m->setSpecularRed(0.75f, 0.75f, 0.75f, 1);
     m->setEmissionRed(0.5f, 0, 0, 0);
-    OO_CHECK(Same(Ambient(m).v, {0.25f, 0.25f, 0.25f, 1}) &&
+    EXPECT_TRUE(Same(Ambient(m).v, {0.25f, 0.25f, 0.25f, 1}) &&
              Same(Specular(m).v, {0.75f, 0.75f, 0.75f, 1}));
-    OO_CHECK(Same(Emission(m).v, {0.5f, 0, 0, 0}));
+    EXPECT_TRUE(Same(Emission(m).v, {0.5f, 0, 0, 0}));
 
     m->setShininess(5);
-    OO_CHECK(m->shininess() == 5);
+    EXPECT_TRUE(m->shininess() == 5);
     m->setShininess(200);
-    OO_CHECK(m->shininess() == 128);
+    EXPECT_TRUE(m->shininess() == 128);
   }
 }
 
-OO_TEST(doApplySetsTheGLMaterial) {
+TEST(OOBasicMaterial, doApplySetsTheGLMaterial) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -348,30 +349,30 @@ OO_TEST(doApplySetsTheGLMaterial) {
     m->setShininess(64);
 
     const int applyNones = gTextureApplyNones;
-    OO_CHECK(m->doApply());
-    OO_CHECK(gTextureApplyNones ==
+    EXPECT_TRUE(m->doApply());
+    EXPECT_TRUE(gTextureApplyNones ==
              applyNones + 1);  // exactly an OOBasicMaterial: no texture
-    OO_CHECK(Same(GLMaterial(GL_DIFFUSE).v, {0.1f, 0.2f, 0.3f, 0.4f}));
-    OO_CHECK(Same(GLMaterial(GL_AMBIENT).v, {0.5f, 0.6f, 0.7f, 0.8f}));
-    OO_CHECK(Same(GLMaterial(GL_SPECULAR).v, {0.9f, 0.8f, 0.7f, 0.6f}));
-    OO_CHECK(Same(GLMaterial(GL_EMISSION).v, {0.4f, 0.3f, 0.2f, 0.1f}));
-    OO_CHECK(GLShininess() == 64);
+    EXPECT_TRUE(Same(GLMaterial(GL_DIFFUSE).v, {0.1f, 0.2f, 0.3f, 0.4f}));
+    EXPECT_TRUE(Same(GLMaterial(GL_AMBIENT).v, {0.5f, 0.6f, 0.7f, 0.8f}));
+    EXPECT_TRUE(Same(GLMaterial(GL_SPECULAR).v, {0.9f, 0.8f, 0.7f, 0.6f}));
+    EXPECT_TRUE(Same(GLMaterial(GL_EMISSION).v, {0.4f, 0.3f, 0.2f, 0.1f}));
+    EXPECT_TRUE(GLShininess() == 64);
 
     // A subclass's base-class doApply() sets the same state, and leaves the
     // texture to the subclass.
     const std::shared_ptr<TestSubMaterial> sub = NamedSub(std::string("Sub"));
     sub->setShininess(3);
-    OO_CHECK(sub->doApply() && sub->doApplies == 1);
-    OO_CHECK(gTextureApplyNones == applyNones + 1);
-    OO_CHECK(Same(GLMaterial(GL_DIFFUSE).v, {1, 1, 1, 1}) &&
+    EXPECT_TRUE(sub->doApply() && sub->doApplies == 1);
+    EXPECT_TRUE(gTextureApplyNones == applyNones + 1);
+    EXPECT_TRUE(Same(GLMaterial(GL_DIFFUSE).v, {1, 1, 1, 1}) &&
              GLShininess() == 3);
-    OO_CHECK(glGetError() == GL_NO_ERROR);
+    EXPECT_TRUE(glGetError() == GL_NO_ERROR);
   }
 }
 
-OO_TEST(unapplyFallsBackToTheDefaultMaterial) {
+TEST(OOBasicMaterial, unapplyFallsBackToTheDefaultMaterial) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -386,79 +387,79 @@ OO_TEST(unapplyFallsBackToTheDefaultMaterial) {
     const int applyNones = gTextureApplyNones;
     m->unapplyWithNext(Named("Next").get());
     m->unapplyWithNext(NamedSub(std::nullopt).get());
-    OO_CHECK(gTextureApplyNones == applyNones);
-    OO_CHECK(Same(GLMaterial(GL_DIFFUSE).v, {0.1f, 0.2f, 0.3f, 0.4f}) &&
+    EXPECT_TRUE(gTextureApplyNones == applyNones);
+    EXPECT_TRUE(Same(GLMaterial(GL_DIFFUSE).v, {0.1f, 0.2f, 0.3f, 0.4f}) &&
              GLShininess() == 64);
 
     // Followed by nothing, or by a material that is not a basic one: the
     // default material's state.
     m->unapplyWithNext(nullptr);
-    OO_CHECK(gTextureApplyNones == applyNones + 1);
-    OO_CHECK(Same(GLMaterial(GL_DIFFUSE).v, {1, 1, 1, 1}) &&
+    EXPECT_TRUE(gTextureApplyNones == applyNones + 1);
+    EXPECT_TRUE(Same(GLMaterial(GL_DIFFUSE).v, {1, 1, 1, 1}) &&
              Same(GLMaterial(GL_AMBIENT).v, {1, 1, 1, 1}));
-    OO_CHECK(Same(GLMaterial(GL_SPECULAR).v, {0, 0, 0, 1}) &&
+    EXPECT_TRUE(Same(GLMaterial(GL_SPECULAR).v, {0, 0, 0, 1}) &&
              Same(GLMaterial(GL_EMISSION).v, {0, 0, 0, 1}));
-    OO_CHECK(GLShininess() == 0);
+    EXPECT_TRUE(GLShininess() == 0);
 
     m->doApply();
     const std::shared_ptr<oo::Material> plainMaterial = oo::makeShared<oo::Material>();
     m->unapplyWithNext(plainMaterial.get());
-    OO_CHECK(gTextureApplyNones == applyNones + 3);
-    OO_CHECK(Same(GLMaterial(GL_DIFFUSE).v, {1, 1, 1, 1}) &&
+    EXPECT_TRUE(gTextureApplyNones == applyNones + 3);
+    EXPECT_TRUE(Same(GLMaterial(GL_DIFFUSE).v, {1, 1, 1, 1}) &&
              GLShininess() == 0);
   }
 }
 
-OO_TEST(applyAndCurrent) {
+TEST(OOBasicMaterial, applyAndCurrent) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
     const std::shared_ptr<oo::BasicMaterial> a = Named("A");
     const std::shared_ptr<TestSubMaterial> b = NamedSub(std::string("B"));
     a->apply();
-    OO_CHECK(oo::Material::current().get() == a.get());
+    EXPECT_TRUE(oo::Material::current().get() == a.get());
     b->apply();
-    OO_CHECK(oo::Material::current().get() == b.get() && b->doApplies == 1);
+    EXPECT_TRUE(oo::Material::current().get() == b.get() && b->doApplies == 1);
     oo::Material::applyNone();
-    OO_CHECK(oo::Material::current() == nullptr);
+    EXPECT_TRUE(oo::Material::current() == nullptr);
   }
 }
 
-OO_TEST(description) {
+TEST(OOBasicMaterial, description) {
   {
     const std::shared_ptr<oo::BasicMaterial> m = Named("Hull");
     const std::string text = m->description();
-    OO_CHECK(text.starts_with("<OOBasicMaterial 0x"));
-    OO_CHECK(text.ends_with(">{\"Hull\"}"));
+    EXPECT_TRUE(text.starts_with("<OOBasicMaterial 0x"));
+    EXPECT_TRUE(text.ends_with(">{\"Hull\"}"));
     const std::shared_ptr<TestSubMaterial> sub = NamedSub(std::string("Sub"));
     const std::string subText = sub->description();
-    OO_CHECK(subText.starts_with("<TestSubMaterial 0x") &&
+    EXPECT_TRUE(subText.starts_with("<TestSubMaterial 0x") &&
              subText.ends_with(">{\"Sub\"}"));
   }
 }
 
-OO_TEST(cxxAPI) {
+TEST(OOBasicMaterial, cxxAPI) {
   {
     const std::shared_ptr<oo::BasicMaterial> m =
         oo::BasicMaterial::materialWithName(std::string("Cxx"));
-    OO_CHECK(m->name() == std::optional<std::string>("Cxx") &&
+    EXPECT_TRUE(m->name() == std::optional<std::string>("Cxx") &&
              m->shininess() == 0);
     GLfloat c[4] = {};
     m->getDiffuseComponents(c);
-    OO_CHECK(Same(c, {1, 1, 1, 1}));
+    EXPECT_TRUE(Same(c, {1, 1, 1, 1}));
     m->getSpecularComponents(c);
-    OO_CHECK(Same(c, {0, 0, 0, 1}));
+    EXPECT_TRUE(Same(c, {0, 0, 0, 1}));
     m->setShininess(200);
-    OO_CHECK(m->shininess() == 128);
+    EXPECT_TRUE(m->shininess() == 128);
     m->setAmbientAndDiffuseColor(oo::Color::redColor().get());
     m->setDiffuseColor(nullptr);
-    OO_CHECK(m->diffuseColor()->redComponent() == 1 &&
+    EXPECT_TRUE(m->diffuseColor()->redComponent() == 1 &&
              m->ambientColor()->greenComponent() == 0);
-    OO_CHECK(m->descriptionComponents() ==
+    EXPECT_TRUE(m->descriptionComponents() ==
              std::optional<std::string>("\"Cxx\""));
-    OO_CHECK(m->permitSpecular() && m->isFinishedLoading());
+    EXPECT_TRUE(m->permitSpecular() && m->isFinishedLoading());
 
     const std::shared_ptr<oo::BasicMaterial> configured =
         oo::BasicMaterial::materialWithName(
@@ -467,28 +468,26 @@ OO_TEST(cxxAPI) {
                 {"diffuse_color", oo::PList("blueColor")},
                 {"specular_exponent", oo::PList(std::int64_t(20))},
             }));
-    OO_CHECK(!configured->name().has_value());
+    EXPECT_TRUE(!configured->name().has_value());
     configured->getAmbientComponents(c);
-    OO_CHECK(Same(c, {0, 0, 1, 1}) && configured->shininess() == 20);
+    EXPECT_TRUE(Same(c, {0, 0, 1, 1}) && configured->shininess() == 20);
     configured->getSpecularComponents(c);
-    OO_CHECK(Same(c, {0.2f, 0.2f, 0.2f, 1}));
+    EXPECT_TRUE(Same(c, {0.2f, 0.2f, 0.2f, 1}));
 
     // The C++ subclass's override is asked by the initialiser.
     const std::shared_ptr<TestSubMaterial> denying =
         NamedSub(std::string("Denying"),
                  Config({{"specular_exponent", oo::PList(std::int64_t(20))}}));
-    OO_CHECK(denying->shininess() == 0 &&
+    EXPECT_TRUE(denying->shininess() == 0 &&
              denying->name() == std::optional<std::string>("Denying"));
   }
 }
 
 // The name of a C++ material.
-OO_TEST(nameOfACxxMaterial) {
+TEST(OOBasicMaterial, nameOfACxxMaterial) {
   {
     const std::shared_ptr<oo::BasicMaterial> m =
         oo::BasicMaterial::materialWithName(std::string("Cxx"));
-    OO_CHECK(m->name() == std::optional<std::string>("Cxx"));
+    EXPECT_TRUE(m->name() == std::optional<std::string>("Cxx"));
   }
 }
-
-OO_TEST_MAIN()

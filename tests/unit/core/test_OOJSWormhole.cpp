@@ -16,6 +16,8 @@
 	tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Types.h"
 #include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
@@ -78,7 +80,6 @@ public:
 #include "OOJSWormhole.h"
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstring>
@@ -328,26 +329,26 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSWormhole, registration)
 {
 	SetUpContext();
 	const JSClassID wormholeClassID = sWormhole->oo_jsClassID();
 	const char *wormholeClassName = OOJSClassName(wormholeClassID);
-	OO_CHECK(wormholeClassID != 0 && wormholeClassName != nullptr && std::strcmp(wormholeClassName, "Wormhole") == 0);
+	EXPECT_TRUE(wormholeClassID != 0 && wormholeClassName != nullptr && std::strcmp(wormholeClassName, "Wormhole") == 0);
 	JSValue prototype = JS_GetClassProto(sContext, wormholeClassID);
-	OO_CHECK(JS_IsObject(prototype));
+	EXPECT_TRUE(JS_IsObject(prototype));
 	JS_FreeValue(sContext, prototype);
-	OO_CHECK(OOJSIsSubclass(wormholeClassID, sFakeEntityClassID));
-	OO_CHECK_EQ(sConverters[wormholeClassID], 1);
-	OO_CHECK(sWormhole->oo_jsClassName() == std::optional<std::string>("Wormhole"));
-	OO_CHECK(sWormhole->isVisibleToScripts());
+	EXPECT_TRUE(OOJSIsSubclass(wormholeClassID, sFakeEntityClassID));
+	EXPECT_EQ(sConverters[wormholeClassID], 1);
+	EXPECT_TRUE(sWormhole->oo_jsClassName() == std::optional<std::string>("Wormhole"));
+	EXPECT_TRUE(sWormhole->isVisibleToScripts());
 	OO_CHECK_EVAL("typeof Wormhole", "function");
 	OO_CHECK_EVAL("new Wormhole()", "threw: unconstructable");
 	OO_CHECK_EVAL("Object.getPrototypeOf(Wormhole.prototype) === Entity.prototype", "true");
@@ -355,7 +356,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSWormhole, properties)
 {
 	OO_CHECK_EVAL("wormhole.arrivalTime", "1000.5");
 	OO_CHECK_EVAL("wormhole.expiryTime", "900.25");
@@ -369,7 +370,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSWormhole, otherObjects)
 {
 	// An Entity that is not a wormhole, and the prototype (no entity at all): the binding's getter
 	// fails without reporting an error, which ends the script uncatchably.
@@ -381,7 +382,7 @@ OO_TEST(otherObjects)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSWormhole, nativeExceptions)
 {
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the entity is a JS error,
@@ -392,9 +393,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("wormhole.arrivalTime", "threw: Native exception: cxx boom");
 	sWormholePart->_arrivalTime = 1000.5;
 	OO_CHECK_EVAL("wormhole.arrivalTime", "1000.5");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

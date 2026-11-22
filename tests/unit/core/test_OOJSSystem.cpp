@@ -17,6 +17,8 @@
    locationFromCode(). Run: meson test -C build/meson_test test_OOJSSystem
 */
 
+#include <gtest/gtest.h>
+
 #include "OOJavaScriptEngine.h"
 #include "Universe.h"
 #include "PlayerEntity.h"
@@ -37,7 +39,6 @@
 #include <vector>
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
-#include "oo_test.hpp"
 
 #include <cstdlib>  // IWYU pragma: keep
 #include <cstring>  // IWYU pragma: keep
@@ -361,10 +362,10 @@ void SetUp()
 	sRoot = stdfs::temp_directory_path() / ("oo-test-jssystem-" + std::to_string(static_cast<unsigned long>(::_getpid())));
 	stdfs::remove_all(sRoot);
 	stdfs::create_directories(sRoot / "Resources");
-	OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+	EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
 	stdfs::current_path(sRoot);
 	const std::string info = "{ CFBundleVersion = \"9.9.9-test\"; }";
-	OO_CHECK(oo::fs::writeFile(sRoot / "Resources" / "Info-gnustep.plist", oo::Data(info.data(), info.size()), oo::fs::WriteMode::kDirect).has_value());
+	EXPECT_TRUE(oo::fs::writeFile(sRoot / "Resources" / "Info-gnustep.plist", oo::Data(info.data(), info.size()), oo::fs::WriteMode::kDirect).has_value());
 	{
 		(void)OOJavaScriptEngine::sharedEngine();
 	}
@@ -426,7 +427,7 @@ void SetUp()
 // ...), or "threw: <message>".
 std::string Eval(const std::string &src)
 {
-	SetUp();
+	::SetUp();
 	std::string text;
 	{
 		JSContext *context = OOJSAcquireContext();
@@ -454,7 +455,7 @@ std::string EvalShown(const std::string &src, const std::string &expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src.c_str(), result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 
 std::string Log(std::vector<std::string> &log)
@@ -473,16 +474,16 @@ std::string LogShown(std::vector<std::string> &log, const std::string &expected)
 	if (result != expected)  std::printf("    log gave: %s\n", result.c_str());
 	return result;
 }
-#define OO_CHECK_LOG(log, expected)  OO_CHECK_EQ(LogShown(log, expected), expected)
+#define OO_CHECK_LOG(log, expected)  EXPECT_EQ(LogShown(log, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSSystem, registration)
 {
-	SetUp();
+	::SetUp();
 	OO_CHECK_EVAL("typeof system", "object");
 	OO_CHECK_EVAL("system", "[System 3:17 \"Lave\"]");
 	OO_CHECK_EVAL("(function () { system = 5; return typeof system; })()", "object");	// read-only
@@ -494,9 +495,9 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(propertiesWithoutSystemData)
+TEST(OOJSSystem, propertiesWithoutSystemData)
 {
-	SetUp();
+	::SetUp();
 	OO_CHECK_EVAL("system.ID", "17");
 	OO_CHECK_EVAL("system.isInterstellarSpace", "false");
 	OO_CHECK_EVAL("system.mainStation.position.x", "10");
@@ -508,12 +509,12 @@ OO_TEST(propertiesWithoutSystemData)
 	OO_CHECK_EVAL("Object.keys(system.waypoints).sort().join()", "nav-a,nav-b");
 	OO_CHECK_EVAL("system.waypoints['nav-b'].position.x", "51");
 	OO_CHECK_EVAL("system.allShips.map(function (p) { return p.position.x; }).join()", "300,100,200");
-	OO_CHECK_EQ(sUniverse->_lastShipsPredicate, "ships:searchable");
-	OO_CHECK(sUniverse->_lastRange == -1 && sUniverse->_lastRelativeTo == nullptr);
+	EXPECT_EQ(sUniverse->_lastShipsPredicate, "ships:searchable");
+	EXPECT_TRUE(sUniverse->_lastRange == -1 && sUniverse->_lastRelativeTo == nullptr);
 	OO_CHECK_EVAL("system.allDemoShips.length", "0");
-	OO_CHECK_EQ(sUniverse->_lastShipsPredicate, "ships:demo");
+	EXPECT_EQ(sUniverse->_lastShipsPredicate, "ships:demo");
 	OO_CHECK_EVAL("system.allVisualEffects.length", "3");
-	OO_CHECK_EQ(sUniverse->_lastShipsPredicate, "effects:searchable");
+	EXPECT_EQ(sUniverse->_lastShipsPredicate, "effects:searchable");
 	OO_CHECK_EVAL("system.ambientLevel", "0.5");
 	OO_CHECK_EVAL("system.pseudoRandomNumber", "0.25");
 	OO_CHECK_EVAL("system.pseudoRandom100", "42");
@@ -529,9 +530,9 @@ OO_TEST(propertiesWithoutSystemData)
 }
 
 
-OO_TEST(propertiesFromSystemData)
+TEST(OOJSSystem, propertiesFromSystemData)
 {
-	SetUp();
+	::SetUp();
 	OO_CHECK_EVAL("system.name", "Lave");
 	OO_CHECK_EVAL("system.description", "A dull world.");
 	OO_CHECK_EVAL("system.inhabitantsDescription", "Humans");
@@ -555,9 +556,9 @@ OO_TEST(propertiesFromSystemData)
 }
 
 
-OO_TEST(propertiesInInterstellarSpace)
+TEST(OOJSSystem, propertiesInInterstellarSpace)
 {
-	SetUp();
+	::SetUp();
 	sUniverse->_interstellar = true;
 	OO_CHECK_EVAL("system.isInterstellarSpace", "true");
 	OO_CHECK_EVAL("system.name", "Interstellar space");
@@ -575,13 +576,13 @@ OO_TEST(propertiesInInterstellarSpace)
 }
 
 
-OO_TEST(setters)
+TEST(OOJSSystem, setters)
 {
-	SetUp();
+	::SetUp();
 	OO_CHECK_EVAL("(function () { system.ambientLevel = 0.75; return system.ambientLevel; })()", "0.75");
-	OO_CHECK_EQ(sUniverse->_lightings, 1);
+	EXPECT_EQ(sUniverse->_lightings, 1);
 	OO_CHECK_EVAL("(function () { system.breakPattern = true; return system.breakPattern; })()", "true");
-	OO_CHECK(sUniverse->_breakPattern);
+	EXPECT_TRUE(sUniverse->_breakPattern);
 	sUniverse->_breakPattern = false;
 	sUniverse->_ambient = 0.5f;
 
@@ -600,9 +601,9 @@ OO_TEST(setters)
 }
 
 
-OO_TEST(methods)
+TEST(OOJSSystem, methods)
 {
-	SetUp();
+	::SetUp();
 	OO_CHECK_EVAL("system.toString()", "[System 3:17 \"Lave\"]");
 
 	sPlayer->_planetToAdd = nullptr;
@@ -610,8 +611,8 @@ OO_TEST(methods)
 	sPlayer->_planetToAdd = sUniverse->_planet;
 	OO_CHECK_EVAL("system.addMoon('pebble').position.x", "20");
 	OO_CHECK_LOG(sPlayer->_log, "addPlanet rock; addMoon pebble");
-	OO_CHECK(Eval("system.addPlanet()").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.addMoon()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.addPlanet()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.addMoon()").rfind("threw: ", 0) == 0);
 	OO_CHECK_LOG(sPlayer->_log, "");
 
 	OO_CHECK_EVAL("system.sendAllShipsAway()", "undefined");
@@ -624,13 +625,13 @@ OO_TEST(methods)
 	OO_CHECK_EVAL("system.locationFromCode('OUTSIDE_SUN')", "(1, 2, 3)");
 	OO_CHECK_LOG(sUniverse->_log, "location WITCHPOINT nil nil");
 	sUniverse->_sun = sun;
-	OO_CHECK(Eval("system.locationFromCode()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.locationFromCode()").rfind("threw: ", 0) == 0);
 }
 
 
-OO_TEST(counts)
+TEST(OOJSSystem, counts)
 {
-	SetUp();
+	::SetUp();
 	Log(sUniverse->_log);
 	OO_CHECK_EVAL("system.countShipsWithPrimaryRole('trader')", "3");
 	OO_CHECK_EVAL("system.countShipsWithRole('pirate', system.mainStation, 1000)", "4");
@@ -638,10 +639,10 @@ OO_TEST(counts)
 	OO_CHECK_LOG(sUniverse->_log, oo::str::format("countPrimary trader -1 nil; countRole pirate 1000 10; countScanClass %d -1 30", static_cast<int>(oo::ScanClass::kBuoy)));
 
 	// Bad arguments: none, a bad reference entity, a bad range, an unknown scan class.
-	OO_CHECK(Eval("system.countShipsWithPrimaryRole()").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.countShipsWithRole('x', 5)").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.countShipsWithRole('x', null)").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.countEntitiesWithScanClass('CLASS_NOT_A_CLASS')").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.countShipsWithPrimaryRole()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.countShipsWithRole('x', 5)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.countShipsWithRole('x', null)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.countEntitiesWithScanClass('CLASS_NOT_A_CLASS')").rfind("threw: ", 0) == 0);
 	OO_CHECK_LOG(sUniverse->_log, "");
 	// A range that is not a number converts to NaN, and is used.
 	OO_CHECK_EVAL("system.countShipsWithRole('x', system.sun, 'far')", "4");
@@ -649,15 +650,15 @@ OO_TEST(counts)
 }
 
 
-OO_TEST(searches)
+TEST(OOJSSystem, searches)
 {
-	SetUp();
+	::SetUp();
 	// In the universe's order without a reference entity, by distance from one with it.
 	OO_CHECK_EVAL("system.entitiesWithScanClass('CLASS_NEUTRAL').map(function (p) { return p.position.x; }).join()", "100,200");
 	OO_CHECK_EVAL("system.filteredEntities(this, function (e) { return true; }).map(function (p) { return p.position.x; }).join()", "300,100,200");
-	OO_CHECK(sUniverse->_lastRange == -1 && sUniverse->_lastRelativeTo == nullptr);
+	EXPECT_TRUE(sUniverse->_lastRange == -1 && sUniverse->_lastRelativeTo == nullptr);
 	OO_CHECK_EVAL("system.filteredEntities(this, function (e) { return true; }, system.sun, 500).map(function (p) { return p.position.x; }).join()", "100,200,300");
-	OO_CHECK(sUniverse->_lastRange == 500 && sUniverse->_lastRelativeTo == sUniverse->_sun);
+	EXPECT_TRUE(sUniverse->_lastRange == 500 && sUniverse->_lastRelativeTo == sUniverse->_sun);
 	OO_CHECK_EVAL("system.filteredEntities(this, function (e) { return e.position.x > 150; }, system.mainStation).map(function (p) { return p.position.x; }).join()", "200,300");
 	OO_CHECK_EVAL("system.entitiesWithScanClass('CLASS_NEUTRAL', system.stations[1]).map(function (p) { return p.position.x; }).join()", "200,100");
 	OO_CHECK_EVAL("system.filteredEntities(this, function (e) { return true; }, system.stations[1]).map(function (p) { return p.position.x; }).join()", "300,200,100");
@@ -669,16 +670,16 @@ OO_TEST(searches)
 	// The predicate's exception ends the search: #768 reports it and stops the script
 	// (OOJSNativeFailure()), as SpiderMonkey's Oolite did, so the script's own catch does not see it.
 	OO_CHECK_EVAL("system.filteredEntities(this, function (e) { throw new Error('nope'); })", "<evaluation failed>");
-	OO_CHECK(Eval("system.filteredEntities(this)").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.entitiesWithScanClass()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.filteredEntities(this)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.entitiesWithScanClass()").rfind("threw: ", 0) == 0);
 }
 
 
 // The legacy spawners, the static lookups, effects,
 // populators, waypoints and the ship creators.
-OO_TEST(legacySpawners)
+TEST(OOJSSystem, legacySpawners)
 {
-	SetUp();
+	::SetUp();
 	Log(sUniverse->_log);
 	Log(sPlayer->_log);
 	OO_CHECK_EVAL("system.legacy_addShips('trader', 2)", "undefined");
@@ -690,23 +691,23 @@ OO_TEST(legacySpawners)
 	OO_CHECK_EVAL("system.legacy_addShipsWithinRadius('police', 1, 'spm', [7, 8, 9], 1000)", "undefined");
 	OO_CHECK_LOG(sPlayer->_log, "addShipsAt trader 2 pwm 1.000000 2.000000 3.000000; addShipsAtPrecisely trader 3 wpu 4.000000 5.000000 6.000000; addShipsWithinRadius police 1 spm 7.000000 8.000000 9.000000 1000.000000");
 
-	OO_CHECK(Eval("system.legacy_addShips('trader', 65)").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.legacy_addShips('trader')").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.legacy_addSystemShips('pirate', 1)").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.legacy_addShipsAt('trader', 2, 'pwm')").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.legacy_addShipsAtPrecisely('trader', 0, 'pwm', 1, 2, 3)").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.legacy_addShipsWithinRadius('police', 1, 'spm', [7, 8, 9])").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.legacy_addShips('trader', 65)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.legacy_addShips('trader')").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.legacy_addSystemShips('pirate', 1)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.legacy_addShipsAt('trader', 2, 'pwm')").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.legacy_addShipsAtPrecisely('trader', 0, 'pwm', 1, 2, 3)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.legacy_addShipsWithinRadius('police', 1, 'spm', [7, 8, 9])").rfind("threw: ", 0) == 0);
 	// The coordinates are one vector argument: three numbers are not accepted.
 	OO_CHECK_EVAL("system.legacy_addShipsAt('trader', 2, 'pwm', 1, 2, 3)", "threw: System.legacy_addShipsAt: Invalid arguments (\"trader\", 2, \"pwm\", 1, 2, 3) -- expected role, positive count no greater than 64, coordinate scheme and coordinates.");
-	OO_CHECK(Eval("system.legacy_spawnShip()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.legacy_spawnShip()").rfind("threw: ", 0) == 0);
 	OO_CHECK_LOG(sUniverse->_log, "");
 	OO_CHECK_LOG(sPlayer->_log, "");
 }
 
 
-OO_TEST(staticLookups)
+TEST(OOJSSystem, staticLookups)
 {
-	SetUp();
+	::SetUp();
 	Log(sUniverse->_log);
 	OO_CHECK_EVAL("System.systemNameForID(5)", "System5");
 	OO_CHECK_EVAL("System.systemNameForID(99)", "null");
@@ -714,16 +715,16 @@ OO_TEST(staticLookups)
 	OO_CHECK_EVAL("System.systemIDForName('Lave')", "7");
 	OO_CHECK_EVAL("System.systemIDForName('Nowhere')", "-1");
 	OO_CHECK_LOG(sUniverse->_log, "systemName 5; systemName 99; findSystem Lave; findSystem Nowhere");
-	OO_CHECK(Eval("System.systemNameForID(-2)").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("System.systemNameForID(256)").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("System.systemIDForName()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("System.systemNameForID(-2)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("System.systemNameForID(256)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("System.systemIDForName()").rfind("threw: ", 0) == 0);
 	OO_CHECK_LOG(sUniverse->_log, "");
 }
 
 
-OO_TEST(visualEffects)
+TEST(OOJSSystem, visualEffects)
 {
-	SetUp();
+	::SetUp();
 	Log(sUniverse->_log);
 	sUniverse->_effectToAdd = nullptr;
 	OO_CHECK_EVAL("system.addVisualEffect('fx', [1, 2, 3])", "null");
@@ -731,15 +732,15 @@ OO_TEST(visualEffects)
 	OO_CHECK_EVAL("system.addVisualEffect('fx', new Vector3D(4, 5, 6)).position.x", "30");
 	OO_CHECK_LOG(sUniverse->_log, "addVisualEffect fx 1 2 3; addVisualEffect fx 4 5 6");
 	OO_CHECK_EVAL("system.addVisualEffect('fx', 4, 5, 6)", "threw: System.addVisualEffect: Invalid arguments (4) -- expected vector.");
-	OO_CHECK(Eval("system.addVisualEffect()").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.addVisualEffect('fx', 'here')").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.addVisualEffect()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.addVisualEffect('fx', 'here')").rfind("threw: ", 0) == 0);
 	OO_CHECK_LOG(sUniverse->_log, "");
 }
 
 
-OO_TEST(populators)
+TEST(OOJSSystem, populators)
 {
-	SetUp();
+	::SetUp();
 	Log(sUniverse->_log);
 	OO_CHECK_EVAL("system.setPopulator('mine')", "undefined");
 	OO_CHECK_EVAL("system.setPopulator('mine', null)", "undefined");
@@ -748,20 +749,20 @@ OO_TEST(populators)
 	OO_CHECK_EVAL("system.setPopulator('mine', { callback: function (pos) { }, priority: 50, coordinates: [1, 2, 3] })", "undefined");
 	OO_CHECK_LOG(sUniverse->_log, "setPopulator mine");
 	const oo::PList settings = sUniverse->_lastPopulator;
-	OO_CHECK(settings.isDict());
+	EXPECT_TRUE(settings.isDict());
 	const oo::PList *priority = settings.find("priority");
-	OO_CHECK(priority != nullptr && priority->doubleValue() == 50.0);
+	EXPECT_TRUE(priority != nullptr && priority->doubleValue() == 50.0);
 	const oo::PList *coordinates = settings.find("coordinates");
-	OO_CHECK(coordinates != nullptr && coordinates->isArray() && coordinates->count() == 3 && coordinates->at(2)->doubleValue() == 3.0);
+	EXPECT_TRUE(coordinates != nullptr && coordinates->isArray() && coordinates->count() == 3 && coordinates->at(2)->doubleValue() == 3.0);
 	const oo::PList *callbackObj = settings.find("callbackObj");
 	OOJSPopulatorDefinition *definition = callbackObj != nullptr ? OOJSPopulatorDefinitionIn(*callbackObj) : nullptr;
-	OO_CHECK(definition != nullptr);
+	EXPECT_TRUE(definition != nullptr);
 	if (definition != nullptr)
 	{
 		{	// as Eval()
 			JSContext *context = OOJSAcquireContext();
 			JSValue callback = definition->callback();	// owned
-			OO_CHECK(OOJSValueIsFunction(context, callback));
+			EXPECT_TRUE(OOJSValueIsFunction(context, callback));
 			JS_FreeValue(context, callback);
 			OOJSRelinquishContext(context);
 		}
@@ -769,38 +770,38 @@ OO_TEST(populators)
 
 	// No coordinates: none set.
 	OO_CHECK_EVAL("system.setPopulator('other', { callback: function (pos) { } })", "undefined");
-	OO_CHECK(sUniverse->_lastPopulator.find("coordinates") == nullptr && sUniverse->_lastPopulator.find("callbackObj") != nullptr);
+	EXPECT_TRUE(sUniverse->_lastPopulator.find("coordinates") == nullptr && sUniverse->_lastPopulator.find("callbackObj") != nullptr);
 	Log(sUniverse->_log);
 
-	OO_CHECK(Eval("system.setPopulator()").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.setPopulator(null, {})").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.setPopulator('mine', { priority: 5 })").rfind("threw: ", 0) == 0);	// no callback
+	EXPECT_TRUE(Eval("system.setPopulator()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.setPopulator(null, {})").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.setPopulator('mine', { priority: 5 })").rfind("threw: ", 0) == 0);	// no callback
 	OO_CHECK_LOG(sUniverse->_log, "");
 }
 
 
-OO_TEST(waypoints)
+TEST(OOJSSystem, waypoints)
 {
-	SetUp();
+	::SetUp();
 	Log(sUniverse->_log);
 	OO_CHECK_EVAL("system.setWaypoint('nav')", "undefined");
 	OO_CHECK_EVAL("system.setWaypoint('nav', [0, 0, 0], [1, 0, 0, 0], null)", "undefined");
 	OO_CHECK_LOG(sUniverse->_log, "defineWaypoint nav null; defineWaypoint nav null");
 	OO_CHECK_EVAL("system.setWaypoint('nav', [1, 2, 3], [1, 0, 0, 0], { size: 5 })", "undefined");
 	const std::string defined = Log(sUniverse->_log);
-	OO_CHECK(defined.rfind("defineWaypoint nav ", 0) == 0);
-	OO_CHECK(defined.find("size") != std::string::npos && defined.find("position") != std::string::npos && defined.find("orientation") != std::string::npos);
-	OO_CHECK(Eval("system.setWaypoint()").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.setWaypoint('nav', 'here', [1, 0, 0, 0], {})").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.setWaypoint('nav', [1, 2, 3], 'up', {})").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.setWaypoint('nav', [1, 2, 3], [1, 0, 0, 0], 5)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(defined.rfind("defineWaypoint nav ", 0) == 0);
+	EXPECT_TRUE(defined.find("size") != std::string::npos && defined.find("position") != std::string::npos && defined.find("orientation") != std::string::npos);
+	EXPECT_TRUE(Eval("system.setWaypoint()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.setWaypoint('nav', 'here', [1, 0, 0, 0], {})").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.setWaypoint('nav', [1, 2, 3], 'up', {})").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.setWaypoint('nav', [1, 2, 3], [1, 0, 0, 0], 5)").rfind("threw: ", 0) == 0);
 	OO_CHECK_LOG(sUniverse->_log, "");
 }
 
 
-OO_TEST(shipCreators)
+TEST(OOJSSystem, shipCreators)
 {
-	SetUp();
+	::SetUp();
 	Log(sUniverse->_log);
 	::ShipEntity *first = MakeShip(60);
 	::ShipEntity *second = MakeShip(61);
@@ -822,26 +823,23 @@ OO_TEST(shipCreators)
 	OO_CHECK_EVAL("system.addGroupToRoute('trader', 2)", "null");
 	Log(sUniverse->_log);
 
-	OO_CHECK(Eval("system.addShips()").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.addShips('trader', 0)").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.addShips('trader', 2, 'here')").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.addShips()").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.addShips('trader', 0)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.addShips('trader', 2, 'here')").rfind("threw: ", 0) == 0);
 	sUniverse->_shipsToAdd = { oo::Hold(first) };
 	OO_CHECK_EVAL("system.addShips('trader', 2, [1, 2, 3], 'far').length", "1");	// a radius that is not a number is NaN
 	OO_CHECK_LOG(sUniverse->_log, "addShipsAt 1 2 3 trader 2 nan 0");
 	sUniverse->_shipsToAdd.clear();
-	OO_CHECK(Eval("system.addShipsToRoute('trader', 2, 1.5)").rfind("threw: ", 0) == 0);
-	OO_CHECK(Eval("system.addShipsToRoute('trader', 2, 0.5, 'xy')").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.addShipsToRoute('trader', 2, 1.5)").rfind("threw: ", 0) == 0);
+	EXPECT_TRUE(Eval("system.addShipsToRoute('trader', 2, 0.5, 'xy')").rfind("threw: ", 0) == 0);
 	OO_CHECK_LOG(sUniverse->_log, "");
 }
 
 
-OO_TEST(cleanUp)
+TEST(OOJSSystem, cleanUp)
 {
 	stdfs::current_path(stdfs::temp_directory_path());
 	std::error_code ignored;
 	stdfs::remove_all(sRoot, ignored);
-	OO_CHECK(true);
+	EXPECT_TRUE(true);
 }
-
-
-OO_TEST_MAIN()

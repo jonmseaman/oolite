@@ -21,6 +21,8 @@
 #include <cstring>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "Color.h"
 #include "ConcreteTexture.h"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -33,7 +35,6 @@
 #include <vector>
 #include "PlanetTextureGenerator.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -53,7 +54,7 @@ namespace {
 // The loaders' sizes come from their one-time set-up, which a path with no
 // known extension runs (and then answers nil, reading nothing).
 void SetUp() {
-  OO_CHECK(OOTestGLContext());
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::AutoreleaseScope pool;
     (void)oo::TextureLoader::loaderWithPath(std::string("unknown.type"), oo::TextureFlags::kNone);
@@ -155,7 +156,7 @@ struct Generated {
 };
 
 void Generate(oo::TextureGenerator* generator, Generated& generated) {
-  OO_CHECK(generator->enqueue());
+  EXPECT_TRUE(generator->enqueue());
   if (std::optional<oo::TextureLoader::Result> loaded = generator->getResult()) {
     generated.ok = true;
     generated.pixMap = loaded->pixMap;
@@ -183,62 +184,62 @@ void ClearCache() {
 
 }  // namespace
 
-OO_TEST(settings) {
-  SetUp();
+TEST(OOPlanetTextureGenerator, settings) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     oo::TextureGenerator* generator =
         NewGenerator(PlanetInfo(false), (RANROTSeed){12345, 67890});
-    OO_CHECK(generator != nullptr &&
+    EXPECT_TRUE(generator != nullptr &&
              (dynamic_cast<oo::TextureGenerator*>(generator) != nullptr));
-    OO_CHECK(generator->textureOptions() ==
+    EXPECT_TRUE(generator->textureOptions() ==
              (oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear |
               oo::TextureFlags::kRepeatS | oo::TextureFlags::kNoShrink));
-    OO_CHECK(generator->path().value_or("").starts_with("OOPlanetTexture@"));
+    EXPECT_TRUE(generator->path().value_or("").starts_with("OOPlanetTexture@"));
 
     // Keyed by what it feeds (nothing yet: baked), the scale (512: 2), the size
     // (not known until it loads), the land fraction, the seed and the colours.
     const std::string key = generator->cacheKey().value_or("");
-    OO_CHECK(key.starts_with(
+    EXPECT_TRUE(key.starts_with(
         "OOPlanetTextureGenerator-diffuse-baked@2\n0,0/0.25/12345,67890/"));
-    OO_CHECK(generator->description().find("{seed: 12345,67890 land: 0.25}") !=
+    EXPECT_TRUE(generator->description().find("{seed: 12345,67890 land: 0.25}") !=
              std::string::npos);
   }
 }
 
-OO_TEST(generatesTheSurface) {
-  SetUp();
+TEST(OOPlanetTextureGenerator, generatesTheSurface) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     Generated a, b;
     Generate(NewGenerator(PlanetInfo(false), (RANROTSeed){1, 1}), a);
-    OO_CHECK(a.ok && a.format == oo::kPixMapRGBA && a.pixMap.width == 512 &&
+    EXPECT_TRUE(a.ok && a.format == oo::kPixMapRGBA && a.pixMap.width == 512 &&
              a.pixMap.height == 512 && a.pixMap.rowBytes == 2048);
 
     // The same seed and parameters give the same planet.
     Generate(NewGenerator(PlanetInfo(false), (RANROTSeed){1, 1}), b);
-    OO_CHECK(b.ok && b.size() == a.size() &&
+    EXPECT_TRUE(b.ok && b.size() == a.size() &&
              std::memcmp(a.bytes(), b.bytes(), a.size()) == 0);
 
     // 3D noise: twice as wide as high.
     Generated wide;
     Generate(NewGenerator(PlanetInfo(true), (RANROTSeed){1, 1}), wide);
-    OO_CHECK(wide.ok && wide.pixMap.width == 512 && wide.pixMap.height == 256);
+    EXPECT_TRUE(wide.ok && wide.pixMap.width == 512 && wide.pixMap.height == 256);
   }
 }
 
-OO_TEST(planetTexture) {
-  SetUp();
+TEST(OOPlanetTextureGenerator, planetTexture) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(Loaded(PlanetTexture(PlanetInfo(false), (RANROTSeed){2, 2}),
+    EXPECT_TRUE(Loaded(PlanetTexture(PlanetInfo(false), (RANROTSeed){2, 2}),
                     "OOPlanetTextureGenerator-diffuse-baked@2\n", 512, 512));
   }
   ClearCache();
 }
 
-OO_TEST(withSecondaryTexture) {
-  SetUp();
+TEST(OOPlanetTextureGenerator, withSecondaryTexture) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     // The normal map is filled when the surface is generated, so the surface is
@@ -246,48 +247,48 @@ OO_TEST(withSecondaryTexture) {
     // not wait for the surface's).
     Textures t =
         GenerateWithSecondary(PlanetInfo(false), (RANROTSeed){3, 3}, true);
-    OO_CHECK(t.ok && t.atmosphere == nullptr);
-    OO_CHECK(Loaded(t.texture, "OOPlanetTextureGenerator-diffuse-raw@2\n", 512,
+    EXPECT_TRUE(t.ok && t.atmosphere == nullptr);
+    EXPECT_TRUE(Loaded(t.texture, "OOPlanetTextureGenerator-diffuse-raw@2\n", 512,
                     512));
-    OO_CHECK(
+    EXPECT_TRUE(
         Loaded(t.secondary, "OOPlanetTextureGenerator-normal@2\n", 512, 512));
 
     Textures alone =
         GenerateWithSecondary(PlanetInfo(false), (RANROTSeed){4, 4}, false);
-    OO_CHECK(alone.ok && alone.secondary == nullptr);
-    OO_CHECK(Loaded(alone.texture, "OOPlanetTextureGenerator-diffuse-baked@2\n",
+    EXPECT_TRUE(alone.ok && alone.secondary == nullptr);
+    EXPECT_TRUE(Loaded(alone.texture, "OOPlanetTextureGenerator-diffuse-baked@2\n",
                     512, 512));
   }
   ClearCache();
 }
 
-OO_TEST(withAtmosphere) {
-  SetUp();
+TEST(OOPlanetTextureGenerator, withAtmosphere) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     Textures t = GenerateWithAtmosphere(PlanetInfo(false), (RANROTSeed){5, 5});
-    OO_CHECK(t.ok && t.secondary == nullptr);
-    OO_CHECK(Loaded(t.texture,
+    EXPECT_TRUE(t.ok && t.secondary == nullptr);
+    EXPECT_TRUE(Loaded(t.texture,
                     "OOPlanetTextureGenerator-diffuse-baked-atmo@2\n", 512,
                     512));
-    OO_CHECK(
+    EXPECT_TRUE(
         Loaded(t.atmosphere, "OOPlanetTextureGenerator-atmo@2\n", 512, 512));
 
     Textures all = GenerateAll(PlanetInfo(false), (RANROTSeed){6, 6}, true);
-    OO_CHECK(all.ok);
-    OO_CHECK(Loaded(all.texture,
+    EXPECT_TRUE(all.ok);
+    EXPECT_TRUE(Loaded(all.texture,
                     "OOPlanetTextureGenerator-diffuse-raw-atmo@2\n", 512, 512));
-    OO_CHECK(
+    EXPECT_TRUE(
         Loaded(all.secondary, "OOPlanetTextureGenerator-normal@2\n", 512, 512));
-    OO_CHECK(
+    EXPECT_TRUE(
         Loaded(all.atmosphere, "OOPlanetTextureGenerator-atmo@2\n", 512, 512));
 
     Textures noSecondary =
         GenerateAll(PlanetInfo(false), (RANROTSeed){7, 7}, false);
-    OO_CHECK(noSecondary.ok && noSecondary.secondary == nullptr);
-    OO_CHECK(Loaded(noSecondary.atmosphere, "OOPlanetTextureGenerator-atmo@2\n",
+    EXPECT_TRUE(noSecondary.ok && noSecondary.secondary == nullptr);
+    EXPECT_TRUE(Loaded(noSecondary.atmosphere, "OOPlanetTextureGenerator-atmo@2\n",
                     512, 512));
-    OO_CHECK(Loaded(noSecondary.texture,
+    EXPECT_TRUE(Loaded(noSecondary.texture,
                     "OOPlanetTextureGenerator-diffuse-baked-atmo@2\n", 512,
                     512));
   }
@@ -297,26 +298,26 @@ OO_TEST(withAtmosphere) {
 // --- The C++ API (after the conversion)
 // --------------------------------------------------------
 
-OO_TEST(cxxApi) {
-  SetUp();
+TEST(OOPlanetTextureGenerator, cxxApi) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     const std::shared_ptr<oo::PlanetTextureGenerator> generator =
         oo::PlanetTextureGenerator::generatorWithPlanetInfo(
             PlanetInfo(false), (RANROTSeed){12345, 67890});
-    OO_CHECK(generator &&
+    EXPECT_TRUE(generator &&
              generator->textureOptions() ==
                  (oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear |
                   oo::TextureFlags::kRepeatS | oo::TextureFlags::kNoShrink));
-    OO_CHECK(generator->descriptionComponents() ==
+    EXPECT_TRUE(generator->descriptionComponents() ==
              std::optional<std::string>("seed: 12345,67890 land: 0.25"));
-    OO_CHECK(generator->cacheKey().value_or("").starts_with(
+    EXPECT_TRUE(generator->cacheKey().value_or("").starts_with(
         "OOPlanetTextureGenerator-diffuse-baked@2\n"));
 
     // Loading fills the root's state; the old -getResult:format:width:height:
     // answers the result.
     generator->loadTexture();
-    OO_CHECK(generator->_width == 512 && generator->_height == 512 &&
+    EXPECT_TRUE(generator->_width == 512 && generator->_height == 512 &&
              generator->_data != nullptr);
     oo::PixMap pixMap = oo::kNullPixMap;
     oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
@@ -327,22 +328,20 @@ OO_TEST(cxxApi) {
       pixMap = loaded->pixMap;
       format = loaded->format;
     }
-    OO_CHECK(loaded.has_value() && format == oo::kPixMapRGBA &&
+    EXPECT_TRUE(loaded.has_value() && format == oo::kPixMapRGBA &&
              pixMap.width == 512);
     oo::FreePixMap(&pixMap);
 
     // The helper generators cross as OOTextureGenerators, named in their
     // descriptions.
     Textures all = GenerateAll(PlanetInfo(false), (RANROTSeed){8, 8}, true);
-    OO_CHECK(all.ok &&
+    EXPECT_TRUE(all.ok &&
              Loaded(all.texture,
                     "OOPlanetTextureGenerator-diffuse-raw-atmo@2\n", 512, 512));
-    OO_CHECK(
+    EXPECT_TRUE(
         Loaded(all.secondary, "OOPlanetTextureGenerator-normal@2\n", 512,
                512) &&
         Loaded(all.atmosphere, "OOPlanetTextureGenerator-atmo@2\n", 512, 512));
   }
   ClearCache();
 }
-
-OO_TEST_MAIN()

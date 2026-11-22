@@ -22,8 +22,9 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "CacheManager.h"
-#include "oo_test.hpp"
 #include "oofnd/FileSystem.hpp"
 
 /*	The asynchronous work manager (OOAsyncWorkManager.mm) starts worker
@@ -89,7 +90,7 @@ stdfs::path sRoot;
 
 void WriteText(const stdfs::path& path, const std::string& text) {
   stdfs::create_directories(path.parent_path());
-  OO_CHECK(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
+  EXPECT_TRUE(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
                              oo::fs::WriteMode::kDirect)
                .has_value());
 }
@@ -119,7 +120,7 @@ void SetUp() {
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
   SetGameVersion("9.9.9-test");
 }
@@ -128,63 +129,63 @@ oo::PList Str(const char* string) { return oo::PList(std::string(string)); }
 
 }  // namespace
 
-OO_TEST(sharedInstanceStartsEmpty) {
-  SetUp();
+TEST(OOCacheManager, sharedInstanceStartsEmpty) {
+  ::SetUp();
   {
-    OO_CHECK(!stdfs::exists(CacheFile()));
+    EXPECT_TRUE(!stdfs::exists(CacheFile()));
     oo::CacheManager* cache = oo::CacheManager::sharedCache();
-    OO_CHECK(cache != nullptr);
-    OO_CHECK(oo::CacheManager::sharedCache() == cache);
-    OO_CHECK(cache->pListForKey("key", "cache").isNull());
-    OO_CHECK(cache->descriptionComponents() ==
+    EXPECT_TRUE(cache != nullptr);
+    EXPECT_TRUE(oo::CacheManager::sharedCache() == cache);
+    EXPECT_TRUE(cache->pListForKey("key", "cache").isNull());
+    EXPECT_TRUE(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=no"));
 
     // Loading made no directory.
-    OO_CHECK(!stdfs::exists(sRoot / "GNUstep"));
-    OO_CHECK(!cache->cacheDirectoryPathCreatingIfNecessary(false).has_value());
-    OO_CHECK(!stdfs::exists(sRoot / "GNUstep"));
+    EXPECT_TRUE(!stdfs::exists(sRoot / "GNUstep"));
+    EXPECT_TRUE(!cache->cacheDirectoryPathCreatingIfNecessary(false).has_value());
+    EXPECT_TRUE(!stdfs::exists(sRoot / "GNUstep"));
   }
 }
 
-OO_TEST(entriesAndCaches) {
-  SetUp();
+TEST(OOCacheManager, entriesAndCaches) {
+  ::SetUp();
   {
     oo::CacheManager* cache = oo::CacheManager::sharedCache();
     cache->setPList(Str("one"), "a", "first");
     cache->setPList(oo::PList(2), "b", "first");
     cache->setPList(Str("three"), "a", "second");
-    OO_CHECK(cache->descriptionComponents() ==
+    EXPECT_TRUE(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=yes"));
-    OO_CHECK(cache->pListForKey("a", "first") == Str("one"));
-    OO_CHECK(cache->pListForKey("b", "first") == oo::PList(2));
-    OO_CHECK(cache->pListForKey("a", "second") == Str("three"));
-    OO_CHECK(cache->pListForKey("b", "second").isNull());
-    OO_CHECK(cache->pListForKey("a", "third").isNull());
+    EXPECT_TRUE(cache->pListForKey("a", "first") == Str("one"));
+    EXPECT_TRUE(cache->pListForKey("b", "first") == oo::PList(2));
+    EXPECT_TRUE(cache->pListForKey("a", "second") == Str("three"));
+    EXPECT_TRUE(cache->pListForKey("b", "second").isNull());
+    EXPECT_TRUE(cache->pListForKey("a", "third").isNull());
 
     // Replacing.
     cache->setPList(Str("uno"), "a", "first");
-    OO_CHECK(cache->pListForKey("a", "first") == Str("uno"));
+    EXPECT_TRUE(cache->pListForKey("a", "first") == Str("uno"));
 
     // Removing an entry, and entries or caches that are not there.
     cache->removeObjectForKey("b", "first");
-    OO_CHECK(cache->pListForKey("b", "first").isNull());
-    OO_CHECK(cache->pListForKey("a", "first") == Str("uno"));
+    EXPECT_TRUE(cache->pListForKey("b", "first").isNull());
+    EXPECT_TRUE(cache->pListForKey("a", "first") == Str("uno"));
     cache->removeObjectForKey("b", "first");
     cache->removeObjectForKey("b", "none");
     cache->clearCache("none");
 
     // Clearing one cache.
     cache->clearCache("second");
-    OO_CHECK(cache->pListForKey("a", "second").isNull());
-    OO_CHECK(cache->pListForKey("a", "first") == Str("uno"));
+    EXPECT_TRUE(cache->pListForKey("a", "second").isNull());
+    EXPECT_TRUE(cache->pListForKey("a", "first") == Str("uno"));
 
     cache->clearCache("first");
-    OO_CHECK(cache->pListForKey("a", "first").isNull());
+    EXPECT_TRUE(cache->pListForKey("a", "first").isNull());
   }
 }
 
-OO_TEST(flushWritesAndReloadReads) {
-  SetUp();
+TEST(OOCacheManager, flushWritesAndReloadReads) {
+  ::SetUp();
   {
     oo::CacheManager* cache = oo::CacheManager::sharedCache();
     cache->setPList(Str("kept"), "k", "flushed");
@@ -196,30 +197,30 @@ OO_TEST(flushWritesAndReloadReads) {
     gTasksAdded = gTasksPerformed = 0;
     cache->flush();
     // The write is one task; flushing marks the manager clean at once.
-    OO_CHECK(gTasksAdded == 1);
-    OO_CHECK(gTasksPerformed == 0);
-    OO_CHECK(cache->descriptionComponents() ==
+    EXPECT_TRUE(gTasksAdded == 1);
+    EXPECT_TRUE(gTasksPerformed == 0);
+    EXPECT_TRUE(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=no"));
     // Nothing to flush while clean.
     cache->flush();
-    OO_CHECK(gTasksAdded == 1);
+    EXPECT_TRUE(gTasksAdded == 1);
 
     cache->finishOngoingFlush();
-    OO_CHECK(gTasksPerformed == 1);
-    OO_CHECK(stdfs::exists(CacheFile()));
+    EXPECT_TRUE(gTasksPerformed == 1);
+    EXPECT_TRUE(stdfs::exists(CacheFile()));
     const std::string text = CacheFileText();
-    OO_CHECK(text.find("<plist") != std::string::npos);
-    OO_CHECK(text.find("9.9.9-test") != std::string::npos);
-    OO_CHECK(text.find("kept") != std::string::npos);
+    EXPECT_TRUE(text.find("<plist") != std::string::npos);
+    EXPECT_TRUE(text.find("9.9.9-test") != std::string::npos);
+    EXPECT_TRUE(text.find("kept") != std::string::npos);
     // Waiting again, with no write under way, does nothing.
     cache->finishOngoingFlush();
-    OO_CHECK(gTasksPerformed == 1);
+    EXPECT_TRUE(gTasksPerformed == 1);
 
     // The directory now exists, so it is answered without being made.
     const std::optional<std::string> directory =
         cache->cacheDirectoryPathCreatingIfNecessary(false);
-    OO_CHECK(directory.has_value());
-    OO_CHECK(directory.has_value() &&
+    EXPECT_TRUE(directory.has_value());
+    EXPECT_TRUE(directory.has_value() &&
              stdfs::equivalent(oo::fs::pathFromUTF8(*directory),
                                CacheFile().parent_path()));
 
@@ -227,108 +228,106 @@ OO_TEST(flushWritesAndReloadReads) {
     // back.
     cache->setPList(Str("unsaved"), "u", "flushed");
     cache->reloadAllCaches();
-    OO_CHECK(cache->pListForKey("u", "flushed").isNull());
-    OO_CHECK(cache->pListForKey("k", "flushed") == Str("kept"));
-    OO_CHECK(cache->pListForKey("d", "flushed") == oo::PList(dict));
-    OO_CHECK(cache->descriptionComponents() ==
+    EXPECT_TRUE(cache->pListForKey("u", "flushed").isNull());
+    EXPECT_TRUE(cache->pListForKey("k", "flushed") == Str("kept"));
+    EXPECT_TRUE(cache->pListForKey("d", "flushed") == oo::PList(dict));
+    EXPECT_TRUE(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=no"));
   }
 }
 
-OO_TEST(writesDisallowed) {
-  SetUp();
+TEST(OOCacheManager, writesDisallowed) {
+  ::SetUp();
   {
     oo::CacheManager* cache = oo::CacheManager::sharedCache();
     cache->setAllowCacheWrites(false);
     cache->setPList(Str("never written"), "n", "flushed");
     gTasksAdded = 0;
     cache->flush();
-    OO_CHECK(gTasksAdded == 0);
-    OO_CHECK(cache->descriptionComponents() ==
+    EXPECT_TRUE(gTasksAdded == 0);
+    EXPECT_TRUE(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=yes"));
 
     cache->setAllowCacheWrites(true);
     cache->flush();
-    OO_CHECK(gTasksAdded == 1);
+    EXPECT_TRUE(gTasksAdded == 1);
     cache->finishOngoingFlush();
-    OO_CHECK(CacheFileText().find("never written") != std::string::npos);
+    EXPECT_TRUE(CacheFileText().find("never written") != std::string::npos);
   }
 }
 
-OO_TEST(staleOrBadCacheDiscarded) {
-  SetUp();
+TEST(OOCacheManager, staleOrBadCacheDiscarded) {
+  ::SetUp();
   {
     oo::CacheManager* cache = oo::CacheManager::sharedCache();
-    OO_CHECK(cache->pListForKey("k", "flushed") == Str("kept"));
+    EXPECT_TRUE(cache->pListForKey("k", "flushed") == Str("kept"));
 
     // Another game version: the cache is dropped on reload, and the manager is
     // clean.
     SetGameVersion("1.0-other");
     cache->reloadAllCaches();
-    OO_CHECK(cache->pListForKey("k", "flushed").isNull());
-    OO_CHECK(cache->descriptionComponents() ==
+    EXPECT_TRUE(cache->pListForKey("k", "flushed").isNull());
+    EXPECT_TRUE(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=no"));
     // It still takes new entries.
     cache->setPList(Str("fresh"), "f", "new");
-    OO_CHECK(cache->pListForKey("f", "new") == Str("fresh"));
+    EXPECT_TRUE(cache->pListForKey("f", "new") == Str("fresh"));
 
     // A file that does not parse: no caches, and no crash.
     SetGameVersion("9.9.9-test");
     WriteText(CacheFile(), "this is not a property list {");
     cache->reloadAllCaches();
-    OO_CHECK(cache->pListForKey("f", "new").isNull());
+    EXPECT_TRUE(cache->pListForKey("f", "new").isNull());
     cache->setPList(Str("again"), "g", "new");
-    OO_CHECK(cache->pListForKey("g", "new") == Str("again"));
+    EXPECT_TRUE(cache->pListForKey("g", "new") == Str("again"));
   }
 }
 
-OO_TEST(cxxApi) {
-  SetUp();
+TEST(OOCacheManager, cxxApi) {
+  ::SetUp();
   {
     oo::CacheManager* cache = oo::CacheManager::sharedCache();
-    OO_CHECK(cache != nullptr);
-    OO_CHECK(oo::CacheManager::sharedCache() == cache);
+    EXPECT_TRUE(cache != nullptr);
+    EXPECT_TRUE(oo::CacheManager::sharedCache() == cache);
     cache->setPList(Str("c"), "k", "cxx");
-    OO_CHECK(cache->pListForKey("k", "cxx") == Str("c"));
-    OO_CHECK(cache->descriptionComponents() ==
+    EXPECT_TRUE(cache->pListForKey("k", "cxx") == Str("c"));
+    EXPECT_TRUE(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=yes"));
     cache->removeObjectForKey("k", "cxx");
-    OO_CHECK(cache->pListForKey("k", "cxx").isNull());
+    EXPECT_TRUE(cache->pListForKey("k", "cxx").isNull());
     cache->setPList(Str("d"), "k", "cxx");
     cache->clearCache("cxx");
-    OO_CHECK(cache->pListForKey("k", "cxx").isNull());
+    EXPECT_TRUE(cache->pListForKey("k", "cxx").isNull());
 
     gTasksAdded = gTasksPerformed = 0;
     cache->flush();
-    OO_CHECK(gTasksAdded == 1);
-    OO_CHECK(cache->descriptionComponents() ==
+    EXPECT_TRUE(gTasksAdded == 1);
+    EXPECT_TRUE(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=no"));
     cache->finishOngoingFlush();
-    OO_CHECK(gTasksPerformed == 1);
-    OO_CHECK(cache->cacheDirectoryPathCreatingIfNecessary(false).has_value());
+    EXPECT_TRUE(gTasksPerformed == 1);
+    EXPECT_TRUE(cache->cacheDirectoryPathCreatingIfNecessary(false).has_value());
   }
 }
 
-OO_TEST(clearAllCaches) {
-  SetUp();
+TEST(OOCacheManager, clearAllCaches) {
+  ::SetUp();
   {
     oo::CacheManager* cache = oo::CacheManager::sharedCache();
     cache->setPList(Str("v"), "k", "c1");
     cache->flush();
     cache->finishOngoingFlush();
-    OO_CHECK(cache->descriptionComponents() ==
+    EXPECT_TRUE(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=no"));
 
     cache->clearAllCaches();
-    OO_CHECK(cache->pListForKey("k", "c1").isNull());
-    OO_CHECK(cache->descriptionComponents() ==
+    EXPECT_TRUE(cache->pListForKey("k", "c1").isNull());
+    EXPECT_TRUE(cache->descriptionComponents() ==
              std::optional<std::string>("dirty=yes"));
     cache->setPList(Str("w"), "k", "c1");
-    OO_CHECK(cache->pListForKey("k", "c1") == Str("w"));
+    EXPECT_TRUE(cache->pListForKey("k", "c1") == Str("w"));
   }
   std::error_code ignored;
   stdfs::current_path(stdfs::temp_directory_path(), ignored);
   stdfs::remove_all(sRoot, ignored);
 }
-
-OO_TEST_MAIN()

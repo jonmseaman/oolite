@@ -13,6 +13,8 @@
    tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "CollisionRegion.h"
 #include "Entity.h"
 #include "SunEntity.h"
@@ -20,7 +22,6 @@
 extern PlayerEntity* gOOPlayer;
 #include <string>
 
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -90,32 +91,32 @@ std::shared_ptr<CollisionRegion> MakeTree() {
 
 }  // namespace
 
-OO_TEST(universeAlone) {
+TEST(CollisionRegion, universeAlone) {
   {
     std::shared_ptr<CollisionRegion> universe = MakeUniverse();
-    OO_CHECK(universe != nullptr);
-    OO_CHECK(universe->debugOut() == std::optional<std::string>("0:"));
-    OO_CHECK(universe->collisionDescription() == "p0 - c0");
-    OO_CHECK(EndsWith(universe->descriptionComponents().value_or(""),
+    EXPECT_TRUE(universe != nullptr);
+    EXPECT_TRUE(universe->debugOut() == std::optional<std::string>("0:"));
+    EXPECT_TRUE(universe->collisionDescription() == "p0 - c0");
+    EXPECT_TRUE(EndsWith(universe->descriptionComponents().value_or(""),
                       ", 0 subregions, 0 ents"));
   }
 }
 
-OO_TEST(subregionTree) {
+TEST(CollisionRegion, subregionTree) {
   {
     std::shared_ptr<CollisionRegion> universe = MakeTree();
-    OO_CHECK(universe->debugOut() == std::optional<std::string>("0:0:0:0:"));
-    OO_CHECK(EndsWith(universe->descriptionComponents().value_or(""),
+    EXPECT_TRUE(universe->debugOut() == std::optional<std::string>("0:0:0:0:"));
+    EXPECT_TRUE(EndsWith(universe->descriptionComponents().value_or(""),
                       ", 2 subregions, 0 ents"));
 
     universe->clearSubregions();
-    OO_CHECK(universe->debugOut() == std::optional<std::string>("0:"));
-    OO_CHECK(EndsWith(universe->descriptionComponents().value_or(""),
+    EXPECT_TRUE(universe->debugOut() == std::optional<std::string>("0:"));
+    EXPECT_TRUE(EndsWith(universe->descriptionComponents().value_or(""),
                       ", 0 subregions, 0 ents"));
   }
 }
 
-OO_TEST(entitiesAreFiled) {
+TEST(CollisionRegion, entitiesAreFiled) {
   {
     std::shared_ptr<CollisionRegion> universe = MakeTree();
     Entity* inner = MakeEntity(make_HPvector(1000, 0, 0), 5);
@@ -123,49 +124,49 @@ OO_TEST(entitiesAreFiled) {
     Entity* distant = MakeEntity(make_HPvector(1.0e7, 0, 0), 5);
 
     universe->clearEntityList();
-    OO_CHECK(universe->checkEntity(inner));
-    OO_CHECK(universe->checkEntity(second));
-    OO_CHECK(universe->checkEntity(distant));
+    EXPECT_TRUE(universe->checkEntity(inner));
+    EXPECT_TRUE(universe->checkEntity(second));
+    EXPECT_TRUE(universe->checkEntity(distant));
 
     // inner lies within the borders (radius + 32 km) of the first region's
     // nested one, and so does second (4 km away); distant is filed in the
     // universe itself.
-    OO_CHECK(universe->debugOut() == std::optional<std::string>("1:0:2:0:"));
-    OO_CHECK(RegionOf(distant) == universe.get());
-    OO_CHECK(RegionOf(inner) != nullptr && RegionOf(inner) != universe.get());
-    OO_CHECK(RegionOf(inner) == RegionOf(second));
-    OO_CHECK(RegionOf(inner)->debugOut() == std::optional<std::string>("2:"));
-    OO_CHECK(EndsWith(RegionOf(inner)->descriptionComponents().value_or(""),
+    EXPECT_TRUE(universe->debugOut() == std::optional<std::string>("1:0:2:0:"));
+    EXPECT_TRUE(RegionOf(distant) == universe.get());
+    EXPECT_TRUE(RegionOf(inner) != nullptr && RegionOf(inner) != universe.get());
+    EXPECT_TRUE(RegionOf(inner) == RegionOf(second));
+    EXPECT_TRUE(RegionOf(inner)->debugOut() == std::optional<std::string>("2:"));
+    EXPECT_TRUE(EndsWith(RegionOf(inner)->descriptionComponents().value_or(""),
                       ", 0 subregions, 2 ents"));
-    OO_CHECK(EndsWith(universe->descriptionComponents().value_or(""),
+    EXPECT_TRUE(EndsWith(universe->descriptionComponents().value_or(""),
                       ", 2 subregions, 1 ents"));
 
     // A region that is not the universe refuses an entity outside its borders.
-    OO_CHECK(!RegionOf(inner)->checkEntity(distant));
+    EXPECT_TRUE(!RegionOf(inner)->checkEntity(distant));
 
     // No collision chain (Universe builds it): nothing is checked.
     universe->findCollisions();
-    OO_CHECK(universe->collisionDescription() == "p0 - c0");
+    EXPECT_TRUE(universe->collisionDescription() == "p0 - c0");
     universe->findShadowedEntities();  // no Universe, so no sun: nothing to do
 
     universe->clearEntityList();
-    OO_CHECK(universe->debugOut() == std::optional<std::string>("0:0:0:0:"));
+    EXPECT_TRUE(universe->debugOut() == std::optional<std::string>("0:0:0:0:"));
   }
 }
 
-OO_TEST(entityListGrows) {
+TEST(CollisionRegion, entityListGrows) {
   {
     std::shared_ptr<CollisionRegion> universe = MakeUniverse();
     for (unsigned i = 0; i < COLLISION_MAX_ENTITIES * 3; i++) {
       universe->addEntity(MakeEntity(make_HPvector(i, 0, 0), 1));
     }
-    OO_CHECK(universe->debugOut() ==
+    EXPECT_TRUE(universe->debugOut() ==
              std::optional<std::string>(
                  std::to_string(COLLISION_MAX_ENTITIES * 3) + ":"));
   }
 }
 
-OO_TEST(shadowGeometry) {
+TEST(CollisionRegion, shadowGeometry) {
   {
     // The function reads only Entity members of the sun, which is C++: a C++
     // sun with the same position and radius.
@@ -177,34 +178,32 @@ OO_TEST(shadowGeometry) {
     Entity* behind = MakeEntity(make_HPvector(0, 0, -100), 50);
     Entity* small = MakeEntity(make_HPvector(0, 0, 100), 0.5f);
     Occlusion o = shadowAtPointOcclusion(kZeroHPVector, 1, between, sun);
-    OO_CHECK(o.occluded);
-    OO_CHECK(o.value == 0.0f);
+    EXPECT_TRUE(o.occluded);
+    EXPECT_TRUE(o.value == 0.0f);
 
     o = shadowAtPointOcclusion(kZeroHPVector, 1, behind, sun);
-    OO_CHECK(!o.occluded);
-    OO_CHECK(o.value == 1.5f);
+    EXPECT_TRUE(!o.occluded);
+    EXPECT_TRUE(o.value == 1.5f);
 
     o = shadowAtPointOcclusion(kZeroHPVector, 1, small,
                                sun);  // smaller can't shade bigger
-    OO_CHECK(!o.occluded);
-    OO_CHECK(o.value == 1.5f);
+    EXPECT_TRUE(!o.occluded);
+    EXPECT_TRUE(o.value == 1.5f);
   }
 }
 
-OO_TEST(cxxRegion) {
+TEST(CollisionRegion, cxxRegion) {
   {
     std::shared_ptr<CollisionRegion> universe = MakeUniverse();
     universe->addSubregionAtPosition(make_HPvector(1000, 0, 0), 100);
     universe->addSubregionAtPosition(make_HPvector(5000, 0, 0), 100);
-    OO_CHECK(universe->debugOut() == std::optional<std::string>("0:0:0:"));
-    OO_CHECK(
+    EXPECT_TRUE(universe->debugOut() == std::optional<std::string>("0:0:0:"));
+    EXPECT_TRUE(
         EndsWith(*universe->descriptionComponents(), ", 2 subregions, 0 ents"));
 
     Entity* entity = MakeEntity(make_HPvector(1.0e7, 0, 0), 5);
-    OO_CHECK(universe->checkEntity(entity));
-    OO_CHECK(RegionOf(entity) == universe.get());
-    OO_CHECK(universe->collisionDescription() == "p0 - c0");
+    EXPECT_TRUE(universe->checkEntity(entity));
+    EXPECT_TRUE(RegionOf(entity) == universe.get());
+    EXPECT_TRUE(universe->collisionDescription() == "p0 - c0");
   }
 }
-
-OO_TEST_MAIN()

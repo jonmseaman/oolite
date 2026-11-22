@@ -14,9 +14,10 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "CommodityMarket.h"
 #include "StringExpander.h"
-#include "oo_test.hpp"
 
 // The expander: "<string>". A test replacement, not a stub: the names and
 // comments go through it.
@@ -81,108 +82,108 @@ using Goods = std::vector<std::string>;
 
 }  // namespace
 
-OO_TEST(goodsAndDefinitions) {
+TEST(OOCommodityMarket, goodsAndDefinitions) {
   {
     std::shared_ptr<oo::CommodityMarket> m = Market();
-    OO_CHECK(m->count() == 5);
-    OO_CHECK(m->goods() ==
+    EXPECT_TRUE(m->count() == 5);
+    EXPECT_TRUE(m->goods() ==
              Goods({"alloys", "radioactives", "food", "furs", "gems"}));
-    OO_CHECK(m->dictionaryForScripting().count() == 5);
-    OO_CHECK(m->definitionForGood("radioactives") ==
+    EXPECT_TRUE(m->dictionaryForScripting().count() == 5);
+    EXPECT_TRUE(m->definitionForGood("radioactives") ==
              oo::PList(oo::PList::Dict{}));  // not a dictionary: an empty one
-    OO_CHECK(m->definitionForGood("unobtainium").isNull());
-    OO_CHECK(m->definitionForGood("furs").get<int>("legality_import") == 2);
+    EXPECT_TRUE(m->definitionForGood("unobtainium").isNull());
+    EXPECT_TRUE(m->definitionForGood("furs").get<int>("legality_import") == 2);
 
     // Names and comments, expanded; the defaults for a missing text or good.
-    OO_CHECK(m->nameForGood("food") == std::optional<std::string>("<Food>"));
-    OO_CHECK(m->nameForGood("radioactives") ==
+    EXPECT_TRUE(m->nameForGood("food") == std::optional<std::string>("<Food>"));
+    EXPECT_TRUE(m->nameForGood("radioactives") ==
              std::optional<std::string>("<[oolite-unknown-commodity-name]>"));
-    OO_CHECK(m->nameForGood("unobtainium") ==
+    EXPECT_TRUE(m->nameForGood("unobtainium") ==
              std::optional<std::string>("<[oolite-unknown-commodity-name]>"));
-    OO_CHECK(m->commentForGood("food") ==
+    EXPECT_TRUE(m->commentForGood("food") ==
              std::optional<std::string>("<Tasty>"));
-    OO_CHECK(m->commentForGood("furs") ==
+    EXPECT_TRUE(m->commentForGood("furs") ==
              std::optional<std::string>("<[oolite-commodity-no-comment]>"));
-    OO_CHECK(m->commentForGood("unobtainium") ==
+    EXPECT_TRUE(m->commentForGood("unobtainium") ==
              std::optional<std::string>("<[oolite-unknown-commodity-name]>"));
-    OO_CHECK(m->shortCommentForGood("food") ==
+    EXPECT_TRUE(m->shortCommentForGood("food") ==
              std::optional<std::string>("<yum>"));
-    OO_CHECK(
+    EXPECT_TRUE(
         m->shortCommentForGood("furs") ==
         std::optional<std::string>("<[oolite-commodity-no-short-comment]>"));
-    OO_CHECK(m->shortCommentForGood("unobtainium") ==
+    EXPECT_TRUE(m->shortCommentForGood("unobtainium") ==
              std::optional<std::string>("<[oolite-unknown-commodity-name]>"));
 
     // Numbers, and what an unknown good answers.
-    OO_CHECK(m->priceForGood("furs") == 560 && m->priceForGood("alloys") == 0 &&
+    EXPECT_TRUE(m->priceForGood("furs") == 560 && m->priceForGood("alloys") == 0 &&
              m->priceForGood("unobtainium") == 0);
-    OO_CHECK(m->quantityForGood("food") == 20 &&
+    EXPECT_TRUE(m->quantityForGood("food") == 20 &&
              m->quantityForGood("unobtainium") == 0);
-    OO_CHECK(m->massUnitForGood("food") == oo::MassUnit::kTons &&
+    EXPECT_TRUE(m->massUnitForGood("food") == oo::MassUnit::kTons &&
              m->massUnitForGood("furs") == oo::MassUnit::kKilograms &&
              m->massUnitForGood("gems") == oo::MassUnit::kGrams);
-    OO_CHECK(m->massUnitForGood("alloys") == oo::MassUnit::kUnknown &&
+    EXPECT_TRUE(m->massUnitForGood("alloys") == oo::MassUnit::kUnknown &&
              m->massUnitForGood("unobtainium") == oo::MassUnit::kTons);
-    OO_CHECK(m->exportLegalityForGood("furs") == 1 &&
+    EXPECT_TRUE(m->exportLegalityForGood("furs") == 1 &&
              m->importLegalityForGood("furs") == 2);
-    OO_CHECK(m->exportLegalityForGood("food") == 0 &&
+    EXPECT_TRUE(m->exportLegalityForGood("food") == 0 &&
              m->importLegalityForGood("unobtainium") == 0);
-    OO_CHECK(m->capacityForGood("gems") == 10 &&
+    EXPECT_TRUE(m->capacityForGood("gems") == 10 &&
              m->capacityForGood("food") == MAIN_SYSTEM_MARKET_LIMIT &&
              m->capacityForGood("unobtainium") == 0);
-    OO_CHECK(m->trumbleOpinionForGood("food") == 1.0f &&
+    EXPECT_TRUE(m->trumbleOpinionForGood("food") == 1.0f &&
              m->trumbleOpinionForGood("furs") == 0.5f &&
              m->trumbleOpinionForGood("gems") == 0.0f);
-    OO_CHECK(m->trumbleOpinionForGood("unobtainium") == 0.0f);
+    EXPECT_TRUE(m->trumbleOpinionForGood("unobtainium") == 0.0f);
 
     // A new good resorts; replacing one keeps the count.
     m->setGood("aardvarks", Good({{"sort_order", oo::PList(1)}}));
-    OO_CHECK(m->goods() == Goods({"alloys", "radioactives", "aardvarks", "food",
+    EXPECT_TRUE(m->goods() == Goods({"alloys", "radioactives", "aardvarks", "food",
                                   "furs", "gems"}));
     m->setGood("gems", Good({{"sort_order", oo::PList(-1)}}));
-    OO_CHECK(m->count() == 6 && m->goods().front() == "gems");
+    EXPECT_TRUE(m->count() == 6 && m->goods().front() == "gems");
   }
 }
 
-OO_TEST(pricesAndQuantities) {
+TEST(OOCommodityMarket, pricesAndQuantities) {
   {
     std::shared_ptr<oo::CommodityMarket> m = Market();
-    OO_CHECK(m->setPrice(99, "food") && m->priceForGood("food") == 99);
-    OO_CHECK(!m->setPrice(99, "unobtainium"));
+    EXPECT_TRUE(m->setPrice(99, "food") && m->priceForGood("food") == 99);
+    EXPECT_TRUE(!m->setPrice(99, "unobtainium"));
 
-    OO_CHECK(m->setQuantity(10, "gems") && m->quantityForGood("gems") == 10);
-    OO_CHECK(!m->setQuantity(11, "gems") &&
+    EXPECT_TRUE(m->setQuantity(10, "gems") && m->quantityForGood("gems") == 10);
+    EXPECT_TRUE(!m->setQuantity(11, "gems") &&
              m->quantityForGood("gems") == 10);  // over capacity
-    OO_CHECK(!m->setQuantity(1, "unobtainium"));
-    OO_CHECK(!m->addQuantity(1, "gems"));
-    OO_CHECK(m->removeQuantity(4, "gems") && m->quantityForGood("gems") == 6);
-    OO_CHECK(m->addQuantity(4, "gems") && m->quantityForGood("gems") == 10);
-    OO_CHECK(!m->removeQuantity(11, "gems") &&
+    EXPECT_TRUE(!m->setQuantity(1, "unobtainium"));
+    EXPECT_TRUE(!m->addQuantity(1, "gems"));
+    EXPECT_TRUE(m->removeQuantity(4, "gems") && m->quantityForGood("gems") == 6);
+    EXPECT_TRUE(m->addQuantity(4, "gems") && m->quantityForGood("gems") == 10);
+    EXPECT_TRUE(!m->removeQuantity(11, "gems") &&
              m->quantityForGood("gems") == 10);
-    OO_CHECK(m->addQuantity(107, "food") && m->quantityForGood("food") == 127);
-    OO_CHECK(!m->addQuantity(1, "food"));
-    OO_CHECK(!m->addQuantity(1, "unobtainium") &&
+    EXPECT_TRUE(m->addQuantity(107, "food") && m->quantityForGood("food") == 127);
+    EXPECT_TRUE(!m->addQuantity(1, "food"));
+    EXPECT_TRUE(!m->addQuantity(1, "unobtainium") &&
              !m->removeQuantity(1, "unobtainium"));
 
-    OO_CHECK(m->setComment("New", "furs") &&
+    EXPECT_TRUE(m->setComment("New", "furs") &&
              m->commentForGood("furs") == std::optional<std::string>("<New>"));
-    OO_CHECK(m->setShortComment("new", "furs") &&
+    EXPECT_TRUE(m->setShortComment("new", "furs") &&
              m->shortCommentForGood("furs") ==
                  std::optional<std::string>("<new>"));
-    OO_CHECK(!m->setComment("x", "unobtainium") &&
+    EXPECT_TRUE(!m->setComment("x", "unobtainium") &&
              !m->setShortComment("x", "unobtainium"));
 
     m->removeAllGoods();
     for (const std::string& good : m->goods())
-      OO_CHECK(m->quantityForGood(good) == 0);
-    OO_CHECK(m->priceForGood("food") == 99);
+      EXPECT_TRUE(m->quantityForGood(good) == 0);
+    EXPECT_TRUE(m->priceForGood("food") == 99);
   }
 }
 
-OO_TEST(savedAmounts) {
+TEST(OOCommodityMarket, savedAmounts) {
   {
     std::shared_ptr<oo::CommodityMarket> m = Market();
-    OO_CHECK(m->savePlayerAmounts() ==
+    EXPECT_TRUE(m->savePlayerAmounts() ==
              oo::PList(oo::PList::Array{
                  oo::PList(oo::PList::Array{oo::PList("alloys"),
                                             oo::PList::unsignedInteger(0)}),
@@ -194,7 +195,7 @@ OO_TEST(savedAmounts) {
                                             oo::PList::unsignedInteger(0)}),
                  oo::PList(oo::PList::Array{oo::PList("gems"),
                                             oo::PList::unsignedInteger(3)})}));
-    OO_CHECK(m->saveStationAmounts().at(2) != nullptr &&
+    EXPECT_TRUE(m->saveStationAmounts().at(2) != nullptr &&
              *m->saveStationAmounts().at(2) ==
                  oo::PList(oo::PList::Array{oo::PList("food"),
                                             oo::PList::unsignedInteger(20),
@@ -211,12 +212,12 @@ OO_TEST(savedAmounts) {
         oo::PList(oo::PList::Array{oo::PList("unobtainium"), oo::PList(1)}),
         oo::PList(oo::PList::Array{oo::PList("alloys"), oo::PList(500)}),
         oo::PList(oo::PList::Array{oo::PList(7), oo::PList(1)})}));
-    OO_CHECK(player->quantityForGood("furs") == 5 &&
+    EXPECT_TRUE(player->quantityForGood("furs") == 5 &&
              player->quantityForGood("gems") == 2);
-    OO_CHECK(player->quantityForGood("food") == 0 &&
+    EXPECT_TRUE(player->quantityForGood("food") == 0 &&
              player->quantityForGood("alloys") == 0);
     player->loadPlayerAmounts(oo::PList());
-    OO_CHECK(player->quantityForGood("furs") == 0);
+    EXPECT_TRUE(player->quantityForGood("furs") == 0);
 
     std::shared_ptr<oo::CommodityMarket> station = Market();
     station->loadStationAmounts(oo::PList(oo::PList::Array{
@@ -226,18 +227,18 @@ OO_TEST(savedAmounts) {
             oo::PList::Array{oo::PList("<Food>"), oo::PList(6), oo::PList(41)}),
         oo::PList(oo::PList::Array{oo::PList("unobtainium"), oo::PList(1),
                                    oo::PList(1)})}));
-    OO_CHECK(station->quantityForGood("furs") == 5 &&
+    EXPECT_TRUE(station->quantityForGood("furs") == 5 &&
              station->priceForGood("furs") == 600);
-    OO_CHECK(station->quantityForGood("food") == 6 &&
+    EXPECT_TRUE(station->quantityForGood("food") == 6 &&
              station->priceForGood("food") == 41);
-    OO_CHECK(station->quantityForGood("gems") == 3 &&
+    EXPECT_TRUE(station->quantityForGood("gems") == 3 &&
              station->priceForGood("gems") == 500);  // untouched
   }
 }
 
-OO_TEST(cxxClass) {
+TEST(OOCommodityMarket, cxxClass) {
   std::shared_ptr<oo::CommodityMarket> m = oo::makeShared<oo::CommodityMarket>();
-  OO_CHECK(m->count() == 0 && m->goods().empty() &&
+  EXPECT_TRUE(m->count() == 0 && m->goods().empty() &&
            m->savePlayerAmounts() == oo::PList(oo::PList::Array{}));
   m->setGood("gems", Good({{"name", oo::PList("Gem-stones")},
                            {"sort_order", oo::PList(2)},
@@ -245,15 +246,15 @@ OO_TEST(cxxClass) {
                            {"price", oo::PList(500)}}));
   m->setGood("food",
              Good({{"name", oo::PList("Food")}, {"sort_order", oo::PList(1)}}));
-  OO_CHECK(m->goods() == Goods({"food", "gems"}));
-  OO_CHECK(m->setQuantity(10, "gems") && !m->addQuantity(1, "gems") &&
+  EXPECT_TRUE(m->goods() == Goods({"food", "gems"}));
+  EXPECT_TRUE(m->setQuantity(10, "gems") && !m->addQuantity(1, "gems") &&
            m->removeQuantity(3, "gems"));
-  OO_CHECK(m->quantityForGood("gems") == 7 && m->priceForGood("gems") == 500 &&
+  EXPECT_TRUE(m->quantityForGood("gems") == 7 && m->priceForGood("gems") == 500 &&
            m->capacityForGood("food") == MAIN_SYSTEM_MARKET_LIMIT);
-  OO_CHECK(m->nameForGood("gems") ==
+  EXPECT_TRUE(m->nameForGood("gems") ==
            std::optional<std::string>("<Gem-stones>"));
-  OO_CHECK(m->definitionForGood("unobtainium").isNull());
-  OO_CHECK(m->saveStationAmounts() ==
+  EXPECT_TRUE(m->definitionForGood("unobtainium").isNull());
+  EXPECT_TRUE(m->saveStationAmounts() ==
            oo::PList(oo::PList::Array{
                oo::PList(oo::PList::Array{oo::PList("food"),
                                           oo::PList::unsignedInteger(0),
@@ -263,18 +264,16 @@ OO_TEST(cxxClass) {
                                           oo::PList::unsignedInteger(500)})}));
 }
 
-OO_TEST(facadeIdentity) {
+TEST(OOCommodityMarket, facadeIdentity) {
   {
     // A C++ market sees its goods.
     std::shared_ptr<oo::CommodityMarket> cxxMarket = oo::makeShared<oo::CommodityMarket>();
     cxxMarket->setGood("food", Good({{"price", oo::PList(3)}}));
-    OO_CHECK(cxxMarket->priceForGood("food") == 3);
+    EXPECT_TRUE(cxxMarket->priceForGood("food") == 3);
     cxxMarket->setPrice(4, "food");
-    OO_CHECK(cxxMarket->priceForGood("food") == 4);
+    EXPECT_TRUE(cxxMarket->priceForGood("food") == 4);
 
-    OO_CHECK(oo::makeShared<oo::CommodityMarket>() !=
+    EXPECT_TRUE(oo::makeShared<oo::CommodityMarket>() !=
              oo::makeShared<oo::CommodityMarket>());  // distinct objects, as before
   }
 }
-
-OO_TEST_MAIN()

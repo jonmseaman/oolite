@@ -17,6 +17,8 @@
 	planet only. Run: bash tools/check-core-tests.sh
 */
 
+#include <gtest/gtest.h>
+
 #include "PlanetEntity.h"
 #include "PlayerEntity.h"	// PLAYER is C++
 #include "EntityOOJavaScriptExtensions.h"
@@ -26,7 +28,6 @@
 #include "Texture.h"
 #include "Universe.h"
 
-#include "oo_test.hpp"
 #include "legacy_random.h"
 
 #include <cmath>
@@ -177,155 +178,155 @@ oo::PlanetEntity *Miniature(oo::PlanetEntity *planet)
 }	// namespace
 
 
-OO_TEST(moon)
+TEST(OOPlanetEntity, moon)
 {
 	{
-		SetUp();
+		::SetUp();
 		oo::PlanetEntity *moon = Planet(false);
-		OO_CHECK(moon != nullptr && dynamic_cast<oo::PlanetEntity *>(static_cast<Entity *>(moon)) != nullptr);
-		OO_CHECK(moon->radius() == 50000.0);
-		OO_CHECK(moon->collisionRadius() == 50000.0f);
-		OO_CHECK(moon->getEnergy() == 50000.0f * 1000.0f);
-		OO_CHECK(moon->status() == oo::EntityStatus::kActive);
-		OO_CHECK(moon->getScanClass() == oo::ScanClass::kNoDraw);
-		OO_CHECK(moon->isPlanet() && moon->isVisible());
-		OO_CHECK(moon->planetType() == oo::StellarBodyType::kMoon);
-		OO_CHECK(!moon->hasAtmosphere());
-		OO_CHECK(moon->rotationalVelocity() == (double)0.02f);
-		OO_CHECK(QuaternionNear(moon->getOrientation(), (Quaternion){ (float)M_SQRT1_2, (float)M_SQRT1_2, 0, 0 }));
-		OO_CHECK(moon->airColor() == nullptr);
-		OO_CHECK(moon->airColorMixRatio() == 0.5f && moon->airDensity() == 0.75f);
+		EXPECT_TRUE(moon != nullptr && dynamic_cast<oo::PlanetEntity *>(static_cast<Entity *>(moon)) != nullptr);
+		EXPECT_TRUE(moon->radius() == 50000.0);
+		EXPECT_TRUE(moon->collisionRadius() == 50000.0f);
+		EXPECT_TRUE(moon->getEnergy() == 50000.0f * 1000.0f);
+		EXPECT_TRUE(moon->status() == oo::EntityStatus::kActive);
+		EXPECT_TRUE(moon->getScanClass() == oo::ScanClass::kNoDraw);
+		EXPECT_TRUE(moon->isPlanet() && moon->isVisible());
+		EXPECT_TRUE(moon->planetType() == oo::StellarBodyType::kMoon);
+		EXPECT_TRUE(!moon->hasAtmosphere());
+		EXPECT_TRUE(moon->rotationalVelocity() == (double)0.02f);
+		EXPECT_TRUE(QuaternionNear(moon->getOrientation(), (Quaternion){ (float)M_SQRT1_2, (float)M_SQRT1_2, 0, 0 }));
+		EXPECT_TRUE(moon->airColor() == nullptr);
+		EXPECT_TRUE(moon->airColorMixRatio() == 0.5f && moon->airDensity() == 0.75f);
 		// The land parameters always set an illumination colour.
-		OO_CHECK(moon->illuminationColor() != nullptr);
+		EXPECT_TRUE(moon->illuminationColor() != nullptr);
 		Vector threshold = moon->terminatorThresholdVector();
-		OO_CHECK(Near(threshold.x, 0.105) && Near(threshold.y, 0.18) && Near(threshold.z, 0.28));
+		EXPECT_TRUE(Near(threshold.x, 0.105) && Near(threshold.y, 0.18) && Near(threshold.z, 0.28));
 		// The texture was asked for as a cube map of the dictionary's name, and not found.
-		OO_CHECK(sTexturesAsked.size() == 1 && sTexturesAsked[0] == "missing.png");
-		OO_CHECK(!moon->textureFileName().has_value());
-		OO_CHECK(moon->material() == nullptr && moon->atmosphereMaterial() == nullptr && moon->atmosphereShaderMaterial() == nullptr);
-		OO_CHECK(moon->isFinishedLoading());
+		EXPECT_TRUE(sTexturesAsked.size() == 1 && sTexturesAsked[0] == "missing.png");
+		EXPECT_TRUE(!moon->textureFileName().has_value());
+		EXPECT_TRUE(moon->material() == nullptr && moon->atmosphereMaterial() == nullptr && moon->atmosphereShaderMaterial() == nullptr);
+		EXPECT_TRUE(moon->isFinishedLoading());
 		// The system data's planet name, expanded.
-		OO_CHECK(moon->name() == std::optional<std::string>("Lave"));
+		EXPECT_TRUE(moon->name() == std::optional<std::string>("Lave"));
 	}
 }
 
 
-OO_TEST(planetWithAtmosphere)
+TEST(OOPlanetEntity, planetWithAtmosphere)
 {
 	{
-		SetUp();
+		::SetUp();
 		oo::PlanetEntity *planet = Planet(true);
-		OO_CHECK(planet->planetType() == oo::StellarBodyType::kNormalPlanet);
-		OO_CHECK(planet->hasAtmosphere());
+		EXPECT_TRUE(planet->planetType() == oo::StellarBodyType::kNormalPlanet);
+		EXPECT_TRUE(planet->hasAtmosphere());
 		// The dictionary's air colour, through its hue, saturation and brightness.
 		oo::Color *air = planet->airColor();
-		OO_CHECK(air != nullptr);
-		OO_CHECK(air != nullptr && Near(air->redComponent(), 0.2, 1e-3) && Near(air->greenComponent(), 0.4, 1e-3) && Near(air->blueComponent(), 0.6, 1e-3));
+		EXPECT_TRUE(air != nullptr);
+		EXPECT_TRUE(air != nullptr && Near(air->redComponent(), 0.2, 1e-3) && Near(air->greenComponent(), 0.4, 1e-3) && Near(air->blueComponent(), 0.6, 1e-3));
 		Vector airVector = planet->airColorAsVector();
-		OO_CHECK(Near(airVector.x, 0.2, 1e-3) && Near(airVector.y, 0.4, 1e-3) && Near(airVector.z, 0.6, 1e-3));
-		OO_CHECK(Near(planet->airColorMixRatio(), 0.6));
+		EXPECT_TRUE(Near(airVector.x, 0.2, 1e-3) && Near(airVector.y, 0.4, 1e-3) && Near(airVector.z, 0.6, 1e-3));
+		EXPECT_TRUE(Near(planet->airColorMixRatio(), 0.6));
 		// The system data's air density.
-		OO_CHECK(Near(planet->airDensity(), 0.4));
-		OO_CHECK(planet->rotationalVelocity() == (double)0.02f);
-		OO_CHECK(sTexturesAsked.size() == 1);
+		EXPECT_TRUE(Near(planet->airDensity(), 0.4));
+		EXPECT_TRUE(planet->rotationalVelocity() == (double)0.02f);
+		EXPECT_TRUE(sTexturesAsked.size() == 1);
 	}
 }
 
 
-OO_TEST(clockTurnsThePlanet)
+TEST(OOPlanetEntity, clockTurnsThePlanet)
 {
 	{
-		SetUp();
+		::SetUp();
 		sPlayer->_clock = 86400.0 * 3 + 100.0;	// 100 s into the day
 		oo::PlanetEntity *planet = Planet(false);
 		Quaternion expected = (Quaternion){ (float)M_SQRT1_2, (float)M_SQRT1_2, 0, 0 };
 		quaternion_rotate_about_axis(&expected, vector_up_from_quaternion(expected), 0.02f * 100);
-		OO_CHECK(QuaternionNear(planet->getOrientation(), expected));
+		EXPECT_TRUE(QuaternionNear(planet->getOrientation(), expected));
 	}
 }
 
 
-OO_TEST(shaderValues)
+TEST(OOPlanetEntity, shaderValues)
 {
 	{
-		SetUp();
+		::SetUp();
 		oo::PlanetEntity *planet = Planet(false);
 
 		std::shared_ptr<oo::Color>	red = oo::Color::colorWithRed(1.0f, 0.0f, 0.0f, 1.0f);
 		planet->setAirColor(red.get());
-		OO_CHECK(planet->airColor() == red.get());
+		EXPECT_TRUE(planet->airColor() == red.get());
 		planet->setAirColor(nullptr);		// ignored
-		OO_CHECK(planet->airColor() == red.get());
+		EXPECT_TRUE(planet->airColor() == red.get());
 		Vector v = planet->airColorAsVector();
-		OO_CHECK(v.x == 1.0f && v.y == 0.0f && v.z == 0.0f);
+		EXPECT_TRUE(v.x == 1.0f && v.y == 0.0f && v.z == 0.0f);
 
 		std::shared_ptr<oo::Color>	blue = oo::Color::colorWithRed(0.0f, 0.0f, 1.0f, 1.0f);
 		planet->setIlluminationColor(blue.get());
-		OO_CHECK(planet->illuminationColor() == blue.get());
+		EXPECT_TRUE(planet->illuminationColor() == blue.get());
 		planet->setIlluminationColor(nullptr);	// ignored
-		OO_CHECK(planet->illuminationColor() == blue.get());
+		EXPECT_TRUE(planet->illuminationColor() == blue.get());
 		v = planet->illuminationColorAsVector();
-		OO_CHECK(v.x == 0.0f && v.y == 0.0f && v.z == 1.0f);
+		EXPECT_TRUE(v.x == 0.0f && v.y == 0.0f && v.z == 1.0f);
 
 		planet->setAirColorMixRatio(1.5f);
-		OO_CHECK(planet->airColorMixRatio() == 1.0f);
+		EXPECT_TRUE(planet->airColorMixRatio() == 1.0f);
 		planet->setAirColorMixRatio(0.25f);
-		OO_CHECK(planet->airColorMixRatio() == 0.25f);
+		EXPECT_TRUE(planet->airColorMixRatio() == 0.25f);
 		planet->setAirDensity(-1.0f);
-		OO_CHECK(planet->airDensity() == 0.0f);
+		EXPECT_TRUE(planet->airDensity() == 0.0f);
 		planet->setAirDensity(0.5f);
-		OO_CHECK(planet->airDensity() == 0.5f);
+		EXPECT_TRUE(planet->airDensity() == 0.5f);
 
 		planet->setTerminatorThresholdVector(make_vector(1, 2, 3));
 		Vector t = planet->terminatorThresholdVector();
-		OO_CHECK(t.x == 1 && t.y == 2 && t.z == 3);
+		EXPECT_TRUE(t.x == 1 && t.y == 2 && t.z == 3);
 
 		planet->setRotationalVelocity(0.5);
-		OO_CHECK(planet->rotationalVelocity() == (double)0.5f);
+		EXPECT_TRUE(planet->rotationalVelocity() == (double)0.5f);
 
 		planet->setName(std::string("Diso"));
-		OO_CHECK(planet->name() == std::optional<std::string>("Diso"));
+		EXPECT_TRUE(planet->name() == std::optional<std::string>("Diso"));
 	}
 }
 
 
-OO_TEST(miniature)
+TEST(OOPlanetEntity, miniature)
 {
 	{
-		SetUp();
+		::SetUp();
 		oo::PlanetEntity *planet = Planet(true);
 		oo::PlanetEntity *mini = Miniature(planet);
-		OO_CHECK(mini != nullptr && mini != planet && dynamic_cast<oo::PlanetEntity *>(static_cast<Entity *>(mini)) != nullptr);
-		OO_CHECK(mini->planetType() == oo::StellarBodyType::kMiniature);
-		OO_CHECK(mini->status() == oo::EntityStatus::kCockpitDisplay);
-		OO_CHECK(mini->getScanClass() == oo::ScanClass::kNoDraw);
-		OO_CHECK(Near(mini->radius(), 50000.0 * PLANET_MINIATURE_FACTOR));
-		OO_CHECK(mini->rotationalVelocity() == (double)0.04f);
-		OO_CHECK(QuaternionNear(mini->getOrientation(), planet->getOrientation()));
-		OO_CHECK(mini->hasAtmosphere());
+		EXPECT_TRUE(mini != nullptr && mini != planet && dynamic_cast<oo::PlanetEntity *>(static_cast<Entity *>(mini)) != nullptr);
+		EXPECT_TRUE(mini->planetType() == oo::StellarBodyType::kMiniature);
+		EXPECT_TRUE(mini->status() == oo::EntityStatus::kCockpitDisplay);
+		EXPECT_TRUE(mini->getScanClass() == oo::ScanClass::kNoDraw);
+		EXPECT_TRUE(Near(mini->radius(), 50000.0 * PLANET_MINIATURE_FACTOR));
+		EXPECT_TRUE(mini->rotationalVelocity() == (double)0.04f);
+		EXPECT_TRUE(QuaternionNear(mini->getOrientation(), planet->getOrientation()));
+		EXPECT_TRUE(mini->hasAtmosphere());
 		Vector t = mini->terminatorThresholdVector();
-		OO_CHECK(Near(t.x, 0.105) && Near(t.y, 0.18) && Near(t.z, 0.28));
+		EXPECT_TRUE(Near(t.x, 0.105) && Near(t.y, 0.18) && Near(t.z, 0.28));
 		// The original is unchanged.
-		OO_CHECK(planet->radius() == 50000.0 && planet->planetType() == oo::StellarBodyType::kNormalPlanet);
+		EXPECT_TRUE(planet->radius() == 50000.0 && planet->planetType() == oo::StellarBodyType::kNormalPlanet);
 	}
 }
 
 
-OO_TEST(updateTurnsThePlanet)
+TEST(OOPlanetEntity, updateTurnsThePlanet)
 {
 	{
-		SetUp();
+		::SetUp();
 		oo::PlanetEntity *moon = Planet(false);
 		Quaternion before = moon->getOrientation();
 		moon->update(10.0);
 		Quaternion expected = before;
 		quaternion_rotate_about_axis(&expected, vector_up_from_quaternion(before), 0.02f * 10.0f);
-		OO_CHECK(QuaternionNear(moon->getOrientation(), expected));
+		EXPECT_TRUE(QuaternionNear(moon->getOrientation(), expected));
 
 		// The nearest planet, out of its atmosphere, sets no air resistance.
 		sPlayer->_nearestPlanet = moon;
 		moon->update(1.0);
-		OO_CHECK(sUniverse->_airResistance == 0.0f);
+		EXPECT_TRUE(sUniverse->_airResistance == 0.0f);
 		sPlayer->_nearestPlanet = nullptr;
 
 		// A miniature turns at its own rate.
@@ -334,15 +335,15 @@ OO_TEST(updateTurnsThePlanet)
 		mini->update(2.0);
 		expected = before;
 		quaternion_rotate_about_axis(&expected, vector_up_from_quaternion(before), 0.04f * 2.0f);
-		OO_CHECK(QuaternionNear(mini->getOrientation(), expected));
+		EXPECT_TRUE(QuaternionNear(mini->getOrientation(), expected));
 	}
 }
 
 
-OO_TEST(orientationSetsTheAxis)
+TEST(OOPlanetEntity, orientationSetsTheAxis)
 {
 	{
-		SetUp();
+		::SetUp();
 		oo::PlanetEntity *moon = Planet(false);
 		Quaternion q = kIdentityQuaternion;
 		moon->setOrientation(q);
@@ -350,53 +351,53 @@ OO_TEST(orientationSetsTheAxis)
 		// Turned about the new up axis.
 		Quaternion expected = q;
 		quaternion_rotate_about_axis(&expected, vector_up_from_quaternion(q), 0.02f * 5.0f);
-		OO_CHECK(QuaternionNear(moon->getOrientation(), expected));
+		EXPECT_TRUE(QuaternionNear(moon->getOrientation(), expected));
 	}
 }
 
 
-OO_TEST(closeCollision)
+TEST(OOPlanetEntity, closeCollision)
 {
 	{
-		SetUp();
+		::SetUp();
 		oo::PlanetEntity *moon = Planet(false);
-		OO_CHECK(!moon->checkCloseCollisionWith(nullptr));
+		EXPECT_TRUE(!moon->checkCloseCollisionWith(nullptr));
 		Entity *rock = oo::MadeEntity(oo::makeShared<Entity>());
-		OO_CHECK(moon->checkCloseCollisionWith(rock));
+		EXPECT_TRUE(moon->checkCloseCollisionWith(rock));
 	}
 }
 
 
-OO_TEST(description)
+TEST(OOPlanetEntity, description)
 {
 	{
-		SetUp();
+		::SetUp();
 		oo::PlanetEntity *moon = Planet(false, 3000);
 		std::string description = oo::EntityDescription(moon);
-		OO_CHECK(description.find("OOPlanetEntity") != std::string::npos);
-		OO_CHECK(description.find("radius: 30000 m") != std::string::npos);
+		EXPECT_TRUE(description.find("OOPlanetEntity") != std::string::npos);
+		EXPECT_TRUE(description.find("radius: 30000 m") != std::string::npos);
 	}
 }
 
 
 // A planet is the root Entity; it answers the shader binding selectors (Entity
 // (OOPlanetShaderBindings)) for a planet only.
-OO_TEST(facade)
+TEST(OOPlanetEntity, facade)
 {
 	{
-		SetUp();
+		::SetUp();
 		oo::PlanetEntity *moon = Planet(false);
 		Entity *object = moon;
-		OO_CHECK(object != nullptr);	// A C++ entity.
-		OO_CHECK(object == moon);
+		EXPECT_TRUE(object != nullptr);	// A C++ entity.
+		EXPECT_TRUE(object == moon);
 		oo::PlanetEntity *mini = Miniature(moon);
-		OO_CHECK(mini == mini);	// The shader bindings: the planet's values, which its object's selectors
+		EXPECT_TRUE(mini == mini);	// The shader bindings: the planet's values, which its object's selectors
     // forward to.
 		moon->setAirDensity(0.5f);
 		moon->setTerminatorThresholdVector(make_vector(1, 2, 3));
-		OO_CHECK(moon->airDensity() == 0.5f);
+		EXPECT_TRUE(moon->airDensity() == 0.5f);
 		Vector t = moon->terminatorThresholdVector();
-		OO_CHECK(t.x == 1 && t.y == 2 && t.z == 3);
+		EXPECT_TRUE(t.x == 1 && t.y == 2 && t.z == 3);
 	}
 }
 
@@ -417,20 +418,17 @@ static void RegisterJSClasses(void (*initClass)(JSContext *, JSValueConst))
 
 // The binding's category, which the C++ planet's overrides answer: what the
 // engine asks a planet's object for by selector is what OOJSPlanet.mm answers.
-OO_TEST(jsExtensions)
+TEST(OOPlanetEntity, jsExtensions)
 {
 	{
-		SetUp();
+		::SetUp();
 		oo::PlanetEntity *moon = Planet(false);
 		RegisterJSClasses(InitOOJSPlanet);
 		Entity *object = moon;
 		const JSClassID jsClass = OOJSEntityJSClassID(object);
 		const JSClassID expectedClass = JSPlanetClassID();
-		OO_CHECK(jsClass != 0 && jsClass == expectedClass);
-		OO_CHECK(OOJSEntityJSClassName(object) == std::optional<std::string>("Moon"));
-		OO_CHECK(OOJSEntityIsVisibleToScripts(object) == true);
+		EXPECT_TRUE(jsClass != 0 && jsClass == expectedClass);
+		EXPECT_TRUE(OOJSEntityJSClassName(object) == std::optional<std::string>("Moon"));
+		EXPECT_TRUE(OOJSEntityIsVisibleToScripts(object) == true);
 	}
 }
-
-
-OO_TEST_MAIN()

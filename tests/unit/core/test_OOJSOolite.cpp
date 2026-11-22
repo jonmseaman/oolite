@@ -14,6 +14,9 @@
 */
 
 #include <quickjs.h>
+
+#include <gtest/gtest.h>
+
 #include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/Object.hpp"
@@ -109,7 +112,6 @@ public:
 #include "OOJSEngineCore.h"
 #include "OOJSOolite.h"
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -478,14 +480,14 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSOolite, registration)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("typeof Oolite", "function");
@@ -501,7 +503,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(version)
+TEST(OOJSOolite, version)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("oolite.versionString", "1.91.0.7");
@@ -517,7 +519,7 @@ OO_TEST(version)
 }
 
 
-OO_TEST(compareVersion)
+TEST(OOJSOolite, compareVersion)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("oolite.compareVersion('1.91.0.7')", "0");
@@ -537,7 +539,7 @@ OO_TEST(compareVersion)
 }
 
 
-OO_TEST(settingsAndPaths)
+TEST(OOJSOolite, settingsAndPaths)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("JSON.stringify(oolite.gameSettings)", "{\"detailLevel\":\"DETAIL_LEVEL_SHADERS\",\"musicMode\":\"MUSIC_ON\"}");
@@ -548,12 +550,12 @@ OO_TEST(settingsAndPaths)
 }
 
 
-OO_TEST(display)
+TEST(OOJSOolite, display)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("oolite.colorSaturation", "1");
 	OO_CHECK_EVAL("(function () { oolite.colorSaturation = 1.5; return oolite.colorSaturation; })()", "1.5");
-	OO_CHECK(sView->_colorSaturation == 1.5f);
+	EXPECT_TRUE(sView->_colorSaturation == 1.5f);
 	OO_CHECK_EVAL("(function () { oolite.colorSaturation = 'x'; return 'set'; })()", "set");	// NaN is a number
 	sView->_colorSaturation = 1.0f;
 
@@ -561,7 +563,7 @@ OO_TEST(display)
 	OO_CHECK_EVAL("(function () { oolite.postFX = 4; return oolite.postFX; })()", "4");
 	OO_CHECK_EVAL("(function () { oolite.postFX = -3; return oolite.postFX; })()", "0");	// at least 0
 	OO_CHECK_EVAL("(function () { oolite.postFX = 'a'; return oolite.postFX; })()", "threw: bad property value");
-	OO_CHECK_EQ(sUniverse->_currentPostFX, 0);
+	EXPECT_EQ(sUniverse->_currentPostFX, 0);
 	sUniverse->_currentPostFX = 2;
 
 #ifndef NDEBUG
@@ -573,7 +575,7 @@ OO_TEST(display)
 }
 
 
-OO_TEST(toneMappers)
+TEST(OOJSOolite, toneMappers)
 {
 	SetUpContext();
 	// SDR output: the SDR mapper is read and set, the HDR one is undefined and refused with a warning.
@@ -581,30 +583,30 @@ OO_TEST(toneMappers)
 	OO_CHECK_EVAL("oolite.sdrToneMapper", "OOSDR_TONEMAPPER_AGX");
 	OO_CHECK_EVAL("oolite.hdrToneMapper", "OOHDR_TONEMAPPER_UNDEFINED");
 	OO_CHECK_EVAL("(function () { oolite.sdrToneMapper = 'OOSDR_TONEMAPPER_REINHARD'; return oolite.sdrToneMapper; })()", "OOSDR_TONEMAPPER_REINHARD");
-	OO_CHECK_EQ(sView->_sdrSets, 1);
+	EXPECT_EQ(sView->_sdrSets, 1);
 	sLastWarning.clear();
 	OO_CHECK_EVAL("(function () { oolite.hdrToneMapper = 'OOHDR_TONEMAPPER_REINHARD'; return oolite.hdrToneMapper; })()", "OOHDR_TONEMAPPER_UNDEFINED");
-	OO_CHECK_EQ(sLastWarning, std::string("hdrToneMapper cannot be set if not running in HDR mode"));
-	OO_CHECK_EQ(sView->_hdrSets, 0);
+	EXPECT_EQ(sLastWarning, std::string("hdrToneMapper cannot be set if not running in HDR mode"));
+	EXPECT_EQ(sView->_hdrSets, 0);
 	OO_CHECK_EVAL("(function () { oolite.sdrToneMapper = 3; return 'set'; })()", "threw: bad property value");	// not a string
-	OO_CHECK_EQ(sView->_sdrSets, 1);
+	EXPECT_EQ(sView->_sdrSets, 1);
 
 	// HDR output: the other way round.
 	sView->_hdrOutput = true;
 	OO_CHECK_EVAL("oolite.hdrToneMapper", "OOHDR_TONEMAPPER_DICE");
 	OO_CHECK_EVAL("oolite.sdrToneMapper", "OOSDR_TONEMAPPER_UNDEFINED");
 	OO_CHECK_EVAL("(function () { oolite.hdrToneMapper = 'OOHDR_TONEMAPPER_REINHARD'; return oolite.hdrToneMapper; })()", "OOHDR_TONEMAPPER_REINHARD");
-	OO_CHECK_EQ(sView->_hdrSets, 1);
+	EXPECT_EQ(sView->_hdrSets, 1);
 	sLastWarning.clear();
 	OO_CHECK_EVAL("(function () { oolite.sdrToneMapper = 'OOSDR_TONEMAPPER_ACES'; return 'set'; })()", "set");
-	OO_CHECK_EQ(sLastWarning, std::string("sdrToneMapper cannot be set if not running in SDR mode"));
-	OO_CHECK_EQ(sView->_sdrSets, 1);
+	EXPECT_EQ(sLastWarning, std::string("sdrToneMapper cannot be set if not running in SDR mode"));
+	EXPECT_EQ(sView->_sdrSets, 1);
 	OO_CHECK_EVAL("(function () { oolite.hdrToneMapper = null; return 'set'; })()", "threw: bad property value");
 	sView->_hdrOutput = false;
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSOolite, nativeExceptions)
 {
 	SetUpContext();
 	sUniverse->_raise = true;
@@ -614,9 +616,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("oolite.gameSettings", "threw: Native exception: cxx boom");
 	sUniverse->_throwCxx = false;
 	OO_CHECK_EVAL("typeof oolite.gameSettings", "object");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

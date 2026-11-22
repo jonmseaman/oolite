@@ -16,10 +16,11 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <gtest/gtest.h>
+
 #include "ConcreteTexture.h"
 #include "TextureGenerator.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -88,7 +89,7 @@ TestGenerator* NewGenerator(oo::TextureFlags options) {
 TestGenerator* QueuedGenerator(oo::TextureFlags options, bool empty) {
   TestGenerator* generator = NewGenerator(options);
   generator->_empty = empty;
-  OO_CHECK(generator->enqueue());
+  EXPECT_TRUE(generator->enqueue());
   return generator;
 }
 
@@ -109,22 +110,22 @@ void ClearCache() {
 
 }  // namespace
 
-OO_TEST(noLoaderNoTexture) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOConcreteTexture, noLoaderNoTexture) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(Texture(nullptr, std::string("test:none"), oo::TextureFlags::kDefaultOptions) ==
+    EXPECT_TRUE(Texture(nullptr, std::string("test:none"), oo::TextureFlags::kDefaultOptions) ==
              nullptr);
-    OO_CHECK(oo::ConcreteTexture::initWithPath(
+    EXPECT_TRUE(oo::ConcreteTexture::initWithPath(
                  "no-such-loader.type", std::string("test:none"),
                  oo::TextureFlags::kDefaultOptions, 0.5f, 0.0f) == nullptr);
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:none")) == nullptr);
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:none")) == nullptr);
   }
 }
 
-OO_TEST(beforeLoading) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOConcreteTexture, beforeLoading) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
@@ -132,26 +133,26 @@ OO_TEST(beforeLoading) {
         oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear;
     oo::Texture* texture = Texture(QueuedGenerator(options, false),
                                  std::string("test:before"), options);
-    OO_CHECK(texture != nullptr);
-    OO_CHECK(texture->cacheKey() == std::optional<std::string>("test:before"));
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:before")) ==
+    EXPECT_TRUE(texture != nullptr);
+    EXPECT_TRUE(texture->cacheKey() == std::optional<std::string>("test:before"));
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:before")) ==
              texture);
-    OO_CHECK(SameSize(texture->texCoordsScale(), 1,
+    EXPECT_TRUE(SameSize(texture->texCoordsScale(), 1,
                       1));  // no rectangle texture: no wait
-    OO_CHECK(!texture->isRectangleTexture() && !texture->isCubeMap());
+    EXPECT_TRUE(!texture->isRectangleTexture() && !texture->isCubeMap());
 #ifndef NDEBUG
-    OO_CHECK(texture->name() == std::optional<std::string>("<TestGenerator>"));
+    EXPECT_TRUE(texture->name() == std::optional<std::string>("<TestGenerator>"));
 #endif
     const std::string text = texture->description();
-    OO_CHECK(text.starts_with("<OOConcreteTexture 0x") &&
+    EXPECT_TRUE(text.starts_with("<OOConcreteTexture 0x") &&
              text.ends_with(">{test:before, loading}"));
-    OO_CHECK(texture->shortDescription().ends_with(">{test:before}"));
+    EXPECT_TRUE(texture->shortDescription().ends_with(">{test:before}"));
   }
   ClearCache();
 }
 
-OO_TEST(loadsAndUploads) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOConcreteTexture, loadsAndUploads) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
@@ -160,45 +161,45 @@ OO_TEST(loadsAndUploads) {
     oo::Texture* texture = Texture(QueuedGenerator(options, false),
                                  std::string("test:linear"), options);
     texture->ensureFinishedLoading();
-    OO_CHECK(texture->isFinishedLoading());
+    EXPECT_TRUE(texture->isFinishedLoading());
     // The loader scales the 4 x 2 image to 2 x 2; the original size is kept.
-    OO_CHECK(SameSize(texture->dimensions(), 2, 2) &&
+    EXPECT_TRUE(SameSize(texture->dimensions(), 2, 2) &&
              SameSize(texture->originalDimensions(), 4, 2));
-    OO_CHECK(!texture->isMipMapped());
+    EXPECT_TRUE(!texture->isMipMapped());
     const GLint name = texture->glTextureName();
-    OO_CHECK(name != 0);
-    OO_CHECK(texture->description().ends_with(">{test:linear, 2 x 2}"));
+    EXPECT_TRUE(name != 0);
+    EXPECT_TRUE(texture->description().ends_with(">{test:linear, 2 x 2}"));
 #ifndef NDEBUG
-    OO_CHECK(texture->dataSize() == 4);
+    EXPECT_TRUE(texture->dataSize() == 4);
 #endif
 
     // Applying binds it.
     glBindTexture(GL_TEXTURE_2D, 0);
     texture->apply();
-    OO_CHECK(BoundTexture() == name);
+    EXPECT_TRUE(BoundTexture() == name);
 
     // A generated texture keeps its bytes (it cannot be reloaded): the copy is
     // of them.
     oo::PixMap pixMap = texture->copyPixMapRepresentation();
-    OO_CHECK(oo::IsValidPixMap(pixMap) && pixMap.width == 2 &&
+    EXPECT_TRUE(oo::IsValidPixMap(pixMap) && pixMap.width == 2 &&
              pixMap.height == 2 && pixMap.format == oo::kPixMapRGBA &&
              pixMap.rowBytes == 8);
     const uint8_t* bytes = (const uint8_t*)pixMap.pixels;
-    OO_CHECK(bytes != NULL && bytes[0] == 3);  // the scaled first pixel
+    EXPECT_TRUE(bytes != NULL && bytes[0] == 3);  // the scaled first pixel
     oo::FreePixMap(&pixMap);
 
     // A graphics reset deletes the GL texture; the next use uploads it again.
     texture->forceRebind();
     texture->apply();
-    OO_CHECK(texture->glTextureName() != 0 &&
+    EXPECT_TRUE(texture->glTextureName() != 0 &&
              BoundTexture() == texture->glTextureName());
-    OO_CHECK(SameSize(texture->dimensions(), 2, 2));
+    EXPECT_TRUE(SameSize(texture->dimensions(), 2, 2));
   }
   ClearCache();
 }
 
-OO_TEST(mipMapped) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOConcreteTexture, mipMapped) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
@@ -206,40 +207,40 @@ OO_TEST(mipMapped) {
         oo::TextureFlags::kMinFilterMipMap | oo::TextureFlags::kMagFilterLinear;
     oo::Texture* texture =
         Texture(QueuedGenerator(options, false), std::string("test:mip"), options);
-    OO_CHECK(texture->isMipMapped());  // waits for loading
-    OO_CHECK(SameSize(texture->dimensions(), 2, 2));
-    OO_CHECK(texture->glTextureName() != 0);
+    EXPECT_TRUE(texture->isMipMapped());  // waits for loading
+    EXPECT_TRUE(SameSize(texture->dimensions(), 2, 2));
+    EXPECT_TRUE(texture->glTextureName() != 0);
     GLint maxLevel = -1;
     glBindTexture(GL_TEXTURE_2D, texture->glTextureName());
     glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, &maxLevel);
-    OO_CHECK(maxLevel == 1);
+    EXPECT_TRUE(maxLevel == 1);
 #ifndef NDEBUG
-    OO_CHECK(texture->dataSize() == 5);  // 2 * 2, mip-mapped: * 4 / 3
+    EXPECT_TRUE(texture->dataSize() == 5);  // 2 * 2, mip-mapped: * 4 / 3
 #endif
   }
   ClearCache();
 }
 
-OO_TEST(failedLoad) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOConcreteTexture, failedLoad) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
     oo::Texture* texture =
         Texture(QueuedGenerator(oo::TextureFlags::kDefaultOptions, true),
                 std::string("test:empty"), oo::TextureFlags::kDefaultOptions);
-    OO_CHECK(SameSize(texture->dimensions(), 0, 0));
-    OO_CHECK(texture->glTextureName() == 0 && texture->isFinishedLoading());
-    OO_CHECK(texture->description().ends_with(">{test:empty, LOAD ERROR}"));
-    OO_CHECK(oo::IsNullPixMap(texture->copyPixMapRepresentation()));
+    EXPECT_TRUE(SameSize(texture->dimensions(), 0, 0));
+    EXPECT_TRUE(texture->glTextureName() == 0 && texture->isFinishedLoading());
+    EXPECT_TRUE(texture->description().ends_with(">{test:empty, LOAD ERROR}"));
+    EXPECT_TRUE(oo::IsNullPixMap(texture->copyPixMapRepresentation()));
     texture->forceRebind();  // not valid: nothing to delete
     texture->apply();
   }
   ClearCache();
 }
 
-OO_TEST(deallocUncaches) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOConcreteTexture, deallocUncaches) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
@@ -248,19 +249,19 @@ OO_TEST(deallocUncaches) {
     oo::Texture* texture = Texture(QueuedGenerator(options, false),
                                  std::string("test:gone"), options);
     texture->ensureFinishedLoading();
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gone")) ==
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:gone")) ==
              texture);
   }
   // Kept by the recent textures until they are cleared; then released, and
   // uncached.
-  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gone")) != nullptr);
+  EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:gone")) != nullptr);
   ClearCache();
-  OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:gone")) == nullptr);
+  EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:gone")) == nullptr);
 #ifndef NDEBUG
   {
     oo::AutoreleaseScope pool;
     for (const std::shared_ptr<oo::Texture>& texture : oo::Texture::allTextures()) {
-      OO_CHECK(texture->cacheKey() != std::optional<std::string>("test:gone"));
+      EXPECT_TRUE(texture->cacheKey() != std::optional<std::string>("test:gone"));
     }
   }
 #endif
@@ -269,15 +270,15 @@ OO_TEST(deallocUncaches) {
 // --- The C++ API (after the conversion)
 // ---------------------------------------------------------
 
-OO_TEST(cxxApi) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOConcreteTexture, cxxApi) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(oo::ConcreteTexture::initWithLoader(nullptr, std::string("test:cxx"),
+    EXPECT_TRUE(oo::ConcreteTexture::initWithLoader(nullptr, std::string("test:cxx"),
                                                oo::TextureFlags::kDefaultOptions, 0.5f,
                                                0.0f) == nullptr);
-    OO_CHECK(oo::ConcreteTexture::initWithPath(
+    EXPECT_TRUE(oo::ConcreteTexture::initWithPath(
                  "no-such-loader.type", std::string("test:cxx"),
                  oo::TextureFlags::kDefaultOptions, 0.5f, 0.0f) == nullptr);
 
@@ -287,27 +288,27 @@ OO_TEST(cxxApi) {
         oo::ConcreteTexture::initWithLoader(QueuedGenerator(options, false),
                                           std::string("test:cxx"), options,
                                           0.5f, 0.0f);
-    OO_CHECK(texture != nullptr &&
+    EXPECT_TRUE(texture != nullptr &&
              texture->cacheKey() == std::optional<std::string>("test:cxx"));
-    OO_CHECK(oo::Texture::existingTextureForKey(std::string("test:cxx")) ==
+    EXPECT_TRUE(oo::Texture::existingTextureForKey(std::string("test:cxx")) ==
              texture.get());
-    OO_CHECK(texture->descriptionComponents() ==
+    EXPECT_TRUE(texture->descriptionComponents() ==
              std::optional<std::string>("test:cxx, loading"));
-    OO_CHECK(texture->shortDescriptionComponents() ==
+    EXPECT_TRUE(texture->shortDescriptionComponents() ==
              std::optional<std::string>("test:cxx"));
 
     texture->ensureFinishedLoading();
-    OO_CHECK(texture->isFinishedLoading());
-    OO_CHECK(SameSize(texture->dimensions(), 2, 2) &&
+    EXPECT_TRUE(texture->isFinishedLoading());
+    EXPECT_TRUE(SameSize(texture->dimensions(), 2, 2) &&
              SameSize(texture->originalDimensions(), 4, 2));
-    OO_CHECK(texture->glTextureName() != 0 && !texture->isMipMapped());
-    OO_CHECK(texture->descriptionComponents() ==
+    EXPECT_TRUE(texture->glTextureName() != 0 && !texture->isMipMapped());
+    EXPECT_TRUE(texture->descriptionComponents() ==
              std::optional<std::string>("test:cxx, 2 x 2"));
     glBindTexture(GL_TEXTURE_2D, 0);
     texture->apply();
-    OO_CHECK(BoundTexture() == texture->glTextureName());
+    EXPECT_TRUE(BoundTexture() == texture->glTextureName());
 #ifndef NDEBUG
-    OO_CHECK(texture->name() == std::optional<std::string>("<TestGenerator>") &&
+    EXPECT_TRUE(texture->name() == std::optional<std::string>("<TestGenerator>") &&
              texture->dataSize() == 4);
     texture->setTrace(true);
     texture->setTrace(false);
@@ -315,5 +316,3 @@ OO_TEST(cxxApi) {
   }
   ClearCache();
 }
-
-OO_TEST_MAIN()

@@ -23,8 +23,9 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "OOJSInterfaceDefinition.h"
-#include "oo_test.hpp"
 #include "oofnd/Notification.hpp"
 
 // MARK: What the rest of the engine provides
@@ -202,27 +203,27 @@ void CollectGarbage() { JS_RunGC(JS_GetRuntime(Context())); }
 // MARK: Tests
 // -------------------------------------------------------------------------------------
 
-OO_TEST(initialState) {
+TEST(OOJSInterfaceDefinition, initialState) {
   Context();
   const std::shared_ptr<OOJSInterfaceDefinition> definition =
       oo::makeShared<OOJSInterfaceDefinition>();
-  OO_CHECK(definition != nullptr);
-  OO_CHECK(IsUndefined(definition->callback()));
-  OO_CHECK(!IsObject(definition->callbackThis()));
-  OO_CHECK(!definition->title().has_value());
-  OO_CHECK(!definition->category().has_value());
-  OO_CHECK(!definition->summary().has_value());
+  EXPECT_TRUE(definition != nullptr);
+  EXPECT_TRUE(IsUndefined(definition->callback()));
+  EXPECT_TRUE(!IsObject(definition->callbackThis()));
+  EXPECT_TRUE(!definition->title().has_value());
+  EXPECT_TRUE(!definition->category().has_value());
+  EXPECT_TRUE(!definition->summary().has_value());
   definition->setTitle(std::string("Title"));
   definition->setCategory("Cat");
   definition->setSummary("Sum");
-  OO_CHECK_EQ(definition->title().value_or("<none>"), "Title");
-  OO_CHECK_EQ(definition->category().value_or("<none>"), "Cat");
-  OO_CHECK_EQ(definition->summary().value_or("<none>"), "Sum");
+  EXPECT_EQ(definition->title().value_or("<none>"), "Title");
+  EXPECT_EQ(definition->category().value_or("<none>"), "Cat");
+  EXPECT_EQ(definition->summary().value_or("<none>"), "Sum");
   definition->setTitle(std::nullopt);
-  OO_CHECK(!definition->title().has_value());
+  EXPECT_TRUE(!definition->title().has_value());
 }
 
-OO_TEST(runCallback) {
+TEST(OOJSInterfaceDefinition, runCallback) {
   {
     const std::shared_ptr<OOJSScript> owner = oo::makeShared<OOJSScript>();
     sRunningScript = owner.get();
@@ -236,17 +237,17 @@ OO_TEST(runCallback) {
         Evaluate("(function (key) { globalThis.ran = this.tag + ':' + key + "
                  "':' + arguments.length; })"));
     definition->setCallbackThis(Evaluate("({ tag: 'me' })"));
-    OO_CHECK(IsObject(definition->callback()));
-    OO_CHECK(IsObject(definition->callbackThis()));
+    EXPECT_TRUE(IsObject(definition->callback()));
+    EXPECT_TRUE(IsObject(definition->callbackThis()));
     CollectGarbage();
 
     sPushed.clear();
     sCalls = 0;
     definition->runCallback("dock");
-    OO_CHECK_EQ(String(Evaluate("globalThis.ran")), "me:dock:1");
-    OO_CHECK_EQ(sCalls, 1);
-    OO_CHECK_EQ(sScriptDepth, 0);
-    OO_CHECK(sPushed.size() == 1 &&
+    EXPECT_EQ(String(Evaluate("globalThis.ran")), "me:dock:1");
+    EXPECT_EQ(sCalls, 1);
+    EXPECT_EQ(sScriptDepth, 0);
+    EXPECT_TRUE(sPushed.size() == 1 &&
              sPushed[0] == owner.get());  // the script that made it
 
     // Replacing the callback and `this`: the new ones run.
@@ -255,7 +256,7 @@ OO_TEST(runCallback) {
                  "(this === globalThis); })"));
     definition->setCallbackThis(JS_UNDEFINED);
     definition->runCallback("k");
-    OO_CHECK_EQ(String(Evaluate("globalThis.ran")), "second k true");
+    EXPECT_EQ(String(Evaluate("globalThis.ran")), "second k true");
   }
 }
 
@@ -270,44 +271,44 @@ std::shared_ptr<OOJSInterfaceDefinition> Interface(std::optional<std::string> ca
 }
 }  // namespace
 
-OO_TEST(interfaceCompare) {
+TEST(OOJSInterfaceDefinition, interfaceCompare) {
   // By category, then by title, ignoring case.
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       Interface("alpha", "z")->interfaceCompare(Interface("Beta", "a").get()),
       oo::ComparisonResult::kAscending);
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       Interface("beta", "a")->interfaceCompare(Interface("ALPHA", "z").get()),
       oo::ComparisonResult::kDescending);
-  OO_CHECK_EQ(Interface("same", "apple")
+  EXPECT_EQ(Interface("same", "apple")
                   ->interfaceCompare(Interface("SAME", "Banana").get()),
               oo::ComparisonResult::kAscending);
-  OO_CHECK_EQ(Interface("same", "Banana")
+  EXPECT_EQ(Interface("same", "Banana")
                   ->interfaceCompare(Interface("same", "apple").get()),
               oo::ComparisonResult::kDescending);
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       Interface("same", "x")->interfaceCompare(Interface("same", "X").get()),
       oo::ComparisonResult::kSame);
   // No category of its own: the same category as anything (a message to nil);
   // then the titles.
-  OO_CHECK_EQ(Interface(std::nullopt, "b")
+  EXPECT_EQ(Interface(std::nullopt, "b")
                   ->interfaceCompare(Interface("cat", "a").get()),
               oo::ComparisonResult::kDescending);
   // The other's missing category or title is the empty string.
-  OO_CHECK_EQ(Interface("cat", "a")
+  EXPECT_EQ(Interface("cat", "a")
                   ->interfaceCompare(Interface(std::nullopt, "a").get()),
               oo::ComparisonResult::kDescending);
-  OO_CHECK_EQ(Interface("", "a")->interfaceCompare(
+  EXPECT_EQ(Interface("", "a")->interfaceCompare(
                   Interface(std::nullopt, std::nullopt).get()),
               oo::ComparisonResult::kDescending);
-  OO_CHECK_EQ(Interface("", std::nullopt)
+  EXPECT_EQ(Interface("", std::nullopt)
                   ->interfaceCompare(Interface(std::nullopt, "a").get()),
               oo::ComparisonResult::kSame);
   // Null: its category and title are missing.
-  OO_CHECK_EQ(Interface("cat", "a")->interfaceCompare(nullptr),
+  EXPECT_EQ(Interface("cat", "a")->interfaceCompare(nullptr),
               oo::ComparisonResult::kDescending);
 }
 
-OO_TEST(engineReset) {
+TEST(OOJSInterfaceDefinition, engineReset) {
   {
     const std::shared_ptr<OOJSInterfaceDefinition> definition =
         oo::makeShared<OOJSInterfaceDefinition>();
@@ -316,14 +317,12 @@ OO_TEST(engineReset) {
     oo::NotificationCenter::defaultCenter().post(
         kOOJavaScriptEngineWillResetNotificationName,
         OOJavaScriptEngine::sharedEngine());
-    OO_CHECK(IsUndefined(definition->callback()));
-    OO_CHECK(!IsObject(definition->callbackThis()));
+    EXPECT_TRUE(IsUndefined(definition->callback()));
+    EXPECT_TRUE(!IsObject(definition->callbackThis()));
   }
   // A definition that is gone no longer observes: another reset is harmless.
   oo::NotificationCenter::defaultCenter().post(
       kOOJavaScriptEngineWillResetNotificationName,
       OOJavaScriptEngine::sharedEngine());
-  OO_CHECK(true);
+  EXPECT_TRUE(true);
 }
-
-OO_TEST_MAIN()

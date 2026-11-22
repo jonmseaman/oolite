@@ -23,8 +23,9 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "OOJSGuiScreenKeyDefinition.h"
-#include "oo_test.hpp"
 #include "oofnd/Notification.hpp"
 
 // MARK: What the rest of the engine provides
@@ -202,27 +203,27 @@ void CollectGarbage() { JS_RunGC(JS_GetRuntime(Context())); }
 // MARK: Tests
 // -------------------------------------------------------------------------------------
 
-OO_TEST(initialState) {
+TEST(OOJSGuiScreenKeyDefinition, initialState) {
   Context();
   const std::shared_ptr<OOJSGuiScreenKeyDefinition> definition =
       oo::makeShared<OOJSGuiScreenKeyDefinition>();
-  OO_CHECK(definition != nullptr);
-  OO_CHECK(IsUndefined(definition->callback()));
-  OO_CHECK(!IsObject(definition->callbackThis()));
-  OO_CHECK(!definition->name().has_value());
-  OO_CHECK(definition->registerKeys().isNull());
+  EXPECT_TRUE(definition != nullptr);
+  EXPECT_TRUE(IsUndefined(definition->callback()));
+  EXPECT_TRUE(!IsObject(definition->callbackThis()));
+  EXPECT_TRUE(!definition->name().has_value());
+  EXPECT_TRUE(definition->registerKeys().isNull());
   definition->setName(std::string("Name"));
   oo::PList::Dict keys;
   keys["key_a"] = oo::PList(std::string("a"));
   definition->setRegisterKeys(oo::PList(std::move(keys)));
-  OO_CHECK_EQ(definition->name().value_or("<none>"), "Name");
-  OO_CHECK(definition->registerKeys().isDict() &&
+  EXPECT_EQ(definition->name().value_or("<none>"), "Name");
+  EXPECT_TRUE(definition->registerKeys().isDict() &&
            definition->registerKeys().count() == 1);
   definition->setName(std::nullopt);
-  OO_CHECK(!definition->name().has_value());
+  EXPECT_TRUE(!definition->name().has_value());
 }
 
-OO_TEST(runCallback) {
+TEST(OOJSGuiScreenKeyDefinition, runCallback) {
   {
     const std::shared_ptr<OOJSScript> owner = oo::makeShared<OOJSScript>();
     sRunningScript = owner.get();
@@ -236,17 +237,17 @@ OO_TEST(runCallback) {
         Evaluate("(function (key) { globalThis.ran = this.tag + ':' + key + "
                  "':' + arguments.length; })"));
     definition->setCallbackThis(Evaluate("({ tag: 'me' })"));
-    OO_CHECK(IsObject(definition->callback()));
-    OO_CHECK(IsObject(definition->callbackThis()));
+    EXPECT_TRUE(IsObject(definition->callback()));
+    EXPECT_TRUE(IsObject(definition->callbackThis()));
     CollectGarbage();
 
     sPushed.clear();
     sCalls = 0;
     definition->runCallback("key_a");
-    OO_CHECK_EQ(String(Evaluate("globalThis.ran")), "me:key_a:1");
-    OO_CHECK_EQ(sCalls, 1);
-    OO_CHECK_EQ(sScriptDepth, 0);
-    OO_CHECK(sPushed.size() == 1 &&
+    EXPECT_EQ(String(Evaluate("globalThis.ran")), "me:key_a:1");
+    EXPECT_EQ(sCalls, 1);
+    EXPECT_EQ(sScriptDepth, 0);
+    EXPECT_TRUE(sPushed.size() == 1 &&
              sPushed[0] == owner.get());  // the script that made it
 
     // Replacing the callback and `this`: the new ones run.
@@ -255,7 +256,7 @@ OO_TEST(runCallback) {
                  "(this === globalThis); })"));
     definition->setCallbackThis(JS_UNDEFINED);
     definition->runCallback("k");
-    OO_CHECK_EQ(String(Evaluate("globalThis.ran")), "second k true");
+    EXPECT_EQ(String(Evaluate("globalThis.ran")), "second k true");
   }
 }
 
@@ -268,26 +269,26 @@ std::shared_ptr<OOJSGuiScreenKeyDefinition> Keys(std::optional<std::string> name
 }
 }  // namespace
 
-OO_TEST(interfaceCompare) {
+TEST(OOJSGuiScreenKeyDefinition, interfaceCompare) {
   // By name, ignoring case.
-  OO_CHECK_EQ(Keys("apple")->interfaceCompare(Keys("Banana").get()),
+  EXPECT_EQ(Keys("apple")->interfaceCompare(Keys("Banana").get()),
               oo::ComparisonResult::kAscending);
-  OO_CHECK_EQ(Keys("banana")->interfaceCompare(Keys("APPLE").get()),
+  EXPECT_EQ(Keys("banana")->interfaceCompare(Keys("APPLE").get()),
               oo::ComparisonResult::kDescending);
-  OO_CHECK_EQ(Keys("same")->interfaceCompare(Keys("SAME").get()),
+  EXPECT_EQ(Keys("same")->interfaceCompare(Keys("SAME").get()),
               oo::ComparisonResult::kSame);
   // No name of its own: the same as anything (a message to nil); the other's
   // missing name is the empty string, as is null's.
-  OO_CHECK_EQ(Keys(std::nullopt)->interfaceCompare(Keys("a").get()),
+  EXPECT_EQ(Keys(std::nullopt)->interfaceCompare(Keys("a").get()),
               oo::ComparisonResult::kSame);
-  OO_CHECK_EQ(Keys("a")->interfaceCompare(Keys(std::nullopt).get()),
+  EXPECT_EQ(Keys("a")->interfaceCompare(Keys(std::nullopt).get()),
               oo::ComparisonResult::kDescending);
-  OO_CHECK_EQ(Keys("")->interfaceCompare(Keys(std::nullopt).get()),
+  EXPECT_EQ(Keys("")->interfaceCompare(Keys(std::nullopt).get()),
               oo::ComparisonResult::kSame);
-  OO_CHECK_EQ(Keys("a")->interfaceCompare(nullptr), oo::ComparisonResult::kDescending);
+  EXPECT_EQ(Keys("a")->interfaceCompare(nullptr), oo::ComparisonResult::kDescending);
 }
 
-OO_TEST(engineReset) {
+TEST(OOJSGuiScreenKeyDefinition, engineReset) {
   {
     const std::shared_ptr<OOJSGuiScreenKeyDefinition> definition =
         oo::makeShared<OOJSGuiScreenKeyDefinition>();
@@ -296,14 +297,12 @@ OO_TEST(engineReset) {
     oo::NotificationCenter::defaultCenter().post(
         kOOJavaScriptEngineWillResetNotificationName,
         OOJavaScriptEngine::sharedEngine());
-    OO_CHECK(IsUndefined(definition->callback()));
-    OO_CHECK(!IsObject(definition->callbackThis()));
+    EXPECT_TRUE(IsUndefined(definition->callback()));
+    EXPECT_TRUE(!IsObject(definition->callbackThis()));
   }
   // A definition that is gone no longer observes: another reset is harmless.
   oo::NotificationCenter::defaultCenter().post(
       kOOJavaScriptEngineWillResetNotificationName,
       OOJavaScriptEngine::sharedEngine());
-  OO_CHECK(true);
+  EXPECT_TRUE(true);
 }
-
-OO_TEST_MAIN()

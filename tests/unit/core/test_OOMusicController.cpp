@@ -22,9 +22,10 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "MusicController.h"
 #include "ResourceManager.h"
-#include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 
 namespace stdfs = std::filesystem;
@@ -121,7 +122,7 @@ void SetUp() {
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
 }
 
@@ -144,164 +145,162 @@ MusicState* Current(oo::MusicController* controller) {
 
 // First: the shared controller reads its mode from the defaults when it is
 // made.
-OO_TEST(theSharedControllerReadsItsMode) {
-  SetUp();
+TEST(OOMusicController, theSharedControllerReadsItsMode) {
+  ::SetUp();
   oo::Defaults::standard().setObject("music mode",
                                      oo::PList(std::string("off")));
   oo::MusicController* controller = oo::MusicController::sharedController();
-  OO_CHECK(controller != nullptr &&
+  EXPECT_TRUE(controller != nullptr &&
            oo::MusicController::sharedController() == controller);
-  OO_CHECK(controller->mode() == oo::MusicMode::kOff);
-  OO_CHECK(!controller->isPlaying() &&
+  EXPECT_TRUE(controller->mode() == oo::MusicMode::kOff);
+  EXPECT_TRUE(!controller->isPlaying() &&
            !controller->playingMusic().has_value() &&
            controller->soundSource() == nullptr);
 
   // Off: nothing plays.
   controller->playThemeMusic();
   controller->playMusicNamed("x.ogg", false);
-  OO_CHECK(TakeLog().empty() && !controller->isPlaying());
+  EXPECT_TRUE(TakeLog().empty() && !controller->isPlaying());
 }
 
 // The theme asked for while off is remembered: turning music on plays it.
-OO_TEST(modeChangesAreKept) {
-  SetUp();
+TEST(OOMusicController, modeChangesAreKept) {
+  ::SetUp();
   oo::MusicController* controller = oo::MusicController::sharedController();
   {
     controller->setMode(oo::MusicMode::kOn);
-    OO_CHECK(controller->mode() == oo::MusicMode::kOn &&
+    EXPECT_TRUE(controller->mode() == oo::MusicMode::kOn &&
              ModeDefault() == std::optional<std::string>("on"));
-    OO_CHECK(
+    EXPECT_TRUE(
         (TakeLog() == std::vector<std::string>{"play OoliteTheme.ogg looped"}));
     controller->setMode(oo::MusicMode::kITunes);  // not on this platform: refused
-    OO_CHECK(controller->mode() == oo::MusicMode::kOn &&
+    EXPECT_TRUE(controller->mode() == oo::MusicMode::kOn &&
              ModeDefault() == std::optional<std::string>("on"));
     controller->setMode(oo::MusicMode::kOff);
-    OO_CHECK(controller->mode() == oo::MusicMode::kOff &&
+    EXPECT_TRUE(controller->mode() == oo::MusicMode::kOff &&
              ModeDefault() == std::optional<std::string>("off"));
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop OoliteTheme.ogg"}));
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop OoliteTheme.ogg"}));
     controller->setMode(
         oo::MusicMode::kOn);  // the stop forgot the theme: nothing plays
-    OO_CHECK(TakeLog().empty() && !controller->isPlaying());
+    EXPECT_TRUE(TakeLog().empty() && !controller->isPlaying());
   }
-  OO_CHECK(gLiveMusics == 0);
+  EXPECT_TRUE(gLiveMusics == 0);
 }
 
-OO_TEST(playsMusicByName) {
-  SetUp();
+TEST(OOMusicController, playsMusicByName) {
+  ::SetUp();
   oo::MusicController* controller = oo::MusicController::sharedController();
   {
     controller->playMusicNamed("a.ogg", true, 2.0f);
-    OO_CHECK((TakeLog() == std::vector<std::string>{"play a.ogg looped"}));
-    OO_CHECK(controller->isPlaying() &&
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"play a.ogg looped"}));
+    EXPECT_TRUE(controller->isPlaying() &&
              controller->playingMusic() == std::optional<std::string>("a.ogg"));
-    OO_CHECK(Current(controller)->_gain == 1.0f);  // clamped
+    EXPECT_TRUE(Current(controller)->_gain == 1.0f);  // clamped
 
     controller->playMusicNamed("a.ogg", false);  // already playing it: nothing
-    OO_CHECK(TakeLog().empty());
+    EXPECT_TRUE(TakeLog().empty());
 
     controller->playMusicNamed("missing.ogg",
                                false);  // none: the current one goes on
-    OO_CHECK(TakeLog().empty() &&
+    EXPECT_TRUE(TakeLog().empty() &&
              controller->playingMusic() == std::optional<std::string>("a.ogg"));
 
     controller->playMusicNamed("b.ogg", false);
-    OO_CHECK(
+    EXPECT_TRUE(
         (TakeLog() == std::vector<std::string>{"stop a.ogg", "play b.ogg"}));
-    OO_CHECK(Current(controller)->_gain == OO_DEFAULT_SOUNDSOURCE_GAIN);
+    EXPECT_TRUE(Current(controller)->_gain == OO_DEFAULT_SOUNDSOURCE_GAIN);
 
     controller->stopMusicNamed("a.ogg");  // not the one playing
-    OO_CHECK(TakeLog().empty());
+    EXPECT_TRUE(TakeLog().empty());
     controller->stopMusicNamed("b.ogg");
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop b.ogg"}));
-    OO_CHECK(!controller->isPlaying() && controller->soundSource() == nullptr);
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop b.ogg"}));
+    EXPECT_TRUE(!controller->isPlaying() && controller->soundSource() == nullptr);
   }
-  OO_CHECK(gLiveMusics == 0);
+  EXPECT_TRUE(gLiveMusics == 0);
 }
 
-OO_TEST(specialMusic) {
-  SetUp();
+TEST(OOMusicController, specialMusic) {
+  ::SetUp();
   oo::MusicController* controller = oo::MusicController::sharedController();
   {
     controller->playThemeMusic();
-    OO_CHECK(
+    EXPECT_TRUE(
         (TakeLog() == std::vector<std::string>{"play OoliteTheme.ogg looped"}));
     controller->stopDockingMusic();  // not docking music: nothing
     controller->stopMissionMusic();
-    OO_CHECK(TakeLog().empty());
+    EXPECT_TRUE(TakeLog().empty());
     controller->stopThemeMusic();  // the theme gives way to the docked music
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop OoliteTheme.ogg",
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop OoliteTheme.ogg",
                                                     "play OoliteDocked.ogg"}));
 
     controller->playDockingMusic();
-    OO_CHECK(
+    EXPECT_TRUE(
         (TakeLog() == std::vector<std::string>{"stop OoliteDocked.ogg",
                                                "play BlueDanube.ogg looped"}));
     controller->toggleDockingMusic();  // playing the docking music: stops it
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop BlueDanube.ogg"}));
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop BlueDanube.ogg"}));
     controller->toggleDockingMusic();  // nothing playing: starts it
-    OO_CHECK(
+    EXPECT_TRUE(
         (TakeLog() == std::vector<std::string>{"play BlueDanube.ogg looped"}));
     controller->stopDockingMusic();
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop BlueDanube.ogg"}));
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop BlueDanube.ogg"}));
 
     // The mission music: the theme until it is set; none when it is cleared.
     controller->playMissionMusic();
-    OO_CHECK((TakeLog() == std::vector<std::string>{"play OoliteTheme.ogg"}));
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"play OoliteTheme.ogg"}));
     controller->setMissionMusic(std::string("mission.ogg"));
     controller->playMissionMusic();
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop OoliteTheme.ogg",
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop OoliteTheme.ogg",
                                                     "play mission.ogg"}));
     controller->stopMissionMusic();
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop mission.ogg"}));
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop mission.ogg"}));
     controller->setMissionMusic(std::nullopt);
     controller->playMissionMusic();
-    OO_CHECK(TakeLog().empty());
+    EXPECT_TRUE(TakeLog().empty());
 
     // A change of mode stops the music, and on again starts the special one.
     controller->playDockedMusic();
     TakeLog();
     controller->setMode(oo::MusicMode::kOff);
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop OoliteDocked.ogg"}));
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop OoliteDocked.ogg"}));
     controller->toggleDockingMusic();  // only when on
-    OO_CHECK(TakeLog().empty());
+    EXPECT_TRUE(TakeLog().empty());
     controller->playDockedMusic();  // off: remembered, not played
-    OO_CHECK(TakeLog().empty());
+    EXPECT_TRUE(TakeLog().empty());
     controller->setMode(oo::MusicMode::kOn);
-    OO_CHECK((TakeLog() == std::vector<std::string>{"play OoliteDocked.ogg"}));
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"play OoliteDocked.ogg"}));
 
     controller->justStop();
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop OoliteDocked.ogg"}));
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop OoliteDocked.ogg"}));
     controller->setMode(oo::MusicMode::kOff);
     controller->setMode(oo::MusicMode::kOn);  // nothing special any more: just stops
     controller->stop();
-    OO_CHECK(TakeLog().empty());
+    EXPECT_TRUE(TakeLog().empty());
   }
-  OO_CHECK(gLiveMusics == 0);
+  EXPECT_TRUE(gLiveMusics == 0);
 }
 
 // The C++ API: the one controller.
-OO_TEST(cxxApi) {
-  SetUp();
+TEST(OOMusicController, cxxApi) {
+  ::SetUp();
   oo::MusicController* controller = oo::MusicController::sharedController();
-  OO_CHECK(controller != nullptr &&
+  EXPECT_TRUE(controller != nullptr &&
            controller == oo::MusicController::sharedController());
   {
-    OO_CHECK(controller->mode() == oo::MusicMode::kOn);
+    EXPECT_TRUE(controller->mode() == oo::MusicMode::kOn);
     controller->setMissionMusic(std::string("c.ogg"));
     controller->playMissionMusic();
-    OO_CHECK((TakeLog() == std::vector<std::string>{"play c.ogg"}));
-    OO_CHECK(controller->isPlaying() &&
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"play c.ogg"}));
+    EXPECT_TRUE(controller->isPlaying() &&
              controller->playingMusic() == std::optional<std::string>("c.ogg"));
-    OO_CHECK(oo::MusicController::sharedController()->isPlaying());
+    EXPECT_TRUE(oo::MusicController::sharedController()->isPlaying());
     controller->playMusicNamed("d.ogg", true, 0.5f);
-    OO_CHECK((TakeLog() ==
+    EXPECT_TRUE((TakeLog() ==
               std::vector<std::string>{"stop c.ogg", "play d.ogg looped"}));
-    OO_CHECK(Current(oo::MusicController::sharedController())->_gain == 0.5f);
+    EXPECT_TRUE(Current(oo::MusicController::sharedController())->_gain == 0.5f);
     controller->stop();
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop d.ogg"}) &&
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop d.ogg"}) &&
              !controller->isPlaying());
   }
-  OO_CHECK(gLiveMusics == 0);
+  EXPECT_TRUE(gLiveMusics == 0);
 }
-
-OO_TEST_MAIN()

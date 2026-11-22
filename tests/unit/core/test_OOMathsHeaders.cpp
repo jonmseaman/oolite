@@ -9,6 +9,8 @@
    meson test -C build/meson_test test_OOMathsHeaders
 */
 
+#include <gtest/gtest.h>
+
 #include "FastArithmetic.h"
 #include "Quaternion.h"  // directly, not through OOMaths.h
 #include "Vector.h"
@@ -24,19 +26,15 @@ constexpr bool kUmbrellaMacros = false;
 #include <numbers>
 #include <type_traits>
 
-#include "oo_test.hpp"
-
 // The headers work on their own, and the umbrella's switches are gone.
-OO_TEST(mathsHeadersStandAlone) {
-  OO_CHECK(!kUmbrellaMacros);
-  OO_CHECK((std::is_same_v<oo::Scalar, GLfloat>));  // always the GL type
+TEST(OOMathsHeaders, mathsHeadersStandAlone) {
+  EXPECT_TRUE(!kUmbrellaMacros);
+  EXPECT_TRUE((std::is_same_v<oo::Scalar, GLfloat>));  // always the GL type
   Vector v = vector_add(make_vector(1, 2, 3), make_vector(1, 1, 1));
-  OO_CHECK(v.x == 2 && v.y == 3 && v.z == 4);
-  OO_CHECK(dot_product(v, make_vector(1, 0, 0)) == 2);
+  EXPECT_TRUE(v.x == 2 && v.y == 3 && v.z == 4);
+  EXPECT_TRUE(dot_product(v, make_vector(1, 0, 0)) == 2);
   Quaternion q = make_quaternion(1, 0, 0, 0);
-  OO_CHECK(quaternion_dot_product(q, q) == 1);
-  OO_CHECK(oo::Clamp_0_1_f(2.0f) == 1.0f);
-  OO_CHECK(std::min(3, 4) == 3 && std::max(3, 4) == 4 && std::numbers::pi > 3.14);
+  EXPECT_TRUE(quaternion_dot_product(q, q) == 1);
+  EXPECT_TRUE(oo::Clamp_0_1_f(2.0f) == 1.0f);
+  EXPECT_TRUE(std::min(3, 4) == 3 && std::max(3, 4) == 4 && std::numbers::pi > 3.14);
 }
-
-OO_TEST_MAIN()

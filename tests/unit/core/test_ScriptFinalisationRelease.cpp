@@ -25,13 +25,14 @@
 
 #include <quickjs.h>
 
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual entity references
 #include "OOJSShipGroup.h"
 #include "ShipGroup.h"
 #include "WaypointEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -100,7 +101,7 @@ JSContext* Context() {
 
 }  // namespace
 
-OO_TEST(aScriptObjectKeepsItsNativeObjectUntilFinalised) {
+TEST(ScriptFinalisationRelease, aScriptObjectKeepsItsNativeObjectUntilFinalised) {
   {
     oo::AutoreleaseScope scope;
     JSContext* context = Context();
@@ -111,21 +112,21 @@ OO_TEST(aScriptObjectKeepsItsNativeObjectUntilFinalised) {
           oo::ShipGroup::groupWithName(std::string("finalised"));
       watched = group;
       wrapper = group->jsValueInContext(context);
-      OO_CHECK(JS_IsObject(wrapper));
+      EXPECT_TRUE(JS_IsObject(wrapper));
     }  // the C++ reference goes; the wrapper's remains
     {
       oo::AutoreleaseScope drained;
     }
     JS_RunGC(JS_GetRuntime(context));
-    OO_CHECK(watched.lock().get() != nullptr);  // not before the wrapper is finalised
+    EXPECT_TRUE(watched.lock().get() != nullptr);  // not before the wrapper is finalised
 
     JS_FreeValue(context, wrapper);
     JS_RunGC(JS_GetRuntime(context));
-    OO_CHECK(watched.lock().get() == nullptr);  // released by the finaliser
+    EXPECT_TRUE(watched.lock().get() == nullptr);  // released by the finaliser
   }
 }
 
-OO_TEST(anEntityIsDisposedOnceAtItsLastReleaseAfterRemoval) {
+TEST(ScriptFinalisationRelease, anEntityIsDisposedOnceAtItsLastReleaseAfterRemoval) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = SetUpUniverse();
@@ -139,28 +140,26 @@ OO_TEST(anEntityIsDisposedOnceAtItsLastReleaseAfterRemoval) {
       waypoint = oo::RetainEntity(oo::MadeEntity(part));
     }
     std::weak_ptr<Entity> watched(oo::share(waypoint));
-    OO_CHECK(u->addEntity(waypoint));
-    OO_CHECK(sLog.empty());
+    EXPECT_TRUE(u->addEntity(waypoint));
+    EXPECT_TRUE(sLog.empty());
 
     u->removeEntity(waypoint);
-    OO_CHECK((sLog == std::vector<std::string>{"removed"}));
-    OO_CHECK(watched.lock().get() == waypoint);  // the test's hold keeps it
+    EXPECT_TRUE((sLog == std::vector<std::string>{"removed"}));
+    EXPECT_TRUE(watched.lock().get() == waypoint);  // the test's hold keeps it
 
     oo::ReleaseEntity(waypoint);  // the test's hold; the universe's dead list
                                   // keeps it until the update ends
-    OO_CHECK((sLog == std::vector<std::string>{"removed"}));
-    OO_CHECK(watched.lock().get() == waypoint);
+    EXPECT_TRUE((sLog == std::vector<std::string>{"removed"}));
+    EXPECT_TRUE(watched.lock().get() == waypoint);
 
     {
       oo::AutoreleaseScope frame;
       u->no_update = true;
       u->update(1.0);  // the dead are autoreleased
-      OO_CHECK(u->entitiesDeadThisUpdate.empty());
-      OO_CHECK((sLog == std::vector<std::string>{"removed"}));
+      EXPECT_TRUE(u->entitiesDeadThisUpdate.empty());
+      EXPECT_TRUE((sLog == std::vector<std::string>{"removed"}));
     }  // the pool drains: the last release, and disposal
-    OO_CHECK((sLog == std::vector<std::string>{"removed", "destroyed"}));
-    OO_CHECK(watched.lock().get() == nullptr);
+    EXPECT_TRUE((sLog == std::vector<std::string>{"removed", "destroyed"}));
+    EXPECT_TRUE(watched.lock().get() == nullptr);
   }
 }
-
-OO_TEST_MAIN()

@@ -15,11 +15,12 @@
 #include <filesystem>
 #include <fstream>
 
+#include <gtest/gtest.h>
+
 #include "ModelVerifierStage.h"
 #include "OXPVerifierStage.h"
 #include "PixMap.h"
 #include "TextureLoader.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListParsing.hpp"
 
@@ -126,34 +127,34 @@ oo::OXPVerifier* MakeVerifier(
 
 }  // namespace
 
-OO_TEST(nameRegistersTheStage) {
+TEST(OOModelVerifierStage, nameRegistersTheStage) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({});
-    OO_CHECK(verifier->stageWithName("Testing models") == nullptr);
-    OO_CHECK(verifier->stageWithName(oo::ModelVerifierStage::kName) == nullptr);
-    OO_CHECK(oo::ModelVerifierStage::nameForReverseDependencyForVerifier(
+    EXPECT_TRUE(verifier->stageWithName("Testing models") == nullptr);
+    EXPECT_TRUE(verifier->stageWithName(oo::ModelVerifierStage::kName) == nullptr);
+    EXPECT_TRUE(oo::ModelVerifierStage::nameForReverseDependencyForVerifier(
                  verifier) == "Testing models");
     oo::OXPVerifierStage* registered =
         verifier->stageWithName(oo::ModelVerifierStage::kName);
-    OO_CHECK(registered != nullptr &&
+    EXPECT_TRUE(registered != nullptr &&
              verifier->stageWithName("Testing models") == registered);
-    OO_CHECK(oo::ModelVerifierStage::nameForReverseDependencyForVerifier(
+    EXPECT_TRUE(oo::ModelVerifierStage::nameForReverseDependencyForVerifier(
                  verifier) == "Testing models");
-    OO_CHECK(verifier->stageWithName(oo::ModelVerifierStage::kName) ==
+    EXPECT_TRUE(verifier->stageWithName(oo::ModelVerifierStage::kName) ==
              registered);  // once
 
-    OO_CHECK(registered->name() ==
+    EXPECT_TRUE(registered->name() ==
              std::optional<std::string>("Testing models"));
-    OO_CHECK(registered->dependencies() == kScannerName);
-    OO_CHECK(registered->dependents() ==
+    EXPECT_TRUE(registered->dependencies() == kScannerName);
+    EXPECT_TRUE(registered->dependents() ==
              (std::vector<std::string>{"Checking for unused files",
                                        "Testing textures and images"}));
-    OO_CHECK(!registered->shouldRun());
+    EXPECT_TRUE(!registered->shouldRun());
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(stagesNameModels) {
+TEST(OOModelVerifierStage, stagesNameModels) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({{"Models/ship.dat", "model"}});
     const std::shared_ptr<oo::ModelVerifierStage> stage =
@@ -161,32 +162,32 @@ OO_TEST(stagesNameModels) {
     stage->setVerifier(verifier);
     const oo::PList materials = *oo::parsePropertyListData("{ a = b; }");
 
-    OO_CHECK(!stage->modelNamed("", "a", "shipdata.plist", oo::PList(),
+    EXPECT_TRUE(!stage->modelNamed("", "a", "shipdata.plist", oo::PList(),
                                 oo::PList()));
-    OO_CHECK(!stage->modelNamed("missing.dat", "a", "shipdata.plist",
+    EXPECT_TRUE(!stage->modelNamed("missing.dat", "a", "shipdata.plist",
                                 oo::PList(), oo::PList()));
-    OO_CHECK(!stage->shouldRun() &&
+    EXPECT_TRUE(!stage->shouldRun() &&
              gLog.empty());  // a missing model: the caller complains
 
-    OO_CHECK(stage->modelNamed("ship.dat", "a", "shipdata.plist", materials,
+    EXPECT_TRUE(stage->modelNamed("ship.dat", "a", "shipdata.plist", materials,
                                oo::PList()));
-    OO_CHECK(stage->shouldRun());
-    OO_CHECK(stage->modelNamed("ship.dat", "a", "shipdata.plist", materials,
+    EXPECT_TRUE(stage->shouldRun());
+    EXPECT_TRUE(stage->modelNamed("ship.dat", "a", "shipdata.plist", materials,
                                oo::PList()));  // again: once
-    OO_CHECK(stage->modelNamed("ship.dat", "b", "shipdata.plist", oo::PList(),
+    EXPECT_TRUE(stage->modelNamed("ship.dat", "b", "shipdata.plist", oo::PList(),
                                oo::PList()));  // another entry
-    OO_CHECK(stage->modelNamed("builtin.dat", std::nullopt, "demoships.plist",
+    EXPECT_TRUE(stage->modelNamed("builtin.dat", std::nullopt, "demoships.plist",
                                oo::PList(), oo::PList()));
-    OO_CHECK(stage->modelNamed("SHIP.DAT", "c", "shipdata.plist", oo::PList(),
+    EXPECT_TRUE(stage->modelNamed("SHIP.DAT", "c", "shipdata.plist", oo::PList(),
                                oo::PList()));
     const size_t caseWarnings =
         gLog.size();  // the scanner's case warning for SHIP.DAT
-    OO_CHECK(LogLinesContaining("case mismatch") == 1);
+    EXPECT_TRUE(LogLinesContaining("case mismatch") == 1);
 
     gLog.clear();
     stage->run();
-    OO_CHECK(caseWarnings == 1);
-    OO_CHECK(gLog == (std::vector<std::string>{
+    EXPECT_TRUE(caseWarnings == 1);
+    EXPECT_TRUE(gLog == (std::vector<std::string>{
                          "TODO: implement model verifier.",
                          "- Pretending to verify model ship.dat referenced in "
                          "entry \"a\" of shipdata.plist.",
@@ -198,10 +199,10 @@ OO_TEST(stagesNameModels) {
                          "entry \"c\" of shipdata.plist."}));
 
     // The models are forgotten after the run.
-    OO_CHECK(!stage->shouldRun());
+    EXPECT_TRUE(!stage->shouldRun());
     gLog.clear();
     stage->run();
-    OO_CHECK(gLog ==
+    EXPECT_TRUE(gLog ==
              std::vector<std::string>{"TODO: implement model verifier."});
   }
   std::filesystem::remove_all(kBase);
@@ -209,33 +210,31 @@ OO_TEST(stagesNameModels) {
 
 // The stage is global: the verifier registers the stage itself, and finds it by
 // name for the ship data stage.
-OO_TEST(facade) {
+TEST(OOModelVerifierStage, facade) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({{"Models/ship.dat", "model"}});
     oo::ModelVerifierStage::nameForReverseDependencyForVerifier(verifier);
     oo::ModelVerifierStage* stage = static_cast<oo::ModelVerifierStage*>(
         verifier->stageWithName(oo::ModelVerifierStage::kName));
-    OO_CHECK(stage != nullptr);
-    OO_CHECK(stage->description().starts_with("<OOModelVerifierStage 0x"));
+    EXPECT_TRUE(stage != nullptr);
+    EXPECT_TRUE(stage->description().starts_with("<OOModelVerifierStage 0x"));
 
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>(oo::ModelVerifierStage::kName));
-    OO_CHECK(stage->dependents() ==
+    EXPECT_TRUE(stage->dependents() ==
              (std::vector<std::string>{"Checking for unused files",
                                        "Testing textures and images"}));
-    OO_CHECK(!stage->shouldRun());
-    OO_CHECK(stage->modelNamed("ship.dat", "a", "shipdata.plist", oo::PList(),
+    EXPECT_TRUE(!stage->shouldRun());
+    EXPECT_TRUE(stage->modelNamed("ship.dat", "a", "shipdata.plist", oo::PList(),
                                oo::PList()));
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->shouldRun());
     gLog.clear();
     stage->dependencyRegistrationComplete();
     stage->performRun();
-    OO_CHECK(
+    EXPECT_TRUE(
         gLog.size() == 2 &&
         LogLinesContaining("- Pretending to verify model ship.dat referenced "
                            "in entry \"a\" of shipdata.plist.") == 1);
   }
   std::filesystem::remove_all(kBase);
 }
-
-OO_TEST_MAIN()

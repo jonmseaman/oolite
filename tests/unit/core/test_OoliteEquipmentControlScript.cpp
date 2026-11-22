@@ -12,6 +12,7 @@
    $equipmentEnabled entry is 0, not absent).
 */
 
+#include <gtest/gtest.h>
 #include <quickjs.h>
 
 #include <cstdio>
@@ -22,14 +23,7 @@
 
 namespace {
 
-int gFailures = 0;
-#define CHECK(cond)                                               \
-  do {                                                            \
-    if (!(cond)) {                                                \
-      std::printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); \
-      ++gFailures;                                                \
-    }                                                             \
-  } while (0)
+#define CHECK(cond) EXPECT_TRUE(cond)
 
 // The script, found from this file's directory or the working directory
 // upwards.
@@ -80,27 +74,24 @@ bool Eval(JSContext* cx, const std::string& code, bool* result = nullptr) {
 }
 
 // Evaluates an expression that must run and be true.
-#define CHECK_JS(cx, code)                                       \
-  do {                                                           \
-    bool truth_ = false;                                         \
-    if (!(Eval((cx), (code), &truth_) && truth_)) {              \
-      std::printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, code); \
-      ++gFailures;                                               \
-    }                                                            \
+#define CHECK_JS(cx, code)                                        \
+  do {                                                            \
+    bool truth_ = false;                                          \
+    EXPECT_TRUE(Eval((cx), (code), &truth_) && truth_) << (code); \
   } while (0)
 
 }  // namespace
 
-int main() {
+TEST(OoliteEquipmentControlScript, incompatible_equipment_is_removed_only_while_enabled) {
   const std::string script = ScriptSource();
   CHECK(!script.empty());
-  if (script.empty()) return 1;
+  if (script.empty()) return;
 
   // A QuickJS-ng context has the standard classes from the start.
   JSRuntime* rt = JS_NewRuntime();
   JSContext* cx = rt != nullptr ? JS_NewContext(rt) : nullptr;
   CHECK(rt != nullptr && cx != nullptr);
-  if (cx == nullptr) return 1;
+  if (cx == nullptr) return;
 
   // The stand-ins: EQ_A and EQ_B are incompatible with each other; removals are
   // recorded.
@@ -143,7 +134,4 @@ int main() {
 
   JS_FreeContext(cx);
   JS_FreeRuntime(rt);
-
-  if (gFailures == 0) std::printf("test_OoliteEquipmentControlScript: OK\n");
-  return gFailures == 0 ? 0 : 1;
 }

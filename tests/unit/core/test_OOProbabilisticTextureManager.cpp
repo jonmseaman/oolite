@@ -25,12 +25,14 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "ProbabilisticTextureManager.h"
 #include "Texture.h"
 #include "Types.h"
-#include "oo_test.hpp"
 #include "oofnd/String.hpp"
 
 // --- The game around the class
@@ -194,12 +196,12 @@ bool CheckPicks(const char* what, const std::string& picks,
 // --- Tests
 // --------------------------------------------------------------------------------------
 
-OO_TEST(entriesKeptAndHowTheyAreLoaded) {
+TEST(OOProbabilisticTextureManager, entriesKeptAndHowTheyAreLoaded) {
   {
     Reset(Config());
     std::shared_ptr<oo::ProbabilisticTextureManager> manager = Manager(MakeRanrotSeed(1));
-    OO_CHECK(manager != nullptr);
-    OO_CHECK(manager->textureCount() == 4);
+    EXPECT_TRUE(manager != nullptr);
+    EXPECT_TRUE(manager->textureCount() == 4);
     const std::vector<std::string> expected = {
         "config test.plist in Config merged",
         "texture a.png in Textures options=0x803 anisotropy=0.5 lodBias=-0.25",
@@ -209,33 +211,33 @@ OO_TEST(entriesKeptAndHowTheyAreLoaded) {
         "texture g.png in Textures options=0x803 anisotropy=0.5 lodBias=-0.25",
         "texture h.png in Textures options=0x803 anisotropy=0.5 lodBias=-0.25",
     };
-    OO_CHECK(gLog == expected);
+    EXPECT_TRUE(gLog == expected);
     if (gLog != expected)
       for (const std::string& line : gLog)
         std::fprintf(stderr, "  %s\n", line.c_str());
 
     // The cumulative probability of the galaxy-wide entries: a 1, b 3, h 1.
-    OO_CHECK(
+    EXPECT_TRUE(
         manager->descriptionComponents() ==
         std::optional<std::string>("4 textures, cumulative probability=5"));
   }
 }
 
-OO_TEST(nothingLoadedIsNil) {
+TEST(OOProbabilisticTextureManager, nothingLoadedIsNil) {
   {
     Reset(oo::PList(oo::PList::Array{}));
-    OO_CHECK(Manager(MakeRanrotSeed(1)) == nullptr);
+    EXPECT_TRUE(Manager(MakeRanrotSeed(1)) == nullptr);
     Reset(oo::PList(oo::PList::Array{oo::PList("missing.png"),
                                      Dict({{"texture", oo::PList("x.png")},
                                            {"probability", oo::PList(-1)}})}));
-    OO_CHECK(Manager(MakeRanrotSeed(1)) == nullptr);
+    EXPECT_TRUE(Manager(MakeRanrotSeed(1)) == nullptr);
     Reset(oo::PList());  // no such plist
-    OO_CHECK(Manager(MakeRanrotSeed(1)) == nullptr);
-    OO_CHECK(gLog.size() == 1);  // asked for the config, and nothing else
+    EXPECT_TRUE(Manager(MakeRanrotSeed(1)) == nullptr);
+    EXPECT_TRUE(gLog.size() == 1);  // asked for the config, and nothing else
   }
 }
 
-OO_TEST(seed) {
+TEST(OOProbabilisticTextureManager, seed) {
   {
     Reset(Config());
     RANROTSeed global = MakeRanrotSeed(77);
@@ -243,39 +245,39 @@ OO_TEST(seed) {
     std::shared_ptr<oo::ProbabilisticTextureManager> manager =
         oo::ProbabilisticTextureManager::createWithPListName("test.plist", oo::TextureFlags::kNone, 0,
                                                            0);
-    OO_CHECK(SameSeed(manager->seed(), global));  // copied from the global seed
-    OO_CHECK(SameSeed(RANROTGetFullSeed(), global));  // and that is left alone
+    EXPECT_TRUE(SameSeed(manager->seed(), global));  // copied from the global seed
+    EXPECT_TRUE(SameSeed(RANROTGetFullSeed(), global));  // and that is left alone
 
     manager->setSeed(MakeRanrotSeed(5));
-    OO_CHECK(SameSeed(manager->seed(), MakeRanrotSeed(5)));
+    EXPECT_TRUE(SameSeed(manager->seed(), MakeRanrotSeed(5)));
     manager->selectTexture();
-    OO_CHECK(
+    EXPECT_TRUE(
         !SameSeed(manager->seed(), MakeRanrotSeed(5)));  // a pick advances it
-    OO_CHECK(SameSeed(RANROTGetFullSeed(), global));
+    EXPECT_TRUE(SameSeed(RANROTGetFullSeed(), global));
 
     // Two managers with one seed pick alike.
-    OO_CHECK(Picks(Manager(MakeRanrotSeed(9)), 30) ==
+    EXPECT_TRUE(Picks(Manager(MakeRanrotSeed(9)), 30) ==
              Picks(Manager(MakeRanrotSeed(9)), 30));
   }
 }
 
-OO_TEST(picks) {
+TEST(OOProbabilisticTextureManager, picks) {
   {
     Reset(Config());
-    OO_CHECK(CheckPicks("galaxy 0, seed A",
+    EXPECT_TRUE(CheckPicks("galaxy 0, seed A",
                         Picks(Manager(MakeRanrotSeed(0x1234567)), 40),
                         "bhabhbabbhbhbbhahbahbbbaabbhbbbbbbabbabb"));
-    OO_CHECK(CheckPicks("galaxy 0, seed B",
+    EXPECT_TRUE(CheckPicks("galaxy 0, seed B",
                         Picks(Manager(MakeRanrotSeed(0x7654321)), 40),
                         "bhbabahhabbabbhbbhbhbahbbaabababaaabhbbb"));
     // In galaxy 2, h (added after g, cumulative 5) is never picked: g
     // (cumulative 8) comes first in the list and takes every pick in (4, 8],
     // and the picks only reach 9.
     gGalaxy = 2;
-    OO_CHECK(CheckPicks("galaxy 2, seed A",
+    EXPECT_TRUE(CheckPicks("galaxy 2, seed A",
                         Picks(Manager(MakeRanrotSeed(0x1234567)), 40),
                         "ggabgbbbggbggggaggaggggbagggbbggggagbbgg"));
-    OO_CHECK(CheckPicks("galaxy 2, seed B",
+    EXPECT_TRUE(CheckPicks("galaxy 2, seed B",
                         Picks(Manager(MakeRanrotSeed(0x7654321)), 40),
                         "ggbabbggabbagbggggggbbgbgabbagbbabbggbbg"));
 
@@ -286,7 +288,7 @@ OO_TEST(picks) {
         Dict({{"texture", oo::PList("g.png")}, {"galaxy", oo::PList("0")}}),
         oo::PList("a.png"),
     }));
-    OO_CHECK(CheckPicks("fallback to the galaxy's first",
+    EXPECT_TRUE(CheckPicks("fallback to the galaxy's first",
                         Picks(Manager(MakeRanrotSeed(0xBADC0DE)), 40),
                         "gggggggggggggggggggggggggggggggggggggggg"));
 
@@ -296,12 +298,12 @@ OO_TEST(picks) {
         Dict({{"texture", oo::PList("k.png")}, {"galaxy", oo::PList("2")}}),
     }));
     gGalaxy = 1;
-    OO_CHECK(CheckPicks("nothing for the galaxy",
+    EXPECT_TRUE(CheckPicks("nothing for the galaxy",
                         Picks(Manager(MakeRanrotSeed(3)), 10), "kkkkkkkkkk"));
   }
 }
 
-OO_TEST(texturesAreLoadedAndKept) {
+TEST(OOProbabilisticTextureManager, texturesAreLoadedAndKept) {
   std::vector<TestTexture*> textures;
   std::shared_ptr<oo::ProbabilisticTextureManager> manager;
   {
@@ -322,18 +324,16 @@ OO_TEST(texturesAreLoadedAndKept) {
       }
     }
   }
-  OO_CHECK(textures.size() == 4);
+  EXPECT_TRUE(textures.size() == 4);
   manager->ensureTexturesLoaded();
   manager->ensureTexturesLoaded();
   for (TestTexture* texture : textures) {
-    OO_CHECK(texture->_loaded == 2);
-    OO_CHECK(texture->weak_from_this().use_count() == 2);  // the test's and the manager's
+    EXPECT_TRUE(texture->_loaded == 2);
+    EXPECT_TRUE(texture->weak_from_this().use_count() == 2);  // the test's and the manager's
   }
   manager = nullptr;
   for (TestTexture* texture : textures) {
-    OO_CHECK(texture->weak_from_this().use_count() == 1);
+    EXPECT_TRUE(texture->weak_from_this().use_count() == 1);
     oo::test::Release(texture);
   }
 }
-
-OO_TEST_MAIN()

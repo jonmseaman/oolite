@@ -16,6 +16,8 @@
 	Run: bash tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "Color.h"
 #include "GuiDisplayGen.h"
@@ -117,7 +119,6 @@ public:
 #include "OOJSEngineCore.h"
 #include "OOJSGlobal.h"
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstdint>
@@ -634,14 +635,14 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(globalObject)
+TEST(OOJSGlobal, globalObject)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("global === this && global.global === global", "true");
@@ -650,7 +651,7 @@ OO_TEST(globalObject)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSGlobal, properties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("galaxyNumber", "3");
@@ -666,26 +667,26 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(log)
+TEST(OOJSGlobal, log)
 {
 	SetUpContext();
 	sMonitorMessages.clear();
 	OO_CHECK_EVAL("log()", "undefined");
-	OO_CHECK(sMonitorMessages.empty());
+	EXPECT_TRUE(sMonitorMessages.empty());
 	OO_CHECK_EVAL("log('hello')", "undefined");
 	OO_CHECK_EVAL("log(null)", "undefined");
 	OO_CHECK_EVAL("log('script.debug.message', 'a', 2, null)", "undefined");
-	OO_CHECK_EQ(sMonitorMessages.size(), 3u);
+	EXPECT_EQ(sMonitorMessages.size(), 3u);
 	if (sMonitorMessages.size() == 3)
 	{
-		OO_CHECK_EQ(sMonitorMessages[0], std::string("(no class): hello"));
-		OO_CHECK_EQ(sMonitorMessages[1], std::string("(no class): (null)"));
-		OO_CHECK_EQ(sMonitorMessages[2], std::string("(no class): a, 2, null"));
+		EXPECT_EQ(sMonitorMessages[0], std::string("(no class): hello"));
+		EXPECT_EQ(sMonitorMessages[1], std::string("(no class): (null)"));
+		EXPECT_EQ(sMonitorMessages[2], std::string("(no class): a, 2, null"));
 	}
 }
 
 
-OO_TEST(expansion)
+TEST(OOJSGlobal, expansion)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("expandDescription('[x]')", "<[x]>");
@@ -712,29 +713,29 @@ OO_TEST(expansion)
 }
 
 
-OO_TEST(screens)
+TEST(OOJSGlobal, screens)
 {
 	SetUpContext();
 	sLastWarning.clear();
 	OO_CHECK_EVAL("setScreenBackground({name: 'bg.png'})", "true");
-	OO_CHECK_EQ(oo::DescriptionOf(sGuiBackground), oo::DescriptionOf(oo::PList(oo::PList::Dict{ { "name", oo::PList(std::string("bg.png")) } })));
-	OO_CHECK(sPlayer->_equipBackground.isNull());
+	EXPECT_EQ(oo::DescriptionOf(sGuiBackground), oo::DescriptionOf(oo::PList(oo::PList::Dict{ { "name", oo::PList(std::string("bg.png")) } })));
+	EXPECT_TRUE(sPlayer->_equipBackground.isNull());
 	sPlayer->_screen = oo::GUIScreenID::kEquipShip;
 	OO_CHECK_EVAL("setScreenBackground({name: 'eq.png'})", "true");
-	OO_CHECK(!sPlayer->_equipBackground.isNull());
+	EXPECT_TRUE(!sPlayer->_equipBackground.isNull());
 	sPlayer->_screen = oo::GUIScreenID::kStatus;
 	OO_CHECK_EVAL("setScreenBackground(null)", "false");
 	OO_CHECK_EVAL("setScreenBackground()", "false");
-	OO_CHECK_EQ(sLastWarning, std::string("Usage error: setScreenBackground() called with no arguments. Treating as setScreenBackground(null). This call may fail in a future version of Oolite."));
+	EXPECT_EQ(sLastWarning, std::string("Usage error: setScreenBackground() called with no arguments. Treating as setScreenBackground(null). This call may fail in a future version of Oolite."));
 	OO_CHECK_EVAL("setScreenBackground(undefined)", "threw: bad arguments: -.setScreenBackground(1) - / GUI texture descriptor");
 	OO_CHECK_EVAL("setScreenOverlay({name: 'fg.png'})", "true");
-	OO_CHECK(!sGuiForeground.isNull());
+	EXPECT_TRUE(!sGuiForeground.isNull());
 	OO_CHECK_EVAL("setScreenOverlay(undefined)", "threw: bad arguments: -.setScreenOverlay(1) - / GUI texture descriptor");
 	// Not on a GUI view: nothing is set.
 	sUniverse->_view = oo::ViewID::kForward;
 	sGuiForeground = oo::PList();
 	OO_CHECK_EVAL("setScreenOverlay({name: 'fg.png'})", "false");
-	OO_CHECK(sGuiForeground.isNull());
+	EXPECT_TRUE(sGuiForeground.isNull());
 	sUniverse->_view = oo::ViewID::kGUIDisplay;
 	// Backgrounds by key.
 	OO_CHECK_EVAL("setScreenBackgroundForKey('long_range_chart', {name: 'lrc.png'})", "true");
@@ -749,7 +750,7 @@ OO_TEST(screens)
 }
 
 
-OO_TEST(guiColors)
+TEST(OOJSGlobal, guiColors)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("getGuiColorSettingForKey('screen_title_color')", "null");
@@ -767,14 +768,14 @@ OO_TEST(guiColors)
 }
 
 
-OO_TEST(extraGuiScreenKeys)
+TEST(OOJSGlobal, extraGuiScreenKeys)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("setExtraGuiScreenKeys('myKeys', {guiScreen: 'GUI_SCREEN_STATUS', registerKeys: {keys: ['a', 'b']}, callback: function () {}})", "true");
-	OO_CHECK_EQ(sPlayer->_lastKeys, std::string("set ") + std::to_string(static_cast<int>(oo::GUIScreenID::kStatus)) + " myKeys " + oo::DescriptionOf(oo::PList(oo::PList::Dict{ { "keys", oo::PList(oo::PList::Array{ oo::PList(std::string("a")), oo::PList(std::string("b")) }) } })));
-	OO_CHECK(sPlayer->_definition.get() != nullptr && IsObject(sPlayer->_definition->callback()) && !IsObject(sPlayer->_definition->callbackThis()));
+	EXPECT_EQ(sPlayer->_lastKeys, std::string("set ") + std::to_string(static_cast<int>(oo::GUIScreenID::kStatus)) + " myKeys " + oo::DescriptionOf(oo::PList(oo::PList::Dict{ { "keys", oo::PList(oo::PList::Array{ oo::PList(std::string("a")), oo::PList(std::string("b")) }) } })));
+	EXPECT_TRUE(sPlayer->_definition.get() != nullptr && IsObject(sPlayer->_definition->callback()) && !IsObject(sPlayer->_definition->callbackThis()));
 	OO_CHECK_EVAL("setExtraGuiScreenKeys('myKeys', {guiScreen: 'GUI_SCREEN_STATUS', registerKeys: null, callback: function () {}, cbThis: global})", "true");
-	OO_CHECK(IsSameObject(sPlayer->_definition->callbackThis(), sGlobal));
+	EXPECT_TRUE(IsSameObject(sPlayer->_definition->callbackThis(), sGlobal));
 	OO_CHECK_EVAL("setExtraGuiScreenKeys('myKeys', {guiScreen: 'GUI_SCREEN_SHIPYARD', registerKeys: {}, callback: function () {}})", "false");
 	// The count of definition arguments given, at most 2 (#768's defArgc).
 	OO_CHECK_EVAL("setExtraGuiScreenKeys('k')", "threw: bad arguments: global.setExtraGuiScreenKeys(0) - / key, definition: definition is not a valid dictionary.");
@@ -786,32 +787,32 @@ OO_TEST(extraGuiScreenKeys)
 	OO_CHECK_EVAL("setExtraGuiScreenKeys('k', {guiScreen: 'GUI_SCREEN_STATUS', registerKeys: {}})", "threw: bad arguments: global.setExtraGuiScreenKeys(1) - / key, definition; must have a 'callback' property.");
 	OO_CHECK_EVAL("setExtraGuiScreenKeys('k', {guiScreen: 'GUI_SCREEN_STATUS', registerKeys: {}, callback: 5})", "threw: bad arguments: global.setExtraGuiScreenKeys(1) - / key, definition; 'callback' property must be a function.");
 	OO_CHECK_EVAL("clearExtraGuiScreenKeys('myKeys', 'GUI_SCREEN_STATUS')", "true");
-	OO_CHECK_EQ(sPlayer->_lastKeys, "clear " + std::to_string(static_cast<int>(oo::GUIScreenID::kStatus)) + " myKeys");
+	EXPECT_EQ(sPlayer->_lastKeys, "clear " + std::to_string(static_cast<int>(oo::GUIScreenID::kStatus)) + " myKeys");
 	OO_CHECK_EVAL("clearExtraGuiScreenKeys('myKeys', 'NOT_A_SCREEN')", "threw: bad arguments: -.clearExtraGuiScreenKeys(0) - / guiScreen invalid entry");
 	OO_CHECK_EVAL("clearExtraGuiScreenKeys('', 'GUI_SCREEN_STATUS')", "threw: bad arguments: -.clearExtraGuiScreenKeys(1) - / key");
 	OO_CHECK_EVAL("clearExtraGuiScreenKeys('k')", "threw: bad arguments: -.setExtraGuiScreenKeys(0) - / missing arguments");
 }
 
 
-OO_TEST(pauseAndQuit)
+TEST(OOJSGlobal, pauseAndQuit)
 {
 	SetUpContext();
 	sUniverse->_paused = 0;
 	OO_CHECK_EVAL("pauseGame()", "true");
-	OO_CHECK_EQ(sUniverse->_paused, 1);
+	EXPECT_EQ(sUniverse->_paused, 1);
 	sPlayer->_screen = oo::GUIScreenID::kMission;
 	OO_CHECK_EVAL("pauseGame()", "false");
-	OO_CHECK_EQ(sUniverse->_paused, 1);
+	EXPECT_EQ(sUniverse->_paused, 1);
 	sPlayer->_screen = oo::GUIScreenID::kStatus;
 	OO_CHECK_EVAL("quitGame()", "true");
-	OO_CHECK_EQ(sUniverse->_quit, 0);	// deferred until the script returns
+	EXPECT_EQ(sUniverse->_quit, 0);	// deferred until the script returns
 	RunDeferredCalls();
-	OO_CHECK_EQ(sUniverse->_quit, 1);
+	EXPECT_EQ(sUniverse->_quit, 1);
 	OO_CHECK_EVAL("takeSnapShot('bad name!')", "threw: bad arguments: -.takeSnapShot(1) - / alphanumeric string");
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSGlobal, nativeExceptions)
 {
 	SetUpContext();
 	sUniverse->_raise = true;
@@ -821,9 +822,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("expandMissionText('greeting')", "threw: Native exception: cxx boom");
 	sUniverse->_throwCxx = false;
 	OO_CHECK_EVAL("expandMissionText('greeting')", "<Hello [name]>\\n");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

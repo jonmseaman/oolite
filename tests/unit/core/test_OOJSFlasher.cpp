@@ -19,6 +19,8 @@
 	Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Color.h"
 #include <quickjs.h>
 #include "oofnd/Exception.hpp"
@@ -143,7 +145,6 @@ bool OOJSFlasherIsVisibleToScripts(void);
 #include "OOJSEngineCore.h"
 
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstdint>
@@ -513,25 +514,25 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSFlasher, registration)
 {
 	SetUpContext();
 	JSClassID flasherClass = sFlasher->oo_jsClassID();
-	OO_CHECK(flasherClass != 0 && OOJSClassName(flasherClass) != nullptr && std::strcmp(OOJSClassName(flasherClass), "Flasher") == 0);
+	EXPECT_TRUE(flasherClass != 0 && OOJSClassName(flasherClass) != nullptr && std::strcmp(OOJSClassName(flasherClass), "Flasher") == 0);
 	JSValue prototype = JS_GetClassProto(sContext, flasherClass);
-	OO_CHECK(JS_IsObject(prototype));
+	EXPECT_TRUE(JS_IsObject(prototype));
 	JS_FreeValue(sContext, prototype);
-	OO_CHECK(OOJSIsSubclass(flasherClass, sFakeEntityClassID));
-	OO_CHECK_EQ(sConverters[flasherClass], 1);
-	OO_CHECK(sFlasher->oo_jsClassName() == std::optional<std::string>("Flasher"));
-	OO_CHECK(sFlasher->isVisibleToScripts());
+	EXPECT_TRUE(OOJSIsSubclass(flasherClass, sFakeEntityClassID));
+	EXPECT_EQ(sConverters[flasherClass], 1);
+	EXPECT_TRUE(sFlasher->oo_jsClassName() == std::optional<std::string>("Flasher"));
+	EXPECT_TRUE(sFlasher->isVisibleToScripts());
 	OO_CHECK_EVAL("typeof Flasher", "function");
 	OO_CHECK_EVAL("new Flasher()", "threw: unconstructable");
 	OO_CHECK_EVAL("Object.getPrototypeOf(Flasher.prototype) === Entity.prototype", "true");
@@ -539,7 +540,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSFlasher, properties)
 {
 	OO_CHECK_EVAL("flasher.active", "true");
 	OO_CHECK_EVAL("flasher.color", "1,0.5,0.25,1");
@@ -551,7 +552,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(setters)
+TEST(OOJSFlasher, setters)
 {
 	OO_CHECK_EVAL("(function () { flasher.active = 0; return flasher.active; })()", "false");
 	OO_CHECK_EVAL("(function () { flasher.active = 'yes'; return flasher.active; })()", "true");
@@ -565,42 +566,42 @@ OO_TEST(setters)
 	OO_CHECK_EVAL("(function () { flasher.size = 4; return flasher.size; })()", "4");
 	OO_CHECK_EVAL("(function () { flasher.size = 0; return flasher.size; })()", "threw: bad property value");
 	OO_CHECK_EVAL("(function () { flasher.size = 'abc'; return flasher.size; })()", "threw: bad property value");
-	OO_CHECK(sFlasherPart->_frequency == 0 && sFlasherPart->_fraction == 1 && sFlasherPart->_phase == -0.75f && sFlasherPart->_diameter == 4);
+	EXPECT_TRUE(sFlasherPart->_frequency == 0 && sFlasherPart->_fraction == 1 && sFlasherPart->_phase == -0.75f && sFlasherPart->_diameter == 4);
 }
 
 
-OO_TEST(color)
+TEST(OOJSFlasher, color)
 {
 	OO_CHECK_EVAL("(function () { flasher.color = [0, 1, 0]; return flasher.color; })()", "0,1,0,1");
 	OO_CHECK_EVAL("(function () { flasher.color = 'redColor'; return flasher.color; })()", "1,0,0,1");
 	OO_CHECK_EVAL("(function () { flasher.color = null; return flasher.color; })()", "null");
-	OO_CHECK(sFlasherPart->_color == nullptr);
+	EXPECT_TRUE(sFlasherPart->_color == nullptr);
 	OO_CHECK_EVAL("(function () { flasher.color = 'not a colour'; return flasher.color; })()", "threw: bad property value");
 	OO_CHECK_EVAL("(function () { flasher.color = [0.25, 0.5, 0.75, 0.5]; return flasher.color; })()", "0.25,0.5,0.75,0.5");
-	OO_CHECK(sFlasherPart->_color != nullptr && sFlasherPart->_color->alphaComponent() == 0.5f);
+	EXPECT_TRUE(sFlasherPart->_color != nullptr && sFlasherPart->_color->alphaComponent() == 0.5f);
 }
 
 
-OO_TEST(remove)
+TEST(OOJSFlasher, remove)
 {
 	SetUpContext();
 	sShipPart->_removedFlasher = nullptr;
 	sFlasher->_owner = sShip;
 	OO_CHECK_EVAL("flasher.remove()", "undefined");
-	OO_CHECK(sShipPart->_removedFlasher == sFlasherPart);
+	EXPECT_TRUE(sShipPart->_removedFlasher == sFlasherPart);
 	sFlasher->_owner = sEffect;
 	OO_CHECK_EVAL("flasher.remove()", "undefined");
-	OO_CHECK(sEffectPart->_removed == sFlasher);
+	EXPECT_TRUE(sEffectPart->_removed == sFlasher);
 	sFlasher->_owner = sShip;
 	// The prototype has no entity: the binding's getter fails without reporting an error, which
 	// ends the script uncatchably, and nothing is removed.
 	sShipPart->_removedFlasher = nullptr;
 	OO_CHECK_EVAL("Flasher.prototype.remove()", "<evaluation failed>");
-	OO_CHECK(sShipPart->_removedFlasher == nullptr);
+	EXPECT_TRUE(sShipPart->_removedFlasher == nullptr);
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSFlasher, otherObjects)
 {
 	// An entity that is not a flasher, and the prototype: the binding's getter fails without
 	// reporting an error, which ends the script uncatchably.
@@ -612,7 +613,7 @@ OO_TEST(otherObjects)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSFlasher, nativeExceptions)
 {
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the entity is a JS error,
@@ -623,9 +624,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("flasher.frequency", "threw: Native exception: cxx boom");
 	sFlasherPart->_frequency = 2;
 	OO_CHECK_EVAL("flasher.frequency", "2");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

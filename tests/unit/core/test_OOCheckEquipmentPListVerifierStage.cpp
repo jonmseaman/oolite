@@ -16,9 +16,10 @@
 #include <filesystem>
 #include <fstream>
 
+#include <gtest/gtest.h>
+
 #include "CheckEquipmentPListVerifierStage.h"
 #include "OXPVerifierStage.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
@@ -112,30 +113,30 @@ oo::OXPVerifier* MakeVerifier(
 
 }  // namespace
 
-OO_TEST(nameAndNeighbours) {
+TEST(OOCheckEquipmentPListVerifierStage, nameAndNeighbours) {
   {
     const std::shared_ptr<oo::CheckEquipmentPListVerifierStage> stage =
         oo::makeShared<oo::CheckEquipmentPListVerifierStage>();
     stage->setVerifier(MakeVerifier({}));
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking equipment.plist"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(!stage->shouldRun());
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(!stage->shouldRun());
     stage->run();
-    OO_CHECK(gLog.empty());
+    EXPECT_TRUE(gLog.empty());
 
     stage->setVerifier(MakeVerifier({{"equipment.plist", "{ a = b; }"}}));
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->shouldRun());
     stage->run();
-    OO_CHECK(gLog.size() == 1 &&
+    EXPECT_TRUE(gLog.size() == 1 &&
              LogLinesContaining(
                  "***** ERROR: equipment.plist is not an array.") == 1);
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(checksEachEntry) {
+TEST(OOCheckEquipmentPListVerifierStage, checksEachEntry) {
   {
     const std::shared_ptr<oo::CheckEquipmentPListVerifierStage> stage =
         oo::makeShared<oo::CheckEquipmentPListVerifierStage>();
@@ -153,61 +154,59 @@ OO_TEST(checksEachEntry) {
           ")"}}));
     stage->run();
 
-    OO_CHECK(LogLinesContaining("***** ERROR: equipment.plist entry 1 of "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: equipment.plist entry 1 of "
                                 "equipment.plist is not an array.") == 1);
-    OO_CHECK(LogLinesContaining("***** ERROR: equipment.plist entry 2 has too "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: equipment.plist entry 2 has too "
                                 "few elements (2, should be 5 or 6).") == 1);
-    OO_CHECK(LogLinesContaining("EQ_GOOD") == 0);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining("EQ_GOOD") == 0);
+    EXPECT_TRUE(LogLinesContaining(
                  "----- WARNING: equipment.plist entry 4 (\"EQ_LONG\") has too "
                  "many elements (7, should be 5 or 6).") == 1);
-    OO_CHECK(LogLinesContaining("EQ_LONG") ==
+    EXPECT_TRUE(LogLinesContaining("EQ_LONG") ==
              1);  // its extra information is a dictionary
 
     // Entry 5: elements of the wrong type; it has no key to be named by.
-    OO_CHECK(LogLinesContaining("***** ERROR: tech level for entry 5 of "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: tech level for entry 5 of "
                                 "equipment.plist is not a positive integer.") ==
              1);
-    OO_CHECK(LogLinesContaining("price for entry 5") ==
+    EXPECT_TRUE(LogLinesContaining("price for entry 5") ==
              0);  // a word reads as the number 0, as -intValue did
-    OO_CHECK(LogLinesContaining("***** ERROR: short description for entry 5 of "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: short description for entry 5 of "
                                 "equipment.plist is not a string.") == 1);
-    OO_CHECK(LogLinesContaining("***** ERROR: key for entry 5 of "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: key for entry 5 of "
                                 "equipment.plist is not a string.") == 1);
-    OO_CHECK(LogLinesContaining("***** ERROR: long description for entry 5 of "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: long description for entry 5 of "
                                 "equipment.plist is not a string.") == 1);
 
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "***** ERROR: equipment.plist entry 6 (\"EQ_EXTRA\")'s extra "
                  "information dictionary is not a dictionary.") == 1);
-    OO_CHECK(LogLinesContaining("EQ_NUMBERS") ==
+    EXPECT_TRUE(LogLinesContaining("EQ_NUMBERS") ==
              0);  // a number where a string is expected is its text
-    OO_CHECK(
+    EXPECT_TRUE(
         LogLinesContaining("***** ERROR: equipment.plist entry 8 (\"4\") has "
                            "too few elements (4, should be 5 or 6).") == 1);
-    OO_CHECK(gLog.size() == 9);
+    EXPECT_TRUE(gLog.size() == 9);
   }
   std::filesystem::remove_all(kBase);
 }
 
 // The stage is global: the verifier registers it and finds it by name, and it
 // describes itself with its class's name.
-OO_TEST(facade) {
+TEST(OOCheckEquipmentPListVerifierStage, facade) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({});
     const std::shared_ptr<oo::CheckEquipmentPListVerifierStage> stage =
         oo::makeShared<oo::CheckEquipmentPListVerifierStage>();
-    OO_CHECK(stage->description().starts_with(
+    EXPECT_TRUE(stage->description().starts_with(
         "<OOCheckEquipmentPListVerifierStage 0x"));
 
     verifier->registerStage(stage.get());
-    OO_CHECK(verifier->stageWithName("Checking equipment.plist") ==
+    EXPECT_TRUE(verifier->stageWithName("Checking equipment.plist") ==
              stage.get());
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking equipment.plist"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
   }
 }
-
-OO_TEST_MAIN()

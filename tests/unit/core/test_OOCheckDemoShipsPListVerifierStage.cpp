@@ -15,9 +15,10 @@
 #include <filesystem>
 #include <fstream>
 
+#include <gtest/gtest.h>
+
 #include "CheckDemoShipsPListVerifierStage.h"
 #include "OXPVerifierStage.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
@@ -111,42 +112,42 @@ oo::OXPVerifier* MakeVerifier(
 
 }  // namespace
 
-OO_TEST(nameAndNeighbours) {
+TEST(OOCheckDemoShipsPListVerifierStage, nameAndNeighbours) {
   {
     const std::shared_ptr<oo::CheckDemoShipsPListVerifierStage> stage =
         oo::makeShared<oo::CheckDemoShipsPListVerifierStage>();
     stage->setVerifier(MakeVerifier({}));
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking demoships.plist"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(!stage->shouldRun());
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(!stage->shouldRun());
     stage->run();
-    OO_CHECK(gLog.empty());
+    EXPECT_TRUE(gLog.empty());
 
     stage->setVerifier(MakeVerifier({{"demoships.plist", "( a )"}}));
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->shouldRun());
     stage->run();
-    OO_CHECK(gLog.empty());  // no shipdata.plist: nothing to check against
+    EXPECT_TRUE(gLog.empty());  // no shipdata.plist: nothing to check against
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(wrongTypes) {
+TEST(OOCheckDemoShipsPListVerifierStage, wrongTypes) {
   {
     const std::shared_ptr<oo::CheckDemoShipsPListVerifierStage> stage =
         oo::makeShared<oo::CheckDemoShipsPListVerifierStage>();
     stage->setVerifier(MakeVerifier({{"demoships.plist", "{ a = b; }"},
                                      {"shipdata.plist", "{ a = {}; }"}}));
     stage->run();
-    OO_CHECK(gLog.size() == 1 &&
+    EXPECT_TRUE(gLog.size() == 1 &&
              LogLinesContaining(
                  "***** ERROR: demoships.plist is not an array.") == 1);
 
     stage->setVerifier(MakeVerifier(
         {{"demoships.plist", "( a )"}, {"shipdata.plist", "( a )"}}));
     stage->run();
-    OO_CHECK(gLog.size() == 1 &&
+    EXPECT_TRUE(gLog.size() == 1 &&
              LogLinesContaining(
                  "***** ERROR: shipdata.plist is not a dictionary.") == 1);
 
@@ -154,14 +155,14 @@ OO_TEST(wrongTypes) {
         {{"demoships.plist", "( a"}, {"shipdata.plist", "{ a = {}; }"}}));
     gLog.clear();  // the scanner's own findings
     stage->run();
-    OO_CHECK(LogLinesContaining("demoships.plist is") == 0 &&
+    EXPECT_TRUE(LogLinesContaining("demoships.plist is") == 0 &&
              LogLinesContaining("demoships.plist entry") ==
                  0);  // unparseable: the scanner said so
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(entriesNameShips) {
+TEST(OOCheckDemoShipsPListVerifierStage, entriesNameShips) {
   {
     const std::shared_ptr<oo::CheckDemoShipsPListVerifierStage> stage =
         oo::makeShared<oo::CheckDemoShipsPListVerifierStage>();
@@ -170,19 +171,19 @@ OO_TEST(entriesNameShips) {
         {"shipdata.plist", "{ cobra = {}; viper = {}; }"},
     }));
     stage->run();
-    OO_CHECK(gLog.size() == 3);
-    OO_CHECK(LogLinesContaining("----- WARNING: demoships.plist entry \"no "
+    EXPECT_TRUE(gLog.size() == 3);
+    EXPECT_TRUE(LogLinesContaining("----- WARNING: demoships.plist entry \"no "
                                 "such ship\" not found in shipdata.plist.") ==
              1);
-    OO_CHECK(LogLinesContaining("----- WARNING: demoships.plist entry "
+    EXPECT_TRUE(LogLinesContaining("----- WARNING: demoships.plist entry "
                                 "\"Cobra\" not found in shipdata.plist.") ==
              1);  // case matters
-    OO_CHECK(gLog.size() == 3 &&
+    EXPECT_TRUE(gLog.size() == 3 &&
              gLog[1].find("----- WARNING: demoships.plist entry \"") !=
                  std::string::npos &&
              gLog[1].find("\" not found in shipdata.plist.") !=
                  std::string::npos);  // the array, by its description
-    OO_CHECK(LogLinesContaining("\"cobra\"") == 0 &&
+    EXPECT_TRUE(LogLinesContaining("\"cobra\"") == 0 &&
              LogLinesContaining("viper") == 0);
   }
   std::filesystem::remove_all(kBase);
@@ -190,22 +191,20 @@ OO_TEST(entriesNameShips) {
 
 // The stage is global: the verifier registers it and finds it by name, and it
 // describes itself with its class's name.
-OO_TEST(facade) {
+TEST(OOCheckDemoShipsPListVerifierStage, facade) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({});
     const std::shared_ptr<oo::CheckDemoShipsPListVerifierStage> stage =
         oo::makeShared<oo::CheckDemoShipsPListVerifierStage>();
-    OO_CHECK(stage->description().starts_with(
+    EXPECT_TRUE(stage->description().starts_with(
         "<OOCheckDemoShipsPListVerifierStage 0x"));
 
     verifier->registerStage(stage.get());
-    OO_CHECK(verifier->stageWithName("Checking demoships.plist") ==
+    EXPECT_TRUE(verifier->stageWithName("Checking demoships.plist") ==
              stage.get());
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking demoships.plist"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
   }
 }
-
-OO_TEST_MAIN()

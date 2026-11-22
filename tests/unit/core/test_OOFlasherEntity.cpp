@@ -23,6 +23,8 @@
 #include <cmath>
 #include <numbers>
 
+#include <gtest/gtest.h>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "Color.h"
 #include "FlasherEntity.h"
@@ -30,7 +32,6 @@
 #include "OOJSFlasher.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -120,28 +121,28 @@ oo::PList WhiteBlack(float frequency, float fraction) {
 
 }  // namespace
 
-OO_TEST(defaults) {
+TEST(OOFlasherEntity, defaults) {
   {
-    SetUp();
+    ::SetUp();
     oo::FlasherEntity* flasher = Flasher(Dict({}));
-    OO_CHECK(flasher != nullptr);
-    OO_CHECK(dynamic_cast<oo::LightParticleEntity*>(flasher) != nullptr);
-    OO_CHECK(flasher->diameter() == 1.0f);
-    OO_CHECK(flasher->frequency() == 2.0f && flasher->phase() == 0.0f &&
+    EXPECT_TRUE(flasher != nullptr);
+    EXPECT_TRUE(dynamic_cast<oo::LightParticleEntity*>(flasher) != nullptr);
+    EXPECT_TRUE(flasher->diameter() == 1.0f);
+    EXPECT_TRUE(flasher->frequency() == 2.0f && flasher->phase() == 0.0f &&
              flasher->fraction() == 0.5f);
-    OO_CHECK(flasher->isActive());
-    OO_CHECK(flasher->status() == oo::EntityStatus::kEffect &&
+    EXPECT_TRUE(flasher->isActive());
+    EXPECT_TRUE(flasher->status() == oo::EntityStatus::kEffect &&
              flasher->getScanClass() == oo::ScanClass::kNoDraw);
     // No colours: the current colour is nil, which left the components white.
-    OO_CHECK(RGBIs(flasher, 1, 1, 1) && ColorComponents(flasher)[3] == 1.0f);
-    OO_CHECK(flasher->isFlasher());
-    OO_CHECK(flasher->findCollisionRadius() == 0.5);
+    EXPECT_TRUE(RGBIs(flasher, 1, 1, 1) && ColorComponents(flasher)[3] == 1.0f);
+    EXPECT_TRUE(flasher->isFlasher());
+    EXPECT_TRUE(flasher->findCollisionRadius() == 0.5);
   }
 }
 
-OO_TEST(dictionary) {
+TEST(OOFlasherEntity, dictionary) {
   {
-    SetUp();
+    ::SetUp();
     oo::FlasherEntity* flasher = Flasher(Dict({
         {"size", oo::PList(6.0)},
         {"frequency", oo::PList(1.5)},
@@ -152,104 +153,104 @@ OO_TEST(dictionary) {
          oo::PList(oo::PList::Array{oo::PList(std::string("blackColor")),
                                     oo::PList(std::string("whiteColor"))})},
     }));
-    OO_CHECK(flasher->diameter() == 6.0f &&
+    EXPECT_TRUE(flasher->diameter() == 6.0f &&
              flasher->findCollisionRadius() == 3.0);
-    OO_CHECK(flasher->frequency() == 3.0f && flasher->phase() == 0.25f &&
+    EXPECT_TRUE(flasher->frequency() == 3.0f && flasher->phase() == 0.25f &&
              flasher->fraction() == 0.75f);
-    OO_CHECK(!flasher->isActive());
-    OO_CHECK(RGBIs(flasher, 0, 0, 0) &&
+    EXPECT_TRUE(!flasher->isActive());
+    EXPECT_TRUE(RGBIs(flasher, 0, 0, 0) &&
              ColorComponents(flasher)[3] == 1.0f);  // the first colour
 
     std::shared_ptr<oo::Color> color = flasher->color();
     float r = -1, g = -1, b = -1, a = -1;
     color->getRed(&r, &g, &b, &a);
-    OO_CHECK(r == 0 && g == 0 && b == 0 && a == 1);
+    EXPECT_TRUE(r == 0 && g == 0 && b == 0 && a == 1);
   }
 }
 
-OO_TEST(saturationFactor) {
+TEST(OOFlasherEntity, saturationFactor) {
   {
-    SetUp();
+    ::SetUp();
     oo::FlasherEntity* flasher = Flasher(Dict({
         {"colors",
          oo::PList(oo::PList::Array{oo::PList(std::string("redColor"))})},
     }));
     // Red at three quarters of its saturation.
-    OO_CHECK(RGBIs(flasher, 1.0f, 0.25f, 0.25f));
+    EXPECT_TRUE(RGBIs(flasher, 1.0f, 0.25f, 0.25f));
   }
 }
 
-OO_TEST(accessors) {
+TEST(OOFlasherEntity, accessors) {
   {
-    SetUp();
+    ::SetUp();
     oo::FlasherEntity* flasher = Flasher(WhiteBlack(1, 0.5));
     flasher->setActive(false);
-    OO_CHECK(!flasher->isActive());
+    EXPECT_TRUE(!flasher->isActive());
     flasher->setActive(true);
-    OO_CHECK(flasher->isActive());
+    EXPECT_TRUE(flasher->isActive());
     flasher->setFrequency(7.0f);
-    OO_CHECK(flasher->frequency() == 7.0f);
+    EXPECT_TRUE(flasher->frequency() == 7.0f);
     flasher->setPhase(0.5f);
-    OO_CHECK(flasher->phase() == 0.5f);
+    EXPECT_TRUE(flasher->phase() == 0.5f);
     flasher->setFraction(0.125f);
-    OO_CHECK(flasher->fraction() == 0.125f);
+    EXPECT_TRUE(flasher->fraction() == 0.125f);
     flasher->setColor(oo::Color::colorWithRed(0.5f, 0.25f, 0.125f, 0.75f).get(),
                       0.375f);
     float r = -1, g = -1, b = -1, a = -1;
     flasher->color()->getRed(&r, &g, &b, &a);
-    OO_CHECK(r == 0.5f && g == 0.25f && b == 0.125f && a == 0.375f);
+    EXPECT_TRUE(r == 0.5f && g == 0.25f && b == 0.125f && a == 0.375f);
   }
 }
 
-OO_TEST(updateCyclesColours) {
+TEST(OOFlasherEntity, updateCyclesColours) {
   {
-    SetUp();
+    ::SetUp();
     // frequency 1 (stored 2): wave = sin(2 pi t), fraction 0.5: threshold
     // cos(pi / 2) = 0.
     oo::FlasherEntity* flasher = Flasher(WhiteBlack(1, 0.5));
-    OO_CHECK(RGBIs(flasher, 1, 1, 1));
+    EXPECT_TRUE(RGBIs(flasher, 1, 1, 1));
 
     flasher->update(0.125);  // t 0.125: wave sin(pi/4), rising half: brightness
                              // above the fraction
     double wave = std::sin(std::numbers::pi / 4);
-    OO_CHECK(RGBIs(flasher, 1, 1, 1));
-    OO_CHECK(Near(ColorComponents(flasher)[3], 0.5 + (0.5 / 1.0) * wave));
+    EXPECT_TRUE(RGBIs(flasher, 1, 1, 1));
+    EXPECT_TRUE(Near(ColorComponents(flasher)[3], 0.5 + (0.5 / 1.0) * wave));
 
     flasher->update(
         0.5);  // t 0.625: wave -sin(pi/4), falling: no switch (wave < _wave)
-    OO_CHECK(RGBIs(flasher, 1, 1, 1));
-    OO_CHECK(Near(ColorComponents(flasher)[3], 0.5 + (0.5 / 1.0) * -wave));
+    EXPECT_TRUE(RGBIs(flasher, 1, 1, 1));
+    EXPECT_TRUE(Near(ColorComponents(flasher)[3], 0.5 + (0.5 / 1.0) * -wave));
 
     flasher->update(
         0.3125);  // t 0.9375: wave still negative and rising: the next colour
-    OO_CHECK(RGBIs(flasher, 0, 0, 0));
+    EXPECT_TRUE(RGBIs(flasher, 0, 0, 0));
 
     flasher->update(0.03125);  // t 0.96875: just switched, no second switch
-    OO_CHECK(RGBIs(flasher, 0, 0, 0));
+    EXPECT_TRUE(RGBIs(flasher, 0, 0, 0));
 
     flasher->update(0.0625);   // t 1.03125: positive again, the switch resets
     flasher->update(0.59375);  // t 1.625: negative but falling: no switch
-    OO_CHECK(RGBIs(flasher, 0, 0, 0));
+    EXPECT_TRUE(RGBIs(flasher, 0, 0, 0));
     flasher->update(
         0.3125);  // t 1.9375: rising below zero: back to the first colour
-    OO_CHECK(RGBIs(flasher, 1, 1, 1));
+    EXPECT_TRUE(RGBIs(flasher, 1, 1, 1));
   }
 }
 
-OO_TEST(frequencyZeroIsOpaque) {
+TEST(OOFlasherEntity, frequencyZeroIsOpaque) {
   {
-    SetUp();
+    ::SetUp();
     oo::FlasherEntity* flasher = Flasher(WhiteBlack(0, 0.5));
     flasher->setColor(oo::Color::whiteColor().get(), 0.25f);
     flasher->update(0.3);
-    OO_CHECK(ColorComponents(flasher)[3] == 1.0f);
-    OO_CHECK(RGBIs(flasher, 1, 1, 1));
+    EXPECT_TRUE(ColorComponents(flasher)[3] == 1.0f);
+    EXPECT_TRUE(RGBIs(flasher, 1, 1, 1));
   }
 }
 
-OO_TEST(drawsOnlyWhileActive) {
+TEST(OOFlasherEntity, drawsOnlyWhileActive) {
   {
-    SetUp();
+    ::SetUp();
     Entity* owner = oo::MadeEntity(oo::makeShared<Entity>());
     SetCamZeroDistance(
         owner,
@@ -260,52 +261,52 @@ OO_TEST(drawsOnlyWhileActive) {
 
     flasher->setActive(false);
     flasher->drawSubEntityImmediate(true, true);
-    OO_CHECK(CamZeroDistance(flasher) == 5.0f);  // not drawn
+    EXPECT_TRUE(CamZeroDistance(flasher) == 5.0f);  // not drawn
 
     flasher->setActive(true);
     flasher->drawSubEntityImmediate(true, true);
-    OO_CHECK(CamZeroDistance(flasher) ==
+    EXPECT_TRUE(CamZeroDistance(flasher) ==
              1e30f);  // OOLightParticleEntity's draw read the owner's distance
   }
 }
 
-OO_TEST(rescale) {
+TEST(OOFlasherEntity, rescale) {
   {
-    SetUp();
+    ::SetUp();
     oo::FlasherEntity* flasher = Flasher(WhiteBlack(1, 0.5));
     flasher->rescaleBy(2.5f);
-    OO_CHECK(flasher->diameter() == 10.0f);
+    EXPECT_TRUE(flasher->diameter() == 10.0f);
     flasher->rescaleBy(3.0f, true);
-    OO_CHECK(flasher->diameter() == 10.0f);
+    EXPECT_TRUE(flasher->diameter() == 10.0f);
   }
 }
 
-OO_TEST(isFlasher) {
+TEST(OOFlasherEntity, isFlasher) {
   {
-    SetUp();
+    ::SetUp();
     // Callers ask the C++ part.
     Entity* plain = oo::MadeEntity(oo::makeShared<Entity>());
-    OO_CHECK(dynamic_cast<oo::FlasherEntity*>(plain) == nullptr);
+    EXPECT_TRUE(dynamic_cast<oo::FlasherEntity*>(plain) == nullptr);
     const std::shared_ptr<oo::LightParticleEntity> lightParticle =
         oo::makeShared<oo::LightParticleEntity>();
     Entity* particle = oo::MadeEntity(lightParticle);
     lightParticle->initWithDiameter(1.0f);
-    OO_CHECK(dynamic_cast<oo::FlasherEntity*>(particle) == nullptr);
+    EXPECT_TRUE(dynamic_cast<oo::FlasherEntity*>(particle) == nullptr);
     oo::FlasherEntity* flasher = Flasher(Dict({}));
-    OO_CHECK(flasher->isFlasher() &&
+    EXPECT_TRUE(flasher->isFlasher() &&
              dynamic_cast<oo::FlasherEntity*>(flasher) == flasher);
   }
 }
 
-OO_TEST(facade) {
+TEST(OOFlasherEntity, facade) {
   {
-    SetUp();
+    ::SetUp();
     // The object is the root's facade, whose C++ part is the flasher: a C++
     // entity.
     Entity* object = oo::MadeEntity(
         oo::FlasherEntity::flasherWithDictionary(WhiteBlack(1, 0.5)));
-    OO_CHECK(dynamic_cast<oo::FlasherEntity*>(object) != nullptr);
-    OO_CHECK(object == object);
+    EXPECT_TRUE(dynamic_cast<oo::FlasherEntity*>(object) != nullptr);
+    EXPECT_TRUE(object == object);
   }
 }
 
@@ -325,18 +326,16 @@ static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
 
 // The C++ class's overrides of the root's JS members: what the engine asks a
 // flasher's object for by selector is what OOJSFlasher.mm answers.
-OO_TEST(jsExtensions) {
+TEST(OOFlasherEntity, jsExtensions) {
   {
-    SetUp();
+    ::SetUp();
     Entity* flasher = Flasher(WhiteBlack(1, 0.5));
     RegisterJSClasses(InitOOJSFlasher);
     const JSClassID jsClass = OOJSEntityJSClassID(flasher);
     const JSClassID expectedClass = JSFlasherClassID();
-    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
-    OO_CHECK(OOJSEntityJSClassName(flasher) ==
+    EXPECT_TRUE(jsClass != 0 && jsClass == expectedClass);
+    EXPECT_TRUE(OOJSEntityJSClassName(flasher) ==
              std::optional<std::string>("Flasher"));
-    OO_CHECK(OOJSEntityIsVisibleToScripts(flasher) == true);
+    EXPECT_TRUE(OOJSEntityIsVisibleToScripts(flasher) == true);
   }
 }
-
-OO_TEST_MAIN()

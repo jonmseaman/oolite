@@ -20,6 +20,9 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "OpenGLExtensionManager.h"
@@ -27,7 +30,6 @@
 #include "Texture.h"
 #include "TextureSprite.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
@@ -250,30 +252,30 @@ bool GLReady() {
 // --- Tests
 // --------------------------------------------------------------------------------------
 
-OO_TEST(noTextureNoSprite) {
+TEST(OOTextureSprite, noTextureNoSprite) {
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(oo::TextureSprite::initWithTexture(nullptr).get() == nullptr);
-    OO_CHECK(oo::TextureSprite::initWithTexture(nullptr, NSMakeSize(4, 4)).get() ==
+    EXPECT_TRUE(oo::TextureSprite::initWithTexture(nullptr).get() == nullptr);
+    EXPECT_TRUE(oo::TextureSprite::initWithTexture(nullptr, NSMakeSize(4, 4)).get() ==
              nullptr);
   }
 }
 
-OO_TEST(sizeIsTheTexturesOrGiven) {
+TEST(OOTextureSprite, sizeIsTheTexturesOrGiven) {
   {
     oo::AutoreleaseScope pool;
     std::shared_ptr<oo::TextureSprite> sprite =
         oo::TextureSprite::initWithTexture(Texture(64, 32));
-    OO_CHECK(sprite != nullptr);
-    OO_CHECK(sprite->getSize().width == 64 && sprite->getSize().height == 32);
+    EXPECT_TRUE(sprite != nullptr);
+    EXPECT_TRUE(sprite->getSize().width == 64 && sprite->getSize().height == 32);
 
     sprite =
         oo::TextureSprite::initWithTexture(Texture(64, 32), NSMakeSize(10, 20));
-    OO_CHECK(sprite->getSize().width == 10 && sprite->getSize().height == 20);
+    EXPECT_TRUE(sprite->getSize().width == 10 && sprite->getSize().height == 20);
   }
 }
 
-OO_TEST(spriteKeepsItsTexture) {
+TEST(OOTextureSprite, spriteKeepsItsTexture) {
   std::shared_ptr<oo::TextureSprite> sprite;
   TestTexture* texture = nullptr;
   {
@@ -282,14 +284,14 @@ OO_TEST(spriteKeepsItsTexture) {
     sprite = oo::TextureSprite::initWithTexture(texture);
     oo::test::Retain(texture);
   }
-  OO_CHECK(texture->weak_from_this().use_count() == 2);  // the test's and the sprite's
+  EXPECT_TRUE(texture->weak_from_this().use_count() == 2);  // the test's and the sprite's
   sprite = nullptr;
-  OO_CHECK(texture->weak_from_this().use_count() == 1);
+  EXPECT_TRUE(texture->weak_from_this().use_count() == 1);
   oo::test::Release(texture);
 }
 
-OO_TEST(blitDrawsTheTexturedQuad) {
-  OO_CHECK(GLReady());
+TEST(OOTextureSprite, blitDrawsTheTexturedQuad) {
+  EXPECT_TRUE(GLReady());
   {
     oo::AutoreleaseScope pool;
     TestTexture* texture = Texture(64, 32);
@@ -298,76 +300,74 @@ OO_TEST(blitDrawsTheTexturedQuad) {
 
     std::vector<Vertex> quad =
         Feedback([&] { sprite->blitToX(10, -20, 30, 0.25f); });
-    OO_CHECK(IsQuad(quad, 10, -20, 30, 100, 50, 0.25));
-    OO_CHECK(texture->_applied == 1);
-    OO_CHECK(!glIsEnabled(GL_TEXTURE_2D));
-    OO_CHECK(glIsEnabled(GL_BLEND));  // the overlay state
-    OO_CHECK(glGetError() == GL_NO_ERROR);
+    EXPECT_TRUE(IsQuad(quad, 10, -20, 30, 100, 50, 0.25));
+    EXPECT_TRUE(texture->_applied == 1);
+    EXPECT_TRUE(!glIsEnabled(GL_TEXTURE_2D));
+    EXPECT_TRUE(glIsEnabled(GL_BLEND));  // the overlay state
+    EXPECT_TRUE(glGetError() == GL_NO_ERROR);
 
     // The alpha is clamped to [0, 1].
-    OO_CHECK(IsQuad(Feedback([&] { sprite->blitToX(0, 0, 0, 1.5f); }), 0, 0, 0,
+    EXPECT_TRUE(IsQuad(Feedback([&] { sprite->blitToX(0, 0, 0, 1.5f); }), 0, 0, 0,
                     100, 50, 1.0));
-    OO_CHECK(IsQuad(Feedback([&] { sprite->blitToX(0, 0, 0, -1.0f); }), 0, 0, 0,
+    EXPECT_TRUE(IsQuad(Feedback([&] { sprite->blitToX(0, 0, 0, -1.0f); }), 0, 0, 0,
                     100, 50, 0.0));
-    OO_CHECK(texture->_applied == 3);
+    EXPECT_TRUE(texture->_applied == 3);
   }
 }
 
-OO_TEST(centredBlits) {
-  OO_CHECK(GLReady());
+TEST(OOTextureSprite, centredBlits) {
+  EXPECT_TRUE(GLReady());
   {
     oo::AutoreleaseScope pool;
     TestTexture* texture = Texture(64, 32);
     std::shared_ptr<oo::TextureSprite> sprite =
         oo::TextureSprite::initWithTexture(texture, NSMakeSize(1.5, 0.75));
 
-    OO_CHECK(
+    EXPECT_TRUE(
         IsQuad(Feedback([&] { sprite->blitCentredToX(100, 200, -5, 0.5f); }),
                100 - 0.75, 200 - 0.375, -5, 1.5, 0.75, 0.5));
 
     // The background blit scales the size and z by 512 (so that it is behind
     // the ships), and puts the size back afterwards.
-    OO_CHECK(IsQuad(
+    EXPECT_TRUE(IsQuad(
         Feedback([&] { sprite->blitBackgroundCentredToX(1, -2, 3, 1.0f); }),
         1 - 384, -2 - 192, 3 * 512, 768, 384, 1.0));
-    OO_CHECK(sprite->getSize().width == 1.5 &&
+    EXPECT_TRUE(sprite->getSize().width == 1.5 &&
              sprite->getSize().height == 0.75);
-    OO_CHECK(texture->_applied == 2);
-    OO_CHECK(glGetError() == GL_NO_ERROR);
+    EXPECT_TRUE(texture->_applied == 2);
+    EXPECT_TRUE(glGetError() == GL_NO_ERROR);
   }
 }
 
 // --- The C++ class (after the conversion)
 // ---------------------------------------------------------
 
-OO_TEST(cxxSprite) {
-  OO_CHECK(GLReady());
+TEST(OOTextureSprite, cxxSprite) {
+  EXPECT_TRUE(GLReady());
   {
     oo::AutoreleaseScope pool;
-    OO_CHECK(oo::TextureSprite::initWithTexture(nullptr).get() == nullptr);
-    OO_CHECK(oo::TextureSprite::initWithTexture(nullptr, NSMakeSize(4, 4)).get() ==
+    EXPECT_TRUE(oo::TextureSprite::initWithTexture(nullptr).get() == nullptr);
+    EXPECT_TRUE(oo::TextureSprite::initWithTexture(nullptr, NSMakeSize(4, 4)).get() ==
              nullptr);
 
     TestTexture* texture = Texture(64, 32);
     std::shared_ptr<oo::TextureSprite> sprite = oo::TextureSprite::initWithTexture(texture);
-    OO_CHECK(sprite.get() != nullptr && sprite->getSize().width == 64 &&
+    EXPECT_TRUE(sprite.get() != nullptr && sprite->getSize().width == 64 &&
              sprite->getSize().height == 32);
 
     sprite = oo::TextureSprite::initWithTexture(texture, NSMakeSize(100, 50));
-    OO_CHECK(IsQuad(Feedback([&] { sprite->blitToX(10, -20, 30, 0.25f); }), 10,
+    EXPECT_TRUE(IsQuad(Feedback([&] { sprite->blitToX(10, -20, 30, 0.25f); }), 10,
                     -20, 30, 100, 50, 0.25));
-    OO_CHECK(IsQuad(Feedback([&] { sprite->blitCentredToX(0, 0, 0, 1.0f); }),
+    EXPECT_TRUE(IsQuad(Feedback([&] { sprite->blitCentredToX(0, 0, 0, 1.0f); }),
                     -50, -25, 0, 100, 50, 1.0));
-    OO_CHECK(sprite->getSize().width == 100 && sprite->getSize().height == 50);
+    EXPECT_TRUE(sprite->getSize().width == 100 && sprite->getSize().height == 50);
 
     sprite = oo::TextureSprite::initWithTexture(texture, NSMakeSize(1.5, 0.75));
-    OO_CHECK(IsQuad(
+    EXPECT_TRUE(IsQuad(
         Feedback([&] { sprite->blitBackgroundCentredToX(1, -2, 3, 1.0f); }),
         1 - 384, -2 - 192, 3 * 512, 768, 384, 1.0));
-    OO_CHECK(sprite->getSize().width == 1.5 &&
+    EXPECT_TRUE(sprite->getSize().width == 1.5 &&
              sprite->getSize().height == 0.75);
-    OO_CHECK(texture->_applied == 3);
+    EXPECT_TRUE(texture->_applied == 3);
   }
 }
-
-OO_TEST_MAIN()

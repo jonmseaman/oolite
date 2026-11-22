@@ -17,11 +17,13 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "MyOpenGLView.h"
 #include "Logging.h"
 #include "TextureScaling.h"
 #include "Universe.h"
-#include "oo_test.hpp"
+#include "oo_gtest.hpp"
 #include "oofnd/Exception.hpp"
 
 // Link stubs: the scaler's object and OOPixMap.mm reach these, and the test
@@ -98,15 +100,15 @@ std::vector<int> Bytes(oo::PixMap pixMap) {
 // so a pin can be read.
 bool Pinned(const char* what, oo::PixMap pixMap, oo::PixMapDimension width,
             oo::PixMapDimension height, std::vector<int> expected) {
-  bool ok = OO_CHECK(pixMap.pixels != nullptr);
-  ok = OO_CHECK_EQ(pixMap.width, width) && ok;
-  ok = OO_CHECK_EQ(pixMap.height, height) && ok;
-  ok = OO_CHECK_EQ(pixMap.rowBytes, static_cast<size_t>(width) *
+  bool ok = OO_EXPECT_V(pixMap.pixels != nullptr);
+  ok = OO_EXPECT_EQ_V(pixMap.width, width) && ok;
+  ok = OO_EXPECT_EQ_V(pixMap.height, height) && ok;
+  ok = OO_EXPECT_EQ_V(pixMap.rowBytes, static_cast<size_t>(width) *
                                         oo::PixMapBytesPerPixel(pixMap)) &&
        ok;
   if (pixMap.pixels == nullptr) return false;
   std::vector<int> actual = Bytes(pixMap);
-  if (!OO_CHECK(actual == expected)) {
+  if (!OO_EXPECT_V(actual == expected)) {
     std::fprintf(stderr, "  %s got {", what);
     for (size_t i = 0; i < actual.size(); i++)
       std::fprintf(stderr, "%s%d", i ? ", " : " ", actual[i]);
@@ -128,7 +130,7 @@ const oo::PixMapFormat kFormats[] = {oo::kPixMapRGBA, oo::kPixMapGrayscale,
 }  // namespace
 
 // SqueezeVertically(): 2x4 -> 2x2, in place, for each format.
-OO_TEST(squeezesVertically) {
+TEST(OOTextureScaling, squeezesVertically) {
   oo::PixMap rgba = oo::ScalePixMap(MakePatterned(2, 4, oo::kPixMapRGBA), 2, 2, false);
   Pinned("rgba", rgba, 2, 2,
          {33, 70, 107, 144, 181, 218, 127, 36, 113, 150, 187, 224, 133, 42, 79,
@@ -147,7 +149,7 @@ OO_TEST(squeezesVertically) {
 }
 
 // StretchHorizontally(): 2x2 -> 4x2, into a new buffer, for each format.
-OO_TEST(stretchesHorizontally) {
+TEST(OOTextureScaling, stretchesHorizontally) {
   oo::PixMap rgba = oo::ScalePixMap(MakePatterned(2, 2, oo::kPixMapRGBA), 4, 2, false);
   Pinned("rgba", rgba, 4, 2,
          {13,  50,  87,  124, 13, 50, 87,  124, 161, 198, 235,
@@ -169,7 +171,7 @@ OO_TEST(stretchesHorizontally) {
 }
 
 // SqueezeHorizontally(): 4x2 -> 2x2, in place, for each format.
-OO_TEST(squeezesHorizontally) {
+TEST(OOTextureScaling, squeezesHorizontally) {
   oo::PixMap rgba = oo::ScalePixMap(MakePatterned(4, 2, oo::kPixMapRGBA), 2, 2, false);
   Pinned("rgba", rgba, 2, 2,
          {87, 124, 161, 70, 127, 164, 73, 110, 167, 76, 113, 150, 79, 116, 153,
@@ -196,7 +198,7 @@ OO_TEST(squeezesHorizontally) {
 // every horizontal case gave these same bytes before the fix; 2x2 -> 2x4 copied
 // its last row from one row past the source buffer (an ASan
 // heap-buffer-overflow READ), as 3x1 -> 4x1 read one pixel past it at weight 0.
-OO_TEST(stretchesVerticallyAndKeepsTheEdges) {
+TEST(OOTextureScaling, stretchesVerticallyAndKeepsTheEdges) {
   oo::PixMap rgba = oo::ScalePixMap(MakePatterned(2, 3, oo::kPixMapRGBA), 2, 4, false);
   Pinned("rgba 2x3 -> 2x4", rgba, 2, 4,
          {13,  50,  87,  124, 161, 198, 235, 16,  33,  70,  107,
@@ -260,21 +262,21 @@ OO_TEST(stretchesVerticallyAndKeepsTheEdges) {
 // once. Grayscale is squeezed vertically by a whole factor (8 -> 4): by 8 -> 5
 // its last row comes out at about 3/8 of the value, a defect of the plain-C
 // SqueezeVertically1() that this test does not touch.
-OO_TEST(keepsUniformImagesUniform) {
+TEST(OOTextureScaling, keepsUniformImagesUniform) {
   for (oo::PixMapFormat format : kFormats) {
     const oo::PixMapDimension height = (format == oo::kPixMapGrayscale) ? 4 : 5;
     oo::PixMap squeezed =
         oo::ScalePixMap(MakeUniform(8, 8, format, 0x5A), 3, height, false);
-    OO_CHECK(squeezed.pixels != nullptr && squeezed.width == 3 &&
+    EXPECT_TRUE(squeezed.pixels != nullptr && squeezed.width == 3 &&
              squeezed.height == height);
-    OO_CHECK(AllEqual(squeezed, 0x5A));
+    EXPECT_TRUE(AllEqual(squeezed, 0x5A));
     oo::FreePixMap(&squeezed);
 
     oo::PixMap stretched =
         oo::ScalePixMap(MakeUniform(3, 8, format, 0xC3), 7, height, false);
-    OO_CHECK(stretched.pixels != nullptr && stretched.width == 7 &&
+    EXPECT_TRUE(stretched.pixels != nullptr && stretched.width == 7 &&
              stretched.height == height);
-    OO_CHECK(AllEqual(stretched, 0xC3));
+    EXPECT_TRUE(AllEqual(stretched, 0xC3));
     oo::FreePixMap(&stretched);
   }
 }
@@ -284,7 +286,7 @@ OO_TEST(keepsUniformImagesUniform) {
 // row, the last included. Before the fix SqueezeVertically1() counted the final
 // source row's weight without its value, so the last row of 0x5A came out at 33
 // and of 0xC3 at 73; SqueezeVertically2/4 were already right.
-OO_TEST(squeezesGrayscaleVerticallyByANonIntegerFactorUniformly) {
+TEST(OOTextureScaling, squeezesGrayscaleVerticallyByANonIntegerFactorUniformly) {
   for (uint8_t value :
        {static_cast<uint8_t>(0x5A), static_cast<uint8_t>(0xC3)}) {
     oo::PixMap tall =
@@ -301,21 +303,21 @@ OO_TEST(squeezesGrayscaleVerticallyByANonIntegerFactorUniformly) {
 
 // A pixmap with no valid format is refused before any wrapper runs: a null
 // pixmap and one parameter-error log line, as before.
-OO_TEST(refusesAnInvalidPixMap) {
+TEST(OOTextureScaling, refusesAnInvalidPixMap) {
   oo::PixelBuffer invalidBytes = oo::MakePixelBuffer(16);
   oo::PixMap invalid = {invalidBytes->data(), 2, 2, oo::kPixMapInvalidFormat, 8, 16,
                       invalidBytes};
   int before = sParameterErrors;
   oo::PixMap result = oo::ScalePixMap(invalid, 1, 1, false);
-  OO_CHECK(result.pixels == nullptr);
-  OO_CHECK_EQ(sParameterErrors, before + 1);
+  EXPECT_TRUE(result.pixels == nullptr);
+  EXPECT_EQ(sParameterErrors, before + 1);
 }
 
 // The wrappers' unreachable default arm now raises with OORaiseException(), the
 // function form of
 // OORaiseException(): the same name and formatted reason (the C++
 // oo::Exception, caught as catch (const oo::Exception &)).
-OO_TEST(raiseExceptionThrowsTheSameException) {
+TEST(OOTextureScaling, raiseExceptionThrowsTheSameException) {
   const char* name = nullptr;
   std::string reason;
   std::optional<oo::Exception> kept;  // what the autorelease pool kept alive
@@ -329,9 +331,9 @@ OO_TEST(raiseExceptionThrowsTheSameException) {
     name = kept->name();
     reason = kept->reason();
   }
-  OO_CHECK(name != nullptr &&
+  EXPECT_TRUE(name != nullptr &&
            std::strcmp(name, oo::InternalInconsistencyException) == 0);
-  OO_CHECK_EQ(reason, std::string("Unsupported pixmap format in scaler: ") +
+  EXPECT_EQ(reason, std::string("Unsupported pixmap format in scaler: ") +
                           oo::PixMapFormatName(oo::kPixMapInvalidFormat));
 
   std::string messageReason;
@@ -344,7 +346,5 @@ OO_TEST(raiseExceptionThrowsTheSameException) {
   {
     messageReason = e.reason();
   }
-  OO_CHECK_EQ(messageReason, reason);
+  EXPECT_EQ(messageReason, reason);
 }
-
-OO_TEST_MAIN()

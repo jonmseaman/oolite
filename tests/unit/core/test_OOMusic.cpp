@@ -21,12 +21,13 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "ALBufferedSound.h"
 #include "ALMusic.h"
 #include "ALSoundDecoder.h"
 #include "ALSoundMixer.h"
 #include "ALStreamedSound.h"
-#include "oo_test.hpp"
 
 namespace stdfs = std::filesystem;
 
@@ -188,15 +189,15 @@ stdfs::path sRoot;
 
 void SetUp() {
   if (!sRoot.empty()) return;
-  OO_CHECK(::_putenv_s("ALSOFT_DRIVERS", "null") == 0);
+  EXPECT_TRUE(::_putenv_s("ALSOFT_DRIVERS", "null") == 0);
   sRoot = stdfs::temp_directory_path() /
           ("oo-test-music-" +
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
-  OO_CHECK(oo::Sound::setUp());
+  EXPECT_TRUE(oo::Sound::setUp());
 }
 
 std::vector<std::string> TakeChannelLog() {
@@ -209,90 +210,90 @@ std::vector<std::string> TakeChannelLog() {
 
 // First: before any music has played there is no source; its gain is 0 and
 // setting it does nothing.
-OO_TEST(noSourceBeforeTheFirstPlay) {
-  SetUp();
+TEST(OOMusic, noSourceBeforeTheFirstPlay) {
+  ::SetUp();
   {
     std::shared_ptr<oo::Music> music =
         oo::Music::initWithContentsOfFile(std::string("theme.ogg"));
-    OO_CHECK(music != nullptr);
-    OO_CHECK(music->musicSoundSource() == nullptr);
-    OO_CHECK(music->musicGain() == 0.0f);
+    EXPECT_TRUE(music != nullptr);
+    EXPECT_TRUE(music->musicSoundSource() == nullptr);
+    EXPECT_TRUE(music->musicGain() == 0.0f);
     music->setMusicGain(0.5f);
-    OO_CHECK(!music->isPlaying());
+    EXPECT_TRUE(!music->isPlaying());
     music->stop();
-    OO_CHECK(TakeChannelLog().empty() && gChannelsOut == 0);
+    EXPECT_TRUE(TakeChannelLog().empty() && gChannelsOut == 0);
   }
 }
 
 // A music wraps the sound the root's cluster loads, and answers its name.
-OO_TEST(wrapsTheClustersSound) {
-  SetUp();
+TEST(OOMusic, wrapsTheClustersSound) {
+  ::SetUp();
   {
     std::shared_ptr<oo::Music> music =
         oo::Music::initWithContentsOfFile(std::string("theme.ogg"));
-    OO_CHECK(music.get() != nullptr);
-    OO_CHECK(music->name() == std::optional<std::string>("theme.ogg"));
-    OO_CHECK(gLiveSounds == 1 && gLiveDecoders == 0);
-    OO_CHECK(!music->soundIncomplete());
+    EXPECT_TRUE(music.get() != nullptr);
+    EXPECT_TRUE(music->name() == std::optional<std::string>("theme.ogg"));
+    EXPECT_TRUE(gLiveSounds == 1 && gLiveDecoders == 0);
+    EXPECT_TRUE(!music->soundIncomplete());
 
-    OO_CHECK(!oo::Music::initWithContentsOfFile(std::string("missing.ogg")));
-    OO_CHECK(!oo::Music::initWithContentsOfFile(std::nullopt));
-    OO_CHECK(gLiveSounds == 1);
+    EXPECT_TRUE(!oo::Music::initWithContentsOfFile(std::string("missing.ogg")));
+    EXPECT_TRUE(!oo::Music::initWithContentsOfFile(std::nullopt));
+    EXPECT_TRUE(gLiveSounds == 1);
   }
-  OO_CHECK(gLiveSounds == 0);  // released with the music
+  EXPECT_TRUE(gLiveSounds == 0);  // released with the music
 }
 
-OO_TEST(playsThroughTheSharedSource) {
-  SetUp();
+TEST(OOMusic, playsThroughTheSharedSource) {
+  ::SetUp();
   TakeChannelLog();
   {
     std::shared_ptr<oo::Music> theme =
         oo::Music::initWithContentsOfFile(std::string("theme.ogg"));
     theme->playLooped(true);
-    OO_CHECK(
+    EXPECT_TRUE(
         (TakeChannelLog() ==
          std::vector<std::string>{"gain 1.000000", "play theme.ogg looped"}));
-    OO_CHECK(theme->isPlaying() && gChannelsOut == 1);
+    EXPECT_TRUE(theme->isPlaying() && gChannelsOut == 1);
     oo::SoundSource* source = theme->musicSoundSource();
-    OO_CHECK(source != nullptr && source->sound() != nullptr && source->loop());
+    EXPECT_TRUE(source != nullptr && source->sound() != nullptr && source->loop());
 
     theme->playLooped(false);  // already playing: nothing
-    OO_CHECK(TakeChannelLog().empty());
+    EXPECT_TRUE(TakeChannelLog().empty());
 
     theme->setMusicGain(0.25f);
-    OO_CHECK(theme->musicGain() == 0.25f && source->gain() == 0.25f);
-    OO_CHECK((TakeChannelLog() == std::vector<std::string>{"gain 0.250000"}));
+    EXPECT_TRUE(theme->musicGain() == 0.25f && source->gain() == 0.25f);
+    EXPECT_TRUE((TakeChannelLog() == std::vector<std::string>{"gain 0.250000"}));
 
     // Another music takes the source; the first is no longer playing.
     std::shared_ptr<oo::Music> docked =
         oo::Music::initWithContentsOfFile(std::string("docked.ogg"));
-    OO_CHECK(!docked->isPlaying());
+    EXPECT_TRUE(!docked->isPlaying());
     docked->playLooped(false);
-    OO_CHECK(docked->musicSoundSource() == source && gChannelsOut == 1);
-    OO_CHECK(
+    EXPECT_TRUE(docked->musicSoundSource() == source && gChannelsOut == 1);
+    EXPECT_TRUE(
         (TakeChannelLog() ==
          std::vector<std::string>{"stop", "gain 0.250000", "play docked.ogg"}));
-    OO_CHECK(docked->isPlaying() && !theme->isPlaying() && !source->loop());
+    EXPECT_TRUE(docked->isPlaying() && !theme->isPlaying() && !source->loop());
 
     theme->stop();  // not the playing one: nothing
-    OO_CHECK(TakeChannelLog().empty() && docked->isPlaying());
+    EXPECT_TRUE(TakeChannelLog().empty() && docked->isPlaying());
 
     docked->stop();
-    OO_CHECK((TakeChannelLog() == std::vector<std::string>{"stop"}));
-    OO_CHECK(!docked->isPlaying() && source->sound() == nullptr &&
+    EXPECT_TRUE((TakeChannelLog() == std::vector<std::string>{"stop"}));
+    EXPECT_TRUE(!docked->isPlaying() && source->sound() == nullptr &&
              gChannelsOut == 0);
 
     // Played again after it was stopped.
     docked->playLooped(true);
-    OO_CHECK(docked->isPlaying() && source->sound() != nullptr);
+    EXPECT_TRUE(docked->isPlaying() && source->sound() != nullptr);
     docked->stop();
     TakeChannelLog();
   }
 }
 
 // A playing music that is released stops first.
-OO_TEST(releasedWhilePlaying) {
-  SetUp();
+TEST(OOMusic, releasedWhilePlaying) {
+  ::SetUp();
   TakeChannelLog();
   oo::SoundSource* source = nullptr;
   {
@@ -303,35 +304,33 @@ OO_TEST(releasedWhilePlaying) {
     TakeChannelLog();
     music = nullptr;
   }
-  OO_CHECK((TakeChannelLog() == std::vector<std::string>{"stop"}));
-  OO_CHECK(source != nullptr && source->sound() == nullptr &&
+  EXPECT_TRUE((TakeChannelLog() == std::vector<std::string>{"stop"}));
+  EXPECT_TRUE(source != nullptr && source->sound() == nullptr &&
            !source->isPlaying());
-  OO_CHECK(gLiveSounds == 0);
+  EXPECT_TRUE(gLiveSounds == 0);
 }
 
 // The C++ API: the factory hides the root's and answers null where the
 // initialiser answered nil.
-OO_TEST(cxxApi) {
-  SetUp();
+TEST(OOMusic, cxxApi) {
+  ::SetUp();
   TakeChannelLog();
   {
-    OO_CHECK(!oo::Music::initWithContentsOfFile(std::string("missing.ogg")));
+    EXPECT_TRUE(!oo::Music::initWithContentsOfFile(std::string("missing.ogg")));
     const std::shared_ptr<oo::Music> music =
         oo::Music::initWithContentsOfFile(std::string("theme.ogg"));
-    OO_CHECK(music && music->name() == std::optional<std::string>("theme.ogg"));
-    OO_CHECK(!music->isPlaying() &&
+    EXPECT_TRUE(music && music->name() == std::optional<std::string>("theme.ogg"));
+    EXPECT_TRUE(!music->isPlaying() &&
              music->soundBuffer() == 0);  // the root's default
     music->playLooped(false);
-    OO_CHECK(music->isPlaying() && music->musicSoundSource() != nullptr);
+    EXPECT_TRUE(music->isPlaying() && music->musicSoundSource() != nullptr);
     music->setMusicGain(0.5f);
-    OO_CHECK(music->musicGain() == 0.5f);
+    EXPECT_TRUE(music->musicGain() == 0.5f);
     music->stop();
-    OO_CHECK(!music->isPlaying());
-    OO_CHECK((TakeChannelLog() ==
+    EXPECT_TRUE(!music->isPlaying());
+    EXPECT_TRUE((TakeChannelLog() ==
               std::vector<std::string>{"gain 0.250000", "play theme.ogg",
                                        "gain 0.500000", "stop"}));
   }
-  OO_CHECK(gLiveSounds == 0);
+  EXPECT_TRUE(gLiveSounds == 0);
 }
-
-OO_TEST_MAIN()

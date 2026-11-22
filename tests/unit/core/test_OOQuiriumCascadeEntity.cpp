@@ -13,11 +13,12 @@
 	tools/check-core-tests.sh
 */
 
+#include <gtest/gtest.h>
+
 #include "QuiriumCascadeEntity.h"
 #include "PlayerEntity.h"	// PLAYER is C++
 #include "Universe.h"
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <string>
@@ -117,11 +118,11 @@ void SetUp()
 }	// namespace
 
 
-OO_TEST(fromShip)
+TEST(OOQuiriumCascadeEntity, fromShip)
 {
 	{
-		SetUp();
-		OO_CHECK(MakeCascade(nullptr) == nullptr);
+		::SetUp();
+		EXPECT_TRUE(MakeCascade(nullptr) == nullptr);
 
 		Entity *ship = oo::MadeEntity(oo::makeShared<::ShipEntity>());	// a C++ ship under its object, never set up
 		Entity *shipOwner = oo::MadeEntity(oo::makeShared<Entity>());
@@ -129,15 +130,15 @@ OO_TEST(fromShip)
 		ship->setOwner(shipOwner);
 
 		Entity *cascade = MakeCascade(oo::ToShip(ship));
-		OO_CHECK(cascade != nullptr);
-		OO_CHECK(HPvector_equal(cascade->getPosition(), make_HPvector(5, 6, 7)));
-		OO_CHECK(cascade->status() == oo::EntityStatus::kEffect && cascade->getScanClass() == oo::ScanClass::kMine);
-		OO_CHECK(cascade->owner() == shipOwner);
-		OO_CHECK(cascade->isEffect() && oo::EntityIsCascadeWeapon(cascade));	// -isCascadeWeapon
-		OO_CHECK(!oo::EntityIsCascadeWeapon(ship));
-		OO_CHECK(!cascade->canCollide() && cascade->checkCloseCollisionWith(nullptr) && cascade->checkCloseCollisionWith(ship));
-		OO_CHECK(oo::EntityDescription(cascade).starts_with("<OOQuiriumCascadeEntity 0x"));
-		OO_CHECK(oo::EntityDescription(cascade).ends_with("{0.000000 seconds passed of 20.000000}"));
+		EXPECT_TRUE(cascade != nullptr);
+		EXPECT_TRUE(HPvector_equal(cascade->getPosition(), make_HPvector(5, 6, 7)));
+		EXPECT_TRUE(cascade->status() == oo::EntityStatus::kEffect && cascade->getScanClass() == oo::ScanClass::kMine);
+		EXPECT_TRUE(cascade->owner() == shipOwner);
+		EXPECT_TRUE(cascade->isEffect() && oo::EntityIsCascadeWeapon(cascade));	// -isCascadeWeapon
+		EXPECT_TRUE(!oo::EntityIsCascadeWeapon(ship));
+		EXPECT_TRUE(!cascade->canCollide() && cascade->checkCloseCollisionWith(nullptr) && cascade->checkCloseCollisionWith(ship));
+		EXPECT_TRUE(oo::EntityDescription(cascade).starts_with("<OOQuiriumCascadeEntity 0x"));
+		EXPECT_TRUE(oo::EntityDescription(cascade).ends_with("{0.000000 seconds passed of 20.000000}"));
 
 		// Nothing is drawn in the opaque pass.
 		cascade->drawImmediate(false, false);
@@ -145,10 +146,10 @@ OO_TEST(fromShip)
 }
 
 
-OO_TEST(update)
+TEST(OOQuiriumCascadeEntity, update)
 {
 	{
-		SetUp();
+		::SetUp();
 		Entity *ship = oo::MadeEntity(oo::makeShared<::ShipEntity>());	// a C++ ship under its object, never set up
 		Entity *shipOwner = oo::MadeEntity(oo::makeShared<Entity>());
 		ship->setOwner(shipOwner);
@@ -158,20 +159,17 @@ OO_TEST(update)
 
 		// A tenth of a second: past the collision delay, expanding, and dealing energy.
 		cascade->update(0.1);
-		OO_CHECK(cascade->canCollide());
-		OO_CHECK(fabs(cascade->collisionRadius() - 100.0f) < 1e-3);
+		EXPECT_TRUE(cascade->canCollide());
+		EXPECT_TRUE(fabs(cascade->collisionRadius() - 100.0f) < 1e-3);
 		const double energy = 0.1 * (100000 - 90000 * (0.1 / 20.0));
-		OO_CHECK(fabs(cascade->getEnergy() - energy) < 1e-2);
-		OO_CHECK(fabs(victim->_damage - energy) < 1e-2);
-		OO_CHECK(victim->_from == cascade && victim->_becauseOf == shipOwner && victim->_weapon == "EQ_QC_MINE");
-		OO_CHECK(oo::EntityDescription(cascade).ends_with("{0.100000 seconds passed of 20.000000}"));
-		OO_CHECK(sRemoved == nullptr);
+		EXPECT_TRUE(fabs(cascade->getEnergy() - energy) < 1e-2);
+		EXPECT_TRUE(fabs(victim->_damage - energy) < 1e-2);
+		EXPECT_TRUE(victim->_from == cascade && victim->_becauseOf == shipOwner && victim->_weapon == "EQ_QC_MINE");
+		EXPECT_TRUE(oo::EntityDescription(cascade).ends_with("{0.100000 seconds passed of 20.000000}"));
+		EXPECT_TRUE(sRemoved == nullptr);
 
 		// Twenty seconds: removed.
 		cascade->update(20.0);
-		OO_CHECK(sRemoved == cascade);
+		EXPECT_TRUE(sRemoved == cascade);
 	}
 }
-
-
-OO_TEST_MAIN()

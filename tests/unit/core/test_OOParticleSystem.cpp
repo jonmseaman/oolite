@@ -24,13 +24,14 @@
 #include <optional>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "ExplosionCloudEntity.h"
 #include "ParticleSystem.h"
 #include "Texture.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "legacy_random.h"
-#include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
@@ -173,96 +174,94 @@ bool GrowsAndExpires(Entity* cloud, double speed, double duration) {
 
 }  // namespace
 
-OO_TEST(smallFragmentBurst) {
+TEST(OOParticleSystem, smallFragmentBurst) {
   {
-    SetUp();
+    ::SetUp();
     Entity* burst = SmallBurst(Source(make_vector(4, 5, 6)));
-    OO_CHECK(IsParticleEffect(burst));
-    OO_CHECK(VectorNear(burst->getVelocity(), make_vector(4, 5, 6)));
-    OO_CHECK(oo::EntityDescription(burst).starts_with(
+    EXPECT_TRUE(IsParticleEffect(burst));
+    EXPECT_TRUE(VectorNear(burst->getVelocity(), make_vector(4, 5, 6)));
+    EXPECT_TRUE(oo::EntityDescription(burst).starts_with(
         "<OOSmallFragmentBurstEntity 0x"));
-    OO_CHECK(oo::EntityDescription(burst).ends_with("{ttl: 1.500s}"));
-    OO_CHECK(GrowsAndExpires(burst, 400, 1.5));
+    EXPECT_TRUE(oo::EntityDescription(burst).ends_with("{ttl: 1.500s}"));
+    EXPECT_TRUE(GrowsAndExpires(burst, 400, 1.5));
   }
 }
 
-OO_TEST(bigFragmentBurst) {
+TEST(OOParticleSystem, bigFragmentBurst) {
   {
-    SetUp();
+    ::SetUp();
     Entity* burst = BigBurst(Source(make_vector(100, 0, 0)));
-    OO_CHECK(IsParticleEffect(burst));
-    OO_CHECK(VectorNear(burst->getVelocity(), make_vector(85, 0, 0)));
-    OO_CHECK(oo::EntityDescription(burst).starts_with(
+    EXPECT_TRUE(IsParticleEffect(burst));
+    EXPECT_TRUE(VectorNear(burst->getVelocity(), make_vector(85, 0, 0)));
+    EXPECT_TRUE(oo::EntityDescription(burst).starts_with(
         "<OOBigFragmentBurstEntity 0x"));
-    OO_CHECK(oo::EntityDescription(burst).ends_with("{ttl: 1.000s}"));
-    OO_CHECK(GrowsAndExpires(burst, 4.0 * (1.0 + 10.0 * 0.5),
+    EXPECT_TRUE(oo::EntityDescription(burst).ends_with("{ttl: 1.000s}"));
+    EXPECT_TRUE(GrowsAndExpires(burst, 4.0 * (1.0 + 10.0 * 0.5),
                              1.0));  // four times 1 + half the radius
   }
 }
 
-OO_TEST(collisions) {
+TEST(OOParticleSystem, collisions) {
   {
-    SetUp();
+    ::SetUp();
     Entity* burst = SmallBurst(Source(kZeroVector));
     Entity* other = Source(kZeroVector);
     Entity* effect = oo::MadeEntity(oo::makeShared<TestEffect>());
-    OO_CHECK(burst->checkCloseCollisionWith(other));
-    OO_CHECK(!burst->checkCloseCollisionWith(effect));
-    OO_CHECK(!burst->checkCloseCollisionWith(nullptr));  // nil is its (nil) owner
-    OO_CHECK(!burst->checkCloseCollisionWith(BigBurst(other)));
+    EXPECT_TRUE(burst->checkCloseCollisionWith(other));
+    EXPECT_TRUE(!burst->checkCloseCollisionWith(effect));
+    EXPECT_TRUE(!burst->checkCloseCollisionWith(nullptr));  // nil is its (nil) owner
+    EXPECT_TRUE(!burst->checkCloseCollisionWith(BigBurst(other)));
   }
 }
 
-OO_TEST(explosionCloudDefaults) {
+TEST(OOParticleSystem, explosionCloudDefaults) {
   {
-    SetUp();
+    ::SetUp();
     Entity* cloud = Cloud(Source(make_vector(0, 3000, 4000)), oo::PList());
-    OO_CHECK(IsParticleEffect(cloud));
-    OO_CHECK(sTextureName ==
+    EXPECT_TRUE(IsParticleEffect(cloud));
+    EXPECT_TRUE(sTextureName ==
              std::optional<std::string>("oolite-particle-cloud2.png"));
-    OO_CHECK(VectorNear(cloud->getVelocity(),
+    EXPECT_TRUE(VectorNear(cloud->getVelocity(),
                         make_vector(0, 600, 800)));  // capped at 1000
-    OO_CHECK(
+    EXPECT_TRUE(
         oo::EntityDescription(cloud).starts_with("<OOExplosionCloudEntity 0x"));
-    OO_CHECK(oo::EntityDescription(cloud).ends_with("{ttl: 0.900s}"));
+    EXPECT_TRUE(oo::EntityDescription(cloud).ends_with("{ttl: 0.900s}"));
     // Size 2.5 radii, particles up to 1.2 times as fast.
-    OO_CHECK(GrowsAndExpires(cloud, 10.0 * 2.5 * 1.2, 0.9));
+    EXPECT_TRUE(GrowsAndExpires(cloud, 10.0 * 2.5 * 1.2, 0.9));
 
     // A slow source keeps its velocity.
-    OO_CHECK(VectorNear(
+    EXPECT_TRUE(VectorNear(
         Cloud(Source(make_vector(0, 30, 40)), oo::PList())->getVelocity(),
         make_vector(0, 30, 40)));
   }
 }
 
-OO_TEST(explosionCloudSettings) {
+TEST(OOParticleSystem, explosionCloudSettings) {
   {
-    SetUp();
+    ::SetUp();
     oo::PList::Dict settings;
     settings["duration"] = oo::PList(2.0);
     settings["size"] = oo::PList(4.0);
     settings["spread"] = oo::PList(0.5);
     settings["texture"] = oo::PList(std::string("test-cloud.png"));
     Entity* cloud = Cloud(Source(kZeroVector), oo::PList(settings));
-    OO_CHECK(IsParticleEffect(cloud));
-    OO_CHECK(sTextureName == std::optional<std::string>("test-cloud.png"));
-    OO_CHECK(oo::EntityDescription(cloud).ends_with("{ttl: 2.000s}"));
-    OO_CHECK(GrowsAndExpires(cloud, 10.0 * 4.0 * 1.2 * 0.5, 2.0));
+    EXPECT_TRUE(IsParticleEffect(cloud));
+    EXPECT_TRUE(sTextureName == std::optional<std::string>("test-cloud.png"));
+    EXPECT_TRUE(oo::EntityDescription(cloud).ends_with("{ttl: 2.000s}"));
+    EXPECT_TRUE(GrowsAndExpires(cloud, 10.0 * 4.0 * 1.2 * 0.5, 2.0));
 
     // An explicit size wins over the settings' factor.
-    SetUp();
+    ::SetUp();
     Entity* sized = SizedCloud(Source(kZeroVector), 50.0f, oo::PList(settings));
-    OO_CHECK(GrowsAndExpires(sized, 50.0 * 1.2 * 0.5, 2.0));
+    EXPECT_TRUE(GrowsAndExpires(sized, 50.0 * 1.2 * 0.5, 2.0));
   }
 }
 
-OO_TEST(explosionCloudNeedsItsTexture) {
+TEST(OOParticleSystem, explosionCloudNeedsItsTexture) {
   {
-    SetUp();
+    ::SetUp();
     sTextureFound = false;
-    OO_CHECK(Cloud(Source(kZeroVector), oo::PList()) == nullptr);
-    OO_CHECK(SizedCloud(Source(kZeroVector), 5.0f, oo::PList()) == nullptr);
+    EXPECT_TRUE(Cloud(Source(kZeroVector), oo::PList()) == nullptr);
+    EXPECT_TRUE(SizedCloud(Source(kZeroVector), 5.0f, oo::PList()) == nullptr);
   }
 }
-
-OO_TEST_MAIN()

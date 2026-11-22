@@ -20,9 +20,10 @@
 #include <type_traits>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "ALSoundDecoder.h"
 #include "Logging.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
 namespace stdfs = std::filesystem;
@@ -73,57 +74,57 @@ constexpr size_t kBoopBytes = 3841 * 2;
 
 }  // namespace
 
-OO_TEST(clusterPicksTheCodecByExtension) {
+TEST(OOALSoundDecoder, clusterPicksTheCodecByExtension) {
   StartLog();
-  OO_CHECK(stdfs::exists(BoopPath()));
+  EXPECT_TRUE(stdfs::exists(BoopPath()));
 
   const std::shared_ptr<oo::ALSoundDecoder> decoder =
       oo::ALSoundDecoder::initWithPath(BoopPath());
-  OO_CHECK(decoder != nullptr);
-  OO_CHECK(dynamic_cast<oo::ALSoundDecoder*>(decoder.get()) != nullptr);
-  OO_CHECK(decoder->name() == std::optional<std::string>("boop.ogg"));
+  EXPECT_TRUE(decoder != nullptr);
+  EXPECT_TRUE(dynamic_cast<oo::ALSoundDecoder*>(decoder.get()) != nullptr);
+  EXPECT_TRUE(decoder->name() == std::optional<std::string>("boop.ogg"));
 
-  OO_CHECK(oo::ALSoundDecoder::initWithPath(std::nullopt) == nullptr);
-  OO_CHECK(oo::ALSoundDecoder::initWithPath(std::string("boop.wav")) == nullptr);
-  OO_CHECK(oo::ALSoundDecoder::initWithPath(std::string("no-such-file.ogg")) ==
+  EXPECT_TRUE(oo::ALSoundDecoder::initWithPath(std::nullopt) == nullptr);
+  EXPECT_TRUE(oo::ALSoundDecoder::initWithPath(std::string("boop.wav")) == nullptr);
+  EXPECT_TRUE(oo::ALSoundDecoder::initWithPath(std::string("no-such-file.ogg")) ==
            nullptr);
-  OO_CHECK(gLog.empty());
+  EXPECT_TRUE(gLog.empty());
 
-  OO_CHECK(oo::ALSoundDecoder::codecWithPath(BoopPath()) != nullptr);
-  OO_CHECK(oo::ALSoundDecoder::codecWithPath(BoopPath())->name() ==
+  EXPECT_TRUE(oo::ALSoundDecoder::codecWithPath(BoopPath()) != nullptr);
+  EXPECT_TRUE(oo::ALSoundDecoder::codecWithPath(BoopPath())->name() ==
            std::optional<std::string>("boop.ogg"));
-  OO_CHECK(oo::ALSoundDecoder::codecWithPath("boop.wav") == nullptr);
-  OO_CHECK(oo::ALSoundDecoder::codecWithPath("no-such-file.ogg") == nullptr);
+  EXPECT_TRUE(oo::ALSoundDecoder::codecWithPath("boop.wav") == nullptr);
+  EXPECT_TRUE(oo::ALSoundDecoder::codecWithPath("no-such-file.ogg") == nullptr);
 
   // A path through an OXZ that is not there: null, logged.
-  OO_CHECK(oo::ALSoundDecoder::initWithPath(
+  EXPECT_TRUE(oo::ALSoundDecoder::initWithPath(
                std::string("no-such.oxz/Sounds/x.ogg")) == nullptr);
-  OO_CHECK(LogLinesContaining("Could not unzip OXZ at no-such.oxz") == 1);
+  EXPECT_TRUE(LogLinesContaining("Could not unzip OXZ at no-such.oxz") == 1);
 }
 
-OO_TEST(theSoundsProperties) {
+TEST(OOALSoundDecoder, theSoundsProperties) {
   const std::shared_ptr<oo::ALSoundDecoder> decoder =
       oo::ALSoundDecoder::codecWithPath(BoopPath());
-  OO_CHECK(!decoder->isStereo());
-  OO_CHECK(decoder->sampleRate() == kBoopRate);
-  OO_CHECK(decoder->sizeAsBuffer() == kBoopBytes);
+  EXPECT_TRUE(!decoder->isStereo());
+  EXPECT_TRUE(decoder->sampleRate() == kBoopRate);
+  EXPECT_TRUE(decoder->sizeAsBuffer() == kBoopBytes);
 
   // What the description printed between its braces (the facade's
   // "<OOALSoundVorbisCodec 0x..." went with it).
-  OO_CHECK(decoder->descriptionComponents().value_or("").starts_with(
+  EXPECT_TRUE(decoder->descriptionComponents().value_or("").starts_with(
       "\"boop.ogg\", comments="));
 }
 
-OO_TEST(readsTheWholeSound) {
+TEST(OOALSoundDecoder, readsTheWholeSound) {
   const std::shared_ptr<oo::ALSoundDecoder> decoder =
       oo::ALSoundDecoder::codecWithPath(BoopPath());
   std::vector<char> buffer;
-  OO_CHECK(decoder->readCreatingBuffer(buffer));
+  EXPECT_TRUE(decoder->readCreatingBuffer(buffer));
   size_t size = buffer.size();
-  OO_CHECK(!buffer.empty() && size == kBoopBytes);
+  EXPECT_TRUE(!buffer.empty() && size == kBoopBytes);
   bool silent = true;
   for (size_t i = 0; i < size; i++) silent = silent && buffer[i] == 0;
-  OO_CHECK(!silent);
+  EXPECT_TRUE(!silent);
 
   // No out-parameters: refused (the out-parameter is a reference now).
   static_assert(
@@ -131,71 +132,69 @@ OO_TEST(readsTheWholeSound) {
                            oo::ALSoundDecoder*, std::nullptr_t>);
 }
 
-OO_TEST(streamsAndStartsAgain) {
+TEST(OOALSoundDecoder, streamsAndStartsAgain) {
   const std::shared_ptr<oo::ALSoundDecoder> whole =
       oo::ALSoundDecoder::codecWithPath(BoopPath());
   std::vector<char> expected;
-  OO_CHECK(whole->readCreatingBuffer(expected));
+  EXPECT_TRUE(whole->readCreatingBuffer(expected));
 
   const std::shared_ptr<oo::ALSoundDecoder> decoder =
       oo::ALSoundDecoder::codecWithPath(BoopPath());
   std::vector<char> chunk(oo::AL_STREAM_CHUNK_SIZE);
-  OO_CHECK(decoder->streamToBuffer(chunk.data()) == kBoopBytes);
-  OO_CHECK(!expected.empty() &&
+  EXPECT_TRUE(decoder->streamToBuffer(chunk.data()) == kBoopBytes);
+  EXPECT_TRUE(!expected.empty() &&
            std::memcmp(chunk.data(), expected.data(), kBoopBytes) == 0);
-  OO_CHECK(decoder->streamToBuffer(chunk.data()) == 0);  // the end
+  EXPECT_TRUE(decoder->streamToBuffer(chunk.data()) == 0);  // the end
 
   decoder->reset();
   std::fill(chunk.begin(), chunk.end(), 0);
-  OO_CHECK(decoder->streamToBuffer(chunk.data()) == kBoopBytes);
-  OO_CHECK(std::memcmp(chunk.data(), expected.data(), kBoopBytes) == 0);
+  EXPECT_TRUE(decoder->streamToBuffer(chunk.data()) == kBoopBytes);
+  EXPECT_TRUE(std::memcmp(chunk.data(), expected.data(), kBoopBytes) == 0);
 }
 
 // The public class's own answers: a decoder of nothing.
-OO_TEST(theRootDecodesNothing) {
+TEST(OOALSoundDecoder, theRootDecodesNothing) {
   const std::shared_ptr<oo::ALSoundDecoder> none = oo::makeShared<oo::ALSoundDecoder>();
-  OO_CHECK(none != nullptr);
+  EXPECT_TRUE(none != nullptr);
   std::vector<char> buffer(1);
-  OO_CHECK(!none->readCreatingBuffer(buffer));
-  OO_CHECK(buffer.empty());
+  EXPECT_TRUE(!none->readCreatingBuffer(buffer));
+  EXPECT_TRUE(buffer.empty());
   char chunk[4] = {};
-  OO_CHECK(none->streamToBuffer(chunk) == 0);
-  OO_CHECK(none->sizeAsBuffer() == 0 && !none->isStereo() &&
+  EXPECT_TRUE(none->streamToBuffer(chunk) == 0);
+  EXPECT_TRUE(none->sizeAsBuffer() == 0 && !none->isStereo() &&
            none->sampleRate() == 0);
   none->reset();
-  OO_CHECK(none->name() == std::optional<std::string>(std::string()));
+  EXPECT_TRUE(none->name() == std::optional<std::string>(std::string()));
 }
 
 // The C++ API: the same answers, null where the facade answered nil.
-OO_TEST(cxxApi) {
-  OO_CHECK(!oo::ALSoundDecoder::initWithPath(std::nullopt));
-  OO_CHECK(!oo::ALSoundDecoder::initWithPath(std::string("boop.wav")));
-  OO_CHECK(!oo::ALSoundDecoder::codecWithPath("no-such-file.ogg"));
+TEST(OOALSoundDecoder, cxxApi) {
+  EXPECT_TRUE(!oo::ALSoundDecoder::initWithPath(std::nullopt));
+  EXPECT_TRUE(!oo::ALSoundDecoder::initWithPath(std::string("boop.wav")));
+  EXPECT_TRUE(!oo::ALSoundDecoder::codecWithPath("no-such-file.ogg"));
 
   const std::shared_ptr<oo::ALSoundDecoder> decoder =
       oo::ALSoundDecoder::initWithPath(BoopPath());
-  OO_CHECK(decoder &&
+  EXPECT_TRUE(decoder &&
            decoder->name() == std::optional<std::string>("boop.ogg"));
-  OO_CHECK(!decoder->isStereo() && decoder->sampleRate() == kBoopRate &&
+  EXPECT_TRUE(!decoder->isStereo() && decoder->sampleRate() == kBoopRate &&
            decoder->sizeAsBuffer() == kBoopBytes);
-  OO_CHECK(decoder->descriptionComponents().value_or("").starts_with(
+  EXPECT_TRUE(decoder->descriptionComponents().value_or("").starts_with(
       "\"boop.ogg\", comments="));
 
   std::vector<char> buffer;
-  OO_CHECK(decoder->readCreatingBuffer(buffer) && buffer.size() == kBoopBytes);
+  EXPECT_TRUE(decoder->readCreatingBuffer(buffer) && buffer.size() == kBoopBytes);
 
   const std::shared_ptr<oo::ALSoundDecoder> streaming =
       oo::ALSoundDecoder::codecWithPath(BoopPath());
   std::vector<char> chunk(oo::AL_STREAM_CHUNK_SIZE);
-  OO_CHECK(streaming->streamToBuffer(chunk.data()) == kBoopBytes);
-  OO_CHECK(streaming->streamToBuffer(chunk.data()) == 0);
+  EXPECT_TRUE(streaming->streamToBuffer(chunk.data()) == kBoopBytes);
+  EXPECT_TRUE(streaming->streamToBuffer(chunk.data()) == 0);
   streaming->reset();
-  OO_CHECK(streaming->streamToBuffer(chunk.data()) == kBoopBytes);
+  EXPECT_TRUE(streaming->streamToBuffer(chunk.data()) == kBoopBytes);
 
   const std::shared_ptr<oo::ALSoundDecoder> none = oo::makeShared<oo::ALSoundDecoder>();
-  OO_CHECK(none->sizeAsBuffer() == 0 &&
+  EXPECT_TRUE(none->sizeAsBuffer() == 0 &&
            none->name() == std::optional<std::string>(std::string()));
-  OO_CHECK(!none->descriptionComponents().has_value());
+  EXPECT_TRUE(!none->descriptionComponents().has_value());
 }
-
-OO_TEST_MAIN()

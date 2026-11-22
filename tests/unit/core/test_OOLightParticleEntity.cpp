@@ -20,11 +20,12 @@
 
 #include <cmath>
 
+#include <gtest/gtest.h>
+
 #include "Color.h"
 #include "LightParticleEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -123,61 +124,61 @@ T* NewParticle(float diameter, Entity** outObject = nullptr) {
 
 }  // namespace
 
-OO_TEST(initWithDiameter) {
+TEST(OOLightParticleEntity, initWithDiameter) {
   {
-    SetUp();
+    ::SetUp();
     Entity* object = nullptr;
     oo::LightParticleEntity* particle =
         NewParticle<oo::LightParticleEntity>(8.0f, &object);
-    OO_CHECK(particle != nullptr &&
+    EXPECT_TRUE(particle != nullptr &&
              typeid(*particle) == typeid(oo::LightParticleEntity));
-    OO_CHECK(particle->diameter() == 8.0f);
-    OO_CHECK(object->getScanClass() == oo::ScanClass::kNoDraw &&
+    EXPECT_TRUE(particle->diameter() == 8.0f);
+    EXPECT_TRUE(object->getScanClass() == oo::ScanClass::kNoDraw &&
              object->status() == oo::EntityStatus::kEffect);
-    OO_CHECK(object->isEffect() && !object->canCollide());
-    OO_CHECK(ComponentsAre(particle, 1.0f, 1.0f, 1.0f, 1.0f));
+    EXPECT_TRUE(object->isEffect() && !object->canCollide());
+    EXPECT_TRUE(ComponentsAre(particle, 1.0f, 1.0f, 1.0f, 1.0f));
 
     // The draw distance grows with the diameter; reduced detail (a minimum
     // detail level) scales it by 12.
     GLfloat expected = pow(8.0f / 2.0, M_SQRT2) * NO_DRAW_DISTANCE_FACTOR *
                        NO_DRAW_DISTANCE_FACTOR;
     expected *= 12.0;
-    OO_CHECK((UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false));
-    OO_CHECK(NoDrawDistance(object) == expected);
+    EXPECT_TRUE((UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false));
+    EXPECT_TRUE(NoDrawDistance(object) == expected);
 
     // A subclass initialises the same way.
     Entity* subObject = nullptr;
     TestParticle* sub = NewParticle<TestParticle>(2.0f, &subObject);
-    OO_CHECK(sub->diameter() == 2.0f && subObject->status() == oo::EntityStatus::kEffect &&
+    EXPECT_TRUE(sub->diameter() == 2.0f && subObject->status() == oo::EntityStatus::kEffect &&
              subObject->isEffect());
   }
 }
 
-OO_TEST(colorAndDiameter) {
+TEST(OOLightParticleEntity, colorAndDiameter) {
   {
-    SetUp();
+    ::SetUp();
     oo::LightParticleEntity* particle = NewParticle<oo::LightParticleEntity>(1.0f);
     particle->setColor(oo::Color::colorWithRed(0.25f, 0.5f, 0.75f, 0.5f).get());
-    OO_CHECK(ComponentsAre(particle, 0.25f, 0.5f, 0.75f, 0.5f));
+    EXPECT_TRUE(ComponentsAre(particle, 0.25f, 0.5f, 0.75f, 0.5f));
     particle->setColor(oo::Color::colorWithRed(1.0f, 0.0f, 0.5f, 1.0f).get(),
                        0.125f);
-    OO_CHECK(ComponentsAre(particle, 1.0f, 0.0f, 0.5f, 0.125f));
+    EXPECT_TRUE(ComponentsAre(particle, 1.0f, 0.0f, 0.5f, 0.125f));
 
     // nil changes nothing (a message to nil did nothing), except the alpha it
     // is given.
     particle->setColor(nullptr);
-    OO_CHECK(ComponentsAre(particle, 1.0f, 0.0f, 0.5f, 0.125f));
+    EXPECT_TRUE(ComponentsAre(particle, 1.0f, 0.0f, 0.5f, 0.125f));
     particle->setColor(nullptr, 0.25f);
-    OO_CHECK(ComponentsAre(particle, 1.0f, 0.0f, 0.5f, 0.25f));
+    EXPECT_TRUE(ComponentsAre(particle, 1.0f, 0.0f, 0.5f, 0.25f));
 
     particle->setDiameter(3.0f);
-    OO_CHECK(particle->diameter() == 3.0f);
+    EXPECT_TRUE(particle->diameter() == 3.0f);
   }
 }
 
-OO_TEST(drawSubEntity) {
+TEST(OOLightParticleEntity, drawSubEntity) {
   {
-    SetUp();
+    ::SetUp();
     Entity* object = nullptr;
     TestParticle* particle = NewParticle<TestParticle>(1.0f, &object);
     Entity* owner = oo::MadeEntity(oo::makeShared<Entity>());
@@ -186,20 +187,20 @@ OO_TEST(drawSubEntity) {
     // Opaque pass: nothing.
     SetCamZeroDistance(owner, 5.0f);
     particle->drawSubEntityImmediate(false, false);
-    OO_CHECK(CamZeroDistance(object) == 0.0f && particle->_draws == 0);
+    EXPECT_TRUE(CamZeroDistance(object) == 0.0f && particle->_draws == 0);
 
     // Beyond the draw distance: the owner's distance is taken, and nothing is
     // drawn.
     SetCamZeroDistance(owner, NoDrawDistance(object) * 2.0f);
     particle->drawSubEntityImmediate(false, true);
-    OO_CHECK(CamZeroDistance(object) == NoDrawDistance(object) * 2.0f &&
+    EXPECT_TRUE(CamZeroDistance(object) == NoDrawDistance(object) * 2.0f &&
              particle->_draws == 0);
 
     // Near: drawn through -drawImmediate:translucent:, which the subclass
     // overrides.
     SetCamZeroDistance(owner, 5.0f);
     particle->drawSubEntityImmediate(false, true);
-    OO_CHECK(CamZeroDistance(object) == 5.0f && particle->_draws == 1);
+    EXPECT_TRUE(CamZeroDistance(object) == 5.0f && particle->_draws == 1);
 
     // The base's own draw does nothing in the opaque pass, or beyond the draw
     // distance.
@@ -212,9 +213,9 @@ OO_TEST(drawSubEntity) {
 }
 
 #ifndef NDEBUG
-OO_TEST(texturesListTheSubclassTexture) {
+TEST(OOLightParticleEntity, texturesListTheSubclassTexture) {
   {
-    SetUp();
+    ::SetUp();
     Entity* object = nullptr;
     TestParticle* particle = NewParticle<TestParticle>(1.0f, &object);
     const std::shared_ptr<oo::Texture> kept =
@@ -222,18 +223,18 @@ OO_TEST(texturesListTheSubclassTexture) {
     oo::Texture* texture = kept.get();
     particle->_texture = texture;
     const std::vector<std::shared_ptr<oo::Texture>> textures = object->allTextures();
-    OO_CHECK(textures.size() == 1 && textures[0].get() == texture);
+    EXPECT_TRUE(textures.size() == 1 && textures[0].get() == texture);
   }
 }
 #endif
 
-OO_TEST(description) {
+TEST(OOLightParticleEntity, description) {
   {
-    SetUp();
+    ::SetUp();
     Entity* object = nullptr;
     (void)NewParticle<TestParticle>(1.0f, &object);
-    OO_CHECK(oo::EntityDescription(object).starts_with("<TestParticle 0x"));
-    OO_CHECK(oo::EntityDescription(object).ends_with(
+    EXPECT_TRUE(oo::EntityDescription(object).starts_with("<TestParticle 0x"));
+    EXPECT_TRUE(oo::EntityDescription(object).ends_with(
         "scanClass: CLASS_NO_DRAW status: STATUS_EFFECT}"));
   }
 }
@@ -243,20 +244,18 @@ OO_TEST(description) {
 // A converted subclass, as OOSparkEntity is.
 class TestCxxParticle : public oo::LightParticleEntity {};
 
-OO_TEST(cxxSubclassFacade) {
+TEST(OOLightParticleEntity, cxxSubclassFacade) {
   {
-    SetUp();
+    ::SetUp();
     const std::shared_ptr<TestCxxParticle> particle = oo::makeShared<TestCxxParticle>();
     particle->initWithDiameter(6.0f);
     Entity* facade = oo::MadeEntity(particle);
-    OO_CHECK(facade != nullptr);
-    OO_CHECK(particle->diameter() == 6.0f && facade->isEffect() &&
+    EXPECT_TRUE(facade != nullptr);
+    EXPECT_TRUE(particle->diameter() == 6.0f && facade->isEffect() &&
              !facade->canCollide() && facade->status() == oo::EntityStatus::kEffect);
     particle->setColor(oo::Color::colorWithRed(0.5f, 0.25f, 0.0f, 1.0f).get(),
                        0.5f);
-    OO_CHECK(ComponentsAre(particle.get(), 0.5f, 0.25f, 0.0f, 0.5f));
-    OO_CHECK(oo::EntityDescription(facade).starts_with("<TestCxxParticle 0x"));
+    EXPECT_TRUE(ComponentsAre(particle.get(), 0.5f, 0.25f, 0.0f, 0.5f));
+    EXPECT_TRUE(oo::EntityDescription(facade).starts_with("<TestCxxParticle 0x"));
   }
 }
-
-OO_TEST_MAIN()

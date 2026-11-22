@@ -17,6 +17,8 @@
    tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "PlayerEntity.h"
 #include "SpeechSynthesizer.h"
 #include "Universe.h"
@@ -26,7 +28,6 @@
 extern PlayerEntity* gOOPlayer;  // the early cases run before the later ones
                                  // stand-in player is installed
 
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -59,185 +60,185 @@ bool ListHeadsEmpty(Universe* u) {
 
 }  // namespace
 
-OO_TEST(defaults) {
+TEST(Universe, defaults) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
-    OO_CHECK(u->sessionID() == 0);
-    OO_CHECK(!u->doingStartUp());
-    OO_CHECK(u->entityCount() == 0);
-    OO_CHECK(u->getTime() == 0.0 && u->getTimeDelta() == 0.0);
-    OO_CHECK(u->currentSystemID() == 0);
-    OO_CHECK(u->getViewDirection() == oo::ViewID::kForward);
-    OO_CHECK(u->getAmbientLightLevel() == 0.0f);
-    OO_CHECK(u->getAirResistanceFactor() == 0.0f);
+    EXPECT_TRUE(u->sessionID() == 0);
+    EXPECT_TRUE(!u->doingStartUp());
+    EXPECT_TRUE(u->entityCount() == 0);
+    EXPECT_TRUE(u->getTime() == 0.0 && u->getTimeDelta() == 0.0);
+    EXPECT_TRUE(u->currentSystemID() == 0);
+    EXPECT_TRUE(u->getViewDirection() == oo::ViewID::kForward);
+    EXPECT_TRUE(u->getAmbientLightLevel() == 0.0f);
+    EXPECT_TRUE(u->getAirResistanceFactor() == 0.0f);
     GLfloat* sky = u->getSkyClearColor();
-    OO_CHECK(sky[0] == 0.0f && sky[1] == 0.0f && sky[2] == 0.0f &&
+    EXPECT_TRUE(sky[0] == 0.0f && sky[1] == 0.0f && sky[2] == 0.0f &&
              sky[3] == 0.0f);
 
-    OO_CHECK(u->getDetailLevel() == oo::GraphicsDetail::kMinimum);
-    OO_CHECK(u->reducedDetail() && !u->useShaders());
-    OO_CHECK(!u->bloom());
-    OO_CHECK(u->currentPostFX() == OO_POSTFX_NONE &&
+    EXPECT_TRUE(u->getDetailLevel() == oo::GraphicsDetail::kMinimum);
+    EXPECT_TRUE(u->reducedDetail() && !u->useShaders());
+    EXPECT_TRUE(!u->bloom());
+    EXPECT_TRUE(u->currentPostFX() == OO_POSTFX_NONE &&
              u->colorblindMode() == OO_POSTFX_NONE);
 
-    OO_CHECK(!u->getDisplayGUI() && !u->getDisplayFPS());
-    OO_CHECK(!u->getAutoSave() && !u->getAutoSaveNow() &&
+    EXPECT_TRUE(!u->getDisplayGUI() && !u->getDisplayFPS());
+    EXPECT_TRUE(!u->getAutoSave() && !u->getAutoSaveNow() &&
              !u->getWireframeGraphics());
-    OO_CHECK(!u->getDoProcedurallyTexturedPlanets());
-    OO_CHECK(!u->getECMVisualFXEnabled());
-    OO_CHECK(u->getFramesDoneThisUpdate() == 0);
-    OO_CHECK(!u->pauseMessageVisible());
-    OO_CHECK(!u->permanentCommLog() && !u->permanentMessageLog() &&
+    EXPECT_TRUE(!u->getDoProcedurallyTexturedPlanets());
+    EXPECT_TRUE(!u->getECMVisualFXEnabled());
+    EXPECT_TRUE(u->getFramesDoneThisUpdate() == 0);
+    EXPECT_TRUE(!u->pauseMessageVisible());
+    EXPECT_TRUE(!u->permanentCommLog() && !u->permanentMessageLog() &&
              !u->autoMessageLogBg());
-    OO_CHECK(!u->witchspaceBreakPattern() &&
+    EXPECT_TRUE(!u->witchspaceBreakPattern() &&
              !u->dockingClearanceProtocolActive());
-    OO_CHECK(u->breakPatternOver());
+    EXPECT_TRUE(u->breakPatternOver());
 #ifndef NDEBUG
-    OO_CHECK(u->getTimeAccelerationFactor() ==
+    EXPECT_TRUE(u->getTimeAccelerationFactor() ==
              0.0);  // the zeroed ivar; -initWithGameView: never set it
 #else
-    OO_CHECK(u->getTimeAccelerationFactor() == 1.0);
+    EXPECT_TRUE(u->getTimeAccelerationFactor() == 1.0);
 #endif
   }
 }
 
-OO_TEST(publicMembers) {
+TEST(Universe, publicMembers) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
-    OO_CHECK(EntityListCount(u) == 0);
-    OO_CHECK(SortedEntity(u, 0) == nullptr &&
+    EXPECT_TRUE(EntityListCount(u) == 0);
+    EXPECT_TRUE(SortedEntity(u, 0) == nullptr &&
              SortedEntity(u, UNIVERSE_MAX_ENTITIES) == nullptr);
-    OO_CHECK(ListHeadsEmpty(u));
-    OO_CHECK(CursorRow(u) == 0);
-    OO_CHECK(StarsAmbient(u, 0) == 0.0f && StarsAmbient(u, 3) == 0.0f);
+    EXPECT_TRUE(ListHeadsEmpty(u));
+    EXPECT_TRUE(CursorRow(u) == 0);
+    EXPECT_TRUE(StarsAmbient(u, 0) == 0.0f && StarsAmbient(u, 3) == 0.0f);
   }
 }
 
-OO_TEST(lightAndAir) {
+TEST(Universe, lightAndAir) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
     u->setAmbientLightLevel(3.5f);
-    OO_CHECK(u->getAmbientLightLevel() == 3.5f);
+    EXPECT_TRUE(u->getAmbientLightLevel() == 3.5f);
     u->setAmbientLightLevel(12.0f);
-    OO_CHECK(u->getAmbientLightLevel() == 10.0f);  // clamped to 0 ... 10
+    EXPECT_TRUE(u->getAmbientLightLevel() == 10.0f);  // clamped to 0 ... 10
     u->setAmbientLightLevel(-1.0f);
-    OO_CHECK(u->getAmbientLightLevel() == 0.0f);
+    EXPECT_TRUE(u->getAmbientLightLevel() == 0.0f);
 
     u->setAirResistanceFactor(0.25f);
-    OO_CHECK(u->getAirResistanceFactor() == 0.25f);
+    EXPECT_TRUE(u->getAirResistanceFactor() == 0.25f);
     u->setAirResistanceFactor(2.0f);
-    OO_CHECK(u->getAirResistanceFactor() == 1.0f);  // clamped to 0 ... 1
+    EXPECT_TRUE(u->getAirResistanceFactor() == 1.0f);  // clamped to 0 ... 1
     u->setAirResistanceFactor(-1.0f);
-    OO_CHECK(u->getAirResistanceFactor() == 0.0f);
+    EXPECT_TRUE(u->getAirResistanceFactor() == 0.0f);
 
     // The sky colour's alpha is also the air resistance, clamped there but not
     // in the colour.
     u->setSkyColorRed(0.1f, 0.2f, 0.3f, 0.5f);
     GLfloat* sky = u->getSkyClearColor();
-    OO_CHECK(sky[0] == 0.1f && sky[1] == 0.2f && sky[2] == 0.3f &&
+    EXPECT_TRUE(sky[0] == 0.1f && sky[1] == 0.2f && sky[2] == 0.3f &&
              sky[3] == 0.5f);
-    OO_CHECK(u->getAirResistanceFactor() == 0.5f);
+    EXPECT_TRUE(u->getAirResistanceFactor() == 0.5f);
     u->setSkyColorRed(0.0f, 0.0f, 0.0f, 3.0f);
-    OO_CHECK(sky[3] == 3.0f && u->getAirResistanceFactor() == 1.0f);
-    OO_CHECK(sky == u->getSkyClearColor());  // the live array
+    EXPECT_TRUE(sky[3] == 3.0f && u->getAirResistanceFactor() == 1.0f);
+    EXPECT_TRUE(sky == u->getSkyClearColor());  // the live array
   }
 }
 
-OO_TEST(postFX) {
+TEST(Universe, postFX) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
     u->setCurrentPostFX(OO_POSTFX_COLORBLINDNESS_DEUTER);
-    OO_CHECK(u->currentPostFX() == OO_POSTFX_COLORBLINDNESS_DEUTER &&
+    EXPECT_TRUE(u->currentPostFX() == OO_POSTFX_COLORBLINDNESS_DEUTER &&
              u->colorblindMode() == OO_POSTFX_COLORBLINDNESS_DEUTER);
 
     // A non-colour-blind effect leaves the colour-blind mode, which ending the
     // effect restores.
     u->setCurrentPostFX(OO_POSTFX_CLOAK);
-    OO_CHECK(u->currentPostFX() == OO_POSTFX_CLOAK &&
+    EXPECT_TRUE(u->currentPostFX() == OO_POSTFX_CLOAK &&
              u->colorblindMode() == OO_POSTFX_COLORBLINDNESS_DEUTER);
     u->terminatePostFX(OO_POSTFX_GRAYSCALE);  // not the current one: nothing
-    OO_CHECK(u->currentPostFX() == OO_POSTFX_CLOAK);
+    EXPECT_TRUE(u->currentPostFX() == OO_POSTFX_CLOAK);
     u->terminatePostFX(OO_POSTFX_CLOAK);
-    OO_CHECK(u->currentPostFX() == OO_POSTFX_COLORBLINDNESS_DEUTER);
+    EXPECT_TRUE(u->currentPostFX() == OO_POSTFX_COLORBLINDNESS_DEUTER);
 
     // Out of range (and 0) is none, which is also the colour-blind mode none.
     u->setCurrentPostFX(OO_POSTFX_ENDOFLIST);
-    OO_CHECK(u->currentPostFX() == OO_POSTFX_NONE &&
+    EXPECT_TRUE(u->currentPostFX() == OO_POSTFX_NONE &&
              u->colorblindMode() == OO_POSTFX_NONE);
     u->setCurrentPostFX(OO_POSTFX_CRT);
     u->setCurrentPostFX(-3);
-    OO_CHECK(u->currentPostFX() == OO_POSTFX_NONE &&
+    EXPECT_TRUE(u->currentPostFX() == OO_POSTFX_NONE &&
              u->colorblindMode() == OO_POSTFX_NONE);
 
     // The colour-blind modes cycle through none, protan, deuter, tritan.
-    OO_CHECK(u->nextColorblindMode(OO_POSTFX_NONE) ==
+    EXPECT_TRUE(u->nextColorblindMode(OO_POSTFX_NONE) ==
              OO_POSTFX_COLORBLINDNESS_PROTAN);
-    OO_CHECK(u->nextColorblindMode(OO_POSTFX_COLORBLINDNESS_TRITAN) ==
+    EXPECT_TRUE(u->nextColorblindMode(OO_POSTFX_COLORBLINDNESS_TRITAN) ==
              OO_POSTFX_NONE);
-    OO_CHECK(u->prevColorblindMode(OO_POSTFX_NONE) ==
+    EXPECT_TRUE(u->prevColorblindMode(OO_POSTFX_NONE) ==
              OO_POSTFX_COLORBLINDNESS_TRITAN);
-    OO_CHECK(u->prevColorblindMode(OO_POSTFX_COLORBLINDNESS_DEUTER) ==
+    EXPECT_TRUE(u->prevColorblindMode(OO_POSTFX_COLORBLINDNESS_DEUTER) ==
              OO_POSTFX_COLORBLINDNESS_PROTAN);
 
     // Bloom needs the extras detail level; a universe never initialised is at
     // the minimum.
     u->setBloom(true);
-    OO_CHECK(!u->bloom());
+    EXPECT_TRUE(!u->bloom());
   }
 }
 
-OO_TEST(flags) {
+TEST(Universe, flags) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
     u->setDisplayFPS(7);
-    OO_CHECK(u->getDisplayFPS() == true);  // normalised
+    EXPECT_TRUE(u->getDisplayFPS() == true);  // normalised
     u->setAutoSaveNow(true);
-    OO_CHECK(u->getAutoSaveNow());
+    EXPECT_TRUE(u->getAutoSaveNow());
     u->setPauseMessageVisible(true);
-    OO_CHECK(u->pauseMessageVisible());
+    EXPECT_TRUE(u->pauseMessageVisible());
     u->setPermanentMessageLog(true);
     u->setAutoMessageLogBg(2);
     u->setPermanentCommLog(true);
-    OO_CHECK(u->permanentMessageLog() && u->autoMessageLogBg() == true &&
+    EXPECT_TRUE(u->permanentMessageLog() && u->autoMessageLogBg() == true &&
              u->permanentCommLog());
     u->setWitchspaceBreakPattern(2);
-    OO_CHECK(u->witchspaceBreakPattern() == true);
+    EXPECT_TRUE(u->witchspaceBreakPattern() == true);
     u->setECMVisualFXEnabled(true);
-    OO_CHECK(u->getECMVisualFXEnabled());
+    EXPECT_TRUE(u->getECMVisualFXEnabled());
     u->resetFramesDoneThisUpdate();
-    OO_CHECK(u->getFramesDoneThisUpdate() == 0);
+    EXPECT_TRUE(u->getFramesDoneThisUpdate() == 0);
 
 #ifndef NDEBUG
     u->setTimeAccelerationFactor(2.0);
-    OO_CHECK(u->getTimeAccelerationFactor() == 2.0);
+    EXPECT_TRUE(u->getTimeAccelerationFactor() == 2.0);
     u->setTimeAccelerationFactor(TIME_ACCELERATION_FACTOR_MAX * 2);
-    OO_CHECK(u->getTimeAccelerationFactor() ==
+    EXPECT_TRUE(u->getTimeAccelerationFactor() ==
              TIME_ACCELERATION_FACTOR_DEFAULT);
     u->setTimeAccelerationFactor(TIME_ACCELERATION_FACTOR_MIN / 2);
-    OO_CHECK(u->getTimeAccelerationFactor() ==
+    EXPECT_TRUE(u->getTimeAccelerationFactor() ==
              TIME_ACCELERATION_FACTOR_DEFAULT);
 #endif
 
     // Each universe has its own state.
     Universe* other = NewUniverse();
-    OO_CHECK(!other->getDisplayFPS() && !other->pauseMessageVisible() &&
+    EXPECT_TRUE(!other->getDisplayFPS() && !other->pauseMessageVisible() &&
              u->getDisplayFPS());
   }
 }
 
 // The universe is one C++ object, whose accessors answer its members and which
 // starts zeroed.
-OO_TEST(facadeAndPart) {
+TEST(Universe, facadeAndPart) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -245,24 +246,24 @@ OO_TEST(facadeAndPart) {
 
     // The accessors answer the part's members, and the setters set them.
     u->setAmbientLightLevel(2.5f);
-    OO_CHECK(part->ambientLightLevel == 2.5f);
+    EXPECT_TRUE(part->ambientLightLevel == 2.5f);
     part->universal_time = 42.0;
     part->_sessionID = 3;
-    OO_CHECK(u->getTime() == 42.0 && u->sessionID() == 3);
+    EXPECT_TRUE(u->getTime() == 42.0 && u->sessionID() == 3);
     u->setCurrentPostFX(OO_POSTFX_COLORBLINDNESS_TRITAN);
-    OO_CHECK(part->_currentPostFX == OO_POSTFX_COLORBLINDNESS_TRITAN &&
+    EXPECT_TRUE(part->_currentPostFX == OO_POSTFX_COLORBLINDNESS_TRITAN &&
              part->_colorblindMode == OO_POSTFX_COLORBLINDNESS_TRITAN);
 
     // A new universe is zeroed, as the runtime zeroed the ivars.
     Universe* fresh =
         new Universe();  // never released: its teardown clears UNIVERSE
-    OO_CHECK(fresh->n_entities == 0 && fresh->x_list_start == nullptr &&
+    EXPECT_TRUE(fresh->n_entities == 0 && fresh->x_list_start == nullptr &&
              fresh->gameView == nullptr);
-    OO_CHECK(fresh->sortedEntities[UNIVERSE_MAX_ENTITIES] == nullptr &&
+    EXPECT_TRUE(fresh->sortedEntities[UNIVERSE_MAX_ENTITIES] == nullptr &&
              fresh->frustum[5][3] == 0.0f);
-    OO_CHECK(fresh->entities.empty() && fresh->demo_ships.isNull() &&
+    EXPECT_TRUE(fresh->entities.empty() && fresh->demo_ships.isNull() &&
              !fresh->currentMessage.has_value());
-    OO_CHECK(gSharedUniverse == u);
+    EXPECT_TRUE(gSharedUniverse == u);
   }
 }
 
@@ -270,7 +271,7 @@ OO_TEST(facadeAndPart) {
 // Pausing, quitting and the set-up from a station or witchspace need
 // the player, the GUI and the game controller, and is pinned by the integration tests.
 
-OO_TEST(slice2StartUpFlagsAddOnsAndEntityList) {
+TEST(Universe, slice2StartUpFlagsAddOnsAndEntityList) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -278,109 +279,109 @@ OO_TEST(slice2StartUpFlagsAddOnsAndEntityList) {
 
     part->_doingStartUp = true;
     part->_sessionID = 7;
-    OO_CHECK(u->doingStartUp() && u->sessionID() == 7);
+    EXPECT_TRUE(u->doingStartUp() && u->sessionID() == 7);
 
     // The add-ons in use: a universe never initialised has the empty string,
     // not none.
     std::optional<std::string> addOns = u->getUseAddOns();
-    OO_CHECK(addOns.has_value() && addOns->empty());
+    EXPECT_TRUE(addOns.has_value() && addOns->empty());
     part->useAddOns = "strict";
-    OO_CHECK(u->getUseAddOns() == std::optional<std::string>("strict"));
+    EXPECT_TRUE(u->getUseAddOns() == std::optional<std::string>("strict"));
     // The same add-ons without forcing: nothing to reinitialise, YES.
-    OO_CHECK(u->setUseAddOns("strict", true));
-    OO_CHECK(u->setUseAddOns("strict", false, false));
-    OO_CHECK(part->useAddOns == "strict");
+    EXPECT_TRUE(u->setUseAddOns("strict", true));
+    EXPECT_TRUE(u->setUseAddOns("strict", false, false));
+    EXPECT_TRUE(part->useAddOns == "strict");
 
-    OO_CHECK(u->entityCount() == 0 && u->entityList().empty());
+    EXPECT_TRUE(u->entityCount() == 0 && u->entityList().empty());
 
     // The colour-blind modes step through the four in both directions, and
     // wrap.
     int mode = OO_POSTFX_NONE;
     for (int i = 0; i < 4; i++) mode = u->nextColorblindMode(mode);
-    OO_CHECK(mode == OO_POSTFX_NONE);
+    EXPECT_TRUE(mode == OO_POSTFX_NONE);
     for (int i = 0; i < 4; i++) mode = u->prevColorblindMode(mode);
-    OO_CHECK(mode == OO_POSTFX_NONE);
-    OO_CHECK(u->nextColorblindMode(OO_POSTFX_COLORBLINDNESS_PROTAN) ==
+    EXPECT_TRUE(mode == OO_POSTFX_NONE);
+    EXPECT_TRUE(u->nextColorblindMode(OO_POSTFX_COLORBLINDNESS_PROTAN) ==
              OO_POSTFX_COLORBLINDNESS_DEUTER);
 
     // Bloom is the flag at the extras detail level only.
     u->setBloom(true);
-    OO_CHECK(part->_bloom == true && !u->bloom());
+    EXPECT_TRUE(part->_bloom == true && !u->bloom());
   }
 }
 
-OO_TEST(slice4PopulatorSettings) {
+TEST(Universe, slice4PopulatorSettings) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     Universe* part = u;
 
-    OO_CHECK(u->getPopulatorSettings().isNull());  // none until cleared or set
-    OO_CHECK(!u->deterministicPopulation());
+    EXPECT_TRUE(u->getPopulatorSettings().isNull());  // none until cleared or set
+    EXPECT_TRUE(!u->deterministicPopulation());
     part->deterministic_population = true;
-    OO_CHECK(u->deterministicPopulation());
+    EXPECT_TRUE(u->deterministicPopulation());
 
     u->setPopulatorSetting("pirates", oo::PList(std::string("some")));
     oo::PList settings = u->getPopulatorSettings();
-    OO_CHECK(settings.isDict() &&
+    EXPECT_TRUE(settings.isDict() &&
              settings.getIf<oo::PList::Dict>()->size() == 1);
-    OO_CHECK(settings.find("pirates") != nullptr &&
+    EXPECT_TRUE(settings.find("pirates") != nullptr &&
              settings.get<std::string>("pirates") == "some");
 
     // A null setting removes the key.
     u->setPopulatorSetting("traders", oo::PList(std::string("more")));
     u->setPopulatorSetting("pirates", oo::PList());
     settings = u->getPopulatorSettings();
-    OO_CHECK(settings.getIf<oo::PList::Dict>()->size() == 1 &&
+    EXPECT_TRUE(settings.getIf<oo::PList::Dict>()->size() == 1 &&
              settings.find("pirates") == nullptr &&
              settings.find("traders") != nullptr);
 
     u->clearSystemPopulator();
     settings = u->getPopulatorSettings();
-    OO_CHECK(settings.isDict() && settings.getIf<oo::PList::Dict>()->empty());
+    EXPECT_TRUE(settings.isDict() && settings.getIf<oo::PList::Dict>()->empty());
   }
 }
 
-OO_TEST(slice5MainLightPosition) {
+TEST(Universe, slice5MainLightPosition) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     Universe* part = u;
 
     u->setMainLightPosition(make_vector(1.0f, -2.0f, 3.5f));
-    OO_CHECK(part->main_light_position[0] == 1.0f &&
+    EXPECT_TRUE(part->main_light_position[0] == 1.0f &&
              part->main_light_position[1] == -2.0f);
-    OO_CHECK(part->main_light_position[2] == 3.5f &&
+    EXPECT_TRUE(part->main_light_position[2] == 3.5f &&
              part->main_light_position[3] == 1.0f);
 
     u->setAmbientLightLevel(4.0f);
-    OO_CHECK(u->getAmbientLightLevel() == 4.0f &&
+    EXPECT_TRUE(u->getAmbientLightLevel() == 4.0f &&
              part->ambientLightLevel == 4.0f);
   }
 }
 
-OO_TEST(slice6CoordinateSystemStrings) {
+TEST(Universe, slice6CoordinateSystemStrings) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
     // Anything but four tokens is the origin, not an error.
     HPVector v = u->coordinatesFromCoordinateSystemString("wpu 1 2");
-    OO_CHECK(v.x == 0.0 && v.y == 0.0 && v.z == 0.0);
+    EXPECT_TRUE(v.x == 0.0 && v.y == 0.0 && v.z == 0.0);
     v = u->coordinatesFromCoordinateSystemString("");
-    OO_CHECK(v.x == 0.0 && v.y == 0.0 && v.z == 0.0);
+    EXPECT_TRUE(v.x == 0.0 && v.y == 0.0 && v.z == 0.0);
     v = u->coordinatesFromCoordinateSystemString("wpu 1 2 3 4");
-    OO_CHECK(v.x == 0.0 && v.y == 0.0 && v.z == 0.0);
+    EXPECT_TRUE(v.x == 0.0 && v.y == 0.0 && v.z == 0.0);
   }
 }
 
-OO_TEST(slice7RoleCategoriesAndFlags) {
+TEST(Universe, slice7RoleCategoriesAndFlags) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     Universe* part = u;
 
-    OO_CHECK(!u->roleIsPirateVictim("trader"));  // no categories loaded
+    EXPECT_TRUE(!u->roleIsPirateVictim("trader"));  // no categories loaded
     part->roleCategories = oo::PList(oo::PList::Dict{
         {"oolite-pirate-victim",
          oo::PList(oo::PList::Array{oo::PList(std::string("trader")),
@@ -388,86 +389,86 @@ OO_TEST(slice7RoleCategoriesAndFlags) {
         {"oolite-hunters",
          oo::PList(oo::PList::Array{oo::PList(std::string("hunter"))})},
     });
-    OO_CHECK(u->roleIsPirateVictim("trader") &&
+    EXPECT_TRUE(u->roleIsPirateVictim("trader") &&
              u->roleIsPirateVictim("courier"));
-    OO_CHECK(!u->roleIsPirateVictim("hunter") && !u->roleIsPirateVictim(""));
-    OO_CHECK(u->role("hunter", "oolite-hunters"));
-    OO_CHECK(!u->role("hunter", "oolite-nothing"));
+    EXPECT_TRUE(!u->roleIsPirateVictim("hunter") && !u->roleIsPirateVictim(""));
+    EXPECT_TRUE(u->role("hunter", "oolite-hunters"));
+    EXPECT_TRUE(!u->role("hunter", "oolite-nothing"));
 
     // No witchpoint buoy among no entities: the minimum.
-    OO_CHECK(u->safeWitchspaceExitDistance() == MIN_DISTANCE_TO_BUOY);
+    EXPECT_TRUE(u->safeWitchspaceExitDistance() == MIN_DISTANCE_TO_BUOY);
 
     part->_dockingClearanceProtocolActive = true;
-    OO_CHECK(u->dockingClearanceProtocolActive());
+    EXPECT_TRUE(u->dockingClearanceProtocolActive());
     u->setWitchspaceBreakPattern(false);
-    OO_CHECK(!u->witchspaceBreakPattern());
+    EXPECT_TRUE(!u->witchspaceBreakPattern());
   }
 }
 
-OO_TEST(slice8StationsAndPlanets) {
+TEST(Universe, slice8StationsAndPlanets) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
     // No sun: no main station is looked for; no planets, no stations.
-    OO_CHECK(u->station() == nullptr && u->planet() == nullptr);
-    OO_CHECK(u->planets().empty() && u->stations().empty());
-    OO_CHECK(u->stationWithRole("", make_HPvector(0, 0, 0)) == nullptr);
-    OO_CHECK(u->stationWithRole("coriolis", make_HPvector(0, 0, 0)) == nullptr);
+    EXPECT_TRUE(u->station() == nullptr && u->planet() == nullptr);
+    EXPECT_TRUE(u->planets().empty() && u->stations().empty());
+    EXPECT_TRUE(u->stationWithRole("", make_HPvector(0, 0, 0)) == nullptr);
+    EXPECT_TRUE(u->stationWithRole("coriolis", make_HPvector(0, 0, 0)) == nullptr);
   }
 }
 
-OO_TEST(slice9BeaconsWaypointsBreakPatternAndAIs) {
+TEST(Universe, slice9BeaconsWaypointsBreakPatternAndAIs) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     Universe* part = u;
 
-    OO_CHECK(u->firstBeacon() == nullptr && u->lastBeacon() == nullptr);
+    EXPECT_TRUE(u->firstBeacon() == nullptr && u->lastBeacon() == nullptr);
     u->resetBeacons();
-    OO_CHECK(u->firstBeacon() == nullptr && u->lastBeacon() == nullptr);
-    OO_CHECK(u->wormholes().empty() && u->currentWaypoints().empty());
+    EXPECT_TRUE(u->firstBeacon() == nullptr && u->lastBeacon() == nullptr);
+    EXPECT_TRUE(u->wormholes().empty() && u->currentWaypoints().empty());
 
     part->breakPatternCounter = 3;
-    OO_CHECK(!u->breakPatternOver());
+    EXPECT_TRUE(!u->breakPatternOver());
 #if !OO_DEBUG  // the debug build asserts that PLAYER is set (OOGetPlayer()), so
                // only a release-style build can ask with none
     PlayerEntity* standIn = gOOPlayer;
     gOOPlayer = nullptr;  // no player: an earlier case leaves its stand-in
                           // (SetUpTestPlayer())
-    OO_CHECK(u->breakPatternHide());  // no player
+    EXPECT_TRUE(u->breakPatternHide());  // no player
     gOOPlayer = standIn;
 #endif
     part->breakPatternCounter = 0;
-    OO_CHECK(u->breakPatternOver());
+    EXPECT_TRUE(u->breakPatternOver());
 
-    OO_CHECK(!u->defaultAIForRole("pirate").has_value());
+    EXPECT_TRUE(!u->defaultAIForRole("pirate").has_value());
     part->autoAIMap = oo::PList(
         oo::PList::Dict{{"pirate", oo::PList(std::string("pirateAI.plist"))}});
-    OO_CHECK(u->defaultAIForRole("pirate") ==
+    EXPECT_TRUE(u->defaultAIForRole("pirate") ==
              std::optional<std::string>("pirateAI.plist"));
-    OO_CHECK(!u->defaultAIForRole("trader").has_value());
+    EXPECT_TRUE(!u->defaultAIForRole("trader").has_value());
 
     u->setSkyColorRed(0.5f, 0.25f, 0.125f, 0.75f);
-    OO_CHECK(part->skyClearColor[0] == 0.5f &&
+    EXPECT_TRUE(part->skyClearColor[0] == 0.5f &&
              part->skyClearColor[3] == 0.75f &&
              u->getAirResistanceFactor() == 0.75f);
   }
 }
 
-OO_TEST(slice10GameViewAndCommodities) {
+TEST(Universe, slice10GameViewAndCommodities) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
-    OO_CHECK(u->getGameView() == nullptr && u->gameController() == nullptr);
+    EXPECT_TRUE(u->getGameView() == nullptr && u->gameController() == nullptr);
     u->setGameView(nullptr);
-    OO_CHECK(u->getGameView() == nullptr);
-    OO_CHECK(u->getCommodities() == nullptr);
+    EXPECT_TRUE(u->getGameView() == nullptr);
+    EXPECT_TRUE(u->getCommodities() == nullptr);
   }
 }
 
-OO_TEST(slice11ViewFrustum) {
+TEST(Universe, slice11ViewFrustum) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -475,9 +476,9 @@ OO_TEST(slice11ViewFrustum) {
 
     // A zeroed frustum: every plane's distance is 0, which a sphere of radius r
     // > 0 is not behind.
-    OO_CHECK(
+    EXPECT_TRUE(
         u->viewFrustumIntersectsSphereAt(make_vector(1.0f, 2.0f, 3.0f), 1.0f));
-    OO_CHECK(
+    EXPECT_TRUE(
         !u->viewFrustumIntersectsSphereAt(make_vector(1.0f, 2.0f, 3.0f), 0.0f));
 
     // One plane, x >= 0 (the others pass everything): a sphere is outside only
@@ -488,29 +489,29 @@ OO_TEST(slice11ViewFrustum) {
     }
     part->frustum[2][0] = 1.0f;
     part->frustum[2][3] = 0.0f;
-    OO_CHECK(
+    EXPECT_TRUE(
         u->viewFrustumIntersectsSphereAt(make_vector(5.0f, 0.0f, 0.0f), 1.0f));
-    OO_CHECK(
+    EXPECT_TRUE(
         u->viewFrustumIntersectsSphereAt(make_vector(-0.5f, 0.0f, 0.0f), 1.0f));
-    OO_CHECK(!u->viewFrustumIntersectsSphereAt(make_vector(-5.0f, 0.0f, 0.0f),
+    EXPECT_TRUE(!u->viewFrustumIntersectsSphereAt(make_vector(-5.0f, 0.0f, 0.0f),
                                                1.0f));
   }
 }
 
-OO_TEST(slice12FrameCounterAndViewMatrix) {
+TEST(Universe, slice12FrameCounterAndViewMatrix) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     Universe* part = u;
 
     part->framesDoneThisUpdate = 4;
-    OO_CHECK(u->getFramesDoneThisUpdate() == 4);
+    EXPECT_TRUE(u->getFramesDoneThisUpdate() == 4);
     u->resetFramesDoneThisUpdate();
-    OO_CHECK(u->getFramesDoneThisUpdate() == 0 &&
+    EXPECT_TRUE(u->getFramesDoneThisUpdate() == 0 &&
              part->framesDoneThisUpdate == 0);
 
     part->viewMatrix = kIdentityMatrix;
-    OO_CHECK(oo::MatrixEqual(u->getViewMatrix(), kIdentityMatrix));
+    EXPECT_TRUE(oo::MatrixEqual(u->getViewMatrix(), kIdentityMatrix));
   }
 }
 
@@ -518,7 +519,7 @@ namespace {
 void SetUpTestPlayer();
 }  // namespace
 
-OO_TEST(slice13EntityLookUp) {
+TEST(Universe, slice13EntityLookUp) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -526,14 +527,14 @@ OO_TEST(slice13EntityLookUp) {
                         // answers it
 
     // No target, an empty slot and out of range are nil; 100 is the player's.
-    OO_CHECK(u->entityForUniversalID(NO_TARGET) == nullptr);
-    OO_CHECK(u->entityForUniversalID(MIN_ENTITY_UID + 1) == nullptr);
-    OO_CHECK(u->entityForUniversalID(MAX_ENTITY_UID + 1) == nullptr);
-    OO_CHECK(u->entityForUniversalID(100) == PLAYER);
+    EXPECT_TRUE(u->entityForUniversalID(NO_TARGET) == nullptr);
+    EXPECT_TRUE(u->entityForUniversalID(MIN_ENTITY_UID + 1) == nullptr);
+    EXPECT_TRUE(u->entityForUniversalID(MAX_ENTITY_UID + 1) == nullptr);
+    EXPECT_TRUE(u->entityForUniversalID(100) == PLAYER);
 
     // No demo ships among no entities: the demo ship is cleared.
     u->removeDemoShips();
-    OO_CHECK(u->demo_ship == nullptr && u->entityCount() == 0);
+    EXPECT_TRUE(u->demo_ship == nullptr && u->entityCount() == 0);
   }
 }
 
@@ -596,25 +597,25 @@ class Slice14GhostEntity : public Entity  // an entity nothing collides with
   bool canCollide() override { return false; }
 };
 
-OO_TEST(slice14NoEntity) {
+TEST(Universe, slice14NoEntity) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     HPVector p2 = make_HPvector(0, 0, 1000);
 
-    OO_CHECK(!u->isVectorClearFromEntity(nullptr, 0, p2));
-    OO_CHECK(u->hazardOnRouteFromEntity(nullptr, 0, p2) == nullptr);
-    OO_CHECK(HPvector_equal(u->getSafeVectorFromEntity(nullptr, 0, p2),
+    EXPECT_TRUE(!u->isVectorClearFromEntity(nullptr, 0, p2));
+    EXPECT_TRUE(u->hazardOnRouteFromEntity(nullptr, 0, p2) == nullptr);
+    EXPECT_TRUE(HPvector_equal(u->getSafeVectorFromEntity(nullptr, 0, p2),
                             kZeroHPVector));
-    OO_CHECK(u->firstShipHitByLaserFromShip(nullptr, oo::WeaponFacing::kForward,
+    EXPECT_TRUE(u->firstShipHitByLaserFromShip(nullptr, oo::WeaponFacing::kForward,
                                             kZeroVector, NULL) == nullptr);
     // The demo ship needs a docked player; with none there is no ship.
     SetUpTestPlayer();
-    OO_CHECK(u->makeDemoShipWithRole("oolite-test", true) == nullptr);
+    EXPECT_TRUE(u->makeDemoShipWithRole("oolite-test", true) == nullptr);
   }
 }
 
-OO_TEST(slice14ClearRoute) {
+TEST(Universe, slice14ClearRoute) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -624,9 +625,9 @@ OO_TEST(slice14ClearRoute) {
     // Nothing else in the universe: clear, no hazard, the destination is safe
     // as it is.
     SetSortedEntities(u, {e1});
-    OO_CHECK(u->isVectorClearFromEntity(e1, 0, p2));
-    OO_CHECK(u->hazardOnRouteFromEntity(e1, 0, p2) == nullptr);
-    OO_CHECK(HPvector_equal(u->getSafeVectorFromEntity(e1, 0, p2), p2));
+    EXPECT_TRUE(u->isVectorClearFromEntity(e1, 0, p2));
+    EXPECT_TRUE(u->hazardOnRouteFromEntity(e1, 0, p2) == nullptr);
+    EXPECT_TRUE(HPvector_equal(u->getSafeVectorFromEntity(e1, 0, p2), p2));
 
     // An entity off the route, behind the start, or beyond the destination is
     // no hazard.
@@ -634,22 +635,22 @@ OO_TEST(slice14ClearRoute) {
     Entity* behind = MakeEntity(make_HPvector(0, 0, -300), 50);
     Entity* beyond = MakeEntity(make_HPvector(0, 0, 1500), 50);
     SetSortedEntities(u, {e1, aside, behind, beyond});
-    OO_CHECK(u->isVectorClearFromEntity(e1, 0, p2));
-    OO_CHECK(u->hazardOnRouteFromEntity(e1, 0, p2) == nullptr);
-    OO_CHECK(HPvector_equal(u->getSafeVectorFromEntity(e1, 0, p2), p2));
+    EXPECT_TRUE(u->isVectorClearFromEntity(e1, 0, p2));
+    EXPECT_TRUE(u->hazardOnRouteFromEntity(e1, 0, p2) == nullptr);
+    EXPECT_TRUE(HPvector_equal(u->getSafeVectorFromEntity(e1, 0, p2), p2));
 
     // An entity nothing collides with is no hazard either.
     Entity* ghost = oo::MadeEntity(oo::makeShared<Slice14GhostEntity>());
     ghost->setPosition(make_HPvector(0, 0, 500));
     ghost->setCollisionRadius(50);
     SetSortedEntities(u, {e1, ghost});
-    OO_CHECK(u->isVectorClearFromEntity(e1, 0, p2));
-    OO_CHECK(u->hazardOnRouteFromEntity(e1, 0, p2) == nullptr);
+    EXPECT_TRUE(u->isVectorClearFromEntity(e1, 0, p2));
+    EXPECT_TRUE(u->hazardOnRouteFromEntity(e1, 0, p2) == nullptr);
     u->n_entities = 0;
   }
 }
 
-OO_TEST(slice14Hazard) {
+TEST(Universe, slice14Hazard) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -658,21 +659,21 @@ OO_TEST(slice14Hazard) {
     HPVector p2 = make_HPvector(0, 0, 1000);
     SetSortedEntities(u, {e1, rock});
 
-    OO_CHECK(!u->isVectorClearFromEntity(e1, 0, p2));
-    OO_CHECK(u->hazardOnRouteFromEntity(e1, 0, p2) == rock);
+    EXPECT_TRUE(!u->isVectorClearFromEntity(e1, 0, p2));
+    EXPECT_TRUE(u->hazardOnRouteFromEntity(e1, 0, p2) == rock);
 
     // The safe vector steers short of the rock and away from the side it is on.
     HPVector safe = u->getSafeVectorFromEntity(e1, 0, p2);
-    OO_CHECK(!HPvector_equal(safe, p2));
-    OO_CHECK(safe.z < 500 && safe.x < 20);
+    EXPECT_TRUE(!HPvector_equal(safe, p2));
+    EXPECT_TRUE(safe.z < 500 && safe.x < 20);
 
     // Within range of the destination already: clear, whatever is in the way.
-    OO_CHECK(u->isVectorClearFromEntity(e1, 2000, p2));
-    OO_CHECK(u->hazardOnRouteFromEntity(e1, 2000, p2) == nullptr);
+    EXPECT_TRUE(u->isVectorClearFromEntity(e1, 2000, p2));
+    EXPECT_TRUE(u->hazardOnRouteFromEntity(e1, 2000, p2) == nullptr);
 
     // Stopping short of the rock: the route is clear.
-    OO_CHECK(u->isVectorClearFromEntity(e1, 600, p2));
-    OO_CHECK(u->hazardOnRouteFromEntity(e1, 600, p2) == nullptr);
+    EXPECT_TRUE(u->isVectorClearFromEntity(e1, 600, p2));
+    EXPECT_TRUE(u->hazardOnRouteFromEntity(e1, 600, p2) == nullptr);
     u->n_entities = 0;
   }
 }
@@ -703,7 +704,7 @@ bool IsFarPredicate(Entity* entity,
 
 }  // namespace
 
-OO_TEST(slice15CountAndFind) {
+TEST(Universe, slice15CountAndFind) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -714,48 +715,48 @@ OO_TEST(slice15CountAndFind) {
 
     // No predicate is every entity; no entity counts from the origin; the
     // reference itself never counts.
-    OO_CHECK(u->countEntitiesMatchingPredicate(NULL, NULL, -1, nullptr) == 3);
-    OO_CHECK(u->countEntitiesMatchingPredicate(NULL, NULL, -1, a) == 2);
+    EXPECT_TRUE(u->countEntitiesMatchingPredicate(NULL, NULL, -1, nullptr) == 3);
+    EXPECT_TRUE(u->countEntitiesMatchingPredicate(NULL, NULL, -1, a) == 2);
     // The range reaches the other entity's surface: b's is 90 away from a, c's
     // 990.
-    OO_CHECK(u->countEntitiesMatchingPredicate(NULL, NULL, 95, a) == 1);
-    OO_CHECK(u->countEntitiesMatchingPredicate(NULL, NULL, 85, a) == 0);
+    EXPECT_TRUE(u->countEntitiesMatchingPredicate(NULL, NULL, 95, a) == 1);
+    EXPECT_TRUE(u->countEntitiesMatchingPredicate(NULL, NULL, 85, a) == 0);
     double limit = 50;
-    OO_CHECK(u->countEntitiesMatchingPredicate(IsFarPredicate, &limit, -1,
+    EXPECT_TRUE(u->countEntitiesMatchingPredicate(IsFarPredicate, &limit, -1,
                                                nullptr) == 2);
 
     // Ships: only c.
-    OO_CHECK(u->countShipsMatchingPredicate(NULL, NULL, -1, a) == 1);
-    OO_CHECK(u->countShipsMatchingPredicate(IsFarPredicate, &limit, -1,
+    EXPECT_TRUE(u->countShipsMatchingPredicate(NULL, NULL, -1, a) == 1);
+    EXPECT_TRUE(u->countShipsMatchingPredicate(IsFarPredicate, &limit, -1,
                                             nullptr) == 1);
-    OO_CHECK(u->countShipsMatchingPredicate(NULL, NULL, 500, a) == 0);
+    EXPECT_TRUE(u->countShipsMatchingPredicate(NULL, NULL, 500, a) == 0);
 
     std::vector<oo::EntityHold> found =
         u->findEntitiesMatchingPredicate(NULL, NULL, -1, a);
-    OO_CHECK(found.size() == 2 && found[0].get() == b &&
+    EXPECT_TRUE(found.size() == 2 && found[0].get() == b &&
              found[1].get() == c);  // in the sorted list's order
     found = u->findEntitiesMatchingPredicate(IsFarPredicate, &limit, 95, a);
-    OO_CHECK(found.size() == 1 && found[0].get() == b);
+    EXPECT_TRUE(found.size() == 1 && found[0].get() == b);
     found = u->findShipsMatchingPredicate(NULL, NULL, -1, nullptr);
-    OO_CHECK(found.size() == 1 && found[0].get() == c);
-    OO_CHECK(
+    EXPECT_TRUE(found.size() == 1 && found[0].get() == c);
+    EXPECT_TRUE(
         u->findVisualEffectsMatchingPredicate(NULL, NULL, -1, nullptr).empty());
 
     // Within range of an entity: the ships only; none for no entity.
-    OO_CHECK(u->entitiesWithinRange(2000, a).size() == 1);
-    OO_CHECK(u->entitiesWithinRange(500, a).empty());
-    OO_CHECK(u->entitiesWithinRange(2000, nullptr).empty());
+    EXPECT_TRUE(u->entitiesWithinRange(2000, a).size() == 1);
+    EXPECT_TRUE(u->entitiesWithinRange(500, a).empty());
+    EXPECT_TRUE(u->entitiesWithinRange(2000, nullptr).empty());
 
     // The scan class.
     c->setScanClass(oo::ScanClass::kRock);
-    OO_CHECK(u->countShipsWithScanClass(oo::ScanClass::kRock, -1, nullptr) == 1);
-    OO_CHECK(u->countShipsWithScanClass(oo::ScanClass::kNeutral, -1, nullptr) == 0);
+    EXPECT_TRUE(u->countShipsWithScanClass(oo::ScanClass::kRock, -1, nullptr) == 1);
+    EXPECT_TRUE(u->countShipsWithScanClass(oo::ScanClass::kNeutral, -1, nullptr) == 0);
 
     u->n_entities = 0;
   }
 }
 
-OO_TEST(slice15FindOneAndNearest) {
+TEST(Universe, slice15FindOneAndNearest) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -766,39 +767,39 @@ OO_TEST(slice15FindOneAndNearest) {
     SetSortedEntities(u, {a, b, c, d});
     double limit = 250;
 
-    OO_CHECK(u->findOneEntityMatchingPredicate(NULL, NULL) == a);
-    OO_CHECK(u->findOneEntityMatchingPredicate(IsFarPredicate, &limit) == b);
+    EXPECT_TRUE(u->findOneEntityMatchingPredicate(NULL, NULL) == a);
+    EXPECT_TRUE(u->findOneEntityMatchingPredicate(IsFarPredicate, &limit) == b);
     limit = 5000;
-    OO_CHECK(u->findOneEntityMatchingPredicate(IsFarPredicate, &limit) == nullptr);
+    EXPECT_TRUE(u->findOneEntityMatchingPredicate(IsFarPredicate, &limit) == nullptr);
 
-    OO_CHECK(u->nearestEntityMatchingPredicate(NULL, NULL, a) == c);
-    OO_CHECK(u->nearestEntityMatchingPredicate(NULL, NULL, nullptr) == a);
+    EXPECT_TRUE(u->nearestEntityMatchingPredicate(NULL, NULL, a) == c);
+    EXPECT_TRUE(u->nearestEntityMatchingPredicate(NULL, NULL, nullptr) == a);
     limit = 250;
-    OO_CHECK(u->nearestEntityMatchingPredicate(IsFarPredicate, &limit, a) == b);
-    OO_CHECK(u->nearestShipMatchingPredicate(NULL, NULL, b) == c);
-    OO_CHECK(u->nearestShipMatchingPredicate(IsFarPredicate, &limit, a) == nullptr);
+    EXPECT_TRUE(u->nearestEntityMatchingPredicate(IsFarPredicate, &limit, a) == b);
+    EXPECT_TRUE(u->nearestShipMatchingPredicate(NULL, NULL, b) == c);
+    EXPECT_TRUE(u->nearestShipMatchingPredicate(IsFarPredicate, &limit, a) == nullptr);
     limit = -1000;
-    OO_CHECK(u->nearestShipMatchingPredicate(IsFarPredicate, &limit, c) == d);
+    EXPECT_TRUE(u->nearestShipMatchingPredicate(IsFarPredicate, &limit, c) == d);
 
     u->n_entities = 0;
   }
 }
 
-OO_TEST(slice15TimeAndCollisions) {
+TEST(Universe, slice15TimeAndCollisions) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     u->universal_time = 12.5;
     u->time_delta = 0.25;
-    OO_CHECK(u->getTime() == 12.5 && u->getTimeDelta() == 0.25);
+    EXPECT_TRUE(u->getTime() == 12.5 && u->getTimeDelta() == 0.25);
 
     // No collision region yet: the description is a dash.
-    OO_CHECK(u->collisionDescription() == "-");
+    EXPECT_TRUE(u->collisionDescription() == "-");
     u->dumpCollisions();
-    OO_CHECK(u->dumpCollisionInfo);
+    EXPECT_TRUE(u->dumpCollisionInfo);
 
     u->viewDirection = oo::ViewID::kAft;
-    OO_CHECK(u->getViewDirection() == oo::ViewID::kAft);
+    EXPECT_TRUE(u->getViewDirection() == oo::ViewID::kAft);
   }
 }
 
@@ -819,40 +820,40 @@ oo::TimeAbsolute CountdownRepeatTime(Universe* u) {
 
 }  // namespace
 
-OO_TEST(slice16Messages) {
+TEST(Universe, slice16Messages) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     u->universal_time = 10.0;
 
     u->displayMessage(std::string("a"), 3);
-    OO_CHECK(CurrentMessage(u) == "a" && MessageRepeatTime(u) == 16.0);
+    EXPECT_TRUE(CurrentMessage(u) == "a" && MessageRepeatTime(u) == 16.0);
     u->universal_time = 12.0;
     u->displayMessage(std::string("a"),
                       3);  // the same message, too soon: nothing
-    OO_CHECK(MessageRepeatTime(u) == 16.0);
+    EXPECT_TRUE(MessageRepeatTime(u) == 16.0);
     u->displayMessage(std::string("b"), 3);
-    OO_CHECK(CurrentMessage(u) == "b" && MessageRepeatTime(u) == 18.0);
+    EXPECT_TRUE(CurrentMessage(u) == "b" && MessageRepeatTime(u) == 18.0);
     u->universal_time = 20.0;
     u->displayMessage(std::string("b"),
                       3);  // the same, once the repeat time has passed
-    OO_CHECK(CurrentMessage(u) == "b" && MessageRepeatTime(u) == 26.0);
+    EXPECT_TRUE(CurrentMessage(u) == "b" && MessageRepeatTime(u) == 26.0);
 
     // A countdown message waits for its own repeat time, whatever the message.
     u->displayCountdownMessage(std::string("c"), 5);
-    OO_CHECK(CurrentMessage(u) == "c" && CountdownRepeatTime(u) == 25.0);
+    EXPECT_TRUE(CurrentMessage(u) == "c" && CountdownRepeatTime(u) == 25.0);
     u->displayCountdownMessage(std::string("d"), 5);
-    OO_CHECK(CurrentMessage(u) == "c" && CountdownRepeatTime(u) == 25.0);
+    EXPECT_TRUE(CurrentMessage(u) == "c" && CountdownRepeatTime(u) == 25.0);
     u->displayCountdownMessage(std::string("c"),
                                5);  // the same message: nothing
-    OO_CHECK(CountdownRepeatTime(u) == 25.0);
+    EXPECT_TRUE(CountdownRepeatTime(u) == 25.0);
 
     u->clearPreviousMessage();
-    OO_CHECK(!CurrentMessage(u).has_value());
+    EXPECT_TRUE(!CurrentMessage(u).has_value());
   }
 }
 
-OO_TEST(slice16ViewDirection) {
+TEST(Universe, slice16ViewDirection) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -862,12 +863,12 @@ OO_TEST(slice16ViewDirection) {
     // the whole game.)
     u->viewDirection = oo::ViewID::kAft;
     u->setViewDirection(oo::ViewID::kAft);
-    OO_CHECK(u->getViewDirection() == oo::ViewID::kAft &&
+    EXPECT_TRUE(u->getViewDirection() == oo::ViewID::kAft &&
              !CurrentMessage(u).has_value() && !u->getDisplayGUI());
   }
 }
 
-OO_TEST(slice16SoundsAndBackgrounds) {
+TEST(Universe, slice16SoundsAndBackgrounds) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -878,25 +879,25 @@ OO_TEST(slice16SoundsAndBackgrounds) {
         {"[slice16-loop2]", oo::PList("[slice16-loop1]")},
     });
 
-    OO_CHECK(u->soundNameForCustomSoundKey("[slice16-boom]") == "boom.ogg");
-    OO_CHECK(u->soundNameForCustomSoundKey("[slice16-alias]") == "boom.ogg");
-    OO_CHECK(!u->soundNameForCustomSoundKey("[slice16-missing]").has_value());
-    OO_CHECK(!u->soundNameForCustomSoundKey("[slice16-loop1]")
+    EXPECT_TRUE(u->soundNameForCustomSoundKey("[slice16-boom]") == "boom.ogg");
+    EXPECT_TRUE(u->soundNameForCustomSoundKey("[slice16-alias]") == "boom.ogg");
+    EXPECT_TRUE(!u->soundNameForCustomSoundKey("[slice16-missing]").has_value());
+    EXPECT_TRUE(!u->soundNameForCustomSoundKey("[slice16-loop1]")
                   .has_value());  // recursion: no sound
 
     // Backgrounds: none loaded, setting changes nothing; loaded, set and remove
     // by key.
     u->setScreenTextureDescriptorForKey("slice16", oo::PList("x.png"));
-    OO_CHECK(u->screenBackgrounds.isNull());
+    EXPECT_TRUE(u->screenBackgrounds.isNull());
     u->screenBackgrounds = oo::PList(oo::PList::Dict{});
     u->setScreenTextureDescriptorForKey("slice16", oo::PList("x.png"));
     const oo::PList* set = u->screenBackgrounds.find("slice16");
-    OO_CHECK(set != nullptr && set->isString());
+    EXPECT_TRUE(set != nullptr && set->isString());
     u->setScreenTextureDescriptorForKey("slice16", oo::PList());
-    OO_CHECK(u->screenBackgrounds.find("slice16") == nullptr);
+    EXPECT_TRUE(u->screenBackgrounds.find("slice16") == nullptr);
     // With no GUI to preload it, no descriptor is answered.
     u->setScreenTextureDescriptorForKey("slice16", oo::PList("x.png"));
-    OO_CHECK(u->screenTextureDescriptorForKey("slice16").isNull());
+    EXPECT_TRUE(u->screenTextureDescriptorForKey("slice16").isNull());
   }
 }
 
@@ -904,7 +905,7 @@ OO_TEST(slice16SoundsAndBackgrounds) {
 // A
 // full update needs the whole game (the player, the JavaScript engine); a
 // universe whose updates are off only lets go of the dead.
-OO_TEST(slice17UpdateOff) {
+TEST(Universe, slice17UpdateOff) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -923,32 +924,32 @@ OO_TEST(slice17UpdateOff) {
     {
       oo::AutoreleaseScope scope;
       u->update(1.0);
-      OO_CHECK(u->getTime() == 5.0 &&
+      EXPECT_TRUE(u->getTime() == 5.0 &&
                u->getTimeDelta() == 0.5);  // no time passes
-      OO_CHECK(u->entitiesDeadThisUpdate.empty());
-      OO_CHECK(dead->weak_from_this().use_count() == 1);  // alive until the pool drains
+      EXPECT_TRUE(u->entitiesDeadThisUpdate.empty());
+      EXPECT_TRUE(dead->weak_from_this().use_count() == 1);  // alive until the pool drains
     }
   }
 }
 
-OO_TEST(slice17Settings) {
+TEST(Universe, slice17Settings) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
     u->setECMVisualFXEnabled(true);
-    OO_CHECK(u->getECMVisualFXEnabled() && u->ECMVisualFXEnabled);
+    EXPECT_TRUE(u->getECMVisualFXEnabled() && u->ECMVisualFXEnabled);
     u->setECMVisualFXEnabled(false);
-    OO_CHECK(!u->getECMVisualFXEnabled());
+    EXPECT_TRUE(!u->getECMVisualFXEnabled());
 
     u->setTimeAccelerationFactor(4.0);
 #ifndef NDEBUG
-    OO_CHECK(u->getTimeAccelerationFactor() == 4.0);
+    EXPECT_TRUE(u->getTimeAccelerationFactor() == 4.0);
     u->setTimeAccelerationFactor(100.0);
-    OO_CHECK(u->getTimeAccelerationFactor() ==
+    EXPECT_TRUE(u->getTimeAccelerationFactor() ==
              TIME_ACCELERATION_FACTOR_DEFAULT);
 #else
-    OO_CHECK(u->getTimeAccelerationFactor() == 1.0);
+    EXPECT_TRUE(u->getTimeAccelerationFactor() == 1.0);
 #endif
   }
 }
@@ -974,7 +975,7 @@ void LinkLists(Universe* u, std::initializer_list<Entity*> list) {
 
 }  // namespace
 
-OO_TEST(slice18FilterSortedLists) {
+TEST(Universe, slice18FilterSortedLists) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -992,16 +993,16 @@ OO_TEST(slice18FilterSortedLists) {
 
     // a and b overlap on z: chained, past the entity that cannot collide; c is
     // alone.
-    OO_CHECK(a->collision_chain == b);
-    OO_CHECK(b->collision_chain == nullptr);
-    OO_CHECK(c->collision_chain == nullptr && ghost->collision_chain == nullptr);
-    OO_CHECK(a->collisionTestFilter == 0 && b->collisionTestFilter == 0);
-    OO_CHECK(c->collisionTestFilter == 1);
-    OO_CHECK(ghost->collisionTestFilter == 3);
+    EXPECT_TRUE(a->collision_chain == b);
+    EXPECT_TRUE(b->collision_chain == nullptr);
+    EXPECT_TRUE(c->collision_chain == nullptr && ghost->collision_chain == nullptr);
+    EXPECT_TRUE(a->collisionTestFilter == 0 && b->collisionTestFilter == 0);
+    EXPECT_TRUE(c->collisionTestFilter == 1);
+    EXPECT_TRUE(ghost->collisionTestFilter == 3);
 
     LinkLists(u, {});
     u->filterSortedLists();  // no entities: nothing to do
-    OO_CHECK(u->z_list_start == nullptr);
+    EXPECT_TRUE(u->z_list_start == nullptr);
   }
 }
 
@@ -1009,7 +1010,7 @@ OO_TEST(slice18FilterSortedLists) {
 // characters, mission text, system data and names, finding systems. A
 // headless universe has no system manager, so the state these answer is set in
 // the members by hand.
-OO_TEST(slice19Descriptions) {
+TEST(Universe, slice19Descriptions) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -1022,20 +1023,20 @@ OO_TEST(slice19Descriptions) {
     u->_descriptionsGeneration = 7;
 
     const oo::PList* descriptions = u->descriptions();
-    OO_CHECK(descriptions == &u->_descriptions);
-    OO_CHECK(u->descriptionsGeneration() == 7);
-    OO_CHECK(u->descriptionForKey("slice19-text") == "Hello");
-    OO_CHECK(!u->descriptionForKey("slice19-missing").has_value());
-    OO_CHECK(u->descriptionForArrayKey("slice19-array", 1) == "one");
-    OO_CHECK(!u->descriptionForArrayKey("slice19-array", 2).has_value());
-    OO_CHECK(!u->descriptionForArrayKey("slice19-text", 0).has_value());
-    OO_CHECK(u->descriptionBooleanForKey("slice19-flag"));
-    OO_CHECK(!u->descriptionBooleanForKey("slice19-missing"));
-    OO_CHECK(oo::LookUpDescriptionPRIV("slice19-text") == "Hello");
+    EXPECT_TRUE(descriptions == &u->_descriptions);
+    EXPECT_TRUE(u->descriptionsGeneration() == 7);
+    EXPECT_TRUE(u->descriptionForKey("slice19-text") == "Hello");
+    EXPECT_TRUE(!u->descriptionForKey("slice19-missing").has_value());
+    EXPECT_TRUE(u->descriptionForArrayKey("slice19-array", 1) == "one");
+    EXPECT_TRUE(!u->descriptionForArrayKey("slice19-array", 2).has_value());
+    EXPECT_TRUE(!u->descriptionForArrayKey("slice19-text", 0).has_value());
+    EXPECT_TRUE(u->descriptionBooleanForKey("slice19-flag"));
+    EXPECT_TRUE(!u->descriptionBooleanForKey("slice19-missing"));
+    EXPECT_TRUE(oo::LookUpDescriptionPRIV("slice19-text") == "Hello");
   }
 }
 
-OO_TEST(slice19DataAndNames) {
+TEST(Universe, slice19DataAndNames) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -1047,27 +1048,27 @@ OO_TEST(slice19DataAndNames) {
     u->missiontext = oo::PList(oo::PList::Dict{{"m", oo::PList("y")}});
     u->systemID = 42;
 
-    OO_CHECK(u->explosionSetting("slice19-boom").get<double>("size") == 2.0);
-    OO_CHECK(u->explosionSetting("slice19-missing").isNull());
-    OO_CHECK(u->scenarios().count() == 1);
-    OO_CHECK(u->getCharacters().get<std::string>("c") == "x");
-    OO_CHECK(u->getMissiontext().get<std::string>("m") == "y");
-    OO_CHECK(u->currentSystemID() == 42);
-    OO_CHECK(u->getSystemManager() == nullptr);
+    EXPECT_TRUE(u->explosionSetting("slice19-boom").get<double>("size") == 2.0);
+    EXPECT_TRUE(u->explosionSetting("slice19-missing").isNull());
+    EXPECT_TRUE(u->scenarios().count() == 1);
+    EXPECT_TRUE(u->getCharacters().get<std::string>("c") == "x");
+    EXPECT_TRUE(u->getMissiontext().get<std::string>("m") == "y");
+    EXPECT_TRUE(u->currentSystemID() == 42);
+    EXPECT_TRUE(u->getSystemManager() == nullptr);
 
-    OO_CHECK(u->keyForPlanetOverridesForSystem(7, 2) == "2 7");
-    OO_CHECK(u->keyForInterstellarOverridesForSystems(3, 4, 2) ==
+    EXPECT_TRUE(u->keyForPlanetOverridesForSystem(7, 2) == "2 7");
+    EXPECT_TRUE(u->keyForInterstellarOverridesForSystems(3, 4, 2) ==
              "interstellar: 2 3 4");
 
     // Names are found whatever their case; a missing name matches nothing.
     u->system_names[5] = std::string("Lave");
     u->system_names[9] = std::string("Diso");
-    OO_CHECK(u->findSystemFromName("lave") == 5);
-    OO_CHECK(u->findSystemFromName("DISO") == 9);
-    OO_CHECK(u->findSystemFromName("Zaonce") == -1);
+    EXPECT_TRUE(u->findSystemFromName("lave") == 5);
+    EXPECT_TRUE(u->findSystemFromName("DISO") == 9);
+    EXPECT_TRUE(u->findSystemFromName("Zaonce") == -1);
 
     // No sun in the universe: interstellar space.
-    OO_CHECK(u->inInterstellarSpace());
+    EXPECT_TRUE(u->inInterstellarSpace());
   }
 }
 
@@ -1075,31 +1076,31 @@ OO_TEST(slice19DataAndNames) {
 // planet textures, global and equipment data, the commodity market, time
 // descriptions. With no system manager, what needs the galaxy's data is left to
 // the integration tests.
-OO_TEST(slice20NamesAndRoutes) {
+TEST(Universe, slice20NamesAndRoutes) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     u->system_names[5] = std::string("Lave");
-    OO_CHECK(u->systemNameIndex(5) == "Lave");
-    OO_CHECK(u->systemNameIndex(256 + 5) == "Lave");  // the index wraps at 256
-    OO_CHECK(!u->systemNameIndex(6).has_value());
-    OO_CHECK(u->systemsFound() == (bool*)u->system_found);
+    EXPECT_TRUE(u->systemNameIndex(5) == "Lave");
+    EXPECT_TRUE(u->systemNameIndex(256 + 5) == "Lave");  // the index wraps at 256
+    EXPECT_TRUE(!u->systemNameIndex(6).has_value());
+    EXPECT_TRUE(u->systemsFound() == (bool*)u->system_found);
 
     // No route from or to interstellar space, or outside the galaxy.
-    OO_CHECK(u->routeFromSystem(-1, 7, oo::RouteType::kJumps).isNull());
-    OO_CHECK(u->routeFromSystem(7, -1, oo::RouteType::kTime).isNull());
-    OO_CHECK(u->routeFromSystem(300, 7, oo::RouteType::kJumps).isNull());
+    EXPECT_TRUE(u->routeFromSystem(-1, 7, oo::RouteType::kJumps).isNull());
+    EXPECT_TRUE(u->routeFromSystem(7, -1, oo::RouteType::kTime).isNull());
+    EXPECT_TRUE(u->routeFromSystem(300, 7, oo::RouteType::kJumps).isNull());
 
     // The current system's neighbours, once cached, are the cache.
     u->systemID = 3;
     u->closeSystems = std::vector<oo::SystemID>{1, 2};
-    OO_CHECK(u->neighboursToSystem(3) == (std::vector<oo::SystemID>{1, 2}));
+    EXPECT_TRUE(u->neighboursToSystem(3) == (std::vector<oo::SystemID>{1, 2}));
 
     u->preloadPlanetTexturesForSystem(3);  // disabled: does nothing
   }
 }
 
-OO_TEST(slice20DataAndTime) {
+TEST(Universe, slice20DataAndTime) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -1107,24 +1108,24 @@ OO_TEST(slice20DataAndTime) {
     u->equipmentData = oo::PList(oo::PList::Array{oo::PList("e")});
     u->equipmentDataOutfitting =
         oo::PList(oo::PList::Array{oo::PList("o"), oo::PList("p")});
-    OO_CHECK(u->getGlobalSettings().get<std::string>("g") == "1");
-    OO_CHECK(u->getEquipmentData().count() == 1);
-    OO_CHECK(u->getEquipmentDataOutfitting().count() == 2);
-    OO_CHECK(u->getCommodityMarket() == nullptr);
+    EXPECT_TRUE(u->getGlobalSettings().get<std::string>("g") == "1");
+    EXPECT_TRUE(u->getEquipmentData().count() == 1);
+    EXPECT_TRUE(u->getEquipmentDataOutfitting().count() == 2);
+    EXPECT_TRUE(u->getCommodityMarket() == nullptr);
 
-    OO_CHECK(u->timeDescription(90061) == "1 day 1 hour 1 minute 1 second");
-    OO_CHECK(u->timeDescription(2 * 86400 + 7200 + 120 + 2.5) ==
+    EXPECT_TRUE(u->timeDescription(90061) == "1 day 1 hour 1 minute 1 second");
+    EXPECT_TRUE(u->timeDescription(2 * 86400 + 7200 + 120 + 2.5) ==
              "2 days 2 hours 2 minutes 2 seconds");
-    OO_CHECK(u->timeDescription(3600) ==
+    EXPECT_TRUE(u->timeDescription(3600) ==
              "60 minutes");  // not more than an hour
-    OO_CHECK(u->timeDescription(0) == "");
+    EXPECT_TRUE(u->timeDescription(0) == "");
   }
 }
 
 // Short time descriptions, sun skimmers, station
 // markets. The words come from descriptions set in the member by hand (no plural
 // rules: "%0" is the singular, "%1" the plural).
-OO_TEST(slice21ShortTimeAndMarkets) {
+TEST(Universe, slice21ShortTimeAndMarkets) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -1137,17 +1138,17 @@ OO_TEST(slice21ShortTimeAndMarkets) {
     }
     u->_descriptions = oo::PList(std::move(words));
 
-    OO_CHECK(u->shortTimeDescription(0) == "no time");
-    OO_CHECK(u->shortTimeDescription(-5) == "no time");
-    OO_CHECK(u->shortTimeDescription(90061) ==
+    EXPECT_TRUE(u->shortTimeDescription(0) == "no time");
+    EXPECT_TRUE(u->shortTimeDescription(-5) == "no time");
+    EXPECT_TRUE(u->shortTimeDescription(90061) ==
              "1 day 1 hour");  // two parts at most
-    OO_CHECK(u->shortTimeDescription(2 * 3600 + 5) == "2 hours 5 seconds");
-    OO_CHECK(u->shortTimeDescription(125) == "2 minutes 5 seconds");
-    OO_CHECK(u->shortTimeDescription(1) == "1 second");
+    EXPECT_TRUE(u->shortTimeDescription(2 * 3600 + 5) == "2 hours 5 seconds");
+    EXPECT_TRUE(u->shortTimeDescription(125) == "2 minutes 5 seconds");
+    EXPECT_TRUE(u->shortTimeDescription(1) == "1 second");
 
     // No stations: no markets to save, and none to load into.
     const oo::PList saved = u->getStationMarkets();
-    OO_CHECK(saved.isArray() && saved.count() == 0);
+    EXPECT_TRUE(saved.isArray() && saved.count() == 0);
     u->loadStationMarkets(oo::PList());
     u->loadStationMarkets(
         oo::PList(oo::PList::Array{oo::PList(oo::PList::Dict{})}));
@@ -1157,47 +1158,47 @@ OO_TEST(slice21ShortTimeAndMarkets) {
 // Witchspace exit and sun-skim positions, beacons by
 // code, script events to all ships, the GUIs and display flags. Trade-in values
 // and brochures need the ship registry (the integration tests).
-OO_TEST(slice23PositionsAndLists) {
+TEST(Universe, slice23PositionsAndLists) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
-    OO_CHECK(HPvector_equal(u->getWitchspaceExitPosition(), kZeroHPVector));
+    EXPECT_TRUE(HPvector_equal(u->getWitchspaceExitPosition(), kZeroHPVector));
     Quaternion q =
         u->getWitchspaceExitRotation();  // close to the identity, normalised
-    OO_CHECK(fabs(q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z - 1.0) < 1e-5);
-    OO_CHECK(q.w > 0.9f);
+    EXPECT_TRUE(fabs(q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z - 1.0) < 1e-5);
+    EXPECT_TRUE(q.w > 0.9f);
 
     // No ship, or no sun: the origin.
-    OO_CHECK(HPvector_equal(u->getSunSkimStartPositionForShip(nullptr),
+    EXPECT_TRUE(HPvector_equal(u->getSunSkimStartPositionForShip(nullptr),
                             kZeroHPVector));
-    OO_CHECK(HPvector_equal(u->getSunSkimEndPositionForShip(nullptr),
+    EXPECT_TRUE(HPvector_equal(u->getSunSkimEndPositionForShip(nullptr),
                             kZeroHPVector));
 
     // No beacons.
-    OO_CHECK(u->listBeaconsWithCode("A").empty());
+    EXPECT_TRUE(u->listBeaconsWithCode("A").empty());
   }
 }
 
-OO_TEST(slice23GUIsAndFlags) {
+TEST(Universe, slice23GUIsAndFlags) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
-    OO_CHECK(u->getGui() == nullptr && u->commLogGUI() == nullptr &&
+    EXPECT_TRUE(u->getGui() == nullptr && u->commLogGUI() == nullptr &&
              u->messageGUI() == nullptr);
 
     u->setDisplayText(true);
-    OO_CHECK(u->getDisplayGUI() == true && u->displayGUI == true);
+    EXPECT_TRUE(u->getDisplayGUI() == true && u->displayGUI == true);
     u->setDisplayText(false);
-    OO_CHECK(!u->getDisplayGUI());
+    EXPECT_TRUE(!u->getDisplayGUI());
     u->setDisplayFPS(true);
-    OO_CHECK(u->getDisplayFPS());
+    EXPECT_TRUE(u->getDisplayFPS());
     u->setDisplayFPS(false);
-    OO_CHECK(!u->getDisplayFPS());
+    EXPECT_TRUE(!u->getDisplayFPS());
     u->setAutoSaveNow(true);
-    OO_CHECK(u->autoSaveNow == true);
+    EXPECT_TRUE(u->autoSaveNow == true);
     u->autoSave = true;
-    OO_CHECK(u->getAutoSave());
+    EXPECT_TRUE(u->getAutoSave());
   }
 }
 
@@ -1207,42 +1208,42 @@ OO_TEST(slice23GUIsAndFlags) {
 // (-setWireframeGraphics:, -setDetailLevel:) and the set-up that loads the
 // game's files are left to the integration tests; their state is set in the members by
 // hand.
-OO_TEST(slice24DetailAndLogs) {
+TEST(Universe, slice24DetailAndLogs) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 
     u->detailLevel = oo::GraphicsDetail::kShaders;
-    OO_CHECK(u->getDetailLevel() == oo::GraphicsDetail::kShaders && u->useShaders() &&
+    EXPECT_TRUE(u->getDetailLevel() == oo::GraphicsDetail::kShaders && u->useShaders() &&
              !u->reducedDetail());
     u->detailLevel = oo::GraphicsDetail::kMinimum;
-    OO_CHECK(u->reducedDetail() && !u->useShaders());
+    EXPECT_TRUE(u->reducedDetail() && !u->useShaders());
     u->wireframeGraphics = true;
-    OO_CHECK(u->getWireframeGraphics());
+    EXPECT_TRUE(u->getWireframeGraphics());
 
     u->setAutoSaveNow(true);
-    OO_CHECK(u->getAutoSaveNow());
+    EXPECT_TRUE(u->getAutoSaveNow());
     u->setAutoSaveNow(false);
-    OO_CHECK(!u->getAutoSaveNow());
+    EXPECT_TRUE(!u->getAutoSaveNow());
 
     u->setPauseMessageVisible(true);
-    OO_CHECK(u->pauseMessageVisible());
+    EXPECT_TRUE(u->pauseMessageVisible());
     u->setPauseMessageVisible(false);
-    OO_CHECK(!u->pauseMessageVisible());
+    EXPECT_TRUE(!u->pauseMessageVisible());
     u->setAutoCommLog(true);
-    OO_CHECK(u->_autoCommLog);
+    EXPECT_TRUE(u->_autoCommLog);
     u->setPermanentCommLog(false);
     u->setPermanentMessageLog(false);
     u->setAutoMessageLogBg(false);
-    OO_CHECK(!u->permanentCommLog() && !u->permanentMessageLog() &&
+    EXPECT_TRUE(!u->permanentCommLog() && !u->permanentMessageLog() &&
              !u->autoMessageLogBg());
 
     // Blocking remembers the player as stale.
     SetUpTestPlayer();
     u->setBlockJSPlayerShipProps(true);
-    OO_CHECK(u->blockJSPlayerShipProps());
+    EXPECT_TRUE(u->blockJSPlayerShipProps());
     u->setBlockJSPlayerShipProps(false);
-    OO_CHECK(!u->blockJSPlayerShipProps());
+    EXPECT_TRUE(!u->blockJSPlayerShipProps());
 
     // A non-fatal exception is only logged; nil is ignored.
     const oo::Exception exception("OoliteSlice24Exception", "test");
@@ -1252,16 +1253,16 @@ OO_TEST(slice24DetailAndLogs) {
 }
 
 #if OOLITE_ESPEAK
-OO_TEST(slice24Voices) {
+TEST(Universe, slice24Voices) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     oo::SpeechSynthesizer::shared().setVoiceNamesForTesting({"zero", "one", "two"});
 
-    OO_CHECK(u->nextVoice(0) == 1 && u->nextVoice(2) == 0);
-    OO_CHECK(u->prevVoice(1) == 0 && u->prevVoice(0) == 2);
-    OO_CHECK(u->voiceName(1) == "one" && u->voiceName(3) == "-");
-    OO_CHECK(u->voiceNumber("two") == 2 && u->voiceNumber("nine") == UINT_MAX);
+    EXPECT_TRUE(u->nextVoice(0) == 1 && u->nextVoice(2) == 0);
+    EXPECT_TRUE(u->prevVoice(1) == 0 && u->prevVoice(0) == 2);
+    EXPECT_TRUE(u->voiceName(1) == "one" && u->voiceName(3) == "-");
+    EXPECT_TRUE(u->voiceNumber("two") == 2 && u->voiceNumber("nine") == UINT_MAX);
 
     oo::SpeechSynthesizer::shared().setVoiceNamesForTesting({});
   }
@@ -1274,30 +1275,30 @@ OO_TEST(slice24Voices) {
 // here, as test_Entity's (TestPrivate). Reinitialising and the initial universe
 // need the whole game (the integration tests).
 
-OO_TEST(slice25RandomPositions) {
+TEST(Universe, slice25RandomPositions) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     const double half = SCANNER_MAX_RANGE / 2;
     for (int i = 0; i < 20; i++) {
       float d = u->randomDistanceWithinScanner();
-      OO_CHECK(d >= -half && d < half);
+      EXPECT_TRUE(d >= -half && d < half);
 
       Vector v = u->randomPlaceWithinScannerFrom(make_vector(10, 20, 30),
                                                  make_vector(1, 0, 0), 100);
-      OO_CHECK(v.x >= 110 - half && v.x < 110 + half && v.y >= 20 - half &&
+      EXPECT_TRUE(v.x >= 110 - half && v.x < 110 + half && v.y >= 20 - half &&
                v.y < 20 + half && v.z >= 30 - half && v.z < 30 + half);
 
       HPVector h = u->fractionalPositionFrom(make_HPvector(0, 0, 0),
                                              make_HPvector(1000, 0, 0), 0.5);
-      OO_CHECK(
+      EXPECT_TRUE(
           h.x >= 500 - SCANNER_MAX_RANGE && h.x <= 500 + SCANNER_MAX_RANGE &&
           fabs(h.y) <= SCANNER_MAX_RANGE && fabs(h.z) <= SCANNER_MAX_RANGE);
     }
   }
 }
 
-OO_TEST(slice25ChooseStringAndWormholes) {
+TEST(Universe, slice25ChooseStringAndWormholes) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -1307,19 +1308,19 @@ OO_TEST(slice25ChooseStringAndWormholes) {
         {"none", oo::PList(oo::PList::Array{})},
         {"number", oo::PList(3.0)},
     });
-    OO_CHECK(u->chooseStringForKey("one", dict) == "only");
+    EXPECT_TRUE(u->chooseStringForKey("one", dict) == "only");
     std::optional<std::string> some = u->chooseStringForKey("some", dict);
-    OO_CHECK(some == "a" || some == "b");
-    OO_CHECK(!u->chooseStringForKey("none", dict).has_value());
-    OO_CHECK(!u->chooseStringForKey("number", dict).has_value());
-    OO_CHECK(!u->chooseStringForKey("missing", dict).has_value());
+    EXPECT_TRUE(some == "a" || some == "b");
+    EXPECT_TRUE(!u->chooseStringForKey("none", dict).has_value());
+    EXPECT_TRUE(!u->chooseStringForKey("number", dict).has_value());
+    EXPECT_TRUE(!u->chooseStringForKey("missing", dict).has_value());
 
     u->populateSpaceFromActiveWormholes();  // none: nothing to do
-    OO_CHECK(u->activeWormholes.empty());
+    EXPECT_TRUE(u->activeWormholes.empty());
   }
 }
 
-OO_TEST(slice25DoRemoveEntity) {
+TEST(Universe, slice25DoRemoveEntity) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -1331,12 +1332,12 @@ OO_TEST(slice25DoRemoveEntity) {
     u->entities.emplace_back(oo::Hold(a));
     u->entities.emplace_back(oo::Hold(b));
 
-    OO_CHECK(u->doRemoveEntity(a));
-    OO_CHECK(u->n_entities == 1 && SortedEntity(u, 0) == b &&
+    EXPECT_TRUE(u->doRemoveEntity(a));
+    EXPECT_TRUE(u->n_entities == 1 && SortedEntity(u, 0) == b &&
              SortedEntity(u, 1) == nullptr);
-    OO_CHECK(b->zero_index == 0 && a->zero_index == -1);
-    OO_CHECK(u->entities.size() == 1 && u->entities[0].get() == b);
-    OO_CHECK(
+    EXPECT_TRUE(b->zero_index == 0 && a->zero_index == -1);
+    EXPECT_TRUE(u->entities.size() == 1 && u->entities[0].get() == b);
+    EXPECT_TRUE(
         !u->doRemoveEntity(a));  // gone already: not in the definitive list
 
     u->n_entities = 0;
@@ -1350,52 +1351,52 @@ OO_TEST(slice25DoRemoveEntity) {
 // script or a sound file needs the JavaScript engine and the game's files (the integration tests):
 // here only what is missing.
 
-OO_TEST(slice26GraphVizAndTools) {
+TEST(Universe, slice26GraphVizAndTools) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
 #if OO_LOCALIZATION_TOOLS
     std::string graphViz = "start\n";
     u->addNumericRefsInString("a [3] b %H", graphViz, "from", 10);
-    OO_CHECK(graphViz ==
+    EXPECT_TRUE(graphViz ==
              "start\n"
              "\tfrom -> n3_0 [color=\"0.300000,0.75,0.8\" lhead=cluster_3]\n"
              "\tfrom -> percent_H [color=\"0,0,0.45\"]\n");
     graphViz.clear();
     u->addNumericRefsInString("%I %R %J %G", graphViz, "x", 4);
-    OO_CHECK(graphViz ==
+    EXPECT_TRUE(graphViz ==
              "\tx -> percent_I [color=\"0,0,0.25\"]\n"
              "\tx -> percent_RN [color=\"0,0,0.65\"]\n"
              "\tx -> percent_J [color=\"0,0,0.75\"]\n"
              "\tx -> percent_G [color=\"0,0,0.85\"]\n");
     graphViz.clear();
     u->addNumericRefsInString("no refs [unclosed", graphViz, "x", 4);
-    OO_CHECK(graphViz.empty());
+    EXPECT_TRUE(graphViz.empty());
 
     u->runLocalizationTools();  // no --compile-sysdesc / --export-sysdesc:
                                 // nothing
 #endif
 
     u->prunePreloadingPlanetMaterials();  // none preloading
-    OO_CHECK(u->_preloadingPlanetMaterials.empty());
+    EXPECT_TRUE(u->_preloadingPlanetMaterials.empty());
   }
 }
 
-OO_TEST(slice26ConditionScriptsAndSounds) {
+TEST(Universe, slice26ConditionScriptsAndSounds) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
     u->addConditionScripts(std::vector<std::string>());
-    OO_CHECK(u->conditionScripts.empty());
-    OO_CHECK(u->getConditionScript("slice26-missing.js") == nullptr);
+    EXPECT_TRUE(u->conditionScripts.empty());
+    EXPECT_TRUE(u->getConditionScript("slice26-missing.js") == nullptr);
 
     // A key with no custom sound makes no sound.
     u->customSounds = oo::PList(oo::PList::Dict{});
-    OO_CHECK(oo::SoundWithCustomSoundKey("[slice26-missing]") == nullptr);
+    EXPECT_TRUE(oo::SoundWithCustomSoundKey("[slice26-missing]") == nullptr);
   }
 }
 
-OO_TEST(slice26PluralDescriptions) {
+TEST(Universe, slice26PluralDescriptions) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
@@ -1405,13 +1406,11 @@ OO_TEST(slice26PluralDescriptions) {
         {"slice26-apple%1", oo::PList("apples")},
         {"slice26-word", oo::PList("word")},
     });
-    OO_CHECK(oo::LookUpPluralDescriptionPRIV("slice26-apple", 1) == "apple");
-    OO_CHECK(oo::LookUpPluralDescriptionPRIV("slice26-apple", 3) == "apples");
-    OO_CHECK(oo::LookUpPluralDescriptionPRIV("slice26-apple", 0) == "apples");
-    OO_CHECK(oo::LookUpDescriptionPRIV("slice26-word") == "word");
-    OO_CHECK(oo::LookUpDescriptionPRIV("slice26-none") ==
+    EXPECT_TRUE(oo::LookUpPluralDescriptionPRIV("slice26-apple", 1) == "apple");
+    EXPECT_TRUE(oo::LookUpPluralDescriptionPRIV("slice26-apple", 3) == "apples");
+    EXPECT_TRUE(oo::LookUpPluralDescriptionPRIV("slice26-apple", 0) == "apples");
+    EXPECT_TRUE(oo::LookUpDescriptionPRIV("slice26-word") == "word");
+    EXPECT_TRUE(oo::LookUpDescriptionPRIV("slice26-none") ==
              "slice26-none");  // the key itself
   }
 }
-
-OO_TEST_MAIN()

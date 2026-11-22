@@ -30,11 +30,12 @@
 #include <fstream>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "HeadUpDisplay.h"
 #include "Color.h"
 #include "ResourceManager.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -56,14 +57,14 @@ void WriteFile(const stdfs::path& path, const char* text) {
    naming the dials the tests use, and a crosshair file.
 */
 void SetUp() {
-  OO_CHECK(OOTestGLContext());
+  EXPECT_TRUE(OOTestGLContext());
   if (!sRoot.empty()) return;
   sRoot = stdfs::temp_directory_path() /
           ("oo-test-hud-" +
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot / "Resources" / "Config");
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
   WriteFile(
       sRoot / "Resources" / "Config" / "whitelist.plist",
@@ -97,55 +98,55 @@ bool SameRGBA(oo::Color* color, float r, float g, float b, float a) {
 
 }  // namespace
 
-OO_TEST(madeFromAnEmptyDictionary) {
-  SetUp();
+TEST(HeadUpDisplay, madeFromAnEmptyDictionary) {
+  ::SetUp();
   {
     std::shared_ptr<HeadUpDisplay> hud = NewHUD(oo::PList(oo::PList::Dict{}));
-    OO_CHECK(hud != nullptr);
-    OO_CHECK(hud->getHudName() == std::optional<std::string>("test-hud.plist"));
-    OO_CHECK(!hud->getDeferredHudName().has_value());
-    OO_CHECK_EQ(hud->mfdCount(), 0u);
-    OO_CHECK(hud->getOverallAlpha() == 0.75f);
-    OO_CHECK(!hud->getReticleTargetSensitive());
-    OO_CHECK(!hud->getAllowBigGui());
-    OO_CHECK(!hud->isHidden());
-    OO_CHECK(!hud->isUpdating());
-    OO_CHECK(!hud->isCompassActive());
-    OO_CHECK(!hud->minimalisticScanner());
-    OO_CHECK(!hud->nonlinearScanner());
-    OO_CHECK(!hud->scannerUltraZoom());
-    OO_CHECK(hud->getLineWidth() == 1.0f);
-    OO_CHECK(hud->scannerZoom() == 0.0f);
-    OO_CHECK(!hud->getCrosshairDefinition().has_value());
+    EXPECT_TRUE(hud != nullptr);
+    EXPECT_TRUE(hud->getHudName() == std::optional<std::string>("test-hud.plist"));
+    EXPECT_TRUE(!hud->getDeferredHudName().has_value());
+    EXPECT_EQ(hud->mfdCount(), 0u);
+    EXPECT_TRUE(hud->getOverallAlpha() == 0.75f);
+    EXPECT_TRUE(!hud->getReticleTargetSensitive());
+    EXPECT_TRUE(!hud->getAllowBigGui());
+    EXPECT_TRUE(!hud->isHidden());
+    EXPECT_TRUE(!hud->isUpdating());
+    EXPECT_TRUE(!hud->isCompassActive());
+    EXPECT_TRUE(!hud->minimalisticScanner());
+    EXPECT_TRUE(!hud->nonlinearScanner());
+    EXPECT_TRUE(!hud->scannerUltraZoom());
+    EXPECT_TRUE(hud->getLineWidth() == 1.0f);
+    EXPECT_TRUE(hud->scannerZoom() == 0.0f);
+    EXPECT_TRUE(!hud->getCrosshairDefinition().has_value());
 
     // The reticle sensitivity's properties: accurate, last computed at the
     // universe's time (nil: 0).
     oo::PList* properties = hud->getPropertiesReticleTargetSensitive();
-    OO_CHECK(properties != nullptr);
-    OO_CHECK(properties->get<bool>("isAccurate", false));
-    OO_CHECK(properties->get<double>("timeLastAccuracyProbabilityCalculation",
+    EXPECT_TRUE(properties != nullptr);
+    EXPECT_TRUE(properties->get<bool>("isAccurate", false));
+    EXPECT_TRUE(properties->get<double>("timeLastAccuracyProbabilityCalculation",
                                      -1.0) == 0.0);
 
     // No drawTargetReticle: dial: green, red, cyan.
-    OO_CHECK(SameRGBA(hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET).get(),
+    EXPECT_TRUE(SameRGBA(hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET).get(),
                       0, 1, 0, 1));
-    OO_CHECK(SameRGBA(
+    EXPECT_TRUE(SameRGBA(
         hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET_SENSITIVE).get(), 1,
         0, 0, 1));
-    OO_CHECK(
+    EXPECT_TRUE(
         SameRGBA(hud->reticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE).get(), 0,
                  1, 1, 1));
-    OO_CHECK(hud->reticleColorForIndex(3) == nullptr);
+    EXPECT_TRUE(hud->reticleColorForIndex(3) == nullptr);
 
     // A nil name is kept as nil.
-    OO_CHECK(!NewHUD(oo::PList(oo::PList::Dict{}), std::nullopt)
+    EXPECT_TRUE(!NewHUD(oo::PList(oo::PList::Dict{}), std::nullopt)
                   ->getHudName()
                   .has_value());
   }
 }
 
-OO_TEST(readsItsConfiguration) {
-  SetUp();
+TEST(HeadUpDisplay, readsItsConfiguration) {
+  ::SetUp();
   {
     const oo::PList mfd(
         oo::PList::Dict{{"x", oo::PList(10)}, {"y", oo::PList(20)}});
@@ -164,19 +165,19 @@ OO_TEST(readsItsConfiguration) {
         {"scanner_ultra_zoom", oo::PList(true)},
     });
     std::shared_ptr<HeadUpDisplay> hud = NewHUD(info);
-    OO_CHECK_EQ(hud->mfdCount(), 3u);
-    OO_CHECK(hud->getOverallAlpha() == 0.5f);
-    OO_CHECK(hud->getReticleTargetSensitive());
-    OO_CHECK(hud->getAllowBigGui());
-    OO_CHECK(hud->isCompassActive());
-    OO_CHECK(hud->minimalisticScanner());
-    OO_CHECK(hud->nonlinearScanner());
-    OO_CHECK(hud->scannerUltraZoom());
+    EXPECT_EQ(hud->mfdCount(), 3u);
+    EXPECT_TRUE(hud->getOverallAlpha() == 0.5f);
+    EXPECT_TRUE(hud->getReticleTargetSensitive());
+    EXPECT_TRUE(hud->getAllowBigGui());
+    EXPECT_TRUE(hud->isCompassActive());
+    EXPECT_TRUE(hud->minimalisticScanner());
+    EXPECT_TRUE(hud->nonlinearScanner());
+    EXPECT_TRUE(hud->scannerUltraZoom());
   }
 }
 
-OO_TEST(reticleColoursFromTheTargetReticleDial) {
-  SetUp();
+TEST(HeadUpDisplay, reticleColoursFromTheTargetReticleDial) {
+  ::SetUp();
   {
     oo::PList reticle(
         oo::PList::Dict{{"selector", oo::PList("drawTargetReticle:")},
@@ -184,12 +185,12 @@ OO_TEST(reticleColoursFromTheTargetReticleDial) {
                         {"wormhole_rgba", oo::PList("yellowColor")}});
     std::shared_ptr<HeadUpDisplay> hud = NewHUD(oo::PList(
         oo::PList::Dict{{"dials", oo::PList(oo::PList::Array{reticle})}}));
-    OO_CHECK(SameRGBA(hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET).get(),
+    EXPECT_TRUE(SameRGBA(hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET).get(),
                       0, 0, 1, 1));
-    OO_CHECK(SameRGBA(
+    EXPECT_TRUE(SameRGBA(
         hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET_SENSITIVE).get(), 1,
         0, 0, 1));  // the default
-    OO_CHECK(
+    EXPECT_TRUE(
         SameRGBA(hud->reticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE).get(), 1,
                  1, 0, 1));
 
@@ -199,99 +200,99 @@ OO_TEST(reticleColoursFromTheTargetReticleDial) {
         {"target_sensitive_rgba", oo::PList(oo::PList::Array{})}});
     std::shared_ptr<HeadUpDisplay> shortHUD = NewHUD(oo::PList(
         oo::PList::Dict{{"dials", oo::PList(oo::PList::Array{shortList})}}));
-    OO_CHECK(
+    EXPECT_TRUE(
         SameRGBA(shortHUD->reticleColorForIndex(OO_RETICLE_COLOR_TARGET).get(),
                  0, 1, 0, 1));
-    OO_CHECK(shortHUD->reticleColorForIndex(
+    EXPECT_TRUE(shortHUD->reticleColorForIndex(
                  OO_RETICLE_COLOR_TARGET_SENSITIVE) == nullptr);
-    OO_CHECK(shortHUD->reticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE) == nullptr);
-    OO_CHECK(!shortHUD->setReticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE,
+    EXPECT_TRUE(shortHUD->reticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE) == nullptr);
+    EXPECT_TRUE(!shortHUD->setReticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE,
                                                 oo::Color::whiteColor().get()));
   }
 }
 
-OO_TEST(setReticleColour) {
-  SetUp();
+TEST(HeadUpDisplay, setReticleColour) {
+  ::SetUp();
   {
     std::shared_ptr<HeadUpDisplay> hud = NewHUD(oo::PList(oo::PList::Dict{}));
     std::shared_ptr<oo::Color> magenta = oo::Color::magentaColor();
-    OO_CHECK(
+    EXPECT_TRUE(
         hud->setReticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE, magenta.get()));
-    OO_CHECK(hud->reticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE) ==
+    EXPECT_TRUE(hud->reticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE) ==
              magenta);  // the same object
-    OO_CHECK(!hud->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET, nullptr));
-    OO_CHECK(SameRGBA(hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET).get(),
+    EXPECT_TRUE(!hud->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET, nullptr));
+    EXPECT_TRUE(SameRGBA(hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET).get(),
                       0, 1, 0, 1));
-    OO_CHECK(!hud->setReticleColorForIndex(3, magenta.get()));
+    EXPECT_TRUE(!hud->setReticleColorForIndex(3, magenta.get()));
   }
 }
 
-OO_TEST(crosshairFile) {
-  SetUp();
+TEST(HeadUpDisplay, crosshairFile) {
+  ::SetUp();
   {
     std::shared_ptr<HeadUpDisplay> hud = NewHUD(oo::PList(
         oo::PList::Dict{{"crosshair_file", oo::PList("testcross.plist")}}));
-    OO_CHECK(hud->getCrosshairDefinition() ==
+    EXPECT_TRUE(hud->getCrosshairDefinition() ==
              std::optional<std::string>("testcross.plist"));
 
     // A file that is not found falls back to crosshairs.plist.
     std::shared_ptr<HeadUpDisplay> missing = NewHUD(oo::PList(
         oo::PList::Dict{{"crosshair_file", oo::PList("nosuch.plist")}}));
-    OO_CHECK(missing->getCrosshairDefinition() ==
+    EXPECT_TRUE(missing->getCrosshairDefinition() ==
              std::optional<std::string>("crosshairs.plist"));
   }
 }
 
-OO_TEST(accessorsAndSetters) {
-  SetUp();
+TEST(HeadUpDisplay, accessorsAndSetters) {
+  ::SetUp();
   {
     std::shared_ptr<HeadUpDisplay> hud = NewHUD(oo::PList(oo::PList::Dict{}));
 
     hud->setHudName(std::string("other.plist"));
-    OO_CHECK(hud->getHudName() == std::optional<std::string>("other.plist"));
+    EXPECT_TRUE(hud->getHudName() == std::optional<std::string>("other.plist"));
     hud->setHudName(std::nullopt);  // ignored
-    OO_CHECK(hud->getHudName() == std::optional<std::string>("other.plist"));
+    EXPECT_TRUE(hud->getHudName() == std::optional<std::string>("other.plist"));
 
     hud->setDeferredHudName(std::string("deferred.plist"));
-    OO_CHECK(hud->getDeferredHudName() ==
+    EXPECT_TRUE(hud->getDeferredHudName() ==
              std::optional<std::string>("deferred.plist"));
     hud->setDeferredHudName(std::nullopt);
-    OO_CHECK(!hud->getDeferredHudName().has_value());
+    EXPECT_TRUE(!hud->getDeferredHudName().has_value());
 
     hud->setScannerZoom(2.5f);
-    OO_CHECK(hud->scannerZoom() == 2.5f);
+    EXPECT_TRUE(hud->scannerZoom() == 2.5f);
 
     hud->setOverallAlpha(1.5f);
-    OO_CHECK(hud->getOverallAlpha() == 1.0f);
+    EXPECT_TRUE(hud->getOverallAlpha() == 1.0f);
     hud->setOverallAlpha(-1.0f);
-    OO_CHECK(hud->getOverallAlpha() == 0.0f);
+    EXPECT_TRUE(hud->getOverallAlpha() == 0.0f);
     hud->setOverallAlpha(0.25f);
-    OO_CHECK(hud->getOverallAlpha() == 0.25f);
+    EXPECT_TRUE(hud->getOverallAlpha() == 0.25f);
 
     hud->setReticleTargetSensitive(true);
-    OO_CHECK(hud->getReticleTargetSensitive());
+    EXPECT_TRUE(hud->getReticleTargetSensitive());
 
     // Hidden: big GUIs are allowed while the HUD is hidden.
     hud->setHidden(true);
-    OO_CHECK(hud->isHidden());
-    OO_CHECK(hud->getAllowBigGui());
+    EXPECT_TRUE(hud->isHidden());
+    EXPECT_TRUE(hud->getAllowBigGui());
     hud->setHidden(false);
-    OO_CHECK(!hud->getAllowBigGui());
+    EXPECT_TRUE(!hud->getAllowBigGui());
 
     hud->setCompassActive(true);
-    OO_CHECK(hud->isCompassActive());
+    EXPECT_TRUE(hud->isCompassActive());
     hud->setCompassActive(false);
-    OO_CHECK(!hud->isCompassActive());
+    EXPECT_TRUE(!hud->isCompassActive());
 
     hud->setMinimalisticScanner(true);
-    OO_CHECK(hud->minimalisticScanner());
+    EXPECT_TRUE(hud->minimalisticScanner());
     hud->setNonlinearScanner(true);
-    OO_CHECK(hud->nonlinearScanner());
+    EXPECT_TRUE(hud->nonlinearScanner());
     hud->setScannerUltraZoom(true);
-    OO_CHECK(hud->scannerUltraZoom());
+    EXPECT_TRUE(hud->scannerUltraZoom());
 
     hud->setLineWidth(3.0f);
-    OO_CHECK(hud->getLineWidth() == 3.0f);
+    EXPECT_TRUE(hud->getLineWidth() == 3.0f);
 
     // Nothing to refresh, nothing to reset, and the player is not flying: no
     // universe.
@@ -301,67 +302,67 @@ OO_TEST(accessorsAndSetters) {
   }
 }
 
-OO_TEST(hiddenSelectors) {
-  SetUp();
+TEST(HeadUpDisplay, hiddenSelectors) {
+  ::SetUp();
   {
     std::shared_ptr<HeadUpDisplay> hud = NewHUD(oo::PList(oo::PList::Dict{}));
-    OO_CHECK(!hud->hasHidden(std::string("drawCompass:")));
-    OO_CHECK(!hud->hasHidden(std::nullopt));
+    EXPECT_TRUE(!hud->hasHidden(std::string("drawCompass:")));
+    EXPECT_TRUE(!hud->hasHidden(std::nullopt));
     hud->setHiddenSelector("drawCompass:", true);
     hud->setHiddenSelector("drawScanner:", true);
-    OO_CHECK(hud->hasHidden(std::string("drawCompass:")));
-    OO_CHECK(hud->hasHidden(std::string("drawScanner:")));
+    EXPECT_TRUE(hud->hasHidden(std::string("drawCompass:")));
+    EXPECT_TRUE(hud->hasHidden(std::string("drawScanner:")));
     hud->setHiddenSelector("drawCompass:", false);
-    OO_CHECK(!hud->hasHidden(std::string("drawCompass:")));
-    OO_CHECK(hud->hasHidden(std::string("drawScanner:")));
+    EXPECT_TRUE(!hud->hasHidden(std::string("drawCompass:")));
+    EXPECT_TRUE(hud->hasHidden(std::string("drawScanner:")));
     hud->clearHiddenSelectors();
-    OO_CHECK(!hud->hasHidden(std::string("drawScanner:")));
+    EXPECT_TRUE(!hud->hasHidden(std::string("drawScanner:")));
   }
 }
 
-OO_TEST(nonlinearScannerScale) {
+TEST(HeadUpDisplay, nonlinearScannerScale) {
   // The direction is kept; the length is the scanner's nonlinear map of the
   // distance.
   const Vector v = HeadUpDisplay::nonlinearScannerScale(
       make_vector(3000.0f, 0.0f, 4000.0f), 1.0f, 256.0);
   const Vector unit = vector_normal(v);
-  OO_CHECK(std::fabs(unit.x - 0.6f) < 1e-6f && unit.y == 0.0f &&
+  EXPECT_TRUE(std::fabs(unit.x - 0.6f) < 1e-6f && unit.y == 0.0f &&
            std::fabs(unit.z - 0.8f) < 1e-6f);
   const float length = magnitude(v);
-  OO_CHECK(std::fabs(length - 50.0f) <
+  EXPECT_TRUE(std::fabs(length - 50.0f) <
            1e-4f);  // 49.9999962 on the Objective-C class
 }
 
-OO_TEST(setCrosshairDefinition) {
-  SetUp();
+TEST(HeadUpDisplay, setCrosshairDefinition) {
+  ::SetUp();
   {
     // The scripts' crosshair setter. (The frame's dials by name are the dial
     // table's.)
     std::shared_ptr<HeadUpDisplay> hud = NewHUD(oo::PList(oo::PList::Dict{}));
-    OO_CHECK(hud->setCrosshairDefinition("testcross.plist"));
-    OO_CHECK(hud->getCrosshairDefinition() ==
+    EXPECT_TRUE(hud->setCrosshairDefinition("testcross.plist"));
+    EXPECT_TRUE(hud->getCrosshairDefinition() ==
              std::optional<std::string>("testcross.plist"));
-    OO_CHECK(!hud->setCrosshairDefinition("nosuch.plist"));
-    OO_CHECK(hud->getCrosshairDefinition() ==
+    EXPECT_TRUE(!hud->setCrosshairDefinition("nosuch.plist"));
+    EXPECT_TRUE(hud->getCrosshairDefinition() ==
              std::optional<std::string>("crosshairs.plist"));
   }
 }
 
-OO_TEST(beaconCodeIcon) {
-  SetUp();
+TEST(HeadUpDisplay, beaconCodeIcon) {
+  ::SetUp();
   {
     // The entities hold the code icon by the C++ OOHUDBeaconIcon interface.
     std::shared_ptr<oo::HUDBeaconCodeIcon> icon = oo::makeShared<oo::HUDBeaconCodeIcon>("A");
-    OO_CHECK(icon != nullptr);
-    OO_CHECK(dynamic_cast<oo::HUDBeaconIcon*>(icon.get()) != nullptr);
+    EXPECT_TRUE(icon != nullptr);
+    EXPECT_TRUE(dynamic_cast<oo::HUDBeaconIcon*>(icon.get()) != nullptr);
   }
 }
 
 // --- The C++ API
 // ------------------------------------------------------------
 
-OO_TEST(cxxAPI) {
-  SetUp();
+TEST(HeadUpDisplay, cxxAPI) {
+  ::SetUp();
   {
     std::shared_ptr<HeadUpDisplay> hud = oo::makeShared<HeadUpDisplay>();
     hud->initWithDictionary(
@@ -372,45 +373,43 @@ OO_TEST(cxxAPI) {
             {"crosshair_file", oo::PList("testcross.plist")},
         }),
         std::string("cxx.plist"));
-    OO_CHECK(hud->getHudName() == std::optional<std::string>("cxx.plist"));
-    OO_CHECK_EQ(hud->mfdCount(), 1u);
-    OO_CHECK(hud->isCompassActive());
-    OO_CHECK(hud->getOverallAlpha() == 0.75f);
-    OO_CHECK(hud->getLineWidth() == 1.0f);
-    OO_CHECK(hud->getCrosshairDefinition() ==
+    EXPECT_TRUE(hud->getHudName() == std::optional<std::string>("cxx.plist"));
+    EXPECT_EQ(hud->mfdCount(), 1u);
+    EXPECT_TRUE(hud->isCompassActive());
+    EXPECT_TRUE(hud->getOverallAlpha() == 0.75f);
+    EXPECT_TRUE(hud->getLineWidth() == 1.0f);
+    EXPECT_TRUE(hud->getCrosshairDefinition() ==
              std::optional<std::string>("testcross.plist"));
-    OO_CHECK(hud->getPropertiesReticleTargetSensitive()->get<bool>("isAccurate",
+    EXPECT_TRUE(hud->getPropertiesReticleTargetSensitive()->get<bool>("isAccurate",
                                                                    false));
 
     std::shared_ptr<oo::Color> target =
         hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET);
-    OO_CHECK(target != nullptr && target->redComponent() == 0.0f &&
+    EXPECT_TRUE(target != nullptr && target->redComponent() == 0.0f &&
              target->greenComponent() == 1.0f);
-    OO_CHECK(hud->reticleColorForIndex(3) == nullptr);
+    EXPECT_TRUE(hud->reticleColorForIndex(3) == nullptr);
     std::shared_ptr<oo::Color> blue = oo::Color::blueColor();
-    OO_CHECK(hud->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET, blue.get()));
-    OO_CHECK(hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET) == blue);
-    OO_CHECK(!hud->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET, nullptr));
+    EXPECT_TRUE(hud->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET, blue.get()));
+    EXPECT_TRUE(hud->reticleColorForIndex(OO_RETICLE_COLOR_TARGET) == blue);
+    EXPECT_TRUE(!hud->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET, nullptr));
 
     hud->setOverallAlpha(2.0f);
-    OO_CHECK(hud->getOverallAlpha() == 1.0f);
+    EXPECT_TRUE(hud->getOverallAlpha() == 1.0f);
     hud->setHidden(true);
-    OO_CHECK(hud->getAllowBigGui());
+    EXPECT_TRUE(hud->getAllowBigGui());
     hud->setHiddenSelector("drawCompass:", true);
-    OO_CHECK(hud->hasHidden(std::string("drawCompass:")));
+    EXPECT_TRUE(hud->hasHidden(std::string("drawCompass:")));
 
     // Neither the player nor the universe: not in flight. Only a release-style
     // build can ask with no player: the debug build asserts that PLAYER is set
     // (OOGetPlayer()).
 #if !OO_DEBUG
-    OO_CHECK(!hud->checkPlayerInFlight());
-    OO_CHECK(!hud->checkPlayerInSystemFlight());
+    EXPECT_TRUE(!hud->checkPlayerInFlight());
+    EXPECT_TRUE(!hud->checkPlayerInSystemFlight());
 #endif
 
     const Vector v = HeadUpDisplay::nonlinearScannerScale(
         make_vector(3000.0f, 0.0f, 4000.0f), 1.0f, 256.0);
-    OO_CHECK(std::fabs(magnitude(v) - 50.0f) < 1e-4f);
+    EXPECT_TRUE(std::fabs(magnitude(v) - 50.0f) < 1e-4f);
   }
 }
-
-OO_TEST_MAIN()

@@ -19,6 +19,8 @@
 #include <cstdlib>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "Character.h"
 #include "oofnd/PList.hpp"
 #include <memory>
@@ -28,7 +30,6 @@
 #include <utility>
 #include <vector>
 #include "StringExpander.h"
-#include "oo_test.hpp"
 
 // --- The game around the class
 // --------------------------------------------------------------
@@ -168,39 +169,39 @@ const std::string kFeline =
 
 }  // namespace
 
-OO_TEST(generatedCharacters) {
+TEST(OOCharacter, generatedCharacters) {
   {
     // Human: "%R" and "nom"; a legal status and insurance from the
     // planet-description RNG.
     Fake();
-    OO_CHECK(Same(Describe(oo::Character::randomCharacterWithRole(
+    EXPECT_TRUE(Same(Describe(oo::Character::randomCharacterWithRole(
                       "nobody in particular", 4)),
                   kHuman4 + "|0|125|4|human colonials"));
     Fake();
     std::shared_ptr<oo::Character> pirate = oo::Character::characterWithRole("pirate", 3);
-    OO_CHECK(Same(Describe(pirate),
+    EXPECT_TRUE(Same(Describe(pirate),
                   "R1 <nom>|<character-generic-description species=human "
                   "colonials planet=System 3>|8|500|3|human colonials"));
-    OO_CHECK(pirate->planetOfOrigin() ==
+    EXPECT_TRUE(pirate->planetOfOrigin() ==
              std::optional<std::string>("System 3"));
 
     // Not human: "%R" twice.
     Fake();
-    OO_CHECK(Same(Describe(oo::Character::randomCharacterWithRole("trader", 5)),
+    EXPECT_TRUE(Same(Describe(oo::Character::randomCharacterWithRole("trader", 5)),
                   kFeline + "5>|0|250|5|furry felines"));
 
     // No species (the description is expanded without one), and no planet name.
     Fake();
-    OO_CHECK(
+    EXPECT_TRUE(
         Same(Describe(oo::Character::randomCharacterWithRole("", 9)),
              "R1 R2|<character-generic-description planet=System 9>|32|0|9|-"));
     Fake();
     std::shared_ptr<oo::Character> nowhere =
         oo::Character::randomCharacterWithRole("", 200);
-    OO_CHECK(Same(Describe(nowhere),
+    EXPECT_TRUE(Same(Describe(nowhere),
                   "R1 <nom>|<character-generic-description species=human "
                   "colonials>|36|0|200|human colonials"));
-    OO_CHECK(!nowhere->planetOfOrigin().has_value());
+    EXPECT_TRUE(!nowhere->planetOfOrigin().has_value());
 
     // One RNG run: each character draws the next seed.
     Fake();
@@ -219,13 +220,13 @@ OO_TEST(generatedCharacters) {
         "planet=System 5>|0|0|5|furry felines",
     };
     for (int i = 0; i < 6; i++) {
-      OO_CHECK(Same(Describe(oo::Character::randomCharacterWithRole("", i)),
+      EXPECT_TRUE(Same(Describe(oo::Character::randomCharacterWithRole("", i)),
                     expected[i]));
     }
   }
 }
 
-OO_TEST(roles) {
+TEST(OOCharacter, roles) {
   struct {
     const char* role;
     bool cast;
@@ -247,58 +248,58 @@ OO_TEST(roles) {
       Fake();
       std::shared_ptr<oo::Character> character =
           FromDictionary({{"origin", oo::PList(4)}, {"random_seed", kSeed}});
-      OO_CHECK(Same(Describe(character), kHuman4 + "|0|250|4|human colonials"));
-      OO_CHECK(character->castInRole(c.role) == c.cast);
-      OO_CHECK(Same(Describe(character), kHuman4 + c.rest));
+      EXPECT_TRUE(Same(Describe(character), kHuman4 + "|0|250|4|human colonials"));
+      EXPECT_TRUE(character->castInRole(c.role) == c.cast);
+      EXPECT_TRUE(Same(Describe(character), kHuman4 + c.rest));
     }
 
     Fake();
     std::shared_ptr<oo::Character> thargoid =
         FromDictionary({{"origin", oo::PList(4)}, {"random_seed", kSeed}});
-    OO_CHECK(thargoid->castInRole("thargoid"));
-    OO_CHECK(Same(Describe(thargoid),
+    EXPECT_TRUE(thargoid->castInRole("thargoid"));
+    EXPECT_TRUE(Same(Describe(thargoid),
                   "desc:character-thargoid-name|desc:character-a-thargoid|100|"
                   "0|4|human colonials"));
   }
 }
 
-OO_TEST(dictionaries) {
+TEST(OOCharacter, dictionaries) {
   {
     // The origin: a number, a numerical string, "0", a system name, an unknown
     // name or none (a random system), an object that answers -intValue, or one
     // that does not (random).
     Fake();
-    OO_CHECK(Same(Describe(FromDictionary(
+    EXPECT_TRUE(Same(Describe(FromDictionary(
                       {{"origin", oo::PList(7)}, {"random_seed", kSeed}})),
                   kFeline + "7>|0|250|7|furry felines"));
     Fake();
-    OO_CHECK(Same(Describe(FromDictionary(
+    EXPECT_TRUE(Same(Describe(FromDictionary(
                       {{"origin", oo::PList("12")}, {"random_seed", kSeed}})),
                   "R1 <nom>|<character-generic-description species=human "
                   "colonials planet=System 12>|0|250|12|human colonials"));
     Fake();
-    OO_CHECK(Same(Describe(FromDictionary(
+    EXPECT_TRUE(Same(Describe(FromDictionary(
                       {{"origin", oo::PList("0")}, {"random_seed", kSeed}})),
                   "R1 <nom>|<character-generic-description species=human "
                   "colonials planet=System 0>|0|250|0|human colonials"));
     Fake();
-    OO_CHECK(Same(Describe(FromDictionary(
+    EXPECT_TRUE(Same(Describe(FromDictionary(
                       {{"origin", oo::PList("Lave")}, {"random_seed", kSeed}})),
                   kFeline + "7>|0|250|7|furry felines"));
     Fake();
-    OO_CHECK(Same(Describe(FromDictionary({{"origin", oo::PList("Nowhere")},
+    EXPECT_TRUE(Same(Describe(FromDictionary({{"origin", oo::PList("Nowhere")},
                                            {"random_seed", kSeed}})),
                   kFeline + "241>|0|250|241|furry felines"));
     Fake();
-    OO_CHECK(Same(Describe(FromDictionary({{"random_seed", kSeed}})),
+    EXPECT_TRUE(Same(Describe(FromDictionary({{"random_seed", kSeed}})),
                   kFeline + "241>|0|250|241|furry felines"));
     // The seed: random when absent, kNilRandomSeed's zeroes when it does not
     // parse.
     Fake();
-    OO_CHECK(Same(Describe(FromDictionary({{"origin", oo::PList(4)}})),
+    EXPECT_TRUE(Same(Describe(FromDictionary({{"origin", oo::PList(4)}})),
                   kHuman4 + "|0|125|4|human colonials"));
     Fake();
-    OO_CHECK(
+    EXPECT_TRUE(
         Same(Describe(FromDictionary({{"origin", oo::PList(4)},
                                       {"random_seed", oo::PList("junk")}})),
              kHuman4 + "|3|0|4|human colonials"));
@@ -317,23 +318,23 @@ OO_TEST(dictionaries) {
          {"insurance", oo::PList(300)},
          {"script_actions",
           oo::PList(oo::PList::Array{oo::PList("doSomething")})}});
-    OO_CHECK(Same(Describe(c), "Jameson|a commander|20|300|4|human colonials"));
-    OO_CHECK(c->legacyScript() ==
+    EXPECT_TRUE(Same(Describe(c), "Jameson|a commander|20|300|4|human colonials"));
+    EXPECT_TRUE(c->legacyScript() ==
              oo::PList(oo::PList::Array{oo::PList("doSomething")}));
-    OO_CHECK(c->script() == nullptr);
-    OO_CHECK(c->descriptionComponents() ==
+    EXPECT_TRUE(c->script() == nullptr);
+    EXPECT_TRUE(c->descriptionComponents() ==
              std::optional<std::string>(
                  "Jameson, a commander. bounty: 20 insurance: 300"));
-    OO_CHECK(c->oo_jsClassName() == std::optional<std::string>("Character"));
+    EXPECT_TRUE(c->oo_jsClassName() == std::optional<std::string>("Character"));
   }
 }
 
-OO_TEST(scriptingInfoAndSetters) {
+TEST(OOCharacter, scriptingInfoAndSetters) {
   {
     Fake();
     std::shared_ptr<oo::Character> c =
         FromDictionary({{"origin", oo::PList(4)}, {"random_seed", kSeed}});
-    OO_CHECK(c->infoForScripting() ==
+    EXPECT_TRUE(c->infoForScripting() ==
              oo::PList(oo::PList::Dict{
                  {"name", oo::PList("R1 <nom>")},
                  {"description",
@@ -349,25 +350,25 @@ OO_TEST(scriptingInfoAndSetters) {
     c->setLegalStatus(-5);
     c->setInsuranceCredits(7);
     c->setLegacyScript(oo::PList(oo::PList::Array{}));
-    OO_CHECK(Same(Describe(c), "Bob|a nobody|-5|7|4|human colonials"));
-    OO_CHECK(c->legacyScript() == oo::PList(oo::PList::Array{}));
+    EXPECT_TRUE(Same(Describe(c), "Bob|a nobody|-5|7|4|human colonials"));
+    EXPECT_TRUE(c->legacyScript() == oo::PList(oo::PList::Array{}));
 
     // The list ended at the first missing value: no species, no description, no
     // name.
     Fake();
     std::shared_ptr<oo::Character> alien = oo::Character::randomCharacterWithRole("", 9);
-    OO_CHECK(
+    EXPECT_TRUE(
         alien->infoForScripting() ==
         oo::PList(oo::PList::Dict{
             {"name", oo::PList("R1 R2")},
             {"description",
              oo::PList("<character-generic-description planet=System 9>")}}));
     alien->setShortDescription(std::nullopt);
-    OO_CHECK(alien->infoForScripting() ==
+    EXPECT_TRUE(alien->infoForScripting() ==
              oo::PList(oo::PList::Dict{{"name", oo::PList("R1 R2")}}));
     alien->setName(std::nullopt);
-    OO_CHECK(alien->infoForScripting() == oo::PList(oo::PList::Dict{}));
-    OO_CHECK(
+    EXPECT_TRUE(alien->infoForScripting() == oo::PList(oo::PList::Dict{}));
+    EXPECT_TRUE(
         alien->descriptionComponents() ==
         std::optional<std::string>("(null), (null). bounty: 32 insurance: 0"));
   }
@@ -376,70 +377,68 @@ OO_TEST(scriptingInfoAndSetters) {
 // --- The C++ class, and what the facade's contract kept
 // --------------------------------------------------
 
-OO_TEST(cxxClass) {
+TEST(OOCharacter, cxxClass) {
   // The same answers as the Objective-C API above.
   Fake();
-  OO_CHECK(Same(
+  EXPECT_TRUE(Same(
       Describe(oo::Character::randomCharacterWithRole("nobody in particular", 4)
                    .get()),
       kHuman4 + "|0|125|4|human colonials"));
   Fake();
   std::shared_ptr<oo::Character> pirate = oo::Character::characterWithRole("pirate", 3);
-  OO_CHECK(Same(Describe(pirate.get()),
+  EXPECT_TRUE(Same(Describe(pirate.get()),
                 "R1 <nom>|<character-generic-description species=human "
                 "colonials planet=System 3>|8|500|3|human colonials"));
-  OO_CHECK(pirate->planetOfOrigin() == std::optional<std::string>("System 3"));
+  EXPECT_TRUE(pirate->planetOfOrigin() == std::optional<std::string>("System 3"));
   Fake();
-  OO_CHECK(Same(Describe(oo::makeShared<oo::Character>("pirate", 3).get()),
+  EXPECT_TRUE(Same(Describe(oo::makeShared<oo::Character>("pirate", 3).get()),
                 "R1 <nom>|<character-generic-description species=human "
                 "colonials planet=System 3>|8|500|3|human colonials"));
 
   Fake();
   std::shared_ptr<oo::Character> c = oo::Character::characterWithDictionary(oo::PList(
       oo::PList::Dict{{"origin", oo::PList(4)}, {"random_seed", kSeed}}));
-  OO_CHECK(Same(Describe(c.get()), kHuman4 + "|0|250|4|human colonials"));
-  OO_CHECK(c->castInRole("police"));
-  OO_CHECK(!c->castInRole("nobody"));
-  OO_CHECK(Same(Describe(c.get()), kHuman4 + "|0|125|4|human colonials"));
-  OO_CHECK(c->descriptionComponents() ==
+  EXPECT_TRUE(Same(Describe(c.get()), kHuman4 + "|0|250|4|human colonials"));
+  EXPECT_TRUE(c->castInRole("police"));
+  EXPECT_TRUE(!c->castInRole("nobody"));
+  EXPECT_TRUE(Same(Describe(c.get()), kHuman4 + "|0|125|4|human colonials"));
+  EXPECT_TRUE(c->descriptionComponents() ==
            std::optional<std::string>(
                "R1 <nom>, <character-generic-description species=human "
                "colonials planet=System 4>. bounty: 0 insurance: 125"));
-  OO_CHECK(c->oo_jsClassName() == std::optional<std::string>("Character"));
-  OO_CHECK(c->script() == nullptr);
-  OO_CHECK(c->infoForScripting().count() == 6);
+  EXPECT_TRUE(c->oo_jsClassName() == std::optional<std::string>("Character"));
+  EXPECT_TRUE(c->script() == nullptr);
+  EXPECT_TRUE(c->infoForScripting().count() == 6);
 
   // [[OOCharacter alloc] init]: every field zero.
   std::shared_ptr<oo::Character> blank = oo::makeShared<oo::Character>();
-  OO_CHECK(!blank->name().has_value() &&
+  EXPECT_TRUE(!blank->name().has_value() &&
            !blank->shortDescription().has_value());
-  OO_CHECK(blank->legalStatus() == 0 && blank->insuranceCredits() == 0 &&
+  EXPECT_TRUE(blank->legalStatus() == 0 && blank->insuranceCredits() == 0 &&
            blank->planetIDOfOrigin() == 0);
-  OO_CHECK(blank->legacyScript().isNull());
+  EXPECT_TRUE(blank->legacyScript().isNull());
 }
 
-OO_TEST(facadeIdentity) {
+TEST(OOCharacter, facadeIdentity) {
   Fake();
   std::shared_ptr<oo::Character> pilot =
       FromDictionary({{"origin", oo::PList(4)}, {"random_seed", kSeed}});
 
   // A crew list (std::shared_ptr) keeps finding the same object.
   std::vector<std::shared_ptr<oo::Character>> crew{pilot};
-  OO_CHECK(crew[0] == pilot);
+  EXPECT_TRUE(crew[0] == pilot);
 
   // Objects made as +alloc and an initialiser made them.
   std::shared_ptr<oo::Character> blank = oo::makeShared<oo::Character>();
-  OO_CHECK(!blank->name().has_value() && blank->legalStatus() == 0 &&
+  EXPECT_TRUE(!blank->name().has_value() && blank->legalStatus() == 0 &&
            blank->planetIDOfOrigin() == 0);
   Fake();
   std::shared_ptr<oo::Character> trader = oo::makeShared<oo::Character>("pirate", 3);
-  OO_CHECK(Same(Describe(trader),
+  EXPECT_TRUE(Same(Describe(trader),
                 "R1 <nom>|<character-generic-description species=human "
                 "colonials planet=System 3>|8|500|3|human colonials"));
 
-  OO_CHECK(
+  EXPECT_TRUE(
       oo::Character::characterWithRole("", 1) !=
       oo::Character::characterWithRole("", 1));  // distinct objects, as before
 }
-
-OO_TEST_MAIN()

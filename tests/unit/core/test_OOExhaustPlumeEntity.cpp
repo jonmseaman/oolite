@@ -28,6 +28,8 @@
 #include <optional>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "Color.h"
 #include "ExhaustPlumeEntity.h"
@@ -36,7 +38,6 @@
 #include "Texture.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -174,123 +175,123 @@ oo::ExhaustPlumeEntity* Plume(Entity* ship, std::vector<std::string> tokens,
 
 }  // namespace
 
-OO_TEST(made) {
+TEST(OOExhaustPlumeEntity, made) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     Entity* ship = Ship();
     oo::ExhaustPlumeEntity* plume =
         Plume(ship, {"1", "2", "3", "4", "5", "1.5"}, 2.0f);
-    OO_CHECK(plume != nullptr);
-    OO_CHECK(plume->owner() == ship);
-    OO_CHECK(HPvector_equal(plume->getPosition(), make_HPvector(2, 4, 6)));
-    OO_CHECK(VectorIs(plume->scale(), 8, 10, 1.5f));  // z is not scaled
+    EXPECT_TRUE(plume != nullptr);
+    EXPECT_TRUE(plume->owner() == ship);
+    EXPECT_TRUE(HPvector_equal(plume->getPosition(), make_HPvector(2, 4, 6)));
+    EXPECT_TRUE(VectorIs(plume->scale(), 8, 10, 1.5f));  // z is not scaled
     // Callers ask the C++ part.
-    OO_CHECK(plume->isExhaust() &&
+    EXPECT_TRUE(plume->isExhaust() &&
              dynamic_cast<oo::ExhaustPlumeEntity*>(ship) == nullptr);
-    OO_CHECK(plume->findCollisionRadius() == 0.0);
+    EXPECT_TRUE(plume->findCollisionRadius() == 0.0);
 
-    OO_CHECK(Plume(ship, {}, 1.0f) == nullptr);
+    EXPECT_TRUE(Plume(ship, {}, 1.0f) == nullptr);
   }
 }
 
-OO_TEST(scaleZ) {
+TEST(OOExhaustPlumeEntity, scaleZ) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     Entity* ship = Ship();
-    OO_CHECK(VectorIs(
+    EXPECT_TRUE(VectorIs(
         Plume(ship, {"0", "0", "0", "1", "1", "0.4"}, 1.0f)->scale(), 1, 1, 1));
-    OO_CHECK(VectorIs(
+    EXPECT_TRUE(VectorIs(
         Plume(ship, {"0", "0", "0", "1", "1", "2.5"}, 1.0f)->scale(), 1, 1, 1));
     oo::ExhaustPlumeEntity* plume =
         Plume(ship, {"0", "0", "0", "1", "1", "2"}, 1.0f);
-    OO_CHECK(VectorIs(plume->scale(), 1, 1, 2));
+    EXPECT_TRUE(VectorIs(plume->scale(), 1, 1, 2));
     plume->setScale(make_vector(3, 4, 0.5f));
-    OO_CHECK(VectorIs(plume->scale(), 3, 4, 0.5f));
+    EXPECT_TRUE(VectorIs(plume->scale(), 3, 4, 0.5f));
     plume->setScale(make_vector(3, 4, 0.0f));
-    OO_CHECK(VectorIs(plume->scale(), 3, 4, 1));
+    EXPECT_TRUE(VectorIs(plume->scale(), 3, 4, 1));
   }
 }
 
-OO_TEST(rescale) {
+TEST(OOExhaustPlumeEntity, rescale) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     oo::ExhaustPlumeEntity* plume =
         Plume(Ship(), {"0", "0", "0", "1", "2", "1.5"}, 1.0f);
     plume->rescaleBy(2.0f);
-    OO_CHECK(VectorIs(plume->scale(), 2, 4, 3));  // z too: no clamp here
+    EXPECT_TRUE(VectorIs(plume->scale(), 2, 4, 3));  // z too: no clamp here
     plume->rescaleBy(5.0f, true);
-    OO_CHECK(VectorIs(plume->scale(), 2, 4, 3));
+    EXPECT_TRUE(VectorIs(plume->scale(), 2, 4, 3));
   }
 }
 
-OO_TEST(updateWithoutVisibleShip) {
+TEST(OOExhaustPlumeEntity, updateWithoutVisibleShip) {
   {
-    SetUp(1.0);
+    ::SetUp(1.0);
     Entity* ship = Ship();
     oo::ExhaustPlumeEntity* plume =
         Plume(ship, {"0", "0", "-10", "2", "2", "1"}, 1.0f);
     SetCollisionRadius(plume, 42.0f);
     Part(ship)->_visible = false;
     plume->update(0.1);
-    OO_CHECK(plume->findCollisionRadius() == 42.0);
+    EXPECT_TRUE(plume->findCollisionRadius() == 42.0);
 
     plume->setOwner(nullptr);
     plume->update(0.1);
-    OO_CHECK(plume->findCollisionRadius() == 42.0);
+    EXPECT_TRUE(plume->findCollisionRadius() == 42.0);
   }
 }
 
-OO_TEST(updateBelowMinimalSpeed) {
+TEST(OOExhaustPlumeEntity, updateBelowMinimalSpeed) {
   {
-    SetUp(1.0);
+    ::SetUp(1.0);
     Entity* ship = Ship();
     oo::ExhaustPlumeEntity* plume =
         Plume(ship, {"0", "0", "-10", "2", "2", "1"}, 1.0f);
     SetCollisionRadius(plume, 42.0f);
     Part(ship)->setSpeedFactor(0.0005f);
     plume->update(0.1);
-    OO_CHECK(plume->findCollisionRadius() == 0.0);
+    EXPECT_TRUE(plume->findCollisionRadius() == 0.0);
   }
 }
 
-OO_TEST(updateMeasures) {
+TEST(OOExhaustPlumeEntity, updateMeasures) {
   {
-    SetUp(1.0);
+    ::SetUp(1.0);
     Entity* ship = Ship();
     oo::ExhaustPlumeEntity* plume =
         Plume(ship, {"0", "0", "-10", "2", "2", "1"}, 1.0f);
     plume->resetPlume();
     plume->update(0.1);
     // What the Objective-C class measured, with this seed.
-    OO_CHECK(Near(plume->findCollisionRadius(), 14.464036));
+    EXPECT_TRUE(Near(plume->findCollisionRadius(), 14.464036));
   }
 }
 
-OO_TEST(texture) {
+TEST(OOExhaustPlumeEntity, texture) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     oo::ExhaustPlumeEntity* plume =
         Plume(Ship(), {"0", "0", "0", "1", "1", "1"}, 1.0f);
     sTextureName.reset();
-    OO_CHECK(plume->texture() == sTexture);
-    OO_CHECK(sTextureName ==
+    EXPECT_TRUE(plume->texture() == sTexture);
+    EXPECT_TRUE(sTextureName ==
              std::optional<std::string>("oolite-exhaust-blur.png"));
     sTextureName.reset();
-    OO_CHECK(plume->texture() == sTexture &&
+    EXPECT_TRUE(plume->texture() == sTexture &&
              oo::ExhaustPlumeEntity::plumeTexture() == sTexture);
-    OO_CHECK(!sTextureName.has_value());  // loaded once
+    EXPECT_TRUE(!sTextureName.has_value());  // loaded once
   }
 }
 
-OO_TEST(facade) {
+TEST(OOExhaustPlumeEntity, facade) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     // The object is the root's facade, whose C++ part is the plume: a C++
     // entity.
     Entity* object = oo::MadeEntity(oo::ExhaustPlumeEntity::exhaustForShip(
         oo::ToShip(Ship()), {"0", "0", "0", "1", "1", "1"}, 1.0f));
-    OO_CHECK(dynamic_cast<oo::ExhaustPlumeEntity*>(object) != nullptr);
-    OO_CHECK(object == object);
+    EXPECT_TRUE(dynamic_cast<oo::ExhaustPlumeEntity*>(object) != nullptr);
+    EXPECT_TRUE(object == object);
   }
 }
 
@@ -310,18 +311,16 @@ static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
 
 // The C++ class's overrides of the root's JS members: what the engine asks a
 // plume's object for by selector is what OOJSExhaustPlume.mm answers.
-OO_TEST(jsExtensions) {
+TEST(OOExhaustPlumeEntity, jsExtensions) {
   {
-    SetUp(0.0);
+    ::SetUp(0.0);
     Entity* plume = Plume(Ship(), {"0", "0", "0", "1", "1", "1"}, 1.0f);
     RegisterJSClasses(InitOOJSExhaustPlume);
     const JSClassID jsClass = OOJSEntityJSClassID(plume);
     const JSClassID expectedClass = JSExhaustPlumeClassID();
-    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
-    OO_CHECK(OOJSEntityJSClassName(plume) ==
+    EXPECT_TRUE(jsClass != 0 && jsClass == expectedClass);
+    EXPECT_TRUE(OOJSEntityJSClassName(plume) ==
              std::optional<std::string>("ExhaustPlume"));
-    OO_CHECK(OOJSEntityIsVisibleToScripts(plume) == true);
+    EXPECT_TRUE(OOJSEntityIsVisibleToScripts(plume) == true);
   }
 }
-
-OO_TEST_MAIN()

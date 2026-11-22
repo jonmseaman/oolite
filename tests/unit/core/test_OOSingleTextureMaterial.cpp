@@ -16,10 +16,11 @@
 #include <cstdlib>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "SingleTextureMaterial.h"
 #include "Texture.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/String.hpp"
 
@@ -188,31 +189,31 @@ bool Same(const GLfloat* a, std::initializer_list<GLfloat> b) {
 
 }  // namespace
 
-OO_TEST(initWithTexture) {
+TEST(OOSingleTextureMaterial, initWithTexture) {
   {
     oo::AutoreleaseScope pool;
     TestTexture* texture = MakeTexture();
     const std::shared_ptr<oo::SingleTextureMaterial> m = Make(
         std::string("Hull"), texture,
         oo::PList(oo::PList::Dict{{"diffuse_color", oo::PList("redColor")}}));
-    OO_CHECK(m != nullptr && m->name() == std::optional<std::string>("Hull"));
+    EXPECT_TRUE(m != nullptr && m->name() == std::optional<std::string>("Hull"));
     GLfloat c[4] = {};
     m->getDiffuseComponents(c);
-    OO_CHECK(
+    EXPECT_TRUE(
         Same(c, {1, 0, 0, 1}));  // the configuration reached the basic material
-    OO_CHECK(m->shininess() == 10);
+    EXPECT_TRUE(m->shininess() == 10);
 #ifndef NDEBUG
     const std::vector<std::shared_ptr<oo::Texture>> textures = m->allTextures();
-    OO_CHECK(textures.size() == 1 && textures[0].get() == texture);
+    EXPECT_TRUE(textures.size() == 1 && textures[0].get() == texture);
 #endif
 
     // No name, or no texture: no material.
-    OO_CHECK(Make(std::nullopt, texture) == nullptr);
-    OO_CHECK(Make(std::string("Bare"), nullptr) == nullptr);
+    EXPECT_TRUE(Make(std::nullopt, texture) == nullptr);
+    EXPECT_TRUE(Make(std::string("Bare"), nullptr) == nullptr);
   }
 }
 
-OO_TEST(initWithConfiguration) {
+TEST(OOSingleTextureMaterial, initWithConfiguration) {
   {
     oo::AutoreleaseScope pool;
     // A configuration: the texture is the diffuse_map's specifier, with the
@@ -224,8 +225,8 @@ OO_TEST(initWithConfiguration) {
             oo::PList(oo::PList::Dict{
                 {"diffuse_map", oo::PList("hull_diffuse.png")},
             }));
-    OO_CHECK(m != nullptr);
-    OO_CHECK(
+    EXPECT_TRUE(m != nullptr);
+    EXPECT_TRUE(
         gTextureConfigurations.size() == 1 &&
         gTextureConfigurations[0] ==
             oo::PList(oo::PList::Dict{{"object", oo::PList("hull_diffuse.png")},
@@ -236,8 +237,8 @@ OO_TEST(initWithConfiguration) {
     gTextureConfigurations.clear();
     m = oo::SingleTextureMaterial::materialWithName(std::string("Plain"),
                                                   oo::PList(oo::PList::Dict{}));
-    OO_CHECK(m != nullptr && gTextureConfigurations.size() == 1);
-    OO_CHECK(gTextureConfigurations[0] ==
+    EXPECT_TRUE(m != nullptr && gTextureConfigurations.size() == 1);
+    EXPECT_TRUE(gTextureConfigurations[0] ==
              oo::PList(oo::PList::Dict{{"object", oo::PList("(null)")},
                                        {"defaultName", oo::PList("Plain")}}));
 
@@ -245,57 +246,57 @@ OO_TEST(initWithConfiguration) {
     gTextureConfigurations.clear();
     m = oo::SingleTextureMaterial::materialWithName(std::string("named.png"),
                                                   oo::PList());
-    OO_CHECK(m != nullptr && gTextureConfigurations.size() == 1 &&
+    EXPECT_TRUE(m != nullptr && gTextureConfigurations.size() == 1 &&
              gTextureConfigurations[0] == oo::PList("named.png"));
-    OO_CHECK(m->name() == std::optional<std::string>("named.png"));
+    EXPECT_TRUE(m->name() == std::optional<std::string>("named.png"));
 
     // Neither: a null specifier, no texture, no material. A texture that fails:
     // no material.
     gTextureConfigurations.clear();
-    OO_CHECK(oo::SingleTextureMaterial::materialWithName(std::nullopt,
+    EXPECT_TRUE(oo::SingleTextureMaterial::materialWithName(std::nullopt,
                                                        oo::PList()) == nullptr);
-    OO_CHECK(gTextureConfigurations.size() == 1 &&
+    EXPECT_TRUE(gTextureConfigurations.size() == 1 &&
              gTextureConfigurations[0].isNull());
-    OO_CHECK(oo::SingleTextureMaterial::materialWithName(std::string("missing"),
+    EXPECT_TRUE(oo::SingleTextureMaterial::materialWithName(std::string("missing"),
                                                        oo::PList()) == nullptr);
   }
 }
 
-OO_TEST(textureKeptForTheMaterialsLife) {
+TEST(OOSingleTextureMaterial, textureKeptForTheMaterialsLife) {
   const int deallocated = gTexturesDeallocated;
   std::shared_ptr<oo::SingleTextureMaterial> m;
   {
     oo::AutoreleaseScope pool;
     m = Make(std::string("Kept"), MakeTexture());
   }
-  OO_CHECK(gTexturesDeallocated == deallocated);
+  EXPECT_TRUE(gTexturesDeallocated == deallocated);
   m = nullptr;
-  OO_CHECK(gTexturesDeallocated == deallocated + 1);
+  EXPECT_TRUE(gTexturesDeallocated == deallocated + 1);
 }
 
-OO_TEST(texturesQuestions) {
+TEST(OOSingleTextureMaterial, texturesQuestions) {
   {
     oo::AutoreleaseScope pool;
     TestTexture* texture = MakeTexture();
     const std::shared_ptr<oo::SingleTextureMaterial> m =
         Make(std::string("Asks"), texture);
-    OO_CHECK(!m->isFinishedLoading() && !m->wantsNormalsAsTextureCoordinates());
+    EXPECT_TRUE(!m->isFinishedLoading() && !m->wantsNormalsAsTextureCoordinates());
     texture->_finished = true;
     texture->_cubeMap = true;
-    OO_CHECK(m->isFinishedLoading() && m->wantsNormalsAsTextureCoordinates());
+    EXPECT_TRUE(m->isFinishedLoading() && m->wantsNormalsAsTextureCoordinates());
     m->ensureFinishedLoading();
-    OO_CHECK(texture->_ensures == 1);
+    EXPECT_TRUE(texture->_ensures == 1);
 #if OO_MULTITEXTURE
-    OO_CHECK(m->countOfTextureUnitsWithBaseCoordinates() == 1);
+    EXPECT_TRUE(m->countOfTextureUnitsWithBaseCoordinates() == 1);
 #endif
     m->setBindingTarget(nullptr);
-    OO_CHECK(m->permitSpecular());
+    EXPECT_TRUE(m->permitSpecular());
   }
 }
 
-OO_TEST(doApply) {
+TEST(OOSingleTextureMaterial, doApply) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -305,23 +306,23 @@ OO_TEST(doApply) {
         Make(std::string("Applied"), texture);
     m->setDiffuseRed(0.5f, 0.25f, 0.125f, 1);
     const int applyNones = gTextureApplyNones;
-    OO_CHECK(m->doApply());
-    OO_CHECK(texture->_applies == 1);
-    OO_CHECK(gTextureApplyNones == applyNones);  // not exactly a basic material
+    EXPECT_TRUE(m->doApply());
+    EXPECT_TRUE(texture->_applies == 1);
+    EXPECT_TRUE(gTextureApplyNones == applyNones);  // not exactly a basic material
     GLfloat c[4] = {};
     glGetMaterialfv(GL_FRONT, GL_DIFFUSE, c);
-    OO_CHECK(Same(c, {0.5f, 0.25f, 0.125f, 1}));
+    EXPECT_TRUE(Same(c, {0.5f, 0.25f, 0.125f, 1}));
 
     m->apply();
-    OO_CHECK(oo::Material::current().get() == m.get() && texture->_applies == 2);
+    EXPECT_TRUE(oo::Material::current().get() == m.get() && texture->_applies == 2);
     oo::Material::applyNone();
-    OO_CHECK(oo::Material::current() == nullptr);
+    EXPECT_TRUE(oo::Material::current() == nullptr);
   }
 }
 
-OO_TEST(unapplyWithNext) {
+TEST(OOSingleTextureMaterial, unapplyWithNext) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -336,91 +337,89 @@ OO_TEST(unapplyWithNext) {
     // material.
     int applyNones = gTextureApplyNones;
     m->unapplyWithNext(Make(std::string("Next"), MakeTexture()).get());
-    OO_CHECK(gTextureApplyNones == applyNones);
+    EXPECT_TRUE(gTextureApplyNones == applyNones);
     glGetMaterialfv(GL_FRONT, GL_DIFFUSE, c);
-    OO_CHECK(Same(c, {0.5f, 0.25f, 0.125f, 1}));
+    EXPECT_TRUE(Same(c, {0.5f, 0.25f, 0.125f, 1}));
 
     // A basic material: no texture; it sets its own GL material.
     m->unapplyWithNext(
         oo::BasicMaterial::materialWithName(std::string("Basic")).get());
-    OO_CHECK(gTextureApplyNones == applyNones + 1);
+    EXPECT_TRUE(gTextureApplyNones == applyNones + 1);
     glGetMaterialfv(GL_FRONT, GL_DIFFUSE, c);
-    OO_CHECK(Same(c, {0.5f, 0.25f, 0.125f, 1}));
+    EXPECT_TRUE(Same(c, {0.5f, 0.25f, 0.125f, 1}));
 
     // Nothing: no texture, and the default material (which also has none).
     applyNones = gTextureApplyNones;
     m->unapplyWithNext(nullptr);
-    OO_CHECK(gTextureApplyNones == applyNones + 2);
+    EXPECT_TRUE(gTextureApplyNones == applyNones + 2);
     glGetMaterialfv(GL_FRONT, GL_DIFFUSE, c);
-    OO_CHECK(Same(c, {1, 1, 1, 1}));
+    EXPECT_TRUE(Same(c, {1, 1, 1, 1}));
   }
 }
 
-OO_TEST(description) {
+TEST(OOSingleTextureMaterial, description) {
   {
     oo::AutoreleaseScope pool;
     const std::string text =
         Description(Make(std::string("Hull"), MakeTexture()).get());
-    OO_CHECK(text.starts_with("<OOSingleTextureMaterial 0x"));
-    OO_CHECK(text.ends_with(">{<TestTexture>}"));
+    EXPECT_TRUE(text.starts_with("<OOSingleTextureMaterial 0x"));
+    EXPECT_TRUE(text.ends_with(">{<TestTexture>}"));
   }
 }
 
 // --- The C++ class and the root
 // -----------------------------------------
 
-OO_TEST(cxxAPI) {
+TEST(OOSingleTextureMaterial, cxxAPI) {
   {
     oo::AutoreleaseScope pool;
     TestTexture* texture = MakeTexture();
     const std::shared_ptr<oo::SingleTextureMaterial> m =
         oo::SingleTextureMaterial::materialWithName(std::string("Cxx"), texture,
                                                   oo::PList());
-    OO_CHECK(m != nullptr && m->name() == std::optional<std::string>("Cxx") &&
+    EXPECT_TRUE(m != nullptr && m->name() == std::optional<std::string>("Cxx") &&
              m->shininess() == 10);
-    OO_CHECK(m->descriptionComponents() ==
+    EXPECT_TRUE(m->descriptionComponents() ==
              std::optional<std::string>("<TestTexture>"));
-    OO_CHECK(!m->isFinishedLoading() && !m->wantsNormalsAsTextureCoordinates());
+    EXPECT_TRUE(!m->isFinishedLoading() && !m->wantsNormalsAsTextureCoordinates());
     texture->_cubeMap = true;
-    OO_CHECK(m->wantsNormalsAsTextureCoordinates());
+    EXPECT_TRUE(m->wantsNormalsAsTextureCoordinates());
 #ifndef NDEBUG
-    OO_CHECK(m->allTextures().size() == 1 &&
+    EXPECT_TRUE(m->allTextures().size() == 1 &&
              m->allTextures()[0].get() == texture);
 #endif
 
-    OO_CHECK(oo::SingleTextureMaterial::materialWithName(std::nullopt, texture,
+    EXPECT_TRUE(oo::SingleTextureMaterial::materialWithName(std::nullopt, texture,
                                                        oo::PList()) == nullptr);
-    OO_CHECK(oo::SingleTextureMaterial::materialWithName(std::string("Bare"), nullptr,
+    EXPECT_TRUE(oo::SingleTextureMaterial::materialWithName(std::string("Bare"), nullptr,
                                                        oo::PList()) == nullptr);
-    OO_CHECK(oo::SingleTextureMaterial::materialWithName(std::string("named.png"),
+    EXPECT_TRUE(oo::SingleTextureMaterial::materialWithName(std::string("named.png"),
                                                        oo::PList()) != nullptr);
-    OO_CHECK(oo::SingleTextureMaterial::materialWithName(std::string("missing"),
+    EXPECT_TRUE(oo::SingleTextureMaterial::materialWithName(std::string("missing"),
                                                        oo::PList()) == nullptr);
 
     if (OOTestGLContext()) {
       const int applies = texture->_applies, applyNones = gTextureApplyNones;
       m->apply();
-      OO_CHECK(texture->_applies == applies + 1 &&
+      EXPECT_TRUE(texture->_applies == applies + 1 &&
                oo::Material::current().get() == m.get());
       oo::Material::applyNone();  // told nothing comes next: no texture, then the
                                 // default material
-      OO_CHECK(gTextureApplyNones == applyNones + 2);
+      EXPECT_TRUE(gTextureApplyNones == applyNones + 2);
     }
   }
 }
 
 // The name and description.
-OO_TEST(nameAndDescription) {
+TEST(OOSingleTextureMaterial, nameAndDescription) {
   {
     oo::AutoreleaseScope pool;
     const std::shared_ptr<oo::SingleTextureMaterial> m =
         oo::SingleTextureMaterial::materialWithName(std::string("Cxx"),
                                                   MakeTexture(), oo::PList());
-    OO_CHECK(m->name() == std::optional<std::string>("Cxx"));
+    EXPECT_TRUE(m->name() == std::optional<std::string>("Cxx"));
     const std::string text = m->description();
-    OO_CHECK(text.starts_with("<OOSingleTextureMaterial 0x") &&
+    EXPECT_TRUE(text.starts_with("<OOSingleTextureMaterial 0x") &&
              text.ends_with(">{<TestTexture>}"));
   }
 }
-
-OO_TEST_MAIN()

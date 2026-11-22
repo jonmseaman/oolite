@@ -15,10 +15,11 @@
 
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "RingEffectEntity.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -98,55 +99,53 @@ Entity* Source() {
 
 }  // namespace
 
-OO_TEST(noSourceNoRing) {
+TEST(OORingEffectEntity, noSourceNoRing) {
   {
-    SetUp();
-    OO_CHECK(Ring(nullptr) == nullptr);
-    OO_CHECK(ShrinkingRing(nullptr) == nullptr);
+    ::SetUp();
+    EXPECT_TRUE(Ring(nullptr) == nullptr);
+    EXPECT_TRUE(ShrinkingRing(nullptr) == nullptr);
   }
 }
 
-OO_TEST(ringTakesTheSource) {
+TEST(OORingEffectEntity, ringTakesTheSource) {
   {
-    SetUp();
+    ::SetUp();
     Entity* source = Source();
     for (Entity* ring : {Ring(source), ShrinkingRing(source)}) {
-      OO_CHECK(ring != nullptr && ring != source);
-      OO_CHECK(HPvector_equal(ring->getPosition(), make_HPvector(1, 2, 3)));
+      EXPECT_TRUE(ring != nullptr && ring != source);
+      EXPECT_TRUE(HPvector_equal(ring->getPosition(), make_HPvector(1, 2, 3)));
       Quaternion q = ring->getOrientation();
-      OO_CHECK(q.w == 0 && q.x == 1 && q.y == 0 && q.z == 0);
+      EXPECT_TRUE(q.w == 0 && q.x == 1 && q.y == 0 && q.z == 0);
       Vector v = ring->getVelocity();
-      OO_CHECK(v.x == 4 && v.y == 5 && v.z == 6);
-      OO_CHECK(ring->status() == oo::EntityStatus::kEffect &&
+      EXPECT_TRUE(v.x == 4 && v.y == 5 && v.z == 6);
+      EXPECT_TRUE(ring->status() == oo::EntityStatus::kEffect &&
                ring->getScanClass() == oo::ScanClass::kNoDraw);
-      OO_CHECK(ring->owner() == source);
-      OO_CHECK(ring->isEffect() && !ring->canCollide());
-      OO_CHECK(!ring->getIsShip() && !ring->getIsVisualEffect());
-      OO_CHECK(
+      EXPECT_TRUE(ring->owner() == source);
+      EXPECT_TRUE(ring->isEffect() && !ring->canCollide());
+      EXPECT_TRUE(!ring->getIsShip() && !ring->getIsVisualEffect());
+      EXPECT_TRUE(
           oo::EntityDescription(ring).starts_with("<OORingEffectEntity 0x"));
-      OO_CHECK(oo::EntityDescription(ring).ends_with(
+      EXPECT_TRUE(oo::EntityDescription(ring).ends_with(
           "{0.000000 seconds passed of 2.000000}"));
     }
   }
 }
 
-OO_TEST(updateCountsAndExpires) {
+TEST(OORingEffectEntity, updateCountsAndExpires) {
   {
-    SetUp();
+    ::SetUp();
     Entity* ring = Ring(Source());
     ring->update(0.5);
-    OO_CHECK(oo::EntityDescription(ring).ends_with(
+    EXPECT_TRUE(oo::EntityDescription(ring).ends_with(
         "{0.500000 seconds passed of 2.000000}"));
-    OO_CHECK(
+    EXPECT_TRUE(
         HPvector_equal(ring->getPosition(),
                        make_HPvector(3, 4.5, 6)));  // moved by its velocity
-    OO_CHECK(sUniverse->_removed == nullptr);
+    EXPECT_TRUE(sUniverse->_removed == nullptr);
 
     ring->update(1.5);
-    OO_CHECK(sUniverse->_removed == nullptr);  // exactly two seconds: not yet
+    EXPECT_TRUE(sUniverse->_removed == nullptr);  // exactly two seconds: not yet
     ring->update(0.25);
-    OO_CHECK(sUniverse->_removed == ring);
+    EXPECT_TRUE(sUniverse->_removed == ring);
   }
 }
-
-OO_TEST_MAIN()

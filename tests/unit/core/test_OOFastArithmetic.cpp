@@ -18,8 +18,9 @@
    debug)
 */
 
+#include <gtest/gtest.h>
+
 #include "Maths.h"  // IWYU pragma: keep
-#include "oo_test.hpp"
 
 namespace {
 
@@ -35,32 +36,32 @@ uint64_t Round64(uint64_t value) {
 
 }  // namespace
 
-OO_TEST(edgeInputsKeepTheOptimisedAnswer) {
-  OO_CHECK(Round32(1) == 2);
-  OO_CHECK(Round32(0) == 1);
-  OO_CHECK(Round32(0x80000001U) == 1);
-  OO_CHECK(Round32(0xC0000000U) == 1);
-  OO_CHECK(Round32(0xFFFFFFFFU) == 1);
+TEST(OOFastArithmetic, edgeInputsKeepTheOptimisedAnswer) {
+  EXPECT_TRUE(Round32(1) == 2);
+  EXPECT_TRUE(Round32(0) == 1);
+  EXPECT_TRUE(Round32(0x80000001U) == 1);
+  EXPECT_TRUE(Round32(0xC0000000U) == 1);
+  EXPECT_TRUE(Round32(0xFFFFFFFFU) == 1);
 
-  OO_CHECK(Round64(1) == 2);
-  OO_CHECK(Round64(0) == 1);
-  OO_CHECK(Round64(0x8000000000000001ULL) == 1);
-  OO_CHECK(Round64(0xFFFFFFFFFFFFFFFFULL) == 1);
+  EXPECT_TRUE(Round64(1) == 2);
+  EXPECT_TRUE(Round64(0) == 1);
+  EXPECT_TRUE(Round64(0x8000000000000001ULL) == 1);
+  EXPECT_TRUE(Round64(0xFFFFFFFFFFFFFFFFULL) == 1);
 
   volatile std::size_t one = 1;
-  OO_CHECK(oo::RoundUpToPowerOf2_NS(one) == 2);
+  EXPECT_TRUE(oo::RoundUpToPowerOf2_NS(one) == 2);
 }
 
-OO_TEST(roundsUpToThePowerOfTwo) {
-  OO_CHECK(Round32(2) == 2);
-  OO_CHECK(Round32(3) == 4);
-  OO_CHECK(Round32(4) == 4);
-  OO_CHECK(Round32(5) == 8);
-  OO_CHECK(Round32(0x7FFFFFFFU) == 0x80000000U);
-  OO_CHECK(Round32(0x80000000U) == 0x80000000U);
-  OO_CHECK(Round64(3) == 4);
-  OO_CHECK(Round64(0x100000001ULL) == 0x200000000ULL);
-  OO_CHECK(Round64(0x8000000000000000ULL) == 0x8000000000000000ULL);
+TEST(OOFastArithmetic, roundsUpToThePowerOfTwo) {
+  EXPECT_TRUE(Round32(2) == 2);
+  EXPECT_TRUE(Round32(3) == 4);
+  EXPECT_TRUE(Round32(4) == 4);
+  EXPECT_TRUE(Round32(5) == 8);
+  EXPECT_TRUE(Round32(0x7FFFFFFFU) == 0x80000000U);
+  EXPECT_TRUE(Round32(0x80000000U) == 0x80000000U);
+  EXPECT_TRUE(Round64(3) == 4);
+  EXPECT_TRUE(Round64(0x100000001ULL) == 0x200000000ULL);
+  EXPECT_TRUE(Round64(0x8000000000000000ULL) == 0x8000000000000000ULL);
 
   // Every power of two, one below and one above it.
   bool all = true;
@@ -74,16 +75,14 @@ OO_TEST(roundsUpToThePowerOfTwo) {
     all = all && Round64(p) == p && Round64(p - 1) == ((bit == 1) ? 2ULL : p) &&
           (bit == 63 || Round64(p + 1) == p << 1);
   }
-  OO_CHECK(all);
+  EXPECT_TRUE(all);
 }
 
-OO_TEST(aTwoPixelSideScalesToTwo) {
+TEST(OOFastArithmetic, aTwoPixelSideScalesToTwo) {
   // OOTextureLoader::getDesiredSize and OOTextureVerifierStage: (2 * side) / 3
   // (OORoundUpToPowerOf2_PixMap is the 32-bit one).
   volatile uint32_t side = 2;
-  OO_CHECK(oo::RoundUpToPowerOf2_32((2 * side) / 3) == 2);
+  EXPECT_TRUE(oo::RoundUpToPowerOf2_32((2 * side) / 3) == 2);
   side = 4;
-  OO_CHECK(oo::RoundUpToPowerOf2_32((2 * side) / 3) == 2);
+  EXPECT_TRUE(oo::RoundUpToPowerOf2_32((2 * side) / 3) == 2);
 }
-
-OO_TEST_MAIN()

@@ -26,6 +26,9 @@
 #include <map>
 #include <string>
 #include <vector>
+
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual references
 
 #include "Description.h"
@@ -45,7 +48,6 @@
 #include "Texture.h"
 #include "legacy_random.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/String.hpp"
 
 // --- Stubs
@@ -413,31 +415,31 @@ oo::PList With(const oo::PList& base, oo::PList::Dict more) {
 
 }  // namespace
 
-OO_TEST(specifiesShaderMaterial) {
-  OO_CHECK(!oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
+TEST(OOShaderMaterial, specifiesShaderMaterial) {
+  EXPECT_TRUE(!oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
       oo::PList()));
-  OO_CHECK(!oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
+  EXPECT_TRUE(!oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
       Config({})));
-  OO_CHECK(oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
+  EXPECT_TRUE(oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
       Config({{"vertex_shader", oo::PList("v")}})));
-  OO_CHECK(oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
+  EXPECT_TRUE(oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
       Config({{"_oo_vertex_shader_source", oo::PList("v")}})));
-  OO_CHECK(oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
+  EXPECT_TRUE(oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
       Config({{"_oo_fragment_shader_source", oo::PList("f")}})));
-  OO_CHECK(oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
+  EXPECT_TRUE(oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
       Config({{"vertex_shader",
                oo::PList(std::int64_t(3))}})));  // a number's string value
   // Only the vertex shader's name is asked, twice: a fragment shader name alone
   // does not count.
-  OO_CHECK(!oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
+  EXPECT_TRUE(!oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
       Config({{"fragment_shader", oo::PList("f")}})));
-  OO_CHECK(!oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
+  EXPECT_TRUE(!oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
       Config({{"vertex_shader", oo::PList(oo::PList::Array{})}})));
 }
 
-OO_TEST(programFromSources) {
+TEST(OOShaderMaterial, programFromSources) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -445,37 +447,37 @@ OO_TEST(programFromSources) {
     std::shared_ptr<oo::ShaderMaterial> m = Make(
         kSources,
         Config({{"A", oo::PList(std::int64_t(1))}, {"B", oo::PList("two")}}));
-    OO_CHECK(m != nullptr && m->name() == std::optional<std::string>("Shader"));
+    EXPECT_TRUE(m != nullptr && m->name() == std::optional<std::string>("Shader"));
     const std::string prefix =
         "#define A  1\n#define B  two\n#define OO_TEXTURE_UNIT_COUNT  " +
         units + "\n\n\n";
-    OO_CHECK(gProgramRequests.size() == 1);
-    OO_CHECK(gProgramRequests[0] ==
+    EXPECT_TRUE(gProgramRequests.size() == 1);
+    EXPECT_TRUE(gProgramRequests[0] ==
              "vs=VS fs=FS vsName=<synthesized> fsName=<synthesized> prefix=" +
                  prefix + " bindings=" +
                  oo::DescriptionOf(
                      Config({{"tangent", oo::PList::signedInteger(15)}})) +
                  " key=$VERTEX:\nVS\n\n$FRAGMENT:\nFS\n\n$MACROS:\n" + prefix +
                  "\n");
-    OO_CHECK(gShaderFileRequests.empty());
+    EXPECT_TRUE(gShaderFileRequests.empty());
 
     // No macros: only the unit count.
     m = Make(Config({{"_oo_vertex_shader_source", oo::PList("VS")}}));
-    OO_CHECK(m != nullptr && gProgramRequests.size() == 1);
-    OO_CHECK(gProgramRequests[0].starts_with(
+    EXPECT_TRUE(m != nullptr && gProgramRequests.size() == 1);
+    EXPECT_TRUE(gProgramRequests[0].starts_with(
         "vs=VS fs=(nil) vsName=<synthesized> fsName=(nil) prefix=#define "
         "OO_TEXTURE_UNIT_COUNT  " +
         units + "\n\n\n"));
-    OO_CHECK(gProgramRequests[0].ends_with(
+    EXPECT_TRUE(gProgramRequests[0].ends_with(
         " key=$VERTEX:\nVS\n\n$FRAGMENT:\n(null)\n\n$MACROS:\n#define "
         "OO_TEXTURE_UNIT_COUNT  " +
         units + "\n\n\n\n"));
   }
 }
 
-OO_TEST(programFromFiles) {
+TEST(OOShaderMaterial, programFromFiles) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -488,59 +490,59 @@ OO_TEST(programFromFiles) {
     std::shared_ptr<oo::ShaderMaterial> m =
         Make(Config({{"vertex_shader", oo::PList("hull")},
                      {"fragment_shader", oo::PList("hull.fs")}}));
-    OO_CHECK(m != nullptr);
-    OO_CHECK(gShaderFileRequests ==
+    EXPECT_TRUE(m != nullptr);
+    EXPECT_TRUE(gShaderFileRequests ==
              (std::vector<std::string>{
                  "Shaders/hull", "Shaders/hull.vertex", "Shaders/hull.fs",
                  "Shaders/hull.fs.fragment", "Shaders/hull.fs.frag"}));
-    OO_CHECK(gProgramRequests.size() == 1 &&
+    EXPECT_TRUE(gProgramRequests.size() == 1 &&
              gProgramRequests[0].starts_with(
                  "vs=VSRC fs=FSRC vsName=hull fsName=hull.fs prefix="));
-    OO_CHECK(gProgramRequests[0].find(
+    EXPECT_TRUE(gProgramRequests[0].find(
                  " key=$VERTEX:\nhull\n\n$FRAGMENT:\nhull.fs\n\n$MACROS:\n") !=
              std::string::npos);
 
     // A name that has one of the two extensions is not extended.
     m = Make(Config({{"fragment_shader", oo::PList("plain.fragment")}}));
-    OO_CHECK(m != nullptr &&
+    EXPECT_TRUE(m != nullptr &&
              gShaderFileRequests ==
                  (std::vector<std::string>{"Shaders/plain.fragment"}));
 
     // A file that is not there: no material, and no program asked for.
     m = Make(Config({{"vertex_shader", oo::PList("gone.vert")}}));
-    OO_CHECK(m == nullptr && gProgramRequests.empty());
-    OO_CHECK(gShaderFileRequests ==
+    EXPECT_TRUE(m == nullptr && gProgramRequests.empty());
+    EXPECT_TRUE(gShaderFileRequests ==
              (std::vector<std::string>{"Shaders/gone.vert"}));
     gShaderFiles.clear();
   }
 }
 
-OO_TEST(failures) {
+TEST(OOShaderMaterial, failures) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
-    OO_CHECK(Make(oo::PList()) == nullptr);  // no configuration
-    OO_CHECK(Make(Config({{"gloss", oo::PList(0.5)}})) == nullptr &&
+    EXPECT_TRUE(Make(oo::PList()) == nullptr);  // no configuration
+    EXPECT_TRUE(Make(Config({{"gloss", oo::PList(0.5)}})) == nullptr &&
              gProgramRequests.empty());  // no shader
-    OO_CHECK(Make(With(kSources,
+    EXPECT_TRUE(Make(With(kSources,
                        {{"_oo_vertex_shader_source", oo::PList("fail")}})) ==
              nullptr);  // no program
-    OO_CHECK(gProgramRequests.size() == 1 && gUniforms.empty());
-    OO_CHECK(oo::ShaderMaterial::shaderMaterialWithName(
+    EXPECT_TRUE(gProgramRequests.size() == 1 && gUniforms.empty());
+    EXPECT_TRUE(oo::ShaderMaterial::shaderMaterialWithName(
                  std::string("S"), oo::PList(), oo::PList(), nullptr) == nullptr);
     const std::shared_ptr<oo::ShaderMaterial> made =
         oo::ShaderMaterial::shaderMaterialWithName(std::string("S"), kSources,
                                                  oo::PList(), nullptr);
-    OO_CHECK(made != nullptr &&
+    EXPECT_TRUE(made != nullptr &&
              made->name() == std::optional<std::string>("S"));
   }
 }
 
-OO_TEST(uniformsFromTheConfiguration) {
+TEST(OOShaderMaterial, uniformsFromTheConfiguration) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -581,7 +583,7 @@ OO_TEST(uniformsFromTheConfiguration) {
                   {"uGloss", oo::PList(0.25)},
               })}}),
         oo::PList(), target);
-    OO_CHECK(m != nullptr);
+    EXPECT_TRUE(m != nullptr);
 
     // The random value is the target's seed's first draw, scaled; the seed is
     // put back after.
@@ -589,7 +591,7 @@ OO_TEST(uniformsFromTheConfiguration) {
     ranrot_srand(12345);
     const float random = randf() * 2;
     RANROTSetFullSeed(seeded);
-    OO_CHECK(RANROTGetFullSeed().high == before.high &&
+    EXPECT_TRUE(RANROTGetFullSeed().high == before.high &&
              RANROTGetFullSeed().low == before.low);
 
     const std::vector<std::string> expected = {
@@ -612,7 +614,7 @@ OO_TEST(uniformsFromTheConfiguration) {
         // correction on).
         "uGammaCorrect float 1",
     };
-    OO_CHECK(gUniforms == expected);
+    EXPECT_TRUE(gUniforms == expected);
 
     // Without a target a binding is not made, and gloss comes from the
     // configuration.
@@ -620,14 +622,14 @@ OO_TEST(uniformsFromTheConfiguration) {
         With(kSources, {{"uniforms", Config({{"g", oo::PList("someBinding")}})},
                         {"gloss", oo::PList(2.0)},
                         {"gamma_correct", oo::PList(false)}}));
-    OO_CHECK(gUniforms == (std::vector<std::string>{"uGloss float 1",
+    EXPECT_TRUE(gUniforms == (std::vector<std::string>{"uGloss float 1",
                                                     "uGammaCorrect float 0"}));
   }
 }
 
-OO_TEST(settingUniforms) {
+TEST(OOShaderMaterial, settingUniforms) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -646,12 +648,12 @@ OO_TEST(settingUniforms) {
         "p", oo::PList(oo::PList::Array{oo::PList(1.0), oo::PList(2.0),
                                         oo::PList(3.0)}));  // a vector: w is 1
     m->setUniform("q", kIdentityQuaternion, true);
-    OO_CHECK(
+    EXPECT_TRUE(
         m->bindUniform("b", target, "someBinding", oo::UniformConvertOptions::kClamp));
-    OO_CHECK(m->bindSafeUniform("s", target, std::string("someBinding"), oo::UniformConvertOptions::kNone));
-    OO_CHECK(!m->bindSafeUniform("n", target, std::nullopt, oo::UniformConvertOptions::kNone));
-    OO_CHECK(!m->bindSafeUniform("x", target, std::string("forbidden"), oo::UniformConvertOptions::kNone));
-    OO_CHECK(!m->bindUniform("bad", target, "someBinding", oo::UniformConvertOptions::kNone));
+    EXPECT_TRUE(m->bindSafeUniform("s", target, std::string("someBinding"), oo::UniformConvertOptions::kNone));
+    EXPECT_TRUE(!m->bindSafeUniform("n", target, std::nullopt, oo::UniformConvertOptions::kNone));
+    EXPECT_TRUE(!m->bindSafeUniform("x", target, std::string("forbidden"), oo::UniformConvertOptions::kNone));
+    EXPECT_TRUE(!m->bindUniform("bad", target, "someBinding", oo::UniformConvertOptions::kNone));
     const std::vector<std::string> expected = {
         "i int 7",
         "f float 0.5",
@@ -664,27 +666,27 @@ OO_TEST(settingUniforms) {
         "s binding someBinding options 0",
         oo::str::format("bad binding someBinding options %u", 0u),
     };
-    OO_CHECK(gUniforms == expected);
+    EXPECT_TRUE(gUniforms == expected);
 
     // Every uniform is told the binding target; a failed one ("bad") replaced
     // nothing.
     gUniformTargets.clear();
     m->setBindingTarget(target);
-    OO_CHECK(gUniformTargets.size() ==
+    EXPECT_TRUE(gUniformTargets.size() ==
              10);  // b f i o p q s v, uGammaCorrect, uGloss
-    OO_CHECK(gUniformTargets.front() == "b target" &&
+    EXPECT_TRUE(gUniformTargets.front() == "b target" &&
              gUniformTargets.back() == "v target");
     m->setUniform("bad", 1);
     gUniformTargets.clear();
     m->setBindingTarget(nullptr);
-    OO_CHECK(gUniformTargets.size() == 10 &&
+    EXPECT_TRUE(gUniformTargets.size() == 10 &&
              gUniformTargets.front() == "b nil");
   }
 }
 
-OO_TEST(texturesApplyAndUnapply) {
+TEST(OOShaderMaterial, texturesApplyAndUnapply) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -694,51 +696,51 @@ OO_TEST(texturesApplyAndUnapply) {
                                     oo::PList("c.png")})}}));
 #ifndef NDEBUG
     const std::vector<std::shared_ptr<oo::Texture>> textures = m->allTextures();
-    OO_CHECK(textures.size() == 3);
-    OO_CHECK(AsTest(textures[0])->_name == "a.png" &&
+    EXPECT_TRUE(textures.size() == 3);
+    EXPECT_TRUE(AsTest(textures[0])->_name == "a.png" &&
              textures[1].get() == oo::Texture::nullTexture().get() &&
              AsTest(textures[2])->_name == "c.png");
-    OO_CHECK(m->isFinishedLoading());
+    EXPECT_TRUE(m->isFinishedLoading());
     AsTest(textures[2])->_finished = false;
-    OO_CHECK(!m->isFinishedLoading());
+    EXPECT_TRUE(!m->isFinishedLoading());
     m->ensureFinishedLoading();
-    OO_CHECK(AsTest(textures[0])->_ensures == 1 &&
+    EXPECT_TRUE(AsTest(textures[0])->_ensures == 1 &&
              AsTest(textures[2])->_ensures == 1);
 #endif
 
     const int programApplies = gProgramApplies,
               uniformApplies = gUniformApplies, applyNones = gTextureApplyNones;
-    OO_CHECK(m->doApply());
-    OO_CHECK(gProgramApplies == programApplies + 1 &&
+    EXPECT_TRUE(m->doApply());
+    EXPECT_TRUE(gProgramApplies == programApplies + 1 &&
              gUniformApplies == uniformApplies + 2);  // uGloss, uGammaCorrect
-    OO_CHECK(gTextureApplyNones == applyNones);  // not exactly a basic material
+    EXPECT_TRUE(gTextureApplyNones == applyNones);  // not exactly a basic material
 #ifndef NDEBUG
-    OO_CHECK(AsTest(textures[0])->_applies == 1 &&
+    EXPECT_TRUE(AsTest(textures[0])->_applies == 1 &&
              AsTest(textures[2])->_applies == 1);
 #endif
     GLint active = 0;
     glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &active);
-    OO_CHECK(active == GL_TEXTURE0_ARB);
+    EXPECT_TRUE(active == GL_TEXTURE0_ARB);
 
     // Another shader material comes next: nothing to undo.
     const int programApplyNones = gProgramApplyNones;
     m->unapplyWithNext(Make(kSources).get());
-    OO_CHECK(gProgramApplyNones == programApplyNones &&
+    EXPECT_TRUE(gProgramApplyNones == programApplyNones &&
              gTextureApplyNones == applyNones);
 
     // Anything else: no program, and each texture unit cleared (the superclass
     // is not asked).
     m->unapplyWithNext(nullptr);
-    OO_CHECK(gProgramApplyNones == programApplyNones + 1 &&
+    EXPECT_TRUE(gProgramApplyNones == programApplyNones + 1 &&
              gTextureApplyNones == applyNones + 3);
     m->unapplyWithNext(
         oo::BasicMaterial::materialWithName(std::string("Basic")).get());
-    OO_CHECK(gProgramApplyNones == programApplyNones + 2 &&
+    EXPECT_TRUE(gProgramApplyNones == programApplyNones + 2 &&
              gTextureApplyNones == applyNones + 6);
 
     // No textures: one unit is still cleared.
     Make(kSources)->unapplyWithNext(nullptr);
-    OO_CHECK(gTextureApplyNones == applyNones + 7);
+    EXPECT_TRUE(gTextureApplyNones == applyNones + 7);
 
     // Texture objects passed in are used as they are, and win over specifiers.
     const std::shared_ptr<oo::Texture> givenRef = oo::Texture::textureWithConfiguration(
@@ -752,16 +754,16 @@ OO_TEST(texturesApplyAndUnapply) {
                  {"textures", oo::PList(oo::PList::Array{oo::PList("a.png")})},
              }));
 #ifndef NDEBUG
-    OO_CHECK(withObjects->allTextures().size() == 1 &&
+    EXPECT_TRUE(withObjects->allTextures().size() == 1 &&
              withObjects->allTextures()[0].get() == given);
 #endif
     (void)withObjects;
   }
 }
 
-OO_TEST(lifetimeAndDescription) {
+TEST(OOShaderMaterial, lifetimeAndDescription) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   const int programs = gProgramsDeallocated, textures = gTexturesDeallocated;
@@ -771,52 +773,52 @@ OO_TEST(lifetimeAndDescription) {
         With(kSources,
              {{"textures", oo::PList(oo::PList::Array{oo::PList("a.png")})}}));
   }
-  OO_CHECK(gProgramsDeallocated == programs &&
+  EXPECT_TRUE(gProgramsDeallocated == programs &&
            gTexturesDeallocated == textures);
   {
     const std::string text = m->description();
-    OO_CHECK(text.starts_with("<OOShaderMaterial 0x") &&
+    EXPECT_TRUE(text.starts_with("<OOShaderMaterial 0x") &&
              text.ends_with(">{\"Shader\"}"));
-    OO_CHECK(m->permitSpecular());
+    EXPECT_TRUE(m->permitSpecular());
     m->apply();
-    OO_CHECK(oo::Material::current().get() == m.get());
+    EXPECT_TRUE(oo::Material::current().get() == m.get());
     oo::Material::applyNone();
   }
   m = nullptr;
-  OO_CHECK(gProgramsDeallocated == programs + 1 &&
+  EXPECT_TRUE(gProgramsDeallocated == programs + 1 &&
            gTexturesDeallocated == textures + 1);
 
   {
     // Specular is always permitted: the exponent applies.
     const std::shared_ptr<oo::ShaderMaterial> shiny = Make(
         With(kSources, {{"specular_exponent", oo::PList(std::int64_t(20))}}));
-    OO_CHECK(shiny->shininess() == 20);
+    EXPECT_TRUE(shiny->shininess() == 20);
   }
 }
 
 // --- The C++ class and the root
 // -----------------------------------------
 
-OO_TEST(cxxAPI) {
+TEST(OOShaderMaterial, cxxAPI) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
-    OO_CHECK(oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
+    EXPECT_TRUE(oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
         kSources));
-    OO_CHECK(!oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
+    EXPECT_TRUE(!oo::ShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
         oo::PList()));
-    OO_CHECK(oo::ShaderMaterial::shaderMaterialWithName(
+    EXPECT_TRUE(oo::ShaderMaterial::shaderMaterialWithName(
                  std::string("S"), oo::PList(), oo::PList(), nullptr) == nullptr);
 
     gUniforms.clear();
     const std::shared_ptr<oo::ShaderMaterial> m =
         oo::ShaderMaterial::shaderMaterialWithName(std::string("Cxx"), kSources,
                                                  oo::PList(), nullptr);
-    OO_CHECK(m != nullptr && m->name() == std::optional<std::string>("Cxx") &&
+    EXPECT_TRUE(m != nullptr && m->name() == std::optional<std::string>("Cxx") &&
              m->permitSpecular());
-    OO_CHECK(gUniforms == (std::vector<std::string>{"uGloss float 0.5",
+    EXPECT_TRUE(gUniforms == (std::vector<std::string>{"uGloss float 0.5",
                                                     "uGammaCorrect float 1"}));
 
     // The overloads each make the uniform the selector of their second keyword
@@ -830,33 +832,31 @@ OO_TEST(cxxAPI) {
                   oo::PList(oo::PList::Array{oo::PList(5.0), oo::PList(6.0),
                                              oo::PList(7.0), oo::PList(8.0)}));
     m->setUniform("q", kIdentityQuaternion, false);
-    OO_CHECK(gUniforms ==
+    EXPECT_TRUE(gUniforms ==
              (std::vector<std::string>{"i int 7", "f float 0.5",
                                        "v vector 1 2 3 4", "o vector 5 6 7 8",
                                        "q quaternion 1 0 0 0 vector"}));
 
     const int programApplies = gProgramApplies;
     m->apply();
-    OO_CHECK(gProgramApplies == programApplies + 1 &&
+    EXPECT_TRUE(gProgramApplies == programApplies + 1 &&
              oo::Material::current().get() == m.get());
     const int programApplyNones = gProgramApplyNones;
     oo::Material::applyNone();
-    OO_CHECK(gProgramApplyNones == programApplyNones + 1);
+    EXPECT_TRUE(gProgramApplyNones == programApplyNones + 1);
   }
 }
 
 // The description names the C++ class.
-OO_TEST(descriptionNamesTheClass) {
+TEST(OOShaderMaterial, descriptionNamesTheClass) {
   if (!OOTestGLContext()) {
-    OO_CHECK(false);
+    EXPECT_TRUE(false);
     return;
   }
   {
     const std::shared_ptr<oo::ShaderMaterial> m =
         oo::ShaderMaterial::shaderMaterialWithName(std::string("Cxx"), kSources,
                                                  oo::PList(), nullptr);
-    OO_CHECK(m->description().starts_with("<OOShaderMaterial 0x"));
+    EXPECT_TRUE(m->description().starts_with("<OOShaderMaterial 0x"));
   }
 }
-
-OO_TEST_MAIN()

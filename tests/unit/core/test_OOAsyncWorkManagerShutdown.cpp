@@ -13,8 +13,9 @@
 #include <chrono>
 #include <thread>
 
+#include <gtest/gtest.h>
+
 #include "AsyncWorkManager.h"
-#include "oo_test.hpp"
 
 // OOLogging.mm would link the game's log file and resource manager in; the
 // abstract base class's subclass-responsibility message it defines is never
@@ -56,24 +57,22 @@ bool WaitFor(const std::atomic<bool>& flag) {
 
 }  // namespace
 
-OO_TEST(shutdownWaitsForAStartedTaskThenStopsTheWorkers) {
+TEST(OOAsyncWorkManagerShutdown, shutdownWaitsForAStartedTaskThenStopsTheWorkers) {
   oo::AsyncWorkManager* manager = oo::AsyncWorkManager::sharedAsyncWorkManager();
   const std::shared_ptr<SlowTask> slow = oo::makeShared<SlowTask>();
-  OO_CHECK(manager->addTask(slow.get(), oo::AsyncWorkPriority::kMedium));
-  OO_CHECK(WaitFor(slow->started));
+  EXPECT_TRUE(manager->addTask(slow.get(), oo::AsyncWorkPriority::kMedium));
+  EXPECT_TRUE(WaitFor(slow->started));
 
   const auto start = std::chrono::steady_clock::now();
   manager->shutdown();
-  OO_CHECK(slow->finished);  // the busy worker finished its task first
-  OO_CHECK(std::chrono::steady_clock::now() - start < std::chrono::seconds(5));
+  EXPECT_TRUE(slow->finished);  // the busy worker finished its task first
+  EXPECT_TRUE(std::chrono::steady_clock::now() - start < std::chrono::seconds(5));
 
   // No worker is left to perform a task added now.
   const std::shared_ptr<FlagTask> late = oo::makeShared<FlagTask>();
   manager->addTask(late.get(), oo::AsyncWorkPriority::kHigh);
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
-  OO_CHECK(!late->performed);
+  EXPECT_TRUE(!late->performed);
 
   manager->shutdown();  // twice is harmless
 }
-
-OO_TEST_MAIN()

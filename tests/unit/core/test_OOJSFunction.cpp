@@ -15,11 +15,12 @@
 	Run: bash tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "OOJSFunction.h"
 #include "Types.h"
 #include "oofnd/Notification.hpp"
 
-#include "oo_test.hpp"
 
 #include <quickjs.h>
 
@@ -166,64 +167,64 @@ std::shared_ptr<OOJSFunction> Compile(const char *name, const char *code, std::v
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(initWithFunction)
+TEST(OOJSFunction, initWithFunction)
 {
 	{
-		OO_CHECK(OOJSFunction::initWithFunction(JS_NULL, Context()) == nullptr);
+		EXPECT_TRUE(OOJSFunction::initWithFunction(JS_NULL, Context()) == nullptr);
 
 		JSValue f = Evaluate("(function double(x) { return 2 * x; })");
 		std::shared_ptr<OOJSFunction> function = OOJSFunction::initWithFunction(f, Context());
-		OO_CHECK(function != nullptr);
-		OO_CHECK(SameObject(function->function(), f));
-		OO_CHECK_EQ(function->name().value_or("<none>"), "double");
-		OO_CHECK_EQ(function->descriptionComponents().value_or("<none>"), "double()");
+		EXPECT_TRUE(function != nullptr);
+		EXPECT_TRUE(SameObject(function->function(), f));
+		EXPECT_EQ(function->name().value_or("<none>"), "double");
+		EXPECT_EQ(function->descriptionComponents().value_or("<none>"), "double()");
 		JSValue functionValue = function->functionValue();
-		OO_CHECK(JS_IsObject(functionValue));
-		OO_CHECK(SameObject(functionValue, f));
+		EXPECT_TRUE(JS_IsObject(functionValue));
+		EXPECT_TRUE(SameObject(functionValue, f));
 		JS_FreeValue(Context(), functionValue);
 		JS_FreeValue(Context(), f);
 
 		JSValue anonymousFunction = Evaluate("(function () { return 1; })");
 		std::shared_ptr<OOJSFunction> anonymous = OOJSFunction::initWithFunction(anonymousFunction, Context());
 		JS_FreeValue(Context(), anonymousFunction);
-		OO_CHECK(!anonymous->name().has_value());
-		OO_CHECK_EQ(anonymous->descriptionComponents().value_or("<none>"), "<anonymous>()");
+		EXPECT_TRUE(!anonymous->name().has_value());
+		EXPECT_EQ(anonymous->descriptionComponents().value_or("<none>"), "<anonymous>()");
 	}
 }
 
 
-OO_TEST(initWithName)
+TEST(OOJSFunction, initWithName)
 {
 	{
 		std::shared_ptr<OOJSFunction> function = Compile("add", "return a + b;", { "a", "b" });
-		OO_CHECK(function != nullptr);
-		OO_CHECK_EQ(function->name().value_or("<none>"), "add");
+		EXPECT_TRUE(function != nullptr);
+		EXPECT_EQ(function->name().value_or("<none>"), "add");
 		JSValueConst argv[2] = { JS_NewInt32(Context(), 2), JS_NewInt32(Context(), 3) };
 		JSValue result = JS_UNDEFINED;
-		OO_CHECK(function->evaluateWithContext(Context(), JS_UNDEFINED, 2, argv, &result));
-		OO_CHECK_EQ(String(result), "5");
+		EXPECT_TRUE(function->evaluateWithContext(Context(), JS_UNDEFINED, 2, argv, &result));
+		EXPECT_EQ(String(result), "5");
 
 		// No code, argument names missing, or a syntax error: nil.
-		OO_CHECK(Compile("none", nullptr, {}) == nullptr);
-		OO_CHECK(OOJSFunction::initWithName(std::string("x"), JS_UNDEFINED, std::string("return 1;"), 1, NULL, std::nullopt, 0, Context()) == nullptr);
-		OO_CHECK(Compile("bad", "return (;", {}) == nullptr);
+		EXPECT_TRUE(Compile("none", nullptr, {}) == nullptr);
+		EXPECT_TRUE(OOJSFunction::initWithName(std::string("x"), JS_UNDEFINED, std::string("return 1;"), 1, NULL, std::nullopt, 0, Context()) == nullptr);
+		EXPECT_TRUE(Compile("bad", "return (;", {}) == nullptr);
 		JS_FreeValue(Context(), JS_GetException(Context()));
 
 		// A NULL context: the main thread's is acquired and released.
 		std::shared_ptr<OOJSFunction> withoutContext = OOJSFunction::initWithName(std::string("seven"), JS_UNDEFINED, std::string("return 7;"), 0, NULL, std::nullopt, 0, NULL);
-		OO_CHECK(withoutContext != nullptr);
-		OO_CHECK(withoutContext->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL, &result));
-		OO_CHECK_EQ(String(result), "7");
+		EXPECT_TRUE(withoutContext != nullptr);
+		EXPECT_TRUE(withoutContext->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL, &result));
+		EXPECT_EQ(String(result), "7");
 
 		// An empty body answers undefined.
 		std::shared_ptr<OOJSFunction> empty = Compile("empty", "", {});
-		OO_CHECK(empty->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL, &result));
-		OO_CHECK_EQ(String(result), "undefined");
+		EXPECT_TRUE(empty->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL, &result));
+		EXPECT_EQ(String(result), "undefined");
 	}
 }
 
 
-OO_TEST(evaluation)
+TEST(OOJSFunction, evaluation)
 {
 	{
 		std::shared_ptr<OOJSFunction> function = Compile("thisName", "return this.name + ':' + arguments.length;", {});
@@ -232,55 +233,52 @@ OO_TEST(evaluation)
 		sScriptPushes = 0;
 		sLimiterStarts = 0;
 		JSValue named = Evaluate("named");
-		OO_CHECK(function->evaluateWithContext(Context(), named, 0, NULL, &result));
+		EXPECT_TRUE(function->evaluateWithContext(Context(), named, 0, NULL, &result));
 		JS_FreeValue(Context(), named);
-		OO_CHECK_EQ(String(result), "n:0");
-		OO_CHECK(function->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL, &result));
-		OO_CHECK_EQ(String(result), "global:0");	// no this: the global object (the function is not strict)
-		OO_CHECK_EQ(sScriptPushes, 2);
-		OO_CHECK_EQ(sLimiterStarts, 2);
-		OO_CHECK_EQ(sScriptDepth, 0);
-		OO_CHECK_EQ(sLimiterDepth, 0);
+		EXPECT_EQ(String(result), "n:0");
+		EXPECT_TRUE(function->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL, &result));
+		EXPECT_EQ(String(result), "global:0");	// no this: the global object (the function is not strict)
+		EXPECT_EQ(sScriptPushes, 2);
+		EXPECT_EQ(sLimiterStarts, 2);
+		EXPECT_EQ(sScriptDepth, 0);
+		EXPECT_EQ(sLimiterDepth, 0);
 
 		// A throwing function answers NO, with the stack and the limiter balanced.
 		std::shared_ptr<OOJSFunction> thrower = Compile("thrower", "throw new Error('boom');", {});
-		OO_CHECK(!thrower->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL, &result));
+		EXPECT_TRUE(!thrower->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL, &result));
 		JS_FreeValue(Context(), JS_GetException(Context()));
-		OO_CHECK_EQ(sScriptDepth, 0);
-		OO_CHECK_EQ(sLimiterDepth, 0);
+		EXPECT_EQ(sScriptDepth, 0);
+		EXPECT_EQ(sLimiterDepth, 0);
 	}
 }
 
 
-OO_TEST(engineReset)
+TEST(OOJSFunction, engineReset)
 {
 	{
 		std::shared_ptr<OOJSFunction> function = Compile("resettable", "return 1;", {});
-		OO_CHECK(!JS_IsNull(function->function()));
+		EXPECT_TRUE(!JS_IsNull(function->function()));
 		oo::NotificationCenter::defaultCenter().post(kOOJavaScriptEngineWillResetNotificationName, OOJavaScriptEngine::sharedEngine());
-		OO_CHECK(JS_IsNull(function->function()));
-		OO_CHECK(JS_IsNull(function->functionValue()));
-		OO_CHECK_EQ(function->name().value_or("<none>"), "resettable");	// the name stays
+		EXPECT_TRUE(JS_IsNull(function->function()));
+		EXPECT_TRUE(JS_IsNull(function->functionValue()));
+		EXPECT_EQ(function->name().value_or("<none>"), "resettable");	// the name stays
 	}
 }
 
 
-OO_TEST(cxxAndFacade)
+TEST(OOJSFunction, cxxAndFacade)
 {
 	{
 		std::shared_ptr<OOJSFunction> function = OOJSFunction::initWithName(std::string("triple"), JS_UNDEFINED, std::string("return 3 * x;"), 1, (const char *[]){ "x" }, std::nullopt, 0, Context());
-		OO_CHECK(function != nullptr);
-		OO_CHECK(OOJSFunction::initWithFunction(JS_NULL, Context()) == nullptr);
-		OO_CHECK(OOJSFunction::initWithName(std::string("bad"), JS_UNDEFINED, std::string("return (;"), 0, NULL, std::nullopt, 0, Context()) == nullptr);
+		EXPECT_TRUE(function != nullptr);
+		EXPECT_TRUE(OOJSFunction::initWithFunction(JS_NULL, Context()) == nullptr);
+		EXPECT_TRUE(OOJSFunction::initWithName(std::string("bad"), JS_UNDEFINED, std::string("return (;"), 0, NULL, std::nullopt, 0, Context()) == nullptr);
 		JS_FreeValue(Context(), JS_GetException(Context()));
 		JSValueConst argv[1] = { JS_NewInt32(Context(), 4) };
 		JSValue result = JS_UNDEFINED;
-		OO_CHECK(function->evaluateWithContext(Context(), JS_UNDEFINED, 1, argv, &result));
-		OO_CHECK_EQ(String(result), "12");
-		OO_CHECK_EQ(function->descriptionComponents().value_or("<none>"), "triple()");
-		OO_CHECK_EQ(function->name().value_or("<none>"), "triple");	// was asked of its facade
+		EXPECT_TRUE(function->evaluateWithContext(Context(), JS_UNDEFINED, 1, argv, &result));
+		EXPECT_EQ(String(result), "12");
+		EXPECT_EQ(function->descriptionComponents().value_or("<none>"), "triple()");
+		EXPECT_EQ(function->name().value_or("<none>"), "triple");	// was asked of its facade
 	}
 }
-
-
-OO_TEST_MAIN()

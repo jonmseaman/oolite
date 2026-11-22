@@ -12,9 +12,10 @@
    tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Logging.h"
 #include "OXPVerifierStage.h"
-#include "oo_test.hpp"
 #include "oofnd/Exception.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
@@ -117,44 +118,44 @@ bool Holds(const std::vector<std::shared_ptr<oo::OXPVerifierStage>>& stages,
 
 }  // namespace
 
-OO_TEST(baseDefaults) {
+TEST(OOOXPVerifierStage, baseDefaults) {
   {
     const std::shared_ptr<oo::OXPVerifierStage> stage = oo::makeShared<oo::OXPVerifierStage>();
     const int before = gSubclassResponsibilities;
-    OO_CHECK(!stage->name()
+    EXPECT_TRUE(!stage->name()
                   .has_value());  // subclass responsibility: logs, answers nil
-    OO_CHECK(gSubclassResponsibilities == before + 1);
+    EXPECT_TRUE(gSubclassResponsibilities == before + 1);
     stage->run();
-    OO_CHECK(gSubclassResponsibilities == before + 2);
-    OO_CHECK(!stage->dependencies().has_value());
-    OO_CHECK(!stage->dependents().has_value());
-    OO_CHECK(stage->shouldRun());
-    OO_CHECK(!stage->completed());
-    OO_CHECK(!stage->canRun());
-    OO_CHECK(stage->verifier() == nullptr);
-    OO_CHECK(stage->resolvedDependencies().empty() &&
+    EXPECT_TRUE(gSubclassResponsibilities == before + 2);
+    EXPECT_TRUE(!stage->dependencies().has_value());
+    EXPECT_TRUE(!stage->dependents().has_value());
+    EXPECT_TRUE(stage->shouldRun());
+    EXPECT_TRUE(!stage->completed());
+    EXPECT_TRUE(!stage->canRun());
+    EXPECT_TRUE(stage->verifier() == nullptr);
+    EXPECT_TRUE(stage->resolvedDependencies().empty() &&
              stage->resolvedDependents().empty());
     stage->dependencyRegistrationComplete();
-    OO_CHECK(stage->canRun());  // nothing to wait for
+    EXPECT_TRUE(stage->canRun());  // nothing to wait for
   }
 }
 
-OO_TEST(verifierIsNotRetained) {
+TEST(OOOXPVerifierStage, verifierIsNotRetained) {
   {
     const std::shared_ptr<oo::OXPVerifier> object = OOOXPVerifierTestAccess::Make();
     oo::OXPVerifier* verifier = object.get();
     const std::shared_ptr<TestObjCStage> stage = MakeStage("Stage");
     const long before = object->weak_from_this().use_count();
     stage->setVerifier(verifier);
-    OO_CHECK(object->weak_from_this().use_count() == before);
+    EXPECT_TRUE(object->weak_from_this().use_count() == before);
     {
-      OO_CHECK(stage->verifier() == verifier);
+      EXPECT_TRUE(stage->verifier() == verifier);
     }
-    OO_CHECK(object->weak_from_this().use_count() == before);
+    EXPECT_TRUE(object->weak_from_this().use_count() == before);
   }
 }
 
-OO_TEST(dependencyGraph) {
+TEST(OOOXPVerifierStage, dependencyGraph) {
   {
     const std::shared_ptr<TestObjCStage> a = MakeStage("A"), b = MakeStage("B"),
                                  c = MakeStage("C"), d = MakeStage("D");
@@ -163,32 +164,32 @@ OO_TEST(dependencyGraph) {
     c->registerDependency(b.get());  // no duplicates
     d->registerDependency(a.get());
 
-    OO_CHECK(b->isDependentOf(a.get()) && c->isDependentOf(b.get()));
-    OO_CHECK(c->isDependentOf(a.get()));  // recursive
-    OO_CHECK(!a->isDependentOf(c.get()) && !b->isDependentOf(c.get()) &&
+    EXPECT_TRUE(b->isDependentOf(a.get()) && c->isDependentOf(b.get()));
+    EXPECT_TRUE(c->isDependentOf(a.get()));  // recursive
+    EXPECT_TRUE(!a->isDependentOf(c.get()) && !b->isDependentOf(c.get()) &&
              !d->isDependentOf(b.get()));
-    OO_CHECK(!c->isDependentOf(nullptr));
-    OO_CHECK(Holds(c->resolvedDependencies(), {b.get()}));
-    OO_CHECK(Holds(a->resolvedDependents(),
+    EXPECT_TRUE(!c->isDependentOf(nullptr));
+    EXPECT_TRUE(Holds(c->resolvedDependencies(), {b.get()}));
+    EXPECT_TRUE(Holds(a->resolvedDependents(),
                    {b.get(), d.get()}));  // registration order
-    OO_CHECK(Holds(b->resolvedDependents(), {c.get()}));
+    EXPECT_TRUE(Holds(b->resolvedDependents(), {c.get()}));
 
     for (TestObjCStage* stage : {a.get(), b.get(), c.get(), d.get()})
       stage->dependencyRegistrationComplete();
-    OO_CHECK(a->canRun() && !b->canRun() && !c->canRun() && !d->canRun());
+    EXPECT_TRUE(a->canRun() && !b->canRun() && !c->canRun() && !d->canRun());
 
     a->performRun();
-    OO_CHECK(a->_runs == 1 && a->completed() && !a->canRun());
-    OO_CHECK(b->canRun() && d->canRun() &&
+    EXPECT_TRUE(a->_runs == 1 && a->completed() && !a->canRun());
+    EXPECT_TRUE(b->canRun() && d->canRun() &&
              !c->canRun());  // every dependent told
 
     b->noteSkipped();
-    OO_CHECK(b->_runs == 0 && b->completed() && !b->canRun());
-    OO_CHECK(c->canRun());
+    EXPECT_TRUE(b->_runs == 0 && b->completed() && !b->canRun());
+    EXPECT_TRUE(c->canRun());
   }
 }
 
-OO_TEST(exceptionInRunIsCaught) {
+TEST(OOOXPVerifierStage, exceptionInRunIsCaught) {
   {
     const std::shared_ptr<TestObjCStage> raising = MakeStage("Raising"),
                                  after = MakeStage("After");
@@ -198,77 +199,77 @@ OO_TEST(exceptionInRunIsCaught) {
     after->dependencyRegistrationComplete();
 
     raising->performRun();  // logs verifyOXP.exception
-    OO_CHECK(raising->_runs == 1 && raising->completed());
-    OO_CHECK(after->canRun());
+    EXPECT_TRUE(raising->_runs == 1 && raising->completed());
+    EXPECT_TRUE(after->canRun());
   }
 }
 
-OO_TEST(superCallsReachTheBase) {
+TEST(OOOXPVerifierStage, superCallsReachTheBase) {
   {
     const std::shared_ptr<TestSuperCallingStage> stage =
         oo::makeShared<TestSuperCallingStage>();
     const std::optional<std::vector<std::string>> dependents =
         stage->dependents();
-    OO_CHECK(dependents == std::vector<std::string>{"Listing unused files"});
+    EXPECT_TRUE(dependents == std::vector<std::string>{"Listing unused files"});
   }
 }
 
-OO_TEST(description) {
+TEST(OOOXPVerifierStage, description) {
   {
     const std::string text = MakeStage("Checking things")->description();
-    OO_CHECK(text.starts_with("<TestObjCStage 0x"));
-    OO_CHECK(text.ends_with(">{\"Checking things\"}"));
-    OO_CHECK(oo::makeShared<oo::OXPVerifierStage>()->description().ends_with(
+    EXPECT_TRUE(text.starts_with("<TestObjCStage 0x"));
+    EXPECT_TRUE(text.ends_with(">{\"Checking things\"}"));
+    EXPECT_TRUE(oo::makeShared<oo::OXPVerifierStage>()->description().ends_with(
         ">{\"(null)\"}"));
   }
 }
 
-OO_TEST(cxxStageBehindTheFacade) {
+TEST(OOOXPVerifierStage, cxxStageBehindTheFacade) {
   {
     const std::shared_ptr<TestCxxStage> stage = oo::makeShared<TestCxxStage>("Cxx");
 
     // The verifier's calls reach the C++ overrides, and the base's defaults.
-    OO_CHECK(stage->name() == std::optional<std::string>("Cxx"));
-    OO_CHECK(!stage->dependencies().has_value());
-    OO_CHECK(stage->dependents() == std::vector<std::string>{"Dependent"});
-    OO_CHECK(!stage->shouldRun());
+    EXPECT_TRUE(stage->name() == std::optional<std::string>("Cxx"));
+    EXPECT_TRUE(!stage->dependencies().has_value());
+    EXPECT_TRUE(stage->dependents() == std::vector<std::string>{"Dependent"});
+    EXPECT_TRUE(!stage->shouldRun());
     stage->dependencyRegistrationComplete();
     stage->performRun();
-    OO_CHECK(stage->runs == 1 && stage->completed() && stage->completed());
+    EXPECT_TRUE(stage->runs == 1 && stage->completed() && stage->completed());
 
     // Described with the C++ class's name, as [self class] named it.
     const std::string text = stage->description();
-    OO_CHECK(text.starts_with("<TestCxxStage 0x"));
-    OO_CHECK(text.ends_with(">{\"Cxx\"}"));
-    OO_CHECK(stage->descriptionComponents() ==
+    EXPECT_TRUE(text.starts_with("<TestCxxStage 0x"));
+    EXPECT_TRUE(text.ends_with(">{\"Cxx\"}"));
+    EXPECT_TRUE(stage->descriptionComponents() ==
              std::optional<std::string>("\"Cxx\""));
   }
 }
 
-OO_TEST(objCStageBehindACxxPointer) {
+TEST(OOOXPVerifierStage, objCStageBehindACxxPointer) {
   {
     const std::shared_ptr<TestObjCStage> objCStage = MakeStage("ObjC");
     oo::OXPVerifierStage* part = objCStage.get();
-    OO_CHECK(part != nullptr);
+    EXPECT_TRUE(part != nullptr);
 
     // Virtual calls through the base reach the subclass's overrides.
-    OO_CHECK(part->name() == std::optional<std::string>("ObjC"));
+    EXPECT_TRUE(part->name() == std::optional<std::string>("ObjC"));
     objCStage->_testDependencies = std::vector<std::string>{"Cxx"};
-    OO_CHECK(part->dependencies() == objCStage->_testDependencies);
-    OO_CHECK(part->shouldRun());  // not overridden: the base's answer
-    OO_CHECK(!part->dependents().has_value());
+    EXPECT_TRUE(part->dependencies() == objCStage->_testDependencies);
+    EXPECT_TRUE(part->shouldRun());  // not overridden: the base's answer
+    EXPECT_TRUE(!part->dependents().has_value());
 
     // The subclass's base call still reaches the base, not back to the
     // subclass.
     const std::shared_ptr<TestSuperCallingStage> superCalling =
         oo::makeShared<TestSuperCallingStage>();
-    OO_CHECK(
+    EXPECT_TRUE(
         static_cast<oo::OXPVerifierStage*>(superCalling.get())->dependents() ==
         std::vector<std::string>{"Listing unused files"});
   }
 }
 
-OO_TEST(mixedDependencyGraph) {
+TEST(OOOXPVerifierStage, mixedDependencyGraph) {
   {
     const std::shared_ptr<TestCxxStage> cxxStage = oo::makeShared<TestCxxStage>("Cxx");
     cxxStage->_shouldRun = true;
@@ -276,20 +277,18 @@ OO_TEST(mixedDependencyGraph) {
 
     // The verifier wires the stages together.
     objCStage->registerDependency(cxxStage.get());
-    OO_CHECK(objCStage->isDependentOf(cxxStage.get()));
-    OO_CHECK(objCStage->isDependentOf(cxxStage.get()));
-    OO_CHECK(Holds(cxxStage->resolvedDependents(), {objCStage.get()}));
-    OO_CHECK(cxxStage->resolvedDependents().size() == 1 &&
+    EXPECT_TRUE(objCStage->isDependentOf(cxxStage.get()));
+    EXPECT_TRUE(objCStage->isDependentOf(cxxStage.get()));
+    EXPECT_TRUE(Holds(cxxStage->resolvedDependents(), {objCStage.get()}));
+    EXPECT_TRUE(cxxStage->resolvedDependents().size() == 1 &&
              cxxStage->resolvedDependents()[0].get() == objCStage.get());
 
     cxxStage->dependencyRegistrationComplete();
     objCStage->dependencyRegistrationComplete();
-    OO_CHECK(cxxStage->canRun() && !objCStage->canRun());
+    EXPECT_TRUE(cxxStage->canRun() && !objCStage->canRun());
     cxxStage->performRun();
-    OO_CHECK(cxxStage->runs == 1 && objCStage->canRun());
+    EXPECT_TRUE(cxxStage->runs == 1 && objCStage->canRun());
     objCStage->performRun();  // virtual run() reaches the override
-    OO_CHECK(objCStage->_runs == 1 && objCStage->completed());
+    EXPECT_TRUE(objCStage->_runs == 1 && objCStage->completed());
   }
 }
-
-OO_TEST_MAIN()

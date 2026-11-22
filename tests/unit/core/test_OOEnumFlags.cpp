@@ -7,10 +7,11 @@
 #include <cstdint>
 #include <string_view>
 
+#include <gtest/gtest.h>
+
 #include "DebugFlags.h"
 #include "EnumFlags.h"
 #include "EnumTable.h"
-#include "oo_test.hpp"
 
 namespace {
 
@@ -28,46 +29,44 @@ constexpr Unrelated operator|(Unrelated, Unrelated) { return {}; }
 constexpr oo::DebugFlags kInsideOo = oo::DebugFlags::kCollisions | oo::DebugFlags::kDocking;
 }  // namespace oo
 
-OO_TEST(flagOperators) {
+TEST(OOEnumFlags, flagOperators) {
   constexpr auto both = oo::DebugFlags::kCollisions | oo::DebugFlags::kDocking;
   static_assert(oo::ToUnderlying(both) == 0x0c);
   static_assert(oo::ToUnderlying(oo::kInsideOo) == 0x0c);
-  OO_CHECK(oo::Any(both & oo::DebugFlags::kDocking));
-  OO_CHECK(!oo::Any(both & oo::DebugFlags::kNoDust));
-  OO_CHECK(oo::ToUnderlying(both ^ oo::DebugFlags::kDocking) == 0x04);
-  OO_CHECK(oo::ToUnderlying(~oo::DebugFlags::kNone) == 0xffffffffu);
-  OO_CHECK(~oo::DebugFlags::kNone == oo::DebugFlags::kAll);
+  EXPECT_TRUE(oo::Any(both & oo::DebugFlags::kDocking));
+  EXPECT_TRUE(!oo::Any(both & oo::DebugFlags::kNoDust));
+  EXPECT_TRUE(oo::ToUnderlying(both ^ oo::DebugFlags::kDocking) == 0x04);
+  EXPECT_TRUE(oo::ToUnderlying(~oo::DebugFlags::kNone) == 0xffffffffu);
+  EXPECT_TRUE(~oo::DebugFlags::kNone == oo::DebugFlags::kAll);
 
   auto f = oo::DebugFlags::kNone;
   f |= oo::DebugFlags::kMisc;
-  OO_CHECK(f == oo::DebugFlags::kMisc);
+  EXPECT_TRUE(f == oo::DebugFlags::kMisc);
   f ^= oo::DebugFlags::kLinkedLists;
-  OO_CHECK(oo::ToUnderlying(f) == 0x10000001u);
+  EXPECT_TRUE(oo::ToUnderlying(f) == 0x10000001u);
   f &= oo::DebugFlags::kLinkedLists;
-  OO_CHECK(f == oo::DebugFlags::kLinkedLists);
-  OO_CHECK(!oo::Any(oo::DebugFlags::kNone));
+  EXPECT_TRUE(f == oo::DebugFlags::kLinkedLists);
+  EXPECT_TRUE(!oo::Any(oo::DebugFlags::kNone));
 }
 
-OO_TEST(debugFlagNames) {
-  OO_CHECK(OOEnumName(oo::DebugFlags::kLinkedLists) == "DEBUG_LINKED_LISTS");
-  OO_CHECK(OOEnumName(oo::DebugFlags::kNoShaderFallback) == "DEBUG_NO_SHADER_FALLBACK");
-  OO_CHECK(OOEnumName(oo::DebugFlags::kMisc) == "DEBUG_MISC");
-  OO_CHECK(OOEnumName(oo::DebugFlags::kNone).empty());
-  OO_CHECK(OOEnumName(oo::DebugFlags::kAll).empty());
+TEST(OOEnumFlags, debugFlagNames) {
+  EXPECT_TRUE(OOEnumName(oo::DebugFlags::kLinkedLists) == "DEBUG_LINKED_LISTS");
+  EXPECT_TRUE(OOEnumName(oo::DebugFlags::kNoShaderFallback) == "DEBUG_NO_SHADER_FALLBACK");
+  EXPECT_TRUE(OOEnumName(oo::DebugFlags::kMisc) == "DEBUG_MISC");
+  EXPECT_TRUE(OOEnumName(oo::DebugFlags::kNone).empty());
+  EXPECT_TRUE(OOEnumName(oo::DebugFlags::kAll).empty());
   // The name is a null-terminated literal, so .data() can name a JS property.
-  OO_CHECK(OOEnumName(oo::DebugFlags::kDocking).data()[13] == '\0');
+  EXPECT_TRUE(OOEnumName(oo::DebugFlags::kDocking).data()[13] == '\0');
 }
 
-OO_TEST(enumTableLooksUpBothWays) {
+TEST(OOEnumFlags, enumTableLooksUpBothWays) {
   constexpr auto table = oo::MakeEnumTable<oo::DebugFlags, oo::DebugFlags::kLinkedLists,
                                            oo::DebugFlags::kCollisions, oo::DebugFlags::kMisc>();
   static_assert(table.entries.size() == 3);
   static_assert(table.name(oo::DebugFlags::kCollisions) == "DEBUG_COLLISIONS");
   static_assert(table.value("DEBUG_MISC") == oo::DebugFlags::kMisc);
-  OO_CHECK(table.name(oo::DebugFlags::kDocking).empty());  // not in the table
-  OO_CHECK(!table.value("DEBUG_DOCKING").has_value());
-  OO_CHECK(!table.value("debug_misc").has_value());  // case-sensitive
-  OO_CHECK(!table.value("").has_value());
+  EXPECT_TRUE(table.name(oo::DebugFlags::kDocking).empty());  // not in the table
+  EXPECT_TRUE(!table.value("DEBUG_DOCKING").has_value());
+  EXPECT_TRUE(!table.value("debug_misc").has_value());  // case-sensitive
+  EXPECT_TRUE(!table.value("").has_value());
 }
-
-OO_TEST_MAIN()

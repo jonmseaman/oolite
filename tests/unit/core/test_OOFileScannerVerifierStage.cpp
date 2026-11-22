@@ -16,9 +16,10 @@
 #include <filesystem>
 #include <fstream>
 
+#include <gtest/gtest.h>
+
 #include "FileScannerVerifierStage.h"
 #include "Logging.h"
-#include "oo_test.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked; the base calls this one function of it (a subclass responsibility).
@@ -129,172 +130,170 @@ oo::FileScannerVerifierStage* ScannerOf(oo::OXPVerifier* verifier) {
 
 }  // namespace
 
-OO_TEST(fileHandlingStageNamesAndRegistersItsNeighbours) {
+TEST(OOFileScannerVerifierStage, fileHandlingStageNamesAndRegistersItsNeighbours) {
   {
     oo::OXPVerifier* verifier = MakeVerifier("");
     const std::shared_ptr<TestFileStage> stage = oo::makeShared<TestFileStage>();
     stage->setVerifier(verifier);
     const int before = OOOXPVerifierTestAccess::Registrations();
 
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(OOOXPVerifierTestAccess::Registrations() == before + 2);
-    OO_CHECK(ScannerOf(verifier) != nullptr);
-    OO_CHECK(verifier->stageWithName("Checking for unused files") != nullptr);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(OOOXPVerifierTestAccess::Registrations() == before + 2);
+    EXPECT_TRUE(ScannerOf(verifier) != nullptr);
+    EXPECT_TRUE(verifier->stageWithName("Checking for unused files") != nullptr);
 
     // Asked again (by another stage), nothing new is registered.
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(OOOXPVerifierTestAccess::Registrations() == before + 2);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(OOOXPVerifierTestAccess::Registrations() == before + 2);
 
     // The rest is the base's.
-    OO_CHECK(stage->name() == std::optional<std::string>("Testing files"));
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->name() == std::optional<std::string>("Testing files"));
+    EXPECT_TRUE(stage->shouldRun());
   }
 }
 
-OO_TEST(superDependentsReachTheIntermediateClass) {
+TEST(OOFileScannerVerifierStage, superDependentsReachTheIntermediateClass) {
   {
     const std::shared_ptr<TestSuperCallingFileStage> stage =
         oo::makeShared<TestSuperCallingFileStage>();
     stage->setVerifier(MakeVerifier(""));
-    OO_CHECK(stage->dependents() ==
+    EXPECT_TRUE(stage->dependents() ==
              (std::vector<std::string>{"Checking for unused files",
                                        "Extra dependent"}));
-    OO_CHECK(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
   }
 }
 
-OO_TEST(scannerFindsFiles) {
+TEST(OOFileScannerVerifierStage, scannerFindsFiles) {
   {
     const std::string base = MakeOXP();
     oo::OXPVerifier* verifier = MakeVerifier(base);
-    OO_CHECK(oo::FileScannerVerifierStage::nameForDependencyForVerifier(
+    EXPECT_TRUE(oo::FileScannerVerifierStage::nameForDependencyForVerifier(
                  verifier) == std::optional<std::string>("Scanning files"));
     oo::FileScannerVerifierStage* scanner = ScannerOf(verifier);
-    OO_CHECK(scanner != nullptr && scanner->verifier() == verifier);
-    OO_CHECK(scanner->name() == std::optional<std::string>("Scanning files"));
-    OO_CHECK(
+    EXPECT_TRUE(scanner != nullptr && scanner->verifier() == verifier);
+    EXPECT_TRUE(scanner->name() == std::optional<std::string>("Scanning files"));
+    EXPECT_TRUE(
         scanner->description().starts_with("<OOFileScannerVerifierStage 0x"));
-    OO_CHECK(scanner->description().ends_with(">{\"Scanning files\"}"));
+    EXPECT_TRUE(scanner->description().ends_with(">{\"Scanning files\"}"));
     scanner->run();
 
     // Case-insensitive, in the folder or bare in the root; the result is the
     // path on disk.
-    OO_CHECK(scanner->fileExists("foo.png", "Textures", "a test", false));
-    OO_CHECK(scanner->pathForFile("FOO.png", "Textures", std::nullopt, false) ==
+    EXPECT_TRUE(scanner->fileExists("foo.png", "Textures", "a test", false));
+    EXPECT_TRUE(scanner->pathForFile("FOO.png", "Textures", std::nullopt, false) ==
              std::optional<std::string>(base + "/textures/Foo.PNG"));
-    OO_CHECK(
+    EXPECT_TRUE(
         scanner->pathForFile("root.png", "Textures", std::nullopt, false) ==
         std::optional<std::string>(base + "/Root.png"));
-    OO_CHECK(
+    EXPECT_TRUE(
         scanner->pathForFile("Root.png", std::nullopt, std::nullopt, false) ==
         std::optional<std::string>(base + "/Root.png"));
 
     // Not found: the built-in files only when asked; no name is no file.
-    OO_CHECK(
+    EXPECT_TRUE(
         !scanner->pathForFile("builtin.png", "Textures", std::nullopt, false)
              .has_value());
-    OO_CHECK(
+    EXPECT_TRUE(
         scanner->pathForFile("builtin.png", "Textures", std::nullopt, true) ==
         std::optional<std::string>("builtin/Textures/builtin.png"));
-    OO_CHECK(
+    EXPECT_TRUE(
         !scanner->pathForFile("missing.png", "Textures", std::nullopt, true)
              .has_value());
-    OO_CHECK(
+    EXPECT_TRUE(
         !scanner->fileExists(std::nullopt, "Textures", std::nullopt, true));
 
     // Junk, Read Me files and skipped folders are not part of the OXP; a nested
     // folder is ignored.
-    OO_CHECK(
+    EXPECT_TRUE(
         !scanner->fileExists(".DS_Store", std::nullopt, std::nullopt, false));
-    OO_CHECK(
+    EXPECT_TRUE(
         !scanner->fileExists("ReadMe.txt", std::nullopt, std::nullopt, false));
-    OO_CHECK(!scanner->filesInFolder(".svn").has_value());
-    OO_CHECK(!scanner->fileExists("c.png", "Images", std::nullopt, false));
+    EXPECT_TRUE(!scanner->filesInFolder(".svn").has_value());
+    EXPECT_TRUE(!scanner->fileExists("c.png", "Images", std::nullopt, false));
 
     // Listings: in the byte order of the lowercase names; the root's is "".
-    OO_CHECK(scanner->filesInFolder("IMAGES") ==
+    EXPECT_TRUE(scanner->filesInFolder("IMAGES") ==
              (std::vector<std::string>{"A.png", "b.png"}));
-    OO_CHECK(scanner->filesInFolder("") ==
+    EXPECT_TRUE(scanner->filesInFolder("") ==
              std::vector<std::string>{"Root.png"});
-    OO_CHECK(!scanner->filesInFolder("Sounds").has_value());
-    OO_CHECK(!scanner->filesInFolder(std::nullopt).has_value());
+    EXPECT_TRUE(!scanner->filesInFolder("Sounds").has_value());
+    EXPECT_TRUE(!scanner->filesInFolder(std::nullopt).has_value());
 
-    OO_CHECK(scanner->displayNameForFile("f", "d") ==
+    EXPECT_TRUE(scanner->displayNameForFile("f", "d") ==
              std::optional<std::string>("d/f"));
-    OO_CHECK(scanner->displayNameForFile("f", std::nullopt) ==
+    EXPECT_TRUE(scanner->displayNameForFile("f", std::nullopt) ==
              std::optional<std::string>("f"));
-    OO_CHECK(!scanner->displayNameForFile(std::nullopt, "d").has_value());
+    EXPECT_TRUE(!scanner->displayNameForFile(std::nullopt, "d").has_value());
 
     // Contents.
-    OO_CHECK(
+    EXPECT_TRUE(
         scanner->dataForFile("shipdata.plist", "config", std::nullopt, false)
             .stringView() == "{ a = 1; }");
-    OO_CHECK(
+    EXPECT_TRUE(
         scanner->dataForFile("missing.plist", "Config", std::nullopt, false)
             .stringView()
             .empty());
     const oo::PList plist =
         scanner->plistNamed("shipdata.plist", "Config", std::nullopt, false);
-    OO_CHECK(plist.get<std::string>("a") == "1");
-    OO_CHECK(scanner->plistNamed("bad.plist", "Config", std::nullopt, false)
+    EXPECT_TRUE(plist.get<std::string>("a") == "1");
+    EXPECT_TRUE(scanner->plistNamed("bad.plist", "Config", std::nullopt, false)
                  .isNull());  // logs the parse error
-    OO_CHECK(scanner->plistNamed("missing.plist", "Config", std::nullopt, false)
+    EXPECT_TRUE(scanner->plistNamed("missing.plist", "Config", std::nullopt, false)
                  .isNull());
 
     std::filesystem::remove_all(base);
   }
 }
 
-OO_TEST(cxxFileStageBehindTheFacade) {
+TEST(OOFileScannerVerifierStage, cxxFileStageBehindTheFacade) {
   {
     oo::OXPVerifier* verifier = MakeVerifier("");
     const std::shared_ptr<TestCxxFileStage> stage = oo::makeShared<TestCxxFileStage>();
     stage->setVerifier(verifier);
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(ScannerOf(verifier) != nullptr);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(ScannerOf(verifier) != nullptr);
 
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Testing files in C++"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
     stage->dependencyRegistrationComplete();
     stage->performRun();
-    OO_CHECK(stage->runs == 1);
-    OO_CHECK(stage->description().starts_with("<TestCxxFileStage 0x"));
+    EXPECT_TRUE(stage->runs == 1);
+    EXPECT_TRUE(stage->description().starts_with("<TestCxxFileStage 0x"));
   }
 }
 
-OO_TEST(scannerFacade) {
+TEST(OOFileScannerVerifierStage, scannerFacade) {
   {
     const std::string base = MakeOXP();
     oo::OXPVerifier* verifier = MakeVerifier(base);
     oo::FileScannerVerifierStage::nameForDependencyForVerifier(verifier);
     oo::FileScannerVerifierStage* cxxScanner = ScannerOf(verifier);
-    OO_CHECK(cxxScanner != nullptr);
+    EXPECT_TRUE(cxxScanner != nullptr);
 
     // The C++ members answer.
     cxxScanner->run();
-    OO_CHECK(cxxScanner->name() ==
+    EXPECT_TRUE(cxxScanner->name() ==
              std::optional<std::string>(oo::FileScannerVerifierStage::kName));
-    OO_CHECK(
+    EXPECT_TRUE(
         cxxScanner->pathForFile("foo.png", "Textures", std::nullopt, false) ==
         std::optional<std::string>(base + "/textures/Foo.PNG"));
-    OO_CHECK(cxxScanner->fileExists("A.PNG", "images", "a test", false));
-    OO_CHECK(cxxScanner->filesInFolder("Images") ==
+    EXPECT_TRUE(cxxScanner->fileExists("A.PNG", "images", "a test", false));
+    EXPECT_TRUE(cxxScanner->filesInFolder("Images") ==
              (std::vector<std::string>{"A.png", "b.png"}));
-    OO_CHECK(
+    EXPECT_TRUE(
         cxxScanner->dataForFile("Root.png", std::nullopt, std::nullopt, false)
             .stringView() == "root");
-    OO_CHECK(
+    EXPECT_TRUE(
         cxxScanner->plistNamed("shipdata.plist", "Config", std::nullopt, false)
             .get<std::string>("a") == "1");
-    OO_CHECK(cxxScanner->displayNameForFile("f", "d") ==
+    EXPECT_TRUE(cxxScanner->displayNameForFile("f", "d") ==
              std::optional<std::string>("d/f"));
     std::filesystem::remove_all(base);
   }
 }
-
-OO_TEST_MAIN()

@@ -16,9 +16,10 @@
 #include <filesystem>
 #include <fstream>
 
+#include <gtest/gtest.h>
+
 #include "CheckJSSyntaxVerifierStage.h"
 #include "OXPVerifierStage.h"
-#include "oo_test.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked; the base calls this one function of it (a subclass responsibility).
@@ -152,41 +153,41 @@ oo::OXPVerifier* MakeVerifier(std::initializer_list<const char*> files) {
 
 }  // namespace
 
-OO_TEST(nameAndNeighbours) {
+TEST(OOCheckJSSyntaxVerifierStage, nameAndNeighbours) {
   {
     const std::shared_ptr<oo::CheckJSSyntaxVerifierStage> stage =
         oo::makeShared<oo::CheckJSSyntaxVerifierStage>();
     stage->setVerifier(MakeVerifier({}));
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking JS Script file syntax"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
   }
 }
 
-OO_TEST(runsWhenThereAreScripts) {
+TEST(OOCheckJSSyntaxVerifierStage, runsWhenThereAreScripts) {
   {
     const std::shared_ptr<oo::CheckJSSyntaxVerifierStage> stage =
         oo::makeShared<oo::CheckJSSyntaxVerifierStage>();
     stage->setVerifier(MakeVerifier({"Config/shipdata.plist"}));
-    OO_CHECK(!stage->shouldRun());
+    EXPECT_TRUE(!stage->shouldRun());
     stage->run();
-    OO_CHECK(gShowErrorLocations == 0 &&
+    EXPECT_TRUE(gShowErrorLocations == 0 &&
              gScriptPaths.empty());  // nothing to do
 
     stage->setVerifier(MakeVerifier({"Scripts/readme.txt"}));
-    OO_CHECK(stage->shouldRun());  // any file in Scripts
+    EXPECT_TRUE(stage->shouldRun());  // any file in Scripts
 
     stage->setVerifier(MakeVerifier({"Config/script.js"}));
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->shouldRun());
 
     stage->setVerifier(MakeVerifier({"Config/Script.js"}));
-    OO_CHECK(!stage->shouldRun());  // the Config listing is as on disk
+    EXPECT_TRUE(!stage->shouldRun());  // the Config listing is as on disk
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(compilesEachScript) {
+TEST(OOCheckJSSyntaxVerifierStage, compilesEachScript) {
   {
     const std::shared_ptr<oo::CheckJSSyntaxVerifierStage> stage =
         oo::makeShared<oo::CheckJSSyntaxVerifierStage>();
@@ -195,12 +196,12 @@ OO_TEST(compilesEachScript) {
                                      "Scripts/noext", "Config/script.js"}));
     StartLog();
     stage->run();
-    OO_CHECK(LogLinesContaining("ERROR") == 0 &&
+    EXPECT_TRUE(LogLinesContaining("ERROR") == 0 &&
              LogLinesContaining("WARNING") ==
                  0);  // the loader reports, not the stage
-    OO_CHECK(gShowErrorLocations == 1);
+    EXPECT_TRUE(gShowErrorLocations == 1);
     const std::string base = kBase.generic_string();
-    OO_CHECK(gScriptPaths ==
+    EXPECT_TRUE(gScriptPaths ==
              (std::vector<std::string>{
                  base + "/Scripts/A.JS", base + "/Scripts/b.js",
                  base + "/Scripts/c.es", base + "/Config/script.js"}));
@@ -208,8 +209,8 @@ OO_TEST(compilesEachScript) {
     // Only the Config script.
     stage->setVerifier(MakeVerifier({"Config/script.js"}));
     stage->run();
-    OO_CHECK(gShowErrorLocations == 1);
-    OO_CHECK(gScriptPaths ==
+    EXPECT_TRUE(gShowErrorLocations == 1);
+    EXPECT_TRUE(gScriptPaths ==
              std::vector<std::string>{base + "/Config/script.js"});
   }
   std::filesystem::remove_all(kBase);
@@ -217,22 +218,20 @@ OO_TEST(compilesEachScript) {
 
 // The stage is global: the verifier registers it and finds it by name, and it
 // describes itself with its class's name.
-OO_TEST(facade) {
+TEST(OOCheckJSSyntaxVerifierStage, facade) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({"Config/script.js"});
     const std::shared_ptr<oo::CheckJSSyntaxVerifierStage> stage =
         oo::makeShared<oo::CheckJSSyntaxVerifierStage>();
-    OO_CHECK(
+    EXPECT_TRUE(
         stage->description().starts_with("<OOCheckJSSyntaxVerifierStage 0x"));
 
     verifier->registerStage(stage.get());
-    OO_CHECK(verifier->stageWithName("Checking JS Script file syntax") ==
+    EXPECT_TRUE(verifier->stageWithName("Checking JS Script file syntax") ==
              stage.get());
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking JS Script file syntax"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
   }
 }
-
-OO_TEST_MAIN()

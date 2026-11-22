@@ -18,11 +18,12 @@
 
 #include <cstdlib>
 
+#include <gtest/gtest.h>
+
 #include "AsyncWorkManager.h"
 #include "Texture.h"
 #include "TextureLoader.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/Exception.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -125,179 +126,179 @@ Result GetResult(oo::TextureLoader* loader) {
 
 }  // namespace
 
-OO_TEST(factoryRefusals) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureLoader, factoryRefusals) {
+  EXPECT_TRUE(OOTestGLContext());
   {
-    OO_CHECK(oo::TextureLoader::loaderWithPath(std::nullopt, oo::TextureFlags::kNone) == nullptr);
-    OO_CHECK(oo::TextureLoader::loaderWithPath(
+    EXPECT_TRUE(oo::TextureLoader::loaderWithPath(std::nullopt, oo::TextureFlags::kNone) == nullptr);
+    EXPECT_TRUE(oo::TextureLoader::loaderWithPath(
                  std::string("textures/unknown.type"), oo::TextureFlags::kNone) == nullptr);
-    OO_CHECK(oo::TextureLoader::loaderWithTextureSpecifier(
+    EXPECT_TRUE(oo::TextureLoader::loaderWithTextureSpecifier(
                  oo::PList(3.0), oo::TextureFlags::kNone, std::string("Textures")) == nullptr);
-    OO_CHECK(oo::TextureLoader::loaderWithTextureSpecifier(
+    EXPECT_TRUE(oo::TextureLoader::loaderWithTextureSpecifier(
                  oo::PList(), oo::TextureFlags::kNone, std::string("Textures")) == nullptr);
-    OO_CHECK(!oo::makeShared<TestLoader>()->initWithPath(std::nullopt, oo::TextureFlags::kNone));
+    EXPECT_TRUE(!oo::makeShared<TestLoader>()->initWithPath(std::nullopt, oo::TextureFlags::kNone));
   }
 }
 
-OO_TEST(optionsDecoded) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureLoader, optionsDecoded) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     TestLoader* plain =
         Loader("dir/plain.png", oo::TextureFlags::kMinFilterLinear, 4, 4, oo::kPixMapRGBA);
-    OO_CHECK(plain->testOptions() == oo::TextureFlags::kMinFilterLinear);
-    OO_CHECK(!plain->testGenerateMipMaps() && !plain->testAvoidShrinking() &&
+    EXPECT_TRUE(plain->testOptions() == oo::TextureFlags::kMinFilterLinear);
+    EXPECT_TRUE(!plain->testGenerateMipMaps() && !plain->testAvoidShrinking() &&
              !plain->testNoScaling());
-    OO_CHECK(plain->testShrinkThreshold() == 512 && plain->testMaxSize() >= 64);
-    OO_CHECK(!plain->testExtractChannel() && !plain->testAllowCubeMap());
-    OO_CHECK(plain->testPath() == "dir/plain.png" &&
+    EXPECT_TRUE(plain->testShrinkThreshold() == 512 && plain->testMaxSize() >= 64);
+    EXPECT_TRUE(!plain->testExtractChannel() && !plain->testAllowCubeMap());
+    EXPECT_TRUE(plain->testPath() == "dir/plain.png" &&
              plain->path() == std::optional<std::string>("dir/plain.png"));
-    OO_CHECK(plain->cacheKey() ==
+    EXPECT_TRUE(plain->cacheKey() ==
              std::optional<std::string>("plain.png:0x0002"));
-    OO_CHECK(!plain->isReady());
+    EXPECT_TRUE(!plain->isReady());
 
-    OO_CHECK(Loader("a", oo::TextureFlags::kMinFilterMipMap, 1, 1, oo::kPixMapRGBA)
+    EXPECT_TRUE(Loader("a", oo::TextureFlags::kMinFilterMipMap, 1, 1, oo::kPixMapRGBA)
                  ->testGenerateMipMaps());
     TestLoader* noShrink = Loader("b", oo::TextureFlags::kNoShrink, 1, 1, oo::kPixMapRGBA);
-    OO_CHECK(noShrink->testAvoidShrinking() &&
+    EXPECT_TRUE(noShrink->testAvoidShrinking() &&
              noShrink->testShrinkThreshold() == UINT32_MAX);
     TestLoader* never = Loader("c", oo::TextureFlags::kNeverScale, 1, 1, oo::kPixMapRGBA);
-    OO_CHECK(never->testNoScaling() &&
+    EXPECT_TRUE(never->testNoScaling() &&
              never->testShrinkThreshold() == UINT32_MAX);
     TestLoader* extra = Loader("d", oo::TextureFlags::kExtraShrink, 1, 1, oo::kPixMapRGBA);
-    OO_CHECK(extra->testShrinkThreshold() == 128 &&
+    EXPECT_TRUE(extra->testShrinkThreshold() == 128 &&
              extra->testMaxSize() <= 256);
-    OO_CHECK(Loader("e", oo::TextureFlags::kAllowCubeMap, 1, 1, oo::kPixMapRGBA)
+    EXPECT_TRUE(Loader("e", oo::TextureFlags::kAllowCubeMap, 1, 1, oo::kPixMapRGBA)
                  ->testAllowCubeMap());
     TestLoader* green =
         Loader("f", oo::TextureFlags::kExtractChannelG, 1, 1, oo::kPixMapRGBA);
-    OO_CHECK(green->testExtractChannel() &&
+    EXPECT_TRUE(green->testExtractChannel() &&
              green->testExtractChannelIndex() == 1);
     TestLoader* alpha =
         Loader("g", oo::TextureFlags::kExtractChannelA, 1, 1, oo::kPixMapRGBA);
-    OO_CHECK(alpha->testExtractChannel() &&
+    EXPECT_TRUE(alpha->testExtractChannel() &&
              alpha->testExtractChannelIndex() == 3);
   }
 }
 
-OO_TEST(descriptions) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureLoader, descriptions) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     TestLoader* loader =
         Loader("dir/desc.png", oo::TextureFlags::kMinFilterLinear, 4, 4, oo::kPixMapRGBA);
-    OO_CHECK(loader->description().starts_with("<TestLoader 0x"));
-    OO_CHECK(loader->description().ends_with(">{{dir/desc.png -- loading}}"));
-    OO_CHECK(loader->shortDescription().ends_with(">{desc.png}"));
-    OO_CHECK(Queue(loader));
+    EXPECT_TRUE(loader->description().starts_with("<TestLoader 0x"));
+    EXPECT_TRUE(loader->description().ends_with(">{{dir/desc.png -- loading}}"));
+    EXPECT_TRUE(loader->shortDescription().ends_with(">{desc.png}"));
+    EXPECT_TRUE(Queue(loader));
     Result result = GetResult(loader);
-    OO_CHECK(result.ok && loader->isReady());
-    OO_CHECK(loader->description().ends_with(
+    EXPECT_TRUE(result.ok && loader->isReady());
+    EXPECT_TRUE(loader->description().ends_with(
         ">{{dir/desc.png -- failed}}"));  // the pixels were handed over
     oo::FreePixMap(&result.pixMap);
   }
 }
 
-OO_TEST(loadsScalesAndHandsOver) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureLoader, loadsScalesAndHandsOver) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     const int loads = gLoads;
     TestLoader* loader =
         Loader("square.png", oo::TextureFlags::kMinFilterLinear, 8, 8, oo::kPixMapRGBA);
-    OO_CHECK(Queue(loader));
+    EXPECT_TRUE(Queue(loader));
     Result result = GetResult(loader);  // waits for the work thread
-    OO_CHECK(gLoads == loads + 1);
-    OO_CHECK(result.ok && result.format == oo::kPixMapRGBA);
-    OO_CHECK(result.originalWidth == 8 && result.originalHeight == 8);
-    OO_CHECK(result.pixMap.width == 8 && result.pixMap.height == 8 &&
+    EXPECT_TRUE(gLoads == loads + 1);
+    EXPECT_TRUE(result.ok && result.format == oo::kPixMapRGBA);
+    EXPECT_TRUE(result.originalWidth == 8 && result.originalHeight == 8);
+    EXPECT_TRUE(result.pixMap.width == 8 && result.pixMap.height == 8 &&
              result.pixMap.rowBytes == 32);  // a power of two: as loaded
-    OO_CHECK(result.pixMap.pixels != NULL &&
+    EXPECT_TRUE(result.pixMap.pixels != NULL &&
              ((uint8_t*)result.pixMap.pixels)[0] == 1);
     oo::FreePixMap(&result.pixMap);
 
     // The pixels were handed over: a second request has none.
     Result again = GetResult(loader);
-    OO_CHECK(!again.ok && again.format == oo::kPixMapInvalidFormat &&
+    EXPECT_TRUE(!again.ok && again.format == oo::kPixMapInvalidFormat &&
              oo::IsNullPixMap(again.pixMap));
 
     // A 4 x 2 image is scaled to 2 x 2 (a power of two near two thirds of each
     // side).
     TestLoader* wide =
         Loader("wide.png", oo::TextureFlags::kMinFilterLinear, 4, 2, oo::kPixMapRGBA);
-    OO_CHECK(Queue(wide));
+    EXPECT_TRUE(Queue(wide));
     Result scaled = GetResult(wide);
-    OO_CHECK(scaled.ok && scaled.pixMap.width == 2 &&
+    EXPECT_TRUE(scaled.ok && scaled.pixMap.width == 2 &&
              scaled.pixMap.height == 2);
-    OO_CHECK(scaled.originalWidth == 4 && scaled.originalHeight == 2);
-    OO_CHECK(((uint8_t*)scaled.pixMap.pixels)[0] == 3);
+    EXPECT_TRUE(scaled.originalWidth == 4 && scaled.originalHeight == 2);
+    EXPECT_TRUE(((uint8_t*)scaled.pixMap.pixels)[0] == 3);
     oo::FreePixMap(&scaled.pixMap);
 
     // Never scaled: as loaded.
     TestLoader* never =
         Loader("never.png", oo::TextureFlags::kNeverScale, 4, 2, oo::kPixMapRGBA);
-    OO_CHECK(Queue(never));
+    EXPECT_TRUE(Queue(never));
     Result asLoaded = GetResult(never);
-    OO_CHECK(asLoaded.ok && asLoaded.pixMap.width == 4 &&
+    EXPECT_TRUE(asLoaded.ok && asLoaded.pixMap.width == 4 &&
              asLoaded.pixMap.height == 2);
     oo::FreePixMap(&asLoaded.pixMap);
   }
 }
 
-OO_TEST(extractsAChannel) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureLoader, extractsAChannel) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     TestLoader* loader = Loader(
         "green.png", oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kExtractChannelG, 8,
         8, oo::kPixMapRGBA);
-    OO_CHECK(Queue(loader));
+    EXPECT_TRUE(Queue(loader));
     Result result = GetResult(loader);
-    OO_CHECK(result.ok && result.format == oo::kPixMapGrayscale);
-    OO_CHECK(result.pixMap.width == 8 && result.pixMap.height == 8 &&
+    EXPECT_TRUE(result.ok && result.format == oo::kPixMapGrayscale);
+    EXPECT_TRUE(result.pixMap.width == 8 && result.pixMap.height == 8 &&
              result.pixMap.rowBytes == 8);
-    OO_CHECK(((uint8_t*)result.pixMap.pixels)[0] ==
+    EXPECT_TRUE(((uint8_t*)result.pixMap.pixels)[0] ==
              2);  // the first pixel's green byte
     oo::FreePixMap(&result.pixMap);
   }
 }
 
-OO_TEST(mipMaps) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureLoader, mipMaps) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     TestLoader* loader =
         Loader("mip.png", oo::TextureFlags::kMinFilterMipMap, 8, 8, oo::kPixMapRGBA);
-    OO_CHECK(Queue(loader));
+    EXPECT_TRUE(Queue(loader));
     Result result = GetResult(loader);
-    OO_CHECK(result.ok && result.pixMap.width == 8 &&
+    EXPECT_TRUE(result.ok && result.pixMap.width == 8 &&
              result.pixMap.height == 8);
-    OO_CHECK(((uint8_t*)result.pixMap.pixels)[0] ==
+    EXPECT_TRUE(((uint8_t*)result.pixMap.pixels)[0] ==
              1);  // the base level as loaded
     oo::FreePixMap(&result.pixMap);
   }
 }
 
-OO_TEST(failures) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureLoader, failures) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
     TestLoader* empty =
         Loader("empty.png", oo::TextureFlags::kMinFilterLinear, 4, 4, oo::kPixMapRGBA);
     empty->_testEmpty = true;
-    OO_CHECK(Queue(empty));
+    EXPECT_TRUE(Queue(empty));
     Result none = GetResult(empty);
-    OO_CHECK(!none.ok && none.format == oo::kPixMapInvalidFormat &&
+    EXPECT_TRUE(!none.ok && none.format == oo::kPixMapInvalidFormat &&
              empty->isReady());
-    OO_CHECK(empty->description().ends_with(">{{empty.png -- failed}}"));
+    EXPECT_TRUE(empty->description().ends_with(">{{empty.png -- failed}}"));
 
     TestLoader* raising =
         Loader("raise.png", oo::TextureFlags::kMinFilterLinear, 4, 4, oo::kPixMapRGBA);
     raising->_testRaise = true;
-    OO_CHECK(Queue(raising));
+    EXPECT_TRUE(Queue(raising));
     Result raised =
         GetResult(raising);  // the exception is caught on the work thread
-    OO_CHECK(!raised.ok && raising->isReady());
+    EXPECT_TRUE(!raised.ok && raising->isReady());
   }
 }
 
@@ -326,54 +327,52 @@ class TestCxxLoader final : public oo::TextureLoader {
   int loads = 0;
 };
 
-OO_TEST(cxxApi) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOTextureLoader, cxxApi) {
+  EXPECT_TRUE(OOTestGLContext());
   SetUpLoaders();
   {
-    OO_CHECK(!oo::TextureLoader::loaderWithPath(std::nullopt, oo::TextureFlags::kNone));
-    OO_CHECK(!oo::TextureLoader::loaderWithPath(std::string("unknown.type"), oo::TextureFlags::kNone));
-    OO_CHECK(!oo::TextureLoader::loaderWithTextureSpecifier(
+    EXPECT_TRUE(!oo::TextureLoader::loaderWithPath(std::nullopt, oo::TextureFlags::kNone));
+    EXPECT_TRUE(!oo::TextureLoader::loaderWithPath(std::string("unknown.type"), oo::TextureFlags::kNone));
+    EXPECT_TRUE(!oo::TextureLoader::loaderWithTextureSpecifier(
         oo::PList(3.0), oo::TextureFlags::kNone, std::string("Textures")));
 
     const std::shared_ptr<TestCxxLoader> loader = oo::makeShared<TestCxxLoader>();
-    OO_CHECK(!loader->initWithPath(std::nullopt, oo::TextureFlags::kNone));
-    OO_CHECK(loader->initWithPath(std::string("dir/cxx.png"),
+    EXPECT_TRUE(!loader->initWithPath(std::nullopt, oo::TextureFlags::kNone));
+    EXPECT_TRUE(loader->initWithPath(std::string("dir/cxx.png"),
                                   oo::TextureFlags::kMinFilterLinear));
-    OO_CHECK(loader->path() == std::optional<std::string>("dir/cxx.png") &&
+    EXPECT_TRUE(loader->path() == std::optional<std::string>("dir/cxx.png") &&
              loader->_shrinkThreshold == 512);
-    OO_CHECK(loader->cacheKey() ==
+    EXPECT_TRUE(loader->cacheKey() ==
              std::optional<std::string>("cxx.png:0x0002"));
-    OO_CHECK(loader->shortDescriptionComponents() ==
+    EXPECT_TRUE(loader->shortDescriptionComponents() ==
              std::optional<std::string>("cxx.png"));
 
     // Queued, loaded on a work thread, handed over on this one.
-    OO_CHECK(Queue(loader.get()));
+    EXPECT_TRUE(Queue(loader.get()));
     oo::PixMap pixMap = oo::kNullPixMap;
     oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
     uint32_t width = 0, height = 0;
     const std::optional<oo::TextureLoader::Result> loaded = loader->getResult();
-    OO_CHECK(loaded.has_value());
+    EXPECT_TRUE(loaded.has_value());
     if (loaded) {
       pixMap = loaded->pixMap;
       format = loaded->format;
       width = loaded->originalWidth;
       height = loaded->originalHeight;
     }
-    OO_CHECK(loader->loads == 1 && loader->isReady() &&
+    EXPECT_TRUE(loader->loads == 1 && loader->isReady() &&
              format == oo::kPixMapRGBA);
-    OO_CHECK(pixMap.width == 8 && pixMap.height == 8 && width == 8 &&
+    EXPECT_TRUE(pixMap.width == 8 && pixMap.height == 8 && width == 8 &&
              height == 8);
-    OO_CHECK(((uint8_t*)pixMap.pixels)[0] == 1);
+    EXPECT_TRUE(((uint8_t*)pixMap.pixels)[0] == 1);
     oo::FreePixMap(&pixMap);
 
     // The C++ loader's overrides and the root's defaults, as callers
     // reach them.
-    OO_CHECK(loader->description().starts_with("<TestCxxLoader 0x") &&
+    EXPECT_TRUE(loader->description().starts_with("<TestCxxLoader 0x") &&
              loader->description().ends_with(">{cxx}"));
-    OO_CHECK(loader->cacheKey() ==
+    EXPECT_TRUE(loader->cacheKey() ==
                  std::optional<std::string>("cxx.png:0x0002") &&
              loader->isReady());
   }
 }
-
-OO_TEST_MAIN()

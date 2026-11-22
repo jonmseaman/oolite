@@ -18,10 +18,11 @@
 #include <sstream>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "OpenGLExtensionManager.h"
 #include "RegExpMatcher.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/Process.hpp"
 
@@ -135,72 +136,72 @@ void SetArguments(std::initializer_list<const char*> args) {
 // --- Tests
 // --------------------------------------------------------------------------------------
 
-OO_TEST(readsTheDriver) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOOpenGLExtensionManager, readsTheDriver) {
+  EXPECT_TRUE(OOTestGLContext());
   SetArguments({"test_OOOpenGLExtensionManager"});
 
   {
     oo::OpenGLExtensionManager* manager =
         oo::OpenGLExtensionManager::sharedManager();
-    OO_CHECK(manager != nullptr);
-    OO_CHECK(oo::OpenGLExtensionManager::sharedManager() == manager);
-    OO_CHECK(sPathsCalls ==
+    EXPECT_TRUE(manager != nullptr);
+    EXPECT_TRUE(oo::OpenGLExtensionManager::sharedManager() == manager);
+    EXPECT_TRUE(sPathsCalls ==
              1);  // the resource paths are set up while the manager initialises
 
     unsigned major, minor, release;
     GLVersion(&major, &minor, &release);
-    OO_CHECK(major >= 3);
-    OO_CHECK(manager->majorVersionNumber() == major);
-    OO_CHECK(manager->minorVersionNumber() == minor);
-    OO_CHECK(manager->releaseVersionNumber() == release);
+    EXPECT_TRUE(major >= 3);
+    EXPECT_TRUE(manager->majorVersionNumber() == major);
+    EXPECT_TRUE(manager->minorVersionNumber() == minor);
+    EXPECT_TRUE(manager->releaseVersionNumber() == release);
     const oo::OpenGLExtensionManager::Version got = manager->version();
-    OO_CHECK(got.major == major && got.minor == minor && got.release == release);
-    OO_CHECK(manager->version().minor == minor);  // one part on its own
-    OO_CHECK(manager->versionIsAtLeastMajor(major, minor));
-    OO_CHECK(manager->versionIsAtLeastMajor(major - 1, minor + 100));
-    OO_CHECK(!manager->versionIsAtLeastMajor(major, minor + 1));
-    OO_CHECK(!manager->versionIsAtLeastMajor(major + 1, 0));
+    EXPECT_TRUE(got.major == major && got.minor == minor && got.release == release);
+    EXPECT_TRUE(manager->version().minor == minor);  // one part on its own
+    EXPECT_TRUE(manager->versionIsAtLeastMajor(major, minor));
+    EXPECT_TRUE(manager->versionIsAtLeastMajor(major - 1, minor + 100));
+    EXPECT_TRUE(!manager->versionIsAtLeastMajor(major, minor + 1));
+    EXPECT_TRUE(!manager->versionIsAtLeastMajor(major + 1, 0));
 
-    OO_CHECK(manager->vendorString() ==
+    EXPECT_TRUE(manager->vendorString() ==
              std::optional<std::string>(GLString(GL_VENDOR)));
-    OO_CHECK(manager->rendererString() ==
+    EXPECT_TRUE(manager->rendererString() ==
              std::optional<std::string>(GLString(GL_RENDERER)));
 
     const std::vector<std::string> extensions = GLExtensions();
-    OO_CHECK(!extensions.empty());
-    for (const std::string& e : extensions) OO_CHECK(manager->haveExtension(e));
-    OO_CHECK(!manager->haveExtension("GL_OO_no_such_extension"));
-    OO_CHECK(!manager->haveExtension(""));
+    EXPECT_TRUE(!extensions.empty());
+    for (const std::string& e : extensions) EXPECT_TRUE(manager->haveExtension(e));
+    EXPECT_TRUE(!manager->haveExtension("GL_OO_no_such_extension"));
+    EXPECT_TRUE(!manager->haveExtension(""));
 
     // The empty GPU settings leave every default in place.
-    OO_CHECK(manager->shadersForceDisabled() == false);
-    OO_CHECK(manager->shadersSupported() ==
+    EXPECT_TRUE(manager->shadersForceDisabled() == false);
+    EXPECT_TRUE(manager->shadersSupported() ==
              (GLHasShaderExtensions() ? true : false));
-    OO_CHECK(manager->usePointSmoothing() && manager->useLineSmoothing() &&
+    EXPECT_TRUE(manager->usePointSmoothing() && manager->useLineSmoothing() &&
              manager->useDustShader());
-    OO_CHECK(manager->vboSupported() == false);  // OO_USE_VBO is 0
-    OO_CHECK(manager->fboSupported() ==
+    EXPECT_TRUE(manager->vboSupported() == false);  // OO_USE_VBO is 0
+    EXPECT_TRUE(manager->fboSupported() ==
              (GLHasExtension("GL_EXT_framebuffer_object") ? true : false));
-    OO_CHECK(manager->textureCombinersSupported() ==
+    EXPECT_TRUE(manager->textureCombinersSupported() ==
              (GLHasExtension("GL_ARB_texture_env_combine") ? true : false));
 
     GLint units = 1;
     if (manager->textureCombinersSupported())
       glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &units);
-    OO_CHECK(manager->textureUnitCount() == units);
+    EXPECT_TRUE(manager->textureUnitCount() == units);
     if (manager->shadersSupported()) {
       GLint imageUnits = 0;
       glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS_ARB, &imageUnits);
-      OO_CHECK(manager->textureImageUnitCount() == imageUnits);
-      OO_CHECK(manager->defaultDetailLevel() == oo::kGraphicsDetailMaximum);
-      OO_CHECK(manager->maximumDetailLevel() == oo::kGraphicsDetailMaximum);
+      EXPECT_TRUE(manager->textureImageUnitCount() == imageUnits);
+      EXPECT_TRUE(manager->defaultDetailLevel() == oo::kGraphicsDetailMaximum);
+      EXPECT_TRUE(manager->maximumDetailLevel() == oo::kGraphicsDetailMaximum);
     }
-    OO_CHECK(oo::ShadersSupported() == manager->shadersSupported());
+    EXPECT_TRUE(oo::ShadersSupported() == manager->shadersSupported());
   }
 }
 
-OO_TEST(gpuSettingsMatchInPrecedenceOrder) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOOpenGLExtensionManager, gpuSettingsMatchInPrecedenceOrder) {
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::OpenGLExtensionManager* manager =
         oo::OpenGLExtensionManager::sharedManager();
@@ -233,19 +234,19 @@ OO_TEST(gpuSettingsMatchInPrecedenceOrder) {
          Dict({{"match", Dict({})}, {"smooth_lines", oo::PList(false)}})},
     });
     manager->reset();
-    OO_CHECK(sPathsCalls == 2);
+    EXPECT_TRUE(sPathsCalls == 2);
 
-    OO_CHECK(manager->usePointSmoothing() == false);
-    OO_CHECK(manager->useLineSmoothing() == true);
-    OO_CHECK(manager->useDustShader() == false);
+    EXPECT_TRUE(manager->usePointSmoothing() == false);
+    EXPECT_TRUE(manager->useLineSmoothing() == true);
+    EXPECT_TRUE(manager->useDustShader() == false);
     if (manager->textureCombinersSupported())
-      OO_CHECK(manager->textureUnitCount() == 1);
+      EXPECT_TRUE(manager->textureUnitCount() == 1);
     if (shaders) {
-      OO_CHECK(manager->shadersSupported());
-      OO_CHECK(manager->textureImageUnitCount() == 2);
-      OO_CHECK(manager->defaultDetailLevel() ==
+      EXPECT_TRUE(manager->shadersSupported());
+      EXPECT_TRUE(manager->textureImageUnitCount() == 2);
+      EXPECT_TRUE(manager->defaultDetailLevel() ==
                oo::GraphicsDetail::kMinimum);  // OOShaderSetting::kSimple < OOShaderSetting::kFull
-      OO_CHECK(manager->maximumDetailLevel() == oo::kGraphicsDetailMaximum);
+      EXPECT_TRUE(manager->maximumDetailLevel() == oo::kGraphicsDetailMaximum);
     }
 
     // An override can only lower a limit; a maximum of OOShaderSetting::kOff turns
@@ -257,29 +258,29 @@ OO_TEST(gpuSettingsMatchInPrecedenceOrder) {
                         {"texture_image_units", oo::PList(-4)}})},
     });
     manager->reset();
-    OO_CHECK(manager->shadersSupported() == false);
-    OO_CHECK(manager->usePointSmoothing() && manager->useLineSmoothing() &&
+    EXPECT_TRUE(manager->shadersSupported() == false);
+    EXPECT_TRUE(manager->usePointSmoothing() && manager->useLineSmoothing() &&
              manager->useDustShader());
     if (shaders) {
-      OO_CHECK(manager->textureImageUnitCount() == 0);
-      OO_CHECK(manager->defaultDetailLevel() == oo::GraphicsDetail::kMinimum);
-      OO_CHECK(manager->maximumDetailLevel() == oo::GraphicsDetail::kMinimum);
+      EXPECT_TRUE(manager->textureImageUnitCount() == 0);
+      EXPECT_TRUE(manager->defaultDetailLevel() == oo::GraphicsDetail::kMinimum);
+      EXPECT_TRUE(manager->maximumDetailLevel() == oo::GraphicsDetail::kMinimum);
     }
     GLint units = 1;
     if (manager->textureCombinersSupported())
       glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &units);
-    OO_CHECK(manager->textureUnitCount() == units);
+    EXPECT_TRUE(manager->textureUnitCount() == units);
 
     sGPUSettings = oo::PList(oo::PList::Dict{});
     manager->reset();
-    OO_CHECK(manager->shadersSupported() == shaders);
+    EXPECT_TRUE(manager->shadersSupported() == shaders);
   }
 }
 
-OO_TEST(gpuSettingsPassTakesOneMatcher) {
+TEST(OOOpenGLExtensionManager, gpuSettingsPassTakesOneMatcher) {
   // A pass holds the one matcher it takes for all its matches (and its compiled
   // tester). A pass with no regexp takes none.
-  OO_CHECK(OOTestGLContext());
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::OpenGLExtensionManager* manager =
         oo::OpenGLExtensionManager::sharedManager();
@@ -298,37 +299,35 @@ OO_TEST(gpuSettingsPassTakesOneMatcher) {
     });
     unsigned made = sMatchersMade;
     manager->reset();
-    OO_CHECK(sMatchersMade == made + 1);  // several matches, one matcher
+    EXPECT_TRUE(sMatchersMade == made + 1);  // several matches, one matcher
 
     sGPUSettings = Dict({{"c-any", Dict({{"match", Dict({})}})}});
     made = sMatchersMade;
     manager->reset();
-    OO_CHECK(sMatchersMade == made);
+    EXPECT_TRUE(sMatchersMade == made);
 
     sGPUSettings = oo::PList(oo::PList::Dict{});
     manager->reset();
   }
 }
 
-OO_TEST(noShadersArgument) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOOpenGLExtensionManager, noShadersArgument) {
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::OpenGLExtensionManager* manager =
         oo::OpenGLExtensionManager::sharedManager();
     SetArguments({"test_OOOpenGLExtensionManager", "--noshaders"});
     manager->reset();
-    OO_CHECK(manager->shadersForceDisabled() == true);
-    OO_CHECK(manager->shadersSupported() == false);
-    OO_CHECK(oo::ShadersSupported() == false);
-    OO_CHECK(manager->defaultDetailLevel() == oo::GraphicsDetail::kMinimum);
-    OO_CHECK(manager->maximumDetailLevel() == oo::GraphicsDetail::kMinimum);
+    EXPECT_TRUE(manager->shadersForceDisabled() == true);
+    EXPECT_TRUE(manager->shadersSupported() == false);
+    EXPECT_TRUE(oo::ShadersSupported() == false);
+    EXPECT_TRUE(manager->defaultDetailLevel() == oo::GraphicsDetail::kMinimum);
+    EXPECT_TRUE(manager->maximumDetailLevel() == oo::GraphicsDetail::kMinimum);
 
     SetArguments({"test_OOOpenGLExtensionManager"});
     manager->reset();
-    OO_CHECK(manager->shadersForceDisabled() == false);
-    OO_CHECK(manager->shadersSupported() ==
+    EXPECT_TRUE(manager->shadersForceDisabled() == false);
+    EXPECT_TRUE(manager->shadersSupported() ==
              (GLHasShaderExtensions() ? true : false));
   }
 }
-
-OO_TEST_MAIN()

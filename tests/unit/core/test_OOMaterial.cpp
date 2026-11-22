@@ -17,9 +17,10 @@
 #include <utility>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "Logging.h"
 #include "Material.h"
-#include "oo_test.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
    linked. The two functions of it that the root calls are defined here instead,
@@ -131,79 +132,79 @@ bool Unapplied(
 
 }  // namespace
 
-OO_TEST(rootDefaults) {
+TEST(OOMaterial, rootDefaults) {
   {
     const std::shared_ptr<oo::Material> material = oo::makeShared<oo::Material>();
     const int parameterErrors = gParameterErrors,
               responsibilities = gSubclassResponsibilities;
-    OO_CHECK(
+    EXPECT_TRUE(
         !material->name().has_value());  // logs a parameter error, answers nil
-    OO_CHECK(gParameterErrors == parameterErrors + 1);
-    OO_CHECK(!material->doApply());  // subclass responsibility
-    OO_CHECK(gSubclassResponsibilities == responsibilities + 1);
+    EXPECT_TRUE(gParameterErrors == parameterErrors + 1);
+    EXPECT_TRUE(!material->doApply());  // subclass responsibility
+    EXPECT_TRUE(gSubclassResponsibilities == responsibilities + 1);
     material->ensureFinishedLoading();
-    OO_CHECK(material->isFinishedLoading());
-    OO_CHECK(!material->wantsNormalsAsTextureCoordinates());
+    EXPECT_TRUE(material->isFinishedLoading());
+    EXPECT_TRUE(!material->wantsNormalsAsTextureCoordinates());
     material->setBindingTarget(nullptr);
     material->unapplyWithNext(nullptr);
 #if OO_MULTITEXTURE
-    OO_CHECK(material->countOfTextureUnitsWithBaseCoordinates() == 1);
+    EXPECT_TRUE(material->countOfTextureUnitsWithBaseCoordinates() == 1);
 #endif
 #ifndef NDEBUG
-    OO_CHECK(material->allTextures().empty());
+    EXPECT_TRUE(material->allTextures().empty());
 #endif
     oo::Material::setUp();
 
     // The root cannot apply: doApply() answers false, so there is still no
     // current material.
     material->apply();
-    OO_CHECK(oo::Material::current() == nullptr);
+    EXPECT_TRUE(oo::Material::current() == nullptr);
   }
 }
 
-OO_TEST(applyMakesCurrent) {
+TEST(OOMaterial, applyMakesCurrent) {
   {
     const std::shared_ptr<TestObjCMaterial> a = MakeMaterial("A"),
                                     b = MakeMaterial("B");
     gUnapplied.clear();
-    OO_CHECK(oo::Material::current() == nullptr);
+    EXPECT_TRUE(oo::Material::current() == nullptr);
 
     a->apply();
-    OO_CHECK(oo::Material::current().get() == a.get() && a->_doApplies == 1);
-    OO_CHECK(Unapplied({}));
+    EXPECT_TRUE(oo::Material::current().get() == a.get() && a->_doApplies == 1);
+    EXPECT_TRUE(Unapplied({}));
 
     b->apply();  // the previous material is told what comes next
-    OO_CHECK(oo::Material::current().get() == b.get());
-    OO_CHECK(Unapplied({{a.get(), b.get()}}));
+    EXPECT_TRUE(oo::Material::current().get() == b.get());
+    EXPECT_TRUE(Unapplied({{a.get(), b.get()}}));
 
     b->apply();  // again: told itself
-    OO_CHECK(oo::Material::current().get() == b.get() && b->_doApplies == 2);
-    OO_CHECK(Unapplied({{b.get(), b.get()}}));
+    EXPECT_TRUE(oo::Material::current().get() == b.get() && b->_doApplies == 2);
+    EXPECT_TRUE(Unapplied({{b.get(), b.get()}}));
 
     oo::Material::applyNone();
-    OO_CHECK(oo::Material::current() == nullptr);
-    OO_CHECK(Unapplied({{b.get(), nullptr}}));
+    EXPECT_TRUE(oo::Material::current() == nullptr);
+    EXPECT_TRUE(Unapplied({{b.get(), nullptr}}));
 
     oo::Material::applyNone();  // nothing current: nothing told
-    OO_CHECK(Unapplied({}));
+    EXPECT_TRUE(Unapplied({}));
   }
 }
 
-OO_TEST(failedApplyLeavesNone) {
+TEST(OOMaterial, failedApplyLeavesNone) {
   {
     const std::shared_ptr<TestObjCMaterial> a = MakeMaterial("A"),
                                     failing = MakeMaterial("Failing", false);
     a->apply();
     gUnapplied.clear();
     failing->apply();
-    OO_CHECK(oo::Material::current() == nullptr && failing->_doApplies == 1);
-    OO_CHECK(Unapplied({{a.get(), failing.get()}}));
+    EXPECT_TRUE(oo::Material::current() == nullptr && failing->_doApplies == 1);
+    EXPECT_TRUE(Unapplied({{a.get(), failing.get()}}));
     oo::Material::applyNone();
-    OO_CHECK(Unapplied({}));
+    EXPECT_TRUE(Unapplied({}));
   }
 }
 
-OO_TEST(currentIsRetained) {
+TEST(OOMaterial, currentIsRetained) {
   const int deallocs = gDeallocs;
   TestObjCMaterial* material = nullptr;
   {
@@ -212,18 +213,18 @@ OO_TEST(currentIsRetained) {
     material->apply();
   }
   // The maker's reference is gone; being current keeps it.
-  OO_CHECK(gDeallocs == deallocs);
+  EXPECT_TRUE(gDeallocs == deallocs);
   {
-    OO_CHECK(oo::Material::current().get() == material);
-    OO_CHECK(oo::Material::current()->description().ends_with(">{\"Kept\"}"));
+    EXPECT_TRUE(oo::Material::current().get() == material);
+    EXPECT_TRUE(oo::Material::current()->description().ends_with(">{\"Kept\"}"));
     gUnapplied.clear();
     oo::Material::applyNone();
-    OO_CHECK(Unapplied({{material, nullptr}}));
+    EXPECT_TRUE(Unapplied({{material, nullptr}}));
   }
-  OO_CHECK(gDeallocs == deallocs + 1);
+  EXPECT_TRUE(gDeallocs == deallocs + 1);
 }
 
-OO_TEST(willDeallocWhileCurrent) {
+TEST(OOMaterial, willDeallocWhileCurrent) {
   {
     const std::shared_ptr<TestObjCMaterial> material = MakeMaterial("Imbalanced");
     material->apply();
@@ -234,80 +235,78 @@ OO_TEST(willDeallocWhileCurrent) {
     // current, but the reference that being current held is not released (the
     // object was being deallocated).
     material->willDealloc();
-    OO_CHECK(Unapplied({{material.get(), nullptr}}));
-    OO_CHECK(oo::Material::current() == nullptr);
-    OO_CHECK(material.use_count() == retained);
+    EXPECT_TRUE(Unapplied({{material.get(), nullptr}}));
+    EXPECT_TRUE(oo::Material::current() == nullptr);
+    EXPECT_TRUE(material.use_count() == retained);
     // The reference being current held stays in the holder willDealloc() moved
     // it to (never deleted; there is no manual release to give it back).
 
     material->willDealloc();  // not current: nothing
-    OO_CHECK(Unapplied({}));
+    EXPECT_TRUE(Unapplied({}));
   }
 }
 
-OO_TEST(superCallsReachTheRoot) {
+TEST(OOMaterial, superCallsReachTheRoot) {
   {
     const std::shared_ptr<TestSuperCallingMaterial> material =
         oo::makeShared<TestSuperCallingMaterial>();
     material->_applies = false;
     const int responsibilities = gSubclassResponsibilities;
-    OO_CHECK(material->doApply());  // false from TestObjCMaterial, then the
+    EXPECT_TRUE(material->doApply());  // false from TestObjCMaterial, then the
                                     // root's isFinishedLoading()
-    OO_CHECK(gSubclassResponsibilities == responsibilities);
-    OO_CHECK(material->wantsNormalsAsTextureCoordinates());
+    EXPECT_TRUE(gSubclassResponsibilities == responsibilities);
+    EXPECT_TRUE(material->wantsNormalsAsTextureCoordinates());
   }
 }
 
-OO_TEST(description) {
+TEST(OOMaterial, description) {
   {
     const std::string text = MakeMaterial("Hull")->description();
-    OO_CHECK(text.starts_with("<TestObjCMaterial 0x"));
-    OO_CHECK(text.ends_with(">{\"Hull\"}"));
-    OO_CHECK(
+    EXPECT_TRUE(text.starts_with("<TestObjCMaterial 0x"));
+    EXPECT_TRUE(text.ends_with(">{\"Hull\"}"));
+    EXPECT_TRUE(
         oo::makeShared<oo::Material>()->description().ends_with(">{\"(null)\"}"));
   }
 }
 
 // A C++ material's overrides and the root's defaults, as its callers reach them
 // .
-OO_TEST(cxxMaterial) {
+TEST(OOMaterial, cxxMaterial) {
   {
     const std::shared_ptr<TestCxxMaterial> material =
         oo::makeShared<TestCxxMaterial>("Cxx");
-    OO_CHECK(material->name() == std::optional<std::string>("Cxx"));
-    OO_CHECK(material->wantsNormalsAsTextureCoordinates());
-    OO_CHECK(material->isFinishedLoading());
+    EXPECT_TRUE(material->name() == std::optional<std::string>("Cxx"));
+    EXPECT_TRUE(material->wantsNormalsAsTextureCoordinates());
+    EXPECT_TRUE(material->isFinishedLoading());
 
     material->apply();
-    OO_CHECK(material->doApplies == 1);
-    OO_CHECK(oo::Material::current().get() == material.get());
+    EXPECT_TRUE(material->doApplies == 1);
+    EXPECT_TRUE(oo::Material::current().get() == material.get());
     oo::Material::applyNone();
-    OO_CHECK(material->unappliedNext == std::vector<oo::Material*>{nullptr});
-    OO_CHECK(oo::Material::current() == nullptr);
+    EXPECT_TRUE(material->unappliedNext == std::vector<oo::Material*>{nullptr});
+    EXPECT_TRUE(oo::Material::current() == nullptr);
 
     // Described with the C++ class's name, as [self class] named it.
     const std::string text = material->description();
-    OO_CHECK(text.starts_with("<TestCxxMaterial 0x"));
-    OO_CHECK(text.ends_with(">{\"Cxx\"}"));
-    OO_CHECK(material->descriptionComponents() ==
+    EXPECT_TRUE(text.starts_with("<TestCxxMaterial 0x"));
+    EXPECT_TRUE(text.ends_with(">{\"Cxx\"}"));
+    EXPECT_TRUE(material->descriptionComponents() ==
              std::optional<std::string>("\"Cxx\""));
   }
 }
 
 // The current material is retained: a C++ material made current lives until it
 // is no longer (the C++ half of currentIsRetainedAcrossTheBridge).
-OO_TEST(currentRetainsACxxMaterial) {
+TEST(OOMaterial, currentRetainsACxxMaterial) {
   const int destroyed = gCxxDestroyed;
   {
     oo::makeShared<TestCxxMaterial>("Cxx")->apply();
   }
-  OO_CHECK(gCxxDestroyed == destroyed);
+  EXPECT_TRUE(gCxxDestroyed == destroyed);
   {
-    OO_CHECK(oo::Material::current()->name() ==
+    EXPECT_TRUE(oo::Material::current()->name() ==
              std::optional<std::string>("Cxx"));
     oo::Material::applyNone();
   }
-  OO_CHECK(gCxxDestroyed == destroyed + 1);
+  EXPECT_TRUE(gCxxDestroyed == destroyed + 1);
 }
-
-OO_TEST_MAIN()

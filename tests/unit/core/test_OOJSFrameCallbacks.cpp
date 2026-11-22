@@ -14,12 +14,13 @@
 	Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Types.h"
 #include "OOJSEngineCore.h"	// the engine API this stage declares, and OOJSValue (not OOJavaScriptEngine.h: the test defines OOJSValue's members)
 #include "OOJSEngineNativeWrappers.h"
 #include "oofnd/String.hpp"
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstring>
@@ -210,91 +211,88 @@ void Frame(double delta)
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(functions)
+TEST(OOJSFrameCallbacks, functions)
 {
-	OO_CHECK_EQ(Eval("typeof addFrameCallback + typeof removeFrameCallback + typeof isValidFrameCallback"), "functionfunctionfunction");
-	OO_CHECK_EQ(Eval("addFrameCallback()"), "threw: bad arguments: .addFrameCallback (0): ; expected function");
-	OO_CHECK_EQ(Eval("addFrameCallback(5)"), "threw: bad arguments: .addFrameCallback (1): ; expected function");
-	OO_CHECK_EQ(Eval("removeFrameCallback()"), "threw: bad arguments: .removeFrameCallback (0): ; expected frame callback tracking ID");
-	OO_CHECK_EQ(Eval("isValidFrameCallback()"), "threw: bad arguments: .isValidFrameCallback (0): ; expected frame callback tracking ID");
+	EXPECT_EQ(Eval("typeof addFrameCallback + typeof removeFrameCallback + typeof isValidFrameCallback"), "functionfunctionfunction");
+	EXPECT_EQ(Eval("addFrameCallback()"), "threw: bad arguments: .addFrameCallback (0): ; expected function");
+	EXPECT_EQ(Eval("addFrameCallback(5)"), "threw: bad arguments: .addFrameCallback (1): ; expected function");
+	EXPECT_EQ(Eval("removeFrameCallback()"), "threw: bad arguments: .removeFrameCallback (0): ; expected frame callback tracking ID");
+	EXPECT_EQ(Eval("isValidFrameCallback()"), "threw: bad arguments: .isValidFrameCallback (0): ; expected frame callback tracking ID");
 
-	OO_CHECK_EQ(Eval("globalThis.id1 = addFrameCallback(function () {}); typeof id1"), "number");
-	OO_CHECK_EQ(Eval("isValidFrameCallback(id1)"), "true");
-	OO_CHECK_EQ(Eval("globalThis.id2 = addFrameCallback(function () {}); id1 !== id2 && isValidFrameCallback(id2)"), "true");
-	OO_CHECK_EQ(Eval("isValidFrameCallback({})"), "false");
+	EXPECT_EQ(Eval("globalThis.id1 = addFrameCallback(function () {}); typeof id1"), "number");
+	EXPECT_EQ(Eval("isValidFrameCallback(id1)"), "true");
+	EXPECT_EQ(Eval("globalThis.id2 = addFrameCallback(function () {}); id1 !== id2 && isValidFrameCallback(id2)"), "true");
+	EXPECT_EQ(Eval("isValidFrameCallback({})"), "false");
 	sWarnings.clear();
-	OO_CHECK_EQ(Eval("removeFrameCallback(id1)"), "undefined");
-	OO_CHECK_EQ(Eval("isValidFrameCallback(id1) + ',' + isValidFrameCallback(id2)"), "false,true");
-	OO_CHECK(sWarnings.empty());
-	OO_CHECK_EQ(Eval("removeFrameCallback(id1)"), "undefined");
-	OO_CHECK_EQ(sWarnings.size(), 1u);
-	if (!sWarnings.empty())  OO_CHECK_EQ(sWarnings[0], "removeFrameCallback(): invalid tracking ID.");
+	EXPECT_EQ(Eval("removeFrameCallback(id1)"), "undefined");
+	EXPECT_EQ(Eval("isValidFrameCallback(id1) + ',' + isValidFrameCallback(id2)"), "false,true");
+	EXPECT_TRUE(sWarnings.empty());
+	EXPECT_EQ(Eval("removeFrameCallback(id1)"), "undefined");
+	EXPECT_EQ(sWarnings.size(), 1u);
+	if (!sWarnings.empty())  EXPECT_EQ(sWarnings[0], "removeFrameCallback(): invalid tracking ID.");
 	OOJSFrameCallbacksRemoveAll();
-	OO_CHECK_EQ(Eval("isValidFrameCallback(id2)"), "false");
+	EXPECT_EQ(Eval("isValidFrameCallback(id2)"), "false");
 }
 
 
-OO_TEST(invoke)
+TEST(OOJSFrameCallbacks, invoke)
 {
-	OO_CHECK_EQ(Eval("globalThis.log = []; globalThis.a = addFrameCallback(function (delta) { log.push('a' + delta + (this === globalThis)); }); "
+	EXPECT_EQ(Eval("globalThis.log = []; globalThis.a = addFrameCallback(function (delta) { log.push('a' + delta + (this === globalThis)); }); "
 					 "globalThis.b = addFrameCallback(function (delta) { log.push('b' + delta); }); log.length"), "0");
 	sLastLimit = -1;
 	Frame(0.25);
-	OO_CHECK_EQ(Eval("log.join()"), "a0.5true,b0.5");	// the delta times the time acceleration
-	OO_CHECK_EQ(sLimiterDepth, 0);
-	OO_CHECK_EQ(sLastLimit, 0.1);
+	EXPECT_EQ(Eval("log.join()"), "a0.5true,b0.5");	// the delta times the time acceleration
+	EXPECT_EQ(sLimiterDepth, 0);
+	EXPECT_EQ(sLastLimit, 0.1);
 	Frame(1.0);
-	OO_CHECK_EQ(Eval("log.join()"), "a0.5true,b0.5,a2true,b2");
+	EXPECT_EQ(Eval("log.join()"), "a0.5true,b0.5,a2true,b2");
 
 	// Removing the first puts the last in its place.
-	OO_CHECK_EQ(Eval("globalThis.c = addFrameCallback(function () { log.push('c'); }); removeFrameCallback(a); log.length = 0"), "0");
+	EXPECT_EQ(Eval("globalThis.c = addFrameCallback(function () { log.push('c'); }); removeFrameCallback(a); log.length = 0"), "0");
 	Frame(0.5);
-	OO_CHECK_EQ(Eval("log.join()"), "c,b1");
+	EXPECT_EQ(Eval("log.join()"), "c,b1");
 	OOJSFrameCallbacksRemoveAll();
 	Frame(0.5);
-	OO_CHECK_EQ(Eval("log.join()"), "c,b1");
+	EXPECT_EQ(Eval("log.join()"), "c,b1");
 }
 
 
-OO_TEST(changesWhileRunning)
+TEST(OOJSFrameCallbacks, changesWhileRunning)
 {
 	// An add or remove made by a callback waits until every callback of the frame has run.
-	OO_CHECK_EQ(Eval("globalThis.log = []; globalThis.added = null; globalThis.validDuring = null; "
+	EXPECT_EQ(Eval("globalThis.log = []; globalThis.added = null; globalThis.validDuring = null; "
 					 "globalThis.adder = addFrameCallback(function () { log.push('adder'); if (added === null) { added = addFrameCallback(function () { log.push('added'); }); validDuring = isValidFrameCallback(added); } }); "
 					 "globalThis.self = addFrameCallback(function () { log.push('self'); removeFrameCallback(self); log.push('still ' + isValidFrameCallback(self)); }); log.length"), "0");
 	Frame(1);
-	OO_CHECK_EQ(Eval("log.join() + ';' + validDuring + ';' + isValidFrameCallback(added) + ';' + isValidFrameCallback(self)"), "adder,self,still true;false;true;false");
-	OO_CHECK_EQ(Eval("log.length = 0; typeof added"), "number");
+	EXPECT_EQ(Eval("log.join() + ';' + validDuring + ';' + isValidFrameCallback(added) + ';' + isValidFrameCallback(self)"), "adder,self,still true;false;true;false");
+	EXPECT_EQ(Eval("log.length = 0; typeof added"), "number");
 	Frame(1);
-	OO_CHECK_EQ(Eval("log.join()"), "adder,added");
+	EXPECT_EQ(Eval("log.join()"), "adder,added");
 	OOJSFrameCallbacksRemoveAll();
 }
 
 
-OO_TEST(throwingCallback)
+TEST(OOJSFrameCallbacks, throwingCallback)
 {
-	OO_CHECK_EQ(Eval("globalThis.log = []; addFrameCallback(function () { throw new Error('boom'); }); addFrameCallback(function () { log.push('after'); }); log.length"), "0");
+	EXPECT_EQ(Eval("globalThis.log = []; addFrameCallback(function () { throw new Error('boom'); }); addFrameCallback(function () { log.push('after'); }); log.length"), "0");
 	Frame(1);
-	OO_CHECK_EQ(Eval("log.join()"), "after");
-	OO_CHECK_EQ(sLimiterDepth, 0);
+	EXPECT_EQ(Eval("log.join()"), "after");
+	EXPECT_EQ(sLimiterDepth, 0);
 	OOJSFrameCallbacksRemoveAll();
 }
 
 
-OO_TEST(growth)
+TEST(OOJSFrameCallbacks, growth)
 {
 	// Past the first 16 slots the list grows, and every callback still runs once per frame.
-	OO_CHECK_EQ(Eval("globalThis.count = 0; globalThis.ids = []; for (var i = 0; i < 40; i++) ids.push(addFrameCallback(function () { count++; })); ids.length"), "40");
+	EXPECT_EQ(Eval("globalThis.count = 0; globalThis.ids = []; for (var i = 0; i < 40; i++) ids.push(addFrameCallback(function () { count++; })); ids.length"), "40");
 	Frame(1);
-	OO_CHECK_EQ(Eval("count"), "40");
-	OO_CHECK_EQ(Eval("ids.every(isValidFrameCallback)"), "true");
-	OO_CHECK_EQ(Eval("for (var i = 0; i < 40; i += 2) removeFrameCallback(ids[i]); count = 0"), "0");
+	EXPECT_EQ(Eval("count"), "40");
+	EXPECT_EQ(Eval("ids.every(isValidFrameCallback)"), "true");
+	EXPECT_EQ(Eval("for (var i = 0; i < 40; i += 2) removeFrameCallback(ids[i]); count = 0"), "0");
 	Frame(1);
-	OO_CHECK_EQ(Eval("count"), "20");
-	OO_CHECK_EQ(Eval("ids.filter(isValidFrameCallback).length"), "20");
+	EXPECT_EQ(Eval("count"), "20");
+	EXPECT_EQ(Eval("ids.filter(isValidFrameCallback).length"), "20");
 	OOJSFrameCallbacksRemoveAll();
-	OO_CHECK_EQ(Eval("ids.some(isValidFrameCallback)"), "false");
+	EXPECT_EQ(Eval("ids.some(isValidFrameCallback)"), "false");
 }
-
-
-OO_TEST_MAIN()

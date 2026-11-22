@@ -21,6 +21,8 @@
 	stood in for as the Objective-C glue was (the same class check and error, the same toString()).
 */
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "Maths.h"
 #include <quickjs.h>
@@ -159,7 +161,6 @@ public:
 #include "OOJSEntityHolder.h"
 
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstring>
@@ -663,18 +664,18 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSEntity, registration)
 {
 	SetUpContext();
-	OO_CHECK_EQ(sConverters[JSEntityClassID()], 1);
-	OO_CHECK(OOJSClassName(JSEntityClassID()) != nullptr && std::strcmp(OOJSClassName(JSEntityClassID()), "Entity") == 0);
+	EXPECT_EQ(sConverters[JSEntityClassID()], 1);
+	EXPECT_TRUE(OOJSClassName(JSEntityClassID()) != nullptr && std::strcmp(OOJSClassName(JSEntityClassID()), "Entity") == 0);
 	OO_CHECK_EVAL("typeof Entity", "function");
 	OO_CHECK_EVAL("new Entity()", "threw: unconstructable");
 	OO_CHECK_EVAL("ship instanceof Entity && Object.getPrototypeOf(ship) === Entity.prototype", "true");
@@ -684,7 +685,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(readProperties)
+TEST(OOJSEntity, readProperties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("ship.collisionRadius", "40.5");
@@ -712,16 +713,16 @@ OO_TEST(readProperties)
 }
 
 
-OO_TEST(writeProperties)
+TEST(OOJSEntity, writeProperties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("(function () { ship.position = [1, 2, 3]; return JSON.stringify(ship.position); })()", "[1,2,3]");
-	OO_CHECK_EQ(sShipPart->_plumeResets, 1);	// a ship's plumes and aegis follow it
-	OO_CHECK_EQ(sShipPart->_aegisChecks, 1);
+	EXPECT_EQ(sShipPart->_plumeResets, 1);	// a ship's plumes and aegis follow it
+	EXPECT_EQ(sShipPart->_aegisChecks, 1);
 	OO_CHECK_EVAL("(function () { rock.position = [4, 5, 6]; return JSON.stringify(rock.position); })()", "[4,5,6]");
-	OO_CHECK_EQ(sRock->_positionSets, 1);
+	EXPECT_EQ(sRock->_positionSets, 1);
 	OO_CHECK_EVAL("(function () { ship.position = 'here'; return 'set'; })()", "threw: bad property value");
-	OO_CHECK_EQ(sShip->_positionSets, 1);
+	EXPECT_EQ(sShip->_positionSets, 1);
 
 	OO_CHECK_EVAL("(function () { ship.orientation = [0, 1, 0, 0]; return JSON.stringify(ship.orientation); })()", "[0,1,0,0]");
 	OO_CHECK_EVAL("(function () { ship.orientation = 7; return 'set'; })()", "threw: bad property value");
@@ -754,7 +755,7 @@ OO_TEST(writeProperties)
 }
 
 
-OO_TEST(staleEntities)
+TEST(OOJSEntity, staleEntities)
 {
 	SetUpContext();
 	// The prototype has no entity: nothing but isValid, which is false.
@@ -765,7 +766,7 @@ OO_TEST(staleEntities)
 	gOOJSPlayerIfStale = sShipPart;	// its C++ part
 	OO_CHECK_EVAL("ship.isValid + ':' + ship.mass + ':' + ship.owner", "false:undefined:undefined");
 	OO_CHECK_EVAL("(function () { ship.energy = 5; return 'set'; })()", "set");
-	OO_CHECK(sShip->_energy == 200);
+	EXPECT_TRUE(sShip->_energy == 200);
 	gOOJSPlayerIfStale = nullptr;
 	OO_CHECK_EVAL("ship.isValid", "true");
 	// Not an entity at all.
@@ -773,60 +774,60 @@ OO_TEST(staleEntities)
 }
 
 
-OO_TEST(dumpState)
+TEST(OOJSEntity, dumpState)
 {
 	SetUpContext();
 #ifndef NDEBUG
 	OO_CHECK_EVAL("ship.dumpState()", "undefined");
-	OO_CHECK_EQ(sShip->_dumps, 1);
+	EXPECT_EQ(sShip->_dumps, 1);
 	OO_CHECK_EVAL("Entity.prototype.dumpState()", "undefined");	// no entity: a message to nil
-	OO_CHECK_EQ(sShip->_dumps, 1);
+	EXPECT_EQ(sShip->_dumps, 1);
 #else
 	OO_CHECK_EVAL("typeof ship.dumpState", "undefined");
 #endif
 }
 
 
-OO_TEST(cFunctions)
+TEST(OOJSEntity, cFunctions)
 {
 	SetUpContext();
 	Entity *entity = nullptr;
 	JSValue shipValue = JSValueForEntity(sShip);
-	OO_CHECK(JSValueToEntity(sContext, shipValue, &entity) && TestObjectOf(entity) == sShip);
-	OO_CHECK(!JSValueToEntity(sContext, JS_NewNumber(sContext, 3), &entity));
+	EXPECT_TRUE(JSValueToEntity(sContext, shipValue, &entity) && TestObjectOf(entity) == sShip);
+	EXPECT_TRUE(!JSValueToEntity(sContext, JS_NewNumber(sContext, 3), &entity));
 
 	JSValueConst argv[2] = { shipValue, JS_NewNumber(sContext, 1) };
 	int consumed = 9;
 	entity = nullptr;
-	OO_CHECK(EntityFromArgumentList(sContext, "Ship", "test", 2, argv, &entity, &consumed));
-	OO_CHECK(TestObjectOf(entity) == sShip && consumed == 1);
+	EXPECT_TRUE(EntityFromArgumentList(sContext, "Ship", "test", 2, argv, &entity, &consumed));
+	EXPECT_TRUE(TestObjectOf(entity) == sShip && consumed == 1);
 
 	// Not an entity: a warning when given a class and function, and false either way.
 	JSValueConst bad[1] = { JS_NewNumber(sContext, 3) };
 	sLastWarning.clear();
 	consumed = 9;
-	OO_CHECK(!EntityFromArgumentList(sContext, "Ship", "test", 1, bad, &entity, &consumed));
-	OO_CHECK_EQ(sLastWarning, std::string("Ship.test(): expected entity, got (full:3)."));
-	OO_CHECK_EQ(consumed, 0);
+	EXPECT_TRUE(!EntityFromArgumentList(sContext, "Ship", "test", 1, bad, &entity, &consumed));
+	EXPECT_EQ(sLastWarning, std::string("Ship.test(): expected entity, got (full:3)."));
+	EXPECT_EQ(consumed, 0);
 	sLastWarning.clear();
 	// With no class and function: no warning, and (as before) success with nothing consumed.
-	OO_CHECK(EntityFromArgumentList(sContext, std::nullopt, std::nullopt, 1, bad, &entity, &consumed));
-	OO_CHECK(sLastWarning.empty());
-	OO_CHECK_EQ(consumed, 1);
+	EXPECT_TRUE(EntityFromArgumentList(sContext, std::nullopt, std::nullopt, 1, bad, &entity, &consumed));
+	EXPECT_TRUE(sLastWarning.empty());
+	EXPECT_EQ(consumed, 1);
 
 	// Bad parameters are an internal error.
 	sParameterErrors = 0;
-	OO_CHECK(!EntityFromArgumentList(sContext, "Ship", "test", 0, argv, &entity, &consumed));
-	OO_CHECK(!EntityFromArgumentList(sContext, "Ship", "test", 1, nullptr, &entity, &consumed));
-	OO_CHECK(!EntityFromArgumentList(sContext, "Ship", "test", 1, argv, nullptr, &consumed));
-	OO_CHECK_EQ(sParameterErrors, 3);
-	OO_CHECK(EntityFromArgumentList(sContext, "Ship", "test", 1, argv, &entity, nullptr));
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_TRUE(!EntityFromArgumentList(sContext, "Ship", "test", 0, argv, &entity, &consumed));
+	EXPECT_TRUE(!EntityFromArgumentList(sContext, "Ship", "test", 1, nullptr, &entity, &consumed));
+	EXPECT_TRUE(!EntityFromArgumentList(sContext, "Ship", "test", 1, argv, nullptr, &consumed));
+	EXPECT_EQ(sParameterErrors, 3);
+	EXPECT_TRUE(EntityFromArgumentList(sContext, "Ship", "test", 1, argv, &entity, nullptr));
+	EXPECT_EQ(sProfileDepth, 0);
 	JS_FreeValue(sContext, shipValue);
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSEntity, nativeExceptions)
 {
 	SetUpContext();
 	sShip->_mass = 99;
@@ -835,9 +836,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("ship.mass", "threw: Native exception: cxx boom");
 	sShip->_mass = 75000;
 	OO_CHECK_EVAL("ship.mass", "75000");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

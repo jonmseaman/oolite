@@ -15,6 +15,8 @@
 	player is sent, and a native's exception. Run: bash tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "Types.h"
 #include "EntityEnums.h"  // IWYU pragma: keep
@@ -226,7 +228,6 @@ public:
 #include "OOJSPlayer.h"
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -687,7 +688,7 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 
 std::string Events()
@@ -703,18 +704,18 @@ std::string Events()
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSPlayer, registration)
 {
 	SetUpContext();
-	OO_CHECK_EQ(sConverters[JSPlayerClassID()], 1);
+	EXPECT_EQ(sConverters[JSPlayerClassID()], 1);
 	const char *playerClassName = OOJSClassName(JSPlayerClassID());
-	OO_CHECK(playerClassName != nullptr && std::strcmp(playerClassName, "Player") == 0);
+	EXPECT_TRUE(playerClassName != nullptr && std::strcmp(playerClassName, "Player") == 0);
 	JSValue prototype = JS_GetClassProto(sContext, JSPlayerClassID());
-	OO_CHECK(JS_IsObject(prototype));
+	EXPECT_TRUE(JS_IsObject(prototype));
 	JS_FreeValue(sContext, prototype);
 	JSValue player = JS_GetPropertyStr(sContext, sGlobal, "player");
 	JSValue playerObject = JSPlayerObject();
-	OO_CHECK(JS_IsObject(player) && JS_VALUE_GET_PTR(player) == JS_VALUE_GET_PTR(playerObject));
+	EXPECT_TRUE(JS_IsObject(player) && JS_VALUE_GET_PTR(player) == JS_VALUE_GET_PTR(playerObject));
 	JS_FreeValue(sContext, playerObject);
 	JS_FreeValue(sContext, player);
 	OO_CHECK_EVAL("typeof Player", "function");
@@ -723,11 +724,11 @@ OO_TEST(registration)
 	OO_CHECK_EVAL("(function () { player = 5; return player instanceof Player; })()", "true");	// read-only
 	OO_CHECK_EVAL("Object.keys(Player.prototype).join()",
 				  "alertAltitude,alertCondition,alertEnergy,alertHostiles,alertMassLocked,alertTemperature,bounty,contractReputation,contractReputationPrecise,credits,dockingClearanceStatus,escapePodRescueTime,legalStatus,name,parcelReputation,parcelReputationPrecise,passengerReputation,passengerReputationPrecise,rank,roleWeights,score,trumbleCount");
-	OO_CHECK(OOPlayerForScripting() == sPlayer);
+	EXPECT_TRUE(OOPlayerForScripting() == sPlayer);
 }
 
 
-OO_TEST(readProperties)
+TEST(OOJSPlayer, readProperties)
 {
 	SetUpContext();
 	sPlayer->_scriptTargetSets = 0;
@@ -750,11 +751,11 @@ OO_TEST(readProperties)
 	OO_CHECK_EVAL("player.name + ':' + player.legalStatus", "null:null");
 	sPlayer->_commanderName = "Jameson";
 	sPlayer->_legalStatus = 30;
-	OO_CHECK(sPlayer->_scriptTargetSets > 0);	// every native asks for the player for scripting
+	EXPECT_TRUE(sPlayer->_scriptTargetSets > 0);	// every native asks for the player for scripting
 }
 
 
-OO_TEST(writeProperties)
+TEST(OOJSPlayer, writeProperties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("(function () { player.name = 'Blake'; return player.name; })()", "Blake");
@@ -774,7 +775,7 @@ OO_TEST(writeProperties)
 	sPlayer->_credits = 100.5;
 
 	OO_CHECK_EVAL("(function () { player.bounty = 60; return player.bounty + ':' + player.legalStatus; })()", "60:Fugitive");
-	OO_CHECK(sPlayer->_bountyReason == oo::LegalStatusReason::kByScript);
+	EXPECT_TRUE(sPlayer->_bountyReason == oo::LegalStatusReason::kByScript);
 	OO_CHECK_EVAL("(function () { player.bounty = -10; return player.bounty; })()", "0");
 	OO_CHECK_EVAL("(function () { player.bounty = 'x'; return 'set'; })()", "threw: bad property value");
 	sPlayer->_legalStatus = 30;
@@ -788,31 +789,31 @@ OO_TEST(writeProperties)
 }
 
 
-OO_TEST(messages)
+TEST(OOJSPlayer, messages)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("player.commsMessage('Hello')", "undefined");
 	OO_CHECK_EVAL("player.commsMessage('Again', 10)", "undefined");
-	OO_CHECK(sUniverse->_comms == (std::vector<std::string>{ "Hello", "Again" }));
-	OO_CHECK(sUniverse->_counts == (std::vector<double>{ 4.5, 10 }));
-	OO_CHECK_EQ(Events(), std::string("commsMessageReceived(Hello, null); commsMessageReceived(Again, null)"));
+	EXPECT_TRUE(sUniverse->_comms == (std::vector<std::string>{ "Hello", "Again" }));
+	EXPECT_TRUE(sUniverse->_counts == (std::vector<double>{ 4.5, 10 }));
+	EXPECT_EQ(Events(), std::string("commsMessageReceived(Hello, null); commsMessageReceived(Again, null)"));
 	OO_CHECK_EVAL("player.commsMessage()", "threw: bad arguments: Player.commsMessage(0) - / message and optional duration");
-	OO_CHECK_EQ(sUniverse->_comms.size(), static_cast<std::size_t>(2));
+	EXPECT_EQ(sUniverse->_comms.size(), static_cast<std::size_t>(2));
 	// Any duration that converts to a number will do, NaN included.
 	OO_CHECK_EVAL("player.commsMessage('x', 'y')", "undefined");
-	OO_CHECK(sUniverse->_comms.size() == 3 && std::isnan(sUniverse->_counts[2]));
-	OO_CHECK_EQ(Events(), std::string("commsMessageReceived(x, null)"));
+	EXPECT_TRUE(sUniverse->_comms.size() == 3 && std::isnan(sUniverse->_counts[2]));
+	EXPECT_EQ(Events(), std::string("commsMessageReceived(x, null)"));
 	sUniverse->_counts.clear();
 
 	OO_CHECK_EVAL("player.consoleMessage('Status')", "undefined");
 	OO_CHECK_EVAL("player.consoleMessage('Longer', 7.5)", "undefined");
-	OO_CHECK(sUniverse->_console == (std::vector<std::string>{ "Status", "Longer" }));
-	OO_CHECK(sUniverse->_counts == (std::vector<double>{ 3.0, 7.5 }));
+	EXPECT_TRUE(sUniverse->_console == (std::vector<std::string>{ "Status", "Longer" }));
+	EXPECT_TRUE(sUniverse->_counts == (std::vector<double>{ 3.0, 7.5 }));
 	OO_CHECK_EVAL("player.consoleMessage(null)", "threw: bad arguments: Player.consoleMessage(1) - / message and optional duration");
-	OO_CHECK_EQ(Events(), std::string());
+	EXPECT_EQ(Events(), std::string());
 
 	OO_CHECK_EVAL("player.addMessageToArrivalReport('Cargo delivered.')", "undefined");
-	OO_CHECK(sPlayer->_report == (std::vector<std::string>{ "Cargo delivered." }));
+	EXPECT_TRUE(sPlayer->_report == (std::vector<std::string>{ "Cargo delivered." }));
 	OO_CHECK_EVAL("player.addMessageToArrivalReport()", "threw: bad arguments: Player.addMessageToArrivalReport(0) - / string (arrival message)");
 
 	// Speech: spoken only when speech is on for comms; stopped only while speaking.
@@ -822,59 +823,59 @@ OO_TEST(messages)
 	OO_CHECK_EVAL("player.audioMessage('loud')", "undefined");
 	sPlayer->_speech = oo::SpeechSettings::kAll;
 	OO_CHECK_EVAL("player.audioMessage('louder')", "undefined");
-	OO_CHECK(sUniverse->_spoken == (std::vector<std::string>{ "loud", "louder" }));
+	EXPECT_TRUE(sUniverse->_spoken == (std::vector<std::string>{ "loud", "louder" }));
 	OO_CHECK_EVAL("player.audioMessage()", "threw: bad arguments: Player.audioMessage(0) - / audiomessage (string)");
 	OO_CHECK_EVAL("player.stopAudioMessage()", "undefined");
-	OO_CHECK_EQ(sUniverse->_stops, 0);
+	EXPECT_EQ(sUniverse->_stops, 0);
 	sUniverse->_speaking = true;
 	OO_CHECK_EVAL("player.stopAudioMessage()", "undefined");
-	OO_CHECK_EQ(sUniverse->_stops, 1);
+	EXPECT_EQ(sUniverse->_stops, 1);
 }
 
 
-OO_TEST(reputationsAndScenarios)
+TEST(OOJSPlayer, reputationsAndScenarios)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("[player.increaseContractReputation(), player.decreasePassengerReputation(), player.increaseParcelReputation(), player.decreaseParcelReputation(), player.increasePassengerReputation(), player.decreaseContractReputation()].join()",
 				  ",,,,,");
-	OO_CHECK_EQ(sPlayer->_contractReputation, 35);
-	OO_CHECK_EQ(sPlayer->_passengerReputation, -17);
-	OO_CHECK_EQ(sPlayer->_parcelReputation, 70);
+	EXPECT_EQ(sPlayer->_contractReputation, 35);
+	EXPECT_EQ(sPlayer->_passengerReputation, -17);
+	EXPECT_EQ(sPlayer->_parcelReputation, 70);
 	OO_CHECK_EVAL("(function () { player.increaseContractReputation(); return player.contractReputationPrecise; })()", "3.6");
 	sPlayer->_contractReputation = 35;
 
 	OO_CHECK_EVAL("player.endScenario('oolite-tutorial')", "true");
 	OO_CHECK_EVAL("player.endScenario('other')", "false");
-	OO_CHECK_EQ(sPlayer->_endedScenario, std::string("other"));
+	EXPECT_EQ(sPlayer->_endedScenario, std::string("other"));
 	OO_CHECK_EVAL("player.endScenario()", "threw: bad arguments: Player.endScenario(0) - / scenario key");
 
 	// setPlayerRole() and setEscapePodDestination() succeed without setting a result, so the test
 	// does not look at what the call gives.
 	OO_CHECK_EVAL("(player.setPlayerRole('hunter'), 'called')", "called");
-	OO_CHECK(sPlayer->_lastRole == "hunter" && sPlayer->_lastRoleSlot == 999);
+	EXPECT_TRUE(sPlayer->_lastRole == "hunter" && sPlayer->_lastRoleSlot == 999);
 	OO_CHECK_EVAL("(player.setPlayerRole('miner', 3), 'called')", "called");
-	OO_CHECK(sPlayer->_lastRole == "miner" && sPlayer->_lastRoleSlot == 3);
+	EXPECT_TRUE(sPlayer->_lastRole == "miner" && sPlayer->_lastRoleSlot == 3);
 	OO_CHECK_EVAL("(player.setPlayerRole('miner', -1), 'called')", "called");
-	OO_CHECK(sPlayer->_lastRoleSlot == 4294967295u);	// as an ECMA uint32
+	EXPECT_TRUE(sPlayer->_lastRoleSlot == 4294967295u);	// as an ECMA uint32
 	OO_CHECK_EVAL("player.setPlayerRole()", "threw: bad arguments: Player.setPlayerRole(0) - / string (role) [, number (index)]");
 }
 
 
-OO_TEST(replaceShip)
+TEST(OOJSPlayer, replaceShip)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("player.replaceShip('cobra3-player')", "true");
-	OO_CHECK_EQ(sPlayer->_replacedWith, std::string("cobra3-player"));
-	OO_CHECK_EQ(Events(), std::string("playerReplacedShip(PlayerEntity); playerBoughtNewShip(PlayerEntity, 0)"));
+	EXPECT_EQ(sPlayer->_replacedWith, std::string("cobra3-player"));
+	EXPECT_EQ(Events(), std::string("playerReplacedShip(PlayerEntity); playerBoughtNewShip(PlayerEntity, 0)"));
 	OO_CHECK_EVAL("player.replaceShip('no-such-ship', 12)", "false");
-	OO_CHECK_EQ(sPlayer->_personality, 12);	// the personality is set either way
-	OO_CHECK_EQ(Events(), std::string());
+	EXPECT_EQ(sPlayer->_personality, 12);	// the personality is set either way
+	EXPECT_EQ(Events(), std::string());
 	OO_CHECK_EVAL("player.replaceShip('cobra3-player', 32767)", "true");
-	OO_CHECK_EQ(sPlayer->_personality, 12);	// out of range
+	EXPECT_EQ(sPlayer->_personality, 12);	// out of range
 	OO_CHECK_EVAL("player.replaceShip('cobra3-player', -1)", "true");
-	OO_CHECK_EQ(sPlayer->_personality, 12);
+	EXPECT_EQ(sPlayer->_personality, 12);
 	OO_CHECK_EVAL("player.replaceShip('cobra3-player', 32766)", "true");
-	OO_CHECK_EQ(sPlayer->_personality, 32766);
+	EXPECT_EQ(sPlayer->_personality, 32766);
 	Events();
 	OO_CHECK_EVAL("player.replaceShip()", "threw: bad arguments: Player.replaceShip(0) - / string (shipyard key)");
 	sPlayer->_status = oo::EntityStatus::kInFlight;
@@ -883,7 +884,7 @@ OO_TEST(replaceShip)
 }
 
 
-OO_TEST(escapePodDestination)
+TEST(OOJSPlayer, escapePodDestination)
 {
 	SetUpContext();
 	// Only while the escape pod is in flight (the player is stale).
@@ -892,12 +893,12 @@ OO_TEST(escapePodDestination)
 
 	sPlayer->_dockTargetSet = false;
 	OO_CHECK_EVAL("(player.setEscapePodDestination(station), 'called')", "called");
-	OO_CHECK(sPlayer->_dockTargetSet && sPlayer->_dockTarget == sStationShip);
+	EXPECT_TRUE(sPlayer->_dockTargetSet && sPlayer->_dockTarget == sStationShip);
 	OO_CHECK_EVAL("(player.setEscapePodDestination(null), 'called')", "called");
-	OO_CHECK(sPlayer->_dockTarget == nullptr);
+	EXPECT_TRUE(sPlayer->_dockTarget == nullptr);
 	sPlayer->_dockTarget = sStationShip;
 	OO_CHECK_EVAL("(player.setEscapePodDestination(false), 'called')", "called");
-	OO_CHECK(sPlayer->_dockTarget == nullptr);
+	EXPECT_TRUE(sPlayer->_dockTarget == nullptr);
 
 	OO_CHECK_EVAL("player.setEscapePodDestination(freighter)", "threw: bad arguments: Player.setEscapePodDestination(1) - / a valid station, null, or 'NEARBY_SYSTEM'");
 	OO_CHECK_EVAL("player.setEscapePodDestination(true)", "threw: bad arguments: Player.setEscapePodDestination(1) - / a valid station, null, or 'NEARBY_SYSTEM'");
@@ -910,11 +911,11 @@ OO_TEST(escapePodDestination)
 	sPlayer->_adjustTime = 0;
 	sUniverse->_destinations = oo::PList(oo::PList::Array{});
 	OO_CHECK_EVAL("(player.setEscapePodDestination('NEARBY_SYSTEM'), 'called')", "called");
-	OO_CHECK(sPlayer->_dockTarget == nullptr && sPlayer->_adjustTime == 0 && sPlayer->_targetSystem == -1);
-	OO_CHECK(sUniverse->_range == 7.0);
+	EXPECT_TRUE(sPlayer->_dockTarget == nullptr && sPlayer->_adjustTime == 0 && sPlayer->_targetSystem == -1);
+	EXPECT_TRUE(sUniverse->_range == 7.0);
 	sUniverse->_interstellar = true;
 	OO_CHECK_EVAL("(player.setEscapePodDestination('NEARBY_SYSTEM'), 'called')", "called");
-	OO_CHECK(sUniverse->_range == 3.5);
+	EXPECT_TRUE(sUniverse->_range == 3.5);
 	sUniverse->_interstellar = false;
 	// Systems going nova are skipped (but not the first one, which the loop never looks at); with
 	// one left, it is chosen without a random draw. The target is its index in the list that is left.
@@ -923,16 +924,16 @@ OO_TEST(escapePodDestination)
 		Dict({ { "distance", oo::PList(1.0) }, { "sysID", oo::PList(18) }, { "nova", oo::PList(true) } }),
 	});
 	OO_CHECK_EVAL("(player.setEscapePodDestination('NEARBY_SYSTEM'), 'called')", "called");
-	OO_CHECK_EQ(sPlayer->_targetSystem, 0);
-	OO_CHECK(sPlayer->_adjustTime >= (0.2 + 4.0) * 3600.0 + 0 && sPlayer->_adjustTime <= (0.2 + 4.0) * 3600.0 + 5400.0 * 127);
-	OO_CHECK(std::fmod(sPlayer->_adjustTime - (0.2 + 4.0) * 3600.0, 5400.0) == 0);
+	EXPECT_EQ(sPlayer->_targetSystem, 0);
+	EXPECT_TRUE(sPlayer->_adjustTime >= (0.2 + 4.0) * 3600.0 + 0 && sPlayer->_adjustTime <= (0.2 + 4.0) * 3600.0 + 5400.0 * 127);
+	EXPECT_TRUE(std::fmod(sPlayer->_adjustTime - (0.2 + 4.0) * 3600.0, 5400.0) == 0);
 
 	gOOJSPlayerIfStale = nullptr;
 	sPlayer->_targetSystem = -1;
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSPlayer, nativeExceptions)
 {
 	SetUpContext();
 	sPlayer->_raise = true;
@@ -942,9 +943,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("player.rank", "threw: Native exception: cxx boom");
 	sPlayer->_throwCxx = false;
 	OO_CHECK_EVAL("player.score", "5");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

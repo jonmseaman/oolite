@@ -14,9 +14,10 @@
 #include <cstdint>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "SpeechSynthesizer.h"
-#include "oo_test.hpp"
 
 // main.cpp defines the debug flags, and the test has its own main (it links
 // the whole game, for the description lookup setVoice makes).
@@ -24,41 +25,39 @@
 std::uint32_t gDebugFlags = 0;
 #endif
 
-OO_TEST(voiceListArithmetic) {
+TEST(SpeechSynthesizer, voiceListArithmetic) {
   oo::SpeechSynthesizer& speech = oo::SpeechSynthesizer::shared();
   speech.setVoiceNamesForTesting({"zero", "one", "two"});
 
-  OO_CHECK(speech.nextVoice(0) == 1 && speech.nextVoice(2) == 0);
-  OO_CHECK(speech.prevVoice(1) == 0 && speech.prevVoice(0) == 2);
-  OO_CHECK(speech.voiceName(1) == "one" && speech.voiceName(3) == "-");
-  OO_CHECK(speech.voiceNumber("two") == 2 &&
+  EXPECT_TRUE(speech.nextVoice(0) == 1 && speech.nextVoice(2) == 0);
+  EXPECT_TRUE(speech.prevVoice(1) == 0 && speech.prevVoice(0) == 2);
+  EXPECT_TRUE(speech.voiceName(1) == "one" && speech.voiceName(3) == "-");
+  EXPECT_TRUE(speech.voiceNumber("two") == 2 &&
            speech.voiceNumber("nine") == UINT_MAX);
   // An index out of range selects nothing and is handed back.
-  OO_CHECK(speech.setVoice(3, true) == 3);
+  EXPECT_TRUE(speech.setVoice(3, true) == 3);
 
   speech.setVoiceNamesForTesting({});
 }
 
-OO_TEST(emptyVoiceList) {
+TEST(SpeechSynthesizer, emptyVoiceList) {
   oo::SpeechSynthesizer& speech = oo::SpeechSynthesizer::shared();
   speech.setVoiceNamesForTesting({});
 
-  OO_CHECK(speech.nextVoice(0) == 0);
-  OO_CHECK(speech.prevVoice(0) == UINT_MAX);
-  OO_CHECK(speech.voiceName(0) == "-");
-  OO_CHECK(speech.voiceNumber("zero") == UINT_MAX);
+  EXPECT_TRUE(speech.nextVoice(0) == 0);
+  EXPECT_TRUE(speech.prevVoice(0) == UINT_MAX);
+  EXPECT_TRUE(speech.voiceName(0) == "-");
+  EXPECT_TRUE(speech.voiceNumber("zero") == UINT_MAX);
 }
 
-OO_TEST(sharedIsOneObject) {
-  OO_CHECK(&oo::SpeechSynthesizer::shared() ==
+TEST(SpeechSynthesizer, sharedIsOneObject) {
+  EXPECT_TRUE(&oo::SpeechSynthesizer::shared() ==
            &oo::SpeechSynthesizer::shared());
 }
 
 // The pronunciation guide's third column is espeak's own replacement.
-OO_TEST(pronunciationColumn) {
+TEST(SpeechSynthesizer, pronunciationColumn) {
   const oo::SpeechSynthesizer& speech = oo::SpeechSynthesizer::shared();
-  OO_CHECK(speech.pronunciationColumn(2) == 1);
-  OO_CHECK(speech.pronunciationColumn(3) == (OOLITE_ESPEAK ? 2u : 1u));
+  EXPECT_TRUE(speech.pronunciationColumn(2) == 1);
+  EXPECT_TRUE(speech.pronunciationColumn(3) == (OOLITE_ESPEAK ? 2u : 1u));
 }
-
-OO_TEST_MAIN()

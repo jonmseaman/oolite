@@ -17,12 +17,13 @@
 
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual entity references
 #include "ECMBlastEntity.h"
 #include "PlayerEntity.h"  // the stand-in PLAYER
 #include "ShipEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -127,67 +128,67 @@ bool IsECMBlast(Entity* entity) {
 
 }  // namespace
 
-OO_TEST(noShipNoBlast) {
+TEST(OOECMBlastEntity, noShipNoBlast) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
-    OO_CHECK(Blast(nullptr) == nullptr);
+    ::SetUp();
+    EXPECT_TRUE(Blast(nullptr) == nullptr);
   }
 }
 
-OO_TEST(blastAtTheShip) {
+TEST(OOECMBlastEntity, blastAtTheShip) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* ship = Ship();
     Entity* blast = Blast(ship);
-    OO_CHECK(blast != nullptr);
-    OO_CHECK(HPvector_equal(blast->getPosition(), make_HPvector(10, 20, 30)));
-    OO_CHECK(blast->status() == oo::EntityStatus::kEffect &&
+    EXPECT_TRUE(blast != nullptr);
+    EXPECT_TRUE(HPvector_equal(blast->getPosition(), make_HPvector(10, 20, 30)));
+    EXPECT_TRUE(blast->status() == oo::EntityStatus::kEffect &&
              blast->getScanClass() == oo::ScanClass::kNoDraw);
-    OO_CHECK(blast->owner() == nullptr);
-    OO_CHECK(IsECMBlast(blast) && !IsECMBlast(ship));
+    EXPECT_TRUE(blast->owner() == nullptr);
+    EXPECT_TRUE(IsECMBlast(blast) && !IsECMBlast(ship));
   }
 }
 
-OO_TEST(fourPulsesThenGone) {
+TEST(OOECMBlastEntity, fourPulsesThenGone) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* ship = Ship();
     Entity* blast = Blast(ship);
 
     blast->update(0.25);
-    OO_CHECK(sRanges.empty() && sUniverse->_removed == nullptr);
+    EXPECT_TRUE(sRanges.empty() && sUniverse->_removed == nullptr);
     blast->update(0.25);
-    OO_CHECK(sRanges.size() == 1 && sRanges[0] == SCANNER_MAX_RANGE * 0.25);
-    OO_CHECK(sUniverse->_searchedFrom == blast);
+    EXPECT_TRUE(sRanges.size() == 1 && sRanges[0] == SCANNER_MAX_RANGE * 0.25);
+    EXPECT_TRUE(sUniverse->_searchedFrom == blast);
     blast->update(0.5);
     blast->update(0.5);
-    OO_CHECK(sRanges.size() == 3 && sRanges[1] == SCANNER_MAX_RANGE * 0.5 &&
+    EXPECT_TRUE(sRanges.size() == 3 && sRanges[1] == SCANNER_MAX_RANGE * 0.5 &&
              sRanges[2] == SCANNER_MAX_RANGE * 0.75);
-    OO_CHECK(sUniverse->_removed == nullptr);
+    EXPECT_TRUE(sUniverse->_removed == nullptr);
     blast->update(0.5);
-    OO_CHECK(sRanges.size() == 4 && sRanges[3] == SCANNER_MAX_RANGE);
-    OO_CHECK(sUniverse->_removed == blast);
+    EXPECT_TRUE(sRanges.size() == 4 && sRanges[3] == SCANNER_MAX_RANGE);
+    EXPECT_TRUE(sUniverse->_removed == blast);
   }
 }
 
-OO_TEST(deadShipEndsIt) {
+TEST(OOECMBlastEntity, deadShipEndsIt) {
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* ship = Ship();
     Entity* blast = Blast(ship);
     ship->setStatus(oo::EntityStatus::kDead);
     blast->update(0.5);
-    OO_CHECK(sRanges.empty() && sUniverse->_removed == blast);
+    EXPECT_TRUE(sRanges.empty() && sUniverse->_removed == blast);
   }
 
   Entity* blast = nullptr;
   {
     oo::AutoreleaseScope scope;
-    SetUp();
+    ::SetUp();
     Entity* ship = oo::RetainEntity(
         oo::MadeEntity(oo::makeShared<::ShipEntity>()));  // a ship
     blast = oo::RetainEntity(Blast(ship));
@@ -196,9 +197,7 @@ OO_TEST(deadShipEndsIt) {
   {
     oo::AutoreleaseScope scope;
     blast->update(0.5);
-    OO_CHECK(sRanges.empty() && sUniverse->_removed == blast);
+    EXPECT_TRUE(sRanges.empty() && sUniverse->_removed == blast);
     oo::ReleaseEntity(blast);
   }
 }
-
-OO_TEST_MAIN()

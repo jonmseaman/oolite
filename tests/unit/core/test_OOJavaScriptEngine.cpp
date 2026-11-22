@@ -13,6 +13,8 @@
 	is freed. Run: meson test -C build/meson_test test_OOJavaScriptEngine
 */
 
+#include <gtest/gtest.h>
+
 #include "OOJavaScriptEngine.h"
 #include "OOJSPropID.h"
 #include "Entity.h"
@@ -29,7 +31,6 @@
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Notification.hpp"
-#include "oo_test.hpp"
 
 #include <quickjs.h>
 
@@ -156,7 +157,7 @@ void Capture(std::string_view line)
 void WriteText(const stdfs::path &path, const std::string &text)
 {
 	stdfs::create_directories(path.parent_path());
-	OO_CHECK(oo::fs::writeFile(path, oo::Data(text.data(), text.size()), oo::fs::WriteMode::kDirect).has_value());
+	EXPECT_TRUE(oo::fs::writeFile(path, oo::Data(text.data(), text.size()), oo::fs::WriteMode::kDirect).has_value());
 }
 
 
@@ -167,7 +168,7 @@ void SetUp()
 	sRoot = stdfs::temp_directory_path() / ("oo-test-jsengine-" + std::to_string(static_cast<unsigned long>(::_getpid())));
 	stdfs::remove_all(sRoot);
 	stdfs::create_directories(sRoot);
-	OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+	EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
 	stdfs::current_path(sRoot);
 	WriteText(sRoot / "Resources" / "Info-gnustep.plist", "{ CFBundleVersion = \"9.9.9-test\"; }");
 	(void)OOJavaScriptEngine::sharedEngine();
@@ -234,7 +235,7 @@ JSValue EvalIn(JSContext *context, const std::string &source, const char *file)
 Owned Eval(JSContext *context, const std::string &source)
 {
 	JSValue result = EvalIn(context, source, "test.js");
-	OO_CHECK(!JS_IsException(result));
+	EXPECT_TRUE(!JS_IsException(result));
 	return Owned(result);
 }
 
@@ -257,7 +258,7 @@ std::string CallToString(JSContext *context, JSValueConst object)
 {
 	Owned function(JS_GetPropertyStr(context, object, "toString"));
 	Owned result(JS_Call(context, function, object, 0, nullptr));
-	OO_CHECK(!JS_IsException(result));
+	EXPECT_TRUE(!JS_IsException(result));
 	return OOStringFromJSValue(context, result).value_or("<none>");
 }
 
@@ -317,21 +318,21 @@ const JSClassDef sVaultClass =
 
 // MARK: The engine ---------------------------------------------------------------------------------
 
-OO_TEST(sharedEngine)
+TEST(OOJavaScriptEngine, sharedEngine)
 {
-	SetUp();
+	::SetUp();
 	{
 		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
-		OO_CHECK(engine != nullptr);
-		OO_CHECK(OOJavaScriptEngine::sharedEngine() == engine);
-		OO_CHECK(gOOJSMainThreadContext != NULL);
-		OO_CHECK(JS_IsObject(engine->globalObject()));
+		EXPECT_TRUE(engine != nullptr);
+		EXPECT_TRUE(OOJavaScriptEngine::sharedEngine() == engine);
+		EXPECT_TRUE(gOOJSMainThreadContext != NULL);
+		EXPECT_TRUE(JS_IsObject(engine->globalObject()));
 
 		JSContext *context = OOJSAcquireContext();
-		OO_CHECK(IsSameObject(Owned(JS_GetGlobalObject(context)), engine->globalObject()));
+		EXPECT_TRUE(IsSameObject(Owned(JS_GetGlobalObject(context)), engine->globalObject()));
 		// The Oolite classes and the prefix script are set up on the global object.
-		OO_CHECK(JS_IsObject(Eval(context, "Vector3D")));
-		OO_CHECK(JS_IsObject(Eval(context, "missionVariables")));
+		EXPECT_TRUE(JS_IsObject(Eval(context, "Vector3D")));
+		EXPECT_TRUE(JS_IsObject(Eval(context, "missionVariables")));
 		OOJSRelinquishContext(context);
 
 		engine->runMissionCallback();	// no callback set: does nothing
@@ -339,64 +340,64 @@ OO_TEST(sharedEngine)
 }
 
 
-OO_TEST(standardClasses)
+TEST(OOJavaScriptEngine, standardClasses)
 {
-	SetUp();
+	::SetUp();
 	{
 		// The engine looks the standard classes' IDs up when it starts.
-		OO_CHECK(gOOJSObjectClassID != 0);
-		OO_CHECK(gOOJSStringClassID != 0);
-		OO_CHECK(gOOJSArrayClassID != 0);
-		OO_CHECK(gOOJSNumberClassID != 0);
-		OO_CHECK(gOOJSBooleanClassID != 0);
-		OO_CHECK(gOOJSObjectClassID != gOOJSArrayClassID);
-		OO_CHECK(gOOJSStringClassID != gOOJSNumberClassID);
-		OO_CHECK(gOOJSNumberClassID != gOOJSBooleanClassID);
+		EXPECT_TRUE(gOOJSObjectClassID != 0);
+		EXPECT_TRUE(gOOJSStringClassID != 0);
+		EXPECT_TRUE(gOOJSArrayClassID != 0);
+		EXPECT_TRUE(gOOJSNumberClassID != 0);
+		EXPECT_TRUE(gOOJSBooleanClassID != 0);
+		EXPECT_TRUE(gOOJSObjectClassID != gOOJSArrayClassID);
+		EXPECT_TRUE(gOOJSStringClassID != gOOJSNumberClassID);
+		EXPECT_TRUE(gOOJSNumberClassID != gOOJSBooleanClassID);
 
 		JSContext *context = OOJSAcquireContext();
-		OO_CHECK(JS_GetClassID(Eval(context, "[1, 2]")) == gOOJSArrayClassID);
-		OO_CHECK(JS_GetClassID(Eval(context, "({ a: 1 })")) == gOOJSObjectClassID);
-		OO_CHECK(JS_GetClassID(Eval(context, "new String('s')")) == gOOJSStringClassID);
-		OO_CHECK(JS_GetClassID(Eval(context, "new Number(1)")) == gOOJSNumberClassID);
-		OO_CHECK(JS_GetClassID(Eval(context, "new Boolean(false)")) == gOOJSBooleanClassID);
+		EXPECT_TRUE(JS_GetClassID(Eval(context, "[1, 2]")) == gOOJSArrayClassID);
+		EXPECT_TRUE(JS_GetClassID(Eval(context, "({ a: 1 })")) == gOOJSObjectClassID);
+		EXPECT_TRUE(JS_GetClassID(Eval(context, "new String('s')")) == gOOJSStringClassID);
+		EXPECT_TRUE(JS_GetClassID(Eval(context, "new Number(1)")) == gOOJSNumberClassID);
+		EXPECT_TRUE(JS_GetClassID(Eval(context, "new Boolean(false)")) == gOOJSBooleanClassID);
 		OOJSRelinquishContext(context);
 	}
 }
 
 
-OO_TEST(flags)
+TEST(OOJavaScriptEngine, flags)
 {
-	SetUp();
+	::SetUp();
 	{
 		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
 		const bool show = engine->showErrorLocations();
 		engine->setShowErrorLocations(true);
-		OO_CHECK(engine->showErrorLocations());
+		EXPECT_TRUE(engine->showErrorLocations());
 		engine->setShowErrorLocations(false);
-		OO_CHECK(!engine->showErrorLocations());
+		EXPECT_TRUE(!engine->showErrorLocations());
 		engine->setShowErrorLocations(show);
 
 #ifndef NDEBUG
 		// Off unless the preferences say otherwise (the scratch home has none).
-		OO_CHECK(!engine->dumpStackForErrors());
-		OO_CHECK(!engine->dumpStackForWarnings());
+		EXPECT_TRUE(!engine->dumpStackForErrors());
+		EXPECT_TRUE(!engine->dumpStackForWarnings());
 		engine->setDumpStackForErrors(true);
-		OO_CHECK(engine->dumpStackForErrors());
-		OO_CHECK(!engine->dumpStackForWarnings());
+		EXPECT_TRUE(engine->dumpStackForErrors());
+		EXPECT_TRUE(!engine->dumpStackForWarnings());
 		engine->setDumpStackForWarnings(true);
-		OO_CHECK(engine->dumpStackForWarnings());
+		EXPECT_TRUE(engine->dumpStackForWarnings());
 		engine->setDumpStackForErrors(false);
 		engine->setDumpStackForWarnings(false);
-		OO_CHECK(!engine->dumpStackForErrors());
-		OO_CHECK(!engine->dumpStackForWarnings());
+		EXPECT_TRUE(!engine->dumpStackForErrors());
+		EXPECT_TRUE(!engine->dumpStackForWarnings());
 #endif
 	}
 }
 
 
-OO_TEST(callJSFunction)
+TEST(OOJavaScriptEngine, callJSFunction)
 {
-	SetUp();
+	::SetUp();
 	{
 		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
 		JSContext *context = OOJSAcquireContext();
@@ -406,8 +407,8 @@ OO_TEST(callJSFunction)
 
 		JSValueConst argv[2] = { JS_NewInt32(context, 6), JS_NewInt32(context, 7) };
 		JSValue result = JS_UNDEFINED;
-		OO_CHECK(engine->callJSFunction(function, thisValue, 2, argv, &result));
-		OO_CHECK(JS_VALUE_GET_TAG(result) == JS_TAG_INT && JS_VALUE_GET_INT(result) == 142);
+		EXPECT_TRUE(engine->callJSFunction(function, thisValue, 2, argv, &result));
+		EXPECT_TRUE(JS_VALUE_GET_TAG(result) == JS_TAG_INT && JS_VALUE_GET_INT(result) == 142);
 		JS_FreeValue(context, result);
 		result = JS_UNDEFINED;
 
@@ -416,10 +417,10 @@ OO_TEST(callJSFunction)
 		context = OOJSAcquireContext();
 		Owned thrower = Eval(context, "(function () { throw new Error('call boom'); })");
 		OOJSRelinquishContext(context);
-		OO_CHECK(!engine->callJSFunction(thrower, thisValue, 0, NULL, &result));
-		OO_CHECK(LogLinesContaining("call boom") >= 1);
+		EXPECT_TRUE(!engine->callJSFunction(thrower, thisValue, 0, NULL, &result));
+		EXPECT_TRUE(LogLinesContaining("call boom") >= 1);
 		context = OOJSAcquireContext();
-		OO_CHECK(!JS_HasException(context));
+		EXPECT_TRUE(!JS_HasException(context));
 		OOJSRelinquishContext(context);
 	}
 }
@@ -427,9 +428,9 @@ OO_TEST(callJSFunction)
 
 // What a holder of a JS value does in place of the old GC roots: it keeps its own reference
 // (OOJSEngineCore.h, rule 4), and the collector leaves the values alone.
-OO_TEST(gcRoots)
+TEST(OOJavaScriptEngine, gcRoots)
 {
-	SetUp();
+	::SetUp();
 	{
 		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
 		JSContext *context = OOJSAcquireContext();
@@ -440,7 +441,7 @@ OO_TEST(gcRoots)
 		engine->garbageCollectionOpportunity(true);
 		engine->garbageCollectionOpportunity(false);
 		context = OOJSAcquireContext();
-		OO_CHECK(OOStringFromJSValue(context, Eval(context, "1, 'ok'")).value_or("") == "ok");
+		EXPECT_TRUE(OOStringFromJSValue(context, Eval(context, "1, 'ok'")).value_or("") == "ok");
 		OOJSRelinquishContext(context);
 
 		JS_FreeValue(context, value);
@@ -452,9 +453,9 @@ OO_TEST(gcRoots)
 
 // MARK: Errors and warnings ------------------------------------------------------------------------
 
-OO_TEST(errorReporting)
+TEST(OOJavaScriptEngine, errorReporting)
 {
-	SetUp();
+	::SetUp();
 	{
 		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
 		const bool show = engine->showErrorLocations();
@@ -471,14 +472,14 @@ OO_TEST(errorReporting)
 		OOJSReportErrorForCaller(context, std::string("TestClass"), std::string("doThing"), "bad %s %d", "input", 7);
 		OOJSReportPendingException(context);
 		OOJSRelinquishContext(context);
-		OO_CHECK(LogLinesContaining("***** JavaScript ") == 1);
-		OO_CHECK(LogLinesContaining("(<unidentified script>): ") == 1);
-		OO_CHECK(LogLinesContaining("TestClass.doThing: bad input 7") == 1);
+		EXPECT_TRUE(LogLinesContaining("***** JavaScript ") == 1);
+		EXPECT_TRUE(LogLinesContaining("(<unidentified script>): ") == 1);
+		EXPECT_TRUE(LogLinesContaining("TestClass.doThing: bad input 7") == 1);
 #if OOJSENGINE_MONITOR_SUPPORT
-		OO_CHECK(monitor->_errors == 1);
-		OO_CHECK(monitor->_engine == engine);
-		OO_CHECK(!monitor->_showLocation);
-		OO_CHECK(monitor->_message.find("TestClass.doThing: bad input 7") != std::string::npos);
+		EXPECT_TRUE(monitor->_errors == 1);
+		EXPECT_TRUE(monitor->_engine == engine);
+		EXPECT_TRUE(!monitor->_showLocation);
+		EXPECT_TRUE(monitor->_message.find("TestClass.doThing: bad input 7") != std::string::npos);
 #endif
 
 		// A bad-arguments report describes the arguments.
@@ -491,7 +492,7 @@ OO_TEST(errorReporting)
 		}
 		OOJSReportPendingException(context);
 		OOJSRelinquishContext(context);
-		OO_CHECK(LogLinesContaining("Ship.fly: Invalid arguments (3, \"three\") -- expected number.") == 1);
+		EXPECT_TRUE(LogLinesContaining("Ship.fly: Invalid arguments (3, \"three\") -- expected number.") == 1);
 
 		// An uncaught exception with locations shown: two lines.
 		StartLog();
@@ -499,13 +500,13 @@ OO_TEST(errorReporting)
 		context = OOJSAcquireContext();
 		const char *source = "\n\nthrow new Error('located boom');";
 		JSValue result = EvalIn(context, source, "located.js");
-		OO_CHECK(JS_IsException(result));
+		EXPECT_TRUE(JS_IsException(result));
 		OOJSReportPendingException(context);
 		OOJSRelinquishContext(context);
-		OO_CHECK(LogLinesContaining("located boom") >= 1);
-		OO_CHECK(LogLinesContaining("located.js, line 3") == 1);
+		EXPECT_TRUE(LogLinesContaining("located boom") >= 1);
+		EXPECT_TRUE(LogLinesContaining("located.js, line 3") == 1);
 #if OOJSENGINE_MONITOR_SUPPORT
-		OO_CHECK(monitor->_showLocation);
+		EXPECT_TRUE(monitor->_showLocation);
 #endif
 
 		// No second line when the stack skip is set.
@@ -513,22 +514,22 @@ OO_TEST(errorReporting)
 		OOJSSetWarningOrErrorStackSkip(1);
 		context = OOJSAcquireContext();
 		result = EvalIn(context, source, "located.js");
-		OO_CHECK(JS_IsException(result));
+		EXPECT_TRUE(JS_IsException(result));
 		OOJSReportPendingException(context);
 		OOJSRelinquishContext(context);
 		OOJSSetWarningOrErrorStackSkip(0);
-		OO_CHECK(LogLinesContaining("located boom") >= 1);
-		OO_CHECK(LogLinesContaining("located.js, line 3") == 0);
+		EXPECT_TRUE(LogLinesContaining("located boom") >= 1);
+		EXPECT_TRUE(LogLinesContaining("located.js, line 3") == 0);
 
 		// A warning: dashes, and nothing pending.
 		StartLog();
 		engine->setShowErrorLocations(false);
 		context = OOJSAcquireContext();
 		OOJSReportWarningForCaller(context, std::nullopt, std::string("warnFunc"), "careful %s", "now");
-		OO_CHECK(!JS_HasException(context));
+		EXPECT_TRUE(!JS_HasException(context));
 		OOJSRelinquishContext(context);
-		OO_CHECK(LogLinesContaining("----- JavaScript warning") == 1);
-		OO_CHECK(LogLinesContaining("warnFunc: careful now") == 1);
+		EXPECT_TRUE(LogLinesContaining("----- JavaScript warning") == 1);
+		EXPECT_TRUE(LogLinesContaining("warnFunc: careful now") == 1);
 
 #if OOJSENGINE_MONITOR_SUPPORT
 		// Script log messages go to the monitor too.
@@ -536,9 +537,9 @@ OO_TEST(errorReporting)
 		context = OOJSAcquireContext();
 		Eval(context, "log('monitored message')");
 		OOJSRelinquishContext(context);
-		OO_CHECK(monitor->_logs == logs + 1);
-		OO_CHECK(monitor->_message == "monitored message");
-		OO_CHECK(!monitor->_messageClass.has_value());
+		EXPECT_TRUE(monitor->_logs == logs + 1);
+		EXPECT_TRUE(monitor->_message == "monitored message");
+		EXPECT_TRUE(!monitor->_messageClass.has_value());
 		engine->setMonitor(nullptr);
 #endif
 		engine->setShowErrorLocations(show);
@@ -558,23 +559,23 @@ JSValue DumpStackNative(OOJS_NATIVE_ARGS)
 }
 
 
-OO_TEST(stackDump)
+TEST(OOJavaScriptEngine, stackDump)
 {
-	SetUp();
+	::SetUp();
 	{
 		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
 		JSContext *context = OOJSAcquireContext();
-		OO_CHECK(JS_SetPropertyStr(context, engine->globalObject(), "testDumpStack", JS_NewCFunction(context, DumpStackNative, "testDumpStack", 0)) >= 0);
+		EXPECT_TRUE(JS_SetPropertyStr(context, engine->globalObject(), "testDumpStack", JS_NewCFunction(context, DumpStackNative, "testDumpStack", 0)) >= 0);
 
 		// #768's dump is QuickJS's own stack text: each frame's function and location
 		// (file:line:column), no variables, innermost first.
 		StartLog();
 		const char *source = "function dumpTarget(a) {\n\tvar b = a + 1;\n\ttestDumpStack();\n\treturn b;\n}\ndumpTarget(41);\n";
 		JSValue result = EvalIn(context, source, "dumpstack.js");
-		OO_CHECK(!JS_IsException(result));
+		EXPECT_TRUE(!JS_IsException(result));
 		JS_FreeValue(context, result);
-		OO_CHECK(LogLinesContaining("at dumpTarget (dumpstack.js:3:") == 1);
-		OO_CHECK(LogLinesContaining("at <eval> (dumpstack.js:6:") == 1);
+		EXPECT_TRUE(LogLinesContaining("at dumpTarget (dumpstack.js:3:") == 1);
+		EXPECT_TRUE(LogLinesContaining("at <eval> (dumpstack.js:6:") == 1);
 		if (LogLinesContaining("dumpstack.js") == 0)  fprintf(stderr, "%s", LogText().c_str());
 		OOJSRelinquishContext(context);
 
@@ -583,12 +584,12 @@ OO_TEST(stackDump)
 		OOJSSetWarningOrErrorStackSkip(1);
 		context = OOJSAcquireContext();
 		result = EvalIn(context, source, "dumpstack.js");
-		OO_CHECK(!JS_IsException(result));
+		EXPECT_TRUE(!JS_IsException(result));
 		JS_FreeValue(context, result);
 		OOJSRelinquishContext(context);
 		OOJSSetWarningOrErrorStackSkip(0);
-		OO_CHECK(LogLinesContaining("at dumpTarget (dumpstack.js:3:") == 1);
-		OO_CHECK(LogLinesContaining("at <eval> (dumpstack.js:6:") == 1);
+		EXPECT_TRUE(LogLinesContaining("at dumpTarget (dumpstack.js:3:") == 1);
+		EXPECT_TRUE(LogLinesContaining("at <eval> (dumpstack.js:6:") == 1);
 
 		// This backend has no `debugger` hook: the statement does nothing.
 		engine->enableDebuggerStatement();
@@ -596,14 +597,14 @@ OO_TEST(stackDump)
 		context = OOJSAcquireContext();
 		Eval(context, "(function () { debugger; return 1; })();");
 		OOJSRelinquishContext(context);
-		OO_CHECK(LogLinesContaining("debugger invoked") == 0);
+		EXPECT_TRUE(LogLinesContaining("debugger invoked") == 0);
 
 		// With no JS on the stack, a dump writes nothing.
 		StartLog();
 		context = OOJSAcquireContext();
 		OOJSDumpStack(context);
 		OOJSRelinquishContext(context);
-		OO_CHECK(LogLinesContaining("script.javaScript.stackTrace") + LogLinesContaining("<Oolite native>") == 0);
+		EXPECT_TRUE(LogLinesContaining("script.javaScript.stackTrace") + LogLinesContaining("<Oolite native>") == 0);
 	}
 }
 #endif
@@ -611,28 +612,28 @@ OO_TEST(stackDump)
 
 // MARK: Values -------------------------------------------------------------------------------------
 
-OO_TEST(describeValue)
+TEST(OOJavaScriptEngine, describeValue)
 {
-	SetUp();
+	::SetUp();
 	{
 		JSContext *context = OOJSAcquireContext();
-		OO_CHECK_EQ(Describe(context, "'a\"b\\n'", false), "\"a\\\"b\\n\"");
-		OO_CHECK_EQ(Describe(context, "new String('boxed')", false), "\"boxed\"");
-		OO_CHECK_EQ(Describe(context, "new Array(251).join('x')", false), "\"" + std::string(200, 'x') + "...\"");
-		OO_CHECK_EQ(Describe(context, "[1, 2, 3]", false), "[1, 2, 3]");
-		OO_CHECK_EQ(Describe(context, "[1, 'two', 3, 4, 5, 6]", false), "[1, \"two\", 3, 4, ... <6 items total>]");
-		OO_CHECK_EQ(Describe(context, "[[1, 2], {}]", false), "[[<2 items>], {...}]");
-		OO_CHECK_EQ(Describe(context, "({ a: 1 })", true), "{...}");
-		OO_CHECK_EQ(Describe(context, "({ a: 1 })", false), "[object Object]");
-		OO_CHECK_EQ(Describe(context, "(function namedFn() {})", false), "function namedFn");
-		OO_CHECK_EQ(Describe(context, "3.5", false), "3.5");
-		OO_CHECK_EQ(Describe(context, "null", false), "null");
-		OO_CHECK_EQ(Describe(context, "undefined", false), "undefined");
-		OO_CHECK_EQ(Describe(context, "true", false), "true");
+		EXPECT_EQ(Describe(context, "'a\"b\\n'", false), "\"a\\\"b\\n\"");
+		EXPECT_EQ(Describe(context, "new String('boxed')", false), "\"boxed\"");
+		EXPECT_EQ(Describe(context, "new Array(251).join('x')", false), "\"" + std::string(200, 'x') + "...\"");
+		EXPECT_EQ(Describe(context, "[1, 2, 3]", false), "[1, 2, 3]");
+		EXPECT_EQ(Describe(context, "[1, 'two', 3, 4, 5, 6]", false), "[1, \"two\", 3, 4, ... <6 items total>]");
+		EXPECT_EQ(Describe(context, "[[1, 2], {}]", false), "[[<2 items>], {...}]");
+		EXPECT_EQ(Describe(context, "({ a: 1 })", true), "{...}");
+		EXPECT_EQ(Describe(context, "({ a: 1 })", false), "[object Object]");
+		EXPECT_EQ(Describe(context, "(function namedFn() {})", false), "function namedFn");
+		EXPECT_EQ(Describe(context, "3.5", false), "3.5");
+		EXPECT_EQ(Describe(context, "null", false), "null");
+		EXPECT_EQ(Describe(context, "undefined", false), "undefined");
+		EXPECT_EQ(Describe(context, "true", false), "true");
 
 		Owned p = Eval(context, "'p'");
 		JSValueConst params[2] = { JS_NewInt32(context, 1), p };
-		OO_CHECK_EQ(OOJSStringWithJavaScriptParameters(params, 2, context).value_or("<none>"), "(1, \"p\")");
+		EXPECT_EQ(OOJSStringWithJavaScriptParameters(params, 2, context).value_or("<none>"), "(1, \"p\")");
 		OOJSRelinquishContext(context);
 	}
 }
@@ -640,107 +641,107 @@ OO_TEST(describeValue)
 
 // A getter that throws while the engine reads a value's name, constructor, stack or element (for a
 // description, a class name or a report) leaves no exception pending afterwards.
-OO_TEST(throwingAccessorsLeaveNoPendingException)
+TEST(OOJavaScriptEngine, throwingAccessorsLeaveNoPendingException)
 {
-	SetUp();
+	::SetUp();
 	{
 		JSContext *context = OOJSAcquireContext();
 
 		Owned noConstructor = Eval(context, "({ get constructor() { throw 1; } })");
-		OO_CHECK_EQ(OOJSClassNameOfValue(context, noConstructor), "Object");
-		OO_CHECK(!JS_HasException(context));
+		EXPECT_EQ(OOJSClassNameOfValue(context, noConstructor), "Object");
+		EXPECT_TRUE(!JS_HasException(context));
 
 		Owned noName = Eval(context, "({ constructor: Object.defineProperty(function () {}, 'name', { get: function () { throw 2; } }) })");
-		OO_CHECK_EQ(OOJSClassNameOfValue(context, noName), "Object");
-		OO_CHECK(!JS_HasException(context));
+		EXPECT_EQ(OOJSClassNameOfValue(context, noName), "Object");
+		EXPECT_TRUE(!JS_HasException(context));
 
 		Describe(context, "Object.defineProperty(function f() {}, 'name', { get: function () { throw 3; } })", false);
-		OO_CHECK(!JS_HasException(context));
+		EXPECT_TRUE(!JS_HasException(context));
 
-		OO_CHECK_EQ(Describe(context, "Object.defineProperty([1, 2], 0, { get: function () { throw 4; } })", false), "[?, 2]");
-		OO_CHECK(!JS_HasException(context));
+		EXPECT_EQ(Describe(context, "Object.defineProperty([1, 2], 0, { get: function () { throw 4; } })", false), "[?, 2]");
+		EXPECT_TRUE(!JS_HasException(context));
 
 		StartLog();
 		JSValue thrown = EvalIn(context, "var e = new Error('m'); Object.defineProperty(e, 'name', { get: function () { throw 5; } }); "
 		                        "Object.defineProperty(e, 'stack', { get: function () { throw 6; } }); throw e;", "test.js");
-		OO_CHECK(JS_IsException(thrown));
+		EXPECT_TRUE(JS_IsException(thrown));
 		OOJSReportPendingException(context);
-		OO_CHECK(!JS_HasException(context));
+		EXPECT_TRUE(!JS_HasException(context));
 
 		OOJSRelinquishContext(context);
 	}
 }
 
-OO_TEST(idAndStringCaches)
+TEST(OOJavaScriptEngine, idAndStringCaches)
 {
-	SetUp();
+	::SetUp();
 	{
 		JSAtom identifier = OOJSID("testIdentifier");
-		OO_CHECK_EQ(OOStringFromJSID(identifier).value_or("<none>"), "testIdentifier");
-		OO_CHECK(OOJSID("testIdentifier") == identifier);
+		EXPECT_EQ(OOStringFromJSID(identifier).value_or("<none>"), "testIdentifier");
+		EXPECT_TRUE(OOJSID("testIdentifier") == identifier);
 
 		JSContext *context = OOJSAcquireContext();
 		Owned literal(OOJSSTR("test literal"));
-		OO_CHECK(JS_IsString(literal));
-		OO_CHECK_EQ(OOStringFromJSValue(context, literal).value_or("<none>"), "test literal");
+		EXPECT_TRUE(JS_IsString(literal));
+		EXPECT_EQ(OOStringFromJSValue(context, literal).value_or("<none>"), "test literal");
 		OOJSRelinquishContext(context);
 	}
 }
 
 
-OO_TEST(nativeObjectValues)
+TEST(OOJavaScriptEngine, nativeObjectValues)
 {
-	SetUp();
+	::SetUp();
 	{
 		JSContext *context = OOJSAcquireContext();
 
 		// nil and OONull are JS null; OONull is one object that copies as itself.
     // (nil is the null PList, through OOJSValueFromPList.)
-		OO_CHECK(JS_IsNull(Owned(OOJSValueFromPList(context, oo::PList()))));
+		EXPECT_TRUE(JS_IsNull(Owned(OOJSValueFromPList(context, oo::PList()))));
 		OONull *null = OONull::null();
-		OO_CHECK(null != nullptr && OONull::null() == null);
-		OO_CHECK(OOIsNullObjectNode(OONullObjectNode()) && OONullObjectNode() == OONullObjectNode());	// the one null, shared
-		OO_CHECK_EQ(null->description(), "<null>");
-		OO_CHECK(JS_IsNull(Owned(OOJSValueFromPList(context, OONullObjectNode()))));
-		OO_CHECK(JS_IsNull(Owned(null->jsValueInContext(context))));
+		EXPECT_TRUE(null != nullptr && OONull::null() == null);
+		EXPECT_TRUE(OOIsNullObjectNode(OONullObjectNode()) && OONullObjectNode() == OONullObjectNode());	// the one null, shared
+		EXPECT_EQ(null->description(), "<null>");
+		EXPECT_TRUE(JS_IsNull(Owned(OOJSValueFromPList(context, OONullObjectNode()))));
+		EXPECT_TRUE(JS_IsNull(Owned(null->jsValueInContext(context))));
 
 		// A native vector is a Vector3D.
 		std::shared_ptr<oo::NativeVector> vector = oo::makeShared<oo::NativeVector>(make_vector(1.0f, 2.0f, 3.0f));
 		Owned vectorValue(OOJSValueFromPList(context, oo::PList(oo::PList::Object(vector))));
-		OO_CHECK(JS_IsObject(vectorValue));
+		EXPECT_TRUE(JS_IsObject(vectorValue));
 		const char *className = OOJSClassName(JS_GetClassID(vectorValue));
-		OO_CHECK(className != nullptr && std::strcmp(className, "Vector3D") == 0);
-		OO_CHECK_EQ(OOStringFromJSValue(context, vectorValue).value_or("<none>"), "(1, 2, 3)");
+		EXPECT_TRUE(className != nullptr && std::strcmp(className, "Vector3D") == 0);
+		EXPECT_EQ(OOStringFromJSValue(context, vectorValue).value_or("<none>"), "(1, 2, 3)");
 
 		OOJSRelinquishContext(context);
 	}
 }
 
 
-OO_TEST(jsValueHolder)
+TEST(OOJavaScriptEngine, jsValueHolder)
 {
-	SetUp();
+	::SetUp();
 	{
 		JSContext *context = OOJSAcquireContext();
 		Owned object = Eval(context, "({ held: 'yes' })");
 		std::shared_ptr<OOJSValue> holder = OOJSValue::valueWithJSValue(object, context);
-		OO_CHECK(holder != nullptr);
-		OO_CHECK(IsSameObject(Owned(holder->jsValueInContext(context)), object));
-		OO_CHECK(IsSameObject(Owned(OOJSValueFromPList(context, OOJSValueObjectNode(holder.get()))), object));
+		EXPECT_TRUE(holder != nullptr);
+		EXPECT_TRUE(IsSameObject(Owned(holder->jsValueInContext(context)), object));
+		EXPECT_TRUE(IsSameObject(Owned(OOJSValueFromPList(context, OOJSValueObjectNode(holder.get()))), object));
 		OOJSRelinquishContext(context);
 
 		// A nil context is acquired for the call.
 		std::shared_ptr<OOJSValue> noContext = OOJSValue::valueWithJSValue(JS_NewInt32(context, 9), NULL);
 		JSValue nine = noContext->jsValueInContext(NULL);
-		OO_CHECK(JS_VALUE_GET_TAG(nine) == JS_TAG_INT && JS_VALUE_GET_INT(nine) == 9);
+		EXPECT_TRUE(JS_VALUE_GET_TAG(nine) == JS_TAG_INT && JS_VALUE_GET_INT(nine) == 9);
 
 		// Undefined holds undefined.
 		std::shared_ptr<OOJSValue> undefinedHolder = OOJSValue::valueWithJSValue(JS_UNDEFINED, NULL);
-		OO_CHECK(JS_IsUndefined(undefinedHolder->jsValueInContext(NULL)));
+		EXPECT_TRUE(JS_IsUndefined(undefinedHolder->jsValueInContext(NULL)));
 
 		OOJavaScriptEngine::sharedEngine()->garbageCollectionOpportunity(true);	// the held object survives
 		context = OOJSAcquireContext();
-		OO_CHECK_EQ(OOStringFromJSValue(context, Owned(holder->jsValueInContext(context))).value_or("<none>"), "[object Object]");
+		EXPECT_EQ(OOStringFromJSValue(context, Owned(holder->jsValueInContext(context))).value_or("<none>"), "[object Object]");
 		OOJSRelinquishContext(context);
 	}
 }
@@ -749,151 +750,151 @@ OO_TEST(jsValueHolder)
 // The generic wrapper's hooks with the C++ object the slot holds: the finalizer
 // tells it its wrapper is gone, releases it and empties the slot; toString
 // names the JS class (only an object with a converter described itself).
-OO_TEST(cxxObjectWrapper)
+TEST(OOJavaScriptEngine, cxxObjectWrapper)
 {
-	SetUp();
+	::SetUp();
 	std::shared_ptr<TestCxxNative> native = oo::makeShared<TestCxxNative>();
 	const int deallocs = sCxxNativeDeallocs;
 	{
 		JSContext *context = OOJSAcquireContext();
 		OOJSRegisterClass(&sTestWrapperClassID, &sTestWrapperClass);
 		Owned wrapper(JS_NewObjectClass(context, static_cast<int>(sTestWrapperClassID)));
-		OO_CHECK(JS_IsObject(wrapper));
-		OO_CHECK(OOJSSetCxxPrivate(wrapper, native));
-		OO_CHECK(JS_SetPropertyStr(context, wrapper, "toString", JS_NewCFunction(context, OOJSObjectWrapperToString, "toString", 0)) >= 0);
+		EXPECT_TRUE(JS_IsObject(wrapper));
+		EXPECT_TRUE(OOJSSetCxxPrivate(wrapper, native));
+		EXPECT_TRUE(JS_SetPropertyStr(context, wrapper, "toString", JS_NewCFunction(context, OOJSObjectWrapperToString, "toString", 0)) >= 0);
 
 		// Unconverted, toString names the JS class.
-		OO_CHECK_EQ(CallToString(context, wrapper), "[object TestWrapper]");
+		EXPECT_EQ(CallToString(context, wrapper), "[object TestWrapper]");
 
 		// With the basic private-object converter the wrapper is an Object node of the C++ object,
 		// and toString still names the JS class.
 		OOJSRegisterObjectConverter(sTestWrapperClassID, OOJSBasicPrivateObjectConverter);
 		const oo::PList node = OOJSPListFromJSObject(context, wrapper);
-		OO_CHECK(node.getIf<oo::PList::Object>() != nullptr && node.getIf<oo::PList::Object>()->get() == native.get());
-		OO_CHECK_EQ(CallToString(context, wrapper), "[object TestWrapper]");
+		EXPECT_TRUE(node.getIf<oo::PList::Object>() != nullptr && node.getIf<oo::PList::Object>()->get() == native.get());
+		EXPECT_EQ(CallToString(context, wrapper), "[object TestWrapper]");
 
 		// Finalising clears the native object's JS self, releases it and empties the slot.
 		OOJSObjectWrapperFinalize(JS_GetRuntime(context), wrapper);
-		OO_CHECK(native->_clears == 1);
+		EXPECT_TRUE(native->_clears == 1);
 		JSClassID ignored;
-		OO_CHECK(JS_GetAnyOpaque(wrapper, &ignored) == NULL);
-		OO_CHECK(OOJSPListFromJSObject(context, wrapper).isNull());
+		EXPECT_TRUE(JS_GetAnyOpaque(wrapper, &ignored) == NULL);
+		EXPECT_TRUE(OOJSPListFromJSObject(context, wrapper).isNull());
 		OOJSObjectWrapperFinalize(JS_GetRuntime(context), wrapper);	// nothing left: does nothing
-		OO_CHECK(native->_clears == 1);
+		EXPECT_TRUE(native->_clears == 1);
 
 		// With no native object, toString names the JS class.
-		OO_CHECK_EQ(CallToString(context, wrapper), "[object TestWrapper]");
+		EXPECT_EQ(CallToString(context, wrapper), "[object TestWrapper]");
 
 		OOJSRegisterObjectConverter(sTestWrapperClassID, NULL);
 		OOJSRelinquishContext(context);
 	}
-	OO_CHECK(sCxxNativeDeallocs == deallocs);	// the test's own reference
+	EXPECT_TRUE(sCxxNativeDeallocs == deallocs);	// the test's own reference
 	native = nullptr;
-	OO_CHECK(sCxxNativeDeallocs == deallocs + 1);
+	EXPECT_TRUE(sCxxNativeDeallocs == deallocs + 1);
 }
 
 
 // `delete` of a property the object does not have still reaches the class's delete hook, which
 // clears the value it serves natively (moved from the facade backend's own test).
-OO_TEST(deleteReachesTheClassHookWithNoOwnProperty)
+TEST(OOJavaScriptEngine, deleteReachesTheClassHookWithNoOwnProperty)
 {
-	SetUp();
+	::SetUp();
 	{
 		JSContext *context = OOJSAcquireContext();
 		OOJSRegisterClass(&sVaultClassID, &sVaultClass);
 		Owned global(JS_GetGlobalObject(context));
-		OO_CHECK(JS_SetPropertyStr(context, global, "vault", JS_NewObjectClass(context, static_cast<int>(sVaultClassID))) >= 0);
+		EXPECT_TRUE(JS_SetPropertyStr(context, global, "vault", JS_NewObjectClass(context, static_cast<int>(sVaultClassID))) >= 0);
 		Owned result = Eval(context, "[vault.a, delete vault.a, vault.a === undefined].join('|')");
-		OO_CHECK_EQ(OOStringFromJSValue(context, result).value_or("<none>"), "11|true|true");
-		OO_CHECK(sVaultDels == 1 && !sVaultHasA);
-		OO_CHECK_EQ(OOStringFromJSValue(context, Eval(context, "delete global.vault")).value_or("<none>"), "true");
+		EXPECT_EQ(OOStringFromJSValue(context, result).value_or("<none>"), "11|true|true");
+		EXPECT_TRUE(sVaultDels == 1 && !sVaultHasA);
+		EXPECT_EQ(OOStringFromJSValue(context, Eval(context, "delete global.vault")).value_or("<none>"), "true");
 		OOJSRelinquishContext(context);
 	}
 }
 
 
-OO_TEST(entityPredicates)
+TEST(OOJavaScriptEngine, entityPredicates)
 {
-	SetUp();
+	::SetUp();
 	{
-		OO_CHECK(!JSEntityIsJavaScriptVisiblePredicate(nullptr, NULL));
-		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(nullptr, NULL));
-		OO_CHECK(!JSEntityIsDemoShipPredicate(nullptr, NULL));
+		EXPECT_TRUE(!JSEntityIsJavaScriptVisiblePredicate(nullptr, NULL));
+		EXPECT_TRUE(!JSEntityIsJavaScriptSearchablePredicate(nullptr, NULL));
+		EXPECT_TRUE(!JSEntityIsDemoShipPredicate(nullptr, NULL));
 
 		TestScriptEntity *entity = static_cast<TestScriptEntity *>(oo::MadeEntity(oo::makeShared<TestScriptEntity>()));
 		entity->setStatus(oo::EntityStatus::kInFlight);
-		OO_CHECK(!JSEntityIsJavaScriptVisiblePredicate(entity, NULL));
-		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
+		EXPECT_TRUE(!JSEntityIsJavaScriptVisiblePredicate(entity, NULL));
+		EXPECT_TRUE(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
 
 		entity->_scriptVisible = true;
-		OO_CHECK(JSEntityIsJavaScriptVisiblePredicate(entity, NULL));
-		OO_CHECK(JSEntityIsJavaScriptSearchablePredicate(entity, NULL));	// neither ship nor planet
-		OO_CHECK(!JSEntityIsDemoShipPredicate(entity, NULL));
+		EXPECT_TRUE(JSEntityIsJavaScriptVisiblePredicate(entity, NULL));
+		EXPECT_TRUE(JSEntityIsJavaScriptSearchablePredicate(entity, NULL));	// neither ship nor planet
+		EXPECT_TRUE(!JSEntityIsDemoShipPredicate(entity, NULL));
 
 		entity->isShip = true;
-		OO_CHECK(JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
-		OO_CHECK(!JSEntityIsDemoShipPredicate(entity, NULL));
+		EXPECT_TRUE(JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
+		EXPECT_TRUE(!JSEntityIsDemoShipPredicate(entity, NULL));
 		entity->isSubEntity = true;
-		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
+		EXPECT_TRUE(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
 		entity->isSubEntity = false;
 		entity->setStatus(oo::EntityStatus::kCockpitDisplay);
-		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
-		OO_CHECK(JSEntityIsDemoShipPredicate(entity, NULL));
+		EXPECT_TRUE(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
+		EXPECT_TRUE(JSEntityIsDemoShipPredicate(entity, NULL));
 		entity->isSubEntity = true;
-		OO_CHECK(!JSEntityIsDemoShipPredicate(entity, NULL));
+		EXPECT_TRUE(!JSEntityIsDemoShipPredicate(entity, NULL));
 
 		// A JS function as a predicate: called with the entity's JS value.
 		JSContext *context = OOJSAcquireContext();
 		Owned isFortyTwo = Eval(context, "(function (e) { return e === 42; })");
 		JSFunctionPredicateParameter param = { context, isFortyTwo, JS_UNDEFINED, false };
-		OO_CHECK(JSFunctionPredicate(entity, &param));
-		OO_CHECK(!param.errorFlag);
+		EXPECT_TRUE(JSFunctionPredicate(entity, &param));
+		EXPECT_TRUE(!param.errorFlag);
 		Owned isNotFortyTwo = Eval(context, "(function (e) { return e !== 42; })");
 		param.function = isNotFortyTwo;
-		OO_CHECK(!JSFunctionPredicate(entity, &param));
-		OO_CHECK(!param.errorFlag);
+		EXPECT_TRUE(!JSFunctionPredicate(entity, &param));
+		EXPECT_TRUE(!param.errorFlag);
 
 		StartLog();
 		Owned thrower = Eval(context, "(function (e) { throw new Error('predicate boom'); })");
 		param.function = thrower;
-		OO_CHECK(!JSFunctionPredicate(entity, &param));
-		OO_CHECK(param.errorFlag);
-		OO_CHECK(LogLinesContaining("predicate boom") >= 1);
+		EXPECT_TRUE(!JSFunctionPredicate(entity, &param));
+		EXPECT_TRUE(param.errorFlag);
+		EXPECT_TRUE(LogLinesContaining("predicate boom") >= 1);
 		Owned always = Eval(context, "(function (e) { return true; })");
 		param.function = always;
-		OO_CHECK(!JSFunctionPredicate(entity, &param));	// the error flag stops further filtering
+		EXPECT_TRUE(!JSFunctionPredicate(entity, &param));	// the error flag stops further filtering
 		OOJSRelinquishContext(context);
 	}
 }
 
 
-OO_TEST(propertyListsFromJS)
+TEST(OOJavaScriptEngine, propertyListsFromJS)
 {
-	SetUp();
+	::SetUp();
 	{
 		JSContext *context = OOJSAcquireContext();
 		oo::PList array = OOJSPListFromJSValue(context, Eval(context, "[1, null, 'a', [true]]"));
-		OO_CHECK(array.isArray());
+		EXPECT_TRUE(array.isArray());
 		const oo::PList::Array *elements = array.getIf<oo::PList::Array>();
-		OO_CHECK(elements != nullptr && elements->size() == 4);
+		EXPECT_TRUE(elements != nullptr && elements->size() == 4);
 		if (elements != nullptr && elements->size() == 4)
 		{
-			OO_CHECK((*elements)[0] == oo::PList::signedInteger(1));
-			OO_CHECK(OOIsNullObjectNode((*elements)[1]));	// a null element is OONull
-			OO_CHECK((*elements)[2] == oo::PList(std::string("a")));
-			OO_CHECK((*elements)[3].isArray());
+			EXPECT_TRUE((*elements)[0] == oo::PList::signedInteger(1));
+			EXPECT_TRUE(OOIsNullObjectNode((*elements)[1]));	// a null element is OONull
+			EXPECT_TRUE((*elements)[2] == oo::PList(std::string("a")));
+			EXPECT_TRUE((*elements)[3].isArray());
 		}
-		OO_CHECK(OOJSPListFromJSValue(context, Eval(context, "[]")).isArray());
+		EXPECT_TRUE(OOJSPListFromJSValue(context, Eval(context, "[]")).isArray());
 
 		oo::PList dict = OOJSPListFromJSValue(context, Eval(context, "({ s: new String('x'), n: new Number(2.5), b: new Boolean(false) })"));
-		OO_CHECK(dict.isDict());
-		OO_CHECK(dict.find("s") != nullptr && *dict.find("s") == oo::PList(std::string("x")));
-		OO_CHECK(dict.find("n") != nullptr && *dict.find("n") == oo::PList(2.5));
-		OO_CHECK(dict.find("b") != nullptr && *dict.find("b") == oo::PList(static_cast<bool>(false)));	// OOCocoa.h defines false as 0
+		EXPECT_TRUE(dict.isDict());
+		EXPECT_TRUE(dict.find("s") != nullptr && *dict.find("s") == oo::PList(std::string("x")));
+		EXPECT_TRUE(dict.find("n") != nullptr && *dict.find("n") == oo::PList(2.5));
+		EXPECT_TRUE(dict.find("b") != nullptr && *dict.find("b") == oo::PList(static_cast<bool>(false)));	// OOCocoa.h defines false as 0
 
     // Round trip through OOJSValueFromPList.
 		oo::PList back = OOJSPListFromJSValue(context, Owned(OOJSValueFromPList(context, oo::PList(oo::PList::Array{oo::PList(std::string("q")), oo::PList::signedInteger(5)}))));
-		OO_CHECK(back == oo::PList(oo::PList::Array{oo::PList(std::string("q")), oo::PList::signedInteger(5)}));
+		EXPECT_TRUE(back == oo::PList(oo::PList::Array{oo::PList(std::string("q")), oo::PList::signedInteger(5)}));
 		OOJSRelinquishContext(context);
 	}
 }
@@ -901,9 +902,9 @@ OO_TEST(propertyListsFromJS)
 
 // MARK: Reset (last: it rebuilds the context) -----------------------------------------------------
 
-OO_TEST(reset)
+TEST(OOJavaScriptEngine, reset)
 {
-	SetUp();
+	::SetUp();
 	{
 		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
 		JSContext *context = OOJSAcquireContext();
@@ -920,20 +921,20 @@ OO_TEST(reset)
 		oo::NotificationCenter::defaultCenter().addObserver(&marker, kOOJavaScriptEngineDidResetNotificationName, &otherSender,
 			[](const oo::Notification &) { otherSender++; });
 
-		OO_CHECK(engine->reset());
-		OO_CHECK(willResets == 1 && didResets == 1 && otherSender == 0);
-		OO_CHECK(contextDuringWill);
-		OO_CHECK(OOJavaScriptEngine::sharedEngine() == engine);
-		OO_CHECK(gOOJSMainThreadContext != NULL);
-		OO_CHECK(JS_IsObject(engine->globalObject()));
-		OO_CHECK(gOOJSArrayClassID != 0);
+		EXPECT_TRUE(engine->reset());
+		EXPECT_TRUE(willResets == 1 && didResets == 1 && otherSender == 0);
+		EXPECT_TRUE(contextDuringWill);
+		EXPECT_TRUE(OOJavaScriptEngine::sharedEngine() == engine);
+		EXPECT_TRUE(gOOJSMainThreadContext != NULL);
+		EXPECT_TRUE(JS_IsObject(engine->globalObject()));
+		EXPECT_TRUE(gOOJSArrayClassID != 0);
 
 		context = OOJSAcquireContext();
-		OO_CHECK_EQ(OOStringFromJSValue(context, Eval(context, "typeof survivesReset")).value_or("<none>"), "undefined");
-		OO_CHECK(JS_IsObject(Eval(context, "Vector3D")));
-		OO_CHECK(JS_GetClassID(Eval(context, "[1]")) == gOOJSArrayClassID);
+		EXPECT_EQ(OOStringFromJSValue(context, Eval(context, "typeof survivesReset")).value_or("<none>"), "undefined");
+		EXPECT_TRUE(JS_IsObject(Eval(context, "Vector3D")));
+		EXPECT_TRUE(JS_GetClassID(Eval(context, "[1]")) == gOOJSArrayClassID);
 		// The standard converters are registered again.
-		OO_CHECK(OOJSPListFromJSValue(context, Eval(context, "[1]")).isArray());
+		EXPECT_TRUE(OOJSPListFromJSValue(context, Eval(context, "[1]")).isArray());
 		OOJSRelinquishContext(context);
 
 		oo::NotificationCenter::defaultCenter().removeObserver(&marker);
@@ -941,14 +942,11 @@ OO_TEST(reset)
 }
 
 
-OO_TEST(cleanUp)
+TEST(OOJavaScriptEngine, cleanUp)
 {
 	oo::log::logger().setSink(nullptr);
 	stdfs::current_path(stdfs::temp_directory_path());
 	std::error_code ignored;
 	stdfs::remove_all(sRoot, ignored);
-	OO_CHECK(true);
+	EXPECT_TRUE(true);
 }
-
-
-OO_TEST_MAIN()

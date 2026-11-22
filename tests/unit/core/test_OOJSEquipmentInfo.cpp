@@ -17,6 +17,8 @@
 	the category answers the engine. Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "EquipmentType.h"
 #include "Color.h"
 #include <quickjs.h>
@@ -38,7 +40,6 @@
 
 #include "OOJSEquipmentInfo.h"
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -566,17 +567,17 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSEquipmentInfo, registration)
 {
 	SetUpContext();
-	OO_CHECK_EQ(sConverters.size(), static_cast<std::size_t>(1));
+	EXPECT_EQ(sConverters.size(), static_cast<std::size_t>(1));
 	OO_CHECK_EVAL("typeof EquipmentInfo", "function");
 	OO_CHECK_EVAL("new EquipmentInfo()", "threw: unconstructable");
 	OO_CHECK_EVAL("EquipmentInfo.infoForKey('EQ_FUEL') instanceof EquipmentInfo", "true");
@@ -585,27 +586,27 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(categoryAnswersTheEngine)
+TEST(OOJSEquipmentInfo, categoryAnswersTheEngine)
 {
 	SetUpContext();
 	oo::EquipmentType *fuel = oo::EquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get();
-	OO_CHECK(OOJSEquipmentInfoJSClassName() == std::optional<std::string>("EquipmentInfo"));
+	EXPECT_TRUE(OOJSEquipmentInfoJSClassName() == std::optional<std::string>("EquipmentInfo"));
 	// One JS object per type, made on first use, with the type (retained) in its private slot.
 	JSValue first = fuel->jsValueInContext(sContext);
 	JSValue second = fuel->jsValueInContext(sContext);
-	OO_CHECK(JS_IsObject(first) && JS_VALUE_GET_PTR(first) == JS_VALUE_GET_PTR(second));
-	OO_CHECK(SlotOf(first) == static_cast<oo::Object *>(fuel));
+	EXPECT_TRUE(JS_IsObject(first) && JS_VALUE_GET_PTR(first) == JS_VALUE_GET_PTR(second));
+	EXPECT_TRUE(SlotOf(first) == static_cast<oo::Object *>(fuel));
 	const char *infoForFuel = "EquipmentInfo.infoForKey('EQ_FUEL')";
 	JSValue fromScript = JS_Eval(sContext, infoForFuel, std::strlen(infoForFuel), "test.js", JS_EVAL_TYPE_GLOBAL);
-	OO_CHECK(JS_IsObject(fromScript) && JS_VALUE_GET_PTR(fromScript) == JS_VALUE_GET_PTR(first));
+	EXPECT_TRUE(JS_IsObject(fromScript) && JS_VALUE_GET_PTR(fromScript) == JS_VALUE_GET_PTR(first));
 	// Clearing another object leaves it; clearing its own makes a new one next time.
 	fuel->clearJSSelf(sGlobal);
 	JSValue again = fuel->jsValueInContext(sContext);
-	OO_CHECK(JS_VALUE_GET_PTR(again) == JS_VALUE_GET_PTR(first));
+	EXPECT_TRUE(JS_VALUE_GET_PTR(again) == JS_VALUE_GET_PTR(first));
 	fuel->clearJSSelf(first);
 	JSValue third = fuel->jsValueInContext(sContext);
-	OO_CHECK(JS_IsObject(third) && JS_VALUE_GET_PTR(third) != JS_VALUE_GET_PTR(first));
-	OO_CHECK(SlotOf(third) == static_cast<oo::Object *>(fuel));
+	EXPECT_TRUE(JS_IsObject(third) && JS_VALUE_GET_PTR(third) != JS_VALUE_GET_PTR(first));
+	EXPECT_TRUE(SlotOf(third) == static_cast<oo::Object *>(fuel));
 	JS_FreeValue(sContext, third);
 	JS_FreeValue(sContext, again);
 	JS_FreeValue(sContext, fromScript);
@@ -614,7 +615,7 @@ OO_TEST(categoryAnswersTheEngine)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSEquipmentInfo, properties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("(function () { var e = EquipmentInfo.infoForKey('EQ_SHIELD_BOOSTER'); return [e.equipmentKey, e.name, e.description, e.techLevel, e.price, e.canCarryMultiple, e.canBeDamaged].join(); })()",
@@ -650,7 +651,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(calculatedPrice)
+TEST(OOJSEquipmentInfo, calculatedPrice)
 {
 	SetUpContext();
 	// Fuel: what it costs to fill the tank (7.0 ly is 70 tenths) at the charge rate.
@@ -660,7 +661,7 @@ OO_TEST(calculatedPrice)
 }
 
 
-OO_TEST(writableProperties)
+TEST(OOJSEquipmentInfo, writableProperties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("(function () { var e = EquipmentInfo.infoForKey('EQ_FUEL'); e.displayColor = 'redColor'; return JSON.stringify(e.displayColor); })()", "[1,0,0,1]");
@@ -671,24 +672,24 @@ OO_TEST(writableProperties)
 	// enforced): kept as a mission variable.
 	gDeprecations = 0;
 	OO_CHECK_EVAL("(function () { var e = EquipmentInfo.infoForKey('EQ_SHIELD_BOOSTER'); e.effectiveTechLevel = 7; return e.effectiveTechLevel; })()", "7");
-	OO_CHECK(sPlayer->_missionVariables["mission_TL_FOR_EQ_SHIELD_BOOSTER"] == oo::PList("7"));
+	EXPECT_TRUE(sPlayer->_missionVariables["mission_TL_FOR_EQ_SHIELD_BOOSTER"] == oo::PList("7"));
 	OO_CHECK_EVAL("(function () { var e = EquipmentInfo.infoForKey('EQ_SHIELD_BOOSTER'); e.effectiveTechLevel = 40; return e.effectiveTechLevel; })()", "15");
 	OO_CHECK_EVAL("(function () { var e = EquipmentInfo.infoForKey('EQ_SHIELD_BOOSTER'); e.effectiveTechLevel = -3; return e.effectiveTechLevel; })()", "0");
 	OO_CHECK_EVAL("(function () { var e = EquipmentInfo.infoForKey('EQ_SHIELD_BOOSTER'); e.effectiveTechLevel = 'x'; return 'set'; })()", "threw: bad property value");
 	OO_CHECK_EVAL("(function () { var e = EquipmentInfo.infoForKey('EQ_SHIELD_BOOSTER'); e.effectiveTechLevel = null; return e.effectiveTechLevel; })()", "99");
-	OO_CHECK(sPlayer->_missionVariables.count("mission_TL_FOR_EQ_SHIELD_BOOSTER") == 0);
-	OO_CHECK_EQ(gDeprecations, 9);	// the five sets, and the four reads (the type deprecates a tech level of 99 itself)
+	EXPECT_TRUE(sPlayer->_missionVariables.count("mission_TL_FOR_EQ_SHIELD_BOOSTER") == 0);
+	EXPECT_EQ(gDeprecations, 9);	// the five sets, and the four reads (the type deprecates a tech level of 99 itself)
 	sLastWarning.clear();
 	OO_CHECK_EVAL("(function () { var e = EquipmentInfo.infoForKey('EQ_FUEL'); e.effectiveTechLevel = 3; return e.effectiveTechLevel; })()", "1");
-	OO_CHECK_EQ(sLastWarning, std::string("Cannot modify effective tech level for EQ_FUEL, because its base tech level is not 99."));
+	EXPECT_EQ(sLastWarning, std::string("Cannot modify effective tech level for EQ_FUEL, because its base tech level is not 99."));
 	gEnforceStandards = true;
 	OO_CHECK_EVAL("(function () { var e = EquipmentInfo.infoForKey('EQ_SHIELD_BOOSTER'); e.effectiveTechLevel = 5; return e.effectiveTechLevel; })()", "99");
-	OO_CHECK_EQ(sLastWarning, std::string("Cannot modify effective tech level for EQ_SHIELD_BOOSTER, because its base tech level is not 99."));
+	EXPECT_EQ(sLastWarning, std::string("Cannot modify effective tech level for EQ_SHIELD_BOOSTER, because its base tech level is not 99."));
 	gEnforceStandards = false;
 }
 
 
-OO_TEST(prototypeAndOtherObjects)
+TEST(OOJSEquipmentInfo, prototypeAndOtherObjects)
 {
 	SetUpContext();
 	// The prototype has no type: what a message to nil answered.
@@ -699,7 +700,7 @@ OO_TEST(prototypeAndOtherObjects)
 }
 
 
-OO_TEST(staticMembers)
+TEST(OOJSEquipmentInfo, staticMembers)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("EquipmentInfo.infoForKey('EQ_NOTHING')", "null");
@@ -710,7 +711,7 @@ OO_TEST(staticMembers)
 }
 
 
-OO_TEST(cFunctions)
+TEST(OOJSEquipmentInfo, cFunctions)
 {
 	SetUpContext();
 	oo::EquipmentType *missile = oo::EquipmentType::equipmentTypeWithIdentifier("EQ_MISSILE").get();
@@ -719,21 +720,21 @@ OO_TEST(cFunctions)
 	JSValue damagedKey = JS_NewString(sContext, "EQ_MISSILE_DAMAGED");
 	JSValue unknownKey = JS_NewString(sContext, "EQ_SOMETHING");
 
-	OO_CHECK(JSValueToEquipmentType(sContext, missileValue) == missile);
-	OO_CHECK(JSValueToEquipmentType(sContext, key) == missile);
-	OO_CHECK(JSValueToEquipmentType(sContext, unknownKey) == nullptr);
-	OO_CHECK(JSValueToEquipmentType(sContext, JS_NULL) == nullptr);
-	OO_CHECK(JSValueToEquipmentKey(sContext, missileValue) == std::optional<std::string>("EQ_MISSILE"));
-	OO_CHECK(JSValueToEquipmentKey(sContext, unknownKey) == std::nullopt);
+	EXPECT_TRUE(JSValueToEquipmentType(sContext, missileValue) == missile);
+	EXPECT_TRUE(JSValueToEquipmentType(sContext, key) == missile);
+	EXPECT_TRUE(JSValueToEquipmentType(sContext, unknownKey) == nullptr);
+	EXPECT_TRUE(JSValueToEquipmentType(sContext, JS_NULL) == nullptr);
+	EXPECT_TRUE(JSValueToEquipmentKey(sContext, missileValue) == std::optional<std::string>("EQ_MISSILE"));
+	EXPECT_TRUE(JSValueToEquipmentKey(sContext, unknownKey) == std::nullopt);
 
 	bool exists = false;
-	OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, missileValue, &exists) == std::optional<std::string>("EQ_MISSILE") && exists == true);
-	OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, key, &exists) == std::optional<std::string>("EQ_MISSILE") && exists == true);
-	OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, unknownKey, &exists) == std::optional<std::string>("EQ_SOMETHING") && exists == false);
-	OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, damagedKey, &exists) == std::nullopt && exists == false);	// _DAMAGED is refused
-	OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, JS_NewInt32(sContext, 3), &exists) == std::nullopt && exists == false);
-	OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, key, nullptr) == std::optional<std::string>("EQ_MISSILE"));
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_TRUE(JSValueToEquipmentKeyRelaxed(sContext, missileValue, &exists) == std::optional<std::string>("EQ_MISSILE") && exists == true);
+	EXPECT_TRUE(JSValueToEquipmentKeyRelaxed(sContext, key, &exists) == std::optional<std::string>("EQ_MISSILE") && exists == true);
+	EXPECT_TRUE(JSValueToEquipmentKeyRelaxed(sContext, unknownKey, &exists) == std::optional<std::string>("EQ_SOMETHING") && exists == false);
+	EXPECT_TRUE(JSValueToEquipmentKeyRelaxed(sContext, damagedKey, &exists) == std::nullopt && exists == false);	// _DAMAGED is refused
+	EXPECT_TRUE(JSValueToEquipmentKeyRelaxed(sContext, JS_NewInt32(sContext, 3), &exists) == std::nullopt && exists == false);
+	EXPECT_TRUE(JSValueToEquipmentKeyRelaxed(sContext, key, nullptr) == std::optional<std::string>("EQ_MISSILE"));
+	EXPECT_EQ(sProfileDepth, 0);
 	JS_FreeValue(sContext, unknownKey);
 	JS_FreeValue(sContext, damagedKey);
 	JS_FreeValue(sContext, key);
@@ -741,7 +742,7 @@ OO_TEST(cFunctions)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSEquipmentInfo, nativeExceptions)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("EquipmentInfo.infoForKey('EQ_SCOOPER').calculatedPrice", "threw: Native exception: price boom");
@@ -749,9 +750,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("EquipmentInfo.infoForKey('EQ_MISSILE').calculatedPrice", "threw: Native exception: cxx boom");
 	sPlayer->_throwCxx = false;
 	OO_CHECK_EVAL("EquipmentInfo.infoForKey('EQ_MISSILE').calculatedPrice", "500");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

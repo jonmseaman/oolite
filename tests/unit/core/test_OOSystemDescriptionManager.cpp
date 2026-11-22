@@ -22,8 +22,9 @@
 #include <cstdlib>  // IWYU pragma: keep
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "SystemDescriptionManager.h"
-#include "oo_test.hpp"
 
 // --- The game around the class
 // --------------------------------------------------------------
@@ -121,73 +122,73 @@ std::shared_ptr<oo::SystemDescriptionManager> NewManager() {
 // --- The API the callers use
 // ------------------------------------
 
-OO_TEST(emptyManager) {
+TEST(OOSystemDescriptionManager, emptyManager) {
   Fake();
   {
     std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
-    OO_CHECK(manager != nullptr);
-    OO_CHECK(manager->getPropertiesForSystem(7, 0) ==
+    EXPECT_TRUE(manager != nullptr);
+    EXPECT_TRUE(manager->getPropertiesForSystem(7, 0) ==
              oo::PList(oo::PList::Dict()));
-    OO_CHECK(manager->getPropertiesForSystem(255, 7) ==
+    EXPECT_TRUE(manager->getPropertiesForSystem(255, 7) ==
              oo::PList(oo::PList::Dict()));
-    OO_CHECK(manager->getPropertiesForSystemKey("0 7") ==
+    EXPECT_TRUE(manager->getPropertiesForSystemKey("0 7") ==
              oo::PList(oo::PList::Dict()));
-    OO_CHECK(manager->getProperty("name", "0 7").isNull());
-    OO_CHECK(manager->getProperty("name", 7, 0).isNull());
-    OO_CHECK(manager->exportScriptedChanges() == oo::PList(oo::PList::Dict()));
-    OO_CHECK(manager->getPropertiesForCurrentSystem() ==
+    EXPECT_TRUE(manager->getProperty("name", "0 7").isNull());
+    EXPECT_TRUE(manager->getProperty("name", 7, 0).isNull());
+    EXPECT_TRUE(manager->exportScriptedChanges() == oo::PList(oo::PList::Dict()));
+    EXPECT_TRUE(manager->getPropertiesForCurrentSystem() ==
              oo::PList(oo::PList::Dict()));
-    OO_CHECK(manager->getNeighbourIDsForSystem(7, 0).empty());
+    EXPECT_TRUE(manager->getNeighbourIDsForSystem(7, 0).empty());
     const NSPoint origin = manager->getCoordinatesForSystem(7, 0);
-    OO_CHECK(origin.x == 0 && origin.y == 0);
-    OO_CHECK(SameSeed(manager->getRandomSeedForSystem(7, 0), kNilRandomSeed));
+    EXPECT_TRUE(origin.x == 0 && origin.y == 0);
+    EXPECT_TRUE(SameSeed(manager->getRandomSeedForSystem(7, 0), kNilRandomSeed));
   }
 }
 
-OO_TEST(invalidSystems) {
+TEST(OOSystemDescriptionManager, invalidSystems) {
   Fake();
   {
     std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
     manager->setUniversalProperties(Dict({{"economy", oo::PList(3)}}));
 
     // A negative system, and one past the last galaxy.
-    OO_CHECK(manager->getProperty("economy", -1, 0).isNull());
-    OO_CHECK(manager->getProperty("economy", 0, 8).isNull());
-    OO_CHECK(manager->getPropertiesForSystem(0, 8) ==
+    EXPECT_TRUE(manager->getProperty("economy", -1, 0).isNull());
+    EXPECT_TRUE(manager->getProperty("economy", 0, 8).isNull());
+    EXPECT_TRUE(manager->getPropertiesForSystem(0, 8) ==
              oo::PList(oo::PList::Dict()));
-    OO_CHECK(manager->getNeighbourIDsForSystem(-1, 0).empty());
-    OO_CHECK(manager->getNeighbourIDsForSystem(0, 8).empty());
+    EXPECT_TRUE(manager->getNeighbourIDsForSystem(-1, 0).empty());
+    EXPECT_TRUE(manager->getNeighbourIDsForSystem(0, 8).empty());
     NSPoint p = manager->getCoordinatesForSystem(-1, 0);
-    OO_CHECK(p.x == 0 && p.y == 0);
+    EXPECT_TRUE(p.x == 0 && p.y == 0);
     p = manager->getCoordinatesForSystem(0, 8);
-    OO_CHECK(p.x == 0 && p.y == 0);
-    OO_CHECK(SameSeed(manager->getRandomSeedForSystem(-1, 0), kNilRandomSeed));
-    OO_CHECK(SameSeed(manager->getRandomSeedForSystem(0, 8), kNilRandomSeed));
+    EXPECT_TRUE(p.x == 0 && p.y == 0);
+    EXPECT_TRUE(SameSeed(manager->getRandomSeedForSystem(-1, 0), kNilRandomSeed));
+    EXPECT_TRUE(SameSeed(manager->getRandomSeedForSystem(0, 8), kNilRandomSeed));
 
     // In interstellar space, and in a galaxy past the last: an empty
     // dictionary, a nil seed.
     gCurrentSystem = -1;
-    OO_CHECK(manager->getPropertiesForCurrentSystem() ==
+    EXPECT_TRUE(manager->getPropertiesForCurrentSystem() ==
              oo::PList(oo::PList::Dict()));
-    OO_CHECK(
+    EXPECT_TRUE(
         SameSeed(manager->getRandomSeedForCurrentSystem(), kNilRandomSeed));
     gCurrentSystem = 7;
     gGalaxy = 8;
-    OO_CHECK(manager->getPropertiesForCurrentSystem() ==
+    EXPECT_TRUE(manager->getPropertiesForCurrentSystem() ==
              oo::PList(oo::PList::Dict()));
-    OO_CHECK(
+    EXPECT_TRUE(
         SameSeed(manager->getRandomSeedForCurrentSystem(), kNilRandomSeed));
     gGalaxy = 0;
 
     // A system key that is out of range is not cached: it is computed, as an
     // interstellar key would be, and a key with no description of its own has
     // no properties at all.
-    OO_CHECK(manager->getPropertiesForSystemKey("9 7") ==
+    EXPECT_TRUE(manager->getPropertiesForSystemKey("9 7") ==
              oo::PList(oo::PList::Dict()));
   }
 }
 
-OO_TEST(layersAndUniversal) {
+TEST(OOSystemDescriptionManager, layersAndUniversal) {
   Fake();
   {
     std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
@@ -195,59 +196,59 @@ OO_TEST(layersAndUniversal) {
         Dict({{"economy", oo::PList(3)}, {"sky", Str("blue")}}));
     // Universal properties reach only systems that have a description of their
     // own.
-    OO_CHECK(manager->getProperty("economy", 7, 0).isNull());
-    OO_CHECK(manager->getProperty("economy", 255, 7).isNull());
+    EXPECT_TRUE(manager->getProperty("economy", 7, 0).isNull());
+    EXPECT_TRUE(manager->getProperty("economy", 255, 7).isNull());
 
     // Core layer (0): below the universal properties.
     manager->setProperties(Dict({{"layer", oo::PList(0)},
                                  {"economy", oo::PList(5)},
                                  {"name", Str("Lave")}}),
                            "0 7");
-    OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(3));
-    OO_CHECK(manager->getProperty("name", 7, 0) == Str("Lave"));
+    EXPECT_TRUE(manager->getProperty("economy", 7, 0) == oo::PList(3));
+    EXPECT_TRUE(manager->getProperty("name", 7, 0) == Str("Lave"));
     // The layer key itself is not a property.
-    OO_CHECK(manager->getProperty("layer", 7, 0).isNull());
+    EXPECT_TRUE(manager->getProperty("layer", 7, 0).isNull());
 
     // Static layer (the default, 1): above them.
     manager->setProperties(Dict({{"economy", oo::PList(6)}}), "0 7");
-    OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(6));
-    OO_CHECK(manager->getProperty("economy", "0 7") == oo::PList(6));
+    EXPECT_TRUE(manager->getProperty("economy", 7, 0) == oo::PList(6));
+    EXPECT_TRUE(manager->getProperty("economy", "0 7") == oo::PList(6));
 
     // Priority (3) over dynamic (2) over static.
     manager->setProperty("economy", "0 7", oo::SystemLayer::kOXPDynamic, oo::PList(7),
                          std::nullopt);
-    OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(7));
+    EXPECT_TRUE(manager->getProperty("economy", 7, 0) == oo::PList(7));
     manager->setProperties(
         Dict({{"layer", oo::PList(3)}, {"economy", oo::PList(8)}}), "0 7");
-    OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(8));
+    EXPECT_TRUE(manager->getProperty("economy", 7, 0) == oo::PList(8));
     // A layer number past the last is the priority layer.
     manager->setProperties(
         Dict({{"layer", oo::PList(9)}, {"economy", oo::PList(9)}}), "0 7");
-    OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(9));
+    EXPECT_TRUE(manager->getProperty("economy", 7, 0) == oo::PList(9));
 
     // Removing the top layers' values uncovers the ones below.
     manager->setProperty("economy", "0 7", oo::SystemLayer::kOXPPriority, oo::PList(),
                          std::nullopt);
-    OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(7));
+    EXPECT_TRUE(manager->getProperty("economy", 7, 0) == oo::PList(7));
     manager->setProperty("economy", "0 7", oo::SystemLayer::kOXPDynamic, oo::PList(),
                          std::nullopt);
-    OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(6));
+    EXPECT_TRUE(manager->getProperty("economy", 7, 0) == oo::PList(6));
 
     // The system's whole dictionary, and the same by key and by the current
     // system.
     const oo::PList expected = Dict({{"economy", oo::PList(6)},
                                      {"name", Str("Lave")},
                                      {"sky", Str("blue")}});
-    OO_CHECK(manager->getPropertiesForSystem(7, 0) == expected);
-    OO_CHECK(manager->getPropertiesForSystemKey("0 7") == expected);
-    OO_CHECK(manager->getPropertiesForCurrentSystem() == expected);
+    EXPECT_TRUE(manager->getPropertiesForSystem(7, 0) == expected);
+    EXPECT_TRUE(manager->getPropertiesForSystemKey("0 7") == expected);
+    EXPECT_TRUE(manager->getPropertiesForCurrentSystem() == expected);
     // Systems with no description have none, universal ones included.
-    OO_CHECK(manager->getPropertiesForSystem(8, 0) ==
+    EXPECT_TRUE(manager->getPropertiesForSystem(8, 0) ==
              oo::PList(oo::PList::Dict()));
   }
 }
 
-OO_TEST(validation) {
+TEST(OOSystemDescriptionManager, validation) {
   Fake();
   {
     std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
@@ -259,10 +260,10 @@ OO_TEST(validation) {
                                {"inhabitants", Str("Humans")},
                            }),
                            "0 7");
-    OO_CHECK(manager->getProperty("coordinates", 7, 0) == Str("20 173"));
+    EXPECT_TRUE(manager->getProperty("coordinates", 7, 0) == Str("20 173"));
     // Numbers where a string is read become their text.
-    OO_CHECK(manager->getProperty("radius", 7, 0) == Str("5000"));
-    OO_CHECK(manager->getProperty("government", 7, 0) == Str("2.5"));
+    EXPECT_TRUE(manager->getProperty("radius", 7, 0) == Str("5000"));
+    EXPECT_TRUE(manager->getProperty("government", 7, 0) == Str("2.5"));
 
     // Rejected values leave the property as it was.
     manager->setProperties(
@@ -273,19 +274,19 @@ OO_TEST(validation) {
             {"radius", oo::PList(oo::PList::Array{})},
         }),
         "0 7");
-    OO_CHECK(manager->getProperty("coordinates", 7, 0) == Str("20 173"));
-    OO_CHECK(manager->getProperty("name", 7, 0) == Str("Lave"));
-    OO_CHECK(manager->getProperty("inhabitants", 7, 0) == Str("Humans"));
-    OO_CHECK(manager->getProperty("radius", 7, 0) == Str("5000"));
+    EXPECT_TRUE(manager->getProperty("coordinates", 7, 0) == Str("20 173"));
+    EXPECT_TRUE(manager->getProperty("name", 7, 0) == Str("Lave"));
+    EXPECT_TRUE(manager->getProperty("inhabitants", 7, 0) == Str("Humans"));
+    EXPECT_TRUE(manager->getProperty("radius", 7, 0) == Str("5000"));
     manager->setProperties(Dict({{"coordinates", oo::PList(5)}}), "0 7");
-    OO_CHECK(manager->getProperty("coordinates", 7, 0) == Str("20 173"));
+    EXPECT_TRUE(manager->getProperty("coordinates", 7, 0) == Str("20 173"));
     // Other properties are not checked.
     manager->setProperties(Dict({{"economy", Str("rich")}}), "0 7");
-    OO_CHECK(manager->getProperty("economy", 7, 0) == Str("rich"));
+    EXPECT_TRUE(manager->getProperty("economy", 7, 0) == Str("rich"));
   }
 }
 
-OO_TEST(interstellar) {
+TEST(OOSystemDescriptionManager, interstellar) {
   Fake();
   {
     std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
@@ -293,31 +294,31 @@ OO_TEST(interstellar) {
     manager->setInterstellarProperties(
         Dict({{"sky_n_stars", oo::PList(100)}, {"economy", oo::PList(1)}}));
     // A system is not affected by the interstellar properties.
-    OO_CHECK(manager->getProperty("sky_n_stars", 7, 0).isNull());
+    EXPECT_TRUE(manager->getProperty("sky_n_stars", 7, 0).isNull());
 
     // An interstellar region with no properties of its own: the interstellar
     // ones, which beat the universal ones (interstellar space's static layer is
     // above them).
-    OO_CHECK(
+    EXPECT_TRUE(
         manager->getPropertiesForSystemKey("interstellar: 0 7 8") ==
         Dict({{"economy", oo::PList(1)}, {"sky_n_stars", oo::PList(100)}}));
-    OO_CHECK(manager->getProperty("sky_n_stars", "interstellar") ==
+    EXPECT_TRUE(manager->getProperty("sky_n_stars", "interstellar") ==
              oo::PList(100));
 
     // A region's own properties win, and are not cached as a system.
     manager->setProperty("sky_n_stars", "interstellar: 0 7 8",
                          oo::SystemLayer::kOXPStatic, oo::PList(5), std::nullopt);
-    OO_CHECK(manager->getPropertiesForSystemKey("interstellar: 0 7 8") ==
+    EXPECT_TRUE(manager->getPropertiesForSystemKey("interstellar: 0 7 8") ==
              Dict({{"economy", oo::PList(1)}, {"sky_n_stars", oo::PList(5)}}));
-    OO_CHECK(manager->getProperty("sky_n_stars", "interstellar: 0 7 8") ==
+    EXPECT_TRUE(manager->getProperty("sky_n_stars", "interstellar: 0 7 8") ==
              oo::PList(5));
-    OO_CHECK(
+    EXPECT_TRUE(
         manager->getPropertiesForSystemKey("interstellar: 0 7 9") ==
         Dict({{"economy", oo::PList(1)}, {"sky_n_stars", oo::PList(100)}}));
   }
 }
 
-OO_TEST(scriptedChanges) {
+TEST(OOSystemDescriptionManager, scriptedChanges) {
   Fake();
   {
     std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
@@ -336,21 +337,21 @@ OO_TEST(scriptedChanges) {
     manager->setProperty("economy", "elsewhere", oo::SystemLayer::kOXPDynamic,
                          oo::PList(4), std::string("org.test.installed"));
     const oo::PList exported = manager->exportScriptedChanges();
-    OO_CHECK(exported ==
+    EXPECT_TRUE(exported ==
              Dict({
                  {"org.test.installed~|~0 7~|~description~|~2",
                   Str("A nice place.")},
                  {"org.test.gone~|~interstellar: 0 7 8~|~sky_n_stars~|~3",
                   oo::PList(9)},
              }));
-    OO_CHECK(manager->getProperty("description", 7, 0) == Str("A nice place."));
-    OO_CHECK(manager->getProperty("economy", "elsewhere") == oo::PList(4));
+    EXPECT_TRUE(manager->getProperty("description", 7, 0) == Str("A nice place."));
+    EXPECT_TRUE(manager->getProperty("economy", "elsewhere") == oo::PList(4));
 
     // Removing the value removes the saved change.
     manager->setProperty("sky_n_stars", "interstellar: 0 7 8",
                          oo::SystemLayer::kOXPPriority, oo::PList(),
                          std::string("org.test.gone"));
-    OO_CHECK(manager->exportScriptedChanges() ==
+    EXPECT_TRUE(manager->exportScriptedChanges() ==
              Dict({{"org.test.installed~|~0 7~|~description~|~2",
                     Str("A nice place.")}}));
 
@@ -364,10 +365,10 @@ OO_TEST(scriptedChanges) {
         {"org.test.gone~|~0 9~|~economy~|~2", oo::PList(1)},
         {"not a scripted change", oo::PList(1)},
     }));
-    OO_CHECK(loaded->getProperty("description", 7, 0) == Str("A nice place."));
-    OO_CHECK(loaded->getProperty("economy", 8, 0) == oo::PList(2));
-    OO_CHECK(loaded->getProperty("economy", 9, 0).isNull());
-    OO_CHECK(loaded->exportScriptedChanges() ==
+    EXPECT_TRUE(loaded->getProperty("description", 7, 0) == Str("A nice place."));
+    EXPECT_TRUE(loaded->getProperty("economy", 8, 0) == oo::PList(2));
+    EXPECT_TRUE(loaded->getProperty("economy", 9, 0).isNull());
+    EXPECT_TRUE(loaded->exportScriptedChanges() ==
              Dict({
                  {"org.test.installed~|~0 7~|~description~|~2",
                   Str("A nice place.")},
@@ -375,11 +376,11 @@ OO_TEST(scriptedChanges) {
              }));
     // Not a dictionary: nothing.
     loaded->importScriptedChanges(Str("x"));
-    OO_CHECK(loaded->exportScriptedChanges().count() == 2);
+    EXPECT_TRUE(loaded->exportScriptedChanges().count() == 2);
   }
 }
 
-OO_TEST(legacyScriptedChanges) {
+TEST(OOSystemDescriptionManager, legacyScriptedChanges) {
   Fake();
   {
     std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
@@ -391,27 +392,27 @@ OO_TEST(legacyScriptedChanges) {
         {"0 9", Dict({{"sun_gone_nova", oo::PList(true)},
                       {"sun_radius", oo::PList(700000)}})},
     }));
-    OO_CHECK(manager->getProperty("economy", 7, 0) == oo::PList(1));
-    OO_CHECK(manager->getProperty("sun_gone_nova", 7, 0) == oo::PList(true));
+    EXPECT_TRUE(manager->getProperty("economy", 7, 0) == oo::PList(1));
+    EXPECT_TRUE(manager->getProperty("sun_gone_nova", 7, 0) == oo::PList(true));
     // A sun radius under 600000 is raised by 600000, as a single-precision
     // real.
-    OO_CHECK(manager->getProperty("sun_radius", 7, 0) ==
+    EXPECT_TRUE(manager->getProperty("sun_radius", 7, 0) ==
              oo::PList::singleReal(601000.0f));
-    OO_CHECK(manager->getProperty("sun_radius", 9, 0) == oo::PList(700000));
-    OO_CHECK(manager->getProperty("economy", 8, 0).isNull());
+    EXPECT_TRUE(manager->getProperty("sun_radius", 9, 0) == oo::PList(700000));
+    EXPECT_TRUE(manager->getProperty("economy", 8, 0).isNull());
     // Saved as changes of the core game's manifest, in the dynamic layer.
     const oo::PList exported = manager->exportScriptedChanges();
-    OO_CHECK(Get(exported, "org.oolite.oolite~|~0 7~|~sun_radius~|~2") ==
+    EXPECT_TRUE(Get(exported, "org.oolite.oolite~|~0 7~|~sun_radius~|~2") ==
              oo::PList::singleReal(601000.0f));
-    OO_CHECK(Get(exported, "org.oolite.oolite~|~0 7~|~economy~|~2") ==
+    EXPECT_TRUE(Get(exported, "org.oolite.oolite~|~0 7~|~economy~|~2") ==
              oo::PList(1));
-    OO_CHECK(Get(exported, "org.oolite.oolite~|~0 9~|~sun_radius~|~2") ==
+    EXPECT_TRUE(Get(exported, "org.oolite.oolite~|~0 9~|~sun_radius~|~2") ==
              oo::PList(700000));
-    OO_CHECK(exported.count() == 5);
+    EXPECT_TRUE(exported.count() == 5);
   }
 }
 
-OO_TEST(routeCacheAndSeeds) {
+TEST(OOSystemDescriptionManager, routeCacheAndSeeds) {
   Fake();
   {
     std::shared_ptr<oo::SystemDescriptionManager> manager = NewManager();
@@ -427,24 +428,24 @@ OO_TEST(routeCacheAndSeeds) {
     manager->buildRouteCache();
 
     const NSPoint p = manager->getCoordinatesForSystem(1, 0);
-    OO_CHECK(p.x == 110 && p.y == 100);
-    OO_CHECK((manager->getNeighbourIDsForSystem(0, 0) ==
+    EXPECT_TRUE(p.x == 110 && p.y == 100);
+    EXPECT_TRUE((manager->getNeighbourIDsForSystem(0, 0) ==
               std::vector<oo::SystemID>{1, 3}));
-    OO_CHECK((manager->getNeighbourIDsForSystem(1, 0) ==
+    EXPECT_TRUE((manager->getNeighbourIDsForSystem(1, 0) ==
               std::vector<oo::SystemID>{0, 2, 3}));
-    OO_CHECK((manager->getNeighbourIDsForSystem(2, 0) ==
+    EXPECT_TRUE((manager->getNeighbourIDsForSystem(2, 0) ==
               std::vector<oo::SystemID>{1}));
     // Systems with no coordinates are all at the zero point, so they are each
     // other's neighbours: every other system of the galaxy.
-    OO_CHECK(manager->getNeighbourIDsForSystem(4, 0).size() == 251);
+    EXPECT_TRUE(manager->getNeighbourIDsForSystem(4, 0).size() == 251);
     // Galaxies are separate.
-    OO_CHECK(manager->getNeighbourIDsForSystem(5, 1).size() == 0);
+    EXPECT_TRUE(manager->getNeighbourIDsForSystem(5, 1).size() == 0);
 
-    OO_CHECK(SameSeed(manager->getRandomSeedForSystem(0, 0),
+    EXPECT_TRUE(SameSeed(manager->getRandomSeedForSystem(0, 0),
                       Random_Seed{1, 2, 3, 4, 5, 6}));
-    OO_CHECK(SameSeed(manager->getRandomSeedForSystem(1, 0), kNilRandomSeed));
+    EXPECT_TRUE(SameSeed(manager->getRandomSeedForSystem(1, 0), kNilRandomSeed));
     gCurrentSystem = 0;
-    OO_CHECK(SameSeed(manager->getRandomSeedForCurrentSystem(),
+    EXPECT_TRUE(SameSeed(manager->getRandomSeedForCurrentSystem(),
                       Random_Seed{1, 2, 3, 4, 5, 6}));
     gCurrentSystem = 7;
   }
@@ -453,7 +454,7 @@ OO_TEST(routeCacheAndSeeds) {
 // --- The C++ classes, and the root's contract
 // --------------------------------------------
 
-OO_TEST(cxxApi) {
+TEST(OOSystemDescriptionManager, cxxApi) {
   Fake();
   {
     std::shared_ptr<oo::SystemDescriptionManager> manager =
@@ -462,46 +463,44 @@ OO_TEST(cxxApi) {
     manager->setProperties(
         Dict({{"name", Str("Lave")}, {"coordinates", Str("100 100")}}), "0 7");
     manager->setProperties(Dict({{"coordinates", Str("105 100")}}), "0 8");
-    OO_CHECK(manager->getPropertiesForSystem(7, 0) ==
+    EXPECT_TRUE(manager->getPropertiesForSystem(7, 0) ==
              Dict({{"coordinates", Str("100 100")},
                    {"economy", oo::PList(3)},
                    {"name", Str("Lave")}}));
-    OO_CHECK(manager->getProperty("name", "0 7") == Str("Lave"));
-    OO_CHECK(manager->getProperty("name", 7, 0) == Str("Lave"));
-    OO_CHECK(manager->getPropertiesForCurrentSystem() ==
+    EXPECT_TRUE(manager->getProperty("name", "0 7") == Str("Lave"));
+    EXPECT_TRUE(manager->getProperty("name", 7, 0) == Str("Lave"));
+    EXPECT_TRUE(manager->getPropertiesForCurrentSystem() ==
              manager->getPropertiesForSystemKey("0 7"));
     manager->setProperty("name", "0 7", oo::SystemLayer::kOXPPriority, Str("Leesti"),
                          std::string("org.test.installed"));
-    OO_CHECK(manager->getProperty("name", 7, 0) == Str("Leesti"));
-    OO_CHECK(manager->exportScriptedChanges() ==
+    EXPECT_TRUE(manager->getProperty("name", 7, 0) == Str("Leesti"));
+    EXPECT_TRUE(manager->exportScriptedChanges() ==
              Dict({{"org.test.installed~|~0 7~|~name~|~3", Str("Leesti")}}));
     manager->buildRouteCache();
-    OO_CHECK((manager->getNeighbourIDsForSystem(7, 0) ==
+    EXPECT_TRUE((manager->getNeighbourIDsForSystem(7, 0) ==
               std::vector<oo::SystemID>{8}));
     const NSPoint p = manager->getCoordinatesForSystem(8, 0);
-    OO_CHECK(p.x == 105 && p.y == 100);
-    OO_CHECK(SameSeed(manager->getRandomSeedForSystem(7, 0), kNilRandomSeed));
-    OO_CHECK(
+    EXPECT_TRUE(p.x == 105 && p.y == 100);
+    EXPECT_TRUE(SameSeed(manager->getRandomSeedForSystem(7, 0), kNilRandomSeed));
+    EXPECT_TRUE(
         SameSeed(manager->getRandomSeedForCurrentSystem(), kNilRandomSeed));
   }
 }
 
-OO_TEST(entry) {
+TEST(OOSystemDescriptionManager, entry) {
   std::shared_ptr<oo::SystemDescriptionEntry> entry =
       oo::makeShared<oo::SystemDescriptionEntry>();
-  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kCore).isNull());
+  EXPECT_TRUE(entry->getProperty("name", oo::SystemLayer::kCore).isNull());
   entry->setProperty("name", oo::SystemLayer::kCore, Str("Lave"));
   entry->setProperty("name", oo::SystemLayer::kOXPStatic, Str("Diso"));
-  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kCore) == Str("Lave"));
-  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kOXPStatic) == Str("Diso"));
-  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kOXPDynamic).isNull());
+  EXPECT_TRUE(entry->getProperty("name", oo::SystemLayer::kCore) == Str("Lave"));
+  EXPECT_TRUE(entry->getProperty("name", oo::SystemLayer::kOXPStatic) == Str("Diso"));
+  EXPECT_TRUE(entry->getProperty("name", oo::SystemLayer::kOXPDynamic).isNull());
   // Validated as the manager's setters validate; null removes.
   entry->setProperty("radius", oo::SystemLayer::kCore, oo::PList(4000));
-  OO_CHECK(entry->getProperty("radius", oo::SystemLayer::kCore) == Str("4000"));
+  EXPECT_TRUE(entry->getProperty("radius", oo::SystemLayer::kCore) == Str("4000"));
   entry->setProperty("name", oo::SystemLayer::kCore, oo::PList(1));
-  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kCore) == Str("Lave"));
+  EXPECT_TRUE(entry->getProperty("name", oo::SystemLayer::kCore) == Str("Lave"));
   entry->setProperty("name", oo::SystemLayer::kCore, oo::PList());
-  OO_CHECK(entry->getProperty("name", oo::SystemLayer::kCore).isNull());
+  EXPECT_TRUE(entry->getProperty("name", oo::SystemLayer::kCore).isNull());
 }
-
-OO_TEST_MAIN()

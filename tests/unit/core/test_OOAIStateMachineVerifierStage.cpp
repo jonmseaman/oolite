@@ -18,11 +18,12 @@
 #include <fstream>
 #include <sstream>
 
+#include <gtest/gtest.h>
+
 #include "AIStateMachineVerifierStage.h"
 #include "Logging.h"
 #include "OXPVerifierStage.h"
 #include "PListParsing.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListParsing.hpp"
 
@@ -138,23 +139,23 @@ const std::vector<std::string> kUnusedName = {"Checking for unused files"};
 
 }  // namespace
 
-OO_TEST(nameAndNeighbours) {
+TEST(OOAIStateMachineVerifierStage, nameAndNeighbours) {
   {
     oo::OXPVerifier* verifier = MakeVerifier("");
-    OO_CHECK(oo::AIStateMachineVerifierStage::nameForReverseDependencyForVerifier(
+    EXPECT_TRUE(oo::AIStateMachineVerifierStage::nameForReverseDependencyForVerifier(
                  verifier) == "Validating AIs");
 
     const std::shared_ptr<oo::AIStateMachineVerifierStage> stage =
         oo::makeShared<oo::AIStateMachineVerifierStage>();
     stage->setVerifier(verifier);
-    OO_CHECK(stage->name() == std::optional<std::string>("Validating AIs"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(!stage->shouldRun());  // no ship named an AI
+    EXPECT_TRUE(stage->name() == std::optional<std::string>("Validating AIs"));
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(!stage->shouldRun());  // no ship named an AI
   }
 }
 
-OO_TEST(shipsNameAIs) {
+TEST(OOAIStateMachineVerifierStage, shipsNameAIs) {
   {
     const std::string base = MakeOXP();
     oo::OXPVerifier* verifier = MakeVerifier(base);
@@ -168,30 +169,30 @@ OO_TEST(shipsNameAIs) {
     // scanner's case warning.
     stage->stateMachineNamed("goodAI.plist", "ship one");
     stage->stateMachineNamed("builtinAI.plist", "ship one");
-    OO_CHECK(gLog.empty());
+    EXPECT_TRUE(gLog.empty());
     stage->stateMachineNamed("GOODAI.plist", "ship one");
-    OO_CHECK(gLog.size() == 1 &&
+    EXPECT_TRUE(gLog.size() == 1 &&
              LogLinesContaining(
                  "***** ERROR: case mismatch: request for file "
                  "'AIs/GOODAI.plist' referenced in shipdata.plist entry \"ship "
                  "one\" resolved to 'AIs/goodAI.plist'.") == 1);
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->shouldRun());
 
     // Missing: one warning, naming the AI, the ship and the OXP; each name is
     // checked once.
     stage->stateMachineNamed("missingAI.plist", "ship two");
     stage->stateMachineNamed("missingAI.plist", "ship three");
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "----- WARNING: AI state machine \"missingAI.plist\" "
                  "referenced in shipdata.plist entry \"ship two\" could not be "
                  "found in Test.oxp or in Oolite.") == 1);
-    OO_CHECK(LogLinesContaining("ship three") == 0);
+    EXPECT_TRUE(LogLinesContaining("ship three") == 0);
 
     std::filesystem::remove_all(base);
   }
 }
 
-OO_TEST(runChecksEachAIAgainstTheWhitelist) {
+TEST(OOAIStateMachineVerifierStage, runChecksEachAIAgainstTheWhitelist) {
   {
     const std::string base = MakeOXP();
     oo::OXPVerifier* verifier = MakeVerifier(base);
@@ -210,43 +211,43 @@ OO_TEST(runChecksEachAIAgainstTheWhitelist) {
     // Each AI read is announced (verifyOXP.verbose); a clean one (whitelisted
     // methods and aliases, arguments cut off, spaces trimmed) says nothing
     // else.
-    OO_CHECK(LogLinesContaining("- Validating AI \"goodAI.plist\".") == 1);
-    OO_CHECK(LogLinesContaining("\"goodAI.plist\"") == 1);
+    EXPECT_TRUE(LogLinesContaining("- Validating AI \"goodAI.plist\".") == 1);
+    EXPECT_TRUE(LogLinesContaining("\"goodAI.plist\"") == 1);
 
     // Every kind of error in one AI; the unpermitted methods (the action up to
     // its first space) once each, sorted case-insensitively.
-    OO_CHECK(LogLinesContaining("***** ERROR: state \"BROKEN\" in AI "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: state \"BROKEN\" in AI "
                                 "\"badAI.plist\" is not a dictionary.") == 1);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "***** ERROR: handler \"UPDATE\" for state \"GLOBAL\" in AI "
                  "\"badAI.plist\" is not an array, ignoring.") == 1);
-    OO_CHECK(
+    EXPECT_TRUE(
         LogLinesContaining(
             "***** ERROR: action 3 in handler \"ENTER\" for state \"GLOBAL\" "
             "in AI \"badAI.plist\" is not a string, ignoring.") == 1);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "***** ERROR: the AI \"badAI.plist\" uses 3 unpermitted "
                  "methods: Beep, zapTarget, zapTarget:") == 1);
 
     // One unpermitted method; a file that is not a dictionary; built-in and
     // missing AIs are not read.
-    OO_CHECK(LogLinesContaining("***** ERROR: the AI \"oneAI.plist\" uses 1 "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: the AI \"oneAI.plist\" uses 1 "
                                 "unpermitted method: fly") == 1);
-    OO_CHECK(LogLinesContaining("***** ERROR: could not interpret \"" + base +
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: could not interpret \"" + base +
                                 "/AIs/listAI.plist\" as a dictionary.") == 1);
-    OO_CHECK(LogLinesContaining("\"builtinAI.plist\"") == 1 &&
+    EXPECT_TRUE(LogLinesContaining("\"builtinAI.plist\"") == 1 &&
              LogLinesContaining("\"missingAI.plist\"") == 1);  // announced only
-    OO_CHECK(LogLinesContaining("ERROR") == 6);
+    EXPECT_TRUE(LogLinesContaining("ERROR") == 6);
 
     // An AI that returns early leaves the log indented (the indent is not
     // undone): pinned as it was. Three early returns (built-in, list, missing),
     // then oneAI's own indent for its error.
     const size_t firstIndent = gLog.front().find_first_not_of(' ');
-    OO_CHECK(gLog.front()
+    EXPECT_TRUE(gLog.front()
                  .substr(firstIndent)
                  .starts_with("- Validating AI \"badAI.plist\"."));
-    OO_CHECK(gLog.back().find_first_not_of(' ') == firstIndent + 8);
-    OO_CHECK(gLog.back().ends_with(
+    EXPECT_TRUE(gLog.back().find_first_not_of(' ') == firstIndent + 8);
+    EXPECT_TRUE(gLog.back().ends_with(
         "***** ERROR: the AI \"oneAI.plist\" uses 1 unpermitted method: fly"));
 
     // The AIs are checked in case-insensitive order of their names.
@@ -256,13 +257,13 @@ OO_TEST(runChecksEachAIAgainstTheWhitelist) {
       if (gLog[i].find("\"badAI.plist\"") != std::string::npos && bad < 0)
         bad = i;
     }
-    OO_CHECK(bad >= 0 && one > bad);
+    EXPECT_TRUE(bad >= 0 && one > bad);
 
     // A second run starts from a fresh whitelist and says the same again.
     const size_t lines = gLog.size();
     gLog.clear();
     stage->run();
-    OO_CHECK(gLog.size() == lines);
+    EXPECT_TRUE(gLog.size() == lines);
 
     std::filesystem::remove_all(base);
   }
@@ -270,7 +271,7 @@ OO_TEST(runChecksEachAIAgainstTheWhitelist) {
 
 // The converted stage is global: the verifier (the ship data stage's holder)
 // registers it and finds it by name.
-OO_TEST(facade) {
+TEST(OOAIStateMachineVerifierStage, facade) {
   {
     const std::string base = MakeOXP();
     oo::OXPVerifier* verifier = MakeVerifier(base);
@@ -281,27 +282,25 @@ OO_TEST(facade) {
     // Registered as the verifier registers it, found again by name, as the ship
     // data stage finds it.
     verifier->registerStage(stage.get());
-    OO_CHECK(verifier->stageWithName("Validating AIs") == stage.get());
-    OO_CHECK(static_cast<oo::AIStateMachineVerifierStage*>(
+    EXPECT_TRUE(verifier->stageWithName("Validating AIs") == stage.get());
+    EXPECT_TRUE(static_cast<oo::AIStateMachineVerifierStage*>(
                  verifier->stageWithName("Validating AIs")) == stage.get());
 
     // The stage answers as its facade did.
-    OO_CHECK(stage->name() == std::optional<std::string>("Validating AIs"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(!stage->shouldRun());
+    EXPECT_TRUE(stage->name() == std::optional<std::string>("Validating AIs"));
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(!stage->shouldRun());
     stage->stateMachineNamed("oneAI.plist", "a ship");
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->shouldRun());
     StartLog();
     stage->dependencyRegistrationComplete();
     stage->performRun();
-    OO_CHECK(LogLinesContaining("***** ERROR: the AI \"oneAI.plist\" uses 1 "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: the AI \"oneAI.plist\" uses 1 "
                                 "unpermitted method: fly") == 1);
-    OO_CHECK(
+    EXPECT_TRUE(
         stage->description().starts_with("<OOAIStateMachineVerifierStage 0x"));
 
     std::filesystem::remove_all(base);
   }
 }
-
-OO_TEST_MAIN()

@@ -12,6 +12,8 @@
 	Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
@@ -84,7 +86,6 @@ public:
 #include "OOJSDock.h"
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstring>
@@ -399,25 +400,25 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSDock, registration)
 {
 	SetUpContext();
 	const JSClassID dockClassID = sDockObject->oo_jsClassID();
 	const char *dockClassName = OOJSClassName(dockClassID);
-	OO_CHECK(dockClassID != 0 && dockClassName != nullptr && std::strcmp(dockClassName, "Dock") == 0);
+	EXPECT_TRUE(dockClassID != 0 && dockClassName != nullptr && std::strcmp(dockClassName, "Dock") == 0);
 	JSValue prototype = JS_GetClassProto(sContext, dockClassID);
-	OO_CHECK(JS_IsObject(prototype));
+	EXPECT_TRUE(JS_IsObject(prototype));
 	JS_FreeValue(sContext, prototype);
-	OO_CHECK(OOJSIsSubclass(dockClassID, sFakeShipClassID));
-	OO_CHECK_EQ(sConverters[dockClassID], 1);
-	OO_CHECK(sDockObject->oo_jsClassName() == std::optional<std::string>("Dock"));
+	EXPECT_TRUE(OOJSIsSubclass(dockClassID, sFakeShipClassID));
+	EXPECT_EQ(sConverters[dockClassID], 1);
+	EXPECT_TRUE(sDockObject->oo_jsClassName() == std::optional<std::string>("Dock"));
 	OO_CHECK_EVAL("typeof Dock", "function");
 	OO_CHECK_EVAL("new Dock()", "threw: unconstructable");
 	OO_CHECK_EVAL("Object.getPrototypeOf(Dock.prototype) === Ship.prototype", "true");
@@ -425,7 +426,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSDock, properties)
 {
 	OO_CHECK_EVAL("dock.allowsDocking", "true");
 	OO_CHECK_EVAL("dock.disallowedDockingCollides", "false");
@@ -435,7 +436,7 @@ OO_TEST(properties)
 	OO_CHECK_EVAL("Object.keys(Dock.prototype).join()", "allowsDocking,disallowedDockingCollides,allowsLaunching,dockingQueueLength,launchingQueueLength");
 	// The three flags are writable, and a value converts to a boolean.
 	OO_CHECK_EVAL("(function () { dock.allowsDocking = false; return dock.allowsDocking; })()", "false");
-	OO_CHECK(sDock->_allowsDocking == false);
+	EXPECT_TRUE(sDock->_allowsDocking == false);
 	OO_CHECK_EVAL("(function () { dock.allowsLaunching = 0; return dock.allowsLaunching; })()", "false");
 	OO_CHECK_EVAL("(function () { dock.disallowedDockingCollides = 'yes'; return dock.disallowedDockingCollides; })()", "true");
 	OO_CHECK_EVAL("(function () { dock.allowsDocking = true; dock.allowsLaunching = 1; return dock.allowsDocking && dock.allowsLaunching; })()", "true");
@@ -444,7 +445,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(isQueued)
+TEST(OOJSDock, isQueued)
 {
 	SetUpContext();
 	sDock->_queued = sShipPart;
@@ -456,7 +457,7 @@ OO_TEST(isQueued)
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSDock, otherObjects)
 {
 	// A ship that is not a dock, and the prototype (no entity at all): the binding's getter and
 	// setter fail without reporting an error, which ends the script uncatchably.
@@ -469,7 +470,7 @@ OO_TEST(otherObjects)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSDock, nativeExceptions)
 {
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the entity is a JS error,
@@ -480,9 +481,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("dock.dockingQueueLength", "threw: Native exception: cxx boom");
 	sDock->_dockingQueue = 3;
 	OO_CHECK_EVAL("dock.dockingQueueLength", "3");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

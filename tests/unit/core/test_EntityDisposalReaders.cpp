@@ -21,11 +21,12 @@
    Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual entity references
 #include "WaypointEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -73,19 +74,19 @@ Entity* RetainedWaypoint(const std::string& code) {
 
 }  // namespace
 
-OO_TEST(threeBeaconsMakeTheList) {
+TEST(EntityDisposalReaders, threeBeaconsMakeTheList) {
   {
     oo::AutoreleaseScope scope;
-    Universe* u = SetUp();
+    Universe* u = ::SetUp();
     Entity* a = RetainedWaypoint("A");
     Entity* b = RetainedWaypoint("B");
     Entity* c = RetainedWaypoint("C");
-    OO_CHECK(oo::EntityIsBeacon(a) && oo::EntityIsBeacon(b) && oo::EntityIsBeacon(c));
-    OO_CHECK(u->addEntity(a));
-    OO_CHECK(u->addEntity(b));
-    OO_CHECK(u->addEntity(c));
-    OO_CHECK(u->firstBeacon() == a);
-    OO_CHECK(u->lastBeacon() == c);
+    EXPECT_TRUE(oo::EntityIsBeacon(a) && oo::EntityIsBeacon(b) && oo::EntityIsBeacon(c));
+    EXPECT_TRUE(u->addEntity(a));
+    EXPECT_TRUE(u->addEntity(b));
+    EXPECT_TRUE(u->addEntity(c));
+    EXPECT_TRUE(u->firstBeacon() == a);
+    EXPECT_TRUE(u->lastBeacon() == c);
     u->removeEntity(a);
     u->removeEntity(b);
     u->removeEntity(c);
@@ -96,23 +97,23 @@ OO_TEST(threeBeaconsMakeTheList) {
 }
 
 // The head: firstBeacon() == beacon.
-OO_TEST(removingTheFirstBeaconMovesTheHeadBeforeItsLastRelease) {
+TEST(EntityDisposalReaders, removingTheFirstBeaconMovesTheHeadBeforeItsLastRelease) {
   {
     oo::AutoreleaseScope scope;
-    Universe* u = SetUp();
+    Universe* u = ::SetUp();
     Entity* a = RetainedWaypoint("A");
     Entity* b = RetainedWaypoint("B");
     Entity* c = RetainedWaypoint("C");
-    OO_CHECK(u->addEntity(a) && u->addEntity(b) && u->addEntity(c));
+    EXPECT_TRUE(u->addEntity(a) && u->addEntity(b) && u->addEntity(c));
 
     u->removeEntity(a);  // the universe's hold goes; the test's is the last
-    OO_CHECK(a->getUniversalID() == NO_TARGET);
+    EXPECT_TRUE(a->getUniversalID() == NO_TARGET);
     const Entity* headAfterRemoval = u->firstBeacon();
     const Entity* tailAfterRemoval = u->lastBeacon();
-    OO_CHECK(headAfterRemoval == b);  // the head moved to the next beacon
-    OO_CHECK(tailAfterRemoval == c);
-    OO_CHECK(oo::PrevBeacon(b) == nullptr && oo::NextBeacon(b) == c);
-    OO_CHECK(!oo::EntityIsBeacon(a));  // clearBeacon cleared its code
+    EXPECT_TRUE(headAfterRemoval == b);  // the head moved to the next beacon
+    EXPECT_TRUE(tailAfterRemoval == c);
+    EXPECT_TRUE(oo::PrevBeacon(b) == nullptr && oo::NextBeacon(b) == c);
+    EXPECT_TRUE(!oo::EntityIsBeacon(a));  // clearBeacon cleared its code
 
     std::weak_ptr<Entity> removed(oo::share(a));
     oo::ReleaseEntity(a);  // the test's hold; the universe's dead list keeps it
@@ -121,9 +122,9 @@ OO_TEST(removingTheFirstBeaconMovesTheHeadBeforeItsLastRelease) {
       u->no_update = true;
       u->update(1.0);  // the dead are autoreleased
     }  // the pool drains: the last release, and disposal
-    OO_CHECK(removed.lock().get() == nullptr);  // it was disposed
-    OO_CHECK(u->firstBeacon() == headAfterRemoval);  // as removal left it
-    OO_CHECK(u->lastBeacon() == tailAfterRemoval);
+    EXPECT_TRUE(removed.lock().get() == nullptr);  // it was disposed
+    EXPECT_TRUE(u->firstBeacon() == headAfterRemoval);  // as removal left it
+    EXPECT_TRUE(u->lastBeacon() == tailAfterRemoval);
 
     u->removeEntity(b);
     u->removeEntity(c);
@@ -133,22 +134,22 @@ OO_TEST(removingTheFirstBeaconMovesTheHeadBeforeItsLastRelease) {
 }
 
 // The tail: lastBeacon() == beacon.
-OO_TEST(removingTheLastBeaconMovesTheTailBeforeItsLastRelease) {
+TEST(EntityDisposalReaders, removingTheLastBeaconMovesTheTailBeforeItsLastRelease) {
   {
     oo::AutoreleaseScope scope;
-    Universe* u = SetUp();
+    Universe* u = ::SetUp();
     Entity* a = RetainedWaypoint("A");
     Entity* b = RetainedWaypoint("B");
     Entity* c = RetainedWaypoint("C");
-    OO_CHECK(u->addEntity(a) && u->addEntity(b) && u->addEntity(c));
+    EXPECT_TRUE(u->addEntity(a) && u->addEntity(b) && u->addEntity(c));
 
     u->removeEntity(c);
-    OO_CHECK(c->getUniversalID() == NO_TARGET);
+    EXPECT_TRUE(c->getUniversalID() == NO_TARGET);
     const Entity* headAfterRemoval = u->firstBeacon();
     const Entity* tailAfterRemoval = u->lastBeacon();
-    OO_CHECK(headAfterRemoval == a);
-    OO_CHECK(tailAfterRemoval == b);  // the tail moved to the previous beacon
-    OO_CHECK(!oo::EntityIsBeacon(c));
+    EXPECT_TRUE(headAfterRemoval == a);
+    EXPECT_TRUE(tailAfterRemoval == b);  // the tail moved to the previous beacon
+    EXPECT_TRUE(!oo::EntityIsBeacon(c));
 
     std::weak_ptr<Entity> removed(oo::share(c));
     oo::ReleaseEntity(c);  // the test's hold; the universe's dead list keeps it
@@ -157,9 +158,9 @@ OO_TEST(removingTheLastBeaconMovesTheTailBeforeItsLastRelease) {
       u->no_update = true;
       u->update(1.0);  // the dead are autoreleased
     }  // the pool drains: the last release, and disposal
-    OO_CHECK(removed.lock().get() == nullptr);  // it was disposed
-    OO_CHECK(u->firstBeacon() == headAfterRemoval);  // as removal left it
-    OO_CHECK(u->lastBeacon() == tailAfterRemoval);
+    EXPECT_TRUE(removed.lock().get() == nullptr);  // it was disposed
+    EXPECT_TRUE(u->firstBeacon() == headAfterRemoval);  // as removal left it
+    EXPECT_TRUE(u->lastBeacon() == tailAfterRemoval);
 
     u->removeEntity(a);
     u->removeEntity(b);
@@ -167,5 +168,3 @@ OO_TEST(removingTheLastBeaconMovesTheTailBeforeItsLastRelease) {
     oo::ReleaseEntity(b);
   }
 }
-
-OO_TEST_MAIN()

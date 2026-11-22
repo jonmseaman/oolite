@@ -20,13 +20,14 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual entity references
 #include "OOJSPropID.h"
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
 #include "StationEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 
 // The player's system ids are private: the test sets them through this friend.
@@ -181,9 +182,9 @@ std::string StringOf(const oo::PList& value) {
 // doScriptEvent() with one argument, the kind of save ("STANDARD_SAVE"), as
 // -doScriptEvent:withArgument: does; the event comes before the save is
 // written.
-OO_TEST(saveSendsPlayerWillSaveGame) {
+TEST(EntityScriptEvents, saveSendsPlayerWillSaveGame) {
   {
-    SetUp();
+    ::SetUp();
     EventPlayer* player = NewTestEntity<EventPlayer>();
     bool raised = false;
     try {
@@ -191,13 +192,13 @@ OO_TEST(saveSendsPlayerWillSaveGame) {
     } catch (...) {
       raised = true;  // the save data could not be made
     }
-    OO_CHECK(raised);
+    EXPECT_TRUE(raised);
     std::vector<Event> events = EventsNamed(OOJSID("playerWillSaveGame"));
-    OO_CHECK_EQ(events.size(), (size_t)1);
+    EXPECT_EQ(events.size(), (size_t)1);
     if (events.size() == 1) {
-      OO_CHECK_EQ(events[0].arguments.size(), (size_t)1);
+      EXPECT_EQ(events[0].arguments.size(), (size_t)1);
       if (events[0].arguments.size() == 1)
-        OO_CHECK_EQ(StringOf(events[0].arguments[0]),
+        EXPECT_EQ(StringOf(events[0].arguments[0]),
                     std::string("STANDARD_SAVE"));
     }
     gOOPlayer = nullptr;
@@ -208,9 +209,9 @@ OO_TEST(saveSendsPlayerWillSaveGame) {
 // Upstream #780: a witchspace countdown that fails its checklist (here, not
 // enough fuel) sends playerJumpFailed with the reason as its one argument
 // through the player's doScriptEvent(), and drops back to flight.
-OO_TEST(failedJumpSendsPlayerJumpFailed) {
+TEST(EntityScriptEvents, failedJumpSendsPlayerJumpFailed) {
   {
-    SetUp();
+    ::SetUp();
     EventPlayer* player = NewTestEntity<EventPlayer>();
     // A jump to another system (the universe that was never initialised has
     // no system data, so it is no distance away), with no fuel: the countdown
@@ -219,14 +220,14 @@ OO_TEST(failedJumpSendsPlayerJumpFailed) {
     PlayerEntityTestAccess::target_system_id(player) = 8;
     player->setStatus(oo::EntityStatus::kWitchspaceCountdown);
     player->setFuel(0);
-    OO_CHECK(!player->witchJumpChecklist(false));
-    OO_CHECK(player->status() == oo::EntityStatus::kInFlight);
+    EXPECT_TRUE(!player->witchJumpChecklist(false));
+    EXPECT_TRUE(player->status() == oo::EntityStatus::kInFlight);
     std::vector<Event> events = EventsNamed(OOJSID("playerJumpFailed"));
-    OO_CHECK_EQ(events.size(), (size_t)1);
+    EXPECT_EQ(events.size(), (size_t)1);
     if (events.size() == 1) {
-      OO_CHECK_EQ(events[0].arguments.size(), (size_t)1);
+      EXPECT_EQ(events[0].arguments.size(), (size_t)1);
       if (events[0].arguments.size() == 1)
-        OO_CHECK_EQ(StringOf(events[0].arguments[0]),
+        EXPECT_EQ(StringOf(events[0].arguments[0]),
                     std::string("insufficient fuel"));
     }
     gOOPlayer = nullptr;
@@ -245,13 +246,13 @@ std::string SaveKindSent() {
 // Upstream #780: an autosave of a commander that was saved before sends
 // playerWillSaveGame with "AUTO_SAVE" (a failed autosave is not reported, so
 // nothing is raised).
-OO_TEST(autosaveSendsPlayerWillSaveGame) {
+TEST(EntityScriptEvents, autosaveSendsPlayerWillSaveGame) {
   {
-    SetUp();
+    ::SetUp();
     EventPlayer* player = NewTestEntity<EventPlayer>();
     player->setLastsaveName(std::string("unit-test-commander"));
     player->autosavePlayer();
-    OO_CHECK_EQ(SaveKindSent(), std::string("AUTO_SAVE"));
+    EXPECT_EQ(SaveKindSent(), std::string("AUTO_SAVE"));
     gOOPlayer = nullptr;
     oo::ReleaseEntity(player);
   }
@@ -259,9 +260,9 @@ OO_TEST(autosaveSendsPlayerWillSaveGame) {
 
 // Upstream #780: a quicksave to the current save file sends
 // playerWillSaveGame with "QUICK_SAVE" before it writes the file.
-OO_TEST(quicksaveSendsPlayerWillSaveGame) {
+TEST(EntityScriptEvents, quicksaveSendsPlayerWillSaveGame) {
   {
-    SetUp();
+    ::SetUp();
     EventPlayer* player = NewTestEntity<EventPlayer>();
     PlayerEntityTestAccess::save_path(player) =
         std::string("unit-test-quicksave.oolite-save");
@@ -271,8 +272,8 @@ OO_TEST(quicksaveSendsPlayerWillSaveGame) {
     } catch (...) {
       raised = true;  // the save data could not be made
     }
-    OO_CHECK(raised);
-    OO_CHECK_EQ(SaveKindSent(), std::string("QUICK_SAVE"));
+    EXPECT_TRUE(raised);
+    EXPECT_EQ(SaveKindSent(), std::string("QUICK_SAVE"));
     gOOPlayer = nullptr;
     oo::ReleaseEntity(player);
   }
@@ -280,9 +281,9 @@ OO_TEST(quicksaveSendsPlayerWillSaveGame) {
 
 // Upstream #780: a countdown to a system beyond the drive's range fails with
 // playerJumpFailed "too far".
-OO_TEST(tooFarJumpSendsPlayerJumpFailed) {
+TEST(EntityScriptEvents, tooFarJumpSendsPlayerJumpFailed) {
   {
-    SetUp();
+    ::SetUp();
     EventPlayer* player = NewTestEntity<EventPlayer>();
     PlayerEntityTestAccess::system_id(player) = 7;
     PlayerEntityTestAccess::target_system_id(player) = 8;
@@ -291,12 +292,12 @@ OO_TEST(tooFarJumpSendsPlayerJumpFailed) {
     PlayerEntityTestAccess::galaxy_coordinates(player) = NSMakePoint(200, 200);
     player->setStatus(oo::EntityStatus::kWitchspaceCountdown);
     player->setFuel(70);
-    OO_CHECK(!player->witchJumpChecklist(false));
-    OO_CHECK(player->status() == oo::EntityStatus::kInFlight);
+    EXPECT_TRUE(!player->witchJumpChecklist(false));
+    EXPECT_TRUE(player->status() == oo::EntityStatus::kInFlight);
     std::vector<Event> events = EventsNamed(OOJSID("playerJumpFailed"));
-    OO_CHECK_EQ(events.size(), (size_t)1);
+    EXPECT_EQ(events.size(), (size_t)1);
     if (events.size() == 1 && events[0].arguments.size() == 1)
-      OO_CHECK_EQ(StringOf(events[0].arguments[0]), std::string("too far"));
+      EXPECT_EQ(StringOf(events[0].arguments[0]), std::string("too far"));
     gOOPlayer = nullptr;
     oo::ReleaseEntity(player);
   }
@@ -305,26 +306,26 @@ OO_TEST(tooFarJumpSendsPlayerJumpFailed) {
 // Upstream #780: the player's alert condition changing sends
 // alertConditionChanged with the new and the old condition, as
 // -doScriptEvent:withArgument:andArgument: does; no change, no event.
-OO_TEST(playerAlertChangeSendsAlertConditionChanged) {
+TEST(EntityScriptEvents, playerAlertChangeSendsAlertConditionChanged) {
   {
-    SetUp();
+    ::SetUp();
     EventPlayer* player = NewTestEntity<EventPlayer>();
     const oo::AlertCondition stale = (oo::AlertCondition)99;
     PlayerEntityTestAccess::lastScriptAlertCondition(player) = stale;
     player->updateAlertCondition();
     const oo::AlertCondition now =
         PlayerEntityTestAccess::lastScriptAlertCondition(player);
-    OO_CHECK(now != stale);
+    EXPECT_TRUE(now != stale);
     std::vector<Event> events = EventsNamed(OOJSID("alertConditionChanged"));
-    OO_CHECK_EQ(events.size(), (size_t)1);
+    EXPECT_EQ(events.size(), (size_t)1);
     if (events.size() == 1 && events[0].arguments.size() == 2) {
-      OO_CHECK(events[0].arguments[0] == oo::PList((int)now));
-      OO_CHECK(events[0].arguments[1] == oo::PList((int)stale));
+      EXPECT_TRUE(events[0].arguments[0] == oo::PList((int)now));
+      EXPECT_TRUE(events[0].arguments[1] == oo::PList((int)stale));
     } else {
-      OO_CHECK(false);  // two arguments, the new and the old condition
+      EXPECT_TRUE(false);  // two arguments, the new and the old condition
     }
     player->updateAlertCondition();
-    OO_CHECK_EQ(EventsNamed(OOJSID("alertConditionChanged")).size(), (size_t)1);
+    EXPECT_EQ(EventsNamed(OOJSID("alertConditionChanged")).size(), (size_t)1);
     gOOPlayer = nullptr;
     oo::ReleaseEntity(player);
   }
@@ -333,26 +334,26 @@ OO_TEST(playerAlertChangeSendsAlertConditionChanged) {
 // Upstream #780: a station whose alert level changes, signalling its script,
 // sends alertConditionChanged through doScriptEvent() with the new and the old
 // level, as -doScriptEvent:withArgument:andArgument: does.
-OO_TEST(stationAlertChangeSendsAlertConditionChanged) {
+TEST(EntityScriptEvents, stationAlertChangeSendsAlertConditionChanged) {
   {
-    SetUp();
+    ::SetUp();
     EventStation* station = NewTestEntity<EventStation>();
     station->setAlertLevel(oo::StationAlertLevel::kGreen, false);  // no event
-    OO_CHECK(sEvents.empty());
+    EXPECT_TRUE(sEvents.empty());
     station->setAlertLevel(oo::StationAlertLevel::kRed, true);
     std::vector<Event> events = EventsNamed(OOJSID("alertConditionChanged"));
-    OO_CHECK_EQ(events.size(), (size_t)1);
+    EXPECT_EQ(events.size(), (size_t)1);
     if (events.size() == 1 && events[0].arguments.size() == 2) {
-      OO_CHECK(events[0].arguments[0] ==
+      EXPECT_TRUE(events[0].arguments[0] ==
                oo::PList((int)oo::StationAlertLevel::kRed));
-      OO_CHECK(events[0].arguments[1] ==
+      EXPECT_TRUE(events[0].arguments[1] ==
                oo::PList((int)oo::StationAlertLevel::kGreen));
     } else {
-      OO_CHECK(false);  // two arguments, the new and the old level
+      EXPECT_TRUE(false);  // two arguments, the new and the old level
     }
     // No change, no event.
     station->setAlertLevel(oo::StationAlertLevel::kRed, true);
-    OO_CHECK_EQ(EventsNamed(OOJSID("alertConditionChanged")).size(), (size_t)1);
+    EXPECT_EQ(EventsNamed(OOJSID("alertConditionChanged")).size(), (size_t)1);
     oo::ReleaseEntity(station);
   }
 }
@@ -360,14 +361,12 @@ OO_TEST(stationAlertChangeSendsAlertConditionChanged) {
 // Upstream #780: a ship going away sends entityDestroyed through its own
 // doScriptEvent(message), as [self doScriptEvent:OOJSID("entityDestroyed")]
 // does.
-OO_TEST(shipDeallocSendsEntityDestroyed) {
+TEST(EntityScriptEvents, shipDeallocSendsEntityDestroyed) {
   {
-    SetUp();
+    ::SetUp();
     EventShip* ship = NewTestEntity<EventShip>();
-    OO_CHECK(EventsNamed(OOJSID("entityDestroyed")).empty());
+    EXPECT_TRUE(EventsNamed(OOJSID("entityDestroyed")).empty());
     oo::ReleaseEntity(ship);
-    OO_CHECK_EQ(EventsNamed(OOJSID("entityDestroyed")).size(), (size_t)1);
+    EXPECT_EQ(EventsNamed(OOJSID("entityDestroyed")).size(), (size_t)1);
   }
 }
-
-OO_TEST_MAIN()

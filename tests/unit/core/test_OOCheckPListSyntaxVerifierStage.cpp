@@ -16,9 +16,10 @@
 #include <filesystem>
 #include <fstream>
 
+#include <gtest/gtest.h>
+
 #include "CheckPListSyntaxVerifierStage.h"
 #include "OXPVerifierStage.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
@@ -119,23 +120,23 @@ oo::OXPVerifier* MakeVerifier(
 
 }  // namespace
 
-OO_TEST(nameAndNeighbours) {
+TEST(OOCheckPListSyntaxVerifierStage, nameAndNeighbours) {
   {
     const std::shared_ptr<oo::CheckPListSyntaxVerifierStage> stage =
         oo::makeShared<oo::CheckPListSyntaxVerifierStage>();
     stage->setVerifier(MakeVerifier({}));
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking plist well-formedness"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(stage->shouldRun());  // always
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(stage->shouldRun());  // always
     stage->run();
-    OO_CHECK(gLog.empty());  // no Config files
+    EXPECT_TRUE(gLog.empty());  // no Config files
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(checksEachKnownPList) {
+TEST(OOCheckPListSyntaxVerifierStage, checksEachKnownPList) {
   {
     const std::shared_ptr<oo::CheckPListSyntaxVerifierStage> stage =
         oo::makeShared<oo::CheckPListSyntaxVerifierStage>();
@@ -154,61 +155,59 @@ OO_TEST(checksEachKnownPList) {
 
     // Each known file that exists is announced, in the order of
     // knownFiles.Config; the script is skipped.
-    OO_CHECK(LogLinesContaining("Checking ") == 6);
+    EXPECT_TRUE(LogLinesContaining("Checking ") == 6);
     for (const char* name : {"array.plist", "dict.plist", "wrongArray.plist",
                              "wrongDict.plist", "string.plist", "bad.plist"}) {
-      OO_CHECK(LogLinesContaining(std::string("Checking ") + name) == 1);
+      EXPECT_TRUE(LogLinesContaining(std::string("Checking ") + name) == 1);
     }
-    OO_CHECK(LogLinesContaining("script.js") == 0 &&
+    EXPECT_TRUE(LogLinesContaining("script.js") == 0 &&
              LogLinesContaining("missing.plist") == 0 &&
              LogLinesContaining("unknown.plist") == 0);
 
     // The wrong kinds (the dictionary's message says "array" too), and neither.
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "wrongArray.plist should be an array but isn't.") == 1);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "wrongDict.plist should be an array but isn't.") == 1);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "string.plist is neither an array nor a dictionary.") == 1);
-    OO_CHECK(LogLinesContaining("array.plist should") == 0 &&
+    EXPECT_TRUE(LogLinesContaining("array.plist should") == 0 &&
              LogLinesContaining("dict.plist should") == 0 &&
              LogLinesContaining("\"dict.plist\"") == 0);
 
     // An unparseable plist: the scanner's parse error, nothing from the stage.
-    OO_CHECK(LogLinesContaining("bad.plist should") == 0 &&
+    EXPECT_TRUE(LogLinesContaining("bad.plist should") == 0 &&
              LogLinesContaining("bad.plist is") == 0);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "Could not interpret property list Config/bad.plist.") == 1);
-    OO_CHECK(gLog.size() ==
+    EXPECT_TRUE(gLog.size() ==
              11);  // 6 announced, 3 wrong, 2 lines of parse error
 
     // In order: each file's findings follow its announcement.
-    OO_CHECK(gLog[0] == "Checking array.plist" &&
+    EXPECT_TRUE(gLog[0] == "Checking array.plist" &&
              gLog[2] == "Checking wrongArray.plist" &&
              gLog[3] == "wrongArray.plist should be an array but isn't.");
-    OO_CHECK(gLog[8] == "Checking bad.plist");
+    EXPECT_TRUE(gLog[8] == "Checking bad.plist");
   }
   std::filesystem::remove_all(kBase);
 }
 
 // The stage is global: the verifier registers it and finds it by name, and it
 // describes itself with its class's name.
-OO_TEST(facade) {
+TEST(OOCheckPListSyntaxVerifierStage, facade) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({});
     const std::shared_ptr<oo::CheckPListSyntaxVerifierStage> stage =
         oo::makeShared<oo::CheckPListSyntaxVerifierStage>();
-    OO_CHECK(stage->description().starts_with(
+    EXPECT_TRUE(stage->description().starts_with(
         "<OOCheckPListSyntaxVerifierStage 0x"));
 
     verifier->registerStage(stage.get());
-    OO_CHECK(verifier->stageWithName("Checking plist well-formedness") ==
+    EXPECT_TRUE(verifier->stageWithName("Checking plist well-formedness") ==
              stage.get());
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking plist well-formedness"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
   }
 }
-
-OO_TEST_MAIN()

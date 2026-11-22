@@ -16,11 +16,12 @@
 
 #include <cmath>
 
+#include <gtest/gtest.h>
+
 #include "BreakPatternEntity.h"
 #include "Color.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
 
 // main.mm defines the debug flags, and the test has its own main.
@@ -108,58 +109,58 @@ bool ColorIs(const std::shared_ptr<oo::BreakPatternEntity>& e, std::size_t i, GL
 
 }  // namespace
 
-OO_TEST(polygon) {
+TEST(OOBreakPatternEntity, polygon) {
   {
-    SetUp();
+    ::SetUp();
     std::shared_ptr<oo::BreakPatternEntity> ring =
         oo::BreakPatternEntity::breakPatternWithPolygonSides(4, 0.0f, 2.0f);
-    OO_CHECK(ring != nullptr);
-    OO_CHECK(Access::VertexCount(ring) == 10);
+    EXPECT_TRUE(ring != nullptr);
+    EXPECT_TRUE(Access::VertexCount(ring) == 10);
 
     // The first side starts at the top; the aspect ratio narrows the other axis
     // (here y).
     Vector v0 = Access::VertexPosition(ring, 0),
            v1 = Access::VertexPosition(ring, 1);
-    OO_CHECK(Near(v0.x, 0) && Near(v0.y, 25) && v0.z == -40);
-    OO_CHECK(Near(v1.x, 0) && Near(v1.y, 20) && v1.z == 0);
+    EXPECT_TRUE(Near(v0.x, 0) && Near(v0.y, 25) && v0.z == -40);
+    EXPECT_TRUE(Near(v1.x, 0) && Near(v1.y, 20) && v1.z == 0);
     Vector v2 = Access::VertexPosition(ring, 2);
-    OO_CHECK(Near(v2.x, 50) && Near(v2.y, 0) && v2.z == -40);
+    EXPECT_TRUE(Near(v2.x, 50) && Near(v2.y, 0) && v2.z == -40);
     // The strip closes on the first pair.
-    OO_CHECK(vector_equal(Access::VertexPosition(ring, 8), v0) &&
+    EXPECT_TRUE(vector_equal(Access::VertexPosition(ring, 8), v0) &&
              vector_equal(Access::VertexPosition(ring, 9), v1));
 
     // Sides are clamped to 3...128.
-    OO_CHECK(
+    EXPECT_TRUE(
         Access::VertexCount(oo::BreakPatternEntity::breakPatternWithPolygonSides(
             1, 0.0f, 1.0f)) == 8);
-    OO_CHECK(
+    EXPECT_TRUE(
         Access::VertexCount(oo::BreakPatternEntity::breakPatternWithPolygonSides(
             1000, 0.0f, 1.0f)) == oo::kBreakPatternMaxVertices);
   }
 }
 
-OO_TEST(flagsAndColors) {
+TEST(OOBreakPatternEntity, flagsAndColors) {
   {
-    SetUp();
+    ::SetUp();
     std::shared_ptr<oo::BreakPatternEntity> ring =
         oo::BreakPatternEntity::breakPatternWithPolygonSides(3, 45.0f, 1.0f);
-    OO_CHECK(ring->status() == oo::EntityStatus::kEffect &&
+    EXPECT_TRUE(ring->status() == oo::EntityStatus::kEffect &&
              ring->scanClass == oo::ScanClass::kNoDraw);
-    OO_CHECK(ring->isImmuneToBreakPatternHide && !ring->canCollide());
+    EXPECT_TRUE(ring->isImmuneToBreakPatternHide && !ring->canCollide());
     std::shared_ptr<Entity> other = oo::makeShared<Entity>();
-    OO_CHECK(dynamic_cast<oo::BreakPatternEntity*>(ring.get()) != nullptr &&
+    EXPECT_TRUE(dynamic_cast<oo::BreakPatternEntity*>(ring.get()) != nullptr &&
              dynamic_cast<oo::BreakPatternEntity*>(other.get()) == nullptr);
 
     // Default: red inside, blue outside.
-    OO_CHECK(ColorIs(ring, 0, 1.0f, 0.0f, 0.0f, 0.5f) &&
+    EXPECT_TRUE(ColorIs(ring, 0, 1.0f, 0.0f, 0.0f, 0.5f) &&
              ColorIs(ring, 1, 0.0f, 0.0f, 1.0f, 0.25f));
-    OO_CHECK(ColorIs(ring, 7, 0.0f, 0.0f, 1.0f, 0.25f));
+    EXPECT_TRUE(ColorIs(ring, 7, 0.0f, 0.0f, 1.0f, 0.25f));
 
     ring->setInnerColor(oo::Color::colorWithRed(0.0f, 1.0f, 0.0f, 1.0f).get(),
                         oo::Color::colorWithRed(1.0f, 1.0f, 1.0f, 0.5f).get());
-    OO_CHECK(ColorIs(ring, 0, 0.0f, 1.0f, 0.0f, 1.0f) &&
+    EXPECT_TRUE(ColorIs(ring, 0, 0.0f, 1.0f, 0.0f, 1.0f) &&
              ColorIs(ring, 1, 1.0f, 1.0f, 1.0f, 0.5f));
-    OO_CHECK(ColorIs(ring, 6, 0.0f, 1.0f, 0.0f, 1.0f) &&
+    EXPECT_TRUE(ColorIs(ring, 6, 0.0f, 1.0f, 0.0f, 1.0f) &&
              ColorIs(ring, 7, 1.0f, 1.0f, 1.0f, 0.5f));
 
     // Hidden (no longer immune): nothing is drawn.
@@ -168,9 +169,9 @@ OO_TEST(flagsAndColors) {
   }
 }
 
-OO_TEST(lifetime) {
+TEST(OOBreakPatternEntity, lifetime) {
   {
-    SetUp();
+    ::SetUp();
     std::shared_ptr<oo::BreakPatternEntity> ring =
         oo::BreakPatternEntity::breakPatternWithPolygonSides(4, 0.0f, 1.0f);
     Entity* facade = oo::MadeEntity(ring);  // what removeEntity: is sent
@@ -181,13 +182,11 @@ OO_TEST(lifetime) {
     // The lifetime runs down at the ring speed (200 a second); the ring moves
     // meanwhile.
     ring->update(0.25);
-    OO_CHECK(sRemoved == nullptr &&
+    EXPECT_TRUE(sRemoved == nullptr &&
              HPvector_equal(ring->getPosition(), make_HPvector(0, 0, 2.5)));
     ring->update(0.25);
-    OO_CHECK(sRemoved == nullptr);
+    EXPECT_TRUE(sRemoved == nullptr);
     ring->update(0.01);
-    OO_CHECK(sRemoved == facade);
+    EXPECT_TRUE(sRemoved == facade);
   }
 }
-
-OO_TEST_MAIN()

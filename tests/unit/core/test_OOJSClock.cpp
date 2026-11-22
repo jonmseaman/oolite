@@ -19,13 +19,14 @@
 #include <stdexcept>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "DebugStandards.h"
 #include "OOJSClock.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "StringParsing.h"
 #include "Universe.h"
-#include "oo_test.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/Exception.hpp"
 
@@ -235,7 +236,7 @@ std::string EvalShown(const char* src, const char* expected) {
   return result;
 }
 #define OO_CHECK_EVAL(src, expected) \
-  OO_CHECK_EQ(EvalShown(src, expected), expected)
+  EXPECT_EQ(EvalShown(src, expected), expected)
 
 void SetClock(double seconds) {
   SetUpContext();
@@ -247,7 +248,7 @@ void SetClock(double seconds) {
 // MARK: Tests
 // -------------------------------------------------------------------------------------
 
-OO_TEST(properties) {
+TEST(OOJSClock, properties) {
   // 3 days, 4 hours, 5 minutes, 6.5 seconds.
   SetClock(((3 * 24 + 4) * 60 + 5) * 60 + 6.5);
   sPlayer->_adjusted = 99.25;
@@ -269,14 +270,14 @@ OO_TEST(properties) {
   OO_CHECK_EVAL("clock.adjustedSeconds", "99.25");
   int deprecations = sDeprecations;
   OO_CHECK_EVAL("clock.legacy_scriptTimer", "42.5");
-  OO_CHECK_EQ(sDeprecations, deprecations + 1);
+  EXPECT_EQ(sDeprecations, deprecations + 1);
   OO_CHECK_EVAL("Object.keys(clock).length", "13");
   // Read-only.
   OO_CHECK_EVAL("(function () { clock.seconds = 5; return clock.seconds; })()",
                 "273906.5");
 }
 
-OO_TEST(methods) {
+TEST(OOJSClock, methods) {
   SetClock(100);
   OO_CHECK_EVAL("clock.toString()", "dial 100.0");
   OO_CHECK_EVAL("String(clock)", "dial 100.0");
@@ -287,18 +288,18 @@ OO_TEST(methods) {
       "threw: bad arguments: Clock.clockStringForTime (1): ; expected number");
   sPlayer->_added = 0;
   OO_CHECK_EVAL("clock.addSeconds(60)", "true");
-  OO_CHECK(sPlayer->_added == 60);
+  EXPECT_TRUE(sPlayer->_added == 60);
   OO_CHECK_EVAL("clock.addSeconds(0.5)", "false");
   OO_CHECK_EVAL("clock.addSeconds(31 * 24 * 3600)", "false");
   OO_CHECK_EVAL("clock.addSeconds(Infinity)", "false");
-  OO_CHECK(sPlayer->_added == 60);
+  EXPECT_TRUE(sPlayer->_added == 60);
   OO_CHECK_EVAL(
       "clock.addSeconds()",
       "threw: bad arguments: Clock.addSeconds (1): ; expected number");
   OO_CHECK_EVAL("new clock.constructor()", "threw: unconstructable");
 }
 
-OO_TEST(nativeExceptions) {
+TEST(OOJSClock, nativeExceptions) {
   // The property getter is a native (OOJS_NATIVE_ENTER): a raise from the
   // player is a JS error, and so is a C++ exception.
   SetClock(-1);
@@ -307,10 +308,8 @@ OO_TEST(nativeExceptions) {
   OO_CHECK_EVAL("clock.days", "threw: Native exception: cxx boom");
   SetClock(0);
   OO_CHECK_EVAL("clock.seconds", "0");
-  OO_CHECK_EQ(sLimiterPauses, 0);
+  EXPECT_EQ(sLimiterPauses, 0);
 #if OOJS_PROFILE
-  OO_CHECK_EQ(sProfileDepth, 0);
+  EXPECT_EQ(sProfileDepth, 0);
 #endif
 }
-
-OO_TEST_MAIN()

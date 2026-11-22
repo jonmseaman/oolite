@@ -16,6 +16,8 @@
 	ignored), runShipLibrary(), and a native's exception. Run: bash tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "Maths.h"
 #include "Types.h"
@@ -185,7 +187,6 @@ public:
 #include "OOJSEngineCore.h"
 #include "OOJSMission.h"
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -887,17 +888,17 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 #define OO_CHECK_CALLS(calls, expected) \
-	do { std::string got_ = Take(calls); if (got_ != (expected))  std::printf("    calls: %s\n", got_.c_str()); OO_CHECK_EQ(got_, std::string(expected)); } while (0)
+	do { std::string got_ = Take(calls); if (got_ != (expected))  std::printf("    calls: %s\n", got_.c_str()); EXPECT_EQ(got_, std::string(expected)); } while (0)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSMission, registration)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("typeof Mission", "function");
@@ -910,7 +911,7 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSMission, properties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("JSON.stringify(mission.markedSystems)", "[]");
@@ -933,13 +934,13 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(markSystems)
+TEST(OOJSMission, markSystems)
 {
 	SetUpContext();
 	sDeprecations = 0;
 	OO_CHECK_EVAL("mission.markSystem(7, {system: 12, name: 'twelve'}, {name: 'none'})", "undefined");
 	OO_CHECK_CALLS(sPlayer->_calls, "addMarker({name:'default',system:7}); addMarker({name:'twelve',system:12})");
-	OO_CHECK_EQ(sDeprecations, 1);
+	EXPECT_EQ(sDeprecations, 1);
 	OO_CHECK_EVAL("mission.markSystem(3, 'x')", "threw: bad arguments: Mission.markSystem(1) - / numbers or objects");
 	OO_CHECK_CALLS(sPlayer->_calls, "");	// nothing marked when one is bad
 	OO_CHECK_EVAL("mission.markSystem(null)", "undefined");	// null is the number 0
@@ -961,7 +962,7 @@ OO_TEST(markSystems)
 }
 
 
-OO_TEST(messageAndInstructions)
+TEST(OOJSMission, messageAndInstructions)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("mission.addMessageText('Hello')", "undefined");
@@ -983,7 +984,7 @@ OO_TEST(messageAndInstructions)
 
 	sLastWarning.clear();
 	OO_CHECK_EVAL("mission.setInstructions()", "undefined");
-	OO_CHECK_EQ(sLastWarning, std::string("Usage error: mission.setInstructions() called with no arguments. Treating as Mission.setInstructions(null). This call may fail in a future version of Oolite."));
+	EXPECT_EQ(sLastWarning, std::string("Usage error: mission.setInstructions() called with no arguments. Treating as Mission.setInstructions(null). This call may fail in a future version of Oolite."));
 	OO_CHECK_CALLS(sPlayer->_calls, "clearDescription('oolite-test-mission')");
 	OO_CHECK_EVAL("mission.setInstructionsKey(undefined)", "threw: bad arguments: Mission.setInstructionsKey(1) - / string or null");
 
@@ -996,7 +997,7 @@ OO_TEST(messageAndInstructions)
 }
 
 
-OO_TEST(runScreen)
+TEST(OOJSMission, runScreen)
 {
 	SetUpContext();
 	sPlayer->_calls.clear();
@@ -1014,8 +1015,8 @@ OO_TEST(runScreen)
 				   "literalText('Hello'); choicesDict({1_YES:'Yes',2_NO:'No'}); overlay(null); background(null); title(nullopt); missionMusic('')");
 	OO_CHECK_CALLS(sUniverse->_calls, "removeDemoShips");
 	OO_CHECK_CALLS(sGuiCalls, "texture('mission.runScreen()'); texture('mission.runScreen()'); rowForKey('2_NO'); selectRow(7)");
-	OO_CHECK(sMusic == (std::vector<std::string>{ "'tune.ogg'" }));
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_TRUE(sMusic == (std::vector<std::string>{ "'tune.ogg'" }));
+	EXPECT_EQ(sLimiterPauses, 0);
 	OO_CHECK_EVAL("'displayModel' in mission", "false");
 
 	// The callback runs as the script that set the screen, with the choice and the key pressed,
@@ -1026,16 +1027,16 @@ OO_TEST(runScreen)
 	MissionRunCallback();
 	OO_CHECK_EVAL("theScript.lastChoice", "1_YES/y");
 	OO_CHECK_CALLS(sPlayer->_calls, "choice(nullopt, '', NO)");
-	OO_CHECK(sScriptStack == (std::vector<std::string>{ "+oolite-test-mission", "-oolite-test-mission" }));
-	OO_CHECK_EQ(sEngine->_calls, 1);
+	EXPECT_TRUE(sScriptStack == (std::vector<std::string>{ "+oolite-test-mission", "-oolite-test-mission" }));
+	EXPECT_EQ(sEngine->_calls, 1);
 	// Only once.
 	MissionRunCallback();
-	OO_CHECK_EQ(sEngine->_calls, 1);
+	EXPECT_EQ(sEngine->_calls, 1);
 	OO_CHECK_CALLS(sPlayer->_calls, "");
 }
 
 
-OO_TEST(runScreenOtherSettings)
+TEST(OOJSMission, runScreenOtherSettings)
 {
 	SetUpContext();
 	sPlayer->_calls.clear();
@@ -1050,16 +1051,16 @@ OO_TEST(runScreenOtherSettings)
 	OO_CHECK_CALLS(sPlayer->_calls, "title('<The [name] Job>'); overlay(null); background({name:'back.png'}); backgroundSpecial('SHORT_RANGE_CHART'); "
 				   "chartZoom(1); chartCentre(12, 8); exitScreen(6); clearScreenID; clearExtraKeys; textEntry(YES); missionScreen(NO); "
 				   "text('my_message'); overlay(null); background(null); title(nullopt); missionMusic('')");
-	OO_CHECK_EQ(sLastWarning, std::string("Mission.runScreen: invalid customChartZoom value specified."));
+	EXPECT_EQ(sLastWarning, std::string("Mission.runScreen: invalid customChartZoom value specified."));
 	OO_CHECK_CALLS(sUniverse->_calls, "removeDemoShips; demoShip('cobra', NO)");
-	OO_CHECK_EQ(sUniverse->_demoShip->_personality, 9);
+	EXPECT_EQ(sUniverse->_demoShip->_personality, 9);
 	OO_CHECK_EVAL("mission.displayModel.name", "demo ship");
-	OO_CHECK(sMusic == (std::vector<std::string>{ "nullopt" }));
+	EXPECT_TRUE(sMusic == (std::vector<std::string>{ "nullopt" }));
 
 	OO_CHECK_EVAL("mission.runScreen({titleKey: 'no_such_key', model: 'none', customChartCentre: 'x'})", "true");
 	OO_CHECK_EVAL("'displayModel' in mission", "false");
-	OO_CHECK(sWarnings.size() >= 2 && sWarnings[sWarnings.size() - 2] == "Mission.runScreen: titleKey 'no_such_key' has no entry in missiontext.plist.");
-	OO_CHECK_EQ(sLastWarning, std::string("Mission.runScreen: invalid value for customChartCentre. Must be valid vector. Defaulting to current location."));
+	EXPECT_TRUE(sWarnings.size() >= 2 && sWarnings[sWarnings.size() - 2] == "Mission.runScreen: titleKey 'no_such_key' has no entry in missiontext.plist.");
+	EXPECT_EQ(sLastWarning, std::string("Mission.runScreen: invalid value for customChartCentre. Must be valid vector. Defaulting to current location."));
 	OO_CHECK_CALLS(sPlayer->_calls, "overlay(null); background(null); backgroundSpecial(''); chartCentre(10, 20); exitScreen(6); clearScreenID; clearExtraKeys; "
 				   "textEntry(NO); missionScreen(NO); choices(''); overlay(null); background(null); title(nullopt); missionMusic('')");
 	sUniverse->_calls.clear();
@@ -1067,9 +1068,9 @@ OO_TEST(runScreenOtherSettings)
 	// In flight: interruptible, and no model by role.
 	sPlayer->_status = oo::EntityStatus::kInFlight;
 	OO_CHECK_EVAL("mission.runScreen({model: 'cobra', allowInterrupt: false})", "true");
-	OO_CHECK_EQ(sLastWarning, std::string("Mission.runScreen: model cannot be displayed while in flight."));
+	EXPECT_EQ(sLastWarning, std::string("Mission.runScreen: model cannot be displayed while in flight."));
 	OO_CHECK_CALLS(sUniverse->_calls, "removeDemoShips");
-	OO_CHECK(Take(sPlayer->_calls).find("allowInterrupt") != std::string::npos);
+	EXPECT_TRUE(Take(sPlayer->_calls).find("allowInterrupt") != std::string::npos);
 	sPlayer->_status = oo::EntityStatus::kDocked;
 
 	// The callback with a this of its own; an exception in it is logged and ignored.
@@ -1080,14 +1081,14 @@ OO_TEST(runScreenOtherSettings)
 	sScriptStack.clear();
 	MissionRunCallback();
 	sEngine->_raise = false;
-	OO_CHECK_EQ(sLog.size(), static_cast<std::size_t>(1));
-	OO_CHECK(!sLog.empty() && sLog[0].find("Ignoring exception") != std::string::npos && sLog[0].find("callback boom") != std::string::npos);
-	OO_CHECK(sScriptStack == (std::vector<std::string>{ "+oolite-test-mission", "-oolite-test-mission" }));
+	EXPECT_EQ(sLog.size(), static_cast<std::size_t>(1));
+	EXPECT_TRUE(!sLog.empty() && sLog[0].find("Ignoring exception") != std::string::npos && sLog[0].find("callback boom") != std::string::npos);
+	EXPECT_TRUE(sScriptStack == (std::vector<std::string>{ "+oolite-test-mission", "-oolite-test-mission" }));
 	OO_CHECK_EVAL("theScript.called", "undefined");
 }
 
 
-OO_TEST(runScreenErrors)
+TEST(OOJSMission, runScreenErrors)
 {
 	SetUpContext();
 	sPlayer->_calls.clear();
@@ -1098,11 +1099,11 @@ OO_TEST(runScreenErrors)
 	OO_CHECK_EVAL("mission.runScreen({title: 'x'})", "false");	// not during the intro
 	OO_CHECK_CALLS(sPlayer->_calls, "");
 	sPlayer->_status = oo::EntityStatus::kDocked;
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
 }
 
 
-OO_TEST(runShipLibrary)
+TEST(OOJSMission, runShipLibrary)
 {
 	SetUpContext();
 	sPlayer->_calls.clear();
@@ -1111,13 +1112,13 @@ OO_TEST(runShipLibrary)
 	sPlayer->_status = oo::EntityStatus::kInFlight;
 	sLastWarning.clear();
 	OO_CHECK_EVAL("mission.runShipLibrary()", "false");
-	OO_CHECK_EQ(sLastWarning, std::string("Mission.runShipLibrary: must be docked."));
+	EXPECT_EQ(sLastWarning, std::string("Mission.runShipLibrary: must be docked."));
 	OO_CHECK_CALLS(sPlayer->_calls, "");
 	sPlayer->_status = oo::EntityStatus::kDocked;
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSMission, nativeExceptions)
 {
 	SetUpContext();
 	sPlayer->_raise = true;
@@ -1127,9 +1128,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("mission.screenID", "threw: Native exception: cxx boom");
 	sPlayer->_throwCxx = false;
 	OO_CHECK_EVAL("mission.screenID", "null");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

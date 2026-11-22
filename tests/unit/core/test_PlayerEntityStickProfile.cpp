@@ -31,11 +31,12 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "GuiDisplayGen.h"
 #include "JoystickManager.h"
 #include "PlayerEntity.h"  // PLAYER is C++
 #include "PlayerEntityStickProfile.h"
-#include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/String.hpp"
 #include "EntityManualRefs.h"  // the tests' manual entity references
@@ -84,7 +85,7 @@ void SetUp() {
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   (void)oo::Defaults::standard();
 
   gOOPlayer = NewTestPlayer<StickProfileTestPlayer>();
@@ -122,7 +123,7 @@ struct Started {
 };
 
 Started Start() {
-  SetUp();
+  ::SetUp();
   ResetProfiles();
   Started started;
   started.gui = oo::makeShared<GuiDisplayGen>();
@@ -133,68 +134,68 @@ Started Start() {
 
 }  // namespace
 
-OO_TEST(startShowsTheRollAxisStandardProfile) {
+TEST(PlayerEntityStickProfile, startShowsTheRollAxisStandardProfile) {
   {
     Started s = Start();
     std::shared_ptr<GuiDisplayGen> gui = s.gui;
 
-    OO_CHECK(gui->getTitle() ==
+    EXPECT_TRUE(gui->getTitle() ==
              std::optional<std::string>("oolite-stickprofile-title"));
-    OO_CHECK_EQ(gui->getSelectedRow(), 1);
-    OO_CHECK(gui->getSelectableRange().location == 1 &&
+    EXPECT_EQ(gui->getSelectedRow(), 1);
+    EXPECT_TRUE(gui->getSelectableRange().location == 1 &&
              gui->getSelectableRange().length == 20);
 
-    OO_CHECK(gui->objectForRow(1) ==
+    EXPECT_TRUE(gui->objectForRow(1) ==
              Row({"oolite-stickprofile-axis", "stickmapper-roll"}));
     // A new standard profile: dead zone STICK_DEADZONE (half the maximum),
     // power 1, parameter 1.
-    OO_CHECK(gui->objectForRow(2) ==
+    EXPECT_TRUE(gui->objectForRow(2) ==
              Row({"oolite-stickprofile-deadzone",
                   Bars(10) + " (" + oo::str::format("%0.4f", STICK_DEADZONE) +
                       ")"}));
-    OO_CHECK(gui->objectForRow(3) ==
+    EXPECT_TRUE(gui->objectForRow(3) ==
              Row({"oolite-stickprofile-profile-type",
                   "oolite-stickprofile-type-standard"}));
-    OO_CHECK(gui->objectForRow(4) ==
+    EXPECT_TRUE(gui->objectForRow(4) ==
              Row({"oolite-stickprofile-range", Bars(2) + " (1.0) "}));
-    OO_CHECK(gui->objectForRow(5) ==
+    EXPECT_TRUE(gui->objectForRow(5) ==
              Row({"oolite-stickprofile-sensitivity", Bars(20) + " (1.00) "}));
-    OO_CHECK(gui->objectForRow(20) == oo::PList(std::string("gui-back")));
+    EXPECT_TRUE(gui->objectForRow(20) == oo::PList(std::string("gui-back")));
     for (int row : {1, 2, 3, 4, 5, 20}) {
-      OO_CHECK(gui->keyForRow(row) ==
+      EXPECT_TRUE(gui->keyForRow(row) ==
                std::optional<std::string>(std::string(GUI_KEY_OK)));
     }
   }
 }
 
-OO_TEST(theAxisStepsBetweenRollPitchAndYaw) {
+TEST(PlayerEntityStickProfile, theAxisStepsBetweenRollPitchAndYaw) {
   {
     Started s = Start();
 
     s.screen->previousAxis();  // roll is the first
-    OO_CHECK(s.gui->objectForRow(1) ==
+    EXPECT_TRUE(s.gui->objectForRow(1) ==
              Row({"oolite-stickprofile-axis", "stickmapper-roll"}));
     s.screen->nextAxis();
-    OO_CHECK(s.gui->objectForRow(1) ==
+    EXPECT_TRUE(s.gui->objectForRow(1) ==
              Row({"oolite-stickprofile-axis", "stickmapper-pitch"}));
     s.screen->nextAxis();
-    OO_CHECK(s.gui->objectForRow(1) ==
+    EXPECT_TRUE(s.gui->objectForRow(1) ==
              Row({"oolite-stickprofile-axis", "stickmapper-yaw"}));
     s.screen->nextAxis();  // yaw is the last
-    OO_CHECK(s.gui->objectForRow(1) ==
+    EXPECT_TRUE(s.gui->objectForRow(1) ==
              Row({"oolite-stickprofile-axis", "stickmapper-yaw"}));
     s.screen->previousAxis();
-    OO_CHECK(s.gui->objectForRow(1) ==
+    EXPECT_TRUE(s.gui->objectForRow(1) ==
              Row({"oolite-stickprofile-axis", "stickmapper-pitch"}));
 
     // Starting again goes back to roll.
     s.screen->startGui(s.gui.get());
-    OO_CHECK(s.gui->objectForRow(1) ==
+    EXPECT_TRUE(s.gui->objectForRow(1) ==
              Row({"oolite-stickprofile-axis", "stickmapper-roll"}));
   }
 }
 
-OO_TEST(theDeadZoneStepsByATwentiethOfItsMaximumOnTheCurrentAxis) {
+TEST(PlayerEntityStickProfile, theDeadZoneStepsByATwentiethOfItsMaximumOnTheCurrentAxis) {
   {
     Started s = Start();
     std::shared_ptr<oo::JoystickAxisProfile> roll(oo::share(
@@ -203,9 +204,9 @@ OO_TEST(theDeadZoneStepsByATwentiethOfItsMaximumOnTheCurrentAxis) {
         Handler()->getProfileForAxis(AXIS_PITCH)));
 
     s.screen->increaseDeadzone();
-    OO_CHECK(Near(roll->deadzone(), STICK_DEADZONE + STICK_MAX_DEADZONE / 20));
-    OO_CHECK(Near(pitch->deadzone(), STICK_DEADZONE));
-    OO_CHECK(s.gui->objectForRow(2) ==
+    EXPECT_TRUE(Near(roll->deadzone(), STICK_DEADZONE + STICK_MAX_DEADZONE / 20));
+    EXPECT_TRUE(Near(pitch->deadzone(), STICK_DEADZONE));
+    EXPECT_TRUE(s.gui->objectForRow(2) ==
              Row({"oolite-stickprofile-deadzone",
                   Bars(11) + " (" + oo::str::format("%0.4f", roll->deadzone()) +
                       ")"}));
@@ -213,19 +214,19 @@ OO_TEST(theDeadZoneStepsByATwentiethOfItsMaximumOnTheCurrentAxis) {
     s.screen->nextAxis();
     s.screen->decreaseDeadzone();
     s.screen->decreaseDeadzone();
-    OO_CHECK(
+    EXPECT_TRUE(
         Near(pitch->deadzone(), STICK_DEADZONE - 2 * STICK_MAX_DEADZONE / 20));
-    OO_CHECK(Near(roll->deadzone(), STICK_DEADZONE + STICK_MAX_DEADZONE / 20));
+    EXPECT_TRUE(Near(roll->deadzone(), STICK_DEADZONE + STICK_MAX_DEADZONE / 20));
 
     // The profile clamps it at zero.
     for (int i = 0; i < 20; i++) s.screen->decreaseDeadzone();
-    OO_CHECK(pitch->deadzone() == 0.0);
-    OO_CHECK(s.gui->objectForRow(2) ==
+    EXPECT_TRUE(pitch->deadzone() == 0.0);
+    EXPECT_TRUE(s.gui->objectForRow(2) ==
              Row({"oolite-stickprofile-deadzone", Bars(0) + " (0.0000)"}));
   }
 }
 
-OO_TEST(powerAndParameterStepTheStandardProfile) {
+TEST(PlayerEntityStickProfile, powerAndParameterStepTheStandardProfile) {
   {
     Started s = Start();
     std::shared_ptr<oo::JoystickStandardAxisProfile> roll(oo::share(
@@ -234,27 +235,27 @@ OO_TEST(powerAndParameterStepTheStandardProfile) {
 
     s.screen->IncreasePower();
     s.screen->IncreasePower();
-    OO_CHECK(Near(roll->power(), 1.0 + 2 * STICKPROFILE_MAX_POWER / 20));
-    OO_CHECK(s.gui->objectForRow(4) ==
+    EXPECT_TRUE(Near(roll->power(), 1.0 + 2 * STICKPROFILE_MAX_POWER / 20));
+    EXPECT_TRUE(s.gui->objectForRow(4) ==
              Row({"oolite-stickprofile-range", Bars(4) + " (2.0) "}));
     s.screen->DecreasePower();
-    OO_CHECK(Near(roll->power(), 1.0 + STICKPROFILE_MAX_POWER / 20));
+    EXPECT_TRUE(Near(roll->power(), 1.0 + STICKPROFILE_MAX_POWER / 20));
 
     s.screen->DecreaseParam();
     s.screen->DecreaseParam();
-    OO_CHECK(Near(roll->parameter(), 0.9));
+    EXPECT_TRUE(Near(roll->parameter(), 0.9));
     // The bar count is 20 x the parameter truncated, as the screen computes it
     // (17 for 1 - 0.05 - 0.05).
-    OO_CHECK(
+    EXPECT_TRUE(
         s.gui->objectForRow(5) ==
         Row({"oolite-stickprofile-sensitivity",
              Bars(static_cast<int>(20 * roll->parameter())) + " (0.90) "}));
     s.screen->IncreaseParam();
-    OO_CHECK(Near(roll->parameter(), 0.95));
+    EXPECT_TRUE(Near(roll->parameter(), 0.95));
   }
 }
 
-OO_TEST(theProfileTypeSwitchesAndKeepsTheOtherForTheSwitchBack) {
+TEST(PlayerEntityStickProfile, theProfileTypeSwitchesAndKeepsTheOtherForTheSwitchBack) {
   {
     Started s = Start();
     std::shared_ptr<oo::JoystickAxisProfile> standard(oo::share(
@@ -262,55 +263,55 @@ OO_TEST(theProfileTypeSwitchesAndKeepsTheOtherForTheSwitchBack) {
     s.screen->increaseDeadzone();
     const double deadzone = standard->deadzone();
 
-    OO_CHECK(!s.screen->currentProfileIsSpline());
+    EXPECT_TRUE(!s.screen->currentProfileIsSpline());
     s.screen->previousProfileType();  // standard is the first
-    OO_CHECK(Handler()->getProfileForAxis(AXIS_ROLL) == standard.get());
+    EXPECT_TRUE(Handler()->getProfileForAxis(AXIS_ROLL) == standard.get());
 
     s.screen->nextProfileType();
     std::shared_ptr<oo::JoystickAxisProfile> spline(oo::share(
         Handler()->getProfileForAxis(AXIS_ROLL)));
-    OO_CHECK(dynamic_cast<oo::JoystickSplineAxisProfile*>(spline.get()) !=
+    EXPECT_TRUE(dynamic_cast<oo::JoystickSplineAxisProfile*>(spline.get()) !=
              nullptr);
-    OO_CHECK(s.screen->currentProfileIsSpline());
-    OO_CHECK(Near(spline->deadzone(), deadzone));  // the dead zone carries over
-    OO_CHECK(s.gui->objectForRow(3) ==
+    EXPECT_TRUE(s.screen->currentProfileIsSpline());
+    EXPECT_TRUE(Near(spline->deadzone(), deadzone));  // the dead zone carries over
+    EXPECT_TRUE(s.gui->objectForRow(3) ==
              Row({"oolite-stickprofile-profile-type",
                   "oolite-stickprofile-type-spline"}));
-    OO_CHECK(s.gui->objectForRow(4) == oo::PList(std::string()));
-    OO_CHECK(s.gui->keyForRow(4) ==
+    EXPECT_TRUE(s.gui->objectForRow(4) == oo::PList(std::string()));
+    EXPECT_TRUE(s.gui->keyForRow(4) ==
              std::optional<std::string>(std::string(GUI_KEY_SKIP)));
-    OO_CHECK(s.gui->objectForRow(5) ==
+    EXPECT_TRUE(s.gui->objectForRow(5) ==
              oo::PList(std::string("oolite-stickprofile-spline-instructions")));
-    OO_CHECK(s.gui->keyForRow(5) ==
+    EXPECT_TRUE(s.gui->keyForRow(5) ==
              std::optional<std::string>(std::string(GUI_KEY_SKIP)));
 
     // Power and parameter do nothing to a spline.
     s.screen->IncreasePower();
     s.screen->DecreaseParam();
-    OO_CHECK(Handler()->getProfileForAxis(AXIS_ROLL) == spline.get());
+    EXPECT_TRUE(Handler()->getProfileForAxis(AXIS_ROLL) == spline.get());
 
     s.screen->nextProfileType();  // spline is the last
-    OO_CHECK(Handler()->getProfileForAxis(AXIS_ROLL) == spline.get());
+    EXPECT_TRUE(Handler()->getProfileForAxis(AXIS_ROLL) == spline.get());
 
     // Back to the very standard profile it had, and forward to the very spline.
     spline->setDeadzone(0.0);
     s.screen->previousProfileType();
-    OO_CHECK(Handler()->getProfileForAxis(AXIS_ROLL) == standard.get());
-    OO_CHECK(standard->deadzone() == 0.0);
+    EXPECT_TRUE(Handler()->getProfileForAxis(AXIS_ROLL) == standard.get());
+    EXPECT_TRUE(standard->deadzone() == 0.0);
     s.screen->nextProfileType();
-    OO_CHECK(Handler()->getProfileForAxis(AXIS_ROLL) == spline.get());
+    EXPECT_TRUE(Handler()->getProfileForAxis(AXIS_ROLL) == spline.get());
 
     // Starting again forgets the kept profiles: the next switch makes a new
     // one.
     s.screen->startGui(s.gui.get());
     s.screen->previousProfileType();
-    OO_CHECK(Handler()->getProfileForAxis(AXIS_ROLL) != standard.get());
-    OO_CHECK(dynamic_cast<oo::JoystickStandardAxisProfile*>(
+    EXPECT_TRUE(Handler()->getProfileForAxis(AXIS_ROLL) != standard.get());
+    EXPECT_TRUE(dynamic_cast<oo::JoystickStandardAxisProfile*>(
                  Handler()->getProfileForAxis(AXIS_ROLL)) != nullptr);
   }
 }
 
-OO_TEST(theMouseAddsMovesAndDeletesSplinePoints) {
+TEST(PlayerEntityStickProfile, theMouseAddsMovesAndDeletesSplinePoints) {
   {
     Started s = Start();
 
@@ -318,7 +319,7 @@ OO_TEST(theMouseAddsMovesAndDeletesSplinePoints) {
     s.screen->mouseDown(NSMakePoint(0, 0));
     s.screen->mouseUp();
     s.screen->deleteSelected();
-    OO_CHECK(!s.screen->currentProfileIsSpline());
+    EXPECT_TRUE(!s.screen->currentProfileIsSpline());
 
     s.screen->nextProfileType();
     std::shared_ptr<oo::JoystickSplineAxisProfile> spline(oo::share(
@@ -328,53 +329,51 @@ OO_TEST(theMouseAddsMovesAndDeletesSplinePoints) {
 
     // With the zero graph rectangle, (0, 0) is the spline point (0.5, 0.5).
     s.screen->mouseDown(NSMakePoint(0, 0));
-    OO_CHECK_EQ(spline->countPoints(), points + 1);
+    EXPECT_EQ(spline->countPoints(), points + 1);
     const std::vector<NSPoint> added = spline->controlPoints();
     bool found = false;
     for (const NSPoint& point : added)
       found = found || (point.x == 0.5 && point.y == 0.5);
-    OO_CHECK(found);
+    EXPECT_TRUE(found);
 
     // Dragging moves the same point: (-2, 0) is (0.6, 0.5).
     s.screen->mouseDown(NSMakePoint(-2, 0));
-    OO_CHECK_EQ(spline->countPoints(), points + 1);
+    EXPECT_EQ(spline->countPoints(), points + 1);
     found = false;
     for (const NSPoint& point : spline->controlPoints())
       found = found || (Near(point.x, 0.6) && point.y == 0.5);
-    OO_CHECK(found);
+    EXPECT_TRUE(found);
 
     // A click outside the unit square does nothing: (12, 0) is (-0.1, 0.5).
     s.screen->mouseUp();
     s.screen->mouseDown(NSMakePoint(12, 0));
-    OO_CHECK_EQ(spline->countPoints(), points + 1);
+    EXPECT_EQ(spline->countPoints(), points + 1);
     s.screen->mouseUp();
 
     // The selected point goes; a second delete has nothing selected.
     s.screen->deleteSelected();
-    OO_CHECK_EQ(spline->countPoints(), points);
+    EXPECT_EQ(spline->countPoints(), points);
     s.screen->deleteSelected();
-    OO_CHECK_EQ(spline->countPoints(), points);
+    EXPECT_EQ(spline->countPoints(), points);
   }
 }
 
-OO_TEST(changesAreSavedToTheDefaults) {
+TEST(PlayerEntityStickProfile, changesAreSavedToTheDefaults) {
   {
     Started s = Start();
     oo::Defaults::standard().removeObject(
         std::string(STICK_ROLL_AXIS_PROFILE_SETTING));
 
     s.screen->nextProfileType();
-    OO_CHECK(!oo::Defaults::standard()
+    EXPECT_TRUE(!oo::Defaults::standard()
                   .object(std::string(STICK_ROLL_AXIS_PROFILE_SETTING))
                   .isNull());
 
     oo::Defaults::standard().removeObject(
         std::string(STICK_ROLL_AXIS_PROFILE_SETTING));
     s.screen->saveSettings();
-    OO_CHECK(!oo::Defaults::standard()
+    EXPECT_TRUE(!oo::Defaults::standard()
                   .object(std::string(STICK_ROLL_AXIS_PROFILE_SETTING))
                   .isNull());
   }
 }
-
-OO_TEST_MAIN()

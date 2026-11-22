@@ -13,10 +13,11 @@
 	reference to a definition. Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "OOJSPopulatorDefinition.h"
 #include "oofnd/Notification.hpp"
 
-#include "oo_test.hpp"
 
 #include <quickjs.h>
 
@@ -211,19 +212,19 @@ void CollectGarbage()
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(initialState)
+TEST(OOJSPopulatorDefinition, initialState)
 {
 	{
 		Context();
 		const std::shared_ptr<OOJSPopulatorDefinition> definition = oo::makeShared<OOJSPopulatorDefinition>();
-		OO_CHECK(definition.get() != nullptr);
-		OO_CHECK(IsUndefined(definition->callback()));
-		OO_CHECK(!IsObject(definition->callbackThis()));
+		EXPECT_TRUE(definition.get() != nullptr);
+		EXPECT_TRUE(IsUndefined(definition->callback()));
+		EXPECT_TRUE(!IsObject(definition->callbackThis()));
 	}
 }
 
 
-OO_TEST(runCallback)
+TEST(OOJSPopulatorDefinition, runCallback)
 {
 	{
 		const std::shared_ptr<OOJSScript> owner = oo::makeShared<OOJSScript>();
@@ -234,71 +235,68 @@ OO_TEST(runCallback)
 		// Neither the function nor `this` has another reference: the definition keeps them alive.
 		definition->setCallback(Evaluate("(function (where) { globalThis.ran = this.tag + ':' + where.join(); })"));
 		definition->setCallbackThis(Evaluate("({ tag: 'me' })"));
-		OO_CHECK(IsObject(definition->callback()));
-		OO_CHECK(IsObject(definition->callbackThis()));
+		EXPECT_TRUE(IsObject(definition->callback()));
+		EXPECT_TRUE(IsObject(definition->callbackThis()));
 		CollectGarbage();
 
 		sPushed.clear();
 		sCalls = 0;
 		definition->runPopulatorCallback(make_HPvector(1, 2.5, -3));
-		OO_CHECK_EQ(String(Evaluate("globalThis.ran")), "me:1,2.5,-3");
-		OO_CHECK_EQ(sCalls, 1);
-		OO_CHECK_EQ(sScriptDepth, 0);
-		OO_CHECK(sPushed.size() == 1 && sPushed[0] == owner.get());	// the script that made it
+		EXPECT_EQ(String(Evaluate("globalThis.ran")), "me:1,2.5,-3");
+		EXPECT_EQ(sCalls, 1);
+		EXPECT_EQ(sScriptDepth, 0);
+		EXPECT_TRUE(sPushed.size() == 1 && sPushed[0] == owner.get());	// the script that made it
 
 		// Replacing the callback: the new one runs.
 		definition->setCallback(Evaluate("(function () { globalThis.ran = 'second'; })"));
 		definition->runPopulatorCallback(make_HPvector(0, 0, 0));
-		OO_CHECK_EQ(String(Evaluate("globalThis.ran")), "second");
+		EXPECT_EQ(String(Evaluate("globalThis.ran")), "second");
 
 		// A definition made with no running script pushes nil.
 		const std::shared_ptr<OOJSPopulatorDefinition> orphan = oo::makeShared<OOJSPopulatorDefinition>();
 		orphan->setCallback(Evaluate("(function () { globalThis.ran = 'orphan'; })"));
 		sPushed.clear();
 		orphan->runPopulatorCallback(make_HPvector(0, 0, 0));
-		OO_CHECK_EQ(String(Evaluate("globalThis.ran")), "orphan");
-		OO_CHECK(sPushed.size() == 1 && sPushed[0] == nullptr);
+		EXPECT_EQ(String(Evaluate("globalThis.ran")), "orphan");
+		EXPECT_TRUE(sPushed.size() == 1 && sPushed[0] == nullptr);
 	}
 }
 
 
-OO_TEST(engineReset)
+TEST(OOJSPopulatorDefinition, engineReset)
 {
 	{
 		const std::shared_ptr<OOJSPopulatorDefinition> definition = oo::makeShared<OOJSPopulatorDefinition>();
 		definition->setCallback(Evaluate("(function () {})"));
 		definition->setCallbackThis(Evaluate("({})"));
 		oo::NotificationCenter::defaultCenter().post(kOOJavaScriptEngineWillResetNotificationName, OOJavaScriptEngine::sharedEngine());
-		OO_CHECK(IsUndefined(definition->callback()));
-		OO_CHECK(!IsObject(definition->callbackThis()));
+		EXPECT_TRUE(IsUndefined(definition->callback()));
+		EXPECT_TRUE(!IsObject(definition->callbackThis()));
 	}
 	// A definition that is gone no longer observes: another reset is harmless.
 	oo::NotificationCenter::defaultCenter().post(kOOJavaScriptEngineWillResetNotificationName, OOJavaScriptEngine::sharedEngine());
-	OO_CHECK(true);
+	EXPECT_TRUE(true);
 }
 
 
-OO_TEST(weakReference)
+TEST(OOJSPopulatorDefinition, weakReference)
 {
 	std::weak_ptr<OOJSPopulatorDefinition> reference;
 	{
 		std::shared_ptr<OOJSPopulatorDefinition> definition = oo::makeShared<OOJSPopulatorDefinition>();
 		reference = definition;
-		OO_CHECK(reference.lock().get() == definition.get());
+		EXPECT_TRUE(reference.lock().get() == definition.get());
 	}
-	OO_CHECK(!reference.lock());
+	EXPECT_TRUE(!reference.lock());
 }
 
 
-OO_TEST(plistCarrier)
+TEST(OOJSPopulatorDefinition, plistCarrier)
 {
 	const std::shared_ptr<OOJSPopulatorDefinition> definition = oo::makeShared<OOJSPopulatorDefinition>();
 	const oo::PList node = OOJSPopulatorDefinitionToPList(definition);
-	OO_CHECK(node.isObject());
-	OO_CHECK(OOJSPopulatorDefinitionIn(node) == definition.get());
-	OO_CHECK(OOJSPopulatorDefinitionIn(oo::PList()) == nullptr);
-	OO_CHECK(OOJSPopulatorDefinitionToPList(nullptr).isNull());
+	EXPECT_TRUE(node.isObject());
+	EXPECT_TRUE(OOJSPopulatorDefinitionIn(node) == definition.get());
+	EXPECT_TRUE(OOJSPopulatorDefinitionIn(oo::PList()) == nullptr);
+	EXPECT_TRUE(OOJSPopulatorDefinitionToPList(nullptr).isNull());
 }
-
-
-OO_TEST_MAIN()

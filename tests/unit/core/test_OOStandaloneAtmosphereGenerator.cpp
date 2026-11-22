@@ -19,6 +19,8 @@
 #include <cstring>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "Color.h"
 #include "ConcreteTexture.h"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -31,7 +33,6 @@
 #include <vector>
 #include "StandaloneAtmosphereGenerator.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -53,7 +54,7 @@ const RANROTSeed kSeed = {12345, 67890};
 // The loaders' sizes come from their one-time set-up, which a path with no
 // known extension runs (and then answers nil, reading nothing).
 void SetUp() {
-  OO_CHECK(OOTestGLContext());
+  EXPECT_TRUE(OOTestGLContext());
   {
     oo::AutoreleaseScope pool;
     (void)oo::TextureLoader::loaderWithPath(std::string("unknown.type"), oo::TextureFlags::kNone);
@@ -120,7 +121,7 @@ struct Generated {
 };
 
 void Generate(oo::TextureGenerator* generator, Generated& generated) {
-  OO_CHECK(generator->enqueue());
+  EXPECT_TRUE(generator->enqueue());
   if (std::optional<oo::TextureLoader::Result> loaded = generator->getResult()) {
     generated.ok = true;
     generated.pixMap = loaded->pixMap;
@@ -137,48 +138,48 @@ void ClearCache() {
 
 }  // namespace
 
-OO_TEST(settings) {
-  SetUp();
+TEST(OOStandaloneAtmosphereGenerator, settings) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     oo::TextureGenerator* generator =
         NewGenerator(PlanetInfo(0.75f, false), kSeed);
-    OO_CHECK(generator != nullptr &&
+    EXPECT_TRUE(generator != nullptr &&
              (dynamic_cast<oo::TextureGenerator*>(generator) != nullptr));
-    OO_CHECK(generator->textureOptions() ==
+    EXPECT_TRUE(generator->textureOptions() ==
              (oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear |
               oo::TextureFlags::kRepeatS | oo::TextureFlags::kNoShrink));
-    OO_CHECK(generator->path().value_or("").starts_with(
+    EXPECT_TRUE(generator->path().value_or("").starts_with(
         "OOStandaloneAtmosphereTexture@"));
 
     // Keyed by the scale (512: 2), the size (not known until it loads), the
     // seed and the clouds; the air colour is never set.
     const std::string key = generator->cacheKey().value_or("");
-    OO_CHECK(
+    EXPECT_TRUE(
         key.starts_with("OOStandaloneAtmosphereGenerator-@2\n0,0/12345,67890/"
                         "0.750000/0.500000/0.000000,0.000000,0.000000/"));
-    OO_CHECK(NewGenerator(PlanetInfo(0.75f, false), kSeed)->cacheKey() ==
+    EXPECT_TRUE(NewGenerator(PlanetInfo(0.75f, false), kSeed)->cacheKey() ==
              std::optional<std::string>(key));
-    OO_CHECK(NewGenerator(PlanetInfo(0.75f, false), (RANROTSeed){1, 2})
+    EXPECT_TRUE(NewGenerator(PlanetInfo(0.75f, false), (RANROTSeed){1, 2})
                  ->cacheKey() != std::optional<std::string>(key));
 
-    OO_CHECK(generator->description().find("{seed: 12345,67890}") !=
+    EXPECT_TRUE(generator->description().find("{seed: 12345,67890}") !=
              std::string::npos);
   }
 }
 
-OO_TEST(generatesClouds) {
-  SetUp();
+TEST(OOStandaloneAtmosphereGenerator, generatesClouds) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     Generated a, b;
     Generate(NewGenerator(PlanetInfo(1.0f, false), kSeed), a);
-    OO_CHECK(a.ok && a.format == oo::kPixMapRGBA && a.pixMap.width == 512 &&
+    EXPECT_TRUE(a.ok && a.format == oo::kPixMapRGBA && a.pixMap.width == 512 &&
              a.pixMap.height == 512 && a.pixMap.rowBytes == 2048);
 
     // The same seed and parameters give the same clouds.
     Generate(NewGenerator(PlanetInfo(1.0f, false), kSeed), b);
-    OO_CHECK(b.ok && b.size() == a.size() &&
+    EXPECT_TRUE(b.ok && b.size() == a.size() &&
              std::memcmp(a.bytes(), b.bytes(), a.size()) == 0);
 
     // Some cloud, some clear sky.
@@ -187,7 +188,7 @@ OO_TEST(generatesClouds) {
       if (a.bytes()[i] > 128) someCloud = true;
       if (a.bytes()[i] < 128) someClear = true;
     }
-    OO_CHECK(someCloud && someClear);
+    EXPECT_TRUE(someCloud && someClear);
 
     // No cloud alpha: transparent everywhere.
     Generated clear;
@@ -195,31 +196,31 @@ OO_TEST(generatesClouds) {
     bool allClear = clear.ok;
     for (size_t i = 3; i < clear.size(); i += 4)
       allClear = allClear && clear.bytes()[i] == 0;
-    OO_CHECK(allClear);
+    EXPECT_TRUE(allClear);
 
     // 3D noise: twice as wide as high.
     Generated wide;
     Generate(NewGenerator(PlanetInfo(1.0f, true), kSeed), wide);
-    OO_CHECK(wide.ok && wide.pixMap.width == 512 && wide.pixMap.height == 256);
+    EXPECT_TRUE(wide.ok && wide.pixMap.width == 512 && wide.pixMap.height == 256);
   }
 }
 
-OO_TEST(textures) {
-  SetUp();
+TEST(OOStandaloneAtmosphereGenerator, textures) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     oo::Texture* atmosphere = GenerateAtmosphere(PlanetInfo(1.0f, false), kSeed);
-    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(atmosphere) != nullptr));
+    EXPECT_TRUE((dynamic_cast<oo::ConcreteTexture*>(atmosphere) != nullptr));
     atmosphere->ensureFinishedLoading();
-    OO_CHECK(atmosphere->isFinishedLoading() &&
+    EXPECT_TRUE(atmosphere->isFinishedLoading() &&
              atmosphere->dimensions().width == 512 &&
              atmosphere->dimensions().height == 512);
 
     oo::Texture* texture =
         PlanetTexture(PlanetInfo(1.0f, true), (RANROTSeed){3, 4});
-    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(texture) != nullptr));
+    EXPECT_TRUE((dynamic_cast<oo::ConcreteTexture*>(texture) != nullptr));
     texture->ensureFinishedLoading();
-    OO_CHECK(texture->dimensions().width == 512 &&
+    EXPECT_TRUE(texture->dimensions().width == 512 &&
              texture->dimensions().height == 256);
   }
   ClearCache();
@@ -228,26 +229,26 @@ OO_TEST(textures) {
 // --- The C++ API (after the conversion)
 // --------------------------------------------------------
 
-OO_TEST(cxxApi) {
-  SetUp();
+TEST(OOStandaloneAtmosphereGenerator, cxxApi) {
+  ::SetUp();
   {
     oo::AutoreleaseScope pool;
     const std::shared_ptr<oo::StandaloneAtmosphereGenerator> generator =
         oo::StandaloneAtmosphereGenerator::generatorWithPlanetInfo(
             PlanetInfo(1.0f, false), kSeed);
-    OO_CHECK(generator &&
+    EXPECT_TRUE(generator &&
              generator->textureOptions() ==
                  (oo::TextureFlags::kMinFilterLinear | oo::TextureFlags::kMagFilterLinear |
                   oo::TextureFlags::kRepeatS | oo::TextureFlags::kNoShrink));
-    OO_CHECK(generator->descriptionComponents() ==
+    EXPECT_TRUE(generator->descriptionComponents() ==
              std::optional<std::string>("seed: 12345,67890"));
-    OO_CHECK(generator->cacheKey().value_or("").starts_with(
+    EXPECT_TRUE(generator->cacheKey().value_or("").starts_with(
         "OOStandaloneAtmosphereGenerator-@2\n"));
 
     // Loading fills the root's state; the old -getResult:format:width:height:
     // answers the result.
     generator->loadTexture();
-    OO_CHECK(generator->_width == 512 && generator->_height == 512 &&
+    EXPECT_TRUE(generator->_width == 512 && generator->_height == 512 &&
              generator->_data != nullptr);
     oo::PixMap pixMap = oo::kNullPixMap;
     oo::TextureDataFormat format = oo::kPixMapInvalidFormat;
@@ -258,20 +259,18 @@ OO_TEST(cxxApi) {
       pixMap = loaded->pixMap;
       format = loaded->format;
     }
-    OO_CHECK(loaded.has_value() && format == oo::kPixMapRGBA &&
+    EXPECT_TRUE(loaded.has_value() && format == oo::kPixMapRGBA &&
              pixMap.width == 512);
     oo::FreePixMap(&pixMap);
 
     std::shared_ptr<oo::Texture> texture;
-    OO_CHECK(oo::StandaloneAtmosphereGenerator::generateAtmosphereTexture(
+    EXPECT_TRUE(oo::StandaloneAtmosphereGenerator::generateAtmosphereTexture(
                  &texture, PlanetInfo(1.0f, false), (RANROTSeed){9, 9}) &&
              (dynamic_cast<oo::ConcreteTexture*>(texture.get()) != nullptr));
-    OO_CHECK((dynamic_cast<oo::ConcreteTexture*>(
+    EXPECT_TRUE((dynamic_cast<oo::ConcreteTexture*>(
                   oo::StandaloneAtmosphereGenerator::planetTextureWithInfo(
                       PlanetInfo(1.0f, false), (RANROTSeed){9, 10})
                       .get()) != nullptr));
   }
   ClearCache();
 }
-
-OO_TEST_MAIN()

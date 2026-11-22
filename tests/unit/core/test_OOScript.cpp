@@ -25,11 +25,12 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "Entity.h"
 #include "CacheManager.h"
 #include "OOPListScript.h"
 #include "OOScript.h"
-#include "oo_test.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
 
@@ -76,7 +77,7 @@ const char* const kCacheName = "sanitized legacy scripts";
 
 void WriteText(const stdfs::path& path, const std::string& text) {
   stdfs::create_directories(path.parent_path());
-  OO_CHECK(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
+  EXPECT_TRUE(oo::fs::writeFile(path, oo::Data(text.data(), text.size()),
                              oo::fs::WriteMode::kDirect)
                .has_value());
 }
@@ -89,7 +90,7 @@ void SetUp() {
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
   WriteText(sRoot / "Resources" / "Info-gnustep.plist",
             "{ CFBundleVersion = \"9.9.9-test\"; }");
@@ -124,64 +125,64 @@ std::vector<std::string> Names(const std::vector<std::shared_ptr<OOScript>>& scr
 
 }  // namespace
 
-OO_TEST(abstractRoot) {
-  SetUp();
+TEST(OOScript, abstractRoot) {
+  ::SetUp();
   {
     // The root's own answers: none, and an error logged for each subclass
     // responsibility.
     const std::shared_ptr<OOScript> root = oo::makeShared<OOScript>();
-    OO_CHECK(root != nullptr);
-    OO_CHECK(!root->name().has_value());
-    OO_CHECK(!root->scriptDescription().has_value());
-    OO_CHECK(!root->version().has_value());
-    OO_CHECK(!root->displayName().has_value());
-    OO_CHECK(!root->requiresTickle());
+    EXPECT_TRUE(root != nullptr);
+    EXPECT_TRUE(!root->name().has_value());
+    EXPECT_TRUE(!root->scriptDescription().has_value());
+    EXPECT_TRUE(!root->version().has_value());
+    EXPECT_TRUE(!root->displayName().has_value());
+    EXPECT_TRUE(!root->requiresTickle());
     root->runWithTarget(nullptr);
-    OO_CHECK(root->description().find("\"(null)\" version (null)") !=
+    EXPECT_TRUE(root->description().find("\"(null)\" version (null)") !=
              std::string::npos);
   }
 }
 
-OO_TEST(objCSubclass) {
-  SetUp();
+TEST(OOScript, objCSubclass) {
+  ::SetUp();
   {
     const std::shared_ptr<TestObjCScript> script = oo::makeShared<TestObjCScript>();
-    OO_CHECK_EQ(script->name().value_or("<none>"), "objc");
-    OO_CHECK_EQ(script->displayName().value_or("<none>"),
+    EXPECT_EQ(script->name().value_or("<none>"), "objc");
+    EXPECT_EQ(script->displayName().value_or("<none>"),
                 "objc");  // no version: just the name
-    OO_CHECK(script->description().find("\"objc\" version (null)") !=
+    EXPECT_TRUE(script->description().find("\"objc\" version (null)") !=
              std::string::npos);
 
     script->hasVersion = true;
-    OO_CHECK_EQ(script->displayName().value_or("<none>"), "objc 1.5");
-    OO_CHECK_EQ(script->superDescriptionComponents().value_or("<none>"),
+    EXPECT_EQ(script->displayName().value_or("<none>"), "objc 1.5");
+    EXPECT_EQ(script->superDescriptionComponents().value_or("<none>"),
                 "\"objc\" version 1.5");
-    OO_CHECK(script->description().find("\"objc\" version 1.5") !=
+    EXPECT_TRUE(script->description().find("\"objc\" version 1.5") !=
              std::string::npos);
 
     // [super ...] reaches the root's own answers.
-    OO_CHECK(!script->superName().has_value());
-    OO_CHECK(!script->superRequiresTickle());
-    OO_CHECK(script->requiresTickle());
+    EXPECT_TRUE(!script->superName().has_value());
+    EXPECT_TRUE(!script->superRequiresTickle());
+    EXPECT_TRUE(script->requiresTickle());
 
     Entity* target = oo::MadeEntity(oo::makeShared<Entity>());
     script->runWithTarget(target);
-    OO_CHECK_EQ(script->runs, 1);
-    OO_CHECK(script->lastTarget == target);
+    EXPECT_EQ(script->runs, 1);
+    EXPECT_TRUE(script->lastTarget == target);
   }
 }
 
-OO_TEST(scriptsFromFileAtPath) {
-  SetUp();
+TEST(OOScript, scriptsFromFileAtPath) {
+  ::SetUp();
   {
     const std::string folder = Folder("files");
 
     // No file, a folder, and an extension that is not a script's: none.
-    OO_CHECK(
+    EXPECT_TRUE(
         !OOScript::scriptsFromFileAtPath(folder + "/missing.js").has_value());
-    OO_CHECK(!OOScript::scriptsFromFileAtPath(folder).has_value());
+    EXPECT_TRUE(!OOScript::scriptsFromFileAtPath(folder).has_value());
     WriteText(stdfs::path(folder) / "notes.txt", "text");
-    OO_CHECK(
+    EXPECT_TRUE(
         !OOScript::scriptsFromFileAtPath(folder + "/notes.txt").has_value());
 
     // A legacy script (its extension in any case) loads its property-list
@@ -189,25 +190,25 @@ OO_TEST(scriptsFromFileAtPath) {
     const std::string path = folder + "/legacy.PLIST";
     CacheLegacyScript(path, "legacy");
     const auto scripts = OOScript::scriptsFromFileAtPath(path);
-    OO_CHECK(scripts.has_value() && scripts->size() == 1);
+    EXPECT_TRUE(scripts.has_value() && scripts->size() == 1);
     if (scripts.has_value() && scripts->size() == 1) {
-      OO_CHECK((Names(*scripts) == std::vector<std::string>{"legacy"}));
-      OO_CHECK(dynamic_cast<OOPListScript*>((*scripts)[0].get()) != nullptr);
+      EXPECT_TRUE((Names(*scripts) == std::vector<std::string>{"legacy"}));
+      EXPECT_TRUE(dynamic_cast<OOPListScript*>((*scripts)[0].get()) != nullptr);
     }
   }
 }
 
-OO_TEST(scriptsByName) {
-  SetUp();
+TEST(OOScript, scriptsByName) {
+  ::SetUp();
   {
     // A name the resource manager does not find: none, and a list of such names
     // loads nothing.
-    OO_CHECK(!OOScript::scriptsFromFileNamed("oo-test-missing.js").has_value());
+    EXPECT_TRUE(!OOScript::scriptsFromFileNamed("oo-test-missing.js").has_value());
     const std::vector<std::shared_ptr<OOScript>> listed =
         OOScript::scriptsFromList(std::vector<std::string>{
             "oo-test-missing.js", "oo-test-missing.plist"});
-    OO_CHECK(listed.empty());
-    OO_CHECK(OOScript::scriptsFromList(std::vector<std::string>()).empty());
+    EXPECT_TRUE(listed.empty());
+    EXPECT_TRUE(OOScript::scriptsFromList(std::vector<std::string>()).empty());
 
     // The single JavaScript loaders: nil for no name, a legacy or unknown
     // extension, or a name not found.
@@ -216,20 +217,20 @@ OO_TEST(scriptsByName) {
         if (ai) return OOScript::jsAIScriptFromFileNamed(name, oo::PList());
         return OOScript::jsScriptFromFileNamed(name, oo::PList());
       };
-      OO_CHECK(load("") == nullptr);
-      OO_CHECK(load("oo-test.plist") == nullptr);
-      OO_CHECK(load("oo-test.txt") == nullptr);
-      OO_CHECK(load("oo-test-missing.js") == nullptr);
-      OO_CHECK(load("oo-test-missing.ES") == nullptr);
+      EXPECT_TRUE(load("") == nullptr);
+      EXPECT_TRUE(load("oo-test.plist") == nullptr);
+      EXPECT_TRUE(load("oo-test.txt") == nullptr);
+      EXPECT_TRUE(load("oo-test-missing.js") == nullptr);
+      EXPECT_TRUE(load("oo-test-missing.ES") == nullptr);
     }
   }
 }
 
-OO_TEST(worldScriptsAtPath) {
-  SetUp();
+TEST(OOScript, worldScriptsAtPath) {
+  ::SetUp();
   {
     // A folder with no scripts: none.
-    OO_CHECK(!OOScript::worldScriptsAtPath(Folder("empty")).has_value());
+    EXPECT_TRUE(!OOScript::worldScriptsAtPath(Folder("empty")).has_value());
 
     // world-scripts.plist names scripts to load by name; names not found load
     // nothing, but the list was found, so the answer is an empty list rather
@@ -238,7 +239,7 @@ OO_TEST(worldScriptsAtPath) {
     WriteText(stdfs::path(listed) / "world-scripts.plist",
               "( \"oo-test-missing.js\" )");
     const auto fromList = OOScript::worldScriptsAtPath(listed);
-    OO_CHECK(fromList.has_value() && fromList->empty());
+    EXPECT_TRUE(fromList.has_value() && fromList->empty());
 
     // A world-scripts.plist that is not an array is skipped; script.plist is
     // the fallback.
@@ -247,15 +248,15 @@ OO_TEST(worldScriptsAtPath) {
     CacheLegacyScript(oo::str::appendingPathComponent(legacy, "script.plist"),
                       "fallback");
     const auto fromLegacy = OOScript::worldScriptsAtPath(legacy);
-    OO_CHECK(fromLegacy.has_value() && fromLegacy->size() == 1);
+    EXPECT_TRUE(fromLegacy.has_value() && fromLegacy->size() == 1);
     if (fromLegacy.has_value() && fromLegacy->size() == 1) {
-      OO_CHECK((Names(*fromLegacy) == std::vector<std::string>{"fallback"}));
+      EXPECT_TRUE((Names(*fromLegacy) == std::vector<std::string>{"fallback"}));
     }
 
     // world-scripts.plist wins over script.plist.
     WriteText(stdfs::path(legacy) / "world-scripts.plist", "( )");
     const auto listWins = OOScript::worldScriptsAtPath(legacy);
-    OO_CHECK(listWins.has_value() && listWins->empty());
+    EXPECT_TRUE(listWins.has_value() && listWins->empty());
   }
 }
 
@@ -280,39 +281,37 @@ class TestCxxScript final : public OOScript {
 
 }  // namespace
 
-OO_TEST(crossingCxxSubclass) {
-  SetUp();
+TEST(OOScript, crossingCxxSubclass) {
+  ::SetUp();
   {
     // A C++ subclass's overrides answer.
     const std::shared_ptr<TestCxxScript> script = oo::makeShared<TestCxxScript>();
-    OO_CHECK_EQ(script->name().value_or("<none>"), "cxx");
-    OO_CHECK_EQ(script->version().value_or("<none>"), "2");
-    OO_CHECK(!script->scriptDescription()
+    EXPECT_EQ(script->name().value_or("<none>"), "cxx");
+    EXPECT_EQ(script->version().value_or("<none>"), "2");
+    EXPECT_TRUE(!script->scriptDescription()
                   .has_value());  // not overridden: the root's
-    OO_CHECK_EQ(script->displayName().value_or("<none>"), "cxx 2");
-    OO_CHECK(script->requiresTickle());
-    OO_CHECK(script->description().find("\"cxx\" version 2") !=
+    EXPECT_EQ(script->displayName().value_or("<none>"), "cxx 2");
+    EXPECT_TRUE(script->requiresTickle());
+    EXPECT_TRUE(script->description().find("\"cxx\" version 2") !=
              std::string::npos);
     Entity* target = oo::MadeEntity(oo::makeShared<Entity>());
     script->runWithTarget(target);
-    OO_CHECK_EQ(script->runs, 1);
-    OO_CHECK(script->lastTarget == target);
+    EXPECT_EQ(script->runs, 1);
+    EXPECT_TRUE(script->lastTarget == target);
 
     // The loaders as static members.
-    OO_CHECK(OOScript::scriptsFromList(
+    EXPECT_TRUE(OOScript::scriptsFromList(
                  std::vector<std::string>{"oo-test-missing.js"})
                  .empty());
-    OO_CHECK(!OOScript::scriptsFromFileAtPath(Folder("files") + "/missing.js")
+    EXPECT_TRUE(!OOScript::scriptsFromFileAtPath(Folder("files") + "/missing.js")
                   .has_value());
-    OO_CHECK(OOScript::jsScriptFromFileNamed("", oo::PList()) == nullptr);
+    EXPECT_TRUE(OOScript::jsScriptFromFileNamed("", oo::PList()) == nullptr);
   }
 }
 
-OO_TEST(cleanUp) {
+TEST(OOScript, cleanUp) {
   stdfs::current_path(stdfs::temp_directory_path());
   std::error_code ignored;
   stdfs::remove_all(sRoot, ignored);
-  OO_CHECK(true);
+  EXPECT_TRUE(true);
 }
-
-OO_TEST_MAIN()

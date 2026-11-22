@@ -8,9 +8,10 @@
    meson test -C build/meson_test test_OOOpenGLOnly
 */
 
+#include <gtest/gtest.h>
+
 #include "OpenGLOnly.h"
 #include "OpenGLOnly.h"  // #pragma once: a second include adds nothing
-#include "oo_test.hpp"
 
 namespace {
 
@@ -30,24 +31,22 @@ constexpr bool kDefinesOOLITE_SDL = false;
 
 // The header no longer keeps SDL's own glext.h out, and leaves the platform
 // macros to OOFoundation.h.
-OO_TEST(sdlOnlyHeader) {
-  OO_CHECK(!kSuppressesSDLGLExt);
-  OO_CHECK(!kDefinesOOLITE_SDL);
+TEST(OOOpenGLOnly, sdlOnlyHeader) {
+  EXPECT_TRUE(!kSuppressesSDLGLExt);
+  EXPECT_TRUE(!kDefinesOOLITE_SDL);
 }
 
 // The GL names the game uses are there: gl.h's, glext.h's (the shader and
 // framebuffer entry points' types) and the MSAA switch, off but on macOS.
-OO_TEST(declaresTheGLTheGameUses) {
+TEST(OOOpenGLOnly, declaresTheGLTheGameUses) {
   GLuint name = 0;
   PFNGLGENVERTEXARRAYSPROC genVertexArrays = nullptr;
   PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC storage = nullptr;
-  OO_CHECK(name == 0 && genVertexArrays == nullptr && storage == nullptr);
-  OO_CHECK(GL_COLOR_ATTACHMENT0 != 0);
+  EXPECT_TRUE(name == 0 && genVertexArrays == nullptr && storage == nullptr);
+  EXPECT_TRUE(GL_COLOR_ATTACHMENT0 != 0);
 #ifdef __APPLE__
-  OO_CHECK(OO_MSAA_COLOR_RENDERBUFFER == 1);
+  EXPECT_TRUE(OO_MSAA_COLOR_RENDERBUFFER == 1);
 #else
-  OO_CHECK(OO_MSAA_COLOR_RENDERBUFFER == 0);
+  EXPECT_TRUE(OO_MSAA_COLOR_RENDERBUFFER == 0);
 #endif
 }
-
-OO_TEST_MAIN()

@@ -17,6 +17,8 @@
 	Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "Maths.h"  // IWYU pragma: keep
 #include <quickjs.h>
@@ -95,7 +97,6 @@ std::optional<std::string> OOJSExhaustPlumeJSClassName(void);
 bool OOJSExhaustPlumeIsVisibleToScripts(void);
 #include "OOJSEngineCore.h"
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstring>
@@ -421,25 +422,25 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSExhaustPlume, registration)
 {
 	SetUpContext();
 	JSClassID plumeClass = sPlume->oo_jsClassID();
-	OO_CHECK(plumeClass != 0 && OOJSClassName(plumeClass) != nullptr && std::strcmp(OOJSClassName(plumeClass), "ExhaustPlume") == 0);
+	EXPECT_TRUE(plumeClass != 0 && OOJSClassName(plumeClass) != nullptr && std::strcmp(OOJSClassName(plumeClass), "ExhaustPlume") == 0);
 	JSValue prototype = JS_GetClassProto(sContext, plumeClass);
-	OO_CHECK(JS_IsObject(prototype));
+	EXPECT_TRUE(JS_IsObject(prototype));
 	JS_FreeValue(sContext, prototype);
-	OO_CHECK(OOJSIsSubclass(plumeClass, sFakeEntityClassID));
-	OO_CHECK_EQ(sConverters[plumeClass], 1);
-	OO_CHECK(sPlume->oo_jsClassName() == std::optional<std::string>("ExhaustPlume"));
-	OO_CHECK(sPlume->isVisibleToScripts());
+	EXPECT_TRUE(OOJSIsSubclass(plumeClass, sFakeEntityClassID));
+	EXPECT_EQ(sConverters[plumeClass], 1);
+	EXPECT_TRUE(sPlume->oo_jsClassName() == std::optional<std::string>("ExhaustPlume"));
+	EXPECT_TRUE(sPlume->isVisibleToScripts());
 	OO_CHECK_EVAL("typeof ExhaustPlume", "function");
 	OO_CHECK_EVAL("new ExhaustPlume()", "threw: unconstructable");
 	OO_CHECK_EVAL("Object.getPrototypeOf(ExhaustPlume.prototype) === Entity.prototype", "true");
@@ -447,32 +448,32 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(properties)
+TEST(OOJSExhaustPlume, properties)
 {
 	OO_CHECK_EVAL("plume.size", "1,2,3.5");
 	OO_CHECK_EVAL("Object.keys(ExhaustPlume.prototype).join()", "size");
 	OO_CHECK_EVAL("(function () { plume.size = [4, 5, 6]; return plume.size; })()", "4,5,6");
-	OO_CHECK(sPlumePart->_scale.x == 4 && sPlumePart->_scale.y == 5 && sPlumePart->_scale.z == 6);
+	EXPECT_TRUE(sPlumePart->_scale.x == 4 && sPlumePart->_scale.y == 5 && sPlumePart->_scale.z == 6);
 	OO_CHECK_EVAL("(function () { plume.size = 'big'; return plume.size; })()", "threw: bad property value");
 	OO_CHECK_EVAL("plume.size", "4,5,6");
 }
 
 
-OO_TEST(remove)
+TEST(OOJSExhaustPlume, remove)
 {
 	SetUpContext();
 	sShipPart->_removed = nullptr;
 	OO_CHECK_EVAL("plume.remove()", "undefined");
-	OO_CHECK(sShipPart->_removed == sPlumePart);
+	EXPECT_TRUE(sShipPart->_removed == sPlumePart);
 	// The prototype has no entity: the binding's getter fails without reporting an error, which
 	// ends the script uncatchably, and nothing is removed.
 	sShipPart->_removed = nullptr;
 	OO_CHECK_EVAL("ExhaustPlume.prototype.remove()", "<evaluation failed>");
-	OO_CHECK(sShipPart->_removed == nullptr);
+	EXPECT_TRUE(sShipPart->_removed == nullptr);
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSExhaustPlume, otherObjects)
 {
 	// An entity that is not a plume, and the prototype: the binding's getter fails without
 	// reporting an error, which ends the script uncatchably.
@@ -485,7 +486,7 @@ OO_TEST(otherObjects)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSExhaustPlume, nativeExceptions)
 {
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the entity is a JS error,
@@ -496,9 +497,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("plume.size", "threw: Native exception: cxx boom");
 	sPlumePart->_scale = make_vector(1, 1, 1);
 	OO_CHECK_EVAL("plume.size", "1,1,1");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

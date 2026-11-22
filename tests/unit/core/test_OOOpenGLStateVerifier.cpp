@@ -18,11 +18,12 @@
 #include <string_view>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "OpenGL.h"
 #include "OpenGLExtensionManager.h"
 #include "RegExpMatcher.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
 
@@ -131,8 +132,8 @@ void StartInOpaque() {
 // --- Tests
 // --------------------------------------------------------------------------------------
 
-OO_TEST(anOpenItemIsNotReported) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOOpenGLStateVerifier, anOpenItemIsNotReported) {
+  EXPECT_TRUE(OOTestGLContext());
   (void)oo::OpenGLExtensionManager::sharedManager();  // loads glActiveTextureARB
                                                     // & co.
   StartInOpaque();
@@ -141,14 +142,14 @@ OO_TEST(anOpenItemIsNotReported) {
   glEnable(GL_LIGHT0);  // OPENGL_STATE_OPAQUE leaves LIGHT0 open
   OOVerifyOpenGLState();
 
-  OO_CHECK(MismatchLines().empty());
-  OO_CHECK(!AnyLineContains("Incorrect OpenGL state"));
+  EXPECT_TRUE(MismatchLines().empty());
+  EXPECT_TRUE(!AnyLineContains("Incorrect OpenGL state"));
   glDisable(GL_LIGHT0);
-  OO_CHECK(glGetError() == GL_NO_ERROR);
+  EXPECT_TRUE(glGetError() == GL_NO_ERROR);
 }
 
-OO_TEST(mismatchesAreReportedInOrderAndRepaired) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOOpenGLStateVerifier, mismatchesAreReportedInOrderAndRepaired) {
+  EXPECT_TRUE(OOTestGLContext());
   (void)oo::OpenGLExtensionManager::sharedManager();
   StartInOpaque();
   CaptureLog();
@@ -162,9 +163,9 @@ OO_TEST(mismatchesAreReportedInOrderAndRepaired) {
   glDisable(GL_DEPTH_TEST);                  // a flag
   OOVerifyOpenGLState();
 
-  OO_CHECK(AnyLineContains("Incorrect OpenGL state in "));
-  OO_CHECK(AnyLineContains("->OOVerifyOpenGLState"));
-  OO_CHECK(AnyLineContains("Expected previous state: OPENGL_STATE_OPAQUE"));
+  EXPECT_TRUE(AnyLineContains("Incorrect OpenGL state in "));
+  EXPECT_TRUE(AnyLineContains("->OOVerifyOpenGLState"));
+  EXPECT_TRUE(AnyLineContains("Expected previous state: OPENGL_STATE_OPAQUE"));
 
   const std::vector<std::string> lines = MismatchLines();
   const std::vector<std::string_view> expected = {
@@ -179,30 +180,28 @@ OO_TEST(mismatchesAreReportedInOrderAndRepaired) {
       "GL blend mode should be GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA but is "
       "GL_ONE, GL_ONE.",
   };
-  OO_CHECK(lines.size() == expected.size());
+  EXPECT_TRUE(lines.size() == expected.size());
   for (std::size_t i = 0; i < lines.size() && i < expected.size(); ++i) {
     if (!Contains(lines[i], expected[i]))
       std::fprintf(stderr, "line %zu: expected \"%.*s\"\n", i,
                    static_cast<int>(expected[i].size()), expected[i].data());
-    OO_CHECK(Contains(lines[i], expected[i]));
+    EXPECT_TRUE(Contains(lines[i], expected[i]));
   }
 
   // The verifier switched GL back to OPENGL_STATE_OPAQUE.
   GLboolean depthMask = GL_FALSE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMask);
-  OO_CHECK(glIsEnabled(GL_DEPTH_TEST) == GL_TRUE);
-  OO_CHECK(glIsEnabled(GL_NORMAL_ARRAY) == GL_TRUE);
-  OO_CHECK(depthMask == GL_TRUE);
-  OO_CHECK(Integer(GL_SHADE_MODEL) == GL_SMOOTH);
-  OO_CHECK(Integer(GL_ACTIVE_TEXTURE_ARB) == GL_TEXTURE0);
-  OO_CHECK(Integer(GL_BLEND_SRC) == GL_SRC_ALPHA);
-  OO_CHECK(Integer(GL_BLEND_DST) == GL_ONE_MINUS_SRC_ALPHA);
+  EXPECT_TRUE(glIsEnabled(GL_DEPTH_TEST) == GL_TRUE);
+  EXPECT_TRUE(glIsEnabled(GL_NORMAL_ARRAY) == GL_TRUE);
+  EXPECT_TRUE(depthMask == GL_TRUE);
+  EXPECT_TRUE(Integer(GL_SHADE_MODEL) == GL_SMOOTH);
+  EXPECT_TRUE(Integer(GL_ACTIVE_TEXTURE_ARB) == GL_TEXTURE0);
+  EXPECT_TRUE(Integer(GL_BLEND_SRC) == GL_SRC_ALPHA);
+  EXPECT_TRUE(Integer(GL_BLEND_DST) == GL_ONE_MINUS_SRC_ALPHA);
 
   // So a second check finds nothing.
   sLog.clear();
   OOVerifyOpenGLState();
-  OO_CHECK(MismatchLines().empty());
-  OO_CHECK(glGetError() == GL_NO_ERROR);
+  EXPECT_TRUE(MismatchLines().empty());
+  EXPECT_TRUE(glGetError() == GL_NO_ERROR);
 }
-
-OO_TEST_MAIN()

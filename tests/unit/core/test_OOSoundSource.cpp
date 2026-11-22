@@ -22,9 +22,10 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "ALSoundMixer.h"
 #include "SoundSource.h"
-#include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/String.hpp"
 
@@ -177,54 +178,54 @@ oo::SoundChannel* ChannelOf(oo::SoundSource* source) {
 
 }  // namespace
 
-OO_TEST(defaults) {
+TEST(OOSoundSource, defaults) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     const std::shared_ptr<oo::SoundSource> source = oo::makeShared<oo::SoundSource>();
-    OO_CHECK(source->sound() == nullptr);
-    OO_CHECK(!source->loop() && source->repeatCount() == 1 &&
+    EXPECT_TRUE(source->sound() == nullptr);
+    EXPECT_TRUE(!source->loop() && source->repeatCount() == 1 &&
              !source->isPlaying());
-    OO_CHECK(!source->positional() &&
+    EXPECT_TRUE(!source->positional() &&
              vector_equal(source->position(), kZeroVector));
-    OO_CHECK(source->gain() == OO_DEFAULT_SOUNDSOURCE_GAIN);
+    EXPECT_TRUE(source->gain() == OO_DEFAULT_SOUNDSOURCE_GAIN);
 
     source->play();  // no sound: nothing
-    OO_CHECK(!source->isPlaying() && TakeLog().empty());
+    EXPECT_TRUE(!source->isPlaying() && TakeLog().empty());
 
-    OO_CHECK(source->descriptionComponents() ==
+    EXPECT_TRUE(source->descriptionComponents() ==
              std::optional<std::string>(
                  "sound=(null), loop=NO, repeatCount=1, not playing"));
   }
 }
 
-OO_TEST(attributes) {
+TEST(OOSoundSource, attributes) {
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     oo::Sound* sound = MakeSound("beep");
     const std::shared_ptr<oo::SoundSource> source = oo::SoundSource::sourceWithSound(sound);
-    OO_CHECK(source->sound() == sound);
-    OO_CHECK(dynamic_cast<oo::SoundSource*>(source.get()) != nullptr);
+    EXPECT_TRUE(source->sound() == sound);
+    EXPECT_TRUE(dynamic_cast<oo::SoundSource*>(source.get()) != nullptr);
 
     source->setLoop(true);
-    OO_CHECK(source->loop());
+    EXPECT_TRUE(source->loop());
     source->setRepeatCount(3);
-    OO_CHECK(source->repeatCount() == 3);
+    EXPECT_TRUE(source->repeatCount() == 3);
     source->setRepeatCount(0);
-    OO_CHECK(source->repeatCount() == 1);  // 0 reads as 1
+    EXPECT_TRUE(source->repeatCount() == 1);  // 0 reads as 1
 
     source->setPosition(make_vector(1, 2, 3));
-    OO_CHECK(source->positional() &&
+    EXPECT_TRUE(source->positional() &&
              vector_equal(source->position(), make_vector(1, 2, 3)));
     source->setPositional(false);
-    OO_CHECK(!source->positional() &&
+    EXPECT_TRUE(!source->positional() &&
              vector_equal(source->position(), kZeroVector));
     source->setPositional(true);
-    OO_CHECK(source->positional());
+    EXPECT_TRUE(source->positional());
     source->setPosition(kZeroVector);
-    OO_CHECK(source->positional());  // a zero position does not clear it
+    EXPECT_TRUE(source->positional());  // a zero position does not clear it
 
     source->setGain(0.5f);
-    OO_CHECK(source->gain() == 0.5f);
+    EXPECT_TRUE(source->gain() == 0.5f);
 
     // The advanced attributes are ignored.
     source->setVelocity(make_vector(1, 1, 1));
@@ -235,8 +236,8 @@ OO_TEST(attributes) {
 
     oo::Sound* other = MakeSound("boop");
     source->setSound(other);
-    OO_CHECK(source->sound() == other);
-    OO_CHECK(
+    EXPECT_TRUE(source->sound() == other);
+    EXPECT_TRUE(
         source->descriptionComponents() ==
         std::optional<std::string>("sound=" + other->description() +
                                    ", loop=YES, repeatCount=1, not playing"));
@@ -245,7 +246,7 @@ OO_TEST(attributes) {
 
 // Playing takes a channel and hands it the source's attributes; the source
 // keeps itself alive.
-OO_TEST(playsThroughAChannel) {
+TEST(OOSoundSource, playsThroughAChannel) {
   TakeLog();
   oo::SoundSource* weak = nullptr;
   {
@@ -256,27 +257,27 @@ OO_TEST(playsThroughAChannel) {
     source->setGain(0.25f);
     source->setLoop(true);
     source->play();
-    OO_CHECK(source->isPlaying() && gChannelsOut == 1);
-    OO_CHECK((TakeLog() == std::vector<std::string>{"play beep looped"}));
+    EXPECT_TRUE(source->isPlaying() && gChannelsOut == 1);
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"play beep looped"}));
 
     oo::SoundChannel* channel = ChannelOf(source.get());
-    OO_CHECK(channel != nullptr &&
+    EXPECT_TRUE(channel != nullptr &&
              OOSoundChannelTestAccess::Delegate(channel) == source.get());
-    OO_CHECK(vector_equal(gChannels[channel].position, make_vector(4, 5, 6)) &&
+    EXPECT_TRUE(vector_equal(gChannels[channel].position, make_vector(4, 5, 6)) &&
              gChannels[channel].gain == 0.25f);
-    OO_CHECK(source->descriptionComponents().value_or("").find(
+    EXPECT_TRUE(source->descriptionComponents().value_or("").find(
                  "playing on channel <OOSoundChannel 0x") != std::string::npos);
 
     // Changes reach the playing channel.
     source->setGain(0.75f);
     source->setPosition(make_vector(7, 8, 9));
-    OO_CHECK(gChannels[channel].gain == 0.75f &&
+    EXPECT_TRUE(gChannels[channel].gain == 0.75f &&
              vector_equal(gChannels[channel].position, make_vector(7, 8, 9)));
 
     weak = source.get();
     source = nullptr;  // [source release]: playing, still alive
   }
-  OO_CHECK(weak->isPlaying());
+  EXPECT_TRUE(weak->isPlaying());
 
   // The channel ends the sound: the source pushes the channel back and lets
   // itself go.
@@ -284,25 +285,25 @@ OO_TEST(playsThroughAChannel) {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     OOSoundChannelTestAccess::Finish(ChannelOf(weak));
   }
-  OO_CHECK((TakeLog() == std::vector<std::string>{"push"}));
-  OO_CHECK(gChannelsOut == 0);
+  EXPECT_TRUE((TakeLog() == std::vector<std::string>{"push"}));
+  EXPECT_TRUE(gChannelsOut == 0);
 }
 
 // A repeat count plays the sound again (unlooped) until it is spent.
-OO_TEST(repeats) {
+TEST(OOSoundSource, repeats) {
   TakeLog();
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     const std::shared_ptr<oo::SoundSource> source = oo::makeShared<oo::SoundSource>();
     source->playSound(MakeSound("beep"), 3);
-    OO_CHECK(source->repeatCount() == 3);
+    EXPECT_TRUE(source->repeatCount() == 3);
     oo::SoundChannel* channel = ChannelOf(source.get());
     OOSoundChannelTestAccess::Finish(channel);
     OOSoundChannelTestAccess::Finish(channel);
-    OO_CHECK(source->isPlaying());
+    EXPECT_TRUE(source->isPlaying());
     OOSoundChannelTestAccess::Finish(channel);
-    OO_CHECK(!source->isPlaying());
-    OO_CHECK((TakeLog() == std::vector<std::string>{"play beep", "play beep",
+    EXPECT_TRUE(!source->isPlaying());
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"play beep", "play beep",
                                                     "play beep", "push"}));
 
     // -playOrRepeat adds one to a playing source's count.
@@ -311,17 +312,17 @@ OO_TEST(repeats) {
     source->playOrRepeat();
     channel = ChannelOf(source.get());
     OOSoundChannelTestAccess::Finish(channel);
-    OO_CHECK(source->isPlaying());
+    EXPECT_TRUE(source->isPlaying());
     OOSoundChannelTestAccess::Finish(channel);
-    OO_CHECK(!source->isPlaying());
-    OO_CHECK((TakeLog() ==
+    EXPECT_TRUE(!source->isPlaying());
+    EXPECT_TRUE((TakeLog() ==
               std::vector<std::string>{"play beep", "play beep", "push"}));
   }
 }
 
 // -stop hands the channel to the class, which pushes it back; playing again
 // stops first.
-OO_TEST(stops) {
+TEST(OOSoundSource, stops) {
   TakeLog();
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
@@ -329,34 +330,34 @@ OO_TEST(stops) {
     const std::shared_ptr<oo::SoundSource> source = oo::SoundSource::sourceWithSound(beep);
     source->play();
     source->play();
-    OO_CHECK((TakeLog() == std::vector<std::string>{"play beep", "stop", "push",
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"play beep", "stop", "push",
                                                     "play beep"}));
     source->stop();
-    OO_CHECK(!source->isPlaying() && gChannelsOut == 0);
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop", "push"}));
+    EXPECT_TRUE(!source->isPlaying() && gChannelsOut == 0);
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop", "push"}));
     source->stop();  // not playing: nothing
-    OO_CHECK(TakeLog().empty());
+    EXPECT_TRUE(TakeLog().empty());
 
     // -playOrRepeatSound: plays a new sound, repeats the same one.
     source->playOrRepeatSound(beep);
-    OO_CHECK(source->isPlaying());
+    EXPECT_TRUE(source->isPlaying());
     source->playOrRepeatSound(beep);
-    OO_CHECK((TakeLog() == std::vector<std::string>{"play beep"}));
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"play beep"}));
     oo::Sound* boop = MakeSound("boop");
     source->playOrRepeatSound(boop);
-    OO_CHECK(source->sound() == boop);
-    OO_CHECK(
+    EXPECT_TRUE(source->sound() == boop);
+    EXPECT_TRUE(
         (TakeLog() == std::vector<std::string>{"stop", "push", "play boop"}));
 
     // Changing the sound stops the playing one.
     source->setSound(beep);
-    OO_CHECK(!source->isPlaying());
-    OO_CHECK((TakeLog() == std::vector<std::string>{"stop", "push"}));
+    EXPECT_TRUE(!source->isPlaying());
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"stop", "push"}));
 
     // -playOOSound: plays with the source's own repeat count.
     source->setRepeatCount(2);
     source->playOOSound(boop);
-    OO_CHECK(source->sound() == boop && source->repeatCount() == 2);
+    EXPECT_TRUE(source->sound() == boop && source->repeatCount() == 2);
     source->stop();
     TakeLog();
   }
@@ -364,7 +365,7 @@ OO_TEST(stops) {
 
 // +stopAll stops every playing source; with no channel to be had, a source does
 // not play.
-OO_TEST(stopAllAndNoChannel) {
+TEST(OOSoundSource, stopAllAndNoChannel) {
   TakeLog();
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
@@ -374,61 +375,59 @@ OO_TEST(stopAllAndNoChannel) {
         oo::SoundSource::sourceWithSound(MakeSound("b"));
     a->play();
     b->play();
-    OO_CHECK(gChannelsOut == 2);
+    EXPECT_TRUE(gChannelsOut == 2);
     oo::SoundSource::stopAll();
-    OO_CHECK(!a->isPlaying() && !b->isPlaying() && gChannelsOut == 0);
-    OO_CHECK((TakeLog() == std::vector<std::string>{"play a", "play b", "stop",
+    EXPECT_TRUE(!a->isPlaying() && !b->isPlaying() && gChannelsOut == 0);
+    EXPECT_TRUE((TakeLog() == std::vector<std::string>{"play a", "play b", "stop",
                                                     "push", "stop", "push"}));
     oo::SoundSource::stopAll();  // none playing
-    OO_CHECK(TakeLog().empty());
+    EXPECT_TRUE(TakeLog().empty());
 
     gChannelsAvailable = 0;
     a->play();
-    OO_CHECK(!a->isPlaying() && TakeLog().empty());
+    EXPECT_TRUE(!a->isPlaying() && TakeLog().empty());
     gChannelsAvailable = 8;
 
     // It was still recorded as playing (as before); +stopAll lets every source
     // go.
     oo::SoundSource::stopAll();
-    OO_CHECK(TakeLog().empty());
+    EXPECT_TRUE(TakeLog().empty());
   }
-  OO_CHECK(gLiveSounds == 0);
+  EXPECT_TRUE(gLiveSounds == 0);
 }
 
 // The C++ API, and a playing C++ source: it is the channel's delegate, and it
 // keeps itself alive.
-OO_TEST(cxxApi) {
+TEST(OOSoundSource, cxxApi) {
   TakeLog();
   oo::SoundSource* weak = nullptr;
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     const std::shared_ptr<oo::SoundSource> source =
         oo::SoundSource::sourceWithSound(MakeSound("beep"));
-    OO_CHECK(source->sound() != nullptr && source->repeatCount() == 1 &&
+    EXPECT_TRUE(source->sound() != nullptr && source->repeatCount() == 1 &&
              source->gain() == OO_DEFAULT_SOUNDSOURCE_GAIN);
-    OO_CHECK(
+    EXPECT_TRUE(
         source->descriptionComponents() ==
         std::optional<std::string>("sound=" + source->sound()->description() +
                                    ", loop=NO, repeatCount=1, not playing"));
     source->setGain(0.5f);
     source->play();
-    OO_CHECK(source->isPlaying());
+    EXPECT_TRUE(source->isPlaying());
     oo::SoundChannel* channel = OOSoundSourceTestAccess::Channel(source.get());
-    OO_CHECK(OOSoundChannelTestAccess::Delegate(channel) == source.get() &&
+    EXPECT_TRUE(OOSoundChannelTestAccess::Delegate(channel) == source.get() &&
              gChannels[channel].gain == 0.5f);
     weak = source.get();
   }
   // The Ref and the pool are gone; the playing source keeps itself.
-  OO_CHECK(weak->isPlaying());
+  EXPECT_TRUE(weak->isPlaying());
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     OOSoundChannelTestAccess::Finish(OOSoundSourceTestAccess::Channel(weak));
   }
-  OO_CHECK((TakeLog() == std::vector<std::string>{"play beep", "push"}));
+  EXPECT_TRUE((TakeLog() == std::vector<std::string>{"play beep", "push"}));
   {
     oo::AutoreleaseScope scope;  // was @autoreleasepool
     oo::SoundSource::stopAll();    // lets it go
   }
 }
-
-OO_TEST_MAIN()

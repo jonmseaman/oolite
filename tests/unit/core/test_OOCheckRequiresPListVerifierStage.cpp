@@ -18,9 +18,10 @@
 #include <filesystem>
 #include <fstream>
 
+#include <gtest/gtest.h>
+
 #include "CheckRequiresPListVerifierStage.h"
 #include "OXPVerifierStage.h"
-#include "oo_test.hpp"
 #include "oofnd/Log.hpp"
 
 /*	The game's OOLogging.mm reaches the resource manager, so it is not
@@ -144,113 +145,111 @@ void RunWith(const char* requiresPList, const char* ooliteVersion) {
 
 }  // namespace
 
-OO_TEST(nameAndNeighbours) {
+TEST(OOCheckRequiresPListVerifierStage, nameAndNeighbours) {
   {
     const std::shared_ptr<oo::CheckRequiresPListVerifierStage> stage =
         oo::makeShared<oo::CheckRequiresPListVerifierStage>();
     stage->setVerifier(MakeVerifier({}));
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking requires.plist"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
-    OO_CHECK(!stage->shouldRun());
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(!stage->shouldRun());
     stage->run();
-    OO_CHECK(gLog.empty());
+    EXPECT_TRUE(gLog.empty());
 
     stage->setVerifier(MakeVerifier({{"requires.plist", "{}"}}));
-    OO_CHECK(stage->shouldRun());
+    EXPECT_TRUE(stage->shouldRun());
     stage->run();
-    OO_CHECK(gLog.empty());  // nothing required
+    EXPECT_TRUE(gLog.empty());  // nothing required
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(shapeAndKeys) {
+TEST(OOCheckRequiresPListVerifierStage, shapeAndKeys) {
   {
     RunWith("( version )", "1.90");
-    OO_CHECK(gLog.size() == 1 &&
+    EXPECT_TRUE(gLog.size() == 1 &&
              LogLinesContaining(
                  "***** ERROR: requires.plist is not a dictionary.") == 1);
 
     RunWith("{ zeta = 1; version = \"1.80\"; alpha = 2; }", "1.90");
-    OO_CHECK(
+    EXPECT_TRUE(
         gLog.size() == 1 &&
         LogLinesContaining("----- WARNING: requires.plist contains unknown "
                            "keys. This OXP will not be loaded by this version "
                            "of Oolite. Unknown keys are: alpha, zeta.") == 1);
 
     RunWith("{ version = ( 1 ); max_version = { a = b; }; }", "1.90");
-    OO_CHECK(gLog.size() == 2);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(gLog.size() == 2);
+    EXPECT_TRUE(LogLinesContaining(
                  "***** ERROR: Value for 'version' is not a string.") == 1);
-    OO_CHECK(LogLinesContaining(
+    EXPECT_TRUE(LogLinesContaining(
                  "***** ERROR: Value for 'max_version' is not a string.") == 1);
   }
   std::filesystem::remove_all(kBase);
 }
 
-OO_TEST(versions) {
+TEST(OOCheckRequiresPListVerifierStage, versions) {
   {
     // In range: nothing.
     RunWith("{ version = \"1.80\"; max_version = \"2.0\"; }", "1.90");
-    OO_CHECK(gLog.empty());
+    EXPECT_TRUE(gLog.empty());
 
     // Needs a newer Oolite, or an older one.
     RunWith("{ version = \"1.91\"; }", "1.90");
-    OO_CHECK(gLog.size() == 1 &&
+    EXPECT_TRUE(gLog.size() == 1 &&
              LogLinesContaining("----- WARNING: this OXP requires a newer "
                                 "version of Oolite (1.91) to work.") == 1);
     RunWith("{ max_version = \"1.89.9\"; }", "1.90");
-    OO_CHECK(gLog.size() == 1 &&
+    EXPECT_TRUE(gLog.size() == 1 &&
              LogLinesContaining("----- WARNING: this OXP requires an older "
                                 "version of Oolite (1.89.9) to work.") == 1);
 
     // A string that is not a version number reads as one below any other (no
     // error is logged): "abc" is below 1.90, and an empty max_version is too.
     RunWith("{ version = \"abc\"; max_version = \"\"; }", "1.90");
-    OO_CHECK(gLog.size() == 1 &&
+    EXPECT_TRUE(gLog.size() == 1 &&
              LogLinesContaining("----- WARNING: this OXP requires an older "
                                 "version of Oolite () to work.") == 1);
 
     // An empty range, whatever Oolite's version.
     RunWith("{ version = \"2.0\"; max_version = \"1.5\"; }", "1.90");
-    OO_CHECK(LogLinesContaining("***** ERROR: this OXP's maximum version (1.5) "
+    EXPECT_TRUE(LogLinesContaining("***** ERROR: this OXP's maximum version (1.5) "
                                 "is less than its minimum version (2.0).") ==
              1);
-    OO_CHECK(gLog.size() == 3);  // and both comparisons with 1.90
+    EXPECT_TRUE(gLog.size() == 3);  // and both comparisons with 1.90
 
     // No Info-gnustep.plist, or no version in it: Oolite's version reads the
     // same way, below any other, so the comparisons still run and the "could
     // not find" warning is not reached.
     RunWith("{ version = \"2.0\"; max_version = \"1.5\"; }", nullptr);
-    OO_CHECK(gLog.size() == 2);
-    OO_CHECK(LogLinesContaining("----- WARNING: this OXP requires a newer "
+    EXPECT_TRUE(gLog.size() == 2);
+    EXPECT_TRUE(LogLinesContaining("----- WARNING: this OXP requires a newer "
                                 "version of Oolite (2.0) to work.") == 1);
-    OO_CHECK(LogLinesContaining("this OXP's maximum version (1.5)") == 1);
-    OO_CHECK(LogLinesContaining("could not find Oolite's version") == 0);
+    EXPECT_TRUE(LogLinesContaining("this OXP's maximum version (1.5)") == 1);
+    EXPECT_TRUE(LogLinesContaining("could not find Oolite's version") == 0);
     RunWith("{ max_version = \"1.5\"; }", "not a version");
-    OO_CHECK(gLog.empty());
+    EXPECT_TRUE(gLog.empty());
   }
   std::filesystem::remove_all(kBase);
 }
 
 // The stage is global: the verifier registers it and finds it by name, and it
 // describes itself with its class's name.
-OO_TEST(facade) {
+TEST(OOCheckRequiresPListVerifierStage, facade) {
   {
     oo::OXPVerifier* verifier = MakeVerifier({});
     const std::shared_ptr<oo::CheckRequiresPListVerifierStage> stage =
         oo::makeShared<oo::CheckRequiresPListVerifierStage>();
-    OO_CHECK(stage->description().starts_with(
+    EXPECT_TRUE(stage->description().starts_with(
         "<OOCheckRequiresPListVerifierStage 0x"));
 
     verifier->registerStage(stage.get());
-    OO_CHECK(verifier->stageWithName("Checking requires.plist") == stage.get());
-    OO_CHECK(stage->name() ==
+    EXPECT_TRUE(verifier->stageWithName("Checking requires.plist") == stage.get());
+    EXPECT_TRUE(stage->name() ==
              std::optional<std::string>("Checking requires.plist"));
-    OO_CHECK(stage->dependencies() == kScannerName);
-    OO_CHECK(stage->dependents() == kUnusedName);
+    EXPECT_TRUE(stage->dependencies() == kScannerName);
+    EXPECT_TRUE(stage->dependents() == kUnusedName);
   }
 }
-
-OO_TEST_MAIN()

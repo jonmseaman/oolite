@@ -16,6 +16,8 @@
 	Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "OOJSCall.h"
 #include "EntityCalledByName.h"	// oo::CallEntityByNameTyped, stood in below
 #include "CallByName.h"
@@ -28,7 +30,6 @@
 #include "oofnd/String.hpp"
 #include <cstring>
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <string>
@@ -316,18 +317,18 @@ std::string CallEntity(Entity *entity, const char *selector)
 // callObjC() on an entity by its name table: a name of the table that the entity's
 // object answers is called with the table's signature; any other name does not respond, even one
 // the object answers (a root-class or lifetime selector, or one the facade does not define).
-OO_TEST(entityMethodsByTable)
+TEST(OOJSCall, entityMethodsByTable)
 {
 	{
 		oo::AutoreleaseScope pool;
 		Context();
 		gOOPlayer->scriptTarget = nullptr;
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "isPlayer"), "1");
-		OO_CHECK(gOOPlayer->scriptTarget == gOOPlayer);	// the player is a ship: its own script target
-		OO_CHECK(CallEntity(gOOPlayer, "retain").find("> does not respond to method retain.") != std::string::npos);
-		OO_CHECK(CallEntity(gOOPlayer, "hash").find("> does not respond to method hash.") != std::string::npos);
-		OO_CHECK(CallEntity(gOOPlayer, "noSuchMethod").find("> does not respond to method noSuchMethod.") != std::string::npos);
-		OO_CHECK_EQ(CallEntity(gOOPlayer, std::vector<JSValue>{}), "error: Test.callObjC(): no selector specified.");
+		EXPECT_EQ(CallEntity(gOOPlayer, "isPlayer"), "1");
+		EXPECT_TRUE(gOOPlayer->scriptTarget == gOOPlayer);	// the player is a ship: its own script target
+		EXPECT_TRUE(CallEntity(gOOPlayer, "retain").find("> does not respond to method retain.") != std::string::npos);
+		EXPECT_TRUE(CallEntity(gOOPlayer, "hash").find("> does not respond to method hash.") != std::string::npos);
+		EXPECT_TRUE(CallEntity(gOOPlayer, "noSuchMethod").find("> does not respond to method noSuchMethod.") != std::string::npos);
+		EXPECT_EQ(CallEntity(gOOPlayer, std::vector<JSValue>{}), "error: Test.callObjC(): no selector specified.");
 	}
 }
 
@@ -339,53 +340,50 @@ OO_TEST(entityMethodsByTable)
    entity result and a null one, a matrix that cannot be called, a parameter
    missing, and parameters after a name with no colon.
 */
-OO_TEST(entityResultsByTable)
+TEST(OOJSCall, entityResultsByTable)
 {
 	{
 		oo::AutoreleaseScope pool;
 		Context();
 		sEntityCalls.clear();
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "removeScript"), "<unchanged>");
-		OO_CHECK_EQ(CallEntity(gOOPlayer, { StringValue("addRole:"), StringValue("hello"), JS_NewInt32(Context(), 3), JS_NULL }), "<unchanged>");
-		OO_CHECK_EQ(sEntityCalls.size(), 2u);
+		EXPECT_EQ(CallEntity(gOOPlayer, "removeScript"), "<unchanged>");
+		EXPECT_EQ(CallEntity(gOOPlayer, { StringValue("addRole:"), StringValue("hello"), JS_NewInt32(Context(), 3), JS_NULL }), "<unchanged>");
+		EXPECT_EQ(sEntityCalls.size(), 2u);
 		if (sEntityCalls.size() == 2)
 		{
-			OO_CHECK_EQ(sEntityCalls[0], "removeScript");
-			OO_CHECK_EQ(sEntityCalls[1], "addRole:hello 3 null");	// the parameters joined with spaces
+			EXPECT_EQ(sEntityCalls[0], "removeScript");
+			EXPECT_EQ(sEntityCalls[1], "addRole:hello 3 null");	// the parameters joined with spaces
 		}
 		sShipInfo = oo::PList(12.5);
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "shipInfoDictionary"), "12.5");
+		EXPECT_EQ(CallEntity(gOOPlayer, "shipInfoDictionary"), "12.5");
 		sShipInfo = oo::PList();
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "shipInfoDictionary"), "<unchanged>");	// a null result leaves it
+		EXPECT_EQ(CallEntity(gOOPlayer, "shipInfoDictionary"), "<unchanged>");	// a null result leaves it
 
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "isPlayer"), "1");
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "thrust"), "0.5");
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "speed"), "0.25");
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "velocity"), "1,2,3");
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "orientation"), "1,0,0,0");
+		EXPECT_EQ(CallEntity(gOOPlayer, "isPlayer"), "1");
+		EXPECT_EQ(CallEntity(gOOPlayer, "thrust"), "0.5");
+		EXPECT_EQ(CallEntity(gOOPlayer, "speed"), "0.25");
+		EXPECT_EQ(CallEntity(gOOPlayer, "velocity"), "1,2,3");
+		EXPECT_EQ(CallEntity(gOOPlayer, "orientation"), "1,0,0,0");
 
 		sOwner = gOOPlayer;
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "owner"), "<object TestPlayerObject>");
+		EXPECT_EQ(CallEntity(gOOPlayer, "owner"), "<object TestPlayerObject>");
 		sOwner = nullptr;
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "owner"), "<unchanged>");
+		EXPECT_EQ(CallEntity(gOOPlayer, "owner"), "<unchanged>");
 
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "addRole:"), "error: Test.callObjC(): method addRole: requires a parameter.");
-		OO_CHECK_EQ(CallEntity(gOOPlayer, "rotationMatrix"), "error: Test.callObjC(): method rotationMatrix cannot be called from JavaScript.");
+		EXPECT_EQ(CallEntity(gOOPlayer, "addRole:"), "error: Test.callObjC(): method addRole: requires a parameter.");
+		EXPECT_EQ(CallEntity(gOOPlayer, "rotationMatrix"), "error: Test.callObjC(): method rotationMatrix cannot be called from JavaScript.");
 		// Parameters after a name with no colon are ignored.
-		OO_CHECK_EQ(CallEntity(gOOPlayer, { StringValue("isPlayer"), StringValue("x") }), "1");
-		OO_CHECK_EQ(sEntityCalls.size(), 4u);
+		EXPECT_EQ(CallEntity(gOOPlayer, { StringValue("isPlayer"), StringValue("x") }), "1");
+		EXPECT_EQ(sEntityCalls.size(), 4u);
 	}
 }
 
 
 #else
 
-OO_TEST(releaseBuild)
+TEST(OOJSCall, releaseBuild)
 {
-	OO_CHECK(true);	// callObjC() is debug-only
+	EXPECT_TRUE(true);	// callObjC() is debug-only
 }
 
 #endif
-
-
-OO_TEST_MAIN()

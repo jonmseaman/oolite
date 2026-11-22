@@ -16,6 +16,8 @@
 	sound, which SoundFromJSValue() answers. Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "OOJSEngineCore.h"
 #include "oofnd/Exception.hpp"
 #include "oofnd/PList.hpp"
@@ -116,7 +118,6 @@ public:
 #include "OOJSSound.h"
 #include "OOJSSoundSource.h"
 
-#include "oo_test.hpp"
 
 #include <cmath>
 #include <cstdarg>
@@ -381,7 +382,7 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 
 std::optional<std::string> NameOf(oo::Sound *sound)
@@ -394,32 +395,32 @@ std::optional<std::string> NameOf(oo::Sound *sound)
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSSound, registration)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("typeof Sound", "function");
 	OO_CHECK_EVAL("new Sound()", "threw: unconstructable");
-	OO_CHECK_EQ(sConverters.size(), 1u);
+	EXPECT_EQ(sConverters.size(), 1u);
 	const std::shared_ptr<TestSound> sound = oo::makeShared<TestSound>();
 	sound->_name = "a.ogg";
-	OO_CHECK(OOJSSoundJSClassName() == std::optional<std::string>("Sound"));
-	OO_CHECK(OOJSSoundJSDescription(sound.get()) == std::optional<std::string>("[Sound \"a.ogg\"]"));
+	EXPECT_TRUE(OOJSSoundJSClassName() == std::optional<std::string>("Sound"));
+	EXPECT_TRUE(OOJSSoundJSDescription(sound.get()) == std::optional<std::string>("[Sound \"a.ogg\"]"));
 	sound->_name = std::nullopt;
-	OO_CHECK(OOJSSoundJSDescription(sound.get()) == std::optional<std::string>("[Sound \"(null)\"]"));
+	EXPECT_TRUE(OOJSSoundJSDescription(sound.get()) == std::optional<std::string>("[Sound \"(null)\"]"));
 	// -oo_jsValueInContext: makes a new Sound object each time, holding the sound retained.
 	const long before = sound->weak_from_this().use_count();
 	JSValue a = OOJSSoundJSValueInContext(sound.get(), sContext);
 	JSValue b = OOJSSoundJSValueInContext(sound.get(), sContext);
-	OO_CHECK(JS_IsObject(a) && JS_IsObject(b) && JS_VALUE_GET_PTR(a) != JS_VALUE_GET_PTR(b));
-	OO_CHECK(SoundFromJSValue(sContext, a) == sound.get());	// the slot's holder holds the sound
+	EXPECT_TRUE(JS_IsObject(a) && JS_IsObject(b) && JS_VALUE_GET_PTR(a) != JS_VALUE_GET_PTR(b));
+	EXPECT_TRUE(SoundFromJSValue(sContext, a) == sound.get());	// the slot's holder holds the sound
 	sLimiterPauses = 0;
-	OO_CHECK_EQ(sound->weak_from_this().use_count(), before + 2);
+	EXPECT_EQ(sound->weak_from_this().use_count(), before + 2);
 	JS_FreeValue(sContext, a);
 	JS_FreeValue(sContext, b);
 }
 
 
-OO_TEST(load)
+TEST(OOJSSound, load)
 {
 	OO_CHECK_EVAL("Sound.load('bang.ogg').name", "Sounds/bang.ogg");
 	OO_CHECK_EVAL("Sound.load('[custom-key]').name", "custom:[custom-key]");
@@ -428,55 +429,55 @@ OO_TEST(load)
 	OO_CHECK_EVAL("Sound.load('missing.ogg')", "null");
 	OO_CHECK_EVAL("Sound.load()", "threw: bad arguments: Sound.load (0): ; expected string");
 	OO_CHECK_EVAL("Sound.load(null)", "threw: bad arguments: Sound.load (1): ; expected string");
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
 }
 
 
-OO_TEST(music)
+TEST(OOJSSound, music)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("Sound.musicSoundSource()", "native OOSoundSource");
 	OO_CHECK_EVAL("Sound.playMusic('theme.ogg')", "undefined");
-	OO_CHECK(sMusic->_playing == std::optional<std::string>("theme.ogg") && !sMusic->_loop && sMusic->_gain == 1.0f);
+	EXPECT_TRUE(sMusic->_playing == std::optional<std::string>("theme.ogg") && !sMusic->_loop && sMusic->_gain == 1.0f);
 	OO_CHECK_EVAL("Sound.playMusic('loop.ogg', true, 0.5)", "undefined");
-	OO_CHECK(sMusic->_playing == std::optional<std::string>("loop.ogg") && sMusic->_loop && sMusic->_gain == 0.5f);
+	EXPECT_TRUE(sMusic->_playing == std::optional<std::string>("loop.ogg") && sMusic->_loop && sMusic->_gain == 0.5f);
 	OO_CHECK_EVAL("Sound.playMusic('x.ogg', true, 'loud')", "threw: bad arguments: Sound.playMusic (1): ; expected float");
 	OO_CHECK_EVAL("Sound.playMusic()", "threw: bad arguments: Sound.playMusic (0): ; expected string");
 	int stops = sMusic->_stops;
 	OO_CHECK_EVAL("Sound.stopMusic('other.ogg')", "undefined");	// not the one playing
-	OO_CHECK_EQ(sMusic->_stops, stops);
+	EXPECT_EQ(sMusic->_stops, stops);
 	OO_CHECK_EVAL("Sound.stopMusic('loop.ogg')", "undefined");
-	OO_CHECK_EQ(sMusic->_stops, stops + 1);
+	EXPECT_EQ(sMusic->_stops, stops + 1);
 	OO_CHECK_EVAL("Sound.stopMusic()", "undefined");
-	OO_CHECK_EQ(sMusic->_stops, stops + 2);
+	EXPECT_EQ(sMusic->_stops, stops + 2);
 	OO_CHECK_EVAL("Sound.stopMusic(null)", "threw: bad arguments: Sound.stopMusic (1): ; expected string or no argument");
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
 }
 
 
-OO_TEST(soundFromJSValue)
+TEST(OOJSSound, soundFromJSValue)
 {
 	SetUpContext();
 	JSValue name = JS_NewString(sContext, "ping.ogg");
-	OO_CHECK(NameOf(SoundFromJSValue(sContext, name)) == std::optional<std::string>("Sounds/ping.ogg"));
-	OO_CHECK_EQ(sLimiterPauses, 0);	// a named sound pauses the time limiter and resumes it (upstream #768 balances the pause)
+	EXPECT_TRUE(NameOf(SoundFromJSValue(sContext, name)) == std::optional<std::string>("Sounds/ping.ogg"));
+	EXPECT_EQ(sLimiterPauses, 0);	// a named sound pauses the time limiter and resumes it (upstream #768 balances the pause)
 	sLimiterPauses = 0;
 	const std::shared_ptr<TestSound> sound = oo::makeShared<TestSound>();
 	sound->_name = "object.ogg";
 	JSValue object = OOJSSoundJSValueInContext(sound.get(), sContext);
-	OO_CHECK(SoundFromJSValue(sContext, object) == sound.get());
+	EXPECT_TRUE(SoundFromJSValue(sContext, object) == sound.get());
 	JS_FreeValue(sContext, object);
 	sLimiterPauses = 0;
 	// At the start screen a name is not looked up: a string is not a Sound object.
 	sPlayer->_status = oo::EntityStatus::kStartGame;
-	OO_CHECK(SoundFromJSValue(sContext, name) == nullptr);
+	EXPECT_TRUE(SoundFromJSValue(sContext, name) == nullptr);
 	JS_FreeValue(sContext, name);
 	sPlayer->_status = oo::EntityStatus::kInFlight;
 	sLimiterPauses = 0;
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSSound, nativeExceptions)
 {
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the sound is a JS error,
@@ -484,9 +485,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("Sound.load('raise').name", "threw: Native exception: name boom");
 	OO_CHECK_EVAL("Sound.load('throw').name", "threw: Native exception: cxx boom");
 	OO_CHECK_EVAL("Sound.load('fine').name", "Sounds/fine");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

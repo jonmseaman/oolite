@@ -14,6 +14,8 @@
 	category answers the engine. Run: tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "EntityManualRefs.h"  // the tests' manual references
 #include "Color.h"
 #include "OOJSEngineCore.h"
@@ -138,7 +140,6 @@ public:
 
 #include "OOJSPlanet.h"
 
-#include "oo_test.hpp"
 
 #include <cstdarg>
 #include <cstdint>
@@ -579,23 +580,23 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSPlanet, registration)
 {
 	SetUpContext();
 	const JSClassID planetClass = TestObjectOf(sPlanet)->oo_jsClassID();
-	OO_CHECK(planetClass != 0 && OOJSClassName(planetClass) != nullptr && std::strcmp(OOJSClassName(planetClass), "Planet") == 0);
+	EXPECT_TRUE(planetClass != 0 && OOJSClassName(planetClass) != nullptr && std::strcmp(OOJSClassName(planetClass), "Planet") == 0);
 	JSValue prototype = JS_GetClassProto(sContext, planetClass);
-	OO_CHECK(JS_IsObject(prototype));
+	EXPECT_TRUE(JS_IsObject(prototype));
 	JS_FreeValue(sContext, prototype);
-	OO_CHECK(OOJSIsSubclass(planetClass, sFakeEntityClassID));
-	OO_CHECK_EQ(sConverters[planetClass], 1);
+	EXPECT_TRUE(OOJSIsSubclass(planetClass, sFakeEntityClassID));
+	EXPECT_EQ(sConverters[planetClass], 1);
 	OO_CHECK_EVAL("typeof Planet", "function");
 	OO_CHECK_EVAL("new Planet()", "threw: unconstructable");
 	OO_CHECK_EVAL("Object.getPrototypeOf(Planet.prototype) === Entity.prototype", "true");
@@ -603,25 +604,25 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(category)
+TEST(OOJSPlanet, category)
 {
 	SetUpContext();
 	// A planet or a moon is visible to scripts and says which it is; any other stellar body is not.
-	OO_CHECK(TestObjectOf(sPlanet)->oo_jsClassName() == std::optional<std::string>("Planet"));
-	OO_CHECK(TestObjectOf(sPlanet)->isVisibleToScripts());
-	OO_CHECK(TestObjectOf(sMoon)->oo_jsClassName() == std::optional<std::string>("Moon"));
-	OO_CHECK(TestObjectOf(sMoon)->isVisibleToScripts());
+	EXPECT_TRUE(TestObjectOf(sPlanet)->oo_jsClassName() == std::optional<std::string>("Planet"));
+	EXPECT_TRUE(TestObjectOf(sPlanet)->isVisibleToScripts());
+	EXPECT_TRUE(TestObjectOf(sMoon)->oo_jsClassName() == std::optional<std::string>("Moon"));
+	EXPECT_TRUE(TestObjectOf(sMoon)->isVisibleToScripts());
 	oo::PlanetEntity *mini = NewPlanet();
 	oo::test::Autorelease(TestObjectOf(mini));
 	mini->_type = oo::StellarBodyType::kMiniature;
-	OO_CHECK(TestObjectOf(mini)->oo_jsClassName() == std::optional<std::string>("Unknown"));
-	OO_CHECK(!TestObjectOf(mini)->isVisibleToScripts());
+	EXPECT_TRUE(TestObjectOf(mini)->oo_jsClassName() == std::optional<std::string>("Unknown"));
+	EXPECT_TRUE(!TestObjectOf(mini)->isVisibleToScripts());
 	mini->_type = oo::StellarBodyType::kSun;
-	OO_CHECK(!TestObjectOf(mini)->isVisibleToScripts());
+	EXPECT_TRUE(!TestObjectOf(mini)->isVisibleToScripts());
 }
 
 
-OO_TEST(properties)
+TEST(OOJSPlanet, properties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("planet.airColor", "0.5,0.25,1,1");
@@ -647,7 +648,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(setters)
+TEST(OOJSPlanet, setters)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("(function () { planet.airColorMixRatio = 0.25; return planet.airColorMixRatio; })()", "0.25");
@@ -668,7 +669,7 @@ OO_TEST(setters)
 }
 
 
-OO_TEST(colors)
+TEST(OOJSPlanet, colors)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("(function () { planet.airColor = [0, 1, 0]; return planet.airColor; })()", "0,1,0,1");
@@ -681,28 +682,28 @@ OO_TEST(colors)
 }
 
 
-OO_TEST(texture)
+TEST(OOJSPlanet, texture)
 {
 	SetUpContext();
 	sPlanet->_textureLoads = 0;
 	sLastWarning.clear();
 	OO_CHECK_EVAL("(function () { planet.texture = 'diso.png'; return planet.texture; })()", "diso.png");
-	OO_CHECK_EQ(sPlanet->_textureLoads, 1);
-	OO_CHECK_EQ(sLastWarning, std::string());
+	EXPECT_EQ(sPlanet->_textureLoads, 1);
+	EXPECT_EQ(sLastWarning, std::string());
 	// A texture that is not found keeps the old one, with a warning; no exception.
 	OO_CHECK_EVAL("(function () { planet.texture = 'missing.png'; return planet.texture; })()", "diso.png");
-	OO_CHECK_EQ(sPlanet->_textureLoads, 2);
-	OO_CHECK_EQ(sLastWarning, std::string("Cannot find texture \"missing.png\". Value not set."));
+	EXPECT_EQ(sPlanet->_textureLoads, 2);
+	EXPECT_EQ(sLastWarning, std::string("Cannot find texture \"missing.png\". Value not set."));
 	// No texture name: nothing is loaded.
 	OO_CHECK_EVAL("(function () { planet.texture = null; return planet.texture; })()", "diso.png");
-	OO_CHECK_EQ(sPlanet->_textureLoads, 2);
-	OO_CHECK_EQ(sLastWarning, std::string("Expected texture string. Value not set."));
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sPlanet->_textureLoads, 2);
+	EXPECT_EQ(sLastWarning, std::string("Expected texture string. Value not set."));
+	EXPECT_EQ(sLimiterPauses, 0);
 	sPlanet->_texture = "lave.png";
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSPlanet, otherObjects)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("Object.getOwnPropertyDescriptor(Planet.prototype, 'radius').get.call(plainEntity)", "threw: Native method expected Planet, got [object Object].");
@@ -715,7 +716,7 @@ OO_TEST(otherObjects)
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSPlanet, nativeExceptions)
 {
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the entity is a JS error,
@@ -726,9 +727,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("planet.radius", "threw: Native exception: cxx boom");
 	sPlanet->_radius = 5000;
 	OO_CHECK_EVAL("planet.radius", "5000");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

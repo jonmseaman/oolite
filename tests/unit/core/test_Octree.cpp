@@ -8,8 +8,9 @@
 
 #include <cmath>
 
+#include <gtest/gtest.h>
+
 #include "Octree.h"
-#include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -41,16 +42,16 @@ std::vector<int> Nodes(const oo::PList& representation) {
     return builder->buildOctreeWithRadius(radius);                     \
   }())
 
-OO_TEST(builderAndRepresentation) {
+TEST(Octree, builderAndRepresentation) {
   {
     std::shared_ptr<Octree> solid = BUILD(2.0f, builder->writeSolid());
-    OO_CHECK(solid);
+    EXPECT_TRUE(solid);
     oo::PList representation = solid->dictionaryRepresentation();
-    OO_CHECK(Nodes(representation) == std::vector<int>({-1}));
-    OO_CHECK(representation.get<float>("radius") == 2.0f);
+    EXPECT_TRUE(Nodes(representation) == std::vector<int>({-1}));
+    EXPECT_TRUE(representation.get<float>("radius") == 2.0f);
 
     std::shared_ptr<Octree> empty = BUILD(2.0f, builder->writeEmpty());
-    OO_CHECK(Nodes(empty->dictionaryRepresentation()) == std::vector<int>({0}));
+    EXPECT_TRUE(Nodes(empty->dictionaryRepresentation()) == std::vector<int>({0}));
 
     // One inner node with its first child solid: the root holds the offset to
     // its children.
@@ -58,7 +59,7 @@ OO_TEST(builderAndRepresentation) {
         BUILD(2.0f, builder->beginInnerNode(); builder->writeSolid();
               for (int i = 0; i < 7; i++) builder->writeEmpty();
               builder->endInnerNode());
-    OO_CHECK(Nodes(corner->dictionaryRepresentation()) ==
+    EXPECT_TRUE(Nodes(corner->dictionaryRepresentation()) ==
              std::vector<int>({1, -1, 0, 0, 0, 0, 0, 0, 0}));
 
     // Eight solid children fold into one solid node.
@@ -66,68 +67,68 @@ OO_TEST(builderAndRepresentation) {
         BUILD(2.0f, builder->beginInnerNode();
               for (int i = 0; i < 8; i++) builder->writeSolid();
               builder->endInnerNode());
-    OO_CHECK(Nodes(folded->dictionaryRepresentation()) ==
+    EXPECT_TRUE(Nodes(folded->dictionaryRepresentation()) ==
              std::vector<int>({-1}));
 
     // The representation comes back as an equal octree.
     std::shared_ptr<Octree> copy =
         Octree::initWithDictionary(corner->dictionaryRepresentation());
-    OO_CHECK(copy && copy != corner);
-    OO_CHECK(Nodes(copy->dictionaryRepresentation()) ==
+    EXPECT_TRUE(copy && copy != corner);
+    EXPECT_TRUE(Nodes(copy->dictionaryRepresentation()) ==
              Nodes(corner->dictionaryRepresentation()));
-    OO_CHECK(copy->volume() == corner->volume());
+    EXPECT_TRUE(copy->volume() == corner->volume());
   }
 }
 
-OO_TEST(invalidRepresentations) {
+TEST(Octree, invalidRepresentations) {
   {
-    OO_CHECK(Octree::initWithDictionary(oo::PList(oo::PList::Dict())).get() ==
+    EXPECT_TRUE(Octree::initWithDictionary(oo::PList(oo::PList::Dict())).get() ==
              nullptr);  // no octree
 
     oo::PList::Dict ragged;
     ragged["octree"] =
         oo::PList(oo::Data("abc", 3));  // not a whole number of nodes
     ragged["radius"] = oo::PList(1.0);
-    OO_CHECK(Octree::initWithDictionary(oo::PList(std::move(ragged))).get() ==
+    EXPECT_TRUE(Octree::initWithDictionary(oo::PList(std::move(ragged))).get() ==
              nullptr);
 
     oo::PList::Dict empty;
     empty["octree"] = oo::PList(oo::Data());  // no nodes at all
     empty["radius"] = oo::PList(1.0);
-    OO_CHECK(Octree::initWithDictionary(oo::PList(std::move(empty))).get() ==
+    EXPECT_TRUE(Octree::initWithDictionary(oo::PList(std::move(empty))).get() ==
              nullptr);
   }
 }
 
-OO_TEST(volumeAndRandomPoint) {
+TEST(Octree, volumeAndRandomPoint) {
   {
-    OO_CHECK(BUILD(2.0f, builder->writeSolid())->volume() == 8.0f);
-    OO_CHECK(BUILD(2.0f, builder->writeEmpty())->volume() == 0.0f);
+    EXPECT_TRUE(BUILD(2.0f, builder->writeSolid())->volume() == 8.0f);
+    EXPECT_TRUE(BUILD(2.0f, builder->writeEmpty())->volume() == 0.0f);
 
     std::shared_ptr<Octree> corner =
         BUILD(2.0f, builder->beginInnerNode(); builder->writeSolid();
               for (int i = 0; i < 7; i++) builder->writeEmpty();
               builder->endInnerNode());
-    OO_CHECK(corner->volume() == 1.0f);
-    OO_CHECK(Same(corner->randomPoint(),
+    EXPECT_TRUE(corner->volume() == 1.0f);
+    EXPECT_TRUE(Same(corner->randomPoint(),
                   make_vector(1, 1, 1)));  // the one full octant's centre
-    OO_CHECK(corner->octreeScaledBy(2.0f)->volume() == 8.0f);
-    OO_CHECK(Same(corner->octreeScaledBy(2.0f)->randomPoint(),
+    EXPECT_TRUE(corner->octreeScaledBy(2.0f)->volume() == 8.0f);
+    EXPECT_TRUE(Same(corner->octreeScaledBy(2.0f)->randomPoint(),
                   make_vector(2, 2, 2)));
-    OO_CHECK(
+    EXPECT_TRUE(
         Same(BUILD(2.0f, builder->writeSolid())->randomPoint(), kZeroVector));
   }
 }
 
-OO_TEST(lineHits) {
+TEST(Octree, lineHits) {
   {
     std::shared_ptr<Octree> solid = BUILD(2.0f, builder->writeSolid());
-    OO_CHECK(
+    EXPECT_TRUE(
         solid->isHitByLine(make_vector(-10, 0, 0), make_vector(10, 0, 0)) ==
         10.0f);  // solid root: distance to v0
 
     std::shared_ptr<Octree> empty = BUILD(2.0f, builder->writeEmpty());
-    OO_CHECK(empty->isHitByLine(make_vector(-10, 0, 0),
+    EXPECT_TRUE(empty->isHitByLine(make_vector(-10, 0, 0),
                                 make_vector(10, 0, 0)) == 0.0f);
 
     std::shared_ptr<Octree> corner =
@@ -137,24 +138,24 @@ OO_TEST(lineHits) {
     // (the line walk offsets octants
     // with the opposite sign to isHitByOctree(), so each of these lines finds
     // the solid octant)
-    OO_CHECK(corner->isHitByLine(make_vector(-1, -1, 10),
+    EXPECT_TRUE(corner->isHitByLine(make_vector(-1, -1, 10),
                                  make_vector(-1, -1, -10)) == 11.0f);
-    OO_CHECK(Near(
+    EXPECT_TRUE(Near(
         corner->isHitByLine(make_vector(-1, 1, 10), make_vector(-1, 1, -10)),
         11.1803f));
-    OO_CHECK(
+    EXPECT_TRUE(
         Near(corner->isHitByLine(make_vector(1, 1, 10), make_vector(1, 1, -10)),
              11.3578f));
-    OO_CHECK(
+    EXPECT_TRUE(
         Near(corner->isHitByLine(make_vector(1, 1, 10), make_vector(1, 1, -10)),
              11.3578f));  // repeatable
-    OO_CHECK(
+    EXPECT_TRUE(
         corner->isHitByLine(make_vector(10, 10, 10), make_vector(20, 20, 20)) ==
         0.0f);  // misses the cube
   }
 }
 
-OO_TEST(octreeHits) {
+TEST(Octree, octreeHits) {
   {
     std::shared_ptr<Octree> a = BUILD(2.0f, builder->writeSolid());
     std::shared_ptr<Octree> b = BUILD(1.0f, builder->writeSolid());
@@ -164,62 +165,60 @@ OO_TEST(octreeHits) {
               for (int i = 0; i < 7; i++) builder->writeEmpty();
               builder->endInnerNode());
 
-    OO_CHECK(a->isHitByOctree(b.get(), make_vector(0, 0, 0), kIdentityIJK));
-    OO_CHECK(!a->isHitByOctree(b.get(), make_vector(10, 0, 0), kIdentityIJK));
-    OO_CHECK(
+    EXPECT_TRUE(a->isHitByOctree(b.get(), make_vector(0, 0, 0), kIdentityIJK));
+    EXPECT_TRUE(!a->isHitByOctree(b.get(), make_vector(10, 0, 0), kIdentityIJK));
+    EXPECT_TRUE(
         !a->isHitByOctree(empty.get(), make_vector(0, 0, 0), kIdentityIJK));
-    OO_CHECK(!a->isHitByOctree(nullptr, make_vector(0, 0, 0), kIdentityIJK));
+    EXPECT_TRUE(!a->isHitByOctree(nullptr, make_vector(0, 0, 0), kIdentityIJK));
 
     // Child 0 is the low-coordinate octant.
-    OO_CHECK(corner->isHitByOctree(b.get(), make_vector(-1.5f, -1.5f, -1.5f),
+    EXPECT_TRUE(corner->isHitByOctree(b.get(), make_vector(-1.5f, -1.5f, -1.5f),
                                    kIdentityIJK));
-    OO_CHECK(!corner->isHitByOctree(b.get(), make_vector(1.5f, 1.5f, 1.5f),
+    EXPECT_TRUE(!corner->isHitByOctree(b.get(), make_vector(1.5f, 1.5f, 1.5f),
                                     kIdentityIJK));
-    OO_CHECK(!corner->isHitByOctree(b.get(), make_vector(-1.5f, -1.5f, 1.5f),
+    EXPECT_TRUE(!corner->isHitByOctree(b.get(), make_vector(-1.5f, -1.5f, 1.5f),
                                     kIdentityIJK));
 
     // Scaled: b at 3 units misses unscaled, hits once b is scaled up.
-    OO_CHECK(!a->isHitByOctree(b.get(), make_vector(3.5f, 0, 0), kIdentityIJK,
+    EXPECT_TRUE(!a->isHitByOctree(b.get(), make_vector(3.5f, 0, 0), kIdentityIJK,
                                1.0f, 1.0f));
-    OO_CHECK(a->isHitByOctree(b.get(), make_vector(3.5f, 0, 0), kIdentityIJK,
+    EXPECT_TRUE(a->isHitByOctree(b.get(), make_vector(3.5f, 0, 0), kIdentityIJK,
                               1.0f, 2.0f));
-    OO_CHECK(!a->isHitByOctree(nullptr, make_vector(0, 0, 0), kIdentityIJK,
+    EXPECT_TRUE(!a->isHitByOctree(nullptr, make_vector(0, 0, 0), kIdentityIJK,
                                1.0f, 1.0f));
   }
 }
 
-OO_TEST(cxxOctree) {
+TEST(Octree, cxxOctree) {
   std::shared_ptr<oo::OctreeBuilder> builder = oo::makeShared<oo::OctreeBuilder>();
   builder->beginInnerNode();
   builder->writeSolid();
   for (int i = 0; i < 7; i++) builder->writeEmpty();
   builder->endInnerNode();
   std::shared_ptr<Octree> corner = builder->buildOctreeWithRadius(2.0f);
-  OO_CHECK(corner.get() != nullptr);
-  OO_CHECK(corner->volume() == 1.0f);
-  OO_CHECK(Nodes(corner->dictionaryRepresentation()) ==
+  EXPECT_TRUE(corner.get() != nullptr);
+  EXPECT_TRUE(corner->volume() == 1.0f);
+  EXPECT_TRUE(Nodes(corner->dictionaryRepresentation()) ==
            std::vector<int>({1, -1, 0, 0, 0, 0, 0, 0, 0}));
-  OO_CHECK(corner->octreeScaledBy(2.0f)->volume() == 8.0f);
+  EXPECT_TRUE(corner->octreeScaledBy(2.0f)->volume() == 8.0f);
 
   std::shared_ptr<Octree> copy =
       Octree::initWithDictionary(corner->dictionaryRepresentation());
-  OO_CHECK(copy.get() != nullptr && copy.get() != corner.get() &&
+  EXPECT_TRUE(copy.get() != nullptr && copy.get() != corner.get() &&
            copy->volume() == 1.0f);
-  OO_CHECK(Octree::initWithDictionary(oo::PList(oo::PList::Dict())).get() ==
+  EXPECT_TRUE(Octree::initWithDictionary(oo::PList(oo::PList::Dict())).get() ==
            nullptr);
 
   std::shared_ptr<oo::OctreeBuilder> small = oo::makeShared<oo::OctreeBuilder>();
   small->writeSolid();
   std::shared_ptr<Octree> b = small->buildOctreeWithRadius(1.0f);
-  OO_CHECK(corner->isHitByOctree(b.get(), make_vector(-1.5f, -1.5f, -1.5f),
+  EXPECT_TRUE(corner->isHitByOctree(b.get(), make_vector(-1.5f, -1.5f, -1.5f),
                                  kIdentityIJK));
-  OO_CHECK(!corner->isHitByOctree(b.get(), make_vector(1.5f, 1.5f, 1.5f),
+  EXPECT_TRUE(!corner->isHitByOctree(b.get(), make_vector(1.5f, 1.5f, 1.5f),
                                   kIdentityIJK));
-  OO_CHECK(!corner->isHitByOctree(nullptr, kZeroVector, kIdentityIJK));
-  OO_CHECK(
+  EXPECT_TRUE(!corner->isHitByOctree(nullptr, kZeroVector, kIdentityIJK));
+  EXPECT_TRUE(
       !corner->isHitByOctree(nullptr, kZeroVector, kIdentityIJK, 1.0f, 1.0f));
-  OO_CHECK(corner->isHitByLine(make_vector(-1, -1, 10),
+  EXPECT_TRUE(corner->isHitByLine(make_vector(-1, -1, 10),
                                make_vector(-1, -1, -10)) == 11.0f);
 }
-
-OO_TEST_MAIN()

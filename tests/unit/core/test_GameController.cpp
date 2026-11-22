@@ -38,6 +38,8 @@
 #include <thread>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "GameController.h"
 #include "MyOpenGLView.h"
 #include "DebugTCPConsoleClient.h"
@@ -45,7 +47,6 @@
 #include "OOJSPropID.h"
 #include "OOJavaScriptEngine.h"
 #include "PlayerEntity.h"
-#include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Exception.hpp"
@@ -189,10 +190,10 @@ void SetUp() {
            std::to_string(static_cast<unsigned long>(::_getpid())));
   stdfs::remove_all(sRoot);
   stdfs::create_directories(sRoot);
-  OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
+  EXPECT_TRUE(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
   stdfs::create_directories(sRoot / "Resources");
-  OO_CHECK(
+  EXPECT_TRUE(
       oo::fs::writeFile(sRoot / "Resources" / "Info-gnustep.plist",
                         oo::Data("{ CFBundleVersion = \"9.9.9-test\"; }", 35),
                         oo::fs::WriteMode::kDirect)
@@ -214,26 +215,26 @@ oo::PList Mode(int width, int height, int refresh) {
 
 }  // namespace
 
-OO_TEST(sharedControllerIsOneObject) {
-  SetUp();
+TEST(GameController, sharedControllerIsOneObject) {
+  ::SetUp();
   {
     GameController* controller = ::GameController::sharedController();
-    OO_CHECK(controller != nullptr);
-    OO_CHECK(::GameController::sharedController() == controller);
-    OO_CHECK(!controller->finishedLaunching());
-    OO_CHECK(!controller->isGamePaused());
-    OO_CHECK(controller->mouseInteractionMode() ==
+    EXPECT_TRUE(controller != nullptr);
+    EXPECT_TRUE(::GameController::sharedController() == controller);
+    EXPECT_TRUE(!controller->finishedLaunching());
+    EXPECT_TRUE(!controller->isGamePaused());
+    EXPECT_TRUE(controller->mouseInteractionMode() ==
              oo::MouseInteractionMode::kUiScreenNoInteraction);
-    OO_CHECK(controller->gameView() == nullptr);
-    OO_CHECK(!controller->playerFileToLoad().has_value());
+    EXPECT_TRUE(controller->gameView() == nullptr);
+    EXPECT_TRUE(!controller->playerFileToLoad().has_value());
   }
 }
 
 // main.mm makes the application's controller with alloc/init, apart from
 // +sharedController's: once the shared one exists, that raises (and releases
 // the receiver).
-OO_TEST(secondControllerRaises) {
-  SetUp();
+TEST(GameController, secondControllerRaises) {
+  ::SetUp();
   {
     GameController* shared = ::GameController::sharedController();
     bool raised = false;
@@ -243,28 +244,28 @@ OO_TEST(secondControllerRaises) {
       raised =
           (std::string(exception.name()) == oo::InternalInconsistencyException);
     }
-    OO_CHECK(raised);
-    OO_CHECK(::GameController::sharedController() == shared);
+    EXPECT_TRUE(raised);
+    EXPECT_TRUE(::GameController::sharedController() == shared);
   }
 }
 
-OO_TEST(gameViewIsKeptAndToldOfTheController) {
-  SetUp();
+TEST(GameController, gameViewIsKeptAndToldOfTheController) {
+  ::SetUp();
   {
     GameController* controller = ::GameController::sharedController();
     TestView* first = oo::test::NewRetained<TestView>();
     TestView* second = oo::test::NewRetained<TestView>();
 
     controller->setGameView(first);
-    OO_CHECK(controller->gameView() == first);
-    OO_CHECK(first->_controller == controller);
-    OO_CHECK(first->weak_from_this().use_count() == 2);  // the controller retains its view
+    EXPECT_TRUE(controller->gameView() == first);
+    EXPECT_TRUE(first->_controller == controller);
+    EXPECT_TRUE(first->weak_from_this().use_count() == 2);  // the controller retains its view
 
     controller->setGameView(second);
-    OO_CHECK(controller->gameView() == second);
-    OO_CHECK(second->_controller == controller);
-    OO_CHECK(first->weak_from_this().use_count() == 1);  // and releases the one it replaces
-    OO_CHECK(second->weak_from_this().use_count() == 2);
+    EXPECT_TRUE(controller->gameView() == second);
+    EXPECT_TRUE(second->_controller == controller);
+    EXPECT_TRUE(first->weak_from_this().use_count() == 1);  // and releases the one it replaces
+    EXPECT_TRUE(second->weak_from_this().use_count() == 2);
 
     controller->setGameView(first);
     oo::test::Release(second);
@@ -272,93 +273,93 @@ OO_TEST(gameViewIsKeptAndToldOfTheController) {
   }
 }
 
-OO_TEST(mouseInteractionModes) {
-  SetUp();
+TEST(GameController, mouseInteractionModes) {
+  ::SetUp();
   {
     GameController* controller = ::GameController::sharedController();
     TestView* view = static_cast<TestView*>(controller->gameView());
-    OO_CHECK(view != nullptr);
+    EXPECT_TRUE(view != nullptr);
     view->_modeNotes.clear();
 
     controller->setMouseInteractionMode(oo::MouseInteractionMode::kFlightNoMouseControl);
-    OO_CHECK(controller->mouseInteractionMode() ==
+    EXPECT_TRUE(controller->mouseInteractionMode() ==
              oo::MouseInteractionMode::kFlightNoMouseControl);
-    OO_CHECK_EQ(view->_modeNotes.size(), 1u);
-    OO_CHECK(view->_modeNotes.back() ==
+    EXPECT_EQ(view->_modeNotes.size(), 1u);
+    EXPECT_TRUE(view->_modeNotes.back() ==
              std::make_pair((int)oo::MouseInteractionMode::kUiScreenNoInteraction,
                             (int)oo::MouseInteractionMode::kFlightNoMouseControl));
 
     // The same mode again changes nothing and tells nobody.
     controller->setMouseInteractionMode(oo::MouseInteractionMode::kFlightNoMouseControl);
-    OO_CHECK_EQ(view->_modeNotes.size(), 1u);
+    EXPECT_EQ(view->_modeNotes.size(), 1u);
 
     controller->setMouseInteractionModeForUIWithMouseInteraction(true);
-    OO_CHECK(controller->mouseInteractionMode() ==
+    EXPECT_TRUE(controller->mouseInteractionMode() ==
              oo::MouseInteractionMode::kUiScreenWithInteraction);
     controller->setMouseInteractionModeForUIWithMouseInteraction(false);
-    OO_CHECK(controller->mouseInteractionMode() ==
+    EXPECT_TRUE(controller->mouseInteractionMode() ==
              oo::MouseInteractionMode::kUiScreenNoInteraction);
 
     // Flight: the player's mouse control chooses the mode.
     sPlayer->_mouseControlOn = true;
     controller->setMouseInteractionModeForFlight();
-    OO_CHECK(controller->mouseInteractionMode() ==
+    EXPECT_TRUE(controller->mouseInteractionMode() ==
              oo::MouseInteractionMode::kFlightWithMouseControl);
     sPlayer->_mouseControlOn = false;
     controller->setMouseInteractionModeForFlight();
-    OO_CHECK(controller->mouseInteractionMode() ==
+    EXPECT_TRUE(controller->mouseInteractionMode() ==
              oo::MouseInteractionMode::kFlightNoMouseControl);
 
-    OO_CHECK_EQ(view->_modeNotes.size(), 5u);
-    OO_CHECK(view->_modeNotes.back() ==
+    EXPECT_EQ(view->_modeNotes.size(), 5u);
+    EXPECT_TRUE(view->_modeNotes.back() ==
              std::make_pair((int)oo::MouseInteractionMode::kFlightWithMouseControl,
                             (int)oo::MouseInteractionMode::kFlightNoMouseControl));
   }
 }
 
-OO_TEST(pauseAndResume) {
-  SetUp();
+TEST(GameController, pauseAndResume) {
+  ::SetUp();
   {
     GameController* controller = ::GameController::sharedController();
     controller->setMouseInteractionMode(oo::MouseInteractionMode::kFlightWithMouseControl);
     sPlayer->_events.clear();
 
     controller->setGamePaused(true);
-    OO_CHECK(controller->isGamePaused());
-    OO_CHECK(controller->mouseInteractionMode() ==
+    EXPECT_TRUE(controller->isGamePaused());
+    EXPECT_TRUE(controller->mouseInteractionMode() ==
              oo::MouseInteractionMode::kUiScreenNoInteraction);
-    OO_CHECK_EQ(sPlayer->_events.size(), 1u);
-    OO_CHECK(!sPlayer->_events.empty() &&
+    EXPECT_EQ(sPlayer->_events.size(), 1u);
+    EXPECT_TRUE(!sPlayer->_events.empty() &&
              SameId(sPlayer->_events.back(), OOJSID("gamePaused")));
 #if OOLITE_WINDOWS
     // EcoQoS (no "ecoqos" default: on): a paused game runs at idle priority.
-    OO_CHECK(GetPriorityClass(GetCurrentProcess()) == IDLE_PRIORITY_CLASS);
+    EXPECT_TRUE(GetPriorityClass(GetCurrentProcess()) == IDLE_PRIORITY_CLASS);
 #endif
 
     // Pausing a paused game does nothing.
     controller->setGamePaused(true);
-    OO_CHECK_EQ(sPlayer->_events.size(), 1u);
+    EXPECT_EQ(sPlayer->_events.size(), 1u);
 
     controller->setGamePaused(false);
-    OO_CHECK(!controller->isGamePaused());
-    OO_CHECK(controller->mouseInteractionMode() ==
+    EXPECT_TRUE(!controller->isGamePaused());
+    EXPECT_TRUE(controller->mouseInteractionMode() ==
              oo::MouseInteractionMode::kFlightWithMouseControl);  // the mode it paused in
-    OO_CHECK_EQ(sPlayer->_events.size(), 2u);
-    OO_CHECK(sPlayer->_events.size() == 2 &&
+    EXPECT_EQ(sPlayer->_events.size(), 2u);
+    EXPECT_TRUE(sPlayer->_events.size() == 2 &&
              SameId(sPlayer->_events.back(), OOJSID("gameResumed")));
 #if OOLITE_WINDOWS
-    OO_CHECK(GetPriorityClass(GetCurrentProcess()) == NORMAL_PRIORITY_CLASS);
+    EXPECT_TRUE(GetPriorityClass(GetCurrentProcess()) == NORMAL_PRIORITY_CLASS);
 #endif
 
     // Resuming a running game does nothing.
     controller->setGamePaused(false);
-    OO_CHECK_EQ(sPlayer->_events.size(), 2u);
+    EXPECT_EQ(sPlayer->_events.size(), 2u);
 
 #if OOLITE_WINDOWS
     // "ecoqos" off: EcoQoS leaves the priority alone.
     oo::Defaults::standard().setBool("ecoqos", false);
     controller->setEcoQoS(true);
-    OO_CHECK(GetPriorityClass(GetCurrentProcess()) == NORMAL_PRIORITY_CLASS);
+    EXPECT_TRUE(GetPriorityClass(GetCurrentProcess()) == NORMAL_PRIORITY_CLASS);
     oo::Defaults::standard().removeObject("ecoqos");
 #endif
 
@@ -367,27 +368,27 @@ OO_TEST(pauseAndResume) {
     // a loaded machine it answers no console command for seconds.
     {
       WSADATA data;
-      OO_CHECK(WSAStartup(MAKEWORD(2, 2), &data) == 0);
+      EXPECT_TRUE(WSAStartup(MAKEWORD(2, 2), &data) == 0);
       SOCKET listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
       sockaddr_in address = {};
       address.sin_family = AF_INET;
       address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
       address.sin_port = 0;  // a free port
-      OO_CHECK(bind(listener, reinterpret_cast<sockaddr*>(&address),
+      EXPECT_TRUE(bind(listener, reinterpret_cast<sockaddr*>(&address),
                     sizeof address) == 0);
-      OO_CHECK(listen(listener, 1) == 0);
+      EXPECT_TRUE(listen(listener, 1) == 0);
       int size = sizeof address;
-      OO_CHECK(getsockname(listener, reinterpret_cast<sockaddr*>(&address),
+      EXPECT_TRUE(getsockname(listener, reinterpret_cast<sockaddr*>(&address),
                            &size) == 0);
 
       std::shared_ptr<oo::DebugTCPConsoleClient> console =
           oo::DebugTCPConsoleClient::clientWithAddress(
               std::string("127.0.0.1"), ntohs(address.sin_port));
-      OO_CHECK(console != nullptr);
-      OO_CHECK(oo::DebugTCPConsoleIsWaitingForInput());
+      EXPECT_TRUE(console != nullptr);
+      EXPECT_TRUE(oo::DebugTCPConsoleIsWaitingForInput());
 
       controller->setGamePaused(true);
-      OO_CHECK(GetPriorityClass(GetCurrentProcess()) == NORMAL_PRIORITY_CLASS);
+      EXPECT_TRUE(GetPriorityClass(GetCurrentProcess()) == NORMAL_PRIORITY_CLASS);
       controller->setGamePaused(false);
 
       console.reset();
@@ -400,8 +401,8 @@ OO_TEST(pauseAndResume) {
 
 // The full-screen category (SDL/GameController+SDLFullScreen.mm): still
 // Objective-C, on the state the class keeps.
-OO_TEST(fullScreenDisplayModes) {
-  SetUp();
+TEST(GameController, fullScreenDisplayModes) {
+  ::SetUp();
   {
     GameController* controller = ::GameController::sharedController();
     TestView* view = static_cast<TestView*>(controller->gameView());
@@ -413,34 +414,34 @@ OO_TEST(fullScreenDisplayModes) {
 
     // The modes the game can use, in the screen's order.
     const oo::PList modes = controller->getDisplayModes();
-    OO_CHECK_EQ(modes.count(), 3u);
-    OO_CHECK(controller->indexOfCurrentDisplayMode() == 1u);
-    OO_CHECK(controller->findDisplayModeForWidth(1920, 1080, 144) ==
+    EXPECT_EQ(modes.count(), 3u);
+    EXPECT_TRUE(controller->indexOfCurrentDisplayMode() == 1u);
+    EXPECT_TRUE(controller->findDisplayModeForWidth(1920, 1080, 144) ==
              Mode(1920, 1080, 144));
-    OO_CHECK(controller->findDisplayModeForWidth(320, 200, 60).isNull());
+    EXPECT_TRUE(controller->findDisplayModeForWidth(320, 200, 60).isNull());
 
-    OO_CHECK(controller->setDisplayWidth(1024, 768, 60));
-    OO_CHECK(controller->indexOfCurrentDisplayMode() == 0u);
-    OO_CHECK_EQ(oo::Defaults::standard().integerForKey("display_width"), 1024);
-    OO_CHECK_EQ(oo::Defaults::standard().integerForKey("display_height"), 768);
-    OO_CHECK(!controller->setDisplayWidth(800, 600, 60));
-    OO_CHECK(controller->indexOfCurrentDisplayMode() == 0u);
+    EXPECT_TRUE(controller->setDisplayWidth(1024, 768, 60));
+    EXPECT_TRUE(controller->indexOfCurrentDisplayMode() == 0u);
+    EXPECT_EQ(oo::Defaults::standard().integerForKey("display_width"), 1024);
+    EXPECT_EQ(oo::Defaults::standard().integerForKey("display_height"), 768);
+    EXPECT_TRUE(!controller->setDisplayWidth(800, 600, 60));
+    EXPECT_TRUE(controller->indexOfCurrentDisplayMode() == 0u);
 
     view->_inFullScreen = true;
-    OO_CHECK(controller->inFullScreenMode());
+    EXPECT_TRUE(controller->inFullScreenMode());
     view->_inFullScreen = false;
-    OO_CHECK(!controller->inFullScreenMode());
+    EXPECT_TRUE(!controller->inFullScreenMode());
 
     oo::Defaults::standard().setBool("fullscreen", true);
     controller->exitFullScreenMode();
-    OO_CHECK(!oo::Defaults::standard().boolForKey("fullscreen"));
+    EXPECT_TRUE(!oo::Defaults::standard().boolForKey("fullscreen"));
   }
 }
 
 // The full-screen members: pausing full-screen mode records the call to make
 // and leaves full screen.
-OO_TEST(fullScreenMembers) {
-  SetUp();
+TEST(GameController, fullScreenMembers) {
+  ::SetUp();
   {
     GameController* controller = GameController::sharedController();
     TestView* view = static_cast<TestView*>(controller->gameView());
@@ -449,80 +450,80 @@ OO_TEST(fullScreenMembers) {
     view->_currentMode = Mode(1280, 720, 75);
     controller->setUpDisplayModes();
 
-    OO_CHECK_EQ(controller->getDisplayModes().count(), 3u);
-    OO_CHECK(controller->getDisplayModes() == controller->getDisplayModes());
-    OO_CHECK_EQ(GameControllerTestAccess::width(controller), 1280u);
-    OO_CHECK_EQ(GameControllerTestAccess::height(controller), 720u);
-    OO_CHECK_EQ(GameControllerTestAccess::refresh(controller), 75u);
-    OO_CHECK(controller->indexOfCurrentDisplayMode() == 2u);
-    OO_CHECK(controller->indexOfCurrentDisplayMode() == 2u);
-    OO_CHECK(controller->findDisplayModeForWidth(640, 480, 60) ==
+    EXPECT_EQ(controller->getDisplayModes().count(), 3u);
+    EXPECT_TRUE(controller->getDisplayModes() == controller->getDisplayModes());
+    EXPECT_EQ(GameControllerTestAccess::width(controller), 1280u);
+    EXPECT_EQ(GameControllerTestAccess::height(controller), 720u);
+    EXPECT_EQ(GameControllerTestAccess::refresh(controller), 75u);
+    EXPECT_TRUE(controller->indexOfCurrentDisplayMode() == 2u);
+    EXPECT_TRUE(controller->indexOfCurrentDisplayMode() == 2u);
+    EXPECT_TRUE(controller->findDisplayModeForWidth(640, 480, 60) ==
              Mode(640, 480, 60));
-    OO_CHECK(controller->findDisplayModeForWidth(9000, 9000, 60).isNull());
+    EXPECT_TRUE(controller->findDisplayModeForWidth(9000, 9000, 60).isNull());
 
-    OO_CHECK(controller->setDisplayWidth(640, 480, 60));
-    OO_CHECK(controller->indexOfCurrentDisplayMode() == 0u);
-    OO_CHECK(GameControllerTestAccess::fullscreenDisplayMode(controller) ==
+    EXPECT_TRUE(controller->setDisplayWidth(640, 480, 60));
+    EXPECT_TRUE(controller->indexOfCurrentDisplayMode() == 0u);
+    EXPECT_TRUE(GameControllerTestAccess::fullscreenDisplayMode(controller) ==
              Mode(640, 480, 60));
-    OO_CHECK_EQ(oo::Defaults::standard().integerForKey("display_refresh"), 60);
-    OO_CHECK(!controller->setDisplayWidth(1280, 720, 30));
-    OO_CHECK_EQ(GameControllerTestAccess::width(controller), 640u);
+    EXPECT_EQ(oo::Defaults::standard().integerForKey("display_refresh"), 60);
+    EXPECT_TRUE(!controller->setDisplayWidth(1280, 720, 30));
+    EXPECT_EQ(GameControllerTestAccess::width(controller), 640u);
 
     // No current mode: the screen's size, refresh unchanged; no match is
     // oo::kNotFound.
     view->_currentMode = oo::PList();
     controller->setUpDisplayModes();
-    OO_CHECK_EQ(GameControllerTestAccess::width(controller), 0u);
-    OO_CHECK(controller->indexOfCurrentDisplayMode() == oo::kNotFound);
+    EXPECT_EQ(GameControllerTestAccess::width(controller), 0u);
+    EXPECT_TRUE(controller->indexOfCurrentDisplayMode() == oo::kNotFound);
 
     view->_inFullScreen = true;
-    OO_CHECK(controller->inFullScreenMode());
+    EXPECT_TRUE(controller->inFullScreenMode());
     view->_inFullScreen = false;
-    OO_CHECK(!controller->inFullScreenMode());
+    EXPECT_TRUE(!controller->inFullScreenMode());
 
     controller->setFullScreenMode(true);
-    OO_CHECK(GameControllerTestAccess::fullscreen(controller));
+    EXPECT_TRUE(GameControllerTestAccess::fullscreen(controller));
     controller->setFullScreenMode(false);
-    OO_CHECK(!GameControllerTestAccess::fullscreen(controller));
+    EXPECT_TRUE(!GameControllerTestAccess::fullscreen(controller));
 
     GameControllerTestAccess::stayInFullScreenMode(controller) = true;
     oo::Defaults::standard().setBool("fullscreen", true);
     controller->exitFullScreenMode();
-    OO_CHECK(!GameControllerTestAccess::stayInFullScreenMode(controller));
-    OO_CHECK(!oo::Defaults::standard().boolForKey("fullscreen"));
+    EXPECT_TRUE(!GameControllerTestAccess::stayInFullScreenMode(controller));
+    EXPECT_TRUE(!oo::Defaults::standard().boolForKey("fullscreen"));
 
     TestTarget* target = oo::test::NewRetained<TestTarget>();
     GameControllerTestAccess::stayInFullScreenMode(controller) = true;
     controller->pauseFullScreenModeToPerform("record:", target);
-    OO_CHECK(GameControllerTestAccess::pauseSelector(controller) == "record:");
-    OO_CHECK(GameControllerTestAccess::pauseTarget(controller) == target);
-    OO_CHECK(!GameControllerTestAccess::stayInFullScreenMode(controller));
+    EXPECT_TRUE(GameControllerTestAccess::pauseSelector(controller) == "record:");
+    EXPECT_TRUE(GameControllerTestAccess::pauseTarget(controller) == target);
+    EXPECT_TRUE(!GameControllerTestAccess::stayInFullScreenMode(controller));
     controller->pauseFullScreenModeToPerform("raise:", nullptr);
-    OO_CHECK(GameControllerTestAccess::pauseSelector(controller) == "raise:");
-    OO_CHECK(GameControllerTestAccess::pauseTarget(controller) == nullptr);
+    EXPECT_TRUE(GameControllerTestAccess::pauseSelector(controller) == "raise:");
+    EXPECT_TRUE(GameControllerTestAccess::pauseTarget(controller) == nullptr);
     oo::test::Release(target);
   }
 }
 
 // The player-file paths.
-OO_TEST(playerFilePaths) {
-  SetUp();
+TEST(GameController, playerFilePaths) {
+  ::SetUp();
   {
     GameController* controller = ::GameController::sharedController();
     controller->setPlayerFileToLoad("saves/Jameson.oolite-save");
-    OO_CHECK(controller->playerFileToLoad() ==
+    EXPECT_TRUE(controller->playerFileToLoad() ==
              std::optional<std::string>("saves/Jameson.oolite-save"));
     controller->setPlayerFileToLoad("saves/Jameson.txt");
-    OO_CHECK(!controller->playerFileToLoad().has_value());
+    EXPECT_TRUE(!controller->playerFileToLoad().has_value());
 
     controller->setPlayerFileDirectory(
         std::optional<std::string>("C:/games/saves/Jameson.oolite-save"));
-    OO_CHECK(controller->playerFileDirectory() ==
+    EXPECT_TRUE(controller->playerFileDirectory() ==
              std::optional<std::string>("C:/games/saves"));
-    OO_CHECK(oo::Defaults::standard().stringForKey("save-directory") ==
+    EXPECT_TRUE(oo::Defaults::standard().stringForKey("save-directory") ==
              std::optional<std::string>("C:/games/saves"));
     controller->setPlayerFileDirectory(std::nullopt);
-    OO_CHECK(
+    EXPECT_TRUE(
         !oo::Defaults::standard().stringForKey("save-directory").has_value());
   }
 }
@@ -532,8 +533,8 @@ OO_TEST(playerFilePaths) {
 // the call is swallowed and the target stays retained (as the Foundation
 // performer leaked it). The game tick's timer is never started here (it would
 // tick the whole game).
-OO_TEST(deferredCalls) {
-  SetUp();
+TEST(GameController, deferredCalls) {
+  ::SetUp();
   {
     GameController* controller = ::GameController::sharedController();
     TestTarget* target = oo::test::NewRetained<TestTarget>();
@@ -541,33 +542,33 @@ OO_TEST(deferredCalls) {
 
     Call(target, &TestTarget::record, argument, 0.0);
     Call(target, &TestTarget::record, nullptr, -1.0);
-    OO_CHECK(target->weak_from_this().use_count() == 3);
-    OO_CHECK(argument->weak_from_this().use_count() == 2);
-    OO_CHECK(target->_calls.empty());
+    EXPECT_TRUE(target->weak_from_this().use_count() == 3);
+    EXPECT_TRUE(argument->weak_from_this().use_count() == 2);
+    EXPECT_TRUE(target->_calls.empty());
 
     // Not due until 0.0001 s have passed.
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     controller->fireDueTimers();
-    OO_CHECK(target->_calls == std::vector<std::string>({"arg"}));
-    OO_CHECK(argument->weak_from_this().use_count() == 1);
-    OO_CHECK(target->weak_from_this().use_count() == 2);
+    EXPECT_TRUE(target->_calls == std::vector<std::string>({"arg"}));
+    EXPECT_TRUE(argument->weak_from_this().use_count() == 1);
+    EXPECT_TRUE(target->weak_from_this().use_count() == 2);
     controller->fireDueTimers();
-    OO_CHECK(target->_calls == std::vector<std::string>({"arg", "nil"}));
-    OO_CHECK(target->weak_from_this().use_count() == 1);
+    EXPECT_TRUE(target->_calls == std::vector<std::string>({"arg", "nil"}));
+    EXPECT_TRUE(target->weak_from_this().use_count() == 1);
     controller->fireDueTimers();  // nothing left
-    OO_CHECK(target->_calls.size() == 2);
+    EXPECT_TRUE(target->_calls.size() == 2);
 
     // A call not yet due stays.
     Call(target, &TestTarget::record, nullptr, 60.0);
     controller->fireDueTimers();
-    OO_CHECK(target->_calls.size() == 2);
+    EXPECT_TRUE(target->_calls.size() == 2);
 
     // An OOException from the call is swallowed; the target is not released.
     Call(target, &TestTarget::raise, nullptr, 0.0);
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     controller->fireDueTimers();
-    OO_CHECK(target->_calls.size() == 3 && target->_calls.back() == "raise");
-    OO_CHECK(target->weak_from_this().use_count() ==
+    EXPECT_TRUE(target->_calls.size() == 3 && target->_calls.back() == "raise");
+    EXPECT_TRUE(target->weak_from_this().use_count() ==
              3);  // the leaked +1 and the pending 60 s call's
 
     // A C++ deferred call shares the performs' queue -
@@ -583,17 +584,17 @@ OO_TEST(deferredCalls) {
     Call(cxxTarget, &TestTarget::record, nullptr, -1.0);
     oo::ScheduleDeferredCall(std::function<void()>(),
                            0.0);  // an empty call: nothing scheduled
-    OO_CHECK(kept.use_count() == 2);
+    EXPECT_TRUE(kept.use_count() == 2);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     controller->fireDueTimers();
-    OO_CHECK(order == std::vector<std::string>({"cxx"}));
-    OO_CHECK(cxxTarget->_calls.empty());
-    OO_CHECK(kept.use_count() == 1);
+    EXPECT_TRUE(order == std::vector<std::string>({"cxx"}));
+    EXPECT_TRUE(cxxTarget->_calls.empty());
+    EXPECT_TRUE(kept.use_count() == 1);
     controller->fireDueTimers();
-    OO_CHECK(cxxTarget->_calls == std::vector<std::string>({"nil"}));
+    EXPECT_TRUE(cxxTarget->_calls == std::vector<std::string>({"nil"}));
     controller->fireDueTimers();  // nothing due
-    OO_CHECK(order.size() == 1 && cxxTarget->_calls.size() == 1);
+    EXPECT_TRUE(order.size() == 1 && cxxTarget->_calls.size() == 1);
 
     std::shared_ptr<int> leaked = std::make_shared<int>(2);
     oo::ScheduleDeferredCall(
@@ -604,8 +605,8 @@ OO_TEST(deferredCalls) {
         0.0);
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     controller->fireDueTimers();
-    OO_CHECK(order.size() == 2 && order.back() == "raise");
-    OO_CHECK(leaked.use_count() == 2);  // the call was not destroyed
+    EXPECT_TRUE(order.size() == 2 && order.back() == "raise");
+    EXPECT_TRUE(leaked.use_count() == 2);  // the call was not destroyed
 
     oo::test::Release(cxxTarget);
 
@@ -617,32 +618,32 @@ OO_TEST(deferredCalls) {
 // The splash screen and window messages reach the
 // view; with no universe starting up there is no progress line; with no player
 // file nothing is loaded.
-OO_TEST(splashAndWindow) {
-  SetUp();
+TEST(GameController, splashAndWindow) {
+  ::SetUp();
   {
     GameController* controller = ::GameController::sharedController();
     TestView* view = static_cast<TestView*>(controller->gameView());
-    OO_CHECK(view != nullptr);
+    EXPECT_TRUE(view != nullptr);
     const int ends = view->_splashEnds, updates = view->_screenUpdates;
 
     controller->beginSplashScreen();  // a view exists: none is made
-    OO_CHECK(controller->gameView() == view);
+    EXPECT_TRUE(controller->gameView() == view);
     controller->endSplashScreen();
-    OO_CHECK(view->_splashEnds == ends + 1);
+    EXPECT_TRUE(view->_splashEnds == ends + 1);
     controller->windowDidResize();
-    OO_CHECK(view->_screenUpdates == updates + 1);
+    EXPECT_TRUE(view->_screenUpdates == updates + 1);
 
     controller->logProgress("progress");  // no universe doing start-up: nothing
     controller->setPlayerFileToLoad("none.txt");
     controller->loadPlayerIfRequired();  // no player file: nothing
-    OO_CHECK(!controller->finishedLaunching());
+    EXPECT_TRUE(!controller->finishedLaunching());
   }
 }
 
 // With no save-directory default (or one that does not exist), the
 // save directory is OO_SAVEDIR, made if missing.
-OO_TEST(saveDirectoryLookup) {
-  SetUp();
+TEST(GameController, saveDirectoryLookup) {
+  ::SetUp();
   {
     GameController* controller = ::GameController::sharedController();
     const stdfs::path saves =
@@ -650,23 +651,23 @@ OO_TEST(saveDirectoryLookup) {
         ("oo-test-gamecontroller-saves-" +
          std::to_string(static_cast<unsigned long>(::_getpid())));
     stdfs::remove_all(saves);
-    OO_CHECK(::_putenv_s("OO_SAVEDIR", saves.string().c_str()) == 0);
+    EXPECT_TRUE(::_putenv_s("OO_SAVEDIR", saves.string().c_str()) == 0);
 
     controller->setPlayerFileDirectory(std::nullopt);
     const std::optional<std::string> found = controller->playerFileDirectory();
-    OO_CHECK(found.has_value() && stdfs::is_directory(saves) &&
+    EXPECT_TRUE(found.has_value() && stdfs::is_directory(saves) &&
              stdfs::equivalent(oo::fs::pathFromUTF8(*found), saves));
-    OO_CHECK(controller->playerFileDirectory() == found);  // looked up once
+    EXPECT_TRUE(controller->playerFileDirectory() == found);  // looked up once
 
     oo::Defaults::standard().setObject(
         "save-directory", oo::PList(std::string("Z:/no/such/directory")));
     controller->setPlayerFileDirectory(std::nullopt);  // clears the default too
-    OO_CHECK(
+    EXPECT_TRUE(
         !oo::Defaults::standard().stringForKey("save-directory").has_value());
     oo::Defaults::standard().setObject(
         "save-directory", oo::PList(std::string("Z:/no/such/directory")));
     const std::optional<std::string> again = controller->playerFileDirectory();
-    OO_CHECK(again.has_value() &&
+    EXPECT_TRUE(again.has_value() &&
              stdfs::equivalent(oo::fs::pathFromUTF8(*again), saves));
 
     controller->setPlayerFileDirectory(std::nullopt);
@@ -676,35 +677,35 @@ OO_TEST(saveDirectoryLookup) {
 
 // The C++ controller: one shared object, and the members telling the view of
 // the controller and keeping the state they read.
-OO_TEST(cxxAPI) {
-  SetUp();
+TEST(GameController, cxxAPI) {
+  ::SetUp();
   {
     GameController* controller = GameController::sharedController();
-    OO_CHECK(controller != nullptr);
-    OO_CHECK(GameController::sharedController() == controller);
+    EXPECT_TRUE(controller != nullptr);
+    EXPECT_TRUE(GameController::sharedController() == controller);
 
     // The members tell the view of the controller.
     TestView* view = static_cast<TestView*>(controller->gameView());
     oo::test::Retain(view);  // only the controller holds it
     TestView* other = oo::test::NewRetained<TestView>();
     controller->setGameView(other);
-    OO_CHECK(other->_controller == controller);
-    OO_CHECK(controller->gameView() == other);
+    EXPECT_TRUE(other->_controller == controller);
+    EXPECT_TRUE(controller->gameView() == other);
     controller->setGameView(view);
-    OO_CHECK(other->weak_from_this().use_count() == 1);
+    EXPECT_TRUE(other->weak_from_this().use_count() == 1);
     oo::test::Release(other);
     oo::test::Release(view);
 
     controller->setMouseInteractionMode(oo::MouseInteractionMode::kUiScreenWithInteraction);
-    OO_CHECK(controller->mouseInteractionMode() ==
+    EXPECT_TRUE(controller->mouseInteractionMode() ==
              oo::MouseInteractionMode::kUiScreenWithInteraction);
     controller->setMouseInteractionModeForUIWithMouseInteraction(false);
-    OO_CHECK(controller->mouseInteractionMode() ==
+    EXPECT_TRUE(controller->mouseInteractionMode() ==
              oo::MouseInteractionMode::kUiScreenNoInteraction);
 
     // The state the members keep.
     controller->setPlayerFileToLoad("x.oolite-save");
-    OO_CHECK(GameControllerTestAccess::_playerFileToLoad(controller) ==
+    EXPECT_TRUE(GameControllerTestAccess::_playerFileToLoad(controller) ==
              std::optional<std::string>("x.oolite-save"));
     controller->setPlayerFileToLoad("x");
   }
@@ -714,20 +715,18 @@ OO_TEST(cxxAPI) {
 // this): it is read in full before the member changes, kept or cleared as for
 // any other name (found by ASan as a heap-use-after-free in the sanitized
 // game's launch).
-OO_TEST(playerFileToLoadFromItsOwnValue) {
-  SetUp();
+TEST(GameController, playerFileToLoadFromItsOwnValue) {
+  ::SetUp();
   {
     GameController* controller = ::GameController::sharedController();
     controller->setPlayerFileToLoad(
         "saves/a-much-longer-name-than-fits-inline.oolite-save");
     controller->setPlayerFileToLoad(
         *GameControllerTestAccess::_playerFileToLoad(controller));
-    OO_CHECK(controller->playerFileToLoad() ==
+    EXPECT_TRUE(controller->playerFileToLoad() ==
              std::optional<std::string>(
                  "saves/a-much-longer-name-than-fits-inline.oolite-save"));
     controller->setPlayerFileToLoad("x");
-    OO_CHECK(!controller->playerFileToLoad().has_value());
+    EXPECT_TRUE(!controller->playerFileToLoad().has_value());
   }
 }
-
-OO_TEST_MAIN()

@@ -19,12 +19,13 @@
 
 #include <cmath>
 
+#include <gtest/gtest.h>
+
 #include "Color.h"
 #include "GraphicsResetManager.h"
 #include "SkyDrawable.h"
 #include "Universe.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -108,56 +109,54 @@ bool ColorIs(oo::Color* color, float r, float g, float b, float a) {
 
 }  // namespace
 
-OO_TEST(made) {
+TEST(OOSkyDrawable, made) {
   {
-    SetUp();
+    ::SetUp();
     const unsigned setUpsBefore = sStarSetUps;
     const std::shared_ptr<oo::Drawable> sky =
         Sky(oo::Color::redColor().get(), oo::Color::blueColor().get(), 7, 5);
-    OO_CHECK(sky != nullptr);
-    OO_CHECK(sStarSetUps == setUpsBefore + 1);
-    OO_CHECK(ColorIs(sStarColor1.get(), 1, 0, 0, 1) &&
+    EXPECT_TRUE(sky != nullptr);
+    EXPECT_TRUE(sStarSetUps == setUpsBefore + 1);
+    EXPECT_TRUE(ColorIs(sStarColor1.get(), 1, 0, 0, 1) &&
              ColorIs(sStarColor2.get(), 0, 0, 1, 1));
-    OO_CHECK(StarCount(sky.get()) == 7);
-    OO_CHECK(NebulaCount(sky.get()) ==
+    EXPECT_TRUE(StarCount(sky.get()) == 7);
+    EXPECT_TRUE(NebulaCount(sky.get()) ==
              5);  // minimum detail: the nebulae were not set up
-    OO_CHECK(DisplayListName(sky.get()) == 0);
+    EXPECT_TRUE(DisplayListName(sky.get()) == 0);
   }
 }
 
-OO_TEST(parts) {
+TEST(OOSkyDrawable, parts) {
   {
-    SetUp();
+    ::SetUp();
     const std::shared_ptr<oo::Drawable> sky =
         Sky(oo::Color::whiteColor().get(), oo::Color::yellowColor().get(), 0, 0);
-    OO_CHECK(sky->hasOpaqueParts());
-    OO_CHECK(!sky->hasTranslucentParts());
-    OO_CHECK(std::isinf(sky->maxDrawDistance()) && sky->maxDrawDistance() > 0);
-    OO_CHECK(sky->collisionRadius() == 0);
+    EXPECT_TRUE(sky->hasOpaqueParts());
+    EXPECT_TRUE(!sky->hasTranslucentParts());
+    EXPECT_TRUE(std::isinf(sky->maxDrawDistance()) && sky->maxDrawDistance() > 0);
+    EXPECT_TRUE(sky->collisionRadius() == 0);
 #ifndef NDEBUG
-    OO_CHECK(sky->allTextures().empty());  // no quad sets
-    OO_CHECK(sky->totalSize() > 0);
+    EXPECT_TRUE(sky->allTextures().empty());  // no quad sets
+    EXPECT_TRUE(sky->totalSize() > 0);
 #endif
   }
 }
 
-OO_TEST(resetDeletesTheDisplayList) {
-  OO_CHECK(OOTestGLContext());
+TEST(OOSkyDrawable, resetDeletesTheDisplayList) {
+  EXPECT_TRUE(OOTestGLContext());
   {
-    SetUp();
+    ::SetUp();
     const std::shared_ptr<oo::Drawable> sky =
         Sky(oo::Color::redColor().get(), oo::Color::blueColor().get(), 0, 0);
     const GLuint list = glGenLists(1);
-    OO_CHECK(list != 0);
+    EXPECT_TRUE(list != 0);
     DisplayListName(sky.get()) = (GLint)list;
-    OO_CHECK(glIsList(list));
+    EXPECT_TRUE(glIsList(list));
 
     oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
-    OO_CHECK(DisplayListName(sky.get()) == 0);
-    OO_CHECK(!glIsList(list));
+    EXPECT_TRUE(DisplayListName(sky.get()) == 0);
+    EXPECT_TRUE(!glIsList(list));
   }
   // Released: no longer a client, so a reset does not reach it.
   oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
 }
-
-OO_TEST_MAIN()

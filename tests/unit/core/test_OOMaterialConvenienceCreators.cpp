@@ -21,6 +21,8 @@
 #include <typeinfo>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "MyOpenGLView.h"
 #include "BasicMaterial.h"
 #include "CombinedEmissionMapGenerator.h"
@@ -32,7 +34,6 @@
 #include "SingleTextureMaterial.h"
 #include "Texture.h"
 #include "oo_gl_test_context.hpp"
-#include "oo_test.hpp"
 #include "oofnd/String.hpp"
 
 // --- Stubs
@@ -384,60 +385,60 @@ bool IsExactly(const std::shared_ptr<oo::Material>& material) {
 
 }  // namespace
 
-OO_TEST(withoutShaders) {
-  if (!SetUp(false)) {
-    OO_CHECK(false);
+TEST(OOMaterialConvenienceCreators, withoutShaders) {
+  if (!::SetUp(false)) {
+    EXPECT_TRUE(false);
     return;
   }
   {
     // A diffuse map (named, or the material's own name): one texture.
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {})));
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {})));
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(
         Make("hull.png", {{"diffuse_map", oo::PList("d.png")}})));
     // With no name the single-texture initialiser fails (it needs one), so
     // basic.
-    OO_CHECK(IsExactly<oo::BasicMaterial>(
+    EXPECT_TRUE(IsExactly<oo::BasicMaterial>(
         Make(nullptr, {{"diffuse_map", oo::PList("d.png")}})));
     // No diffuse map: basic; one that fails to load: basic too.
-    OO_CHECK(IsExactly<oo::BasicMaterial>(Make(nullptr, {})));
-    OO_CHECK(IsExactly<oo::BasicMaterial>(Make("missing", {})));
+    EXPECT_TRUE(IsExactly<oo::BasicMaterial>(Make(nullptr, {})));
+    EXPECT_TRUE(IsExactly<oo::BasicMaterial>(Make("missing", {})));
     // Emission or illumination maps: multitexture, when the combiners are there
     // (they are).
-    OO_CHECK(IsExactly<oo::MultiTextureMaterial>(
+    EXPECT_TRUE(IsExactly<oo::MultiTextureMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}})));
-    OO_CHECK(IsExactly<oo::MultiTextureMaterial>(
+    EXPECT_TRUE(IsExactly<oo::MultiTextureMaterial>(
         Make("hull.png", {{"illumination_map", oo::PList("i.png")}})));
-    OO_CHECK(IsExactly<oo::MultiTextureMaterial>(Make(
+    EXPECT_TRUE(IsExactly<oo::MultiTextureMaterial>(Make(
         "hull.png", {{"emission_and_illumination_map", oo::PList("ei.png")}})));
     // A shader configuration without shaders: its fixed-function equivalent.
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(
         Make("hull.png", {{"vertex_shader", oo::PList("named")}})));
-    OO_CHECK(Make("Named", {})->name() == std::optional<std::string>("Named"));
+    EXPECT_TRUE(Make("Named", {})->name() == std::optional<std::string>("Named"));
   }
 }
 
-OO_TEST(namedShaders) {
-  if (!SetUp(true)) {
-    OO_CHECK(false);
+TEST(OOMaterialConvenienceCreators, namedShaders) {
+  if (!::SetUp(true)) {
+    EXPECT_TRUE(false);
     return;
   }
   {
     std::shared_ptr<oo::Material> m =
         Make("hull.png", {{"vertex_shader", oo::PList("named")},
                           {"fragment_shader", oo::PList("named")}});
-    OO_CHECK(IsExactly<oo::ShaderMaterial>(m));
-    OO_CHECK(gCacheWrites.empty());
+    EXPECT_TRUE(IsExactly<oo::ShaderMaterial>(m));
+    EXPECT_TRUE(gCacheWrites.empty());
 
     // A shader that fails, at low detail and not smoothed: the fixed-function
     // material.
     m = Make("hull.png", {{"vertex_shader", oo::PList("absent")}});
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(m));
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(m));
   }
 }
 
-OO_TEST(synthesizedShaders) {
-  if (!SetUp(true, oo::GraphicsDetail::kShaders)) {
-    OO_CHECK(false);
+TEST(OOMaterialConvenienceCreators, synthesizedShaders) {
+  if (!::SetUp(true, oo::GraphicsDetail::kShaders)) {
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -447,69 +448,69 @@ OO_TEST(synthesizedShaders) {
     std::shared_ptr<oo::Material> m =
         Make("hull.png", {{"emission_map", oo::PList("e.png")}}, false,
              std::string("ship"));
-    OO_CHECK(IsExactly<oo::ShaderMaterial>(m));
-    OO_CHECK(gCacheWrites.size() == 1 &&
+    EXPECT_TRUE(IsExactly<oo::ShaderMaterial>(m));
+    EXPECT_TRUE(gCacheWrites.size() == 1 &&
              gCacheWrites[0].starts_with(
                  "synthesized shader materials|ship/hull.png/"));
 
     const oo::PList& config = gCache.begin()->second;
-    OO_CHECK(config.get<std::string>("_oo_is_synthesized_config") == "true");
-    OO_CHECK(config.get<std::string>("vertex_shader") ==
+    EXPECT_TRUE(config.get<std::string>("_oo_is_synthesized_config") == "true");
+    EXPECT_TRUE(config.get<std::string>("vertex_shader") ==
              "oolite-tangent-space-vertex.vertex");
-    OO_CHECK(config.get<std::string>("fragment_shader") ==
+    EXPECT_TRUE(config.get<std::string>("fragment_shader") ==
              "oolite-default-shader.fragment");
-    OO_CHECK(config.get<std::string>("diffuse_map") == "hull.png");
+    EXPECT_TRUE(config.get<std::string>("diffuse_map") == "hull.png");
     const oo::PList* textures = config.find("textures");
-    OO_CHECK(textures != nullptr &&
+    EXPECT_TRUE(textures != nullptr &&
              *textures == oo::PList(oo::PList::Array{oo::PList("hull.png"),
                                                      oo::PList("e.png")}));
     const oo::PList* uniforms = config.find("uniforms");
-    OO_CHECK(uniforms != nullptr);
-    OO_CHECK(uniforms->find("uDiffuseMap") != nullptr &&
+    EXPECT_TRUE(uniforms != nullptr);
+    EXPECT_TRUE(uniforms->find("uDiffuseMap") != nullptr &&
              *uniforms->find("uDiffuseMap") ==
                  oo::PList(oo::PList::Dict{
                      {"type", oo::PList("texture")},
                      {"value", oo::PList::unsignedInteger(0)}}));
-    OO_CHECK(uniforms->find("uEmissionMap") != nullptr &&
+    EXPECT_TRUE(uniforms->find("uEmissionMap") != nullptr &&
              *uniforms->find("uEmissionMap") ==
                  oo::PList(oo::PList::Dict{
                      {"type", oo::PList("texture")},
                      {"value", oo::PList::unsignedInteger(1)}}));
-    OO_CHECK(uniforms->get<std::string>("uHullHeatLevel") == "hullHeatLevel" &&
+    EXPECT_TRUE(uniforms->get<std::string>("uHullHeatLevel") == "hullHeatLevel" &&
              uniforms->get<std::string>("uTime") == "timeElapsedSinceSpawn");
-    OO_CHECK(uniforms->get<std::string>("uFogColor") == "fogUniform");
+    EXPECT_TRUE(uniforms->get<std::string>("uFogColor") == "fogUniform");
     const oo::PList* macros = config.find("_oo_synthesized_material_macros");
-    OO_CHECK(macros != nullptr &&
+    EXPECT_TRUE(macros != nullptr &&
              macros->get<std::string>("OOSTD_DIFFUSE_MAP") == "1" &&
              macros->get<std::string>("OOSTD_EMISSION_MAP") == "1");
-    OO_CHECK(macros->get<std::string>("OOSTD_SPECULAR") ==
+    EXPECT_TRUE(macros->get<std::string>("OOSTD_SPECULAR") ==
              "1");  // the default exponent (10) and colour
 
     // Asked again: read from the cache, not written.
     gCacheWrites.clear();
-    OO_CHECK(IsExactly<oo::ShaderMaterial>(
+    EXPECT_TRUE(IsExactly<oo::ShaderMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}}, false,
              std::string("ship"))));
-    OO_CHECK(gCacheWrites.empty());
+    EXPECT_TRUE(gCacheWrites.empty());
 
     // No cache key: synthesized, not cached.
-    OO_CHECK(IsExactly<oo::ShaderMaterial>(Make("hull.png", {})) &&
+    EXPECT_TRUE(IsExactly<oo::ShaderMaterial>(Make("hull.png", {})) &&
              gCacheWrites.empty());
   }
 }
 
-OO_TEST(synthesisTriggersAndLoops) {
-  if (!SetUp(true, oo::GraphicsDetail::kMinimum)) {
-    OO_CHECK(false);
+TEST(OOMaterialConvenienceCreators, synthesisTriggersAndLoops) {
+  if (!::SetUp(true, oo::GraphicsDetail::kMinimum)) {
+    EXPECT_TRUE(false);
     return;
   }
   {
     // Low detail: fixed function, unless smoothed or a map needs the shader.
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {})));
-    OO_CHECK(IsExactly<oo::ShaderMaterial>(Make("hull.png", {}, true)));
-    OO_CHECK(IsExactly<oo::ShaderMaterial>(
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {})));
+    EXPECT_TRUE(IsExactly<oo::ShaderMaterial>(Make("hull.png", {}, true)));
+    EXPECT_TRUE(IsExactly<oo::ShaderMaterial>(
         Make("hull.png", {{"normal_map", oo::PList("n.png")}})));
-    OO_CHECK(IsExactly<oo::ShaderMaterial>(
+    EXPECT_TRUE(IsExactly<oo::ShaderMaterial>(
         Make("hull.png", {{"specular_map", oo::PList("s.png")}})));
 
     /*	The synthesized shaders fail to build: no loop, and the fixed-function
@@ -519,19 +520,19 @@ OO_TEST(synthesisTriggersAndLoops) {
        single-texture, not multitexture.
     */
     gShaderFiles.erase("oolite-default-shader.fragment");
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {}, true)));
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {}, true)));
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}}, true)));
     // Without the smoothing that forces the shader, at low detail, the emission
     // map still asks for the shader, and the result is the same.
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}})));
   }
 }
 
-OO_TEST(fromDictionaries) {
-  if (!SetUp(true)) {
-    OO_CHECK(false);
+TEST(OOMaterialConvenienceCreators, fromDictionaries) {
+  if (!::SetUp(true)) {
+    EXPECT_TRUE(false);
     return;
   }
   {
@@ -550,44 +551,44 @@ OO_TEST(fromDictionaries) {
 
     // With shaders, the shaders dictionary's entry; without, the materials
     // dictionary's.
-    OO_CHECK(IsExactly<oo::ShaderMaterial>(make("hull.png", materials, shaders)));
+    EXPECT_TRUE(IsExactly<oo::ShaderMaterial>(make("hull.png", materials, shaders)));
     gUniverse->_useShaders = false;
     std::shared_ptr<oo::Material> m = make("hull.png", materials, shaders);
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(m));
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(m));
     // Neither: an empty configuration if the texture of that name loads, else
     // nothing.
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(
         make("other.png", materials, shaders)));
-    OO_CHECK(make("missing", materials, shaders) == nullptr);
-    OO_CHECK(make("missing", oo::PList(), oo::PList()) == nullptr);
+    EXPECT_TRUE(make("missing", materials, shaders) == nullptr);
+    EXPECT_TRUE(make("missing", oo::PList(), oo::PList()) == nullptr);
   }
 }
 
 // --- The C++ static members
 // ------------------------------------------------------------------------
 
-OO_TEST(cxxStaticMembers) {
-  if (!SetUp(false)) {
-    OO_CHECK(false);
+TEST(OOMaterialConvenienceCreators, cxxStaticMembers) {
+  if (!::SetUp(false)) {
+    EXPECT_TRUE(false);
     return;
   }
   {
-    OO_CHECK(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {})));
-    OO_CHECK(IsExactly<oo::BasicMaterial>(Make(nullptr, {})));
-    OO_CHECK(IsExactly<oo::MultiTextureMaterial>(
+    EXPECT_TRUE(IsExactly<oo::SingleTextureMaterial>(Make("hull.png", {})));
+    EXPECT_TRUE(IsExactly<oo::BasicMaterial>(Make(nullptr, {})));
+    EXPECT_TRUE(IsExactly<oo::MultiTextureMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}})));
-    OO_CHECK(Make("Named", {})->name() == std::optional<std::string>("Named"));
+    EXPECT_TRUE(Make("Named", {})->name() == std::optional<std::string>("Named"));
   }
 
-  if (!SetUp(true, oo::GraphicsDetail::kShaders)) {
-    OO_CHECK(false);
+  if (!::SetUp(true, oo::GraphicsDetail::kShaders)) {
+    EXPECT_TRUE(false);
     return;
   }
   {
-    OO_CHECK(IsExactly<oo::ShaderMaterial>(
+    EXPECT_TRUE(IsExactly<oo::ShaderMaterial>(
         Make("hull.png", {{"emission_map", oo::PList("e.png")}}, false,
              std::string("ship"))));
-    OO_CHECK(gCacheWrites.size() == 1);
+    EXPECT_TRUE(gCacheWrites.size() == 1);
 
     const oo::PList materials = oo::PList(oo::PList::Dict{
         {"hull.png",
@@ -596,13 +597,11 @@ OO_TEST(cxxStaticMembers) {
         {"hull.png",
          oo::PList(oo::PList::Dict{{"vertex_shader", oo::PList("named")},
                                    {"fragment_shader", oo::PList("named")}})}});
-    OO_CHECK(IsExactly<oo::ShaderMaterial>(oo::Material::materialWithName(
+    EXPECT_TRUE(IsExactly<oo::ShaderMaterial>(oo::Material::materialWithName(
         std::string("hull.png"), std::nullopt, materials, shaders, oo::PList(),
         nullptr, false)));
-    OO_CHECK(oo::Material::materialWithName(std::string("missing"), std::nullopt,
+    EXPECT_TRUE(oo::Material::materialWithName(std::string("missing"), std::nullopt,
                                           oo::PList(), oo::PList(), oo::PList(),
                                           nullptr, false) == nullptr);
   }
 }
-
-OO_TEST_MAIN()

@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "GuiDisplayGen.h"
 #include "Color.h"
 #include "EntityHold.h"
@@ -30,7 +32,6 @@
 #include "ShipEntity.h"
 #include "StationEntity.h"
 #include "ValueType.h"
-#include "oo_test.hpp"
 
 // main.cpp defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -134,43 +135,41 @@ oo::ShaderUniformType TypeOf() {
 
 }  // namespace
 
-OO_TEST(shaderUniformTypes) {
-  OO_CHECK(TypeOf<bool>() == oo::kShaderUniformTypeChar);  // bool was "c"
-  OO_CHECK(TypeOf<signed char>() == oo::kShaderUniformTypeChar);
-  OO_CHECK(TypeOf<unsigned char>() == oo::kShaderUniformTypeUnsignedChar);
-  OO_CHECK(TypeOf<short>() == oo::kShaderUniformTypeShort);
-  OO_CHECK(TypeOf<unsigned short>() == oo::kShaderUniformTypeUnsignedShort);
-  OO_CHECK(TypeOf<int>() == oo::kShaderUniformTypeInt);
-  OO_CHECK(TypeOf<oo::CompassMode>() == oo::kShaderUniformTypeInt);
-  OO_CHECK(TypeOf<unsigned>() == oo::kShaderUniformTypeUnsignedInt);
-  OO_CHECK(TypeOf<long>() == oo::kShaderUniformTypeLong);
-  OO_CHECK(TypeOf<unsigned long>() == oo::kShaderUniformTypeUnsignedLong);
-  OO_CHECK(TypeOf<float>() == oo::kShaderUniformTypeFloat);
-  OO_CHECK(TypeOf<double>() == oo::kShaderUniformTypeDouble);
-  OO_CHECK(TypeOf<Vector>() == oo::kShaderUniformTypeVector);
-  OO_CHECK(TypeOf<HPVector>() == oo::kShaderUniformTypeHPVector);
-  OO_CHECK(TypeOf<Quaternion>() == oo::kShaderUniformTypeQuaternion);
-  OO_CHECK(TypeOf<oo::Matrix>() == oo::kShaderUniformTypeMatrix);
-  OO_CHECK(TypeOf<NSPoint>() == oo::kShaderUniformTypePoint);
-  OO_CHECK(TypeOf<oo::Color*>() == oo::kShaderUniformTypeColor);
-  OO_CHECK(TypeOf<oo::ObjectResult>() == oo::kShaderUniformTypeObject);
+TEST(ValueType, shaderUniformTypes) {
+  EXPECT_TRUE(TypeOf<bool>() == oo::kShaderUniformTypeChar);  // bool was "c"
+  EXPECT_TRUE(TypeOf<signed char>() == oo::kShaderUniformTypeChar);
+  EXPECT_TRUE(TypeOf<unsigned char>() == oo::kShaderUniformTypeUnsignedChar);
+  EXPECT_TRUE(TypeOf<short>() == oo::kShaderUniformTypeShort);
+  EXPECT_TRUE(TypeOf<unsigned short>() == oo::kShaderUniformTypeUnsignedShort);
+  EXPECT_TRUE(TypeOf<int>() == oo::kShaderUniformTypeInt);
+  EXPECT_TRUE(TypeOf<oo::CompassMode>() == oo::kShaderUniformTypeInt);
+  EXPECT_TRUE(TypeOf<unsigned>() == oo::kShaderUniformTypeUnsignedInt);
+  EXPECT_TRUE(TypeOf<long>() == oo::kShaderUniformTypeLong);
+  EXPECT_TRUE(TypeOf<unsigned long>() == oo::kShaderUniformTypeUnsignedLong);
+  EXPECT_TRUE(TypeOf<float>() == oo::kShaderUniformTypeFloat);
+  EXPECT_TRUE(TypeOf<double>() == oo::kShaderUniformTypeDouble);
+  EXPECT_TRUE(TypeOf<Vector>() == oo::kShaderUniformTypeVector);
+  EXPECT_TRUE(TypeOf<HPVector>() == oo::kShaderUniformTypeHPVector);
+  EXPECT_TRUE(TypeOf<Quaternion>() == oo::kShaderUniformTypeQuaternion);
+  EXPECT_TRUE(TypeOf<oo::Matrix>() == oo::kShaderUniformTypeMatrix);
+  EXPECT_TRUE(TypeOf<NSPoint>() == oo::kShaderUniformTypePoint);
+  EXPECT_TRUE(TypeOf<oo::Color*>() == oo::kShaderUniformTypeColor);
+  EXPECT_TRUE(TypeOf<oo::ObjectResult>() == oo::kShaderUniformTypeObject);
 
   // No template matched these encodings.
-  OO_CHECK(TypeOf<void>() == oo::kShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<long long>() == oo::kShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<unsigned long long>() == oo::kShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<NSRect>() == oo::kShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<BoundingBox>() == oo::kShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<oo::PList>() == oo::kShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<std::optional<std::string>>() ==
+  EXPECT_TRUE(TypeOf<void>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(TypeOf<long long>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(TypeOf<unsigned long long>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(TypeOf<NSRect>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(TypeOf<BoundingBox>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(TypeOf<oo::PList>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(TypeOf<std::optional<std::string>>() ==
            oo::kShaderUniformTypeInvalid);
-  OO_CHECK(TypeOf<ShipEntity*>() == oo::kShaderUniformTypeInvalid);
+  EXPECT_TRUE(TypeOf<ShipEntity*>() == oo::kShaderUniformTypeInvalid);
 }
 
-OO_TEST(valueTypeNames) {
-  OO_CHECK(oo::ValueTypeName(VT::kVoid) == "void");
-  OO_CHECK(oo::ValueTypeName(VT::kPList) == "oo::PList");
-  OO_CHECK(oo::ValueTypeName(VT::kOther) == "another pointer or class");
+TEST(ValueType, valueTypeNames) {
+  EXPECT_TRUE(oo::ValueTypeName(VT::kVoid) == "void");
+  EXPECT_TRUE(oo::ValueTypeName(VT::kPList) == "oo::PList");
+  EXPECT_TRUE(oo::ValueTypeName(VT::kOther) == "another pointer or class");
 }
-
-OO_TEST_MAIN()

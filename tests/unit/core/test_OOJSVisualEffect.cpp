@@ -19,6 +19,8 @@
 	with the members the binding calls and the same answers. Run: bash tests/run.sh unit
 */
 
+#include <gtest/gtest.h>
+
 #include "Foundation.h"
 #include "Color.h"
 #include "Maths.h"  // IWYU pragma: keep
@@ -265,7 +267,6 @@ std::vector<oo::EntityHold> OOJSVisualEffectSubEntitiesForScript(oo::VisualEffec
 #include "OOJSEngineCore.h"
 
 
-#include "oo_test.hpp"
 
 #include <cmath>
 
@@ -863,25 +864,25 @@ std::string EvalShown(const char *src, const char *expected)
 	if (result != expected)  std::printf("    %s\n    gave: %s\n", src, result.c_str());
 	return result;
 }
-#define OO_CHECK_EVAL(src, expected)  OO_CHECK_EQ(EvalShown(src, expected), expected)
+#define OO_CHECK_EVAL(src, expected)  EXPECT_EQ(EvalShown(src, expected), expected)
 
 }	// namespace
 
 
 // MARK: Tests -------------------------------------------------------------------------------------
 
-OO_TEST(registration)
+TEST(OOJSVisualEffect, registration)
 {
 	SetUpContext();
 	JSClassID effectClass = sEffect->oo_jsClassID();
-	OO_CHECK(effectClass != 0 && OOJSClassName(effectClass) != nullptr && std::strcmp(OOJSClassName(effectClass), "VisualEffect") == 0);
+	EXPECT_TRUE(effectClass != 0 && OOJSClassName(effectClass) != nullptr && std::strcmp(OOJSClassName(effectClass), "VisualEffect") == 0);
 	JSValue prototype = JS_GetClassProto(sContext, effectClass);
-	OO_CHECK(JS_IsObject(prototype));
+	EXPECT_TRUE(JS_IsObject(prototype));
 	JS_FreeValue(sContext, prototype);
-	OO_CHECK(OOJSIsSubclass(effectClass, sFakeEntityClassID));
-	OO_CHECK_EQ(sConverters[effectClass], 1);
-	OO_CHECK(sEffect->oo_jsClassName() == std::optional<std::string>("VisualEffect"));
-	OO_CHECK(sEffect->isVisibleToScripts());
+	EXPECT_TRUE(OOJSIsSubclass(effectClass, sFakeEntityClassID));
+	EXPECT_EQ(sConverters[effectClass], 1);
+	EXPECT_TRUE(sEffect->oo_jsClassName() == std::optional<std::string>("VisualEffect"));
+	EXPECT_TRUE(sEffect->isVisibleToScripts());
 	OO_CHECK_EVAL("typeof VisualEffect", "function");
 	OO_CHECK_EVAL("new VisualEffect()", "threw: unconstructable");
 	OO_CHECK_EVAL("Object.getPrototypeOf(VisualEffect.prototype) === Entity.prototype", "true");
@@ -889,23 +890,23 @@ OO_TEST(registration)
 }
 
 
-OO_TEST(subEntitiesForScript)
+TEST(OOJSVisualEffect, subEntitiesForScript)
 {
 	SetUpContext();
 	// None before the first subentity, then the visual-effect subentities, in
   // order.
-	OO_CHECK(OOJSVisualEffectSubEntitiesForScript(sEffectPart).empty());
+	EXPECT_TRUE(OOJSVisualEffectSubEntitiesForScript(sEffectPart).empty());
 	sEffectPart->_subs = std::vector<oo::EntityHold>{ oo::Hold(sSub->_cxxEntity.get()) };
 	std::vector<oo::EntityHold> subs = OOJSVisualEffectSubEntitiesForScript(sEffectPart);
-	OO_CHECK_EQ(subs.size(), 1u);
-	OO_CHECK(subs.size() == 1 && subs[0].get() == sSub->_cxxEntity.get());
+	EXPECT_EQ(subs.size(), 1u);
+	EXPECT_TRUE(subs.size() == 1 && subs[0].get() == sSub->_cxxEntity.get());
 	OO_CHECK_EVAL("effect.subEntities", "[OOVisualEffectEntity]");
 	sEffectPart->_subs = std::nullopt;
 	OO_CHECK_EVAL("effect.subEntities", "null");
 }
 
 
-OO_TEST(properties)
+TEST(OOJSVisualEffect, properties)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("effect.beaconCode", "null");
@@ -932,7 +933,7 @@ OO_TEST(properties)
 }
 
 
-OO_TEST(setters)
+TEST(OOJSVisualEffect, setters)
 {
 	SetUpContext();
 	OO_CHECK_EVAL("(function () { effect.beaconLabel = 'Other'; return effect.beaconLabel; })()", "Other");
@@ -956,40 +957,40 @@ OO_TEST(setters)
 }
 
 
-OO_TEST(beacons)
+TEST(OOJSVisualEffect, beacons)
 {
 	SetUpContext();
 	sGame->_added = sGame->_cleared = 0;
 	// Setting a code on a non-beacon registers it with the universe.
 	OO_CHECK_EVAL("(function () { effect.beaconCode = 'B'; return effect.beaconCode; })()", "B");
-	OO_CHECK_EQ(sGame->_added, 1);
+	EXPECT_EQ(sGame->_added, 1);
 	// Changing the code of a beacon does not.
 	OO_CHECK_EVAL("(function () { effect.beaconCode = 'C'; return effect.beaconCode; })()", "C");
-	OO_CHECK_EQ(sGame->_added, 1);
+	EXPECT_EQ(sGame->_added, 1);
 	// Clearing it clears the beacon, and resets the compass if the player was aiming at it.
 	sGame->_nextBeacon = sEffect;
 	sGame->_compassMode = -1;
 	OO_CHECK_EVAL("(function () { effect.beaconCode = ''; return effect.beaconCode; })()", "null");
-	OO_CHECK_EQ(sGame->_cleared, 1);
-	OO_CHECK_EQ(sGame->_compassMode, static_cast<int>(oo::CompassMode::kPlanet));
+	EXPECT_EQ(sGame->_cleared, 1);
+	EXPECT_EQ(sGame->_compassMode, static_cast<int>(oo::CompassMode::kPlanet));
 	// Clearing a non-beacon does nothing.
 	sGame->_compassMode = -1;
 	OO_CHECK_EVAL("(function () { effect.beaconCode = null; return effect.beaconCode; })()", "null");
-	OO_CHECK_EQ(sGame->_cleared, 1);
-	OO_CHECK_EQ(sGame->_compassMode, -1);
+	EXPECT_EQ(sGame->_cleared, 1);
+	EXPECT_EQ(sGame->_compassMode, -1);
 	sGame->_nextBeacon = nullptr;
 }
 
 
-OO_TEST(methods)
+TEST(OOJSVisualEffect, methods)
 {
 	SetUpContext();
 	// remove(): a subentity leaves its owner, anything else leaves the universe.
 	OO_CHECK_EVAL("sub.remove()", "undefined");
-	OO_CHECK(sEffectPart->_removedSub == sSub);
-	OO_CHECK_EQ(sEffectPart->_removed, 0);
+	EXPECT_TRUE(sEffectPart->_removedSub == sSub);
+	EXPECT_EQ(sEffectPart->_removed, 0);
 	OO_CHECK_EVAL("effect.remove()", "undefined");
-	OO_CHECK_EQ(sEffectPart->_removed, 1);
+	EXPECT_EQ(sEffectPart->_removed, 1);
 	// scale(): all three scales; a missing or non-positive factor is an error.
 	// It answers undefined (#768's native returns it; SpiderMonkey's left the callee in the result
 	// slot).
@@ -1004,11 +1005,11 @@ OO_TEST(methods)
 	OO_CHECK_EVAL("effect.restoreSubEntities()", "false");
 	sEffectPart->_subsAfterSetUp = 0;
 	sEffectPart->_subs = std::nullopt;
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
 }
 
 
-OO_TEST(materials)
+TEST(OOJSVisualEffect, materials)
 {
 	SetUpContext();
 	// No mesh: empty dictionaries.
@@ -1016,12 +1017,12 @@ OO_TEST(materials)
 	// setMaterials() makes a mesh from the effect's model with the new materials and the old shaders.
 	sMeshesMade = 0;
 	OO_CHECK_EVAL("effect.setMaterials({key: 'm'})", "true");
-	OO_CHECK_EQ(sMeshesMade, 1);
-	OO_CHECK_EQ(sMeshName, std::string("effect.dat"));
-	OO_CHECK(!sMeshCacheKey.has_value());
-	OO_CHECK(sMeshSmooth);
-	OO_CHECK(sMeshTarget == sEffect);
-	OO_CHECK_EQ(oo::DescriptionOf(sMeshMacros), oo::DescriptionOf(oo::PList(oo::PList::Dict{ { "OO_TEST", oo::PList(1.0) } })));
+	EXPECT_EQ(sMeshesMade, 1);
+	EXPECT_EQ(sMeshName, std::string("effect.dat"));
+	EXPECT_TRUE(!sMeshCacheKey.has_value());
+	EXPECT_TRUE(sMeshSmooth);
+	EXPECT_TRUE(sMeshTarget == sEffect);
+	EXPECT_EQ(oo::DescriptionOf(sMeshMacros), oo::DescriptionOf(oo::PList(oo::PList::Dict{ { "OO_TEST", oo::PList(1.0) } })));
 	OO_CHECK_EVAL("JSON.stringify(effect.getMaterials())", "{\"key\":\"m\"}");
 	OO_CHECK_EVAL("JSON.stringify(effect.getShaders())", "{}");
 	// setShaders() keeps the materials.
@@ -1033,26 +1034,26 @@ OO_TEST(materials)
 	// A second argument that is not an object is ignored, with a warning.
 	sLastWarning.clear();
 	OO_CHECK_EVAL("effect.setMaterials({key: 'm3'}, 5)", "true");
-	OO_CHECK_EQ(sLastWarning, std::string("VisualEffect.setMaterials: expected object as second parameter instead of '5'."));
+	EXPECT_EQ(sLastWarning, std::string("VisualEffect.setMaterials: expected object as second parameter instead of '5'."));
 	OO_CHECK_EVAL("JSON.stringify(effect.getShaders())", "{\"key\":\"s2\"}");
 	// Bad first arguments.
 	OO_CHECK_EVAL("effect.setMaterials(null)", "false");
-	OO_CHECK_EQ(sLastWarning, std::string("VisualEffect.setMaterials: expected object instead of 'null'."));
+	EXPECT_EQ(sLastWarning, std::string("VisualEffect.setMaterials: expected object instead of 'null'."));
 	OO_CHECK_EVAL("effect.setShaders('x')", "false");
-	OO_CHECK_EQ(sLastWarning, std::string("VisualEffect.setShaders: expected object instead of 'x'."));
+	EXPECT_EQ(sLastWarning, std::string("VisualEffect.setShaders: expected object instead of 'x'."));
 	OO_CHECK_EVAL("effect.setMaterials()", "threw: bad arguments: VisualEffect.setMaterials(0) - / parameter object");
 	// A mesh that cannot be made leaves the old one.
 	oo::PList::Dict effectInfo;
 	effectInfo["model"] = oo::PList(std::string("nomesh.dat"));
 	sEffectPart->_effectInfo = oo::PList(std::move(effectInfo));
 	OO_CHECK_EVAL("effect.setMaterials({key: 'm4'})", "false");
-	OO_CHECK(!sMeshSmooth);
+	EXPECT_TRUE(!sMeshSmooth);
 	OO_CHECK_EVAL("JSON.stringify(effect.getMaterials())", "{\"key\":\"m3\"}");
-	OO_CHECK_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
 }
 
 
-OO_TEST(otherObjects)
+TEST(OOJSVisualEffect, otherObjects)
 {
 	SetUpContext();
 	// A non-effect entity is refused without a JS error; a non-entity is an error.
@@ -1064,13 +1065,13 @@ OO_TEST(otherObjects)
 	gOOJSPlayerIfStale = sEffectPart;	// its C++ part
 	sEffectPart->_removed = 0;
 	OO_CHECK_EVAL("effect.remove()", "undefined");
-	OO_CHECK_EQ(sEffectPart->_removed, 0);
+	EXPECT_EQ(sEffectPart->_removed, 0);
 	OO_CHECK_EVAL("effect.getMaterials()", "undefined");
 	gOOJSPlayerIfStale = nullptr;
 }
 
 
-OO_TEST(nativeExceptions)
+TEST(OOJSVisualEffect, nativeExceptions)
 {
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the entity is a JS error,
@@ -1081,9 +1082,6 @@ OO_TEST(nativeExceptions)
 	OO_CHECK_EVAL("effect.hullHeatLevel", "threw: Native exception: cxx boom");
 	sEffectPart->_hullHeatLevel = 0.5f;
 	OO_CHECK_EVAL("effect.hullHeatLevel", "0.5");
-	OO_CHECK_EQ(sLimiterPauses, 0);
-	OO_CHECK_EQ(sProfileDepth, 0);
+	EXPECT_EQ(sLimiterPauses, 0);
+	EXPECT_EQ(sProfileDepth, 0);
 }
-
-
-OO_TEST_MAIN()

@@ -21,10 +21,11 @@
 #include <string>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "Description.h"
 #include "PListSchemaVerifier.h"
 #include "StringParsing.h"
-#include "oo_test.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/Exception.hpp"
 
@@ -45,7 +46,7 @@ namespace {
 
 oo::PList Parse(const char* text) {
   auto result = oo::parsePropertyList(text);
-  OO_CHECK(result.has_value());
+  EXPECT_TRUE(result.has_value());
   return result ? *result : oo::PList();
 }
 
@@ -135,44 +136,44 @@ oo::PList GoodShip() {
 
 }  // namespace
 
-OO_TEST(nullSchemaGivesNil) {
-  OO_CHECK(oo::PListSchemaVerifier::verifierWithSchema(oo::PList()) == nullptr);
+TEST(OOPListSchemaVerifier, nullSchemaGivesNil) {
+  EXPECT_TRUE(oo::PListSchemaVerifier::verifierWithSchema(oo::PList()) == nullptr);
   const std::shared_ptr<oo::PListSchemaVerifier> allocated =
       oo::PListSchemaVerifier::initWithSchema(oo::PList());
-  OO_CHECK(allocated == nullptr);
-  OO_CHECK(oo::PListSchemaVerifier::verifierWithSchema(Parse("string")) !=
+  EXPECT_TRUE(allocated == nullptr);
+  EXPECT_TRUE(oo::PListSchemaVerifier::verifierWithSchema(Parse("string")) !=
            nullptr);
 }
 
-OO_TEST(keepsItsDelegate) {
+TEST(OOPListSchemaVerifier, keepsItsDelegate) {
   {
     const std::shared_ptr<oo::PListSchemaVerifier> verifier =
         oo::PListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
-    OO_CHECK(verifier->delegate() == nullptr);
+    EXPECT_TRUE(verifier->delegate() == nullptr);
     const std::shared_ptr<TestSchemaDelegate> delegate =
         oo::makeShared<TestSchemaDelegate>();
     verifier->setDelegate(delegate.get());
-    OO_CHECK(verifier->delegate() == delegate.get());
-    OO_CHECK(delegate->weak_from_this().use_count() == 1);  // not retained
+    EXPECT_TRUE(verifier->delegate() == delegate.get());
+    EXPECT_TRUE(delegate->weak_from_this().use_count() == 1);  // not retained
     verifier->setDelegate(nullptr);
-    OO_CHECK(verifier->delegate() == nullptr);
+    EXPECT_TRUE(verifier->delegate() == nullptr);
   }
 }
 
-OO_TEST(acceptsAValidPropertyList) {
+TEST(OOPListSchemaVerifier, acceptsAValidPropertyList) {
   {
     const std::shared_ptr<oo::PListSchemaVerifier> verifier =
         oo::PListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
     const std::shared_ptr<TestSchemaDelegate> delegate =
         oo::makeShared<TestSchemaDelegate>();
     verifier->setDelegate(delegate.get());
-    OO_CHECK(verifier->verifyPropertyList(GoodShip(), "cobra"));
-    OO_CHECK(delegate->failures.empty());
-    OO_CHECK(delegate->verifiers.empty());
+    EXPECT_TRUE(verifier->verifyPropertyList(GoodShip(), "cobra"));
+    EXPECT_TRUE(delegate->failures.empty());
+    EXPECT_TRUE(delegate->verifiers.empty());
   }
 }
 
-OO_TEST(reportsEachFailureToTheDelegate) {
+TEST(OOPListSchemaVerifier, reportsEachFailureToTheDelegate) {
   {
     const std::shared_ptr<oo::PListSchemaVerifier> verifier =
         oo::PListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
@@ -187,7 +188,7 @@ OO_TEST(reportsEachFailureToTheDelegate) {
         oo::PList(oo::PList::Array{oo::PList("trader"), oo::PList(7)});
     ship["scale"] = oo::PList(3.0);
     ship["colour"] = oo::PList("red");
-    OO_CHECK(!verifier->verifyPropertyList(oo::PList(ship), "bad"));
+    EXPECT_TRUE(!verifier->verifyPropertyList(oo::PList(ship), "bad"));
 
     // As found before the conversion: count = -2 is not reported as a
     // positiveInteger failure (pinned, not judged).
@@ -203,13 +204,13 @@ OO_TEST(reportsEachFailureToTheDelegate) {
         "bad: 4 scale | Number is too large (3, maximum is 2). | {maximum = 2; "
         "minimum = \"0.5\"; type = float; }",
     };
-    OO_CHECK(delegate->failures == expected);
+    EXPECT_TRUE(delegate->failures == expected);
     for (oo::PListSchemaVerifier* seen : delegate->verifiers)
-      OO_CHECK(seen == verifier.get());
+      EXPECT_TRUE(seen == verifier.get());
   }
 }
 
-OO_TEST(stopsWhenTheDelegateSaysSo) {
+TEST(OOPListSchemaVerifier, stopsWhenTheDelegateSaysSo) {
   {
     const std::shared_ptr<oo::PListSchemaVerifier> verifier =
         oo::PListSchemaVerifier::verifierWithSchema(Parse(kShipSchema));
@@ -221,9 +222,9 @@ OO_TEST(stopsWhenTheDelegateSaysSo) {
     oo::PList::Dict ship = *GoodShip().getIf<oo::PList::Dict>();
     ship.erase("name");
     ship["count"] = oo::PList(-2);
-    OO_CHECK(!verifier->verifyPropertyList(oo::PList(ship), "stop"));
-    OO_CHECK_EQ(delegate->failures.size(), 1u);
-    OO_CHECK(
+    EXPECT_TRUE(!verifier->verifyPropertyList(oo::PList(ship), "stop"));
+    EXPECT_EQ(delegate->failures.size(), 1u);
+    EXPECT_TRUE(
         !delegate->failures.empty() &&
         delegate->failures[0] ==
             "stop: 10 root | Required keys (name) missing from dictionary. | "
@@ -235,7 +236,7 @@ OO_TEST(stopsWhenTheDelegateSaysSo) {
   }
 }
 
-OO_TEST(reportsABadSchema) {
+TEST(OOPListSchemaVerifier, reportsABadSchema) {
   {
     const std::shared_ptr<TestSchemaDelegate> delegate =
         oo::makeShared<TestSchemaDelegate>();
@@ -245,17 +246,17 @@ OO_TEST(reportsABadSchema) {
         oo::PListSchemaVerifier::verifierWithSchema(
             Parse("{ type = $nothing; }"));
     undefinedMacro->setDelegate(delegate.get());
-    OO_CHECK(!undefinedMacro->verifyPropertyList(oo::PList("x"), "macro"));
+    EXPECT_TRUE(!undefinedMacro->verifyPropertyList(oo::PList("x"), "macro"));
 
     const std::shared_ptr<oo::PListSchemaVerifier> unknownType =
         oo::PListSchemaVerifier::verifierWithSchema(Parse("{ type = gizmo; }"));
     unknownType->setDelegate(delegate.get());
-    OO_CHECK(!unknownType->verifyPropertyList(oo::PList("x"), "unknown"));
+    EXPECT_TRUE(!unknownType->verifyPropertyList(oo::PList("x"), "unknown"));
 
     const std::shared_ptr<oo::PListSchemaVerifier> noType =
         oo::PListSchemaVerifier::verifierWithSchema(Parse("{ minimum = 1; }"));
     noType->setDelegate(delegate.get());
-    OO_CHECK(!noType->verifyPropertyList(oo::PList("x"), "untyped"));
+    EXPECT_TRUE(!noType->verifyPropertyList(oo::PList("x"), "untyped"));
 
     const std::vector<std::string> expected = {
         "macro: 102 root | Bad schema: reference to undefined macro "
@@ -265,11 +266,11 @@ OO_TEST(reportsABadSchema) {
         "untyped: 101 root | Bad schema: invalid type specifier for path root "
         "(no type specified). | {minimum = 1; }",
     };
-    OO_CHECK(delegate->failures == expected);
+    EXPECT_TRUE(delegate->failures == expected);
   }
 }
 
-OO_TEST(asksTheDelegateAboutDelegatedTypes) {
+TEST(OOPListSchemaVerifier, asksTheDelegateAboutDelegatedTypes) {
   {
     const std::shared_ptr<oo::PListSchemaVerifier> verifier =
         oo::PListSchemaVerifier::verifierWithSchema(
@@ -283,18 +284,18 @@ OO_TEST(asksTheDelegateAboutDelegatedTypes) {
         oo::PList::Array{oo::PList("adder"), oo::PList("viper")});
 
     delegate->delegatedAnswer = true;
-    OO_CHECK(verifier->verifyPropertyList(list, "yes"));
+    EXPECT_TRUE(verifier->verifyPropertyList(list, "yes"));
 
     delegate->delegatedAnswer = false;
-    OO_CHECK(!verifier->verifyPropertyList(list, "no"));
+    EXPECT_TRUE(!verifier->verifyPropertyList(list, "no"));
 
     delegate->delegatedAnswer = true;
     delegate->delegatedError = true;
-    OO_CHECK(!verifier->verifyPropertyList(list, "error"));
+    EXPECT_TRUE(!verifier->verifyPropertyList(list, "error"));
 
     delegate->delegatedError = false;
     delegate->delegatedRaises = true;
-    OO_CHECK(!verifier->verifyPropertyList(list, "raises"));
+    EXPECT_TRUE(!verifier->verifyPropertyList(list, "raises"));
 
     const std::vector<std::string> expectedDelegated = {
         "yes shipKey [0] adder",    "yes shipKey [1] viper",
@@ -320,14 +321,14 @@ OO_TEST(asksTheDelegateAboutDelegatedTypes) {
         "\"shipKey\". | {baseType = string; key = shipKey; type = "
         "delegatedType; }",
     };
-    OO_CHECK(delegate->delegated == expectedDelegated);
-    OO_CHECK(delegate->failures == expectedFailures);
+    EXPECT_TRUE(delegate->delegated == expectedDelegated);
+    EXPECT_TRUE(delegate->failures == expectedFailures);
     for (oo::PListSchemaVerifier* seen : delegate->verifiers)
-      OO_CHECK(seen == verifier.get());
+      EXPECT_TRUE(seen == verifier.get());
   }
 }
 
-OO_TEST(aDelegateThatHandlesNothing) {
+TEST(OOPListSchemaVerifier, aDelegateThatHandlesNothing) {
   {
     // Delegated types pass; a failure stops verification.
     const std::shared_ptr<oo::PListSchemaVerifier> verifier =
@@ -335,40 +336,40 @@ OO_TEST(aDelegateThatHandlesNothing) {
             Parse("{ type = array; valueType = { type = delegatedType; "
                   "baseType = string; key = shipKey; }; }"));
     verifier->setDelegate(nullptr);
-    OO_CHECK(verifier->verifyPropertyList(
+    EXPECT_TRUE(verifier->verifyPropertyList(
         oo::PList(oo::PList::Array{oo::PList("adder"), oo::PList("viper")}),
         "mute"));
-    OO_CHECK(!verifier->verifyPropertyList(oo::PList(4), "mute"));
+    EXPECT_TRUE(!verifier->verifyPropertyList(oo::PList(4), "mute"));
 
     const std::shared_ptr<oo::PListSchemaVerifier> orphan =
         oo::PListSchemaVerifier::verifierWithSchema(Parse("string"));
-    OO_CHECK(!orphan->verifyPropertyList(oo::PList(4), "orphan"));
-    OO_CHECK(orphan->verifyPropertyList(oo::PList("four"), "orphan"));
+    EXPECT_TRUE(!orphan->verifyPropertyList(oo::PList(4), "orphan"));
+    EXPECT_TRUE(orphan->verifyPropertyList(oo::PList("four"), "orphan"));
   }
 }
 
-OO_TEST(describesKeyPaths) {
-  OO_CHECK_EQ(KeyPathText(oo::PList()), "root");
-  OO_CHECK_EQ(KeyPathText(oo::PList(oo::PList::Array{})), "root");
-  OO_CHECK_EQ(KeyPathText(oo::PList(oo::PList::Array{
+TEST(OOPListSchemaVerifier, describesKeyPaths) {
+  EXPECT_EQ(KeyPathText(oo::PList()), "root");
+  EXPECT_EQ(KeyPathText(oo::PList(oo::PList::Array{})), "root");
+  EXPECT_EQ(KeyPathText(oo::PList(oo::PList::Array{
                   oo::PList("adder-player"), oo::PList("custom_views"),
                   oo::PList(0), oo::PList("view_description")})),
               "adder-player.custom_views[0].view_description");
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       KeyPathText(oo::PList(oo::PList::Array{oo::PList(2), oo::PList("x")})),
       "[2].x");
-  OO_CHECK_EQ(KeyPathText(oo::PList(oo::PList::Array{oo::PList(1.5)})),
+  EXPECT_EQ(KeyPathText(oo::PList(oo::PList::Array{oo::PList(1.5)})),
               "[1.5]");
-  OO_CHECK_EQ(KeyPathText(oo::PList(oo::PList::Array{
+  EXPECT_EQ(KeyPathText(oo::PList(oo::PList::Array{
                   oo::PList("a"), oo::PList(oo::PList::Dict{})})),
               "(nullopt)");
-  OO_CHECK_EQ(KeyPathText(oo::PList("not an array")), "root");
+  EXPECT_EQ(KeyPathText(oo::PList("not an array")), "root");
 }
 
 // The C++ verifier hands its delegate itself.
-OO_TEST(delegateIsHandedTheVerifier) {
+TEST(OOPListSchemaVerifier, delegateIsHandedTheVerifier) {
   {
-    OO_CHECK(oo::PListSchemaVerifier::verifierWithSchema(oo::PList()).get() ==
+    EXPECT_TRUE(oo::PListSchemaVerifier::verifierWithSchema(oo::PList()).get() ==
              nullptr);
 
     std::shared_ptr<oo::PListSchemaVerifier> made =
@@ -376,17 +377,15 @@ OO_TEST(delegateIsHandedTheVerifier) {
     const std::shared_ptr<TestSchemaDelegate> delegate =
         oo::makeShared<TestSchemaDelegate>();
     made->setDelegate(delegate.get());
-    OO_CHECK(made->delegate() == delegate.get());
-    OO_CHECK(!made->verifyPropertyList(oo::PList(4), "made"));
-    OO_CHECK(made->verifyPropertyList(oo::PList("four"), "made"));
-    OO_CHECK_EQ(delegate->verifiers.size(), 1u);
-    OO_CHECK(!delegate->verifiers.empty() &&
+    EXPECT_TRUE(made->delegate() == delegate.get());
+    EXPECT_TRUE(!made->verifyPropertyList(oo::PList(4), "made"));
+    EXPECT_TRUE(made->verifyPropertyList(oo::PList("four"), "made"));
+    EXPECT_EQ(delegate->verifiers.size(), 1u);
+    EXPECT_TRUE(!delegate->verifiers.empty() &&
              delegate->verifiers[0] == made.get());
-    OO_CHECK_EQ(oo::PListSchemaVerifier::descriptionForKeyPath(
+    EXPECT_EQ(oo::PListSchemaVerifier::descriptionForKeyPath(
                     oo::PList(oo::PList::Array{oo::PList("a"), oo::PList(3)}))
                     .value_or(""),
                 "a[3]");
   }
 }
-
-OO_TEST_MAIN()
