@@ -55,12 +55,11 @@ MA 02110-1301, USA.
 int SaveEXRSnapshot(const char* outfilename, int width, int height,
                     const float* rgb);
 
+#include <cmath>
 #include <cstddef>
+#include <cstdio>
 #include <format>
 #include <vector>
-
-#include <cmath>
-#include <cstdio>
 
 #include "oofnd/Date.hpp"
 
