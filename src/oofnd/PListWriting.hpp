@@ -64,7 +64,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <expected>
 #include <format>
 #include <string>
@@ -547,7 +546,6 @@ inline bool isJSON5BareKey(std::string_view key) noexcept {
 // JSON5 string.
 inline void appendJSON5String(std::string& out, const std::string& s) {
   const std::u16string units = utf8ToUtf16(s);
-  char buf[8];
   out += '"';
   for (std::size_t i = 0; i < units.size(); ++i) {
     const char16_t u = units[i];
@@ -580,15 +578,13 @@ inline void appendJSON5String(std::string& out, const std::string& s) {
         break;
     }
     if (u < 0x20) {
-      std::snprintf(buf, sizeof buf, "\\x%02X", static_cast<unsigned>(u));
-      out += buf;
+      out += std::format("\\x{:02X}", static_cast<unsigned>(u));
     } else if (u >= 0xD800 && u <= 0xDBFF && i + 1 < units.size() &&
                units[i + 1] >= 0xDC00 && units[i + 1] <= 0xDFFF) {
       appendUtf16AsUtf8(out, &units[i], 2);
       ++i;
     } else if (u >= 0xD800 && u <= 0xDFFF) {
-      std::snprintf(buf, sizeof buf, "\\u%04X", static_cast<unsigned>(u));
-      out += buf;
+      out += std::format("\\u{:04X}", static_cast<unsigned>(u));
     } else {
       appendUtf16AsUtf8(out, &units[i], 1);
     }
@@ -651,11 +647,9 @@ class JSON5Writer {
         int mo, d, h, mi, s;
         breakDate(v.getIf<PList::Date>()->sinceReferenceDate, y, mo, d, h, mi,
                   s);
-        char buf[64];
-        std::snprintf(buf, sizeof buf,
-                      "{$date: \"%04ld-%02d-%02dT%02d:%02d:%02dZ\"}", y, mo, d,
-                      h, mi, s);
-        out += buf;
+        out +=
+            std::format("{{$date: \"{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z\"}}",
+                        y, mo, d, h, mi, s);
         return true;
       }
       case PList::Type::kArray: {
