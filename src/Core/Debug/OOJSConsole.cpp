@@ -107,12 +107,12 @@ static JSValue ConsoleGarbageCollect(OOJS_NATIVE_ARGS);
 #if DEBUG
 static JSValue ConsoleDumpHeap(OOJS_NATIVE_ARGS);
 #endif
+static JSValue ConsoleDisplayProjection(OOJS_NATIVE_ARGS);
+static JSValue ConsoleSetDisplayPreference(OOJS_NATIVE_ARGS);
 #if OOJS_PROFILE
 static JSValue ConsoleProfile(OOJS_NATIVE_ARGS);
 static JSValue ConsoleGetProfile(OOJS_NATIVE_ARGS);
 static JSValue ConsoleTrace(OOJS_NATIVE_ARGS);
-static JSValue ConsoleDisplayProjection(OOJS_NATIVE_ARGS);
-static JSValue ConsoleSetDisplayPreference(OOJS_NATIVE_ARGS);
 
 namespace {
 bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
