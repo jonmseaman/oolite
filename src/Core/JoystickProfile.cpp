@@ -26,7 +26,6 @@ MA 02110-1301, USA.
 
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>

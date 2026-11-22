@@ -40,7 +40,6 @@ SOFTWARE.
 #include <vector>
 
 #include "ConstToString.h"
-#include "FunctionAttributes.h"
 #include "Headless.h"
 #include "RegExpMatcher.h"
 #include "ResourceManager.h"

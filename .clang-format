@@ -1,1 +1,18 @@
 BasedOnStyle: Google
+Language: Cpp
+Standard: Latest      # C++23
+SeparateDefinitionBlocks: Always
+---
+# clang-format guesses the language of a .h file from its content, and guesses
+# Objective-C for any header that names Foundation's NSPoint, NSSize, NSRect or
+# NSRange (the aliases in oofnd/objc/FoundationTypes.h). Those headers are C++,
+# so undo Google's Objective-C differences. Once those four names are gone from
+# the headers, this section can go too.
+Language: ObjC
+BasedOnStyle: Google
+Standard: Latest
+ColumnLimit: 80
+AlwaysBreakBeforeMultilineStrings: true
+IncludeBlocks: Regroup
+DerivePointerAlignment: false
+SeparateDefinitionBlocks: Always
