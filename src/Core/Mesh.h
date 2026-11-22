@@ -120,18 +120,16 @@ namespace oo {
 
 class Mesh : public Drawable, public GraphicsResetClient {
  public:
-  static std::shared_ptr<Mesh> meshWithName(const std::string& name,
-                                            const std::optional<std::string>& cacheKey,
-                                            const oo::PList& materialDict,
-                                            const oo::PList& shadersDict, bool smooth,
-                                            const oo::PList& macros, Entity* object);
+  static std::shared_ptr<Mesh> meshWithName(
+      const std::string& name, const std::optional<std::string>& cacheKey,
+      const oo::PList& materialDict, const oo::PList& shadersDict, bool smooth,
+      const oo::PList& macros, Entity* object);
 
-  static std::shared_ptr<Mesh> meshWithName(const std::string& name,
-                                            const std::optional<std::string>& cacheKey,
-                                            const oo::PList& materialDict,
-                                            const oo::PList& shadersDict, bool smooth,
-                                            const oo::PList& macros, Entity* object, float factor,
-                                            bool cacheWriteable);
+  static std::shared_ptr<Mesh> meshWithName(
+      const std::string& name, const std::optional<std::string>& cacheKey,
+      const oo::PList& materialDict, const oo::PList& shadersDict, bool smooth,
+      const oo::PList& macros, Entity* object, float factor,
+      bool cacheWriteable);
 
   static std::shared_ptr<oo::Material> placeholderMaterial();
 
@@ -167,12 +165,16 @@ class Mesh : public Drawable, public GraphicsResetClient {
   size_t objectSize() const override { return sizeof *this; }
 #endif
 
-  std::shared_ptr<Octree> getOctree();  // -octree (the member octree is the octree)
+  std::shared_ptr<Octree>
+  getOctree();  // -octree (the member octree is the octree)
 
   // This needs a better name.
-  BoundingBox findBoundingBoxRelativeToPosition(Vector opv, Vector ri, Vector rj, Vector rk,
-                                                Vector position, Vector si, Vector sj, Vector sk);
-  BoundingBox findSubentityBoundingBoxWithPosition(Vector position, Matrix rotMatrix);
+  BoundingBox findBoundingBoxRelativeToPosition(Vector opv, Vector ri,
+                                                Vector rj, Vector rk,
+                                                Vector position, Vector si,
+                                                Vector sj, Vector sk);
+  BoundingBox findSubentityBoundingBoxWithPosition(Vector position,
+                                                   Matrix rotMatrix);
 
   std::shared_ptr<Mesh> meshRescaledBy(GLfloat scaleFactor);
 
@@ -194,8 +196,9 @@ class Mesh : public Drawable, public GraphicsResetClient {
   MeshVertexCount vertexCount = {};
   MeshFaceCount faceCount = {};
 
-  std::optional<std::string> baseFile;  // "No Model" until loaded; nullopt after -rescaleByFactor:
-                                        // (no octree cache)
+  std::optional<std::string>
+      baseFile;  // "No Model" until loaded; nullopt after -rescaleByFactor:
+                 // (no octree cache)
   std::optional<std::string> baseFileOctreeCacheRef;
   bool _cacheWriteable = {};
 
@@ -253,7 +256,8 @@ class Mesh : public Drawable, public GraphicsResetClient {
     Vector tangent;
   };
 
-  NormalAndTangent getNormal(MeshVertexCount v_index, MeshSmoothGroup smoothGroup);
+  NormalAndTangent getNormal(MeshVertexCount v_index,
+                             MeshSmoothGroup smoothGroup);
   void calculateBoundingVolumes();
   void rescaleByFactor(GLfloat factor);
 
@@ -264,7 +268,8 @@ class Mesh : public Drawable, public GraphicsResetClient {
 
   // Manage the set of refcounted buffers we need to hang on to.
   void setRetainedObject(oo::Data object, const std::string& key);
-  void* allocateBytesWithSize(size_t size, std::size_t count, const std::string& key);
+  void* allocateBytesWithSize(size_t size, std::size_t count,
+                              const std::string& key);
 
   // Allocate all per-vertex/per-face buffers.
   bool allocateVertexBuffersWithCount(std::size_t count);
@@ -276,12 +281,15 @@ class Mesh : public Drawable, public GraphicsResetClient {
 
  private:
   // Loading.
-  bool initWithName(const std::string& name, const std::optional<std::string>& cacheKey,
-                    const oo::PList& materialDict, const oo::PList& shadersDict, bool smooth,
-                    const oo::PList& macros, Entity* target, float scale, bool cacheWriteable);
+  bool initWithName(const std::string& name,
+                    const std::optional<std::string>& cacheKey,
+                    const oo::PList& materialDict, const oo::PList& shadersDict,
+                    bool smooth, const oo::PList& macros, Entity* target,
+                    float scale, bool cacheWriteable);
   bool loadData(const std::string& filename, float scale);
   oo::PList modelData();  // null: incomplete
-  bool setModelFromModelData(const oo::PList& dict, const std::string& fileName);
+  bool setModelFromModelData(const oo::PList& dict,
+                             const std::string& fileName);
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   void debugDrawNormals();

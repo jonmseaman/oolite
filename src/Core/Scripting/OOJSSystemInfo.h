@@ -52,7 +52,8 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
  public:
   // -initWithGalaxy:system:, as a factory: null for a galaxy or system out of
   // range.
-  static std::shared_ptr<OOSystemInfo> initWithGalaxy(oo::GalaxyID galaxy, oo::SystemID system);
+  static std::shared_ptr<OOSystemInfo> initWithGalaxy(oo::GalaxyID galaxy,
+                                                      oo::SystemID system);
 
   std::optional<std::string> descriptionComponents() const;
   std::optional<std::string> shortDescriptionComponents() const;
@@ -61,7 +62,8 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
   bool isEqual(const OOSystemInfo* other) const;  // null: not equal
   std::size_t hash() const;
 
-  oo::PList valueForKey(const std::optional<std::string>& key);  // null for none
+  oo::PList valueForKey(
+      const std::optional<std::string>& key);  // null for none
   void setValue(const oo::PList& value,
                 const std::string& key);  // a null value removes
 
@@ -92,11 +94,13 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
   oo::GalaxyID _galaxy;
   oo::SystemID _system;
   std::string _planetKey;
-  std::set<std::string> _nullAssignedKeys;  // See SystemInfoExoticSetProperty().
+  std::set<std::string>
+      _nullAssignedKeys;  // See SystemInfoExoticSetProperty().
 };
 
 void InitOOJSSystemInfo(JSContext* context, JSValueConst global);
 
 // Returns an owned value, or JS_NULL on failure (with a JS warning, but no
 // exception).
-JSValue GetJSSystemInfoForSystem(JSContext* context, oo::GalaxyID galaxy, oo::SystemID system);
+JSValue GetJSSystemInfoForSystem(JSContext* context, oo::GalaxyID galaxy,
+                                 oo::SystemID system);

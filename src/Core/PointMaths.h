@@ -6,11 +6,17 @@
 #include "oofnd/objc/FoundationTypes.h"  // NSPoint
 
 // Utilities for working with NSPoints as 2D vectors.
-inline NSPoint PtAdd(NSPoint a, NSPoint b) { return NSMakePoint(a.x + b.x, a.y + b.y); }
+inline NSPoint PtAdd(NSPoint a, NSPoint b) {
+  return NSMakePoint(a.x + b.x, a.y + b.y);
+}
 
-inline NSPoint PtSub(NSPoint a, NSPoint b) { return NSMakePoint(a.x - b.x, a.y - b.y); }
+inline NSPoint PtSub(NSPoint a, NSPoint b) {
+  return NSMakePoint(a.x - b.x, a.y - b.y);
+}
 
-inline NSPoint PtScale(NSPoint p, double scale) { return NSMakePoint(p.x * scale, p.y * scale); }
+inline NSPoint PtScale(NSPoint p, double scale) {
+  return NSMakePoint(p.x * scale, p.y * scale);
+}
 
 inline double PtDot(NSPoint a, NSPoint b) { return a.x * b.x + a.y * b.y; }
 
@@ -26,4 +32,6 @@ inline NSPoint PtRotACW(NSPoint p) {
   return NSMakePoint(-p.y, p.x);
 }
 
-inline NSPoint PtNormal(NSPoint p) { return PtScale(p, 1.0 / sqrt(PtDot(p, p))); }
+inline NSPoint PtNormal(NSPoint p) {
+  return PtScale(p, 1.0 / sqrt(PtDot(p, p)));
+}

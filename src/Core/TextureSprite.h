@@ -46,7 +46,8 @@ class TextureSprite : public oo::Object {
   // Null for a nil texture (-initWithTexture:... answered nil). The first is
   // the texture's original dimensions.
   static std::shared_ptr<TextureSprite> initWithTexture(oo::Texture* texture);
-  static std::shared_ptr<TextureSprite> initWithTexture(oo::Texture* texture, NSSize spriteSize);
+  static std::shared_ptr<TextureSprite> initWithTexture(oo::Texture* texture,
+                                                        NSSize spriteSize);
 
   NSSize getSize();  // -size (the ivar keeps its name)
 

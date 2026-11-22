@@ -285,10 +285,10 @@ class MyOpenGLView : public oo::Object {
 
   // What key a physical key gives: SDL's answer for the active layout, unless
   // a test has installed a recorded layout. The shipped game never replaces it.
-  std::function<SDL_Keycode(SDL_Scancode, SDL_Keymod)> keyLookup = [](SDL_Scancode scancode,
-                                                                      SDL_Keymod mod) {
-    return SDL_GetKeyFromScancode(scancode, mod, false);
-  };
+  std::function<SDL_Keycode(SDL_Scancode, SDL_Keymod)> keyLookup =
+      [](SDL_Scancode scancode, SDL_Keymod mod) {
+        return SDL_GetKeyFromScancode(scancode, mod, false);
+      };
   std::optional<std::string> getWindowCaption();
   void createWindowWithSize(NSSize size);
   void initSplashScreen();
@@ -351,21 +351,27 @@ class MyOpenGLView : public oo::Object {
   oo::OpenGLMatrixManager* getOpenGLMatrixManager();  // borrowed
 
   // Snapshots and debug image dumps.
-  bool snapShot(const std::optional<std::string>& filename);  // nullopt: auto-numbered "oolite-NNN"
+  bool snapShot(const std::optional<std::string>&
+                    filename);  // nullopt: auto-numbered "oolite-NNN"
 #ifndef NDEBUG
   // General image-dumping method.
-  void dumpRGBAToFileNamed(const std::string& name, uint8_t* bytes, std::size_t width,
-                           std::size_t height, std::size_t rowBytes);
-  void dumpRGBToFileNamed(const std::string& name, uint8_t* bytes, std::size_t width,
-                          std::size_t height, std::size_t rowBytes);
-  void dumpGrayToFileNamed(const std::string& name, uint8_t* bytes, std::size_t width,
-                           std::size_t height, std::size_t rowBytes);
-  void dumpGrayAlphaToFileNamed(const std::string& name, uint8_t* bytes, std::size_t width,
-                                std::size_t height, std::size_t rowBytes);
+  void dumpRGBAToFileNamed(const std::string& name, uint8_t* bytes,
+                           std::size_t width, std::size_t height,
+                           std::size_t rowBytes);
+  void dumpRGBToFileNamed(const std::string& name, uint8_t* bytes,
+                          std::size_t width, std::size_t height,
+                          std::size_t rowBytes);
+  void dumpGrayToFileNamed(const std::string& name, uint8_t* bytes,
+                           std::size_t width, std::size_t height,
+                           std::size_t rowBytes);
+  void dumpGrayAlphaToFileNamed(const std::string& name, uint8_t* bytes,
+                                std::size_t width, std::size_t height,
+                                std::size_t rowBytes);
   // A nullopt name skips that file.
   void dumpRGBAToRGBFileNamed(const std::optional<std::string>& rgbName,
-                              const std::optional<std::string>& grayName, uint8_t* bytes,
-                              std::size_t width, std::size_t height, std::size_t rowBytes);
+                              const std::optional<std::string>& grayName,
+                              uint8_t* bytes, std::size_t width,
+                              std::size_t height, std::size_t rowBytes);
 #endif
 
   // Input (MyOpenGLView+Input.cpp): the former (Input) category. A getter named
@@ -378,8 +384,8 @@ class MyOpenGLView : public oo::Object {
   std::optional<std::string> getTypedString();
   virtual void resetTypedString();
   void setTypedString(const std::string& value);
-  virtual void noteMouseInteractionModeChangedFrom(oo::MouseInteractionMode oldMode,
-                                                   oo::MouseInteractionMode newMode);
+  virtual void noteMouseInteractionModeChangedFrom(
+      oo::MouseInteractionMode oldMode, oo::MouseInteractionMode newMode);
   void pollControls();
   void setVirtualJoystick(double vmx, double vmy);
   NSPoint getVirtualJoystickPosition();
@@ -453,9 +459,10 @@ class MyOpenGLView : public oo::Object {
   bool _msaa = {};
 
   // Full screen sizes
-  std::vector<oo::PList> screenSizes;  // mode Dicts: Width, Height (integers), RefreshRate (a
-                                       // single real; the native mode's an integer 0)
-  int currentSize = {};                // we need an int!
+  std::vector<oo::PList>
+      screenSizes;       // mode Dicts: Width, Height (integers), RefreshRate (a
+                         // single real; the native mode's an integer 0)
+  int currentSize = {};  // we need an int!
   bool fullScreen = {};
 
   // Windowed mode

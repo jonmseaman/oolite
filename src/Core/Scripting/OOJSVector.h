@@ -43,27 +43,32 @@ JSValue JSVectorWithVector(JSContext* context, Vector vector) NONNULL_FUNC;
 JSValue JSVectorWithHPVector(JSContext* context, HPVector vector) NONNULL_FUNC;
 
 // *outValue is owned by the caller on success.
-bool VectorToJSValue(JSContext* context, Vector vector, JSValue* outValue) NONNULL_FUNC;
-bool HPVectorToJSValue(JSContext* context, HPVector vector, JSValue* outValue) NONNULL_FUNC;
-bool NSPointToVectorJSValue(JSContext* context, NSPoint point, JSValue* outValue) NONNULL_FUNC;
+bool VectorToJSValue(JSContext* context, Vector vector,
+                     JSValue* outValue) NONNULL_FUNC;
+bool HPVectorToJSValue(JSContext* context, HPVector vector,
+                       JSValue* outValue) NONNULL_FUNC;
+bool NSPointToVectorJSValue(JSContext* context, NSPoint point,
+                            JSValue* outValue) NONNULL_FUNC;
 // Empty where the value is not a vector (an object that JSObjectGetVector()
 // reads).
-std::optional<Vector> JSValueToVector(JSContext* context, JSValueConst value) NONNULL_FUNC;
-std::optional<HPVector> JSValueToHPVector(JSContext* context, JSValueConst value) NONNULL_FUNC;
+std::optional<Vector> JSValueToVector(JSContext* context,
+                                      JSValueConst value) NONNULL_FUNC;
+std::optional<HPVector> JSValueToHPVector(JSContext* context,
+                                          JSValueConst value) NONNULL_FUNC;
 
 /*	Given a JS Vector object, get the corresponding Vector struct. Given a
    JS Entity, get its position. Given a JS Array with exactly three elements,
         all of them numbers, treat them as [x, y, z]  components. For anything
         else, return NO. (Other implicit conversions may be added in future.)
 */
-bool JSObjectGetVector(JSContext* context, JSValueConst vectorObj, HPVector* outVector)
-    GCC_ATTR((nonnull(1, 3)));
+bool JSObjectGetVector(JSContext* context, JSValueConst vectorObj,
+                       HPVector* outVector) GCC_ATTR((nonnull(1, 3)));
 
 //	Set the value of a JS vector object.
-bool JSVectorSetVector(JSContext* context, JSValueConst vectorObj, Vector vector)
-    GCC_ATTR((nonnull(1)));
-bool JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj, HPVector vector)
-    GCC_ATTR((nonnull(1)));
+bool JSVectorSetVector(JSContext* context, JSValueConst vectorObj,
+                       Vector vector) GCC_ATTR((nonnull(1)));
+bool JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj,
+                         HPVector vector) GCC_ATTR((nonnull(1)));
 
 /*	VectorFromArgumentList()
 
@@ -79,12 +84,14 @@ bool JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj, HPVector ve
    form is no longer used.
 */
 bool VectorFromArgumentList(JSContext* context, const std::string& scriptClass,
-                            const std::string& function, int argc, JSValueConst* argv,
-                            HPVector* outVector, int* outConsumed) GCC_ATTR((nonnull(1, 6)));
+                            const std::string& function, int argc,
+                            JSValueConst* argv, HPVector* outVector,
+                            int* outConsumed) GCC_ATTR((nonnull(1, 6)));
 
 /*	VectorFromArgumentListNoError()
 
         Like VectorFromArgumentList(), but does not report an error on failure.
 */
-bool VectorFromArgumentListNoError(JSContext* context, int argc, JSValueConst* argv,
-                                   HPVector* outVector, int* outConsumed) GCC_ATTR((nonnull(1, 4)));
+bool VectorFromArgumentListNoError(JSContext* context, int argc,
+                                   JSValueConst* argv, HPVector* outVector,
+                                   int* outConsumed) GCC_ATTR((nonnull(1, 4)));

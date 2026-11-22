@@ -86,9 +86,10 @@ constexpr std::string_view OOEnumName(WORMHOLE_SCANINFO value) noexcept {
 namespace oo {
 
 struct WormholeTransit {
-  oo::EntityHold ship;                // the ship, its object held
-  double time;                        // arrival relative to the wormhole's arrival_time
-  std::optional<std::string> beacon;  // the ship's beacon code when it entered, if any
+  oo::EntityHold ship;  // the ship, its object held
+  double time;          // arrival relative to the wormhole's arrival_time
+  std::optional<std::string>
+      beacon;  // the ship's beacon code when it entered, if any
 };
 
 }  // namespace oo
@@ -130,12 +131,13 @@ class WormholeEntity : public Entity {
   double arrivalTime();           // Time at which the wormholes exit opens
   double estimatedArrivalTime();  // Time when wormhole should open (different
                                   // from arrival_time for misjump wormholes)
-  double travelTime();            // Time needed for a ship to traverse the wormhole
-  double scanTime();              // Time when wormhole was scanned
+  double travelTime();  // Time needed for a ship to traverse the wormhole
+  double scanTime();    // Time when wormhole was scanned
   void setScannedAt(double time);
-  void setContainsPlayer(bool val);  // mark the wormhole as waiting for player exit
+  void setContainsPlayer(
+      bool val);  // mark the wormhole as waiting for player exit
 
-  bool isScanned();              // True if the wormhole has been scanned by the player
+  bool isScanned();  // True if the wormhole has been scanned by the player
   WORMHOLE_SCANINFO scanInfo();  // Stage of scanning
   void setScanInfo(WORMHOLE_SCANINFO scanInfo);
 
@@ -162,19 +164,21 @@ class WormholeEntity : public Entity {
  private:
   std::string_view scanInfoString();
 
-  double expiry_time = {};             // Time when wormhole entrance closes
-  double travel_time = {};             // Time taken for a ship to traverse the wormhole
-  double arrival_time = {};            // Time when wormhole exit opens
-  double estimated_arrival_time = {};  // Time when wormhole should open (be different to
-                                       // arrival_time for misjump wormholes)
-  double scan_time = {};               // Time when wormhole was scanned
+  double expiry_time = {};   // Time when wormhole entrance closes
+  double travel_time = {};   // Time taken for a ship to traverse the wormhole
+  double arrival_time = {};  // Time when wormhole exit opens
+  double estimated_arrival_time =
+      {};                 // Time when wormhole should open (be different to
+                          // arrival_time for misjump wormholes)
+  double scan_time = {};  // Time when wormhole was scanned
 
   oo::SystemID origin = {};
   oo::SystemID destination = {};
 
-  NSPoint originCoords = {};       // May not equal our origin system if the wormhole
-                                   // opens from Interstellar Space
-  NSPoint destinationCoords = {};  // May not equal the destination system if the wormhole misjumps
+  NSPoint originCoords = {};  // May not equal our origin system if the wormhole
+                              // opens from Interstellar Space
+  NSPoint destinationCoords =
+      {};  // May not equal the destination system if the wormhole misjumps
 
   std::vector<oo::WormholeTransit> shipsInTransit;
 

@@ -55,8 +55,9 @@ namespace oo {
 
 class HUDBeaconIcon : public oo::Object {
  public:
-  virtual void drawHUDBeaconIconAt(NSPoint where, NSSize size, GLfloat alpha,
-                                   GLfloat z) = 0;  // -oo_drawHUDBeaconIconAt:size:alpha:z:
+  virtual void drawHUDBeaconIconAt(
+      NSPoint where, NSSize size, GLfloat alpha,
+      GLfloat z) = 0;  // -oo_drawHUDBeaconIconAt:size:alpha:z:
 };
 
 class PolygonSprite : public HUDBeaconIcon, public GraphicsResetClient {
@@ -67,9 +68,9 @@ class PolygonSprite : public HUDBeaconIcon, public GraphicsResetClient {
      as the vertices. Name is used for debugging only. Null where the data
      cannot be tesselated (-initWithDataArray:... answered nil).
   */
-  static std::shared_ptr<PolygonSprite> initWithDataArray(const oo::PList& dataArray,
-                                                          GLfloat outlineWidth,
-                                                          const std::string& name);
+  static std::shared_ptr<PolygonSprite> initWithDataArray(
+      const oo::PList& dataArray, GLfloat outlineWidth,
+      const std::string& name);
 
   void drawFilled();
   void drawOutline();
@@ -80,7 +81,8 @@ class PolygonSprite : public HUDBeaconIcon, public GraphicsResetClient {
 
   // OOHUDBeaconIcon: the drawing of the sprite's OOHUDBeaconIcon category
   // (HeadUpDisplay.cpp).
-  void drawHUDBeaconIconAt(NSPoint where, NSSize size, GLfloat alpha, GLfloat z) override;
+  void drawHUDBeaconIconAt(NSPoint where, NSSize size, GLfloat alpha,
+                           GLfloat z) override;
 
   // What "%@" prints: <OOPolygonSprite 0x...>, with
   // {components} in debug builds.
@@ -95,7 +97,8 @@ class PolygonSprite : public HUDBeaconIcon, public GraphicsResetClient {
   ~PolygonSprite() override;
 
  private:
-  PolygonSprite() = default;  // initWithDataArray() does -initWithDataArray:...'s work
+  PolygonSprite() =
+      default;  // initWithDataArray() does -initWithDataArray:...'s work
 
   void drawWithData(GLfloat* data, size_t count, GLuint* vbo);
   bool loadPolygons(const oo::PList& dataArray, float outlineWidth);

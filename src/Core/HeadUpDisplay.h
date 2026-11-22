@@ -250,11 +250,14 @@ inline constexpr double ONE_EIGHTH = 0.125;
 inline constexpr int MAX_ACCURACY_RANGE = 7000;  // 7.000km
 #define ACCURACY_PROBABILITY_DECREASE_FACTOR \
   0.000035f  // for every 1000km decrease by 3.5% the chance of high accuracy
-#define MIN_PROBABILITY_ACCURACY 0.35f  // floor value for probability of high accuracy is 35%
+#define MIN_PROBABILITY_ACCURACY \
+  0.35f  // floor value for probability of high accuracy is 35%
 
 inline constexpr int OO_RETICLE_COLOR_TARGET = 0;
-inline constexpr int OO_RETICLE_COLOR_TARGET_SENSITIVE = OO_RETICLE_COLOR_TARGET + 1;
-inline constexpr int OO_RETICLE_COLOR_WORMHOLE = OO_RETICLE_COLOR_TARGET_SENSITIVE + 1;
+inline constexpr int OO_RETICLE_COLOR_TARGET_SENSITIVE =
+    OO_RETICLE_COLOR_TARGET + 1;
+inline constexpr int OO_RETICLE_COLOR_WORMHOLE =
+    OO_RETICLE_COLOR_TARGET_SENSITIVE + 1;
 
 class Entity;
 class PlayerEntity;
@@ -270,12 +273,14 @@ class HeadUpDisplay : public oo::Object {
   ~HeadUpDisplay() override;
 
   // -initWithDictionary:inFile: (callers make the HUD, then run this).
-  void initWithDictionary(const oo::PList& hudinfo, const std::optional<std::string>& hudFileName);
+  void initWithDictionary(const oo::PList& hudinfo,
+                          const std::optional<std::string>& hudFileName);
 
   void resetGuis(const oo::PList& info);
 
   std::optional<std::string> getHudName();
-  void setHudName(const std::optional<std::string>& newHudName);  // nullopt is ignored, as nil was
+  void setHudName(const std::optional<std::string>&
+                      newHudName);  // nullopt is ignored, as nil was
 
   GLfloat scannerZoom();
   void setScannerZoom(GLfloat value);
@@ -292,7 +297,8 @@ class HeadUpDisplay : public oo::Object {
 
   bool getAllowBigGui();
 
-  bool hasHidden(const std::optional<std::string>& selectorName);  // nullopt (was nil): false
+  bool hasHidden(const std::optional<std::string>&
+                     selectorName);  // nullopt (was nil): false
   void setHiddenSelector(const std::string& selectorName, bool hide);
   void clearHiddenSelectors();
 
@@ -388,20 +394,23 @@ class HeadUpDisplay : public oo::Object {
   GLfloat lineWidth = {};
 
   std::optional<std::string> hudName;
-  std::optional<std::string> deferredHudName;  // Usually it will be nullopt. If engaged, then it
-                                               // means that we have a deferred HUD waiting to be
-                                               // drawn This may happen for example when a script
-                                               // handler attempts to switch HUD while it is being
-                                               // rendered. - Nikos 20110628
+  std::optional<std::string>
+      deferredHudName;  // Usually it will be nullopt. If engaged, then it
+                        // means that we have a deferred HUD waiting to be
+                        // drawn This may happen for example when a script
+                        // handler attempts to switch HUD while it is being
+                        // rendered. - Nikos 20110628
   bool hudUpdating = {};
 
   GLfloat overallAlpha = {};
 
-  bool reticleTargetSensitive = {};  // TO DO: Move this into the propertiesReticleTargetSensitive
-                                     // structure (Getafix - 2010/08/21)
-  oo::PList propertiesReticleTargetSensitive;  // isAccurate (bool),
-                                               // timeLastAccuracyProbabilityCalculation
-                                               // (double)
+  bool reticleTargetSensitive =
+      {};  // TO DO: Move this into the propertiesReticleTargetSensitive
+           // structure (Getafix - 2010/08/21)
+  oo::PList
+      propertiesReticleTargetSensitive;  // isAccurate (bool),
+                                         // timeLastAccuracyProbabilityCalculation
+                                         // (double)
 
   bool cloakIndicatorOnStatusLight = {};
 
@@ -443,24 +452,32 @@ class HeadUpDisplay : public oo::Object {
   void drawLegend(const oo::PList& info);
   void drawHUDItem(const oo::PList& info);
 
-  void drawMultiFunctionDisplay(const oo::PList& info, const std::string& text, std::size_t index);
+  void drawMultiFunctionDisplay(const oo::PList& info, const std::string& text,
+                                std::size_t index);
 
   void drawSurroundInternal(const oo::PList& info, const GLfloat color[4]);
 
-  void drawCompassPlanetBlipAt(Vector relativePosition, NSSize siz, GLfloat alpha);
-  void drawCompassStationBlipAt(Vector relativePosition, NSSize siz, GLfloat alpha);
+  void drawCompassPlanetBlipAt(Vector relativePosition, NSSize siz,
+                               GLfloat alpha);
+  void drawCompassStationBlipAt(Vector relativePosition, NSSize siz,
+                                GLfloat alpha);
   void drawCompassSunBlipAt(Vector relativePosition, NSSize siz, GLfloat alpha);
-  void drawCompassTargetBlipAt(Vector relativePosition, NSSize siz, GLfloat alpha);
-  void drawCompassBeaconBlipAt(Vector relativePosition, NSSize siz, GLfloat alpha);
+  void drawCompassTargetBlipAt(Vector relativePosition, NSSize siz,
+                               GLfloat alpha);
+  void drawCompassBeaconBlipAt(Vector relativePosition, NSSize siz,
+                               GLfloat alpha);
 
   void drawSecondaryTargetReticle(const oo::PList& info);
 
-  void drawIconForMissile(::ShipEntity* missile, bool selected, oo::MissileStatus status, int x,
-                          int y, GLfloat width, GLfloat height, GLfloat alpha);
-  void drawIconForEmptyPylonAtX(int x, int y, GLfloat width, GLfloat height, GLfloat alpha);
+  void drawIconForMissile(::ShipEntity* missile, bool selected,
+                          oo::MissileStatus status, int x, int y, GLfloat width,
+                          GLfloat height, GLfloat alpha);
+  void drawIconForEmptyPylonAtX(int x, int y, GLfloat width, GLfloat height,
+                                GLfloat alpha);
   void drawDirectionCue(const oo::PList& info);
 
-  oo::PList crosshairDefinitionForWeaponType(oo::WeaponType weapon);  // a null PList for none
+  oo::PList crosshairDefinitionForWeaponType(
+      oo::WeaponType weapon);  // a null PList for none
 
   void resetGui(::GuiDisplayGen* gui, const oo::PList& gui_info);
   void resetGuiPosition(::GuiDisplayGen* gui, const oo::PList& gui_info);
@@ -476,19 +493,21 @@ class HUDBeaconCodeIcon : public HUDBeaconIcon {
  public:
   explicit HUDBeaconCodeIcon(const std::string& text);  // -initWithText:
 
-  void drawHUDBeaconIconAt(NSPoint where, NSSize size, GLfloat alpha, GLfloat z) override;
+  void drawHUDBeaconIconAt(NSPoint where, NSSize size, GLfloat alpha,
+                           GLfloat z) override;
 
  private:
   std::string _text;
 };
 
 // Draws the sprite as a beacon icon (the sprite's OOHUDBeaconIcon interface).
-void PolygonSpriteDrawHUDBeaconIcon(PolygonSprite* sprite, NSPoint where, NSSize size,
-                                    GLfloat alpha, GLfloat z);
+void PolygonSpriteDrawHUDBeaconIcon(PolygonSprite* sprite, NSPoint where,
+                                    NSSize size, GLfloat alpha, GLfloat z);
 
-void DrawString(const std::string& text, GLfloat x, GLfloat y, GLfloat z, NSSize siz);
-void DrawStringAligned(const std::string& text, GLfloat x, GLfloat y, GLfloat z, NSSize siz,
-                       bool rightAlign);
+void DrawString(const std::string& text, GLfloat x, GLfloat y, GLfloat z,
+                NSSize siz);
+void DrawStringAligned(const std::string& text, GLfloat x, GLfloat y, GLfloat z,
+                       NSSize siz, bool rightAlign);
 
 /* OODrawString(Aligned) handles all the string drawing, but because
  * it does texture application and GL_QUADS beginning once per string
@@ -508,15 +527,18 @@ void DrawStringAligned(const std::string& text, GLfloat x, GLfloat y, GLfloat z,
  * - CIM
  */
 void StartDrawingStrings();
-void DrawStringQuadsAligned(const std::string& text, GLfloat x, GLfloat y, GLfloat z, NSSize siz,
-                            bool rightAlign);
+void DrawStringQuadsAligned(const std::string& text, GLfloat x, GLfloat y,
+                            GLfloat z, NSSize siz, bool rightAlign);
 void StopDrawingStrings();
 
-void DrawHilightedString(const std::string& text, GLfloat x, GLfloat y, GLfloat z, NSSize siz);
-void DrawPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y, GLfloat z, NSSize siz);
-void DrawHilightedPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y, GLfloat z,
-                             NSSize siz);
-NSRect RectFromString(const std::string& text, GLfloat x, GLfloat y, NSSize siz);
+void DrawHilightedString(const std::string& text, GLfloat x, GLfloat y,
+                         GLfloat z, NSSize siz);
+void DrawPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y, GLfloat z,
+                    NSSize siz);
+void DrawHilightedPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y,
+                             GLfloat z, NSSize siz);
+NSRect RectFromString(const std::string& text, GLfloat x, GLfloat y,
+                      NSSize siz);
 
 }  // namespace oo
 
@@ -540,15 +562,17 @@ class VisualEffectEntity;
         (HeadUpDisplay.cpp).
 */
 // UNIVERSE->getGui()->setGLColorFromSetting() (OODrawPlanetInfo()).
-void HeadUpDisplayUniverseGUISetGLColorFromSetting(const std::optional<std::string>& setting,
-                                                   oo::Color* defaultValue, GLfloat alpha);
+void HeadUpDisplayUniverseGUISetGLColorFromSetting(
+    const std::optional<std::string>& setting, oo::Color* defaultValue,
+    GLfloat alpha);
 // The player, entities and universe as the reticles and waypoints read them
 // (hudDrawReticleOnTarget(), hudDrawWaypoint(),
 // hudRotateViewpointForVirtualDepth()).
 oo::GUIScreenID HeadUpDisplayPlayerGuiScreen(PlayerEntity* player);
 HPVector HeadUpDisplayPlayerViewpointPosition(PlayerEntity* player);
 GLfloat HeadUpDisplayPlayerWeaponRange(PlayerEntity* player);
-std::optional<std::string> HeadUpDisplayPlayerDialTargetName(PlayerEntity* player);
+std::optional<std::string> HeadUpDisplayPlayerDialTargetName(
+    PlayerEntity* player);
 double HeadUpDisplayPlayerClockTimeAdjusted(PlayerEntity* player);
 Vector HeadUpDisplayPlayerCustomViewForwardVector(PlayerEntity* player);
 Vector HeadUpDisplayPlayerCustomViewUpVector(PlayerEntity* player);
@@ -563,13 +587,16 @@ Quaternion HeadUpDisplayEntityOrientation(Entity* entity);
 std::optional<std::string> HeadUpDisplayShipScanDescription(ShipEntity* ship);
 bool HeadUpDisplayShipIsCloaked(ShipEntity* ship);
 bool HeadUpDisplayShipIsHostileToPlayer(ShipEntity* ship);
-GLfloat* HeadUpDisplayShipScannerDisplayColor(ShipEntity* ship, bool isHostile, bool flash);
-GLfloat* HeadUpDisplayVisualEffectScannerDisplayColor(oo::VisualEffectEntity* vis, bool flash);
+GLfloat* HeadUpDisplayShipScannerDisplayColor(ShipEntity* ship, bool isHostile,
+                                              bool flash);
+GLfloat* HeadUpDisplayVisualEffectScannerDisplayColor(
+    oo::VisualEffectEntity* vis, bool flash);
 WORMHOLE_SCANINFO HeadUpDisplayWormholeScanInfo(WormholeEntity* wormhole);
 double HeadUpDisplayWormholeEstimatedArrivalTime(WormholeEntity* wormhole);
 double HeadUpDisplayWormholeExpiryTime(WormholeEntity* wormhole);
 oo::TimeAbsolute HeadUpDisplayUniverseGetTime();
-const oo::PList* HeadUpDisplayUniverseDescriptions();  // MissileIconDefinition()
+const oo::PList*
+HeadUpDisplayUniverseDescriptions();  // MissileIconDefinition()
 oo::ViewID HeadUpDisplayUniverseViewDirection();
 Entity* HeadUpDisplayUniverseFirstEntityTargetedByPlayer();
 Entity* HeadUpDisplayUniverseFirstEntityTargetedByPlayerPrecisely();

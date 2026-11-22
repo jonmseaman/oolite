@@ -83,12 +83,14 @@ class SystemDescriptionEntry : public oo::Object {
   SystemDescriptionEntry();  // -init
 
   // value / result null = nil (setting nil removes the property)
-  void setProperty(const std::string& property, SystemLayer layer, const oo::PList& value);
+  void setProperty(const std::string& property, SystemLayer layer,
+                   const oo::PList& value);
   oo::PList getProperty(const std::string& property, SystemLayer layer);
 
  private:
   // null = nil (validation failed and could not be recovered)
-  oo::PList validateProperty(const std::string& property, const oo::PList& value);
+  oo::PList validateProperty(const std::string& property,
+                             const oo::PList& value);
 
   oo::PList layers[OO_SYSTEM_LAYERS] = {};  // each a Dict: property -> value
 };
@@ -120,8 +122,9 @@ class SystemDescriptionManager : public oo::Object {
 
   // this is used by Javascript property setting (manifest nullopt = nil: the
   // change is not saved)
-  void setProperty(const std::string& property, const std::string& key, SystemLayer layer,
-                   const oo::PList& value, const std::optional<std::string>& manifest);
+  void setProperty(const std::string& property, const std::string& key,
+                   SystemLayer layer, const oo::PList& value,
+                   const std::optional<std::string>& manifest);
 
   // The save game's scripted overrides: property lists (Dicts) whose values are
   // the properties' values (any objects: Object nodes where they are not
@@ -139,8 +142,9 @@ class SystemDescriptionManager : public oo::Object {
   oo::PList getProperty(const std::string& property, SystemID s, GalaxyID g);
 
   NSPoint getCoordinatesForSystem(SystemID s, GalaxyID g);
-  std::vector<SystemID> getNeighbourIDsForSystem(SystemID s,
-                                                 GalaxyID g);  // empty for an invalid system
+  std::vector<SystemID> getNeighbourIDsForSystem(
+      SystemID s,
+      GalaxyID g);  // empty for an invalid system
 
   Random_Seed getRandomSeedForCurrentSystem();
   Random_Seed getRandomSeedForSystem(SystemID s, GalaxyID g);
@@ -152,27 +156,32 @@ class SystemDescriptionManager : public oo::Object {
   oo::PList calculatePropertiesForSystemKey(const std::string& key);
   void updateCacheEntry(std::size_t i);
   void updateCacheEntry(std::size_t i, const std::string& property);
-  oo::PList getProperty(const std::string& property, const std::string& key, bool universal);
+  oo::PList getProperty(const std::string& property, const std::string& key,
+                        bool universal);
   /* some planetinfo properties have two ways to specify
    * need to get the one with higher layer (if they're both at the same layer,
    * go with property1) */
-  oo::PList getProperty(const std::string& property1, const std::string& property2,
-                        const std::string& key, bool universal);
+  oo::PList getProperty(const std::string& property1,
+                        const std::string& property2, const std::string& key,
+                        bool universal);
 
   // value null = nil (removes the saved change); manifest nullopt = nil
   // (cancels saving it)
-  void saveScriptedChangeToProperty(const std::string& property, const std::string& key,
-                                    SystemLayer layer, const oo::PList& value,
+  void saveScriptedChangeToProperty(const std::string& property,
+                                    const std::string& key, SystemLayer layer,
+                                    const oo::PList& value,
                                     const std::optional<std::string>& manifest);
 
   oo::PList universalProperties = {};  // a Dict: property -> value
   std::shared_ptr<SystemDescriptionEntry> interstellarSpace = {};
-  std::map<std::string, std::shared_ptr<SystemDescriptionEntry>, std::less<>> systemDescriptions =
-      {};
-  oo::PList propertyCache[OO_SYSTEM_CACHE_LENGTH] = {};  // each a Dict: property -> value
+  std::map<std::string, std::shared_ptr<SystemDescriptionEntry>, std::less<>>
+      systemDescriptions = {};
+  oo::PList propertyCache[OO_SYSTEM_CACHE_LENGTH] =
+      {};  // each a Dict: property -> value
   std::set<std::string> propertiesInUse = {};
   NSPoint coordinatesCache[OO_SYSTEM_CACHE_LENGTH] = {};
-  std::vector<SystemID> neighbourCache[OO_SYSTEM_CACHE_LENGTH] = {};  // system numbers
+  std::vector<SystemID> neighbourCache[OO_SYSTEM_CACHE_LENGTH] =
+      {};                          // system numbers
   oo::PList scriptedChanges = {};  // a Dict: joined override key -> value
 };
 
