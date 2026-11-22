@@ -28,7 +28,6 @@ SOFTWARE.
 #include "ProbabilisticTextureManager.h"
 
 #include <cstddef>
-#include <cstdint>
 #include <format>
 #include <memory>
 #include <optional>

@@ -28,7 +28,6 @@ MA 02110-1301, USA.
 
 #include <algorithm>
 #include <array>
-#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <expected>
@@ -89,7 +88,6 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "WormholeEntity.h"
 #include "oofnd/AutoreleaseScope.hpp"
-#include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Exception.hpp"
 #include "oofnd/FileSystem.hpp"
@@ -2572,8 +2570,6 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
   script_time_check = SCRIPT_TIMER_INTERVAL;
   script_time_interval = SCRIPT_TIMER_INTERVAL;
 
-  // The local hour, minute and second of now, as the calendar date gave them
-  // (oofnd/Date.hpp).
   // The time of day from the game's clock: the local time for the windowed
   // game, the seed's for a headless one.
   const std::int64_t secondOfDay =

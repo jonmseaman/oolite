@@ -28,7 +28,7 @@ MA 02110-1301, USA.
 #include <cstdint>
 #include <format>
 #include <optional>
-#include <set>
+#include <set>  // IWYU pragma: keep: used only with DEBUG_GRAPHVIZ
 #include <string>
 #include <string_view>
 #include <vector>
