@@ -33,6 +33,7 @@ tests/__pycache__
 # What meson fetches into third_party/ (its subproject_dir) for a wrap: the extracted source and
 # the download cache. The wrap files, packagefiles/ and the copied libraries are tracked.
 /third_party/quickjs-*/
+/third_party/googletest-*/
 /third_party/packagecache/
 /third_party/.wraplock
 # A stray fetch into meson's default subproject_dir; the build uses third_party/.

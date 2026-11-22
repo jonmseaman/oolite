@@ -81,3 +81,15 @@ modules:
         sha256: 559bc4c420475e55c7ab4510adbc562f55d7524d75e8e89d79ce4bb02f5687d9
         dest: third_party/packagecache
         dest-filename: quickjs-ng-0.17.0.tar.gz
+      # Google Test (third_party/gtest.wrap), for the C++ component tests the build runs in the
+      # sandbox: its tarball and WrapDB's meson overlay, both read from the packagecache.
+      - type: file
+        url: https://github.com/google/googletest/archive/refs/tags/v1.17.0.tar.gz
+        sha256: 65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c
+        dest: third_party/packagecache
+        dest-filename: googletest-1.17.0.tar.gz
+      - type: file
+        url: https://wrapdb.mesonbuild.com/v2/gtest_1.17.0-4/get_patch
+        sha256: 3abf7662d09db706453a5b064a1e914678c74b9d9b0b19382747ca561d0d8750
+        dest: third_party/packagecache
+        dest-filename: gtest_1.17.0-4_patch.zip

@@ -13,8 +13,9 @@ project(
     default_options: [
         'optimization=2',
         # Always use the bundled, patched QuickJS-ng (see third_party/quickjs-ng.wrap):
-        # an unpatched system build breaks OXPs that rely on SpiderMonkey behaviour.
-        'force_fallback_for=quickjs-ng',
+        # an unpatched system build breaks OXPs that rely on SpiderMonkey behaviour. Google Test
+        # (third_party/gtest.wrap) is always the pinned one too, never a system package.
+        'force_fallback_for=quickjs-ng,gtest',
     ],
 )
 
@@ -127,6 +128,16 @@ if host_machine.system() == 'windows'
     test_env = environment()
     test_env.prepend('PATH', toolchain_bin)
     add_test_setup('default', env: test_env, is_default: true)
+endif
+
+# Every C++ test program is written on Google Test (third_party/gtest.wrap). It is fetched and
+# built only where tests are: a deployment build without deployment_unit_tests never needs it.
+oo_tests_built = not get_option('deployment_release') or get_option('deployment_unit_tests')
+if oo_tests_built
+    # Static, so a test program needs no DLL beside it on Windows.
+    gtest_dep = dependency('gtest', main: false, default_options: ['default_library=static'])
+    # The shared main and headers (oo_gtest_main_dep, oo_gtest_dep); meson test --suite gtest.
+    subdir('tests/support')
 endif
 
 if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows'
