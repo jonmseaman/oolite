@@ -296,12 +296,12 @@ OO_TEST(copies) {
     if (mesh == nullptr) return;
 
     // Immutable seen from outside: a copy is the mesh itself, retained.
-    const std::shared_ptr<oo::Mesh> copy = mesh->copyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> copy = mesh->copyWithZone();
     OO_CHECK(copy == mesh);
 
     // A mutable copy is a new mesh with the same model, sharing nothing it can
     // change.
-    const std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone();
     OO_CHECK(mutableCopy != nullptr);
     OO_CHECK(mutableCopy != mesh);
     OO_CHECK(dynamic_cast<oo::Mesh*>(mutableCopy.get()) != nullptr);
@@ -340,7 +340,7 @@ OO_TEST(graphicsResetAfterRelease) {
   {
     const std::shared_ptr<oo::Mesh> mesh = Mesh("tetra.dat");
     OO_CHECK(mesh != nullptr);
-    std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone(nullptr);
+    std::shared_ptr<oo::Mesh> mutableCopy = mesh->mutableCopyWithZone();
     // Both are registered: the reset rebinds their materials.
     oo::GraphicsResetManager::sharedManager()->resetGraphicsState();
     OO_CHECK_EQ(mesh->getVertexCount(), 4u);
@@ -421,7 +421,7 @@ OO_TEST(facadeContract) {
     OO_CHECK(cxxMesh->descriptionComponents() ==
              std::optional<std::string>("\"tetra.dat\", 4 vertices, 4 faces, "
                                         "radius: 10 m normals: per-face"));
-    OO_CHECK(cxxMesh->copyWithZone(nullptr).get() ==
+    OO_CHECK(cxxMesh->copyWithZone().get() ==
              cxxMesh);  // a copy is the mesh itself
 
     // Through the root's C++ pointer, the overrides answer (the bounding box is
@@ -512,7 +512,7 @@ OO_TEST(rendering) {
     OO_CHECK(Near(mesh->collisionRadius(), 10.0));
 
     // A mutable copy draws on its own lists.
-    const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone();
     copy->renderOpaqueParts();
     OO_CHECK_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
   }
@@ -570,7 +570,7 @@ OO_TEST(loadingMembers) {
     OO_CHECK_EQ(mesh->modelName().value_or("<none>"), "tetra.dat");
 
     // A mutable copy shares the buffers and is a new mesh.
-    const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone(nullptr);
+    const std::shared_ptr<oo::Mesh> copy = mesh->mutableCopyWithZone();
     OO_CHECK(copy.get() != nullptr && copy.get() != mesh.get());
     if (copy.get() == nullptr) return;
     OO_CHECK(copy->_vertices == mesh->_vertices);
