@@ -33,7 +33,6 @@ MA 02110-1301, USA.
 #if OO_OXP_VERIFIER_ENABLED
 
 #include "FileScannerVerifierStage.h"
-#include "Texture.h"
 #include "TextureLoader.h"
 #include "oofnd/Log.hpp"
 

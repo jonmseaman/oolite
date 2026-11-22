@@ -25,7 +25,6 @@ SOFTWARE.
 
 */
 
-#include <cstdint>
 #include <memory>
 
 #include "OpenGLExtensionManager.h"  // IWYU pragma: keep: defines OO_SHADERS, which guards this file

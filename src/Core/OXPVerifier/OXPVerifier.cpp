@@ -57,6 +57,9 @@ SOFTWARE.
 #pragma pop_macro("interface")
 
 #include <tchar.h>
+#elif OOLITE_LINUX
+#include <fstream>
+#include <iostream>
 #endif
 
 #include "AIStateMachineVerifierStage.h"
@@ -81,7 +84,6 @@ SOFTWARE.
 #include "oofnd/Log.hpp"
 #include "oofnd/PListFile.hpp"
 #include "oofnd/PListGet.hpp"
-#include "oofnd/PListParsing.hpp"
 #include "oofnd/Process.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
@@ -813,16 +815,13 @@ void OpenLogFile() {
                    logPath.has_value() ? logPath->c_str() : nullptr, nullptr,
                    nullptr, SW_SHOWNORMAL);
 #elif OOLITE_LINUX
-      // MKW - needed to suppress 'ignoring return value' warning for system()
-      // call
-      //		int ret;
-      // CIM - and now the compiler complains about that too... casting return
-      // value to void seems to keep it quiet for now
-      // Nothing to do here, since we dump to stdout instead of to a file.
-      // OOLogOutputHandlerStopLoggingToStdout();
-      (void)system(std::format("cat \"{}\"",
-                               oo::LogHandlerGetLogPath().value_or("(null)"))
-                       .c_str());
+      // The log, copied to stdout as `cat` printed it: there is no
+      // application to open it in.
+      if (const std::optional<std::string> logPath =
+              oo::LogHandlerGetLogPath()) {
+        std::ifstream log(*logPath, std::ios::binary);
+        if (log) std::cout << log.rdbuf() << std::flush;
+      }
 #else
       do {
       } while (0);

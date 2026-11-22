@@ -3548,13 +3548,6 @@ void HeadUpDisplay::drawFPSInfoCounter(const oo::PList& info) {
   siz.width = useDefined(cached.width, FPSINFO_DISPLAY_WIDTH);
   siz.height = useDefined(cached.height, FPSINFO_DISPLAY_HEIGHT);
 
-  HPVector playerPos = (PLAYER != nullptr ? PLAYER->getPosition() : HPVector{});
-  std::string positionInfo = std::format(
-      "abs {:.2f} {:.2f} {:.2f} / {}", playerPos.x, playerPos.y, playerPos.z,
-      (UNIVERSE != nullptr ? UNIVERSE->expressPosition(playerPos, "pwm")
-                           : std::optional<std::string>())
-          .value_or("(null)"));
-
   // We would normally set a variable alpha value here, but in this case we
   // don't. We prefer the FPS counter to be always visible - Nikos 20100405
   GetRGBAArrayFromInfo(info, textColor);
@@ -3569,6 +3562,13 @@ void HeadUpDisplay::drawFPSInfoCounter(const oo::PList& info) {
       UNIVERSE != nullptr ? UNIVERSE->collisionDescription() : std::string());
   oo::DrawString(collDebugInfo, static_cast<GLfloat>(x),
                  static_cast<GLfloat>(y - siz.height), z1, siz);
+
+  HPVector playerPos = (PLAYER != nullptr ? PLAYER->getPosition() : HPVector{});
+  std::string positionInfo = std::format(
+      "abs {:.2f} {:.2f} {:.2f} / {}", playerPos.x, playerPos.y, playerPos.z,
+      (UNIVERSE != nullptr ? UNIVERSE->expressPosition(playerPos, "pwm")
+                           : std::optional<std::string>())
+          .value_or("(null)"));
 
   oo::DrawString(positionInfo, static_cast<GLfloat>(x),
                  static_cast<GLfloat>(y - 1.8 * siz.height), z1, siz08);
