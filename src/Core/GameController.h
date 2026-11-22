@@ -51,6 +51,10 @@ inline constexpr double MINIMUM_ANIMATION_TICK = 0.0041667;
 class MyOpenGLView;
 class Universe;
 
+namespace oo::ui {
+class UiHost;
+}  // namespace oo::ui
+
 /*	The application controller: the class shell, its state and accessors;
    the frame loop and deferred calls; start-up, splash and progress messages,
         exit and the player file; the SDL full-screen members
@@ -220,10 +224,18 @@ class GameController : public oo::Object {
   friend struct GameControllerTestAccess;
 
  private:
+  // The interface layer for this run, injected into the view and the
+  // universe: the classic grid.
+  void setUpUiHost();
+
   // Internal: the state, read and written by the members above.
 
   std::shared_ptr<::MyOpenGLView>
-      _gameView;                          // was gameView, named like its getter
+      _gameView;  // was gameView, named like its getter
+  // The interface layer (src/UI), given to the view and the universe. After
+  // the view (it draws in the view's GL context) and before the universe (the
+  // universe's screens hold views it made), so it is destroyed between them.
+  std::unique_ptr<oo::ui::UiHost> _uiHost;
   std::unique_ptr<::Universe> _universe;  // the game's universe (UNIVERSE)
 
   oo::GameClock _clock;  // the system clock unless a headless game set one

@@ -259,6 +259,10 @@ constexpr std::string_view OOEnumName(SDRToneMapper value) noexcept {
 extern int debug;
 
 // The game view.
+namespace oo::ui {
+class UiHost;
+}  // namespace oo::ui
+
 class MyOpenGLView : public oo::Object {
  public:
   MyOpenGLView() = default;  // the object -init fills; see init()
@@ -310,6 +314,13 @@ class MyOpenGLView : public oo::Object {
   GLfloat getY_offset();
   ::GameController* getGameController();
   virtual void setGameController(::GameController* controller);
+  // The interface layer, offered each input event before the game reads it
+  // (injected by the game controller; null: none).
+  void setUiHost(oo::ui::UiHost* host);
+
+  // The game's window (null when headless), for the interface layer.
+  SDL_Window* sdlWindow() { return window; }
+
   bool isRunningOnPrimaryDisplayDevice();
   void getDisplayDimensions(unsigned* width, unsigned* height);
 #if OOLITE_WINDOWS
@@ -425,6 +436,7 @@ class MyOpenGLView : public oo::Object {
  private:
   // Internal: the view's state, read by the members above.
   ::GameController* gameController = {};  // not retained
+  oo::ui::UiHost* uiHost = {};            // not owned
   bool keys[NUM_KEYS] = {};
   int scancode2Unicode[NUM_KEYS] = {};
   // the keyboard's mapping_normal / mapping_shifted (null if none)

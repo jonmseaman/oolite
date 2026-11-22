@@ -58,6 +58,8 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "UI/NullUiHost.h"
+#include "UI/UiHost.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
@@ -279,6 +281,11 @@ GameController::GameController() {
 }
 
 GameController::~GameController() = default;
+
+void GameController::setUpUiHost() {
+  _uiHost = std::make_unique<oo::ui::NullUiHost>();
+  if (_gameView != nullptr) _gameView->setUiHost(_uiHost.get());
+}
 
 bool GameController::isGamePaused() { return gameIsPaused; }
 
@@ -594,9 +601,11 @@ void GameController::applicationDidFinishLaunching() {
     // moved here to try to avoid initialising this before having an Open GL
     // context logProgress(OO_DESC("Initialising universe")); // DESC expansions
     // only possible after Universe init
+    setUpUiHost();
     _universe = Universe::newUniverse(
         _gameView
             .get());  // also gSharedUniverse; destroyed with the controller
+    _universe->setUiHost(_uiHost.get());
 
     loadPlayerIfRequired();
 
@@ -692,7 +701,9 @@ void GameController::startHeadless(const oo::HeadlessOptions& options) {
     // as the windowed start: the options screen lists them
     setUpDisplayModes();
   }
+  setUpUiHost();
   _universe = Universe::newUniverse(_gameView.get(), options);
+  _universe->setUiHost(_uiHost.get());
   loadPlayerIfRequired();
 
   if (options.startInFlight) {

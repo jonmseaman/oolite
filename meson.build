@@ -150,6 +150,12 @@ if not get_option('deployment_release') and host_machine.system() == 'windows'
     subdir('tests/unit/core')
 endif
 
+# The interface layer's view-models and classic views (meson test --suite ui): src/UI's own
+# sources with fakes for the game, so every platform builds them.
+if oo_tests_built
+    subdir('tests/unit/ui')
+endif
+
 # The C++ half of the component tier (meson test --suite component): headless programs that
 # start the real game. Built on every platform, by every flavour but deployment, like the unit
 # tests (the Flatpak leg builds a test-flavour tree of its own to run them).

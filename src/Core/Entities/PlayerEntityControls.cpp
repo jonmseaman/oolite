@@ -90,6 +90,7 @@ MA 02110-1301, USA.
 #include "SunEntity.h"
 #include "SystemDescriptionManager.h"
 #include "Types.h"
+#include "UI/ShipLibrary/ShipLibraryViewModel.h"
 #include "Universe.h"
 #include "Vector.h"
 #include "ViewID.h"
@@ -2728,23 +2729,26 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       handleKeyboardLayoutKeys();
       break;
 
-    case oo::GUIScreenID::kShipLibrary:
+    case oo::GUIScreenID::kShipLibrary: {
       if ((gameView != nullptr ? gameView->isDown(' ') : false)) {
         //  '<space>'
         // viewed in game, return to interfaces as that's where it's accessed
         // from
         setGuiToInterfacesScreen(0);
       }
+      // Read after the space key: leaving the library closes it.
+      oo::ui::ShipLibraryViewModel* shipLibrary =
+          (UNIVERSE != nullptr ? UNIVERSE->shipLibrary() : nullptr);
       if (checkKeyPress(n_key_gui_arrow_up) || joyButtonState[BUTTON_GUIUP]) {
         //  '<--'
         if (!upDownKeyPressed)
-          if (UNIVERSE != nullptr) UNIVERSE->selectIntro2Previous();
+          if (shipLibrary != nullptr) shipLibrary->PreviousShip();
       }
       if (checkKeyPress(n_key_gui_arrow_down) ||
           joyButtonState[BUTTON_GUIDOWN]) {
         //  '-->'
         if (!upDownKeyPressed)
-          if (UNIVERSE != nullptr) UNIVERSE->selectIntro2Next();
+          if (shipLibrary != nullptr) shipLibrary->NextShip();
       }
       upDownKeyPressed = ((checkKeyPress(n_key_gui_arrow_up) ||
                            joyButtonState[BUTTON_GUIUP]) ||
@@ -2755,13 +2759,13 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
           joyButtonState[BUTTON_GUILEFT]) {
         //  '<--'
         if (!leftRightKeyPressed)
-          if (UNIVERSE != nullptr) UNIVERSE->selectIntro2PreviousCategory();
+          if (shipLibrary != nullptr) shipLibrary->PreviousCategory();
       }
       if (checkKeyPress(n_key_gui_arrow_right) ||
           joyButtonState[BUTTON_GUIRIGHT]) {
         //  '-->'
         if (!leftRightKeyPressed)
-          if (UNIVERSE != nullptr) UNIVERSE->selectIntro2NextCategory();
+          if (shipLibrary != nullptr) shipLibrary->NextCategory();
       }
       leftRightKeyPressed = ((checkKeyPress(n_key_gui_arrow_left) ||
                               joyButtonState[BUTTON_GUILEFT]) ||
@@ -2769,6 +2773,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
                               joyButtonState[BUTTON_GUIRIGHT]));
 
       break;
+    }
     case oo::GUIScreenID::kOptions:
       handleGUIUpDownArrowKeys();
       oo::GUIRow guiSelectedRow;
@@ -5526,22 +5531,25 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
       stickProfileInputHandler(gui, gameView);
       break;
 
-    case oo::GUIScreenID::kShipLibrary:
+    case oo::GUIScreenID::kShipLibrary: {
       if ((gameView != nullptr ? gameView->isDown(' ') : false)) {
         //  '<space>'
         // viewed from start screen, return to it
         setGuiToIntroFirstGo(true);
       }
+      // Read after the space key: leaving the library closes it.
+      oo::ui::ShipLibraryViewModel* shipLibrary =
+          (UNIVERSE != nullptr ? UNIVERSE->shipLibrary() : nullptr);
       if (checkKeyPress(n_key_gui_arrow_up) || joyButtonState[BUTTON_GUIUP]) {
         //  '<--'
         if (!upDownKeyPressed)
-          if (UNIVERSE != nullptr) UNIVERSE->selectIntro2Previous();
+          if (shipLibrary != nullptr) shipLibrary->PreviousShip();
       }
       if (checkKeyPress(n_key_gui_arrow_down) ||
           joyButtonState[BUTTON_GUIDOWN]) {
         //  '-->'
         if (!upDownKeyPressed)
-          if (UNIVERSE != nullptr) UNIVERSE->selectIntro2Next();
+          if (shipLibrary != nullptr) shipLibrary->NextShip();
       }
       upDownKeyPressed = ((checkKeyPress(n_key_gui_arrow_up) ||
                            joyButtonState[BUTTON_GUIUP]) ||
@@ -5552,13 +5560,13 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
           joyButtonState[BUTTON_GUILEFT]) {
         //  '<--'
         if (!leftRightKeyPressed)
-          if (UNIVERSE != nullptr) UNIVERSE->selectIntro2PreviousCategory();
+          if (shipLibrary != nullptr) shipLibrary->PreviousCategory();
       }
       if (checkKeyPress(n_key_gui_arrow_right) ||
           joyButtonState[BUTTON_GUIRIGHT]) {
         //  '-->'
         if (!leftRightKeyPressed)
-          if (UNIVERSE != nullptr) UNIVERSE->selectIntro2NextCategory();
+          if (shipLibrary != nullptr) shipLibrary->NextCategory();
       }
       leftRightKeyPressed = ((checkKeyPress(n_key_gui_arrow_left) ||
                               joyButtonState[BUTTON_GUILEFT]) ||
@@ -5566,6 +5574,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
                               joyButtonState[BUTTON_GUIRIGHT]));
 
       break;
+    }
 
     case oo::GUIScreenID::kNewGame:
       if (handleGUIUpDownArrowKeys()) {

@@ -62,6 +62,7 @@ MA 02110-1301, USA.
 #include "GameController.h"
 #include "GraphicsResetManager.h"
 #include "GuiDisplayGen.h"
+#include "GuiDisplayGenGridSurface.h"
 #include "HeadUpDisplay.h"
 #include "JoystickManager.h"
 #include "LightParticleEntity.h"
@@ -88,6 +89,7 @@ MA 02110-1301, USA.
 #include "ShipEntityAI.h"
 #include "ShipGroup.h"
 #include "ShipLibraryDescriptions.h"
+#include "ShipLibraryGameAdapter.h"
 #include "ShipRegistry.h"
 #include "SkyEntity.h"
 #include "SpeechSynthesizer.h"
@@ -97,6 +99,11 @@ MA 02110-1301, USA.
 #include "SunEntity.h"
 #include "SystemDescriptionManager.h"
 #include "Texture.h"
+#include "UI/NullUiHost.h"
+#include "UI/ShipLibrary/ShipLibraryModel.h"
+#include "UI/ShipLibrary/ShipLibraryScreen.h"
+#include "UI/ShipLibrary/ShipLibraryViewModel.h"
+#include "UI/UiHost.h"
 #include "VisualEffectEntity.h"
 #include "WaypointEntity.h"
 #include "WormholeEntity.h"
@@ -481,6 +488,8 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView,
 void Universe::dealloc() {
   gSharedUniverse = nullptr;
 
+  closeShipLibrary();  // its views borrow the GUI and the interface host
+
   currentMessage.reset();
 
   gui = nullptr;
@@ -614,16 +623,102 @@ std::string CustomLibraryText(std::string_view descKey,
                             : oo::str::FormatArg::null()});
 }
 
-// +arrayWithObjects:field1, field2, field3, nil: the fields up to the first
-// nil.
-std::vector<std::string> FieldsUpToNil(
-    std::initializer_list<std::optional<std::string>> fields) {
-  std::vector<std::string> result;
-  for (const std::optional<std::string>& field : fields) {
-    if (!field.has_value()) break;
-    result.push_back(*field);
+// A figure of the ship library sheet: the entry's own text where it has one
+// ("" leaves the field blank), else the default worked out from the ship.
+std::string LibraryStat(const oo::PList& settings, std::string_view key,
+                        std::string_view customDescKey,
+                        std::string (*fallback)(::ShipEntity*),
+                        ::ShipEntity* ship) {
+  const std::optional<std::string> override =
+      LibrarySetting(settings, key, std::nullopt);
+  if (!override.has_value()) return fallback(ship);
+  if (override->empty()) return std::string();
+  return CustomLibraryText(customDescKey, *override);
+}
+
+// The ship library sheet of the library entry <librarySettings> for the demo
+// ship on show.
+oo::ui::ShipSheet ShipSheetFor(const oo::PList& librarySettings,
+                               ::ShipEntity* demoShip) {
+  oo::ui::ShipSheet sheet;
+
+  std::optional<std::string> override =
+      LibrarySetting(librarySettings, oo::kDemoShipClass, "ship");
+  sheet.category_singular =
+      oo::ShipLibraryCategorySingular(override.value_or(std::string()));
+  sheet.class_name = (demoShip != nullptr ? demoShip->getShipClassName()
+                                          : std::optional<std::string>());
+  override =
+      LibrarySetting(librarySettings, oo::kDemoShipSummary, std::nullopt);
+  sheet.summary = override.has_value() ? ExpandText(*override)
+                                       : std::optional<std::string>("");
+
+  // ship_data defaults to true for "ship" class, false for everything else
+  sheet.has_stats = librarySettings.get<bool>(
+      oo::kDemoShipShipData,
+      LibrarySetting(librarySettings, oo::kDemoShipClass, "ship") == "ship");
+  if (sheet.has_stats) {
+    sheet.speed = LibraryStat(librarySettings, oo::kDemoShipSpeed,
+                              "oolite-ship-library-speed-custom",
+                              &oo::ShipLibrarySpeed, demoShip);
+    sheet.turn_rate = LibraryStat(librarySettings, oo::kDemoShipTurnRate,
+                                  "oolite-ship-library-turn-custom",
+                                  &oo::ShipLibraryTurnRate, demoShip);
+    sheet.cargo = LibraryStat(librarySettings, oo::kDemoShipCargo,
+                              "oolite-ship-library-cargo-custom",
+                              &oo::ShipLibraryCargo, demoShip);
+    sheet.generator = LibraryStat(librarySettings, oo::kDemoShipGenerator,
+                                  "oolite-ship-library-generator-custom",
+                                  &oo::ShipLibraryGenerator, demoShip);
+    sheet.shields = LibraryStat(librarySettings, oo::kDemoShipShields,
+                                "oolite-ship-library-shields-custom",
+                                &oo::ShipLibraryShields, demoShip);
+    sheet.witchspace = LibraryStat(librarySettings, oo::kDemoShipWitchspace,
+                                   "oolite-ship-library-witchspace-custom",
+                                   &oo::ShipLibraryWitchspace, demoShip);
+    sheet.weapons = LibraryStat(librarySettings, oo::kDemoShipWeapons,
+                                "oolite-ship-library-weapons-custom",
+                                &oo::ShipLibraryWeapons, demoShip);
+    sheet.turrets = LibraryStat(librarySettings, oo::kDemoShipTurrets,
+                                "oolite-ship-library-turrets-custom",
+                                &oo::ShipLibraryTurrets, demoShip);
+    sheet.size = LibraryStat(librarySettings, oo::kDemoShipSize,
+                             "oolite-ship-library-size-custom",
+                             &oo::ShipLibrarySize, demoShip);
   }
-  return result;
+
+  override =
+      LibrarySetting(librarySettings, oo::kDemoShipDescription, std::nullopt);
+  sheet.has_description = override.has_value();
+  if (override.has_value()) sheet.description = ExpandText(*override);
+  return sheet;
+}
+
+// The ship library's categories and their ships, from the demo ship list.
+std::vector<oo::ui::ShipLibraryCategory> ShipLibraryCategoriesFrom(
+    const oo::PList& demoShips) {
+  std::vector<oo::ui::ShipLibraryCategory> categories;
+  const std::size_t count = demoShips.count();
+  categories.reserve(count);
+  for (std::size_t k = 0; k < count; ++k) {
+    oo::ui::ShipLibraryCategory category;
+    category.id = DemoClassAt(demoShips, k);
+    category.plural_name = oo::ShipLibraryCategoryPlural(category.id);
+    const oo::PList* subList = demoShips.at(k);
+    const std::size_t shipCount = (subList != nullptr) ? subList->count() : 0;
+    for (std::size_t j = 0; j < shipCount; ++j) {
+      const oo::PList* shipEntry = subList->at(j);
+      oo::ui::ShipLibraryEntry entry;
+      if (shipEntry != nullptr) {
+        entry.key = OptionalStringIn(*shipEntry, oo::kDemoShipKey)
+                        .value_or(std::string());
+        entry.name = OptionalStringIn(*shipEntry, oo::kDemoShipName);
+      }
+      category.entries.push_back(std::move(entry));
+    }
+    categories.push_back(std::move(category));
+  }
+  return categories;
 }
 
 bool IsCandidateMainStationPredicate(Entity* entity, void* /*parameter*/) {
@@ -3808,6 +3903,7 @@ void Universe::setupIntroFirstGo(bool justCobra) {
   displayGUI = true;
 
   if (justCobra) {
+    closeShipLibrary();
     /*- cobra - intro1 -*/
     ship = newShipWithName(std::string(PLAYER_SHIP_DESC), true);
   } else {
@@ -3847,6 +3943,8 @@ void Universe::setupIntroFirstGo(bool justCobra) {
       }
     }
 
+    openShipLibrary();
+
     if (!demo_ship)
       ship = newShipWithName(
           OptionalStringIn(
@@ -3863,9 +3961,8 @@ void Universe::setupIntroFirstGo(bool justCobra) {
     if (ship != nullptr) ship->setOrientation(q2);
     if (!justCobra) {
       if (ship != nullptr)
-        ship->setPositionX(
-            0.0f, 0.0f,
-            DEMO2_VANISHING_DISTANCE * ship->collision_radius * 0.01);
+        ship->setPosition(shipLibraryStagePosition(
+            DEMO2_VANISHING_DISTANCE * ship->collision_radius * 0.01));
       if (ship != nullptr)
         ship->setDestination(ship->position);  // ideal position
     } else {
@@ -3906,265 +4003,61 @@ oo::PList Universe::demoShipData() {
 }
 
 void Universe::setLibraryTextForDemoShip() {
-  oo::GUITabSettings tab_stops;
-  tab_stops[0] = 0;
-  tab_stops[1] = 170;
-  tab_stops[2] = 340;
-  if (gui == nullptr)
-    // the messages to nil did nothing, and the rest only writes the GUI
-    return;
-  gui->setTabStops(tab_stops);
-
-  /*	[gui setText:[demo_ship displayName] forRow:19 align:GUI_ALIGN_CENTER];
-          [gui setColor:[OOColor whiteColor] forRow:19]; */
-
-  const oo::PList librarySettings = demoShipData();
-
-  oo::GUIRow descRow = 7;
-
-  std::optional<std::string> field1;
-  std::optional<std::string> field2;
-  std::optional<std::string> field3;
-  std::optional<std::string> override;
-
-  // clear rows
-  for (std::size_t i = 1; i <= 26; i++) {
-    gui->setText("", static_cast<oo::GUIRow>(i));
-  }
-
-  /* Row 1: ScanClass, Name, Summary */
-  override = LibrarySetting(librarySettings, oo::kDemoShipClass, "ship");
-  field1 = oo::ShipLibraryCategorySingular(override.value_or(std::string()));
-
-  field2 = (demo_ship != nullptr ? demo_ship->getShipClassName()
-                                 : std::optional<std::string>());
-
-  override =
-      LibrarySetting(librarySettings, oo::kDemoShipSummary, std::nullopt);
-  if (override.has_value()) {
-    field3 = ExpandText(*override);
-  } else {
-    field3 = std::string();
-  }
-  gui->setArray(FieldsUpToNil({field1, field2, field3}), 1);
-  gui->setColor(oo::Color::greenColor().get(), 1);
-
-  // ship_data defaults to true for "ship" class, false for everything else
-  if (!librarySettings.get<bool>(
-          oo::kDemoShipShipData,
-          LibrarySetting(librarySettings, oo::kDemoShipClass, "ship") ==
-              "ship")) {
-    descRow = 3;
-  } else {
-    /* Row 2: Speed, Turn Rate, Cargo */
-
-    override =
-        LibrarySetting(librarySettings, oo::kDemoShipSpeed, std::nullopt);
-    if (override.has_value()) {
-      if (override->empty()) {
-        field1 = std::string();
-      } else {
-        field1 =
-            CustomLibraryText("oolite-ship-library-speed-custom", *override);
-      }
-    } else {
-      field1 = oo::ShipLibrarySpeed(demo_ship);
-    }
-
-    override =
-        LibrarySetting(librarySettings, oo::kDemoShipTurnRate, std::nullopt);
-    if (override.has_value()) {
-      if (override->empty()) {
-        field2 = std::string();
-      } else {
-        field2 =
-            CustomLibraryText("oolite-ship-library-turn-custom", *override);
-      }
-    } else {
-      field2 = oo::ShipLibraryTurnRate(demo_ship);
-    }
-
-    override =
-        LibrarySetting(librarySettings, oo::kDemoShipCargo, std::nullopt);
-    if (override.has_value()) {
-      if (override->empty()) {
-        field3 = std::string();
-      } else {
-        field3 =
-            CustomLibraryText("oolite-ship-library-cargo-custom", *override);
-      }
-    } else {
-      field3 = oo::ShipLibraryCargo(demo_ship);
-    }
-
-    gui->setArray(FieldsUpToNil({field1, field2, field3}), 3);
-
-    /* Row 3: recharge rate, energy banks, witchspace */
-    override =
-        LibrarySetting(librarySettings, oo::kDemoShipGenerator, std::nullopt);
-    if (override.has_value()) {
-      if (override->empty()) {
-        field1 = std::string();
-      } else {
-        field1 = CustomLibraryText("oolite-ship-library-generator-custom",
-                                   *override);
-      }
-    } else {
-      field1 = oo::ShipLibraryGenerator(demo_ship);
-    }
-
-    override =
-        LibrarySetting(librarySettings, oo::kDemoShipShields, std::nullopt);
-    if (override.has_value()) {
-      if (override->empty()) {
-        field2 = std::string();
-      } else {
-        field2 =
-            CustomLibraryText("oolite-ship-library-shields-custom", *override);
-      }
-    } else {
-      field2 = oo::ShipLibraryShields(demo_ship);
-    }
-
-    override =
-        LibrarySetting(librarySettings, oo::kDemoShipWitchspace, std::nullopt);
-    if (override.has_value()) {
-      if (override->empty()) {
-        field3 = std::string();
-      } else {
-        field3 = CustomLibraryText("oolite-ship-library-witchspace-custom",
-                                   *override);
-      }
-    } else {
-      field3 = oo::ShipLibraryWitchspace(demo_ship);
-    }
-
-    gui->setArray(FieldsUpToNil({field1, field2, field3}), 4);
-
-    /* Row 4: weapons, turrets, size */
-    override =
-        LibrarySetting(librarySettings, oo::kDemoShipWeapons, std::nullopt);
-    if (override.has_value()) {
-      if (override->empty()) {
-        field1 = std::string();
-      } else {
-        field1 =
-            CustomLibraryText("oolite-ship-library-weapons-custom", *override);
-      }
-    } else {
-      field1 = oo::ShipLibraryWeapons(demo_ship);
-    }
-
-    override =
-        LibrarySetting(librarySettings, oo::kDemoShipTurrets, std::nullopt);
-    if (override.has_value()) {
-      if (override->empty()) {
-        field2 = std::string();
-      } else {
-        field2 =
-            CustomLibraryText("oolite-ship-library-turrets-custom", *override);
-      }
-    } else {
-      field2 = oo::ShipLibraryTurrets(demo_ship);
-    }
-
-    override = LibrarySetting(librarySettings, oo::kDemoShipSize, std::nullopt);
-    if (override.has_value()) {
-      if (override->empty()) {
-        field3 = std::string();
-      } else {
-        field3 =
-            CustomLibraryText("oolite-ship-library-size-custom", *override);
-      }
-    } else {
-      field3 = oo::ShipLibrarySize(demo_ship);
-    }
-
-    gui->setArray(FieldsUpToNil({field1, field2, field3}), 5);
-  }
-
-  override =
-      LibrarySetting(librarySettings, oo::kDemoShipDescription, std::nullopt);
-  if (override.has_value()) {
-    gui->addLongText(ExpandText(*override), descRow, oo::GUIAlignment::kLeft);
-  }
-
-  // line 19: ship categories
-  field1 = std::format(
-      "<-- {}", oo::ShipLibraryCategoryPlural(DemoClassAt(
-                    demo_ships, (demo_ship_index + demo_ships.count() - 1) %
-                                    demo_ships.count())));
-  field2 =
-      oo::ShipLibraryCategoryPlural(DemoClassAt(demo_ships, demo_ship_index));
-  field3 = std::format(
-      "{} -->", oo::ShipLibraryCategoryPlural(DemoClassAt(
-                    demo_ships, (demo_ship_index + 1) % demo_ships.count())));
-
-  gui->setArray(FieldsUpToNil({field1, field2, field3}), 19);
-  gui->setColor(oo::Color::greenColor().get(), 19);
-
-  // lines 21-25: ship names
-  const oo::PList* subListEntry = demo_ships.at(demo_ship_index);
-  const oo::PList subList =
-      (subListEntry != nullptr) ? *subListEntry : oo::PList();
-  std::size_t i, start = demo_ship_subindex - (demo_ship_subindex % 5);
-  std::size_t end = start + 4;
-  if (end >= subList.count()) {
-    end = subList.count() - 1;
-  }
-  oo::GUIRow row = 21;
-  field1 = std::string();
-  field3 = std::string();
-  for (i = start; i <= end; i++) {
-    const oo::PList* shipEntry = subList.at(i);
-    field2 = (shipEntry != nullptr)
-                 ? OptionalStringIn(*shipEntry, oo::kDemoShipName)
-                 : std::nullopt;
-    gui->setArray(FieldsUpToNil({field1, field2, field3}), row);
-    if (i == demo_ship_subindex) {
-      gui->setColor(oo::Color::yellowColor().get(), row);
-    } else {
-      gui->setColor(oo::Color::whiteColor().get(), row);
-    }
-    row++;
-  }
-
-  field2 = "...";
-  if (start > 0) {
-    gui->setArray(FieldsUpToNil({field1, field2, field3}), 20);
-    gui->setColor(oo::Color::whiteColor().get(), 20);
-  }
-  if (end < subList.count() - 1) {
-    gui->setArray(FieldsUpToNil({field1, field2, field3}), 26);
-    gui->setColor(oo::Color::whiteColor().get(), 26);
-  }
+  if (ship_library == nullptr) return;
+  ship_library->view_model().OnShipShown(
+      demo_ship_index, demo_ship_subindex,
+      ShipSheetFor(demoShipData(), demo_ship));
 }
 
-void Universe::selectIntro2Previous() {
+void Universe::showDemoShip(std::size_t category, std::size_t index) {
+  const std::size_t categoryCount = demo_ships.count();
+  if (categoryCount == 0) return;
+  const std::size_t shipCount =
+      DemoClassCount(demo_ships, category % categoryCount);
+  if (shipCount == 0) return;
   demo_stage = DEMO_SHOW_THING;
-  std::size_t subcount = DemoClassCount(demo_ships, demo_ship_index);
-  demo_ship_subindex = (demo_ship_subindex + subcount - 2) % subcount;
+  demo_ship_index = category % categoryCount;
+  // The fly-out advances the index by one (the state machine in update).
+  demo_ship_subindex = (index % shipCount + shipCount - 1) % shipCount;
   demo_stage_time = universal_time - 1.0;  // force change
 }
 
-void Universe::selectIntro2PreviousCategory() {
-  demo_stage = DEMO_SHOW_THING;
-  demo_ship_index =
-      (demo_ship_index + demo_ships.count() - 1) % demo_ships.count();
-  demo_ship_subindex = DemoClassCount(demo_ships, demo_ship_index) - 1;
-  demo_stage_time = universal_time - 1.0;  // force change
+void Universe::openShipLibrary() {
+  closeShipLibrary();
+  if (ship_library_adapter == nullptr) {
+    ship_library_adapter = std::make_unique<oo::ShipLibraryGameAdapter>(*this);
+  }
+  ship_library_surface = std::make_unique<oo::GuiDisplayGenGridSurface>(gui);
+  ship_library = std::make_unique<oo::ui::ShipLibraryScreen>(
+      *ship_library_adapter, uiHost(), *ship_library_surface);
+  ship_library->view_model().SetCategories(
+      ShipLibraryCategoriesFrom(demo_ships), demo_ship_index,
+      demo_ship_subindex);
 }
 
-void Universe::selectIntro2NextCategory() {
-  demo_stage = DEMO_SHOW_THING;
-  demo_ship_index = (demo_ship_index + 1) % demo_ships.count();
-  demo_ship_subindex = DemoClassCount(demo_ships, demo_ship_index) - 1;
-  demo_stage_time = universal_time - 1.0;  // force change
+oo::ui::ShipLibraryViewModel* Universe::shipLibrary() {
+  return ship_library != nullptr ? &ship_library->view_model() : nullptr;
 }
 
-void Universe::selectIntro2Next() {
-  demo_stage = DEMO_SHOW_THING;
-  demo_stage_time = universal_time - 1.0;  // force change
+void Universe::closeShipLibrary() {
+  ship_library.reset();  // its view first: it borrows the surface
+  ship_library_surface.reset();
+}
+
+void Universe::setUiHost(oo::ui::UiHost* host) {
+  closeShipLibrary();  // a view made by the old host must not outlive it
+  ui_host = host;
+}
+
+HPVector Universe::shipLibraryStagePosition(double restingZ) {
+  const oo::ui::ShipStage stage =
+      ship_library != nullptr ? ship_library->stage() : oo::ui::ShipStage{};
+  const double z = restingZ * stage.distance_scale;
+  return make_HPvector(stage.x_offset * z, stage.y_offset * z, z);
+}
+
+oo::ui::UiHost& Universe::uiHost() {
+  return ui_host != nullptr ? *ui_host : oo::ui::NullUiHost::Fallback();
 }
 
 ::StationEntity* Universe::station() {
@@ -5827,7 +5720,14 @@ void Universe::drawMessage() {
                          : static_cast<HeadUpDisplay*>(nullptr));
   // a nil HUD answered 0
   float overallAlpha = (hud != nullptr) ? hud->getOverallAlpha() : 0.0f;
-  if (displayGUI) {
+  // The library's views live only while its screen is up, however it was left.
+  if (ship_library != nullptr &&
+      (PLAYER == nullptr ||
+       PLAYER->guiScreen() != oo::GUIScreenID::kShipLibrary)) {
+    closeShipLibrary();
+  }
+  const bool uiCoversGui = displayGUI && uiHost().IsCoveringGui();
+  if (displayGUI && !uiCoversGui) {
     if ((gameController() != nullptr ? gameController()->mouseInteractionMode()
                                      : oo::MouseInteractionMode{}) ==
         oo::MouseInteractionMode::kUiScreenWithInteraction) {
@@ -5837,6 +5737,8 @@ void Universe::drawMessage() {
       if (gui != nullptr) gui->drawGUI(1.0, false);
     }
   }
+
+  if (displayGUI) uiHost().Render();
 
   if (message_gui != nullptr)
     message_gui->drawGUI(message_gui->alpha() * overallAlpha, false);
@@ -7541,6 +7443,11 @@ void Universe::update(oo::TimeDelta inDeltaT) {
               oo::GUIScreenID::kShipLibrary) [[unlikely]] {
         update_stage = "demo management";
 
+        // The library's Back control, outside any input handler of its views.
+        if (ship_library_adapter != nullptr) {
+          ship_library_adapter->RunPendingExit();
+        }
+
         if (universal_time >= demo_stage_time) {
           if (ent_count > 1) {
             Vector vel;
@@ -7614,7 +7521,7 @@ void Universe::update(oo::TimeDelta inDeltaT) {
                     if (demo_ship != nullptr)
                       // ideal position
                       demo_ship->setDestination(
-                          make_HPvector(0.0f, 0.0f, demo_start_z * 0.01f));
+                          shipLibraryStagePosition(demo_start_z * 0.01f));
                     if (demo_ship != nullptr)
                       demo_ship->setVelocity(kZeroVector);
                     if (demo_ship != nullptr)
@@ -7640,7 +7547,9 @@ void Universe::update(oo::TimeDelta inDeltaT) {
               (universal_time - demo_start_time) / DEMO2_FLY_IN_STAGE_TIME);
           if (demo_ship != nullptr)
             demo_ship->setPositionX(
-                0.0f,
+                (demo_ship != nullptr ? demo_ship->destination() : HPVector{})
+                        .x *
+                    delta,
                 (demo_ship != nullptr ? demo_ship->destination() : HPVector{})
                         .y *
                     delta,

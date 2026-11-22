@@ -16,6 +16,7 @@ Oolite
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
 #include "SDLJoystickManager.h"
+#include "UI/UiHost.h"
 #include "Universe.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
@@ -236,6 +237,9 @@ void MyOpenGLView::pollControls() {
   bool resize_pending = false;
 
   while (SDL_PollEvent(&event)) {
+    // A pointer event the interface layer used (over one of its controls) is
+    // not the game's.
+    if (uiHost != nullptr && uiHost->HandleEvent(event)) continue;
     switch (event.type) {
       case SDL_EVENT_JOYSTICK_AXIS_MOTION:
       case SDL_EVENT_JOYSTICK_BUTTON_UP:
@@ -942,6 +946,7 @@ void MyOpenGLView::pollControls() {
     SDL_GetWindowSizeInPixels(window, &pixelWidth, &pixelHeight);
 
     updateGLSize(NSMakeSize(pixelWidth, pixelHeight));
+    if (uiHost != nullptr) uiHost->Resize(pixelWidth, pixelHeight);
 
     if (!fullScreen) {
       // Save the window size in points, not pixels: they differ on high-DPI

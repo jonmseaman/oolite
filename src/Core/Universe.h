@@ -99,6 +99,14 @@ class PlanetEntity;
 }  // namespace oo
 
 #include "GuiDisplayGen.h"  // the universe keeps its GUIs (std::shared_ptr)
+#include "GuiDisplayGenGridSurface.h"  // the ship library's classic surface
+#include "ShipLibraryGameAdapter.h"
+#include "UI/ShipLibrary/ShipLibraryScreen.h"
+
+namespace oo::ui {
+class UiHost;
+}  // namespace oo::ui
+
 class CollisionRegion;
 
 using EntityFilterPredicate = bool (*)(Entity* entity,
@@ -441,6 +449,11 @@ class Universe : public oo::Object {
 
   ::ShipEntity* demo_ship = nullptr;
 
+  oo::ui::UiHost* ui_host = nullptr;  // borrowed from the game controller
+  std::unique_ptr<oo::GuiDisplayGenGridSurface> ship_library_surface;
+  std::unique_ptr<oo::ShipLibraryGameAdapter> ship_library_adapter;
+  std::unique_ptr<oo::ui::ShipLibraryScreen> ship_library;
+
   ::StationEntity* cachedStation = nullptr;
   ::oo::PlanetEntity* cachedPlanet = nullptr;
   ::oo::SunEntity* cachedSun = nullptr;
@@ -617,11 +630,22 @@ class Universe : public oo::Object {
   // planet look-ups.
   void setupIntroFirstGo(bool justCobra);
   oo::PList demoShipData();
+  // Tells the open ship library which ship is on show.
   void setLibraryTextForDemoShip();
-  void selectIntro2Previous();
-  void selectIntro2PreviousCategory();
-  void selectIntro2NextCategory();
-  void selectIntro2Next();
+  // Flies the demo ship out and the ship at <index> of <category> in.
+  void showDemoShip(std::size_t category, std::size_t index);
+  // The open ship library's view-model, null while the library is closed.
+  oo::ui::ShipLibraryViewModel* shipLibrary();
+  void openShipLibrary();
+  void closeShipLibrary();
+  // The demo ship's resting place: <restingZ> ahead (the classic distance),
+  // moved as the library's view asks (ShipStage).
+  HPVector shipLibraryStagePosition(double restingZ);
+
+  // The interface layer (src/UI), injected by the game controller; a
+  // NullUiHost (the classic look) until then.
+  void setUiHost(oo::ui::UiHost* host);
+  oo::ui::UiHost& uiHost();
   // station(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
   ::StationEntity* stationWithRole(const std::string& role, HPVector position);

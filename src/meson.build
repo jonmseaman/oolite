@@ -59,6 +59,7 @@ oolite_dependencies += [oofnd_objc_dep]
 oolite_override_options += ['cpp_std=c++23']
 subdir('Core')
 subdir('SDL')
+subdir('UI')
 
 # The third-party code builds as its own library, without oolite_cpp_args.
 oolite_third_party_lib = static_library(

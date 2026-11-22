@@ -918,6 +918,8 @@ void MyOpenGLView::setGameController(::GameController* controller) {
   gameController = controller;
 }
 
+void MyOpenGLView::setUiHost(oo::ui::UiHost* host) { uiHost = host; }
+
 bool MyOpenGLView::inFullScreenMode() { return fullScreen; }
 
 #if OOLITE_SDL

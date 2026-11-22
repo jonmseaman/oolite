@@ -45,6 +45,8 @@ component_programs = {
     'test_tutorial_keys': {'layouts': component_layouts, 'should_fail': ['test_tutorial_keys_ru']},
     'test_launch_key': {},
     'test_remapped_key': {},
+    # The ship library's view-model (src/UI) driven through the game's keys (spec 007 prototype).
+    'test_ship_library': {},
     # The key-path observations (research H1-H5), one test per case: key_fault_h1 ... h5.
     'test_key_faults': {'cases': {
         'key_fault_h1': 'h1_n_activates_with_caps_lock_on',
