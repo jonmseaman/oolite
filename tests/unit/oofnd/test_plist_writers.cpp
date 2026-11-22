@@ -14,13 +14,15 @@
         meson test --suite oofnd-plist
 */
 
+#include <gtest/gtest.h>
+
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/PListWriting.hpp"
 
 #include <string>
 #include <string_view>
 
-#include "oo_test.hpp"
+#include "oo_gtest.hpp"
 #include "plist_dump.hpp"
 
 using namespace std::string_view_literals;
@@ -749,145 +751,145 @@ std::string xml(const oo::PList& p) {
 bool writesLikeGNUstep(std::string_view in, std::string_view expectedOld,
                        std::string_view expectedXml) {
   const oo::PList p = parsedOrNull(in);
-  bool ok = OO_CHECK(!p.isNull());
+  bool ok = OO_EXPECT_V(!p.isNull());
   if (!expectedOld.empty())
-    ok = OO_CHECK_EQ(oldStyle(p), std::string(expectedOld)) && ok;
-  ok = OO_CHECK_EQ(xml(p), std::string(expectedXml)) && ok;
+    ok = OO_EXPECT_EQ_V(oldStyle(p), std::string(expectedOld)) && ok;
+  ok = OO_EXPECT_EQ_V(xml(p), std::string(expectedXml)) && ok;
   return ok;
 }
 
 }  // namespace
 
-OO_TEST(fixtureAllKinds) {
+TEST(plist_writers, fixtureAllKinds) {
   writesLikeGNUstep(
       kW01In, kW01Old,
       kW01Xml);  // every value type, nesting, data of 0-4 and 8 bytes
 }
 
-OO_TEST(fixtureStrings) {
+TEST(plist_writers, fixtureStrings) {
   // Bare vs quoted, escapes, controls, NUL, non-BMP. One line differs by
   // design: GNUstep writes caf\xc3\xa9 bare, oofnd quotes it (see
   // oldStyleQuotesNonAscii_GnustepDiffers).
   std::string v01Old(kV01Old);
   const std::size_t at = v01Old.find("\tcaf\xc3\xa9,");
-  OO_CHECK(at != std::string::npos);
+  EXPECT_TRUE(at != std::string::npos);
   if (at != std::string::npos) v01Old.replace(at, 7, "\t\"caf\xc3\xa9\",");
   writesLikeGNUstep(kV01In, v01Old, kV01Xml);
   // With a lone surrogate among them GNUstep's old-style writer returns nil (no
   // description) and the XML writer drops that string's text.
   writesLikeGNUstep(kW02In, "", kW02Xml);
-  OO_CHECK_EQ(kW02Old, "WRITEERR (nil)\n"sv);
-  OO_CHECK(!oo::writeOldStylePList(parsedOrNull(kW02In)).has_value());
+  EXPECT_EQ(kW02Old, "WRITEERR (nil)\n"sv);
+  EXPECT_TRUE(!oo::writeOldStylePList(parsedOrNull(kW02In)).has_value());
   writesLikeGNUstep(kV07In, "", kV07Xml);
-  OO_CHECK(!oo::writeOldStylePList(parsedOrNull(kV07In)).has_value());
+  EXPECT_TRUE(!oo::writeOldStylePList(parsedOrNull(kV07In)).has_value());
   writesLikeGNUstep(kV08In, "", kV08Xml);  // ... a lone-surrogate key too
-  OO_CHECK(kV07Old == kW02Old && kV08Old == kW02Old);
+  EXPECT_TRUE(kV07Old == kW02Old && kV08Old == kW02Old);
 }
 
-OO_TEST(fixtureKeyOrder) {
+TEST(plist_writers, fixtureKeyOrder) {
   writesLikeGNUstep(
       kW03In, kW03Old,
       kW03Xml);  // old-style: case-insensitive; XML: by UTF-16 unit
   writesLikeGNUstep(kV02In, "", kV02Xml);
 }
 
-OO_TEST(fixtureScalarsAtTopLevel) {
+TEST(plist_writers, fixtureScalarsAtTopLevel) {
   writesLikeGNUstep(kW05In, kW05Old, kW05Xml);
   writesLikeGNUstep(kW06In, kW06Old, kW06Xml);
   writesLikeGNUstep(kW07In, kW07Old, kW07Xml);
 }
 
-OO_TEST(fixtureNestingAndIndentation) {
+TEST(plist_writers, fixtureNestingAndIndentation) {
   writesLikeGNUstep(kW08In, kW08Old,
                     kW08Xml);  // XML indentation caps at six tabs
   writesLikeGNUstep(kW09In, kW09Old, kW09Xml);
   writesLikeGNUstep(kV06In, kV06Old, kV06Xml);  // 8 bytes of data at depth 2
 }
 
-OO_TEST(fixtureNumbers) {
+TEST(plist_writers, fixtureNumbers) {
   writesLikeGNUstep(kW10In, kW10Old,
                     kW10Xml);  // %.8g vs %.16g, subnormal, inf, nan
   writesLikeGNUstep(kV09In, kV09Old, kV09Xml);
 }
 
-OO_TEST(fixtureDates) {
+TEST(plist_writers, fixtureDates) {
   // Old-style cannot write dates; XML writes them in UTC.
   writesLikeGNUstep(kW04In, kW04Old, kW04Xml);
   writesLikeGNUstep(kW11In, kW11Old, kW11Xml);
   writesLikeGNUstep(kV03In, kV03Old, kV03Xml);
 }
 
-OO_TEST(oldStyleDataGNUstepCannotWrite_GnustepDiffers) {
+TEST(plist_writers, oldStyleDataGNUstepCannotWrite_GnustepDiffers) {
   // 5 bytes: GNUstep writes past its buffer and cuts the '>' (captured:
   // "<01020304 05").
-  OO_CHECK_EQ(kW12Old, "(\n\t<01020304 05\n)\n"sv);
-  OO_CHECK_EQ(oldStyle(parsedOrNull(kW12In)), "(\n\t<01020304 05>\n)\n");
-  OO_CHECK_EQ(xml(parsedOrNull(kW12In)), std::string(kW12Xml));
+  EXPECT_EQ(kW12Old, "(\n\t<01020304 05\n)\n"sv);
+  EXPECT_EQ(oldStyle(parsedOrNull(kW12In)), "(\n\t<01020304 05>\n)\n");
+  EXPECT_EQ(xml(parsedOrNull(kW12In)), std::string(kW12Xml));
   // More than 32 bytes: GNUstep crashes; oofnd breaks the line every 32 bytes.
   oo::PList::Data bytes;
   for (int i = 0; i < 40; ++i) bytes.append(&i, 1);
-  OO_CHECK_EQ(oldStyle(oo::PList(oo::PList::Array{oo::PList(bytes)})),
+  EXPECT_EQ(oldStyle(oo::PList(oo::PList::Array{oo::PList(bytes)})),
               "(\n\t<00010203 04050607 08090A0B 0C0D0E0F 10111213 14151617 "
               "18191A1B 1C1D1E1F\n"
               " 20212223 24252627>\n)\n");
-  OO_CHECK_EQ(oldStyle(oo::PList(oo::PList::Dict{
+  EXPECT_EQ(oldStyle(oo::PList(oo::PList::Dict{
                   {"k", oo::PList(oo::PList::Dict{{"j", oo::PList(bytes)}})}})),
               "{\n\tk =\n\t{\n\t\tj = <00010203 04050607 08090A0B 0C0D0E0F "
               "10111213 14151617 18191A1B 1C1D1E1F\n"
               "\t 20212223 24252627>;\n\t};\n}\n");
 }
 
-OO_TEST(oldStyleQuotesNonAscii_GnustepDiffers) {
+TEST(plist_writers, oldStyleQuotesNonAscii_GnustepDiffers) {
   // GNUstep writes `caf\xc3\xa9` bare (it is "alphanumeric"), which no plist
   // reader accepts.
-  OO_CHECK(kV01Old.find("\tcaf\xc3\xa9,") != std::string_view::npos);
-  OO_CHECK_EQ(oldStyle(oo::PList("caf\xc3\xa9")), "\"caf\xc3\xa9\"\n");
-  OO_CHECK_EQ(oldStyle(oo::PList("cafe")), "cafe\n");
+  EXPECT_TRUE(kV01Old.find("\tcaf\xc3\xa9,") != std::string_view::npos);
+  EXPECT_EQ(oldStyle(oo::PList("caf\xc3\xa9")), "\"caf\xc3\xa9\"\n");
+  EXPECT_EQ(oldStyle(oo::PList("cafe")), "cafe\n");
 }
 
-OO_TEST(oldStyleKeysEqualButForCase_GnustepDiffers) {
+TEST(plist_writers, oldStyleKeysEqualButForCase_GnustepDiffers) {
   // GNUstep orders these by hash (captured: A, a, a-, a1, aB, AB, Ab, ab);
   // oofnd by UTF-16 unit.
-  OO_CHECK(kV02Old.find("\ta1 = \"7\";\n\taB = \"6\";\n\tAB = \"4\";") !=
+  EXPECT_TRUE(kV02Old.find("\ta1 = \"7\";\n\taB = \"6\";\n\tAB = \"4\";") !=
            std::string_view::npos);
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       oldStyle(parsedOrNull(kV02In)),
       "{\n\tA = \"2\";\n\ta = \"1\";\n\t\"a-\" = \"8\";\n\ta1 = \"7\";\n\tAB = "
       "\"4\";\n\tAb = \"5\";\n\taB = \"6\";\n\tab = \"3\";\n}\n");
 }
 
-OO_TEST(writersOnHandBuiltValues) {
+TEST(plist_writers, writersOnHandBuiltValues) {
   using oo::PList;
-  OO_CHECK_EQ(oldStyle(PList(PList::Dict{})), "{\n\t\n}\n");
-  OO_CHECK_EQ(oldStyle(PList(PList::Array{})), "(\n\t\n)\n");
-  OO_CHECK_EQ(oldStyle(PList::unsignedInteger(18446744073709551615ull)),
+  EXPECT_EQ(oldStyle(PList(PList::Dict{})), "{\n\t\n}\n");
+  EXPECT_EQ(oldStyle(PList(PList::Array{})), "(\n\t\n)\n");
+  EXPECT_EQ(oldStyle(PList::unsignedInteger(18446744073709551615ull)),
               "18446744073709551615\n");
-  OO_CHECK_EQ(oldStyle(PList(true)), "true\n");
-  OO_CHECK_EQ(oldStyle(PList("")), "\"\"\n");
+  EXPECT_EQ(oldStyle(PList(true)), "true\n");
+  EXPECT_EQ(oldStyle(PList("")), "\"\"\n");
   // OldSchoolPropertyListWriting drops the text between two escaped characters
   // (fixture V01 pins it: "quote\"back\\slash" is written "quote\"\\slash").
-  OO_CHECK_EQ(oldStyle(PList("a\"b\\c\nd\re\tf")),
+  EXPECT_EQ(oldStyle(PList("a\"b\\c\nd\re\tf")),
               "\"a\\\"\\\\\\\n\\\re\tf\"\n");
-  OO_CHECK_EQ(oldStyle(PList("one \"escape\" only")),
+  EXPECT_EQ(oldStyle(PList("one \"escape\" only")),
               "\"one \\\"\\\" only\"\n");
-  OO_CHECK_EQ(oldStyle(PList("tail\n")), "\"tail\\\n\"\n");
-  OO_CHECK_EQ(oldStyle(PList("\\\\")), "\"\\\\\\\\\"\n");
-  OO_CHECK_EQ(oldStyle(PList()), "WRITEERR nil property list\n");
-  OO_CHECK_EQ(oldStyle(PList(PList::Array{PList()})),
+  EXPECT_EQ(oldStyle(PList("tail\n")), "\"tail\\\n\"\n");
+  EXPECT_EQ(oldStyle(PList("\\\\")), "\"\\\\\\\\\"\n");
+  EXPECT_EQ(oldStyle(PList()), "WRITEERR nil property list\n");
+  EXPECT_EQ(oldStyle(PList(PList::Array{PList()})),
               "WRITEERR non-plist object in dictionary\n");
-  OO_CHECK_EQ(xml(PList()), "WRITEERR nil property list\n");
+  EXPECT_EQ(xml(PList()), "WRITEERR nil property list\n");
   // A leading U+FEFF survives the raw path but not XString's escaping path (an
   // NSString made from units); captured from GNUstep: "﻿&" writes as "&amp;".
-  OO_CHECK_EQ(xml(PList("\xEF\xBB\xBF&")).find("<string>&amp;</string>") !=
+  EXPECT_EQ(xml(PList("\xEF\xBB\xBF&")).find("<string>&amp;</string>") !=
                   std::string::npos,
               true);
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       xml(PList("\xEF\xBB\xBFx")).find("<string>\xEF\xBB\xBFx</string>") !=
           std::string::npos,
       true);
 }
 
-OO_TEST(roundTrips) {
+TEST(plist_writers, roundTrips) {
   using oo::PList;
   // XML keeps every kind (non-negative integers read back unsigned, as GNUstep
   // stores them).
@@ -904,8 +906,8 @@ OO_TEST(roundTrips) {
                                PList(PList::Dict{})})},
   });
   const std::expected<oo::Data, oo::PListError> x = oo::writeXMLPList(all);
-  OO_CHECK(x.has_value());
-  OO_CHECK(oo::parsePropertyList(x->stringView()).value() == all);
+  EXPECT_TRUE(x.has_value());
+  EXPECT_TRUE(oo::parsePropertyList(x->stringView()).value() == all);
 
   // Old-style keeps strings, data, arrays and dictionaries (numbers come back
   // as strings).
@@ -921,53 +923,53 @@ OO_TEST(roundTrips) {
       {"Upper", PList("")},
   });
   const std::expected<oo::Data, oo::PListError> o = oo::writeOldStylePList(text);
-  OO_CHECK(o.has_value());
-  OO_CHECK(oo::parsePropertyList(o->stringView()).value() == text);
-  OO_CHECK_EQ(
-      oo_test::dump(
+  EXPECT_TRUE(o.has_value());
+  EXPECT_TRUE(oo::parsePropertyList(o->stringView()).value() == text);
+  EXPECT_EQ(
+      plist_dump::dump(
           oo::parsePropertyList(
               oldStyle(PList(PList::Array{PList(1), PList(2.5), PList(true)})))
               .value()),
       "[S\"1\",S\"2.5\",S\"true\"]");
 }
 
-OO_TEST(parsePropertyListDispatch) {
+TEST(plist_writers, parsePropertyListDispatch) {
   oo::PListFormat f = oo::PListFormat::kBinary;
-  OO_CHECK_EQ(oo_test::dump(oo::parsePropertyList("{ a = b; }", &f).value()),
+  EXPECT_EQ(plist_dump::dump(oo::parsePropertyList("{ a = b; }", &f).value()),
               "{\"a\"=S\"b\";}");
-  OO_CHECK(f == oo::PListFormat::kOpenStep);
-  OO_CHECK_EQ(oo_test::dump(oo::parsePropertyList(" \n<*I5>", &f).value()),
+  EXPECT_TRUE(f == oo::PListFormat::kOpenStep);
+  EXPECT_EQ(plist_dump::dump(oo::parsePropertyList(" \n<*I5>", &f).value()),
               "I5");
-  OO_CHECK(f == oo::PListFormat::kGNUstep);
-  OO_CHECK_EQ(
-      oo_test::dump(oo::parsePropertyList(
+  EXPECT_TRUE(f == oo::PListFormat::kGNUstep);
+  EXPECT_EQ(
+      plist_dump::dump(oo::parsePropertyList(
                         "<?xml version=\"1.0\"?><plist><true/></plist>", &f)
                         .value()),
       "B1");
-  OO_CHECK(f == oo::PListFormat::kXML);
+  EXPECT_TRUE(f == oo::PListFormat::kXML);
   // Whitespace before "<?" still selects XML, whose scanner then rejects it
   // (captured).
-  OO_CHECK_EQ(oo::parsePropertyList(
+  EXPECT_EQ(oo::parsePropertyList(
                   "  <?xml version=\"1.0\"?><plist><true/></plist>", &f)
                   .error()
                   .message,
               "failed to parse as XML property list");
-  OO_CHECK(f == oo::PListFormat::kXML);
-  OO_CHECK_EQ(oo::parsePropertyList("").error().message,
+  EXPECT_TRUE(f == oo::PListFormat::kXML);
+  EXPECT_EQ(oo::parsePropertyList("").error().message,
               "empty data argument passed to method");
-  OO_CHECK_EQ(oo::parsePropertyList("{ a = b ").error().message,
+  EXPECT_EQ(oo::parsePropertyList("{ a = b ").error().message,
               "Parse failed at line 1 (char 9) - reached end of string");
-  OO_CHECK_EQ(oo::parsePropertyList("{ a = b ").error().description(),
+  EXPECT_EQ(oo::parsePropertyList("{ a = b ").error().description(),
               "Error Domain=NSPropertyListSerialization Code=0 \"Parse failed "
               "at line 1 (char 9) - reached end of string\"");
   // Binary plists are not read.
-  OO_CHECK(!oo::parsePropertyList("bplist00\x01\x02"sv, &f).has_value());
-  OO_CHECK(f == oo::PListFormat::kBinary);
-  OO_CHECK(!oo::parsePropertyList("\x00\x01"sv, &f).has_value());
-  OO_CHECK(f == oo::PListFormat::kGNUstepBinary);
+  EXPECT_TRUE(!oo::parsePropertyList("bplist00\x01\x02"sv, &f).has_value());
+  EXPECT_TRUE(f == oo::PListFormat::kBinary);
+  EXPECT_TRUE(!oo::parsePropertyList("\x00\x01"sv, &f).has_value());
+  EXPECT_TRUE(f == oo::PListFormat::kGNUstepBinary);
   // The DTD change is applied first (OOPropertyListFromData), and is
   // transparent.
-  OO_CHECK(oo::parsePropertyList(kW01In).value() ==
+  EXPECT_TRUE(oo::parsePropertyList(kW01In).value() ==
            oo::parsePropertyListData(kW01In).value());
 }
 
@@ -991,7 +993,7 @@ class DescribedForeign : public oo::PListForeign {
 // +dataFromPropertyList:format:XML succeeds on an object that is not
 // property-list data, writing its -description in a <string> with no line break
 // after it, and reports no error.
-OO_TEST(xmlWritesForeignObjectAsItsDescription_capture) {
+TEST(plist_writers, xmlWritesForeignObjectAsItsDescription_capture) {
   oo::PList::Dict inner;
   inner["k"] = oo::PList(oo::PList::Object(
       std::shared_ptr<oo::PListForeign>(
@@ -1001,7 +1003,7 @@ OO_TEST(xmlWritesForeignObjectAsItsDescription_capture) {
   outer["packet type"] = oo::PList(std::string("Note Configuration"));
   const std::expected<oo::Data, oo::PListError> r =
       oo::writeXMLPList(oo::PList(outer));
-  OO_CHECK(static_cast<bool>(r));
+  EXPECT_TRUE(static_cast<bool>(r));
   const std::string expected =
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
       "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" "
@@ -1016,7 +1018,5 @@ OO_TEST(xmlWritesForeignObjectAsItsDescription_capture) {
       "    <string>Note Configuration</string>\n"
       "</dict>\n"
       "</plist>";
-  OO_CHECK(r && r->toString() == expected);
+  EXPECT_TRUE(r && r->toString() == expected);
 }
-
-OO_TEST_MAIN()

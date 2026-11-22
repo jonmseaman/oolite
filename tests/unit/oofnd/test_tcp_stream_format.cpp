@@ -16,8 +16,9 @@
 #include <cstdarg>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "../../../src/Core/Debug/TCPStreamDecoderFormat.hpp"
-#include "oo_test.hpp"
 
 namespace {
 
@@ -50,46 +51,44 @@ const Handle kTypeName{"GSMutableArray"};            // an NSString
 
 }  // namespace
 
-OO_TEST(unsignedConversion) {
-  OO_CHECK_EQ(Format("Invalid data -- NULL bytes but %u byte count.", 0u),
+TEST(tcp_stream_format, unsignedConversion) {
+  EXPECT_EQ(Format("Invalid data -- NULL bytes but %u byte count.", 0u),
               std::string("Invalid data -- NULL bytes but 0 byte count."));
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       Format("Invalid data -- NULL bytes but %u byte count.", 4294967295u),
       std::string("Invalid data -- NULL bytes but 4294967295 byte count."));
 }
 
-OO_TEST(sizeConversionAndData) {
-  OO_CHECK_EQ(Format("nextSize = %zu, bufferUsed = %zu, nextPacketData = %@.",
+TEST(tcp_stream_format, sizeConversionAndData) {
+  EXPECT_EQ(Format("nextSize = %zu, bufferUsed = %zu, nextPacketData = %@.",
                      static_cast<size_t>(0),
                      static_cast<size_t>(18446744073709551615ULL), &kNineBytes),
               std::string("nextSize = 0, bufferUsed = 18446744073709551615, "
                           "nextPacketData = <01020304 05060708 09>."));
-  OO_CHECK_EQ(Format("nextPacketData = %@.", &kEmptyData),
+  EXPECT_EQ(Format("nextPacketData = %@.", &kEmptyData),
               std::string("nextPacketData = <>."));
-  OO_CHECK_EQ(Format("nextPacketData = %@.", &kThreeBytes),
+  EXPECT_EQ(Format("nextPacketData = %@.", &kThreeBytes),
               std::string("nextPacketData = <deadbe>."));
 }
 
-OO_TEST(objectConversion) {
-  OO_CHECK_EQ(
+TEST(tcp_stream_format, objectConversion) {
+  EXPECT_EQ(
       Format("nextPacketData = %@.", static_cast<const Handle*>(nullptr)),
       std::string("nextPacketData = (null)."));
-  OO_CHECK_EQ(Format("Protocol error: packet is not property list (property "
+  EXPECT_EQ(Format("Protocol error: packet is not property list (property "
                      "list error: %@).",
                      &kParseError),
               std::string("Protocol error: packet is not property list "
                           "(property list error: Parse failed at line 1)."));
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       Format("Protocol error: packet is a %@, not a dictionary.", &kTypeName),
       std::string(
           "Protocol error: packet is a GSMutableArray, not a dictionary."));
 }
 
-OO_TEST(percentSigns) {
-  OO_CHECK_EQ(Format("100%% %u%%", 7u), std::string("100% 7%"));
-  OO_CHECK_EQ(Format("trailing %"), std::string("trailing %"));
-  OO_CHECK_EQ(Format("Protocol error: packet contains no packet type."),
+TEST(tcp_stream_format, percentSigns) {
+  EXPECT_EQ(Format("100%% %u%%", 7u), std::string("100% 7%"));
+  EXPECT_EQ(Format("trailing %"), std::string("trailing %"));
+  EXPECT_EQ(Format("Protocol error: packet contains no packet type."),
               std::string("Protocol error: packet contains no packet type."));
 }
-
-OO_TEST_MAIN()

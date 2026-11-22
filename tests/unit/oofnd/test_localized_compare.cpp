@@ -16,8 +16,9 @@
 #include <cstddef>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "localized_compare_table.inc"
-#include "oo_test.hpp"
 #include "oofnd/String.hpp"
 
 namespace {
@@ -32,8 +33,8 @@ int sign(int v) { return v < 0 ? -1 : (v > 0 ? 1 : 0); }
 
 }  // namespace
 
-OO_TEST(every_pair_matches_gnustep) {
-  OO_CHECK(kWords >= 60u);
+TEST(localized_compare, every_pair_matches_gnustep) {
+  EXPECT_TRUE(kWords >= 60u);
   std::size_t mismatches = 0;
   for (std::size_t i = 0; i < kWords; ++i) {
     for (std::size_t j = 0; j < kWords; ++j) {
@@ -42,27 +43,27 @@ OO_TEST(every_pair_matches_gnustep) {
                                                      kLocalizedCompareLocale));
       if (got != kLocalizedCompareSigns[i][j]) {
         ++mismatches;
-        OO_CHECK_EQ(got, kLocalizedCompareSigns[i][j]);
+        EXPECT_EQ(got, kLocalizedCompareSigns[i][j]);
       }
     }
   }
-  OO_CHECK_EQ(mismatches, 0u);
+  EXPECT_EQ(mismatches, 0u);
 }
 
-OO_TEST(readable_orderings) {
+TEST(localized_compare, readable_orderings) {
   // The case the manifest sort depends on: lower before upper, both before the
   // next letter.
-  OO_CHECK(oo::str::localizedCompare("a", "A", "en_US") < 0);
-  OO_CHECK(oo::str::localizedCompare("A", "b", "en_US") < 0);
-  OO_CHECK(oo::str::localizedCompare("Zz", "zz", "en_US") > 0);
-  OO_CHECK_EQ(oo::str::localizedCompare("Ships", "Ships", "en_US"), 0);
+  EXPECT_TRUE(oo::str::localizedCompare("a", "A", "en_US") < 0);
+  EXPECT_TRUE(oo::str::localizedCompare("A", "b", "en_US") < 0);
+  EXPECT_TRUE(oo::str::localizedCompare("Zz", "zz", "en_US") > 0);
+  EXPECT_EQ(oo::str::localizedCompare("Ships", "Ships", "en_US"), 0);
   // ... where the literal order (compare) disagrees.
-  OO_CHECK(oo::str::compare("A", "b") < 0);
-  OO_CHECK(oo::str::compare("a", "B") > 0);
-  OO_CHECK(oo::str::localizedCompare("a", "B", "en_US") < 0);
+  EXPECT_TRUE(oo::str::compare("A", "b") < 0);
+  EXPECT_TRUE(oo::str::compare("a", "B") > 0);
+  EXPECT_TRUE(oo::str::localizedCompare("a", "B", "en_US") < 0);
 }
 
-OO_TEST(sorting_matches_the_table) {
+TEST(localized_compare, sorting_matches_the_table) {
   // A sort by localizedCompare agrees with the order the GNUstep signs imply.
   std::vector<std::size_t> order(kWords);
   for (std::size_t i = 0; i < kWords; ++i) order[i] = i;
@@ -73,16 +74,14 @@ OO_TEST(sorting_matches_the_table) {
                                          kLocalizedCompareLocale) < 0;
       });
   for (std::size_t k = 1; k < kWords; ++k) {
-    OO_CHECK(kLocalizedCompareSigns[order[k - 1]][order[k]] <= 0);
+    EXPECT_TRUE(kLocalizedCompareSigns[order[k - 1]][order[k]] <= 0);
   }
 }
 
-OO_TEST(default_locale_form_uses_icus_default) {
+TEST(localized_compare, default_locale_form_uses_icus_default) {
   for (std::size_t i = 0; i < kWords; ++i) {
-    OO_CHECK_EQ(sign(oo::str::localizedCompare(kLocalizedCompareWords[i], "m")),
+    EXPECT_EQ(sign(oo::str::localizedCompare(kLocalizedCompareWords[i], "m")),
                 sign(oo::str::localizedCompare(kLocalizedCompareWords[i], "m",
                                                uloc_getDefault())));
   }
 }
-
-OO_TEST_MAIN()

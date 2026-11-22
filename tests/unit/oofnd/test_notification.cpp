@@ -8,13 +8,14 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "oofnd/Notification.hpp"
 
 #include <string>
 #include <thread>
 #include <vector>
 
-#include "oo_test.hpp"
 
 namespace {
 
@@ -25,7 +26,7 @@ int gEngine = 0;  // stand-ins for sender objects: only their addresses matter
 int gOtherEngine = 0;
 int gA = 0, gB = 0, gC = 0;
 
-OO_TEST(deliversByNameAndObjectInRegistrationOrder) {
+TEST(notification, deliversByNameAndObjectInRegistrationOrder) {
   oo::NotificationCenter nc;
   std::vector<std::string> log;
   nc.addObserver(&gA, kWillReset, &gEngine,
@@ -38,46 +39,46 @@ OO_TEST(deliversByNameAndObjectInRegistrationOrder) {
                  [&](const oo::Notification&) { log.push_back("did"); });
 
   nc.post(kWillReset, &gEngine);
-  OO_CHECK((log == std::vector<std::string>{"a", "b", "c"}));
+  EXPECT_TRUE((log == std::vector<std::string>{"a", "b", "c"}));
 
   log.clear();
   nc.post(kDidReset, &gEngine);
-  OO_CHECK((log == std::vector<std::string>{"did"}));
+  EXPECT_TRUE((log == std::vector<std::string>{"did"}));
 
   log.clear();
   nc.post(kWillReset,
           &gOtherEngine);  // a different object: nobody listens to it
   nc.post("unrelated", &gEngine);
-  OO_CHECK(log.empty());
+  EXPECT_TRUE(log.empty());
 }
 
-OO_TEST(namesCompareByValue) {
+TEST(notification, namesCompareByValue) {
   oo::NotificationCenter nc;
   int calls = 0;
   nc.addObserver(&gA, std::string("will reset"), nullptr,
                  [&](const oo::Notification&) { ++calls; });
   const std::string sameTextElsewhere = std::string("will ") + "reset";
   nc.post(sameTextElsewhere, nullptr);
-  OO_CHECK_EQ(calls, 1);
+  EXPECT_EQ(calls, 1);
 }
 
-OO_TEST(wildcardsWhenAdding) {
+TEST(notification, wildcardsWhenAdding) {
   oo::NotificationCenter nc;
   std::vector<std::string> log;
   nc.addObserver(&gA, kWillReset, nullptr, [&](const oo::Notification& n) {
     log.push_back(std::string("anyObject:") + std::string(n.name));
-    OO_CHECK(n.object == &gOtherEngine);
+    EXPECT_TRUE(n.object == &gOtherEngine);
   });
   nc.addObserver(&gB, "", &gOtherEngine, [&](const oo::Notification& n) {
     log.push_back(std::string("anyName:") + std::string(n.name));
   });
   nc.post(kWillReset, &gOtherEngine);
-  OO_CHECK(
+  EXPECT_TRUE(
       (log == std::vector<std::string>{std::string("anyObject:") + kWillReset,
                                        std::string("anyName:") + kWillReset}));
 }
 
-OO_TEST(removeByObserverNameAndObject) {
+TEST(notification, removeByObserverNameAndObject) {
   oo::NotificationCenter nc;
   int a = 0, b = 0, did = 0;
   nc.addObserver(&gA, kWillReset, &gEngine,
@@ -90,27 +91,27 @@ OO_TEST(removeByObserverNameAndObject) {
   nc.removeObserver(&gA, kWillReset, &gEngine);  // only that registration of a
   nc.post(kWillReset, &gEngine);
   nc.post(kDidReset, &gEngine);
-  OO_CHECK_EQ(a, 0);
-  OO_CHECK_EQ(b, 1);
-  OO_CHECK_EQ(did, 1);
+  EXPECT_EQ(a, 0);
+  EXPECT_EQ(b, 1);
+  EXPECT_EQ(did, 1);
 
   nc.removeObserver(&gB, kWillReset,
                     &gOtherEngine);  // object does not match: stays
   nc.post(kWillReset, &gEngine);
-  OO_CHECK_EQ(b, 2);
+  EXPECT_EQ(b, 2);
 
   nc.removeObserver(&gA);  // everything of a
   nc.post(kDidReset, &gEngine);
-  OO_CHECK_EQ(did, 1);
-  OO_CHECK_EQ(nc.observerCount(), 1u);
+  EXPECT_EQ(did, 1);
+  EXPECT_EQ(nc.observerCount(), 1u);
 
   nc.removeObserver(&gB, "", nullptr);  // wildcards when removing
-  OO_CHECK_EQ(nc.observerCount(), 0u);
+  EXPECT_EQ(nc.observerCount(), 0u);
   nc.removeObserver(&gB);  // removing twice is harmless
   nc.removeObserver(nullptr);
 }
 
-OO_TEST(duplicateRegistrationsDeliverTwiceAndRemoveTogether) {
+TEST(notification, duplicateRegistrationsDeliverTwiceAndRemoveTogether) {
   oo::NotificationCenter nc;
   int calls = 0;
   nc.addObserver(&gA, kWillReset, &gEngine,
@@ -118,34 +119,34 @@ OO_TEST(duplicateRegistrationsDeliverTwiceAndRemoveTogether) {
   nc.addObserver(&gA, kWillReset, &gEngine,
                  [&](const oo::Notification&) { ++calls; });
   nc.post(kWillReset, &gEngine);
-  OO_CHECK_EQ(calls, 2);
+  EXPECT_EQ(calls, 2);
   nc.removeObserver(&gA, kWillReset, &gEngine);
   nc.post(kWillReset, &gEngine);
-  OO_CHECK_EQ(calls, 2);
+  EXPECT_EQ(calls, 2);
 }
 
-OO_TEST(removeByToken) {
+TEST(notification, removeByToken) {
   oo::NotificationCenter nc;
   int first = 0, second = 0;
   const auto t1 = nc.addObserver(nullptr, kWillReset, nullptr,
                                  [&](const oo::Notification&) { ++first; });
   const auto t2 = nc.addObserver(nullptr, kWillReset, nullptr,
                                  [&](const oo::Notification&) { ++second; });
-  OO_CHECK(t1 != 0);
-  OO_CHECK(t1 != t2);
+  EXPECT_TRUE(t1 != 0);
+  EXPECT_TRUE(t1 != t2);
   nc.removeObserver(t1);
   nc.post(kWillReset, &gEngine);
-  OO_CHECK_EQ(first, 0);
-  OO_CHECK_EQ(second, 1);
+  EXPECT_EQ(first, 0);
+  EXPECT_EQ(second, 1);
   nc.removeObserver(t1);  // unknown token: no-op
   nc.removeObserver(
       nullptr);  // a null observer never matches token-only entries
-  OO_CHECK_EQ(nc.observerCount(), 1u);
+  EXPECT_EQ(nc.observerCount(), 1u);
 }
 
 // The game's pattern: each JS-holding object removes itself from inside its
 // will-reset callback.
-OO_TEST(removalDuringPostIsSafe) {
+TEST(notification, removalDuringPostIsSafe) {
   oo::NotificationCenter nc;
   std::vector<std::string> log;
   nc.addObserver(&gA, kWillReset, &gEngine, [&](const oo::Notification&) {
@@ -159,14 +160,14 @@ OO_TEST(removalDuringPostIsSafe) {
                  [&](const oo::Notification&) { log.push_back("c"); });
 
   nc.post(kWillReset, &gEngine);
-  OO_CHECK((log == std::vector<std::string>{"a", "b"}));
+  EXPECT_TRUE((log == std::vector<std::string>{"a", "b"}));
 
   log.clear();
   nc.post(kWillReset, &gEngine);
-  OO_CHECK((log == std::vector<std::string>{"b"}));
+  EXPECT_TRUE((log == std::vector<std::string>{"b"}));
 }
 
-OO_TEST(additionDuringPostWaitsForTheNextPost) {
+TEST(notification, additionDuringPostWaitsForTheNextPost) {
   oo::NotificationCenter nc;
   int added = 0;
   bool once = false;
@@ -177,12 +178,12 @@ OO_TEST(additionDuringPostWaitsForTheNextPost) {
                    [&](const oo::Notification&) { ++added; });
   });
   nc.post(kWillReset, nullptr);
-  OO_CHECK_EQ(added, 0);
+  EXPECT_EQ(added, 0);
   nc.post(kWillReset, nullptr);
-  OO_CHECK_EQ(added, 1);
+  EXPECT_EQ(added, 1);
 }
 
-OO_TEST(nestedPosts) {
+TEST(notification, nestedPosts) {
   oo::NotificationCenter nc;
   std::vector<std::string> log;
   nc.addObserver(&gA, kWillReset, nullptr, [&](const oo::Notification&) {
@@ -193,10 +194,10 @@ OO_TEST(nestedPosts) {
   nc.addObserver(&gB, kDidReset, nullptr,
                  [&](const oo::Notification&) { log.push_back("did"); });
   nc.post(kWillReset, nullptr);
-  OO_CHECK((log == std::vector<std::string>{"will", "did", "will-end"}));
+  EXPECT_TRUE((log == std::vector<std::string>{"will", "did", "will-end"}));
 }
 
-OO_TEST(postsOnThePostingThread) {
+TEST(notification, postsOnThePostingThread) {
   oo::NotificationCenter nc;
   std::thread::id deliveredOn;
   nc.addObserver(&gA, kWillReset, nullptr, [&](const oo::Notification&) {
@@ -208,23 +209,21 @@ OO_TEST(postsOnThePostingThread) {
     nc.post(kWillReset, nullptr);
   });
   t.join();
-  OO_CHECK(deliveredOn == postedOn);
-  OO_CHECK(deliveredOn != std::this_thread::get_id());
+  EXPECT_TRUE(deliveredOn == postedOn);
+  EXPECT_TRUE(deliveredOn != std::this_thread::get_id());
 }
 
-OO_TEST(defaultCenterIsOneInstance) {
+TEST(notification, defaultCenterIsOneInstance) {
   oo::NotificationCenter& a = oo::NotificationCenter::defaultCenter();
   oo::NotificationCenter& b = oo::NotificationCenter::defaultCenter();
-  OO_CHECK(&a == &b);
+  EXPECT_TRUE(&a == &b);
   int calls = 0;
   const auto token = a.addObserver(&gA, "test_notification.default", nullptr,
                                    [&](const oo::Notification&) { ++calls; });
   b.post("test_notification.default", nullptr);
-  OO_CHECK_EQ(calls, 1);
+  EXPECT_EQ(calls, 1);
   a.removeObserver(token);
-  OO_CHECK_EQ(a.observerCount(), 0u);
+  EXPECT_EQ(a.observerCount(), 0u);
 }
 
 }  // namespace
-
-OO_TEST_MAIN()

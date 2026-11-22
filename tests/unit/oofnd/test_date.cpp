@@ -6,12 +6,13 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "oofnd/Date.hpp"
 
 #include <cmath>
 #include <string>
 
-#include "oo_test.hpp"
 
 namespace {
 
@@ -21,80 +22,78 @@ Clock::time_point unix(std::int64_t seconds) {
   return Clock::time_point(std::chrono::seconds(seconds));
 }
 
-OO_TEST(referenceDateIs2001UTC) {
-  OO_CHECK_EQ(oo::date::kReferenceDateSince1970, 978307200);
+TEST(date, referenceDateIs2001UTC) {
+  EXPECT_EQ(oo::date::kReferenceDateSince1970, 978307200);
   // 2001-01-01 00:00:00 UTC: 31 years of 365 days + 8 leap days (1972 .. 2000)
   // after 1970.
-  OO_CHECK_EQ(oo::date::kReferenceDateSince1970, (31LL * 365 + 8) * 86400);
-  OO_CHECK(oo::date::timeIntervalSinceReferenceDate(unix(978307200)) == 0.0);
-  OO_CHECK(oo::date::timeIntervalSinceReferenceDate(unix(0)) == -978307200.0);
-  OO_CHECK(oo::date::timeIntervalSince1970(unix(978307200)) == 978307200.0);
-  OO_CHECK_EQ(oo::date::description(
+  EXPECT_EQ(oo::date::kReferenceDateSince1970, (31LL * 365 + 8) * 86400);
+  EXPECT_TRUE(oo::date::timeIntervalSinceReferenceDate(unix(978307200)) == 0.0);
+  EXPECT_TRUE(oo::date::timeIntervalSinceReferenceDate(unix(0)) == -978307200.0);
+  EXPECT_TRUE(oo::date::timeIntervalSince1970(unix(978307200)) == 978307200.0);
+  EXPECT_EQ(oo::date::description(
                   oo::date::dateWithTimeIntervalSinceReferenceDate(0.0), 0),
               std::string("2001-01-01 00:00:00 +0000"));
 }
 
-OO_TEST(roundTrips) {
+TEST(date, roundTrips) {
   const double interval = 812345678.25;  // a 2026 date with a quarter second
   const Clock::time_point t =
       oo::date::dateWithTimeIntervalSinceReferenceDate(interval);
-  OO_CHECK(std::fabs(oo::date::timeIntervalSinceReferenceDate(t) - interval) <
+  EXPECT_TRUE(std::fabs(oo::date::timeIntervalSinceReferenceDate(t) - interval) <
            1e-6);
-  OO_CHECK(std::fabs(oo::date::timeIntervalSince1970(t) -
+  EXPECT_TRUE(std::fabs(oo::date::timeIntervalSince1970(t) -
                      (interval + 978307200.0)) < 1e-6);
-  OO_CHECK(oo::date::dateWithTimeIntervalSince1970(interval + 978307200.0) ==
+  EXPECT_TRUE(oo::date::dateWithTimeIntervalSince1970(interval + 978307200.0) ==
            t);
 }
 
-OO_TEST(nowAgreesWithTheSystemClock) {
+TEST(date, nowAgreesWithTheSystemClock) {
   const double before = oo::date::timeIntervalSinceReferenceDate();
   const double sys =
       std::chrono::duration<double>(Clock::now().time_since_epoch()).count() -
       978307200.0;
   const double after = oo::date::timeIntervalSinceReferenceDate();
-  OO_CHECK(before <= sys + 1e-3);
-  OO_CHECK(sys <= after + 1e-3);
-  OO_CHECK(
+  EXPECT_TRUE(before <= sys + 1e-3);
+  EXPECT_TRUE(sys <= after + 1e-3);
+  EXPECT_TRUE(
       before >
       7.5e8);  // after 2024: it is a real wall-clock reading, not an uptime
 }
 
-OO_TEST(descriptionFormat) {
+TEST(date, descriptionFormat) {
   // 2026-09-23 14:03:12.9 UTC: seconds truncate, as NSCalendarDate's %S does.
   const Clock::time_point t = unix(1790172192) + std::chrono::milliseconds(900);
-  OO_CHECK_EQ(oo::date::description(t, 0),
+  EXPECT_EQ(oo::date::description(t, 0),
               std::string("2026-09-23 14:03:12 +0000"));
-  OO_CHECK_EQ(oo::date::description(t, 60),
+  EXPECT_EQ(oo::date::description(t, 60),
               std::string("2026-09-23 15:03:12 +0100"));
-  OO_CHECK_EQ(oo::date::description(t, -330),
+  EXPECT_EQ(oo::date::description(t, -330),
               std::string("2026-09-23 08:33:12 -0530"));
-  OO_CHECK_EQ(oo::date::description(unix(951782400), 0),
+  EXPECT_EQ(oo::date::description(unix(951782400), 0),
               std::string("2000-02-29 00:00:00 +0000"));  // leap day
-  OO_CHECK_EQ(oo::date::description(unix(-1), 0),
+  EXPECT_EQ(oo::date::description(unix(-1), 0),
               std::string("1969-12-31 23:59:59 +0000"));
-  OO_CHECK_EQ(oo::date::description(unix(1790121600), -60),
+  EXPECT_EQ(oo::date::description(unix(1790121600), -60),
               std::string("2026-09-22 23:00:00 -0100"));  // day rolls back
 
   // The local form has the same shape and a whole-minute offset within a day.
   const std::string local = oo::date::description(t);
-  OO_CHECK_EQ(local.size(), std::string("2026-09-23 14:03:12 +0000").size());
-  OO_CHECK(local[4] == '-' && local[7] == '-' && local[10] == ' ' &&
+  EXPECT_EQ(local.size(), std::string("2026-09-23 14:03:12 +0000").size());
+  EXPECT_TRUE(local[4] == '-' && local[7] == '-' && local[10] == ' ' &&
            local[13] == ':' && local[16] == ':');
-  OO_CHECK(local[20] == '+' || local[20] == '-');
+  EXPECT_TRUE(local[20] == '+' || local[20] == '-');
   const int offset = oo::date::localUTCOffsetMinutes(t);
-  OO_CHECK(offset > -24 * 60 && offset < 24 * 60);
-  OO_CHECK_EQ(local, oo::date::description(t, offset));
+  EXPECT_TRUE(offset > -24 * 60 && offset < 24 * 60);
+  EXPECT_EQ(local, oo::date::description(t, offset));
 }
 
-OO_TEST(monotonicSecondsNeverGoBack) {
+TEST(date, monotonicSecondsNeverGoBack) {
   double last = oo::date::monotonicSeconds();
   for (int i = 0; i < 1000; i++) {
     const double now = oo::date::monotonicSeconds();
-    OO_CHECK(now >= last);
+    EXPECT_TRUE(now >= last);
     last = now;
   }
 }
 
 }  // namespace
-
-OO_TEST_MAIN()

@@ -8,6 +8,8 @@
 
 
 
+#include <gtest/gtest.h>
+
 #include "oofnd/Defaults.hpp"
 
 
@@ -19,7 +21,6 @@
 #include <string>
 #include <vector>
 
-#include "oo_test.hpp"
 
 namespace {
 
@@ -41,8 +42,8 @@ fs::Path scratch(const char* name) {
 }
 
 void put(const fs::Path& file, const std::string& text) {
-  OO_CHECK(fs::createDirectories(file.parent_path()));
-  OO_CHECK(fs::writeFile(file, oo::Data::fromString(text)));
+  EXPECT_TRUE(fs::createDirectories(file.parent_path()));
+  EXPECT_TRUE(fs::writeFile(file, oo::Data::fromString(text)));
 }
 
 std::optional<std::string> contents(const fs::Path& file) {
@@ -65,7 +66,7 @@ const char* const kProbeInput =
 // --- NSString coercions (NSUserDefaults -boolForKey: / -integerForKey: /
 // -doubleForKey:) ------
 
-OO_TEST(stringBoolValueMatchesGNUstep) {
+TEST(defaults, stringBoolValueMatchesGNUstep) {
   using oo::defaults_detail::stringBoolValue;
   const std::map<std::string, bool> probed = {
       {"YES", true},
@@ -93,10 +94,10 @@ OO_TEST(stringBoolValueMatchesGNUstep) {
        "12",
        false},
   };
-  for (const auto& [s, b] : probed) OO_CHECK_EQ(stringBoolValue(s), b);
+  for (const auto& [s, b] : probed) EXPECT_EQ(stringBoolValue(s), b);
 }
 
-OO_TEST(stringIntegerValueMatchesGNUstep) {
+TEST(defaults, stringIntegerValueMatchesGNUstep) {
   using oo::defaults_detail::stringIntegerValue;
   const std::map<std::string, std::int64_t> probed = {
       {" 12", 12},
@@ -126,10 +127,10 @@ OO_TEST(stringIntegerValueMatchesGNUstep) {
       {"", 0},
       {"  -", 0},
   };
-  for (const auto& [s, i] : probed) OO_CHECK_EQ(stringIntegerValue(s), i);
+  for (const auto& [s, i] : probed) EXPECT_EQ(stringIntegerValue(s), i);
 }
 
-OO_TEST(stringDoubleValueMatchesGNUstep) {
+TEST(defaults, stringDoubleValueMatchesGNUstep) {
   using oo::defaults_detail::stringDoubleValue;
   const std::map<std::string, double> probed = {
       {"0.1", 0.1},
@@ -155,16 +156,16 @@ OO_TEST(stringDoubleValueMatchesGNUstep) {
       {"1,5", 1.0},
       {"YES", 0.0},
   };
-  for (const auto& [s, d] : probed) OO_CHECK_EQ(stringDoubleValue(s), d);
-  OO_CHECK(std::isinf(stringDoubleValue("1e400")));
-  OO_CHECK(std::signbit(stringDoubleValue("-0")));
-  OO_CHECK_EQ(static_cast<float>(stringDoubleValue("0.1")), 0.1f);
+  for (const auto& [s, d] : probed) EXPECT_EQ(stringDoubleValue(s), d);
+  EXPECT_TRUE(std::isinf(stringDoubleValue("1e400")));
+  EXPECT_TRUE(std::signbit(stringDoubleValue("-0")));
+  EXPECT_EQ(static_cast<float>(stringDoubleValue("0.1")), 0.1f);
 }
 
 // --- the OpenStep writer (NSUserDefaults+Override's format)
 // ---------------------------------
 
-OO_TEST(openStepStringsAreBareOnlyWhenAlphanumeric) {
+TEST(defaults, openStepStringsAreBareOnlyWhenAlphanumeric) {
   for (int c = 32; c < 127; ++c) {
     const std::string s = std::string("a") + static_cast<char>(c) + "b";
     const bool alnum = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') ||
@@ -172,14 +173,14 @@ OO_TEST(openStepStringsAreBareOnlyWhenAlphanumeric) {
     std::string expected = alnum ? s : "\"" + s + "\"";
     if (c == '"') expected = "\"a\\\"b\"";
     if (c == '\\') expected = "\"a\\\\b\"";
-    OO_CHECK_EQ(written(PList(s)), expected);
+    EXPECT_EQ(written(PList(s)), expected);
   }
-  OO_CHECK_EQ(written(PList("")), std::string("\"\""));
-  OO_CHECK_EQ(written(PList("1")), std::string("1"));
-  OO_CHECK_EQ(written(PList("-")), std::string("\"-\""));
+  EXPECT_EQ(written(PList("")), std::string("\"\""));
+  EXPECT_EQ(written(PList("1")), std::string("1"));
+  EXPECT_EQ(written(PList("-")), std::string("\"-\""));
 }
 
-OO_TEST(openStepEscapesControlsAndNonASCII) {
+TEST(defaults, openStepEscapesControlsAndNonASCII) {
   const char* const probed[32] = {
       nullptr,     "\"\\001\"", "\"\\002\"", "\"\\003\"", "\"\\004\"",
       "\"\\005\"", "\"\\006\"", "\"\\a\"",   "\"\\b\"",   "\"\t\"",
@@ -190,30 +191,30 @@ OO_TEST(openStepEscapesControlsAndNonASCII) {
       "\"\\036\"", "\"\\037\"",
   };
   for (int c = 1; c < 32; ++c)
-    OO_CHECK_EQ(written(PList(std::string(1, static_cast<char>(c)))),
+    EXPECT_EQ(written(PList(std::string(1, static_cast<char>(c)))),
                 std::string(probed[c]));
-  OO_CHECK_EQ(written(PList("\x7f")), std::string("\"\\177\""));
-  OO_CHECK_EQ(written(PList("\xC2\x80")), std::string("\"\\U0080\""));
-  OO_CHECK_EQ(written(PList("caf\xC3\xA9 \xE2\x98\x83")),
+  EXPECT_EQ(written(PList("\x7f")), std::string("\"\\177\""));
+  EXPECT_EQ(written(PList("\xC2\x80")), std::string("\"\\U0080\""));
+  EXPECT_EQ(written(PList("caf\xC3\xA9 \xE2\x98\x83")),
               std::string("\"caf\\U00E9 \\U2603\""));
-  OO_CHECK_EQ(written(PList("\xEF\xBF\xBD")), std::string("\"\\UFFFD\""));
-  OO_CHECK_EQ(written(PList("\xF0\x9F\x98\x80")),
+  EXPECT_EQ(written(PList("\xEF\xBF\xBD")), std::string("\"\\UFFFD\""));
+  EXPECT_EQ(written(PList("\xF0\x9F\x98\x80")),
               std::string("\"\\UD83D\\UDE00\""));
 }
 
-OO_TEST(openStepContainersNumbersAndData) {
-  OO_CHECK_EQ(written(PList(PList::Array{})), std::string("(\n)"));
-  OO_CHECK_EQ(written(PList(PList::Dict{})), std::string("{\n}"));
-  OO_CHECK_EQ(written(PList(oo::Data())), std::string("<>"));
-  OO_CHECK_EQ(
+TEST(defaults, openStepContainersNumbersAndData) {
+  EXPECT_EQ(written(PList(PList::Array{})), std::string("(\n)"));
+  EXPECT_EQ(written(PList(PList::Dict{})), std::string("{\n}"));
+  EXPECT_EQ(written(PList(oo::Data())), std::string("<>"));
+  EXPECT_EQ(
       written(PList(oo::Data("\x01\x02\x03\x04\x05\x06\x07\x08\x09", 9))),
       std::string("<01020304 05060708 09>"));
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       written(PList(PList::Array{
           PList("x"), PList(PList::Dict{{"k", PList(PList::Array{})}})})),
       std::string("(\n    x,\n    {\n\tk = (\n\t);\n    }\n)"));
   // Keys in UTF-16 order: upper case before lower case, "~" before U+2603.
-  OO_CHECK_EQ(written(PList(PList::Dict{{"b", "x"},
+  EXPECT_EQ(written(PList(PList::Dict{{"b", "x"},
                                         {"B", "y"},
                                         {"a", "z"},
                                         {"A", "w"},
@@ -221,28 +222,28 @@ OO_TEST(openStepContainersNumbersAndData) {
                                         {"\xE2\x98\x83", "t"}})),
               std::string("{\n    A = w;\n    B = y;\n    a = z;\n    b = x;\n "
                           "   \"~\" = u;\n    \"\\U2603\" = t;\n}"));
-  OO_CHECK_EQ(written(PList(1e21)), std::string("\"1e+21\""));
-  OO_CHECK_EQ(written(PList(123456789012345678.0)),
+  EXPECT_EQ(written(PList(1e21)), std::string("\"1e+21\""));
+  EXPECT_EQ(written(PList(123456789012345678.0)),
               std::string("\"1.234567890123457e+17\""));
-  OO_CHECK_EQ(written(PList(INFINITY)), std::string("inf"));
-  OO_CHECK_EQ(written(PList(-INFINITY)), std::string("\"-inf\""));
-  OO_CHECK_EQ(written(PList(std::nan(""))), std::string("nan"));
-  OO_CHECK_EQ(written(PList(true)), std::string("1"));
-  OO_CHECK_EQ(written(PList(std::int16_t{-3})), std::string("\"-3\""));
-  OO_CHECK_EQ(written(PList(4000000000u)), std::string("4000000000"));
+  EXPECT_EQ(written(PList(INFINITY)), std::string("inf"));
+  EXPECT_EQ(written(PList(-INFINITY)), std::string("\"-inf\""));
+  EXPECT_EQ(written(PList(std::nan(""))), std::string("nan"));
+  EXPECT_EQ(written(PList(true)), std::string("1"));
+  EXPECT_EQ(written(PList(std::int16_t{-3})), std::string("\"-3\""));
+  EXPECT_EQ(written(PList(4000000000u)), std::string("4000000000"));
 
   // Seven levels deep: the indentation is GNUstep's, 4 spaces per level with 8
   // spaces as a tab.
   PList deep("deep");
   for (int i = 0; i < 6; ++i) deep = PList(PList::Array{deep});
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       written(PList(PList::Dict{{"k", deep}})),
       std::string(
           "{\n    k = (\n\t(\n\t    (\n\t\t(\n\t\t    (\n\t\t\t(\n\t\t\t    "
           "deep\n\t\t\t)\n\t\t    )\n\t\t)\n\t    )\n\t)\n    );\n}"));
 }
 
-OO_TEST(openStepNumberDescriptionsFromTheProbe) {
+TEST(defaults, openStepNumberDescriptionsFromTheProbe) {
   PList::Array nums = {
       0.1 + 0.2,
       1.0 / 3,
@@ -269,7 +270,7 @@ OO_TEST(openStepNumberDescriptionsFromTheProbe) {
   auto single = [&](const PList& p) {
     return &p == &a[10] || &p == &a[11] || &p == &a[12];
   };
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       written(root, single),
       std::string(
           "{\n    nums = "
@@ -285,7 +286,7 @@ OO_TEST(openStepNumberDescriptionsFromTheProbe) {
 // --- arguments, domain name, directory
 // ------------------------------------------------------
 
-OO_TEST(argumentDomainMatchesGNUstep) {
+TEST(defaults, argumentDomainMatchesGNUstep) {
   const PList::Dict args = oo::parseDefaultsArguments({
       "probe.exe",
       "-a",
@@ -335,28 +336,28 @@ OO_TEST(argumentDomainMatchesGNUstep) {
       {"o", "a;"},
       {"p", "(unterminated"},
   };
-  OO_CHECK(args == expected);
-  OO_CHECK(args.find("b") == args.end());
-  OO_CHECK(args.find("j") == args.end());
+  EXPECT_TRUE(args == expected);
+  EXPECT_TRUE(args.find("b") == args.end());
+  EXPECT_TRUE(args.find("j") == args.end());
 
   const PList::Dict again = oo::parseDefaultsArguments(
       {"probe", "loose", "-x", "1", "-x", "2", "--NSx", "y"});
-  OO_CHECK(again == (PList::Dict{{"x", "2"}, {"-NSx", "y"}}));
+  EXPECT_TRUE(again == (PList::Dict{{"x", "2"}, {"-NSx", "y"}}));
 }
 
-OO_TEST(applicationDomainIsTheBundleIdentifierElseTheProcessName) {
-  OO_CHECK_EQ(
+TEST(defaults, applicationDomainIsTheBundleIdentifierElseTheProcessName) {
+  EXPECT_EQ(
       oo::applicationDomainName(
           PList(PList::Dict{{"CFBundleIdentifier", "oolite"}}), "probe"),
       std::string("oolite"));
-  OO_CHECK_EQ(oo::applicationDomainName(PList(), "probe"),
+  EXPECT_EQ(oo::applicationDomainName(PList(), "probe"),
               std::string("probe"));
-  OO_CHECK_EQ(oo::applicationDomainName(
+  EXPECT_EQ(oo::applicationDomainName(
                   PList(PList::Dict{{"CFBundleIdentifier", ""}}), "oolite"),
               std::string("oolite"));
 }
 
-OO_TEST(defaultsDirectoryIsHomeGNUstepDefaults) {
+TEST(defaults, defaultsDirectoryIsHomeGNUstepDefaults) {
   auto make = [](oo::PathEnvironment::Platform platform,
                  std::map<std::string, std::string> vars) {
     oo::PathEnvironment env;
@@ -369,18 +370,18 @@ OO_TEST(defaultsDirectoryIsHomeGNUstepDefaults) {
     return oo::ResourcePaths(env);
   };
   using P = oo::PathEnvironment::Platform;
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       fs::utf8String(oo::userDefaultsDirectory(
           make(P::kWindows, {{"HOMEPATH", "C:\\Games\\Oolite\\oolite.app"}}))),
       std::string("C:/Games/Oolite/oolite.app/GNUstep/Defaults"));
-  OO_CHECK_EQ(fs::utf8String(oo::userDefaultsDirectory(
+  EXPECT_EQ(fs::utf8String(oo::userDefaultsDirectory(
                   make(P::kWindows, {{"HOMEPATH", "C:\\g"},
                                     {"OO_GNUSTEPDEFAULTSDIR", "C:\\x"}}))),
               std::string("C:/g/GNUstep/Defaults"));
-  OO_CHECK_EQ(fs::utf8String(oo::userDefaultsDirectory(
+  EXPECT_EQ(fs::utf8String(oo::userDefaultsDirectory(
                   make(P::kPosix, {{"HOME", "/home/u"}}))),
               std::string("/home/u/GNUstep/Defaults"));
-  OO_CHECK_EQ(fs::utf8String(oo::userDefaultsDirectory(make(
+  EXPECT_EQ(fs::utf8String(oo::userDefaultsDirectory(make(
                   P::kPosix,
                   {{"HOME", "/home/u"}, {"OO_GNUSTEPDEFAULTSDIR", "/data"}}))),
               std::string("/data"));
@@ -389,7 +390,7 @@ OO_TEST(defaultsDirectoryIsHomeGNUstepDefaults) {
 // --- the store
 // ------------------------------------------------------------------------------
 
-OO_TEST(gettersCoerceTheProbedFile) {
+TEST(defaults, gettersCoerceTheProbedFile) {
   const fs::Path dir = scratch("getters");
   put(dir / "oolite.plist", kProbeInput);
   oo::Defaults d(dir, "oolite");
@@ -420,36 +421,36 @@ OO_TEST(gettersCoerceTheProbedFile) {
       {"missing", false, 0, 0},
   };
   for (const Row& r : probed) {
-    OO_CHECK_EQ(d.boolForKey(r.key), r.b);
-    OO_CHECK_EQ(d.integerForKey(r.key), r.i);
-    OO_CHECK_EQ(d.doubleForKey(r.key), r.f);
-    OO_CHECK_EQ(d.floatForKey(r.key), static_cast<float>(r.f));
+    EXPECT_EQ(d.boolForKey(r.key), r.b);
+    EXPECT_EQ(d.integerForKey(r.key), r.i);
+    EXPECT_EQ(d.doubleForKey(r.key), r.f);
+    EXPECT_EQ(d.floatForKey(r.key), static_cast<float>(r.f));
   }
-  OO_CHECK(d.stringForKey("t1") == std::optional<std::string>("YES"));
-  OO_CHECK(!d.stringForKey("t11"));
-  OO_CHECK(!d.stringForKey("missing"));
+  EXPECT_TRUE(d.stringForKey("t1") == std::optional<std::string>("YES"));
+  EXPECT_TRUE(!d.stringForKey("t11"));
+  EXPECT_TRUE(!d.stringForKey("missing"));
 
   d.setObject("arr", PList(PList::Array{"1"}));
   d.setObject("dict", PList(PList::Dict{{"k", "1"}}));
   d.setObject("data", PList(oo::Data("1", 1)));
   for (const char* k : {"arr", "dict", "data"}) {
-    OO_CHECK(!d.boolForKey(k));
-    OO_CHECK_EQ(d.integerForKey(k), 0);
-    OO_CHECK_EQ(d.doubleForKey(k), 0.0);
-    OO_CHECK(!d.stringForKey(k));
+    EXPECT_TRUE(!d.boolForKey(k));
+    EXPECT_EQ(d.integerForKey(k), 0);
+    EXPECT_EQ(d.doubleForKey(k), 0.0);
+    EXPECT_TRUE(!d.stringForKey(k));
   }
-  OO_CHECK(d.arrayForKey("arr").isArray() && d.arrayForKey("dict").isNull());
-  OO_CHECK(d.dictionaryForKey("dict").isDict() &&
+  EXPECT_TRUE(d.arrayForKey("arr").isArray() && d.arrayForKey("dict").isNull());
+  EXPECT_TRUE(d.dictionaryForKey("dict").isDict() &&
            d.dictionaryForKey("arr").isNull());
   d.setDouble("nan", std::nan(""));
   d.setDouble("big", 1e30);
   d.setDouble("neg0", -0.0);
-  OO_CHECK(d.boolForKey("nan") && d.boolForKey("big") && !d.boolForKey("neg0"));
-  OO_CHECK_EQ(d.integerForKey("nan"), INT64_MIN);
-  OO_CHECK_EQ(d.integerForKey("big"), INT64_MIN);
+  EXPECT_TRUE(d.boolForKey("nan") && d.boolForKey("big") && !d.boolForKey("neg0"));
+  EXPECT_EQ(d.integerForKey("nan"), INT64_MIN);
+  EXPECT_EQ(d.integerForKey("big"), INT64_MIN);
 }
 
-OO_TEST(searchListOrder) {
+TEST(defaults, searchListOrder) {
   const fs::Path dir = scratch("search");
   put(dir / "oolite.plist", "{ app = fromApp; both = fromApp; }");
   put(dir / "NSGlobalDomain.plist",
@@ -457,33 +458,33 @@ OO_TEST(searchListOrder) {
   oo::Defaults d(dir, "oolite", {{"both", "fromArgs"}});
   d.registerDefaults(
       {{"reg", "fromRegistration"}, {"global", "fromRegistration"}});
-  OO_CHECK(d.stringForKey("both") == std::optional<std::string>("fromArgs"));
-  OO_CHECK(d.stringForKey("app") == std::optional<std::string>("fromApp"));
-  OO_CHECK(d.stringForKey("global") ==
+  EXPECT_TRUE(d.stringForKey("both") == std::optional<std::string>("fromArgs"));
+  EXPECT_TRUE(d.stringForKey("app") == std::optional<std::string>("fromApp"));
+  EXPECT_TRUE(d.stringForKey("global") ==
            std::optional<std::string>("fromGlobal"));
-  OO_CHECK(d.stringForKey("reg") ==
+  EXPECT_TRUE(d.stringForKey("reg") ==
            std::optional<std::string>("fromRegistration"));
   d.setObject("both", "set");  // the application domain: arguments still win
-  OO_CHECK(d.stringForKey("both") == std::optional<std::string>("fromArgs"));
+  EXPECT_TRUE(d.stringForKey("both") == std::optional<std::string>("fromArgs"));
   d.removeObject("app");
-  OO_CHECK(d.stringForKey("app") == std::optional<std::string>("fromGlobal"));
+  EXPECT_TRUE(d.stringForKey("app") == std::optional<std::string>("fromGlobal"));
 }
 
-OO_TEST(synchronizeWritesTheProbedBytes) {
+TEST(defaults, synchronizeWritesTheProbedBytes) {
   const fs::Path dir = scratch("write");
   put(dir / "oolite.plist", kProbeInput);
   oo::Defaults d(dir, "oolite");
-  OO_CHECK(d.synchronize());  // nothing changed: the file is left as it is
-  OO_CHECK(contents(dir / "oolite.plist") ==
+  EXPECT_TRUE(d.synchronize());  // nothing changed: the file is left as it is
+  EXPECT_TRUE(contents(dir / "oolite.plist") ==
            std::optional<std::string>(kProbeInput));
   d.setObject("t1", "YES");  // the same value: still nothing to write
-  OO_CHECK(d.synchronize());
-  OO_CHECK(contents(dir / "oolite.plist") ==
+  EXPECT_TRUE(d.synchronize());
+  EXPECT_TRUE(contents(dir / "oolite.plist") ==
            std::optional<std::string>(kProbeInput));
 
   d.setObject("only", "v");
-  OO_CHECK(d.synchronize());
-  OO_CHECK(contents(dir / "oolite.plist") ==
+  EXPECT_TRUE(d.synchronize());
+  EXPECT_TRUE(contents(dir / "oolite.plist") ==
            std::optional<std::string>(
                "{\n    only = v;\n    setInteger = 123456789012;\n    t1 = "
                "YES;\n    t10 = NO;\n    t11 = 1;\n"
@@ -494,7 +495,7 @@ OO_TEST(synchronizeWritesTheProbedBytes) {
                "    t9 = \"  -3.5e1x\";\n}"));
 }
 
-OO_TEST(synchronizeCreatesTheDirectoryAndKeepsFloatsSinglePrecision) {
+TEST(defaults, synchronizeCreatesTheDirectoryAndKeepsFloatsSinglePrecision) {
   const fs::Path dir = scratch("fresh") / "GNUstep" / "Defaults";
   oo::Defaults d(dir, "oolite");
   d.setObject("CustomEquipActivation", PList(PList::Array{}));
@@ -504,8 +505,8 @@ OO_TEST(synchronizeCreatesTheDirectoryAndKeepsFloatsSinglePrecision) {
   d.setFloat("volume_control", 0.55f);
   d.setDouble("gamma", 0.55f);
   d.setBool("yes", true);
-  OO_CHECK(d.synchronize());
-  OO_CHECK(contents(dir / "oolite.plist") ==
+  EXPECT_TRUE(d.synchronize());
+  EXPECT_TRUE(contents(dir / "oolite.plist") ==
            std::optional<std::string>(
                "{\n    CustomEquipActivation = (\n    );\n    "
                "\"Jameson-humbletrash\" = \"-29624\";\n"
@@ -514,62 +515,60 @@ OO_TEST(synchronizeCreatesTheDirectoryAndKeepsFloatsSinglePrecision) {
                "    \"save-directory\" = \"Resources/Scenarios\";\n    "
                "\"volume_control\" = \"0.55\";\n    yes = 1;\n}"));
   // Until the next run the values keep their types, as NSNumbers did.
-  OO_CHECK_EQ(d.floatForKey("volume_control"), 0.55f);
-  OO_CHECK(d.object("yes") == PList(true));
+  EXPECT_EQ(d.floatForKey("volume_control"), 0.55f);
+  EXPECT_TRUE(d.object("yes") == PList(true));
   // ...and the next run reads strings.
   oo::Defaults next(dir, "oolite");
-  OO_CHECK(next.object("volume_control") == PList("0.55"));
-  OO_CHECK_EQ(next.floatForKey("volume_control"), 0.55f);
-  OO_CHECK_EQ(next.integerForKey("Jameson-humbletrash"), -29624);
+  EXPECT_TRUE(next.object("volume_control") == PList("0.55"));
+  EXPECT_EQ(next.floatForKey("volume_control"), 0.55f);
+  EXPECT_EQ(next.integerForKey("Jameson-humbletrash"), -29624);
 }
 
-OO_TEST(synchronizeMergesOntoAnotherWritersFile) {
+TEST(defaults, synchronizeMergesOntoAnotherWritersFile) {
   const fs::Path dir = scratch("merge");
   put(dir / "oolite.plist", "{ nums = (1); only = v; }");
   oo::Defaults d(dir, "oolite");
   d.setObject("local", "mine");
   put(dir / "oolite.plist",
       "{ext = fromdisk; nums = 1;}");  // someone else synchronized meanwhile
-  OO_CHECK(!d.stringForKey("ext"));    // not seen before synchronize
-  OO_CHECK(d.synchronize());
-  OO_CHECK(d.stringForKey("ext") == std::optional<std::string>("fromdisk"));
-  OO_CHECK(!d.stringForKey("only"));
-  OO_CHECK(contents(dir / "oolite.plist") ==
+  EXPECT_TRUE(!d.stringForKey("ext"));    // not seen before synchronize
+  EXPECT_TRUE(d.synchronize());
+  EXPECT_TRUE(d.stringForKey("ext") == std::optional<std::string>("fromdisk"));
+  EXPECT_TRUE(!d.stringForKey("only"));
+  EXPECT_TRUE(contents(dir / "oolite.plist") ==
            std::optional<std::string>(
                "{\n    ext = fromdisk;\n    local = mine;\n    nums = 1;\n}"));
 }
 
-OO_TEST(synchronizeOfAnEmptyDomainDeletesTheFile) {
+TEST(defaults, synchronizeOfAnEmptyDomainDeletesTheFile) {
   const fs::Path dir = scratch("empty");
   put(dir / "oolite.plist", "{ a = 1; b = 2; }");
   oo::Defaults d(dir, "oolite");
   d.removeObject("a");
   d.removeObject("b");
-  OO_CHECK(d.synchronize());
-  OO_CHECK(!fs::fileExists(dir / "oolite.plist"));
+  EXPECT_TRUE(d.synchronize());
+  EXPECT_TRUE(!fs::fileExists(dir / "oolite.plist"));
 }
 
-OO_TEST(otherFormatsAndGarbageOnDisk) {
+TEST(defaults, otherFormatsAndGarbageOnDisk) {
   const fs::Path dir = scratch("formats");
   put(dir / "oolite.plist",
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist "
       "version=\"1.0\"><dict><key>b</key><true/><key>r</key><real>2.5</real></"
       "dict></plist>");
   oo::Defaults x(dir, "oolite");
-  OO_CHECK(x.boolForKey("b"));
+  EXPECT_TRUE(x.boolForKey("b"));
   x.setObject("only", "v");
-  OO_CHECK(x.synchronize());
-  OO_CHECK(contents(dir / "oolite.plist") ==
+  EXPECT_TRUE(x.synchronize());
+  EXPECT_TRUE(contents(dir / "oolite.plist") ==
            std::optional<std::string>(
                "{\n    b = 1;\n    only = v;\n    r = \"2.5\";\n}"));
 
   put(dir / "oolite.plist", "{a = ;");
   oo::Defaults g(dir, "oolite");
-  OO_CHECK(!g.object("a"));
+  EXPECT_TRUE(!g.object("a"));
   g.setObject("only", "v");
-  OO_CHECK(g.synchronize());
-  OO_CHECK(contents(dir / "oolite.plist") ==
+  EXPECT_TRUE(g.synchronize());
+  EXPECT_TRUE(contents(dir / "oolite.plist") ==
            std::optional<std::string>("{\n    only = v;\n}"));
 }
-
-OO_TEST_MAIN()

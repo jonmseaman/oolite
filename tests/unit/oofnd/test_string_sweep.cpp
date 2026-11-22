@@ -16,7 +16,9 @@
 #include <string>
 #include <vector>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
+#include "oo_gtest.hpp"
 #include "oofnd/String.hpp"
 
 namespace {
@@ -218,50 +220,50 @@ const JoinRow kJoinRows[] = {
 
 }  // namespace
 
-OO_TEST(path_components_are_gnusteps) {
+TEST(string_sweep, path_components_are_gnusteps) {
   for (const PathRow& r : kPathRows) {
-    if (!OO_CHECK(oo::str::pathComponents(r.path) == r.components))
+    if (!OO_EXPECT_V(oo::str::pathComponents(r.path) == r.components))
       std::printf("    path [%s]\n", r.path);
   }
 }
 
-OO_TEST(last_path_component_is_gnusteps) {
+TEST(string_sweep, last_path_component_is_gnusteps) {
   for (const PathRow& r : kPathRows) {
-    if (!OO_CHECK_EQ(oo::str::lastPathComponent(r.path), std::string(r.last)))
+    if (!OO_EXPECT_EQ_V(oo::str::lastPathComponent(r.path), std::string(r.last)))
       std::printf("    path [%s]\n", r.path);
   }
 }
 
-OO_TEST(deleting_last_path_component_is_gnusteps) {
+TEST(string_sweep, deleting_last_path_component_is_gnusteps) {
   for (const PathRow& r : kPathRows) {
-    if (!OO_CHECK_EQ(oo::str::deletingLastPathComponent(r.path),
+    if (!OO_EXPECT_EQ_V(oo::str::deletingLastPathComponent(r.path),
                      std::string(r.deleting)))
       std::printf("    path [%s]\n", r.path);
   }
 }
 
-OO_TEST(appending_path_component_is_gnusteps) {
+TEST(string_sweep, appending_path_component_is_gnusteps) {
   for (const PathRow& r : kPathRows) {
-    if (!OO_CHECK_EQ(oo::str::appendingPathComponent(r.path, "z"),
+    if (!OO_EXPECT_EQ_V(oo::str::appendingPathComponent(r.path, "z"),
                      std::string(r.appendingZ)))
       std::printf("    path [%s]\n", r.path);
   }
 }
 
-OO_TEST(path_with_components_is_gnusteps) {
+TEST(string_sweep, path_with_components_is_gnusteps) {
   for (const PathRow& r : kPathRows) {
-    if (!OO_CHECK_EQ(oo::str::pathWithComponents(r.components),
+    if (!OO_EXPECT_EQ_V(oo::str::pathWithComponents(r.components),
                      std::string(r.rejoined)))
       std::printf("    path [%s]\n", r.path);
   }
   for (const JoinRow& r : kJoinRows) {
-    if (!OO_CHECK_EQ(oo::str::pathWithComponents(r.components),
+    if (!OO_EXPECT_EQ_V(oo::str::pathWithComponents(r.components),
                      std::string(r.joined)))
       std::printf("    joined [%s]\n", r.joined);
   }
 }
 
-OO_TEST(pointer_description_is_gnusteps) {
+TEST(string_sweep, pointer_description_is_gnusteps) {
   struct Row {
     std::uint64_t pointer;
     const char* text;
@@ -279,10 +281,8 @@ OO_TEST(pointer_description_is_gnusteps) {
       {0, "(null)"},
   };
   for (const Row& r : rows) {
-    OO_CHECK_EQ(oo::str::pointerDescription(reinterpret_cast<const void*>(
+    EXPECT_EQ(oo::str::pointerDescription(reinterpret_cast<const void*>(
                     static_cast<std::uintptr_t>(r.pointer))),
                 std::string(r.text));
   }
 }
-
-OO_TEST_MAIN()

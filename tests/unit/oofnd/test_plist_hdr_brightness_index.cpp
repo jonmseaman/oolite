@@ -29,7 +29,8 @@
 #include <cstdint>
 #include <string>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
 #include "oofnd/PListGet.hpp"
 #include "oofnd/PListOldStyle.hpp"
 #include "oofnd/objc/FoundationTypes.h"
@@ -98,96 +99,77 @@ int controlsBrightnessValue(const oo::PList& brightnesses,
 
 void notFoundNarrowsToMinusOneAndNeverComparesEqual() {
   const int narrowed = static_cast<int>(oo::kNotFound);
-  OO_CHECK_EQ(narrowed, -1);
-  OO_CHECK(static_cast<std::ptrdiff_t>(narrowed) != oo::kNotFound);
-  OO_CHECK_EQ(static_cast<std::size_t>(narrowed), SIZE_MAX);
+  EXPECT_EQ(narrowed, -1);
+  EXPECT_TRUE(static_cast<std::ptrdiff_t>(narrowed) != oo::kNotFound);
+  EXPECT_EQ(static_cast<std::size_t>(narrowed), SIZE_MAX);
 }
 
 void atIntOutOfRangeAnswersTheFallback() {
   const oo::PList brightnesses = shippedBrightnesses();
-  OO_CHECK(brightnesses.isArray());
-  OO_CHECK_EQ(brightnesses.count(), std::size_t{5});
-  OO_CHECK(brightnesses.at(SIZE_MAX) == nullptr);
-  OO_CHECK_EQ(brightnesses.at<int>(SIZE_MAX), 0);
-  OO_CHECK_EQ(brightnesses.at<int>(brightnesses.count()), 0);
-  OO_CHECK_EQ(brightnesses.at<int>(SIZE_MAX, 77), 77);
-  OO_CHECK_EQ(brightnesses.at<int>(0), 400);
-  OO_CHECK_EQ(brightnesses.at<int>(4), 1000);
+  EXPECT_TRUE(brightnesses.isArray());
+  EXPECT_EQ(brightnesses.count(), std::size_t{5});
+  EXPECT_TRUE(brightnesses.at(SIZE_MAX) == nullptr);
+  EXPECT_EQ(brightnesses.at<int>(SIZE_MAX), 0);
+  EXPECT_EQ(brightnesses.at<int>(brightnesses.count()), 0);
+  EXPECT_EQ(brightnesses.at<int>(SIZE_MAX, 77), 77);
+  EXPECT_EQ(brightnesses.at<int>(0), 400);
+  EXPECT_EQ(brightnesses.at<int>(4), 1000);
 }
 
 void optionsScreenMatchedBrightnessShowsItsOwnValue() {
   const oo::PList brightnesses = shippedBrightnesses();
   bool fallbackRan = true;
-  OO_CHECK_EQ(optionsScreenBrightnessValue(brightnesses, 600, &fallbackRan),
+  EXPECT_EQ(optionsScreenBrightnessValue(brightnesses, 600, &fallbackRan),
               600);
-  OO_CHECK(!fallbackRan);
+  EXPECT_TRUE(!fallbackRan);
 }
 
 void optionsScreenUnmatchedBrightnessReadsSizeMaxAndShowsZero() {
   const oo::PList brightnesses = shippedBrightnesses();
   bool fallbackRan = true;
-  OO_CHECK_EQ(optionsScreenBrightnessValue(brightnesses, 750, &fallbackRan), 0);
-  OO_CHECK(
+  EXPECT_EQ(optionsScreenBrightnessValue(brightnesses, 750, &fallbackRan), 0);
+  EXPECT_TRUE(
       !fallbackRan);  // upstream behaviour: the 400-nit fallback never runs
 }
 
 void optionsScreenMissingArrayShowsZero() {
   bool fallbackRan = true;
-  OO_CHECK_EQ(optionsScreenBrightnessValue(oo::PList(), 750, &fallbackRan), 0);
-  OO_CHECK(!fallbackRan);
+  EXPECT_EQ(optionsScreenBrightnessValue(oo::PList(), 750, &fallbackRan), 0);
+  EXPECT_TRUE(!fallbackRan);
 }
 
 void controlsMatchedBrightnessStepsAndWraps() {
   const oo::PList brightnesses = shippedBrightnesses();
   bool fallbackRan = true;
-  OO_CHECK_EQ(controlsBrightnessValue(brightnesses, 600, 1, &fallbackRan), 800);
-  OO_CHECK(!fallbackRan);
-  OO_CHECK_EQ(controlsBrightnessValue(brightnesses, 600, -1, &fallbackRan),
+  EXPECT_EQ(controlsBrightnessValue(brightnesses, 600, 1, &fallbackRan), 800);
+  EXPECT_TRUE(!fallbackRan);
+  EXPECT_EQ(controlsBrightnessValue(brightnesses, 600, -1, &fallbackRan),
               500);
-  OO_CHECK_EQ(controlsBrightnessValue(brightnesses, 1000, 1, &fallbackRan),
+  EXPECT_EQ(controlsBrightnessValue(brightnesses, 1000, 1, &fallbackRan),
               400);
-  OO_CHECK_EQ(controlsBrightnessValue(brightnesses, 400, -1, &fallbackRan),
+  EXPECT_EQ(controlsBrightnessValue(brightnesses, 400, -1, &fallbackRan),
               1000);
 }
 
 void controlsUnmatchedBrightnessRightGoesToFirstLeftWrapsToLast() {
   const oo::PList brightnesses = shippedBrightnesses();
   bool fallbackRan = true;
-  OO_CHECK_EQ(controlsBrightnessValue(brightnesses, 750, 1, &fallbackRan), 400);
-  OO_CHECK(!fallbackRan);
+  EXPECT_EQ(controlsBrightnessValue(brightnesses, 750, 1, &fallbackRan), 400);
+  EXPECT_TRUE(!fallbackRan);
   fallbackRan = true;
-  OO_CHECK_EQ(controlsBrightnessValue(brightnesses, 750, -1, &fallbackRan),
+  EXPECT_EQ(controlsBrightnessValue(brightnesses, 750, -1, &fallbackRan),
               1000);
-  OO_CHECK(!fallbackRan);
+  EXPECT_TRUE(!fallbackRan);
 }
 
 }  // namespace
 
-// Registered here rather than with OO_TEST: the macro's static registrars and
-// static functions are clang-tidy findings
-// (bugprone-throwing-static-initialization, misc-use-anonymous-namespace) in a
-// new file. Same registry, same runner, same summary
-// line.
-int main() {
-  ::oo_test::registry().push_back(
-      ::oo_test::Case{"notFoundNarrowsToMinusOneAndNeverComparesEqual",
-                      &notFoundNarrowsToMinusOneAndNeverComparesEqual});
-  ::oo_test::registry().push_back(::oo_test::Case{
-      "atIntOutOfRangeAnswersTheFallback", &atIntOutOfRangeAnswersTheFallback});
-  ::oo_test::registry().push_back(
-      ::oo_test::Case{"optionsScreenMatchedBrightnessShowsItsOwnValue",
-                      &optionsScreenMatchedBrightnessShowsItsOwnValue});
-  ::oo_test::registry().push_back(::oo_test::Case{
-      "optionsScreenUnmatchedBrightnessReadsSizeMaxAndShowsZero",
-      &optionsScreenUnmatchedBrightnessReadsSizeMaxAndShowsZero});
-  ::oo_test::registry().push_back(
-      ::oo_test::Case{"optionsScreenMissingArrayShowsZero",
-                      &optionsScreenMissingArrayShowsZero});
-  ::oo_test::registry().push_back(
-      ::oo_test::Case{"controlsMatchedBrightnessStepsAndWraps",
-                      &controlsMatchedBrightnessStepsAndWraps});
-  ::oo_test::registry().push_back(::oo_test::Case{
-      "controlsUnmatchedBrightnessRightGoesToFirstLeftWrapsToLast",
-      &controlsUnmatchedBrightnessRightGoesToFirstLeftWrapsToLast});
-  return ::oo_test::runAll(__FILE__);
-}
+// One TEST per case function, in the order they were registered. The cases
+// stay functions in the anonymous namespace (misc-use-anonymous-namespace).
+TEST(plist_hdr_brightness_index, notFoundNarrowsToMinusOneAndNeverComparesEqual) { notFoundNarrowsToMinusOneAndNeverComparesEqual(); }
+TEST(plist_hdr_brightness_index, atIntOutOfRangeAnswersTheFallback) { atIntOutOfRangeAnswersTheFallback(); }
+TEST(plist_hdr_brightness_index, optionsScreenMatchedBrightnessShowsItsOwnValue) { optionsScreenMatchedBrightnessShowsItsOwnValue(); }
+TEST(plist_hdr_brightness_index, optionsScreenUnmatchedBrightnessReadsSizeMaxAndShowsZero) { optionsScreenUnmatchedBrightnessReadsSizeMaxAndShowsZero(); }
+TEST(plist_hdr_brightness_index, optionsScreenMissingArrayShowsZero) { optionsScreenMissingArrayShowsZero(); }
+TEST(plist_hdr_brightness_index, controlsMatchedBrightnessStepsAndWraps) { controlsMatchedBrightnessStepsAndWraps(); }
+TEST(plist_hdr_brightness_index, controlsUnmatchedBrightnessRightGoesToFirstLeftWrapsToLast) { controlsUnmatchedBrightnessRightGoesToFirstLeftWrapsToLast(); }

@@ -5,9 +5,10 @@
 # Every platform builds them (no host guard, unlike tests/unit). Each program links every game
 # object but main's, extracted from the oolite target so it is compiled exactly as the game is,
 # with the game's include directories and dependencies but not its link arguments (-mwindows
-# would hide the program's output). The cases are Google Test's (tests/support): meson runs each
-# program with the gtest protocol, so testlog.junit.xml has a result per case, and one case alone
-# is --test-args=--gtest_filter=<Suite>.<case>.
+# would hide the program's output). The cases are Google Test's (tests/support), and one case alone
+# is --test-args=--gtest_filter=<Suite>.<case>. Meson runs them by exit status, not its gtest
+# protocol: that protocol has the program write <test>.xml into its working directory, which here
+# is the application bundle, and a file there breaks the bundle's signature on macOS.
 #
 # A program runs in the built application directory, because the game reads Resources from its
 # working directory. OO_COMPONENT_SOURCE_ROOT (layouts, fixtures) and OO_COMPONENT_BUILD_ROOT
@@ -20,8 +21,7 @@
 # test per keyboard layout, <test>_<layout>, each given --layout <layout>), 'cases' (one test per
 # case, {test name: case name}, each running that case alone with --gtest_filter=<Suite>.<case>,
 # where <Suite> is the source's name less test_), 'should_fail' (those of its tests that are
-# expected to fail: a recorded finding, checked both ways), 'protocol' (default 'gtest'; a program
-# that ends itself mid-case, like the census, writes no Google Test report and is 'exitcode').
+# expected to fail: a recorded finding, checked both ways).
 # Every program links the GL trap where there is one.
 
 # The recorded keyboard layouts the key tests run under (layouts/<name>.tsv); a layout whose table
@@ -77,7 +77,7 @@ component_programs = {
     'test_dictionary_arguments_reject_arrays': {},
     'test_exit_runs_js_leak_check': {'verbose': true},
     # Every ship and equipment item in the core data, one outcome each (contracts/census.md).
-    'component_census': {'test_name': 'census', 'timeout': 600, 'verbose': true, 'protocol': 'exitcode'},
+    'component_census': {'test_name': 'census', 'timeout': 600, 'verbose': true},
 }
 
 fs = import('fs')
@@ -153,7 +153,6 @@ foreach name, options : component_programs
             test(test_name, exe,
                 args: options.get('args', []) + [
                     '--gtest_filter=' + name.substring(5) + '.' + case_name],
-                protocol: options.get('protocol', 'gtest'),
                 should_fail: options.get('should_fail', []).contains(test_name),
                 suite: options.get('suite', 'component'),
                 timeout: options.get('timeout', 60),
@@ -167,7 +166,6 @@ foreach name, options : component_programs
         foreach layout : options.get('layouts')
             test(options.get('test_name', name) + '_' + layout, exe,
                 args: options.get('args', []) + ['--layout', layout],
-                protocol: options.get('protocol', 'gtest'),
                 should_fail: options.get('should_fail', []).contains(
                     options.get('test_name', name) + '_' + layout),
                 suite: options.get('suite', 'component'),
@@ -181,7 +179,6 @@ foreach name, options : component_programs
     else
         test(options.get('test_name', name), exe,
             args: options.get('args', []),
-            protocol: options.get('protocol', 'gtest'),
             suite: options.get('suite', 'component'),
             timeout: options.get('timeout', 60),
             verbose: options.get('verbose', false),

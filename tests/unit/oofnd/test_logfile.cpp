@@ -11,6 +11,8 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "oofnd/LogFile.hpp"
 
 #include <atomic>
@@ -21,7 +23,6 @@
 #include <optional>
 #include <string>
 
-#include "oo_test.hpp"
 
 namespace {
 
@@ -65,105 +66,103 @@ std::string fileContents(const oo::fs::Path& path) {
 
 }  // namespace
 
-OO_TEST(logFileBytesMatchGNUstep) {
-  OO_CHECK_EQ(hex(logFileBytes(U({'a', '\n', 0x0301, 'b'}), true)),
+TEST(logfile, logFileBytesMatchGNUstep) {
+  EXPECT_EQ(hex(logFileBytes(U({'a', '\n', 0x0301, 'b'}), true)),
               std::string("610ACC81620D0A"));
-  OO_CHECK_EQ(hex(logFileBytes(U({'a', '\n', 'b', '\r', '\n', 'c'}), true)),
+  EXPECT_EQ(hex(logFileBytes(U({'a', '\n', 'b', '\r', '\n', 'c'}), true)),
               std::string("610D0A620D0D0A630D0A"));
-  OO_CHECK_EQ(hex(logFileBytes(U({'a', 0xD800, 'b'}), true)),
+  EXPECT_EQ(hex(logFileBytes(U({'a', 0xD800, 'b'}), true)),
               std::string("nil"));
-  OO_CHECK_EQ(hex(logFileBytes(U({'a', 0xDC00}), true)), std::string("nil"));
-  OO_CHECK_EQ(hex(logFileBytes(U({'x', '\n', 0xDC00, '\n', 'y'}), true)),
+  EXPECT_EQ(hex(logFileBytes(U({'a', 0xDC00}), true)), std::string("nil"));
+  EXPECT_EQ(hex(logFileBytes(U({'x', '\n', 0xDC00, '\n', 'y'}), true)),
               std::string("nil"));
-  OO_CHECK_EQ(hex(logFileBytes(U({0xD83D, 0xDE00, '\n', 0x00E9}), true)),
+  EXPECT_EQ(hex(logFileBytes(U({0xD83D, 0xDE00, '\n', 0x00E9}), true)),
               std::string("F09F98800D0AC3A90D0A"));
-  OO_CHECK_EQ(hex(logFileBytes(U({'\n', '\n'}), true)),
+  EXPECT_EQ(hex(logFileBytes(U({'\n', '\n'}), true)),
               std::string("0D0A0D0A0D0A"));
-  OO_CHECK_EQ(hex(logFileBytes(U({'a', '\n', 0x0301, '\n', 'b'}), true)),
+  EXPECT_EQ(hex(logFileBytes(U({'a', '\n', 0x0301, '\n', 'b'}), true)),
               std::string("610ACC810D0A620D0A"));
-  OO_CHECK_EQ(hex(logFileBytes("", true)), std::string("0D0A"));
+  EXPECT_EQ(hex(logFileBytes("", true)), std::string("0D0A"));
   // Not Windows: the line and "\n", nothing else.
-  OO_CHECK_EQ(hex(logFileBytes(U({'a', '\n', 'b'}), false)),
+  EXPECT_EQ(hex(logFileBytes(U({'a', '\n', 'b'}), false)),
               std::string("610A620A"));
-  OO_CHECK_EQ(hex(logFileBytes(U({'a', 0xD800}), false)), std::string("nil"));
+  EXPECT_EQ(hex(logFileBytes(U({'a', 0xD800}), false)), std::string("nil"));
   // A byte that is not UTF-8 reached GNUstep as one Latin-1 unit
   // (oo::NSStringFrom).
-  OO_CHECK_EQ(hex(logFileBytes("\xE9", true)), std::string("C3A90D0A"));
+  EXPECT_EQ(hex(logFileBytes("\xE9", true)), std::string("C3A90D0A"));
 }
 
-OO_TEST(consoleBytesMatchUTF8String) {
-  OO_CHECK_EQ(consoleBytes(U({'a', 0xD800, 'b'})), std::string("a\xEF\xBF\xBD"
+TEST(logfile, consoleBytesMatchUTF8String) {
+  EXPECT_EQ(consoleBytes(U({'a', 0xD800, 'b'})), std::string("a\xEF\xBF\xBD"
                                                                "b\n"));
-  OO_CHECK_EQ(consoleBytes("plain"), std::string("plain\n"));
-  OO_CHECK_EQ(consoleBytes(std::string("ab\0cd", 5)), std::string("ab"));
+  EXPECT_EQ(consoleBytes("plain"), std::string("plain\n"));
+  EXPECT_EQ(consoleBytes(std::string("ab\0cd", 5)), std::string("ab"));
 }
 
-OO_TEST(writerWritesQueuedLinesThenThePostamble) {
+TEST(logfile, writerWritesQueuedLinesThenThePostamble) {
   const oo::fs::Path dir = scratchDirectory("write");
   const oo::fs::Path path = dir / "Latest.log";
   std::atomic<bool> saturated{false};
   {
     oo::log::FileWriter writer(saturated, true);
-    OO_CHECK(writer.start(path));
-    OO_CHECK(writer.running());
+    EXPECT_TRUE(writer.start(path));
+    EXPECT_TRUE(writer.running());
     writer.write("first");
     writer.write(U({'l', 'o', 'n', 'e', 0xD800}));  // dropped
     writer.flush();
     writer.write("a\nb");
     writer.end("\nClosing log at 2026-09-23 05:45:11 -0400.");
-    OO_CHECK(!writer.running());
+    EXPECT_TRUE(!writer.running());
     writer.write("after the end");  // ignored
   }
-  OO_CHECK_EQ(fileContents(path),
+  EXPECT_EQ(fileContents(path),
               std::string("first\r\na\r\nb\r\n\r\nClosing log at 2026-09-23 "
                           "05:45:11 -0400.\r\n"));
   std::error_code ec;
   std::filesystem::remove_all(dir, ec);
 }
 
-OO_TEST(saturationTruncatesOnceForTheWholeProcess) {
+TEST(logfile, saturationTruncatesOnceForTheWholeProcess) {
   const oo::fs::Path dir = scratchDirectory("saturate");
   std::atomic<bool> saturated{false};
   {
     oo::log::FileWriter writer(saturated, false, 12);
-    OO_CHECK(writer.start(dir / "a.log"));
+    EXPECT_TRUE(writer.start(dir / "a.log"));
     writer.write("12345");  // 6 bytes
     writer.write("12345");  // 12: not past the limit
     writer.write("x");      // 14: replaced by the notice
     writer.write("never");
     writer.end("\nClosing log at X.");
   }
-  OO_CHECK(saturated.load());
-  OO_CHECK_EQ(fileContents(dir / "a.log"),
+  EXPECT_TRUE(saturated.load());
+  EXPECT_EQ(fileContents(dir / "a.log"),
               std::string("12345\n12345\n\n\n\n***** LOG TRUNCATED DUE TO "
                           "EXCESSIVE LENGTH *****\n"));
   {
     oo::log::FileWriter later(saturated, false, 12);
-    OO_CHECK(later.start(dir / "b.log"));
+    EXPECT_TRUE(later.start(dir / "b.log"));
     later.write("nothing");
     later.end("\nClosing log at X.");
   }
-  OO_CHECK_EQ(fileContents(dir / "b.log"), std::string());
+  EXPECT_EQ(fileContents(dir / "b.log"), std::string());
   std::error_code ec;
   std::filesystem::remove_all(dir, ec);
 }
 
-OO_TEST(rotationMovesLatestOverPrevious) {
+TEST(logfile, rotationMovesLatestOverPrevious) {
   const oo::fs::Path dir = scratchDirectory("rotate");
   const oo::fs::Path latest = dir / "Latest.log",
                      previous = dir / "Previous.log";
-  OO_CHECK(oo::log::rotateToPrevious(latest, previous));  // nothing to rotate
-  OO_CHECK(oo::fs::writeFile(latest, oo::Data("new", 3)).has_value());
-  OO_CHECK(oo::fs::writeFile(previous, oo::Data("old", 3)).has_value());
-  OO_CHECK(oo::log::rotateToPrevious(latest, previous));
-  OO_CHECK(!oo::fs::fileExists(latest));
-  OO_CHECK_EQ(fileContents(previous), std::string("new"));
+  EXPECT_TRUE(oo::log::rotateToPrevious(latest, previous));  // nothing to rotate
+  EXPECT_TRUE(oo::fs::writeFile(latest, oo::Data("new", 3)).has_value());
+  EXPECT_TRUE(oo::fs::writeFile(previous, oo::Data("old", 3)).has_value());
+  EXPECT_TRUE(oo::log::rotateToPrevious(latest, previous));
+  EXPECT_TRUE(!oo::fs::fileExists(latest));
+  EXPECT_EQ(fileContents(previous), std::string("new"));
   std::atomic<bool> saturated{false};
   oo::log::FileWriter writer(saturated);
-  OO_CHECK(!writer.start(dir / "missing-directory" / "Latest.log"));
-  OO_CHECK(!writer.running());
+  EXPECT_TRUE(!writer.start(dir / "missing-directory" / "Latest.log"));
+  EXPECT_TRUE(!writer.running());
   std::error_code ec;
   std::filesystem::remove_all(dir, ec);
 }
-
-OO_TEST_MAIN()

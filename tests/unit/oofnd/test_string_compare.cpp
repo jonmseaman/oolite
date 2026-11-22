@@ -15,7 +15,8 @@
 #include <string>
 #include <vector>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
 #include "oofnd/String.hpp"
 
 namespace {
@@ -50,19 +51,19 @@ std::uint32_t digest(const std::vector<std::string>& corpus, F order) {
 
 }  // namespace
 
-OO_TEST(compare_matches_gnustep_on_every_ascii_pair) {
-  OO_CHECK_EQ(corpus1().size(), 95u);
-  OO_CHECK_EQ(corpus2().size(), 157u);
-  OO_CHECK_EQ(digest(corpus1(), oo::str::compare), 2377555174u);
-  OO_CHECK_EQ(digest(corpus2(), oo::str::compare), 3348300654u);
+TEST(string_compare, compare_matches_gnustep_on_every_ascii_pair) {
+  EXPECT_EQ(corpus1().size(), 95u);
+  EXPECT_EQ(corpus2().size(), 157u);
+  EXPECT_EQ(digest(corpus1(), oo::str::compare), 2377555174u);
+  EXPECT_EQ(digest(corpus2(), oo::str::compare), 3348300654u);
 }
 
-OO_TEST(case_insensitive_compare_matches_gnustep_on_every_ascii_pair) {
-  OO_CHECK_EQ(digest(corpus1(), oo::str::caseInsensitiveCompare), 3032232806u);
-  OO_CHECK_EQ(digest(corpus2(), oo::str::caseInsensitiveCompare), 4004246510u);
+TEST(string_compare, case_insensitive_compare_matches_gnustep_on_every_ascii_pair) {
+  EXPECT_EQ(digest(corpus1(), oo::str::caseInsensitiveCompare), 3032232806u);
+  EXPECT_EQ(digest(corpus2(), oo::str::caseInsensitiveCompare), 4004246510u);
 }
 
-OO_TEST(readable_rows_captured_from_gnustep) {
+TEST(string_compare, readable_rows_captured_from_gnustep) {
   // (x, y, caseInsensitiveCompare, compare) as GNUstep answered.
   struct Row {
     const char* x;
@@ -82,15 +83,13 @@ OO_TEST(readable_rows_captured_from_gnustep) {
       {"\xEF\xBC\xA1", "a", 1, 1},      // U+FF21 lowers to U+FF41, after 'a'
   };
   for (const Row& r : rows) {
-    OO_CHECK_EQ(oo::str::caseInsensitiveCompare(r.x, r.y), r.ci);
-    OO_CHECK_EQ(oo::str::compare(r.x, r.y), r.cs);
+    EXPECT_EQ(oo::str::caseInsensitiveCompare(r.x, r.y), r.ci);
+    EXPECT_EQ(oo::str::compare(r.x, r.y), r.cs);
   }
 }
 
-OO_TEST(not_modelled_composed_sequences) {
+TEST(string_compare, not_modelled_composed_sequences) {
   // GNUstep answers 0 for both ("e" + U+0301 is U+00E9 there); the units decide
   // here.
-  OO_CHECK_EQ(oo::str::compare("e\xCC\x81", "\xC3\xA9"), -1);
+  EXPECT_EQ(oo::str::compare("e\xCC\x81", "\xC3\xA9"), -1);
 }
-
-OO_TEST_MAIN()

@@ -26,7 +26,7 @@
 
 #include "oofnd/PList.hpp"
 
-namespace oo_test {
+namespace plist_dump {
 
 inline void dumpString(const std::string& s, std::string& out) {
   out += '"';
@@ -125,4 +125,4 @@ inline std::string dump(const oo::PList& p) {
   return out;
 }
 
-}  // namespace oo_test
+}  // namespace plist_dump

@@ -4,17 +4,21 @@
 # To convert files: build/meson_<type>/tools/plist2json5/plist2json5 [--strings|--typed] <path>...
 # To read JSON5 files as the game does: .../plist2json5 --parse <path>...
 
-plist2json5_inc = include_directories('.', '../../tests/unit/oofnd')
+plist2json5_inc = include_directories('.')
 
 plist2json5 = executable('plist2json5', 'plist2json5.cpp',
     include_directories: [oofnd_inc, plist2json5_inc],
     install: false, override_options: oofnd_override_options)
 
-test('test_plist2json5',
-    executable('test_plist2json5', 'test_plist2json5.cpp',
-        include_directories: [oofnd_inc, plist2json5_inc],
-        install: false, override_options: oofnd_override_options),
-    suite: 'plist2json5', timeout: 60)
+# Its own tests are on Google Test, which is built only where tests are (oo_tests_built).
+if oo_tests_built
+    test('test_plist2json5',
+        executable('test_plist2json5', 'test_plist2json5.cpp',
+            include_directories: [oofnd_inc, plist2json5_inc],
+            dependencies: oo_gtest_main_dep,
+            install: false, override_options: oofnd_override_options),
+        suite: 'plist2json5', timeout: 60, protocol: 'gtest')
+endif
 
 # The plists in the tree (the core files that are still plists, the Debug OXP, the templates under
 # tools/) convert and read back as the same data, in both modes.

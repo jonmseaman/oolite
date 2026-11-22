@@ -22,7 +22,9 @@
 #include <string_view>
 #include <system_error>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
+#include "oo_gtest.hpp"
 #include "oofnd/Encoding.hpp"
 
 namespace {
@@ -120,51 +122,49 @@ class Scratch {
 
 }  // namespace
 
-OO_TEST(decode_matches_gnustep) {
+TEST(unicode_file, decode_matches_gnustep) {
   for (const Row& r : kRows) {
-    if (!OO_CHECK(oo::utf8ToUtf16(oo::str::decodeUnicodeText(r.bytes)) ==
+    if (!OO_EXPECT_V(oo::utf8ToUtf16(oo::str::decodeUnicodeText(r.bytes)) ==
                   r.units))
       std::printf("    row %s\n", r.name);
   }
 }
 
-OO_TEST(file_matches_gnustep) {
+TEST(unicode_file, file_matches_gnustep) {
   Scratch dir;
   for (const Row& r : kRows) {
     const std::optional<std::string> s =
         oo::str::stringWithContentsOfUnicodeFile(dir.write(r.name, r.bytes));
-    if (!OO_CHECK(s.has_value() && oo::utf8ToUtf16(*s) == r.units))
+    if (!OO_EXPECT_V(s.has_value() && oo::utf8ToUtf16(*s) == r.units))
       std::printf("    row %s\n", r.name);
   }
 }
 
-OO_TEST(result_is_utf8) {
-  OO_CHECK_EQ(oo::str::decodeUnicodeText("\xFF\xFEh\0i\0\xE9\0"sv),
+TEST(unicode_file, result_is_utf8) {
+  EXPECT_EQ(oo::str::decodeUnicodeText("\xFF\xFEh\0i\0\xE9\0"sv),
               std::string("hi\xC3\xA9"));
-  OO_CHECK_EQ(oo::str::decodeUnicodeText("caf\xE9"sv),
+  EXPECT_EQ(oo::str::decodeUnicodeText("caf\xE9"sv),
               std::string("caf\xC3\xA9"));
-  OO_CHECK_EQ(oo::str::decodeUnicodeText("\xFF\xFE"
+  EXPECT_EQ(oo::str::decodeUnicodeText("\xFF\xFE"
                                          "a\0\x3D\xD8\x00\xDE"sv),
               std::string("a\xF0\x9F\x98\x80"));
   // A lone surrogate is kept as WTF-8, as a PList string keeps it (-UTF8String
   // printed U+FFFD).
-  OO_CHECK_EQ(oo::str::decodeUnicodeText("\xFF\xFE"
+  EXPECT_EQ(oo::str::decodeUnicodeText("\xFF\xFE"
                                          "a\0\0\xD8"
                                          "b\0"sv),
               std::string("a\xED\xA0\x80"
                           "b"));
 }
 
-OO_TEST(missing_directory_and_empty_are_nil) {
+TEST(unicode_file, missing_directory_and_empty_are_nil) {
   Scratch dir;
-  OO_CHECK(!oo::str::stringWithContentsOfUnicodeFile(dir.path("missing"))
+  EXPECT_TRUE(!oo::str::stringWithContentsOfUnicodeFile(dir.path("missing"))
                 .has_value());
-  OO_CHECK(!oo::str::stringWithContentsOfUnicodeFile(dir.write("empty", ""sv))
+  EXPECT_TRUE(!oo::str::stringWithContentsOfUnicodeFile(dir.write("empty", ""sv))
                 .has_value());
   std::error_code ec;
   std::filesystem::create_directories(dir.root() / "adir", ec);
-  OO_CHECK(
+  EXPECT_TRUE(
       !oo::str::stringWithContentsOfUnicodeFile(dir.path("adir")).has_value());
 }
-
-OO_TEST_MAIN()

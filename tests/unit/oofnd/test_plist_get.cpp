@@ -17,6 +17,8 @@
    so a fallback is always visible. meson test --suite oofnd-plist
 */
 
+#include <gtest/gtest.h>
+
 #include "oofnd/PListGet.hpp"
 
 #include <cmath>
@@ -24,8 +26,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-
-#include "oo_test.hpp"
 
 namespace {
 
@@ -975,7 +975,7 @@ bool checkRow(const Row& row, const std::string& got, const char* how) {
 
 }  // namespace
 
-OO_TEST(getMatchesGNUstepCapturedTable) {
+TEST(plist_get, getMatchesGNUstepCapturedTable) {
   for (const Row& row : kCaptured) {
     PList::Dict d;
     if (row.value) d.emplace("k", *row.value);
@@ -984,11 +984,11 @@ OO_TEST(getMatchesGNUstepCapturedTable) {
         results([&]<class T>(typename oo::PListGet<T>::Fallback fb) {
           return dict.get<T>("k", fb);
         });
-    OO_CHECK(checkRow(row, got, "dict.get<T>(\"k\", fallback)"));
+    EXPECT_TRUE(checkRow(row, got, "dict.get<T>(\"k\", fallback)"));
   }
 }
 
-OO_TEST(atMatchesGNUstepCapturedTable) {
+TEST(plist_get, atMatchesGNUstepCapturedTable) {
   for (const Row& row : kCaptured) {
     PList::Array a{PList("pad")};
     if (row.value) a.push_back(*row.value);
@@ -997,54 +997,54 @@ OO_TEST(atMatchesGNUstepCapturedTable) {
         results([&]<class T>(typename oo::PListGet<T>::Fallback fb) {
           return array.at<T>(1, fb);
         });
-    OO_CHECK(checkRow(row, got, "array.at<T>(1, fallback)"));
+    EXPECT_TRUE(checkRow(row, got, "array.at<T>(1, fallback)"));
   }
 }
 
 // [nil oo_floatForKey:k defaultValue:1] is 0: messaging nil returns zero, not
 // the fallback.
-OO_TEST(nullReceiverIsNilNotFallback) {
+TEST(plist_get, nullReceiverIsNilNotFallback) {
   const PList nullReceiver;
-  OO_CHECK_EQ(nullReceiver.get<float>("k", 1.0f), 0.0f);
-  OO_CHECK_EQ(nullReceiver.get<int>("k", 5), 0);
-  OO_CHECK_EQ(nullReceiver.get<bool>("k", true), false);
-  OO_CHECK_EQ(nullReceiver.get<std::string>("k", "D"), std::string());
-  OO_CHECK_EQ(nullReceiver.get<oo::NonNegative<double>>("k", 2.0), 0.0);
-  OO_CHECK(nullReceiver.get<PList::Dict>("k", &nullReceiver) == nullptr);
-  OO_CHECK_EQ(nullReceiver.at<int>(0, 5), 0);
+  EXPECT_EQ(nullReceiver.get<float>("k", 1.0f), 0.0f);
+  EXPECT_EQ(nullReceiver.get<int>("k", 5), 0);
+  EXPECT_EQ(nullReceiver.get<bool>("k", true), false);
+  EXPECT_EQ(nullReceiver.get<std::string>("k", "D"), std::string());
+  EXPECT_EQ(nullReceiver.get<oo::NonNegative<double>>("k", 2.0), 0.0);
+  EXPECT_TRUE(nullReceiver.get<PList::Dict>("k", &nullReceiver) == nullptr);
+  EXPECT_EQ(nullReceiver.at<int>(0, 5), 0);
 }
 
 // The no-fallback forms (-oo_floatForKey: etc.) fall back to zero / NO / nil.
-OO_TEST(noFallbackFormsUseTheExtractorDefaults) {
+TEST(plist_get, noFallbackFormsUseTheExtractorDefaults) {
   const PList d(PList::Dict{{"s", PList("x")}});
-  OO_CHECK_EQ(d.get<float>("missing"), 0.0f);
-  OO_CHECK_EQ(d.get<float>("s"),
+  EXPECT_EQ(d.get<float>("missing"), 0.0f);
+  EXPECT_EQ(d.get<float>("s"),
               0.0f);  // "x" is not a zero string, so the (zero) fallback
-  OO_CHECK_EQ(d.get<unsigned>("missing"), 0u);
-  OO_CHECK_EQ(d.get<bool>("s"), false);
-  OO_CHECK_EQ(d.get<std::string>("missing"), std::string());
-  OO_CHECK(d.get<PList>("missing") == nullptr);
-  OO_CHECK_EQ(d.get<std::string>("s"), std::string("x"));
+  EXPECT_EQ(d.get<unsigned>("missing"), 0u);
+  EXPECT_EQ(d.get<bool>("s"), false);
+  EXPECT_EQ(d.get<std::string>("missing"), std::string());
+  EXPECT_TRUE(d.get<PList>("missing") == nullptr);
+  EXPECT_EQ(d.get<std::string>("s"), std::string("x"));
   const PList a(PList::Array{PList(3)});
-  OO_CHECK_EQ(a.at<int>(0), 3);
-  OO_CHECK_EQ(a.at<int>(1), 0);
-  OO_CHECK_EQ(
+  EXPECT_EQ(a.at<int>(0), 3);
+  EXPECT_EQ(a.at<int>(1), 0);
+  EXPECT_EQ(
       a.at<int>(1, -1),
       -1);  // -oo_objectAtIndex: is nil past the end, never a range exception
 }
 
 // A receiver of the wrong kind finds nothing.
-OO_TEST(wrongReceiverKindGivesFallback) {
+TEST(plist_get, wrongReceiverKindGivesFallback) {
   const PList s("text");
-  OO_CHECK_EQ(s.get<int>("k", 4), 4);
-  OO_CHECK_EQ(s.at<int>(0, 4), 4);
+  EXPECT_EQ(s.get<int>("k", 4), 4);
+  EXPECT_EQ(s.at<int>(0, 4), 4);
   const PList d(PList::Dict{{"0", PList(1)}});
-  OO_CHECK_EQ(d.at<int>(0, 4), 4);
+  EXPECT_EQ(d.at<int>(0, 4), 4);
 }
 
 // oo_objectForKey / oo_arrayForKey / oo_dictionaryForKey / oo_dataForKey:
 // -isKindOfClass:.
-OO_TEST(containerKindsReturnTheNode) {
+TEST(plist_get, containerKindsReturnTheNode) {
   const PList inner(PList::Dict{{"x", PList(2.5)}});
   const PList d(PList::Dict{{"a", PList(PList::Array{PList(1), PList(2)})},
                             {"d", inner},
@@ -1053,51 +1053,49 @@ OO_TEST(containerKindsReturnTheNode) {
                             {"s", PList("str")}});
   const PList fb;
   const PList* arr = d.get<PList::Array>("a");
-  OO_CHECK(arr != nullptr && arr->count() == 2 && arr->at<int>(1) == 2);
+  EXPECT_TRUE(arr != nullptr && arr->count() == 2 && arr->at<int>(1) == 2);
   const PList* dict = d.get<PList::Dict>("d");
-  OO_CHECK(dict != nullptr && dict->get<float>("x") == 2.5f);
-  OO_CHECK(d.get<PList::Data>("b") != nullptr);
-  OO_CHECK(d.get<PList::Date>("t") != nullptr);
-  OO_CHECK(d.get<PList::Array>("d") == nullptr);
-  OO_CHECK(d.get<PList::Dict>("a", &fb) == &fb);
-  OO_CHECK(d.get<PList::Dict>("s", &fb) ==
+  EXPECT_TRUE(dict != nullptr && dict->get<float>("x") == 2.5f);
+  EXPECT_TRUE(d.get<PList::Data>("b") != nullptr);
+  EXPECT_TRUE(d.get<PList::Date>("t") != nullptr);
+  EXPECT_TRUE(d.get<PList::Array>("d") == nullptr);
+  EXPECT_TRUE(d.get<PList::Dict>("a", &fb) == &fb);
+  EXPECT_TRUE(d.get<PList::Dict>("s", &fb) ==
            &fb);  // a string is not a dictionary
-  OO_CHECK(d.get<PList>("s") == d.find("s"));
-  OO_CHECK(d.get<PList>("zz", &fb) == &fb);
+  EXPECT_TRUE(d.get<PList>("s") == d.find("s"));
+  EXPECT_TRUE(d.get<PList>("zz", &fb) == &fb);
 }
 
 // NSNumber -stringValue for the kinds a plist can hold.
-OO_TEST(stringFromNumbers) {
+TEST(plist_get, stringFromNumbers) {
   const PList d(
       PList::Dict{{"u", PList::unsignedInteger(18446744073709551615ULL)},
                   {"i", PList::signedInteger(-5)},
                   {"r", PList(0.1)},
                   {"t", PList(true)},
                   {"a", PList(PList::Array{})}});
-  OO_CHECK_EQ(d.get<std::string>("u"), std::string("18446744073709551615"));
-  OO_CHECK_EQ(d.get<std::string>("i"), std::string("-5"));
-  OO_CHECK_EQ(d.get<std::string>("r"), std::string("0.1"));
-  OO_CHECK_EQ(d.get<std::string>("t"), std::string("1"));
-  OO_CHECK_EQ(d.get<std::string>("a", "D"), std::string("D"));
+  EXPECT_EQ(d.get<std::string>("u"), std::string("18446744073709551615"));
+  EXPECT_EQ(d.get<std::string>("i"), std::string("-5"));
+  EXPECT_EQ(d.get<std::string>("r"), std::string("0.1"));
+  EXPECT_EQ(d.get<std::string>("t"), std::string("1"));
+  EXPECT_EQ(d.get<std::string>("a", "D"), std::string("D"));
 }
 
 // GNUstep's scanner keeps 18 digits and drops the rest without rescaling; an
 // exponent past 511 is no number at all. (Also rows of kCaptured; spelled out
 // here because they surprise.)
-OO_TEST(scannerQuirks) {
-  OO_CHECK_EQ(oo::plist_get::doubleValue(u"9223372036854775807"),
+TEST(plist_get, scannerQuirks) {
+  EXPECT_EQ(oo::plist_get::doubleValue(u"9223372036854775807"),
               922337203685477580.0);
-  OO_CHECK_EQ(oo::plist_get::doubleValue(u"1e511"), HUGE_VAL);
-  OO_CHECK_EQ(oo::plist_get::doubleValue(u"1e512"), 0.0);
-  OO_CHECK_EQ(oo::plist_get::doubleValue(u"\u3000 5"),
+  EXPECT_EQ(oo::plist_get::doubleValue(u"1e511"), HUGE_VAL);
+  EXPECT_EQ(oo::plist_get::doubleValue(u"1e512"), 0.0);
+  EXPECT_EQ(oo::plist_get::doubleValue(u"\u3000 5"),
               5.0);  // Unicode space is skipped here...
-  OO_CHECK_EQ(oo::plist_get::longLongValue(u"\u3000 5"),
+  EXPECT_EQ(oo::plist_get::longLongValue(u"\u3000 5"),
               0);  // ...but not by -longLongValue
-  OO_CHECK_EQ(oo::plist_get::longLongValue(u"000000000000000000001"),
+  EXPECT_EQ(oo::plist_get::longLongValue(u"000000000000000000001"),
               0);  // 20-character buffer
-  OO_CHECK_EQ(oo::plist_get::intValue(u"-5000000000"), -2147483647 - 1);
-  OO_CHECK_EQ(oo::plist_get::doubleValue(u"1e99999999999"),
+  EXPECT_EQ(oo::plist_get::intValue(u"-5000000000"), -2147483647 - 1);
+  EXPECT_EQ(oo::plist_get::doubleValue(u"1e99999999999"),
               0.0);  // wrapped int exponent, > 511
 }
-
-OO_TEST_MAIN()

@@ -9,41 +9,40 @@
 #include <string>
 #include <type_traits>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
 #include "oofnd/Exception.hpp"
 
 static_assert(std::is_base_of_v<std::exception, oo::Exception>);
 
-OO_TEST(caughtAsStdExceptionWithTheReason) {
+TEST(exception_std, caughtAsStdExceptionWithTheReason) {
   bool caught = false;
   try {
     throw oo::Exception("OOTestException", "the reason, in UTF-8: \xc3\xa9");
   } catch (const std::exception& e) {
     caught = true;
-    OO_CHECK_EQ(std::string(e.what()),
+    EXPECT_EQ(std::string(e.what()),
                 std::string("the reason, in UTF-8: \xc3\xa9"));
   }
-  OO_CHECK(caught);
+  EXPECT_TRUE(caught);
 }
 
-OO_TEST(ooHandlerFirstStillSeesNameAndReason) {
+TEST(exception_std, ooHandlerFirstStillSeesNameAndReason) {
   int which = 0;
   try {
     throw oo::Exception("OOTestException", "why");
   } catch (const oo::Exception& e) {
     which = 1;
-    OO_CHECK_EQ(std::string(e.name()), std::string("OOTestException"));
-    OO_CHECK_EQ(std::string(e.reason()), std::string("why"));
+    EXPECT_EQ(std::string(e.name()), std::string("OOTestException"));
+    EXPECT_EQ(std::string(e.reason()), std::string("why"));
   } catch (const std::exception&) {
     which = 2;
   }
-  OO_CHECK_EQ(which, 1);
+  EXPECT_EQ(which, 1);
 }
 
-OO_TEST(nullNameAndReasonBecomeEmpty) {
+TEST(exception_std, nullNameAndReasonBecomeEmpty) {
   const oo::Exception e(nullptr, nullptr);
-  OO_CHECK_EQ(std::string(e.name()), std::string());
-  OO_CHECK_EQ(std::string(e.what()), std::string());
+  EXPECT_EQ(std::string(e.name()), std::string());
+  EXPECT_EQ(std::string(e.what()), std::string());
 }
-
-OO_TEST_MAIN()

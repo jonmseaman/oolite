@@ -18,12 +18,12 @@
    integration tests run every caller through them). meson test --suite oofnd-plist
 */
 
+#include <gtest/gtest.h>
+
 #include "oofnd/PListGet.hpp"
 
 #include <array>
 #include <string_view>
-
-#include "oo_test.hpp"
 
 namespace {
 
@@ -42,127 +42,125 @@ TupleSource Read(const PList* v, const std::array<std::string_view, N>& keys,
 }  // namespace
 
 // No value, and values of other kinds, leave the default untouched.
-OO_TEST(noneKeepsDefault) {
+TEST(plist_game_tuples, noneKeepsDefault) {
   std::array<float, 3> out{7.5f, 7.5f, 7.5f};
-  OO_CHECK(Read(nullptr, kXYZ, out) == TupleSource::kNone);
+  EXPECT_TRUE(Read(nullptr, kXYZ, out) == TupleSource::kNone);
   const PList number(3.0);
-  OO_CHECK(Read(&number, kXYZ, out) == TupleSource::kNone);
+  EXPECT_TRUE(Read(&number, kXYZ, out) == TupleSource::kNone);
   const PList null;
-  OO_CHECK(Read(&null, kXYZ, out) == TupleSource::kNone);
+  EXPECT_TRUE(Read(&null, kXYZ, out) == TupleSource::kNone);
   const PList data(PList::Data{});
-  OO_CHECK(Read(&data, kXYZ, out) == TupleSource::kNone);
-  OO_CHECK(out[0] == 7.5f && out[1] == 7.5f && out[2] == 7.5f);
+  EXPECT_TRUE(Read(&data, kXYZ, out) == TupleSource::kNone);
+  EXPECT_TRUE(out[0] == 7.5f && out[1] == 7.5f && out[2] == 7.5f);
 }
 
 // A string is the game's to scan; an object node may be its native vector.
-OO_TEST(stringAndObjectAreReported) {
+TEST(plist_game_tuples, stringAndObjectAreReported) {
   std::array<double, 3> out{};
   const PList string("1 2 3");
-  OO_CHECK(Read(&string, kXYZ, out) == TupleSource::kString);
+  EXPECT_TRUE(Read(&string, kXYZ, out) == TupleSource::kString);
   const PList object{PList::Object{}};
-  OO_CHECK(Read(&object, kXYZ, out) == TupleSource::kObject);
+  EXPECT_TRUE(Read(&object, kXYZ, out) == TupleSource::kObject);
 }
 
 // An array of exactly N: element i converts as -oo_floatAtIndex:i (fallback 0).
-OO_TEST(arrayOfExactlyN) {
+TEST(plist_game_tuples, arrayOfExactlyN) {
   std::array<float, 3> out{7.5f, 7.5f, 7.5f};
   const PList a(PList::Array{PList(1.5), PList("2.25"), PList("junk")});
-  OO_CHECK(Read(&a, kXYZ, out) == TupleSource::kComponents);
-  OO_CHECK_EQ(out[0], 1.5f);
-  OO_CHECK_EQ(out[1], 2.25f);
-  OO_CHECK_EQ(out[2], 0.0f);  // not a number: the element's fallback, 0
+  EXPECT_TRUE(Read(&a, kXYZ, out) == TupleSource::kComponents);
+  EXPECT_EQ(out[0], 1.5f);
+  EXPECT_EQ(out[1], 2.25f);
+  EXPECT_EQ(out[2], 0.0f);  // not a number: the element's fallback, 0
 
   std::array<float, 3> keep{7.5f, 7.5f, 7.5f};
   const PList two(PList::Array{PList(1.0), PList(2.0)});
-  OO_CHECK(Read(&two, kXYZ, keep) == TupleSource::kNone);
+  EXPECT_TRUE(Read(&two, kXYZ, keep) == TupleSource::kNone);
   const PList four(
       PList::Array{PList(1.0), PList(2.0), PList(3.0), PList(4.0)});
-  OO_CHECK(Read(&four, kXYZ, keep) == TupleSource::kNone);
-  OO_CHECK(keep[0] == 7.5f);
+  EXPECT_TRUE(Read(&four, kXYZ, keep) == TupleSource::kNone);
+  EXPECT_TRUE(keep[0] == 7.5f);
 
   // Four for a quaternion, w first.
   std::array<float, 4> q{};
-  OO_CHECK(Read(&four, kWXYZ, q) == TupleSource::kComponents);
-  OO_CHECK(q[0] == 1.0f && q[1] == 2.0f && q[2] == 3.0f && q[3] == 4.0f);
+  EXPECT_TRUE(Read(&four, kWXYZ, q) == TupleSource::kComponents);
+  EXPECT_TRUE(q[0] == 1.0f && q[1] == 2.0f && q[2] == 3.0f && q[3] == 4.0f);
 }
 
 // oo::ObjectFromPList dropped null elements before the Foundation function
 // counted them.
-OO_TEST(arrayNullsDropped) {
+TEST(plist_game_tuples, arrayNullsDropped) {
   std::array<double, 3> out{};
   const PList a(PList::Array{PList(1.0), PList(), PList(2.0), PList(3.0)});
-  OO_CHECK(Read(&a, kXYZ, out) == TupleSource::kComponents);
-  OO_CHECK(out[0] == 1.0 && out[1] == 2.0 && out[2] == 3.0);
+  EXPECT_TRUE(Read(&a, kXYZ, out) == TupleSource::kComponents);
+  EXPECT_TRUE(out[0] == 1.0 && out[1] == 2.0 && out[2] == 3.0);
 }
 
 // A dictionary with at least one key: every component read, missing ones 0 (not
 // the default's).
-OO_TEST(dictionaryComponents) {
+TEST(plist_game_tuples, dictionaryComponents) {
   std::array<double, 3> out{7.25, 7.25, 7.25};
   const PList d(PList::Dict{{"y", PList(PList::signedInteger(4))},
                             {"other", PList(9.0)}});
-  OO_CHECK(Read(&d, kXYZ, out) == TupleSource::kComponents);
-  OO_CHECK(out[0] == 0.0 && out[1] == 4.0 && out[2] == 0.0);
+  EXPECT_TRUE(Read(&d, kXYZ, out) == TupleSource::kComponents);
+  EXPECT_TRUE(out[0] == 0.0 && out[1] == 4.0 && out[2] == 0.0);
 
   std::array<double, 3> keep{7.25, 7.25, 7.25};
   const PList none(PList::Dict{{"other", PList(9.0)},
                                {"x", PList()}});  // a null value is absent
-  OO_CHECK(Read(&none, kXYZ, keep) == TupleSource::kNone);
-  OO_CHECK(keep[0] == 7.25);
+  EXPECT_TRUE(Read(&none, kXYZ, keep) == TupleSource::kNone);
+  EXPECT_TRUE(keep[0] == 7.25);
 
   std::array<float, 4> q{};
   const PList qd(PList::Dict{{"w", PList("0.5")}, {"z", PList(true)}});
-  OO_CHECK(Read(&qd, kWXYZ, q) == TupleSource::kComponents);
-  OO_CHECK(q[0] == 0.5f && q[1] == 0.0f && q[2] == 0.0f && q[3] == 1.0f);
+  EXPECT_TRUE(Read(&qd, kWXYZ, q) == TupleSource::kComponents);
+  EXPECT_TRUE(q[0] == 0.5f && q[1] == 0.0f && q[2] == 0.0f && q[3] == 1.0f);
 }
 
 // The writers: +numberWithFloat: (single-precision reals) / +numberWithDouble:.
-OO_TEST(writers) {
+TEST(plist_game_tuples, writers) {
   const PList v =
       oo::plist_get::tuplePList<float, 3>(kXYZ, {0.1f, -2.0f, 3.5f});
-  OO_CHECK(v.find("x") != nullptr && v.find("x")->isSinglePrecision());
-  OO_CHECK_EQ(static_cast<float>(v.find("x")->doubleValue()), 0.1f);
-  OO_CHECK_EQ(v.find("y")->doubleValue(), -2.0);
-  OO_CHECK_EQ(v.getIf<PList::Dict>()->size(), std::size_t(3));
+  EXPECT_TRUE(v.find("x") != nullptr && v.find("x")->isSinglePrecision());
+  EXPECT_EQ(static_cast<float>(v.find("x")->doubleValue()), 0.1f);
+  EXPECT_EQ(v.find("y")->doubleValue(), -2.0);
+  EXPECT_EQ(v.getIf<PList::Dict>()->size(), std::size_t(3));
 
   const PList hp =
       oo::plist_get::tuplePList<double, 3>(kXYZ, {0.1, 1e300, -0.0});
-  OO_CHECK(!hp.find("x")->isSinglePrecision());
-  OO_CHECK_EQ(hp.find("x")->doubleValue(), 0.1);
-  OO_CHECK_EQ(hp.find("y")->doubleValue(), 1e300);
+  EXPECT_TRUE(!hp.find("x")->isSinglePrecision());
+  EXPECT_EQ(hp.find("x")->doubleValue(), 0.1);
+  EXPECT_EQ(hp.find("y")->doubleValue(), 1e300);
 
   const PList q =
       oo::plist_get::tuplePList<float, 4>(kWXYZ, {1.0f, 0.0f, 0.0f, 0.0f});
-  OO_CHECK_EQ(q.find("w")->doubleValue(), 1.0);
-  OO_CHECK_EQ(q.getIf<PList::Dict>()->size(), std::size_t(4));
+  EXPECT_EQ(q.find("w")->doubleValue(), 1.0);
+  EXPECT_EQ(q.getIf<PList::Dict>()->size(), std::size_t(4));
 
   // Round trip through the reader.
   std::array<float, 3> out{};
-  OO_CHECK(Read(&v, kXYZ, out) == TupleSource::kComponents);
-  OO_CHECK(out[0] == 0.1f && out[1] == -2.0f && out[2] == 3.5f);
+  EXPECT_TRUE(Read(&v, kXYZ, out) == TupleSource::kComponents);
+  EXPECT_TRUE(out[0] == 0.1f && out[1] == -2.0f && out[2] == 3.5f);
 }
 
 // OOFuzzyBooleanFromObject's probability.
-OO_TEST(fuzzyProbability) {
+TEST(plist_game_tuples, fuzzyProbability) {
   using oo::plist_get::fuzzyProbabilityFrom;
-  OO_CHECK_EQ(fuzzyProbabilityFrom(nullptr, 0.25f), 0.25f);
+  EXPECT_EQ(fuzzyProbabilityFrom(nullptr, 0.25f), 0.25f);
   const PList half(0.5), yes("YES"), no("off"), zero(" 0"), minusZero("-0"),
       junk("maybe"), fraction("0.3"), tiny("1e-50");
   const PList t(true), n(PList::signedInteger(2)), a(PList::Array{});
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&half, 0.25f), 0.5f);
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&yes, 0.25f), 1.0f);
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&no, 0.25f), 0.0f);
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&zero, 0.25f),
+  EXPECT_EQ(fuzzyProbabilityFrom(&half, 0.25f), 0.5f);
+  EXPECT_EQ(fuzzyProbabilityFrom(&yes, 0.25f), 1.0f);
+  EXPECT_EQ(fuzzyProbabilityFrom(&no, 0.25f), 0.0f);
+  EXPECT_EQ(fuzzyProbabilityFrom(&zero, 0.25f),
               0.0f);  // a zero string keeps its 0
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&minusZero, 0.25f),
+  EXPECT_EQ(fuzzyProbabilityFrom(&minusZero, 0.25f),
               0.25f);  // "-0" is not a zero string (quirk)
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&junk, 0.25f), 0.25f);
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&fraction, 0.25f), 0.3f);
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&tiny, 0.25f),
+  EXPECT_EQ(fuzzyProbabilityFrom(&junk, 0.25f), 0.25f);
+  EXPECT_EQ(fuzzyProbabilityFrom(&fraction, 0.25f), 0.3f);
+  EXPECT_EQ(fuzzyProbabilityFrom(&tiny, 0.25f),
               1.0f);  // -floatValue 0, -doubleValue not
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&t, 0.25f), 1.0f);
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&n, 0.25f), 2.0f);
-  OO_CHECK_EQ(fuzzyProbabilityFrom(&a, 0.25f), 0.25f);
+  EXPECT_EQ(fuzzyProbabilityFrom(&t, 0.25f), 1.0f);
+  EXPECT_EQ(fuzzyProbabilityFrom(&n, 0.25f), 2.0f);
+  EXPECT_EQ(fuzzyProbabilityFrom(&a, 0.25f), 0.25f);
 }
-
-OO_TEST_MAIN()

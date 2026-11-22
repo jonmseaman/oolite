@@ -7,20 +7,21 @@
 #include <stdexcept>
 #include <string>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
 #include "oofnd/Exception.hpp"
 
 // oo::Finally: @finally. C++23 has no scope guard (std::scope_exit is a TS).
-OO_TEST(finallyRunsWhenTheScopeIsLeftNormally) {
+TEST(std_differences, finallyRunsWhenTheScopeIsLeftNormally) {
   std::string order;
   {
     oo::Finally finally([&] { order += "finally"; });
     order += "body,";
   }
-  OO_CHECK_EQ(order, std::string("body,finally"));
+  EXPECT_EQ(order, std::string("body,finally"));
 }
 
-OO_TEST(finallyRunsWhenAnExceptionLeavesTheScope) {
+TEST(std_differences, finallyRunsWhenAnExceptionLeavesTheScope) {
   std::string order;
   try {
     oo::Finally finally([&] { order += "finally,"; });
@@ -29,7 +30,5 @@ OO_TEST(finallyRunsWhenAnExceptionLeavesTheScope) {
   } catch (const std::runtime_error&) {
     order += "handler";
   }
-  OO_CHECK_EQ(order, std::string("body,finally,handler"));
+  EXPECT_EQ(order, std::string("body,finally,handler"));
 }
-
-OO_TEST_MAIN()

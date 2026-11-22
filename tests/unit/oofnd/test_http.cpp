@@ -16,6 +16,8 @@
 // oofnd-link-windows: -lws2_32
 
 
+#include <gtest/gtest.h>
+
 #include "oofnd/Http.hpp"
 
 #include <atomic>
@@ -28,7 +30,6 @@
 #include <thread>
 #include <vector>
 
-#include "oo_test.hpp"
 
 #if defined(_WIN32)
 #include <winsock2.h>
@@ -116,97 +117,97 @@ std::string bigBody() {
 // --- parseUrl
 // -------------------------------------------------------------------------------------
 
-OO_TEST(parse_http_urls) {
+TEST(http, parse_http_urls) {
   auto u = parseUrl("https://addons.oolite.space/api/1.0/overview");
-  OO_CHECK(u.has_value());
-  OO_CHECK(u->scheme == Url::Scheme::kHttps);
-  OO_CHECK_EQ(u->host, std::string("addons.oolite.space"));
-  OO_CHECK_EQ(u->port, 443);
-  OO_CHECK_EQ(u->target, std::string("/api/1.0/overview"));
+  EXPECT_TRUE(u.has_value());
+  EXPECT_TRUE(u->scheme == Url::Scheme::kHttps);
+  EXPECT_EQ(u->host, std::string("addons.oolite.space"));
+  EXPECT_EQ(u->port, 443);
+  EXPECT_EQ(u->target, std::string("/api/1.0/overview"));
 
   u = parseUrl("http://127.0.0.1:18432");
-  OO_CHECK(u.has_value());
-  OO_CHECK(u->scheme == Url::Scheme::kHttp);
-  OO_CHECK_EQ(u->port, 18432);
-  OO_CHECK_EQ(u->target, std::string("/"));
+  EXPECT_TRUE(u.has_value());
+  EXPECT_TRUE(u->scheme == Url::Scheme::kHttp);
+  EXPECT_EQ(u->port, 18432);
+  EXPECT_EQ(u->target, std::string("/"));
 
   u = parseUrl("http://127.0.0.1:18432/ok?x=1#frag");
-  OO_CHECK(u.has_value());
-  OO_CHECK_EQ(u->target, std::string("/ok?x=1"));
+  EXPECT_TRUE(u.has_value());
+  EXPECT_EQ(u->target, std::string("/ok?x=1"));
 
   u = parseUrl("http://example.com?q");
-  OO_CHECK(u.has_value());
-  OO_CHECK_EQ(u->target, std::string("/?q"));
+  EXPECT_TRUE(u.has_value());
+  EXPECT_EQ(u->target, std::string("/?q"));
 
   u = parseUrl("http://user:pw@127.0.0.1:18432/headers");
-  OO_CHECK(u.has_value());
-  OO_CHECK_EQ(u->host, std::string("127.0.0.1"));
-  OO_CHECK_EQ(u->target, std::string("/headers"));
+  EXPECT_TRUE(u.has_value());
+  EXPECT_EQ(u->host, std::string("127.0.0.1"));
+  EXPECT_EQ(u->target, std::string("/headers"));
 
   u = parseUrl("HTTP://127.0.0.1/a%20b");
-  OO_CHECK(u.has_value());
-  OO_CHECK(u->scheme == Url::Scheme::kHttp);
-  OO_CHECK_EQ(u->port, 80);
-  OO_CHECK_EQ(u->target, std::string("/a%20b"));
+  EXPECT_TRUE(u.has_value());
+  EXPECT_TRUE(u->scheme == Url::Scheme::kHttp);
+  EXPECT_EQ(u->port, 80);
+  EXPECT_EQ(u->target, std::string("/a%20b"));
 
   u = parseUrl("http://[::1]:8080/x");
-  OO_CHECK(u.has_value());
-  OO_CHECK_EQ(u->host, std::string("::1"));
-  OO_CHECK_EQ(u->port, 8080);
+  EXPECT_TRUE(u.has_value());
+  EXPECT_EQ(u->host, std::string("::1"));
+  EXPECT_EQ(u->port, 8080);
 }
 
-OO_TEST(parse_file_urls) {
+TEST(http, parse_file_urls) {
   auto u = parseUrl("file:///C:/Windows/win.ini");
-  OO_CHECK(u.has_value());
-  OO_CHECK(u->scheme == Url::Scheme::kFile);
+  EXPECT_TRUE(u.has_value());
+  EXPECT_TRUE(u->scheme == Url::Scheme::kFile);
 #if defined(_WIN32)
-  OO_CHECK_EQ(u->path, std::string("C:/Windows/win.ini"));
+  EXPECT_EQ(u->path, std::string("C:/Windows/win.ini"));
 #else
-  OO_CHECK_EQ(u->path, std::string("/C:/Windows/win.ini"));
+  EXPECT_EQ(u->path, std::string("/C:/Windows/win.ini"));
 #endif
   u = parseUrl("file://localhost/tmp/a%20b.txt");
-  OO_CHECK(u.has_value());
-  OO_CHECK_EQ(u->path, std::string("/tmp/a b.txt"));
-  OO_CHECK(!parseUrl("file://otherhost/x").has_value());
-  OO_CHECK(!parseUrl("file://").has_value());
+  EXPECT_TRUE(u.has_value());
+  EXPECT_EQ(u->path, std::string("/tmp/a b.txt"));
+  EXPECT_TRUE(!parseUrl("file://otherhost/x").has_value());
+  EXPECT_TRUE(!parseUrl("file://").has_value());
 }
 
-OO_TEST(parse_rejects_what_cannot_start) {
+TEST(http, parse_rejects_what_cannot_start) {
   // NSURL answered nil for these (spaces, non-ASCII, empty).
-  OO_CHECK(!parseUrl("").has_value());
-  OO_CHECK(!parseUrl("not a url").has_value());
-  OO_CHECK(!parseUrl("http://exa mple.com/").has_value());
-  OO_CHECK(!parseUrl("http://127.0.0.1/a b").has_value());
-  OO_CHECK(!parseUrl("http://example.com/\xC3\xA9").has_value());
-  OO_CHECK(!parseUrl("http://example.com/{x}").has_value());
+  EXPECT_TRUE(!parseUrl("").has_value());
+  EXPECT_TRUE(!parseUrl("not a url").has_value());
+  EXPECT_TRUE(!parseUrl("http://exa mple.com/").has_value());
+  EXPECT_TRUE(!parseUrl("http://127.0.0.1/a b").has_value());
+  EXPECT_TRUE(!parseUrl("http://example.com/\xC3\xA9").has_value());
+  EXPECT_TRUE(!parseUrl("http://example.com/{x}").has_value());
   // Schemes and shapes NSURLConnection could not fetch over HTTP.
-  OO_CHECK(!parseUrl("ftp://127.0.0.1/ok").has_value());
-  OO_CHECK(!parseUrl("mailto:someone@example.com").has_value());
-  OO_CHECK(!parseUrl("http:///nohost").has_value());
-  OO_CHECK(!parseUrl("http:example.com").has_value());
-  OO_CHECK(!parseUrl("://x").has_value());
-  OO_CHECK(!parseUrl("http://example.com:0/").has_value());
-  OO_CHECK(!parseUrl("http://example.com:65536/").has_value());
-  OO_CHECK(!parseUrl("http://example.com:8a/").has_value());
-  OO_CHECK(!parseUrl("http://[::1/").has_value());
+  EXPECT_TRUE(!parseUrl("ftp://127.0.0.1/ok").has_value());
+  EXPECT_TRUE(!parseUrl("mailto:someone@example.com").has_value());
+  EXPECT_TRUE(!parseUrl("http:///nohost").has_value());
+  EXPECT_TRUE(!parseUrl("http:example.com").has_value());
+  EXPECT_TRUE(!parseUrl("://x").has_value());
+  EXPECT_TRUE(!parseUrl("http://example.com:0/").has_value());
+  EXPECT_TRUE(!parseUrl("http://example.com:65536/").has_value());
+  EXPECT_TRUE(!parseUrl("http://example.com:8a/").has_value());
+  EXPECT_TRUE(!parseUrl("http://[::1/").has_value());
 }
 
 // --- downloads that need no server
 // ------------------------------------------------------------------
 
-OO_TEST(unparseable_url_fails_at_once) {
+TEST(http, unparseable_url_fails_at_once) {
   for (const char* url : {"", "not a url", "http://exa mple.com/",
                           "ftp://127.0.0.1/ok", "http:///nohost"}) {
     const Transcript t = get(url);
-    OO_CHECK(t.failed);
-    OO_CHECK(!t.finished);
-    OO_CHECK_EQ(t.responses, 0);
-    OO_CHECK(!t.error.empty());
-    OO_CHECK(!t.eventAfterEnd);
+    EXPECT_TRUE(t.failed);
+    EXPECT_TRUE(!t.finished);
+    EXPECT_EQ(t.responses, 0);
+    EXPECT_TRUE(!t.error.empty());
+    EXPECT_TRUE(!t.eventAfterEnd);
   }
 }
 
-OO_TEST(file_url_delivers_the_file) {
+TEST(http, file_url_delivers_the_file) {
   std::error_code ec;
   const auto stamp =
       std::chrono::steady_clock::now().time_since_epoch().count();
@@ -215,7 +216,7 @@ OO_TEST(file_url_delivers_the_file) {
   std::filesystem::create_directories(dir, ec);
   const oo::fs::Path file = dir / "manifest data.txt";
   const std::string body = bigBody();
-  OO_CHECK(
+  EXPECT_TRUE(
       oo::fs::writeFile(file, oo::Data(body.data(), body.size())).has_value());
 
   std::string url = "file://";
@@ -227,23 +228,23 @@ OO_TEST(file_url_delivers_the_file) {
     url += (c == ' ') ? std::string("%20") : std::string(1, c);
 
   const Transcript t = get(url);
-  OO_CHECK(t.finished);
-  OO_CHECK(!t.failed);
-  OO_CHECK_EQ(t.responses, 1);
-  OO_CHECK_EQ(t.expected, static_cast<std::int64_t>(body.size()));
-  OO_CHECK(t.body == body);
-  OO_CHECK(!t.dataBeforeResponse);
-  OO_CHECK(!t.eventAfterEnd);
+  EXPECT_TRUE(t.finished);
+  EXPECT_TRUE(!t.failed);
+  EXPECT_EQ(t.responses, 1);
+  EXPECT_EQ(t.expected, static_cast<std::int64_t>(body.size()));
+  EXPECT_TRUE(t.body == body);
+  EXPECT_TRUE(!t.dataBeforeResponse);
+  EXPECT_TRUE(!t.eventAfterEnd);
 
   const Transcript missing = get(url + ".missing");
-  OO_CHECK(missing.failed);
-  OO_CHECK_EQ(missing.responses, 0);
+  EXPECT_TRUE(missing.failed);
+  EXPECT_EQ(missing.responses, 0);
   std::filesystem::remove_all(dir, ec);
 }
 
 // The OXZ manager writes what a download delivers through these
 // (oofnd/FileSystem.hpp).
-OO_TEST(download_file_sink) {
+TEST(http, download_file_sink) {
   std::error_code ec;
   const auto stamp =
       std::chrono::steady_clock::now().time_since_epoch().count();
@@ -251,32 +252,32 @@ OO_TEST(download_file_sink) {
                            ("oofnd-http-sink-" + std::to_string(stamp));
   std::filesystem::create_directories(dir, ec);
   const oo::fs::Path file = dir / "download.tmp";
-  OO_CHECK(oo::fs::writeFile(file, oo::Data::fromString("previous contents"))
+  EXPECT_TRUE(oo::fs::writeFile(file, oo::Data::fromString("previous contents"))
                .has_value());
 
   std::FILE* f = oo::fs::createFileForWriting(file);
-  OO_CHECK(f != nullptr);
-  OO_CHECK_EQ(oo::fs::fileSize(file).value_or(99),
+  EXPECT_TRUE(f != nullptr);
+  EXPECT_EQ(oo::fs::fileSize(file).value_or(99),
               0u);  // created empty over the old file
-  OO_CHECK_EQ(std::fwrite("hello ", 1, 6, f), 6u);
-  OO_CHECK_EQ(std::fwrite("world", 1, 5, f), 5u);
-  OO_CHECK(oo::fs::synchronizeFile(f));
-  OO_CHECK_EQ(oo::fs::fileSize(file).value_or(0), 11u);
-  OO_CHECK_EQ(std::fclose(f), 0);
-  OO_CHECK_EQ(oo::fs::readFile(file).value_or(oo::Data()).toString(),
+  EXPECT_EQ(std::fwrite("hello ", 1, 6, f), 6u);
+  EXPECT_EQ(std::fwrite("world", 1, 5, f), 5u);
+  EXPECT_TRUE(oo::fs::synchronizeFile(f));
+  EXPECT_EQ(oo::fs::fileSize(file).value_or(0), 11u);
+  EXPECT_EQ(std::fclose(f), 0);
+  EXPECT_EQ(oo::fs::readFile(file).value_or(oo::Data()).toString(),
               std::string("hello world"));
 
-  OO_CHECK(!oo::fs::synchronizeFile(nullptr));
-  OO_CHECK(oo::fs::createFileForWriting(dir / "missing-dir" / "x") == nullptr);
+  EXPECT_TRUE(!oo::fs::synchronizeFile(nullptr));
+  EXPECT_TRUE(oo::fs::createFileForWriting(dir / "missing-dir" / "x") == nullptr);
   std::filesystem::remove_all(dir, ec);
 }
 
-OO_TEST(cancel_before_taking_drops_everything) {
+TEST(http, cancel_before_taking_drops_everything) {
   Download download("file:///nonexistent-oofnd-http-test/x", kUserAgent);
   download.cancel();
-  OO_CHECK(download.cancelled());
+  EXPECT_TRUE(download.cancelled());
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
-  OO_CHECK(!download.nextEvent().has_value());
+  EXPECT_TRUE(!download.nextEvent().has_value());
   download.cancel();  // twice is harmless
 }
 
@@ -470,88 +471,88 @@ Server& server() {
 
 void expectComplete(const Transcript& t, int status, std::int64_t expected,
                     const std::string& body) {
-  OO_CHECK(t.finished);
-  OO_CHECK(!t.failed);
-  OO_CHECK_EQ(t.responses, 1);
-  OO_CHECK_EQ(t.status, status);
-  OO_CHECK_EQ(t.expected, expected);
-  OO_CHECK(t.body == body);
-  OO_CHECK(!t.dataBeforeResponse);
-  OO_CHECK(!t.eventAfterEnd);
+  EXPECT_TRUE(t.finished);
+  EXPECT_TRUE(!t.failed);
+  EXPECT_EQ(t.responses, 1);
+  EXPECT_EQ(t.status, status);
+  EXPECT_EQ(t.expected, expected);
+  EXPECT_TRUE(t.body == body);
+  EXPECT_TRUE(!t.dataBeforeResponse);
+  EXPECT_TRUE(!t.eventAfterEnd);
 }
 
-OO_TEST(ok_delivers_response_data_finish) {
+TEST(http, ok_delivers_response_data_finish) {
   expectComplete(get(server().url("/ok")), 200, 5, "hello");
   expectComplete(get(server().url("/ok#frag")), 200, 5, "hello");
   expectComplete(get(server().url("/big")), 200, 300000, bigBody());
   expectComplete(get(server().url("/empty")), 200, 0, "");
 }
 
-OO_TEST(error_statuses_are_responses_with_a_body) {
+TEST(http, error_statuses_are_responses_with_a_body) {
   expectComplete(get(server().url("/404")), 404, 9, "not found");
   expectComplete(get(server().url("/500")), 500, 3, "bad");
   expectComplete(get(server().url("/ok?x=1")), 404, 0, "");
   expectComplete(get(server().url("")), 404, 0, "");
 }
 
-OO_TEST(unknown_length_is_minus_one) {
+TEST(http, unknown_length_is_minus_one) {
   expectComplete(get(server().url("/chunked")), 200, -1, "hello world");
   expectComplete(get(server().url("/nolen")), 200, -1, "no length body");
   expectComplete(get(server().url("/204")), 204, -1, "");
 }
 
-OO_TEST(body_is_delivered_as_sent) {
+TEST(http, body_is_delivered_as_sent) {
   const std::string z(
       "\x1f\x8b\x08\x00\x00\x00\x00\x00\x02\xff\xab\x02\x00\x00\xff\xff", 16);
   expectComplete(get(server().url("/gzip")), 200, 16, z);
 }
 
-OO_TEST(a_body_cut_short_finishes_with_what_arrived) {
+TEST(http, a_body_cut_short_finishes_with_what_arrived) {
   expectComplete(get(server().url("/drop")), 200, 100, "partial");
 }
 
-OO_TEST(request_carries_user_agent_and_host_only) {
+TEST(http, request_carries_user_agent_and_host_only) {
   const Transcript t = get(server().url("/headers"));
-  OO_CHECK(t.finished);
-  OO_CHECK_EQ(t.status, 200);
-  OO_CHECK(t.body.rfind("GET /headers HTTP/1.1\r\n", 0) == 0);
-  OO_CHECK(t.body.find("\r\nUser-Agent: Oolite/1.93\r\n") != std::string::npos);
-  OO_CHECK(t.body.find("\r\nHost: 127.0.0.1:") != std::string::npos);
-  OO_CHECK(t.body.find("Accept-Encoding") == std::string::npos);
-  OO_CHECK(t.body.find("Cookie") == std::string::npos);
-  OO_CHECK(t.body.find("Authorization") == std::string::npos);
+  EXPECT_TRUE(t.finished);
+  EXPECT_EQ(t.status, 200);
+  EXPECT_TRUE(t.body.rfind("GET /headers HTTP/1.1\r\n", 0) == 0);
+  EXPECT_TRUE(t.body.find("\r\nUser-Agent: Oolite/1.93\r\n") != std::string::npos);
+  EXPECT_TRUE(t.body.find("\r\nHost: 127.0.0.1:") != std::string::npos);
+  EXPECT_TRUE(t.body.find("Accept-Encoding") == std::string::npos);
+  EXPECT_TRUE(t.body.find("Cookie") == std::string::npos);
+  EXPECT_TRUE(t.body.find("Authorization") == std::string::npos);
 
   const std::string withUser =
       "http://user:pw@" + server().url("/headers").substr(7);
   const Transcript u = get(withUser);
-  OO_CHECK(u.finished);
-  OO_CHECK(u.body.find("Authorization") == std::string::npos);
+  EXPECT_TRUE(u.finished);
+  EXPECT_TRUE(u.body.find("Authorization") == std::string::npos);
 }
 
-OO_TEST(redirects_deliver_only_the_final_response) {
+TEST(http, redirects_deliver_only_the_final_response) {
   // Absolute: as NSURLConnection. The redirect's Set-Cookie is not sent back.
   const Transcript a = get(server().url("/redirabs"));
-  OO_CHECK(a.finished);
-  OO_CHECK_EQ(a.responses, 1);
-  OO_CHECK_EQ(a.status, 200);
-  OO_CHECK(a.body.rfind("GET /headers HTTP/1.1\r\n", 0) == 0);
-  OO_CHECK(a.body.find("Cookie") == std::string::npos);
+  EXPECT_TRUE(a.finished);
+  EXPECT_EQ(a.responses, 1);
+  EXPECT_EQ(a.status, 200);
+  EXPECT_TRUE(a.body.rfind("GET /headers HTTP/1.1\r\n", 0) == 0);
+  EXPECT_TRUE(a.body.find("Cookie") == std::string::npos);
   // Relative: NSURLConnection never called back; it is
   // followed.
   expectComplete(get(server().url("/redir")), 200, 5, "hello");
 }
 
-OO_TEST(refused_connection_fails) {
+TEST(http, refused_connection_fails) {
   // Port 1 on loopback: nothing listens there.
   const Transcript t = get("http://127.0.0.1:1/x");
-  OO_CHECK(t.failed);
-  OO_CHECK(!t.finished);
-  OO_CHECK_EQ(t.responses, 0);
-  OO_CHECK(t.error.find("libcurl error 7") != std::string::npos);  // couldn't connect
-  OO_CHECK(!t.eventAfterEnd);
+  EXPECT_TRUE(t.failed);
+  EXPECT_TRUE(!t.finished);
+  EXPECT_EQ(t.responses, 0);
+  EXPECT_TRUE(t.error.find("libcurl error 7") != std::string::npos);  // couldn't connect
+  EXPECT_TRUE(!t.eventAfterEnd);
 }
 
-OO_TEST(cancel_interrupts_a_stalled_body) {
+TEST(http, cancel_interrupts_a_stalled_body) {
   server();
   server().stopping_ = false;
   const auto start = std::chrono::steady_clock::now();
@@ -571,17 +572,15 @@ OO_TEST(cancel_interrupts_a_stalled_body) {
       if (event->kind == Event::Kind::kResponse) response = true;
       if (event->kind == Event::Kind::kData) body += event->bytes;
     }
-    OO_CHECK(response);
-    OO_CHECK_EQ(body, std::string("part"));
+    EXPECT_TRUE(response);
+    EXPECT_EQ(body, std::string("part"));
     download.cancel();
-    OO_CHECK(!download.nextEvent().has_value());
+    EXPECT_TRUE(!download.nextEvent().has_value());
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    OO_CHECK(!download.nextEvent().has_value());
+    EXPECT_TRUE(!download.nextEvent().has_value());
   }  // the destructor joins the worker the cancel interrupted
-  OO_CHECK(std::chrono::steady_clock::now() - start < std::chrono::seconds(10));
+  EXPECT_TRUE(std::chrono::steady_clock::now() - start < std::chrono::seconds(10));
   server().stopping_ = true;
 }
 
 }  // namespace
-
-OO_TEST_MAIN()

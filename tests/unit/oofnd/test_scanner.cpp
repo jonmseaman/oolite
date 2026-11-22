@@ -17,6 +17,8 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "oofnd/Scanner.hpp"
 
 #include <cstdint>
@@ -29,7 +31,6 @@
 #include <utility>
 #include <vector>
 
-#include "oo_test.hpp"
 
 namespace {
 
@@ -312,7 +313,7 @@ struct ScriptRunner {
 
 }  // namespace
 
-OO_TEST(namedSetsMatchGNUstepOverTheBMP) {
+TEST(scanner, namedSetsMatchGNUstepOverTheBMP) {
   const std::pair<const char*, CharacterSet> sets[] = {
       {"whitespace", CharacterSet::whitespace()},
       {"whitespaceAndNewline", CharacterSet::whitespaceAndNewline()},
@@ -336,210 +337,210 @@ OO_TEST(namedSetsMatchGNUstepOverTheBMP) {
     }
     h = fnv(h, line);
   }
-  OO_CHECK_EQ(h, 0xd85a935268da8294ULL);
+  EXPECT_EQ(h, 0xd85a935268da8294ULL);
 
-  OO_CHECK(CharacterSet::whitespace().contains(u'\t'));
-  OO_CHECK(!CharacterSet::whitespace().contains(u'\n'));
-  OO_CHECK(CharacterSet::whitespace().contains(char16_t(0x2028)));
-  OO_CHECK(!CharacterSet::newline().contains(char16_t(0x2028)));
-  OO_CHECK(CharacterSet::decimalDigit().contains(char16_t(0x0661)));
-  OO_CHECK(!CharacterSet::decimalDigit().contains(char16_t(0x00B2)));
-  OO_CHECK(CharacterSet::alphanumeric().contains(char16_t(0x00B2)));
+  EXPECT_TRUE(CharacterSet::whitespace().contains(u'\t'));
+  EXPECT_TRUE(!CharacterSet::whitespace().contains(u'\n'));
+  EXPECT_TRUE(CharacterSet::whitespace().contains(char16_t(0x2028)));
+  EXPECT_TRUE(!CharacterSet::newline().contains(char16_t(0x2028)));
+  EXPECT_TRUE(CharacterSet::decimalDigit().contains(char16_t(0x0661)));
+  EXPECT_TRUE(!CharacterSet::decimalDigit().contains(char16_t(0x00B2)));
+  EXPECT_TRUE(CharacterSet::alphanumeric().contains(char16_t(0x00B2)));
   bool same = true;
   for (unsigned c = 0; c < 0x10000; ++c) {
     same = same && CharacterSet::whitespaceAndNewline().contains(char16_t(c)) ==
                        oo::str::isWhitespaceOrNewline(char16_t(c));
   }
-  OO_CHECK(same);
+  EXPECT_TRUE(same);
 }
 
-OO_TEST(customAndInvertedSets) {
+TEST(scanner, customAndInvertedSets) {
   const CharacterSet set = CharacterSet::fromCharacters("a(\xC3\xA9");
-  OO_CHECK(set.contains(u'a') && set.contains(u'(') &&
+  EXPECT_TRUE(set.contains(u'a') && set.contains(u'(') &&
            set.contains(char16_t(0xE9)));
-  OO_CHECK(!set.contains(u'A'));
-  OO_CHECK(set.inverted().contains(u'A') && !set.inverted().contains(u'a'));
-  OO_CHECK(set.inverted().inverted().contains(u'a'));
+  EXPECT_TRUE(!set.contains(u'A'));
+  EXPECT_TRUE(set.inverted().contains(u'A') && !set.inverted().contains(u'a'));
+  EXPECT_TRUE(set.inverted().inverted().contains(u'a'));
   // A surrogate pair is one supplementary member; neither unit alone is.
   const CharacterSet pair = CharacterSet::fromCharacters("\xF0\x9F\x98\x80");
-  OO_CHECK(!pair.contains(char16_t(0xD83D)) &&
+  EXPECT_TRUE(!pair.contains(char16_t(0xD83D)) &&
            !pair.contains(char16_t(0xDE00)));
 }
 
-OO_TEST(numbersAsNSScannerReadsThem) {
+TEST(scanner, numbersAsNSScannerReadsThem) {
   Scanner s(" 1.5e");
   float f = 0;
-  OO_CHECK(s.scanFloat(&f));
-  OO_CHECK_EQ(f, 1.5f);
-  OO_CHECK_EQ(s.scanLocation(), 4u);  // the dangling 'e' is not consumed
-  OO_CHECK(!s.isAtEnd());
+  EXPECT_TRUE(s.scanFloat(&f));
+  EXPECT_EQ(f, 1.5f);
+  EXPECT_EQ(s.scanLocation(), 4u);  // the dangling 'e' is not consumed
+  EXPECT_TRUE(!s.isAtEnd());
 
   Scanner colour("255 128 0");  // OOColor +colorFromString:
   float rgb[4] = {0, 0, 0, 7};
-  OO_CHECK(colour.scanFloat(&rgb[0]) && colour.scanFloat(&rgb[1]) &&
+  EXPECT_TRUE(colour.scanFloat(&rgb[0]) && colour.scanFloat(&rgb[1]) &&
            colour.scanFloat(&rgb[2]));
-  OO_CHECK(!colour.scanFloat(&rgb[3]));
-  OO_CHECK_EQ(rgb[0], 255.0f);
-  OO_CHECK_EQ(rgb[3], 7.0f);  // untouched on failure
-  OO_CHECK_EQ(colour.scanLocation(), 9u);
+  EXPECT_TRUE(!colour.scanFloat(&rgb[3]));
+  EXPECT_EQ(rgb[0], 255.0f);
+  EXPECT_EQ(rgb[3], 7.0f);  // untouched on failure
+  EXPECT_EQ(colour.scanLocation(), 9u);
 
   int i = 12345;
   Scanner big("4294967295"), small("-2147483648"), neg(" -12");
-  OO_CHECK(big.scanInt(&i));
-  OO_CHECK_EQ(i, 2147483647);
-  OO_CHECK(small.scanInt(&i));
-  OO_CHECK_EQ(i, -2147483647 - 1);
-  OO_CHECK(neg.scanInt(&i));
-  OO_CHECK_EQ(i, -12);
-  OO_CHECK(neg.isAtEnd());
+  EXPECT_TRUE(big.scanInt(&i));
+  EXPECT_EQ(i, 2147483647);
+  EXPECT_TRUE(small.scanInt(&i));
+  EXPECT_EQ(i, -2147483647 - 1);
+  EXPECT_TRUE(neg.scanInt(&i));
+  EXPECT_EQ(i, -12);
+  EXPECT_TRUE(neg.isAtEnd());
 
   Scanner none("x");
-  OO_CHECK(!none.scanInt(&i) && !none.scanDouble(nullptr));
-  OO_CHECK_EQ(none.scanLocation(), 0u);
+  EXPECT_TRUE(!none.scanInt(&i) && !none.scanDouble(nullptr));
+  EXPECT_EQ(none.scanLocation(), 0u);
 }
 
-OO_TEST(stringsAsOORoleSetScansThem) {
+TEST(scanner, stringsAsOORoleSetScansThem) {
   // "role(0.5)": scanUpToString "(" then scanString "(" then scanFloat.
   Scanner s("role(0.5)");
   std::string role, paren;
   float p = 1.0f;
-  OO_CHECK(s.scanUpToString("(", &role));
-  OO_CHECK_EQ(role, std::string("role"));
-  OO_CHECK(s.scanString("(", &paren));
-  OO_CHECK(s.scanFloat(&p));
-  OO_CHECK_EQ(p, 0.5f);
+  EXPECT_TRUE(s.scanUpToString("(", &role));
+  EXPECT_EQ(role, std::string("role"));
+  EXPECT_TRUE(s.scanString("(", &paren));
+  EXPECT_TRUE(s.scanFloat(&p));
+  EXPECT_EQ(p, 0.5f);
 
   // A token starting with "(": nothing before it, so scanUpToString fails and
   // leaves <role>.
   Scanner t("(5)");
   std::string untouched = "keep";
-  OO_CHECK(!t.scanUpToString("(", &untouched));
-  OO_CHECK_EQ(untouched, std::string("keep"));
-  OO_CHECK(t.scanString("("));
-  OO_CHECK(t.scanFloat(&p));
-  OO_CHECK_EQ(p, 5.0f);
+  EXPECT_TRUE(!t.scanUpToString("(", &untouched));
+  EXPECT_EQ(untouched, std::string("keep"));
+  EXPECT_TRUE(t.scanString("("));
+  EXPECT_TRUE(t.scanFloat(&p));
+  EXPECT_EQ(p, 5.0f);
 
   // Case-insensitive by default; the text is returned as written.
   Scanner c("ABc");
   std::string got;
-  OO_CHECK(c.scanString("ab", &got));
-  OO_CHECK_EQ(got, std::string("AB"));
+  EXPECT_TRUE(c.scanString("ab", &got));
+  EXPECT_EQ(got, std::string("AB"));
   // U+212A KELVIN SIGN matches 'k', but only as the first unit of the target.
   Scanner k(
       "x\xE2\x84\xAA"
       "a");
-  OO_CHECK(k.scanUpToString("k", &got));
-  OO_CHECK_EQ(got, std::string("x"));
+  EXPECT_TRUE(k.scanUpToString("k", &got));
+  EXPECT_EQ(got, std::string("x"));
   Scanner k2(
       "x\xE2\x84\xAA"
       "a");
-  OO_CHECK(k2.scanUpToString("xk", &got));
-  OO_CHECK_EQ(k2.scanLocation(), 3u);  // not found: everything scanned
+  EXPECT_TRUE(k2.scanUpToString("xk", &got));
+  EXPECT_EQ(k2.scanLocation(), 3u);  // not found: everything scanned
   // A match that a combining unit follows is not a match.
   Scanner m(
       "ae\xCC\x81"
       "e");
-  OO_CHECK(m.scanUpToString("e", &got));
-  OO_CHECK_EQ(m.scanLocation(), 3u);
+  EXPECT_TRUE(m.scanUpToString("e", &got));
+  EXPECT_EQ(m.scanLocation(), 3u);
 }
 
-OO_TEST(failureLocationsFollowNSScanner) {
+TEST(scanner, failureLocationsFollowNSScanner) {
   // Nothing but skippable characters: scanString / scanUpToString /
   // scanUpToCharactersFromSet leave the location past them;
   // scanCharactersFromSet and the number scans restore it.
   Scanner a("  ");
-  OO_CHECK(!a.scanCharactersFromSet(CharacterSet::alphanumeric()));
-  OO_CHECK_EQ(a.scanLocation(), 0u);
-  OO_CHECK(!a.scanInt(nullptr));
-  OO_CHECK_EQ(a.scanLocation(), 0u);
-  OO_CHECK(!a.scanUpToCharactersFromSet(CharacterSet::alphanumeric()));
-  OO_CHECK_EQ(a.scanLocation(), 2u);
+  EXPECT_TRUE(!a.scanCharactersFromSet(CharacterSet::alphanumeric()));
+  EXPECT_EQ(a.scanLocation(), 0u);
+  EXPECT_TRUE(!a.scanInt(nullptr));
+  EXPECT_EQ(a.scanLocation(), 0u);
+  EXPECT_TRUE(!a.scanUpToCharactersFromSet(CharacterSet::alphanumeric()));
+  EXPECT_EQ(a.scanLocation(), 2u);
   Scanner b(" ");
-  OO_CHECK(!b.scanString(" "));
-  OO_CHECK_EQ(b.scanLocation(), 1u);
+  EXPECT_TRUE(!b.scanString(" "));
+  EXPECT_EQ(b.scanLocation(), 1u);
   // A target longer than what is left also leaves the location past the skipped
   // characters; a mismatch restores it.
   Scanner c("\tab");
-  OO_CHECK(!c.scanString("abc"));
-  OO_CHECK_EQ(c.scanLocation(), 1u);
+  EXPECT_TRUE(!c.scanString("abc"));
+  EXPECT_EQ(c.scanLocation(), 1u);
   c.setScanLocation(0);
-  OO_CHECK(!c.scanString("x"));
-  OO_CHECK_EQ(c.scanLocation(), 0u);
+  EXPECT_TRUE(!c.scanString("x"));
+  EXPECT_EQ(c.scanLocation(), 0u);
 }
 
-OO_TEST(ooliteNoSkipScansAsNSScannerOOExtensions) {
+TEST(scanner, ooliteNoSkipScansAsNSScannerOOExtensions) {
   // ShipEntity's cargo: scanInt, then skip whitespace (no newlines), then the
   // rest.
   Scanner s("3 \talloys");
   int n = 0;
-  OO_CHECK(s.scanInt(&n));
-  OO_CHECK_EQ(n, 3);
-  OO_CHECK(s.scanCharactersFromSetNoSkip(CharacterSet::whitespace()));
-  OO_CHECK_EQ(s.remainder(), std::string("alloys"));
+  EXPECT_TRUE(s.scanInt(&n));
+  EXPECT_EQ(n, 3);
+  EXPECT_TRUE(s.scanCharactersFromSetNoSkip(CharacterSet::whitespace()));
+  EXPECT_EQ(s.remainder(), std::string("alloys"));
   // No skipping: a leading tab is a run of its own; an empty run fails but
   // keeps the location.
   Scanner t("\tA ");
   std::string run;
-  OO_CHECK(
+  EXPECT_TRUE(
       !t.scanUpToCharactersFromSetNoSkip(CharacterSet::whitespace(), &run));
-  OO_CHECK(t.scanCharactersFromSetNoSkip(CharacterSet::whitespace(), &run));
-  OO_CHECK_EQ(run, std::string("\t"));
-  OO_CHECK(t.scanUpToCharactersFromSetNoSkip(CharacterSet::whitespace(), &run));
-  OO_CHECK_EQ(run, std::string("A"));
-  OO_CHECK_EQ(t.scanLocation(), 2u);
+  EXPECT_TRUE(t.scanCharactersFromSetNoSkip(CharacterSet::whitespace(), &run));
+  EXPECT_EQ(run, std::string("\t"));
+  EXPECT_TRUE(t.scanUpToCharactersFromSetNoSkip(CharacterSet::whitespace(), &run));
+  EXPECT_EQ(run, std::string("A"));
+  EXPECT_EQ(t.scanLocation(), 2u);
 }
 
-OO_TEST(trimFindAndSplitBySet) {
-  OO_CHECK_EQ(oo::str::trim(" A\tB ", CharacterSet::whitespace()),
+TEST(scanner, trimFindAndSplitBySet) {
+  EXPECT_EQ(oo::str::trim(" A\tB ", CharacterSet::whitespace()),
               std::string("A\tB"));
-  OO_CHECK_EQ(oo::str::trim(" \x1F"
+  EXPECT_EQ(oo::str::trim(" \x1F"
                             "A\x1F ",
                             CharacterSet::fromCharacters(" \x1F")),
               std::string("A"));  // GuiDisplayGen
-  OO_CHECK_EQ(oo::str::trim("_ A\n_", CharacterSet::fromCharacters("_ \n")),
+  EXPECT_EQ(oo::str::trim("_ A\n_", CharacterSet::fromCharacters("_ \n")),
               std::string("A"));
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       oo::str::findFirstOf(" A\tB ", CharacterSet::whitespace().inverted()),
       1u);
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       oo::str::findLastOf(" A\tB ", CharacterSet::whitespace().inverted()), 3u);
   // OODefaultShaderSynthesizer: a mode made only of r, g, b, a has no member of
   // the inverse.
-  OO_CHECK_EQ(oo::str::findFirstOf(
+  EXPECT_EQ(oo::str::findFirstOf(
                   "rgbx", CharacterSet::fromCharacters("rgba").inverted()),
               3u);
-  OO_CHECK_EQ(oo::str::findFirstOf(
+  EXPECT_EQ(oo::str::findFirstOf(
                   "rgba", CharacterSet::fromCharacters("rgba").inverted()),
               std::string_view::npos);
   const std::vector<std::string> parts =
       oo::str::splitByCharacters(" A\tB ", CharacterSet::whitespace());
-  OO_CHECK_EQ(parts.size(), 4u);
-  OO_CHECK(parts[0].empty() && parts[1] == "A" && parts[2] == "B" &&
+  EXPECT_EQ(parts.size(), 4u);
+  EXPECT_TRUE(parts[0].empty() && parts[1] == "A" && parts[2] == "B" &&
            parts[3].empty());
 }
 
 // Captured from GNUstep base:
 // -rangeOfCharacterFromSet:options:NSLiteralSearch range: with the old-style
 // plist writer's escape set, and -longCharacterIsMember: of a unit.
-OO_TEST(rangedSearchAndLongMembership) {
+TEST(scanner, rangedSearchAndLongMembership) {
   const CharacterSet escapes = CharacterSet::fromCharacters("\"\r\n\\");
-  OO_CHECK_EQ(oo::str::findFirstOf("x\ny\rz\\w\"", escapes, 0), 1u);
-  OO_CHECK_EQ(oo::str::findFirstOf("x\ny\rz\\w\"", escapes, 2), 3u);
-  OO_CHECK_EQ(oo::str::findFirstOf("x\ny\rz\\w\"", escapes, 6), 7u);
-  OO_CHECK_EQ(oo::str::findFirstOf("x\ny\rz\\w\"", escapes, 8),
+  EXPECT_EQ(oo::str::findFirstOf("x\ny\rz\\w\"", escapes, 0), 1u);
+  EXPECT_EQ(oo::str::findFirstOf("x\ny\rz\\w\"", escapes, 2), 3u);
+  EXPECT_EQ(oo::str::findFirstOf("x\ny\rz\\w\"", escapes, 6), 7u);
+  EXPECT_EQ(oo::str::findFirstOf("x\ny\rz\\w\"", escapes, 8),
               std::string_view::npos);
-  OO_CHECK_EQ(oo::str::findFirstOf("e\xCC\x81\"", escapes, 1),
+  EXPECT_EQ(oo::str::findFirstOf("e\xCC\x81\"", escapes, 1),
               2u);  // after a combining mark
-  OO_CHECK_EQ(oo::str::findFirstOf("\xF0\x9F\x98\x80\"a\\", escapes, 1),
+  EXPECT_EQ(oo::str::findFirstOf("\xF0\x9F\x98\x80\"a\\", escapes, 1),
               2u);  // after a surrogate pair
-  OO_CHECK_EQ(oo::str::findFirstOf("abc", escapes, 3), std::string_view::npos);
-  OO_CHECK(CharacterSet::decimalDigit().contains(u'7'));
-  OO_CHECK(
+  EXPECT_EQ(oo::str::findFirstOf("abc", escapes, 3), std::string_view::npos);
+  EXPECT_TRUE(CharacterSet::decimalDigit().contains(u'7'));
+  EXPECT_TRUE(
       CharacterSet::decimalDigit().contains(u'٣'));  // ARABIC-INDIC DIGIT THREE
-  OO_CHECK(!CharacterSet::decimalDigit().contains(u'A'));
+  EXPECT_TRUE(!CharacterSet::decimalDigit().contains(u'A'));
 }
 
-OO_TEST(scriptCorpusMatchesGNUstep) {
+TEST(scanner, scriptCorpusMatchesGNUstep) {
   ScriptCorpus corpus(0x12);
   ScriptRunner runner;
   std::uint64_t h = 14695981039346656037ULL;
@@ -547,7 +548,5 @@ OO_TEST(scriptCorpusMatchesGNUstep) {
     for (const std::string& line : corpus.script())
       h = fnv(h, runner.run(line));
   }
-  OO_CHECK_EQ(h, 0xbcc81a26e7aadb21ULL);
+  EXPECT_EQ(h, 0xbcc81a26e7aadb21ULL);
 }
-
-OO_TEST_MAIN()

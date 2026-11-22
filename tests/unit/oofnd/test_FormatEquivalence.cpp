@@ -13,12 +13,13 @@
 #include <limits>
 #include <string>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
 #include "oofnd/String.hpp"
 
-#define SAME(printfCall, stdCall) OO_CHECK_EQ(std::string(printfCall), std::string(stdCall))
+#define SAME(printfCall, stdCall) EXPECT_EQ(std::string(printfCall), std::string(stdCall))
 
-OO_TEST(stringsAndSignedIntegers) {
+TEST(FormatEquivalence, stringsAndSignedIntegers) {
   const std::string s = "words";
   SAME(oo::str::format("%s", s.c_str()), std::format("{}", s));
   SAME(oo::str::format("%s %d %s", "a", 3, s.c_str()), std::format("{} {} {}", "a", 3, s));
@@ -28,7 +29,7 @@ OO_TEST(stringsAndSignedIntegers) {
   }
 }
 
-OO_TEST(signednessIsKeptByTheCast) {
+TEST(FormatEquivalence, signednessIsKeptByTheCast) {
   // %d of an unsigned argument: printf reads it as int.
   for (unsigned v : {0u, 7u, 2147483647u, 2147483648u, 4294967295u})
     SAME(oo::str::format("%d", v), std::format("{}", static_cast<int>(v)));
@@ -40,7 +41,7 @@ OO_TEST(signednessIsKeptByTheCast) {
     SAME(oo::str::format("%d", v), std::format("{}", v));
 }
 
-OO_TEST(sizesAnd64BitIntegers) {
+TEST(FormatEquivalence, sizesAnd64BitIntegers) {
   for (std::size_t v : {std::size_t{0}, std::size_t{12345}, std::numeric_limits<std::size_t>::max()})
     SAME(oo::str::format("%zu", v), std::format("{}", v));
   for (std::ptrdiff_t v : {std::ptrdiff_t{0}, std::ptrdiff_t{-5}, std::numeric_limits<std::ptrdiff_t>::max()})
@@ -51,7 +52,7 @@ OO_TEST(sizesAnd64BitIntegers) {
     SAME(oo::str::format("%016llx", static_cast<unsigned long long>(v)), std::format("{:016x}", v));
 }
 
-OO_TEST(hexAndCharacters) {
+TEST(FormatEquivalence, hexAndCharacters) {
   for (unsigned v : {0u, 255u, 0xabcdefu})
     SAME(oo::str::format("%06x", v), std::format("{:06x}", v));
   for (unsigned v : {0u, 0x1fu, 0xffffu})
@@ -60,7 +61,7 @@ OO_TEST(hexAndCharacters) {
     SAME(oo::str::format("%c", c), std::format("{:c}", static_cast<char>(c)));
 }
 
-OO_TEST(floatsWithPrecision) {
+TEST(FormatEquivalence, floatsWithPrecision) {
   for (double v : {0.0, 1.0, -1.5, 3.14159265, 1234567.0, 1e-7, 1e20}) {
     SAME(oo::str::format("%g", v), std::format("{:g}", v));
     SAME(oo::str::format("%f", v), std::format("{:f}", v));
@@ -72,17 +73,15 @@ OO_TEST(floatsWithPrecision) {
     SAME(oo::str::format("%.*f", precision, 2.71828), std::format("{:.{}f}", 2.71828, precision));
 }
 
-OO_TEST(floatArgumentsWithG) {
+TEST(FormatEquivalence, floatArgumentsWithG) {
   // printf widens a float to double; std::format formats the float itself. The widening is
   // exact, so both round the same value (DustEntity's shader prefix passes floats to {:g}).
   for (float v : {0.0f, 1.0f / 3.0f, 0.1f, 3.14159265f, 1e-7f, 65536.0f, 1e20f, 4.0e4f / 0.5f})
     SAME(oo::str::format("%g", static_cast<double>(v)), std::format("{:g}", v));
 }
 
-OO_TEST(widthAndAlignment) {
+TEST(FormatEquivalence, widthAndAlignment) {
   // printf right-aligns strings; std::format left-aligns them unless told.
   SAME(oo::str::format("%60s", "right"), std::format("{:>60}", "right"));
   SAME(oo::str::format("%5d", 42), std::format("{:5}", 42));
 }
-
-OO_TEST_MAIN()

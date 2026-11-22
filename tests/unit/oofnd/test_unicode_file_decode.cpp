@@ -15,6 +15,8 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "oofnd/String.hpp"
 
 #include <cstdint>
@@ -24,7 +26,6 @@
 #include <string>
 #include <vector>
 
-#include "oo_test.hpp"
 
 namespace {
 
@@ -104,79 +105,79 @@ struct FileCorpus {
 
 }  // namespace
 
-OO_TEST(utf16FilesKeepTheCategorysByteOrderAndGNUstepsMarkHandling) {
+TEST(unicode_file_decode, utf16FilesKeepTheCategorysByteOrderAndGNUstepsMarkHandling) {
   // Units after the first mark are little-endian whichever mark it was.
-  OO_CHECK_EQ(decode({0xFF, 0xFE, 0x41, 0x00}), "1: 0041");
-  OO_CHECK_EQ(decode({0xFE, 0xFF, 0x41, 0x00}), "1: 0041");
-  OO_CHECK_EQ(decode({0xFE, 0xFF, 0x00, 0x41}), "1: 4100");
+  EXPECT_EQ(decode({0xFF, 0xFE, 0x41, 0x00}), "1: 0041");
+  EXPECT_EQ(decode({0xFE, 0xFF, 0x41, 0x00}), "1: 0041");
+  EXPECT_EQ(decode({0xFE, 0xFF, 0x00, 0x41}), "1: 4100");
   // -stringWithCharacters: drops a leading U+FEFF, drops a leading U+FFFE and
   // swaps the rest; GNUstep applies that twice.
-  OO_CHECK_EQ(decode({0xFF, 0xFE, 0xFF, 0xFE, 0x41, 0x00}), "1: 0041");
-  OO_CHECK_EQ(decode({0xFF, 0xFE, 0xFE, 0xFF, 0x41, 0x00}), "1: 4100");
-  OO_CHECK_EQ(decode({0xFF, 0xFE, 0xFF, 0xFE, 0xFF, 0xFE, 0x41, 0x00}),
+  EXPECT_EQ(decode({0xFF, 0xFE, 0xFF, 0xFE, 0x41, 0x00}), "1: 0041");
+  EXPECT_EQ(decode({0xFF, 0xFE, 0xFE, 0xFF, 0x41, 0x00}), "1: 4100");
+  EXPECT_EQ(decode({0xFF, 0xFE, 0xFF, 0xFE, 0xFF, 0xFE, 0x41, 0x00}),
               "1: 0041");
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       decode({0xFF, 0xFE, 0xFF, 0xFE, 0xFF, 0xFE, 0xFF, 0xFE, 0x41, 0x00}),
       "2: FEFF 0041");
-  OO_CHECK_EQ(decode({0xFF, 0xFE, 0xFE, 0xFF, 0xFF, 0xFE, 0x00, 0x41}),
+  EXPECT_EQ(decode({0xFF, 0xFE, 0xFE, 0xFF, 0xFF, 0xFE, 0x00, 0x41}),
               "1: 4100");
-  OO_CHECK_EQ(decode({0xFF, 0xFE, 0xFF, 0xFE, 0xFE, 0xFF, 0x41, 0x00}),
+  EXPECT_EQ(decode({0xFF, 0xFE, 0xFF, 0xFE, 0xFE, 0xFF, 0x41, 0x00}),
               "1: 4100");
-  OO_CHECK_EQ(decode({0xFF, 0xFE, 0x41, 0x00, 0xFF, 0xFE, 0x42, 0x00}),
+  EXPECT_EQ(decode({0xFF, 0xFE, 0x41, 0x00, 0xFF, 0xFE, 0x42, 0x00}),
               "3: 0041 FEFF 0042");
-  OO_CHECK_EQ(decode({0xFF, 0xFE}), "0:");
-  OO_CHECK_EQ(decode({0xFF, 0xFE, 0x00, 0xD8}), "1: D800");
-  OO_CHECK_EQ(decode({0xFF, 0xFE, 0xFF, 0xFF}), "1: FFFF");
+  EXPECT_EQ(decode({0xFF, 0xFE}), "0:");
+  EXPECT_EQ(decode({0xFF, 0xFE, 0x00, 0xD8}), "1: D800");
+  EXPECT_EQ(decode({0xFF, 0xFE, 0xFF, 0xFF}), "1: FFFF");
 }
 
-OO_TEST(utf8FilesSkipTheBomAndValidateStrictly) {
-  OO_CHECK_EQ(decode({}), "0:");
-  OO_CHECK_EQ(decode({0x41}), "1: 0041");
-  OO_CHECK_EQ(decode({0x00}), "1: 0000");
-  OO_CHECK_EQ(decode({0xC3, 0xA9}), "1: 00E9");
-  OO_CHECK_EQ(decode({0xEF, 0xBB, 0xBF, 0x41}), "1: 0041");
-  OO_CHECK_EQ(decode({0xEF, 0xBB, 0xBF}), "0:");
-  OO_CHECK_EQ(decode({0xEF, 0xBB, 0xBF, 0x00}), "1: 0000");
+TEST(unicode_file_decode, utf8FilesSkipTheBomAndValidateStrictly) {
+  EXPECT_EQ(decode({}), "0:");
+  EXPECT_EQ(decode({0x41}), "1: 0041");
+  EXPECT_EQ(decode({0x00}), "1: 0000");
+  EXPECT_EQ(decode({0xC3, 0xA9}), "1: 00E9");
+  EXPECT_EQ(decode({0xEF, 0xBB, 0xBF, 0x41}), "1: 0041");
+  EXPECT_EQ(decode({0xEF, 0xBB, 0xBF}), "0:");
+  EXPECT_EQ(decode({0xEF, 0xBB, 0xBF, 0x00}), "1: 0000");
   // After the category's own skip GNUstep drops up to two more leading U+FEFF,
   // and never swaps.
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       decode({0xEF, 0xBB, 0xBF, 0xEF, 0xBB, 0xBF, 0xEF, 0xBB, 0xBF, 0x41}),
       "1: 0041");
-  OO_CHECK_EQ(decode({0xEF, 0xBB, 0xBF, 0xEF, 0xBB, 0xBF, 0xEF, 0xBB, 0xBF,
+  EXPECT_EQ(decode({0xEF, 0xBB, 0xBF, 0xEF, 0xBB, 0xBF, 0xEF, 0xBB, 0xBF,
                       0xEF, 0xBB, 0xBF, 0x41}),
               "2: FEFF 0041");
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       decode({0xEF, 0xBB, 0xBF, 0xEF, 0xBB, 0xBF, 0xEF, 0xBF, 0xBE, 0x41}),
       "2: FFFE 0041");
-  OO_CHECK_EQ(decode({0xEF, 0xBF, 0xBE, 0x41}), "2: FFFE 0041");
-  OO_CHECK_EQ(decode({0x41, 0xEF, 0xBB, 0xBF, 0x42}), "3: 0041 FEFF 0042");
-  OO_CHECK_EQ(decode({0xF0, 0x90, 0x80, 0x80}), "2: D800 DC00");
-  OO_CHECK_EQ(decode({0xF4, 0x80, 0x80, 0x80}), "2: DBC0 DC00");
+  EXPECT_EQ(decode({0xEF, 0xBF, 0xBE, 0x41}), "2: FFFE 0041");
+  EXPECT_EQ(decode({0x41, 0xEF, 0xBB, 0xBF, 0x42}), "3: 0041 FEFF 0042");
+  EXPECT_EQ(decode({0xF0, 0x90, 0x80, 0x80}), "2: D800 DC00");
+  EXPECT_EQ(decode({0xF4, 0x80, 0x80, 0x80}), "2: DBC0 DC00");
   // The corrected length: exactly the bytes after the BOM (the category read
   // six past them).
-  OO_CHECK_EQ(decode({0xEF, 0xBB, 0xBF, 0xE9}), "1: 00E9");
+  EXPECT_EQ(decode({0xEF, 0xBB, 0xBF, 0xE9}), "1: 00E9");
 }
 
-OO_TEST(invalidUtf8FallsBackToLatin1) {
-  OO_CHECK_EQ(decode({0xE9}), "1: 00E9");
-  OO_CHECK_EQ(decode({0xC3}), "1: 00C3");
-  OO_CHECK_EQ(decode({0xED, 0xA0, 0x80}),
+TEST(unicode_file_decode, invalidUtf8FallsBackToLatin1) {
+  EXPECT_EQ(decode({0xE9}), "1: 00E9");
+  EXPECT_EQ(decode({0xC3}), "1: 00C3");
+  EXPECT_EQ(decode({0xED, 0xA0, 0x80}),
               "3: 00ED 00A0 0080");                   // an encoded surrogate
-  OO_CHECK_EQ(decode({0xC0, 0x80}), "2: 00C0 0080");  // overlong
-  OO_CHECK_EQ(decode({0xE0, 0x80, 0x8F}), "3: 00E0 0080 008F");
-  OO_CHECK_EQ(decode({0xF0, 0x8F, 0x80, 0x80}), "4: 00F0 008F 0080 0080");
-  OO_CHECK_EQ(decode({0xF4, 0x90, 0x80, 0x80}),
+  EXPECT_EQ(decode({0xC0, 0x80}), "2: 00C0 0080");  // overlong
+  EXPECT_EQ(decode({0xE0, 0x80, 0x8F}), "3: 00E0 0080 008F");
+  EXPECT_EQ(decode({0xF0, 0x8F, 0x80, 0x80}), "4: 00F0 008F 0080 0080");
+  EXPECT_EQ(decode({0xF4, 0x90, 0x80, 0x80}),
               "4: 00F4 0090 0080 0080");  // above U+10FFFF
-  OO_CHECK_EQ(decode({0xF8, 0x80, 0x80, 0x80, 0x80}),
+  EXPECT_EQ(decode({0xF8, 0x80, 0x80, 0x80, 0x80}),
               "5: 00F8 0080 0080 0080 0080");
-  OO_CHECK_EQ(decode({0xFF, 0xFF}), "2: 00FF 00FF");  // even length, not a mark
-  OO_CHECK_EQ(decode({0xEF, 0xBB, 0xBF, 0xC3}),
+  EXPECT_EQ(decode({0xFF, 0xFF}), "2: 00FF 00FF");  // even length, not a mark
+  EXPECT_EQ(decode({0xEF, 0xBB, 0xBF, 0xC3}),
               "1: 00C3");  // Latin-1 of the bytes after the BOM
-  OO_CHECK_EQ(decode({0xEF, 0xBB, 0xBF, 0xFF, 0xFE, 0x41, 0x00}),
+  EXPECT_EQ(decode({0xEF, 0xBB, 0xBF, 0xFF, 0xFE, 0x41, 0x00}),
               "4: 00FF 00FE 0041 0000");
 }
 
-OO_TEST(corpusMatchesGNUstep) {
+TEST(unicode_file_decode, corpusMatchesGNUstep) {
   FileCorpus corpus(0x62);
   std::uint64_t h = 14695981039346656037ULL;
   for (int i = 0; i < 40000; ++i) {
@@ -186,14 +187,12 @@ OO_TEST(corpusMatchesGNUstep) {
       h = (h ^ c) * 1099511628211ULL;
     }
   }
-  OO_CHECK_EQ(h, 0x999d45242cdbb86eULL);
+  EXPECT_EQ(h, 0x999d45242cdbb86eULL);
 }
 
-OO_TEST(dataOverloadIsTheSame) {
+TEST(unicode_file_decode, dataOverloadIsTheSame) {
   const oo::Data d(reinterpret_cast<const std::uint8_t*>("\xEF\xBB\xBF"
                                                          "abc"),
                    6);
-  OO_CHECK_EQ(oo::str::decodeUnicodeFile(d), std::string("abc"));
+  EXPECT_EQ(oo::str::decodeUnicodeFile(d), std::string("abc"));
 }
-
-OO_TEST_MAIN()

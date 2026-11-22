@@ -20,6 +20,8 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "oofnd/Log.hpp"
 
 #include <chrono>
@@ -29,7 +31,6 @@
 #include <utility>
 #include <vector>
 
-#include "oo_test.hpp"
 
 namespace {
 
@@ -301,7 +302,7 @@ Q|q|0
 
 }  // namespace
 
-OO_TEST(timeStampIsLocalTimeWithTruncatedMilliseconds) {
+TEST(log, timeStampIsLocalTimeWithTruncatedMilliseconds) {
   using namespace std::chrono;
   const system_clock::time_point base = system_clock::from_time_t(1000000000);
   std::tm tm{};
@@ -313,16 +314,16 @@ OO_TEST(timeStampIsLocalTimeWithTruncatedMilliseconds) {
 #endif
   char hms[16];
   std::strftime(hms, sizeof hms, "%H:%M:%S", &tm);
-  OO_CHECK_EQ(oo::log::timeStamp(base), std::string(hms) + ".000");
-  OO_CHECK_EQ(oo::log::timeStamp(base + microseconds(999999)),
+  EXPECT_EQ(oo::log::timeStamp(base), std::string(hms) + ".000");
+  EXPECT_EQ(oo::log::timeStamp(base + microseconds(999999)),
               std::string(hms) + ".999");
-  OO_CHECK_EQ(oo::log::timeStamp(base + microseconds(123456)),
+  EXPECT_EQ(oo::log::timeStamp(base + microseconds(123456)),
               std::string(hms) + ".123");
-  OO_CHECK_EQ(oo::log::timeStamp(base + microseconds(500)),
+  EXPECT_EQ(oo::log::timeStamp(base + microseconds(500)),
               std::string(hms) + ".000");
 }
 
-OO_TEST(formatFrontEndAndSettingsEdges) {
+TEST(log, formatFrontEndAndSettingsEdges) {
   std::vector<std::string> lines;
   static std::vector<std::string>* sLines = nullptr;
   sLines = &lines;
@@ -340,8 +341,8 @@ OO_TEST(formatFrontEndAndSettingsEdges) {
                       true);
   // This runs first: no _override is in effect yet (once set, it stays until
   // set again).
-  OO_CHECK(oo::log::willDisplay("x.y"));
-  OO_CHECK(!oo::log::willDisplay(
+  EXPECT_TRUE(oo::log::willDisplay("x.y"));
+  EXPECT_TRUE(!oo::log::willDisplay(
       "loop"));  // a metaclass cycle falls back to _default
   OO_LOG("x", "n = {}, s = {}, f = {:.2f}", 42, "str", 2.5);
   OO_LOG("hidden", "not {}", "shown");
@@ -349,24 +350,24 @@ OO_TEST(formatFrontEndAndSettingsEdges) {
   oo::log::indentIf("x");
   OO_LOG("x.deep", "{}", "indented");
   oo::log::outdentIf("x");
-  OO_CHECK(lines.size() == 3);
+  EXPECT_TRUE(lines.size() == 3);
   if (lines.size() == 3) {
-    OO_CHECK_EQ(lines[0], std::string("[x]: n = 42, s = str, f = 2.50"));
-    OO_CHECK_EQ(lines[1], std::string("[x]: ----- WARNING: careful: 1"));
-    OO_CHECK_EQ(lines[2], std::string("  [x.deep]: indented"));
+    EXPECT_EQ(lines[0], std::string("[x]: n = 42, s = str, f = 2.50"));
+    EXPECT_EQ(lines[1], std::string("[x]: ----- WARNING: careful: 1"));
+    EXPECT_EQ(lines[2], std::string("  [x.deep]: indented"));
   }
-  OO_CHECK_EQ(oo::log::indentLevel(), 0u);
+  EXPECT_EQ(oo::log::indentLevel(), 0u);
 
   L().setInitialized(false);
-  OO_CHECK(!oo::log::willDisplay("x"));
-  OO_CHECK(!lines.empty() && lines.back() ==
+  EXPECT_TRUE(!oo::log::willDisplay("x"));
+  EXPECT_TRUE(!lines.empty() && lines.back() ==
                                  "OOLogging internal - Inited: ***** ERROR: "
                                  "OOLoggingInit() has not been called.");
   L().setInitialized(true);
   L().setSink(nullptr);
 }
 
-OO_TEST(transcriptMatchesTheOriginalOOLogging) {
+TEST(log, transcriptMatchesTheOriginalOOLogging) {
   L().setSink(Capture);
   L().setInitialized(true);
   gControl = Control();
@@ -515,10 +516,8 @@ OO_TEST(transcriptMatchesTheOriginalOOLogging) {
   Flags(false, false, true, false);
   Query("q");
 
-  OO_CHECK_EQ(gTranscript, std::string(kExpected));
+  EXPECT_EQ(gTranscript, std::string(kExpected));
   if (gTranscript != kExpected) {
     std::printf("--- transcript ---\n%s--- end ---\n", gTranscript.c_str());
   }
 }
-
-OO_TEST_MAIN()

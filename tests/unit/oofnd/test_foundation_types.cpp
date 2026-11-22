@@ -16,7 +16,8 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
 #include "oofnd/objc/FoundationTypes.h"
 
 // Recorded: sizeof std::ptrdiff_t 8 align 8 signed, same as intptr_t and long long;
@@ -56,83 +57,81 @@ static_assert(offsetof(NSRect, origin.y) == 8 &&
 static_assert(
     std::is_same_v<std::remove_cv_t<decltype(oo::kNotFound)>, std::ptrdiff_t>);
 
-OO_TEST(constantsMatchGNUstep) {
+TEST(foundation_types, constantsMatchGNUstep) {
   // Recorded: oo::kNotFound 9223372036854775807, PTRDIFF_MAX the same,
   // PTRDIFF_MIN -9223372036854775808, SIZE_MAX 18446744073709551615.
-  OO_CHECK_EQ(static_cast<long long>(oo::kNotFound), 9223372036854775807LL);
-  OO_CHECK_EQ(static_cast<long long>(PTRDIFF_MAX), 9223372036854775807LL);
-  OO_CHECK_EQ(static_cast<long long>(PTRDIFF_MIN), -9223372036854775807LL - 1);
-  OO_CHECK_EQ(static_cast<unsigned long long>(SIZE_MAX),
+  EXPECT_EQ(static_cast<long long>(oo::kNotFound), 9223372036854775807LL);
+  EXPECT_EQ(static_cast<long long>(PTRDIFF_MAX), 9223372036854775807LL);
+  EXPECT_EQ(static_cast<long long>(PTRDIFF_MIN), -9223372036854775807LL - 1);
+  EXPECT_EQ(static_cast<unsigned long long>(SIZE_MAX),
               18446744073709551615ULL);
 }
 
-OO_TEST(zeroGeometryIsZero) {
-  OO_CHECK(NSZeroPoint.x == 0.0 && NSZeroPoint.y == 0.0);
-  OO_CHECK(NSZeroSize.width == 0.0 && NSZeroSize.height == 0.0);
-  OO_CHECK(NSZeroRect.origin.x == 0.0 && NSZeroRect.origin.y == 0.0);
-  OO_CHECK(NSZeroRect.size.width == 0.0 && NSZeroRect.size.height == 0.0);
+TEST(foundation_types, zeroGeometryIsZero) {
+  EXPECT_TRUE(NSZeroPoint.x == 0.0 && NSZeroPoint.y == 0.0);
+  EXPECT_TRUE(NSZeroSize.width == 0.0 && NSZeroSize.height == 0.0);
+  EXPECT_TRUE(NSZeroRect.origin.x == 0.0 && NSZeroRect.origin.y == 0.0);
+  EXPECT_TRUE(NSZeroRect.size.width == 0.0 && NSZeroRect.size.height == 0.0);
 }
 
-OO_TEST(rangeFunctionsMatchGNUstep) {
+TEST(foundation_types, rangeFunctionsMatchGNUstep) {
   const NSRange r = NSMakeRange(3, 4);
   // Recorded: NSMakeRange(3,4) = {3, 4}, NSMaxRange 7.
-  OO_CHECK_EQ(r.location, 3u);
-  OO_CHECK_EQ(r.length, 4u);
-  OO_CHECK_EQ(NSMaxRange(r), 7u);
+  EXPECT_EQ(r.location, 3u);
+  EXPECT_EQ(r.length, 4u);
+  EXPECT_EQ(NSMaxRange(r), 7u);
   // Recorded: NSLocationInRange 2 -> 0, 3 -> 1, 6 -> 1, 7 -> 0; 0 in {0,0} ->
   // 0.
-  OO_CHECK_EQ(NSLocationInRange(2, r), false);
-  OO_CHECK_EQ(NSLocationInRange(3, r), true);
-  OO_CHECK_EQ(NSLocationInRange(6, r), true);
-  OO_CHECK_EQ(NSLocationInRange(7, r), false);
-  OO_CHECK_EQ(NSLocationInRange(0, NSMakeRange(0, 0)), false);
+  EXPECT_EQ(NSLocationInRange(2, r), false);
+  EXPECT_EQ(NSLocationInRange(3, r), true);
+  EXPECT_EQ(NSLocationInRange(6, r), true);
+  EXPECT_EQ(NSLocationInRange(7, r), false);
+  EXPECT_EQ(NSLocationInRange(0, NSMakeRange(0, 0)), false);
   // Recorded: NSMakeRange(oo::kNotFound, 0) = {9223372036854775807, 0} (not an
   // overflow).
   const NSRange notFound = NSMakeRange(oo::kNotFound, 0);
-  OO_CHECK_EQ(notFound.location, static_cast<std::size_t>(oo::kNotFound));
-  OO_CHECK_EQ(notFound.length, 0u);
+  EXPECT_EQ(notFound.location, static_cast<std::size_t>(oo::kNotFound));
+  EXPECT_EQ(notFound.length, 0u);
   // Recorded: NSEqualRanges same -> 1, different length -> 0.
-  OO_CHECK_EQ(NSEqualRanges(r, NSMakeRange(3, 4)), true);
-  OO_CHECK_EQ(NSEqualRanges(r, NSMakeRange(3, 5)), false);
+  EXPECT_EQ(NSEqualRanges(r, NSMakeRange(3, 4)), true);
+  EXPECT_EQ(NSEqualRanges(r, NSMakeRange(3, 5)), false);
   // (Recorded: NSMakeRange(SIZE_MAX, 2) raised NSRangeException; here it
   // aborts, by design.)
 }
 
-OO_TEST(geometryConstructorsMatchGNUstep) {
+TEST(foundation_types, geometryConstructorsMatchGNUstep) {
   // Recorded: NSMakePoint 1.5 -2.25, NSMakeSize 3 4.5, NSMakeRect 1 2 3 4.
   const NSPoint p = NSMakePoint(1.5, -2.25);
   const NSSize s = NSMakeSize(3.0, 4.5);
   const NSRect rc = NSMakeRect(1, 2, 3, 4);
-  OO_CHECK(p.x == 1.5 && p.y == -2.25);
-  OO_CHECK(s.width == 3.0 && s.height == 4.5);
-  OO_CHECK(rc.origin.x == 1.0 && rc.origin.y == 2.0 && rc.size.width == 3.0 &&
+  EXPECT_TRUE(p.x == 1.5 && p.y == -2.25);
+  EXPECT_TRUE(s.width == 3.0 && s.height == 4.5);
+  EXPECT_TRUE(rc.origin.x == 1.0 && rc.origin.y == 2.0 && rc.size.width == 3.0 &&
            rc.size.height == 4.0);
 }
 
-OO_TEST(geometryEqualityMatchesGNUstep) {
+TEST(foundation_types, geometryEqualityMatchesGNUstep) {
   const NSPoint p = NSMakePoint(1.5, -2.25);
   const NSSize s = NSMakeSize(3.0, 4.5);
   const NSRect rc = NSMakeRect(1, 2, 3, 4);
   // Recorded: NSEqualPoints same 1, diff 0, {0,-0} vs {-0,0} 1, NaN 0.
-  OO_CHECK_EQ(NSEqualPoints(p, NSMakePoint(1.5, -2.25)), true);
-  OO_CHECK_EQ(NSEqualPoints(p, NSMakePoint(1.5, 2.25)), false);
-  OO_CHECK_EQ(NSEqualPoints(NSMakePoint(0.0, -0.0), NSMakePoint(-0.0, 0.0)),
+  EXPECT_EQ(NSEqualPoints(p, NSMakePoint(1.5, -2.25)), true);
+  EXPECT_EQ(NSEqualPoints(p, NSMakePoint(1.5, 2.25)), false);
+  EXPECT_EQ(NSEqualPoints(NSMakePoint(0.0, -0.0), NSMakePoint(-0.0, 0.0)),
               true);
-  OO_CHECK_EQ(NSEqualPoints(NSMakePoint(NAN, 0), NSMakePoint(NAN, 0)), false);
+  EXPECT_EQ(NSEqualPoints(NSMakePoint(NAN, 0), NSMakePoint(NAN, 0)), false);
   // Recorded: NSEqualSizes same 1, diff 0, -0 vs 0 1, NaN 0.
-  OO_CHECK_EQ(NSEqualSizes(s, NSMakeSize(3, 4.5)), true);
-  OO_CHECK_EQ(NSEqualSizes(s, NSMakeSize(3, 4)), false);
-  OO_CHECK_EQ(NSEqualSizes(NSMakeSize(-0.0, 0), NSMakeSize(0, 0)), true);
-  OO_CHECK_EQ(NSEqualSizes(NSMakeSize(NAN, 0), NSMakeSize(NAN, 0)), false);
+  EXPECT_EQ(NSEqualSizes(s, NSMakeSize(3, 4.5)), true);
+  EXPECT_EQ(NSEqualSizes(s, NSMakeSize(3, 4)), false);
+  EXPECT_EQ(NSEqualSizes(NSMakeSize(-0.0, 0), NSMakeSize(0, 0)), true);
+  EXPECT_EQ(NSEqualSizes(NSMakeSize(NAN, 0), NSMakeSize(NAN, 0)), false);
   // Recorded: NSEqualRects same 1, diff 0, -0 origin vs NSZeroRect 1, NaN 0,
   // and two empty rects at different origins 0 (equality is by all four fields,
   // not by emptiness).
-  OO_CHECK_EQ(NSEqualRects(rc, NSMakeRect(1, 2, 3, 4)), true);
-  OO_CHECK_EQ(NSEqualRects(rc, NSMakeRect(1, 2, 3, 5)), false);
-  OO_CHECK_EQ(NSEqualRects(NSMakeRect(-0.0, 0, 0, 0), NSZeroRect), true);
-  OO_CHECK_EQ(NSEqualRects(NSMakeRect(NAN, 0, 0, 0), NSMakeRect(NAN, 0, 0, 0)),
+  EXPECT_EQ(NSEqualRects(rc, NSMakeRect(1, 2, 3, 4)), true);
+  EXPECT_EQ(NSEqualRects(rc, NSMakeRect(1, 2, 3, 5)), false);
+  EXPECT_EQ(NSEqualRects(NSMakeRect(-0.0, 0, 0, 0), NSZeroRect), true);
+  EXPECT_EQ(NSEqualRects(NSMakeRect(NAN, 0, 0, 0), NSMakeRect(NAN, 0, 0, 0)),
               false);
-  OO_CHECK_EQ(NSEqualRects(NSMakeRect(5, 5, 0, 0), NSMakeRect(9, 9, 0, 0)), false);
+  EXPECT_EQ(NSEqualRects(NSMakeRect(5, 5, 0, 0), NSMakeRect(9, 9, 0, 0)), false);
 }
-
-OO_TEST_MAIN()

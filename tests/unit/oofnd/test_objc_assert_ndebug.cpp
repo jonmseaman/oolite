@@ -18,7 +18,8 @@
   1  // the deployment flavour's macro (meson.build, deployment_release)
 #endif
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
 #include "oofnd/Exception.hpp"
 #include "oofnd/objc/Assert.h"
 
@@ -54,19 +55,17 @@ void* CParam(void* p) {
 
 }  // namespace
 
-OO_TEST(conditionSideEffectsRunUnderNDEBUG) {
+TEST(objc_assert_ndebug, conditionSideEffectsRunUnderNDEBUG) {
   sCalls = 0;
   OOCAssert(CountedTrue(), "never fails");
   OOCParameterAssert(CountedTrue());
-  OO_CHECK_EQ(sCalls, 2);
-  OO_CHECK(CountedTrue());  // and referenced here, so a macro that drops its
+  EXPECT_EQ(sCalls, 2);
+  EXPECT_TRUE(CountedTrue());  // and referenced here, so a macro that drops its
                             // argument still builds
 }
 
-OO_TEST(falseConditionsRaiseUnderNDEBUG) {
-  OO_CHECK(Raises([] { CFail(4); }));
-  OO_CHECK(Raises([] { CParam(nullptr); }));
-  OO_CHECK(!Raises([] { CFail(0); }));
+TEST(objc_assert_ndebug, falseConditionsRaiseUnderNDEBUG) {
+  EXPECT_TRUE(Raises([] { CFail(4); }));
+  EXPECT_TRUE(Raises([] { CParam(nullptr); }));
+  EXPECT_TRUE(!Raises([] { CFail(0); }));
 }
-
-OO_TEST_MAIN()

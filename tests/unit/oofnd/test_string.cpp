@@ -19,6 +19,8 @@
 */
 
 
+#include <gtest/gtest.h>
+
 #include "oofnd/String.hpp"
 
 #include <cstdint>
@@ -29,7 +31,6 @@
 
 #include <unicode/uchar.h>
 
-#include "oo_test.hpp"
 
 namespace {
 
@@ -99,7 +100,7 @@ std::string units(const std::string& s) {
 // --- character tables
 // ----------------------------------------------------------------------------
 
-OO_TEST(caseMappingIsIcusAndMatchesGNUstepOnLatin) {
+TEST(string, caseMappingIsIcusAndMatchesGNUstepOnLatin) {
   // -uppercaseString / -lowercaseString of U+0000-U+017F, upper then lower,
   // little-endian: GNUstep 1.31.1's answers, which every ICU version shares.
   Fnv f;
@@ -111,7 +112,7 @@ OO_TEST(caseMappingIsIcusAndMatchesGNUstepOnLatin) {
     f.add(static_cast<unsigned char>(l & 0xFF));
     f.add(static_cast<unsigned char>(l >> 8));
   }
-  OO_CHECK_EQ(f.h, 0x11F9C71353F9624FULL);
+  EXPECT_EQ(f.h, 0x11F9C71353F9624FULL);
 
   // Over the rest of the BMP, ICU's simple case mapping (whose answers vary by
   // ICU version), kept to one unit.
@@ -127,25 +128,25 @@ OO_TEST(caseMappingIsIcusAndMatchesGNUstepOnLatin) {
         toLower(static_cast<char16_t>(c)) != el)
       ++mismatches;
   }
-  OO_CHECK_EQ(mismatches, 0u);
+  EXPECT_EQ(mismatches, 0u);
 
-  OO_CHECK_EQ(toUpper(u'a'), u'A');
-  OO_CHECK_EQ(toUpper(0xDF),
+  EXPECT_EQ(toUpper(u'a'), u'A');
+  EXPECT_EQ(toUpper(0xDF),
               char16_t(0xDF));  // sharp s has no one-unit capital here
-  OO_CHECK_EQ(toUpper(0x131), char16_t(0x49));   // dotless i -> I
-  OO_CHECK_EQ(toLower(0x130), char16_t(0x69));   // I with dot -> i
-  OO_CHECK_EQ(toUpper(0x3C2), char16_t(0x3A3));  // final sigma -> SIGMA
-  OO_CHECK_EQ(toLower(0x212A), char16_t(0x6B));  // KELVIN SIGN -> k
-  OO_CHECK_EQ(toUpper(0x2C30),
+  EXPECT_EQ(toUpper(0x131), char16_t(0x49));   // dotless i -> I
+  EXPECT_EQ(toLower(0x130), char16_t(0x69));   // I with dot -> i
+  EXPECT_EQ(toUpper(0x3C2), char16_t(0x3A3));  // final sigma -> SIGMA
+  EXPECT_EQ(toLower(0x212A), char16_t(0x6B));  // KELVIN SIGN -> k
+  EXPECT_EQ(toUpper(0x2C30),
               char16_t(0x2C00));  // Glagolitic: newer than GNUstep's tables
-  OO_CHECK(isWhitespaceOrNewline(0x85) && isWhitespaceOrNewline(0x3000) &&
+  EXPECT_TRUE(isWhitespaceOrNewline(0x85) && isWhitespaceOrNewline(0x3000) &&
            !isWhitespaceOrNewline(0xFEFF));
 }
 
 // --- the string corpus: case, capitalisation, trimming, path extensions
 // ------------------------------
 
-OO_TEST(stringCorpusMatchesGNUstepWithIcuCase) {
+TEST(string, stringCorpusMatchesGNUstepWithIcuCase) {
   // 20,000 strings x {itself, -capitalizedString, -uppercaseString,
   // -lowercaseString, leading trim, trailing trim, -pathExtension}, one probe
   // line each.
@@ -161,32 +162,32 @@ OO_TEST(stringCorpusMatchesGNUstepWithIcuCase) {
     f.add("tt " + units(trimTrailingWhitespaceAndNewlines(s)) + "|\n");
     f.add("ext " + units(pathExtension(s)) + "|\n");
   }
-  OO_CHECK_EQ(f.h, 0xE9A5708421748AEBULL);
+  EXPECT_EQ(f.h, 0xE9A5708421748AEBULL);
 }
 
-OO_TEST(capitalizationAndTrimming) {
-  OO_CHECK_EQ(capitalized("hello wORLD"), std::string("Hello World"));
-  OO_CHECK_EQ(capitalized("o'neil mc-donald"), std::string("O'neil Mc-donald"));
-  OO_CHECK_EQ(capitalized("  two\tspaces\nx"), std::string("  Two\tSpaces\nX"));
-  OO_CHECK_EQ(capitalized(U({0x61, 0xA0, 0x62})),
+TEST(string, capitalizationAndTrimming) {
+  EXPECT_EQ(capitalized("hello wORLD"), std::string("Hello World"));
+  EXPECT_EQ(capitalized("o'neil mc-donald"), std::string("O'neil Mc-donald"));
+  EXPECT_EQ(capitalized("  two\tspaces\nx"), std::string("  Two\tSpaces\nX"));
+  EXPECT_EQ(capitalized(U({0x61, 0xA0, 0x62})),
               U({0x41, 0xA0, 0x42}));  // NBSP breaks words
-  OO_CHECK_EQ(capitalized("3rd"), std::string("3rd"));
-  OO_CHECK_EQ(capitalized(""), std::string(""));
-  OO_CHECK_EQ(trimLeadingWhitespaceAndNewlines(" \t\n x y "),
+  EXPECT_EQ(capitalized("3rd"), std::string("3rd"));
+  EXPECT_EQ(capitalized(""), std::string(""));
+  EXPECT_EQ(trimLeadingWhitespaceAndNewlines(" \t\n x y "),
               std::string("x y "));
-  OO_CHECK_EQ(trimTrailingWhitespaceAndNewlines(" x y \r\n"),
+  EXPECT_EQ(trimTrailingWhitespaceAndNewlines(" x y \r\n"),
               std::string(" x y"));
-  OO_CHECK_EQ(trimLeadingWhitespaceAndNewlines(U({0x3000, 0x2028, 0x41})),
+  EXPECT_EQ(trimLeadingWhitespaceAndNewlines(U({0x3000, 0x2028, 0x41})),
               std::string("A"));
-  OO_CHECK_EQ(trimTrailingWhitespaceAndNewlines(" \n\t "), std::string(""));
-  OO_CHECK_EQ(trimWhitespaceAndNewlines("  both  "), std::string("both"));
-  OO_CHECK_EQ(trimLeading("xxaxx", [](char16_t c) { return c == u'x'; }),
+  EXPECT_EQ(trimTrailingWhitespaceAndNewlines(" \n\t "), std::string(""));
+  EXPECT_EQ(trimWhitespaceAndNewlines("  both  "), std::string("both"));
+  EXPECT_EQ(trimLeading("xxaxx", [](char16_t c) { return c == u'x'; }),
               std::string("axx"));
-  OO_CHECK_EQ(trimTrailing("xxaxx", [](char16_t c) { return c == u'x'; }),
+  EXPECT_EQ(trimTrailing("xxaxx", [](char16_t c) { return c == u'x'; }),
               std::string("xxa"));
 }
 
-OO_TEST(pathExtensionMatchesGNUstep) {
+TEST(string, pathExtensionMatchesGNUstep) {
   struct Row {
     const char* path;
     const char* ext;
@@ -256,48 +257,48 @@ OO_TEST(pathExtensionMatchesGNUstep) {
       {"a. b", " b"},
   };
   for (const Row& r : rows)
-    OO_CHECK_EQ(pathExtension(r.path), std::string(r.ext));
+    EXPECT_EQ(pathExtension(r.path), std::string(r.ext));
 
   // A dot that a combining unit follows is part of that composed sequence, not
   // a separator.
-  OO_CHECK_EQ(pathExtension(U({0x61, 0x2E, 0x62, 0x2E, 0x301, 0x63})),
+  EXPECT_EQ(pathExtension(U({0x61, 0x2E, 0x62, 0x2E, 0x301, 0x63})),
               U({0x62, 0x2E, 0x301, 0x63}));
-  OO_CHECK_EQ(pathExtension(U({0x61, 0x2F, 0x2E, 0x301, 0x62})),
+  EXPECT_EQ(pathExtension(U({0x61, 0x2F, 0x2E, 0x301, 0x62})),
               std::string(""));
-  OO_CHECK_EQ(pathExtension(U({0x61, 0x2E, 0xD83D, 0xDE00})),
+  EXPECT_EQ(pathExtension(U({0x61, 0x2E, 0xD83D, 0xDE00})),
               U({0xD83D, 0xDE00}));
-  OO_CHECK_EQ(pathExtension(U({0x61, 0x2E, 0x62, 0x2E, 0xDE00})),
+  EXPECT_EQ(pathExtension(U({0x61, 0x2E, 0x62, 0x2E, 0xDE00})),
               U({0x62, 0x2E, 0xDE00}));
-  OO_CHECK_EQ(pathExtension(U({0x61, 0x2E, 0x2B0, 0x62})),
+  EXPECT_EQ(pathExtension(U({0x61, 0x2E, 0x2B0, 0x62})),
               std::string(""));  // a modifier letter extends too
 
-  OO_CHECK(pathHasExtension("Shaders/foo.VS", "vs"));
-  OO_CHECK(pathHasExtension("a.oxp/", "OXP"));
-  OO_CHECK(!pathHasExtension("a.oxp.zip", "oxp"));
-  OO_CHECK(!pathHasExtension(U({0x61, 0x2E, 0x212A}),
+  EXPECT_TRUE(pathHasExtension("Shaders/foo.VS", "vs"));
+  EXPECT_TRUE(pathHasExtension("a.oxp/", "OXP"));
+  EXPECT_TRUE(!pathHasExtension("a.oxp.zip", "oxp"));
+  EXPECT_TRUE(!pathHasExtension(U({0x61, 0x2E, 0x212A}),
                              "k"));  // Kelvin sign is not 'k' here
-  OO_CHECK(!pathHasExtension(U({0x61, 0x2E, 0x130}), "i"));
+  EXPECT_TRUE(!pathHasExtension(U({0x61, 0x2E, 0x130}), "i"));
   const std::vector<std::string> exts = {"vertex", "vs", "vsh"};
-  OO_CHECK(pathHasExtensionIn("x/y.Vsh", exts));
-  OO_CHECK(!pathHasExtensionIn("x/y.fs", exts));
+  EXPECT_TRUE(pathHasExtensionIn("x/y.Vsh", exts));
+  EXPECT_TRUE(!pathHasExtensionIn("x/y.fs", exts));
 }
 
-OO_TEST(caseInsensitiveEqualityAgainstASCII) {
-  OO_CHECK(equalsIgnoringCaseAscii("PLIST", "plist"));
-  OO_CHECK(equalsIgnoringCaseAscii("", ""));
-  OO_CHECK(!equalsIgnoringCaseAscii("plists", "plist"));
-  OO_CHECK(!equalsIgnoringCaseAscii("_", "A"));
-  OO_CHECK(!equalsIgnoringCaseAscii(U({0xFF21}), "a"));  // fullwidth A
-  OO_CHECK(!equalsIgnoringCaseAscii(U({0x17F}), "s"));   // long s
-  OO_CHECK(
+TEST(string, caseInsensitiveEqualityAgainstASCII) {
+  EXPECT_TRUE(equalsIgnoringCaseAscii("PLIST", "plist"));
+  EXPECT_TRUE(equalsIgnoringCaseAscii("", ""));
+  EXPECT_TRUE(!equalsIgnoringCaseAscii("plists", "plist"));
+  EXPECT_TRUE(!equalsIgnoringCaseAscii("_", "A"));
+  EXPECT_TRUE(!equalsIgnoringCaseAscii(U({0xFF21}), "a"));  // fullwidth A
+  EXPECT_TRUE(!equalsIgnoringCaseAscii(U({0x17F}), "s"));   // long s
+  EXPECT_TRUE(
       !equalsIgnoringCaseAscii(U({0x61, 0x301}), "a"));  // a + combining acute
-  OO_CHECK(equalsIgnoringCaseAscii(U({0xE9}), U({0xE9})));
+  EXPECT_TRUE(equalsIgnoringCaseAscii(U({0xE9}), U({0xE9})));
 }
 
 // --- tokens, oo_hash, versions
 // ---------------------------------------------------------------------
 
-OO_TEST(tokensAndHashCorpusMatchGNUstep) {
+TEST(string, tokensAndHashCorpusMatchGNUstep) {
   // ScanTokensFromString() and -oo_hash over hand-picked strings and 3,000
   // corpus strings.
   std::vector<std::string> inputs = {
@@ -314,16 +315,16 @@ OO_TEST(tokensAndHashCorpusMatchGNUstep) {
     f.add(line + "\n");
     f.add("hash " + units(s) + ": " + std::to_string(ooHash(s)) + "\n");
   }
-  OO_CHECK_EQ(f.h, 0x33B776F86797BE7DULL);
+  EXPECT_EQ(f.h, 0x33B776F86797BE7DULL);
 
-  OO_CHECK(tokens("  alpha\tbeta\n gamma ") ==
+  EXPECT_TRUE(tokens("  alpha\tbeta\n gamma ") ==
            (std::vector<std::string>{"alpha", "beta", "gamma"}));
-  OO_CHECK(tokens(" \n ").empty());
-  OO_CHECK_EQ(ooHash(""), 5381u);
-  OO_CHECK_EQ(ooHash("a"), ((5381u << 5) + 5381u) ^ 0x61u);
+  EXPECT_TRUE(tokens(" \n ").empty());
+  EXPECT_EQ(ooHash(""), 5381u);
+  EXPECT_EQ(ooHash("a"), ((5381u << 5) + 5381u) ^ 0x61u);
 }
 
-OO_TEST(versionsMatchGNUstep) {
+TEST(string, versionsMatchGNUstep) {
   struct Row {
     const char* text;
     std::vector<unsigned> components;
@@ -357,7 +358,7 @@ OO_TEST(versionsMatchGNUstep) {
       {"-5", {0}},
       {"1.2.3 (build 7)", {1, 2, 3}},
   };
-  for (const Row& r : rows) OO_CHECK(versionComponents(r.text) == r.components);
+  for (const Row& r : rows) EXPECT_TRUE(versionComponents(r.text) == r.components);
 
   // CompareVersions() over every ordered pair of the rows, as
   // NSComparisonResult bytes.
@@ -366,10 +367,10 @@ OO_TEST(versionsMatchGNUstep) {
     for (const Row& b : rows)
       f.add(static_cast<unsigned char>(compareVersions(
           versionComponents(a.text), versionComponents(b.text))));
-  OO_CHECK_EQ(f.h, 0x988203404BD1F39FULL);
-  OO_CHECK(
+  EXPECT_EQ(f.h, 0x988203404BD1F39FULL);
+  EXPECT_TRUE(
       compareVersions(versionComponents("1.7"), versionComponents("1.60")) < 0);
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       compareVersions(versionComponents("1.2.3.0"), versionComponents("1.2.3")),
       0);
 }
@@ -377,29 +378,29 @@ OO_TEST(versionsMatchGNUstep) {
 // --- replacing, splitting, building
 // --------------------------------------------------------------
 
-OO_TEST(replaceOccurrencesMatchesGNUstep) {
-  OO_CHECK_EQ(replaceOccurrences(U({0x61, 0x2605, 0x62}), U({0x2605}), "\b"),
+TEST(string, replaceOccurrencesMatchesGNUstep) {
+  EXPECT_EQ(replaceOccurrences(U({0x61, 0x2605, 0x62}), U({0x2605}), "\b"),
               std::string("a\bb"));
-  OO_CHECK_EQ(replaceOccurrences(U({0x2605, 0x2605}), U({0x2605}), "xy"),
+  EXPECT_EQ(replaceOccurrences(U({0x2605, 0x2605}), U({0x2605}), "xy"),
               std::string("xyxy"));
-  OO_CHECK_EQ(replaceOccurrences(U({0x2605, 0x301}), U({0x2605}), "X"),
+  EXPECT_EQ(replaceOccurrences(U({0x2605, 0x301}), U({0x2605}), "X"),
               U({0x2605, 0x301}));
-  OO_CHECK_EQ(replaceOccurrences(U({0x78, 0x301, 0x2605}), U({0x2605}), "X"),
+  EXPECT_EQ(replaceOccurrences(U({0x78, 0x301, 0x2605}), U({0x2605}), "X"),
               U({0x78, 0x301, 0x58}));
-  OO_CHECK_EQ(replaceOccurrences("aab", "ab", "Z"), std::string("aZ"));
-  OO_CHECK_EQ(replaceOccurrences("abab", "ab", "Z"), std::string("ZZ"));
-  OO_CHECK_EQ(replaceOccurrences("aaa", "aa", "Z"), std::string("Za"));
-  OO_CHECK_EQ(replaceOccurrences(U({0x65, 0x301}), U({0xE9}), "Z"),
+  EXPECT_EQ(replaceOccurrences("aab", "ab", "Z"), std::string("aZ"));
+  EXPECT_EQ(replaceOccurrences("abab", "ab", "Z"), std::string("ZZ"));
+  EXPECT_EQ(replaceOccurrences("aaa", "aa", "Z"), std::string("Za"));
+  EXPECT_EQ(replaceOccurrences(U({0x65, 0x301}), U({0xE9}), "Z"),
               U({0x65, 0x301}));  // no canonical equivalence
-  OO_CHECK_EQ(replaceOccurrences(U({0x65, 0x301}), "e", "Z"), U({0x65, 0x301}));
-  OO_CHECK_EQ(replaceOccurrences(U({0x41, 0x2605}), U({0x61, 0x2605}), "Z"),
+  EXPECT_EQ(replaceOccurrences(U({0x65, 0x301}), "e", "Z"), U({0x65, 0x301}));
+  EXPECT_EQ(replaceOccurrences(U({0x41, 0x2605}), U({0x61, 0x2605}), "Z"),
               U({0x41, 0x2605}));
-  OO_CHECK_EQ(replaceOccurrences(U({0xFB01}), "fi", "Z"), U({0xFB01}));
-  OO_CHECK_EQ(replaceOccurrences(U({0x2605, 0xD83D}), U({0x2605}), "X"),
+  EXPECT_EQ(replaceOccurrences(U({0xFB01}), "fi", "Z"), U({0xFB01}));
+  EXPECT_EQ(replaceOccurrences(U({0x2605, 0xD83D}), U({0x2605}), "X"),
               U({0x58, 0xD83D}));
-  OO_CHECK_EQ(replaceOccurrences(U({0x2605, 0xDE00}), U({0x2605}), "X"),
+  EXPECT_EQ(replaceOccurrences(U({0x2605, 0xDE00}), U({0x2605}), "X"),
               U({0x2605, 0xDE00}));
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       replaceOccurrences(U({0x20A2, 0x20, 0x35}), U({0x20A2}), U({0x20AC})),
       U({0x20AC, 0x20, 0x35}));
 
@@ -419,10 +420,10 @@ OO_TEST(replaceOccurrencesMatchesGNUstep) {
     f.add("C " + units(h) + ": " + units(k) + ": " +
           units(replaceOccurrences(h, k, "<>")) + "\n");
   }
-  OO_CHECK_EQ(f.h, 0xEDBF1D989502E79FULL);
+  EXPECT_EQ(f.h, 0xEDBF1D989502E79FULL);
 }
 
-OO_TEST(literalSearchPrefixAndSuffixMatchGNUstep) {
+TEST(string, literalSearchPrefixAndSuffixMatchGNUstep) {
   // NSLiteralSearch replacement, -hasPrefix: and -hasSuffix: over 4,000 corpus
   // haystacks salted with a combining acute, so literal and composed matching
   // would differ.
@@ -441,101 +442,99 @@ OO_TEST(literalSearchPrefixAndSuffixMatchGNUstep) {
           (hasPrefix(h, k) ? "1" : "0") + " " + (hasSuffix(h, k) ? "1" : "0") +
           "\n");
   }
-  OO_CHECK_EQ(f.h, 0xD8CC5CDB623FF7ECULL);
+  EXPECT_EQ(f.h, 0xD8CC5CDB623FF7ECULL);
 
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       replaceOccurrences(U({0x2605, 0x301}), U({0x2605}), "X", Search::kLiteral),
       U({0x58, 0x301}));
-  OO_CHECK(
+  EXPECT_TRUE(
       hasPrefix(U({0x62, 0x301}), "b"));  // literal: ends inside the sequence
-  OO_CHECK(hasPrefix(U({0xD83D, 0xDE00}),
+  EXPECT_TRUE(hasPrefix(U({0xD83D, 0xDE00}),
                      U({0xD83D})));  // ...or inside a surrogate pair
-  OO_CHECK(!hasPrefix("abc", "") && !hasSuffix("abc", "") &&
+  EXPECT_TRUE(!hasPrefix("abc", "") && !hasSuffix("abc", "") &&
            !hasPrefix("", ""));
-  OO_CHECK(hasPrefix("mission_x", "mission_") &&
+  EXPECT_TRUE(hasPrefix("mission_x", "mission_") &&
            hasSuffix("abc_string", "_string") && !hasSuffix("c", "abc"));
 }
 
-OO_TEST(splitLinesTabsAndUnits) {
-  OO_CHECK(split("a.b..c", ".") ==
+TEST(string, splitLinesTabsAndUnits) {
+  EXPECT_TRUE(split("a.b..c", ".") ==
            (std::vector<std::string>{"a", "b", "", "c"}));
-  OO_CHECK(split("", ".") == (std::vector<std::string>{""}));
-  OO_CHECK(split(".", ".") == (std::vector<std::string>{"", ""}));
-  OO_CHECK(split("a::b", "::") == (std::vector<std::string>{"a", "b"}));
+  EXPECT_TRUE(split("", ".") == (std::vector<std::string>{""}));
+  EXPECT_TRUE(split(".", ".") == (std::vector<std::string>{"", ""}));
+  EXPECT_TRUE(split("a::b", "::") == (std::vector<std::string>{"a", "b"}));
 
-  OO_CHECK_EQ(tabString(0), std::string(""));
-  OO_CHECK_EQ(tabString(12), std::string(12, '\t'));
+  EXPECT_EQ(tabString(0), std::string(""));
+  EXPECT_EQ(tabString(12), std::string(12, '\t'));
   std::string m = "x";
   appendLine(m, "y");
   appendLine(m, "");
-  OO_CHECK_EQ(m, std::string("xy\n\n"));
+  EXPECT_EQ(m, std::string("xy\n\n"));
   std::string d = U({0x61, 0xD83D, 0xDE00, 0x62});
   deleteUnitAt(d, 1);  // one UTF-16 unit, as NSMutableString does
-  OO_CHECK_EQ(d, U({0x61, 0xDE00, 0x62}));
+  EXPECT_EQ(d, U({0x61, 0xDE00, 0x62}));
   deleteUnitAt(d, 9);
-  OO_CHECK_EQ(length(d), 3u);
-  OO_CHECK_EQ(length(U({0xD83D, 0xDE00})), 2u);
+  EXPECT_EQ(length(d), 3u);
+  EXPECT_EQ(length(U({0xD83D, 0xDE00})), 2u);
 
   const oo::Data bom = utf16Data("A", true),
                  plain = utf16Data(U({0x20AC}), false);
-  OO_CHECK_EQ(bom.length(), 4u);
-  OO_CHECK(bom.bytes()[0] == 0xFF && bom.bytes()[1] == 0xFE &&
+  EXPECT_EQ(bom.length(), 4u);
+  EXPECT_TRUE(bom.bytes()[0] == 0xFF && bom.bytes()[1] == 0xFE &&
            bom.bytes()[2] == 0x41 && bom.bytes()[3] == 0);
-  OO_CHECK(plain.length() == 2 && plain.bytes()[0] == 0xAC &&
+  EXPECT_TRUE(plain.length() == 2 && plain.bytes()[0] == 0xAC &&
            plain.bytes()[1] == 0x20);
 
-  OO_CHECK_EQ(intValue(" -12abc"), -12);
-  OO_CHECK_EQ(longLongValue("99999999999999999999"), 9223372036854775807LL);
-  OO_CHECK_EQ(doubleValue(" 2.5e1x"), 25.0);
+  EXPECT_EQ(intValue(" -12abc"), -12);
+  EXPECT_EQ(longLongValue("99999999999999999999"), 9223372036854775807LL);
+  EXPECT_EQ(doubleValue(" 2.5e1x"), 25.0);
 }
 
 // --- formatting
 // -------------------------------------------------------------------------------------
 
-OO_TEST(formatMatchesGNUstepForTheGamesConversions) {
+TEST(string, formatMatchesGNUstepForTheGamesConversions) {
   // -[NSString stringWithFormat:] results, captured.
-  OO_CHECK_EQ(format("%f", 0.1), std::string("0.100000"));
-  OO_CHECK_EQ(format("%f", -0.0), std::string("-0.000000"));
-  OO_CHECK_EQ(format("%.1f", 0.05), std::string("0.1"));
-  OO_CHECK_EQ(format("%.1f", 0.25), std::string("0.2"));
-  OO_CHECK_EQ(format("%.2f", 2.675), std::string("2.67"));
-  OO_CHECK_EQ(format("%.0f %.0f %.0f", 0.5, 1.5, 2.5), std::string("0 2 2"));
-  OO_CHECK_EQ(format("%.3f", 1234567.891), std::string("1234567.891"));
-  OO_CHECK_EQ(format("%g %g %g", 0.1, 1e-5, 123456789.0),
+  EXPECT_EQ(format("%f", 0.1), std::string("0.100000"));
+  EXPECT_EQ(format("%f", -0.0), std::string("-0.000000"));
+  EXPECT_EQ(format("%.1f", 0.05), std::string("0.1"));
+  EXPECT_EQ(format("%.1f", 0.25), std::string("0.2"));
+  EXPECT_EQ(format("%.2f", 2.675), std::string("2.67"));
+  EXPECT_EQ(format("%.0f %.0f %.0f", 0.5, 1.5, 2.5), std::string("0 2 2"));
+  EXPECT_EQ(format("%.3f", 1234567.891), std::string("1234567.891"));
+  EXPECT_EQ(format("%g %g %g", 0.1, 1e-5, 123456789.0),
               std::string("0.1 1e-05 1.23457e+08"));
-  OO_CHECK_EQ(format("%.3g", 1234567.891), std::string("1.23e+06"));
-  OO_CHECK_EQ(format("%.10g", 2.0 / 3.0), std::string("0.6666666667"));
-  OO_CHECK_EQ(format("%e", 1e-300), std::string("1.000000e-300"));
-  OO_CHECK_EQ(format("%.3e", 6.02214076e23), std::string("6.022e+23"));
-  OO_CHECK_EQ(format("%E", 1.602e-19), std::string("1.602000E-19"));
-  OO_CHECK_EQ(format("%g %f %g", std::numeric_limits<double>::infinity(),
+  EXPECT_EQ(format("%.3g", 1234567.891), std::string("1.23e+06"));
+  EXPECT_EQ(format("%.10g", 2.0 / 3.0), std::string("0.6666666667"));
+  EXPECT_EQ(format("%e", 1e-300), std::string("1.000000e-300"));
+  EXPECT_EQ(format("%.3e", 6.02214076e23), std::string("6.022e+23"));
+  EXPECT_EQ(format("%E", 1.602e-19), std::string("1.602000E-19"));
+  EXPECT_EQ(format("%g %f %g", std::numeric_limits<double>::infinity(),
                      -std::numeric_limits<double>::infinity(),
                      std::numeric_limits<double>::quiet_NaN()),
               std::string("inf -inf nan"));
-  OO_CHECK_EQ(format("%10.3f|%-10.3f|", 3.14159, 3.14159),
+  EXPECT_EQ(format("%10.3f|%-10.3f|", 3.14159, 3.14159),
               std::string("     3.142|3.142     |"));
-  OO_CHECK_EQ(format("%+.2f % f %010.3f", 7.0, 42.0, -3.5),
+  EXPECT_EQ(format("%+.2f % f %010.3f", 7.0, 42.0, -3.5),
               std::string("+7.00  42.000000 -00003.500"));
-  OO_CHECK_EQ(format("%#g %.1f %5.1f", 1.0, 1e15, 99.95),
+  EXPECT_EQ(format("%#g %.1f %5.1f", 1.0, 1e15, 99.95),
               std::string("1.00000 1000000000000000.0 100.0"));
-  OO_CHECK_EQ(format("%.17g %.15g %a", 0.1, 0.1, 1.0),
+  EXPECT_EQ(format("%.17g %.15g %a", 0.1, 0.1, 1.0),
               std::string("0.10000000000000001 0.1 0x1p+0"));
-  OO_CHECK_EQ(format("%d|%5d|%-5d|%05d|%+d|% d", -42, 42, 42, 42, 7, 7),
+  EXPECT_EQ(format("%d|%5d|%-5d|%05d|%+d|% d", -42, 42, 42, 42, 7, 7),
               std::string("-42|   42|42   |00042|+7| 7"));
-  OO_CHECK_EQ(format("%x %X %#x %o %u %3.2d", 255, 255, 255, 8, -1, 5),
+  EXPECT_EQ(format("%x %X %#x %o %u %3.2d", 255, 255, 255, 8, -1, 5),
               std::string("ff FF 0xff 10 4294967295  05"));
-  OO_CHECK_EQ(format("%i %d %c", 2147483647, -2147483647 - 1, 65),
+  EXPECT_EQ(format("%i %d %c", 2147483647, -2147483647 - 1, 65),
               std::string("2147483647 -2147483648 A"));
-  OO_CHECK_EQ(
+  EXPECT_EQ(
       format("%lld %lld", 9223372036854775807LL, -9223372036854775807LL - 1),
       std::string("9223372036854775807 -9223372036854775808"));
-  OO_CHECK_EQ(format("%llu %llx", 18446744073709551615ULL, 3735928559ULL),
+  EXPECT_EQ(format("%llu %llx", 18446744073709551615ULL, 3735928559ULL),
               std::string("18446744073709551615 deadbeef"));
-  OO_CHECK_EQ(format("%s|%5s|%-5s|%.2s", "abc", "ab", "ab", "abcdef"),
+  EXPECT_EQ(format("%s|%5s|%-5s|%.2s", "abc", "ab", "ab", "abcdef"),
               std::string("abc|   ab|ab   |ab"));
-  OO_CHECK_EQ(format("%%%s a%%b", "x"), std::string("%x a%b"));
+  EXPECT_EQ(format("%%%s a%%b", "x"), std::string("%x a%b"));
   const std::string big(300, 'q');
-  OO_CHECK_EQ(format("<%s>", big.c_str()), "<" + big + ">");
+  EXPECT_EQ(format("<%s>", big.c_str()), "<" + big + ">");
 }
-
-OO_TEST_MAIN()

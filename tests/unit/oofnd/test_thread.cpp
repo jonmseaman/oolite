@@ -5,6 +5,8 @@
    redeclarations.
 */
 
+#include <gtest/gtest.h>
+
 #include "oofnd/Thread.hpp"
 
 #if defined(_WIN32)
@@ -15,8 +17,6 @@
 #include <condition_variable>
 #include <mutex>
 #include <string>
-
-#include "oo_test.hpp"
 
 namespace {
 
@@ -44,33 +44,33 @@ bool RunDetachedAndWait(F body) {
 
 }  // namespace
 
-OO_TEST(mainThreadIsTheStaticInitThread) {
-  OO_CHECK(oo::thread::isMainThread());
-  OO_CHECK(oo::thread::kMainThreadId == std::this_thread::get_id());
+TEST(thread, mainThreadIsTheStaticInitThread) {
+  EXPECT_TRUE(oo::thread::isMainThread());
+  EXPECT_TRUE(oo::thread::kMainThreadId == std::this_thread::get_id());
 }
 
-OO_TEST(detachedThreadRunsAndIsNotMain) {
+TEST(thread, detachedThreadRunsAndIsNotMain) {
   std::atomic<int> ran{0};
   std::atomic<bool> wasMain{true};
-  OO_CHECK(RunDetachedAndWait([&] {
+  EXPECT_TRUE(RunDetachedAndWait([&] {
     wasMain = oo::thread::isMainThread();
     ++ran;
   }));
-  OO_CHECK_EQ(ran.load(), 1);
-  OO_CHECK(!wasMain.load());
+  EXPECT_EQ(ran.load(), 1);
+  EXPECT_TRUE(!wasMain.load());
 }
 
-OO_TEST(detachMovesItsCallable) {
+TEST(thread, detachMovesItsCallable) {
   std::string seen;
   std::string payload = "moved into the thread";
-  OO_CHECK(RunDetachedAndWait([&seen, p = std::move(payload)] { seen = p; }));
-  OO_CHECK_EQ(seen, std::string("moved into the thread"));
+  EXPECT_TRUE(RunDetachedAndWait([&seen, p = std::move(payload)] { seen = p; }));
+  EXPECT_EQ(seen, std::string("moved into the thread"));
 }
 
-OO_TEST(setCurrentNameIsReadBack) {
+TEST(thread, setCurrentNameIsReadBack) {
   bool ok = false;
   std::string readBack;
-  OO_CHECK(RunDetachedAndWait([&] {
+  EXPECT_TRUE(RunDetachedAndWait([&] {
     ok = oo::thread::setCurrentName("OOAsyncWorkManager thread 1");
 #if defined(_WIN32)
     PWSTR desc = nullptr;
@@ -86,13 +86,11 @@ OO_TEST(setCurrentNameIsReadBack) {
       readBack = buf;
 #endif
   }));
-  OO_CHECK(ok);
+  EXPECT_TRUE(ok);
 #if defined(_WIN32)
-  OO_CHECK_EQ(readBack, std::string("OOAsyncWorkManager thread 1"));
+  EXPECT_EQ(readBack, std::string("OOAsyncWorkManager thread 1"));
 #else
-  OO_CHECK_EQ(readBack,
+  EXPECT_EQ(readBack,
               std::string("OOAsyncWorkManager thread 1").substr(0, 15));
 #endif
 }
-
-OO_TEST_MAIN()

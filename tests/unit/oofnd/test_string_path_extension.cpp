@@ -16,7 +16,9 @@
 #include <cstdio>
 #include <string>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
+#include "oo_gtest.hpp"
 #include "oofnd/String.hpp"
 
 namespace {
@@ -98,20 +100,18 @@ const Row kRootRows[] = {
 
 }  // namespace
 
-OO_TEST(appending_path_extension_is_gnusteps) {
+TEST(string_path_extension, appending_path_extension_is_gnusteps) {
   for (const Row& r : kGridRows) {
-    if (!OO_CHECK_EQ(oo::str::appendingPathExtension(r.path, r.extension),
+    if (!OO_EXPECT_EQ_V(oo::str::appendingPathExtension(r.path, r.extension),
                      std::string(r.appended)))
       std::printf("    path [%s] extension [%s]\n", r.path, r.extension);
   }
 }
 
-OO_TEST(appending_path_extension_to_a_root_is_gnusteps) {
+TEST(string_path_extension, appending_path_extension_to_a_root_is_gnusteps) {
   for (const Row& r : kRootRows) {
-    if (!OO_CHECK_EQ(oo::str::appendingPathExtension(r.path, r.extension),
+    if (!OO_EXPECT_EQ_V(oo::str::appendingPathExtension(r.path, r.extension),
                      std::string(r.appended)))
       std::printf("    path [%s] extension [%s]\n", r.path, r.extension);
   }
 }
-
-OO_TEST_MAIN()

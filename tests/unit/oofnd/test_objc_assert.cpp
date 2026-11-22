@@ -18,7 +18,8 @@
 
 #include <string>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
 #include "oofnd/objc/Assert.h"
 
 #ifdef NDEBUG
@@ -60,34 +61,32 @@ void CParam(void *p) { sLine = __LINE__; OOCParameterAssert(p != NULL); }
 
 }  // namespace
 
-OO_TEST(functionAssertionUsesPrettyFunction) {
-  Outcome o = Run([] { CFail(4); });
-  OO_CHECK(o.raised);
-  OO_CHECK_EQ(o.name, std::string("NSInternalInconsistencyException"));
+TEST(objc_assert, functionAssertionUsesPrettyFunction) {
+  Outcome o = ::Run([] { CFail(4); });
+  EXPECT_TRUE(o.raised);
+  EXPECT_EQ(o.name, std::string("NSInternalInconsistencyException"));
 #if defined(__GNUC__) && !defined(__clang__)
-  OO_CHECK_EQ(o.reason, At(sLine) + "void {anonymous}::CFail(int).  y is 4");
+  EXPECT_EQ(o.reason, At(sLine) + "void {anonymous}::CFail(int).  y is 4");
 #else
-  OO_CHECK_EQ(o.reason,
+  EXPECT_EQ(o.reason,
               At(sLine) + "void (anonymous namespace)::CFail(int).  y is 4");
 #endif
 
-  Outcome p = Run([] { CParam(nullptr); });
-  OO_CHECK(p.raised);
+  Outcome p = ::Run([] { CParam(nullptr); });
+  EXPECT_TRUE(p.raised);
 #if defined(__GNUC__) && !defined(__clang__)
-  OO_CHECK_EQ(p.reason, At(sLine) +
+  EXPECT_EQ(p.reason, At(sLine) +
                             "void {anonymous}::CParam(void*).  Invalid "
                             "parameter not satisfying: p != NULL");
 #else
-  OO_CHECK_EQ(p.reason, At(sLine) +
+  EXPECT_EQ(p.reason, At(sLine) +
                             "void (anonymous namespace)::CParam(void *).  "
                             "Invalid parameter not satisfying: p != NULL");
 #endif
 }
 
-OO_TEST(trueConditionsDoNotRaise) {
+TEST(objc_assert, trueConditionsDoNotRaise) {
   int dummy = 0;
-  OO_CHECK(!Run([] { CFail(0); }).raised);
-  OO_CHECK(!Run([&] { CParam(&dummy); }).raised);
+  EXPECT_TRUE(!::Run([] { CFail(0); }).raised);
+  EXPECT_TRUE(!::Run([&] { CParam(&dummy); }).raised);
 }
-
-OO_TEST_MAIN()

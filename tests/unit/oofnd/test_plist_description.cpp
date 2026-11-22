@@ -16,7 +16,8 @@
 #include <string>
 #include <string_view>
 
-#include "oo_test.hpp"
+#include <gtest/gtest.h>
+
 #include "oofnd/PListDescription.hpp"
 #include "oofnd/PListParsing.hpp"
 
@@ -55,7 +56,7 @@ oo::PList InputOf(const CapturedRow& row) {
   if (kind == "nil") return oo::PList();
   if (kind == "plist") {
     auto parsed = oo::parsePropertyList(row.input);
-    OO_CHECK(parsed.has_value());
+    EXPECT_TRUE(parsed.has_value());
     return parsed.has_value() ? *parsed : oo::PList();
   }
   if (kind == "float")
@@ -69,51 +70,49 @@ oo::PList InputOf(const CapturedRow& row) {
   if (kind == "foreign-dict")
     return oo::PList(oo::PList::Dict{{"key", ForeignNode(row.input)}});
   std::printf("unknown captured kind %s\n", row.kind);
-  OO_CHECK(false);
+  EXPECT_TRUE(false);
   return oo::PList();
 }
 
 }  // namespace
 
-OO_TEST(everyCapturedRowMatchesGNUstep) {
-  OO_CHECK(sizeof kRows / sizeof kRows[0] >= 40);
+TEST(plist_description, everyCapturedRowMatchesGNUstep) {
+  EXPECT_TRUE(sizeof kRows / sizeof kRows[0] >= 40);
   for (const CapturedRow& row : kRows) {
     const std::string got =
         oo::describe(InputOf(row), 0);  // captured with TZ=UTC
     if (got != row.description)
       std::printf("  %s: got [%s]\n  %s: GNUstep [%s]\n", row.name, got.c_str(),
                   row.name, row.description);
-    OO_CHECK_EQ(got, std::string(row.description));
+    EXPECT_EQ(got, std::string(row.description));
   }
 }
 
-OO_TEST(nullElementsAreLeftOutAsObjectFromPListDroppedThem) {
+TEST(plist_description, nullElementsAreLeftOutAsObjectFromPListDroppedThem) {
   const oo::PList array(
       oo::PList::Array{oo::PList("a"), oo::PList(), oo::PList("b")});
-  OO_CHECK_EQ(oo::describe(array), std::string("(a, b)"));
+  EXPECT_EQ(oo::describe(array), std::string("(a, b)"));
   const oo::PList dict(
       oo::PList::Dict{{"a", oo::PList()}, {"b", oo::PList("c")}});
-  OO_CHECK_EQ(oo::describe(dict), std::string("{b = c; }"));
+  EXPECT_EQ(oo::describe(dict), std::string("{b = c; }"));
 }
 
-OO_TEST(keysSortByUtf16UnitsNotUtf8Bytes) {
+TEST(plist_description, keysSortByUtf16UnitsNotUtf8Bytes) {
   // U+FF01 (UTF-8 EF BC 81) sorts after U+1F600 (F0 9F 98 80) by bytes, before
   // it by UTF-16 units.
   const oo::PList dict(oo::PList::Dict{{"\xef\xbc\x81", oo::PList("x")},
                                        {"\xf0\x9f\x98\x80", oo::PList("y")}});
-  OO_CHECK_EQ(oo::describe(dict),
+  EXPECT_EQ(oo::describe(dict),
               std::string("{\"\\UD83D\\UDE00\" = y; \"\\UFF01\" = x; }"));
 }
 
-OO_TEST(aDateIsDescribedInTheLocalTimeZoneAsNSDateWas) {
+TEST(plist_description, aDateIsDescribedInTheLocalTimeZoneAsNSDateWas) {
   const oo::PList::Date when{298297845.0};  // 2010-06-15 12:30:45 +0000
   const auto t =
       oo::date::dateWithTimeIntervalSinceReferenceDate(when.sinceReferenceDate);
-  OO_CHECK_EQ(oo::describe(oo::PList(when)), oo::date::description(t));
-  OO_CHECK_EQ(oo::describe(oo::PList(when), 0),
+  EXPECT_EQ(oo::describe(oo::PList(when)), oo::date::description(t));
+  EXPECT_EQ(oo::describe(oo::PList(when), 0),
               std::string("2010-06-15 12:30:45 +0000"));
-  OO_CHECK_EQ(oo::describe(oo::PList(when), -300),
+  EXPECT_EQ(oo::describe(oo::PList(when), -300),
               std::string("2010-06-15 07:30:45 -0500"));
 }
-
-OO_TEST_MAIN()

@@ -1,6 +1,6 @@
 # oofnd unit tests: meson test -C build/meson_<type> --suite oofnd
 #
-# One executable per test_*.cpp, plain C++20 on the in-tree oo_test.hpp harness. Add a new test
+# One executable per test_*.cpp, plain C++20 on Google Test with the shared main (tests/support). Add a new test
 # file's name here as well: a test_*.cpp missing from this list is not built.
 
 oofnd_tests = [
@@ -39,11 +39,11 @@ foreach t : oofnd_tests
     exe = executable(
         'oofnd_' + t,
         t + '.cpp',
-        dependencies: oofnd_dep,
+        dependencies: [oofnd_dep, oo_gtest_main_dep],
         override_options: oofnd_override_options,
         install: false,
     )
-    test(t, exe, suite: 'oofnd', timeout: 60)
+    test(t, exe, suite: 'oofnd', timeout: 60, protocol: 'gtest')
 endforeach
 
 # oofnd/Http.hpp uses libcurl (through oofnd_dep); the test's loopback server uses winsock on Windows.
@@ -53,13 +53,14 @@ test('test_http',
     executable(
         'oofnd_test_http',
         'test_http.cpp',
-        dependencies: oofnd_dep,
+        dependencies: [oofnd_dep, oo_gtest_main_dep],
         link_args: oofnd_http_link_args,
         override_options: oofnd_override_options,
         install: false,
     ),
     suite: 'oofnd',
     timeout: 60,
+    protocol: 'gtest',
 )
 
 # The PList component (value type, old-style and XML parsers, writers) is also its own suite:
@@ -82,11 +83,11 @@ foreach t : oofnd_plist_tests
     exe = executable(
         'oofnd_' + t,
         t + '.cpp',
-        dependencies: oofnd_dep,
+        dependencies: [oofnd_dep, oo_gtest_main_dep],
         override_options: oofnd_override_options,
         install: false,
     )
-    test(t, exe, suite: ['oofnd', 'oofnd-plist'], timeout: 60)
+    test(t, exe, suite: ['oofnd', 'oofnd-plist'], timeout: 60, protocol: 'gtest')
 endforeach
 
 # Tests of what is left of the Foundation-free floor (oofnd/objc), linking neither libobjc2 nor
@@ -105,9 +106,9 @@ foreach t : oofnd_objc_tests
     exe = executable(
         'oofnd_' + t,
         t + '.cpp',
-        dependencies: oofnd_objc_dep,
+        dependencies: [oofnd_objc_dep, oo_gtest_main_dep],
         override_options: oofnd_override_options,
         install: false,
     )
-    test(t, exe, suite: 'oofnd', timeout: 60)
+    test(t, exe, suite: 'oofnd', timeout: 60, protocol: 'gtest')
 endforeach
