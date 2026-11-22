@@ -19,7 +19,12 @@ def main() -> int:
     parser.add_argument("--arg", action="append", default=[])
     parser.add_argument("--exit", choices=["nonzero", "zero"], default="nonzero")
     parser.add_argument("--expect", action="append", default=[])
-    options = parser.parse_args()
+    # A Google Test flag meant for the suite's other programs (tests/run.sh unit -k <filter> passes
+    # one to every test in the suite) is not the probe's.
+    options, extra = parser.parse_known_args()
+    unknown = [a for a in extra if not a.startswith("--gtest_")]
+    if unknown:
+        parser.error(f"unrecognized arguments: {' '.join(unknown)}")
 
     run = subprocess.run([options.program] + options.arg, capture_output=True, text=True,
                          errors="replace", timeout=60, check=False)

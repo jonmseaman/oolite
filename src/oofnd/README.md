@@ -48,8 +48,7 @@ Rules that hold for every component:
 | `src/oofnd/objc/Assert.h` | `OOCAssert` / `OOCParameterAssert`: gnustep-base's assertion semantics, live in every flavour |
 | `src/oofnd/objc/FoundationTypes.h` | what is left of Foundation's C types: `NSRange`, `NSPoint`/`NSSize`/`NSRect` with `NSMake*`/`NSEqual*`, and `oo::kNotFound`, with GNUstep's exact definitions; refuses to compile beside a Foundation header. The integer, interval and `CGFloat` aliases became the standard types. Pinned by `tests/unit/oofnd/test_foundation_types.cpp` |
 | `src/oofnd/meson.build` | `oofnd_dep` (include path `src/`, so consumers write `#include "oofnd/X.hpp"`) |
-| `tests/unit/oofnd/test_*.cpp` | one executable per component, plain C++23 |
-| `tests/unit/oofnd/oo_test.hpp` | the whole test harness: `OO_TEST`, `OO_CHECK`, `OO_CHECK_EQ`, `OO_TEST_MAIN` |
+| `tests/unit/oofnd/test_*.cpp` | one executable per component, plain C++23 on Google Test (`TEST`, `EXPECT_TRUE`, `EXPECT_EQ`), linking the shared main in `tests/support` |
 | `tests/unit/oofnd/plist_dump.hpp` | canonical one-line dump of a `PList`, the format the PList tests' GNUstep-captured expectations are written in |
 | `tests/unit/oofnd/meson.build` | registers each test in `meson test --suite oofnd` |
 
@@ -136,5 +135,6 @@ Cocoa-compatibility headers had it) and hand them back unchanged, suspending the
 `#pragma push_macro`/`pop_macro` as `Data.hpp` does (`tests/unit/oofnd/test_cocoa_macros.cpp`
 checks it).
 
-Adding a component: put `Foo.hpp` here, write `tests/unit/oofnd/test_foo.cpp` ending in
-`OO_TEST_MAIN()`, and add `'test_foo'` to `tests/unit/oofnd/meson.build`.
+Adding a component: put `Foo.hpp` here, write `tests/unit/oofnd/test_foo.cpp` with
+`TEST(foo, …)` cases (`#include <gtest/gtest.h>`; no `main`, the shared one is linked), and add
+`'test_foo'` to `tests/unit/oofnd/meson.build`.

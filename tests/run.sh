@@ -1,7 +1,7 @@
 #!/bin/bash
 # Run Oolite's test tiers from this directory, inside a private virtualenv.
 #
-#     tests/run.sh unit        meson suites: oofnd, core, headers (needs ./mk.sh build dev)
+#     tests/run.sh unit        meson suites: gtest, oofnd, core, headers (needs ./mk.sh build dev)
 #     tests/run.sh component   headless C++ programs, meson suite component; needs no display
 #                              and no virtualenv (--cpp is accepted and means the same)
 #     tests/run.sh smoke       launch_snapshot.py via mk.sh
@@ -11,6 +11,9 @@
 # For the component tier, -k <name> picks the programs whose meson test name contains <name>; a
 # name that matches no program is an error:
 #     tests/run.sh component -k skeleton
+# For the unit tier, -k <filter> is a Google Test filter for every Google Test suite (the headers
+# suite, which is not one, is left out):
+#     tests/run.sh unit -k 'OOColor.*'
 #
 # Environment: BUILD_TYPE (default dev), OO_VENV (default build/.venv-tests), OO_APP_DIR.
 # dev, not test: test links with LTO, and every core unit test re-runs LTO over the game's objects.
@@ -84,12 +87,31 @@ require_build() {
     export OO_APP_DIR="$app"
 }
 
+# unit [-k <gtest-filter>]
 run_unit() {
     require_build
-    local suite
-    for suite in oofnd core headers; do
-        echo "--> meson test --suite $suite"
-        meson test -C "build/meson_${BUILD_TYPE}" --suite "$suite" --print-errorlogs
+    local filter="" have_filter=false suite
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -k) filter=${2:-}; have_filter=true; shift 2 || shift ;;
+            -k*) filter=${1#-k}; have_filter=true; shift ;;
+            *) echo "tests/run.sh unit: unknown argument '$1'" >&2; return 2 ;;
+        esac
+    done
+    if $have_filter && [[ -z "$filter" ]]; then
+        echo "tests/run.sh unit: -k needs a Google Test filter" >&2
+        return 2
+    fi
+    for suite in gtest oofnd core headers; do
+        if $have_filter; then
+            [[ "$suite" == headers ]] && continue
+            echo "--> meson test --suite $suite --test-args=--gtest_filter=$filter"
+            meson test -C "build/meson_${BUILD_TYPE}" --suite "$suite" --print-errorlogs \
+                "--test-args=--gtest_filter=$filter"
+        else
+            echo "--> meson test --suite $suite"
+            meson test -C "build/meson_${BUILD_TYPE}" --suite "$suite" --print-errorlogs
+        fi
     done
 }
 
@@ -135,12 +157,12 @@ tier=${1:-}
 
 case "$tier" in
     venv)      ensure_venv ;;
-    unit)      run_unit ;;  # no Python needed; meson drives it
+    unit)      run_unit "$@" ;;  # no Python needed; meson drives it
     component) run_component "$@" ;;
     smoke)     run_smoke ;;
     all)       run_unit; run_component; run_smoke ;;
     *)
-        sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+        sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         [[ -z "$tier" ]] || exit 2
         ;;
 esac

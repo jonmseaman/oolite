@@ -728,7 +728,7 @@ TEST(component_census, census) {
   } else {
     code = RunParent(o);
   }
-  // The census's own output and exit codes, not oo_test's summary.
+  // The census's own output and exit codes, not Google Test's summary.
   oo::component::exitProgram(code);
 }
 
