@@ -66,6 +66,8 @@ component_programs = {
     'test_s6_damaged_ship_flees': {'verbose': true},
     'test_s7_neutral_traffic_is_quiet': {'verbose': true},
     'test_s8_destroyed_ships_leave_allships': {'verbose': true},
+    # A cargo contract: accepted, flown to another system, delivered on time and then late.
+    'test_contract_delivery': {'verbose': true},
     # Runs test_s1_police_kills_pirate twice and compares the digests of every step.
     'test_repeat': {'verbose': true, 'timeout': 120},
     # One ship, one behaviour (spec 011 US6). Each takes --without-weapon, which must make it fail.
