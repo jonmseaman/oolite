@@ -6,6 +6,8 @@
 #                              and no virtualenv (--cpp is accepted and means the same)
 #     tests/run.sh smoke       launch_snapshot.py via mk.sh
 #     tests/run.sh all         unit, component, then smoke, stopping at the first failure
+#     tests/run.sh coverage    the component tier under Clang source-based coverage, then a report
+#                              of src/ (needs ./mk.sh build coverage; BUILD_TYPE defaults to coverage)
 #     tests/run.sh venv        create/refresh the virtualenv only
 #
 # For the component tier, -k <name> picks the programs whose meson test name contains <name>; a
@@ -14,6 +16,9 @@
 # For the unit tier, -k <filter> is a Google Test filter for every Google Test suite (the headers
 # suite, which is not one, is left out):
 #     tests/run.sh unit -k 'OOColor.*'
+# For the coverage tier, -k <name> is as for component, and --per-test runs each program alone so
+# by-test.tsv says which program reaches which file. The report is in build/meson_coverage/coverage:
+# summary.txt, by-file.tsv, html/index.html, component.lcov (tests/coverage_report.py).
 #
 # Environment: BUILD_TYPE (default dev), OO_VENV (default build/.venv-tests), OO_APP_DIR.
 # dev, not test: test links with LTO, and every core unit test re-runs LTO over the game's objects.
@@ -24,6 +29,7 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." &> /dev/null && pwd)
 cd "$ROOT"
 
+BUILD_TYPE_GIVEN=${BUILD_TYPE:-}  # the coverage tier's default differs
 BUILD_TYPE=${BUILD_TYPE:-dev}
 VENV=${OO_VENV:-build/.venv-tests}
 REQ_STAMP="$VENV/.requirements-stamp"
@@ -133,18 +139,75 @@ run_component() {
         meson test -C "$dir" --suite component --print-errorlogs
         return
     fi
-    # meson test --list prints "<suite> - <project>:<name>"; meson test takes the bare names.
-    local names=() line name
-    while IFS= read -r line; do
-        name=${line##*:}
-        [[ "$name" == *"$filter"* ]] && names+=("$name")
-    done < <(meson test -C "$dir" --suite component --list 2> /dev/null | tr -d '\r' | grep ' - ')
+    local names=() name
+    while IFS= read -r name; do names+=("$name"); done < <(component_tests "$dir" "$filter")
     if [[ ${#names[@]} -eq 0 ]]; then
         echo "tests/run.sh: no C++ component program matches '$filter'" >&2
         return 1
     fi
     echo "--> meson test --suite component ${names[*]}"
     meson test -C "$dir" --suite component --print-errorlogs "${names[@]}"
+}
+
+# The component tests in build directory $1 whose name contains $2 (every one for ""), one a line.
+# meson test --list prints "<suite> - <project>:<name>"; meson test takes the bare names.
+component_tests() {
+    local line name
+    while IFS= read -r line; do
+        name=${line##*:}
+        [[ "$name" == *"$2"* ]] && echo "$name"
+    done < <(meson test -C "$1" --suite component --list 2> /dev/null | tr -d '\r' | grep ' - ')
+}
+
+# coverage [-k <name>] [--per-test]: the component programs, each writing its profile into
+# <build>/coverage/raw/<group>/ (group: the test with --per-test, else "all"), then the report. The
+# tests' own exit status is the tier's, after the report.
+run_coverage() {
+    local filter="" have_filter=false per_test=false
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -k) filter=${2:-}; have_filter=true; shift 2 || shift ;;
+            -k*) filter=${1#-k}; have_filter=true; shift ;;
+            --per-test) per_test=true; shift ;;
+            *) echo "tests/run.sh coverage: unknown argument '$1'" >&2; return 2 ;;
+        esac
+    done
+    BUILD_TYPE=${BUILD_TYPE_GIVEN:-coverage}
+    require_build
+    local dir="build/meson_${BUILD_TYPE}"
+    local out="$ROOT/$dir/coverage"
+    local names=() name
+    while IFS= read -r name; do names+=("$name"); done < <(component_tests "$dir" "$filter")
+    if [[ ${#names[@]} -eq 0 ]]; then
+        echo "tests/run.sh: no C++ component program matches '$filter'" >&2
+        return 1
+    fi
+    rm -rf "$out"
+    mkdir -p "$out/raw"
+    # The programs run in the application directory and may start children: an absolute path, one
+    # file a process. A native Windows program needs a Windows path.
+    local raw="$out/raw"
+    if command -v cygpath > /dev/null 2>&1; then
+        raw=$(cygpath -m "$raw")
+    fi
+    # Instrumented programs are slower; the census's own timeout is already 600 s.
+    local status=0
+    if [[ "$per_test" == true ]]; then
+        for name in "${names[@]}"; do
+            echo "--> meson test $name (coverage)"
+            LLVM_PROFILE_FILE="$raw/$name/%p.profraw" meson test -C "$dir" --suite component \
+                --print-errorlogs --timeout-multiplier 3 "$name" || status=1
+        done
+    else
+        local selected=()
+        [[ "$have_filter" == true ]] && selected=("${names[@]}")
+        echo "--> meson test --suite component (coverage) ${selected[*]-}"
+        LLVM_PROFILE_FILE="$raw/all/%p.profraw" meson test -C "$dir" --suite component \
+            --print-errorlogs --timeout-multiplier 3 ${selected[@]+"${selected[@]}"} || status=1
+    fi
+    echo "--> tests/coverage_report.py"
+    "$(find_python)" tests/coverage_report.py --build-dir "$dir" --out "$out" || return
+    return "$status"
 }
 
 run_smoke() {
@@ -161,8 +224,9 @@ case "$tier" in
     component) run_component "$@" ;;
     smoke)     run_smoke ;;
     all)       run_unit; run_component; run_smoke ;;
+    coverage)  run_coverage "$@" ;;
     *)
-        sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+        sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         [[ -z "$tier" ]] || exit 2
         ;;
 esac

@@ -103,6 +103,17 @@ if get_option('dev_release')
     )
 endif
 
+# Clang source-based coverage of this project's code (./mk.sh build coverage; tests/run.sh coverage
+# merges and reports it). Project arguments, not c_args: subprojects and meson's own compiler checks
+# stay uninstrumented.
+if get_option('source_coverage')
+    if meson.get_compiler('cpp').get_id() != 'clang'
+        error('source_coverage needs Clang (-fprofile-instr-generate -fcoverage-mapping)')
+    endif
+    add_project_arguments('-fprofile-instr-generate', '-fcoverage-mapping', language: c_family)
+    add_project_link_arguments('-fprofile-instr-generate', language: c_family)
+endif
+
 # dependencies, compiler/linker flags and build
 subdir('src')
 

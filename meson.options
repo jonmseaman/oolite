@@ -31,6 +31,9 @@ option('oo_localization_tools', type: 'boolean', value: true,
 option('debug_graphviz', type: 'boolean', value: true,
        description: 'Enable AI state-machine graph visualization via GraphViz syntax output')
 
+option('source_coverage', type: 'boolean', value: false,
+       description: 'Clang source-based coverage of the game (-fprofile-instr-generate -fcoverage-mapping); ./mk.sh build coverage, tests/run.sh coverage')
+
 # Release Variant Control
 option('deployment_release', type: 'boolean', value: false,
        description: 'Force a strict production deployment setup (overrides and disables most debugging instrumentation)')

@@ -181,13 +181,13 @@ show_help() {  # Script Help Menu
     echo -e "  \033[36mhelp\033[0m                           Show this breakdown menu"
     echo ""
     echo "Build Types:"
-    echo -e "  \033[32mdeployment, test, dev, debug\033[0m"
+    echo -e "  \033[32mdeployment, test, dev, debug, coverage\033[0m"
 }
 
 validate_build_type() {
     local build_type="$1"
-    if [[ "$build_type" != "deployment" && "$build_type" != "test" && "$build_type" != "dev" && "$build_type" != "debug" ]]; then
-        echo "❌ Invalid build_type '$build_type'. Expected: deployment, test, dev, or debug." >&2
+    if [[ "$build_type" != "deployment" && "$build_type" != "test" && "$build_type" != "dev" && "$build_type" != "debug" && "$build_type" != "coverage" ]]; then
+        echo "❌ Invalid build_type '$build_type'. Expected: deployment, test, dev, debug, or coverage." >&2
         exit 1
     fi
 }
@@ -208,6 +208,9 @@ execute_target() {  # Target Execution Logic
                 meson_setup "dev" "-Ddev_release=true" "-Ddebug=false" "-Dstrip_bin=false"
             elif [[ "$build_type" == "debug" ]]; then
                 meson_setup "debug" "-Ddebug=true" "-Dstrip_bin=false"
+            elif [[ "$build_type" == "coverage" ]]; then
+                # dev, instrumented for Clang source-based coverage (tests/run.sh coverage)
+                meson_setup "coverage" "-Ddev_release=true" "-Ddebug=false" "-Dstrip_bin=false" "-Db_lto=false" "-Dsource_coverage=true"
             fi
             ;;
         compile)

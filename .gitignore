@@ -29,6 +29,8 @@ tests/__pycache__
 
 # Debug output
 /core
+# A program built with -fprofile-instr-generate and run without LLVM_PROFILE_FILE
+*.profraw
 
 # What meson fetches into third_party/ (its subproject_dir) for a wrap: the extracted source and
 # the download cache. The wrap files, packagefiles/ and the copied libraries are tracked.
