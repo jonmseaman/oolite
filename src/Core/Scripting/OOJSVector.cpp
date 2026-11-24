@@ -118,6 +118,15 @@ static const JSCFunctionListEntry sVectorProperties[] = {
     JS_CGETSET_MAGIC_DEF2("z", VectorGetProperty, VectorSetProperty,
                           OOJSPropertyMagic(VectorProperty::kZ),
                           OOJS_PROP_READWRITE_CB),
+    // v[0], v[1], v[2]: under SpiderMonkey a numeric id reached the class's
+    // property hook, whose ids x, y, z are 0, 1, 2, and expansions read and
+    // write vectors that way. Not enumerated, as they were not then.
+    JS_CGETSET_MAGIC_DEF2("0", VectorGetProperty, VectorSetProperty,
+                          OOJSPropertyMagic(VectorProperty::kX), 0),
+    JS_CGETSET_MAGIC_DEF2("1", VectorGetProperty, VectorSetProperty,
+                          OOJSPropertyMagic(VectorProperty::kY), 0),
+    JS_CGETSET_MAGIC_DEF2("2", VectorGetProperty, VectorSetProperty,
+                          OOJSPropertyMagic(VectorProperty::kZ), 0),
 };
 
 static const JSCFunctionListEntry sVectorMethods[] = {

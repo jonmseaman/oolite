@@ -106,6 +106,17 @@ static const JSCFunctionListEntry sQuaternionProperties[] = {
     JS_CGETSET_MAGIC_DEF2("z", QuaternionGetProperty, QuaternionSetProperty,
                           OOJSPropertyMagic(QuaternionProperty::kZ),
                           OOJS_PROP_READWRITE_CB),
+    // q[0] to q[3]: under SpiderMonkey a numeric id reached the class's
+    // property hook, whose ids w, x, y, z are 0 to 3, and expansions read and
+    // write quaternions that way. Not enumerated, as they were not then.
+    JS_CGETSET_MAGIC_DEF2("0", QuaternionGetProperty, QuaternionSetProperty,
+                          OOJSPropertyMagic(QuaternionProperty::kW), 0),
+    JS_CGETSET_MAGIC_DEF2("1", QuaternionGetProperty, QuaternionSetProperty,
+                          OOJSPropertyMagic(QuaternionProperty::kX), 0),
+    JS_CGETSET_MAGIC_DEF2("2", QuaternionGetProperty, QuaternionSetProperty,
+                          OOJSPropertyMagic(QuaternionProperty::kY), 0),
+    JS_CGETSET_MAGIC_DEF2("3", QuaternionGetProperty, QuaternionSetProperty,
+                          OOJSPropertyMagic(QuaternionProperty::kZ), 0),
 };
 
 static const JSCFunctionListEntry sQuaternionMethods[] = {

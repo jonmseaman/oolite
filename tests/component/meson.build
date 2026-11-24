@@ -44,6 +44,7 @@ component_programs = {
     # (tasks.md, Findings -> Keys), upstream's code too; checked both ways, left to Jon.
     'test_tutorial_keys': {'layouts': component_layouts, 'should_fail': ['test_tutorial_keys_ru']},
     'test_launch_key': {},
+    'test_vector_index': {},
     'test_remapped_key': {},
     # The key-path observations (research H1-H5), one test per case: key_fault_h1 ... h5.
     'test_key_faults': {'cases': {
