@@ -10,8 +10,14 @@ void main()
 {
 	const float bloomThreshold = 1.0;
 	const float bloomStrength = 0.05;
+	// The scene buffer is half float: a colour past its largest value (65504) is stored as
+	// infinity. Some OXPs give emission colours in the thousands, which was harmless before HDR;
+	// an infinite pixel turns NaN in the tone mapper and the blur passes spread it into black
+	// squares. Keep the colour finite here, before it reaches the blur and the final pass.
+	const float maxHalfFloat = 65000.0;
 	out_color = texture(image, vs_out_texture_coordinate);
-	
+	out_color.rgb = min(out_color.rgb, vec3(maxHalfFloat));
+
 	float brightness = dot(out_color.rgb, vec3(0.2126, 0.7152, 0.0722));	
 	if(brightness > bloomThreshold)
 		bright_color = vec4(out_color.rgb * bloomStrength, 1.0);
