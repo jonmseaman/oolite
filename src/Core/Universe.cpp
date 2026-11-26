@@ -41,6 +41,7 @@ MA 02110-1301, USA.
 #include "CollisionRegion.h"
 #include "DockEntity.h"
 #include "DustEntity.h"
+#include "FeatureConfig.h"
 #include "GameController.h"
 #include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
@@ -1706,9 +1707,9 @@ void Universe::setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2) {
   double planet_zpos = planetDict.get<float>("planet_distance", 500000);
   planet_zpos *= planetDict.get<float>("planet_distance_multiplier", 1.0);
 
-#ifdef OO_DUMP_PLANETINFO
-  OO_LOG("planetinfo.record", "planet zpos = {:f}", planet_zpos);
-#endif
+  if (oo::features().IsDumpPlanetInfoEnabled()) {
+    OO_LOG("planetinfo.record", "planet zpos = {:f}", planet_zpos);
+  }
   if (a_planet != nullptr) a_planet->setPosition((HPVector){0, 0, planet_zpos});
   if (a_planet != nullptr) a_planet->setEnergy(1000000.0);
 
@@ -1777,11 +1778,11 @@ void Universe::setUpSpace() {
   // fixed entities (part of the graphics system really) come first...
   setSkyColorRed(0.0f, 0.0f, 0.0f, 0.0f);
 
-#ifdef OO_DUMP_PLANETINFO
-  OO_LOG("planetinfo.record", "seed = {} {} {} {}", system_seed.c,
-         system_seed.d, system_seed.e, system_seed.f);
-  OO_LOG("planetinfo.record", "coordinates = {} {}", system_seed.d,
-         system_seed.b);
+  if (oo::features().IsDumpPlanetInfoEnabled()) {
+  OO_LOG("planetinfo.record", "seed = {} {} {} {}", systemSeed.c,
+         systemSeed.d, systemSeed.e, systemSeed.f);
+  OO_LOG("planetinfo.record", "coordinates = {} {}", systemSeed.d,
+         systemSeed.b);
 
 #define SPROP(PROP)                               \
   OO_LOG("planetinfo.record", #PROP " = \"{}\";", \
@@ -1800,8 +1801,7 @@ void Universe::setUpSpace() {
   SPROP(inhabitant);
   SPROP(inhabitants);
   SPROP(description);
-#endif
-
+  }
   // set the system seed for random number generation
   seed_for_planet_description(systemSeed);
 
@@ -1908,9 +1908,9 @@ void Universe::setUpSpace() {
                 "Sun radius of {:f} is not valid for this system", sun_radius);
     sun_radius = sun_radius < 1000.0 ? 1000.0 : (sun_distance / 2);
   }
-#ifdef OO_DUMP_PLANETINFO
-  OO_LOG("planetinfo.record", "sun_radius = {:f}", sun_radius);
-#endif
+  if (oo::features().IsDumpPlanetInfoEnabled()) {
+    OO_LOG("planetinfo.record", "sun_radius = {:f}", sun_radius);
+  }
   safeDistance = 36 * sun_radius * sun_radius;  // 6 times the sun radius
 
   // here we need to check if the sun collides with (or is too close to) the
@@ -1932,11 +1932,11 @@ void Universe::setUpSpace() {
     a_planet->setOrientation(
         quaternion_rotation_betweenHP(sun_dir, make_HPvector(1.0, 0.0, 0.0)));
 
-#ifdef OO_DUMP_PLANETINFO
-  OO_LOG("planetinfo.record", "sun_vector = {:.3f} {:.3f} {:.3f}", vf.x, vf.y,
-         vf.z);
-  OO_LOG("planetinfo.record", "sun_distance = {:.0f}", sun_distance);
-#endif
+  if (oo::features().IsDumpPlanetInfoEnabled()) {
+    OO_LOG("planetinfo.record", "sun_vector = {:.3f} {:.3f} {:.3f}", vf.x, vf.y,
+           vf.z);
+    OO_LOG("planetinfo.record", "sun_distance = {:.0f}", sun_distance);
+  }
 
   // the sun's settings: the values as they were in the system info, else the
   // defaults (floats, as +numberWithFloat: stored them: item 15); the radius a
@@ -1959,15 +1959,15 @@ void Universe::setUpSpace() {
     sunSettings[std::string(KEY_SUNNAME)] = *value;
   }
   const oo::PList sun_dict(std::move(sunSettings));
-#ifdef OO_DUMP_PLANETINFO
-  OO_LOG("planetinfo.record", "corona_flare = {:f}",
-         sun_dict.get<float>("corona_flare"));
-  OO_LOG("planetinfo.record", "corona_hues = {:f}",
-         sun_dict.get<float>("corona_hues"));
-  OO_LOG("planetinfo.record", "sun_color = {}",
-         (bgcolor != nullptr ? bgcolor->descriptionComponents() : std::nullopt)
-             .value_or("(null)"));
-#endif
+  if (oo::features().IsDumpPlanetInfoEnabled()) {
+    OO_LOG("planetinfo.record", "corona_flare = {:f}",
+           sun_dict.get<float>("corona_flare"));
+    OO_LOG("planetinfo.record", "corona_hues = {:f}",
+           sun_dict.get<float>("corona_hues"));
+    OO_LOG("planetinfo.record", "sun_color = {}",
+           (bgcolor != nullptr ? bgcolor->descriptionComponents() : std::nullopt)
+           .value_or("(null)"));
+  }
   {
     // A new sun, held.
     std::shared_ptr<OOSunEntity> sunRef = oo::makeShared<OOSunEntity>();
@@ -1996,19 +1996,19 @@ void Universe::setUpSpace() {
   stationPos = (a_planet != nullptr ? a_planet->getPosition() : HPVector{});
 
   vf = VectorIn(systeminfo, "station_vector", kZeroVector);
-#ifdef OO_DUMP_PLANETINFO
-  OO_LOG("planetinfo.record", "station_vector = {:.3f} {:.3f} {:.3f}", vf.x,
-         vf.y, vf.z);
-#endif
+  if (oo::features().IsDumpPlanetInfoEnabled()) {
+    OO_LOG("planetinfo.record", "station_vector = {:.3f} {:.3f} {:.3f}", vf.x,
+           vf.y, vf.z);
+  }
   stationPos = HPvector_subtract(
       stationPos,
       vectorToHPVector(vector_multiply_scalar(vf, 2.0 * planet_radius)));
 
   //// possibly systeminfo has an override for the station
   stationDesc = systeminfo.get<std::string>("station", "coriolis");
-#ifdef OO_DUMP_PLANETINFO
-  OO_LOG("planetinfo.record", "station = {}", stationDesc.value_or("(null)"));
-#endif
+  if (oo::features().IsDumpPlanetInfoEnabled()) {
+    OO_LOG("planetinfo.record", "station = {}", stationDesc.value_or("(null)"));
+  }
 
   // a missing role (the unset default) gives no ship, as a nil role did
   stationObject = stationDesc.has_value() ? newShipWithRole(*stationDesc)

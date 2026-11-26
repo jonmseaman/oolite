@@ -42,6 +42,7 @@ MA 02110-1301, USA.
 
 #include "AI.h"
 #include "CollisionRegion.h"
+#include "FeatureConfig.h"
 #include "GameController.h"
 #include "HeadUpDisplay.h"
 #include "MyOpenGLView.h"
@@ -7733,9 +7734,7 @@ void PlayerEntity::enterWormhole(::WormholeEntity* w_hole) {
   if (scriptedMisjump()) {
     misjump = true;  // a script could just have changed this to true;
   }
-#ifdef OO_DUMP_PLANETINFO
-  misjump = false;
-#endif
+  if (oo::features().IsDumpPlanetInfoEnabled())
   if (misjump && scriptedMisjumpRange() != 0.5) {
     if (w_hole != nullptr)
       w_hole->setMisjumpWithRange(
@@ -7759,9 +7758,6 @@ void PlayerEntity::enterWitchspace() {
     malfunc_chance = 256;  // force no misjumps on first jump
   }
 
-#ifdef OO_DUMP_PLANETINFO
-  bool misjump = false;  // debugging
-#else
   bool malfunc = ((ranrot_rand() & 0xff) > malfunc_chance);
   // 75% of the time a malfunction means a misjump
   bool misjump = scriptedMisjump() || (flightPitch == max_flight_pitch) ||
@@ -7781,7 +7777,6 @@ void PlayerEntity::enterWitchspace() {
       setFuelLeak(std::format("{:f}", (randf() + randf()) * 5.0));
     }
   }
-#endif
 
   // From this point forward we are -definitely- witchjumping
 
